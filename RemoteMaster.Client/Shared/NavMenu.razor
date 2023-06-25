@@ -1,0 +1,31 @@
+﻿<div class="h-full flex flex-col bg-gray-800 text-white">
+    <div class="p-5 flex items-center justify-between">
+        <h1 class="font-bold text-2xl">RemoteMaster</h1>
+        <button title="Navigation menu" class="w-8 h-8 rounded flex justify-center items-center bg-gray-600" @onclick="ToggleNavMenu">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-5 w-5">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+            </svg>
+        </button>
+    </div>
+
+    <nav class="flex-grow p-5 space-y-2 overflow-y-auto">
+        <NavLink class="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-600" href="" Match="NavLinkMatch.All">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-5 w-5">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h9m5 0a2 2 0 002 2h2a2 2 0 002-2v-1a2 2 0 00-2-2h-2a2 2 0 00-2 2v1zm-9 4h1"></path>
+            </svg>
+            <span>Home</span>
+        </NavLink>
+        <!-- Дополнительные ссылки -->
+    </nav>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string NavMenuCssClass => collapseNavMenu ? "hidden" : "";
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

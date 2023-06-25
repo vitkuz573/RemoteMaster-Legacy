@@ -1,0 +1,36 @@
+﻿@page "/{ipAddress}/screen"
+
+@using Microsoft.AspNetCore.SignalR.Client
+@using RemoteMaster.Client.Models
+
+@inject NavigationManager NavigationManager
+
+@code {
+    [Parameter]
+    public string IPAddress { get; set; }
+
+    private HubConnection hubConnection;
+    private string serverUrl;
+
+    protected override async Task OnInitializedAsync()
+    {
+        serverUrl = NavigationManager.ToAbsoluteUri("/yourHubPath").ToString();
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(serverUrl)
+            .Build();
+
+        hubConnection.On<byte[]>("ScreenUpdate", HandleScreenUpdate);
+
+        await hubConnection.StartAsync();
+    }
+
+    private void HandleScreenUpdate(byte[] screenData)
+    {
+        // Обработка обновления экрана, полученного от сервера
+    }
+
+    public void Dispose()
+    {
+        hubConnection?.DisposeAsync();
+    }
+}

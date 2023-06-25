@@ -1,0 +1,32 @@
+﻿@page "/{ipAddress}/control"
+
+@using RemoteMaster.Client.Models
+@using RemoteMaster.Client.Services;
+
+@inject ComputerService ComputerService
+
+@code {
+    [Parameter]
+    public string IPAddress { get; set; }
+
+    private Computer managedComputer;
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            managedComputer = ComputerService.GetComputerByIp(IPAddress);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting computer: {ex.Message}");
+        }
+    }
+}
+
+@if (managedComputer != null)
+{
+    <div class="m-2">
+        <iframe src="@($"http://localhost:7111/{IPAddress}/screen")" width="100%" height="500" style="border:none;"></iframe>
+    </div>
+}
