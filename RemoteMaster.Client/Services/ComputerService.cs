@@ -8,7 +8,8 @@ public class ComputerService
     {
         new Computer { Name = "Computer 1", IPAddress = "192.168.0.1" },
         new Computer { Name = "Computer 2", IPAddress = "192.168.0.2" },
-        new Computer { Name = "Computer 3", IPAddress = "192.168.0.3" }
+        new Computer { Name = "Computer 3", IPAddress = "192.168.0.3" },
+        new Computer { Name = "localhost", IPAddress = "127.0.0.1" }
     };
 
     public Computer GetComputerByIp(string ipAddress)

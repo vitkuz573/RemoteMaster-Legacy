@@ -10,6 +10,7 @@
     public string IPAddress { get; set; }
 
     private Computer managedComputer;
+    private string errorMessage;
 
     protected override void OnInitialized()
     {
@@ -19,14 +20,18 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error getting computer: {ex.Message}");
+            errorMessage = $"Error getting computer: {ex.Message}";
         }
     }
 }
 
-@if (managedComputer != null)
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p>@errorMessage</p>
+}
+else if (managedComputer != null)
 {
     <div class="m-2">
-        <iframe src="@($"http://localhost:7111/{IPAddress}/screen")" width="100%" height="500" style="border:none;"></iframe>
+        <iframe src="@($"https://localhost:7111/{IPAddress}/screen")" width="100%" height="500" style="border:none;"></iframe>
     </div>
 }

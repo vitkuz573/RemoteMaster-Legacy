@@ -11,17 +11,31 @@
 
     private HubConnection hubConnection;
     private string serverUrl;
+    private string connectionError;
 
     protected override async Task OnInitializedAsync()
     {
-        serverUrl = NavigationManager.ToAbsoluteUri("/yourHubPath").ToString();
+        serverUrl = $"https://{IPAddress}:7172/screenHub?ipAddress={IPAddress}";
         hubConnection = new HubConnectionBuilder()
-            .WithUrl(serverUrl)
+            .WithUrl(serverUrl, options =>
+            {
+                options.HttpMessageHandlerFactory = _ => new HttpClientHandler
+                    {
+                        ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                    };
+            })
             .Build();
 
         hubConnection.On<byte[]>("ScreenUpdate", HandleScreenUpdate);
 
-        await hubConnection.StartAsync();
+        try
+        {
+            await hubConnection.StartAsync();
+        }
+        catch (Exception ex)
+        {
+            connectionError = $"Error starting connection: {ex.Message}";
+        }
     }
 
     private void HandleScreenUpdate(byte[] screenData)
@@ -33,4 +47,13 @@
     {
         hubConnection?.DisposeAsync();
     }
+}
+
+@if (!string.IsNullOrEmpty(connectionError))
+{
+    <p>@connectionError</p>
+}
+else
+{
+    <p>Connection started successfully.</p>
 }
