@@ -20,6 +20,7 @@
     protected override async Task OnInitializedAsync()
     {
         serverUrl = $"https://{IPAddress}:7172/screenHub?ipAddress={IPAddress}";
+        Console.WriteLine($"Attempting to connect to {serverUrl}");
         hubConnection = new HubConnectionBuilder()
             .WithUrl(serverUrl, options =>
             {
@@ -36,16 +37,19 @@
         {
             await hubConnection.StartAsync();
             isConnectionStarted = true;
+            Console.WriteLine("Connection started successfully");
         }
         catch (Exception ex)
         {
             connectionError = $"Error starting connection: {ex.Message}";
+            Console.WriteLine(connectionError);
         }
     }
 
     private void HandleScreenUpdate(byte[] screenData)
     {
         screenDataUrl = $"data:image/png;base64,{Convert.ToBase64String(screenData)}";
+        Console.WriteLine($"Screen data received, length: {screenData.Length} bytes");
         StateHasChanged();
     }
 

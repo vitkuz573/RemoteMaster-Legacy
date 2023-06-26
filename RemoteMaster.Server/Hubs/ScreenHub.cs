@@ -1,18 +1,44 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using System.Text;
+using ScreenHelper;
+using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace RemoteMaster.Server.Hubs;
 
 public class ScreenHub : Hub
 {
-    public async Task SendScreenUpdate(string ipAddress, byte[] screenData)
+    private readonly ILogger<ScreenHub> _logger; // Поле для экземпляра логгера
+
+    public ScreenHub(ILogger<ScreenHub> logger) // Внедряем логгер через конструктор
     {
-        await Clients.OthersInGroup(ipAddress).SendAsync("ScreenUpdate", screenData);
-        // temporary code for testing
-        if (screenData == null)
+        _logger = logger;
+    }
+
+    public byte[] CaptureScreen()
+    {
+        _logger.LogInformation("Capturing screen..."); // Добавляем логирование перед захватом экрана
+
+        using var bitmap = new Bitmap(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
+
+        using (var graphics = Graphics.FromImage(bitmap))
         {
-            await Clients.Group(ipAddress).SendAsync("ScreenUpdate", Encoding.UTF8.GetBytes("Hello, world!"));
+            graphics.CopyFromScreen(0, 0, 0, 0, bitmap.Size);
         }
+
+        using var memoryStream = new MemoryStream();
+        bitmap.Save(memoryStream, ImageFormat.Png);
+
+        _logger.LogInformation($"Captured screen of size {memoryStream.Length} bytes"); // Добавляем логирование после захвата экрана
+
+        return memoryStream.ToArray();
+    }
+
+    public async Task SendScreenUpdate(string ipAddress)
+    {
+        _logger.LogInformation($"Sending screen update for IP {ipAddress}"); // Добавляем логирование перед отправкой обновления экрана
+
+        var screenData = CaptureScreen();
+        await Clients.OthersInGroup(ipAddress).SendAsync("ScreenUpdate", screenData);
     }
 
     public async Task ShowDialog(string message)
@@ -24,15 +50,18 @@ public class ScreenHub : Hub
     {
         var httpContext = Context.GetHttpContext();
         var ipAddress = httpContext.Request.Query["ipAddress"];
-        Console.WriteLine($"Client with IP {ipAddress} connected.");
+        _logger.LogInformation($"Client with IP {ipAddress} connected."); // Добавляем логирование при подключении клиента
         await Groups.AddToGroupAsync(Context.ConnectionId, ipAddress);
         await base.OnConnectedAsync();
+
+        await SendScreenUpdate(ipAddress); // вызываем SendScreenUpdate при подключении клиента
     }
 
     public override async Task OnDisconnectedAsync(Exception exception)
     {
         var httpContext = Context.GetHttpContext();
         var ipAddress = httpContext.Request.Query["ipAddress"];
+        _logger.LogInformation($"Client with IP {ipAddress} disconnected."); // Добавляем логирование при отключении клиента
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, ipAddress);
         await base.OnDisconnectedAsync(exception);
     }
