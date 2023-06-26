@@ -1,4 +1,6 @@
-﻿@page "/{ipAddress}/screen"
+﻿@layout EmptyLayout
+@page "/{ipAddress}/screen"
+
 
 @using Microsoft.AspNetCore.SignalR.Client
 @using RemoteMaster.Client.Models
@@ -12,6 +14,8 @@
     private HubConnection hubConnection;
     private string serverUrl;
     private string connectionError;
+    private string screenDataUrl;
+    private bool isConnectionStarted = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -31,6 +35,7 @@
         try
         {
             await hubConnection.StartAsync();
+            isConnectionStarted = true;
         }
         catch (Exception ex)
         {
@@ -40,7 +45,8 @@
 
     private void HandleScreenUpdate(byte[] screenData)
     {
-        // Обработка обновления экрана, полученного от сервера
+        screenDataUrl = $"data:image/png;base64,{Convert.ToBase64String(screenData)}";
+        StateHasChanged();
     }
 
     public void Dispose()
@@ -53,7 +59,15 @@
 {
     <p>@connectionError</p>
 }
+else if (isConnectionStarted && !string.IsNullOrEmpty(screenDataUrl))
+{
+    <img src="@screenDataUrl" width="100%" />
+}
+else if (isConnectionStarted)
+{
+    <p>Connection started successfully, waiting for screen update...</p>
+}
 else
 {
-    <p>Connection started successfully.</p>
+    <p>Establishing connection...</p>
 }
