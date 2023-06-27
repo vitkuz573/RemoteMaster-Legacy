@@ -1,11 +1,11 @@
 ﻿@page "/{IPAddress}/control"
-
+@using Microsoft.AspNetCore.SignalR.Client;
 @using RemoteMaster.Client.Models
 @using RemoteMaster.Client.Services
-
 @inject NavigationManager NavigationManager
 @inject ScreenHubConnectionService ScreenHubConnectionService
 @inject ComputerService ComputerService
+@inject ILogger<RemoteMaster.Client.Models.Computer> Logger
 
 @code {
     [Parameter]
@@ -27,18 +27,30 @@
         catch (Exception ex)
         {
             errorMessage = $"Error getting computer: {ex.Message}";
+            Logger.LogError(errorMessage);
         }
 
         if (managedComputer != null && hubConnection == null)
         {
             string serverUrl = $"https://{IPAddress}:7172/screenHub?ipAddress={IPAddress}";
-            Console.WriteLine($"Attempting to connect to {serverUrl}");
+            Logger.LogInformation($"Attempting to connect to {serverUrl}");
 
-            hubConnection = await ScreenHubConnectionService.GetConnectionAsync(serverUrl);
-            hubConnection.On<byte[]>("ScreenUpdate", HandleScreenUpdate);
-            hubConnection.Closed += HubConnectionClosed;
+            try
+            {
+                hubConnection = await ScreenHubConnectionService.GetConnectionAsync(serverUrl);
+                hubConnection.On<byte[]>("ScreenUpdate", HandleScreenUpdate);
+                hubConnection.Closed += HubConnectionClosed;
 
-            isConnectionStarted = true;
+                if (hubConnection.State == HubConnectionState.Connected)
+                {
+                    isConnectionStarted = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Failed to start connection: {ex.Message}";
+                Logger.LogError(errorMessage);
+            }
         }
     }
 
@@ -51,12 +63,23 @@
     private Task HubConnectionClosed(Exception arg)
     {
         connectionError = "Server connection lost.";
+        Logger.LogWarning(connectionError);
         return InvokeAsync(StateHasChanged);
     }
 
-    public void Dispose()
+    public async Task DisposeAsync()
     {
-        hubConnection?.DisposeAsync();
+        if (hubConnection != null)
+        {
+            try
+            {
+                await hubConnection.DisposeAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"Error while disposing HubConnection: {ex.Message}");
+            }
+        }
     }
 }
 

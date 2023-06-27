@@ -53,12 +53,19 @@ public class ScreenHub : Hub
 
         while (!cancellationToken.IsCancellationRequested)
         {
-            var screenData = CaptureScreen();
-            await Clients.OthersInGroup(ipAddress).SendAsync("ScreenUpdate", screenData);
+            try
+            {
+                var screenData = CaptureScreen();
+                await Clients.OthersInGroup(ipAddress).SendAsync("ScreenUpdate", screenData);
 
-            var fps = _fpsSettings.TryGetValue(ipAddress, out var val) ? val : 30;
+                var fps = _fpsSettings.TryGetValue(ipAddress, out var val) ? val : 30;
 
-            await Task.Delay(1000 / fps);
+                await Task.Delay(1000 / fps);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("An error occurred during streaming: {Message}", ex.Message);
+            }
         }
     }
 
@@ -68,6 +75,7 @@ public class ScreenHub : Hub
 
         if (httpContext == null)
         {
+            _logger.LogWarning("No HTTP context available for the connection.");
             return;
         }
 
@@ -90,6 +98,7 @@ public class ScreenHub : Hub
 
         if (httpContext == null)
         {
+            _logger.LogWarning("No HTTP context available for the connection.");
             return;
         }
 
