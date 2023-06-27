@@ -31,10 +31,10 @@ public class ScreenHub : Hub
             try
             {
                 var screenData = _screenCaptureService.CaptureScreen();
-                await Clients.OthersInGroup(ipAddress).SendAsync("ScreenUpdate", screenData);
+                await Clients.OthersInGroup(ipAddress).SendAsync("ScreenUpdate", screenData, cancellationToken);
 
                 var config = _screenCaptureService.GetClientConfig(ipAddress);
-                await Task.Delay(1000 / config.FPS);
+                await Task.Delay(1000 / config.FPS, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -45,15 +45,12 @@ public class ScreenHub : Hub
 
     public override async Task OnConnectedAsync()
     {
-        var httpContext = Context.GetHttpContext();
+        var ipAddress = GetIpAddressFromHttpContext();
 
-        if (httpContext == null)
+        if (string.IsNullOrEmpty(ipAddress))
         {
-            _logger.LogWarning("No HTTP context available for the connection.");
             return;
         }
-
-        var ipAddress = httpContext.Request.Query["ipAddress"];
 
         await Groups.AddToGroupAsync(Context.ConnectionId, ipAddress);
 
@@ -63,17 +60,14 @@ public class ScreenHub : Hub
         await StartScreenStream(ipAddress, cancellationTokenSource.Token);
     }
 
-    public override async Task OnDisconnectedAsync(Exception exception)
+    public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        var httpContext = Context.GetHttpContext();
+        var ipAddress = GetIpAddressFromHttpContext();
 
-        if (httpContext == null)
+        if (string.IsNullOrEmpty(ipAddress))
         {
-            _logger.LogWarning("No HTTP context available for the connection.");
             return;
         }
-
-        var ipAddress = httpContext.Request.Query["ipAddress"];
 
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, ipAddress);
 
@@ -83,6 +77,18 @@ public class ScreenHub : Hub
         }
 
         await base.OnDisconnectedAsync(exception);
+    }
+
+    private string? GetIpAddressFromHttpContext()
+    {
+        var ipAddress = Context.GetHttpContext()?.Request.Query["ipAddress"].ToString();
+
+        if (string.IsNullOrEmpty(ipAddress))
+        {
+            _logger.LogWarning("No HTTP context available or IP address is missing.");
+        }
+
+        return ipAddress;
     }
 }
 
