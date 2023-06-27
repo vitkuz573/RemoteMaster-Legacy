@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using ScreenHelper;
 using System.Collections.Concurrent;
 using System.Drawing;
 using System.Drawing.Imaging;
+using Windows.Win32.Foundation;
+using Windows.Win32.Graphics.Gdi;
+using Windows.Win32.UI.WindowsAndMessaging;
+using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Server.Hubs;
 
@@ -18,7 +21,10 @@ public class ScreenHub : Hub
 
     public byte[] CaptureScreen()
     {
-        using var bitmap = new Bitmap(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
+        var width = GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CXVIRTUALSCREEN);
+        var height = GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CYVIRTUALSCREEN);
+
+        using var bitmap = new Bitmap(width, height);
 
         using (var graphics = Graphics.FromImage(bitmap))
         {
