@@ -8,6 +8,8 @@
 
   <ItemGroup>
     <PackageReference Include="ScreenHelper" Version="1.0.2" />
+    <PackageReference Include="SharpDX.Direct3D11" Version="4.2.0" />
+    <PackageReference Include="SharpDX.DXGI" Version="4.2.0" />
     <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
   </ItemGroup>
 
