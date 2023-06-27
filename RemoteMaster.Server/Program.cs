@@ -1,9 +1,13 @@
+using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Hubs;
+using RemoteMaster.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorPages();
 builder.Services.AddSignalR();
+
+builder.Services.AddScoped<IScreenCaptureService, ScreenCaptureService>();
 
 var app = builder.Build();
 
