@@ -9,8 +9,8 @@ namespace RemoteMaster.Server.Hubs;
 
 public class ScreenHub : Hub
 {
-    private ConcurrentDictionary<string, CancellationTokenSource> _connectionCancellations = new();
-    private ConcurrentDictionary<string, int> _fpsSettings = new();
+    private readonly ConcurrentDictionary<string, CancellationTokenSource> _connectionCancellations = new();
+    private readonly ConcurrentDictionary<string, int> _fpsSettings = new();
     private readonly ILogger<ScreenHub> _logger;
 
     public ScreenHub(ILogger<ScreenHub> logger)
