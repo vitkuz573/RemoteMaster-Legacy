@@ -1,18 +1,25 @@
-﻿@page "/{ipAddress}/control"
+﻿@page "/{IPAddress}/control"
 
+@using Microsoft.AspNetCore.SignalR.Client
 @using RemoteMaster.Client.Models
-@using RemoteMaster.Client.Services;
+@using RemoteMaster.Client.Services
 
+@inject NavigationManager NavigationManager
+@inject ScreenHubConnectionService ScreenHubConnectionService
 @inject ComputerService ComputerService
 
 @code {
     [Parameter]
     public string IPAddress { get; set; }
 
+    private HubConnection hubConnection;
+    private string connectionError;
+    private string screenDataUrl;
+    private bool isConnectionStarted = false;
     private Computer managedComputer;
     private string errorMessage;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         try
         {
@@ -22,6 +29,28 @@
         {
             errorMessage = $"Error getting computer: {ex.Message}";
         }
+
+        if (managedComputer != null && hubConnection == null)
+        {
+            string serverUrl = $"https://{IPAddress}:7172/screenHub?ipAddress={IPAddress}";
+            Console.WriteLine($"Attempting to connect to {serverUrl}");
+
+            hubConnection = await ScreenHubConnectionService.GetConnectionAsync(serverUrl);
+            hubConnection.On<byte[]>("ScreenUpdate", HandleScreenUpdate);
+
+            isConnectionStarted = true;
+        }
+    }
+
+    private void HandleScreenUpdate(byte[] screenData)
+    {
+        screenDataUrl = $"data:image/png;base64,{Convert.ToBase64String(screenData)}";
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        hubConnection?.DisposeAsync();
     }
 }
 
@@ -29,9 +58,15 @@
 {
     <p>@errorMessage</p>
 }
-else if (managedComputer != null)
+else if (isConnectionStarted && !string.IsNullOrEmpty(screenDataUrl))
 {
-    <div class="m-2">
-        <Screen IPAddress="@IPAddress" />
-    </div>
+    <img src="@screenDataUrl" width="100%" />
+}
+else if (isConnectionStarted)
+{
+    <p>Connection started successfully, waiting for screen update...</p>
+}
+else
+{
+    <p>Establishing connection...</p>
 }

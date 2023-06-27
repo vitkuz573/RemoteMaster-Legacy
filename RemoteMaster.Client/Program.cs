@@ -25,6 +25,7 @@ builder.Services.AddBlazorise(options =>
 }).AddTailwindProviders().AddFontAwesomeIcons();
 
 builder.Services.AddSingleton<ComputerService>();
+builder.Services.AddSingleton<ScreenHubConnectionService>();
 
 var app = builder.Build();
 

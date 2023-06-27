@@ -42,5 +42,13 @@
     </div>
 
     <script src="_framework/blazor.server.js"></script>
+
+    <script>
+        window.updateImageSource = (element, data) => {
+            const blob = new Blob([data], { type: "image/png" });
+            const url = URL.createObjectURL(blob);
+            element.src = url;
+        }
+    </script>
 </body>
 </html>
