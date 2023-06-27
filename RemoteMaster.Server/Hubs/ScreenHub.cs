@@ -9,12 +9,24 @@ namespace RemoteMaster.Server.Hubs;
 
 public class ScreenHub : Hub
 {
-    private ConcurrentDictionary<string, CancellationTokenSource> _connectionCancellations = new ConcurrentDictionary<string, CancellationTokenSource>();
+    private ConcurrentDictionary<string, CancellationTokenSource> _connectionCancellations = new();
+    private ConcurrentDictionary<string, int> _fpsSettings = new();
     private readonly ILogger<ScreenHub> _logger;
 
     public ScreenHub(ILogger<ScreenHub> logger)
     {
         _logger = logger;
+    }
+
+    public void SetFps(string ipAddress, int fps)
+    {
+        if (fps <= 0)
+        {
+            _logger.LogError("FPS value should be greater than 0. Given: {fps}", fps);
+            return;
+        }
+
+        _fpsSettings[ipAddress] = fps;
     }
 
     public byte[] CaptureScreen()
@@ -44,7 +56,9 @@ public class ScreenHub : Hub
             var screenData = CaptureScreen();
             await Clients.OthersInGroup(ipAddress).SendAsync("ScreenUpdate", screenData);
 
-            await Task.Delay(1000 / 30);
+            var fps = _fpsSettings.TryGetValue(ipAddress, out var val) ? val : 30;
+
+            await Task.Delay(1000 / fps);
         }
     }
 
@@ -63,6 +77,9 @@ public class ScreenHub : Hub
 
         var cancellationTokenSource = new CancellationTokenSource();
         _connectionCancellations[ipAddress] = cancellationTokenSource;
+
+        // Initialize FPS settings with a default value
+        _fpsSettings[ipAddress] = 30;
 
         await StartScreenStream(ipAddress, cancellationTokenSource.Token);
     }
