@@ -1,6 +1,5 @@
 ﻿@page "/{IPAddress}/control"
 
-@using Microsoft.AspNetCore.SignalR.Client
 @using RemoteMaster.Client.Models
 @using RemoteMaster.Client.Services
 
@@ -37,6 +36,7 @@
 
             hubConnection = await ScreenHubConnectionService.GetConnectionAsync(serverUrl);
             hubConnection.On<byte[]>("ScreenUpdate", HandleScreenUpdate);
+            hubConnection.Closed += HubConnectionClosed;
 
             isConnectionStarted = true;
         }
@@ -46,6 +46,12 @@
     {
         screenDataUrl = $"data:image/png;base64,{Convert.ToBase64String(screenData)}";
         InvokeAsync(StateHasChanged);
+    }
+
+    private Task HubConnectionClosed(Exception arg)
+    {
+        connectionError = "Server connection lost.";
+        return InvokeAsync(StateHasChanged);
     }
 
     public void Dispose()
@@ -58,9 +64,15 @@
 {
     <p>@errorMessage</p>
 }
+else if (!string.IsNullOrEmpty(connectionError))
+{
+    <div class="overlay">
+        <p>@connectionError</p>
+    </div>
+}
 else if (isConnectionStarted && !string.IsNullOrEmpty(screenDataUrl))
 {
-    <img src="@screenDataUrl" width="100%" />
+    <img src="@screenDataUrl" width="1494" />
 }
 else if (isConnectionStarted)
 {

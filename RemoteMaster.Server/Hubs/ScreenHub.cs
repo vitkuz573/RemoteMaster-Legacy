@@ -40,7 +40,7 @@ public class ScreenHub : Hub
             var screenData = CaptureScreen();
             await Clients.OthersInGroup(ipAddress).SendAsync("ScreenUpdate", screenData);
 
-            await Task.Delay(1000 / 30);
+            await Task.Delay(1000 / 300);
         }
     }
 
