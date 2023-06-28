@@ -8,52 +8,18 @@ namespace RemoteMaster.Server.Hubs;
 public class ScreenHub : Hub
 {
     private readonly ConcurrentDictionary<string, CancellationTokenSource> _connectionCancellations = new();
-    private readonly IScreenCaptureService _screenCaptureService;
+    private readonly IStreamingService _streamingService;
     private readonly ILogger<ScreenHub> _logger;
 
-    public ScreenHub(ILogger<ScreenHub> logger, IScreenCaptureService screenCaptureService)
+    public ScreenHub(ILogger<ScreenHub> logger, IStreamingService streamingService)
     {
         _logger = logger;
-        _screenCaptureService = screenCaptureService;
+        _streamingService = streamingService;
     }
 
     public void SetFps(string ipAddress, int fps)
     {
-        if (fps <= 0 || fps > 60)
-        {
-            _logger.LogError("FPS value should be between 1 and 60. Given: {fps}", fps);
-            return;
-        }
-
-        if (!IPAddress.TryParse(ipAddress, out _))
-        {
-            _logger.LogError("Invalid IP address: {ipAddress}", ipAddress);
-            return;
-        }
-
-        var config = _screenCaptureService.GetClientConfig(ipAddress);
-        config.FPS = fps;
-    }
-
-    public async Task StartScreenStream(string ipAddress, CancellationToken cancellationToken)
-    {
-        _logger.LogInformation("Starting screen stream for IP {ipAddress}", ipAddress);
-
-        while (!cancellationToken.IsCancellationRequested)
-        {
-            try
-            {
-                var screenData = _screenCaptureService.CaptureScreen();
-                await Clients.OthersInGroup(ipAddress).SendAsync("ScreenUpdate", screenData, cancellationToken);
-
-                var config = _screenCaptureService.GetClientConfig(ipAddress);
-                await Task.Delay(1000 / config.FPS, cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("An error occurred during streaming: {Message}", ex.Message);
-            }
-        }
+        _streamingService.SetFps(ipAddress, fps);
     }
 
     public override async Task OnConnectedAsync()
@@ -70,7 +36,7 @@ public class ScreenHub : Hub
         var cancellationTokenSource = new CancellationTokenSource();
         _connectionCancellations[ipAddress] = cancellationTokenSource;
 
-        await StartScreenStream(ipAddress, cancellationTokenSource.Token);
+        await _streamingService.StartStreaming(ipAddress, cancellationTokenSource.Token);
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
@@ -105,4 +71,3 @@ public class ScreenHub : Hub
         return ipAddress;
     }
 }
-

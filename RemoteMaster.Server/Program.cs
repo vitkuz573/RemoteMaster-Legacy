@@ -8,6 +8,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddSignalR();
 
 builder.Services.AddScoped<IScreenCaptureService, ScreenCaptureService>();
+builder.Services.AddScoped<IStreamingService, StreamingService>();
 
 var app = builder.Build();
 
