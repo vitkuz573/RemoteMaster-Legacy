@@ -30,5 +30,6 @@ app.UseAuthorization();
 
 app.MapRazorPages();
 app.MapHub<ScreenHub>("/screenHub");
+app.MapControllers();
 
 app.Run();
