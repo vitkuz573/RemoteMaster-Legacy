@@ -9,6 +9,7 @@ builder.Services.AddSignalR();
 
 builder.Services.AddScoped<IScreenCaptureService, ScreenCaptureService>();
 builder.Services.AddScoped<IStreamingService, StreamingService>();
+builder.Services.AddScoped<IScreenService, ScreenService>();
 
 var app = builder.Build();
 
