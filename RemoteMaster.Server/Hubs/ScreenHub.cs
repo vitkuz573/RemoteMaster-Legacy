@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Server.Abstractions;
 using System.Collections.Concurrent;
+using System.Net;
 
 namespace RemoteMaster.Server.Hubs;
 
@@ -18,6 +19,18 @@ public class ScreenHub : Hub
 
     public void SetFps(string ipAddress, int fps)
     {
+        if (fps <= 0 || fps > 60)
+        {
+            _logger.LogError("FPS value should be between 1 and 60. Given: {fps}", fps);
+            return;
+        }
+
+        if (!IPAddress.TryParse(ipAddress, out _))
+        {
+            _logger.LogError("Invalid IP address: {ipAddress}", ipAddress);
+            return;
+        }
+
         var config = _screenCaptureService.GetClientConfig(ipAddress);
         config.FPS = fps;
     }
@@ -47,7 +60,7 @@ public class ScreenHub : Hub
     {
         var ipAddress = GetIpAddressFromHttpContext();
 
-        if (string.IsNullOrEmpty(ipAddress))
+        if (ipAddress == null)
         {
             return;
         }
@@ -64,7 +77,7 @@ public class ScreenHub : Hub
     {
         var ipAddress = GetIpAddressFromHttpContext();
 
-        if (string.IsNullOrEmpty(ipAddress))
+        if (ipAddress == null)
         {
             return;
         }
@@ -83,9 +96,10 @@ public class ScreenHub : Hub
     {
         var ipAddress = Context.GetHttpContext()?.Request.Query["ipAddress"].ToString();
 
-        if (string.IsNullOrEmpty(ipAddress))
+        if (string.IsNullOrEmpty(ipAddress) || !IPAddress.TryParse(ipAddress, out _))
         {
-            _logger.LogWarning("No HTTP context available or IP address is missing.");
+            _logger.LogWarning("Invalid or missing IP address.");
+            return null;
         }
 
         return ipAddress;
