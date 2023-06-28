@@ -1,34 +1,56 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RemoteMaster.Server.Abstractions;
+using System;
 using System.Drawing;
 
-namespace RemoteMaster.Server
+namespace RemoteMaster.Server;
+
+[Route("api/[controller]")]
+[ApiController]
+public class InformationController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class InformationController : ControllerBase
+    private readonly IScreenService _screenService;
+    private readonly ILogger<InformationController> _logger;
+
+    public InformationController(IScreenService screenService, ILogger<InformationController> logger)
     {
-        private readonly IScreenService _screenService;
+        _screenService = screenService;
+        _logger = logger;
+    }
 
-        public InformationController(IScreenService screenService)
+    /// <summary>
+    /// Gets the screen size based on type.
+    /// </summary>
+    /// <param name="type">The type of the screen size (physical or virtual).</param>
+    /// <returns>The size of the screen.</returns>
+    [HttpGet("screenSize/{type}")]
+    public ActionResult<Size> GetScreenSize(string type)
+    {
+        try
         {
-            _screenService = screenService;
-        }
+            Size screenSize;
 
-        [HttpGet("screenSize")]
-        public ActionResult<Size> GetScreenSize()
-        {
-            var screenSize = _screenService.GetScreenSize();
+            switch (type.ToLower())
+            {
+                case "physical":
+                    screenSize = _screenService.GetScreenSize();
+                    _logger.LogInformation("Retrieved physical screen size: {Size}", screenSize);
+                    break;
+                case "virtual":
+                    screenSize = _screenService.GetVirtualScreenSize();
+                    _logger.LogInformation("Retrieved virtual screen size: {Size}", screenSize);
+                    break;
+                default:
+                    return BadRequest("Invalid type. Valid types are 'physical' or 'virtual'");
+            }
 
             return Ok(screenSize);
         }
-
-        [HttpGet("virtualScreenSize")]
-        public ActionResult<Size> GetVirtualScreenSize()
+        catch (Exception ex)
         {
-            var screenSize = _screenService.GetVirtualScreenSize();
+            _logger.LogError(ex, "Error retrieving {type} screen size", type);
 
-            return Ok(screenSize);
+            return StatusCode(500, $"Error retrieving {type} screen size");
         }
     }
 }
