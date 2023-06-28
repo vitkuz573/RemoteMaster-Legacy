@@ -1,1 +1,4 @@
 ﻿GetSystemMetrics
+GetDC
+ReleaseDC
+BitBlt

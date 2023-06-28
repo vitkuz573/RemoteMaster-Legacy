@@ -3,6 +3,8 @@ using RemoteMaster.Server.Models;
 using System.Collections.Concurrent;
 using System.Drawing;
 using System.Drawing.Imaging;
+using Windows.Win32.Foundation;
+using Windows.Win32.Graphics.Gdi;
 using Windows.Win32.UI.WindowsAndMessaging;
 using static Windows.Win32.PInvoke;
 
@@ -17,11 +19,16 @@ public class ScreenCaptureService : IScreenCaptureService
         var width = GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CXVIRTUALSCREEN);
         var height = GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CYVIRTUALSCREEN);
 
-        using var bitmap = new Bitmap(width, height);
-        using (var graphics = Graphics.FromImage(bitmap))
-        {
-            graphics.CopyFromScreen(0, 0, 0, 0, bitmap.Size);
-        }
+        using var bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+        using var memoryGraphics = Graphics.FromImage(bitmap);
+
+        var dc1 = GetDC(HWND.Null);
+        var dc2 = (HDC)memoryGraphics.GetHdc();
+
+        BitBlt(dc2, 0, 0, width, height, dc1, 0, 0, ROP_CODE.SRCCOPY);
+
+        memoryGraphics.ReleaseHdc(dc2);
+        ReleaseDC(HWND.Null, dc1);
 
         using var memoryStream = new MemoryStream();
         bitmap.Save(memoryStream, ImageFormat.Png);
@@ -36,6 +43,7 @@ public class ScreenCaptureService : IScreenCaptureService
             config = new ClientConfig();
             _clientConfigs[ipAddress] = config;
         }
+
         return config;
     }
 }
