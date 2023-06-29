@@ -37,7 +37,7 @@
 
         if (managedComputer != null && hubConnection == null)
         {
-            string serverUrl = $"https://{IPAddress}:7172/screenHub?ipAddress={IPAddress}";
+            string serverUrl = $"https://{IPAddress}:7172/screenHub?screenId={IPAddress}";
             Logger.LogInformation($"Attempting to connect to {serverUrl}");
 
             try

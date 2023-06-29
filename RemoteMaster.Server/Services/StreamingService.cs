@@ -9,9 +9,9 @@ public class StreamingService : IStreamingService
 {
     private readonly IScreenCaptureService _screenCaptureService;
     private readonly ILogger<StreamingService> _logger;
-    private readonly IHubContext<ScreenHub> _hubContext;
+    private readonly IHubContext<ControlHub> _hubContext;
 
-    public StreamingService(IScreenCaptureService screenCaptureService, ILogger<StreamingService> logger, IHubContext<ScreenHub> hubContext)
+    public StreamingService(IScreenCaptureService screenCaptureService, ILogger<StreamingService> logger, IHubContext<ControlHub> hubContext)
     {
         _screenCaptureService = screenCaptureService;
         _logger = logger;
