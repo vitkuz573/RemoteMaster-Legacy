@@ -1,10 +1,13 @@
 ﻿@page "/{IPAddress}/control"
-@using Microsoft.AspNetCore.SignalR.Client;
+@using Microsoft.AspNetCore.SignalR.Client
 @using RemoteMaster.Client.Models
 @using RemoteMaster.Client.Services
+@using System.Text.Json
+@using Size = System.Drawing.Size
 @inject NavigationManager NavigationManager
 @inject ScreenHubConnectionService ScreenHubConnectionService
 @inject ComputerService ComputerService
+@inject HttpClient HttpClient
 @inject ILogger<RemoteMaster.Client.Models.Computer> Logger
 
 @code {
@@ -16,6 +19,7 @@
     private string screenDataUrl;
     private bool isConnectionStarted = false;
     private Computer managedComputer;
+    private Size virtualScreenSize;
     private string errorMessage;
 
     protected override async Task OnInitializedAsync()
@@ -23,6 +27,7 @@
         try
         {
             managedComputer = ComputerService.GetComputerByIp(IPAddress);
+            virtualScreenSize = await GetVirtualScreenSize();
         }
         catch (Exception ex)
         {
@@ -52,6 +57,20 @@
                 Logger.LogError(errorMessage);
             }
         }
+    }
+
+    private async Task<Size> GetVirtualScreenSize()
+    {
+        var response = await HttpClient.GetAsync($"https://{IPAddress}:7172/api/screen/size/virtual");
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new Exception($"Failed to retrieve virtual screen size: {response.StatusCode}");
+        }
+
+        var responseString = await response.Content.ReadAsStringAsync();
+
+        return JsonSerializer.Deserialize<Size>(responseString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
     }
 
     private void HandleScreenUpdate(byte[] screenData)
@@ -104,4 +123,9 @@ else if (isConnectionStarted)
 else
 {
     <p>Establishing connection...</p>
+}
+
+@if (virtualScreenSize != null)
+{
+    <p>Virtual screen size: Width: @virtualScreenSize.Width, Height: @virtualScreenSize.Height</p>
 }

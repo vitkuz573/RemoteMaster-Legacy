@@ -35,23 +35,25 @@ public class ScreenCaptureService : IScreenCaptureService
 
     public unsafe byte[] CaptureScreen()
     {
-        try
-        {
-            if (_isDirectXEnabled)
-            {
-                return CaptureScreenWithDirectX();
-            }
-            else
-            {
-                return CaptureScreenWithBitBlt();
-            }
-        }
-        catch
-        {
-            _isDirectXEnabled = false;
+        return CaptureScreenWithBitBlt();
 
-            return CaptureScreenWithBitBlt();
-        }
+        // try
+        // {
+        //     if (_isDirectXEnabled)
+        //     {
+        //         return CaptureScreenWithDirectX();
+        //     }
+        //     else
+        //     {
+        //         return CaptureScreenWithBitBlt();
+        //     }
+        // }
+        // catch
+        // {
+        //     _isDirectXEnabled = false;
+        // 
+        //     return CaptureScreenWithBitBlt();
+        // }
     }
 
     private unsafe byte[] CaptureScreenWithDirectX()
