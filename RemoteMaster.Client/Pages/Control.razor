@@ -1,10 +1,5 @@
 ﻿@page "/{IPAddress}/control"
-@using Microsoft.AspNetCore.SignalR.Client
 @using RemoteMaster.Client.Models
-@using RemoteMaster.Client.Services
-@using System.Text.Json
-@inject ComputerService ComputerService
-@inject IHttpClientFactory HttpClientFactory
 @inject ILogger<Computer> Logger
 
 @code {
