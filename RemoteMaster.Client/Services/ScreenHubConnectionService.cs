@@ -18,7 +18,29 @@ public class ScreenHubConnectionService
                         ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
                     };
                 })
+                .WithAutomaticReconnect(new[]
+                {
+                    TimeSpan.Zero,
+                    TimeSpan.FromSeconds(2),
+                    TimeSpan.FromSeconds(5),
+                    TimeSpan.FromSeconds(10),
+                    TimeSpan.FromSeconds(15)
+                })
                 .Build();
+
+            _connection.Closed += async (error) =>
+            {
+                await Task.Delay(new Random().Next(0, 5) * 1000);
+                try
+                {
+                    await _connection.StartAsync();
+                    Console.WriteLine("Connection restarted successfully");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error restarting connection: {ex.Message}");
+                }
+            };
 
             try
             {
