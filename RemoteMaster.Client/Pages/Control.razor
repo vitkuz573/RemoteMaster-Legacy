@@ -3,7 +3,6 @@
 @using RemoteMaster.Client.Models
 @using RemoteMaster.Client.Services
 @using System.Text.Json
-@using Size = System.Drawing.Size
 @inject ComputerService ComputerService
 @inject IHttpClientFactory HttpClientFactory
 @inject ILogger<Computer> Logger
@@ -15,7 +14,6 @@
     private HubConnection? hubConnection;
     private string? statusMessage;
     private string? screenDataUrl;
-    private Size virtualScreenSize;
     private TimeSpan[] retryIntervals = new[]
     {
         TimeSpan.Zero,
@@ -28,8 +26,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        virtualScreenSize = await GetVirtualScreenSizeAsync();
-
         if (IPAddress != null && hubConnection == null)
         {
             var serverUrl = $"https://{IPAddress}:7172/screenHub?screenId={IPAddress}";
@@ -46,6 +42,7 @@
                 .Build();
 
             hubConnection.On<byte[]>("ScreenUpdate", HandleScreenUpdate);
+
             hubConnection.Closed += error =>
             {
                 statusMessage = $"Server connection lost. Exception: {error?.Message}";
@@ -53,6 +50,7 @@
 
                 return InvokeAsync(StateHasChanged);
             };
+
             hubConnection.Reconnecting += error =>
             {
                 retryAttempt++;
@@ -62,6 +60,7 @@
 
                 return Task.CompletedTask;
             };
+
             hubConnection.Reconnected += connectionId =>
             {
                 retryAttempt = 0;
@@ -82,15 +81,6 @@
                 await InvokeAsync(StateHasChanged);
             }
         }
-    }
-
-    private async Task<Size> GetVirtualScreenSizeAsync()
-    {
-        var client = HttpClientFactory.CreateClient("ClientWithDisabledCertificateCheck");
-        var response = await client.GetAsync($"https://{IPAddress}:7172/api/screen/size/virtual");
-        var responseString = await response.Content.ReadAsStringAsync();
-
-        return JsonSerializer.Deserialize<Size>(responseString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
     }
 
     private void HandleScreenUpdate(byte[] screenData)
@@ -133,9 +123,4 @@
 else
 {
     <p>Establishing connection...</p>
-}
-
-@if (virtualScreenSize != null)
-{
-    <p>Virtual screen size: Width: @virtualScreenSize.Width, Height: @virtualScreenSize.Height</p>
 }
