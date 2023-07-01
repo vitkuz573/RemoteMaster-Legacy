@@ -15,12 +15,11 @@
     public string IPAddress { get; set; }
 
     private HubConnection hubConnection;
-    private string connectionError;
+    private string statusMessage;
     private string screenDataUrl;
     private bool isConnectionStarted = false;
     private Computer managedComputer;
     private Size virtualScreenSize;
-    private string errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -31,8 +30,8 @@
         }
         catch (Exception ex)
         {
-            errorMessage = $"Error getting computer: {ex.Message}";
-            Logger.LogError(errorMessage);
+            statusMessage = $"Error getting computer: {ex.Message}";
+            Logger.LogError(statusMessage);
         }
 
         if (managedComputer != null && hubConnection == null)
@@ -53,8 +52,8 @@
             }
             catch (Exception ex)
             {
-                errorMessage = $"Failed to start connection: {ex.Message}";
-                Logger.LogError(errorMessage);
+                statusMessage = $"Failed to start connection: {ex.Message}";
+                Logger.LogError(statusMessage);
             }
         }
     }
@@ -81,8 +80,8 @@
 
     private Task HubConnectionClosed(Exception arg)
     {
-        connectionError = "Server connection lost.";
-        Logger.LogWarning(connectionError);
+        statusMessage = "Server connection lost.";
+        Logger.LogWarning(statusMessage);
         return InvokeAsync(StateHasChanged);
     }
 
@@ -96,21 +95,16 @@
             }
             catch (Exception ex)
             {
-                Logger.LogError($"Error while disposing HubConnection: {ex.Message}");
+                statusMessage = $"Error while disposing HubConnection: {ex.Message}";
+                Logger.LogError(statusMessage);
             }
         }
     }
 }
 
-@if (!string.IsNullOrEmpty(errorMessage))
+@if (!string.IsNullOrEmpty(statusMessage))
 {
-    <p>@errorMessage</p>
-}
-else if (!string.IsNullOrEmpty(connectionError))
-{
-    <div class="overlay">
-        <p>@connectionError</p>
-    </div>
+    <p>@statusMessage</p>
 }
 else if (isConnectionStarted && !string.IsNullOrEmpty(screenDataUrl))
 {
