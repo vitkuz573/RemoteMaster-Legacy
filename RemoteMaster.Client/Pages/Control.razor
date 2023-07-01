@@ -6,10 +6,10 @@
     [Parameter]
     public string IPAddress { get; set; }
 
-    private HubConnection? hubConnection;
-    private string? statusMessage;
-    private string? screenDataUrl;
-    private TimeSpan[] retryIntervals = new[]
+    private HubConnection? _hubConnection;
+    private string? _statusMessage;
+    private string? _screenDataUrl;
+    private TimeSpan[] _retryIntervals = new[]
     {
         TimeSpan.Zero,
         TimeSpan.FromSeconds(2),
@@ -17,15 +17,15 @@
         TimeSpan.FromSeconds(10),
         TimeSpan.FromSeconds(15)
     };
-    private int retryAttempt = 0;
+    private int _retryAttempt = 0;
 
     protected override async Task OnInitializedAsync()
     {
-        if (IPAddress != null && hubConnection == null)
+        if (IPAddress != null && _hubConnection == null)
         {
             var serverUrl = $"https://{IPAddress}:7172/screenHub?screenId={IPAddress}";
 
-            hubConnection = new HubConnectionBuilder()
+            _hubConnection = new HubConnectionBuilder()
                 .WithUrl(serverUrl, options =>
                 {
                     options.HttpMessageHandlerFactory = _ => new HttpClientHandler
@@ -33,33 +33,33 @@
                         ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
                     };
                 })
-                .WithAutomaticReconnect(retryIntervals)
+                .WithAutomaticReconnect(_retryIntervals)
                 .Build();
 
-            hubConnection.On<byte[]>("ScreenUpdate", HandleScreenUpdate);
+            _hubConnection.On<byte[]>("ScreenUpdate", HandleScreenUpdate);
 
-            hubConnection.Closed += error =>
+            _hubConnection.Closed += error =>
             {
-                statusMessage = $"Server connection lost. Exception: {error?.Message}";
-                Logger.LogWarning(statusMessage);
+                _statusMessage = $"Server connection lost. Exception: {error?.Message}";
+                Logger.LogWarning(_statusMessage);
 
                 return InvokeAsync(StateHasChanged);
             };
 
-            hubConnection.Reconnecting += error =>
+            _hubConnection.Reconnecting += error =>
             {
-                retryAttempt++;
-                var nextRetryInterval = retryAttempt < retryIntervals.Length ? retryIntervals[retryAttempt] : retryIntervals[^1];
-                statusMessage = $"Connection lost, attempting to reconnect in {nextRetryInterval.TotalSeconds} seconds...";
+                _retryAttempt++;
+                var nextRetryInterval = _retryAttempt < _retryIntervals.Length ? _retryIntervals[_retryAttempt] : _retryIntervals[^1];
+                _statusMessage = $"Connection lost, attempting to reconnect in {nextRetryInterval.TotalSeconds} seconds...";
                 InvokeAsync(StateHasChanged);
 
                 return Task.CompletedTask;
             };
 
-            hubConnection.Reconnected += connectionId =>
+            _hubConnection.Reconnected += connectionId =>
             {
-                retryAttempt = 0;
-                statusMessage = $"Connection reestablished, connection Id: {connectionId}";
+                _retryAttempt = 0;
+                _statusMessage = $"Connection reestablished, connection Id: {connectionId}";
                 InvokeAsync(StateHasChanged);
 
                 return Task.CompletedTask;
@@ -67,12 +67,12 @@
 
             try
             {
-                await hubConnection.StartAsync();
+                await _hubConnection.StartAsync();
                 await InvokeAsync(StateHasChanged);
             }
             catch (Exception ex)
             {
-                statusMessage = $"Error starting connection: {ex.Message}";
+                _statusMessage = $"Error starting connection: {ex.Message}";
                 await InvokeAsync(StateHasChanged);
             }
         }
@@ -80,37 +80,37 @@
 
     private void HandleScreenUpdate(byte[] screenData)
     {
-        screenDataUrl = $"data:image/png;base64,{Convert.ToBase64String(screenData)}";
-        statusMessage = null;
+        _screenDataUrl = $"data:image/png;base64,{Convert.ToBase64String(screenData)}";
+        _statusMessage = null;
         InvokeAsync(StateHasChanged);
     }
 
     public async Task DisposeAsync()
     {
-        if (hubConnection != null)
+        if (_hubConnection != null)
         {
-            await hubConnection.DisposeAsync();
+            await _hubConnection.DisposeAsync();
         }
     }
 }
 
-@if (hubConnection != null)
+@if (_hubConnection != null)
 {
-    @switch (hubConnection.State)
+    @switch (_hubConnection.State)
     {
         case HubConnectionState.Disconnected:
         case HubConnectionState.Connecting:
         case HubConnectionState.Reconnecting:
-            <p>@statusMessage</p>
+            <p>@_statusMessage</p>
             break;
         case HubConnectionState.Connected:
-            if (string.IsNullOrEmpty(screenDataUrl))
+            if (string.IsNullOrEmpty(_screenDataUrl))
             {
                 <p>Connection started successfully, waiting for screen update...</p>
             }
             else
             {
-                <img src="@screenDataUrl" width="1494" />
+                <img src="@_screenDataUrl" width="1494" />
             }
             break;
     }
