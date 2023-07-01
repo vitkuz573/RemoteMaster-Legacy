@@ -30,15 +30,19 @@ public class ScreenHubConnectionService
 
             _connection.Closed += async (error) =>
             {
-                await Task.Delay(new Random().Next(0, 5) * 1000);
-                try
+                for (var attempt = 1; attempt <= 5; attempt++)
                 {
-                    await _connection.StartAsync();
-                    Console.WriteLine("Connection restarted successfully");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error restarting connection: {ex.Message}");
+                    try
+                    {
+                        await Task.Delay(attempt * 1000);
+                        await _connection.StartAsync();
+                        Console.WriteLine($"Connection restarted successfully at attempt {attempt}");
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Attempt {attempt}: Error restarting connection: {ex.Message}");
+                    }
                 }
             };
 

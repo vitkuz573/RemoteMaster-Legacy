@@ -33,6 +33,16 @@
             hubConnection = await ScreenHubConnectionService.GetConnectionAsync(serverUrl);
             hubConnection.On<byte[]>("ScreenUpdate", HandleScreenUpdate);
             hubConnection.Closed += HubConnectionClosed;
+            hubConnection.Reconnecting += error =>
+            {
+                statusMessage = $"Connection lost, attempting to reconnect...";
+                return Task.CompletedTask;
+            };
+            hubConnection.Reconnected += connectionId =>
+            {
+                statusMessage = $"Connection reestablished, connection Id: {connectionId}";
+                return Task.CompletedTask;
+            };
 
             if (hubConnection.State == HubConnectionState.Connected)
             {
@@ -59,6 +69,7 @@
     private void HandleScreenUpdate(byte[] screenData)
     {
         screenDataUrl = $"data:image/png;base64,{Convert.ToBase64String(screenData)}";
+        statusMessage = null;
         InvokeAsync(StateHasChanged);
     }
 
