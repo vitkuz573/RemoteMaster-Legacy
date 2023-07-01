@@ -12,18 +12,25 @@
     [Parameter]
     public string IPAddress { get; set; }
 
-    private HubConnection hubConnection;
-    private string statusMessage;
-    private string screenDataUrl;
-    private Computer managedComputer;
+    private HubConnection? hubConnection;
+    private string? statusMessage;
+    private string? screenDataUrl;
     private Size virtualScreenSize;
+    private TimeSpan[] retryIntervals = new[]
+    {
+        TimeSpan.Zero,
+        TimeSpan.FromSeconds(2),
+        TimeSpan.FromSeconds(5),
+        TimeSpan.FromSeconds(10),
+        TimeSpan.FromSeconds(15)
+    };
+    private int retryAttempt = 0;
 
     protected override async Task OnInitializedAsync()
     {
-        managedComputer = ComputerService.GetComputerByIp(IPAddress);
         virtualScreenSize = await GetVirtualScreenSizeAsync();
 
-        if (managedComputer != null && hubConnection == null)
+        if (IPAddress != null && hubConnection == null)
         {
             var serverUrl = $"https://{IPAddress}:7172/screenHub?screenId={IPAddress}";
 
@@ -31,44 +38,48 @@
                 .WithUrl(serverUrl, options =>
                 {
                     options.HttpMessageHandlerFactory = _ => new HttpClientHandler
-                        {
-                            ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-                        };
+                    {
+                        ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                    };
                 })
-                .WithAutomaticReconnect(new[]
-                {
-                    TimeSpan.Zero,
-                    TimeSpan.FromSeconds(2),
-                    TimeSpan.FromSeconds(5),
-                    TimeSpan.FromSeconds(10),
-                    TimeSpan.FromSeconds(15)
-                })
+                .WithAutomaticReconnect(retryIntervals)
                 .Build();
 
             hubConnection.On<byte[]>("ScreenUpdate", HandleScreenUpdate);
-            hubConnection.Closed += HubConnectionClosed;
+            hubConnection.Closed += error =>
+            {
+                statusMessage = $"Server connection lost. Exception: {error?.Message}";
+                Logger.LogWarning(statusMessage);
+
+                return InvokeAsync(StateHasChanged);
+            };
             hubConnection.Reconnecting += error =>
             {
-                statusMessage = $"Connection lost, attempting to reconnect...";
+                retryAttempt++;
+                var nextRetryInterval = retryAttempt < retryIntervals.Length ? retryIntervals[retryAttempt] : retryIntervals[^1];
+                statusMessage = $"Connection lost, attempting to reconnect in {nextRetryInterval.TotalSeconds} seconds...";
                 InvokeAsync(StateHasChanged);
+
                 return Task.CompletedTask;
             };
             hubConnection.Reconnected += connectionId =>
             {
+                retryAttempt = 0;
                 statusMessage = $"Connection reestablished, connection Id: {connectionId}";
                 InvokeAsync(StateHasChanged);
+
                 return Task.CompletedTask;
             };
 
             try
             {
                 await hubConnection.StartAsync();
-                InvokeAsync(StateHasChanged);
+                await InvokeAsync(StateHasChanged);
             }
             catch (Exception ex)
             {
                 statusMessage = $"Error starting connection: {ex.Message}";
-                InvokeAsync(StateHasChanged);
+                await InvokeAsync(StateHasChanged);
             }
         }
     }
@@ -78,11 +89,7 @@
         var client = HttpClientFactory.CreateClient("ClientWithDisabledCertificateCheck");
         var response = await client.GetAsync($"https://{IPAddress}:7172/api/screen/size/virtual");
         var responseString = await response.Content.ReadAsStringAsync();
-        return DeserializeScreenSize(responseString);
-    }
 
-    private Size DeserializeScreenSize(string responseString)
-    {
         return JsonSerializer.Deserialize<Size>(responseString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
     }
 
@@ -91,13 +98,6 @@
         screenDataUrl = $"data:image/png;base64,{Convert.ToBase64String(screenData)}";
         statusMessage = null;
         InvokeAsync(StateHasChanged);
-    }
-
-    private Task HubConnectionClosed(Exception? arg)
-    {
-        statusMessage = "Server connection lost.";
-        Logger.LogWarning(statusMessage);
-        return InvokeAsync(StateHasChanged);
     }
 
     public async Task DisposeAsync()
@@ -114,11 +114,9 @@
     @switch (hubConnection.State)
     {
         case HubConnectionState.Disconnected:
-            <p>@statusMessage</p>
-            break;
         case HubConnectionState.Connecting:
         case HubConnectionState.Reconnecting:
-            <p>Establishing connection...</p>
+            <p>@statusMessage</p>
             break;
         case HubConnectionState.Connected:
             if (string.IsNullOrEmpty(screenDataUrl))
