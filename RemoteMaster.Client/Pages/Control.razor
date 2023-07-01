@@ -4,7 +4,6 @@
 @using RemoteMaster.Client.Services
 @using System.Text.Json
 @using Size = System.Drawing.Size
-@inject ScreenHubConnectionService ScreenHubConnectionService
 @inject ComputerService ComputerService
 @inject IHttpClientFactory HttpClientFactory
 @inject ILogger<Computer> Logger
@@ -29,7 +28,24 @@
         {
             var serverUrl = $"https://{IPAddress}:7172/screenHub?screenId={IPAddress}";
 
-            hubConnection = await ScreenHubConnectionService.GetConnectionAsync(serverUrl);
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(serverUrl, options =>
+                {
+                    options.HttpMessageHandlerFactory = _ => new HttpClientHandler
+                        {
+                            ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                        };
+                })
+                .WithAutomaticReconnect(new[]
+                {
+                    TimeSpan.Zero,
+                    TimeSpan.FromSeconds(2),
+                    TimeSpan.FromSeconds(5),
+                    TimeSpan.FromSeconds(10),
+                    TimeSpan.FromSeconds(15)
+                })
+                .Build();
+
             hubConnection.On<byte[]>("ScreenUpdate", HandleScreenUpdate);
             hubConnection.Closed += HubConnectionClosed;
             hubConnection.Reconnecting += error =>
@@ -43,9 +59,15 @@
                 return Task.CompletedTask;
             };
 
-            if (hubConnection.State == HubConnectionState.Connected)
+            try
             {
+                await hubConnection.StartAsync();
+                Console.WriteLine("Connection started successfully");
                 isConnectionStarted = true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error starting connection: {ex.Message}");
             }
         }
     }
