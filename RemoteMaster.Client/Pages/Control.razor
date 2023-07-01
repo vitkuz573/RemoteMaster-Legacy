@@ -4,7 +4,6 @@
 @using RemoteMaster.Client.Services
 @using System.Text.Json
 @using Size = System.Drawing.Size
-@inject NavigationManager NavigationManager
 @inject ScreenHubConnectionService ScreenHubConnectionService
 @inject ComputerService ComputerService
 @inject IHttpClientFactory HttpClientFactory
@@ -28,7 +27,7 @@
 
         if (managedComputer != null && hubConnection == null)
         {
-            string serverUrl = $"https://{IPAddress}:7172/screenHub?screenId={IPAddress}";
+            var serverUrl = $"https://{IPAddress}:7172/screenHub?screenId={IPAddress}";
 
             hubConnection = await ScreenHubConnectionService.GetConnectionAsync(serverUrl);
             hubConnection.On<byte[]>("ScreenUpdate", HandleScreenUpdate);
@@ -53,7 +52,7 @@
 
     private async Task<Size> GetVirtualScreenSizeAsync()
     {
-        HttpClient client = HttpClientFactory.CreateClient("ClientWithDisabledCertificateCheck");
+        var client = HttpClientFactory.CreateClient("ClientWithDisabledCertificateCheck");
         var response = await client.GetAsync($"https://{IPAddress}:7172/api/screen/size/virtual");
 
         var responseString = await response.Content.ReadAsStringAsync();
