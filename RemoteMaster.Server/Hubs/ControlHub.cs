@@ -17,43 +17,43 @@ public class ControlHub : Hub
         _streamingService = streamingService;
     }
 
-    public void SetFps(string screenId, int fps)
+    public void SetFps(string controlId, int fps)
     {
-        _streamingService.SetFps(screenId, fps);
+        _streamingService.SetFps(controlId, fps);
     }
 
-    public async Task SendMouseMovement(string screenId, MouseMovementDto mouseMovement)
+    public async Task SendMouseMovement(string controlId, MouseMovementDto mouseMovement)
     {
-        await Clients.Group(screenId).SendAsync("ReceiveMouseMovement", mouseMovement);
+        await Clients.Group(controlId).SendAsync("ReceiveMouseMovement", mouseMovement);
     }
 
-    public async Task SendMouseButtonClick(string screenId, MouseButtonClickDto mouseButtonClick)
+    public async Task SendMouseButtonClick(string controlId, MouseButtonClickDto mouseButtonClick)
     {
-        await Clients.Group(screenId).SendAsync("ReceiveMouseButtonClick", mouseButtonClick);
+        await Clients.Group(controlId).SendAsync("ReceiveMouseButtonClick", mouseButtonClick);
     }
 
     public override async Task OnConnectedAsync()
     {
-        var screenId = Context.GetHttpContext()?.Request.Headers["screenId"].ToString();
+        var controlId = Context.GetHttpContext()?.Request.Headers["controlId"].ToString();
 
-        if (!string.IsNullOrEmpty(screenId))
+        if (!string.IsNullOrEmpty(controlId))
         {
-            await Groups.AddToGroupAsync(Context.ConnectionId, screenId);
+            await Groups.AddToGroupAsync(Context.ConnectionId, controlId);
             var cancellationTokenSource = new CancellationTokenSource();
-            _connectionCancellations[screenId] = cancellationTokenSource;
-            await _streamingService.StartStreaming(screenId, cancellationTokenSource.Token);
+            _connectionCancellations[controlId] = cancellationTokenSource;
+            await _streamingService.StartStreaming(controlId, cancellationTokenSource.Token);
         }
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        var screenId = Context.GetHttpContext()?.Request.Headers["screenId"].ToString();
+        var controlId = Context.GetHttpContext()?.Request.Headers["controlId"].ToString();
 
-        if (!string.IsNullOrEmpty(screenId))
+        if (!string.IsNullOrEmpty(controlId))
         {
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, screenId);
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, controlId);
 
-            if (_connectionCancellations.TryRemove(screenId, out var cancellationTokenSource))
+            if (_connectionCancellations.TryRemove(controlId, out var cancellationTokenSource))
             {
                 cancellationTokenSource.Cancel();
             }

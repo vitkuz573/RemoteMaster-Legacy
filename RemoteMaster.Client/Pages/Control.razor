@@ -23,12 +23,12 @@
     {
         if (IPAddress != null && _hubConnection == null)
         {
-            var serverUrl = $"https://{IPAddress}:7172/screenHub";
+            var serverUrl = $"https://{IPAddress}:7172/controlHub";
 
             _hubConnection = new HubConnectionBuilder()
                 .WithUrl(serverUrl, options =>
                 {
-                    options.Headers["screenId"] = IPAddress;
+                    options.Headers["controlId"] = IPAddress;
 
                     options.HttpMessageHandlerFactory = _ => new HttpClientHandler
                     {

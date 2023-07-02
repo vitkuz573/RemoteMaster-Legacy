@@ -30,7 +30,7 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapRazorPages();
-app.MapHub<ControlHub>("/screenHub");
+app.MapHub<ControlHub>("/controlHub");
 app.MapControllers();
 
 app.Run();
