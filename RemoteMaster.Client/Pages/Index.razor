@@ -1,25 +1,24 @@
 ﻿@page "/"
 
 @using RemoteMaster.Client.Models
-@using System.Collections.ObjectModel
+@using RemoteMaster.Client.Services
+@using System.Collections.ObjectModel;
+@inject ComputerService ComputerService
 
 @code {
-    ObservableCollection<Node> Nodes = new()
-    {
-        new Folder
-        {
-            Name = "Folder 1",
-            Children = new List<Node>
-            {
-                new Computer { Name = "Computer 1", IPAddress = "192.168.0.1" },
-                new Computer { Name = "Computer 2", IPAddress = "192.168.0.2" },
-                new Computer { Name = "Computer 3", IPAddress = "192.168.0.3" }
-            }
-        },
-    };
-
+    ObservableCollection<Node> Nodes = new ObservableCollection<Node>();
     IList<Node> expandedNodes = new List<Node>();
     Node selectedNode;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var folders = ComputerService.GetFolders();
+
+        foreach (var folder in folders)
+        {
+            Nodes.Add(folder);
+        }
+    }
 }
 
 <Row>

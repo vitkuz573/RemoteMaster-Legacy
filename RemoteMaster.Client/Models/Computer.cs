@@ -9,6 +9,8 @@ public class Computer : Node
         Type = "computer";
     }
 
+    public Folder ParentFolder { get; set; }
+
     public string IPAddress { get; set; }
 
     public override IconName Icon => IconName.Desktop;
