@@ -1,42 +1,54 @@
-﻿using RemoteMaster.Client.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using RemoteMaster.Client.Models;
+using System.DirectoryServices.AccountManagement;
+using System.Net;
+using System.Linq;
 
 namespace RemoteMaster.Client.Services;
 
 public class ComputerService
 {
-    private List<Folder> folders = new List<Folder>
-    {
-        new Folder
-        {
-            Name = "Folder 1",
-            Children = new List<Node>
-            {
-                new Computer { Name = "Computer 1", IPAddress = "192.168.0.1" },
-                new Computer { Name = "Computer 2", IPAddress = "192.168.0.2" },
-                new Computer { Name = "Computer 3", IPAddress = "192.168.0.3" }
-            }
-        },
-        // Other folders...
-    };
+    private readonly AppDbContext _context;
 
-    public List<Folder> GetFolders()
+    public ComputerService(AppDbContext context)
     {
-        return folders;
+        _context = context;
     }
 
-    public Computer GetComputerByIp(string ipAddress)
+    public IList<Folder> GetFolders()
     {
-        foreach (var folder in folders)
-        {
-            foreach (var child in folder.Children)
+        return _context.Nodes.OfType<Folder>().Include(f => f.Children).ToList();
+    }
+
+
+    public void SyncComputersFromActiveDirectory()
+    {
+        using var domainContext = new PrincipalContext(ContextType.Domain);
+        using var searcher = new PrincipalSearcher(new ComputerPrincipal(domainContext));
+
+        var domainComputers = searcher.FindAll()
+            .OfType<ComputerPrincipal>()
+            .Select(cp => new Computer
             {
-                if (child is Computer computer && computer.IPAddress == ipAddress)
-                {
-                    return computer;
-                }
+                Name = cp.Name,
+                IPAddress = Dns.GetHostAddresses(cp.Name).FirstOrDefault()?.ToString()
+            })
+            .ToList();
+
+        foreach (var domainComputer in domainComputers)
+        {
+            var localComputer = _context.Nodes.OfType<Computer>().FirstOrDefault(c => c.Name == domainComputer.Name);
+
+            if (localComputer == null)
+            {
+                _context.Nodes.Add(domainComputer);
+            }
+            else
+            {
+                localComputer.IPAddress = domainComputer.IPAddress;
             }
         }
 
-        return null;
+        _context.SaveChanges();
     }
 }

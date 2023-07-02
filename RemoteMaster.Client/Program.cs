@@ -2,6 +2,7 @@ using Blazorise;
 using Blazorise.Icons.FontAwesome;
 using Blazorise.Tailwind;
 using Microsoft.AspNetCore.Authentication.Negotiate;
+using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Client.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -38,7 +39,9 @@ builder.Services.AddBlazorise(options =>
     options.Immediate = true;
 }).AddTailwindProviders().AddFontAwesomeIcons();
 
-builder.Services.AddSingleton<ComputerService>();
+builder.Services.AddScoped<ComputerService>();
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 

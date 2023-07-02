@@ -10,9 +10,9 @@ public class Folder : Node
         Children = new List<Node>();
     }
 
-    public IList<Node> Children { get; set; }
-
     public override IconName Icon => IconName.Folder;
 
     public override IconName ExpandedIcon => IconName.FolderOpen;
 }
+
+
