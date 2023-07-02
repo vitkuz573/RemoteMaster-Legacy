@@ -32,7 +32,6 @@ namespace RemoteMaster.Client.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("ParentId")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("NodeId");
@@ -68,9 +67,7 @@ namespace RemoteMaster.Client.Migrations
                 {
                     b.HasOne("RemoteMaster.Client.Models.Node", "Parent")
                         .WithMany("Children")
-                        .HasForeignKey("ParentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ParentId");
 
                     b.Navigation("Parent");
                 });

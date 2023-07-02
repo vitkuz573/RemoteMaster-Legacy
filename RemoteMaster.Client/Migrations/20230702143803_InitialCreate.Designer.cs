@@ -11,7 +11,7 @@ using RemoteMaster.Client.Services;
 namespace RemoteMaster.Client.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20230702121216_InitialCreate")]
+    [Migration("20230702143803_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -35,7 +35,6 @@ namespace RemoteMaster.Client.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("ParentId")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("NodeId");
@@ -71,9 +70,7 @@ namespace RemoteMaster.Client.Migrations
                 {
                     b.HasOne("RemoteMaster.Client.Models.Node", "Parent")
                         .WithMany("Children")
-                        .HasForeignKey("ParentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ParentId");
 
                     b.Navigation("Parent");
                 });

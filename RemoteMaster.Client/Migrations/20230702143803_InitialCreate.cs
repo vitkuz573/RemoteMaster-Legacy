@@ -17,7 +17,7 @@ namespace RemoteMaster.Client.Migrations
                 {
                     NodeId = table.Column<Guid>(type: "TEXT", nullable: false),
                     Name = table.Column<string>(type: "TEXT", nullable: false),
-                    ParentId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    ParentId = table.Column<Guid>(type: "TEXT", nullable: true),
                     NodeType = table.Column<string>(type: "TEXT", nullable: false),
                     IPAddress = table.Column<string>(type: "TEXT", nullable: true)
                 },
@@ -28,8 +28,7 @@ namespace RemoteMaster.Client.Migrations
                         name: "FK_Nodes_Nodes_ParentId",
                         column: x => x.ParentId,
                         principalTable: "Nodes",
-                        principalColumn: "NodeId",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "NodeId");
                 });
 
             migrationBuilder.CreateIndex(

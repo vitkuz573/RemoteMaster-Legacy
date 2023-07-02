@@ -19,7 +19,8 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Node>()
             .HasMany(n => n.Children)
             .WithOne(c => c.Parent)
-            .HasForeignKey(c => c.ParentId);  // change from FolderId to ParentId
+            .HasForeignKey(c => c.ParentId)
+            .IsRequired(false);
     }
 }
 
