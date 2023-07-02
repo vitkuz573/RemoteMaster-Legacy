@@ -1,4 +1,5 @@
 ﻿using Blazorise;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RemoteMaster.Client.Models;
 
@@ -6,12 +7,13 @@ public class Folder : Node
 {
     public Folder()
     {
-        Type = "folder";
         Children = new List<Node>();
     }
 
+    [NotMapped]
     public override IconName Icon => IconName.Folder;
 
+    [NotMapped]
     public override IconName ExpandedIcon => IconName.FolderOpen;
 }
 

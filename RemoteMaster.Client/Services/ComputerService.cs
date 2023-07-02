@@ -20,7 +20,6 @@ public class ComputerService
         return _context.Nodes.OfType<Folder>().Include(f => f.Children).ToList();
     }
 
-
     public void SyncComputersFromActiveDirectory()
     {
         using var domainContext = new PrincipalContext(ContextType.Domain);

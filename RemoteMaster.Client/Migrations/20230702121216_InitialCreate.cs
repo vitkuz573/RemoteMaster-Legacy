@@ -18,9 +18,6 @@ namespace RemoteMaster.Client.Migrations
                     NodeId = table.Column<Guid>(type: "TEXT", nullable: false),
                     Name = table.Column<string>(type: "TEXT", nullable: false),
                     ParentId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Icon = table.Column<int>(type: "INTEGER", nullable: false),
-                    ExpandedIcon = table.Column<int>(type: "INTEGER", nullable: false),
-                    Type = table.Column<string>(type: "TEXT", nullable: false),
                     NodeType = table.Column<string>(type: "TEXT", nullable: false),
                     IPAddress = table.Column<string>(type: "TEXT", nullable: true)
                 },

@@ -23,12 +23,6 @@ namespace RemoteMaster.Client.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("ExpandedIcon")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Icon")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -38,10 +32,6 @@ namespace RemoteMaster.Client.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("ParentId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Type")
                         .IsRequired()
                         .HasColumnType("TEXT");
 

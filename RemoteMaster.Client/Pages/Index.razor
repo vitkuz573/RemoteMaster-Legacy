@@ -22,7 +22,7 @@
 
 <Row>
     <Column>
-        <TreeView Nodes="Nodes" GetChildNodes="@(node => node is Folder folder ? folder.Children : null)" HasChildNodes="@(node => node is Folder)" @bind-SelectedNode="selectedNode" @bind-ExpandedNodes="expandedNodes">
+        <TreeView Nodes="Nodes" GetChildNodes="@(node => (node as Folder)?.Children)" HasChildNodes="@(node => node is Folder)" @bind-SelectedNode="selectedNode" @bind-ExpandedNodes="expandedNodes">
             <NodeContent>
                 <Icon Name="@((expandedNodes.Contains(context) && context is Folder) ? context.ExpandedIcon : context.Icon)" />
                 @context.Name
