@@ -34,7 +34,7 @@ public class ControlHub : Hub
 
     public override async Task OnConnectedAsync()
     {
-        var screenId = Context.GetHttpContext()?.Request.Query["screenId"].ToString();
+        var screenId = Context.GetHttpContext()?.Request.Headers["screenId"].ToString();
 
         if (!string.IsNullOrEmpty(screenId))
         {
@@ -47,11 +47,12 @@ public class ControlHub : Hub
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        var screenId = Context.GetHttpContext()?.Request.Query["screenId"].ToString();
+        var screenId = Context.GetHttpContext()?.Request.Headers["screenId"].ToString();
 
         if (!string.IsNullOrEmpty(screenId))
         {
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, screenId);
+
             if (_connectionCancellations.TryRemove(screenId, out var cancellationTokenSource))
             {
                 cancellationTokenSource.Cancel();

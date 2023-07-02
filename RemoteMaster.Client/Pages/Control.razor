@@ -23,11 +23,13 @@
     {
         if (IPAddress != null && _hubConnection == null)
         {
-            var serverUrl = $"https://{IPAddress}:7172/screenHub?screenId={IPAddress}";
+            var serverUrl = $"https://{IPAddress}:7172/screenHub";
 
             _hubConnection = new HubConnectionBuilder()
                 .WithUrl(serverUrl, options =>
                 {
+                    options.Headers["screenId"] = IPAddress;
+
                     options.HttpMessageHandlerFactory = _ => new HttpClientHandler
                     {
                         ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
