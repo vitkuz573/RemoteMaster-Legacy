@@ -3,14 +3,24 @@
 <PageTitle>RemoteMaster.Client</PageTitle>
 
 <div class="flex h-screen bg-gray-200">
-    <div class="flex flex-col w-64 bg-gray-800 text-white shadow-md">
-        <NavMenu />
+    <div class="@NavMenuContainerClasses">
+        <NavMenu OnToggleNavMenu="ToggleNavMenu" collapseNavMenu="@collapseNavMenu" />
     </div>
-
+    @if (collapseNavMenu)
+    {
+        <button title="Navigation menu" class="w-8 h-8 rounded flex justify-center items-center bg-gray-600 absolute left-0 top-0 m-5 z-10" @onclick="ToggleNavMenu">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-5 w-5">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+            </svg>
+        </button>
+    }
     <main class="flex-1 flex flex-col overflow-hidden">
         <header class="flex items-center justify-between p-6 bg-white border-b border-gray-200">
             <div class="flex items-center">
-                <LoginDisplay />
+                <div class="mx-10">
+                    <!-- added here -->
+                    <LoginDisplay />
+                </div>
             </div>
             <div class="flex items-center">
                 <a href="https://docs.microsoft.com/aspnet/" target="_blank" class="text-gray-500 hover:text-gray-600">About</a>
@@ -22,3 +32,15 @@
         </article>
     </main>
 </div>
+
+@code {
+    private bool collapseNavMenu = false;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    private string NavMenuContainerClasses =>
+        $"flex flex-col w-64 transition-all duration-300 ease-in-out {(collapseNavMenu ? "hidden" : "")}";
+}
