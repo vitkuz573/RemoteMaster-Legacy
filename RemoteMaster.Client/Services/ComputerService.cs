@@ -2,7 +2,6 @@
 using RemoteMaster.Client.Models;
 using System.DirectoryServices.AccountManagement;
 using System.Net;
-using System.Linq;
 
 namespace RemoteMaster.Client.Services;
 
@@ -18,6 +17,18 @@ public class ComputerService
     public IList<Folder> GetFolders()
     {
         return _context.Nodes.OfType<Folder>().Include(f => f.Children).ToList();
+    }
+
+    public void AddComputer(Computer computer)
+    {
+        _context.Nodes.Add(computer);
+        _context.SaveChanges();
+    }
+
+    public void AddFolder(Folder folder)
+    {
+        _context.Nodes.Add(folder);
+        _context.SaveChanges();
     }
 
     public void SyncComputersFromActiveDirectory()

@@ -4,21 +4,36 @@
 @using System.Collections.ObjectModel;
 @inject ComputerService ComputerService
 
-@code {
-    ObservableCollection<Node> Nodes = new ObservableCollection<Node>();
-    IList<Node> expandedNodes = new List<Node>();
-    Node selectedNode;
+<EditForm Model="newFolder" OnValidSubmit="AddFolder">
+    <Column>
+        <Row>
+            <Column ColumnSize="ColumnSize.Is6">
+                <TextEdit @bind-Text="newFolder.Name" Placeholder="Enter Folder Name" />
+            </Column>
+        </Row>
+        <Button Type="ButtonType.Submit" Color="Color.Primary">Add Folder</Button>
+    </Column>
+</EditForm>
 
-    protected override async Task OnInitializedAsync()
-    {
-        var folders = ComputerService.GetFolders();
-
-        foreach (var folder in folders)
-        {
-            Nodes.Add(folder);
-        }
-    }
-}
+<EditForm Model="newComputer" OnValidSubmit="AddComputer">
+    <Column>
+        <Row>
+            <Column ColumnSize="ColumnSize.Is6">
+                <TextEdit @bind-Text="newComputer.Name" Placeholder="Enter Computer Name" />
+            </Column>
+            <Column ColumnSize="ColumnSize.Is6">
+                <TextEdit @bind-Text="newComputer.IPAddress" Placeholder="Enter IP Address" />
+            </Column>
+        </Row>
+        <Select TValue="Folder" @bind-Value="selectedFolder" Placeholder="Select Folder">
+            @foreach (var folder in Nodes.OfType<Folder>())
+            {
+                    <SelectItem Value="@folder">@folder.Name</SelectItem>
+            }
+        </Select>
+        <Button Type="ButtonType.Submit" Color="Color.Primary">Add Computer</Button>
+    </Column>
+</EditForm>
 
 <Row>
     <Column>
@@ -53,3 +68,41 @@
         }
     </Column>
 </Row>
+
+@code {
+    ObservableCollection<Node> Nodes = new ObservableCollection<Node>();
+    IList<Node> expandedNodes = new List<Node>();
+    Node selectedNode;
+    Computer newComputer = new Computer();
+    Folder newFolder = new Folder();
+    Folder selectedFolder = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var folders = ComputerService.GetFolders();
+
+        foreach (var folder in folders)
+        {
+            Nodes.Add(folder);
+        }
+    }
+
+    private void AddFolder()
+    {
+        ComputerService.AddFolder(newFolder);
+        Nodes.Add(newFolder);
+        newFolder = new Folder();
+    }
+
+    private void AddComputer()
+    {
+        if (selectedFolder == null)
+            return;
+
+        newComputer.ParentId = selectedFolder.NodeId;
+        selectedFolder.Children.Add(newComputer);
+        ComputerService.AddComputer(newComputer);
+        newComputer = new Computer();
+        selectedFolder = null;
+    }
+}
