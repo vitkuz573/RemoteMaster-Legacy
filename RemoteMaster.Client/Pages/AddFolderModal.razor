@@ -1,7 +1,7 @@
 ﻿@using RemoteMaster.Client.Models
 @using System.Collections.ObjectModel
 
-<Modal @ref="ModalRef">
+<Modal @ref="_modalRef">
     <ModalContent Centered>
         <ModalHeader>
             <ModalTitle>Add Folder</ModalTitle>
@@ -10,7 +10,7 @@
         <ModalBody>
             <Field>
                 <FieldLabel>Name</FieldLabel>
-                <TextEdit @bind-Text="NewFolder.Name" Placeholder="Enter Folder Name" />
+                <TextEdit @bind-Text="_newFolder.Name" Placeholder="Enter Folder Name" />
             </Field>
         </ModalBody>
         <ModalFooter>
@@ -21,23 +21,23 @@
 </Modal>
 
 @code {
-    public Modal ModalRef;
-    public Folder NewFolder = new Folder();
+    private Modal _modalRef;
+    private Folder _newFolder = new Folder();
 
     public void Show()
     {
-        ModalRef.Show();
+        _modalRef.Show();
     }
 
     public void Hide()
     {
-        ModalRef.Hide();
+        _modalRef.Hide();
     }
 
     public void AddFolder()
     {
-        OnAdd.InvokeAsync(NewFolder);
-        NewFolder = new Folder();
+        OnAdd.InvokeAsync(_newFolder);
+        _newFolder = new Folder();
         Hide();
     }
 

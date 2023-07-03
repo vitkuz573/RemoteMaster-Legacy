@@ -6,25 +6,25 @@
 
 <Button Color="Color.Primary" Clicked="@SyncComputersFromAD">Sync Computers from AD</Button>
 
-<p>@SyncStatus</p>
+<p>@_syncStatus</p>
 
-@if (DomainComputers != null && DomainComputers.Count > 0)
+@if (_domainComputers != null && _domainComputers.Count > 0)
 {
     <h2>Domain Computers:</h2>
-    @RenderComputers(DomainComputers)
+    @RenderComputers(_domainComputers)
 }
 
-<Button Color="Color.Primary" Clicked="@(() => AddFolderModalRef.Show())">Add Folder</Button>
-<Button Color="Color.Primary" Clicked="@(() => AddComputerModalRef.Show())">Add Computer</Button>
+<Button Color="Color.Primary" Clicked="@(() => _addFolderModalRef.Show())">Add Folder</Button>
+<Button Color="Color.Primary" Clicked="@(() => _addComputerModalRef.Show())">Add Computer</Button>
 
-<AddFolderModal @ref="AddFolderModalRef" OnAdd="AddFolder" />
-<AddComputerModal @ref="AddComputerModalRef" Nodes="Nodes" OnAdd="AddComputer" />
+<AddFolderModal @ref="_addFolderModalRef" OnAdd="AddFolder" />
+<AddComputerModal @ref="_addComputerModalRef" Nodes="_nodes" OnAdd="AddComputer" />
 
 <Row>
     <Column>
-        <TreeView Nodes="Nodes" GetChildNodes="@(node => (node as Folder)?.Children)" HasChildNodes="@(node => node is Folder)" @bind-SelectedNode="_selectedNode" @bind-ExpandedNodes="expandedNodes">
+        <TreeView Nodes="_nodes" GetChildNodes="@(node => (node as Folder)?.Children)" HasChildNodes="@(node => node is Folder)" @bind-SelectedNode="_selectedNode" @bind-ExpandedNodes="_expandedNodes">
             <NodeContent>
-                <Icon Name="@((expandedNodes.Contains(context) && context is Folder) ? context.ExpandedIcon : context.Icon)" />
+                <Icon Name="@((_expandedNodes.Contains(context) && context is Folder) ? context.ExpandedIcon : context.Icon)" />
                 @context.Name
             </NodeContent>
         </TreeView>
@@ -55,12 +55,15 @@
 </Row>
 
 @code {
-    ObservableCollection<Node> Nodes = new ObservableCollection<Node>();
-    IList<Node> expandedNodes = new List<Node>();
-    Node _selectedNode;
+    private ObservableCollection<Node> _nodes = new ObservableCollection<Node>();
+    private IList<Node> _expandedNodes = new List<Node>();
+    private Node _selectedNode;
 
-    AddFolderModal AddFolderModalRef;
-    AddComputerModal AddComputerModalRef;
+    private AddFolderModal _addFolderModalRef;
+    private AddComputerModal _addComputerModalRef;
+
+    private string _syncStatus;
+    private IDictionary<string, List<Computer>> _domainComputers = new Dictionary<string, List<Computer>>();
 
     protected override async Task OnInitializedAsync()
     {
@@ -68,21 +71,21 @@
 
         foreach (var folder in folders)
         {
-            Nodes.Add(folder);
+            _nodes.Add(folder);
         }
     }
 
     private void AddFolder(Folder folder)
     {
         ComputerService.AddNode(folder);
-        Nodes.Add(folder);
+        _nodes.Add(folder);
     }
 
     private void AddComputer((Computer computer, Guid? folderId) data)
     {
         var (computer, folderId) = data;
 
-        var folder = Nodes.OfType<Folder>().FirstOrDefault(f => f.NodeId == folderId);
+        var folder = _nodes.OfType<Folder>().FirstOrDefault(f => f.NodeId == folderId);
 
         if (folder != null)
         {
@@ -92,25 +95,23 @@
         }
     }
 
-    string SyncStatus;
-    IDictionary<string, List<Computer>> DomainComputers = new Dictionary<string, List<Computer>>();
-
     private async Task SyncComputersFromAD()
     {
         try
         {
-            DomainComputers = await ComputerService.SyncComputersFromActiveDirectory();
-            SyncStatus = "Sync has been completed successfully";
+            _domainComputers = await ComputerService.SyncComputersFromActiveDirectory();
+            _syncStatus = "Sync has been completed successfully";
         }
         catch (Exception e)
         {
-            SyncStatus = $"An error occurred during sync: {e.Message}";
+            _syncStatus = $"An error occurred during sync: {e.Message}";
         }
     }
 
-    RenderFragment RenderComputers(IDictionary<string, List<Computer>> computersDictionary, int level = 0) => builder =>
+    private RenderFragment RenderComputers(IDictionary<string, List<Computer>> computersDictionary, int level = 0) => builder =>
     {
-        int seq = 0;
+        var seq = 0;
+
         foreach (var ou in computersDictionary)
         {
             builder.AddContent(seq++, new MarkupString($"<p style='margin-left: {20 * level}px'>{ou.Key}</p>"));
