@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Client.Models;
+using System.Collections.Concurrent;
 using System.DirectoryServices.AccountManagement;
 using System.Net;
+using System.Net.Sockets;
 
 namespace RemoteMaster.Client.Services;
 
@@ -25,34 +27,34 @@ public class ComputerService
         _context.SaveChanges();
     }
 
-    public void SyncComputersFromActiveDirectory()
+    public async Task<List<Computer>> SyncComputersFromActiveDirectory()
     {
         using var domainContext = new PrincipalContext(ContextType.Domain);
         using var searcher = new PrincipalSearcher(new ComputerPrincipal(domainContext));
 
-        var domainComputers = searcher.FindAll()
-            .OfType<ComputerPrincipal>()
-            .Select(cp => new Computer
-            {
-                Name = cp.Name,
-                IPAddress = Dns.GetHostAddresses(cp.Name).FirstOrDefault()?.ToString()
-            })
-            .ToList();
+        var domainComputers = new ConcurrentBag<Computer>();  // Используем потокобезопасную коллекцию
 
-        foreach (var domainComputer in domainComputers)
-        {
-            var localComputer = _context.Nodes.OfType<Computer>().FirstOrDefault(c => c.Name == domainComputer.Name);
-
-            if (localComputer == null)
+        var tasks = searcher.FindAll().OfType<ComputerPrincipal>()
+            .Select(cp => Task.Run(async () =>  // Запуск задачи в фоновом потоке
             {
-                _context.Nodes.Add(domainComputer);
-            }
-            else
-            {
-                localComputer.IPAddress = domainComputer.IPAddress;
-            }
-        }
+                try
+                {
+                    var ipAddress = (await Dns.GetHostEntryAsync(cp.Name)).AddressList.FirstOrDefault()?.ToString();
 
-        _context.SaveChanges();
+                    domainComputers.Add(new Computer
+                    {
+                        Name = cp.Name,
+                        IPAddress = ipAddress
+                    });
+                }
+                catch (SocketException)
+                {
+                    // Хост недоступен, пропустите его и продолжите со следующим.
+                }
+            }));
+
+        await Task.WhenAll(tasks);  // Ожидание завершения всех задач
+
+        return domainComputers.ToList();  // Возвращает список найденных компьютеров
     }
 }

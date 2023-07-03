@@ -4,6 +4,20 @@
 @using System.Collections.ObjectModel;
 @inject ComputerService ComputerService
 
+<Button Color="Color.Primary" Clicked="@SyncComputersFromAD">Sync Computers from AD</Button>
+
+<p>@SyncStatus</p>
+
+@if (DomainComputers != null && DomainComputers.Count > 0)
+{
+    <h2>Domain Computers:</h2>
+
+    @foreach (var computer in DomainComputers)
+    {
+        <p>@computer.Name: @computer.IPAddress</p>
+    }
+}
+
 <Button Color="Color.Primary" Clicked="@(() => AddFolderModalRef.Show())">Add Folder</Button>
 <Button Color="Color.Primary" Clicked="@(() => AddComputerModalRef.Show())">Add Computer</Button>
 
@@ -73,11 +87,28 @@
         var (computer, folderId) = data;
 
         var folder = Nodes.OfType<Folder>().FirstOrDefault(f => f.NodeId == folderId);
+
         if (folder != null)
         {
             computer.ParentId = folder.NodeId;
             folder.Children.Add(computer);
             ComputerService.AddNode(computer);
+        }
+    }
+
+    string SyncStatus;
+    List<Computer> DomainComputers = new List<Computer>();
+
+    private async Task SyncComputersFromAD()
+    {
+        try
+        {
+            DomainComputers = await ComputerService.SyncComputersFromActiveDirectory();
+            SyncStatus = "Sync has been completed successfully";
+        }
+        catch (Exception e)
+        {
+            SyncStatus = $"An error occurred during sync: {e.Message}";
         }
     }
 }
