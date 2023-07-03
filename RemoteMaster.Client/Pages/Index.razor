@@ -11,11 +11,7 @@
 @if (DomainComputers != null && DomainComputers.Count > 0)
 {
     <h2>Domain Computers:</h2>
-
-    @foreach (var computer in DomainComputers)
-    {
-        <p>@computer.Name: @computer.IPAddress</p>
-    }
+    @RenderComputers(DomainComputers)
 }
 
 <Button Color="Color.Primary" Clicked="@(() => AddFolderModalRef.Show())">Add Folder</Button>
@@ -97,7 +93,7 @@
     }
 
     string SyncStatus;
-    List<Computer> DomainComputers = new List<Computer>();
+    IDictionary<string, List<Computer>> DomainComputers = new Dictionary<string, List<Computer>>();
 
     private async Task SyncComputersFromAD()
     {
@@ -111,4 +107,18 @@
             SyncStatus = $"An error occurred during sync: {e.Message}";
         }
     }
+
+    RenderFragment RenderComputers(IDictionary<string, List<Computer>> computersDictionary, int level = 0) => builder =>
+    {
+        int seq = 0;
+        foreach (var ou in computersDictionary)
+        {
+            builder.AddContent(seq++, new MarkupString($"<p style='margin-left: {20 * level}px'>{ou.Key}</p>"));
+
+            foreach (var computer in ou.Value)
+            {
+                builder.AddContent(seq++, new MarkupString($"<p style='margin-left: {20 * (level + 1)}px'>{computer.Name}: {computer.IPAddress}</p>"));
+            }
+        }
+    };
 }
