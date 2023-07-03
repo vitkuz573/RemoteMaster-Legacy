@@ -25,10 +25,10 @@
                 <TextEdit @bind-Text="newComputer.IPAddress" Placeholder="Enter IP Address" />
             </Column>
         </Row>
-        <Select TValue="Folder" @bind-Value="selectedFolder" Placeholder="Select Folder">
+        <Select TValue="Guid?" @bind-Value="selectedFolderId" Placeholder="Select Folder" SelectedValueChanged="@OnSelectedFolderChanged">
             @foreach (var folder in Nodes.OfType<Folder>())
             {
-                    <SelectItem Value="@folder">@folder.Name</SelectItem>
+                <SelectItem Value="@folder.NodeId">@folder.Name</SelectItem>
             }
         </Select>
         <Button Type="ButtonType.Submit" Color="Color.Primary">Add Computer</Button>
@@ -76,6 +76,7 @@
     Computer newComputer = new Computer();
     Folder newFolder = new Folder();
     Folder selectedFolder = null;
+    Guid? selectedFolderId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -85,6 +86,9 @@
         {
             Nodes.Add(folder);
         }
+
+        // Set to null initially
+        selectedFolderId = null;
     }
 
     private void AddFolder()
@@ -96,13 +100,60 @@
 
     private void AddComputer()
     {
-        if (selectedFolder == null)
-            return;
+        try
+        {
+            var selectedFolder = Nodes.OfType<Folder>().FirstOrDefault(f => f.NodeId == selectedFolderId);
 
-        newComputer.ParentId = selectedFolder.NodeId;
-        selectedFolder.Children.Add(newComputer);
-        ComputerService.AddNode(newComputer);
-        newComputer = new Computer();
-        selectedFolder = null;
+            Console.WriteLine($"AddComputer triggered. Selected folder: {selectedFolder?.Name}");
+
+            if (selectedFolder == null)
+            {
+                Console.WriteLine("No folder is selected. Cannot add computer.");
+                return;
+            }
+
+            newComputer.ParentId = selectedFolder.NodeId;
+            selectedFolder.Children.Add(newComputer);
+            ComputerService.AddNode(newComputer);
+
+            newComputer = new Computer(); // Reset the form model for next input
+
+            // Assuming you have a method to refresh the nodes list
+            RefreshNodes();
+
+            Console.WriteLine($"Added computer to folder {selectedFolder.Name}");
+
+            // Clear selectedFolderId for next input
+            // selectedFolderId = null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception caught in AddComputer: {ex.Message}");
+        }
+    }
+
+    private void RefreshNodes()
+    {
+        // Assuming you have a method like this
+        Nodes.Clear();
+        var folders = ComputerService.GetFolders();
+        foreach (var folder in folders)
+        {
+            Nodes.Add(folder);
+        }
+    }
+
+    private void DebugPrintFolders()
+    {
+        foreach (var folder in Nodes.OfType<Folder>())
+        {
+            Console.WriteLine($"Folder: {folder.Name}, ID: {folder.NodeId}");
+        }
+    }
+
+    private void OnSelectedFolderChanged(Guid? selectedId)
+    {
+        Console.WriteLine($"Selected folder ID changed to: {selectedId}");
+        selectedFolderId = selectedId;
     }
 }
