@@ -89,7 +89,7 @@
 
     private void AddFolder()
     {
-        ComputerService.AddFolder(newFolder);
+        ComputerService.AddNode(newFolder);
         Nodes.Add(newFolder);
         newFolder = new Folder();
     }
@@ -101,7 +101,7 @@
 
         newComputer.ParentId = selectedFolder.NodeId;
         selectedFolder.Children.Add(newComputer);
-        ComputerService.AddComputer(newComputer);
+        ComputerService.AddNode(newComputer);
         newComputer = new Computer();
         selectedFolder = null;
     }

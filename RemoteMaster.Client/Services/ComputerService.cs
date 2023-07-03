@@ -19,15 +19,9 @@ public class ComputerService
         return _context.Nodes.OfType<Folder>().Include(f => f.Children).ToList();
     }
 
-    public void AddComputer(Computer computer)
+    public void AddNode(Node node)
     {
-        _context.Nodes.Add(computer);
-        _context.SaveChanges();
-    }
-
-    public void AddFolder(Folder folder)
-    {
-        _context.Nodes.Add(folder);
+        _context.Nodes.Add(node);
         _context.SaveChanges();
     }
 
