@@ -1,0 +1,46 @@
+﻿@using RemoteMaster.Client.Models
+@using System.Collections.ObjectModel
+
+<Modal @ref="ModalRef">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Add Folder</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalBody>
+            <Field>
+                <FieldLabel>Name</FieldLabel>
+                <TextEdit @bind-Text="NewFolder.Name" Placeholder="Enter Folder Name" />
+            </Field>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="Hide">Close</Button>
+            <Button Color="Color.Primary" Clicked="AddFolder">Add</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+@code {
+    public Modal ModalRef;
+    public Folder NewFolder = new Folder();
+
+    public void Show()
+    {
+        ModalRef.Show();
+    }
+
+    public void Hide()
+    {
+        ModalRef.Hide();
+    }
+
+    public void AddFolder()
+    {
+        OnAdd.InvokeAsync(NewFolder);
+        NewFolder = new Folder();
+        Hide();
+    }
+
+    [Parameter]
+    public EventCallback<Folder> OnAdd { get; set; }
+}

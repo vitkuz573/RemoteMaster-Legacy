@@ -1,0 +1,69 @@
+﻿@using RemoteMaster.Client.Models
+@using System.Collections.ObjectModel
+
+<Modal @ref="ModalRef">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Add Computer</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalBody>
+            <Field>
+                <FieldLabel>Name</FieldLabel>
+                <TextEdit @bind-Text="NewComputer.Name" Placeholder="Enter Computer Name" />
+            </Field>
+            <Field>
+                <FieldLabel>IP Address</FieldLabel>
+                <TextEdit @bind-Text="NewComputer.IPAddress" Placeholder="Enter IP Address" />
+            </Field>
+            <Field>
+                <Select TValue="Guid?" @bind-Value="SelectedFolderId" Placeholder="Select Folder" SelectedValueChanged="@OnSelectedFolderChanged">
+                    @foreach (var folder in Nodes.OfType<Folder>())
+                    {
+                        <SelectItem Value="@folder.NodeId">@folder.Name</SelectItem>
+                    }
+                </Select>
+            </Field>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="Hide">Close</Button>
+            <Button Color="Color.Primary" Clicked="AddComputer">Add</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+@code {
+    public Modal ModalRef;
+    public Computer NewComputer = new Computer();
+    public Guid? SelectedFolderId;
+
+    public void Show()
+    {
+        ModalRef.Show();
+    }
+
+    public void Hide()
+    {
+        ModalRef.Hide();
+    }
+
+    public void AddComputer()
+    {
+        OnAdd.InvokeAsync((NewComputer, SelectedFolderId));
+        NewComputer = new Computer();
+        SelectedFolderId = null;
+        Hide();
+    }
+
+    private void OnSelectedFolderChanged(Guid? selectedId)
+    {
+        Console.WriteLine($"Selected folder ID changed to: {selectedId}");
+        SelectedFolderId = selectedId;
+    }
+
+    [Parameter]
+    public ObservableCollection<Node> Nodes { get; set; }
+
+    [Parameter]
+    public EventCallback<(Computer, Guid?)> OnAdd { get; set; }
+}

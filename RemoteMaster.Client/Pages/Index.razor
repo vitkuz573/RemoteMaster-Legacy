@@ -4,58 +4,11 @@
 @using System.Collections.ObjectModel;
 @inject ComputerService ComputerService
 
-<Button Color="Color.Primary" Clicked="@ShowAddFolderModal">Add Folder</Button>
-<Button Color="Color.Primary" Clicked="@ShowAddComputerModal">Add Computer</Button>
+<Button Color="Color.Primary" Clicked="@(() => AddFolderModalRef.Show())">Add Folder</Button>
+<Button Color="Color.Primary" Clicked="@(() => AddComputerModalRef.Show())">Add Computer</Button>
 
-<Modal @ref="_addFolderModalRef">
-    <ModalContent Centered>
-        <ModalHeader>
-            <ModalTitle>Add Folder</ModalTitle>
-            <CloseButton />
-        </ModalHeader>
-        <ModalBody>
-            <Field>
-                <FieldLabel>Name</FieldLabel>
-                <TextEdit @bind-Text="newFolder.Name" Placeholder="Enter Folder Name" />
-            </Field>
-        </ModalBody>
-        <ModalFooter>
-            <Button Color="Color.Secondary" Clicked="@HideAddFolderModal">Close</Button>
-            <Button Color="Color.Primary" Clicked="@AddFolder">Add</Button>
-        </ModalFooter>
-    </ModalContent>
-</Modal>
-
-<Modal @ref="_addComputerModalRef">
-    <ModalContent Centered>
-        <ModalHeader>
-            <ModalTitle>Add Computer</ModalTitle>
-            <CloseButton />
-        </ModalHeader>
-        <ModalBody>
-            <Field>
-                <FieldLabel>Name</FieldLabel>
-                <TextEdit @bind-Text="newComputer.Name" Placeholder="Enter Computer Name" />
-            </Field>
-            <Field>
-                <FieldLabel>IP Address</FieldLabel>
-                <TextEdit @bind-Text="newComputer.IPAddress" Placeholder="Enter IP Address" />
-            </Field>
-            <Field>
-                <Select TValue="Guid?" @bind-Value="selectedFolderId" Placeholder="Select Folder" SelectedValueChanged="@OnSelectedFolderChanged">
-                    @foreach (var folder in Nodes.OfType<Folder>())
-                    {
-                        <SelectItem Value="@folder.NodeId">@folder.Name</SelectItem>
-                    }
-                </Select>
-            </Field>
-        </ModalBody>
-        <ModalFooter>
-            <Button Color="Color.Secondary" Clicked="@HideAddComputerModal">Close</Button>
-            <Button Color="Color.Primary" Clicked="@AddComputer">Add</Button>
-        </ModalFooter>
-    </ModalContent>
-</Modal>
+<AddFolderModal @ref="AddFolderModalRef" OnAdd="AddFolder" />
+<AddComputerModal @ref="AddComputerModalRef" Nodes="Nodes" OnAdd="AddComputer" />
 
 <Row>
     <Column>
@@ -95,10 +48,9 @@
     ObservableCollection<Node> Nodes = new ObservableCollection<Node>();
     IList<Node> expandedNodes = new List<Node>();
     Node _selectedNode;
-    Computer newComputer = new Computer();
-    Folder newFolder = new Folder();
-    Folder selectedFolder = null;
-    Guid? selectedFolderId;
+
+    AddFolderModal AddFolderModalRef;
+    AddComputerModal AddComputerModalRef;
 
     protected override async Task OnInitializedAsync()
     {
@@ -108,96 +60,24 @@
         {
             Nodes.Add(folder);
         }
-
-        selectedFolderId = null;
     }
 
-    private void UpdateFolder(Folder updatedFolder)
+    private void AddFolder(Folder folder)
     {
-        var existingFolder = Nodes.OfType<Folder>().FirstOrDefault(f => f.NodeId == updatedFolder.NodeId);
-        if (existingFolder != null)
+        ComputerService.AddNode(folder);
+        Nodes.Add(folder);
+    }
+
+    private void AddComputer((Computer computer, Guid? folderId) data)
+    {
+        var (computer, folderId) = data;
+
+        var folder = Nodes.OfType<Folder>().FirstOrDefault(f => f.NodeId == folderId);
+        if (folder != null)
         {
-            var index = Nodes.IndexOf(existingFolder);
-            Nodes[index] = updatedFolder;
-        }
-        else
-        {
-            Nodes.Add(updatedFolder);
+            computer.ParentId = folder.NodeId;
+            folder.Children.Add(computer);
+            ComputerService.AddNode(computer);
         }
     }
-
-    private void OnSelectedFolderChanged(Guid? selectedId)
-    {
-        Console.WriteLine($"Selected folder ID changed to: {selectedId}");
-        selectedFolderId = selectedId;
-    }
-
-    #region Add Folder Modal
-    private Modal _addFolderModalRef;
-
-    public Task ShowAddFolderModal()
-    {
-        return _addFolderModalRef.Show();
-    }
-
-    private Task HideAddFolderModal()
-    {
-        return _addFolderModalRef.Hide();
-    }
-
-    private void AddFolder()
-    {
-        ComputerService.AddNode(newFolder);
-        Nodes.Add(newFolder);
-        newFolder = new Folder();
-
-        HideAddFolderModal();
-    }
-    #endregion
-
-    #region Add Computer Modal
-    private Modal _addComputerModalRef;
-
-    public Task ShowAddComputerModal()
-    {
-        return _addComputerModalRef.Show();
-    }
-
-    private Task HideAddComputerModal()
-    {
-        return _addComputerModalRef.Hide();
-    }
-
-    private void AddComputer()
-    {
-        try
-        {
-            var selectedFolder = Nodes.OfType<Folder>().FirstOrDefault(f => f.NodeId == selectedFolderId);
-
-            Console.WriteLine($"AddComputer triggered. Selected folder: {selectedFolder?.Name}");
-
-            if (selectedFolder == null)
-            {
-                Console.WriteLine("No folder is selected. Cannot add computer.");
-                return;
-            }
-
-            newComputer.ParentId = selectedFolder.NodeId;
-            selectedFolder.Children.Add(newComputer);
-            ComputerService.AddNode(newComputer);
-
-            newComputer = new Computer();
-
-            UpdateFolder(selectedFolder);
-
-            Console.WriteLine($"Added computer to folder {selectedFolder.Name}");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Exception caught in AddComputer: {ex.Message}");
-        }
-
-        HideAddComputerModal();
-    }
-    #endregion
 }
