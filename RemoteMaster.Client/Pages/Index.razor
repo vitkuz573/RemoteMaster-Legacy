@@ -46,6 +46,13 @@
     </Column>
 </Row>
 
+<Snackbar @ref="_syncStatusSnackbar" Color="SnackbarColor.Secondary">
+    <SnackbarBody>
+        @_syncStatus
+        <SnackbarAction Clicked="(() => _syncStatusSnackbar.Hide())">Hide</SnackbarAction>
+    </SnackbarBody>
+</Snackbar>
+
 @code {
     private ObservableCollection<Node> _nodes = new ObservableCollection<Node>();
     private IList<Node> _expandedNodes = new List<Node>();
@@ -59,6 +66,8 @@
 
     private string _syncStatus;
     private IDictionary<string, List<Computer>> _domainComputers = new Dictionary<string, List<Computer>>();
+
+    private Snackbar _syncStatusSnackbar;
 
     protected override async Task OnInitializedAsync()
     {
@@ -103,6 +112,8 @@
         {
             _syncStatus = $"An error occurred during sync: {e.Message}";
         }
+
+        _syncStatusSnackbar.Show();
     }
 
     private async Task OpenInNewTab(Computer computer)

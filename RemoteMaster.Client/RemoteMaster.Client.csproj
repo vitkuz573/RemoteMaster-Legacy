@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net7.0-windows</TargetFramework>
@@ -10,6 +10,7 @@
     <PackageReference Include="Blazorise" Version="1.2.4" />
     <PackageReference Include="Blazorise.FluentValidation" Version="1.2.4" />
     <PackageReference Include="Blazorise.Icons.FontAwesome" Version="1.2.4" />
+    <PackageReference Include="Blazorise.Snackbar" Version="1.2.4" />
     <PackageReference Include="Blazorise.Tailwind" Version="1.2.4" />
     <PackageReference Include="Blazorise.TreeView" Version="1.2.4" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.5.2" />
