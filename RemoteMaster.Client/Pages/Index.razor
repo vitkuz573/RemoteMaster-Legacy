@@ -1,22 +1,12 @@
 ﻿@page "/"
 @using RemoteMaster.Client.Models
 @using RemoteMaster.Client.Services
-@using System.Collections.ObjectModel;
+@using System.Collections.ObjectModel
 @inject ComputerService ComputerService
 
 <Button Color="Color.Primary" Clicked="@SyncComputersFromAD">Sync Computers from AD</Button>
 
-<p>@_syncStatus</p>
-
-@if (_domainComputers != null && _domainComputers.Count > 0)
-{
-    <TreeView Nodes="_adNodes" GetChildNodes="@(node => (node as Folder)?.Children)" HasChildNodes="@(node => node is Folder)" @bind-SelectedNode="_selectedNode" @bind-ExpandedNodes="_expandedNodes">
-        <NodeContent>
-            <Icon Name="@((_expandedNodes.Contains(context) && context is Folder) ? context.ExpandedIcon : context.Icon)" />
-            @context.Name
-        </NodeContent>
-    </TreeView>
-}
+<SyncResultsModal @ref="_syncResultsModalRef" />
 
 <Button Color="Color.Primary" Clicked="@(() => _addFolderModalRef.Show())">Add Folder</Button>
 <Button Color="Color.Primary" Clicked="@(() => _addComputerModalRef.Show())">Add Computer</Button>
@@ -67,6 +57,7 @@
 
     private AddFolderModal _addFolderModalRef;
     private AddComputerModal _addComputerModalRef;
+    private SyncResultsModal _syncResultsModalRef;
 
     private string _syncStatus;
     private IDictionary<string, List<Computer>> _domainComputers = new Dictionary<string, List<Computer>>();
@@ -107,6 +98,8 @@
 
                 _adNodes.Add(folder);
             }
+
+            _syncResultsModalRef.Show(_adNodes);
         }
         catch (Exception e)
         {
