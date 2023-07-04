@@ -44,7 +44,8 @@ builder.Services.AddBlazorise(options =>
 
 builder.Services.AddValidatorsFromAssembly(typeof(App).Assembly);
 
-builder.Services.AddScoped<ComputerService>();
+builder.Services.AddScoped<DatabaseService>();
+builder.Services.AddScoped<ActiveDirectoryService>();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 

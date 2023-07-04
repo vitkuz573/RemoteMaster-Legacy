@@ -2,7 +2,8 @@
 @using RemoteMaster.Client.Models
 @using RemoteMaster.Client.Services
 @using System.Collections.ObjectModel
-@inject ComputerService ComputerService
+@inject DatabaseService DatabaseService
+@inject ActiveDirectoryService ActiveDirectoryService
 @inject IJSRuntime JsRuntime
 
 <Button Color="Color.Primary" Clicked="@SyncComputersFromAD">Sync Computers from AD</Button>
@@ -71,7 +72,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var folders = ComputerService.GetFolders();
+        var folders = DatabaseService.GetFolders();
 
         foreach (var folder in folders)
         {
@@ -81,7 +82,7 @@
 
     private void AddFolder(Folder folder)
     {
-        ComputerService.AddNode(folder);
+        DatabaseService.AddNode(folder);
         _nodes.Add(folder);
     }
 
@@ -89,7 +90,7 @@
     {
         try
         {
-            _domainComputers = await ComputerService.SyncComputersFromActiveDirectory();
+            _domainComputers = await ActiveDirectoryService.SyncComputersFromActiveDirectory();
             _syncStatus = "Sync has been completed successfully";
 
             _adNodes.Clear();
