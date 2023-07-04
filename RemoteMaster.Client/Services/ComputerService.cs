@@ -44,10 +44,11 @@ public class ComputerService
                     var ipAddress = (await Dns.GetHostEntryAsync(cp.Name)).AddressList.FirstOrDefault()?.ToString();
 
                     domainComputers.AddOrUpdate(cp.DistinguishedName.Split(',').Skip(1).First().Replace("OU=", ""),
-                        new List<Computer> { new Computer { Name = cp.Name, IPAddress = ipAddress } },
+                        new List<Computer> { new Computer(cp.Name, ipAddress) },
                         (key, oldValue) =>
                         {
-                            oldValue.Add(new Computer { Name = cp.Name, IPAddress = ipAddress });
+                            oldValue.Add(new Computer(cp.Name, ipAddress));
+
                             return oldValue;
                         });
                 }

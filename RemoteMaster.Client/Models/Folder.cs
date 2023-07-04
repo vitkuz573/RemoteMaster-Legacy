@@ -10,6 +10,12 @@ public class Folder : Node
         Children = new List<Node>();
     }
 
+    public Folder(string name)
+    {
+        Name = name;
+        Children = new List<Node>();
+    }
+
     [NotMapped]
     public override IconName Icon => IconName.Folder;
 

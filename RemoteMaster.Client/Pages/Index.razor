@@ -108,17 +108,17 @@
             _domainComputers = await ComputerService.SyncComputersFromActiveDirectory();
             _syncStatus = "Sync has been completed successfully";
 
-            // Очищаем коллекцию перед заполнением новыми данными
             _adNodes.Clear();
 
-            // Преобразование _domainComputers в дерево и добавление его в _adNodes
             foreach (var ou in _domainComputers)
             {
-                var folder = new Folder() { Name = ou.Key };
+                var folder = new Folder(ou.Key);
+
                 foreach (var computer in ou.Value)
                 {
                     folder.Children.Add(computer);
                 }
+
                 _adNodes.Add(folder);
             }
         }
@@ -127,19 +127,4 @@
             _syncStatus = $"An error occurred during sync: {e.Message}";
         }
     }
-
-    private RenderFragment RenderComputers(IDictionary<string, List<Computer>> computersDictionary, int level = 0) => builder =>
-    {
-        var seq = 0;
-
-        foreach (var ou in computersDictionary)
-        {
-            builder.AddContent(seq++, new MarkupString($"<p style='margin-left: {20 * level}px'>{ou.Key}</p>"));
-
-            foreach (var computer in ou.Value)
-            {
-                builder.AddContent(seq++, new MarkupString($"<p style='margin-left: {20 * (level + 1)}px'>{computer.Name}: {computer.IPAddress}</p>"));
-            }
-        }
-    };
 }
