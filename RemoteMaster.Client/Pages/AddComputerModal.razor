@@ -50,7 +50,14 @@
 
     public void AddComputer()
     {
-        OnAdd.InvokeAsync((_newComputer, _selectedFolderId));
+        var folder = Nodes.OfType<Folder>().FirstOrDefault(f => f.NodeId == _selectedFolderId);
+
+        if (folder != null)
+        {
+            _newComputer.ParentId = folder.NodeId;
+            folder.Children.Add(_newComputer);
+        }
+
         _newComputer = new Computer();
         _selectedFolderId = null;
         Hide();
@@ -64,7 +71,4 @@
 
     [Parameter]
     public ObservableCollection<Node> Nodes { get; set; }
-
-    [Parameter]
-    public EventCallback<(Computer, Guid?)> OnAdd { get; set; }
 }

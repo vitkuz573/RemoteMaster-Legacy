@@ -22,7 +22,7 @@
 <Button Color="Color.Primary" Clicked="@(() => _addComputerModalRef.Show())">Add Computer</Button>
 
 <AddFolderModal @ref="_addFolderModalRef" OnAdd="AddFolder" />
-<AddComputerModal @ref="_addComputerModalRef" Nodes="_nodes" OnAdd="AddComputer" />
+<AddComputerModal @ref="_addComputerModalRef" Nodes="_nodes" />
 
 <Row>
     <Column>
@@ -85,20 +85,6 @@
     {
         ComputerService.AddNode(folder);
         _nodes.Add(folder);
-    }
-
-    private void AddComputer((Computer computer, Guid? folderId) data)
-    {
-        var (computer, folderId) = data;
-
-        var folder = _nodes.OfType<Folder>().FirstOrDefault(f => f.NodeId == folderId);
-
-        if (folder != null)
-        {
-            computer.ParentId = folder.NodeId;
-            folder.Children.Add(computer);
-            ComputerService.AddNode(computer);
-        }
     }
 
     private async Task SyncComputersFromAD()
