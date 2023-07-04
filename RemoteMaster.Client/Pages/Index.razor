@@ -10,8 +10,12 @@
 
 @if (_domainComputers != null && _domainComputers.Count > 0)
 {
-    <h2>Domain Computers:</h2>
-    @RenderComputers(_domainComputers)
+    <TreeView Nodes="_adNodes" GetChildNodes="@(node => (node as Folder)?.Children)" HasChildNodes="@(node => node is Folder)" @bind-SelectedNode="_selectedNode" @bind-ExpandedNodes="_expandedNodes">
+        <NodeContent>
+            <Icon Name="@((_expandedNodes.Contains(context) && context is Folder) ? context.ExpandedIcon : context.Icon)" />
+            @context.Name
+        </NodeContent>
+    </TreeView>
 }
 
 <Button Color="Color.Primary" Clicked="@(() => _addFolderModalRef.Show())">Add Folder</Button>
@@ -59,6 +63,8 @@
     private IList<Node> _expandedNodes = new List<Node>();
     private Node _selectedNode;
 
+    private ObservableCollection<Node> _adNodes = new ObservableCollection<Node>();
+
     private AddFolderModal _addFolderModalRef;
     private AddComputerModal _addComputerModalRef;
 
@@ -101,6 +107,20 @@
         {
             _domainComputers = await ComputerService.SyncComputersFromActiveDirectory();
             _syncStatus = "Sync has been completed successfully";
+
+            // Очищаем коллекцию перед заполнением новыми данными
+            _adNodes.Clear();
+
+            // Преобразование _domainComputers в дерево и добавление его в _adNodes
+            foreach (var ou in _domainComputers)
+            {
+                var folder = new Folder() { Name = ou.Key };
+                foreach (var computer in ou.Value)
+                {
+                    folder.Children.Add(computer);
+                }
+                _adNodes.Add(folder);
+            }
         }
         catch (Exception e)
         {
