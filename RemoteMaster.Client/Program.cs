@@ -1,8 +1,11 @@
 using Blazorise;
+using Blazorise.FluentValidation;
 using Blazorise.Icons.FontAwesome;
 using Blazorise.Tailwind;
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.EntityFrameworkCore;
+using RemoteMaster.Client;
 using RemoteMaster.Client.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,7 +40,9 @@ builder.Services.AddHttpClient("ClientWithDisabledCertificateCheck", client =>
 builder.Services.AddBlazorise(options =>
 {
     options.Immediate = true;
-}).AddTailwindProviders().AddFontAwesomeIcons();
+}).AddTailwindProviders().AddFontAwesomeIcons().AddBlazoriseFluentValidation();
+
+builder.Services.AddValidatorsFromAssembly(typeof(App).Assembly);
 
 builder.Services.AddScoped<ComputerService>();
 builder.Services.AddDbContext<AppDbContext>(options =>

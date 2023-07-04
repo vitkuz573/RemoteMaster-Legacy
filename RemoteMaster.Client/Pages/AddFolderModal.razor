@@ -8,10 +8,18 @@
             <CloseButton />
         </ModalHeader>
         <ModalBody>
-            <Field>
-                <FieldLabel>Name</FieldLabel>
-                <TextEdit @bind-Text="_newFolder.Name" Placeholder="Enter Folder Name" />
-            </Field>
+            <Validations @ref="@_fluentValidations" Mode="ValidationMode.Manual" Model="@_newFolder" HandlerType="typeof(FluentValidationHandler)">
+                <Validation>
+                    <Field>
+                        <FieldLabel>Name</FieldLabel>
+                        <TextEdit @bind-Text="_newFolder.Name" Placeholder="Enter Folder Name">
+                            <Feedback>
+                                <ValidationError />
+                            </Feedback>
+                        </TextEdit>
+                    </Field>
+                </Validation>
+            </Validations>
         </ModalBody>
         <ModalFooter>
             <Button Color="Color.Secondary" Clicked="Hide">Close</Button>
@@ -24,6 +32,8 @@
     private Modal _modalRef;
     private Folder _newFolder = new Folder();
 
+    private Validations _fluentValidations;
+
     public void Show()
     {
         _modalRef.Show();
@@ -34,11 +44,14 @@
         _modalRef.Hide();
     }
 
-    public void AddFolder()
+    public async void AddFolder()
     {
-        OnAdd.InvokeAsync(_newFolder);
-        _newFolder = new Folder();
-        Hide();
+        if (await _fluentValidations.ValidateAll())
+        {
+            await OnAdd.InvokeAsync(_newFolder);
+            _newFolder = new Folder();
+            Hide();
+        }
     }
 
     [Parameter]
