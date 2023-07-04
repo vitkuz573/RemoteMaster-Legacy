@@ -3,6 +3,7 @@
 @using RemoteMaster.Client.Services
 @using System.Collections.ObjectModel
 @inject ComputerService ComputerService
+@inject IJSRuntime JsRuntime
 
 <Button Color="Color.Primary" Clicked="@SyncComputersFromAD">Sync Computers from AD</Button>
 
@@ -31,17 +32,14 @@
             {
                 if (child is Computer computer)
                 {
-                    <a href="https://localhost:7111/@computer.IPAddress/control" target="_blank">
-                        <div class="p-4 m-2 bg-white rounded-lg shadow-md flex items-center space-x-4">
-                            <div class="flex-shrink-0">
-                                <Icon Name="@computer.Icon" />
-                            </div>
-                            <div>
-                                <div class="text-lg font-semibold text-gray-900">@computer.Name</div>
-                                <p class="text-gray-600">IP: @computer.IPAddress</p>
-                            </div>
-                        </div>
-                    </a>
+                    <Card @onclick="(() => OpenInNewTab(computer))">
+                        <CardImage Source="/img/gallery/2.jpg" Alt="@computer.Name" />
+                        <CardBody>
+                            <CardTitle Size="3">
+                                @computer.Name
+                            </CardTitle>
+                        </CardBody>
+                    </Card>
                 }
             }
         }
@@ -105,5 +103,11 @@
         {
             _syncStatus = $"An error occurred during sync: {e.Message}";
         }
+    }
+
+    private async Task OpenInNewTab(Computer computer)
+    {
+        var url = $"https://localhost:7111/{computer.IPAddress}/control";
+        await JsRuntime.InvokeVoidAsync("openInNewTab", url);
     }
 }
