@@ -47,10 +47,10 @@
     </Column>
 </Row>
 
-<Snackbar @ref="_syncStatusSnackbar" Color="SnackbarColor.Secondary">
+<Snackbar @ref="_fetchComputersFromADStatusSnackbar" Color="SnackbarColor.Secondary">
     <SnackbarBody>
-        @_syncStatus
-        <SnackbarAction Clicked="(() => _syncStatusSnackbar.Hide())">Hide</SnackbarAction>
+        @_fetchComputersFromADStatus
+        <SnackbarAction Clicked="(() => _fetchComputersFromADStatusSnackbar.Hide())">Hide</SnackbarAction>
     </SnackbarBody>
 </Snackbar>
 
@@ -65,10 +65,10 @@
     private AddComputerModal _addComputerModalRef;
     private SyncResultsModal _syncResultsModalRef;
 
-    private string _syncStatus;
+    private string _fetchComputersFromADStatus;
     private IDictionary<string, List<Computer>> _domainComputers = new Dictionary<string, List<Computer>>();
 
-    private Snackbar _syncStatusSnackbar;
+    private Snackbar _fetchComputersFromADStatusSnackbar;
 
     protected override async Task OnInitializedAsync()
     {
@@ -90,8 +90,8 @@
     {
         try
         {
-            _domainComputers = await ActiveDirectoryService.SyncComputersFromActiveDirectory();
-            _syncStatus = "Sync has been completed successfully";
+            _domainComputers = await ActiveDirectoryService.FetchComputers();
+            _fetchComputersFromADStatus = "Fetch has been completed successfully";
 
             _adNodes.Clear();
 
@@ -111,10 +111,10 @@
         }
         catch (Exception e)
         {
-            _syncStatus = $"An error occurred during sync: {e.Message}";
+            _fetchComputersFromADStatus = $"An error occurred during fetch: {e.Message}";
         }
 
-        _syncStatusSnackbar.Show();
+        _fetchComputersFromADStatusSnackbar.Show();
     }
 
     private async Task OpenInNewTab(Computer computer)

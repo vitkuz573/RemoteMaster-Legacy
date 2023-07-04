@@ -8,7 +8,7 @@ namespace RemoteMaster.Client.Services;
 
 public class ActiveDirectoryService
 {
-    public async Task<IDictionary<string, List<Computer>>> SyncComputersFromActiveDirectory()
+    public async Task<IDictionary<string, List<Computer>>> FetchComputers()
     {
         using var domainContext = new PrincipalContext(ContextType.Domain);
         using var searcher = new PrincipalSearcher(new ComputerPrincipal(domainContext));
