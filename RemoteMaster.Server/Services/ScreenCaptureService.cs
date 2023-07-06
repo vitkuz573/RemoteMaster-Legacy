@@ -41,12 +41,12 @@ public class ScreenCaptureService : IScreenCaptureService
         return memoryStream.ToArray();
     }
 
-    public ClientConfig GetClientConfig(string ipAddress)
+    public ClientConfig GetClientConfig(string controlId)
     {
-        if (!_clientConfigs.TryGetValue(ipAddress, out var config))
+        if (!_clientConfigs.TryGetValue(controlId, out var config))
         {
             config = new ClientConfig();
-            _clientConfigs[ipAddress] = config;
+            _clientConfigs[controlId] = config;
         }
 
         return config;

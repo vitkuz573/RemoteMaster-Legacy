@@ -1,5 +1,6 @@
 ﻿@page "/{IPAddress}/control"
 @using RemoteMaster.Client.Models
+@using RemoteMaster.Shared.Dto;
 @inject ILogger<Computer> Logger
 
 @code {
@@ -7,6 +8,7 @@
     public string IPAddress { get; set; }
 
     private HubConnection? _hubConnection;
+    private string? _controlId;
     private string? _statusMessage;
     private string? _screenDataUrl;
     private TimeSpan[] _retryIntervals = new[]
@@ -23,17 +25,18 @@
     {
         if (IPAddress != null && _hubConnection == null)
         {
+            _controlId = Guid.NewGuid().ToString();
             var serverUrl = $"https://{IPAddress}:7172/controlHub";
 
             _hubConnection = new HubConnectionBuilder()
                 .WithUrl(serverUrl, options =>
                 {
-                    options.Headers["controlId"] = IPAddress;
+                    options.Headers["controlId"] = _controlId;
 
                     options.HttpMessageHandlerFactory = _ => new HttpClientHandler
-                    {
-                        ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-                    };
+                        {
+                            ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                        };
                 })
                 .WithAutomaticReconnect(_retryIntervals)
                 .Build();
@@ -94,6 +97,25 @@
             await _hubConnection.DisposeAsync();
         }
     }
+
+    private async Task SendCursorPosition(int x, int y)
+    {
+        Console.WriteLine($"About to call SendAsync with cursor position: ({x}, {y})");
+
+        if (_hubConnection != null && _hubConnection.State == HubConnectionState.Connected)
+        {
+            var cursorPosition = new CursorPositionDto { X = x, Y = y };
+            await _hubConnection.SendAsync("SendCursorPosition", _controlId, cursorPosition);
+        }
+
+        Console.WriteLine($"Called SendAsync with cursor position: ({x}, {y})");
+    }
+
+    private async Task HandleMouseMove(MouseEventArgs e)
+    {
+        Console.WriteLine($"Mouse moved to: ({e.ClientX}, {e.ClientY})");
+        await SendCursorPosition((int)e.ClientX, (int)e.ClientY);
+    }
 }
 
 @if (_hubConnection != null)
@@ -112,7 +134,7 @@
             }
             else
             {
-                <img src="@_screenDataUrl" width="1494" />
+                <img src="@_screenDataUrl" width="1494" @onmousemove="HandleMouseMove" />
             }
             break;
     }

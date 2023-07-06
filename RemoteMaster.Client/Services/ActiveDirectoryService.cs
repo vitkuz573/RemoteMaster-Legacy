@@ -22,14 +22,19 @@ public class ActiveDirectoryService
                 {
                     var ipAddress = (await Dns.GetHostEntryAsync(cp.Name)).AddressList.FirstOrDefault()?.ToString();
 
-                    domainComputers.AddOrUpdate(cp.DistinguishedName.Split(',').Skip(1).First().Replace("OU=", ""),
+                    domainComputers.AddOrUpdate(
+                        cp.DistinguishedName.Split(',').Skip(1).First().Replace("OU=", ""),
                         new List<Computer> { new Computer(cp.Name, ipAddress) },
                         (key, oldValue) =>
                         {
-                            oldValue.Add(new Computer(cp.Name, ipAddress));
+                            if (!oldValue.Any(c => c.Name == cp.Name && c.IPAddress == ipAddress))
+                            {
+                                oldValue.Add(new Computer(cp.Name, ipAddress));
+                            }
 
                             return oldValue;
-                        });
+                        }
+                    );
                 }
                 catch (SocketException)
                 {

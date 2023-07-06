@@ -13,7 +13,7 @@
     <PackageReference Include="Blazorise.Snackbar" Version="1.2.4" />
     <PackageReference Include="Blazorise.Tailwind" Version="1.2.4" />
     <PackageReference Include="Blazorise.TreeView" Version="1.2.4" />
-    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.5.2" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.6.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="7.0.8" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="7.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.8">

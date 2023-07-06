@@ -6,5 +6,5 @@ public interface IScreenCaptureService
 {
     byte[] CaptureScreen();
 
-    ClientConfig GetClientConfig(string ipAddress);
+    ClientConfig GetClientConfig(string controlId);
 }

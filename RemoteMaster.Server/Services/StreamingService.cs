@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Hubs;
-using System.Net;
 
 namespace RemoteMaster.Server.Services;
 
@@ -18,7 +17,7 @@ public class StreamingService : IStreamingService
         _hubContext = hubContext;
     }
 
-    public void SetFps(string ipAddress, int fps)
+    public void SetFps(string controlId, int fps)
     {
         if (fps <= 0 || fps > 60)
         {
@@ -26,28 +25,22 @@ public class StreamingService : IStreamingService
             return;
         }
 
-        if (!IPAddress.TryParse(ipAddress, out _))
-        {
-            _logger.LogError("Invalid IP address: {ipAddress}", ipAddress);
-            return;
-        }
-
-        var config = _screenCaptureService.GetClientConfig(ipAddress);
+        var config = _screenCaptureService.GetClientConfig(controlId);
         config.FPS = fps;
     }
 
-    public async Task StartStreaming(string ipAddress, CancellationToken cancellationToken)
+    public async Task StartStreaming(string controlId, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Starting screen stream for IP {ipAddress}", ipAddress);
+        _logger.LogInformation("Starting screen stream for control ID {controlId}", controlId);
 
         while (!cancellationToken.IsCancellationRequested)
         {
             try
             {
                 var screenData = _screenCaptureService.CaptureScreen();
-                await _hubContext.Clients.Group(ipAddress).SendAsync("ScreenUpdate", screenData, cancellationToken);
+                await _hubContext.Clients.Group(controlId).SendAsync("ScreenUpdate", screenData, cancellationToken);
 
-                var config = _screenCaptureService.GetClientConfig(ipAddress);
+                var config = _screenCaptureService.GetClientConfig(controlId);
                 await Task.Delay(1000 / config.FPS, cancellationToken);
             }
             catch (Exception ex)
