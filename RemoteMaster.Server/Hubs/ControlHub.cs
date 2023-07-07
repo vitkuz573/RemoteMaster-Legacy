@@ -37,7 +37,11 @@ public class ControlHub : Hub
     {
         var controlId = Context.GetHttpContext()?.Request.Headers["controlId"].ToString();
 
-        if (!string.IsNullOrEmpty(controlId))
+        if (string.IsNullOrEmpty(controlId))
+        {
+            _logger.LogWarning("Control ID not found in the request headers.");
+        }
+        else
         {
             _logger.LogInformation($"Client with control ID: {controlId} connected. Adding to group...");
             await Groups.AddToGroupAsync(Context.ConnectionId, controlId);
@@ -56,13 +60,19 @@ public class ControlHub : Hub
             _connectionCancellations[controlId] = cancellationTokenSource;
             await _streamingService.StartStreaming(controlId, cancellationTokenSource.Token);
         }
+
+        await base.OnConnectedAsync();
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         var controlId = Context.GetHttpContext()?.Request.Headers["controlId"].ToString();
 
-        if (!string.IsNullOrEmpty(controlId))
+        if (string.IsNullOrEmpty(controlId))
+        {
+            _logger.LogWarning("Control ID not found in the request headers.");
+        }
+        else
         {
             _logger.LogInformation($"Client with control ID: {controlId} disconnected. Removing from group...");
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, controlId);
