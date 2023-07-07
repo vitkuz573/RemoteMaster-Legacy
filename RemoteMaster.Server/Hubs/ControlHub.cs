@@ -19,6 +19,17 @@ public class ControlHub : Hub
         _streamingService = streamingService;
     }
 
+    public async Task SendMessage(string message)
+    {
+        // var controlId = Context.GetHttpContext()?.Request.Headers["controlId"].ToString();
+
+        // _logger.LogInformation($"Received message: {message} from control ID: {controlId}");
+
+        // Дальнейшая логика обработки сообщения
+
+        await Clients.All.SendAsync("ReceiveMessage", message);
+    }
+
     public async Task SendCursorPosition(string controlId, CursorPositionDto cursorPosition)
     {
         _logger.LogInformation("SendCursorPosition called with control ID: {controlId} and cursor position: {cursorPosition}", controlId, cursorPosition);

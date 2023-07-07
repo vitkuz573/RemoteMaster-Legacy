@@ -113,8 +113,11 @@
 
     private async Task HandleMouseMove(MouseEventArgs e)
     {
-        Console.WriteLine($"Mouse moved to: ({e.ClientX}, {e.ClientY})");
-        await SendCursorPosition((int)e.ClientX, (int)e.ClientY);
+        if (_hubConnection is not null)
+        {
+            Logger.LogInformation("kek");
+            await _hubConnection.SendAsync("SendMessage", "sdfsdfsf");
+        }
     }
 }
 
