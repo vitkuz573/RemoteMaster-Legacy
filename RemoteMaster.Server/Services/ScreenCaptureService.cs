@@ -1,6 +1,4 @@
 ﻿using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Models;
-using System.Collections.Concurrent;
 using System.Drawing;
 using System.Drawing.Imaging;
 using Windows.Win32.Foundation;
@@ -12,8 +10,6 @@ namespace RemoteMaster.Server.Services;
 
 public class ScreenCaptureService : IScreenCaptureService
 {
-    private readonly ConcurrentDictionary<string, ClientConfig> _clientConfigs = new();
-
     public unsafe byte[] CaptureScreen()
     {
         var width = GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CXVIRTUALSCREEN);
@@ -39,16 +35,5 @@ public class ScreenCaptureService : IScreenCaptureService
         bitmap.Save(memoryStream, ImageFormat.Png);
 
         return memoryStream.ToArray();
-    }
-
-    public ClientConfig GetClientConfig(string controlId)
-    {
-        if (!_clientConfigs.TryGetValue(controlId, out var config))
-        {
-            config = new ClientConfig();
-            _clientConfigs[controlId] = config;
-        }
-
-        return config;
     }
 }
