@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Server.Abstractions;
-using System.Collections.Concurrent;
 
 namespace RemoteMaster.Server.Hubs;
 
