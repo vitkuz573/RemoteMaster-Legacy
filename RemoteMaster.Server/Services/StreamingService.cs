@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Hubs;
+using RemoteMaster.Shared.Dto;
 
 namespace RemoteMaster.Server.Services;
 
@@ -29,11 +30,17 @@ public class StreamingService : IStreamingService
             {
                 var screenData = _screenCaptureService.CaptureScreen();
 
-                var screenDataChunks = SplitScreenData(screenData);
+                var screenDataChunks = SplitScreenData(screenData).ToList();
 
-                foreach (var chunk in screenDataChunks)
+                for (int i = 0; i < screenDataChunks.Count; i++)
                 {
-                    await _hubContext.Clients.Client(connectionId).SendAsync("ScreenUpdate", chunk, cancellationToken);
+                    var chunk = screenDataChunks[i];
+                    var dto = new ScreenUpdateDto
+                    {
+                        Data = chunk,
+                        IsEndOfImage = i == screenDataChunks.Count - 1 && IsEndOfImage(chunk)
+                    };
+                    await _hubContext.Clients.Client(connectionId).SendAsync("ScreenUpdate", dto, cancellationToken);
                 }
             }
             catch (Exception ex)
@@ -41,6 +48,11 @@ public class StreamingService : IStreamingService
                 _logger.LogError("An error occurred during streaming: {Message}", ex.Message);
             }
         }
+    }
+
+    private static bool IsEndOfImage(byte[] data)
+    {
+        return data.Length == 4 && data.All(b => b == 255);
     }
 
     private IEnumerable<byte[]> SplitScreenData(byte[] screenData)

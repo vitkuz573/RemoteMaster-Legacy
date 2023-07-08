@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
+using RemoteMaster.Shared.Dto;
 
 namespace RemoteMaster.Client.Pages;
 
@@ -29,9 +30,9 @@ public partial class Control
                 .WithAutomaticReconnect(new RetryPolicy())
                 .Build();
 
-            _hubConnection.On<byte[]>("ScreenUpdate", (screenData) =>
+            _hubConnection.On<ScreenUpdateDto>("ScreenUpdate", (dto) =>
             {
-                if (IsEndOfImage(screenData))
+                if (dto.IsEndOfImage)
                 {
                     var fullImageData = _buffer.ToArray();
                     _screenDataUrl = $"data:image/png;base64,{Convert.ToBase64String(fullImageData)}";
@@ -41,18 +42,13 @@ public partial class Control
                 }
                 else
                 {
-                    _buffer.AddRange(screenData);
+                    _buffer.AddRange(dto.Data);
                 }
             });
 
             await _hubConnection.StartAsync();
             await InvokeAsync(StateHasChanged);
         }
-    }
-
-    private static bool IsEndOfImage(byte[] data)
-    {
-        return data.Length == 4 && data.All(b => b == 255);
     }
 
     public async Task DisposeAsync()
