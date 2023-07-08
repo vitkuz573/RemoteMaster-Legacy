@@ -8,19 +8,19 @@ public partial class Control
     [Parameter]
     public string Host { get; set; }
 
+    [Inject]
+    private ILogger<Control> Logger { get; set; }
+
     private HubConnection _hubConnection;
     private string? _statusMessage;
     private string? _screenDataUrl;
-
-    [Inject]
-    private ILogger<Control> Logger { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             _hubConnection = new HubConnectionBuilder()
-                .WithUrl($"http://{Host}:5076/controlHub")
+                .WithUrl($"http://{Host}:5076/hubs/control")
                 .WithAutomaticReconnect(new RetryPolicy())
                 .Build();
 
