@@ -8,20 +8,17 @@ public partial class Control
     [Parameter]
     public string Host { get; set; }
 
-    private HubConnection? _hubConnection;
+    private HubConnection _hubConnection;
     private string? _statusMessage;
     private string? _screenDataUrl;
 
     [Inject]
     private ILogger<Control> Logger { get; set; }
 
-    private bool _firstRender = true;
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (_firstRender && Host != null && _hubConnection == null)
+        if (firstRender)
         {
-            _firstRender = false;
             _hubConnection = new HubConnectionBuilder()
                 .WithUrl($"http://{Host}:5076/controlHub")
                 .WithAutomaticReconnect(new RetryPolicy())
@@ -36,16 +33,11 @@ public partial class Control
 
             await _hubConnection.StartAsync();
             await InvokeAsync(StateHasChanged);
-
-            Logger.LogInformation("Connection started!");
         }
     }
 
     public async Task DisposeAsync()
     {
-        if (_hubConnection != null)
-        {
-            await _hubConnection.DisposeAsync();
-        }
+        await _hubConnection.DisposeAsync();
     }
 }
