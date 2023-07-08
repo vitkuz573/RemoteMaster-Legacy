@@ -1,43 +1,4 @@
-﻿@page "/{IPAddress}/control"
-@inject ILogger<Control> Logger
-
-@code {
-    [Parameter]
-    public string IPAddress { get; set; }
-
-    private HubConnection? _hubConnection;
-    private string? _statusMessage;
-    private string? _screenDataUrl;
-
-    protected override async Task OnInitializedAsync()
-    {
-        if (IPAddress != null && _hubConnection == null)
-        {
-            _hubConnection = new HubConnectionBuilder()
-                .WithUrl($"http://{IPAddress}:5076/controlHub")
-                .WithAutomaticReconnect(new RetryPolicy())
-                .Build();
-
-            _hubConnection.On<byte[]>("ScreenUpdate", (screenData) =>
-            {
-                _screenDataUrl = $"data:image/png;base64,{Convert.ToBase64String(screenData)}";
-                _statusMessage = null;
-                InvokeAsync(StateHasChanged);
-            });
-
-            await _hubConnection.StartAsync();
-            await InvokeAsync(StateHasChanged);
-        }
-    }
-
-    public async Task DisposeAsync()
-    {
-        if (_hubConnection != null)
-        {
-            await _hubConnection.DisposeAsync();
-        }
-    }
-}
+﻿@page "/{Host}/control"
 
 @if (_hubConnection != null)
 {
