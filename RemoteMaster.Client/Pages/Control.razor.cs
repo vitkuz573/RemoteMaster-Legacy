@@ -11,6 +11,9 @@ public partial class Control
     [Inject]
     private ILogger<Control> Logger { get; set; }
 
+    [Inject]
+    private IHubConnectionBuilder HubConnectionBuilder { get; set; }
+
     private HubConnection _hubConnection;
     private string? _statusMessage;
     private string? _screenDataUrl;
@@ -19,7 +22,7 @@ public partial class Control
     {
         if (firstRender)
         {
-            _hubConnection = new HubConnectionBuilder()
+            _hubConnection = HubConnectionBuilder
                 .WithUrl($"http://{Host}:5076/hubs/control")
                 .WithAutomaticReconnect(new RetryPolicy())
                 .Build();
