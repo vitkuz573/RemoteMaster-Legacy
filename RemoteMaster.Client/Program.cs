@@ -13,20 +13,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
-builder.Services.AddScoped(sp =>
-    new HttpClient(new HttpClientHandler
-    {
-        ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-    }));
-
-builder.Services.AddHttpClient("ClientWithDisabledCertificateCheck", client =>
-{
-    // ваша конфигурация здесь
-}).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-{
-    ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-});
-
 builder.Services.AddBlazorise(options =>
 {
     options.Immediate = true;

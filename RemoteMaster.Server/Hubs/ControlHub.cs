@@ -1,15 +1,12 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using RemoteMaster.Client.Models;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Shared.Dto;
 using System.Collections.Concurrent;
 
 namespace RemoteMaster.Server.Hubs;
 
 public class ControlHub : Hub
 {
-    private readonly ConcurrentDictionary<string, Viewer> _connectedViewers = new();
-    private readonly ConcurrentDictionary<string, CancellationTokenSource> _connectionCancellations = new();
+    private readonly ConcurrentDictionary<string, CancellationTokenSource> _connectionCancellationTokens;
     private readonly IStreamingService _streamingService;
     private readonly ILogger<ControlHub> _logger;
 
@@ -17,86 +14,22 @@ public class ControlHub : Hub
     {
         _logger = logger;
         _streamingService = streamingService;
-    }
-
-    public async Task SendMessage(string message)
-    {
-        // var controlId = Context.GetHttpContext()?.Request.Headers["controlId"].ToString();
-
-        // _logger.LogInformation($"Received message: {message} from control ID: {controlId}");
-
-        // Дальнейшая логика обработки сообщения
-
-        await Clients.All.SendAsync("ReceiveMessage", message);
-    }
-
-    public async Task SendCursorPosition(string controlId, CursorPositionDto cursorPosition)
-    {
-        _logger.LogInformation("SendCursorPosition called with control ID: {controlId} and cursor position: {cursorPosition}", controlId, cursorPosition);
-        _logger.LogInformation($"Received cursor position: ({cursorPosition.X}, {cursorPosition.Y}) from control ID: {controlId}");
-        await Clients.Group(controlId).SendAsync("ReceiveCursorPosition", cursorPosition);
-        _logger.LogInformation($"Sent cursor position to the clients in group {controlId}");
-    }
-
-    public async Task SetFps(string controlId, int fps)
-    {
-        _streamingService.SetFps(controlId, fps);
-        await Clients.Group(controlId).SendAsync("FpsUpdated", fps);
+        _connectionCancellationTokens = new ConcurrentDictionary<string, CancellationTokenSource>();
     }
 
     public override async Task OnConnectedAsync()
     {
-        var controlId = Context.GetHttpContext()?.Request.Headers["controlId"].ToString();
+        var cancellationTokenSource = new CancellationTokenSource();
+        _connectionCancellationTokens.TryAdd(Context.ConnectionId, cancellationTokenSource);
 
-        if (string.IsNullOrEmpty(controlId))
-        {
-            _logger.LogWarning("Control ID not found in the request headers.");
-        }
-        else
-        {
-            _logger.LogInformation($"Client with control ID: {controlId} connected. Adding to group...");
-            await Groups.AddToGroupAsync(Context.ConnectionId, controlId);
-            _logger.LogInformation($"Client with control ID: {controlId} added to group.");
-
-            var viewer = new Viewer
-            {
-                ConnectionId = Context.ConnectionId,
-                IpAddress = Context.GetHttpContext()?.Connection.RemoteIpAddress.ToString(),
-                ConnectedAt = DateTime.UtcNow
-            };
-
-            _connectedViewers[controlId] = viewer;
-
-            var cancellationTokenSource = new CancellationTokenSource();
-            _connectionCancellations[controlId] = cancellationTokenSource;
-            await _streamingService.StartStreaming(controlId, cancellationTokenSource.Token);
-        }
-
-        await base.OnConnectedAsync();
+        await _streamingService.StartStreaming(Context.ConnectionId, cancellationTokenSource.Token);
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        var controlId = Context.GetHttpContext()?.Request.Headers["controlId"].ToString();
-
-        if (string.IsNullOrEmpty(controlId))
+        if (_connectionCancellationTokens.TryRemove(Context.ConnectionId, out var cancellationTokenSource))
         {
-            _logger.LogWarning("Control ID not found in the request headers.");
+            cancellationTokenSource.Cancel();
         }
-        else
-        {
-            _logger.LogInformation($"Client with control ID: {controlId} disconnected. Removing from group...");
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, controlId);
-            _logger.LogInformation($"Client with control ID: {controlId} removed from group.");
-
-            _connectedViewers.TryRemove(controlId, out var _);
-
-            if (_connectionCancellations.TryRemove(controlId, out var cancellationTokenSource))
-            {
-                cancellationTokenSource.Cancel();
-            }
-        }
-
-        await base.OnDisconnectedAsync(exception);
     }
 }

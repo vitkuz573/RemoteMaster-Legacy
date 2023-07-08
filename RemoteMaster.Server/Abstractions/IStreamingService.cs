@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR;
-
-namespace RemoteMaster.Server.Abstractions;
+﻿namespace RemoteMaster.Server.Abstractions;
 
 public interface IStreamingService
 {

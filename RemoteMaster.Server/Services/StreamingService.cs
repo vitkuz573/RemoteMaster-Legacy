@@ -38,7 +38,7 @@ public class StreamingService : IStreamingService
             try
             {
                 var screenData = _screenCaptureService.CaptureScreen();
-                await _hubContext.Clients.Group(controlId).SendAsync("ScreenUpdate", screenData, cancellationToken);
+                await _hubContext.Clients.Client(controlId).SendAsync("ScreenUpdate", screenData, cancellationToken);
 
                 var config = _screenCaptureService.GetClientConfig(controlId);
                 await Task.Delay(1000 / config.FPS, cancellationToken);

@@ -119,7 +119,7 @@
 
     private async Task OpenInNewTab(Computer computer)
     {
-        var url = $"https://localhost:7111/{computer.IPAddress}/control";
+        var url = $"http://localhost:5254/{computer.IPAddress}/control";
         await JsRuntime.InvokeVoidAsync("openInNewTab", url);
     }
 }
