@@ -10,6 +10,8 @@ public class StreamingService : IStreamingService
     private readonly ILogger<StreamingService> _logger;
     private readonly IHubContext<ControlHub> _hubContext;
 
+    private readonly byte[] _endOfImageMarker = new byte[] { 255, 255, 255, 255 };
+
     public StreamingService(IScreenCaptureService screenCaptureService, ILogger<StreamingService> logger, IHubContext<ControlHub> hubContext)
     {
         _screenCaptureService = screenCaptureService;
@@ -29,18 +31,24 @@ public class StreamingService : IStreamingService
         config.FPS = fps;
     }
 
-    public async Task StartStreaming(string controlId, CancellationToken cancellationToken)
+    public async Task StartStreaming(string connectionId, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Starting screen stream for control ID {controlId}", controlId);
+        _logger.LogInformation("Starting screen stream for ID {connectionId}", connectionId);
 
         while (!cancellationToken.IsCancellationRequested)
         {
             try
             {
                 var screenData = _screenCaptureService.CaptureScreen();
-                await _hubContext.Clients.Client(controlId).SendAsync("ScreenUpdate", screenData, cancellationToken);
 
-                var config = _screenCaptureService.GetClientConfig(controlId);
+                var screenDataChunks = SplitScreenData(screenData);
+
+                foreach (var chunk in screenDataChunks)
+                {
+                    await _hubContext.Clients.Client(connectionId).SendAsync("ScreenUpdate", chunk, cancellationToken);
+                }
+
+                var config = _screenCaptureService.GetClientConfig(connectionId);
                 await Task.Delay(1000 / config.FPS, cancellationToken);
             }
             catch (Exception ex)
@@ -48,5 +56,17 @@ public class StreamingService : IStreamingService
                 _logger.LogError("An error occurred during streaming: {Message}", ex.Message);
             }
         }
+    }
+
+    private IEnumerable<byte[]> SplitScreenData(byte[] screenData)
+    {
+        var bufferSize = 8192;
+
+        for (var i = 0; i < screenData.Length; i += bufferSize)
+        {
+            yield return screenData.Skip(i).Take(bufferSize).ToArray();
+        }
+
+        yield return _endOfImageMarker;
     }
 }

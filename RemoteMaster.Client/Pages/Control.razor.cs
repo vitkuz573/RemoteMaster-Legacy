@@ -18,6 +18,8 @@ public partial class Control
     private string? _statusMessage;
     private string? _screenDataUrl;
 
+    private List<byte> _buffer = new List<byte>();
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -29,14 +31,28 @@ public partial class Control
 
             _hubConnection.On<byte[]>("ScreenUpdate", (screenData) =>
             {
-                _screenDataUrl = $"data:image/png;base64,{Convert.ToBase64String(screenData)}";
-                _statusMessage = null;
-                InvokeAsync(StateHasChanged);
+                if (IsEndOfImage(screenData))
+                {
+                    var fullImageData = _buffer.ToArray();
+                    _screenDataUrl = $"data:image/png;base64,{Convert.ToBase64String(fullImageData)}";
+                    _statusMessage = null;
+                    InvokeAsync(StateHasChanged);
+                    _buffer.Clear();
+                }
+                else
+                {
+                    _buffer.AddRange(screenData);
+                }
             });
 
             await _hubConnection.StartAsync();
             await InvokeAsync(StateHasChanged);
         }
+    }
+
+    private static bool IsEndOfImage(byte[] data)
+    {
+        return data.Length == 4 && data.All(b => b == 255);
     }
 
     public async Task DisposeAsync()
