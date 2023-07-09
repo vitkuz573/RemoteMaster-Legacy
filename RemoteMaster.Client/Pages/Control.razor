@@ -1,2 +1,10 @@
 ﻿@page "/{Host}/control"
 
+@if (!string.IsNullOrEmpty(_screenDataUrl))
+{
+    <img src="@_screenDataUrl" width="1494" />
+}
+else
+{
+    <p>Establishing connection...</p>
+}

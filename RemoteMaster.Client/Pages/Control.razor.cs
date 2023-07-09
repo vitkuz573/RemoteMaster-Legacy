@@ -11,11 +11,21 @@ public partial class Control
     [Inject]
     private IJSRuntime JSRuntime { get; set; }
 
+    private string _screenDataUrl;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await JSRuntime.InvokeVoidAsync("window.setupSignalRConnection", Host);
+            var dotnetHelper = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("window.setupSignalRConnection", Host, dotnetHelper);
         }
+    }
+
+    [JSInvokable]
+    public async Task UpdateScreenDataUrl(string dataUrl)
+    {
+        _screenDataUrl = dataUrl;
+        await InvokeAsync(StateHasChanged);
     }
 }

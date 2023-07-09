@@ -4,6 +4,7 @@
     "lib": [ "dom", "dom.iterable", "esnext" ],
     "strict": true,
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "downlevelIteration": true
   }
 }

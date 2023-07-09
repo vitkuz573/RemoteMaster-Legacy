@@ -41,6 +41,9 @@ public class StreamingService : IStreamingService
                         IsEndOfImage = i == screenDataChunks.Count - 1 && IsEndOfImage(chunk)
                     };
                     await _hubContext.Clients.Client(connectionId).SendAsync("ScreenUpdate", dto, cancellationToken);
+
+                    // Introduce a delay between each iteration
+                    await Task.Delay(100); // Adjust the delay duration as needed
                 }
             }
             catch (Exception ex)
