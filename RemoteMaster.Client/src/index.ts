@@ -7,6 +7,11 @@ declare global {
     }
 }
 
+interface ScreenUpdateDto {
+    Data: Uint8Array;
+    IsEndOfImage: boolean;
+}
+
 let _buffer: Uint8Array[] = [];
 
 window.setupSignalRConnection = function (host: string, dotnetHelper: any) {
@@ -20,7 +25,7 @@ window.setupSignalRConnection = function (host: string, dotnetHelper: any) {
         .configureLogging(LogLevel.Information)
         .build();
 
-    connection.on("ScreenUpdate", (dto: { Data: Uint8Array, IsEndOfImage: boolean }) => {
+    connection.on("ScreenUpdate", (dto: ScreenUpdateDto) => {
         _buffer.push(dto.Data);
 
         if (dto.IsEndOfImage) {
