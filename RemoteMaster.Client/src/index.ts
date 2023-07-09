@@ -20,10 +20,9 @@ window.setupSignalRConnection = function (host: string, dotnetHelper: any) {
         .build();
 
     connection.on("ScreenUpdate", (dto: { Data: Uint8Array, IsEndOfImage: boolean }) => {
-        // console.log(dto);
 
         if (dto.IsEndOfImage) {
-            let fullImageData = _buffer.reduce((acc, val) => acc.concat(val), []);
+            let fullImageData = _buffer.flat();
             let blob = new Blob([new Uint8Array(fullImageData)], { type: 'image/png' });
             let url = URL.createObjectURL(blob);
             dotnetHelper.invokeMethodAsync('UpdateScreenDataUrl', url);
@@ -34,5 +33,6 @@ window.setupSignalRConnection = function (host: string, dotnetHelper: any) {
         }
     });
 
-    connection.start().catch(err => console.error(err.toString()));
+    connection.start().catch((err: Error) => console.error(err.toString()));
 }
+
