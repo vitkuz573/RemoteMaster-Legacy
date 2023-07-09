@@ -33,14 +33,14 @@ public class ScreenCaptureService : IScreenCaptureService
     private static byte[] SaveBitmap(Bitmap bitmap)
     {
         using var memoryStream = new MemoryStream();
-        bitmap.Save(memoryStream, ImageFormat.Png); // сохраняем Bitmap в MemoryStream в формате PNG
+        bitmap.Save(memoryStream, ImageFormat.Png);
 
         var originalData = memoryStream.ToArray();
-        var originalImage = SKBitmap.Decode(originalData); // загружаем изображение в SKBitmap
+        var originalImage = SKBitmap.Decode(originalData);
 
         using var newImage = SKImage.FromBitmap(originalImage);
-        using var newData = newImage.Encode(SKEncodedImageFormat.Jpeg, 80); // преобразуем изображение в JPEG с качеством 90
+        using var newData = newImage.Encode(SKEncodedImageFormat.Jpeg, 80);
 
-        return newData.ToArray(); // возвращаем JPEG изображение как массив байтов
+        return newData.ToArray();
     }
 }
