@@ -1,4 +1,5 @@
 ﻿using RemoteMaster.Server.Abstractions;
+using SkiaSharp;
 using System.Drawing;
 using System.Drawing.Imaging;
 using Windows.Win32.Foundation;
@@ -32,8 +33,14 @@ public class ScreenCaptureService : IScreenCaptureService
     private static byte[] SaveBitmap(Bitmap bitmap)
     {
         using var memoryStream = new MemoryStream();
-        bitmap.Save(memoryStream, ImageFormat.Png);
+        bitmap.Save(memoryStream, ImageFormat.Png); // сохраняем Bitmap в MemoryStream в формате PNG
 
-        return memoryStream.ToArray();
+        var originalData = memoryStream.ToArray();
+        var originalImage = SKBitmap.Decode(originalData); // загружаем изображение в SKBitmap
+
+        using var newImage = SKImage.FromBitmap(originalImage);
+        using var newData = newImage.Encode(SKEncodedImageFormat.Jpeg, 80); // преобразуем изображение в JPEG с качеством 90
+
+        return newData.ToArray(); // возвращаем JPEG изображение как массив байтов
     }
 }

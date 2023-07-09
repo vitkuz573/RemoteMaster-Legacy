@@ -4015,7 +4015,7 @@
       .build();
     n.on('ScreenUpdate', (e) => {
       if ((Ae.push(e.Data), e.IsEndOfImage)) {
-        let e = new Blob(Ae, { type: 'image/png' }),
+        let e = new Blob(Ae, { type: 'image/jpeg' }),
           n = URL.createObjectURL(e);
         t.invokeMethodAsync('UpdateScreenDataUrl', n), (Ae = []);
       }

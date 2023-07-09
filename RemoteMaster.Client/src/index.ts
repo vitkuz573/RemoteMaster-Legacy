@@ -23,7 +23,7 @@ window.setupSignalRConnection = function (host: string, dotnetHelper: any) {
         _buffer.push(dto.Data);
 
         if (dto.IsEndOfImage) {
-            let blob = new Blob(_buffer, { type: 'image/png' });
+            let blob = new Blob(_buffer, { type: 'image/jpeg' });
             let url = URL.createObjectURL(blob);
             dotnetHelper.invokeMethodAsync('UpdateScreenDataUrl', url);
             _buffer = [];
