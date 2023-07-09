@@ -8,14 +8,14 @@ namespace RemoteMaster.Server.Services;
 public class StreamingService : IStreamingService
 {
     private readonly IScreenCaptureService _screenCaptureService;
-    private readonly ILogger<StreamingService> _logger;
     private readonly IHubContext<ControlHub> _hubContext;
+    private readonly ILogger<StreamingService> _logger;
 
     public StreamingService(IScreenCaptureService screenCaptureService, ILogger<StreamingService> logger, IHubContext<ControlHub> hubContext)
     {
         _screenCaptureService = screenCaptureService;
-        _logger = logger;
         _hubContext = hubContext;
+        _logger = logger;
     }
 
     public async Task StartStreaming(string connectionId, CancellationToken cancellationToken)
@@ -38,6 +38,7 @@ public class StreamingService : IStreamingService
                         Data = chunk,
                         IsEndOfImage = i == screenDataChunks.Count - 1
                     };
+
                     await _hubContext.Clients.Client(connectionId).SendAsync("ScreenUpdate", dto, cancellationToken);
                 }
             }
