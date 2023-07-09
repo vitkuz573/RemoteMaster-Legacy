@@ -4010,6 +4010,7 @@
         skipNegotiation: !0,
         transport: A.WebSockets,
       })
+      .withAutomaticReconnect([0, 3e3, 5e3, 1e4, 15e3, 3e4])
       .withHubProtocol(new Re())
       .configureLogging(f.Information)
       .build();

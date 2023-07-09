@@ -15,6 +15,7 @@ window.setupSignalRConnection = function (host: string, dotnetHelper: any) {
             skipNegotiation: true,
             transport: HttpTransportType.WebSockets
         })
+        .withAutomaticReconnect([0, 3000, 5000, 10000, 15000, 30000])
         .withHubProtocol(new MessagePackHubProtocol())
         .configureLogging(LogLevel.Information)
         .build();
