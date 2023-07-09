@@ -23,9 +23,10 @@ public partial class Control
     }
 
     [JSInvokable]
-    public async Task UpdateScreenDataUrl(string dataUrl)
+    public async Task UpdateScreenDataUrl(string url)
     {
-        _screenDataUrl = dataUrl;
+        _screenDataUrl = url;
         await InvokeAsync(StateHasChanged);
+        JSRuntime.InvokeVoidAsync("URL.revokeObjectURL", url);
     }
 }
