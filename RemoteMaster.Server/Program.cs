@@ -5,7 +5,7 @@ using RemoteMaster.Server.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorPages();
-builder.Services.AddSignalR();
+builder.Services.AddSignalR().AddMessagePackProtocol();
 
 builder.Services.AddScoped<IScreenCaptureService, ScreenCaptureService>();
 builder.Services.AddScoped<IStreamingService, StreamingService>();

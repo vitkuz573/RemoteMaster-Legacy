@@ -1,27 +1,2 @@
 ﻿@page "/{Host}/control"
 
-@if (_hubConnection != null)
-{
-    @switch (_hubConnection.State)
-    {
-        case HubConnectionState.Disconnected:
-        case HubConnectionState.Connecting:
-        case HubConnectionState.Reconnecting:
-            <p>@_statusMessage</p>
-            break;
-        case HubConnectionState.Connected:
-            if (string.IsNullOrEmpty(_screenDataUrl))
-            {
-                <p>Connection started successfully, waiting for screen update...</p>
-            }
-            else
-            {
-                <img src="@_screenDataUrl" width="1494" />
-            }
-            break;
-    }
-}
-else
-{
-    <p>Establishing connection...</p>
-}
