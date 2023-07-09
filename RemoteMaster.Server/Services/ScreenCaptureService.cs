@@ -32,13 +32,16 @@ public class ScreenCaptureService : IScreenCaptureService
 
     private static byte[] SaveBitmap(Bitmap bitmap)
     {
-        using var memoryStream = new MemoryStream();
-        bitmap.Save(memoryStream, ImageFormat.Png);
+        var info = new SKImageInfo(bitmap.Width, bitmap.Height, SKColorType.Bgra8888);
+        var skBitmap = new SKBitmap(info);
 
-        var originalData = memoryStream.ToArray();
-        var originalImage = SKBitmap.Decode(originalData);
+        var bitmapData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadOnly, bitmap.PixelFormat);
 
-        using var newImage = SKImage.FromBitmap(originalImage);
+        skBitmap.InstallPixels(info, bitmapData.Scan0, bitmapData.Stride);
+
+        bitmap.UnlockBits(bitmapData);
+
+        using var newImage = SKImage.FromBitmap(skBitmap);
         using var newData = newImage.Encode(SKEncodedImageFormat.Jpeg, 80);
 
         return newData.ToArray();
