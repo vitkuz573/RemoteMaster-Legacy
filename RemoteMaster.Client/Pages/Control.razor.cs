@@ -27,6 +27,5 @@ public partial class Control
     {
         _screenDataUrl = url;
         await InvokeAsync(StateHasChanged);
-        JSRuntime.InvokeVoidAsync("URL.revokeObjectURL", url);
     }
 }

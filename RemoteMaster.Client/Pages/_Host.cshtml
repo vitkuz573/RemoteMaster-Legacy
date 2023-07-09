@@ -51,6 +51,10 @@
         window.openInNewTab = (url) => {
             window.open(url, '_blank');
         };
+
+        window.revokeUrl = function (url) {
+            URL.revokeObjectURL(url);
+        }
     </script>
 </body>
 </html>

@@ -2,7 +2,7 @@
 
 @if (!string.IsNullOrEmpty(_screenDataUrl))
 {
-    <img src="@_screenDataUrl" width="1494" />
+    <img src="@_screenDataUrl" width="1494" onload="window.revokeUrl(this.src)" />
 }
 else
 {
