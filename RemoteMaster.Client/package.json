@@ -9,6 +9,10 @@
     "webpack-cli": "^5.1.4"
   },
   "scripts": {
-    "build": "webpack"
+    "build": "webpack",
+    "format": "prettier --write wwwroot/js/*.js"
+  },
+  "devDependencies": {
+    "prettier": "^3.0.0"
   }
 }
