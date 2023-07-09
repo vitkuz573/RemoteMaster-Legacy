@@ -11,8 +11,6 @@ public class StreamingService : IStreamingService
     private readonly ILogger<StreamingService> _logger;
     private readonly IHubContext<ControlHub> _hubContext;
 
-    private readonly byte[] _endOfImageMarker = new byte[] { 255, 255, 255, 255 };
-
     public StreamingService(IScreenCaptureService screenCaptureService, ILogger<StreamingService> logger, IHubContext<ControlHub> hubContext)
     {
         _screenCaptureService = screenCaptureService;
@@ -30,7 +28,7 @@ public class StreamingService : IStreamingService
             {
                 var screenData = _screenCaptureService.CaptureScreen();
 
-                var screenDataChunks = SplitScreenData(screenData).ToList();
+                var screenDataChunks = SplitScreenData(screenData, 8192).ToList();
 
                 for (int i = 0; i < screenDataChunks.Count; i++)
                 {
@@ -38,7 +36,7 @@ public class StreamingService : IStreamingService
                     var dto = new ScreenUpdateDto
                     {
                         Data = chunk,
-                        IsEndOfImage = i == screenDataChunks.Count - 1 && IsEndOfImage(chunk)
+                        IsEndOfImage = i == screenDataChunks.Count - 1
                     };
                     await _hubContext.Clients.Client(connectionId).SendAsync("ScreenUpdate", dto, cancellationToken);
                 }
@@ -50,20 +48,11 @@ public class StreamingService : IStreamingService
         }
     }
 
-    private static bool IsEndOfImage(byte[] data)
+    private static IEnumerable<byte[]> SplitScreenData(byte[] screenData, int chunkSize)
     {
-        return data.Length == 4 && data.All(b => b == 255);
-    }
-
-    private IEnumerable<byte[]> SplitScreenData(byte[] screenData)
-    {
-        var bufferSize = 8192;
-
-        for (var i = 0; i < screenData.Length; i += bufferSize)
+        for (var i = 0; i < screenData.Length; i += chunkSize)
         {
-            yield return screenData.Skip(i).Take(bufferSize).ToArray();
+            yield return screenData.Skip(i).Take(chunkSize).ToArray();
         }
-
-        yield return _endOfImageMarker;
     }
 }
