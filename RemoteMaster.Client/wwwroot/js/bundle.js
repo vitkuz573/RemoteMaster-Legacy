@@ -4005,7 +4005,7 @@
   }
   let Ae = [];
   window.setupSignalRConnection = function (e, t) {
-    let n = new G()
+    const n = new G()
       .withUrl(`http://${e}:5076/hubs/control`, {
         skipNegotiation: !0,
         transport: A.WebSockets,
@@ -4016,11 +4016,13 @@
       .build();
     n.on('ScreenUpdate', (e) => {
       if ((Ae.push(e.Data), e.IsEndOfImage)) {
-        let e = new Blob(Ae, { type: 'image/jpeg' }),
+        const e = new Blob(Ae, { type: 'image/jpeg' }),
           n = URL.createObjectURL(e);
         t.invokeMethodAsync('UpdateScreenDataUrl', n), (Ae = []);
       }
     }),
-      n.start().catch((e) => console.error(e.toString()));
+      n.start().catch((e) => {
+        console.error(e.toString());
+      });
   };
 })();
