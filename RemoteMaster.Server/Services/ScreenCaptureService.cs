@@ -11,6 +11,13 @@ namespace RemoteMaster.Server.Services;
 
 public class ScreenCaptureService : IScreenCaptureService
 {
+    private readonly IViewerService _viewerService;
+
+    public ScreenCaptureService(IViewerService viewerService)
+    {
+        _viewerService = viewerService;
+    }
+
     public unsafe byte[] CaptureScreen()
     {
         var width = GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CXVIRTUALSCREEN);
@@ -30,8 +37,11 @@ public class ScreenCaptureService : IScreenCaptureService
         return SaveBitmap(bitmap);
     }
 
-    private static byte[] SaveBitmap(Bitmap bitmap)
+    private byte[] SaveBitmap(Bitmap bitmap)
     {
+        var imageFormat = _viewerService.GetImageFormat();
+        var imageQuality = _viewerService.GetImageQuality();
+
         var info = new SKImageInfo(bitmap.Width, bitmap.Height, SKColorType.Bgra8888);
         var skBitmap = new SKBitmap(info);
 
@@ -42,7 +52,7 @@ public class ScreenCaptureService : IScreenCaptureService
         bitmap.UnlockBits(bitmapData);
 
         using var newImage = SKImage.FromBitmap(skBitmap);
-        using var newData = newImage.Encode(SKEncodedImageFormat.Jpeg, 80);
+        using var newData = newImage.Encode(imageFormat, imageQuality);
 
         return newData.ToArray();
     }
