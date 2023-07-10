@@ -45,5 +45,8 @@ window.setupSignalRConnection = function (host: string, dotnetHelper: any) {
 }
 
 window.setQuality = function (quality) {
-  connection.invoke('SetQuality', quality).catch((err: Error) => { console.error(err) })
+  console.log('SetQuality on client Invoked')
+  console.log('Connection state: ' + connection.state)
+
+  connection.invoke('SetQuality', quality)
 }
