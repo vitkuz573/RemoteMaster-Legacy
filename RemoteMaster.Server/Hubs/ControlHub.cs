@@ -5,10 +5,10 @@ namespace RemoteMaster.Server.Hubs;
 
 public class ControlHub : Hub
 {
-    private readonly IStreamingService _streamingService;
+    private readonly IScreenCasterService _streamingService;
     private readonly ILogger<ControlHub> _logger;
 
-    public ControlHub(ILogger<ControlHub> logger, IStreamingService streamingService)
+    public ControlHub(ILogger<ControlHub> logger, IScreenCasterService streamingService)
     {
         _logger = logger;
         _streamingService = streamingService;

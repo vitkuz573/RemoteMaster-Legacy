@@ -5,13 +5,13 @@ using RemoteMaster.Shared.Dto;
 
 namespace RemoteMaster.Server.Services;
 
-public class StreamingService : IStreamingService
+public class ScreenCastService : IScreenCasterService
 {
     private readonly IScreenCaptureService _screenCaptureService;
     private readonly IHubContext<ControlHub> _hubContext;
-    private readonly ILogger<StreamingService> _logger;
+    private readonly ILogger<ScreenCastService> _logger;
 
-    public StreamingService(IScreenCaptureService screenCaptureService, ILogger<StreamingService> logger, IHubContext<ControlHub> hubContext)
+    public ScreenCastService(IScreenCaptureService screenCaptureService, ILogger<ScreenCastService> logger, IHubContext<ControlHub> hubContext)
     {
         _screenCaptureService = screenCaptureService;
         _hubContext = hubContext;

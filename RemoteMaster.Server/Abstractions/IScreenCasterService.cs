@@ -1,6 +1,6 @@
 ﻿namespace RemoteMaster.Server.Abstractions;
 
-public interface IStreamingService
+public interface IScreenCasterService
 {
     Task StartStreaming(string connectionId, CancellationToken cancellationToken);
 }
