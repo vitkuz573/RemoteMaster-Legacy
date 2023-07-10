@@ -2268,7 +2268,7 @@
         : { invocationId: e, result: n, type: B.Completion };
     }
   }
-  class J {
+  class Q {
     constructor() {
       (this.name = 'json'), (this.version = 1), (this.transferFormat = M.Text);
     }
@@ -2350,7 +2350,7 @@
       if ('string' != typeof e || '' === e) throw new Error(t);
     }
   }
-  const Q = {
+  const J = {
     trace: f.Trace,
     debug: f.Debug,
     info: f.Information,
@@ -2366,7 +2366,7 @@
       if ((y.isRequired(e, 'logging'), void 0 !== e.log)) this.logger = e;
       else if ('string' == typeof e) {
         const t = (function (e) {
-          const t = Q[e.toLowerCase()];
+          const t = J[e.toLowerCase()];
           if (void 0 !== t) return t;
           throw new Error(`Unknown log level: ${e}`);
         })(e);
@@ -2411,7 +2411,7 @@
       return X.create(
         t,
         this.logger || _.instance,
-        this.protocol || new J(),
+        this.protocol || new Q(),
         this.reconnectPolicy
       );
     }
@@ -4003,9 +4003,10 @@
       return t;
     }
   }
-  let Ae = [];
-  window.setupSignalRConnection = function (e, t) {
-    const n = new G()
+  let Ae,
+    Me = [];
+  (window.setupSignalRConnection = function (e, t) {
+    (Ae = new G()
       .withUrl(`http://${e}:5076/hubs/control`, {
         skipNegotiation: !0,
         transport: A.WebSockets,
@@ -4013,16 +4014,21 @@
       .withAutomaticReconnect([0, 3e3, 5e3, 1e4, 15e3, 3e4])
       .withHubProtocol(new Re())
       .configureLogging(f.Information)
-      .build();
-    n.on('ScreenUpdate', (e) => {
-      if ((Ae.push(e.Data), e.IsEndOfImage)) {
-        const e = new Blob(Ae, { type: 'image/jpeg' }),
-          n = URL.createObjectURL(e);
-        t.invokeMethodAsync('UpdateScreenDataUrl', n), (Ae = []);
-      }
-    }),
-      n.start().catch((e) => {
+      .build()),
+      Ae.on('ScreenUpdate', (e) => {
+        if ((Me.push(e.Data), e.IsEndOfImage)) {
+          const e = new Blob(Me, { type: 'image/jpeg' }),
+            n = URL.createObjectURL(e);
+          t.invokeMethodAsync('UpdateScreenDataUrl', n), (Me = []);
+        }
+      }),
+      Ae.start().catch((e) => {
         console.error(e.toString());
       });
-  };
+  }),
+    (window.setQuality = function (e) {
+      Ae.invoke('SetQuality', e).catch((e) => {
+        console.error(e);
+      });
+    });
 })();

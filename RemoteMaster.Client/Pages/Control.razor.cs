@@ -28,4 +28,10 @@ public partial class Control
         _screenDataUrl = url;
         await InvokeAsync(StateHasChanged);
     }
+
+    public async Task QualityChanged(ChangeEventArgs e)
+    {
+        var quality = int.Parse(e.Value.ToString());
+        await JSRuntime.InvokeVoidAsync("window.setQuality", quality);
+    }
 }

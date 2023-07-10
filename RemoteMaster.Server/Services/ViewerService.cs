@@ -7,16 +7,16 @@ namespace RemoteMaster.Server.Services;
 
 public class ViewerService : IViewerService
 {
-    private readonly ViewerOptions _options;
+    private readonly IOptionsSnapshot<ViewerOptions> _options;
 
-    public ViewerService(IOptions<ViewerOptions> options)
+    public ViewerService(IOptionsSnapshot<ViewerOptions> options)
     {
-        _options = options.Value;
+        _options = options;
     }
 
     public SKEncodedImageFormat GetImageFormat()
     {
-        return _options.ImageFormat switch
+        return _options.Value.ImageFormat switch
         {
             "Png" => SKEncodedImageFormat.Png,
             "Jpeg" => SKEncodedImageFormat.Jpeg,
@@ -26,6 +26,16 @@ public class ViewerService : IViewerService
 
     public int GetImageQuality()
     {
-        return _options.ImageQuality ?? 80;
+        return _options.Value.ImageQuality ?? 80;
+    }
+
+    public void SetImageQuality(int quality)
+    {
+        if (quality < 1 || quality > 100)
+        {
+            throw new ArgumentException("Quality must be between 1 and 100.");
+        }
+
+        _options.Value.ImageQuality = quality;
     }
 }

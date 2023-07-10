@@ -7,4 +7,6 @@ public interface IViewerService
     SKEncodedImageFormat GetImageFormat();
 
     int GetImageQuality();
+
+    void SetImageQuality(int quality);
 }

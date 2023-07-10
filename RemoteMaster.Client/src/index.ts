@@ -5,6 +5,7 @@ declare global {
   interface Window {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setupSignalRConnection: (host: string, dotnetHelper: any) => void
+    setQuality: (quality: number) => void
   }
 }
 
@@ -14,10 +15,12 @@ interface ScreenUpdateDto {
 }
 
 let _buffer: Uint8Array[] = []
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let connection: any
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 window.setupSignalRConnection = function (host: string, dotnetHelper: any) {
-  const connection = new HubConnectionBuilder()
+  connection = new HubConnectionBuilder()
     .withUrl(`http://${host}:5076/hubs/control`, {
       skipNegotiation: true,
       transport: HttpTransportType.WebSockets
@@ -39,4 +42,8 @@ window.setupSignalRConnection = function (host: string, dotnetHelper: any) {
   })
 
   connection.start().catch((err: Error) => { console.error(err.toString()) })
+}
+
+window.setQuality = function (quality) {
+  connection.invoke('SetQuality', quality).catch((err: Error) => { console.error(err) })
 }

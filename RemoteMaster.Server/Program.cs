@@ -10,7 +10,7 @@ builder.Services.AddSignalR().AddMessagePackProtocol();
 builder.Services.AddScoped<IScreenCaptureService, ScreenCaptureService>();
 builder.Services.AddScoped<IScreenCasterService, ScreenCastService>();
 builder.Services.AddScoped<IScreenService, ScreenService>();
-builder.Services.AddSingleton<IViewerService, ViewerService>();
+builder.Services.AddScoped<IViewerService, ViewerService>();
 
 var app = builder.Build();
 
