@@ -1,11 +1,5 @@
-﻿using Microsoft.AspNetCore.DataProtection.KeyManagement;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Server.Abstractions;
-using System;
-using System.Runtime.InteropServices;
-using Windows.Win32.UI.Input.KeyboardAndMouse;
-using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Server.Hubs;
 
@@ -14,13 +8,15 @@ public class ControlHub : Hub
     private readonly IScreenCasterService _streamingService;
     private readonly IViewerService _viewerService;
     private readonly ILogger<ControlHub> _logger;
+    private readonly IInputSender _inputSender;
     private CancellationTokenSource _cancellationTokenSource;
 
-    public ControlHub(ILogger<ControlHub> logger, IScreenCasterService streamingService, IViewerService viewerService)
+    public ControlHub(ILogger<ControlHub> logger, IScreenCasterService streamingService, IViewerService viewerService, IInputSender inputSender)
     {
         _logger = logger;
         _streamingService = streamingService;
         _viewerService = viewerService;
+        _inputSender = inputSender;
     }
 
     public override async Task OnConnectedAsync()
@@ -58,28 +54,6 @@ public class ControlHub : Hub
     public void SendMouseCoordinates(int x, int y, double imgWidth, double imgHeight)
     {
         _logger.LogInformation($"Received mouse coordinates: ({x}, {y}) and image dimensions: ({imgWidth}, {imgHeight})");
-
-        // переводим координаты мыши в абсолютные координаты для SendInput
-        var translatedX = (int)(x * 65535 / imgWidth);
-        var translatedY = (int)(y * 65535 / imgHeight);
-
-        var input = new INPUT
-        {
-            type = INPUT_TYPE.INPUT_MOUSE
-        };
-
-        input.Anonymous.mi = new MOUSEINPUT
-        {
-            dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE | MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE | MOUSE_EVENT_FLAGS.MOUSEEVENTF_VIRTUALDESK,
-            dx = translatedX,
-            dy = translatedY,
-            time = 0,
-            mouseData = 0,
-            dwExtraInfo = (nuint)GetMessageExtraInfo().Value
-        };
-
-        var inputs = new Span<INPUT>(ref input);
-
-        SendInput(inputs, Marshal.SizeOf(typeof(INPUT)));
+        _inputSender.SendMouseCoordinates(x, y, imgWidth, imgHeight);
     }
 }

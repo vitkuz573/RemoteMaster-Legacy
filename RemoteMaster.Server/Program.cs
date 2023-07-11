@@ -11,6 +11,7 @@ builder.Services.AddScoped<IScreenCaptureService, ScreenCaptureService>();
 builder.Services.AddScoped<IScreenCasterService, ScreenCastService>();
 builder.Services.AddScoped<IScreenService, ScreenService>();
 builder.Services.AddScoped<IViewerService, ViewerService>();
+builder.Services.AddScoped<IInputSender, InputSender>();
 
 var app = builder.Build();
 
