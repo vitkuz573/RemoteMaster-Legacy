@@ -4030,5 +4030,10 @@
       console.log('SetQuality on client Invoked'),
         console.log(`Connection state: ${Ae.state}`),
         Ae.invoke('SetQuality', e);
+    }),
+    (window.sendMouseCoordinates = function (e, t) {
+      console.log('SendMouseCoordinates on client Invoked'),
+        console.log(`Connection state: ${Ae.state}`),
+        Ae.invoke('SendMouseCoordinates', e, t);
     });
 })();

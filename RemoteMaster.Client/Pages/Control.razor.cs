@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 
 namespace RemoteMaster.Client.Pages;
@@ -33,5 +34,10 @@ public partial class Control
     {
         var quality = int.Parse(e.Value.ToString());
         await JSRuntime.InvokeVoidAsync("window.setQuality", quality);
+    }
+
+    private async Task OnMouseMove(MouseEventArgs e)
+    {
+        await JSRuntime.InvokeVoidAsync("window.sendMouseCoordinates", e.ClientX, e.ClientY);
     }
 }

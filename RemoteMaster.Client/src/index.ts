@@ -7,6 +7,7 @@ declare global {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setupSignalRConnection: (host: string, dotnetHelper: any) => void
     setQuality: (quality: number) => void
+    sendMouseCoordinates: (x: any, y: any) => void
   }
 }
 
@@ -46,4 +47,12 @@ window.setQuality = function (quality): void {
   console.log(`Connection state: ${connection.state}`)
 
   connection.invoke('SetQuality', quality)
+}
+
+window.sendMouseCoordinates = function (x: any, y: any): void {
+  console.log('SendMouseCoordinates on client Invoked')
+  // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+  console.log(`Connection state: ${connection.state}`)
+
+  connection.invoke('SendMouseCoordinates', x, y)
 }

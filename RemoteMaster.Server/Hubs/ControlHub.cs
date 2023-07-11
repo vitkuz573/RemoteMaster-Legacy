@@ -48,4 +48,12 @@ public class ControlHub : Hub
 
         _viewerService.SetImageQuality(quality);
     }
+
+    public async Task SendMouseCoordinates(int x, int y)
+    {
+        _logger.LogInformation($"Received mouse coordinates: ({x}, {y})");
+
+        // Здесь вы можете обработать координаты мыши как вам нужно
+    }
+
 }
