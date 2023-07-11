@@ -71,7 +71,7 @@ public partial class Control
     {
         var quality = int.Parse(e.Value.ToString());
 
-        _hubConnection.InvokeAsync("SetQuality", quality);
+        await _hubConnection.InvokeAsync("SetQuality", quality);
     }
 
     private async Task OnMouseMove(MouseEventArgs e)
@@ -103,7 +103,7 @@ public partial class Control
         var absoluteX = Math.Round(relativeX * 65535 / imgPosition.Width);
         var absoluteY = Math.Round(relativeY * 65535 / imgPosition.Height);
 
-        _hubConnection.InvokeAsync("SendMouseButton", e.Button, e.Type, absoluteX, absoluteY);
+        await _hubConnection.InvokeAsync("SendMouseButton", e.Button, e.Type, absoluteX, absoluteY);
     }
 }
 
