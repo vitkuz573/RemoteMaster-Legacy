@@ -3,3 +3,5 @@ GetDC
 ReleaseDC
 BitBlt
 SetCursorPos
+SendInput
+GetMessageExtraInfo

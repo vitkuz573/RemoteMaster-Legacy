@@ -4027,13 +4027,9 @@
       });
   }),
     (window.setQuality = function (e) {
-      console.log('SetQuality on client Invoked'),
-        console.log(`Connection state: ${Ae.state}`),
-        Ae.invoke('SetQuality', e);
+      Ae.invoke('SetQuality', e);
     }),
     (window.sendMouseCoordinates = function (e, t, n, o) {
-      console.log('SendMouseCoordinates on client Invoked'),
-        console.log(`Connection state: ${Ae.state}`),
-        Ae.invoke('SendMouseCoordinates', e, t, n, o);
+      Ae.invoke('SendMouseCoordinates', e, t, n, o);
     });
 })();
