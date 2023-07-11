@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="src\index.ts" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Blazorise" Version="1.2.4" />
     <PackageReference Include="Blazorise.FluentValidation" Version="1.2.4" />
     <PackageReference Include="Blazorise.Icons.FontAwesome" Version="1.2.4" />
@@ -33,10 +29,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RemoteMaster.Shared\RemoteMaster.Shared.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <TypeScriptCompile Include="src\index.ts" />
   </ItemGroup>
 
 </Project>
