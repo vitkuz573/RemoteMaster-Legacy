@@ -38,6 +38,27 @@ public partial class Control
 
     private async Task OnMouseMove(MouseEventArgs e)
     {
-        await JSRuntime.InvokeVoidAsync("window.sendMouseCoordinates", e.ClientX, e.ClientY);
+        var imgElement = await JSRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", "screenImage");
+        var imgPosition = await imgElement.InvokeAsync<DOMRect>("getBoundingClientRect");
+        var imgWidth = imgPosition.Width;
+        var imgHeight = imgPosition.Height;
+
+        // вычитаем позицию изображения из координат мыши
+        var relativeX = e.ClientX - imgPosition.Left;
+        var relativeY = e.ClientY - imgPosition.Top;
+
+        await JSRuntime.InvokeVoidAsync("window.sendMouseCoordinates", relativeX, relativeY, imgWidth, imgHeight);
     }
 }
+
+public class DOMRect
+{
+    public double Left { get; set; }
+
+    public double Top { get; set; }
+
+    public double Width { get; set; }
+
+    public double Height { get; set; }
+}
+

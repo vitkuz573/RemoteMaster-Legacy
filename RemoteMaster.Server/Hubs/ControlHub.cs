@@ -50,10 +50,19 @@ public class ControlHub : Hub
         _viewerService.SetImageQuality(quality);
     }
 
-    public async Task SendMouseCoordinates(int x, int y)
+    public async Task SendMouseCoordinates(int x, int y, double imgWidth, double imgHeight)
     {
-        _logger.LogInformation($"Received mouse coordinates: ({x}, {y})");
+        _logger.LogInformation($"Received mouse coordinates: ({x}, {y}) and image dimensions: ({imgWidth}, {imgHeight})");
 
-        SetCursorPos(x, y);
+        // переводим координаты мыши в абсолютные координаты для SendInput
+        var translatedX = (int)(x * 65535 / imgWidth);
+        var translatedY = (int)(y * 65535 / imgHeight);
+
+        // выводим полученные и переведенные координаты в лог
+        _logger.LogInformation($"Translated mouse coordinates: ({translatedX}, {translatedY})");
+
+        // здесь вы можете обработать переведенные координаты мыши как вам нужно
+        // например, можно вызывать Win32 API SendInput:
+        // Win32ApiHelper.SendMouseInput(translatedX, translatedY);
     }
 }
