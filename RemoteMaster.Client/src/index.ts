@@ -42,17 +42,9 @@ window.setupSignalRConnection = function (host: string, dotnetHelper: any): void
 }
 
 window.setQuality = function (quality): void {
-  console.log('SetQuality on client Invoked')
-  // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-  console.log(`Connection state: ${connection.state}`)
-
   connection.invoke('SetQuality', quality)
 }
 
 window.sendMouseCoordinates = function (x, y, imgWidth, imgHeight): void {
-  console.log('SendMouseCoordinates on client Invoked')
-  // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-  console.log(`Connection state: ${connection.state}`)
-
   connection.invoke('SendMouseCoordinates', x, y, imgWidth, imgHeight)
 }
