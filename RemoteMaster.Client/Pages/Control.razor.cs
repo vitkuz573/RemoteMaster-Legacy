@@ -33,6 +33,7 @@ public partial class Control
                     options.Transports = HttpTransportType.WebSockets;
                 })
                 .AddMessagePackProtocol()
+                .WithAutomaticReconnect(new RetryPolicy())
                 .Build();
 
             _hubConnection.On<ScreenUpdateDto>("ScreenUpdate", async dto =>
@@ -44,20 +45,14 @@ public partial class Control
                     var allData = _buffer.SelectMany(bytes => bytes).ToArray();
                     _buffer.Clear();
 
-                    var url = await JSRuntime.InvokeAsync<string>("createImageBlobUrl", allData);
+                    _screenDataUrl = await JSRuntime.InvokeAsync<string>("createImageBlobUrl", allData);
 
-                    await UpdateScreenDataUrl(url);
+                    await InvokeAsync(StateHasChanged);
                 }
             });
 
             await _hubConnection.StartAsync();
         }
-    }
-
-    public async Task UpdateScreenDataUrl(string url)
-    {
-        _screenDataUrl = url;
-        await InvokeAsync(StateHasChanged);
     }
 
     public async Task QualityChanged(ChangeEventArgs e)
