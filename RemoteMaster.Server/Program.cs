@@ -9,7 +9,6 @@ builder.Services.AddSignalR().AddMessagePackProtocol();
 
 builder.Services.AddScoped<IScreenCaptureService, ScreenCaptureService>();
 builder.Services.AddScoped<IScreenCasterService, ScreenCastService>();
-builder.Services.AddScoped<IScreenService, ScreenService>();
 builder.Services.AddScoped<IViewerService, ViewerService>();
 builder.Services.AddScoped<IInputSender, InputSender>();
 
@@ -33,6 +32,5 @@ app.UseAuthorization();
 
 app.MapRazorPages();
 app.MapHub<ControlHub>("/hubs/control");
-app.MapControllers();
 
 app.Run();
