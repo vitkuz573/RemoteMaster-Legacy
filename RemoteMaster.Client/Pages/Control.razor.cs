@@ -19,11 +19,9 @@ public partial class Control
     [Inject]
     private IHubConnectionBuilder HubConnectionBuilder { get; set; }
 
-    private string _screenDataUrl;
-
+    private string? _screenDataUrl;
     private HubConnection? _hubConnection;
-
-    private List<byte[]> _buffer = new List<byte[]>();
+    private readonly List<byte[]> _buffer = new();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -43,22 +41,17 @@ public partial class Control
 
                 if (dto.IsEndOfImage)
                 {
-                    await ProcessEndOfImage();
+                    var allData = _buffer.SelectMany(bytes => bytes).ToArray();
+                    _buffer.Clear();
+
+                    var url = await JSRuntime.InvokeAsync<string>("createImageBlobUrl", allData);
+
+                    await UpdateScreenDataUrl(url);
                 }
             });
 
             await _hubConnection.StartAsync();
         }
-    }
-
-    private async Task ProcessEndOfImage()
-    {
-        var allData = _buffer.SelectMany(bytes => bytes).ToArray();
-        _buffer.Clear();
-
-        var url = await JSRuntime.InvokeAsync<string>("createImageBlobUrl", allData);
-
-        await UpdateScreenDataUrl(url);
     }
 
     public async Task UpdateScreenDataUrl(string url)
@@ -74,33 +67,29 @@ public partial class Control
         await _hubConnection.InvokeAsync("SetQuality", quality);
     }
 
-    private async Task OnMouseMove(MouseEventArgs e)
+    private async Task<(int, int)> GetNormalizedMouseCoordinates(MouseEventArgs e)
     {
         var imgElement = await JSRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", "screenImage");
         var imgPosition = await imgElement.InvokeAsync<DOMRect>("getBoundingClientRect");
 
-        // вычитаем позицию изображения из координат мыши
         var relativeX = e.ClientX - imgPosition.Left;
         var relativeY = e.ClientY - imgPosition.Top;
 
-        var absoluteX = Math.Round(relativeX * 65535 / imgPosition.Width);
-        var absoluteY = Math.Round(relativeY * 65535 / imgPosition.Height);
+        var absoluteX = (int)Math.Round(relativeX * 65535 / imgPosition.Width);
+        var absoluteY = (int)Math.Round(relativeY * 65535 / imgPosition.Height);
 
-        await _hubConnection.InvokeAsync("SendMouseCoordinates", (int)absoluteX, (int)absoluteY);
+        return (absoluteX, absoluteY);
+    }
+
+    private async Task OnMouseMove(MouseEventArgs e)
+    {
+        var (absoluteX, absoluteY) = await GetNormalizedMouseCoordinates(e);
+        await _hubConnection.InvokeAsync("SendMouseCoordinates", absoluteX, absoluteY);
     }
 
     private async Task OnMouseUpDown(MouseEventArgs e)
     {
-        var imgElement = await JSRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", "screenImage");
-        var imgPosition = await imgElement.InvokeAsync<DOMRect>("getBoundingClientRect");
-
-        // вычитаем позицию изображения из координат мыши
-        var relativeX = e.ClientX - imgPosition.Left;
-        var relativeY = e.ClientY - imgPosition.Top;
-
-        var absoluteX = Math.Round(relativeX * 65535 / imgPosition.Width);
-        var absoluteY = Math.Round(relativeY * 65535 / imgPosition.Height);
-
+        var (absoluteX, absoluteY) = await GetNormalizedMouseCoordinates(e);
         await _hubConnection.InvokeAsync("SendMouseButton", e.Button, e.Type, absoluteX, absoluteY);
     }
 }
