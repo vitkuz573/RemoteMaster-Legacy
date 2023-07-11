@@ -1,6 +1,6 @@
 ﻿namespace RemoteMaster.Shared.Dto;
 
-public class CursorPositionDto
+public class MouseMoveDto
 {
     public int X { get; set; }
 

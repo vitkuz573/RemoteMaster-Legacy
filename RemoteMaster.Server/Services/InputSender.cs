@@ -1,4 +1,5 @@
 ﻿using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Shared.Dto;
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
@@ -51,7 +52,7 @@ public class InputSender : IInputSender
         _cts = null;
     }
 
-    public void SendMouseCoordinates(int x, int y)
+    public void SendMouseCoordinates(MouseMoveDto dto)
     {
         EnqueueOperation(() =>
         {
@@ -63,8 +64,8 @@ public class InputSender : IInputSender
                     mi = new MOUSEINPUT
                     {
                         dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE | MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE | MOUSE_EVENT_FLAGS.MOUSEEVENTF_VIRTUALDESK,
-                        dx = x,
-                        dy = y,
+                        dx = dto.X,
+                        dy = dto.Y,
                         time = 0,
                         mouseData = 0,
                         dwExtraInfo = (nuint)GetMessageExtraInfo().Value

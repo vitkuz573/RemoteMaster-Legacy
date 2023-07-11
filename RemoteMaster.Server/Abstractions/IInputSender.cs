@@ -1,8 +1,10 @@
-﻿namespace RemoteMaster.Server.Abstractions;
+﻿using RemoteMaster.Shared.Dto;
+
+namespace RemoteMaster.Server.Abstractions;
 
 public interface IInputSender
 {
-    void SendMouseCoordinates(int x, int y);
+    void SendMouseCoordinates(MouseMoveDto dto);
 
     void SendMouseButton(long button, string state, int x, int y);
 }

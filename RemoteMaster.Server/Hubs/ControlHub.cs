@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Shared.Dto;
 
 namespace RemoteMaster.Server.Hubs;
 
@@ -51,15 +52,13 @@ public class ControlHub : Hub
         _viewerService.SetImageQuality(quality);
     }
 
-    public void SendMouseCoordinates(int x, int y)
+    public void SendMouseCoordinates(MouseMoveDto dto)
     {
-        _logger.LogInformation($"Received mouse coordinates: ({x}, {y})");
-        _inputSender.SendMouseCoordinates(x, y);
+        _inputSender.SendMouseCoordinates(dto);
     }
 
     public void SendMouseButton(long button, string state, int x, int y)
     {
-        _logger.LogInformation("Received mouse button {button} with state {state}", button, state);
         _inputSender.SendMouseButton(button, state, x, y);
     }
 }

@@ -79,7 +79,17 @@ public partial class Control
     private async Task OnMouseMove(MouseEventArgs e)
     {
         var (absoluteX, absoluteY) = await GetNormalizedMouseCoordinates(e);
-        await _hubConnection.InvokeAsync("SendMouseCoordinates", absoluteX, absoluteY);
+
+        var dto = new MouseMoveDto
+        {
+            X = absoluteX,
+            Y = absoluteY
+        };
+
+        if (_hubConnection != null && _hubConnection.State == HubConnectionState.Connected)
+        {
+            await _hubConnection.InvokeAsync("SendMouseCoordinates", dto);
+        }
     }
 
     private async Task OnMouseUpDown(MouseEventArgs e)
