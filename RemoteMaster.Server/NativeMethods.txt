@@ -2,3 +2,4 @@
 GetDC
 ReleaseDC
 BitBlt
+SetCursorPos

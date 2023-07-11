@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Server.Abstractions;
+using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Server.Hubs;
 
@@ -53,7 +54,6 @@ public class ControlHub : Hub
     {
         _logger.LogInformation($"Received mouse coordinates: ({x}, {y})");
 
-        // Здесь вы можете обработать координаты мыши как вам нужно
+        SetCursorPos(x, y);
     }
-
 }
