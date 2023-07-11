@@ -76,8 +76,6 @@ public partial class Control
 
     private async Task OnMouseMove(MouseEventArgs e)
     {
-        Console.WriteLine("test");
-
         var imgElement = await JSRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", "screenImage");
         var imgPosition = await imgElement.InvokeAsync<DOMRect>("getBoundingClientRect");
 
