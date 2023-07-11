@@ -8,7 +8,8 @@ public class ControlHub : Hub
     private readonly IScreenCasterService _streamingService;
     private readonly IViewerService _viewerService;
     private readonly ILogger<ControlHub> _logger;
-    
+    private CancellationTokenSource _cancellationTokenSource;
+
     public ControlHub(ILogger<ControlHub> logger, IScreenCasterService streamingService, IViewerService viewerService)
     {
         _logger = logger;
@@ -18,20 +19,33 @@ public class ControlHub : Hub
 
     public override async Task OnConnectedAsync()
     {
-        var cancellationTokenSource = new CancellationTokenSource();
+        _cancellationTokenSource = new CancellationTokenSource();
 
-        Task.Run(() => _streamingService.StartStreaming(Context.ConnectionId, cancellationTokenSource.Token));
+        var connectionId = Context.ConnectionId;
+
+        var _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _streamingService.StartStreaming(connectionId, _cancellationTokenSource.Token);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while streaming");
+            }
+        });
+    }
+
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
+        _cancellationTokenSource.Cancel();
+        await base.OnDisconnectedAsync(exception);
     }
 
     public async Task SetQuality(int quality)
     {
         _logger.LogInformation("Invoked SetQuality");
-        
-        _viewerService.SetImageQuality(quality);
-    }
 
-    public async Task SendMessage(string user, string message)
-    {
-        Console.WriteLine($"Received message {message} from {user}");
+        _viewerService.SetImageQuality(quality);
     }
 }
