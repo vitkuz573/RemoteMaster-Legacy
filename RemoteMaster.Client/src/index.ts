@@ -1,5 +1,6 @@
 ﻿import { HubConnectionBuilder, LogLevel, HttpTransportType } from '@microsoft/signalr'
 import { MessagePackHubProtocol } from '@microsoft/signalr-protocol-msgpack'
+import { type ScreenUpdateDto } from './ScreenUpdateDto'
 
 declare global {
   interface Window {
@@ -9,17 +10,12 @@ declare global {
   }
 }
 
-interface ScreenUpdateDto {
-  Data: Uint8Array
-  IsEndOfImage: boolean
-}
-
 let _buffer: Uint8Array[] = []
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let connection: any
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-window.setupSignalRConnection = function (host: string, dotnetHelper: any) {
+window.setupSignalRConnection = function (host: string, dotnetHelper: any): void {
   connection = new HubConnectionBuilder()
     .withUrl(`http://${host}:5076/hubs/control`, {
       skipNegotiation: true,
@@ -44,9 +40,10 @@ window.setupSignalRConnection = function (host: string, dotnetHelper: any) {
   connection.start().catch((err: Error) => { console.error(err.toString()) })
 }
 
-window.setQuality = function (quality) {
+window.setQuality = function (quality): void {
   console.log('SetQuality on client Invoked')
-  console.log('Connection state: ' + connection.state)
+  // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+  console.log(`Connection state: ${connection.state}`)
 
   connection.invoke('SetQuality', quality)
 }

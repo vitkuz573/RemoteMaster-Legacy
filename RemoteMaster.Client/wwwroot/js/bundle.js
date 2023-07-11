@@ -4028,7 +4028,7 @@
   }),
     (window.setQuality = function (e) {
       console.log('SetQuality on client Invoked'),
-        console.log('Connection state: ' + Ae.state),
+        console.log(`Connection state: ${Ae.state}`),
         Ae.invoke('SetQuality', e);
     });
 })();
