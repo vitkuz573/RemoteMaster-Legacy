@@ -51,5 +51,20 @@ public partial class Control
 
         await JSRuntime.InvokeVoidAsync("window.sendMouseCoordinates", absoluteX, absoluteY);
     }
+
+    private async Task OnMouseClick(MouseEventArgs e)
+    {
+        var imgElement = await JSRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", "screenImage");
+        var imgPosition = await imgElement.InvokeAsync<DOMRect>("getBoundingClientRect");
+
+        // вычитаем позицию изображения из координат мыши
+        var relativeX = e.ClientX - imgPosition.Left;
+        var relativeY = e.ClientY - imgPosition.Top;
+
+        var absoluteX = Math.Round(relativeX * 65535 / imgPosition.Width);
+        var absoluteY = Math.Round(relativeY * 65535 / imgPosition.Height);
+
+        await JSRuntime.InvokeVoidAsync("window.sendMouseButton", e.Button, e.Type, absoluteX, absoluteY);
+    }
 }
 

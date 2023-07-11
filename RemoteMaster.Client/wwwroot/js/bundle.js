@@ -4031,5 +4031,8 @@
     }),
     (window.sendMouseCoordinates = function (e, t) {
       Ae.invoke('SendMouseCoordinates', e, t);
+    }),
+    (window.sendMouseButton = function (e, t, n, o) {
+      Ae.invoke('SendMouseButton', e, t, n, o);
     });
 })();

@@ -8,6 +8,7 @@ declare global {
     setupSignalRConnection: (host: string, dotnetHelper: any) => void
     setQuality: (quality: number) => void
     sendMouseCoordinates: (x: any, y: any) => void
+    sendMouseButton: (button: any, state: any, x: any, y: any) => void
   }
 }
 
@@ -47,4 +48,8 @@ window.setQuality = function (quality): void {
 
 window.sendMouseCoordinates = function (x, y): void {
   connection.invoke('SendMouseCoordinates', x, y)
+}
+
+window.sendMouseButton = function (button, state, x, y): void {
+  connection.invoke('SendMouseButton', button, state, x, y)
 }

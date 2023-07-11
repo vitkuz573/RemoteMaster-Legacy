@@ -56,4 +56,10 @@ public class ControlHub : Hub
         _logger.LogInformation($"Received mouse coordinates: ({x}, {y})");
         _inputSender.SendMouseCoordinates(x, y);
     }
+
+    public void SendMouseButton(long button, string state, int x, int y)
+    {
+        _logger.LogInformation("Received mouse button {button} with state {state}", button, state);
+        _inputSender.SendMouseButton(button, state, x, y);
+    }
 }
