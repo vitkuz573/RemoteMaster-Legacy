@@ -52,7 +52,7 @@ public partial class Control
         await JSRuntime.InvokeVoidAsync("window.sendMouseCoordinates", absoluteX, absoluteY);
     }
 
-    private async Task OnMouseClick(MouseEventArgs e)
+    private async Task OnMouseUpDown(MouseEventArgs e)
     {
         var imgElement = await JSRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", "screenImage");
         var imgPosition = await imgElement.InvokeAsync<DOMRect>("getBoundingClientRect");

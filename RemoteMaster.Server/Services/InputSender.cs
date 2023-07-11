@@ -40,8 +40,6 @@ public class InputSender : IInputSender
 
     public void SendMouseButton(long button, string state, int x, int y)
     {
-        _logger.LogInformation($"Received button: {button} with state {state} in cooridnates {x}:{y}");
-
         var mouseEvent = button switch
         {
             0 => state switch
