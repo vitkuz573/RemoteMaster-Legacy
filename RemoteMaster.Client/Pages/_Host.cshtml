@@ -45,8 +45,6 @@
 
     <script src="_framework/blazor.server.js"></script>
 
-    <script src="~/js/bundle.js"></script>
-
     <script>
         window.openInNewTab = (url) => {
             window.open(url, '_blank');
@@ -54,6 +52,11 @@
 
         window.revokeUrl = function (url) {
             URL.revokeObjectURL(url);
+        }
+
+        window.createImageBlobUrl = function (data) {
+            const blob = new Blob([data], { type: 'image/jpeg' });
+            return URL.createObjectURL(blob);
         }
     </script>
 </body>
