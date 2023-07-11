@@ -7,7 +7,7 @@ declare global {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setupSignalRConnection: (host: string, dotnetHelper: any) => void
     setQuality: (quality: number) => void
-    sendMouseCoordinates: (x: any, y: any, imgWidth: any, imgHeight: any) => void
+    sendMouseCoordinates: (x: any, y: any) => void
   }
 }
 
@@ -45,6 +45,6 @@ window.setQuality = function (quality): void {
   connection.invoke('SetQuality', quality)
 }
 
-window.sendMouseCoordinates = function (x, y, imgWidth, imgHeight): void {
-  connection.invoke('SendMouseCoordinates', x, y, imgWidth, imgHeight)
+window.sendMouseCoordinates = function (x, y): void {
+  connection.invoke('SendMouseCoordinates', x, y)
 }

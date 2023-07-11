@@ -4029,7 +4029,7 @@
     (window.setQuality = function (e) {
       Ae.invoke('SetQuality', e);
     }),
-    (window.sendMouseCoordinates = function (e, t, n, o) {
-      Ae.invoke('SendMouseCoordinates', e, t, n, o);
+    (window.sendMouseCoordinates = function (e, t) {
+      Ae.invoke('SendMouseCoordinates', e, t);
     });
 })();

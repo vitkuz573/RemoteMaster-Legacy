@@ -51,9 +51,9 @@ public class ControlHub : Hub
         _viewerService.SetImageQuality(quality);
     }
 
-    public void SendMouseCoordinates(int x, int y, double imgWidth, double imgHeight)
+    public void SendMouseCoordinates(int x, int y)
     {
-        _logger.LogInformation($"Received mouse coordinates: ({x}, {y}) and image dimensions: ({imgWidth}, {imgHeight})");
-        _inputSender.SendMouseCoordinates(x, y, imgWidth, imgHeight);
+        _logger.LogInformation($"Received mouse coordinates: ({x}, {y})");
+        _inputSender.SendMouseCoordinates(x, y);
     }
 }

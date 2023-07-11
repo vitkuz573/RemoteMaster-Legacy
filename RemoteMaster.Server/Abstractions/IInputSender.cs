@@ -2,5 +2,5 @@
 
 public interface IInputSender
 {
-    void SendMouseCoordinates(int x, int y, double imgWidth, double imgHeight);
+    void SendMouseCoordinates(int x, int y);
 }
