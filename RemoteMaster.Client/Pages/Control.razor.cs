@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
+using RemoteMaster.Client.Models;
 
 namespace RemoteMaster.Client.Pages;
 
@@ -50,16 +51,5 @@ public partial class Control
 
         await JSRuntime.InvokeVoidAsync("window.sendMouseCoordinates", absoluteX, absoluteY);
     }
-}
-
-public class DOMRect
-{
-    public double Left { get; set; }
-
-    public double Top { get; set; }
-
-    public double Width { get; set; }
-
-    public double Height { get; set; }
 }
 
