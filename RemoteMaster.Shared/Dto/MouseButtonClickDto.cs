@@ -2,13 +2,11 @@
 
 public class MouseButtonClickDto
 {
-    public MouseButtonClickDto(string button, bool click = true)
-    {
-        Button = button;
-        Click = click;
-    }
+    public long Button { get; set; }
 
-    public string Button { get; set; }
+    public string State { get; set; }
 
-    public bool Click { get; set; }
+    public int X { get; set; }
+
+    public int Y { get; set; }
 }

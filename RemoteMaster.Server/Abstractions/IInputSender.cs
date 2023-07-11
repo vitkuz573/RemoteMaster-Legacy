@@ -6,5 +6,5 @@ public interface IInputSender
 {
     void SendMouseCoordinates(MouseMoveDto dto);
 
-    void SendMouseButton(long button, string state, int x, int y);
+    void SendMouseButton(MouseButtonClickDto dto);
 }

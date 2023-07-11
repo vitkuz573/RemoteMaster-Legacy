@@ -79,23 +79,23 @@ public class InputSender : IInputSender
         });
     }
 
-    public void SendMouseButton(long button, string state, int x, int y)
+    public void SendMouseButton(MouseButtonClickDto dto)
     {
         EnqueueOperation(() =>
         {
-            var mouseEvent = button switch
+            var mouseEvent = dto.Button switch
             {
-                0 => state switch
+                0 => dto.State switch
                 {
                     "mousedown" => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN,
                     "mouseup" => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP
                 },
-                1 => state switch
+                1 => dto.State switch
                 {
                     "mousedown" => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEDOWN,
                     "mouseup" => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEUP
                 },
-                2 => state switch
+                2 => dto.State switch
                 {
                     "mousedown" => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN,
                     "mouseup" => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP
@@ -110,8 +110,8 @@ public class InputSender : IInputSender
                     mi = new MOUSEINPUT
                     {
                         dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE | mouseEvent | MOUSE_EVENT_FLAGS.MOUSEEVENTF_VIRTUALDESK,
-                        dx = x,
-                        dy = y
+                        dx = dto.X,
+                        dy = dto.Y
                     }
                 }
             };

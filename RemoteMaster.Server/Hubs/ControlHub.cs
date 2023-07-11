@@ -57,8 +57,8 @@ public class ControlHub : Hub
         _inputSender.SendMouseCoordinates(dto);
     }
 
-    public void SendMouseButton(long button, string state, int x, int y)
+    public void SendMouseButton(MouseButtonClickDto dto)
     {
-        _inputSender.SendMouseButton(button, state, x, y);
+        _inputSender.SendMouseButton(dto);
     }
 }

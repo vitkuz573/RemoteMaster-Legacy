@@ -95,7 +95,19 @@ public partial class Control
     private async Task OnMouseUpDown(MouseEventArgs e)
     {
         var (absoluteX, absoluteY) = await GetNormalizedMouseCoordinates(e);
-        await _hubConnection.InvokeAsync("SendMouseButton", e.Button, e.Type, absoluteX, absoluteY);
+
+        var dto = new MouseButtonClickDto
+        {
+            Button = e.Button,
+            State = e.Type,
+            X = absoluteX,
+            Y = absoluteY
+        };
+
+        if (_hubConnection != null && _hubConnection.State == HubConnectionState.Connected)
+        {
+            await _hubConnection.InvokeAsync("SendMouseButton", dto);
+        }
     }
 }
 
