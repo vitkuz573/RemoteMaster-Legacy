@@ -63,13 +63,6 @@ public class ControlHub : Hub
         var translatedX = (int)(x * 65535 / imgWidth);
         var translatedY = (int)(y * 65535 / imgHeight);
 
-        // выводим полученные и переведенные координаты в лог
-        _logger.LogInformation($"Translated mouse coordinates: ({translatedX}, {translatedY})");
-
-        // здесь вы можете обработать переведенные координаты мыши как вам нужно
-        // например, можно вызывать Win32 API SendInput:
-        // Win32ApiHelper.SendMouseInput(translatedX, translatedY);
-
         var input = new INPUT
         {
             type = INPUT_TYPE.INPUT_MOUSE
