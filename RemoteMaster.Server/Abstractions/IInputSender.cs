@@ -7,4 +7,6 @@ public interface IInputSender
     void SendMouseCoordinates(MouseMoveDto dto);
 
     void SendMouseButton(MouseButtonClickDto dto);
+
+    void SendKeyboardInput(KeyboardKeyDto dto);
 }

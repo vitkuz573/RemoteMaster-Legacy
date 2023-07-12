@@ -5,3 +5,5 @@ BitBlt
 SetCursorPos
 SendInput
 GetMessageExtraInfo
+MapVirtualKeyEx
+GetKeyboardLayout

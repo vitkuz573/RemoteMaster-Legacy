@@ -51,6 +51,9 @@ public partial class Control
                 }
             });
 
+            await JSRuntime.InvokeVoidAsync("addKeyDownEventListener", DotNetObjectReference.Create(this));
+            await JSRuntime.InvokeVoidAsync("addKeyUpEventListener", DotNetObjectReference.Create(this));
+
             await _hubConnection.StartAsync();
         }
     }
@@ -110,6 +113,37 @@ public partial class Control
         if (_hubConnection != null && _hubConnection.State == HubConnectionState.Connected)
         {
             await _hubConnection.InvokeAsync("SendMouseButton", dto);
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnKeyDown(int keyCode)
+    {
+        var dto = new KeyboardKeyDto
+        {
+            Key = keyCode,
+            State = "keydown",
+        };
+
+        if (_hubConnection != null && _hubConnection.State == HubConnectionState.Connected)
+        {
+            await _hubConnection.InvokeAsync("SendKeyboardInput", dto);
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnKeyUp(int keyCode)
+    {
+        var dto = new KeyboardKeyDto
+        {
+            Key = keyCode,
+            State = "keyup",
+        };
+
+
+        if (_hubConnection != null && _hubConnection.State == HubConnectionState.Connected)
+        {
+            await _hubConnection.InvokeAsync("SendKeyboardInput", dto);
         }
     }
 }

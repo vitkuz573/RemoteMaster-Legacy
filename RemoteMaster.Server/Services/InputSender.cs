@@ -121,4 +121,30 @@ public class InputSender : IInputSender
             SendInput(inputs, Marshal.SizeOf(typeof(INPUT)));
         });
     }
+
+    public void SendKeyboardInput(KeyboardKeyDto dto)
+    {
+        EnqueueOperation(() =>
+        {
+            var input = new INPUT
+            {
+                type = INPUT_TYPE.INPUT_KEYBOARD,
+                Anonymous =
+                {
+                    ki = new KEYBDINPUT
+                    {
+                        wVk = (VIRTUAL_KEY)dto.Key,
+                        wScan = 0,
+                        time = 0,
+                        dwFlags = dto.State == "keyup" ? KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP : 0,
+                        dwExtraInfo = (nuint)GetMessageExtraInfo().Value
+                    }
+                }
+            };
+
+            var inputs = new Span<INPUT>(ref input);
+
+            SendInput(inputs, Marshal.SizeOf(typeof(INPUT)));
+        });
+    }
 }

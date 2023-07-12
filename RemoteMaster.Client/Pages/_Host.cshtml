@@ -58,6 +58,18 @@
             const blob = new Blob([data], { type: 'image/jpeg' });
             return URL.createObjectURL(blob);
         }
+
+        window.addKeyDownEventListener = (dotnetHelper) => {
+            window.onkeydown = (e) => {
+                dotnetHelper.invokeMethodAsync('OnKeyDown', e.keyCode);
+            };
+        };
+
+        window.addKeyUpEventListener = (dotnetHelper) => {
+            window.onkeyup = (e) => {
+                dotnetHelper.invokeMethodAsync('OnKeyUp', e.keyCode);
+            };
+        };
     </script>
 </body>
 </html>

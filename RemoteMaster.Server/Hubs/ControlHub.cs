@@ -59,4 +59,9 @@ public class ControlHub : Hub
     {
         _inputSender.SendMouseButton(dto);
     }
+
+    public void SendKeyboardInput(KeyboardKeyDto dto)
+    {
+        _inputSender.SendKeyboardInput(dto);
+    }
 }
