@@ -13,3 +13,7 @@ CreateProcessAsUser
 WTSQuerySessionInformation
 WTSEnumerateSessions
 WTSFreeMemory
+OpenInputDesktop
+GetUserObjectInformation
+SetThreadDesktop
+SwitchDesktop

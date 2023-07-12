@@ -1,6 +1,7 @@
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Hubs;
 using RemoteMaster.Server.Services;
+using RemoteMaster.Shared.Native.Windows;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,3 +38,17 @@ app.MapRazorPages();
 app.MapHub<ControlHub>("/hubs/control");
 
 app.Run();
+
+if (DesktopHelper.GetCurrentDesktop(out var currentDesktopName))
+{
+    // _logger.LogInformation("Setting initial desktop to {currentDesktopName}.", currentDesktopName);
+}
+else
+{
+    // _logger.LogWarning("Failed to get initial desktop name.");
+}
+
+if (!DesktopHelper.SwitchToInputDesktop())
+{
+    // _logger.LogWarning("Failed to set initial desktop.");
+}
