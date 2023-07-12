@@ -3,10 +3,6 @@
 @if (!string.IsNullOrEmpty(_screenDataUrl))
 {
     <img id="screenImage" src="@_screenDataUrl" draggable="false" width="1494" onload="window.revokeUrl(this.src)" @onmousemove="OnMouseMove" @onmousedown="OnMouseUpDown" @onmouseup="OnMouseUpDown" />
-    <div>
-        <label for="qualityInput">Quality: </label>
-        <input id="qualityInput" type="number" min="1" max="100" @onchange="QualityChanged" />
-    </div>
 }
 else
 {
@@ -19,5 +15,9 @@ else
         -moz-user-select: none;
         -ms-user-select: none;
         user-select: none;
+    }
+
+    #screenImage {
+        border: 1px solid black;
     }
 </style>
