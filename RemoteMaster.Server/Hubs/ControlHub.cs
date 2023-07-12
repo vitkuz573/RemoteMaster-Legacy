@@ -45,10 +45,8 @@ public class ControlHub : Hub
         await base.OnDisconnectedAsync(exception);
     }
 
-    public async Task SetQuality(int quality)
+    public void SetQuality(int quality)
     {
-        _logger.LogInformation("Invoked SetQuality");
-
         _viewerService.SetImageQuality(quality);
     }
 

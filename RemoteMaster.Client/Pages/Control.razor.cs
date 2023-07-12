@@ -59,7 +59,10 @@ public partial class Control
     {
         var quality = int.Parse(e.Value.ToString());
 
-        await _hubConnection.InvokeAsync("SetQuality", quality);
+        if (_hubConnection != null && _hubConnection.State == HubConnectionState.Connected)
+        {
+            await _hubConnection.InvokeAsync("SetQuality", quality);
+        }
     }
 
     private async Task<(int, int)> GetNormalizedMouseCoordinates(MouseEventArgs e)
