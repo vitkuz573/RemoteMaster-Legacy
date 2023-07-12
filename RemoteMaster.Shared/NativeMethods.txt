@@ -1,0 +1,15 @@
+﻿GetSystemMetrics
+GetDC
+ReleaseDC
+BitBlt
+SetCursorPos
+SendInput
+GetMessageExtraInfo
+WTSGetActiveConsoleSessionId
+OpenProcess
+OpenProcessToken
+DuplicateTokenEx
+CreateProcessAsUser
+WTSQuerySessionInformation
+WTSEnumerateSessions
+WTSFreeMemory

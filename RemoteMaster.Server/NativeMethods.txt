@@ -1,9 +1,0 @@
-﻿GetSystemMetrics
-GetDC
-ReleaseDC
-BitBlt
-SetCursorPos
-SendInput
-GetMessageExtraInfo
-MapVirtualKeyEx
-GetKeyboardLayout

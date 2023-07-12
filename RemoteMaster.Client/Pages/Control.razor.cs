@@ -16,18 +16,24 @@ public partial class Control
     [Inject]
     private IJSRuntime JSRuntime { get; set; }
 
-    [Inject]
-    private IHubConnectionBuilder HubConnectionBuilder { get; set; }
-
     private string? _screenDataUrl;
-    private HubConnection? _hubConnection;
+    private HubConnection? _agentConnection;
+    private HubConnection? _serverConnection;
     private readonly List<byte[]> _buffer = new();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            _hubConnection = HubConnectionBuilder
+            _agentConnection = new HubConnectionBuilder()
+                .WithUrl($"http://{Host}:3564/hubs/main", options =>
+                {
+                    options.SkipNegotiation = true;
+                    options.Transports = HttpTransportType.WebSockets;
+                })
+                .Build();
+
+            _serverConnection = new HubConnectionBuilder()
                 .WithUrl($"http://{Host}:5076/hubs/control", options => {
                     options.SkipNegotiation = true;
                     options.Transports = HttpTransportType.WebSockets;
@@ -36,7 +42,7 @@ public partial class Control
                 .WithAutomaticReconnect(new RetryPolicy())
                 .Build();
 
-            _hubConnection.On<ScreenUpdateDto>("ScreenUpdate", async dto =>
+            _serverConnection.On<ScreenUpdateDto>("ScreenUpdate", async dto =>
             {
                 _buffer.Add(dto.Data);
 
@@ -54,17 +60,13 @@ public partial class Control
             await JSRuntime.InvokeVoidAsync("addKeyDownEventListener", DotNetObjectReference.Create(this));
             await JSRuntime.InvokeVoidAsync("addKeyUpEventListener", DotNetObjectReference.Create(this));
 
-            await _hubConnection.StartAsync();
-        }
-    }
+            await _agentConnection.StartAsync();
 
-    public async Task QualityChanged(ChangeEventArgs e)
-    {
-        var quality = int.Parse(e.Value.ToString());
+            Thread.Sleep(5000);
 
-        if (_hubConnection != null && _hubConnection.State == HubConnectionState.Connected)
-        {
-            await _hubConnection.InvokeAsync("SetQuality", quality);
+            await _serverConnection.StartAsync();
+
+            await _agentConnection.StopAsync();
         }
     }
 
@@ -92,9 +94,9 @@ public partial class Control
             Y = absoluteY
         };
 
-        if (_hubConnection != null && _hubConnection.State == HubConnectionState.Connected)
+        if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
         {
-            await _hubConnection.InvokeAsync("SendMouseCoordinates", dto);
+            await _serverConnection.InvokeAsync("SendMouseCoordinates", dto);
         }
     }
 
@@ -110,9 +112,9 @@ public partial class Control
             Y = absoluteY
         };
 
-        if (_hubConnection != null && _hubConnection.State == HubConnectionState.Connected)
+        if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
         {
-            await _hubConnection.InvokeAsync("SendMouseButton", dto);
+            await _serverConnection.InvokeAsync("SendMouseButton", dto);
         }
     }
 
@@ -128,9 +130,9 @@ public partial class Control
             Y = absoluteY
         };
 
-        if (_hubConnection != null && _hubConnection.State == HubConnectionState.Connected)
+        if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
         {
-            await _hubConnection.InvokeAsync("SendMouseButton", dto);
+            await _serverConnection.InvokeAsync("SendMouseButton", dto);
         }
     }
 
@@ -143,9 +145,9 @@ public partial class Control
             State = "keydown",
         };
 
-        if (_hubConnection != null && _hubConnection.State == HubConnectionState.Connected)
+        if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
         {
-            await _hubConnection.InvokeAsync("SendKeyboardInput", dto);
+            await _serverConnection.InvokeAsync("SendKeyboardInput", dto);
         }
     }
 
@@ -159,9 +161,9 @@ public partial class Control
         };
 
 
-        if (_hubConnection != null && _hubConnection.State == HubConnectionState.Connected)
+        if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
         {
-            await _hubConnection.InvokeAsync("SendKeyboardInput", dto);
+            await _serverConnection.InvokeAsync("SendKeyboardInput", dto);
         }
     }
 }
