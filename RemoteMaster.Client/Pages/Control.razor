@@ -2,7 +2,7 @@
 
 @if (!string.IsNullOrEmpty(_screenDataUrl))
 {
-    <img id="screenImage" src="@_screenDataUrl" draggable="false" width="1494" onload="window.revokeUrl(this.src)" @onmousemove="OnMouseMove" @onmousedown="OnMouseUpDown" @onmouseup="OnMouseUpDown" />
+    <img id="screenImage" src="@_screenDataUrl" draggable="false" width="1494" onload="window.revokeUrl(this.src)" @onmousemove="OnMouseMove" @onmousedown="OnMouseUpDown" @onmouseup="OnMouseUpDown" @onmouseover="OnMouseOver" />
 }
 else
 {

@@ -116,6 +116,24 @@ public partial class Control
         }
     }
 
+    private async Task OnMouseOver(MouseEventArgs e)
+    {
+        var (absoluteX, absoluteY) = await GetNormalizedMouseCoordinates(e);
+
+        var dto = new MouseButtonClickDto
+        {
+            Button = e.Button,
+            State = "mouseup",
+            X = absoluteX,
+            Y = absoluteY
+        };
+
+        if (_hubConnection != null && _hubConnection.State == HubConnectionState.Connected)
+        {
+            await _hubConnection.InvokeAsync("SendMouseButton", dto);
+        }
+    }
+
     [JSInvokable]
     public async Task OnKeyDown(int keyCode)
     {
