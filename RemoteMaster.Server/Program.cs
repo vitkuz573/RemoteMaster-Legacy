@@ -14,6 +14,9 @@ builder.Services.AddScoped<IInputSender, InputSender>();
 
 var app = builder.Build();
 
+app.Urls.Clear();
+app.Urls.Add("http://0.0.0.0:5076");
+
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
