@@ -13,6 +13,9 @@ public partial class Control
     [Parameter]
     public string Host { get; set; }
 
+    [Parameter]
+    public string SkipAgentConnection { get; set; } = "false";
+
     [Inject]
     private IJSRuntime JSRuntime { get; set; }
 
@@ -25,16 +28,26 @@ public partial class Control
     {
         if (firstRender)
         {
-            _agentConnection = new HubConnectionBuilder()
-                .WithUrl($"http://{Host}:3564/hubs/main", options =>
-                {
-                    options.SkipNegotiation = true;
-                    options.Transports = HttpTransportType.WebSockets;
-                })
-                .Build();
+            if (SkipAgentConnection != "true")
+            {
+                _agentConnection = new HubConnectionBuilder()
+                    .WithUrl($"http://{Host}:3564/hubs/main", options =>
+                    {
+                        options.SkipNegotiation = true;
+                        options.Transports = HttpTransportType.WebSockets;
+                    })
+                    .Build();
+
+                await _agentConnection.StartAsync();
+
+                Thread.Sleep(5000);
+
+                await _agentConnection.StopAsync();
+            }
 
             _serverConnection = new HubConnectionBuilder()
-                .WithUrl($"http://{Host}:5076/hubs/control", options => {
+                .WithUrl($"http://{Host}:5076/hubs/control", options =>
+                {
                     options.SkipNegotiation = true;
                     options.Transports = HttpTransportType.WebSockets;
                 })
@@ -60,13 +73,7 @@ public partial class Control
             await JSRuntime.InvokeVoidAsync("addKeyDownEventListener", DotNetObjectReference.Create(this));
             await JSRuntime.InvokeVoidAsync("addKeyUpEventListener", DotNetObjectReference.Create(this));
 
-            await _agentConnection.StartAsync();
-
-            Thread.Sleep(5000);
-
             await _serverConnection.StartAsync();
-
-            await _agentConnection.StopAsync();
         }
     }
 

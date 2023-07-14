@@ -21,12 +21,12 @@ builder.Services.AddScoped<IScreenCaptureService, ScreenCaptureService>();
 builder.Services.AddScoped<IScreenCasterService, ScreenCastService>();
 builder.Services.AddScoped<IViewerService, ViewerService>();
 builder.Services.AddScoped<IInputSender, InputSender>();
-builder.Services.AddScoped<IAppStartup, AppStartup>();
+// builder.Services.AddScoped<IAppStartup, AppStartup>();
 
 var app = builder.Build();
 
-var appStartup = app.Services.GetRequiredService<IAppStartup>();
-await appStartup.Initialize();
+// var appStartup = app.Services.GetRequiredService<IAppStartup>();
+// await appStartup.Initialize();
 
 app.Urls.Clear();
 app.Urls.Add("http://0.0.0.0:5076");
