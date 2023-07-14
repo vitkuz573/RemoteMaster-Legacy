@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using RemoteMaster.Client.Models;
 using RemoteMaster.Shared.Dto;
+using System.Web;
 
 namespace RemoteMaster.Client.Pages;
 
@@ -13,8 +14,8 @@ public partial class Control
     [Parameter]
     public string Host { get; set; }
 
-    [Parameter]
-    public string SkipAgentConnection { get; set; } = "false";
+    [Inject]
+    private NavigationManager NavManager { get; set; }
 
     [Inject]
     private IJSRuntime JSRuntime { get; set; }
@@ -28,7 +29,11 @@ public partial class Control
     {
         if (firstRender)
         {
-            if (SkipAgentConnection != "true")
+            var uri = new Uri(NavManager.Uri);
+            var query = HttpUtility.ParseQueryString(uri.Query);
+            var skipAgentConnection = query.Get("skipAgent");
+
+            if (skipAgentConnection != "true")
             {
                 _agentConnection = new HubConnectionBuilder()
                     .WithUrl($"http://{Host}:3564/hubs/main", options =>
