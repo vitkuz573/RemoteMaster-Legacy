@@ -1,4 +1,5 @@
 ﻿using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Shared.Native.Windows;
 using SkiaSharp;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -16,6 +17,8 @@ public class ScreenCaptureService : IScreenCaptureService
     public ScreenCaptureService(IViewerService viewerService)
     {
         _viewerService = viewerService;
+
+        DesktopHelper.SwitchToInputDesktop();
     }
 
     public unsafe byte[] CaptureScreen()
