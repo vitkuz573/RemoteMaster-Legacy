@@ -14,21 +14,7 @@ public static class ProcessHelper
 
         procInfo = new PROCESS_INFORMATION();
 
-        var dwSessionId = WTSGetActiveConsoleSessionId();
-
-        if (!forceConsoleSession)
-        {
-            var activeSessions = SessionHelper.GetActiveSessions();
-
-            if (activeSessions.Any(x => x.Id == targetSessionId))
-            {
-                dwSessionId = (uint)targetSessionId;
-            }
-            else
-            {
-                dwSessionId = activeSessions.Last().Id;
-            }
-        }
+        var dwSessionId = GetSessionId(forceConsoleSession, targetSessionId);
 
         foreach (var process in Process.GetProcessesByName("winlogon"))
         {
@@ -50,23 +36,57 @@ public static class ProcessHelper
             return false;
         }
 
-        fixed (char* pDesktopName = @"winsta0\" + desktopName)
-        {
-            var startupInfo = default(STARTUPINFOW);
-            startupInfo.cb = (uint)Marshal.SizeOf(startupInfo);
-            startupInfo.lpDesktop = pDesktopName;
+        return CreateInteractiveProcess(hUserTokenDup, applicationName, desktopName, hiddenWindow, out procInfo);
+    }
 
-            PROCESS_CREATION_FLAGS dwCreationFlags;
+    private static uint GetSessionId(bool forceConsoleSession, int targetSessionId)
+    {
+        if (forceConsoleSession)
+        {
+            return WTSGetActiveConsoleSessionId();
+        }
+        else
+        {
+            var activeSessions = SessionHelper.GetActiveSessions();
+            uint lastSessionId = 0;
+            var targetSessionFound = false;
+
+            foreach (var session in activeSessions)
+            {
+                lastSessionId = session.Id;
+
+                if (session.Id == targetSessionId)
+                {
+                    targetSessionFound = true;
+                    break;
+                }
+            }
+
+            return targetSessionFound ? (uint)targetSessionId : lastSessionId;
+        }
+    }
+
+    private static unsafe bool CreateInteractiveProcess(SafeHandle hUserTokenDup, string applicationName, string desktopName, bool hiddenWindow, out PROCESS_INFORMATION procInfo)
+    {
+        fixed (char* pDesktopName = $@"winsta0\{desktopName}")
+        {
+            var startupInfo = new STARTUPINFOW
+            {
+                cb = (uint)Marshal.SizeOf<STARTUPINFOW>(),
+                lpDesktop = pDesktopName
+            };
+
+            var dwCreationFlags = PROCESS_CREATION_FLAGS.NORMAL_PRIORITY_CLASS | PROCESS_CREATION_FLAGS.CREATE_UNICODE_ENVIRONMENT;
 
             if (hiddenWindow)
             {
-                dwCreationFlags = PROCESS_CREATION_FLAGS.NORMAL_PRIORITY_CLASS | PROCESS_CREATION_FLAGS.CREATE_UNICODE_ENVIRONMENT | PROCESS_CREATION_FLAGS.CREATE_NO_WINDOW;
+                dwCreationFlags |= PROCESS_CREATION_FLAGS.CREATE_NO_WINDOW;
                 startupInfo.dwFlags = STARTUPINFOW_FLAGS.STARTF_USESHOWWINDOW;
                 startupInfo.wShowWindow = 0;
             }
             else
             {
-                dwCreationFlags = PROCESS_CREATION_FLAGS.NORMAL_PRIORITY_CLASS | PROCESS_CREATION_FLAGS.CREATE_UNICODE_ENVIRONMENT | PROCESS_CREATION_FLAGS.CREATE_NEW_CONSOLE;
+                dwCreationFlags |= PROCESS_CREATION_FLAGS.CREATE_NEW_CONSOLE;
             }
 
             applicationName += char.MinValue;

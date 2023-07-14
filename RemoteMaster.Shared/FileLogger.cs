@@ -22,7 +22,7 @@ public class FileLogger : ILogger
         _sinkTimer.Elapsed += SinkTimer_Elapsed;
     }
 
-    private string LogDir
+    private static string LogDir
     {
         get
         {
@@ -47,7 +47,7 @@ public class FileLogger : ILogger
 
     private string LogPath => Path.Combine(LogDir, $"LogFile_{_applicationName}_{DateTime.Now:yyyy-MM-dd}.log");
 
-    public IDisposable BeginScope<TState>(TState state)
+    public IDisposable? BeginScope<TState>(TState state) where TState : notnull
     {
         _scopeStack.Push($"{state}");
 
@@ -88,7 +88,7 @@ public class FileLogger : ILogger
         };
     }
 
-    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception, string> formatter)
     {
         try
         {
@@ -163,7 +163,7 @@ public class FileLogger : ILogger
         }
     }
 
-    private string FormatLogEntry(LogLevel logLevel, string categoryName, string state, Exception exception, string[] scopeStack)
+    private static string FormatLogEntry(LogLevel logLevel, string categoryName, string state, Exception? exception, string[] scopeStack)
     {
         var ex = exception;
         var exMessage = exception?.Message;

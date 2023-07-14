@@ -2,6 +2,7 @@
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Hubs;
 using RemoteMaster.Shared.Dto;
+using RemoteMaster.Shared.Helpers;
 
 namespace RemoteMaster.Server.Services;
 
@@ -28,32 +29,17 @@ public class ScreenCastService : IScreenCasterService
             {
                 var screenData = _screenCaptureService.CaptureScreen();
 
-                var screenDataChunks = SplitScreenData(screenData, 8192).ToList();
+                var screenDataChunks = Chunker.Chunkify(screenData);
 
-                for (int i = 0; i < screenDataChunks.Count; i++)
+                foreach (var chunk in screenDataChunks)
                 {
-                    var chunk = screenDataChunks[i];
-                    var dto = new ScreenUpdateDto
-                    {
-                        Data = chunk,
-                        IsEndOfImage = i == screenDataChunks.Count - 1
-                    };
-
-                    await _hubContext.Clients.Client(connectionId).SendAsync("ScreenUpdate", dto, cancellationToken);
+                    await _hubContext.Clients.Client(connectionId).SendAsync("ScreenUpdate", chunk, cancellationToken);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError("An error occurred during streaming: {Message}", ex.Message);
             }
-        }
-    }
-
-    private static IEnumerable<byte[]> SplitScreenData(byte[] screenData, int chunkSize)
-    {
-        for (var i = 0; i < screenData.Length; i += chunkSize)
-        {
-            yield return screenData.Skip(i).Take(chunkSize).ToArray();
         }
     }
 }

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using RemoteMaster.Client.Models;
 using RemoteMaster.Shared.Dto;
+using RemoteMaster.Shared.Helpers;
 using System.Web;
 
 namespace RemoteMaster.Client.Pages;
@@ -23,7 +24,6 @@ public partial class Control
     private string? _screenDataUrl;
     private HubConnection? _agentConnection;
     private HubConnection? _serverConnection;
-    private readonly List<byte[]> _buffer = new();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -60,15 +60,10 @@ public partial class Control
                 .WithAutomaticReconnect(new RetryPolicy())
                 .Build();
 
-            _serverConnection.On<ScreenUpdateDto>("ScreenUpdate", async dto =>
+            _serverConnection.On<ChunkDto>("ScreenUpdate", async chunk =>
             {
-                _buffer.Add(dto.Data);
-
-                if (dto.IsEndOfImage)
+                if (Chunker.TryUnchunkify<byte[]>(chunk, out var allData))
                 {
-                    var allData = _buffer.SelectMany(bytes => bytes).ToArray();
-                    _buffer.Clear();
-
                     _screenDataUrl = await JSRuntime.InvokeAsync<string>("createImageBlobUrl", allData);
 
                     await InvokeAsync(StateHasChanged);
