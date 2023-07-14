@@ -62,7 +62,7 @@ public partial class Control
 
             _serverConnection.On<ChunkDto>("ScreenUpdate", async chunk =>
             {
-                if (Chunker.TryUnchunkify<byte[]>(chunk, out var allData))
+                if (Chunker.TryUnchunkify(chunk, out var allData))
                 {
                     _screenDataUrl = await JSRuntime.InvokeAsync<string>("createImageBlobUrl", allData);
 

@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Hubs;
-using RemoteMaster.Shared.Dto;
 using RemoteMaster.Shared.Helpers;
 
 namespace RemoteMaster.Server.Services;

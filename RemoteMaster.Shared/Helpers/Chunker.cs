@@ -11,7 +11,18 @@ public static class Chunker
     public static IEnumerable<ChunkDto> Chunkify<T>(T data, int chunkSize = 4096) where T : class
     {
         var serializedData = MessagePackSerializer.Serialize(data);
-        var chunkCount = (int)Math.Ceiling((double)serializedData.Length / chunkSize);
+
+        return GenerateChunks(serializedData, chunkSize);
+    }
+
+    public static IEnumerable<ChunkDto> Chunkify(byte[] data, int chunkSize = 4096)
+    {
+        return GenerateChunks(data, chunkSize);
+    }
+
+    private static IEnumerable<ChunkDto> GenerateChunks(byte[] data, int chunkSize)
+    {
+        var chunkCount = (int)Math.Ceiling((double)data.Length / chunkSize);
         var instanceId = Guid.NewGuid().ToString();
 
         for (var i = 0; i < chunkCount; i++)
@@ -21,9 +32,9 @@ public static class Chunker
 
             for (var j = i * chunkSize; j < (i + 1) * chunkSize; j++)
             {
-                if (j < serializedData.Length)
+                if (j < data.Length)
                 {
-                    chunk[index] = serializedData[j];
+                    chunk[index] = data[j];
                     index++;
                 }
                 else
@@ -45,9 +56,44 @@ public static class Chunker
 
     public static bool TryUnchunkify<T>(ChunkDto chunkDto, out T result) where T : class
     {
+        var chunks = AddToCache(chunkDto);
+
+        if (!chunkDto.IsLastChunk)
+        {
+            result = default;
+
+            return false;
+        }
+
+        var allBytes = CombineChunks(chunks);
+
+        result = MessagePackSerializer.Deserialize<T>(allBytes);
+
+        return true;
+    }
+
+    public static bool TryUnchunkify(ChunkDto chunkDto, out byte[] result)
+    {
+        var chunks = AddToCache(chunkDto);
+
+        if (!chunkDto.IsLastChunk)
+        {
+            result = default;
+
+            return false;
+        }
+
+        result = CombineChunks(chunks);
+
+        return true;
+    }
+
+    private static List<ChunkDto> AddToCache(ChunkDto chunkDto)
+    {
         var chunks = _cache.GetOrCreate(chunkDto.InstanceId, entry =>
         {
             entry.SlidingExpiration = TimeSpan.FromMinutes(1);
+
             return new List<ChunkDto>();
         });
 
@@ -56,14 +102,16 @@ public static class Chunker
             chunks.Add(chunkDto);
         }
 
-        if (!chunkDto.IsLastChunk)
+        if (chunkDto.IsLastChunk)
         {
-            result = default;
-            return false;
+            _cache.Remove(chunkDto.InstanceId);
         }
 
-        _cache.Remove(chunkDto.InstanceId);
+        return chunks;
+    }
 
+    private static byte[] CombineChunks(List<ChunkDto> chunks)
+    {
         var allBytes = new List<byte>();
 
         foreach (var chunk in chunks.OrderBy(c => c.ChunkId))
@@ -71,7 +119,6 @@ public static class Chunker
             allBytes.AddRange(chunk.Chunk);
         }
 
-        result = MessagePackSerializer.Deserialize<T>(allBytes.ToArray());
-        return true;
+        return allBytes.ToArray();
     }
 }
