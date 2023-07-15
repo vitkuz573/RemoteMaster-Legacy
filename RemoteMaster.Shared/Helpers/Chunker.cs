@@ -26,7 +26,7 @@ public static class Chunker
                 IsFirstChunk = true,
                 IsLastChunk = true,
                 ChunkId = 0,
-                InstanceId = Guid.NewGuid().ToString()
+                SequenceId = Guid.NewGuid().ToString()
             };
 
             yield break;
@@ -60,7 +60,7 @@ public static class Chunker
     private static IEnumerable<ChunkDto> GenerateChunks(byte[] data, int chunkSize)
     {
         var chunkCount = (int)Math.Ceiling((double)data.Length / chunkSize);
-        var instanceId = Guid.NewGuid().ToString();
+        var sequenceId = Guid.NewGuid().ToString();
 
         for (var i = 0; i < chunkCount; i++)
         {
@@ -75,7 +75,7 @@ public static class Chunker
                 IsFirstChunk = i == 0,
                 IsLastChunk = i == chunkCount - 1,
                 ChunkId = i,
-                InstanceId = instanceId
+                SequenceId = sequenceId
             };
         }
     }
@@ -137,7 +137,7 @@ public static class Chunker
 
     private static ConcurrentBag<ChunkDto> AddToCache(ChunkDto chunkDto)
     {
-        var chunks = _cache.GetOrCreate(chunkDto.InstanceId, entry =>
+        var chunks = _cache.GetOrCreate(chunkDto.SequenceId, entry =>
         {
             entry.SlidingExpiration = TimeSpan.FromMinutes(1);
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
@@ -149,7 +149,7 @@ public static class Chunker
 
         if (chunkDto.IsLastChunk)
         {
-            _cache.Remove(chunkDto.InstanceId);
+            _cache.Remove(chunkDto.SequenceId);
         }
 
         return chunks;

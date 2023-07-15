@@ -10,5 +10,5 @@ public class ChunkDto
 
     public int ChunkId { get; set; } // Идентификатор чанка в последовательности
 
-    public string InstanceId { get; set; }
+    public string SequenceId { get; set; }
 }
