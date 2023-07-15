@@ -9,7 +9,7 @@ public static class Chunker
 {
     private static readonly MemoryCache _cache = new(new MemoryCacheOptions());
 
-    public static IEnumerable<ChunkDto> Chunkify<T>(T data, int chunkSize = 4096) where T : class
+    public static IEnumerable<ChunkDto> Chunkify<T>(T data, int chunkSize = 4096, MessagePackSerializerOptions options = null) where T : class
     {
         if (data == null)
         {
@@ -34,7 +34,9 @@ public static class Chunker
 
         try
         {
-            serializedData = MessagePackSerializer.Serialize(data);
+            serializedData = options != null ?
+                MessagePackSerializer.Serialize(data, options) :
+                MessagePackSerializer.Serialize(data);
         }
         catch (Exception ex)
         {
@@ -80,7 +82,7 @@ public static class Chunker
         }
     }
 
-    public static bool TryUnchunkify<T>(ChunkDto chunkDto, out T result) where T : class
+    public static bool TryUnchunkify<T>(ChunkDto chunkDto, out T result, MessagePackSerializerOptions options = null) where T : class
     {
         if (chunkDto.Chunk.Length == 0)
         {
@@ -109,7 +111,9 @@ public static class Chunker
 
         try
         {
-            result = MessagePackSerializer.Deserialize<T>(allBytes);
+            result = options != null ?
+                MessagePackSerializer.Deserialize<T>(allBytes, options) :
+                MessagePackSerializer.Deserialize<T>(allBytes);
         }
         catch (Exception ex)
         {
