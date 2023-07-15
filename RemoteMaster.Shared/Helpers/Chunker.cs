@@ -1,6 +1,7 @@
 ﻿using MessagePack;
 using Microsoft.Extensions.Caching.Memory;
 using RemoteMaster.Shared.Dto;
+using System.Collections.Concurrent;
 
 namespace RemoteMaster.Shared.Helpers;
 
@@ -10,7 +11,16 @@ public static class Chunker
 
     public static IEnumerable<ChunkDto> Chunkify<T>(T data, int chunkSize = 4096) where T : class
     {
-        var serializedData = MessagePackSerializer.Serialize(data);
+        byte[] serializedData;
+
+        try
+        {
+            serializedData = MessagePackSerializer.Serialize(data);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Failed to serialize data", ex);
+        }
 
         return GenerateChunks(serializedData, chunkSize);
     }
@@ -27,21 +37,10 @@ public static class Chunker
 
         for (var i = 0; i < chunkCount; i++)
         {
-            var chunk = new byte[chunkSize];
-            var index = 0;
+            var length = i < chunkCount - 1 ? chunkSize : data.Length - i * chunkSize;
+            var chunk = new byte[length];
 
-            for (var j = i * chunkSize; j < (i + 1) * chunkSize; j++)
-            {
-                if (j < data.Length)
-                {
-                    chunk[index] = data[j];
-                    index++;
-                }
-                else
-                {
-                    break;
-                }
-            }
+            Array.Copy(data, i * chunkSize, chunk, 0, length);
 
             yield return new ChunkDto
             {
@@ -67,7 +66,14 @@ public static class Chunker
 
         var allBytes = CombineChunks(chunks);
 
-        result = MessagePackSerializer.Deserialize<T>(allBytes);
+        try
+        {
+            result = MessagePackSerializer.Deserialize<T>(allBytes);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Failed to deserialize data", ex);
+        }
 
         return true;
     }
@@ -88,19 +94,16 @@ public static class Chunker
         return true;
     }
 
-    private static List<ChunkDto> AddToCache(ChunkDto chunkDto)
+    private static ConcurrentBag<ChunkDto> AddToCache(ChunkDto chunkDto)
     {
         var chunks = _cache.GetOrCreate(chunkDto.InstanceId, entry =>
         {
             entry.SlidingExpiration = TimeSpan.FromMinutes(1);
 
-            return new List<ChunkDto>();
+            return new ConcurrentBag<ChunkDto>();
         });
 
-        lock (chunks)
-        {
-            chunks.Add(chunkDto);
-        }
+        chunks.Add(chunkDto);
 
         if (chunkDto.IsLastChunk)
         {
@@ -110,11 +113,12 @@ public static class Chunker
         return chunks;
     }
 
-    private static byte[] CombineChunks(List<ChunkDto> chunks)
+    private static byte[] CombineChunks(ConcurrentBag<ChunkDto> chunks)
     {
+        var orderedChunks = chunks.OrderBy(c => c.ChunkId);
         var allBytes = new List<byte>();
 
-        foreach (var chunk in chunks.OrderBy(c => c.ChunkId))
+        foreach (var chunk in orderedChunks)
         {
             allBytes.AddRange(chunk.Chunk);
         }
