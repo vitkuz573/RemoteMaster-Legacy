@@ -99,7 +99,8 @@ public static class Chunker
         var chunks = _cache.GetOrCreate(chunkDto.InstanceId, entry =>
         {
             entry.SlidingExpiration = TimeSpan.FromMinutes(1);
-
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+            
             return new ConcurrentBag<ChunkDto>();
         });
 
