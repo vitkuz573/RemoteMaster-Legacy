@@ -11,7 +11,26 @@ public static class Chunker
 
     public static IEnumerable<ChunkDto> Chunkify<T>(T data, int chunkSize = 4096) where T : class
     {
+        if (data == null)
+        {
+            throw new InvalidOperationException("Data cannot be null");
+        }
+
         byte[] serializedData;
+
+        if (data is string str && string.IsNullOrEmpty(str))
+        {
+            yield return new ChunkDto
+            {
+                Chunk = Array.Empty<byte>(),
+                IsFirstChunk = true,
+                IsLastChunk = true,
+                ChunkId = 0,
+                InstanceId = Guid.NewGuid().ToString()
+            };
+
+            yield break;
+        }
 
         try
         {
@@ -22,7 +41,15 @@ public static class Chunker
             throw new InvalidOperationException("Failed to serialize data", ex);
         }
 
-        return GenerateChunks(serializedData, chunkSize);
+        if (serializedData.Length == 0)
+        {
+            yield break;
+        }
+
+        foreach (var chunk in GenerateChunks(serializedData, chunkSize))
+        {
+            yield return chunk;
+        }
     }
 
     public static IEnumerable<ChunkDto> Chunkify(byte[] data, int chunkSize = 4096)
@@ -72,7 +99,7 @@ public static class Chunker
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException("Failed to deserialize data", ex);
+            throw new InvalidOperationException("Failed to deserialize data into the expected type", ex);
         }
 
         return true;

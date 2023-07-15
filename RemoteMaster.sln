@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Server", "Remo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Shared", "RemoteMaster.Shared\RemoteMaster.Shared.csproj", "{DFED8337-1138-4192-BC5D-354BDB952E2D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteMaster.Agent", "RemoteMaster.Agent\RemoteMaster.Agent.csproj", "{01A08820-6471-41A9-8F76-A574B2DF3709}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Agent", "RemoteMaster.Agent\RemoteMaster.Agent.csproj", "{01A08820-6471-41A9-8F76-A574B2DF3709}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteMaster.Tests", "RemoteMaster.Tests\RemoteMaster.Tests.csproj", "{6D0F8FF4-7B71-47C6-9166-255B9BD080C0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{01A08820-6471-41A9-8F76-A574B2DF3709}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{01A08820-6471-41A9-8F76-A574B2DF3709}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{01A08820-6471-41A9-8F76-A574B2DF3709}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D0F8FF4-7B71-47C6-9166-255B9BD080C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D0F8FF4-7B71-47C6-9166-255B9BD080C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D0F8FF4-7B71-47C6-9166-255B9BD080C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D0F8FF4-7B71-47C6-9166-255B9BD080C0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
