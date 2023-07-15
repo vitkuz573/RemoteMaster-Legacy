@@ -82,6 +82,20 @@ public static class Chunker
 
     public static bool TryUnchunkify<T>(ChunkDto chunkDto, out T result) where T : class
     {
+        if (chunkDto.Chunk.Length == 0)
+        {
+            if (typeof(T) == typeof(string))
+            {
+                result = string.Empty as T;
+            }
+            else
+            {
+                result = default(T);
+            }
+
+            return true;
+        }
+
         var chunks = AddToCache(chunkDto);
 
         if (!chunkDto.IsLastChunk)
