@@ -227,8 +227,6 @@ public class ChunkerTests
         Assert.IsTrue(chunks.Count > 1);
     }
 
-    // Uncomment this test if needed.
-    /*
     [TestMethod]
     public void TryUnchunkify_ChunksOutOfOrder_ShouldThrowException()
     {
@@ -236,7 +234,7 @@ public class ChunkerTests
         var options = MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance);
 
         var chunks = Chunker.Chunkify(originalData, 16, options).ToList();
-        chunks = chunks.OrderBy(x => Guid.NewGuid()).ToList();  // Randomly order the chunks.
+        chunks = chunks.OrderBy(x => Guid.NewGuid()).ToList();
 
         bool hasThrownException = false;
 
@@ -254,5 +252,4 @@ public class ChunkerTests
 
         Assert.IsTrue(hasThrownException);
     }
-    */
 }
