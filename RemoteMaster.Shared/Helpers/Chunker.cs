@@ -9,7 +9,7 @@ public static class Chunker
 {
     private static readonly MemoryCache _cache = new(new MemoryCacheOptions());
 
-    public static IEnumerable<ChunkDto> Chunkify<T>(T data, int chunkSize = 4096, MessagePackSerializerOptions options = null) where T : class
+    public static IEnumerable<ChunkDto> Chunkify<T>(T data, int chunkSize = 4096, IFormatterResolver resolver = null) where T : class
     {
         if (data == null)
         {
@@ -17,6 +17,12 @@ public static class Chunker
         }
 
         byte[] serializedData;
+        var options = MessagePackSerializerOptions.Standard;
+
+        if (resolver != null)
+        {
+            options = options.WithResolver(resolver);
+        }
 
         if (data is string str && string.IsNullOrEmpty(str))
         {
@@ -34,9 +40,7 @@ public static class Chunker
 
         try
         {
-            serializedData = options != null ?
-                MessagePackSerializer.Serialize(data, options) :
-                MessagePackSerializer.Serialize(data);
+            serializedData = MessagePackSerializer.Serialize(data, options);
         }
         catch (Exception ex)
         {
@@ -82,7 +86,7 @@ public static class Chunker
         }
     }
 
-    public static bool TryUnchunkify<T>(ChunkDto chunkDto, out T result, MessagePackSerializerOptions options = null) where T : class
+    public static bool TryUnchunkify<T>(ChunkDto chunkDto, out T result, IFormatterResolver resolver = null) where T : class
     {
         if (chunkDto.Chunk.Length == 0)
         {
@@ -99,6 +103,12 @@ public static class Chunker
         }
 
         var chunks = AddToCache(chunkDto);
+        var options = MessagePackSerializerOptions.Standard;
+
+        if (resolver != null)
+        {
+            options = options.WithResolver(resolver);
+        }
 
         if (!chunkDto.IsLastChunk)
         {
@@ -111,9 +121,7 @@ public static class Chunker
 
         try
         {
-            result = options != null ?
-                MessagePackSerializer.Deserialize<T>(allBytes, options) :
-                MessagePackSerializer.Deserialize<T>(allBytes);
+            result = MessagePackSerializer.Deserialize<T>(allBytes, options);
         }
         catch (Exception ex)
         {
@@ -145,7 +153,7 @@ public static class Chunker
         {
             entry.SlidingExpiration = TimeSpan.FromMinutes(1);
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
-            
+
             return new ConcurrentBag<ChunkDto>();
         });
 

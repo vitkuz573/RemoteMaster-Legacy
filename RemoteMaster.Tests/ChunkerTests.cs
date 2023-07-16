@@ -1,4 +1,3 @@
-using MessagePack;
 using MessagePack.Resolvers;
 using RemoteMaster.Shared.Helpers;
 using System.Text;
@@ -12,9 +11,9 @@ public class ChunkerTests
     public void Chunkify_StringData_ShouldReturnChunks()
     {
         var data = "This is some string data for testing.";
-        var options = MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance);
+        var resolver = ContractlessStandardResolver.Instance;
 
-        var chunks = Chunker.Chunkify(data, 16, options).ToList();
+        var chunks = Chunker.Chunkify(data, 16, resolver).ToList();
 
         Assert.IsTrue(chunks.Count > 0);
     }
@@ -23,9 +22,9 @@ public class ChunkerTests
     public void Chunkify_ByteData_ShouldReturnChunks()
     {
         var data = Encoding.ASCII.GetBytes("This is some byte data for testing.");
-        var options = MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance);
+        var resolver = ContractlessStandardResolver.Instance;
 
-        var chunks = Chunker.Chunkify(data, 16, options).ToList();
+        var chunks = Chunker.Chunkify(data, 16, resolver).ToList();
 
         Assert.IsTrue(chunks.Count > 0);
     }
@@ -34,13 +33,13 @@ public class ChunkerTests
     public void TryUnchunkify_StringData_ShouldReturnOriginalData()
     {
         var originalData = "This is some string data for testing.";
-        var options = MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance);
+        var resolver = ContractlessStandardResolver.Instance;
 
-        var chunks = Chunker.Chunkify(originalData, 16, options).ToList();
+        var chunks = Chunker.Chunkify(originalData, 16, resolver).ToList();
 
         chunks.ForEach(chunk =>
         {
-            Chunker.TryUnchunkify(chunk, out string result, options);
+            Chunker.TryUnchunkify(chunk, out string result, resolver);
 
             if (chunk.IsLastChunk)
             {
@@ -53,13 +52,13 @@ public class ChunkerTests
     public void TryUnchunkify_ByteData_ShouldReturnOriginalData()
     {
         var originalData = Encoding.ASCII.GetBytes("This is some byte data for testing.");
-        var options = MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance);
+        var resolver = ContractlessStandardResolver.Instance;
 
-        var chunks = Chunker.Chunkify(originalData, 16, options).ToList();
+        var chunks = Chunker.Chunkify(originalData, 16, resolver).ToList();
 
         chunks.ForEach(chunk =>
         {
-            Chunker.TryUnchunkify(chunk, out byte[] result, options);
+            Chunker.TryUnchunkify(chunk, out byte[] result, resolver);
 
             if (chunk.IsLastChunk)
             {
@@ -73,18 +72,18 @@ public class ChunkerTests
     public void Chunkify_NullObject_ShouldThrowException()
     {
         string data = null;
-        var options = MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance);
+        var resolver = ContractlessStandardResolver.Instance;
 
-        var chunks = Chunker.Chunkify(data, 16, options).ToList();
+        var chunks = Chunker.Chunkify(data, 16, resolver).ToList();
     }
 
     [TestMethod]
     public void TryUnchunkify_WrongType_ShouldThrowException()
     {
         var originalData = "This is some string data for testing.";
-        var options = MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance);
+        var resolver = ContractlessStandardResolver.Instance;
 
-        var chunks = Chunker.Chunkify(originalData, 16, options).ToList();
+        var chunks = Chunker.Chunkify(originalData, 16, resolver).ToList();
 
         bool hasThrownException = false;
 
@@ -92,7 +91,7 @@ public class ChunkerTests
         {
             foreach (var chunk in chunks)
             {
-                Chunker.TryUnchunkify<Stream>(chunk, out _, options);
+                Chunker.TryUnchunkify<Stream>(chunk, out _, resolver);
             }
         }
         catch (InvalidOperationException)
@@ -107,9 +106,9 @@ public class ChunkerTests
     public void Chunkify_EmptyString_ShouldReturnEmptyChunks()
     {
         var data = "";
-        var options = MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance);
+        var resolver = ContractlessStandardResolver.Instance;
 
-        var chunks = Chunker.Chunkify(data, 16, options).ToList();
+        var chunks = Chunker.Chunkify(data, 16, resolver).ToList();
 
         Assert.AreEqual(1, chunks.Count);
         Assert.AreEqual(0, chunks[0].Chunk.Length);
@@ -119,13 +118,13 @@ public class ChunkerTests
     public void TryUnchunkify_EmptyChunks_ShouldReturnEmptyString()
     {
         var originalData = "";
-        var options = MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance);
+        var resolver = ContractlessStandardResolver.Instance;
 
-        var chunks = Chunker.Chunkify(originalData, 16, options).ToList();
+        var chunks = Chunker.Chunkify(originalData, 16, resolver).ToList();
 
         chunks.ForEach(chunk =>
         {
-            Chunker.TryUnchunkify(chunk, out string result, options);
+            Chunker.TryUnchunkify(chunk, out string result, resolver);
 
             if (chunk.IsLastChunk)
             {
@@ -138,9 +137,9 @@ public class ChunkerTests
     public void Chunkify_VeryLargeData_ShouldReturnChunks()
     {
         var data = new string('x', 10000);
-        var options = MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance);
+        var resolver = ContractlessStandardResolver.Instance;
 
-        var chunks = Chunker.Chunkify(data, 16, options).ToList();
+        var chunks = Chunker.Chunkify(data, 16, resolver).ToList();
 
         Assert.IsTrue(chunks.Count > 0);
     }
@@ -149,13 +148,13 @@ public class ChunkerTests
     public void TryUnchunkify_VeryLargeChunks_ShouldReturnOriginalData()
     {
         var originalData = new string('x', 10000);
-        var options = MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance);
+        var resolver = ContractlessStandardResolver.Instance;
 
-        var chunks = Chunker.Chunkify(originalData, 16, options).ToList();
+        var chunks = Chunker.Chunkify(originalData, 16, resolver).ToList();
 
         chunks.ForEach(chunk =>
         {
-            Chunker.TryUnchunkify(chunk, out string result, options);
+            Chunker.TryUnchunkify(chunk, out string result, resolver);
 
             if (chunk.IsLastChunk)
             {
@@ -172,9 +171,9 @@ public class ChunkerTests
             Property1 = "Property1 value",
             Property2 = 1234
         };
-        var options = MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance);
+        var resolver = ContractlessStandardResolver.Instance;
 
-        var chunks = Chunker.Chunkify(data, 16, options).ToList();
+        var chunks = Chunker.Chunkify(data, 16, resolver).ToList();
 
         Assert.IsTrue(chunks.Count > 0);
     }
@@ -187,13 +186,13 @@ public class ChunkerTests
             Property1 = "Property1 value",
             Property2 = 1234
         };
-        var options = MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance);
+        var resolver = ContractlessStandardResolver.Instance;
 
-        var chunks = Chunker.Chunkify(originalData, 16, options).ToList();
+        var chunks = Chunker.Chunkify(originalData, 16, resolver).ToList();
 
         chunks.ForEach(chunk =>
         {
-            Chunker.TryUnchunkify(chunk, out TestObject result, options);
+            Chunker.TryUnchunkify(chunk, out TestObject result, resolver);
 
             if (chunk.IsLastChunk)
             {
@@ -208,9 +207,9 @@ public class ChunkerTests
     {
         var data = "Test data";
         var chunkSize = data.Length + 10;
-        var options = MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance);
+        var resolver = ContractlessStandardResolver.Instance;
 
-        var chunks = Chunker.Chunkify(data, chunkSize, options).ToList();
+        var chunks = Chunker.Chunkify(data, chunkSize, resolver).ToList();
 
         Assert.AreEqual(1, chunks.Count);
     }
@@ -220,9 +219,9 @@ public class ChunkerTests
     {
         var data = "This is some test data";
         var chunkSize = 10;
-        var options = MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance);
+        var resolver = ContractlessStandardResolver.Instance;
 
-        var chunks = Chunker.Chunkify(data, chunkSize, options).ToList();
+        var chunks = Chunker.Chunkify(data, chunkSize, resolver).ToList();
 
         Assert.IsTrue(chunks.Count > 1);
     }
@@ -231,9 +230,9 @@ public class ChunkerTests
     public void TryUnchunkify_ChunksOutOfOrder_ShouldThrowException()
     {
         var originalData = "This is some string data for testing.";
-        var options = MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance);
+        var resolver = ContractlessStandardResolver.Instance;
 
-        var chunks = Chunker.Chunkify(originalData, 16, options).ToList();
+        var chunks = Chunker.Chunkify(originalData, 16, resolver).ToList();
         chunks = chunks.OrderBy(x => Guid.NewGuid()).ToList();
 
         bool hasThrownException = false;
@@ -242,7 +241,7 @@ public class ChunkerTests
         {
             foreach (var chunk in chunks)
             {
-                Chunker.TryUnchunkify(chunk, out string result, options);
+                Chunker.TryUnchunkify(chunk, out string result, resolver);
             }
         }
         catch (InvalidOperationException)
