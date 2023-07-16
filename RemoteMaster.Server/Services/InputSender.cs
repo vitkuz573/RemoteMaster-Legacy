@@ -28,8 +28,15 @@ public class InputSender : IInputSender
     {
         _operationQueue.Enqueue(() =>
         {
-            DesktopHelper.SwitchToInputDesktop();
-            operation();
+            try
+            {
+                DesktopHelper.SwitchToInputDesktop();
+                operation();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Exception occurred during operation execution");
+            }
         });
     }
 
@@ -39,8 +46,15 @@ public class InputSender : IInputSender
         {
             if (_operationQueue.TryDequeue(out var operation))
             {
-                operation();
-                Thread.Sleep(10);
+                try
+                {
+                    operation();
+                    Thread.Sleep(10);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Exception occurred during operation processing");
+                }
             }
             else
             {
