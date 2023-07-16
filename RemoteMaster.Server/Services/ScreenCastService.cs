@@ -28,7 +28,7 @@ public class ScreenCastService : IScreenCasterService
             {
                 var screenData = _screenCaptureService.CaptureScreen();
 
-                var screenDataChunks = Chunker.Chunkify(screenData);
+                var screenDataChunks = Chunker.ChunkifyBytes(screenData);
 
                 foreach (var chunk in screenDataChunks)
                 {

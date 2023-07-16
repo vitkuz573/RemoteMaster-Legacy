@@ -58,7 +58,7 @@ public static class Chunker
         }
     }
 
-    public static IEnumerable<ChunkDto> Chunkify(byte[] data, int chunkSize = 4096)
+    public static IEnumerable<ChunkDto> ChunkifyBytes(byte[] data, int chunkSize = 4096)
     {
         return GenerateChunks(data, chunkSize);
     }
