@@ -9,7 +9,7 @@ public static class Chunker
 {
     private static readonly MemoryCache _cache = new(new MemoryCacheOptions());
 
-    public static IEnumerable<ChunkDto> Chunkify<T>(T data, int chunkSize = 4096, IFormatterResolver resolver = null) where T : class
+    public static IEnumerable<ChunkDto> Chunkify<T>(T data, int chunkSize = 4096, IFormatterResolver? resolver = null) where T : class
     {
         if (data == null)
         {
@@ -86,7 +86,7 @@ public static class Chunker
         }
     }
 
-    public static bool TryUnchunkify<T>(ChunkDto chunkDto, out T result, IFormatterResolver resolver = null) where T : class
+    public static bool TryUnchunkify<T>(ChunkDto chunkDto, out T result, IFormatterResolver? resolver = null) where T : class
     {
         if (chunkDto.Chunk.Length == 0)
         {
@@ -96,7 +96,7 @@ public static class Chunker
             }
             else
             {
-                result = default(T);
+                result = default;
             }
 
             return true;
@@ -155,7 +155,7 @@ public static class Chunker
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
 
             return new ConcurrentBag<ChunkDto>();
-        });
+        }) ?? throw new InvalidOperationException("Chunks cannot be null");
 
         chunks.Add(chunkDto);
 
