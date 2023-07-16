@@ -23,6 +23,8 @@ public class ScreenCaptureService : IScreenCaptureService
 
     public unsafe byte[] CaptureScreen()
     {
+        DesktopHelper.SwitchToInputDesktop();
+
         var width = GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CXVIRTUALSCREEN);
         var height = GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CYVIRTUALSCREEN);
 
