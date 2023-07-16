@@ -10,7 +10,7 @@ using System.Web;
 
 namespace RemoteMaster.Client.Pages;
 
-public partial class Control
+public partial class Control : IDisposable
 {
     [Parameter]
     public string Host { get; set; }
@@ -109,30 +109,22 @@ public partial class Control
 
     private async Task OnMouseUpDown(MouseEventArgs e)
     {
-        var (absoluteX, absoluteY) = await GetNormalizedMouseCoordinates(e);
-
-        var dto = new MouseButtonClickDto
-        {
-            Button = e.Button,
-            State = e.Type,
-            X = absoluteX,
-            Y = absoluteY
-        };
-
-        if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
-        {
-            await _serverConnection.InvokeAsync("SendMouseButton", dto);
-        }
+        await SendMouseButton(e, e.Type);
     }
 
     private async Task OnMouseOver(MouseEventArgs e)
+    {
+        await SendMouseButton(e, "mouseup");
+    }
+
+    private async Task SendMouseButton(MouseEventArgs e, string state)
     {
         var (absoluteX, absoluteY) = await GetNormalizedMouseCoordinates(e);
 
         var dto = new MouseButtonClickDto
         {
             Button = e.Button,
-            State = "mouseup",
+            State = state,
             X = absoluteX,
             Y = absoluteY
         };
@@ -146,32 +138,32 @@ public partial class Control
     [JSInvokable]
     public async Task OnKeyDown(int keyCode)
     {
-        var dto = new KeyboardKeyDto
-        {
-            Key = keyCode,
-            State = "keydown",
-        };
-
-        if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
-        {
-            await _serverConnection.InvokeAsync("SendKeyboardInput", dto);
-        }
+        await SendKeyboardInput(keyCode, "keydown");
     }
 
     [JSInvokable]
     public async Task OnKeyUp(int keyCode)
     {
+        await SendKeyboardInput(keyCode, "keyup");
+    }
+
+    private async Task SendKeyboardInput(int keyCode, string state)
+    {
         var dto = new KeyboardKeyDto
         {
             Key = keyCode,
-            State = "keyup",
+            State = state,
         };
-
 
         if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
         {
             await _serverConnection.InvokeAsync("SendKeyboardInput", dto);
         }
     }
-}
 
+    public void Dispose()
+    {
+        _serverConnection?.DisposeAsync();
+        _agentConnection?.DisposeAsync();
+    }
+}

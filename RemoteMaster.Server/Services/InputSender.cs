@@ -1,5 +1,6 @@
 ﻿using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Dto;
+using RemoteMaster.Shared.Native.Windows;
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
@@ -25,7 +26,11 @@ public class InputSender : IInputSender
 
     public void EnqueueOperation(Action operation)
     {
-        _operationQueue.Enqueue(operation);
+        _operationQueue.Enqueue(() =>
+        {
+            DesktopHelper.SwitchToInputDesktop();
+            operation();
+        });
     }
 
     private void ProcessQueue(CancellationToken token)
