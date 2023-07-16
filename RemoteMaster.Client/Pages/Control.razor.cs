@@ -10,7 +10,7 @@ using System.Web;
 
 namespace RemoteMaster.Client.Pages;
 
-public partial class Control : IDisposable
+public partial class Control
 {
     [Parameter]
     public string Host { get; set; }
@@ -91,77 +91,87 @@ public partial class Control : IDisposable
         return (absoluteX, absoluteY);
     }
 
-    private async Task InvokeWithConnectionStateCheck(string methodName, object dto)
+    private async Task OnMouseMove(MouseEventArgs e)
     {
+        var (absoluteX, absoluteY) = await GetNormalizedMouseCoordinates(e);
+
+        var dto = new MouseMoveDto
+        {
+            X = absoluteX,
+            Y = absoluteY
+        };
+
         if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
         {
-            await _serverConnection.InvokeAsync(methodName, dto);
+            await _serverConnection.InvokeAsync("SendMouseCoordinates", dto);
         }
     }
 
-    private async Task OnMouseAction(MouseEventArgs e, string actionType)
+    private async Task OnMouseUpDown(MouseEventArgs e)
     {
         var (absoluteX, absoluteY) = await GetNormalizedMouseCoordinates(e);
 
         var dto = new MouseButtonClickDto
         {
             Button = e.Button,
-            State = actionType,
+            State = e.Type,
             X = absoluteX,
             Y = absoluteY
         };
 
-        await InvokeWithConnectionStateCheck("SendMouseButton", dto);
-    }
-
-    private async Task OnMouseMove(MouseEventArgs e)
-    {
-        await OnMouseAction(e, "mousemove");
-    }
-
-    private async Task OnMouseUpDown(MouseEventArgs e)
-    {
-        await OnMouseAction(e, e.Type);
+        if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
+        {
+            await _serverConnection.InvokeAsync("SendMouseButton", dto);
+        }
     }
 
     private async Task OnMouseOver(MouseEventArgs e)
     {
-        await OnMouseAction(e, "mouseup");
-    }
+        var (absoluteX, absoluteY) = await GetNormalizedMouseCoordinates(e);
 
-    private async Task OnKeyAction(int keyCode, string actionType)
-    {
-        var dto = new KeyboardKeyDto
+        var dto = new MouseButtonClickDto
         {
-            Key = keyCode,
-            State = actionType
+            Button = e.Button,
+            State = "mouseup",
+            X = absoluteX,
+            Y = absoluteY
         };
 
-        await InvokeWithConnectionStateCheck("SendKeyboardInput", dto);
+        if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
+        {
+            await _serverConnection.InvokeAsync("SendMouseButton", dto);
+        }
     }
 
     [JSInvokable]
     public async Task OnKeyDown(int keyCode)
     {
-        await OnKeyAction(keyCode, "keydown");
+        var dto = new KeyboardKeyDto
+        {
+            Key = keyCode,
+            State = "keydown",
+        };
+
+        if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
+        {
+            await _serverConnection.InvokeAsync("SendKeyboardInput", dto);
+        }
     }
 
     [JSInvokable]
     public async Task OnKeyUp(int keyCode)
     {
-        await OnKeyAction(keyCode, "keyup");
-    }
-
-    public async void Dispose()
-    {
-        if (_agentConnection != null)
+        var dto = new KeyboardKeyDto
         {
-            await _agentConnection.DisposeAsync();
-        }
+            Key = keyCode,
+            State = "keyup",
+        };
 
-        if (_serverConnection != null)
+
+        if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
         {
-            await _serverConnection.DisposeAsync();
+            await _serverConnection.InvokeAsync("SendKeyboardInput", dto);
         }
     }
 }
+
