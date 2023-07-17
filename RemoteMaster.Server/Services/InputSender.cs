@@ -1,5 +1,5 @@
 ﻿using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Shared.Dto;
+using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Native.Windows;
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;

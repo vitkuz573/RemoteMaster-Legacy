@@ -1,22 +1,20 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Shared.Dto;
+using RemoteMaster.Shared.Dtos;
 
 namespace RemoteMaster.Server.Hubs;
 
 public class ControlHub : Hub
 {
     private readonly IScreenCasterService _streamingService;
-    private readonly IViewerService _viewerService;
     private readonly ILogger<ControlHub> _logger;
     private readonly IInputSender _inputSender;
     private CancellationTokenSource _cancellationTokenSource;
 
-    public ControlHub(ILogger<ControlHub> logger, IScreenCasterService streamingService, IViewerService viewerService, IInputSender inputSender)
+    public ControlHub(ILogger<ControlHub> logger, IScreenCasterService streamingService, IInputSender inputSender)
     {
         _logger = logger;
         _streamingService = streamingService;
-        _viewerService = viewerService;
         _inputSender = inputSender;
     }
 
@@ -43,11 +41,6 @@ public class ControlHub : Hub
     {
         _cancellationTokenSource.Cancel();
         await base.OnDisconnectedAsync(exception);
-    }
-
-    public void SetQuality(int quality)
-    {
-        _viewerService.SetImageQuality(quality);
     }
 
     public void SendMouseCoordinates(MouseMoveDto dto)

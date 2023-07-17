@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using RemoteMaster.Client.Models;
-using RemoteMaster.Shared.Dto;
+using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Helpers;
 using System.Web;
 

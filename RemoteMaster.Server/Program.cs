@@ -2,7 +2,6 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Hubs;
 using RemoteMaster.Server.Services;
 using RemoteMaster.Shared;
-using RemoteMaster.Shared.Native.Windows;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,14 +18,9 @@ builder.Services.AddSignalR().AddMessagePackProtocol();
 
 builder.Services.AddScoped<IScreenCaptureService, ScreenCaptureService>();
 builder.Services.AddScoped<IScreenCasterService, ScreenCastService>();
-builder.Services.AddScoped<IViewerService, ViewerService>();
 builder.Services.AddScoped<IInputSender, InputSender>();
-// builder.Services.AddScoped<IAppStartup, AppStartup>();
 
 var app = builder.Build();
-
-// var appStartup = app.Services.GetRequiredService<IAppStartup>();
-// await appStartup.Initialize();
 
 app.Urls.Clear();
 app.Urls.Add("http://0.0.0.0:5076");

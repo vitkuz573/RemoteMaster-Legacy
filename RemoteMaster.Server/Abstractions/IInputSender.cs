@@ -1,4 +1,4 @@
-﻿using RemoteMaster.Shared.Dto;
+﻿using RemoteMaster.Shared.Dtos;
 
 namespace RemoteMaster.Server.Abstractions;
 

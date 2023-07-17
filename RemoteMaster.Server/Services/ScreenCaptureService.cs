@@ -1,4 +1,5 @@
-﻿using RemoteMaster.Server.Abstractions;
+﻿using Microsoft.IO;
+using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Native.Windows;
 using SkiaSharp;
 using System.Drawing;
@@ -12,12 +13,10 @@ namespace RemoteMaster.Server.Services;
 
 public class ScreenCaptureService : IScreenCaptureService
 {
-    private readonly IViewerService _viewerService;
+    private RecyclableMemoryStreamManager _recycleManager = new();
 
-    public ScreenCaptureService(IViewerService viewerService)
+    public ScreenCaptureService()
     {
-        _viewerService = viewerService;
-
         DesktopHelper.SwitchToInputDesktop();
     }
 
@@ -42,21 +41,33 @@ public class ScreenCaptureService : IScreenCaptureService
         return SaveBitmap(bitmap);
     }
 
-    private byte[] SaveBitmap(Bitmap bitmap)
+    private byte[] EncodeBitmap(SKBitmap bitmap, SKEncodedImageFormat format, int quality)
     {
-        var imageFormat = _viewerService.GetImageFormat();
-        var imageQuality = _viewerService.GetImageQuality();
+        using var ms = _recycleManager.GetStream();
+        bitmap.Encode(ms, format, quality);
 
+        return ms.ToArray();
+    }
+
+    private unsafe byte[] SaveBitmap(Bitmap bitmap)
+    {
         var info = new SKImageInfo(bitmap.Width, bitmap.Height, SKColorType.Bgra8888);
+
+        byte[] data;
 
         var bitmapData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadOnly, bitmap.PixelFormat);
 
-        using var newImage = SKImage.FromPixels(info, bitmapData.Scan0);
+        try
+        {
+            using var newImage = SKImage.FromPixels(info, bitmapData.Scan0);
+            var skBitmap = SKBitmap.FromImage(newImage);
+            data = EncodeBitmap(skBitmap, SKEncodedImageFormat.Jpeg, 80);
+        }
+        finally
+        {
+            bitmap.UnlockBits(bitmapData);
+        }
 
-        bitmap.UnlockBits(bitmapData);
-
-        using var newData = newImage.Encode(imageFormat, imageQuality);
-
-        return newData.ToArray();
+        return data;
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace RemoteMaster.Shared.Dto;
+﻿namespace RemoteMaster.Shared.Dtos;
 
 public class MouseButtonClickDto
 {

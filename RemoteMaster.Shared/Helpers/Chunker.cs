@@ -1,6 +1,6 @@
 ﻿using MessagePack;
 using Microsoft.Extensions.Caching.Memory;
-using RemoteMaster.Shared.Dto;
+using RemoteMaster.Shared.Dtos;
 using System.Collections.Concurrent;
 
 namespace RemoteMaster.Shared.Helpers;
