@@ -60,6 +60,11 @@ public class ControlHub : Hub
         _inputSender.SendMouseButton(dto);
     }
 
+    public void SendMouseWheel(MouseWheelDto dto)
+    {
+        _inputSender.SendMouseWheel(dto);
+    }
+
     public void SendKeyboardInput(KeyboardKeyDto dto)
     {
         _inputSender.SendKeyboardInput(dto);

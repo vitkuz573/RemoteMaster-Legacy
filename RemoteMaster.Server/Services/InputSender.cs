@@ -141,6 +141,30 @@ public class InputSender : IInputSender
         });
     }
 
+    public void SendMouseWheel(MouseWheelDto dto)
+    {
+        var input = new INPUT
+        {
+            type = INPUT_TYPE.INPUT_MOUSE,
+            Anonymous =
+            {
+                mi = new MOUSEINPUT
+                {
+                    dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_WHEEL,
+                    dx = 0,
+                    dy = 0,
+                    time = 0,
+                    mouseData = dto.DeltaY < 0 ? 120 : dto.DeltaY > 0 ? -120 : 0,
+                    dwExtraInfo = (nuint)GetMessageExtraInfo().Value
+                }
+            }
+        };
+
+        var inputs = new Span<INPUT>(ref input);
+
+        SendInput(inputs, Marshal.SizeOf(typeof(INPUT)));
+    }
+
     public void SendKeyboardInput(KeyboardKeyDto dto)
     {
         EnqueueOperation(() =>

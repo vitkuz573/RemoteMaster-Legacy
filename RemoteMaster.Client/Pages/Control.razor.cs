@@ -135,6 +135,19 @@ public partial class Control : IDisposable
         }
     }
 
+    private async Task OnMouseWheel(WheelEventArgs e)
+    {
+        var dto = new MouseWheelDto
+        {
+            DeltaY = (int)e.DeltaY
+        };
+
+        if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
+        {
+            await _serverConnection.InvokeAsync("SendMouseWheel", dto);
+        }
+    }
+
     [JSInvokable]
     public async Task OnKeyDown(int keyCode)
     {
