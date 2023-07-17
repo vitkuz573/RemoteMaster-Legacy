@@ -14,6 +14,8 @@ public class InputSender : IInputSender
     private readonly BlockingCollection<Action> _operationQueue;
     private CancellationTokenSource _cts;
     private readonly int _numWorkers;
+    private readonly object _ctsLock = new();
+    private readonly ConcurrentBag<INPUT> _inputPool = new();
 
     public InputSender(ILogger<InputSender> logger, int numWorkers = 4)
     {
@@ -26,9 +28,20 @@ public class InputSender : IInputSender
 
     private void StartWorkerThreads()
     {
-        for (int i = 0; i < _numWorkers; i++)
+        lock (_ctsLock)
         {
-            Task.Factory.StartNew(() => ProcessQueue(_cts.Token), TaskCreationOptions.LongRunning);
+            for (int i = 0; i < _numWorkers; i++)
+            {
+                Task.Factory.StartNew(() =>
+                {
+                    CancellationToken token;
+                    lock (_ctsLock)
+                    {
+                        token = _cts.Token;
+                    }
+                    ProcessQueue(token);
+                }, TaskCreationOptions.LongRunning);
+            }
         }
     }
 
@@ -65,34 +78,38 @@ public class InputSender : IInputSender
 
     public void StopProcessing()
     {
-        _cts.Cancel();
-        _cts = null;
+        lock (_ctsLock)
+        {
+            if (_cts != null)
+            {
+                _cts.Cancel();
+                _cts = null;
+            }
+        }
     }
 
     public void SendMouseCoordinates(MouseMoveDto dto)
     {
         EnqueueOperation(() =>
         {
-            var input = new INPUT
+            var input = GetInput();
+
+            input.type = INPUT_TYPE.INPUT_MOUSE;
+            input.Anonymous.mi = new MOUSEINPUT
             {
-                type = INPUT_TYPE.INPUT_MOUSE,
-                Anonymous =
-                {
-                    mi = new MOUSEINPUT
-                    {
-                        dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE | MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE | MOUSE_EVENT_FLAGS.MOUSEEVENTF_VIRTUALDESK,
-                        dx = dto.X,
-                        dy = dto.Y,
-                        time = 0,
-                        mouseData = 0,
-                        dwExtraInfo = (nuint)GetMessageExtraInfo().Value
-                    }
-                }
+                dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE | MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE | MOUSE_EVENT_FLAGS.MOUSEEVENTF_VIRTUALDESK,
+                dx = dto.X,
+                dy = dto.Y,
+                time = 0,
+                mouseData = 0,
+                dwExtraInfo = (nuint)GetMessageExtraInfo().Value
             };
 
             var inputs = new Span<INPUT>(ref input);
 
             SendInput(inputs, Marshal.SizeOf(typeof(INPUT)));
+
+            ReturnInput(input);
         });
     }
 
@@ -119,73 +136,85 @@ public class InputSender : IInputSender
                 }
             };
 
-            var input = new INPUT
+            var input = GetInput();
+
+            input.type = INPUT_TYPE.INPUT_MOUSE;
+            input.Anonymous.mi = new MOUSEINPUT
             {
-                type = INPUT_TYPE.INPUT_MOUSE,
-                Anonymous =
-                {
-                    mi = new MOUSEINPUT
-                    {
-                        dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE | mouseEvent | MOUSE_EVENT_FLAGS.MOUSEEVENTF_VIRTUALDESK,
-                        dx = dto.X,
-                        dy = dto.Y
-                    }
-                }
+                dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE | mouseEvent | MOUSE_EVENT_FLAGS.MOUSEEVENTF_VIRTUALDESK,
+                dx = dto.X,
+                dy = dto.Y
             };
 
             var inputs = new Span<INPUT>(ref input);
 
             SendInput(inputs, Marshal.SizeOf(typeof(INPUT)));
+
+            ReturnInput(input);
         });
     }
 
     public void SendMouseWheel(MouseWheelDto dto)
     {
-        var input = new INPUT
+        EnqueueOperation(() =>
         {
-            type = INPUT_TYPE.INPUT_MOUSE,
-            Anonymous =
+            var input = GetInput();
+
+            input.type = INPUT_TYPE.INPUT_MOUSE;
+            input.Anonymous.mi = new MOUSEINPUT
             {
-                mi = new MOUSEINPUT
-                {
-                    dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_WHEEL,
-                    dx = 0,
-                    dy = 0,
-                    time = 0,
-                    mouseData = dto.DeltaY < 0 ? 120 : dto.DeltaY > 0 ? -120 : 0,
-                    dwExtraInfo = (nuint)GetMessageExtraInfo().Value
-                }
-            }
-        };
+                dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_WHEEL,
+                dx = 0,
+                dy = 0,
+                time = 0,
+                mouseData = dto.DeltaY < 0 ? 120 : dto.DeltaY > 0 ? -120 : 0,
+                dwExtraInfo = (nuint)GetMessageExtraInfo().Value
+            };
 
-        var inputs = new Span<INPUT>(ref input);
+            var inputs = new Span<INPUT>(ref input);
 
-        SendInput(inputs, Marshal.SizeOf(typeof(INPUT)));
+            SendInput(inputs, Marshal.SizeOf(typeof(INPUT)));
+
+            ReturnInput(input);
+        });
     }
 
     public void SendKeyboardInput(KeyboardKeyDto dto)
     {
         EnqueueOperation(() =>
         {
-            var input = new INPUT
+            var input = GetInput();
+
+            input.type = INPUT_TYPE.INPUT_KEYBOARD;
+            input.Anonymous.ki = new KEYBDINPUT
             {
-                type = INPUT_TYPE.INPUT_KEYBOARD,
-                Anonymous =
-                {
-                    ki = new KEYBDINPUT
-                    {
-                        wVk = (VIRTUAL_KEY)dto.Key,
-                        wScan = 0,
-                        time = 0,
-                        dwFlags = dto.State == "keyup" ? KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP : 0,
-                        dwExtraInfo = (nuint)GetMessageExtraInfo().Value
-                    }
-                }
+                wVk = (VIRTUAL_KEY)dto.Key,
+                wScan = 0,
+                time = 0,
+                dwFlags = dto.State == "keyup" ? KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP : 0,
+                dwExtraInfo = (nuint)GetMessageExtraInfo().Value
             };
 
             var inputs = new Span<INPUT>(ref input);
 
             SendInput(inputs, Marshal.SizeOf(typeof(INPUT)));
+
+            ReturnInput(input);
         });
+    }
+
+    private INPUT GetInput()
+    {
+        if (!_inputPool.TryTake(out var input))
+        {
+            input = new INPUT();
+        }
+
+        return input;
+    }
+
+    private void ReturnInput(INPUT input)
+    {
+        _inputPool.Add(input);
     }
 }
