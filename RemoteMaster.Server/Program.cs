@@ -16,8 +16,8 @@ builder.Services.AddLogging(builder =>
 builder.Services.AddRazorPages();
 builder.Services.AddSignalR().AddMessagePackProtocol();
 
-builder.Services.AddScoped<IScreenCaptureService, ScreenCaptureService>();
-builder.Services.AddScoped<IScreenCasterService, ScreenCastService>();
+builder.Services.AddScoped<IScreenCapturer, ScreenCapturer>();
+builder.Services.AddScoped<IScreenCaster, ScreenCaster>();
 builder.Services.AddScoped<IInputSender, InputSender>();
 
 var app = builder.Build();

@@ -1,6 +1,6 @@
 ﻿namespace RemoteMaster.Server.Abstractions;
 
-public interface IScreenCaptureService
+public interface IScreenCapturer
 {
     byte[] CaptureScreen();
 }

@@ -6,16 +6,16 @@ namespace RemoteMaster.Server.Hubs;
 
 public class ControlHub : Hub
 {
-    private readonly IScreenCasterService _streamingService;
-    private readonly ILogger<ControlHub> _logger;
-    private readonly IInputSender _inputSender;
     private CancellationTokenSource _cancellationTokenSource;
+    private readonly IScreenCaster _screenCaster;
+    private readonly IInputSender _inputSender;
+    private readonly ILogger<ControlHub> _logger;
 
-    public ControlHub(ILogger<ControlHub> logger, IScreenCasterService streamingService, IInputSender inputSender)
+    public ControlHub(IScreenCaster screenCaster, IInputSender inputSender, ILogger<ControlHub> logger)
     {
-        _logger = logger;
-        _streamingService = streamingService;
+        _screenCaster = screenCaster;
         _inputSender = inputSender;
+        _logger = logger;
     }
 
     public override async Task OnConnectedAsync()
@@ -28,7 +28,7 @@ public class ControlHub : Hub
         {
             try
             {
-                await _streamingService.StartStreaming(connectionId, _cancellationTokenSource.Token);
+                await _screenCaster.StartStreaming(connectionId, _cancellationTokenSource.Token);
             }
             catch (Exception ex)
             {

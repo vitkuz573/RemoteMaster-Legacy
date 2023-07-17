@@ -11,11 +11,11 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Server.Services;
 
-public class ScreenCaptureService : IScreenCaptureService
+public class ScreenCapturer : IScreenCapturer
 {
     private RecyclableMemoryStreamManager _recycleManager = new();
 
-    public ScreenCaptureService()
+    public ScreenCapturer()
     {
         DesktopHelper.SwitchToInputDesktop();
     }

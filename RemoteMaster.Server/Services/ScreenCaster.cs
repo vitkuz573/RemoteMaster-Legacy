@@ -5,13 +5,13 @@ using RemoteMaster.Shared.Helpers;
 
 namespace RemoteMaster.Server.Services;
 
-public class ScreenCastService : IScreenCasterService
+public class ScreenCaster : IScreenCaster
 {
-    private readonly IScreenCaptureService _screenCaptureService;
+    private readonly IScreenCapturer _screenCaptureService;
     private readonly IHubContext<ControlHub> _hubContext;
-    private readonly ILogger<ScreenCastService> _logger;
+    private readonly ILogger<ScreenCaster> _logger;
 
-    public ScreenCastService(IScreenCaptureService screenCaptureService, ILogger<ScreenCastService> logger, IHubContext<ControlHub> hubContext)
+    public ScreenCaster(IScreenCapturer screenCaptureService, ILogger<ScreenCaster> logger, IHubContext<ControlHub> hubContext)
     {
         _screenCaptureService = screenCaptureService;
         _hubContext = hubContext;

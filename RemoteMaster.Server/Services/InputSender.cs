@@ -10,12 +10,12 @@ namespace RemoteMaster.Server.Services;
 
 public class InputSender : IInputSender
 {
-    private readonly ILogger<InputSender> _logger;
     private readonly BlockingCollection<Action> _operationQueue;
     private CancellationTokenSource _cts;
     private readonly int _numWorkers;
     private readonly object _ctsLock = new();
     private readonly ConcurrentBag<INPUT> _inputPool = new();
+    private readonly ILogger<InputSender> _logger;
 
     public InputSender(ILogger<InputSender> logger, int numWorkers = 4)
     {
