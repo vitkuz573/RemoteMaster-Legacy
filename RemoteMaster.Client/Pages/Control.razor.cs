@@ -67,6 +67,8 @@ public partial class Control : IDisposable
                     _screenDataUrl = await JSRuntime.InvokeAsync<string>("createImageBlobUrl", allData);
 
                     await InvokeAsync(StateHasChanged);
+
+                    await JSRuntime.InvokeVoidAsync("disableContextMenuOnImage");
                 }
             });
 

@@ -70,6 +70,12 @@
                 dotnetHelper.invokeMethodAsync('OnKeyUp', e.keyCode);
             };
         };
+
+        window.disableContextMenuOnImage = () => {
+            document.getElementById('screenImage').addEventListener('contextmenu', (event) => {
+                event.preventDefault();
+            });
+        };
     </script>
 </body>
 </html>
