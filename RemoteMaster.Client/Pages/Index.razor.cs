@@ -1,0 +1,103 @@
+﻿using Blazorise.Snackbar;
+using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
+using RemoteMaster.Client.Models;
+using RemoteMaster.Client.Services;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+
+namespace RemoteMaster.Client.Pages;
+
+public partial class Index
+{
+    private readonly ObservableCollection<Node> _nodes = new();
+    private IList<Node> _expandedNodes = new List<Node>();
+    private Node _selectedNode;
+
+    private readonly ObservableCollection<Node> _adNodes = new();
+
+    private AddFolderModal _addFolderModalRef;
+    private AddComputerModal _addComputerModalRef;
+    private SyncResultsModal _syncResultsModalRef;
+
+    private string _fetchComputersFromADStatus;
+    private IDictionary<string, List<Computer>> _domainComputers = new Dictionary<string, List<Computer>>();
+
+    private Snackbar _fetchComputersFromADStatusSnackbar;
+
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; }
+
+    [Inject]
+    private DatabaseService DatabaseService { get; set; }
+
+    [Inject]
+    private ActiveDirectoryService ActiveDirectoryService { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var folders = DatabaseService.GetFolders();
+
+        foreach (var folder in folders)
+        {
+            _nodes.Add(folder);
+        }
+    }
+
+    private void AddFolder(Folder folder)
+    {
+        DatabaseService.AddNode(folder);
+        _nodes.Add(folder);
+    }
+
+    private async Task SyncComputersFromAD()
+    {
+        try
+        {
+            _domainComputers = await ActiveDirectoryService.FetchComputers();
+            _fetchComputersFromADStatus = "Fetch has been completed successfully";
+
+            _adNodes.Clear();
+
+            foreach (var ou in _domainComputers)
+            {
+                var folder = new Folder(ou.Key);
+
+                foreach (var computer in ou.Value)
+                {
+                    folder.Children.Add(computer);
+                }
+
+                _adNodes.Add(folder);
+            }
+
+            _syncResultsModalRef.Show(_adNodes);
+        }
+        catch (Exception e)
+        {
+            _fetchComputersFromADStatus = $"An error occurred during fetch: {e.Message}";
+        }
+
+        _fetchComputersFromADStatusSnackbar.Show();
+    }
+
+    private async Task OpenInNewTab(Computer computer)
+    {
+        var url = $"http://localhost:5254/{computer.IPAddress}/control";
+        await JSRuntime.InvokeVoidAsync("openInNewTab", url);
+    }
+
+    private async Task OpenCmdWithRemoteCommands(Computer computer)
+    {
+        var command = $"/C psexec \\\\{computer.IPAddress} -s powershell";
+
+        var startInfo = new ProcessStartInfo()
+        {
+            FileName = "cmd.exe",
+            Arguments = command,
+            UseShellExecute = true,
+        };
+
+        await Task.Run(() => Process.Start(startInfo));
+    }
+}
