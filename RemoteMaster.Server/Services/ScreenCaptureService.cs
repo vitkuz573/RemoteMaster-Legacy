@@ -48,15 +48,13 @@ public class ScreenCaptureService : IScreenCaptureService
         var imageQuality = _viewerService.GetImageQuality();
 
         var info = new SKImageInfo(bitmap.Width, bitmap.Height, SKColorType.Bgra8888);
-        var skBitmap = new SKBitmap(info);
 
         var bitmapData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadOnly, bitmap.PixelFormat);
 
-        skBitmap.InstallPixels(info, bitmapData.Scan0, bitmapData.Stride);
+        using var newImage = SKImage.FromPixels(info, bitmapData.Scan0);
 
         bitmap.UnlockBits(bitmapData);
 
-        using var newImage = SKImage.FromBitmap(skBitmap);
         using var newData = newImage.Encode(imageFormat, imageQuality);
 
         return newData.ToArray();
