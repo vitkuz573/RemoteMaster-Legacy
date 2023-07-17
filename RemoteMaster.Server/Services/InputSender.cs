@@ -11,22 +11,30 @@ namespace RemoteMaster.Server.Services;
 public class InputSender : IInputSender
 {
     private readonly ILogger<InputSender> _logger;
-    private readonly ConcurrentQueue<Action> _operationQueue;
-    private Thread _workerThread;
+    private readonly BlockingCollection<Action> _operationQueue;
     private CancellationTokenSource _cts;
+    private readonly int _numWorkers;
 
-    public InputSender(ILogger<InputSender> logger)
+    public InputSender(ILogger<InputSender> logger, int numWorkers = 4)
     {
         _logger = logger;
-        _operationQueue = new ConcurrentQueue<Action>();
+        _operationQueue = new BlockingCollection<Action>();
         _cts = new CancellationTokenSource();
-        _workerThread = new Thread(() => ProcessQueue(_cts.Token)) { IsBackground = true };
-        _workerThread.Start();
+        _numWorkers = numWorkers;
+        StartWorkerThreads();
+    }
+
+    private void StartWorkerThreads()
+    {
+        for (int i = 0; i < _numWorkers; i++)
+        {
+            Task.Factory.StartNew(() => ProcessQueue(_cts.Token), TaskCreationOptions.LongRunning);
+        }
     }
 
     public void EnqueueOperation(Action operation)
     {
-        _operationQueue.Enqueue(() =>
+        _operationQueue.Add(() =>
         {
             try
             {
@@ -42,23 +50,15 @@ public class InputSender : IInputSender
 
     private void ProcessQueue(CancellationToken token)
     {
-        while (!token.IsCancellationRequested)
+        foreach (var operation in _operationQueue.GetConsumingEnumerable(token))
         {
-            if (_operationQueue.TryDequeue(out var operation))
+            try
             {
-                try
-                {
-                    operation();
-                    Thread.Sleep(10);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Exception occurred during operation processing");
-                }
+                operation();
             }
-            else
+            catch (Exception ex)
             {
-                Thread.Sleep(50);
+                _logger.LogError(ex, "Exception occurred during operation processing");
             }
         }
     }
@@ -66,8 +66,6 @@ public class InputSender : IInputSender
     public void StopProcessing()
     {
         _cts.Cancel();
-        _workerThread.Join();
-        _workerThread = null;
         _cts = null;
     }
 
