@@ -2,6 +2,7 @@
 @using RemoteMaster.Client.Models
 @using RemoteMaster.Client.Services
 @using System.Collections.ObjectModel
+@using System.Diagnostics;
 @inject DatabaseService DatabaseService
 @inject ActiveDirectoryService ActiveDirectoryService
 @inject IJSRuntime JsRuntime
@@ -33,7 +34,7 @@
             {
                 if (child is Computer computer)
                 {
-                    <Card @onclick="(() => OpenInNewTab(computer))">
+                    <Card @onclick="(() => OpenCmdWithRemoteCommands(computer))">
                         <CardImage Source="/img/gallery/2.jpg" Alt="@computer.Name" />
                         <CardBody>
                             <CardTitle Size="3">
@@ -121,5 +122,19 @@
     {
         var url = $"http://localhost:5254/{computer.IPAddress}/control";
         await JsRuntime.InvokeVoidAsync("openInNewTab", url);
+    }
+
+    private async Task OpenCmdWithRemoteCommands(Computer computer)
+    {
+        var command = $"/C psexec \\\\{computer.IPAddress} -s powershell";
+
+        var startInfo = new ProcessStartInfo()
+            {
+                FileName = "cmd.exe",
+                Arguments = command,
+                UseShellExecute = true,
+            };
+
+        await Task.Run(() => Process.Start(startInfo));
     }
 }
