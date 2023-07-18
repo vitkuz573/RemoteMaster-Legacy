@@ -57,7 +57,7 @@ public partial class Control : IDisposable
 
                 await _agentConnection.StartAsync();
 
-                Thread.Sleep(5000);
+                // Thread.Sleep(5000);
 
                 await _agentConnection.StopAsync();
             }
