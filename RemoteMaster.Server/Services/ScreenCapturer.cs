@@ -13,12 +13,7 @@ namespace RemoteMaster.Server.Services;
 
 public class ScreenCapturer : IScreenCapturer
 {
-    private RecyclableMemoryStreamManager _recycleManager = new();
-
-    public ScreenCapturer()
-    {
-        DesktopHelper.SwitchToInputDesktop();
-    }
+    private readonly RecyclableMemoryStreamManager _recycleManager = new();
 
     public unsafe byte[] CaptureScreen()
     {
