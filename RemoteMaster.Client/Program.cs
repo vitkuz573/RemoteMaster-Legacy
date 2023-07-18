@@ -11,6 +11,7 @@ using RemoteMaster.Client.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Services
+builder.Services.AddScoped<ControlFunctionsService>();
 builder.Services.AddScoped<DatabaseService>();
 builder.Services.AddScoped<ActiveDirectoryService>();
 builder.Services.AddTransient<IHubConnectionBuilder>(s => new HubConnectionBuilder());

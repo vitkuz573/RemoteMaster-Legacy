@@ -1,4 +1,6 @@
-﻿@inherits LayoutComponentBase
+﻿@using RemoteMaster.Client.Services;
+@inherits LayoutComponentBase
+@inject ControlFunctionsService ControlFuncsService
 
 <PageTitle>RemoteMaster.Client - Control</PageTitle>
 
@@ -30,6 +32,7 @@
                 </button>
             </div>
             <ul class="space-y-2">
+                <li><a class="text-blue-500 hover:text-blue-600 hover:underline" @onclick="ControlFuncsService.KillServer">Kill Server</a></li>
                 <li><a href="#" class="text-blue-500 hover:text-blue-600 hover:underline">Switch Screen</a></li>
                 <!-- Add more actions here -->
             </ul>

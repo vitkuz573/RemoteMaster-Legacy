@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using RemoteMaster.Client.Models;
+using RemoteMaster.Client.Services;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Helpers;
 using System.Web;
@@ -19,6 +20,9 @@ public partial class Control : IDisposable
     private NavigationManager NavManager { get; set; }
 
     [Inject]
+    private ControlFunctionsService ControlFuncsService { get; set; }
+
+    [Inject]
     private IJSRuntime JSRuntime { get; set; }
 
     private string? _screenDataUrl;
@@ -29,6 +33,14 @@ public partial class Control : IDisposable
     {
         if (firstRender)
         {
+            ControlFuncsService.KillServer = async () =>
+            {
+                if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
+                {
+                    await _serverConnection.InvokeAsync("KillServer");
+                }
+            };
+
             var uri = new Uri(NavManager.Uri);
             var query = HttpUtility.ParseQueryString(uri.Query);
             var skipAgentConnection = query.Get("skipAgent");
