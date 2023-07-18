@@ -14,14 +14,11 @@ public partial class Index
     private IList<Node> _expandedNodes = new List<Node>();
     private Node _selectedNode;
 
-    private readonly ObservableCollection<Node> _adNodes = new();
-
     private AddFolderModal _addFolderModalRef;
     private AddComputerModal _addComputerModalRef;
     private SyncResultsModal _syncResultsModalRef;
 
     private string _fetchComputersFromADStatus;
-    private IDictionary<string, List<Computer>> _domainComputers = new Dictionary<string, List<Computer>>();
 
     private Snackbar _fetchComputersFromADStatusSnackbar;
 
@@ -54,12 +51,12 @@ public partial class Index
     {
         try
         {
-            _domainComputers = await ActiveDirectoryService.FetchComputers();
+            var domainComputers = await ActiveDirectoryService.FetchComputers();
             _fetchComputersFromADStatus = "Fetch has been completed successfully";
 
-            _adNodes.Clear();
+            var adNodes = new ObservableCollection<Node>();
 
-            foreach (var ou in _domainComputers)
+            foreach (var ou in domainComputers)
             {
                 var folder = new Folder(ou.Key);
 
@@ -68,10 +65,10 @@ public partial class Index
                     folder.Children.Add(computer);
                 }
 
-                _adNodes.Add(folder);
+                adNodes.Add(folder);
             }
 
-            _syncResultsModalRef.Show(_adNodes);
+            _syncResultsModalRef.Show(adNodes);
         }
         catch (Exception e)
         {
