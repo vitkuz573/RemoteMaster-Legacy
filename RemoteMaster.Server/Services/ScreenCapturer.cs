@@ -41,10 +41,19 @@ public class ScreenCapturer : IScreenCapturer
         return SaveBitmap(bitmap);
     }
 
-    private byte[] EncodeBitmap(SKBitmap bitmap, SKEncodedImageFormat format, int quality)
+    private byte[] EncodeBitmap(SKBitmap bitmap, int quality)
     {
         using var ms = _recycleManager.GetStream();
-        bitmap.Encode(ms, format, quality);
+
+        var encoderOptions = new SKJpegEncoderOptions
+        {
+            Quality = quality,
+            Downsample = SKJpegEncoderDownsample.Downsample420
+        };
+
+        using var pixmap = bitmap.PeekPixels();
+        using var data = pixmap.Encode(encoderOptions);
+        data.SaveTo(ms);
 
         return ms.ToArray();
     }
@@ -59,9 +68,9 @@ public class ScreenCapturer : IScreenCapturer
 
         try
         {
-            using var newImage = SKImage.FromPixels(info, bitmapData.Scan0);
-            var skBitmap = SKBitmap.FromImage(newImage);
-            data = EncodeBitmap(skBitmap, SKEncodedImageFormat.Jpeg, 80);
+            var skBitmap = new SKBitmap(info);
+            skBitmap.InstallPixels(info, bitmapData.Scan0, bitmapData.Stride);
+            data = EncodeBitmap(skBitmap, 10);
         }
         finally
         {
