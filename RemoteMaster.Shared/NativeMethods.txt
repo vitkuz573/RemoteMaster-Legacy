@@ -22,3 +22,8 @@ LookupPrivilegeValue
 AdjustTokenPrivileges
 SE_SHUTDOWN_NAME
 InitiateSystemShutdown
+SystemParametersInfo
+GetDeviceCaps
+EnumDisplayMonitors
+MonitorFromPoint
+MonitorFromRect
