@@ -85,10 +85,7 @@ public partial class Control : IDisposable
 
             _serverConnection.On<string[]>("Displays", displays =>
             {
-                foreach (var display in displays)
-                {
-                    Logger.LogWarning(display);
-                }
+                ControlFuncsService.Displays = displays;
             });
 
             _serverConnection.On<ChunkDto>("ScreenUpdate", async chunk =>
