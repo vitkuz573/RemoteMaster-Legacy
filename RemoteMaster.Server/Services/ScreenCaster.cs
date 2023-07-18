@@ -7,13 +7,13 @@ namespace RemoteMaster.Server.Services;
 
 public class ScreenCaster : IScreenCaster
 {
-    private readonly IScreenCapturer _screenCaptureService;
+    private readonly IScreenCapturer _screenCapturer;
     private readonly IHubContext<ControlHub> _hubContext;
     private readonly ILogger<ScreenCaster> _logger;
 
-    public ScreenCaster(IScreenCapturer screenCaptureService, ILogger<ScreenCaster> logger, IHubContext<ControlHub> hubContext)
+    public ScreenCaster(IScreenCapturer screenCapturer, ILogger<ScreenCaster> logger, IHubContext<ControlHub> hubContext)
     {
-        _screenCaptureService = screenCaptureService;
+        _screenCapturer = screenCapturer;
         _hubContext = hubContext;
         _logger = logger;
     }
@@ -22,11 +22,13 @@ public class ScreenCaster : IScreenCaster
     {
         _logger.LogInformation("Starting screen stream for ID {connectionId}", connectionId);
 
+        await _hubContext.Clients.Client(connectionId).SendAsync("Displays", _screenCapturer.GetDisplayNames().ToArray(), cancellationToken);
+
         while (!cancellationToken.IsCancellationRequested)
         {
             try
             {
-                var screenData = _screenCaptureService.CaptureScreen();
+                var screenData = _screenCapturer.CaptureScreen();
 
                 var screenDataChunks = Chunker.ChunkifyBytes(screenData);
 

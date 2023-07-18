@@ -17,6 +17,9 @@ public partial class Control : IDisposable
     public string Host { get; set; }
 
     [Inject]
+    private ILogger<Control> Logger { get; set; }
+
+    [Inject]
     private NavigationManager NavManager { get; set; }
 
     [Inject]
@@ -79,6 +82,14 @@ public partial class Control : IDisposable
                 .AddMessagePackProtocol()
                 .WithAutomaticReconnect(new RetryPolicy())
                 .Build();
+
+            _serverConnection.On<string[]>("Displays", displays =>
+            {
+                foreach (var display in displays)
+                {
+                    Logger.LogWarning(display);
+                }
+            });
 
             _serverConnection.On<ChunkDto>("ScreenUpdate", async chunk =>
             {
