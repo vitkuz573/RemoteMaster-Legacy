@@ -1,6 +1,7 @@
 ﻿using Microsoft.IO;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Native.Windows;
+using RemoteMaster.Shared.Native.Windows.ScreenHelper;
 using SkiaSharp;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -73,5 +74,10 @@ public class ScreenCapturer : IScreenCapturer
         }
 
         return data;
+    }
+
+    public IEnumerable<string> GetDisplayNames()
+    {
+        return Screen.AllScreens.Select(x => x.DeviceName);
     }
 }
