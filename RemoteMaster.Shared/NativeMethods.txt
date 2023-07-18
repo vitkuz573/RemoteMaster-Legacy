@@ -17,3 +17,8 @@ OpenInputDesktop
 GetUserObjectInformation
 SetThreadDesktop
 SwitchDesktop
+GetCurrentProcess
+LookupPrivilegeValue
+AdjustTokenPrivileges
+SE_SHUTDOWN_NAME
+InitiateSystemShutdown

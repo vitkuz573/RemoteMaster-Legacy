@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Dtos;
+using RemoteMaster.Shared.Native.Windows;
+using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Server.Hubs;
 
@@ -66,5 +68,12 @@ public class ControlHub : Hub
     public async Task KillServer()
     {
         Environment.Exit(0);
+    }
+
+    public async Task RebootComputer()
+    {
+        TokenPrivilegeHelper.AdjustTokenPrivilege(SE_SHUTDOWN_NAME);
+
+        InitiateSystemShutdown(null, null, 0, true, true);
     }
 }
