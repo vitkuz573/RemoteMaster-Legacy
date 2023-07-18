@@ -1,5 +1,4 @@
 ﻿@using RemoteMaster.Client.Models
-@using System.Collections.ObjectModel
 
 <Modal @ref="_modalRef">
     <ModalContent Centered>
@@ -27,21 +26,3 @@
         </ModalFooter>
     </ModalContent>
 </Modal>
-
-@code {
-    private Modal _modalRef;
-    private ObservableCollection<Node> _adNodes = new ObservableCollection<Node>();
-    private IList<Node> _expandedNodes = new List<Node>();
-    private Node _selectedNode;
-
-    public void Show(ObservableCollection<Node> adNodes)
-    {
-        _adNodes = adNodes;
-        _modalRef.Show();
-    }
-
-    public void Hide()
-    {
-        _modalRef.Hide();
-    }
-}
