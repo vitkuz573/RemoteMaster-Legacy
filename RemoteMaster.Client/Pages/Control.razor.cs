@@ -17,9 +17,6 @@ public partial class Control : IDisposable
     public string Host { get; set; }
 
     [Inject]
-    private ILogger<Control> Logger { get; set; }
-
-    [Inject]
     private NavigationManager NavManager { get; set; }
 
     [Inject]

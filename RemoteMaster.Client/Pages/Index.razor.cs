@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using RemoteMaster.Client.Models;
 using RemoteMaster.Client.Services;
-using RemoteMaster.Shared.Native.Windows.ScreenHelper;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 
@@ -30,22 +29,10 @@ public partial class Index
     private DatabaseService DatabaseService { get; set; }
 
     [Inject]
-    private ILogger<Index> Logger { get; set; }
-
-    [Inject]
     private ActiveDirectoryService ActiveDirectoryService { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        var screens = Screen.AllScreens;
-
-        Logger.LogInformation(screens.Length.ToString());
-
-        foreach (var screen in screens)
-        {
-            Console.WriteLine(screen.ToString());
-        }
-
         var folders = DatabaseService.GetFolders();
 
         foreach (var folder in folders)

@@ -78,7 +78,7 @@ public class ScreenCapturer : IScreenCapturer
         {
             var skBitmap = new SKBitmap(info);
             skBitmap.InstallPixels(info, bitmapData.Scan0, bitmapData.Stride);
-            data = EncodeBitmap(skBitmap, 10);
+            data = EncodeBitmap(skBitmap, 80);
         }
         finally
         {
