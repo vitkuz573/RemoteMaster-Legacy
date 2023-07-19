@@ -67,7 +67,7 @@ public class ControlHub : Hub
 
     public void SendSelectedScreen(SelectScreenDto dto)
     {
-        _screenCaster.SetSelectedScreen(dto);
+        _screenCaster.SetSelectedScreen(Context.ConnectionId, dto);
     }
 
     public async Task KillServer()

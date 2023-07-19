@@ -1,73 +1,40 @@
-﻿using Microsoft.AspNetCore.SignalR;
-using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Hubs;
+﻿using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Dtos;
-using RemoteMaster.Shared.Helpers;
-using System.Threading;
+using System.Collections.Concurrent;
 
 namespace RemoteMaster.Server.Services;
 
 public class ScreenCaster : IScreenCaster
 {
-    private readonly IScreenCapturer _screenCapturer;
-    private readonly IHubContext<ControlHub> _hubContext;
+    private readonly IViewerFactory _viewerFactory;
     private readonly ILogger<ScreenCaster> _logger;
+    private readonly ConcurrentDictionary<string, Viewer> _viewers = new();
 
-    public ScreenCaster(IScreenCapturer screenCapturer, ILogger<ScreenCaster> logger, IHubContext<ControlHub> hubContext)
+    public ScreenCaster(IViewerFactory viewerFactory, ILogger<ScreenCaster> logger)
     {
-        _screenCapturer = screenCapturer;
-        _hubContext = hubContext;
+        _viewerFactory = viewerFactory;
         _logger = logger;
     }
 
     public async Task StartStreaming(string connectionId, CancellationToken cancellationToken)
     {
-        _screenCapturer.ScreenChanged += (sender, bounds) =>
+        var viewer = _viewerFactory.CreateViewer(connectionId);
+        _viewers.TryAdd(connectionId, viewer);
+
+        await viewer.StartStreaming(cancellationToken);
+    }
+
+    public void SetSelectedScreen(string connectionId, SelectScreenDto dto)
+    {
+        if (_viewers.TryGetValue(connectionId, out var viewer))
         {
-            // logic
-        };
-
-        var bounds = _screenCapturer.CurrentScreenBounds;
-
-        await SendScreenData(connectionId, _screenCapturer.GetDisplayNames(), _screenCapturer.SelectedScreen, bounds.Width, bounds.Height);
-
-        _logger.LogInformation("Starting screen stream for ID {connectionId}", connectionId);
-
-        while (!cancellationToken.IsCancellationRequested)
+            viewer.SetSelectedScreen(dto);
+        }
+        else
         {
-            try
-            {
-                var screenData = _screenCapturer.GetNextFrame();
-
-                var screenDataChunks = Chunker.ChunkifyBytes(screenData);
-
-                foreach (var chunk in screenDataChunks)
-                {
-                    await _hubContext.Clients.Client(connectionId).SendAsync("ScreenUpdate", chunk, cancellationToken);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("An error occurred during streaming: {Message}", ex.Message);
-            }
+            _logger.LogError("Failed to find a viewer for connection ID {connectionId}", connectionId);
         }
     }
 
-    public async Task SendScreenData(string connectionId, IEnumerable<string> displayNames, string selectedDisplay, int screenWidth, int screenHeight)
-    {
-        var dto = new ScreenDataDto
-        {
-            DisplayNames = displayNames,
-            SelectedDisplay = selectedDisplay,
-            ScreenWidth = screenWidth,
-            ScreenHeight = screenHeight
-        };
-
-        await _hubContext.Clients.Client(connectionId).SendAsync("ScreenData", dto);
-    }
-
-    public void SetSelectedScreen(SelectScreenDto dto)
-    {
-        _screenCapturer.SetSelectedScreen(dto.DisplayName);
-    }
+    // You can also implement methods to stop streaming and remove viewers when a client disconnects
 }

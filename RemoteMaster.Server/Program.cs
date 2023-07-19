@@ -19,6 +19,8 @@ builder.Services.AddSignalR().AddMessagePackProtocol();
 builder.Services.AddScoped<IScreenCapturer, ScreenCapturer>();
 builder.Services.AddScoped<IScreenCaster, ScreenCaster>();
 builder.Services.AddScoped<IInputSender, InputSender>();
+builder.Services.AddScoped<IViewerFactory, ViewerFactory>();
+
 
 var app = builder.Build();
 
