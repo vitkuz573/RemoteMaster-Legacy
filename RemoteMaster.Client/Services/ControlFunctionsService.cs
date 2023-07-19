@@ -1,4 +1,6 @@
-﻿namespace RemoteMaster.Client.Services;
+﻿using RemoteMaster.Shared.Dtos;
+
+namespace RemoteMaster.Client.Services;
 
 public class ControlFunctionsService
 {
@@ -8,5 +10,5 @@ public class ControlFunctionsService
 
     public string[] Displays { get; set; }
 
-    public Action<string> SelectDisplay { get; set; }
+    public Action<SelectScreenDto> SelectDisplay { get; set; }
 }

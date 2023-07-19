@@ -7,7 +7,6 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
-using Windows.Win32.UI.WindowsAndMessaging;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Server.Services;
@@ -36,8 +35,10 @@ public class ScreenCapturer : IScreenCapturer
     {
         DesktopHelper.SwitchToInputDesktop();
 
-        var width = GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CXVIRTUALSCREEN);
-        var height = GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CYVIRTUALSCREEN);
+        var width = CurrentScreenBounds.Width;
+        var height = CurrentScreenBounds.Height;
+        var left = CurrentScreenBounds.Left;
+        var top = CurrentScreenBounds.Top;
 
         using var bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
         using var memoryGraphics = Graphics.FromImage(bitmap);
@@ -45,7 +46,7 @@ public class ScreenCapturer : IScreenCapturer
         var dc1 = GetDC(HWND.Null);
         var dc2 = (HDC)memoryGraphics.GetHdc();
 
-        BitBlt(dc2, 0, 0, width, height, dc1, 0, 0, ROP_CODE.SRCCOPY);
+        BitBlt(dc2, 0, 0, width, height, dc1, left, top, ROP_CODE.SRCCOPY);
 
         memoryGraphics.ReleaseHdc(dc2);
         ReleaseDC(HWND.Null, dc1);

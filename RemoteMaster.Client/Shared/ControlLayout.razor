@@ -1,4 +1,5 @@
 ﻿@using RemoteMaster.Client.Services;
+@using RemoteMaster.Shared.Dtos;
 @inherits LayoutComponentBase
 @inject ControlFunctionsService ControlFuncsService
 
@@ -83,6 +84,11 @@
 
     private void OnChangeScreen(ChangeEventArgs e)
     {
-        ControlFuncsService.SelectDisplay(e.Value.ToString());
+        var dto = new SelectScreenDto()
+        {
+            DisplayName = e.Value.ToString()
+        };
+
+        ControlFuncsService.SelectDisplay(dto);
     }
 }
