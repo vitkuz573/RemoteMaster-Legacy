@@ -5,6 +5,7 @@ using RemoteMaster.Shared.Native.Windows.ScreenHelper;
 using SkiaSharp;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
 using static Windows.Win32.PInvoke;
@@ -22,6 +23,8 @@ public class ScreenCapturer : IScreenCapturer
 
     public event EventHandler<Rectangle>? ScreenChanged;
 
+    private readonly object _screenBoundsLock = new();
+
     private readonly ILogger<ScreenCapturer> _logger;
 
     public ScreenCapturer(ILogger<ScreenCapturer> logger)
@@ -31,27 +34,57 @@ public class ScreenCapturer : IScreenCapturer
         InitBitBlt();
     }
 
-    public unsafe byte[] CaptureScreen()
+    public unsafe byte[]? GetBitBltFrame()
     {
-        DesktopHelper.SwitchToInputDesktop();
+        try
+        {
+            var width = CurrentScreenBounds.Width;
+            var height = CurrentScreenBounds.Height;
+            var left = CurrentScreenBounds.Left;
+            var top = CurrentScreenBounds.Top;
 
-        var width = CurrentScreenBounds.Width;
-        var height = CurrentScreenBounds.Height;
-        var left = CurrentScreenBounds.Left;
-        var top = CurrentScreenBounds.Top;
+            using var bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+            using var memoryGraphics = Graphics.FromImage(bitmap);
 
-        using var bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
-        using var memoryGraphics = Graphics.FromImage(bitmap);
+            var dc1 = GetDC(HWND.Null);
+            var dc2 = (HDC)memoryGraphics.GetHdc();
 
-        var dc1 = GetDC(HWND.Null);
-        var dc2 = (HDC)memoryGraphics.GetHdc();
+            BitBlt(dc2, 0, 0, width, height, dc1, left, top, ROP_CODE.SRCCOPY);
 
-        BitBlt(dc2, 0, 0, width, height, dc1, left, top, ROP_CODE.SRCCOPY);
+            memoryGraphics.ReleaseHdc(dc2);
+            ReleaseDC(HWND.Null, dc1);
 
-        memoryGraphics.ReleaseHdc(dc2);
-        ReleaseDC(HWND.Null, dc1);
+            return SaveBitmap(bitmap);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Capturer error in BitBltCapture.");
+            return null;
+        }
+    }
 
-        return SaveBitmap(bitmap);
+    public unsafe byte[]? GetNextFrame()
+    {
+        lock (_screenBoundsLock)
+        {
+            try
+            {
+                if (!DesktopHelper.SwitchToInputDesktop())
+                {
+                    var errCode = Marshal.GetLastWin32Error();
+                    _logger.LogError("Failed to switch to input desktop. Last Win32 error code: {errCode}", errCode);
+                }
+
+                var result = GetBitBltFrame();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while getting next frame.");
+                return null;
+            }
+        }
     }
 
     private byte[] EncodeBitmap(SKBitmap bitmap, int quality)

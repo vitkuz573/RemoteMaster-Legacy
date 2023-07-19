@@ -29,7 +29,7 @@ public class ScreenCaster : IScreenCaster
         {
             try
             {
-                var screenData = _screenCapturer.CaptureScreen();
+                var screenData = _screenCapturer.GetNextFrame();
 
                 var screenDataChunks = Chunker.ChunkifyBytes(screenData);
 

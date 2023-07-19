@@ -2,7 +2,7 @@
 
 public interface IScreenCapturer
 {
-    byte[] CaptureScreen();
+    byte[]? GetNextFrame();
 
     IEnumerable<string> GetDisplayNames();
 

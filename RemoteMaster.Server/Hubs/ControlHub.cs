@@ -67,7 +67,6 @@ public class ControlHub : Hub
 
     public void SendSelectedScreen(SelectScreenDto dto)
     {
-        _logger.LogInformation("Invoked SendSelectedScreen with screen {screen}", dto.DisplayName);
         _screenCaster.SetSelectedScreen(dto);
     }
 
