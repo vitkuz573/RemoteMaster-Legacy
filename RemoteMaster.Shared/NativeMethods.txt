@@ -31,5 +31,6 @@ MonitorFromWindow
 MONITORINFOEXW
 GetMonitorInfo
 MONITORINFOF_PRIMARY
+CreateDC
 DeleteDC
 EnumDisplayMonitors

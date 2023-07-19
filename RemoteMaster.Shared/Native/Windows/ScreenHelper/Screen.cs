@@ -52,10 +52,10 @@ public partial class Screen
 
             _deviceName = new string(info.szDevice.ToString());
 
-            // if (hdc.IsNull)
-            // {
-            //     screenDC = PInvoke.CreateDCW(_deviceName, pwszDevice: null, pszPort: null, pdm: null);
-            // }
+            if (hdc == null)
+            {
+                screenDC = PInvoke.CreateDCW(_deviceName, null, null, null);
+            }
         }
 
         _hmonitor = monitor;
