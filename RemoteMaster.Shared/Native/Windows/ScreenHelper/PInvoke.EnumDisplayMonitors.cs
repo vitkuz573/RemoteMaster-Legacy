@@ -14,7 +14,7 @@ public static unsafe partial class PInvoke
 
         try
         {
-            return PInvoke.EnumDisplayMonitors(default, (RECT?)null, EnumDisplayMonitorsNativeCallback, (LPARAM)(nint)gcHandle);
+            return EnumDisplayMonitors(default, (RECT?)null, EnumDisplayMonitorsNativeCallback, (LPARAM)(nint)gcHandle);
         }
         finally
         {
