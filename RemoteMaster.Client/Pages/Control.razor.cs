@@ -80,9 +80,9 @@ public partial class Control : IDisposable
                 .WithAutomaticReconnect(new RetryPolicy())
                 .Build();
 
-            _serverConnection.On<string[]>("Displays", displays =>
+            _serverConnection.On<ScreenDataDto>("ScreenData", dto =>
             {
-                ControlFuncsService.Displays = displays;
+                ControlFuncsService.Displays = dto.DisplayNames.ToArray();
                 ControlFuncsService.SelectDisplay = async (display) =>
                 {
                     if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)

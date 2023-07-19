@@ -3,6 +3,7 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Hubs;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Helpers;
+using System.Threading;
 
 namespace RemoteMaster.Server.Services;
 
@@ -26,9 +27,11 @@ public class ScreenCaster : IScreenCaster
             // logic
         };
 
-        _logger.LogInformation("Starting screen stream for ID {connectionId}", connectionId);
+        var bounds = _screenCapturer.CurrentScreenBounds;
 
-        await _hubContext.Clients.Client(connectionId).SendAsync("Displays", _screenCapturer.GetDisplayNames().ToArray(), cancellationToken);
+        await SendScreenData(connectionId, _screenCapturer.GetDisplayNames(), _screenCapturer.SelectedScreen, bounds.Width, bounds.Height);
+
+        _logger.LogInformation("Starting screen stream for ID {connectionId}", connectionId);
 
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -48,6 +51,19 @@ public class ScreenCaster : IScreenCaster
                 _logger.LogError("An error occurred during streaming: {Message}", ex.Message);
             }
         }
+    }
+
+    public async Task SendScreenData(string connectionId, IEnumerable<string> displayNames, string selectedDisplay, int screenWidth, int screenHeight)
+    {
+        var dto = new ScreenDataDto
+        {
+            DisplayNames = displayNames,
+            SelectedDisplay = selectedDisplay,
+            ScreenWidth = screenWidth,
+            ScreenHeight = screenHeight
+        };
+
+        await _hubContext.Clients.Client(connectionId).SendAsync("ScreenData", dto);
     }
 
     public void SetSelectedScreen(SelectScreenDto dto)

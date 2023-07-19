@@ -6,6 +6,10 @@ public interface IScreenCapturer
 {
     event EventHandler<Rectangle> ScreenChanged;
 
+    Rectangle CurrentScreenBounds { get; }
+
+    string SelectedScreen { get; }
+
     byte[]? GetNextFrame();
 
     IEnumerable<string> GetDisplayNames();
