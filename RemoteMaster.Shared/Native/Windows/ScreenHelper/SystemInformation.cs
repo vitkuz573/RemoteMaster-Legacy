@@ -1,7 +1,9 @@
 ﻿using System.Drawing;
+using Windows.Win32;
 using Windows.Win32.Foundation;
+using static Windows.Win32.UI.WindowsAndMessaging.SYSTEM_METRICS_INDEX;
+using static Windows.Win32.UI.WindowsAndMessaging.SYSTEM_PARAMETERS_INFO_ACTION;
 using Windows.Win32.UI.WindowsAndMessaging;
-using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Shared.Native.Windows.ScreenHelper;
 
@@ -10,15 +12,14 @@ public static class SystemInformation
     private static bool s_checkMultiMonitorSupport;
     private static bool s_multiMonitorSupport;
 
-    public static Size PrimaryMonitorSize => GetSize(SYSTEM_METRICS_INDEX.SM_CXSCREEN, SYSTEM_METRICS_INDEX.SM_CYSCREEN);
+    public static Size PrimaryMonitorSize => GetSize(SM_CXSCREEN, SM_CYSCREEN);
 
-    public static unsafe Rectangle WorkingArea
+    public unsafe static Rectangle WorkingArea
     {
         get
         {
-            var rect = new RECT();
-            SystemParametersInfo(SYSTEM_PARAMETERS_INFO_ACTION.SPI_GETWORKAREA, 0, &rect, 0);
-
+            var rect = default(RECT);
+            PInvoke.SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
             return rect;
         }
     }
@@ -29,7 +30,7 @@ public static class SystemInformation
         {
             if (!s_checkMultiMonitorSupport)
             {
-                s_multiMonitorSupport = GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CMONITORS) != 0;
+                s_multiMonitorSupport = PInvoke.GetSystemMetrics(SM_CMONITORS) != 0;
                 s_checkMultiMonitorSupport = true;
             }
 
@@ -43,16 +44,16 @@ public static class SystemInformation
         {
             if (MultiMonitorSupport)
             {
-                return new(GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_XVIRTUALSCREEN), GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_YVIRTUALSCREEN), GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CXVIRTUALSCREEN), GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CYVIRTUALSCREEN));
+                return new(PInvoke.GetSystemMetrics(SM_XVIRTUALSCREEN),
+                           PInvoke.GetSystemMetrics(SM_YVIRTUALSCREEN),
+                           PInvoke.GetSystemMetrics(SM_CXVIRTUALSCREEN),
+                           PInvoke.GetSystemMetrics(SM_CYVIRTUALSCREEN));
             }
-            else
-            {
-                var size = PrimaryMonitorSize;
 
-                return new(0, 0, size.Width, size.Height);
-            }
+            Size size = PrimaryMonitorSize;
+            return new Rectangle(0, 0, size.Width, size.Height);
         }
     }
 
-    private static Size GetSize(SYSTEM_METRICS_INDEX x, SYSTEM_METRICS_INDEX y) => new(GetSystemMetrics(x), GetSystemMetrics(y));
+    private static Size GetSize(SYSTEM_METRICS_INDEX x, SYSTEM_METRICS_INDEX y) => new(PInvoke.GetSystemMetrics(x), PInvoke.GetSystemMetrics(y));
 }

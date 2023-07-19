@@ -27,3 +27,9 @@ GetDeviceCaps
 EnumDisplayMonitors
 MonitorFromPoint
 MonitorFromRect
+MonitorFromWindow
+MONITORINFOEXW
+GetMonitorInfo
+MONITORINFOF_PRIMARY
+DeleteDC
+EnumDisplayMonitors

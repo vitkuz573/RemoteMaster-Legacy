@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Hubs;
+using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Helpers;
 
 namespace RemoteMaster.Server.Services;
@@ -42,5 +43,10 @@ public class ScreenCaster : IScreenCaster
                 _logger.LogError("An error occurred during streaming: {Message}", ex.Message);
             }
         }
+    }
+
+    public void SetSelectedScreen(SelectScreenDto dto)
+    {
+        _screenCapturer.SetSelectedScreen(dto.DisplayName);
     }
 }

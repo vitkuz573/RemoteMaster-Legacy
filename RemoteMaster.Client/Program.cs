@@ -30,6 +30,9 @@ builder.Services.AddServerSideBlazor();
 
 var app = builder.Build();
 
+app.Urls.Clear();
+app.Urls.Add("http://0.0.0.0:5254");
+
 // Configure the HTTP request pipeline
 if (!app.Environment.IsDevelopment())
 {

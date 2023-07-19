@@ -16,6 +16,18 @@ public class ScreenCapturer : IScreenCapturer
 {
     private readonly RecyclableMemoryStreamManager _recycleManager = new();
 
+    private readonly Dictionary<string, int> _bitBltScreens = new();
+
+    public Rectangle CurrentScreenBounds { get;private set; } = Screen.PrimaryScreen?.Bounds ?? Rectangle.Empty;
+    public string SelectedScreen { get; private set; } = Screen.PrimaryScreen?.DeviceName ?? string.Empty;
+
+    public event EventHandler<Rectangle>? ScreenChanged;
+
+    public ScreenCapturer()
+    {
+        InitBitBlt();
+    }
+
     public unsafe byte[] CaptureScreen()
     {
         DesktopHelper.SwitchToInputDesktop();
@@ -79,5 +91,40 @@ public class ScreenCapturer : IScreenCapturer
     public IEnumerable<string> GetDisplayNames()
     {
         return Screen.AllScreens.Select(x => x.DeviceName);
+    }
+
+    public void SetSelectedScreen(string displayName)
+    {
+        if (displayName == SelectedScreen)
+        {
+            return;
+        }
+
+        if (_bitBltScreens.ContainsKey(displayName))
+        {
+            SelectedScreen = displayName;
+        }
+        else
+        {
+            SelectedScreen = _bitBltScreens.Keys.First();
+        }
+
+        RefreshCurrentScreenBounds();
+    }
+
+    private void RefreshCurrentScreenBounds()
+    {
+        CurrentScreenBounds = Screen.AllScreens[_bitBltScreens[SelectedScreen]].Bounds;
+        ScreenChanged?.Invoke(this, CurrentScreenBounds);
+    }
+
+    private void InitBitBlt()
+    {
+        _bitBltScreens.Clear();
+
+        for (var i = 0; i < Screen.AllScreens.Length; i++)
+        {
+            _bitBltScreens.Add(Screen.AllScreens[i].DeviceName, i);
+        }
     }
 }

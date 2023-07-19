@@ -65,6 +65,11 @@ public class ControlHub : Hub
         _inputSender.SendKeyboardInput(dto);
     }
 
+    public void SendSelectedScreen(SelectScreenDto dto)
+    {
+        _screenCaster.SetSelectedScreen(dto);
+    }
+
     public async Task KillServer()
     {
         Environment.Exit(0);

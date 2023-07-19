@@ -86,6 +86,13 @@ public partial class Control : IDisposable
             _serverConnection.On<string[]>("Displays", displays =>
             {
                 ControlFuncsService.Displays = displays;
+                ControlFuncsService.SelectDisplay = async (display) =>
+                {
+                    if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
+                    {
+                        await _serverConnection.InvokeAsync("SendSelectedScreen", display);
+                    }
+                };
             });
 
             _serverConnection.On<ChunkDto>("ScreenUpdate", async chunk =>

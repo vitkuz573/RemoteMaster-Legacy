@@ -1,36 +1,35 @@
 ﻿using Microsoft.Win32;
 using System.Drawing;
+using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
 using static Interop;
-using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Shared.Native.Windows.ScreenHelper;
 
 public partial class Screen
 {
-    private readonly IntPtr _hmonitor;
-
+    private readonly HMONITOR _hmonitor;
     private readonly Rectangle _bounds;
     private Rectangle _workingArea = Rectangle.Empty;
     private readonly bool _primary;
     private readonly string _deviceName;
     private readonly int _bitDepth;
 
-    private static readonly object s_syncLock = new();
+    private static readonly object s_syncLock = new object();
 
     private static int s_desktopChangedCount = -1;
     private int _currentDesktopChangedCount = -1;
 
-    private const int PRIMARY_MONITOR = unchecked((int)0xBAADF00D);
+    private static readonly HMONITOR PRIMARY_MONITOR = (HMONITOR)unchecked((nint)0xBAADF00D);
 
     private static Screen[]? s_screens;
 
-    internal Screen(IntPtr monitor) : this(monitor, default)
+    internal Screen(HMONITOR monitor) : this(monitor, default)
     {
     }
 
-    internal unsafe Screen(IntPtr monitor, HDC hdc)
+    internal unsafe Screen(HMONITOR monitor, HDC hdc)
     {
         var screenDC = hdc;
 
@@ -42,31 +41,31 @@ public partial class Screen
         }
         else
         {
-            var info = new User32.MONITORINFOEXW()
+            MONITORINFOEXW info = new()
             {
-                cbSize = (uint)sizeof(User32.MONITORINFOEXW),
+                monitorInfo = new() { cbSize = (uint)sizeof(MONITORINFOEXW) }
             };
 
-            User32.GetMonitorInfoW(monitor, ref info);
-            _bounds = info.rcMonitor;
-            _primary = (info.dwFlags & User32.MONITORINFOF.PRIMARY) != 0;
+            PInvoke.GetMonitorInfo(monitor, (MONITORINFO*)&info);
+            _bounds = info.monitorInfo.rcMonitor;
+            _primary = ((info.monitorInfo.dwFlags & PInvoke.MONITORINFOF_PRIMARY) != 0);
 
-            _deviceName = new string(info.szDevice);
+            _deviceName = new string(info.szDevice.ToString());
 
             // if (hdc.IsNull)
             // {
-            //     // screenDC = CreateDCW(info.szDevice, null, null, null);
+            //     screenDC = PInvoke.CreateDCW(_deviceName, pwszDevice: null, pszPort: null, pdm: null);
             // }
         }
 
         _hmonitor = monitor;
 
-        _bitDepth = GetDeviceCaps(screenDC, GET_DEVICE_CAPS_INDEX.BITSPIXEL);
-        _bitDepth *= GetDeviceCaps(screenDC, GET_DEVICE_CAPS_INDEX.PLANES);
+        _bitDepth = PInvoke.GetDeviceCaps(screenDC, GET_DEVICE_CAPS_INDEX.BITSPIXEL);
+        _bitDepth *= PInvoke.GetDeviceCaps(screenDC, GET_DEVICE_CAPS_INDEX.PLANES);
 
         if (hdc != screenDC)
         {
-            // DeleteDC(screenDC);
+            PInvoke.DeleteDC(screenDC);
         }
     }
 
@@ -74,29 +73,26 @@ public partial class Screen
     {
         get
         {
-            if (s_screens == null)
+            if (s_screens is null)
             {
                 if (SystemInformation.MultiMonitorSupport)
                 {
-                    var closure = new MonitorEnumCallback();
-                    var proc = new MONITORENUMPROC(closure.Callback);
-                    EnumDisplayMonitors(new HDC(), new RECT(), proc, (nint)null);
+                    List<Screen> screens = new();
 
-                    if (closure.screens.Count > 0)
+                    PInvoke.EnumDisplayMonitors((HMONITOR hmonitor, HDC hdc) =>
                     {
-                        s_screens = closure.screens.ToArray();
-                    }
-                    else
-                    {
-                        s_screens = new Screen[] { new Screen(PRIMARY_MONITOR) };
-                    }
+                        screens.Add(new(hmonitor, hdc));
+                        return true;
+                    });
+
+                    s_screens = screens.Count > 0 ? screens.ToArray() : new Screen[] { new(PRIMARY_MONITOR) };
                 }
                 else
                 {
                     s_screens = new Screen[] { PrimaryScreen! };
                 }
 
-                SystemEvents.DisplaySettingsChanging += new EventHandler(OnDisplaySettingsChanging);
+                SystemEvents.DisplaySettingsChanging += OnDisplaySettingsChanging;
             }
 
             return s_screens;
@@ -117,9 +113,9 @@ public partial class Screen
         {
             if (SystemInformation.MultiMonitorSupport)
             {
-                var screens = AllScreens;
+                Screen[] screens = AllScreens;
 
-                for (var i = 0; i < screens.Length; i++)
+                for (int i = 0; i < screens.Length; i++)
                 {
                     if (screens[i]._primary)
                     {
@@ -131,7 +127,7 @@ public partial class Screen
             }
             else
             {
-                return new Screen(PRIMARY_MONITOR);
+                return new Screen(PRIMARY_MONITOR, default);
             }
         }
     }
@@ -150,13 +146,13 @@ public partial class Screen
                 }
                 else
                 {
-                    var info = new User32.MONITORINFOEXW()
+                    MONITORINFOEXW info = new()
                     {
-                        cbSize = (uint)sizeof(User32.MONITORINFOEXW)
+                        monitorInfo = new() { cbSize = (uint)sizeof(MONITORINFOEXW) }
                     };
 
-                    User32.GetMonitorInfoW(_hmonitor, ref info);
-                    _workingArea = info.rcWork;
+                    PInvoke.GetMonitorInfo(_hmonitor, (MONITORINFO*)&info);
+                    _workingArea = info.monitorInfo.rcWork;
                 }
             }
 
@@ -174,7 +170,8 @@ public partial class Screen
                 {
                     if (s_desktopChangedCount == -1)
                     {
-                        SystemEvents.UserPreferenceChanged += new UserPreferenceChangedEventHandler(OnUserPreferenceChanged);
+                        SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
+
                         s_desktopChangedCount = 0;
                     }
                 }
@@ -188,13 +185,18 @@ public partial class Screen
 
     public static Screen FromPoint(Point point)
         => SystemInformation.MultiMonitorSupport
-        ? new Screen(MonitorFromPoint(point, MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST))
+        ? new Screen(PInvoke.MonitorFromPoint(point, MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST))
         : new Screen(PRIMARY_MONITOR);
 
-    public static Screen FromRectangle(RECT rect)
+    public static Screen FromRectangle(Rectangle rect)
         => SystemInformation.MultiMonitorSupport
-        ? new Screen(MonitorFromRect(rect, MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST))
-        : new Screen(PRIMARY_MONITOR);
+        ? new Screen(PInvoke.MonitorFromRect(rect, MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST))
+        : new Screen(PRIMARY_MONITOR, default);
+
+    public static Screen FromHandle(IntPtr hwnd)
+        => SystemInformation.MultiMonitorSupport
+        ? new Screen(PInvoke.MonitorFromWindow((HWND)hwnd, MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST))
+        : new Screen(PRIMARY_MONITOR, default);
 
     public static Rectangle GetWorkingArea(Point pt) => FromPoint(pt).WorkingArea;
 
@@ -208,7 +210,8 @@ public partial class Screen
 
     private static void OnDisplaySettingsChanging(object? sender, EventArgs e)
     {
-        SystemEvents.DisplaySettingsChanging -= new EventHandler(OnDisplaySettingsChanging);
+        SystemEvents.DisplaySettingsChanging -= OnDisplaySettingsChanging;
+
         s_screens = null;
     }
 

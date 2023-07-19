@@ -5,4 +5,6 @@ public interface IScreenCapturer
     byte[] CaptureScreen();
 
     IEnumerable<string> GetDisplayNames();
+
+    void SetSelectedScreen(string displayName);
 }
