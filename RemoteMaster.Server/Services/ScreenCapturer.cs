@@ -23,8 +23,12 @@ public class ScreenCapturer : IScreenCapturer
 
     public event EventHandler<Rectangle>? ScreenChanged;
 
-    public ScreenCapturer()
+    private readonly ILogger<ScreenCapturer> _logger;
+
+    public ScreenCapturer(ILogger<ScreenCapturer> logger)
     {
+        _logger = logger;
+
         InitBitBlt();
     }
 
@@ -125,6 +129,7 @@ public class ScreenCapturer : IScreenCapturer
         for (var i = 0; i < Screen.AllScreens.Length; i++)
         {
             _bitBltScreens.Add(Screen.AllScreens[i].DeviceName, i);
+            _logger.LogInformation("Detected display: {display}", Screen.AllScreens[i].DeviceName);
         }
     }
 }
