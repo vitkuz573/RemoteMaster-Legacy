@@ -21,6 +21,11 @@ public class ScreenCaster : IScreenCaster
 
     public async Task StartStreaming(string connectionId, CancellationToken cancellationToken)
     {
+        _screenCapturer.ScreenChanged += (sender, bounds) =>
+        {
+            // logic
+        };
+
         _logger.LogInformation("Starting screen stream for ID {connectionId}", connectionId);
 
         await _hubContext.Clients.Client(connectionId).SendAsync("Displays", _screenCapturer.GetDisplayNames().ToArray(), cancellationToken);

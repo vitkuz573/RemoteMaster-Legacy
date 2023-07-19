@@ -15,17 +15,15 @@ namespace RemoteMaster.Server.Services;
 public class ScreenCapturer : IScreenCapturer
 {
     private readonly RecyclableMemoryStreamManager _recycleManager = new();
-
     private readonly Dictionary<string, int> _bitBltScreens = new();
+    private readonly object _screenBoundsLock = new();
+    private readonly ILogger<ScreenCapturer> _logger;
 
     public Rectangle CurrentScreenBounds { get;private set; } = Screen.PrimaryScreen?.Bounds ?? Rectangle.Empty;
+    
     public string SelectedScreen { get; private set; } = Screen.PrimaryScreen?.DeviceName ?? string.Empty;
 
     public event EventHandler<Rectangle>? ScreenChanged;
-
-    private readonly object _screenBoundsLock = new();
-
-    private readonly ILogger<ScreenCapturer> _logger;
 
     public ScreenCapturer(ILogger<ScreenCapturer> logger)
     {
