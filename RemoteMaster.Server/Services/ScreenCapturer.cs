@@ -130,7 +130,6 @@ public class ScreenCapturer : IScreenCapturer
         for (var i = 0; i < Screen.AllScreens.Length; i++)
         {
             _bitBltScreens.Add(Screen.AllScreens[i].DeviceName, i);
-            _logger.LogInformation("Detected display: {display}", Screen.AllScreens[i].DeviceName);
         }
     }
 }
