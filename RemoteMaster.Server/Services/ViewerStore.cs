@@ -9,8 +9,12 @@ public class ViewerStore : IViewerStore
 
     public Viewer GetViewer(string connectionId)
     {
-        _viewers.TryGetValue(connectionId, out var viewer);
-        return viewer;
+        if (_viewers.TryGetValue(connectionId, out var viewer))
+        {
+            return viewer;
+        }
+
+        throw new KeyNotFoundException($"Viewer with connection ID {connectionId} was not found.");
     }
 
     public void AddViewer(string connectionId, Viewer viewer)
