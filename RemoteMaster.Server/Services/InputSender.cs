@@ -6,243 +6,243 @@ using System.Runtime.InteropServices;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
 using static Windows.Win32.PInvoke;
 
-namespace RemoteMaster.Server.Services;
-
-public class InputSender : IInputSender
+namespace RemoteMaster.Server.Services
 {
-    private bool _disposed = false;
-    private readonly BlockingCollection<Action> _operationQueue;
-    private CancellationTokenSource _cts;
-    private readonly int _numWorkers;
-    private readonly object _ctsLock = new();
-    private readonly ConcurrentBag<INPUT> _inputPool = new();
-    private readonly ILogger<InputSender> _logger;
-
-    public InputSender(ILogger<InputSender> logger, int numWorkers = 4)
+    public class InputSender : IInputSender
     {
-        _logger = logger;
-        _operationQueue = new BlockingCollection<Action>();
-        _cts = new CancellationTokenSource();
-        _numWorkers = numWorkers;
-        StartWorkerThreads();
-    }
+        private bool _disposed = false;
+        private readonly BlockingCollection<Action> _operationQueue;
+        private CancellationTokenSource _cts;
+        private readonly int _numWorkers;
+        private readonly object _ctsLock = new();
+        private readonly ConcurrentBag<INPUT> _inputPool = new();
+        private readonly ILogger<InputSender> _logger;
 
-    private void StartWorkerThreads()
-    {
-        lock (_ctsLock)
+        public InputSender(ILogger<InputSender> logger, int numWorkers = 4)
         {
-            for (int i = 0; i < _numWorkers; i++)
+            _logger = logger;
+            _operationQueue = new BlockingCollection<Action>();
+            _cts = new CancellationTokenSource();
+            _numWorkers = numWorkers;
+            StartWorkerThreads();
+        }
+
+        private void StartWorkerThreads()
+        {
+            lock (_ctsLock)
             {
-                Task.Factory.StartNew(() =>
+                for (int i = 0; i < _numWorkers; i++)
                 {
-                    CancellationToken token;
-                    lock (_ctsLock)
+                    Task.Factory.StartNew(() =>
                     {
-                        token = _cts.Token;
-                    }
-                    ProcessQueue(token);
-                }, TaskCreationOptions.LongRunning);
-            }
-        }
-    }
-
-    public void EnqueueOperation(Action operation)
-    {
-        _operationQueue.Add(() =>
-        {
-            try
-            {
-                DesktopHelper.SwitchToInputDesktop();
-                operation();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Exception occurred during operation execution");
-            }
-        });
-    }
-
-    private void ProcessQueue(CancellationToken token)
-    {
-        foreach (var operation in _operationQueue.GetConsumingEnumerable(token))
-        {
-            try
-            {
-                operation();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Exception occurred during operation processing");
-            }
-        }
-    }
-
-    public void StopProcessing()
-    {
-        lock (_ctsLock)
-        {
-            if (_cts != null)
-            {
-                _cts.Cancel();
-                _cts = null;
-            }
-        }
-    }
-
-    public void SendMouseCoordinates(MouseMoveDto dto)
-    {
-        EnqueueOperation(() =>
-        {
-            var input = GetInput();
-
-            input.type = INPUT_TYPE.INPUT_MOUSE;
-            input.Anonymous.mi = new MOUSEINPUT
-            {
-                dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE | MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE | MOUSE_EVENT_FLAGS.MOUSEEVENTF_VIRTUALDESK,
-                dx = dto.X,
-                dy = dto.Y,
-                time = 0,
-                mouseData = 0,
-                dwExtraInfo = (nuint)GetMessageExtraInfo().Value
-            };
-
-            var inputs = new Span<INPUT>(ref input);
-
-            SendInput(inputs, Marshal.SizeOf(typeof(INPUT)));
-
-            ReturnInput(input);
-        });
-    }
-
-    public void SendMouseButton(MouseButtonClickDto dto)
-    {
-        EnqueueOperation(() =>
-        {
-            var mouseEvent = dto.Button switch
-            {
-                0 => dto.State switch
-                {
-                    "mousedown" => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN,
-                    "mouseup" => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP
-                },
-                1 => dto.State switch
-                {
-                    "mousedown" => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEDOWN,
-                    "mouseup" => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEUP
-                },
-                2 => dto.State switch
-                {
-                    "mousedown" => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN,
-                    "mouseup" => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP
+                        CancellationToken token;
+                        lock (_ctsLock)
+                        {
+                            token = _cts.Token;
+                        }
+                        ProcessQueue(token);
+                    }, TaskCreationOptions.LongRunning);
                 }
-            };
+            }
+        }
 
+        public void EnqueueOperation(Action operation)
+        {
+            _operationQueue.Add(() =>
+            {
+                try
+                {
+                    DesktopHelper.SwitchToInputDesktop();
+                    operation();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Exception occurred during operation execution");
+                }
+            });
+        }
+
+        private void ProcessQueue(CancellationToken token)
+        {
+            foreach (var operation in _operationQueue.GetConsumingEnumerable(token))
+            {
+                try
+                {
+                    operation();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Exception occurred during operation processing");
+                }
+            }
+        }
+
+        public void StopProcessing()
+        {
+            lock (_ctsLock)
+            {
+                if (_cts != null)
+                {
+                    _cts.Cancel();
+                    _cts = null;
+                }
+            }
+        }
+
+        private void PrepareAndSendInput<TInput>(INPUT_TYPE inputType, TInput inputData, Func<INPUT, TInput, INPUT> fillInputData)
+        {
             var input = GetInput();
 
-            input.type = INPUT_TYPE.INPUT_MOUSE;
-            input.Anonymous.mi = new MOUSEINPUT
-            {
-                dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE | mouseEvent | MOUSE_EVENT_FLAGS.MOUSEEVENTF_VIRTUALDESK,
-                dx = dto.X,
-                dy = dto.Y
-            };
+            input.type = inputType;
+            input = fillInputData(input, inputData);
 
             var inputs = new Span<INPUT>(ref input);
 
             SendInput(inputs, Marshal.SizeOf(typeof(INPUT)));
 
             ReturnInput(input);
-        });
-    }
+        }
 
-    public void SendMouseWheel(MouseWheelDto dto)
-    {
-        EnqueueOperation(() =>
+
+        public void SendMouseCoordinates(MouseMoveDto dto)
         {
-            var input = GetInput();
-
-            input.type = INPUT_TYPE.INPUT_MOUSE;
-            input.Anonymous.mi = new MOUSEINPUT
+            EnqueueOperation(() =>
             {
-                dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_WHEEL,
-                dx = 0,
-                dy = 0,
-                time = 0,
-                mouseData = dto.DeltaY < 0 ? 120 : dto.DeltaY > 0 ? -120 : 0,
-                dwExtraInfo = (nuint)GetMessageExtraInfo().Value
-            };
+                PrepareAndSendInput(INPUT_TYPE.INPUT_MOUSE, dto, (input, data) =>
+                {
+                    input.Anonymous.mi = new MOUSEINPUT
+                    {
+                        dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE | MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE | MOUSE_EVENT_FLAGS.MOUSEEVENTF_VIRTUALDESK,
+                        dx = data.X,
+                        dy = data.Y,
+                        time = 0,
+                        mouseData = 0,
+                        dwExtraInfo = (nuint)GetMessageExtraInfo().Value
+                    };
 
-            var inputs = new Span<INPUT>(ref input);
+                    return input;
+                });
+            });
+        }
 
-            SendInput(inputs, Marshal.SizeOf(typeof(INPUT)));
-
-            ReturnInput(input);
-        });
-    }
-
-    public void SendKeyboardInput(KeyboardKeyDto dto)
-    {
-        EnqueueOperation(() =>
+        public void SendMouseButton(MouseButtonClickDto dto)
         {
-            var input = GetInput();
-
-            input.type = INPUT_TYPE.INPUT_KEYBOARD;
-            input.Anonymous.ki = new KEYBDINPUT
+            EnqueueOperation(() =>
             {
-                wVk = (VIRTUAL_KEY)dto.Key,
-                wScan = 0,
-                time = 0,
-                dwFlags = dto.State == "keyup" ? KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP : 0,
-                dwExtraInfo = (nuint)GetMessageExtraInfo().Value
-            };
+                var mouseEvent = dto.Button switch
+                {
+                    0 => dto.State switch
+                    {
+                        "mousedown" => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN,
+                        "mouseup" => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP
+                    },
+                    1 => dto.State switch
+                    {
+                        "mousedown" => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEDOWN,
+                        "mouseup" => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEUP
+                    },
+                    2 => dto.State switch
+                    {
+                        "mousedown" => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN,
+                        "mouseup" => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP
+                    }
+                };
 
-            var inputs = new Span<INPUT>(ref input);
+                PrepareAndSendInput(INPUT_TYPE.INPUT_MOUSE, dto, (input, data) =>
+                {
+                    input.Anonymous.mi = new MOUSEINPUT
+                    {
+                        dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE | mouseEvent | MOUSE_EVENT_FLAGS.MOUSEEVENTF_VIRTUALDESK,
+                        dx = data.X,
+                        dy = data.Y
+                    };
 
-            SendInput(inputs, Marshal.SizeOf(typeof(INPUT)));
-
-            ReturnInput(input);
-        });
-    }
-
-    private INPUT GetInput()
-    {
-        if (!_inputPool.TryTake(out var input))
-        {
-            input = new INPUT();
+                    return input;
+                });
+            });
         }
 
-        return input;
-    }
-
-    private void ReturnInput(INPUT input)
-    {
-        _inputPool.Add(input);
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    protected virtual void Dispose(bool disposing)
-    {
-        if (_disposed)
+        public void SendMouseWheel(MouseWheelDto dto)
         {
-            return;
+            EnqueueOperation(() =>
+            {
+                PrepareAndSendInput(INPUT_TYPE.INPUT_MOUSE, dto, (input, data) =>
+                {
+                    input.Anonymous.mi = new MOUSEINPUT
+                    {
+                        dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_WHEEL,
+                        dx = 0,
+                        dy = 0,
+                        time = 0,
+                        mouseData = data.DeltaY < 0 ? 120 : data.DeltaY > 0 ? -120 : 0,
+                        dwExtraInfo = (nuint)GetMessageExtraInfo().Value
+                    };
+
+                    return input;
+                });
+            });
         }
 
-        if (disposing)
+        public void SendKeyboardInput(KeyboardKeyDto dto)
         {
-            _operationQueue?.Dispose();
-            _cts?.Dispose();
+            EnqueueOperation(() =>
+            {
+                PrepareAndSendInput(INPUT_TYPE.INPUT_KEYBOARD, dto, (input, data) =>
+                {
+                    input.Anonymous.ki = new KEYBDINPUT
+                    {
+                        wVk = (VIRTUAL_KEY)data.Key,
+                        wScan = 0,
+                        time = 0,
+                        dwFlags = data.State == "keyup" ? KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP : 0,
+                        dwExtraInfo = (nuint)GetMessageExtraInfo().Value
+                    };
+
+                    return input;
+                });
+            });
         }
 
-        _disposed = true;
-    }
+        private INPUT GetInput()
+        {
+            if (!_inputPool.TryTake(out var input))
+            {
+                input = new INPUT();
+            }
 
-    ~InputSender()
-    {
-        Dispose(false);
+            return input;
+        }
+
+        private void ReturnInput(INPUT input)
+        {
+            _inputPool.Add(input);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                _operationQueue?.Dispose();
+                _cts?.Dispose();
+            }
+
+            _disposed = true;
+        }
+
+        ~InputSender()
+        {
+            Dispose(false);
+        }
     }
 }
