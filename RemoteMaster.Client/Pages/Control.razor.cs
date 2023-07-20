@@ -82,7 +82,7 @@ public partial class Control : IDisposable
 
             _serverConnection.On<ScreenDataDto>("ScreenData", dto =>
             {
-                ControlFuncsService.Displays = dto.DisplayNames.ToArray();
+                ControlFuncsService.Displays = dto.DisplayNames;
                 ControlFuncsService.SelectDisplay = async (display) =>
                 {
                     if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
