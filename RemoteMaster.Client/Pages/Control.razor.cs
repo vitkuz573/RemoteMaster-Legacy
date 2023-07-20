@@ -96,7 +96,7 @@ public partial class Control : IDisposable
             _serverConnection.On<ScreenSizeDto>("ScreenSize", dto =>
             {
                 // logic
-                // fields: Width and Height
+                // Properties: Width and Height
                 // Invoked on change screen
             });
 
