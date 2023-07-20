@@ -72,7 +72,7 @@ public class Viewer
         _screenCapturer.SetSelectedScreen(dto.DisplayName);
     }
 
-    private async Task SendDto(object dto)
+    private async Task SendDto<T>(T dto) where T : class
     {
         await _hubContext.Clients.Client(_connectionId).SendAsync("ScreenData", dto);
     }
