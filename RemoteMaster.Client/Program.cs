@@ -6,6 +6,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Client;
+using RemoteMaster.Client.Abstractions;
 using RemoteMaster.Client.Services;
 
 var builder = WebApplication.CreateBuilder(args);

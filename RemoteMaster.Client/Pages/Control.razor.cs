@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
+using RemoteMaster.Client.Abstractions;
 using RemoteMaster.Client.Models;
 using RemoteMaster.Client.Services;
 using RemoteMaster.Shared.Dtos;
@@ -59,13 +60,13 @@ public partial class Control : IDisposable
 
             if (skipAgentConnection != "true")
             {
-                _agentConnection = HubConnectionFactory.Create(Host, 3564, "hubs/main", true, HttpTransportType.WebSockets, false);
+                _agentConnection = HubConnectionFactory.Create(Host, 3564, "hubs/main");
 
                 await _agentConnection.StartAsync();
                 await _agentConnection.StopAsync();
             }
 
-            _serverConnection = HubConnectionFactory.Create(Host, 5076, "hubs/control", true, HttpTransportType.WebSockets, true);
+            _serverConnection = HubConnectionFactory.Create(Host, 5076, "hubs/control", withMessagePack: true);
 
             _serverConnection.On<ScreenDataDto>("ScreenData", dto =>
             {
