@@ -24,6 +24,9 @@ public partial class Control : IDisposable
     private ControlFunctionsService ControlFuncsService { get; set; }
 
     [Inject]
+    private IHubConnectionFactory HubConnectionFactory { get; set; }
+
+    [Inject]
     private IJSRuntime JSRuntime { get; set; }
 
     private string? _screenDataUrl;
@@ -56,30 +59,13 @@ public partial class Control : IDisposable
 
             if (skipAgentConnection != "true")
             {
-                _agentConnection = new HubConnectionBuilder()
-                    .WithUrl($"http://{Host}:3564/hubs/main", options =>
-                    {
-                        options.SkipNegotiation = true;
-                        options.Transports = HttpTransportType.WebSockets;
-                    })
-                    .Build();
+                _agentConnection = HubConnectionFactory.Create(Host, 3564, "hubs/main", true, HttpTransportType.WebSockets, false);
 
                 await _agentConnection.StartAsync();
-
-                // Thread.Sleep(5000);
-
                 await _agentConnection.StopAsync();
             }
 
-            _serverConnection = new HubConnectionBuilder()
-                .WithUrl($"http://{Host}:5076/hubs/control", options =>
-                {
-                    options.SkipNegotiation = true;
-                    options.Transports = HttpTransportType.WebSockets;
-                })
-                .AddMessagePackProtocol()
-                .WithAutomaticReconnect(new RetryPolicy())
-                .Build();
+            _serverConnection = HubConnectionFactory.Create(Host, 5076, "hubs/control", true, HttpTransportType.WebSockets, true);
 
             _serverConnection.On<ScreenDataDto>("ScreenData", dto =>
             {
