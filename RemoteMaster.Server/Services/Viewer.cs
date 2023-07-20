@@ -64,7 +64,7 @@ public class Viewer
             ScreenHeight = screenHeight
         };
 
-        await SendDto(dto);
+        await SendDtoToViewer(dto);
     }
 
     public void SetSelectedScreen(SelectScreenDto dto)
@@ -72,7 +72,7 @@ public class Viewer
         _screenCapturer.SetSelectedScreen(dto.DisplayName);
     }
 
-    private async Task SendDto<T>(T dto) where T : class
+    private async Task SendDtoToViewer<T>(T dto) where T : class
     {
         await _hubContext.Clients.Client(_connectionId).SendAsync("ScreenData", dto);
     }
