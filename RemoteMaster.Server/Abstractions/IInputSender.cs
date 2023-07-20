@@ -2,7 +2,7 @@
 
 namespace RemoteMaster.Server.Abstractions;
 
-public interface IInputSender
+public interface IInputSender : IDisposable
 {
     void SendMouseCoordinates(MouseMoveDto dto);
 

@@ -10,6 +10,7 @@ namespace RemoteMaster.Server.Services;
 
 public class InputSender : IInputSender
 {
+    private bool _disposed = false;
     private readonly BlockingCollection<Action> _operationQueue;
     private CancellationTokenSource _cts;
     private readonly int _numWorkers;
@@ -216,5 +217,32 @@ public class InputSender : IInputSender
     private void ReturnInput(INPUT input)
     {
         _inputPool.Add(input);
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        if (disposing)
+        {
+            _operationQueue?.Dispose();
+            _cts?.Dispose();
+        }
+
+        _disposed = true;
+    }
+
+    ~InputSender()
+    {
+        Dispose(false);
     }
 }
