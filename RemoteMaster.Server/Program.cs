@@ -16,11 +16,16 @@ builder.Services.AddLogging(builder =>
 builder.Services.AddRazorPages();
 builder.Services.AddSignalR().AddMessagePackProtocol();
 
-builder.Services.AddScoped<IScreenCapturer, ScreenCapturer>();
+// Регистрация Singleton services
+builder.Services.AddSingleton<IScreenCapturer, ScreenCapturer>();
+builder.Services.AddSingleton<IInputSender, InputSender>();
+builder.Services.AddSingleton<IViewerStore, ViewerStore>();
+
+// Регистрация Scoped services
 builder.Services.AddScoped<IScreenCaster, ScreenCaster>();
-builder.Services.AddScoped<IInputSender, InputSender>();
-builder.Services.AddScoped<IViewerFactory, ViewerFactory>();
-builder.Services.AddScoped<IViewerStore, ViewerStore>();
+
+// Регистрация Transient services
+builder.Services.AddTransient<IViewerFactory, ViewerFactory>();
 
 
 var app = builder.Build();
