@@ -20,9 +20,9 @@ public class Viewer
         _logger = logger;
         _connectionId = connectionId;
 
-        _screenCapturer.ScreenChanged += (sender, bounds) =>
+        _screenCapturer.ScreenChanged += async (sender, bounds) =>
         {
-            // logic
+            await SendScreenSize(bounds.Width, bounds.Height);
         };
     }
 
@@ -65,6 +65,11 @@ public class Viewer
         };
 
         await SendDtoToViewer(dto);
+    }
+
+    public async Task SendScreenSize(int width, int height)
+    {
+
     }
 
     public void SetSelectedScreen(SelectScreenDto dto)
