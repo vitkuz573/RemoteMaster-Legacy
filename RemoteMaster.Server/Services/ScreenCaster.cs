@@ -1,32 +1,34 @@
 ﻿using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Dtos;
-using System.Collections.Concurrent;
 
 namespace RemoteMaster.Server.Services;
 
 public class ScreenCaster : IScreenCaster
 {
     private readonly IViewerFactory _viewerFactory;
+    private readonly IViewerStore _viewerStore;
     private readonly ILogger<ScreenCaster> _logger;
-    private readonly ConcurrentDictionary<string, Viewer> _viewers = new();
 
-    public ScreenCaster(IViewerFactory viewerFactory, ILogger<ScreenCaster> logger)
+    public ScreenCaster(IViewerFactory viewerFactory, IViewerStore viewerStore, ILogger<ScreenCaster> logger)
     {
         _viewerFactory = viewerFactory;
+        _viewerStore = viewerStore;
         _logger = logger;
     }
 
     public async Task StartStreaming(string connectionId, CancellationToken cancellationToken)
     {
         var viewer = _viewerFactory.CreateViewer(connectionId);
-        _viewers.TryAdd(connectionId, viewer);
+        _viewerStore.AddViewer(connectionId, viewer);
 
         await viewer.StartStreaming(cancellationToken);
     }
 
     public void SetSelectedScreen(string connectionId, SelectScreenDto dto)
     {
-        if (_viewers.TryGetValue(connectionId, out var viewer))
+        var viewer = _viewerStore.GetViewer(connectionId);
+
+        if (viewer != null)
         {
             viewer.SetSelectedScreen(dto);
         }

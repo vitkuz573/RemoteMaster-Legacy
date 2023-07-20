@@ -20,6 +20,7 @@ builder.Services.AddScoped<IScreenCapturer, ScreenCapturer>();
 builder.Services.AddScoped<IScreenCaster, ScreenCaster>();
 builder.Services.AddScoped<IInputSender, InputSender>();
 builder.Services.AddScoped<IViewerFactory, ViewerFactory>();
+builder.Services.AddScoped<IViewerStore, ViewerStore>();
 
 
 var app = builder.Build();
