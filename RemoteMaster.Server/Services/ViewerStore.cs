@@ -17,9 +17,9 @@ public class ViewerStore : IViewerStore
         throw new KeyNotFoundException($"Viewer with connection ID {connectionId} was not found.");
     }
 
-    public void AddViewer(string connectionId, Viewer viewer)
+    public void AddViewer(Viewer viewer)
     {
-        _viewers.TryAdd(connectionId, viewer);
+        _viewers.TryAdd(viewer.ConnectionId, viewer);
     }
 
     public void RemoveViewer(string connectionId)

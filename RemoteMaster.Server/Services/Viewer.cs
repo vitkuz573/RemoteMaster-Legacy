@@ -11,14 +11,13 @@ public class Viewer
     private readonly IScreenCapturer _screenCapturer;
     private readonly IHubContext<ControlHub> _hubContext;
     private readonly ILogger<Viewer> _logger;
-    private readonly string _connectionId;
 
     public Viewer(IScreenCapturer screenCapturer, ILogger<Viewer> logger, IHubContext<ControlHub> hubContext, string connectionId)
     {
         _screenCapturer = screenCapturer;
         _hubContext = hubContext;
         _logger = logger;
-        _connectionId = connectionId;
+        ConnectionId = connectionId;
 
         _screenCapturer.ScreenChanged += async (sender, bounds) =>
         {
@@ -26,13 +25,15 @@ public class Viewer
         };
     }
 
+    public string ConnectionId { get; }
+
     public async Task StartStreaming(CancellationToken cancellationToken)
     {
         var bounds = _screenCapturer.CurrentScreenBounds;
 
         await SendScreenData(_screenCapturer.GetDisplayNames(), _screenCapturer.SelectedScreen, bounds.Width, bounds.Height);
 
-        _logger.LogInformation("Starting screen stream for ID {connectionId}", _connectionId);
+        _logger.LogInformation("Starting screen stream for ID {connectionId}", ConnectionId);
 
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -44,7 +45,7 @@ public class Viewer
 
                 foreach (var chunk in screenDataChunks)
                 {
-                    await _hubContext.Clients.Client(_connectionId).SendAsync("ScreenUpdate", chunk, cancellationToken);
+                    await _hubContext.Clients.Client(ConnectionId).SendAsync("ScreenUpdate", chunk, cancellationToken);
                 }
             }
             catch (Exception ex)
@@ -79,6 +80,6 @@ public class Viewer
 
     private async Task SendDtoToViewer<T>(T dto) where T : class
     {
-        await _hubContext.Clients.Client(_connectionId).SendAsync("ScreenData", dto);
+        await _hubContext.Clients.Client(ConnectionId).SendAsync("ScreenData", dto);
     }
 }

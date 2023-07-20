@@ -6,7 +6,7 @@ public interface IViewerStore
 {
     Viewer GetViewer(string connectionId);
 
-    void AddViewer(string connectionId, Viewer viewer);
+    void AddViewer(Viewer viewer);
 
     void RemoveViewer(string connectionId);
 }
