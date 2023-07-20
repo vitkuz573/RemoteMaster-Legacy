@@ -46,22 +46,6 @@ namespace RemoteMaster.Server.Services
             }
         }
 
-        public void EnqueueOperation(Action operation)
-        {
-            _operationQueue.Add(() =>
-            {
-                try
-                {
-                    DesktopHelper.SwitchToInputDesktop();
-                    operation();
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Exception occurred during operation execution");
-                }
-            });
-        }
-
         private void ProcessQueue(CancellationToken token)
         {
             foreach (var operation in _operationQueue.GetConsumingEnumerable(token))
@@ -75,6 +59,15 @@ namespace RemoteMaster.Server.Services
                     _logger.LogError(ex, "Exception occurred during operation processing");
                 }
             }
+        }
+
+        public void EnqueueOperation(Action operation)
+        {
+            _operationQueue.Add(() =>
+            {
+                DesktopHelper.SwitchToInputDesktop();
+                operation();
+            });
         }
 
         public void StopProcessing()
