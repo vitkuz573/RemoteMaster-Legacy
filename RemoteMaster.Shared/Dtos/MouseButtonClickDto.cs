@@ -1,10 +1,12 @@
-﻿namespace RemoteMaster.Shared.Dtos;
+﻿using RemoteMaster.Shared.Models;
+
+namespace RemoteMaster.Shared.Dtos;
 
 public class MouseButtonClickDto
 {
     public long Button { get; set; }
 
-    public string State { get; set; }
+    public ButtonAction State { get; set; }
 
     public int X { get; set; }
 

@@ -1,8 +1,10 @@
-﻿namespace RemoteMaster.Shared.Dtos;
+﻿using RemoteMaster.Shared.Models;
+
+namespace RemoteMaster.Shared.Dtos;
 
 public class KeyboardKeyDto
 {
     public int Key { get; set; }
 
-    public string State { get; set; }
+    public ButtonAction State { get; set; }
 }

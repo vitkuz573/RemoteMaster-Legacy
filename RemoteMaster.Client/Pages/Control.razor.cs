@@ -7,6 +7,7 @@ using RemoteMaster.Client.Models;
 using RemoteMaster.Client.Services;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Helpers;
+using RemoteMaster.Shared.Models;
 using System.Web;
 
 namespace RemoteMaster.Client.Pages;
@@ -143,15 +144,15 @@ public partial class Control : IDisposable
 
     private async Task OnMouseUpDown(MouseEventArgs e)
     {
-        await SendMouseButton(e, e.Type);
+        await SendMouseButton(e, e.Type == "mouseup" ? ButtonAction.Up : ButtonAction.Down);
     }
 
     private async Task OnMouseOver(MouseEventArgs e)
     {
-        await SendMouseButton(e, "mouseup");
+        await SendMouseButton(e, ButtonAction.Up);
     }
 
-    private async Task SendMouseButton(MouseEventArgs e, string state)
+    private async Task SendMouseButton(MouseEventArgs e, ButtonAction state)
     {
         var (absoluteX, absoluteY) = await GetNormalizedMouseCoordinates(e);
 
@@ -185,16 +186,16 @@ public partial class Control : IDisposable
     [JSInvokable]
     public async Task OnKeyDown(int keyCode)
     {
-        await SendKeyboardInput(keyCode, "keydown");
+        await SendKeyboardInput(keyCode, ButtonAction.Down);
     }
 
     [JSInvokable]
     public async Task OnKeyUp(int keyCode)
     {
-        await SendKeyboardInput(keyCode, "keyup");
+        await SendKeyboardInput(keyCode, ButtonAction.Up);
     }
 
-    private async Task SendKeyboardInput(int keyCode, string state)
+    private async Task SendKeyboardInput(int keyCode, ButtonAction state)
     {
         var dto = new KeyboardKeyDto
         {

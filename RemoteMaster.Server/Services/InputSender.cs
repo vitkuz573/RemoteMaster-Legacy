@@ -1,5 +1,6 @@
 ﻿using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Dtos;
+using RemoteMaster.Shared.Models;
 using RemoteMaster.Shared.Native.Windows;
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
@@ -126,18 +127,18 @@ namespace RemoteMaster.Server.Services
                 {
                     0 => dto.State switch
                     {
-                        "mousedown" => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN,
-                        "mouseup" => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP
+                        ButtonAction.Down => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN,
+                        ButtonAction.Up => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP
                     },
                     1 => dto.State switch
                     {
-                        "mousedown" => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEDOWN,
-                        "mouseup" => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEUP
+                        ButtonAction.Down => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEDOWN,
+                        ButtonAction.Up => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEUP
                     },
                     2 => dto.State switch
                     {
-                        "mousedown" => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN,
-                        "mouseup" => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP
+                        ButtonAction.Down => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN,
+                        ButtonAction.Up => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP
                     }
                 };
 
@@ -187,7 +188,7 @@ namespace RemoteMaster.Server.Services
                         wVk = (VIRTUAL_KEY)data.Key,
                         wScan = 0,
                         time = 0,
-                        dwFlags = data.State == "keyup" ? KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP : 0,
+                        dwFlags = data.State == ButtonAction.Up ? KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP : 0,
                         dwExtraInfo = (nuint)GetMessageExtraInfo().Value
                     };
 
