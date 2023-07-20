@@ -70,10 +70,10 @@ public class Viewer
 
     public async Task SendScreenSize(int width, int height)
     {
-        var dto = new ScreenDataDto
+        var dto = new ScreenSizeDto
         {
-            ScreenWidth = width,
-            ScreenHeight = height
+            Width = width,
+            Height = height
         };
 
         await _hubContext.Clients.Client(ConnectionId).SendAsync("ScreenSize", dto);

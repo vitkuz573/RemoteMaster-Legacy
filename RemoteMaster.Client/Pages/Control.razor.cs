@@ -93,6 +93,13 @@ public partial class Control : IDisposable
                 };
             });
 
+            _serverConnection.On<ScreenSizeDto>("ScreenSize", dto =>
+            {
+                // logic
+                // fields: Width and Height
+                // Invoked on change screen
+            });
+
             _serverConnection.On<ChunkDto>("ScreenUpdate", async chunk =>
             {
                 if (Chunker.TryUnchunkify(chunk, out var allData))
