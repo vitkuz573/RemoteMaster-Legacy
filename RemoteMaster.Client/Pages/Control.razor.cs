@@ -36,6 +36,8 @@ public partial class Control : IDisposable
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        await JSRuntime.InvokeVoidAsync("setTitle", Host);
+
         if (firstRender)
         {
             ControlFuncsService.KillServer = async () =>
