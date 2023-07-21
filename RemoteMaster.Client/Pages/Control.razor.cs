@@ -106,7 +106,7 @@ public partial class Control : IDisposable
         }
     }
 
-    private async Task<(int, int)> GetNormalizedMouseCoordinates(MouseEventArgs e)
+    private async Task<(double, double, double, double)> GetMouseCoordinates(MouseEventArgs e)
     {
         var imgElement = await JSRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", "screenImage");
         var imgPosition = await imgElement.InvokeAsync<DOMRect>("getBoundingClientRect");
@@ -114,20 +114,19 @@ public partial class Control : IDisposable
         var relativeX = e.ClientX - imgPosition.Left;
         var relativeY = e.ClientY - imgPosition.Top;
 
-        var absoluteX = (int)Math.Round(relativeX * 65535 / imgPosition.Width);
-        var absoluteY = (int)Math.Round(relativeY * 65535 / imgPosition.Height);
-
-        return (absoluteX, absoluteY);
+        return (relativeX, relativeY, imgPosition.Width, imgPosition.Height);
     }
 
     private async Task OnMouseMove(MouseEventArgs e)
     {
-        var (absoluteX, absoluteY) = await GetNormalizedMouseCoordinates(e);
+        var (relativeX, relativeY, imgWidth, imgHeight) = await GetMouseCoordinates(e);
 
         var dto = new MouseMoveDto
         {
-            X = absoluteX,
-            Y = absoluteY
+            X = relativeX,
+            Y = relativeY,
+            ImgWidth = imgWidth,
+            ImgHeight = imgHeight
         };
 
         if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
@@ -148,14 +147,16 @@ public partial class Control : IDisposable
 
     private async Task SendMouseButton(MouseEventArgs e, ButtonAction state)
     {
-        var (absoluteX, absoluteY) = await GetNormalizedMouseCoordinates(e);
+        var (relativeX, relativeY, imgWidth, imgHeight) = await GetMouseCoordinates(e);
 
         var dto = new MouseButtonClickDto
         {
             Button = e.Button,
             State = state,
-            X = absoluteX,
-            Y = absoluteY
+            X = relativeX,
+            Y = relativeY,
+            ImgWidth = imgWidth,
+            ImgHeight = imgHeight
         };
 
         if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)

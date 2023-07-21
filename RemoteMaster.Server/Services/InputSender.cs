@@ -28,6 +28,14 @@ namespace RemoteMaster.Server.Services
             StartWorkerThreads();
         }
 
+        private static (double, double) GetNormalizedCoordinates(double x, double y, double imgWidth, double imgHeight, IScreenCapturer screenCapturer)
+        {
+            var normalizedX = ((x / imgWidth) * screenCapturer.CurrentScreenBounds.Width) / screenCapturer.VirtualScreenBounds.Width * 65535;
+            var normalizedY = ((y / imgHeight) * screenCapturer.CurrentScreenBounds.Height) / screenCapturer.VirtualScreenBounds.Height * 65535;
+
+            return (normalizedX, normalizedY);
+        }
+
         private void StartWorkerThreads()
         {
             lock (_ctsLock)
@@ -98,17 +106,19 @@ namespace RemoteMaster.Server.Services
         }
 
 
-        public void SendMouseCoordinates(MouseMoveDto dto)
+        public void SendMouseCoordinates(MouseMoveDto dto, Viewer viewer)
         {
             EnqueueOperation(() =>
             {
+                var (normalizedX, normalizedY) = GetNormalizedCoordinates(dto.X, dto.Y, dto.ImgWidth, dto.ImgHeight, viewer.ScreenCapturer);
+
                 PrepareAndSendInput(INPUT_TYPE.INPUT_MOUSE, dto, (input, data) =>
                 {
                     input.Anonymous.mi = new MOUSEINPUT
                     {
                         dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE | MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE | MOUSE_EVENT_FLAGS.MOUSEEVENTF_VIRTUALDESK,
-                        dx = data.X,
-                        dy = data.Y,
+                        dx = (int)normalizedX,
+                        dy = (int)normalizedY,
                         time = 0,
                         mouseData = 0,
                         dwExtraInfo = (nuint)GetMessageExtraInfo().Value
@@ -147,8 +157,8 @@ namespace RemoteMaster.Server.Services
                     input.Anonymous.mi = new MOUSEINPUT
                     {
                         dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE | mouseEvent | MOUSE_EVENT_FLAGS.MOUSEEVENTF_VIRTUALDESK,
-                        dx = data.X,
-                        dy = data.Y
+                        dx = (int)data.X,
+                        dy = (int)data.Y
                     };
 
                     return input;

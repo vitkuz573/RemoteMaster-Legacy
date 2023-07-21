@@ -11,12 +11,14 @@ public class ControlHub : Hub
     private CancellationTokenSource _cancellationTokenSource;
     private readonly IScreenCaster _screenCaster;
     private readonly IInputSender _inputSender;
+    private readonly IViewerStore _viewerStore;
     private readonly ILogger<ControlHub> _logger;
 
-    public ControlHub(IScreenCaster screenCaster, IInputSender inputSender, ILogger<ControlHub> logger)
+    public ControlHub(IScreenCaster screenCaster, IInputSender inputSender, IViewerStore viewerStore, ILogger<ControlHub> logger)
     {
         _screenCaster = screenCaster;
         _inputSender = inputSender;
+        _viewerStore = viewerStore;
         _logger = logger;
     }
 
@@ -47,7 +49,9 @@ public class ControlHub : Hub
 
     public void SendMouseCoordinates(MouseMoveDto dto)
     {
-        _inputSender.SendMouseCoordinates(dto);
+        var viewer = _viewerStore.GetViewer(Context.ConnectionId);
+
+        _inputSender.SendMouseCoordinates(dto, viewer);
     }
 
     public void SendMouseButton(MouseButtonClickDto dto)

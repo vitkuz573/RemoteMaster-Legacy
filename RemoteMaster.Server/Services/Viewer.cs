@@ -8,30 +8,31 @@ namespace RemoteMaster.Server.Services;
 
 public class Viewer
 {
-    private readonly IScreenCapturer _screenCapturer;
     private readonly IHubContext<ControlHub> _hubContext;
     private readonly ILogger<Viewer> _logger;
 
     public Viewer(IScreenCapturer screenCapturer, ILogger<Viewer> logger, IHubContext<ControlHub> hubContext, string connectionId)
     {
-        _screenCapturer = screenCapturer;
+        ScreenCapturer = screenCapturer;
         _hubContext = hubContext;
         _logger = logger;
         ConnectionId = connectionId;
 
-        _screenCapturer.ScreenChanged += async (sender, bounds) =>
+        ScreenCapturer.ScreenChanged += async (sender, bounds) =>
         {
             await SendScreenSize(bounds.Width, bounds.Height);
         };
     }
 
+    public IScreenCapturer ScreenCapturer { get; }
+
     public string ConnectionId { get; }
 
     public async Task StartStreaming(CancellationToken cancellationToken)
     {
-        var bounds = _screenCapturer.CurrentScreenBounds;
+        var bounds = ScreenCapturer.CurrentScreenBounds;
 
-        await SendScreenData(_screenCapturer.GetDisplayNames(), _screenCapturer.SelectedScreen, bounds.Width, bounds.Height);
+        await SendScreenData(ScreenCapturer.GetDisplayNames(), ScreenCapturer.SelectedScreen, bounds.Width, bounds.Height);
 
         _logger.LogInformation("Starting screen stream for ID {connectionId}", ConnectionId);
 
@@ -39,7 +40,7 @@ public class Viewer
         {
             try
             {
-                var screenData = _screenCapturer.GetNextFrame();
+                var screenData = ScreenCapturer.GetNextFrame();
 
                 var screenDataChunks = Chunker.ChunkifyBytes(screenData);
 
@@ -81,6 +82,6 @@ public class Viewer
 
     public void SetSelectedScreen(SelectScreenDto dto)
     {
-        _screenCapturer.SetSelectedScreen(dto.DisplayName);
+        ScreenCapturer.SetSelectedScreen(dto.DisplayName);
     }
 }

@@ -2,7 +2,11 @@
 
 public class MouseMoveDto
 {
-    public int X { get; set; }
+    public double X { get; init; }
 
-    public int Y { get; set; }
+    public double Y { get; init; }
+
+    public double ImgWidth { get; init; }
+
+    public double ImgHeight { get; init; }
 }
