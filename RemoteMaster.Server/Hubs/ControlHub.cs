@@ -56,7 +56,9 @@ public class ControlHub : Hub
 
     public void SendMouseButton(MouseButtonClickDto dto)
     {
-        _inputSender.SendMouseButton(dto);
+        var viewer = _viewerStore.GetViewer(Context.ConnectionId);
+
+        _inputSender.SendMouseButton(dto, viewer);
     }
 
     public void SendMouseWheel(MouseWheelDto dto)

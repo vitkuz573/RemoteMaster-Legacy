@@ -28,17 +28,12 @@ namespace RemoteMaster.Server.Services
             StartWorkerThreads();
         }
 
-        private static (double, double) GetNormalizedCoordinates(double percentX, double percentY, IScreenCapturer screenCapturer)
+        private static (double, double) GetAbsolutePercentFromRelativePercent(double percentX, double percentY, IScreenCapturer screenCapturer)
         {
-            var virtualScreenWidth = screenCapturer.VirtualScreenBounds.Width;
-            var virtualScreenHeight = screenCapturer.VirtualScreenBounds.Height;
-            var currentScreenWidth = screenCapturer.CurrentScreenBounds.Width;
-            var currentScreenHeight = screenCapturer.CurrentScreenBounds.Height;
+            var absoluteX = screenCapturer.CurrentScreenBounds.Width * percentX + screenCapturer.CurrentScreenBounds.Left - screenCapturer.VirtualScreenBounds.Left;
+            var absoluteY = screenCapturer.CurrentScreenBounds.Height * percentY + screenCapturer.CurrentScreenBounds.Top - screenCapturer.VirtualScreenBounds.Top;
 
-            var normalizedX = (percentX * currentScreenWidth + screenCapturer.CurrentScreenBounds.Left - screenCapturer.VirtualScreenBounds.Left) / virtualScreenWidth * 65535;
-            var normalizedY = (percentY * currentScreenHeight + screenCapturer.CurrentScreenBounds.Top - screenCapturer.VirtualScreenBounds.Top) / virtualScreenHeight * 65535;
-
-            return (normalizedX, normalizedY);
+            return (absoluteX / screenCapturer.VirtualScreenBounds.Width, absoluteY / screenCapturer.VirtualScreenBounds.Height);
         }
 
         private void StartWorkerThreads()
@@ -110,12 +105,14 @@ namespace RemoteMaster.Server.Services
             ReturnInput(input);
         }
 
-
         public void SendMouseCoordinates(MouseMoveDto dto, Viewer viewer)
         {
             EnqueueOperation(() =>
             {
-                var (normalizedX, normalizedY) = GetNormalizedCoordinates(dto.X, dto.Y, viewer.ScreenCapturer);
+                var xyPercent = GetAbsolutePercentFromRelativePercent(dto.X, dto.Y, viewer.ScreenCapturer);
+
+                var normalizedX = xyPercent.Item1 * 65535D;
+                var normalizedY = xyPercent.Item2 * 65535D;
 
                 PrepareAndSendInput(INPUT_TYPE.INPUT_MOUSE, dto, (input, data) =>
                 {
@@ -134,7 +131,7 @@ namespace RemoteMaster.Server.Services
             });
         }
 
-        public void SendMouseButton(MouseButtonClickDto dto)
+        public void SendMouseButton(MouseButtonClickDto dto, Viewer viewer)
         {
             EnqueueOperation(() =>
             {
@@ -157,13 +154,18 @@ namespace RemoteMaster.Server.Services
                     }
                 };
 
+                var xyPercent = GetAbsolutePercentFromRelativePercent(dto.X, dto.Y, viewer.ScreenCapturer);
+
+                var normalizedX = xyPercent.Item1 * 65535D;
+                var normalizedY = xyPercent.Item2 * 65535D;
+
                 PrepareAndSendInput(INPUT_TYPE.INPUT_MOUSE, dto, (input, data) =>
                 {
                     input.Anonymous.mi = new MOUSEINPUT
                     {
                         dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE | mouseEvent | MOUSE_EVENT_FLAGS.MOUSEEVENTF_VIRTUALDESK,
-                        dx = (int)data.X,
-                        dy = (int)data.Y
+                        dx = (int)normalizedX,
+                        dy = (int)normalizedY
                     };
 
                     return input;

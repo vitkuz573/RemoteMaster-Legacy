@@ -106,7 +106,7 @@ public partial class Control : IDisposable
         }
     }
 
-    private async Task<(double, double)> GetMouseCoordinates(MouseEventArgs e)
+    private async Task<(double, double)> GetRelativeMousePositionOnPercent(MouseEventArgs e)
     {
         var imgElement = await JSRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", "screenImage");
         var imgPosition = await imgElement.InvokeAsync<DOMRect>("getBoundingClientRect");
@@ -119,12 +119,12 @@ public partial class Control : IDisposable
 
     private async Task OnMouseMove(MouseEventArgs e)
     {
-        var (percentX, percentY) = await GetMouseCoordinates(e);
+        var xyPercent = await GetRelativeMousePositionOnPercent(e);
 
         var dto = new MouseMoveDto
         {
-            X = percentX,
-            Y = percentY
+            X = xyPercent.Item1,
+            Y = xyPercent.Item2
         };
 
         if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
@@ -145,14 +145,14 @@ public partial class Control : IDisposable
 
     private async Task SendMouseButton(MouseEventArgs e, ButtonAction state)
     {
-        var (percentX, percentY) = await GetMouseCoordinates(e);
+        var xyPercent = await GetRelativeMousePositionOnPercent(e);
 
         var dto = new MouseButtonClickDto
         {
             Button = e.Button,
             State = state,
-            X = percentX,
-            Y = percentY,
+            X = xyPercent.Item1,
+            Y = xyPercent.Item2
         };
 
         if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
