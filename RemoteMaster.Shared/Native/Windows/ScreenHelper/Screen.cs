@@ -16,7 +16,7 @@ public partial class Screen
     private readonly string _deviceName;
     private readonly int _bitDepth;
 
-    private static readonly object s_syncLock = new object();
+    private static readonly object s_syncLock = new();
 
     private static int s_desktopChangedCount = -1;
     private int _currentDesktopChangedCount = -1;
