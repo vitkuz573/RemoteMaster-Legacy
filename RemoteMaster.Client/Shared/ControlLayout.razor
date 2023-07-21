@@ -95,11 +95,6 @@
 
     private void OnChangeScreen(ChangeEventArgs e)
     {
-        var dto = new SelectScreenDto()
-        {
-            DisplayName = e.Value.ToString()
-        };
-
-        ControlFuncsService.SelectDisplay(dto);
+        ControlFuncsService.SelectDisplay(e.Value.ToString());
     }
 }

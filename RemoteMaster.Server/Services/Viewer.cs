@@ -112,8 +112,8 @@ public class Viewer
         await _hubContext.Clients.Client(ConnectionId).SendAsync("ScreenSize", dto);
     }
 
-    public void SetSelectedScreen(SelectScreenDto dto)
+    public void SetSelectedScreen(string displayName)
     {
-        ScreenCapturer.SetSelectedScreen(dto.DisplayName);
+        ScreenCapturer.SetSelectedScreen(displayName);
     }
 }

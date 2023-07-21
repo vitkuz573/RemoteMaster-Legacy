@@ -24,13 +24,13 @@ public class ScreenCaster : IScreenCaster
         await viewer.StartStreaming(cancellationToken);
     }
 
-    public void SetSelectedScreen(string connectionId, SelectScreenDto dto)
+    public void SetSelectedScreen(string connectionId, string displayName)
     {
         var viewer = _viewerStore.GetViewer(connectionId);
 
         if (viewer != null)
         {
-            viewer.SetSelectedScreen(dto);
+            viewer.SetSelectedScreen(displayName);
         }
         else
         {
