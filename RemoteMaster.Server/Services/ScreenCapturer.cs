@@ -20,6 +20,8 @@ public class ScreenCapturer : IScreenCapturer
     private readonly ILogger<ScreenCapturer> _logger;
 
     public Rectangle CurrentScreenBounds { get;private set; } = Screen.PrimaryScreen?.Bounds ?? Rectangle.Empty;
+
+    public Rectangle VirtualScreenBounds { get; private set; } = SystemInformation.VirtualScreen;
     
     public string SelectedScreen { get; private set; } = Screen.PrimaryScreen?.DeviceName ?? string.Empty;
 

@@ -8,6 +8,8 @@ public interface IScreenCapturer
 
     Rectangle CurrentScreenBounds { get; }
 
+    Rectangle VirtualScreenBounds { get; }
+
     string SelectedScreen { get; }
 
     byte[]? GetNextFrame();
