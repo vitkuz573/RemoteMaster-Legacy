@@ -9,10 +9,10 @@
     <div class="absolute h-full w-full bg-gray-800 text-white p-6">
         <div class="flex items-center justify-between">
             <h1 class="text-2xl font-bold">Control Panel</h1>
-            <button @onclick="ToggleMenu" class="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 focus:outline-none">
+            <button @onclick="ToggleMenu" class="absolute right-6 top-1/2 transform -translate-y-1/2 px-3 py-2 rounded-lg bg-gray-500 hover:bg-gray-600 focus:outline-none opacity-50 @($"{(isMenuOpen ? "-translate-x-80" : "translate-x-0")}")">
                 <span class="sr-only">Open Menu</span>
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
             </button>
         </div>
@@ -78,6 +78,12 @@
         </div>
     </aside>
 </div>
+
+<style>
+    .translate-x-80 {
+        transform: translateX(-80px);
+    }
+</style>
 
 @code {
     private bool isMenuOpen = false;
