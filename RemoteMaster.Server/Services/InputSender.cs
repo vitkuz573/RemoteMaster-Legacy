@@ -115,7 +115,7 @@ namespace RemoteMaster.Server.Services
         {
             EnqueueOperation(() =>
             {
-                var (normalizedX, normalizedY) = GetNormalizedCoordinates(dto.X, dto.Y, dto.ImgWidth, dto.ImgHeight, viewer.ScreenCapturer);
+                var (normalizedX, normalizedY) = GetNormalizedCoordinates(dto.X, dto.Y, viewer.ScreenCapturer);
 
                 PrepareAndSendInput(INPUT_TYPE.INPUT_MOUSE, dto, (input, data) =>
                 {
