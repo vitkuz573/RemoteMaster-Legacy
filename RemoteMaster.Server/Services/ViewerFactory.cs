@@ -17,7 +17,7 @@ public class ViewerFactory : IViewerFactory
         _logger = logger;
     }
 
-    public Viewer CreateViewer(string connectionId)
+    public Viewer Create(string connectionId)
     {
         return new Viewer(_screenCapturer, _logger, _hubContext, connectionId);
     }

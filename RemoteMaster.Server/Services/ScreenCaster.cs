@@ -18,7 +18,7 @@ public class ScreenCaster : IScreenCaster
 
     public async Task StartStreaming(string connectionId, CancellationToken cancellationToken)
     {
-        var viewer = _viewerFactory.CreateViewer(connectionId);
+        var viewer = _viewerFactory.Create(connectionId);
         _viewerStore.AddViewer(viewer);
 
         await viewer.StartStreaming(cancellationToken);
