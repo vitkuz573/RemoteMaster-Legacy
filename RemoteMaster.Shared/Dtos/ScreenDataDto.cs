@@ -1,8 +1,10 @@
-﻿namespace RemoteMaster.Shared.Dtos;
+﻿using System.Drawing;
+
+namespace RemoteMaster.Shared.Dtos;
 
 public class ScreenDataDto
 {
-    public IEnumerable<(string, bool)> Displays { get; init; } = Enumerable.Empty<(string, bool)>();
+    public IEnumerable<(string, bool, Size)> Displays { get; init; } = Enumerable.Empty<(string, bool, Size)>();
 
     public string SelectedDisplay { get; init; } = string.Empty;
 

@@ -45,9 +45,9 @@
                         <select class="border border-gray-300 rounded-full text-gray-600 h-10 pl-5 pr-10 bg-white hover:border-gray-400 focus:outline-none appearance-none" @onchange="OnChangeScreen">
                             @if (ControlFuncsService.Displays != null)
                             {
-                                @foreach (var (displayName, isPrimary) in ControlFuncsService.Displays)
+                                @foreach (var (displayName, isPrimary, resolution) in ControlFuncsService.Displays)
                                 {
-                                    <option value="@displayName" selected="@isPrimary">@displayName</option>
+                                    <option value="@displayName" selected="@isPrimary">@displayName (@resolution.Width x @resolution.Height)</option>
                                 }
                             }
                         </select>

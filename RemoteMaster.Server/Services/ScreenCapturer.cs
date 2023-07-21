@@ -126,9 +126,9 @@ public class ScreenCapturer : IScreenCapturer
         return data;
     }
 
-    public IEnumerable<(string name, bool isPrimary)> GetDisplays()
+    public IEnumerable<(string name, bool isPrimary, Size resolution)> GetDisplays()
     {
-        return Screen.AllScreens.Select(screen => (screen.DeviceName, screen.Primary));
+        return Screen.AllScreens.Select(screen => (screen.DeviceName, screen.Primary, screen.Bounds.Size));
     }
 
     public void SetSelectedScreen(string displayName)
