@@ -30,8 +30,11 @@ namespace RemoteMaster.Server.Services
 
         private static (double, double) GetNormalizedCoordinates(double x, double y, double imgWidth, double imgHeight, IScreenCapturer screenCapturer)
         {
-            var normalizedX = ((x / imgWidth) * screenCapturer.CurrentScreenBounds.Width) / screenCapturer.VirtualScreenBounds.Width * 65535;
-            var normalizedY = ((y / imgHeight) * screenCapturer.CurrentScreenBounds.Height) / screenCapturer.VirtualScreenBounds.Height * 65535;
+            var normalizedX = ((x / imgWidth) * screenCapturer.CurrentScreenBounds.Width) + screenCapturer.CurrentScreenBounds.Left;
+            var normalizedY = ((y / imgHeight) * screenCapturer.CurrentScreenBounds.Height) + screenCapturer.CurrentScreenBounds.Top;
+
+            normalizedX = ((normalizedX - screenCapturer.VirtualScreenBounds.Left) / screenCapturer.VirtualScreenBounds.Width) * 65535;
+            normalizedY = ((normalizedY - screenCapturer.VirtualScreenBounds.Top) / screenCapturer.VirtualScreenBounds.Height) * 65535;
 
             return (normalizedX, normalizedY);
         }
