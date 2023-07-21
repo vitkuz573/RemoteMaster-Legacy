@@ -76,6 +76,12 @@ public class ControlHub : Hub
         _screenCaster.SetSelectedScreen(Context.ConnectionId, displayName);
     }
 
+    public void SetQuality(int quality)
+    {
+        var viewer = _viewerStore.GetViewer(Context.ConnectionId);
+        viewer.ScreenCapturer.SetQuality(quality);
+    }
+
     public async Task KillServer()
     {
         Environment.Exit(0);

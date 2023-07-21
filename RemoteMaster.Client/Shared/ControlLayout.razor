@@ -59,6 +59,17 @@
                     </div>
                 </li>
                 <!-- Add more actions here -->
+                <li>
+                    <div class="flex items-center space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        <h3 class="text-gray-600">Change Quality</h3>
+                    </div>
+                    <div class="relative inline-flex mt-2">
+                        <input type="number" min="1" max="100" value="50" class="border border-gray-300 rounded-full text-gray-600 h-10 pl-5 pr-5 bg-white hover:border-gray-400 focus:outline-none" @onchange="OnChangeQuality">
+                    </div>
+                </li>
             </ul>
             <div class="mt-4 text-lg font-semibold border-t pt-4">Dangerous Actions</div>
             <ul class="mt-2 space-y-2">
@@ -96,5 +107,17 @@
     private void OnChangeScreen(ChangeEventArgs e)
     {
         ControlFuncsService.SelectDisplay(e.Value.ToString());
+    }
+
+    private void OnChangeQuality(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value.ToString(), out int quality) && quality >= 1 && quality <= 100)
+        {
+            ControlFuncsService.SetQuality(quality);
+        }
+        else
+        {
+            // Необходимо обработать случай, когда введенное значение не является числом от 1 до 100.
+        }
     }
 }

@@ -12,4 +12,6 @@ public class ControlFunctionsService
     public IEnumerable<(string, bool, Size)> Displays { get; set; }
 
     public Action<string> SelectDisplay { get; set; }
+
+    public Action<int> SetQuality { get; set; }
 }

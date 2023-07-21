@@ -17,4 +17,6 @@ public interface IScreenCapturer
     IEnumerable<(string name, bool isPrimary, Size resolution)> GetDisplays();
 
     void SetSelectedScreen(string displayName);
+
+    void SetQuality(int quality);
 }

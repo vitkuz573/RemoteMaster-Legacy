@@ -25,6 +25,8 @@ public class ScreenCapturer : IScreenCapturer
     
     public string SelectedScreen { get; private set; } = Screen.PrimaryScreen?.DeviceName ?? string.Empty;
 
+    public int Quality { get; private set; } = 80;
+
     public event EventHandler<Rectangle>? ScreenChanged;
 
     public ScreenCapturer(ILogger<ScreenCapturer> logger)
@@ -87,13 +89,13 @@ public class ScreenCapturer : IScreenCapturer
         }
     }
 
-    private byte[] EncodeBitmap(SKBitmap bitmap, int quality)
+    private byte[] EncodeBitmap(SKBitmap bitmap)
     {
         using var ms = _recycleManager.GetStream();
 
         var encoderOptions = new SKJpegEncoderOptions
         {
-            Quality = quality,
+            Quality = Quality,
             Downsample = SKJpegEncoderDownsample.Downsample420
         };
 
@@ -116,7 +118,7 @@ public class ScreenCapturer : IScreenCapturer
         {
             var skBitmap = new SKBitmap(info);
             skBitmap.InstallPixels(info, bitmapData.Scan0, bitmapData.Stride);
-            data = EncodeBitmap(skBitmap, 80);
+            data = EncodeBitmap(skBitmap);
         }
         finally
         {
@@ -164,5 +166,13 @@ public class ScreenCapturer : IScreenCapturer
         {
             _bitBltScreens.Add(Screen.AllScreens[i].DeviceName, i);
         }
+    }
+
+    public void SetQuality(int quality)
+    {
+        if (quality < 0 || quality > 100)
+            throw new ArgumentException("Quality must be between 0 and 100");
+
+        Quality = quality;
     }
 }

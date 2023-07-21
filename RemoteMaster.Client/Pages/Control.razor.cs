@@ -56,6 +56,14 @@ public partial class Control : IDisposable
                 }
             };
 
+            ControlFuncsService.SetQuality = async (quality) =>
+            {
+                if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
+                {
+                    await _serverConnection.InvokeAsync("SetQuality", quality);
+                }
+            };
+
             var uri = new Uri(NavManager.Uri);
             var query = HttpUtility.ParseQueryString(uri.Query);
             var skipAgentConnection = query.Get("skipAgent");
