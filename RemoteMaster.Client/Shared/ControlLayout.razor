@@ -45,7 +45,7 @@
                         <select class="border border-gray-300 rounded-full text-gray-600 h-10 pl-5 pr-10 bg-white hover:border-gray-400 focus:outline-none appearance-none" @onchange="OnChangeScreen">
                             @if (ControlFuncsService.Displays != null)
                             {
-                                var displayList = ControlFuncsService.Displays.ToList(); // Преобразовываем в список
+                                var displayList = ControlFuncsService.Displays.ToList();
 
                                 @for (int i = 0; i < displayList.Count; i++)
                                 {
