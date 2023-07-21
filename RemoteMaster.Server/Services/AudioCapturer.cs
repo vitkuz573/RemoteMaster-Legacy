@@ -1,4 +1,5 @@
-﻿using NAudio.Wave;
+﻿using NAudio.CoreAudioApi;
+using NAudio.Wave;
 using RemoteMaster.Server.Abstractions;
 
 namespace RemoteMaster.Server.Services;
@@ -25,8 +26,14 @@ public class AudioCapturer : IAudioCapturer
 
     public void StartCapturing()
     {
+        if (_capture.CaptureState == CaptureState.Capturing)
+        {
+            _capture.StopRecording();
+        }
+
         _capture.StartRecording();
     }
+
 
     public void StopCapturing()
     {
