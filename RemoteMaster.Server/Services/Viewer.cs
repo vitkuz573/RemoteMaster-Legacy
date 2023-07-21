@@ -32,7 +32,7 @@ public class Viewer
     {
         var bounds = ScreenCapturer.CurrentScreenBounds;
 
-        await SendScreenData(ScreenCapturer.GetDisplayNames(), ScreenCapturer.SelectedScreen, bounds.Width, bounds.Height);
+        await SendScreenData(ScreenCapturer.GetDisplays(), ScreenCapturer.SelectedScreen, bounds.Width, bounds.Height);
 
         _logger.LogInformation("Starting screen stream for ID {connectionId}", ConnectionId);
 
@@ -56,11 +56,11 @@ public class Viewer
         }
     }
 
-    public async Task SendScreenData(IEnumerable<string> displayNames, string selectedDisplay, int screenWidth, int screenHeight)
+    public async Task SendScreenData(IEnumerable<(string, bool)> displays, string selectedDisplay, int screenWidth, int screenHeight)
     {
         var dto = new ScreenDataDto
         {
-            DisplayNames = displayNames,
+            Displays = displays,
             SelectedDisplay = selectedDisplay,
             ScreenWidth = screenWidth,
             ScreenHeight = screenHeight

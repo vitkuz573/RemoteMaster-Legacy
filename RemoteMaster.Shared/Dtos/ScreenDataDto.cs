@@ -2,7 +2,7 @@
 
 public class ScreenDataDto
 {
-    public IEnumerable<string> DisplayNames { get; init; } = Enumerable.Empty<string>();
+    public IEnumerable<(string, bool)> Displays { get; init; } = Enumerable.Empty<(string, bool)>();
 
     public string SelectedDisplay { get; init; } = string.Empty;
 

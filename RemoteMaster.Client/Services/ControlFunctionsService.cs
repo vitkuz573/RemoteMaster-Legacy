@@ -8,7 +8,7 @@ public class ControlFunctionsService
 
     public Action RebootComputer { get; set; }
 
-    public IEnumerable<string> Displays { get; set; }
+    public IEnumerable<(string, bool)> Displays { get; set; }
 
     public Action<SelectScreenDto> SelectDisplay { get; set; }
 }

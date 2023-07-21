@@ -126,9 +126,9 @@ public class ScreenCapturer : IScreenCapturer
         return data;
     }
 
-    public IEnumerable<string> GetDisplayNames()
+    public IEnumerable<(string name, bool isPrimary)> GetDisplays()
     {
-        return Screen.AllScreens.Select(x => x.DeviceName);
+        return Screen.AllScreens.Select(screen => (screen.DeviceName, screen.Primary));
     }
 
     public void SetSelectedScreen(string displayName)

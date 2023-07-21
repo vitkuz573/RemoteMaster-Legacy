@@ -14,7 +14,7 @@ public interface IScreenCapturer
 
     byte[]? GetNextFrame();
 
-    IEnumerable<string> GetDisplayNames();
+    IEnumerable<(string name, bool isPrimary)> GetDisplays();
 
     void SetSelectedScreen(string displayName);
 }
