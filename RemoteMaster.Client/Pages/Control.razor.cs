@@ -106,27 +106,25 @@ public partial class Control : IDisposable
         }
     }
 
-    private async Task<(double, double, double, double)> GetMouseCoordinates(MouseEventArgs e)
+    private async Task<(double, double)> GetMouseCoordinates(MouseEventArgs e)
     {
         var imgElement = await JSRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", "screenImage");
         var imgPosition = await imgElement.InvokeAsync<DOMRect>("getBoundingClientRect");
 
-        var relativeX = e.ClientX - imgPosition.Left;
-        var relativeY = e.ClientY - imgPosition.Top;
+        var percentX = (e.ClientX - imgPosition.Left) / imgPosition.Width;
+        var percentY = (e.ClientY - imgPosition.Top) / imgPosition.Height;
 
-        return (relativeX, relativeY, imgPosition.Width, imgPosition.Height);
+        return (percentX, percentY);
     }
 
     private async Task OnMouseMove(MouseEventArgs e)
     {
-        var (relativeX, relativeY, imgWidth, imgHeight) = await GetMouseCoordinates(e);
+        var (percentX, percentY) = await GetMouseCoordinates(e);
 
         var dto = new MouseMoveDto
         {
-            X = relativeX,
-            Y = relativeY,
-            ImgWidth = imgWidth,
-            ImgHeight = imgHeight
+            X = percentX,
+            Y = percentY
         };
 
         if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
@@ -147,16 +145,14 @@ public partial class Control : IDisposable
 
     private async Task SendMouseButton(MouseEventArgs e, ButtonAction state)
     {
-        var (relativeX, relativeY, imgWidth, imgHeight) = await GetMouseCoordinates(e);
+        var (percentX, percentY) = await GetMouseCoordinates(e);
 
         var dto = new MouseButtonClickDto
         {
             Button = e.Button,
             State = state,
-            X = relativeX,
-            Y = relativeY,
-            ImgWidth = imgWidth,
-            ImgHeight = imgHeight
+            X = percentX,
+            Y = percentY,
         };
 
         if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)

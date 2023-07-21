@@ -28,15 +28,15 @@ namespace RemoteMaster.Server.Services
             StartWorkerThreads();
         }
 
-        private static (double, double) GetNormalizedCoordinates(double x, double y, double imgWidth, double imgHeight, IScreenCapturer screenCapturer)
+        private static (double, double) GetNormalizedCoordinates(double percentX, double percentY, IScreenCapturer screenCapturer)
         {
             var virtualScreenWidth = screenCapturer.VirtualScreenBounds.Width;
             var virtualScreenHeight = screenCapturer.VirtualScreenBounds.Height;
             var currentScreenWidth = screenCapturer.CurrentScreenBounds.Width;
             var currentScreenHeight = screenCapturer.CurrentScreenBounds.Height;
 
-            var normalizedX = (x / imgWidth * currentScreenWidth + screenCapturer.CurrentScreenBounds.Left - screenCapturer.VirtualScreenBounds.Left) / virtualScreenWidth * 65535;
-            var normalizedY = (y / imgHeight * currentScreenHeight + screenCapturer.CurrentScreenBounds.Top - screenCapturer.VirtualScreenBounds.Top) / virtualScreenHeight * 65535;
+            var normalizedX = (percentX * currentScreenWidth + screenCapturer.CurrentScreenBounds.Left - screenCapturer.VirtualScreenBounds.Left) / virtualScreenWidth * 65535;
+            var normalizedY = (percentY * currentScreenHeight + screenCapturer.CurrentScreenBounds.Top - screenCapturer.VirtualScreenBounds.Top) / virtualScreenHeight * 65535;
 
             return (normalizedX, normalizedY);
         }
