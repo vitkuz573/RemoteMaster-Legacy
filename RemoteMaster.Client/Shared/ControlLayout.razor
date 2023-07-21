@@ -45,9 +45,14 @@
                         <select class="border border-gray-300 rounded-full text-gray-600 h-10 pl-5 pr-10 bg-white hover:border-gray-400 focus:outline-none appearance-none" @onchange="OnChangeScreen">
                             @if (ControlFuncsService.Displays != null)
                             {
-                                @foreach (var (displayName, isPrimary, resolution) in ControlFuncsService.Displays)
+                                var displayList = ControlFuncsService.Displays.ToList(); // Преобразовываем в список
+
+                                @for (int i = 0; i < displayList.Count; i++)
                                 {
-                                    <option value="@displayName" selected="@isPrimary">@displayName (@resolution.Width x @resolution.Height)</option>
+                                    var (displayName, isPrimary, resolution) = displayList[i];
+                                    var screenName = "Screen " + (i + 1);
+
+                                    <option value="@displayName" selected="@isPrimary">@screenName (@resolution.Width x @resolution.Height)</option>
                                 }
                             }
                         </select>
