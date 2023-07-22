@@ -24,7 +24,7 @@ public class ViewerStore : IViewerStore
 
         _logger.LogWarning("Viewer with connection ID {ConnectionId} was not found.", connectionId);
         throw new KeyNotFoundException($"Viewer with connection ID {connectionId} was not found.");
-    }
+    } 
 
     public void AddViewer(Viewer viewer)
     {
