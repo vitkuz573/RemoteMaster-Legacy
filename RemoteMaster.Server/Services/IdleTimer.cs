@@ -2,17 +2,17 @@
 
 namespace RemoteMaster.Server.Services;
 
-public class ViewerMonitorService : IViewerMonitorService
+public class IdleTimer : IIdleTimer
 {
     private readonly IViewerStore _viewerStore;
     private readonly IShutdownService _shutdownService;
-    private readonly ILogger<ViewerMonitorService> _logger;
+    private readonly ILogger<IdleTimer> _logger;
     private Timer _timer;
     private readonly object _lock = new();
 
     public DateTime LastSeen { get; private set; }
 
-    public ViewerMonitorService(IViewerStore viewerStore, IShutdownService shutdownService, ILogger<ViewerMonitorService> logger)
+    public IdleTimer(IViewerStore viewerStore, IShutdownService shutdownService, ILogger<IdleTimer> logger)
     {
         _viewerStore = viewerStore;
         _shutdownService = shutdownService;

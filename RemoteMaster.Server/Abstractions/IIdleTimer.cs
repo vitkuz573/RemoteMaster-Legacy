@@ -1,6 +1,6 @@
 ﻿namespace RemoteMaster.Server.Abstractions;
 
-public interface IViewerMonitorService
+public interface IIdleTimer
 {
     DateTime LastSeen { get; }
 

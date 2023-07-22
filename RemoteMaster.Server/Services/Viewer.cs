@@ -26,19 +26,6 @@ public class Viewer
             await SendScreenSize(bounds.Width, bounds.Height);
         };
 
-        // AudioCapturer.DataAvailable += async (sender, e) =>
-        // {
-        //     var audioData = new byte[e.BytesRecorded];
-        //     Array.Copy(e.Buffer, audioData, e.BytesRecorded);
-        // 
-        //     var audioDataChunks = Chunker.ChunkifyBytes(audioData);
-        // 
-        //     foreach (var chunk in audioDataChunks)
-        //     {
-        //         await _hubContext.Clients.Client(ConnectionId).SendAsync("AudioUpdate", chunk);
-        //     }
-        // };
-
         AudioCapturer.DataAvailable += async (sender, e) =>
         {
             var audioDataChunks = Chunker.ChunkifyBytes(e.Buffer);
