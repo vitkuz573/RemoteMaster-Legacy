@@ -2,6 +2,7 @@
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Native.Windows;
+using Windows.Win32.Foundation;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Server.Hubs;
@@ -94,5 +95,10 @@ public class ControlHub : Hub
         TokenPrivilegeHelper.AdjustTokenPrivilege(SE_SHUTDOWN_NAME);
 
         InitiateSystemShutdown(null, null, 0, true, true);
+    }
+
+    public async Task SendMessageBox(MessageBoxDto dto)
+    {
+        MessageBox(HWND.Null, dto.Text, dto.Caption, dto.Style);
     }
 }

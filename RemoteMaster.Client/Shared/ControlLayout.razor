@@ -1,5 +1,6 @@
 ﻿@using RemoteMaster.Client.Services;
 @using RemoteMaster.Shared.Dtos;
+@using Windows.Win32.UI.WindowsAndMessaging;
 @inherits LayoutComponentBase
 @inject ControlFunctionsService ControlFuncsService
 
@@ -58,7 +59,7 @@
                         </select>
                     </div>
                 </li>
-                <!-- Add more actions here -->
+
                 <li>
                     <div class="flex items-center space-x-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -68,6 +69,26 @@
                     </div>
                     <div class="relative inline-flex mt-2">
                         <input type="number" min="1" max="100" value="50" class="border border-gray-300 rounded-full text-gray-600 h-10 pl-5 pr-5 bg-white hover:border-gray-400 focus:outline-none" @onchange="OnChangeQuality">
+                    </div>
+                </li>
+
+                <!-- Add new action here -->
+                <li>
+                    <div class="flex items-center space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                            <path d="M3 12h18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                        </svg>
+                        <h3 class="text-gray-600">Send Message</h3>
+                    </div>
+                    <div class="mt-2">
+                        <input type="text" placeholder="Title" class="border border-gray-300 rounded text-gray-600 h-10 pl-5 pr-5 bg-white hover:border-gray-400 focus:outline-none" @bind="MessageBoxTitle" />
+                        <input type="text" placeholder="Message" class="border border-gray-300 rounded text-gray-600 h-10 pl-5 pr-5 bg-white hover:border-gray-400 focus:outline-none mt-2" @bind="MessageBoxText" />
+                        <select class="border border-gray-300 rounded-full text-gray-600 h-10 pl-5 pr-10 bg-white hover:border-gray-400 focus:outline-none appearance-none mt-2" @bind="MessageBoxStyle">
+                            <option value="Info">Info</option>
+                            <option value="Warning">Warning</option>
+                            <option value="Error">Error</option>
+                        </select>
+                        <button class="mt-2 w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 rounded text-white" @onclick="SendMessageBox">Send</button>
                     </div>
                 </li>
             </ul>
@@ -98,6 +119,9 @@
 
 @code {
     private bool isMenuOpen = false;
+    private string MessageBoxTitle { get; set; }
+    private string MessageBoxText { get; set; }
+    private string MessageBoxStyle { get; set; } = "Info";
 
     private void ToggleMenu()
     {
@@ -119,5 +143,24 @@
         {
             // Необходимо обработать случай, когда введенное значение не является числом от 1 до 100.
         }
+    }
+
+    private void SendMessageBox()
+    {
+        var style = MessageBoxStyle switch
+        {
+            "Info" => MESSAGEBOX_STYLE.MB_ICONINFORMATION,
+            "Warning" => MESSAGEBOX_STYLE.MB_ICONWARNING,
+            "Error" => MESSAGEBOX_STYLE.MB_ICONERROR
+        };
+
+        var dto = new MessageBoxDto
+        {
+            Caption = MessageBoxTitle,
+            Text = MessageBoxText,
+            Style = style
+        };
+
+        ControlFuncsService.SendMessageBox(dto);
     }
 }

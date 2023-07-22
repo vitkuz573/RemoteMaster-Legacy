@@ -14,4 +14,6 @@ public class ControlFunctionsService
     public Action<string> SelectDisplay { get; set; }
 
     public Action<int> SetQuality { get; set; }
+
+    public Action<MessageBoxDto> SendMessageBox { get; set; }
 }
