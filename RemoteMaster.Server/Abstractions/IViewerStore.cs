@@ -10,5 +10,5 @@ public interface IViewerStore
 
     void AddViewer(Viewer viewer);
 
-    bool RemoveViewer(string connectionId);
+    void RemoveViewer(string connectionId);
 }
