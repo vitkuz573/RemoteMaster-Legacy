@@ -7,6 +7,8 @@ public class ViewerStore : IViewerStore
 {
     private readonly ConcurrentDictionary<string, Viewer> _viewers = new();
 
+    public IReadOnlyDictionary<string, Viewer> Viewers => _viewers;
+
     public Viewer GetViewer(string connectionId)
     {
         if (_viewers.TryGetValue(connectionId, out var viewer))

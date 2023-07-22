@@ -21,6 +21,7 @@ builder.Services.AddSingleton<IScreenCapturer, ScreenCapturer>();
 builder.Services.AddSingleton<IAudioCapturer, AudioCapturer>();
 builder.Services.AddSingleton<IInputSender, InputSender>();
 builder.Services.AddSingleton<IViewerStore, ViewerStore>();
+builder.Services.AddSingleton<IViewerMonitorService, ViewerMonitorService>();
 
 // Регистрация Scoped services
 builder.Services.AddScoped<IScreenCaster, ScreenCaster>();
@@ -52,5 +53,8 @@ app.UseAuthorization();
 
 app.MapRazorPages();
 app.MapHub<ControlHub>("/hubs/control");
+
+var viewerMonitorService = app.Services.GetRequiredService<IViewerMonitorService>();
+viewerMonitorService.StartMonitoring();
 
 app.Run();
