@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using NAudio.Wave;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Hubs;
 using RemoteMaster.Shared.Dtos;
