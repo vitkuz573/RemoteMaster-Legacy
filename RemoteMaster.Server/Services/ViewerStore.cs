@@ -24,8 +24,8 @@ public class ViewerStore : IViewerStore
         _viewers.TryAdd(viewer.ConnectionId, viewer);
     }
 
-    public void RemoveViewer(string connectionId)
+    public bool RemoveViewer(string connectionId)
     {
-        _viewers.TryRemove(connectionId, out _);
+        return _viewers.TryRemove(connectionId, out _);
     }
 }

@@ -43,7 +43,10 @@ public class ControlHub : Hub
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        _viewerStore.RemoveViewer(Context.ConnectionId);
+        if (_viewerStore.RemoveViewer(Context.ConnectionId))
+        {
+            _logger.LogInformation("Viewer with connection ID {connectionId} was successfully removed.", Context.ConnectionId);
+        }
 
         _cancellationTokenSource?.Cancel();
         await base.OnDisconnectedAsync(exception);
