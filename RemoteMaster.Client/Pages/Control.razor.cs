@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
-using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using RemoteMaster.Client.Abstractions;
@@ -13,7 +12,7 @@ using System.Web;
 
 namespace RemoteMaster.Client.Pages;
 
-public partial class Control : IDisposable
+public partial class Control : IAsyncDisposable
 {
     [Parameter]
     public string Host { get; set; }
@@ -34,54 +33,51 @@ public partial class Control : IDisposable
     private HubConnection? _agentConnection;
     private HubConnection? _serverConnection;
 
+    private async Task TryInvokeServerAsync(string method)
+    {
+        if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
+        {
+            await _serverConnection.InvokeAsync(method);
+        }
+    }
+
+    private async Task TryInvokeServerAsync<T>(string method, T argument)
+    {
+        if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
+        {
+            await _serverConnection.InvokeAsync(method, argument);
+        }
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await JSRuntime.InvokeVoidAsync("setTitle", Host);
 
         if (firstRender)
         {
-            ControlFuncsService.KillServer = async () =>
+            ControlFuncsService.KillServer = async () => await TryInvokeServerAsync("KillServer");
+            ControlFuncsService.RebootComputer = async () => await TryInvokeServerAsync("RebootComputer");
+            ControlFuncsService.SetQuality = async (quality) => await TryInvokeServerAsync("SetQuality", quality);
+            ControlFuncsService.SendMessageBox = async (dto) => await TryInvokeServerAsync("SendMessageBox", dto);
+
+            bool uriCreated = Uri.TryCreate(NavManager.Uri, UriKind.Absolute, out Uri? uri);
+
+            if (uriCreated && uri != null)
             {
-                if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
+                var query = HttpUtility.ParseQueryString(uri.Query);
+                var skipAgentConnection = query.Get("skipAgent");
+
+                if (skipAgentConnection != "true")
                 {
-                    await _serverConnection.InvokeAsync("KillServer");
+                    _agentConnection = HubConnectionFactory.Create(Host, 3564, "hubs/main");
+
+                    await _agentConnection.StartAsync();
+                    await _agentConnection.StopAsync();
                 }
-            };
-
-            ControlFuncsService.RebootComputer = async () =>
+            }
+            else
             {
-                if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
-                {
-                    await _serverConnection.InvokeAsync("RebootComputer");
-                }
-            };
-
-            ControlFuncsService.SetQuality = async (quality) =>
-            {
-                if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
-                {
-                    await _serverConnection.InvokeAsync("SetQuality", quality);
-                }
-            };
-
-            ControlFuncsService.SendMessageBox = async (dto) =>
-            {
-                if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
-                {
-                    await _serverConnection.InvokeAsync("SendMessageBox", dto);
-                }
-            };
-
-            var uri = new Uri(NavManager.Uri);
-            var query = HttpUtility.ParseQueryString(uri.Query);
-            var skipAgentConnection = query.Get("skipAgent");
-
-            if (skipAgentConnection != "true")
-            {
-                _agentConnection = HubConnectionFactory.Create(Host, 3564, "hubs/main");
-
-                await _agentConnection.StartAsync();
-                await _agentConnection.StopAsync();
+                throw new UriFormatException($"Could not parse the URI: {NavManager.Uri}");
             }
 
             _serverConnection = HubConnectionFactory.Create(Host, 5076, "hubs/control", withMessagePack: true);
@@ -89,20 +85,7 @@ public partial class Control : IDisposable
             _serverConnection.On<ScreenDataDto>("ScreenData", dto =>
             {
                 ControlFuncsService.Displays = dto.Displays;
-                ControlFuncsService.SelectDisplay = async (display) =>
-                {
-                    if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
-                    {
-                        await _serverConnection.InvokeAsync("SendSelectedScreen", display);
-                    }
-                };
-            });
-
-            _serverConnection.On<ScreenSizeDto>("ScreenSize", dto =>
-            {
-                // logic
-                // Properties: Width and Height
-                // Invoked on change screen
+                ControlFuncsService.SelectDisplay = async (display) => await TryInvokeServerAsync("SendSelectedScreen", display);
             });
 
             _serverConnection.On<ChunkDto>("ScreenUpdate", async chunk =>
@@ -145,10 +128,7 @@ public partial class Control : IDisposable
             Y = xyPercent.Item2
         };
 
-        if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
-        {
-            await _serverConnection.InvokeAsync("SendMouseCoordinates", dto);
-        }
+        await TryInvokeServerAsync("SendMouseCoordinates", dto);
     }
 
     private async Task OnMouseUpDown(MouseEventArgs e)
@@ -173,10 +153,7 @@ public partial class Control : IDisposable
             Y = xyPercent.Item2
         };
 
-        if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
-        {
-            await _serverConnection.InvokeAsync("SendMouseButton", dto);
-        }
+        await TryInvokeServerAsync("SendMouseButton", dto);
     }
 
     private async Task OnMouseWheel(WheelEventArgs e)
@@ -186,10 +163,7 @@ public partial class Control : IDisposable
             DeltaY = (int)e.DeltaY
         };
 
-        if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
-        {
-            await _serverConnection.InvokeAsync("SendMouseWheel", dto);
-        }
+        await TryInvokeServerAsync("SendMouseWheel", dto);
     }
 
     [JSInvokable]
@@ -212,15 +186,21 @@ public partial class Control : IDisposable
             State = state,
         };
 
-        if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
-        {
-            await _serverConnection.InvokeAsync("SendKeyboardInput", dto);
-        }
+        await TryInvokeServerAsync("SendKeyboardInput", dto);
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-        _serverConnection?.DisposeAsync();
-        _agentConnection?.DisposeAsync();
+        if (_serverConnection != null)
+        {
+            await _serverConnection.DisposeAsync();
+        }
+
+        if (_agentConnection != null)
+        {
+            await _agentConnection.DisposeAsync();
+        }
+
+        GC.SuppressFinalize(this);
     }
 }
