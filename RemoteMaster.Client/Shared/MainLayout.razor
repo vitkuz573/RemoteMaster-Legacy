@@ -3,7 +3,7 @@
 <PageTitle>RemoteMaster.Client</PageTitle>
 
 <div class="flex h-screen bg-gray-200">
-    <div class="@NavMenuContainerClasses">
+    <div class="@NavMenuContainerClasses" style="transform: @(collapseNavMenu ? "translateX(-100%)" : "translateX(0)");">
         <NavMenu OnToggleNavMenu="ToggleNavMenu" collapseNavMenu="@collapseNavMenu" />
     </div>
     @if (collapseNavMenu)
@@ -34,7 +34,7 @@
 </div>
 
 @code {
-    private bool collapseNavMenu = false;
+    private bool collapseNavMenu = true;
 
     private void ToggleNavMenu()
     {
@@ -42,5 +42,5 @@
     }
 
     private string NavMenuContainerClasses =>
-        $"flex flex-col w-64 transition-all duration-300 ease-in-out {(collapseNavMenu ? "hidden" : "")}";
+        $"fixed h-screen z-20 flex flex-col w-64 transition-transform duration-300 ease-in-out";
 }

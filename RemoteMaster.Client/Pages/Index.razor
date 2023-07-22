@@ -1,50 +1,69 @@
 ﻿@page "/"
 @using RemoteMaster.Client.Models;
 
-<Button Color="Color.Primary" Clicked="@SyncComputersFromAD">Sync Computers from AD</Button>
+<div class="container mx-auto py-6 px-4">
 
-<SyncResultsModal @ref="_syncResultsModalRef" />
+    <div class="flex justify-between mb-4">
+        <Button Color="Color.Primary" Clicked="SyncComputersFromAD" class="btn btn-blue">
+            <i class="fas fa-sync-alt mr-2"></i> Sync Computers from AD
+        </Button>
 
-<Button Color="Color.Primary" Clicked="@(() => _addFolderModalRef.Show())">Add Folder</Button>
-<Button Color="Color.Primary" Clicked="@(() => _addComputerModalRef.Show())">Add Computer</Button>
+        <div class="space-x-4">
+            <Button Color="Color.Primary" Clicked="(() => _addFolderModalRef.Show())" class="btn btn-blue">
+                <i class="fas fa-folder-plus mr-2"></i> Add Folder
+            </Button>
 
-<AddFolderModal @ref="_addFolderModalRef" OnAdd="AddFolder" />
-<AddComputerModal @ref="_addComputerModalRef" Nodes="_nodes" />
+            <Button Color="Color.Primary" Clicked="(() => _addComputerModalRef.Show())" class="btn btn-blue">
+                <i class="fas fa-desktop mr-2"></i> Add Computer
+            </Button>
+        </div>
+    </div>
 
-<Row>
-    <Column>
-        <TreeView Nodes="_nodes" GetChildNodes="@(node => (node as Folder)?.Children)" HasChildNodes="@(node => node is Folder)" @bind-SelectedNode="_selectedNode" @bind-ExpandedNodes="_expandedNodes">
-            <NodeContent>
-                <Icon Name="@((_expandedNodes.Contains(context) && context is Folder) ? context.ExpandedIcon : context.Icon)" />
-                @context.Name
-            </NodeContent>
-        </TreeView>
-    </Column>
+    <SyncResultsModal @ref="_syncResultsModalRef" />
 
-    <Column>
-        @if (_selectedNode is Folder selectedFolder)
-        {
-            foreach (var child in selectedFolder.Children)
+    <AddFolderModal @ref="_addFolderModalRef" OnAdd="AddFolder" />
+    <AddComputerModal @ref="_addComputerModalRef" Nodes="_nodes" />
+
+    <Row class="grid grid-cols-3 gap-4">
+
+        <Column class="col-span-1 border-r">
+            <Card class="border rounded-lg p-4">
+                <TreeView Nodes="_nodes" GetChildNodes="@(node => (node as Folder)?.Children)" HasChildNodes="@(node => node is Folder)" @bind-SelectedNode="_selectedNode" @bind-ExpandedNodes="_expandedNodes">
+                    <NodeContent>
+                        <Icon Name="@((_expandedNodes.Contains(context) && context is Folder) ? context.ExpandedIcon : context.Icon)" />
+                        @context.Name
+                    </NodeContent>
+                </TreeView>
+            </Card>
+        </Column>
+
+        <Column class="col-span-2 grid grid-cols-4 gap-4">
+            @if (_selectedNode is Folder selectedFolder)
             {
-                if (child is Computer computer)
+                foreach (var child in selectedFolder.Children)
                 {
-                    <Card @onclick="(() => OpenCmdWithRemoteCommands(computer))">
-                        <CardImage Source="/img/gallery/2.jpg" Alt="@computer.Name" />
-                        <CardBody>
-                            <CardTitle Size="3">
-                                @computer.Name
-                            </CardTitle>
-                        </CardBody>
-                    </Card>
+                    if (child is Computer computer)
+                    {
+                        <Card class="card w-24 h-32 cursor-pointer" @onclick="(() => OpenCmdWithRemoteCommands(computer))">
+                            <CardImage Source="/img/gallery/2.jpg" Alt="@computer.Name" class="w-full h-16 object-cover" />
+                            <CardBody class="m-2 p-1">
+                                <CardTitle Size="3" class="text-sm font-bold">
+                                    @computer.Name
+                                </CardTitle>
+                            </CardBody>
+                        </Card>
+                    }
                 }
             }
-        }
-    </Column>
-</Row>
+        </Column>
 
-<Snackbar @ref="_fetchComputersFromADStatusSnackbar" Color="SnackbarColor.Secondary">
-    <SnackbarBody>
-        @_fetchComputersFromADStatus
-        <SnackbarAction Clicked="(() => _fetchComputersFromADStatusSnackbar.Hide())">Hide</SnackbarAction>
-    </SnackbarBody>
-</Snackbar>
+    </Row>
+
+    <Snackbar @ref="_fetchComputersFromADStatusSnackbar" Color="SnackbarColor.Secondary">
+        <SnackbarBody>
+            @_fetchComputersFromADStatus
+            <SnackbarAction Clicked="(() => _fetchComputersFromADStatusSnackbar.Hide())">Hide</SnackbarAction>
+        </SnackbarBody>
+    </Snackbar>
+
+</div>
