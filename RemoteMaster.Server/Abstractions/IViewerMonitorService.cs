@@ -2,7 +2,7 @@
 
 public interface IViewerMonitorService
 {
-    DateTime LastSeen { get; set; }
+    DateTime LastSeen { get; }
 
     void StartMonitoring();
 }

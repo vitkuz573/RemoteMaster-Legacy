@@ -21,6 +21,7 @@ builder.Services.AddSingleton<IScreenCapturer, ScreenCapturer>();
 builder.Services.AddSingleton<IAudioCapturer, AudioCapturer>();
 builder.Services.AddSingleton<IInputSender, InputSender>();
 builder.Services.AddSingleton<IViewerStore, ViewerStore>();
+builder.Services.AddSingleton<IShutdownService, ShutdownService>();
 builder.Services.AddSingleton<IViewerMonitorService, ViewerMonitorService>();
 
 // Регистрация Scoped services

@@ -5,13 +5,16 @@ namespace RemoteMaster.Server.Services;
 public class ViewerMonitorService : IViewerMonitorService
 {
     private readonly IViewerStore _viewerStore;
+    private readonly IShutdownService _shutdownService;
     private Timer _timer;
+    private readonly object _lock = new();
 
-    public DateTime LastSeen { get; set; }
+    public DateTime LastSeen { get; private set; }
 
-    public ViewerMonitorService(IViewerStore viewerStore)
+    public ViewerMonitorService(IViewerStore viewerStore, IShutdownService shutdownService)
     {
         _viewerStore = viewerStore;
+        _shutdownService = shutdownService;
         LastSeen = DateTime.UtcNow;
     }
 
@@ -22,18 +25,31 @@ public class ViewerMonitorService : IViewerMonitorService
 
     private void CheckViewers(object state)
     {
-        if (!_viewerStore.Viewers.Any())
+        try
         {
-            var now = DateTime.UtcNow;
-
-            if ((now - LastSeen).TotalSeconds > 30)
+            if (!_viewerStore.Viewers.Any())
             {
-                Environment.Exit(0);
+                var now = DateTime.UtcNow;
+
+                lock (_lock)
+                {
+                    if ((now - LastSeen).TotalSeconds > 30)
+                    {
+                        _shutdownService.InitiateShutdown();
+                    }
+                }
+            }
+            else
+            {
+                lock (_lock)
+                {
+                    LastSeen = DateTime.UtcNow;
+                }
             }
         }
-        else
+        catch (Exception ex)
         {
-            LastSeen = DateTime.UtcNow;
+            // log exception and continue
         }
     }
 }
