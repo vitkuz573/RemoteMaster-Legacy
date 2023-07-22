@@ -6,21 +6,29 @@ public class ViewerMonitorService : IViewerMonitorService
 {
     private readonly IViewerStore _viewerStore;
     private readonly IShutdownService _shutdownService;
+    private readonly ILogger<ViewerMonitorService> _logger;
     private Timer _timer;
     private readonly object _lock = new();
 
     public DateTime LastSeen { get; private set; }
 
-    public ViewerMonitorService(IViewerStore viewerStore, IShutdownService shutdownService)
+    public ViewerMonitorService(IViewerStore viewerStore, IShutdownService shutdownService, ILogger<ViewerMonitorService> logger)
     {
         _viewerStore = viewerStore;
         _shutdownService = shutdownService;
+        _logger = logger;
         LastSeen = DateTime.UtcNow;
     }
 
     public void StartMonitoring()
     {
         _timer = new Timer(CheckViewers, null, TimeSpan.Zero, TimeSpan.FromSeconds(30));
+    }
+
+    public void StopMonitoring()
+    {
+        _timer?.Dispose();
+        _timer = null;
     }
 
     private void CheckViewers(object state)
@@ -31,25 +39,40 @@ public class ViewerMonitorService : IViewerMonitorService
             {
                 var now = DateTime.UtcNow;
 
-                lock (_lock)
+                if (Monitor.TryEnter(_lock, TimeSpan.FromSeconds(2)))
                 {
-                    if ((now - LastSeen).TotalSeconds > 30)
+                    try
                     {
-                        _shutdownService.InitiateShutdown();
+                        if ((now - LastSeen).TotalSeconds > 30)
+                        {
+                            StopMonitoring();
+                            _shutdownService.InitiateShutdown();
+                        }
+                    }
+                    finally
+                    {
+                        Monitor.Exit(_lock);
                     }
                 }
             }
             else
             {
-                lock (_lock)
+                if (Monitor.TryEnter(_lock, TimeSpan.FromSeconds(2)))
                 {
-                    LastSeen = DateTime.UtcNow;
+                    try
+                    {
+                        LastSeen = DateTime.UtcNow;
+                    }
+                    finally
+                    {
+                        Monitor.Exit(_lock);
+                    }
                 }
             }
         }
         catch (Exception ex)
         {
-            // log exception and continue
+            _logger.LogError(ex, "An error occurred while checking viewers.");
         }
     }
 }

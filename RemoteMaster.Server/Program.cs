@@ -30,7 +30,6 @@ builder.Services.AddScoped<IScreenCaster, ScreenCaster>();
 // Регистрация Transient services
 builder.Services.AddTransient<IViewerFactory, ViewerFactory>();
 
-
 var app = builder.Build();
 
 app.Urls.Clear();
