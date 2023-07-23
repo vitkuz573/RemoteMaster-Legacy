@@ -33,9 +33,11 @@ public partial class Control : IAsyncDisposable
     private HubConnection? _agentConnection;
     private HubConnection? _serverConnection;
 
+    private static bool IsConnectionReady(HubConnection connection) => connection != null && connection.State == HubConnectionState.Connected;
+
     private async Task TryInvokeServerAsync(string method)
     {
-        if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
+        if (IsConnectionReady(_serverConnection))
         {
             await _serverConnection.InvokeAsync(method);
         }
@@ -43,7 +45,7 @@ public partial class Control : IAsyncDisposable
 
     private async Task TryInvokeServerAsync<T>(string method, T argument)
     {
-        if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
+        if (IsConnectionReady(_serverConnection))
         {
             await _serverConnection.InvokeAsync(method, argument);
         }
