@@ -5,7 +5,9 @@ using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Helpers;
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media.Imaging;
 
 namespace RemoteMaster.Client.WPF;
@@ -50,6 +52,45 @@ public partial class MainWindow : Window
         });
 
         _serverConnection.StartAsync();
+    }
+
+    private async Task TryInvokeServerAsync(string method)
+    {
+        if (IsConnectionReady(_serverConnection))
+        {
+            await _serverConnection.InvokeAsync(method);
+        }
+    }
+
+    private async Task TryInvokeServerAsync<T>(string method, T argument)
+    {
+        if (IsConnectionReady(_serverConnection))
+        {
+            await _serverConnection.InvokeAsync(method, argument);
+        }
+    }
+
+    private (double, double) GetRelativeMousePositionOnPercent(MouseEventArgs e)
+    {
+        var currentPosition = e.GetPosition(screenImage);
+
+        var percentX = currentPosition.X / screenImage.ActualWidth;
+        var percentY = currentPosition.Y / screenImage.ActualHeight;
+
+        return (percentX, percentY);
+    }
+
+    private async void OnMouseMove(object sender, MouseEventArgs e)
+    {
+        var xyPercent = GetRelativeMousePositionOnPercent(e);
+
+        var dto = new MouseMoveDto
+        {
+            X = xyPercent.Item1,
+            Y = xyPercent.Item2
+        };
+
+        await TryInvokeServerAsync("SendMouseCoordinates", dto);
     }
 
     private static bool IsConnectionReady(HubConnection connection) => connection != null && connection.State == HubConnectionState.Connected;
