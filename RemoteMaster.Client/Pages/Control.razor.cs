@@ -147,7 +147,7 @@ public partial class Control : IAsyncDisposable
     {
         var xyPercent = await GetRelativeMousePositionOnPercent(e);
 
-        var dto = new MouseButtonClickDto
+        var dto = new MouseClickDto
         {
             Button = e.Button,
             State = state,

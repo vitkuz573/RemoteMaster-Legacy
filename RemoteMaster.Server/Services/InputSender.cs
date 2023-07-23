@@ -131,7 +131,7 @@ namespace RemoteMaster.Server.Services
             });
         }
 
-        public void SendMouseButton(MouseButtonClickDto dto, Viewer viewer)
+        public void SendMouseButton(MouseClickDto dto, Viewer viewer)
         {
             EnqueueOperation(() =>
             {

@@ -7,7 +7,7 @@ public interface IInputSender : IDisposable
 {
     void SendMouseCoordinates(MouseMoveDto dto, Viewer viewer);
 
-    void SendMouseButton(MouseButtonClickDto dto, Viewer viewer);
+    void SendMouseButton(MouseClickDto dto, Viewer viewer);
 
     void SendMouseWheel(MouseWheelDto dto);
 

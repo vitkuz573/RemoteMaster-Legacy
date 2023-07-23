@@ -57,7 +57,7 @@ public class ControlHub : Hub
         _inputSender.SendMouseCoordinates(dto, viewer);
     }
 
-    public void SendMouseButton(MouseButtonClickDto dto)
+    public void SendMouseButton(MouseClickDto dto)
     {
         var viewer = _viewerStore.GetViewer(Context.ConnectionId);
 

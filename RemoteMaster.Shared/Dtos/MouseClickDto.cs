@@ -2,7 +2,7 @@
 
 namespace RemoteMaster.Shared.Dtos;
 
-public class MouseButtonClickDto
+public class MouseClickDto
 {
     public long Button { get; set; }
 
