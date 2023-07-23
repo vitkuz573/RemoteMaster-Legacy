@@ -4,28 +4,30 @@ using RemoteMaster.Client.Models;
 using RemoteMaster.Client.Services;
 using System.Collections.ObjectModel;
 
-namespace RemoteMaster.Client.Pages;
+namespace RemoteMaster.Client.Components;
 
 public partial class AddComputerModal
 {
     public Modal _modalRef;
-    public Computer _newComputer = new();
+    public Computer _newComputer;
     public Guid? _selectedFolderId;
-
     private Validations _fluentValidations;
 
     [Inject]
     private DatabaseService DatabaseService { get; set; }
 
-    public void Show()
+    [Parameter]
+    public ObservableCollection<Node> Nodes { get; set; }
+
+    public AddComputerModal()
     {
-        _modalRef.Show();
+        _newComputer = new Computer();
+        _selectedFolderId = null;
     }
 
-    public void Hide()
-    {
-        _modalRef.Hide();
-    }
+    public void Show() => _modalRef.Show();
+
+    public void Hide() => _modalRef.Hide();
 
     public async void AddComputer()
     {
@@ -47,12 +49,5 @@ public partial class AddComputerModal
         }
     }
 
-    private void OnSelectedFolderChanged(Guid? selectedId)
-    {
-        Console.WriteLine($"Selected folder ID changed to: {selectedId}");
-        _selectedFolderId = selectedId;
-    }
-
-    [Parameter]
-    public ObservableCollection<Node> Nodes { get; set; }
+    private void OnSelectedFolderChanged(Guid? selectedId) => _selectedFolderId = selectedId;
 }
