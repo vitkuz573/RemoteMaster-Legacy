@@ -200,7 +200,5 @@ public partial class Control : IAsyncDisposable
         {
             await _agentConnection.DisposeAsync();
         }
-
-        GC.SuppressFinalize(this);
     }
 }
