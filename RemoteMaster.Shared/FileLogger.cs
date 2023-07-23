@@ -2,6 +2,7 @@
 using RemoteMaster.Shared.Extensions;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Text;
 
 namespace RemoteMaster.Shared;
 
@@ -10,7 +11,7 @@ public class FileLogger : ILogger
     private static readonly ConcurrentQueue<string> _logQueue = new();
     private static readonly ConcurrentStack<string> _scopeStack = new();
     private static readonly SemaphoreSlim _writeLock = new(1, 1);
-    private static string _logDir;
+    private static string? _logDir;
     private readonly string _applicationName;
     private readonly string _categoryName;
     private readonly System.Timers.Timer _sinkTimer = new(5000) { AutoReset = false };
@@ -22,30 +23,21 @@ public class FileLogger : ILogger
         _sinkTimer.Elapsed += SinkTimer_Elapsed;
     }
 
-    private static string LogDir
+    private static string LogDirectory
     {
         get
         {
-            if (!string.IsNullOrWhiteSpace(_logDir))
-            {
-                return _logDir;
-            }
+            if (!string.IsNullOrWhiteSpace(_logDir)) return _logDir;
 
-            if (OperatingSystem.IsWindows())
-            {
-                _logDir = Directory.CreateDirectory(@"C:\sc\Logs").FullName;
-                // _logDir = Directory.CreateDirectory(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "RControl", "Logs")).FullName;
-            }
-            else
-            {
-                _logDir = Directory.CreateDirectory("/var/log/rcontrol").FullName;
-            }
+            _logDir = OperatingSystem.IsWindows()
+                ? Directory.CreateDirectory(@"C:\sc\Logs").FullName
+                : Directory.CreateDirectory("/var/log/rcontrol").FullName;
 
             return _logDir;
         }
     }
 
-    private string LogPath => Path.Combine(LogDir, $"LogFile_{_applicationName}_{DateTime.Now:yyyy-MM-dd}.log");
+    private string LogPath => Path.Combine(LogDirectory, $"LogFile_{_applicationName}_{DateTime.Now:yyyy-MM-dd}.log");
 
     public IDisposable? BeginScope<TState>(TState state) where TState : notnull
     {
@@ -65,7 +57,6 @@ public class FileLogger : ILogger
                 File.Delete(LogPath);
             }
         }
-        catch { }
         finally
         {
             _writeLock.Release();
@@ -108,7 +99,7 @@ public class FileLogger : ILogger
     {
         try
         {
-            _writeLock.Wait();
+            await _writeLock.WaitAsync();
             CheckLogFileExists();
 
             return await File.ReadAllBytesAsync(LogPath);
@@ -129,27 +120,6 @@ public class FileLogger : ILogger
     {
         _ = Directory.CreateDirectory(Path.GetDirectoryName(LogPath)!);
 
-        if (!File.Exists(LogPath))
-        {
-            File.Create(LogPath).Close();
-
-            try
-            {
-                if (OperatingSystem.IsWindows())
-                {
-                    Process.Start("cmd", $"/c icacls \"{LogPath}\" /grant Users:M").WaitForExit(1_000);
-                }
-                else if (OperatingSystem.IsLinux())
-                {
-                    Process.Start("sudo", $"chmod 775 {LogPath}").WaitForExit(1_000);
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error modifying log file permissions: {ex.Message}");
-            }
-        }
-
         if (File.Exists(LogPath))
         {
             var fi = new FileInfo(LogPath);
@@ -165,38 +135,43 @@ public class FileLogger : ILogger
 
     private static string FormatLogEntry(LogLevel logLevel, string categoryName, string state, Exception? exception, string[] scopeStack)
     {
-        var ex = exception;
-        var exMessage = exception?.Message;
+        var exMessage = new StringBuilder(exception?.Message ?? "");
 
+        var ex = exception;
         while (ex?.InnerException is not null)
         {
-            exMessage += $" | {ex.InnerException.Message}";
+            exMessage.Append($" | {ex.InnerException.Message}");
             ex = ex.InnerException;
         }
 
-        var entry =
-            $"[{logLevel}]\t" +
-            $"{DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss.fff}\t";
+        var entry = new StringBuilder()
+            .Append($"[{logLevel}]\t")
+            .Append($"{DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss.fff}\t");
 
-        entry += scopeStack.Any() ?
-                    $"[{string.Join(" - ", scopeStack)} - {categoryName}]\t" :
-                    $"[{categoryName}]\t";
-
-        entry += $"Message: {state}\t";
-
-        if (!string.IsNullOrWhiteSpace(exMessage))
+        if (scopeStack.Any())
         {
-            entry += exMessage;
+            entry.Append($"[{string.Join(" - ", scopeStack)} - {categoryName}]\t");
+        }
+        else
+        {
+            entry.Append($"[{categoryName}]\t");
+        }
+
+        entry.Append($"Message: {state}\t");
+
+        if (!string.IsNullOrWhiteSpace(exMessage.ToString()))
+        {
+            entry.Append(exMessage);
         }
 
         if (exception is not null)
         {
-            entry += $"{Environment.NewLine}{exception.StackTrace}";
+            entry.Append($"{Environment.NewLine}{exception.StackTrace}");
         }
 
-        entry += Environment.NewLine;
+        entry.Append(Environment.NewLine);
 
-        return entry;
+        return entry.ToString();
     }
 
     private async void SinkTimer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
@@ -204,17 +179,16 @@ public class FileLogger : ILogger
         try
         {
             await _writeLock.WaitAsync();
-
             CheckLogFileExists();
 
-            var message = string.Empty;
+            var message = new StringBuilder();
 
             while (_logQueue.TryDequeue(out var entry))
             {
-                message += entry;
+                message.Append(entry);
             }
 
-            File.AppendAllText(LogPath, message);
+            File.AppendAllText(LogPath, message.ToString());
         }
         catch (Exception ex)
         {
