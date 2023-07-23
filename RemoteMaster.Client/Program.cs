@@ -16,7 +16,7 @@ builder.Services.AddTransient<IHubConnectionFactory, HubConnectionFactory>();
 // Services
 builder.Services.AddScoped<ControlFunctionsService>();
 builder.Services.AddScoped<DatabaseService>();
-builder.Services.AddScoped<ActiveDirectoryService>();
+builder.Services.AddSingleton<ActiveDirectoryService>();
 builder.Services.AddTransient<IHubConnectionBuilder>(s => new HubConnectionBuilder());
 builder.Services.AddValidatorsFromAssembly(typeof(App).Assembly);
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
