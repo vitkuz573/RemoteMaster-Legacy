@@ -16,13 +16,14 @@ namespace RemoteMaster.Client.WPF;
 public partial class MainWindow : Window
 {
     private readonly HubConnection? _agentConnection;
-    private readonly HubConnection? _serverConnection;
+
+    public static HubConnection? ServerConnection { get; private set; }
 
     public MainWindow()
     {
         InitializeComponent();
 
-        _serverConnection = new HubConnectionBuilder()
+        ServerConnection = new HubConnectionBuilder()
             .WithUrl($"http://127.0.0.1:5076/hubs/control", options =>
             {
                 options.SkipNegotiation = true;
@@ -31,7 +32,7 @@ public partial class MainWindow : Window
             .AddMessagePackProtocol()
             .Build();
 
-        _serverConnection.On<ScreenDataDto>("ScreenData", dto =>
+        ServerConnection.On<ScreenDataDto>("ScreenData", dto =>
         {
             var screenNumber = 1;
 
@@ -55,7 +56,7 @@ public partial class MainWindow : Window
             }
         });
 
-        _serverConnection.On<ChunkWrapper>("ScreenUpdate", chunk =>
+        ServerConnection.On<ChunkWrapper>("ScreenUpdate", chunk =>
         {
             if (Chunker.TryUnchunkify(chunk, out var allData))
             {
@@ -77,22 +78,22 @@ public partial class MainWindow : Window
             }
         });
 
-        _serverConnection.StartAsync();
+        ServerConnection.StartAsync();
     }
 
-    private async Task TryInvokeServerAsync(string method)
+    public static async Task TryInvokeServerAsync(string method)
     {
-        if (IsConnectionReady(_serverConnection))
+        if (IsConnectionReady(ServerConnection))
         {
-            await _serverConnection.InvokeAsync(method);
+            await ServerConnection.InvokeAsync(method);
         }
     }
 
-    private async Task TryInvokeServerAsync<T>(string method, T argument)
+    public static async Task TryInvokeServerAsync<T>(string method, T argument)
     {
-        if (IsConnectionReady(_serverConnection))
+        if (IsConnectionReady(ServerConnection))
         {
-            await _serverConnection.InvokeAsync(method, argument);
+            await ServerConnection.InvokeAsync(method, argument);
         }
     }
 
@@ -132,5 +133,11 @@ public partial class MainWindow : Window
     private async void QualitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         await TryInvokeServerAsync("SetQuality", (int)e.NewValue);
+    }
+
+    private void OnNewMessageBoxClick(object sender, RoutedEventArgs e)
+    {
+        var messageBoxWindow = new MessageBoxWindow();
+        messageBoxWindow.ShowDialog();
     }
 }
