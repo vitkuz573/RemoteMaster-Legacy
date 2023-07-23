@@ -20,7 +20,7 @@ public partial class MessageBoxWindow : Window
             Style = MESSAGEBOX_STYLE.MB_OK
         };
 
-        await MainWindow.TryInvokeServerAsync("SendMessageBox", dto);
+        await ViewerWindow.TryInvokeServerAsync("SendMessageBox", dto);
 
         Close();
     }
