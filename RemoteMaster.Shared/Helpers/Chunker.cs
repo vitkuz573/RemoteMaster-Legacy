@@ -9,7 +9,7 @@ public static class Chunker
 {
     private static readonly MemoryCache _cache = new(new MemoryCacheOptions());
 
-    public static IEnumerable<ChunkDto> Chunkify<T>(T data, int chunkSize = 4096, IFormatterResolver? resolver = null) where T : class
+    public static IEnumerable<ChunkWrapper> Chunkify<T>(T data, int chunkSize = 4096, IFormatterResolver? resolver = null) where T : class
     {
         if (data == null)
         {
@@ -26,7 +26,7 @@ public static class Chunker
 
         if (data is string str && string.IsNullOrEmpty(str))
         {
-            yield return new ChunkDto
+            yield return new ChunkWrapper
             {
                 Chunk = Array.Empty<byte>(),
                 IsFirstChunk = true,
@@ -58,12 +58,12 @@ public static class Chunker
         }
     }
 
-    public static IEnumerable<ChunkDto> ChunkifyBytes(byte[] data, int chunkSize = 4096)
+    public static IEnumerable<ChunkWrapper> ChunkifyBytes(byte[] data, int chunkSize = 4096)
     {
         return GenerateChunks(data, chunkSize);
     }
 
-    private static IEnumerable<ChunkDto> GenerateChunks(byte[] data, int chunkSize)
+    private static IEnumerable<ChunkWrapper> GenerateChunks(byte[] data, int chunkSize)
     {
         var chunkCount = (int)Math.Ceiling((double)data.Length / chunkSize);
         var sequenceId = Guid.NewGuid().ToString();
@@ -75,7 +75,7 @@ public static class Chunker
 
             Array.Copy(data, i * chunkSize, chunk, 0, length);
 
-            yield return new ChunkDto
+            yield return new ChunkWrapper
             {
                 Chunk = chunk,
                 IsFirstChunk = i == 0,
@@ -86,7 +86,7 @@ public static class Chunker
         }
     }
 
-    public static bool TryUnchunkify<T>(ChunkDto chunkDto, out T result, IFormatterResolver? resolver = null) where T : class
+    public static bool TryUnchunkify<T>(ChunkWrapper chunkDto, out T result, IFormatterResolver? resolver = null) where T : class
     {
         if (chunkDto.Chunk.Length == 0)
         {
@@ -131,7 +131,7 @@ public static class Chunker
         return true;
     }
 
-    public static bool TryUnchunkify(ChunkDto chunkDto, out byte[] result)
+    public static bool TryUnchunkify(ChunkWrapper chunkDto, out byte[] result)
     {
         var chunks = AddToCache(chunkDto);
 
@@ -147,14 +147,14 @@ public static class Chunker
         return true;
     }
 
-    private static ConcurrentBag<ChunkDto> AddToCache(ChunkDto chunkDto)
+    private static ConcurrentBag<ChunkWrapper> AddToCache(ChunkWrapper chunkDto)
     {
         var chunks = _cache.GetOrCreate(chunkDto.SequenceId, entry =>
         {
             entry.SlidingExpiration = TimeSpan.FromMinutes(1);
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
 
-            return new ConcurrentBag<ChunkDto>();
+            return new ConcurrentBag<ChunkWrapper>();
         }) ?? throw new InvalidOperationException("Chunks cannot be null");
 
         chunks.Add(chunkDto);
@@ -167,7 +167,7 @@ public static class Chunker
         return chunks;
     }
 
-    private static byte[] CombineChunks(ConcurrentBag<ChunkDto> chunks)
+    private static byte[] CombineChunks(ConcurrentBag<ChunkWrapper> chunks)
     {
         var orderedChunks = chunks.OrderBy(c => c.ChunkId);
         var allBytes = new List<byte>();

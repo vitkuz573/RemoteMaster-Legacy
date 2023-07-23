@@ -90,7 +90,7 @@ public partial class Control : IAsyncDisposable
                 ControlFuncsService.SelectDisplay = async (display) => await TryInvokeServerAsync("SendSelectedScreen", display);
             });
 
-            _serverConnection.On<ChunkDto>("ScreenUpdate", async chunk =>
+            _serverConnection.On<ChunkWrapper>("ScreenUpdate", async chunk =>
             {
                 if (Chunker.TryUnchunkify(chunk, out var allData))
                 {
