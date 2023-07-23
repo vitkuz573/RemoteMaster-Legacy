@@ -79,9 +79,9 @@ public partial class Index
         await JSRuntime.InvokeVoidAsync("openInNewTab", url);
     }
 
-    private async Task OpenCmdWithRemoteCommands(Computer computer)
+    private static async Task OpenShell(Computer computer, Shell shell)
     {
-        var command = $"/C psexec \\\\{computer.IPAddress} -s powershell";
+        var command = $"/C psexec \\\\{computer.IPAddress} -s {shell}";
 
         var startInfo = new ProcessStartInfo()
         {
