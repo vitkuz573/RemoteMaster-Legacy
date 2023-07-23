@@ -50,7 +50,7 @@ public class Viewer
 
         _logger.LogInformation("Starting screen stream for ID {connectionId}", ConnectionId);
 
-        AudioCapturer.StartCapturing();
+        // AudioCapturer.StartCapturing();
 
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -71,7 +71,7 @@ public class Viewer
             }
         }
 
-        AudioCapturer.StopCapturing();
+        // AudioCapturer.StopCapturing();
     }
 
     public async Task SendScreenData(IEnumerable<(string, bool, Size)> displays, string selectedDisplay, int screenWidth, int screenHeight)
