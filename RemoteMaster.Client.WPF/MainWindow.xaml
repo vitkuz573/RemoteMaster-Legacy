@@ -7,6 +7,12 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        <Image x:Name="screenImage" MouseMove="OnMouseMove" />
+        <DockPanel>
+            <Menu DockPanel.Dock="Top">
+                <MenuItem Header="Display" Click="OnDisplayClick" />
+                <MenuItem Header="About" Click="OnAboutClick" />
+            </Menu>
+            <Image x:Name="screenImage" MouseMove="OnMouseMove" />
+        </DockPanel>
     </Grid>
 </Window>

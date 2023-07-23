@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Helpers;
-using System;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
@@ -94,4 +93,15 @@ public partial class MainWindow : Window
     }
 
     private static bool IsConnectionReady(HubConnection connection) => connection != null && connection.State == HubConnectionState.Connected;
+
+    private void OnDisplayClick(object sender, RoutedEventArgs e)
+    {
+        // Код обработки события для 'Display'
+    }
+
+    private void OnAboutClick(object sender, RoutedEventArgs e)
+    {
+        // Код обработки события для 'About'
+    }
+
 }
