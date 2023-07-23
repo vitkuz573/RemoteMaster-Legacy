@@ -125,10 +125,4 @@ public partial class MainWindow : Window
     {
         // Код обработки события для 'Display'
     }
-
-    private void OnAboutClick(object sender, RoutedEventArgs e)
-    {
-        // Код обработки события для 'About'
-    }
-
 }
