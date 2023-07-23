@@ -15,9 +15,9 @@ public partial class Index
     private IList<Node> _expandedNodes = new List<Node>();
     private Node _selectedNode;
 
-    private AddFolderModal _addFolderModalRef;
-    private AddComputerModal _addComputerModalRef;
-    private SyncResultsModal _syncResultsModalRef;
+    private AddFolder _addFolderRef;
+    private AddComputerManual _addComputerManualRef;
+    private AddComputerFromAD _addComputerFromADRef;
 
     private string _fetchComputersFromADStatus;
 
@@ -63,7 +63,7 @@ public partial class Index
                 adNodes.Add(folder);
             }
 
-            _syncResultsModalRef.Show(adNodes);
+            _addComputerFromADRef.Show(adNodes);
         }
         catch (Exception e)
         {

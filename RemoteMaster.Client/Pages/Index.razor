@@ -10,20 +10,20 @@
         </Button>
 
         <div class="space-x-4">
-            <Button Color="Color.Primary" Clicked="(() => _addFolderModalRef.Show())" class="btn btn-blue">
+            <Button Color="Color.Primary" Clicked="(() => _addFolderRef.Show())" class="btn btn-blue">
                 <i class="fas fa-folder-plus mr-2"></i> Add Folder
             </Button>
 
-            <Button Color="Color.Primary" Clicked="(() => _addComputerModalRef.Show())" class="btn btn-blue">
+            <Button Color="Color.Primary" Clicked="(() => _addComputerManualRef.Show())" class="btn btn-blue">
                 <i class="fas fa-desktop mr-2"></i> Add Computer
             </Button>
         </div>
     </div>
 
-    <SyncResultsModal @ref="_syncResultsModalRef" />
+    <AddComputerFromAD @ref="_addComputerFromADRef" />
 
-    <AddFolderModal @ref="_addFolderModalRef" Nodes="_nodes" />
-    <AddComputerModal @ref="_addComputerModalRef" Nodes="_nodes" />
+    <AddFolder @ref="_addFolderRef" Nodes="_nodes" />
+    <AddComputerManual @ref="_addComputerManualRef" Nodes="_nodes" />
 
     <Row class="grid grid-cols-3 gap-4">
 

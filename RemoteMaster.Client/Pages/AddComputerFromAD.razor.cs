@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 
 namespace RemoteMaster.Client.Components;
 
-public partial class SyncResultsModal
+public partial class AddComputerFromAD
 {
     private Modal _modalRef;
     private ObservableCollection<Node> _adNodes = new();

@@ -6,7 +6,7 @@ using System.Collections.ObjectModel;
 
 namespace RemoteMaster.Client.Components;
 
-public partial class AddComputerModal
+public partial class AddComputerManual
 {
     public Modal _modalRef;
     public Computer _newComputer;
@@ -19,7 +19,7 @@ public partial class AddComputerModal
     [Parameter]
     public ObservableCollection<Node> Nodes { get; set; }
 
-    public AddComputerModal()
+    public AddComputerManual()
     {
         _newComputer = new Computer();
         _selectedFolderId = null;
@@ -29,7 +29,7 @@ public partial class AddComputerModal
 
     public void Hide() => _modalRef.Hide();
 
-    public async void AddComputer()
+    public async void Add()
     {
         if (await _fluentValidations.ValidateAll())
         {

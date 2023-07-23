@@ -6,7 +6,7 @@ using System.Collections.ObjectModel;
 
 namespace RemoteMaster.Client.Components;
 
-public partial class AddFolderModal
+public partial class AddFolder
 {
     public Modal _modalRef;
     public Folder _newFolder;
@@ -18,7 +18,7 @@ public partial class AddFolderModal
     [Parameter]
     public ObservableCollection<Node> Nodes { get; set; }
 
-    public AddFolderModal()
+    public AddFolder()
     {
         _newFolder = new Folder();
     }
@@ -27,7 +27,7 @@ public partial class AddFolderModal
 
     public void Hide() => _modalRef.Hide();
 
-    public async void AddFolder()
+    public async void Add()
     {
         if (await _fluentValidations.ValidateAll())
         {
