@@ -1,36 +1,42 @@
 ﻿using Blazorise;
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Client.Models;
+using RemoteMaster.Client.Services;
+using System.Collections.ObjectModel;
 
-namespace RemoteMaster.Client.Pages;
+namespace RemoteMaster.Client.Components;
 
 public partial class AddFolderModal
 {
-    private Modal _modalRef;
-    private Folder _newFolder = new();
-
+    public Modal _modalRef;
+    public Folder _newFolder;
     private Validations _fluentValidations;
 
-    public void Show()
+    [Inject]
+    private DatabaseService DatabaseService { get; set; }
+
+    [Parameter]
+    public ObservableCollection<Node> Nodes { get; set; }
+
+    public AddFolderModal()
     {
-        _modalRef.Show();
+        _newFolder = new Folder();
     }
 
-    public void Hide()
-    {
-        _modalRef.Hide();
-    }
+    public void Show() => _modalRef.Show();
+
+    public void Hide() => _modalRef.Hide();
 
     public async void AddFolder()
     {
         if (await _fluentValidations.ValidateAll())
         {
-            await OnAdd.InvokeAsync(_newFolder);
+            Nodes.Add(_newFolder);
+
+            DatabaseService.AddNode(_newFolder);
+
             _newFolder = new Folder();
             Hide();
         }
     }
-
-    [Parameter]
-    public EventCallback<Folder> OnAdd { get; set; }
 }

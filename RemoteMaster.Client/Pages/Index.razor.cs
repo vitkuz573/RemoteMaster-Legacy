@@ -42,12 +42,6 @@ public partial class Index
         }
     }
 
-    private void AddFolder(Folder folder)
-    {
-        DatabaseService.AddNode(folder);
-        _nodes.Add(folder);
-    }
-
     private async Task SyncComputersFromAD()
     {
         try
