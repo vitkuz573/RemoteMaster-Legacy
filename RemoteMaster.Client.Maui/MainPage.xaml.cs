@@ -1,23 +1,43 @@
-﻿namespace RemoteMaster.Client.Maui;
+﻿using Microsoft.AspNetCore.Http.Connections;
+using Microsoft.AspNetCore.SignalR.Client;
+using RemoteMaster.Shared.Dtos;
+using RemoteMaster.Shared.Helpers;
+
+namespace RemoteMaster.Client.Maui;
 
 public partial class MainPage : ContentPage
 {
-    int count = 0;
+    private readonly HubConnection _agentConnection;
+    private readonly HubConnection _serverConnection;
 
     public MainPage()
     {
         InitializeComponent();
+
+        _serverConnection = new HubConnectionBuilder()
+            .WithUrl($"http://127.0.0.1:5076/hubs/control", options =>
+            {
+                options.SkipNegotiation = true;
+                options.Transports = HttpTransportType.WebSockets;
+            })
+            .AddMessagePackProtocol()
+            .Build();
+
+        _serverConnection.On<ChunkWrapper>("ScreenUpdate", chunk =>
+        {
+            if (Chunker.TryUnchunkify(chunk, out var allData))
+            {
+                screenImage.Dispatcher.DispatchAsync(() =>
+                {
+                    screenImage.Source = ImageSource.FromStream(() => new MemoryStream(allData));
+                });
+            }
+        });
+
+        _serverConnection.StartAsync();
     }
 
-    private void OnCounterClicked(object sender, EventArgs e)
-    {
-        count++;
+    private static bool IsConnectionReady(HubConnection connection) => connection != null && connection.State == HubConnectionState.Connected;
 
-        if (count == 1)
-            CounterBtn.Text = $"Clicked {count} time";
-        else
-            CounterBtn.Text = $"Clicked {count} times";
 
-        SemanticScreenReader.Announce(CounterBtn.Text);
-    }
 }

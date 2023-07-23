@@ -54,7 +54,7 @@ app.UseAuthorization();
 app.MapRazorPages();
 app.MapHub<ControlHub>("/hubs/control");
 
-var viewerMonitorService = app.Services.GetRequiredService<IIdleTimer>();
-viewerMonitorService.StartMonitoring();
+// var viewerMonitorService = app.Services.GetRequiredService<IIdleTimer>();
+// viewerMonitorService.StartMonitoring();
 
 app.Run();
