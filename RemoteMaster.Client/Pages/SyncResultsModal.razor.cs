@@ -2,7 +2,7 @@
 using RemoteMaster.Client.Models;
 using System.Collections.ObjectModel;
 
-namespace RemoteMaster.Client.Pages;
+namespace RemoteMaster.Client.Components;
 
 public partial class SyncResultsModal
 {
