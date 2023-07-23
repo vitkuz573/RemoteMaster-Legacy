@@ -9,7 +9,7 @@
     <Grid>
         <DockPanel>
             <Menu DockPanel.Dock="Top">
-                <MenuItem Header="Display" Click="OnDisplayClick" />
+                <MenuItem Header="Display" x:Name="displays" Click="OnDisplayClick" />
                 <MenuItem Header="About" Click="OnAboutClick" />
             </Menu>
             <Image x:Name="screenImage" MouseMove="OnMouseMove" />

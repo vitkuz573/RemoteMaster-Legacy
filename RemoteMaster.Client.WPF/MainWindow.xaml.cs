@@ -6,8 +6,10 @@ using RemoteMaster.Shared.Helpers;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 
 namespace RemoteMaster.Client.WPF;
 
@@ -28,6 +30,30 @@ public partial class MainWindow : Window
             })
             .AddMessagePackProtocol()
             .Build();
+
+        _serverConnection.On<ScreenDataDto>("ScreenData", dto =>
+        {
+            var screenNumber = 1;
+
+            foreach (var display in dto.Displays)
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    var newItem = new MenuItem
+                    {
+                        Header = $"Screen {screenNumber++} ({display.Item3.Width} x {display.Item3.Height})",
+                        Tag = display.Item1
+                    };
+
+                    if (display.Item2)
+                    {
+                        newItem.IsChecked = true;
+                    }
+
+                    displays.Items.Add(newItem);
+                });
+            }
+        });
 
         _serverConnection.On<ChunkWrapper>("ScreenUpdate", async chunk =>
         {
