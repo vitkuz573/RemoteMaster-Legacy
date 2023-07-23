@@ -19,9 +19,8 @@ public partial class Index
     private AddComputerManual _addComputerManualRef;
     private AddComputerFromAD _addComputerFromADRef;
 
-    private string _fetchComputersFromADStatus;
-
-    private Snackbar _fetchComputersFromADStatusSnackbar;
+    private string _getComputersFromADStatus;
+    private Snackbar _getComputersFromADStatusSnackbar;
 
     [Inject]
     private IJSRuntime JSRuntime { get; set; }
@@ -42,12 +41,12 @@ public partial class Index
         }
     }
 
-    private async Task SyncComputersFromAD()
+    private async Task GetComputersFromAD()
     {
         try
         {
             var domainComputers = await ActiveDirectoryService.FetchComputers();
-            _fetchComputersFromADStatus = "Fetch has been completed successfully";
+            _getComputersFromADStatus = "Fetch has been completed successfully";
 
             var adNodes = new ObservableCollection<Node>();
 
@@ -67,10 +66,10 @@ public partial class Index
         }
         catch (Exception e)
         {
-            _fetchComputersFromADStatus = $"An error occurred during fetch: {e.Message}";
+            _getComputersFromADStatus = $"An error occurred during fetch: {e.Message}";
         }
 
-        _fetchComputersFromADStatusSnackbar.Show();
+        _getComputersFromADStatusSnackbar.Show();
     }
 
     private async Task OpenInNewTab(Computer computer)

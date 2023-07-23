@@ -5,8 +5,8 @@
 <div class="container mx-auto py-6 px-4">
 
     <div class="flex justify-between mb-4">
-        <Button Color="Color.Primary" Clicked="SyncComputersFromAD" class="btn btn-blue">
-            <i class="fas fa-sync-alt mr-2"></i> Sync Computers from AD
+        <Button Color="Color.Primary" Clicked="GetComputersFromAD" class="btn btn-blue">
+            <i class="fas fa-sync-alt mr-2"></i> Get Computers from AD
         </Button>
 
         <div class="space-x-4">
@@ -79,10 +79,10 @@
 
     </Row>
 
-    <Snackbar @ref="_fetchComputersFromADStatusSnackbar" Color="SnackbarColor.Secondary">
+    <Snackbar @ref="_getComputersFromADStatusSnackbar" Color="SnackbarColor.Secondary">
         <SnackbarBody>
-            @_fetchComputersFromADStatus
-            <SnackbarAction Clicked="(() => _fetchComputersFromADStatusSnackbar.Hide())">Hide</SnackbarAction>
+            @_getComputersFromADStatus
+            <SnackbarAction Clicked="(() => _getComputersFromADStatusSnackbar.Hide())">Hide</SnackbarAction>
         </SnackbarBody>
     </Snackbar>
 
