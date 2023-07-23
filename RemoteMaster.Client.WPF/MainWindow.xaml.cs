@@ -59,20 +59,20 @@ public partial class MainWindow : Window
             {
                 Dispatcher.Invoke(() =>
                 {
-                    var menuItem = new MenuItem
+                    var screenText = $"Screen {screenNumber++} ({display.Item3.Width} x {display.Item3.Height})";
+
+                    var comboBoxItem = new ComboBoxItem
                     {
-                        Header = $"Screen {screenNumber++} ({display.Item3.Width} x {display.Item3.Height})",
+                        Content = screenText,
                         Tag = display.Item1
                     };
 
-                    menuItem.Click += OnDisplayClick;
-
                     if (display.Item2)
                     {
-                        menuItem.IsChecked = true;
+                        comboBoxItem.IsSelected = true;
                     }
 
-                    displays.Items.Add(menuItem);
+                    displays.Items.Add(comboBoxItem);
                 });
             }
         });
@@ -155,18 +155,12 @@ public partial class MainWindow : Window
 
     private static bool IsConnectionReady(HubConnection connection) => connection != null && connection.State == HubConnectionState.Connected;
 
-    private async void OnDisplayClick(object sender, RoutedEventArgs e)
+    private async void QualityTextBox_TextChanged(object sender, TextChangedEventArgs e)
     {
-        if (sender is MenuItem menuItem)
+        if (sender is TextBox textBox && int.TryParse(textBox.Text, out int quality))
         {
-            await TryInvokeServerAsync("SendSelectedScreen", Convert.ToString(menuItem.Tag));
-            e.Handled = true;
+            await TryInvokeServerAsync("SetQuality", quality);
         }
-    }
-
-    private async void QualitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        await TryInvokeServerAsync("SetQuality", (int)e.NewValue);
     }
 
     private void OnNewMessageBoxClick(object sender, RoutedEventArgs e)
@@ -178,5 +172,29 @@ public partial class MainWindow : Window
     private async void OnKillServerClick(object sender, RoutedEventArgs e)
     {
         await TryInvokeServerAsync("KillServer");
+    }
+
+    private void ToggleButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (drawerHost.IsRightDrawerOpen)
+        {
+            drawerHost.IsRightDrawerOpen = false;
+            toggleButton.Content = "<";
+        }
+        else
+        {
+            drawerHost.IsRightDrawerOpen = true;
+            toggleButton.Content = ">";
+        }
+    }
+
+    private async void OnDisplaySelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (sender is ComboBox comboBox)
+        {
+            var selectedItem = (ComboBoxItem)comboBox.SelectedItem;
+            await TryInvokeServerAsync("SendSelectedScreen", Convert.ToString(selectedItem.Tag));
+            displays.IsDropDownOpen = false;
+        }
     }
 }
