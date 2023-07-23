@@ -6,12 +6,20 @@
         xmlns:local="clr-namespace:RemoteMaster.Client.WPF"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        <DockPanel>
-            <Menu DockPanel.Dock="Top">
-                <MenuItem Header="Display" x:Name="displays" Click="OnDisplayClick" />
-            </Menu>
-            <Image x:Name="screenImage" MouseMove="OnMouseMove" />
-        </DockPanel>
-    </Grid>
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="Display" x:Name="displays" Click="OnDisplayClick" />
+        </Menu>
+        <StatusBar DockPanel.Dock="Bottom">
+            <StatusBarItem>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Quality: " />
+                    <Slider x:Name="qualitySlider" Width="100" Minimum="1" Maximum="100" Value="50" SmallChange="1" LargeChange="10" ValueChanged="QualitySlider_ValueChanged" />
+                </StackPanel>
+            </StatusBarItem>
+        </StatusBar>
+        <Grid>
+            <Image x:Name="screenImage" MouseMove="OnMouseMove" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
+        </Grid>
+    </DockPanel>
 </Window>

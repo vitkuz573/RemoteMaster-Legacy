@@ -128,4 +128,9 @@ public partial class MainWindow : Window
             await TryInvokeServerAsync("SendSelectedScreen", menuItem.Tag);
         }
     }
+
+    private async void QualitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        await TryInvokeServerAsync("SetQuality", (int)e.NewValue);
+    }
 }
