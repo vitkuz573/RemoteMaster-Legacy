@@ -20,18 +20,19 @@ public partial class ViewerWindow : Window
 
     public static HubConnection? ServerConnection { get; private set; }
 
-    public ViewerWindow()
+    public ViewerWindow(string host)
     {
         InitializeComponent();
-        InitializeConnectionAsync();
+
+        InitializeConnectionAsync(host);
     }
 
-    private async Task InitializeConnectionAsync()
+    private async Task InitializeConnectionAsync(string host)
     {
         try
         {
             ServerConnection = new HubConnectionBuilder()
-                .WithUrl($"http://127.0.0.1:5076/hubs/control", options =>
+                .WithUrl($"http://{host}:5076/hubs/control", options =>
                 {
                     options.SkipNegotiation = true;
                     options.Transports = HttpTransportType.WebSockets;
