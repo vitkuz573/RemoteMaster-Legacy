@@ -22,6 +22,6 @@ public partial class MessageBoxWindow : Window
 
         await MainWindow.TryInvokeServerAsync("SendMessageBox", dto);
 
-        this.Close();
+        Close();
     }
 }

@@ -126,7 +126,7 @@ public partial class MainWindow : Window
     {
         if (sender is MenuItem menuItem)
         {
-            await TryInvokeServerAsync("SendSelectedScreen", menuItem.Tag);
+            await TryInvokeServerAsync("SendSelectedScreen", menuItem.Tag.ToString());
         }
     }
 
