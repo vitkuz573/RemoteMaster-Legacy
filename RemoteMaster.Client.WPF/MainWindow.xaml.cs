@@ -121,8 +121,12 @@ public partial class MainWindow : Window
 
     private static bool IsConnectionReady(HubConnection connection) => connection != null && connection.State == HubConnectionState.Connected;
 
-    private void OnDisplayClick(object sender, RoutedEventArgs e)
+    private async void OnDisplayClick(object sender, RoutedEventArgs e)
     {
-        // Код обработки события для 'Display'
+        if (sender is MenuItem menuItem)
+        {
+            var display = menuItem.Tag;
+            await TryInvokeServerAsync("SendSelectedScreen", display);
+        }
     }
 }
