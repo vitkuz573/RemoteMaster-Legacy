@@ -45,33 +45,7 @@
                 {
                     if (child is Computer computer)
                     {
-                        <Card class="card w-24 h-32 cursor-pointer">
-                            <CardImage Source="/img/gallery/2.jpg" Alt="@computer.Name" class="w-full h-16 object-cover" />
-                            <Dropdown RightAligned ShowArrow="false" class="absolute right-0 mt-2">
-                                <DropdownToggle>
-                                    <Button Margin="Margin.Is0" Padding="Padding.Is0">
-                                        <Icon Name="IconName.Bars" />
-                                    </Button>
-                                </DropdownToggle>
-                                <DropdownMenu>
-                                    <DropdownItem Clicked="(() => OpenShell(computer, Shell.PowerShell))">
-                                        <span>
-                                            <i class="fas fa-terminal mr-2"></i> Open Command
-                                        </span>
-                                    </DropdownItem>
-                                    <DropdownItem Clicked="(() => OpenInNewTab(computer))">
-                                        <span>
-                                            <i class="fas fa-external-link-alt mr-2"></i> Open in Tab
-                                        </span>
-                                    </DropdownItem>
-                                </DropdownMenu>
-                            </Dropdown>
-                            <CardBody class="m-2 p-1">
-                                <CardTitle Size="3" class="text-sm font-bold">
-                                    @computer.Name
-                                </CardTitle>
-                            </CardBody>
-                        </Card>
+                        <ComputerCard Computer="computer" OnOpenShell="OpenShell" OnOpenInNewTab="OpenInNewTab" />
                     }
                 }
             }
