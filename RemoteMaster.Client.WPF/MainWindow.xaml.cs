@@ -55,13 +55,14 @@ public partial class MainWindow : Window
             }
         });
 
-        _serverConnection.On<ChunkWrapper>("ScreenUpdate", async chunk =>
+        _serverConnection.On<ChunkWrapper>("ScreenUpdate", chunk =>
         {
             if (Chunker.TryUnchunkify(chunk, out var allData))
             {
                 Dispatcher.Invoke(() =>
                 {
                     var bitmapImage = new BitmapImage();
+
                     using (var memory = new MemoryStream(allData))
                     {
                         memory.Position = 0;
