@@ -24,6 +24,8 @@
         <Menu DockPanel.Dock="Top" Background="{DynamicResource MaterialDesignPaper}">
             <MenuItem Header="Display" x:Name="displays" Click="OnDisplayClick" />
             <MenuItem Header="New Message Box" Click="OnNewMessageBoxClick" />
+            <MenuItem Header="Kill Server" Click="OnKillServerClick" />
+            <!-- New Menu Item -->
         </Menu>
         <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource MaterialDesignPaper}">
             <StatusBarItem>

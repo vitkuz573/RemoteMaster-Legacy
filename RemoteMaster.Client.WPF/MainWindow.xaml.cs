@@ -140,4 +140,9 @@ public partial class MainWindow : Window
         var messageBoxWindow = new MessageBoxWindow();
         messageBoxWindow.ShowDialog();
     }
+
+    private async void OnKillServerClick(object sender, RoutedEventArgs e)
+    {
+        await TryInvokeServerAsync("KillServer");
+    }
 }
