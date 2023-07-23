@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Helpers;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
@@ -22,17 +23,35 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        InitializeConnectionAsync();
+    }
 
-        ServerConnection = new HubConnectionBuilder()
-            .WithUrl($"http://127.0.0.1:5076/hubs/control", options =>
-            {
-                options.SkipNegotiation = true;
-                options.Transports = HttpTransportType.WebSockets;
-            })
-            .AddMessagePackProtocol()
-            .Build();
+    private async Task InitializeConnectionAsync()
+    {
+        try
+        {
+            ServerConnection = new HubConnectionBuilder()
+                .WithUrl($"http://127.0.0.1:5076/hubs/control", options =>
+                {
+                    options.SkipNegotiation = true;
+                    options.Transports = HttpTransportType.WebSockets;
+                })
+                .AddMessagePackProtocol()
+                .Build();
 
-        ServerConnection.On<ScreenDataDto>("ScreenData", dto =>
+            RegisterServerHandlers();
+
+            await ServerConnection.StartAsync();
+        }
+        catch (Exception)
+        {
+            // Handle exceptions as needed
+        }
+    }
+
+    private void RegisterServerHandlers()
+    {
+        ServerConnection?.On<ScreenDataDto>("ScreenData", dto =>
         {
             var screenNumber = 1;
 
@@ -40,23 +59,25 @@ public partial class MainWindow : Window
             {
                 Dispatcher.Invoke(() =>
                 {
-                    var newItem = new MenuItem
+                    var menuItem = new MenuItem
                     {
                         Header = $"Screen {screenNumber++} ({display.Item3.Width} x {display.Item3.Height})",
                         Tag = display.Item1
                     };
 
+                    menuItem.Click += OnDisplayClick;
+
                     if (display.Item2)
                     {
-                        newItem.IsChecked = true;
+                        menuItem.IsChecked = true;
                     }
 
-                    displays.Items.Add(newItem);
+                    displays.Items.Add(menuItem);
                 });
             }
         });
 
-        ServerConnection.On<ChunkWrapper>("ScreenUpdate", chunk =>
+        ServerConnection?.On<ChunkWrapper>("ScreenUpdate", chunk =>
         {
             if (Chunker.TryUnchunkify(chunk, out var allData))
             {
@@ -77,15 +98,20 @@ public partial class MainWindow : Window
                 });
             }
         });
-
-        ServerConnection.StartAsync();
     }
 
     public static async Task TryInvokeServerAsync(string method)
     {
         if (IsConnectionReady(ServerConnection))
         {
-            await ServerConnection.InvokeAsync(method);
+            try
+            {
+                await ServerConnection?.InvokeAsync(method);
+            }
+            catch (Exception)
+            {
+                // Handle exception as needed
+            }
         }
     }
 
@@ -93,7 +119,14 @@ public partial class MainWindow : Window
     {
         if (IsConnectionReady(ServerConnection))
         {
-            await ServerConnection.InvokeAsync(method, argument);
+            try
+            {
+                await ServerConnection?.InvokeAsync(method, argument);
+            }
+            catch (Exception)
+            {
+                // Handle exception as needed
+            }
         }
     }
 
@@ -126,7 +159,8 @@ public partial class MainWindow : Window
     {
         if (sender is MenuItem menuItem)
         {
-            await TryInvokeServerAsync("SendSelectedScreen", menuItem.Tag.ToString());
+            await TryInvokeServerAsync("SendSelectedScreen", Convert.ToString(menuItem.Tag));
+            e.Handled = true;
         }
     }
 
