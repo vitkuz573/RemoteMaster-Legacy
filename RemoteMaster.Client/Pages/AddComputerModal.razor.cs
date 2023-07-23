@@ -1,6 +1,7 @@
 ﻿using Blazorise;
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Client.Models;
+using RemoteMaster.Client.Services;
 using System.Collections.ObjectModel;
 
 namespace RemoteMaster.Client.Pages;
@@ -12,6 +13,9 @@ public partial class AddComputerModal
     public Guid? _selectedFolderId;
 
     private Validations _fluentValidations;
+
+    [Inject]
+    private DatabaseService DatabaseService { get; set; }
 
     public void Show()
     {
@@ -34,6 +38,8 @@ public partial class AddComputerModal
                 _newComputer.ParentId = folder.NodeId;
                 folder.Children.Add(_newComputer);
             }
+
+            DatabaseService.AddNode(_newComputer);
 
             _newComputer = new Computer();
             _selectedFolderId = null;
