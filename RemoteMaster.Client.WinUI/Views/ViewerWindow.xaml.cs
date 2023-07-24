@@ -16,11 +16,6 @@ public sealed partial class ViewerWindow : Window
     {
         ViewModel = App.GetService<ViewerViewModel>();
         InitializeComponent();
-        Closed += OnViewerWindowClosed;
-    }
-
-    private void OnViewerWindowClosed(object sender, WindowEventArgs e)
-    {
-        ViewModel.Dispose();
+        Closed += (sender, e) => ViewModel.Dispose();
     }
 }
