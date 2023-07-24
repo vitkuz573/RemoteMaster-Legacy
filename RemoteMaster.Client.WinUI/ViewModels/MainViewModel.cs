@@ -17,6 +17,11 @@ public partial class MainViewModel : ObservableRecipient
     [RelayCommand]
     private void OpenViewer()
     {
-        _windowService.OpenWindow(new ViewerViewModel());
+        var parameters = new Dictionary<string, object>
+        {
+            { "Host", "127.0.0.1" }
+        };
+
+        _windowService.OpenWindow(new ViewerViewModel(), parameters);
     }
 }
