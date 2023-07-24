@@ -2,6 +2,8 @@
 
 namespace RemoteMaster.Client.WinUI.ViewModels;
 
-public class ViewerViewModel : ObservableRecipient
+public partial class ViewerViewModel : ObservableRecipient
 {
+    [ObservableProperty]
+    private string _imageUrl;
 }

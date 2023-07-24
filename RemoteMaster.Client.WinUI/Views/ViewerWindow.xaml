@@ -9,6 +9,6 @@
     mc:Ignorable="d">
 
     <Grid>
-
+        <Image Source="{Binding ImageUrl}" />
     </Grid>
 </Window>
