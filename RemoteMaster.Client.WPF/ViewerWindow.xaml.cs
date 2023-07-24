@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Helpers;
+using RemoteMaster.Shared.Models;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -91,7 +92,7 @@ public partial class ViewerWindow : Window
         {
             if (Chunker.TryUnchunkify(chunk, out var allData))
             {
-                Dispatcher.Invoke(() =>
+                Dispatcher.InvokeAsync(() =>
                 {
                     var bitmapImage = new BitmapImage();
 
@@ -102,6 +103,7 @@ public partial class ViewerWindow : Window
                         bitmapImage.StreamSource = memory;
                         bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
                         bitmapImage.EndInit();
+                        bitmapImage.Freeze();  // Make the BitmapImage usable from any thread.
                     }
 
                     screenImage.Source = bitmapImage;
@@ -206,5 +208,39 @@ public partial class ViewerWindow : Window
             await TryInvokeServerAsync("SendSelectedScreen", Convert.ToString(selectedItem.Tag));
             displays.IsDropDownOpen = false;
         }
+    }
+
+    private async void screenImage_MouseUpDown(object sender, MouseButtonEventArgs e)
+    {
+        var xyPercent = GetRelativeMousePositionOnPercent(e);
+
+        var dto = new MouseClickDto
+        {
+            Button = e.ChangedButton switch
+            {
+                MouseButton.Left => 0,
+                MouseButton.Middle => 1,
+                MouseButton.Right => 2,
+            },
+            State = e.ButtonState switch
+            {
+                MouseButtonState.Pressed => ButtonAction.Down,
+                MouseButtonState.Released => ButtonAction.Up,
+            },
+            X = xyPercent.Item1,
+            Y = xyPercent.Item2
+        };
+
+        await TryInvokeServerAsync("SendMouseButton", dto);
+    }
+
+    private async void screenImage_MouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        var dto = new MouseWheelDto
+        {
+            DeltaY = -e.Delta
+        };
+
+        await TryInvokeServerAsync("SendMouseWheel", dto);
     }
 }

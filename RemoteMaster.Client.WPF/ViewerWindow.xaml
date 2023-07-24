@@ -59,7 +59,7 @@
                     <iconPacks:PackIconMaterial Kind="ChevronLeft" VerticalAlignment="Center" HorizontalAlignment="Center" Width="20" Height="20" />
                 </Button>
                 <Grid>
-                    <Image x:Name="screenImage" MouseMove="OnMouseMove" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <Image x:Name="screenImage" MouseMove="OnMouseMove" MouseUp="screenImage_MouseUpDown" MouseDown="screenImage_MouseUpDown" MouseWheel="screenImage_MouseWheel" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Grid>
             </DockPanel>
         </materialDesign:DrawerHost>
