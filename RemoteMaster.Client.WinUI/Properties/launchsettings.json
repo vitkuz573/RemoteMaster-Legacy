@@ -1,0 +1,10 @@
+﻿{
+    "profiles": {
+      "RemoteMaster.Client.WinUI (Package)": {
+        "commandName": "MsixPackage"
+      },
+      "RemoteMaster.Client.WinUI (Unpackaged)": {
+        "commandName": "Project"
+      }
+    }
+}
