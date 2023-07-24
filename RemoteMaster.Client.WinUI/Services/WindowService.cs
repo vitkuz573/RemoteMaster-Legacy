@@ -22,6 +22,7 @@ public class WindowService : IWindowService
 
             if (parameters != null && parameters.ContainsKey("Host"))
             {
+                ((ViewerWindow)newWindow).Title = $"Viewer for {parameters["Host"]}";
                 ((ViewerWindow)newWindow).ViewModel.Host = parameters["Host"].ToString();
                 ((ViewerWindow)newWindow).ViewModel.InitializeServerConnection();
             }
