@@ -22,6 +22,6 @@ public partial class MainViewModel : ObservableRecipient
             { "Host", "127.0.0.1" }
         };
 
-        _windowService.OpenWindow(new ViewerViewModel(), parameters);
+        _windowService.OpenWindow<ViewerViewModel>(parameters);
     }
 }

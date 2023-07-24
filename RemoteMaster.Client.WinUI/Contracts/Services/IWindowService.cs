@@ -4,5 +4,5 @@ namespace RemoteMaster.Client.WinUI.Contracts.Services;
 
 public interface IWindowService
 {
-    void OpenWindow<TViewModel>(TViewModel viewModel, IDictionary<string, object> parameters) where TViewModel : ObservableObject;
+    void OpenWindow<TViewModel>(IDictionary<string, object> parameters) where TViewModel : ObservableObject;
 }

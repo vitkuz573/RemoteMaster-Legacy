@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,7 +9,7 @@ public partial class ViewerViewModel : ObservableRecipient
     [ObservableProperty]
     private string _imageUrl;
 
-    private readonly HubConnection _serverConnection;
+    private HubConnection _serverConnection;
 
     public string Host
     {
@@ -20,8 +19,10 @@ public partial class ViewerViewModel : ObservableRecipient
 
     public ViewerViewModel()
     {
-        Debug.WriteLine(Host);
+    }
 
+    public void InitializeServerConnection()
+    {
         _serverConnection = new HubConnectionBuilder()
             .WithUrl($"http://{Host}:5076/hubs/control")
             .AddMessagePackProtocol()
