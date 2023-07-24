@@ -11,7 +11,7 @@ public partial class MainWindow : Window
 
     private void Button_Click(object sender, RoutedEventArgs e)
     {
-        var viewer = new ViewerWindow("127.0.0.1");
+        var viewer = new ViewerWindow("172.20.20.18");
         viewer.Show();
     }
 }

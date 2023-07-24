@@ -16,7 +16,7 @@ namespace RemoteMaster.Client.WPF;
 
 public partial class ViewerWindow : Window
 {
-    private readonly HubConnection? _agentConnection;
+    private HubConnection? _agentConnection;
 
     public static HubConnection? ServerConnection { get; private set; }
 
@@ -31,6 +31,14 @@ public partial class ViewerWindow : Window
     {
         try
         {
+            _agentConnection = new HubConnectionBuilder()
+                .WithUrl($"http://{host}:3564/hubs/main", options =>
+                {
+                    options.SkipNegotiation = true;
+                    options.Transports = HttpTransportType.WebSockets;
+                })
+                .Build();
+
             ServerConnection = new HubConnectionBuilder()
                 .WithUrl($"http://{host}:5076/hubs/control", options =>
                 {
@@ -42,6 +50,7 @@ public partial class ViewerWindow : Window
 
             RegisterServerHandlers();
 
+            await _agentConnection.StartAsync();
             await ServerConnection.StartAsync();
         }
         catch (Exception)
