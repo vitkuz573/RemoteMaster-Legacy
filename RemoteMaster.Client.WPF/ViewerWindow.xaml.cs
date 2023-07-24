@@ -12,6 +12,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using static System.Runtime.CompilerServices.RuntimeHelpers;
 
 namespace RemoteMaster.Client.WPF;
 
@@ -242,5 +243,16 @@ public partial class ViewerWindow : Window
         };
 
         await TryInvokeServerAsync("SendMouseWheel", dto);
+    }
+
+    private async void Window_KeyDownUp(object sender, KeyEventArgs e)
+    {
+        var dto = new KeyboardKeyDto
+        {
+            Key = KeyInterop.VirtualKeyFromKey(e.Key),
+            State = e.IsDown ? ButtonAction.Down : ButtonAction.Up,
+        };
+
+        await TryInvokeServerAsync("SendKeyboardInput", dto);
     }
 }
