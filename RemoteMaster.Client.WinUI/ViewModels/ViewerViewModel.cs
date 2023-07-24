@@ -1,10 +1,11 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.Diagnostics;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace RemoteMaster.Client.WinUI.ViewModels;
 
-public partial class ViewerViewModel : ObservableRecipient
+public partial class ViewerViewModel : ObservableRecipient, IDisposable
 {
     [ObservableProperty]
     private string _imageUrl;
@@ -41,5 +42,19 @@ public partial class ViewerViewModel : ObservableRecipient
         {
             // Handle exception
         }
+    }
+
+    public async void CloseServerConnection()
+    {
+        if (_serverConnection != null)
+        {
+            await _serverConnection.DisposeAsync();
+            _serverConnection = null;
+        }
+    }
+
+    public void Dispose()
+    {
+        CloseServerConnection();
     }
 }
