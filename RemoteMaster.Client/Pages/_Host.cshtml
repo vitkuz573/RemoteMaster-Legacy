@@ -96,15 +96,22 @@
 
             // сохраняем выбранные IP в глобальную переменную
             window.selectedIPs = ipAddresses;
-
-            console.log(selectedIPs);
         });
 
         window.openTabs = () => {
+            const blockedPopups = [];
             window.selectedIPs.forEach(ipAddress => {
                 var url = `http://localhost:5254/${ipAddress}/control`;
-                window.open(url, '_blank');
+                const popupWindow = window.open(url, '_blank');
+                if (!popupWindow || popupWindow.closed || typeof popupWindow.closed === 'undefined') {
+                    blockedPopups.push(ipAddress);
+                }
             });
+
+            if (blockedPopups.length > 0) {
+                const confirmationMessage = `Некоторые всплывающие окна были заблокированы. Пожалуйста, разрешите всплывающие окна для сайта и повторите попытку. Заблокированы IP-адреса: ${blockedPopups.join(', ')}.`;
+                alert(confirmationMessage);
+            }
         };
     </script>
 </body>
