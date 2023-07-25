@@ -83,6 +83,8 @@
             document.title = title;
         }
 
+        window.selectedIPs = [];
+
         const ds = new DragSelect({
             selectables: document.getElementsByClassName('selectable-nodes'),
             area: document.querySelector('#container')
@@ -92,13 +94,18 @@
             var selectedItems = e.items;
             var ipAddresses = Array.from(selectedItems).map(item => item.getAttribute('data-ip-address'));
 
-            console.log(ipAddresses);
+            // сохраняем выбранные IP в глобальную переменную
+            window.selectedIPs = ipAddresses;
 
-            ipAddresses.forEach(ipAddress => {
+            console.log(selectedIPs);
+        });
+
+        window.openTabs = () => {
+            window.selectedIPs.forEach(ipAddress => {
                 var url = `http://localhost:5254/${ipAddress}/control`;
                 window.open(url, '_blank');
             });
-        });
+        };
     </script>
 </body>
 </html>
