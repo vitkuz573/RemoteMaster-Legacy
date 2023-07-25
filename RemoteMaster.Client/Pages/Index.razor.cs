@@ -31,7 +31,7 @@ public partial class Index
     [Inject]
     private ActiveDirectoryService ActiveDirectoryService { get; set; }
 
-    protected override async Task OnInitializedAsync()
+    protected async override Task OnInitializedAsync()
     {
         var folders = DatabaseService.GetFolders();
 

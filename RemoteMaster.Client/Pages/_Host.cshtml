@@ -88,7 +88,15 @@
         });
 
         ds.subscribe('callback', (e) => {
-            console.log(e);
+            var selectedItems = e.items;
+            var ipAddresses = Array.from(selectedItems).map(item => item.getAttribute('data-ip-address'));
+
+            console.log(ipAddresses);
+
+            ipAddresses.forEach(ipAddress => {
+                var url = `http://localhost:5254/${ipAddress}/control`;
+                window.open(url, '_blank');
+            });
         });
     </script>
 </body>

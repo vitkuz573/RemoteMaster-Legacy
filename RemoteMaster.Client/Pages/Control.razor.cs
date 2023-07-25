@@ -62,7 +62,7 @@ public partial class Control : IAsyncDisposable
             ControlFuncsService.SetQuality = async (quality) => await TryInvokeServerAsync("SetQuality", quality);
             ControlFuncsService.SendMessageBox = async (dto) => await TryInvokeServerAsync("SendMessageBox", dto);
 
-            bool uriCreated = Uri.TryCreate(NavManager.Uri, UriKind.Absolute, out Uri? uri);
+            bool uriCreated = Uri.TryCreate(NavManager.Uri, UriKind.Absolute, out var uri);
 
             if (uriCreated && uri != null)
             {
