@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http.Connections;
+﻿using MahApps.Metro.Controls;
+using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using RemoteMaster.Shared.Dtos;
@@ -12,11 +13,10 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
-using static System.Runtime.CompilerServices.RuntimeHelpers;
 
 namespace RemoteMaster.Client.WPF;
 
-public partial class ViewerWindow : Window
+public partial class ViewerWindow : MetroWindow
 {
     private HubConnection? _agentConnection;
 
@@ -73,18 +73,20 @@ public partial class ViewerWindow : Window
                 {
                     var screenText = $"Screen {screenNumber++} ({display.Item3.Width} x {display.Item3.Height})";
 
-                    var comboBoxItem = new ComboBoxItem
+                    var menuItem = new MenuItem
                     {
-                        Content = screenText,
+                        Header = screenText,
                         Tag = display.Item1
                     };
 
                     if (display.Item2)
                     {
-                        comboBoxItem.IsSelected = true;
+                        menuItem.IsChecked = true;
                     }
 
-                    displays.Items.Add(comboBoxItem);
+                    menuItem.Click += OnDisplayMenuItemClick;
+
+                    displays.Items.Add(menuItem);
                 });
             }
         });
@@ -176,38 +178,25 @@ public partial class ViewerWindow : Window
         }
     }
 
-    private void OnNewMessageBoxClick(object sender, RoutedEventArgs e)
-    {
-        var messageBoxWindow = new MessageBoxWindow();
-        messageBoxWindow.ShowDialog();
-    }
-
     private async void OnKillServerClick(object sender, RoutedEventArgs e)
     {
         await TryInvokeServerAsync("KillServer");
     }
 
-    private void ToggleButton_Click(object sender, RoutedEventArgs e)
+    private async void OnDisplayMenuItemClick(object sender, RoutedEventArgs e)
     {
-        if (drawerHost.IsRightDrawerOpen)
+        if (sender is MenuItem menuItem)
         {
-            drawerHost.IsRightDrawerOpen = false;
-            toggleButton.Content = "<";
-        }
-        else
-        {
-            drawerHost.IsRightDrawerOpen = true;
-            toggleButton.Content = ">";
-        }
-    }
+            await TryInvokeServerAsync("SendSelectedScreen", Convert.ToString(menuItem.Tag));
+            menuItem.IsChecked = true;
 
-    private async void OnDisplaySelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (sender is ComboBox comboBox)
-        {
-            var selectedItem = (ComboBoxItem)comboBox.SelectedItem;
-            await TryInvokeServerAsync("SendSelectedScreen", Convert.ToString(selectedItem.Tag));
-            displays.IsDropDownOpen = false;
+            foreach (MenuItem item in displays.Items)
+            {
+                if (!item.Equals(menuItem))
+                {
+                    item.IsChecked = false;
+                }
+            }
         }
     }
 
