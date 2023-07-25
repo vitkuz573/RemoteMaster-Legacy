@@ -98,18 +98,24 @@ public partial class ViewerWindow : MetroWindow
         {
             if (Chunker.TryUnchunkify(chunk, out var allData))
             {
-                Dispatcher.InvokeAsync(() =>
+                Task.Run(() =>
                 {
-                    using var memory = new MemoryStream(allData);
-                    memory.Position = 0;
-                    var bitmap = new Bitmap(memory);
-                    var bitmapData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                    BitmapSource bitmapSource;
+                    using (var memory = new MemoryStream(allData))
+                    {
+                        memory.Position = 0;
+                        var bitmap = new Bitmap(memory);
+                        var bitmapData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 
-                    var bitmapSource = BitmapSource.Create(bitmap.Width, bitmap.Height, bitmap.HorizontalResolution, bitmap.VerticalResolution, PixelFormats.Bgra32, null, bitmapData.Scan0, bitmapData.Stride * bitmapData.Height, bitmapData.Stride);
-                    bitmap.UnlockBits(bitmapData);
-                    bitmapSource.Freeze();
+                        bitmapSource = BitmapSource.Create(bitmap.Width, bitmap.Height, bitmap.HorizontalResolution, bitmap.VerticalResolution, PixelFormats.Bgra32, null, bitmapData.Scan0, bitmapData.Stride * bitmapData.Height, bitmapData.Stride);
+                        bitmap.UnlockBits(bitmapData);
+                        bitmapSource.Freeze();
+                    }
 
-                    screenImage.Source = bitmapSource;
+                    Dispatcher.Invoke(() =>
+                    {
+                        screenImage.Source = bitmapSource;
+                    });
                 });
             }
         });

@@ -1,28 +1,36 @@
 ﻿@namespace RemoteMaster.Client.Components
 
-<Card class="card w-24 h-32 cursor-pointer hover:border-blue-500 border-2">
-    <Dropdown RightAligned ShowArrow="false" class="absolute right-0 mt-2">
-        <DropdownToggle>
-            <Button Margin="Margin.Is0" Padding="Padding.Is0">
-                <Icon Name="IconName.Bars" />
-            </Button>
-        </DropdownToggle>
-        <DropdownMenu>
-            <DropdownItem Clicked="(() => OnOpenShell.InvokeAsync(Computer))">
-                <span>
-                    <i class="fas fa-terminal mr-2"></i> Open Command
-                </span>
-            </DropdownItem>
-            <DropdownItem Clicked="(() => OnOpenInNewTab.InvokeAsync(Computer))">
-                <span>
-                    <i class="fas fa-external-link-alt mr-2"></i> Open in Tab
-                </span>
-            </DropdownItem>
-        </DropdownMenu>
-    </Dropdown>
-    <CardBody class="m-2 p-1">
-        <CardTitle Size="3" class="text-sm font-bold">
-            @Computer.Name
-        </CardTitle>
-    </CardBody>
-</Card>
+<div class="card h-48 w-64 bg-white rounded-lg overflow-hidden border-2 border-transparent hover:border-blue-500 transition-all shadow-md hover:shadow-lg flex flex-col">
+    <div class="h-32 w-full">
+        <img src="https://placehold.co/500x300" alt="Screen preview" class="h-full w-full object-cover" />
+    </div>
+    <div class="flex-grow p-3 flex flex-col justify-between">
+        <div class="flex justify-between items-center">
+            <h3 class="text-sm text-gray-700 font-semibold">
+                @Computer.Name
+            </h3>
+            <div class="relative">
+                <Dropdown RightAligned ShowArrow="false">
+                    <DropdownToggle>
+                        <Button Margin="Margin.Is0" Padding="Padding.Is0" class="text-gray-500 hover:text-gray-700 focus:outline-none">
+                            <Icon Name="IconName.MoreVertical" />
+                        </Button>
+                    </DropdownToggle>
+                    <DropdownMenu>
+                        <DropdownItem Clicked="(() => OnOpenShell.InvokeAsync(Computer))">
+                            <span>
+                                <i class="fas fa-terminal mr-2"></i> Open Command
+                            </span>
+                        </DropdownItem>
+                        <DropdownItem Clicked="(() => OnOpenInNewTab.InvokeAsync(Computer))">
+                            <span>
+                                <i class="fas fa-external-link-alt mr-2"></i> Open in Tab
+                            </span>
+                        </DropdownItem>
+                    </DropdownMenu>
+                </Dropdown>
+            </div>
+        </div>
+        <!-- Here you can add more details about the Computer -->
+    </div>
+</div>
