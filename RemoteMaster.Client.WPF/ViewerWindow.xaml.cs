@@ -1,11 +1,4 @@
-﻿using MahApps.Metro.Controls;
-using Microsoft.AspNetCore.Http.Connections;
-using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.Extensions.DependencyInjection;
-using RemoteMaster.Shared.Dtos;
-using RemoteMaster.Shared.Helpers;
-using RemoteMaster.Shared.Models;
-using System;
+﻿using System;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
@@ -13,6 +6,13 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using MahApps.Metro.Controls;
+using Microsoft.AspNetCore.Http.Connections;
+using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.DependencyInjection;
+using RemoteMaster.Shared.Dtos;
+using RemoteMaster.Shared.Helpers;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Client.WPF;
 
@@ -169,14 +169,6 @@ public partial class ViewerWindow : MetroWindow
     }
 
     private static bool IsConnectionReady(HubConnection connection) => connection != null && connection.State == HubConnectionState.Connected;
-
-    private async void QualityTextBox_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        if (sender is TextBox textBox && int.TryParse(textBox.Text, out int quality))
-        {
-            await TryInvokeServerAsync("SetQuality", quality);
-        }
-    }
 
     private async void OnKillServerClick(object sender, RoutedEventArgs e)
     {
