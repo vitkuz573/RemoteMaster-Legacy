@@ -38,17 +38,18 @@
             </Card>
         </Column>
 
-        <Column class="col-span-2 grid grid-cols-4 gap-4">
-            @if (_selectedNode is Folder selectedFolder)
-            {
-                foreach (var child in selectedFolder.Children)
+        <Column class="col-span-2 grid grid-cols-4 gap-4" style="height: calc(100vh - ПикселиПодменю);">
+            <div id="container" />
+                @if (_selectedNode is Folder selectedFolder)
                 {
-                    if (child is Computer computer)
+                    foreach (var child in selectedFolder.Children)
                     {
-                        <ComputerCard Computer="computer" OnOpenShell="OpenShell" OnOpenInNewTab="OpenInNewTab" />
+                        if (child is Computer computer)
+                        {
+                            <ComputerCard Computer="computer" OnOpenShell="OpenShell" OnOpenInNewTab="OpenInNewTab" />
+                        }
                     }
                 }
-            }
         </Column>
 
     </Row>
@@ -60,6 +61,8 @@
         </SnackbarBody>
     </Snackbar>
 
+    <button onclick="openTabs()">Открыть выделенные</button>
+
 </div>
 
 <style>
@@ -68,5 +71,16 @@
         -moz-user-select: none;
         -ms-user-select: none;
         user-select: none;
+    }
+
+    #container {
+        width: 75%;
+        height: 75%;
+        border: 5px solid red;
+        position: absolute;
+        overflow: auto;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
     }
 </style>
