@@ -236,4 +236,11 @@ public partial class ViewerWindow : MetroWindow
 
         await TryInvokeServerAsync("SendKeyboardInput", dto);
     }
+
+    private async void QualitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        var quality = (int)e.NewValue;
+
+        await TryInvokeServerAsync("SetQuality", quality);
+    }
 }

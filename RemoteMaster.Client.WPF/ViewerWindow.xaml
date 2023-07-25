@@ -20,15 +20,26 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
+
+        <!-- Ваше меню -->
         <Menu Grid.Row="0">
             <MenuItem x:Name="displays" Header="Displays" />
             <MenuItem Header="Control">
                 <MenuItem Header="Kill Server" Click="OnKillServerClick" />
             </MenuItem>
         </Menu>
+
+        <!-- Ваше изображение -->
         <Grid Grid.Row="1">
             <Image x:Name="screenImage" MouseMove="OnMouseMove" MouseUp="screenImage_MouseUpDown" MouseDown="screenImage_MouseUpDown" MouseWheel="screenImage_MouseWheel" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
         </Grid>
+
+        <!-- Панель управления качеством изображения -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="5">
+            <TextBlock Text="Quality:" VerticalAlignment="Center" Margin="5" />
+            <Slider x:Name="QualitySlider" Minimum="0" Maximum="100" ValueChanged="QualitySlider_ValueChanged"  Width="200" />
+        </StackPanel>
     </Grid>
 </controls:MetroWindow>
