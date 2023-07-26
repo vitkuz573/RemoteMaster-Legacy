@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using System.Web;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
@@ -8,7 +9,6 @@ using RemoteMaster.Client.Services;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Helpers;
 using RemoteMaster.Shared.Models;
-using System.Web;
 
 namespace RemoteMaster.Client.Pages;
 
@@ -49,9 +49,6 @@ public partial class Control : IAsyncDisposable
         {
             await JSRuntime.InvokeVoidAsync("setTitle", Host);
 
-            ControlFuncsService.SetQuality = async (quality) => await TryInvokeServerAsync("SetQuality", quality);
-            ControlFuncsService.SendMessageBox = async (dto) => await TryInvokeServerAsync("SendMessageBox", dto);
-
             var uriCreated = Uri.TryCreate(NavManager.Uri, UriKind.Absolute, out var uri);
 
             if (uriCreated && uri != null)
@@ -77,7 +74,6 @@ public partial class Control : IAsyncDisposable
             _serverConnection.On<ScreenDataDto>("ScreenData", dto =>
             {
                 ControlFuncsService.Displays = dto.Displays;
-                ControlFuncsService.SelectDisplay = async (display) => await TryInvokeServerAsync("SendSelectedScreen", display);
             });
 
             _serverConnection.On<ChunkWrapper>("ScreenUpdate", async chunk =>
