@@ -85,17 +85,19 @@
 
         window.selectedIPs = [];
 
-        const ds = new DragSelect({
-            selectables: document.getElementsByClassName('selectable-nodes'),
-            area: document.querySelector('#container')
-        });
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const ds = new DragSelect({
+                selectables: document.getElementsByClassName('selectable-nodes'),
+                area: document.querySelector('#container')
+            });
 
-        ds.subscribe('callback', (e) => {
-            var selectedItems = e.items;
-            var ipAddresses = Array.from(selectedItems).map(item => item.getAttribute('data-ip-address'));
+            ds.subscribe('callback', (e) => {
+                var selectedItems = e.items;
+                var ipAddresses = Array.from(selectedItems).map(item => item.getAttribute('data-ip-address'));
 
-            // сохраняем выбранные IP в глобальную переменную
-            window.selectedIPs = ipAddresses;
+                // сохраняем выбранные IP в глобальную переменную
+                window.selectedIPs = ipAddresses;
+            });
         });
 
         window.openTabs = () => {
