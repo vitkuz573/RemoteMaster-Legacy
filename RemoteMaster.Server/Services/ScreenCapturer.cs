@@ -1,7 +1,9 @@
 ﻿using System.Drawing;
 using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 using Microsoft.IO;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Shared.Native.Windows;
 using SkiaSharp;
 
 namespace RemoteMaster.Server.Services;
@@ -10,6 +12,7 @@ public abstract class ScreenCapturer : IScreenCapturer
 {
     protected readonly RecyclableMemoryStreamManager _recycleManager = new();
     protected readonly ILogger<ScreenCapturer> _logger;
+    protected readonly object _screenBoundsLock = new();
 
     public abstract Rectangle CurrentScreenBounds { get; protected set; }
 
@@ -29,7 +32,31 @@ public abstract class ScreenCapturer : IScreenCapturer
 
     protected abstract void Init();
 
-    public abstract byte[]? GetNextFrame();
+    public byte[]? GetNextFrame()
+    {
+        lock (_screenBoundsLock)
+        {
+            try
+            {
+                if (!DesktopHelper.SwitchToInputDesktop())
+                {
+                    var errCode = Marshal.GetLastWin32Error();
+                    _logger.LogError("Failed to switch to input desktop. Last Win32 error code: {errCode}", errCode);
+                }
+
+                var result = GetFrame();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while getting next frame.");
+                return null;
+            }
+        }
+    }
+
+    protected abstract byte[]? GetFrame();
 
     public abstract IEnumerable<(string name, bool isPrimary, Size resolution)> GetDisplays();
 

@@ -1,7 +1,5 @@
 ﻿using System.Drawing;
 using System.Drawing.Imaging;
-using System.Runtime.InteropServices;
-using RemoteMaster.Shared.Native.Windows;
 using RemoteMaster.Shared.Native.Windows.ScreenHelper;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
@@ -12,7 +10,6 @@ namespace RemoteMaster.Server.Services;
 public class BitBltCapturer : ScreenCapturer
 {
     private readonly Dictionary<string, int> _bitBltScreens = new();
-    private readonly object _screenBoundsLock = new();
 
     public override Rectangle CurrentScreenBounds { get; protected set; } = Screen.PrimaryScreen?.Bounds ?? Rectangle.Empty;
 
@@ -34,31 +31,7 @@ public class BitBltCapturer : ScreenCapturer
         }
     }
 
-    public override unsafe byte[]? GetNextFrame()
-    {
-        lock (_screenBoundsLock)
-        {
-            try
-            {
-                if (!DesktopHelper.SwitchToInputDesktop())
-                {
-                    var errCode = Marshal.GetLastWin32Error();
-                    _logger.LogError("Failed to switch to input desktop. Last Win32 error code: {errCode}", errCode);
-                }
-
-                var result = GetBitBltFrame();
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while getting next frame.");
-                return null;
-            }
-        }
-    }
-
-    private unsafe byte[]? GetBitBltFrame()
+    protected override unsafe byte[]? GetFrame()
     {
         try
         {
@@ -82,7 +55,7 @@ public class BitBltCapturer : ScreenCapturer
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Capturer error in BitBltCapture.");
+            _logger.LogError(ex, "Capturer error in GetFrame.");
             return null;
         }
     }
