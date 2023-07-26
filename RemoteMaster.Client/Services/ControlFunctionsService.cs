@@ -1,5 +1,5 @@
-﻿using System.Drawing;
-using Microsoft.AspNetCore.SignalR.Client;
+﻿using Microsoft.AspNetCore.SignalR.Client;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Client.Services;
 
@@ -7,5 +7,5 @@ public class ControlFunctionsService
 {
     public HubConnection ServerConnection { get; set; }
 
-    public IEnumerable<(string, bool, Size)> Displays { get; set; }
+    public IEnumerable<DisplayInfo> Displays { get; set; }
 }

@@ -3,6 +3,7 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Hubs;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Helpers;
+using RemoteMaster.Shared.Models;
 using System.Drawing;
 
 namespace RemoteMaster.Server.Services;
@@ -54,7 +55,7 @@ public class Viewer
         }
     }
 
-    public async Task SendScreenData(IEnumerable<(string, bool, Size)> displays, int screenWidth, int screenHeight)
+    public async Task SendScreenData(IEnumerable<DisplayInfo> displays, int screenWidth, int screenHeight)
     {
         var dto = new ScreenDataDto
         {

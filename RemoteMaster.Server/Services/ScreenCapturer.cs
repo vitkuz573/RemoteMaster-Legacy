@@ -3,6 +3,7 @@ using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using Microsoft.IO;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Shared.Models;
 using RemoteMaster.Shared.Native.Windows;
 using SkiaSharp;
 
@@ -58,7 +59,7 @@ public abstract class ScreenCapturer : IScreenCapturer
 
     protected abstract byte[]? GetFrame();
 
-    public abstract IEnumerable<(string name, bool isPrimary, Size resolution)> GetDisplays();
+    public abstract IEnumerable<DisplayInfo> GetDisplays();
 
     public abstract void SetSelectedScreen(string displayName);
 

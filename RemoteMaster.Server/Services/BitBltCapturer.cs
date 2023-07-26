@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
 using System.Drawing.Imaging;
+using RemoteMaster.Shared.Models;
 using RemoteMaster.Shared.Native.Windows.ScreenHelper;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
@@ -60,9 +61,14 @@ public class BitBltCapturer : ScreenCapturer
         }
     }
 
-    public override IEnumerable<(string name, bool isPrimary, Size resolution)> GetDisplays()
+    public override IEnumerable<DisplayInfo> GetDisplays()
     {
-        return Screen.AllScreens.Select(screen => (screen.DeviceName, screen.Primary, screen.Bounds.Size));
+        return Screen.AllScreens.Select(screen => new DisplayInfo
+        {
+            Name = screen.DeviceName,
+            IsPrimary = screen.Primary,
+            Resolution = screen.Bounds.Size,
+        });
     }
 
     public override void SetSelectedScreen(string displayName)

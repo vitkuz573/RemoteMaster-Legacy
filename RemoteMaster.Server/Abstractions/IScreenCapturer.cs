@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Abstractions;
 
@@ -14,7 +15,7 @@ public interface IScreenCapturer
 
     byte[]? GetNextFrame();
 
-    IEnumerable<(string name, bool isPrimary, Size resolution)> GetDisplays();
+    IEnumerable<DisplayInfo> GetDisplays();
 
     void SetSelectedScreen(string displayName);
 
