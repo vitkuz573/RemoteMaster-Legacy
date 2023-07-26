@@ -35,14 +35,6 @@ public partial class Control : IAsyncDisposable
 
     private static bool IsConnectionReady(HubConnection connection) => connection != null && connection.State == HubConnectionState.Connected;
 
-    private async Task TryInvokeServerAsync(string method)
-    {
-        if (IsConnectionReady(_serverConnection))
-        {
-            await _serverConnection.InvokeAsync(method);
-        }
-    }
-
     private async Task TryInvokeServerAsync<T>(string method, T argument)
     {
         if (IsConnectionReady(_serverConnection))
@@ -51,18 +43,16 @@ public partial class Control : IAsyncDisposable
         }
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected async override Task OnAfterRenderAsync(bool firstRender)
     {
-        await JSRuntime.InvokeVoidAsync("setTitle", Host);
-
         if (firstRender)
         {
-            ControlFuncsService.KillServer = async () => await TryInvokeServerAsync("KillServer");
-            ControlFuncsService.RebootComputer = async () => await TryInvokeServerAsync("RebootComputer");
+            await JSRuntime.InvokeVoidAsync("setTitle", Host);
+
             ControlFuncsService.SetQuality = async (quality) => await TryInvokeServerAsync("SetQuality", quality);
             ControlFuncsService.SendMessageBox = async (dto) => await TryInvokeServerAsync("SendMessageBox", dto);
 
-            bool uriCreated = Uri.TryCreate(NavManager.Uri, UriKind.Absolute, out var uri);
+            var uriCreated = Uri.TryCreate(NavManager.Uri, UriKind.Absolute, out var uri);
 
             if (uriCreated && uri != null)
             {
@@ -106,6 +96,8 @@ public partial class Control : IAsyncDisposable
             await JSRuntime.InvokeVoidAsync("addKeyUpEventListener", DotNetObjectReference.Create(this));
 
             await _serverConnection.StartAsync();
+
+            ControlFuncsService.ServerConnection = _serverConnection;
         }
     }
 

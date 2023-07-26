@@ -1,13 +1,12 @@
-﻿using RemoteMaster.Shared.Dtos;
+﻿using Microsoft.AspNetCore.SignalR.Client;
+using RemoteMaster.Shared.Dtos;
 using System.Drawing;
 
 namespace RemoteMaster.Client.Services;
 
 public class ControlFunctionsService
 {
-    public Action KillServer { get; set; }
-
-    public Action RebootComputer { get; set; }
+    public HubConnection ServerConnection { get; set; }
 
     public IEnumerable<(string, bool, Size)> Displays { get; set; }
 

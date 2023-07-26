@@ -98,13 +98,13 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
-                    <a class="text-red-500 hover:text-red-600 hover:underline" @onclick="ControlFuncsService.KillServer">Kill Server</a>
+                    <a class="text-red-500 hover:text-red-600 hover:underline" @onclick="KillServer">Kill Server</a>
                 </li>
                 <li class="flex items-center space-x-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
-                    <a class="text-red-500 hover:text-red-600 hover:underline" @onclick="ControlFuncsService.RebootComputer">Reboot Computer</a>
+                    <a class="text-red-500 hover:text-red-600 hover:underline" @onclick="RebootComputer">Reboot Computer</a>
                 </li>
             </ul>
         </div>
@@ -162,5 +162,15 @@
         };
 
         ControlFuncsService.SendMessageBox(dto);
+    }
+
+    private async void KillServer()
+    {
+        await ControlFuncsService.ServerConnection.InvokeAsync("KillServer");
+    }
+
+    private async void RebootComputer()
+    {
+        await ControlFuncsService.ServerConnection.InvokeAsync("RebootComputer");
     }
 }
