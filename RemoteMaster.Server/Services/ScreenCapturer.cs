@@ -171,7 +171,9 @@ public class ScreenCapturer : IScreenCapturer
     public void SetQuality(int quality)
     {
         if (quality < 0 || quality > 100)
+        {
             throw new ArgumentException("Quality must be between 0 and 100");
+        }
 
         Quality = quality;
     }
