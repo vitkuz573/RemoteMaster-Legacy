@@ -15,6 +15,8 @@ public abstract class ScreenCapturer : IScreenCapturer
     protected readonly ILogger<ScreenCapturer> _logger;
     protected readonly object _screenBoundsLock = new();
 
+    public virtual Dictionary<string, int> Screens { get; protected set; } = new();
+
     public abstract Rectangle CurrentScreenBounds { get; protected set; }
 
     public abstract Rectangle VirtualScreenBounds { get; protected set; }

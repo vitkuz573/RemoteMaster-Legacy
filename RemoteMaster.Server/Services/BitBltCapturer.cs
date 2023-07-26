@@ -10,8 +10,6 @@ namespace RemoteMaster.Server.Services;
 
 public class BitBltCapturer : ScreenCapturer
 {
-    private readonly Dictionary<string, int> _bitBltScreens = new();
-
     public override Rectangle CurrentScreenBounds { get; protected set; } = Screen.PrimaryScreen?.Bounds ?? Rectangle.Empty;
 
     public override Rectangle VirtualScreenBounds { get; protected set; } = SystemInformation.VirtualScreen;
@@ -24,11 +22,11 @@ public class BitBltCapturer : ScreenCapturer
 
     protected override void Init()
     {
-        _bitBltScreens.Clear();
+        Screens.Clear();
 
         for (var i = 0; i < Screen.AllScreens.Length; i++)
         {
-            _bitBltScreens.Add(Screen.AllScreens[i].DeviceName, i);
+            Screens.Add(Screen.AllScreens[i].DeviceName, i);
         }
     }
 
@@ -78,13 +76,13 @@ public class BitBltCapturer : ScreenCapturer
             return;
         }
 
-        if (_bitBltScreens.ContainsKey(displayName))
+        if (Screens.ContainsKey(displayName))
         {
             SelectedScreen = displayName;
         }
         else
         {
-            SelectedScreen = _bitBltScreens.Keys.First();
+            SelectedScreen = Screens.Keys.First();
         }
 
         RefreshCurrentScreenBounds();
@@ -92,7 +90,7 @@ public class BitBltCapturer : ScreenCapturer
 
     protected override void RefreshCurrentScreenBounds()
     {
-        CurrentScreenBounds = Screen.AllScreens[_bitBltScreens[SelectedScreen]].Bounds;
+        CurrentScreenBounds = Screen.AllScreens[Screens[SelectedScreen]].Bounds;
         RaiseScreenChangedEvent(CurrentScreenBounds);
     }
 }
