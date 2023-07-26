@@ -88,7 +88,8 @@
         document.addEventListener('DOMContentLoaded', (event) => {
             const ds = new DragSelect({
                 selectables: document.getElementsByClassName('selectable-nodes'),
-                area: document.querySelector('#container')
+                area: document.querySelector('#container'),
+                draggability: false
             });
 
             ds.subscribe('callback', (e) => {
