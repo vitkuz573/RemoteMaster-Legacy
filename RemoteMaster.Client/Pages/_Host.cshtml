@@ -99,17 +99,17 @@
         });
 
         window.openTabs = () => {
-            const blockedPopups = [];
+            let blockedPopups = false;
             window.selectedIPs.forEach(ipAddress => {
                 var url = `http://localhost:5254/${ipAddress}/control`;
                 const popupWindow = window.open(url, '_blank');
                 if (!popupWindow || popupWindow.closed || typeof popupWindow.closed === 'undefined') {
-                    blockedPopups.push(ipAddress);
+                    blockedPopups = true;
                 }
             });
 
-            if (blockedPopups.length > 0) {
-                const confirmationMessage = `Некоторые всплывающие окна были заблокированы. Пожалуйста, разрешите всплывающие окна для сайта и повторите попытку. Заблокированы IP-адреса: ${blockedPopups.join(', ')}.`;
+            if (blockedPopups) {
+                const confirmationMessage = `Всплывающие окна были заблокированы. Пожалуйста, разрешите их для сайта и повторите попытку.`;
                 alert(confirmationMessage);
             }
         };
