@@ -68,7 +68,7 @@
                         <h3 class="text-gray-600">Change Quality</h3>
                     </div>
                     <div class="relative inline-flex mt-2">
-                        <input type="number" min="1" max="100" value="50" class="border border-gray-300 rounded-full text-gray-600 h-10 pl-5 pr-5 bg-white hover:border-gray-400 focus:outline-none" @onchange="OnChangeQuality">
+                        <input type="range" min="1" max="100" value="80" class="slider w-48 h-5 rounded-full bg-gray-200 focus:outline-none appearance-none" @onchange="OnChangeQuality">
                     </div>
                 </li>
 
@@ -117,14 +117,7 @@
 
     private async void OnChangeQuality(ChangeEventArgs e)
     {
-        if (int.TryParse(e.Value.ToString(), out int quality) && quality >= 1 && quality <= 100)
-        {
-            await ControlFuncsService.ServerConnection.InvokeAsync("SetQuality", quality);
-        }
-        else
-        {
-            // Необходимо обработать случай, когда введенное значение не является числом от 1 до 100.
-        }
+        await ControlFuncsService.ServerConnection.InvokeAsync("SetQuality", Convert.ToInt32(e.Value));
     }
 
     private async void KillServer()
