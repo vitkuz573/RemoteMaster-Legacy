@@ -12,10 +12,9 @@ public class Viewer
     private readonly IHubContext<ControlHub> _hubContext;
     private readonly ILogger<Viewer> _logger;
 
-    public Viewer(IScreenCapturer screenCapturer, IAudioCapturer audioCapturer, ILogger<Viewer> logger, IHubContext<ControlHub> hubContext, string connectionId)
+    public Viewer(IScreenCapturer screenCapturer, ILogger<Viewer> logger, IHubContext<ControlHub> hubContext, string connectionId)
     {
         ScreenCapturer = screenCapturer;
-        AudioCapturer = audioCapturer;
         _hubContext = hubContext;
         _logger = logger;
         ConnectionId = connectionId;
@@ -24,21 +23,9 @@ public class Viewer
         {
             await SendScreenSize(bounds.Width, bounds.Height);
         };
-
-        AudioCapturer.DataAvailable += async (sender, e) =>
-        {
-            var audioDataChunks = Chunker.ChunkifyBytes(e.Buffer);
-
-            foreach (var chunk in audioDataChunks)
-            {
-                await _hubContext.Clients.Client(ConnectionId).SendAsync("AudioUpdate", chunk);
-            }
-        };
     }
 
     public IScreenCapturer ScreenCapturer { get; }
-
-    public IAudioCapturer AudioCapturer { get; }
 
     public string ConnectionId { get; }
 
