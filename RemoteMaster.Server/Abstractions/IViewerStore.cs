@@ -6,9 +6,9 @@ public interface IViewerStore
 {
     IReadOnlyDictionary<string, Viewer> Viewers { get; }
 
-    Viewer GetViewer(string connectionId);
+    bool TryGetViewer(string connectionId, out Viewer viewer);
 
-    void AddViewer(Viewer viewer);
+    bool TryAddViewer(Viewer viewer);
 
-    void RemoveViewer(string connectionId);
+    bool TryRemoveViewer(string connectionId);
 }

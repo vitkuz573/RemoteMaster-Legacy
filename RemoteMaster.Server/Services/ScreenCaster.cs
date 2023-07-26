@@ -1,5 +1,4 @@
 ﻿using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Shared.Dtos;
 
 namespace RemoteMaster.Server.Services;
 
@@ -19,16 +18,20 @@ public class ScreenCaster : IScreenCaster
     public async Task StartStreaming(string connectionId, CancellationToken cancellationToken)
     {
         var viewer = _viewerFactory.Create(connectionId);
-        _viewerStore.AddViewer(viewer);
 
-        await viewer.StartStreaming(cancellationToken);
+        if (_viewerStore.TryAddViewer(viewer))
+        {
+            await viewer.StartStreaming(cancellationToken);
+        }
+        else
+        {
+            _logger.LogError("Failed to add viewer with connection ID {connectionId}", connectionId);
+        }
     }
 
     public void SetSelectedScreen(string connectionId, string displayName)
     {
-        var viewer = _viewerStore.GetViewer(connectionId);
-
-        if (viewer != null)
+        if (_viewerStore.TryGetViewer(connectionId, out var viewer))
         {
             viewer.SetSelectedScreen(displayName);
         }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Services;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Native.Windows;
 using Windows.Win32.Foundation;
@@ -23,10 +24,9 @@ public class ControlHub : Hub
         _logger = logger;
     }
 
-    public override async Task OnConnectedAsync()
+    public async override Task OnConnectedAsync()
     {
         _cancellationTokenSource = new CancellationTokenSource();
-
         var connectionId = Context.ConnectionId;
 
         var _ = Task.Run(async () =>
@@ -42,9 +42,12 @@ public class ControlHub : Hub
         });
     }
 
-    public override async Task OnDisconnectedAsync(Exception? exception)
+    public async override Task OnDisconnectedAsync(Exception? exception)
     {
-        _viewerStore.RemoveViewer(Context.ConnectionId);
+        if (!_viewerStore.TryRemoveViewer(Context.ConnectionId))
+        {
+            _logger.LogError("Failed to remove viewer for connection ID {connectionId}", Context.ConnectionId);
+        }
 
         _cancellationTokenSource?.Cancel();
         await base.OnDisconnectedAsync(exception);
@@ -52,16 +55,12 @@ public class ControlHub : Hub
 
     public void SendMouseCoordinates(MouseMoveDto dto)
     {
-        var viewer = _viewerStore.GetViewer(Context.ConnectionId);
-
-        _inputSender.SendMouseCoordinates(dto, viewer);
+        ExecuteActionForViewer(viewer => _inputSender.SendMouseCoordinates(dto, viewer));
     }
 
     public void SendMouseButton(MouseClickDto dto)
     {
-        var viewer = _viewerStore.GetViewer(Context.ConnectionId);
-
-        _inputSender.SendMouseButton(dto, viewer);
+        ExecuteActionForViewer(viewer => _inputSender.SendMouseButton(dto, viewer));
     }
 
     public void SendMouseWheel(MouseWheelDto dto)
@@ -81,8 +80,7 @@ public class ControlHub : Hub
 
     public void SetQuality(int quality)
     {
-        var viewer = _viewerStore.GetViewer(Context.ConnectionId);
-        viewer.ScreenCapturer.SetQuality(quality);
+        ExecuteActionForViewer(viewer => viewer.ScreenCapturer.SetQuality(quality));
     }
 
     public async Task KillServer()
@@ -93,12 +91,23 @@ public class ControlHub : Hub
     public async Task RebootComputer()
     {
         TokenPrivilegeHelper.AdjustTokenPrivilege(SE_SHUTDOWN_NAME);
-
         InitiateSystemShutdown(null, null, 0, true, true);
     }
 
     public async Task SendMessageBox(MessageBoxDto dto)
     {
         MessageBox(HWND.Null, dto.Text, dto.Caption, dto.Style);
+    }
+
+    private void ExecuteActionForViewer(Action<Viewer> action)
+    {
+        if (_viewerStore.TryGetViewer(Context.ConnectionId, out var viewer))
+        {
+            action(viewer);
+        }
+        else
+        {
+            _logger.LogError("Failed to find a viewer for connection ID {connectionId}", Context.ConnectionId);
+        }
     }
 }
