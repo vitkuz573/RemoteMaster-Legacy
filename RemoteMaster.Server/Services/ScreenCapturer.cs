@@ -1,95 +1,53 @@
-﻿using Microsoft.IO;
-using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Shared.Native.Windows;
-using RemoteMaster.Shared.Native.Windows.ScreenHelper;
-using SkiaSharp;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Drawing.Imaging;
-using System.Runtime.InteropServices;
-using Windows.Win32.Foundation;
-using Windows.Win32.Graphics.Gdi;
-using static Windows.Win32.PInvoke;
+using Microsoft.IO;
+using RemoteMaster.Server.Abstractions;
+using SkiaSharp;
 
 namespace RemoteMaster.Server.Services;
 
-public class ScreenCapturer : IScreenCapturer
+public abstract class ScreenCapturer : IScreenCapturer
 {
-    private readonly RecyclableMemoryStreamManager _recycleManager = new();
-    private readonly Dictionary<string, int> _bitBltScreens = new();
-    private readonly object _screenBoundsLock = new();
-    private readonly ILogger<ScreenCapturer> _logger;
+    protected readonly RecyclableMemoryStreamManager _recycleManager = new();
+    protected readonly ILogger<ScreenCapturer> _logger;
 
-    public Rectangle CurrentScreenBounds { get;private set; } = Screen.PrimaryScreen?.Bounds ?? Rectangle.Empty;
+    public abstract Rectangle CurrentScreenBounds { get; protected set; }
 
-    public Rectangle VirtualScreenBounds { get; private set; } = SystemInformation.VirtualScreen;
-    
-    public string SelectedScreen { get; private set; } = Screen.PrimaryScreen?.DeviceName ?? string.Empty;
+    public abstract Rectangle VirtualScreenBounds { get; protected set; }
 
-    public int Quality { get; private set; } = 80;
+    public abstract string SelectedScreen { get; protected set; }
+
+    public int Quality { get; protected set; } = 80;
 
     public event EventHandler<Rectangle>? ScreenChanged;
 
-    public ScreenCapturer(ILogger<ScreenCapturer> logger)
+    protected ScreenCapturer(ILogger<ScreenCapturer> logger)
     {
         _logger = logger;
-
-        InitBitBlt();
+        Init();
     }
 
-    public unsafe byte[]? GetBitBltFrame()
+    protected abstract void Init();
+
+    public abstract byte[]? GetNextFrame();
+
+    public abstract IEnumerable<(string name, bool isPrimary, Size resolution)> GetDisplays();
+
+    public abstract void SetSelectedScreen(string displayName);
+
+    protected abstract void RefreshCurrentScreenBounds();
+
+    public void SetQuality(int quality)
     {
-        try
+        if (quality < 0 || quality > 100)
         {
-            var width = CurrentScreenBounds.Width;
-            var height = CurrentScreenBounds.Height;
-            var left = CurrentScreenBounds.Left;
-            var top = CurrentScreenBounds.Top;
-
-            using var bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
-            using var memoryGraphics = Graphics.FromImage(bitmap);
-
-            var dc1 = GetDC(HWND.Null);
-            var dc2 = (HDC)memoryGraphics.GetHdc();
-
-            BitBlt(dc2, 0, 0, width, height, dc1, left, top, ROP_CODE.SRCCOPY);
-
-            memoryGraphics.ReleaseHdc(dc2);
-            ReleaseDC(HWND.Null, dc1);
-
-            return SaveBitmap(bitmap);
+            throw new ArgumentException("Quality must be between 0 and 100");
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Capturer error in BitBltCapture.");
-            return null;
-        }
+
+        Quality = quality;
     }
 
-    public unsafe byte[]? GetNextFrame()
-    {
-        lock (_screenBoundsLock)
-        {
-            try
-            {
-                if (!DesktopHelper.SwitchToInputDesktop())
-                {
-                    var errCode = Marshal.GetLastWin32Error();
-                    _logger.LogError("Failed to switch to input desktop. Last Win32 error code: {errCode}", errCode);
-                }
-
-                var result = GetBitBltFrame();
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while getting next frame.");
-                return null;
-            }
-        }
-    }
-
-    private byte[] EncodeBitmap(SKBitmap bitmap)
+    protected byte[] EncodeBitmap(SKBitmap bitmap)
     {
         using var ms = _recycleManager.GetStream();
 
@@ -106,7 +64,7 @@ public class ScreenCapturer : IScreenCapturer
         return ms.ToArray();
     }
 
-    private unsafe byte[] SaveBitmap(Bitmap bitmap)
+    protected unsafe byte[] SaveBitmap(Bitmap bitmap)
     {
         var info = new SKImageInfo(bitmap.Width, bitmap.Height, SKColorType.Bgra8888);
 
@@ -128,53 +86,8 @@ public class ScreenCapturer : IScreenCapturer
         return data;
     }
 
-    public IEnumerable<(string name, bool isPrimary, Size resolution)> GetDisplays()
+    protected void RaiseScreenChangedEvent(Rectangle currentScreenBounds)
     {
-        return Screen.AllScreens.Select(screen => (screen.DeviceName, screen.Primary, screen.Bounds.Size));
-    }
-
-    public void SetSelectedScreen(string displayName)
-    {
-        if (displayName == SelectedScreen)
-        {
-            return;
-        }
-
-        if (_bitBltScreens.ContainsKey(displayName))
-        {
-            SelectedScreen = displayName;
-        }
-        else
-        {
-            SelectedScreen = _bitBltScreens.Keys.First();
-        }
-
-        RefreshCurrentScreenBounds();
-    }
-
-    private void RefreshCurrentScreenBounds()
-    {
-        CurrentScreenBounds = Screen.AllScreens[_bitBltScreens[SelectedScreen]].Bounds;
-        ScreenChanged?.Invoke(this, CurrentScreenBounds);
-    }
-
-    private void InitBitBlt()
-    {
-        _bitBltScreens.Clear();
-
-        for (var i = 0; i < Screen.AllScreens.Length; i++)
-        {
-            _bitBltScreens.Add(Screen.AllScreens[i].DeviceName, i);
-        }
-    }
-
-    public void SetQuality(int quality)
-    {
-        if (quality < 0 || quality > 100)
-        {
-            throw new ArgumentException("Quality must be between 0 and 100");
-        }
-
-        Quality = quality;
+        ScreenChanged?.Invoke(this, currentScreenBounds);
     }
 }

@@ -17,7 +17,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddSignalR().AddMessagePackProtocol();
 
 // Регистрация Singleton services
-builder.Services.AddSingleton<IScreenCapturer, ScreenCapturer>();
+builder.Services.AddSingleton<IScreenCapturer, BitBltCapturer>();
 builder.Services.AddSingleton<IInputSender, InputSender>();
 builder.Services.AddSingleton<IViewerStore, ViewerStore>();
 builder.Services.AddSingleton<IShutdownService, ShutdownService>();
