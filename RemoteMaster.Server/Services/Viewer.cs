@@ -19,10 +19,7 @@ public class Viewer
         _logger = logger;
         ConnectionId = connectionId;
 
-        ScreenCapturer.ScreenChanged += async (sender, bounds) =>
-        {
-            await SendScreenSize(bounds.Width, bounds.Height);
-        };
+        ScreenCapturer.ScreenChanged += async (sender, bounds) => await SendScreenSize(bounds.Width, bounds.Height);
     }
 
     public IScreenCapturer ScreenCapturer { get; }
@@ -33,11 +30,9 @@ public class Viewer
     {
         var bounds = ScreenCapturer.CurrentScreenBounds;
 
-        await SendScreenData(ScreenCapturer.GetDisplays(), ScreenCapturer.SelectedScreen, bounds.Width, bounds.Height);
+        await SendScreenData(ScreenCapturer.GetDisplays(), bounds.Width, bounds.Height);
 
         _logger.LogInformation("Starting screen stream for ID {connectionId}", ConnectionId);
-
-        // AudioCapturer.StartCapturing();
 
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -57,16 +52,13 @@ public class Viewer
                 _logger.LogError("An error occurred during streaming: {Message}", ex.Message);
             }
         }
-
-        // AudioCapturer.StopCapturing();
     }
 
-    public async Task SendScreenData(IEnumerable<(string, bool, Size)> displays, string selectedDisplay, int screenWidth, int screenHeight)
+    public async Task SendScreenData(IEnumerable<(string, bool, Size)> displays, int screenWidth, int screenHeight)
     {
         var dto = new ScreenDataDto
         {
             Displays = displays,
-            SelectedDisplay = selectedDisplay,
             ScreenWidth = screenWidth,
             ScreenHeight = screenHeight
         };
