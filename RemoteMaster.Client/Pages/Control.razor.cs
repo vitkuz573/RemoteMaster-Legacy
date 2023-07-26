@@ -71,10 +71,7 @@ public partial class Control : IAsyncDisposable
 
             _serverConnection = HubConnectionFactory.Create(Host, 5076, "hubs/control", withMessagePack: true);
 
-            _serverConnection.On<ScreenDataDto>("ScreenData", dto =>
-            {
-                ControlFuncsService.Displays = dto.Displays;
-            });
+            _serverConnection.On<ScreenDataDto>("ScreenData", dto => ControlFuncsService.Displays = dto.Displays);
 
             _serverConnection.On<ChunkWrapper>("ScreenUpdate", async chunk =>
             {
