@@ -7,253 +7,252 @@ using System.Runtime.InteropServices;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
 using static Windows.Win32.PInvoke;
 
-namespace RemoteMaster.Server.Services
+namespace RemoteMaster.Server.Services;
+
+public class InputSender : IInputSender
 {
-    public class InputSender : IInputSender
+    private bool _disposed = false;
+    private readonly BlockingCollection<Action> _operationQueue;
+    private CancellationTokenSource _cts;
+    private readonly int _numWorkers;
+    private readonly object _ctsLock = new();
+    private readonly ConcurrentBag<INPUT> _inputPool = new();
+    private readonly ILogger<InputSender> _logger;
+
+    public InputSender(ILogger<InputSender> logger, int numWorkers = 4)
     {
-        private bool _disposed = false;
-        private readonly BlockingCollection<Action> _operationQueue;
-        private CancellationTokenSource _cts;
-        private readonly int _numWorkers;
-        private readonly object _ctsLock = new();
-        private readonly ConcurrentBag<INPUT> _inputPool = new();
-        private readonly ILogger<InputSender> _logger;
+        _logger = logger;
+        _operationQueue = new BlockingCollection<Action>();
+        _cts = new CancellationTokenSource();
+        _numWorkers = numWorkers;
+        StartWorkerThreads();
+    }
 
-        public InputSender(ILogger<InputSender> logger, int numWorkers = 4)
+    private static (double, double) GetAbsolutePercentFromRelativePercent(double percentX, double percentY, IScreenCapturer screenCapturer)
+    {
+        var absoluteX = screenCapturer.CurrentScreenBounds.Width * percentX + screenCapturer.CurrentScreenBounds.Left - screenCapturer.VirtualScreenBounds.Left;
+        var absoluteY = screenCapturer.CurrentScreenBounds.Height * percentY + screenCapturer.CurrentScreenBounds.Top - screenCapturer.VirtualScreenBounds.Top;
+
+        return (absoluteX / screenCapturer.VirtualScreenBounds.Width, absoluteY / screenCapturer.VirtualScreenBounds.Height);
+    }
+
+    private void StartWorkerThreads()
+    {
+        lock (_ctsLock)
         {
-            _logger = logger;
-            _operationQueue = new BlockingCollection<Action>();
-            _cts = new CancellationTokenSource();
-            _numWorkers = numWorkers;
-            StartWorkerThreads();
-        }
-
-        private static (double, double) GetAbsolutePercentFromRelativePercent(double percentX, double percentY, IScreenCapturer screenCapturer)
-        {
-            var absoluteX = screenCapturer.CurrentScreenBounds.Width * percentX + screenCapturer.CurrentScreenBounds.Left - screenCapturer.VirtualScreenBounds.Left;
-            var absoluteY = screenCapturer.CurrentScreenBounds.Height * percentY + screenCapturer.CurrentScreenBounds.Top - screenCapturer.VirtualScreenBounds.Top;
-
-            return (absoluteX / screenCapturer.VirtualScreenBounds.Width, absoluteY / screenCapturer.VirtualScreenBounds.Height);
-        }
-
-        private void StartWorkerThreads()
-        {
-            lock (_ctsLock)
+            for (int i = 0; i < _numWorkers; i++)
             {
-                for (int i = 0; i < _numWorkers; i++)
+                Task.Factory.StartNew(() =>
                 {
-                    Task.Factory.StartNew(() =>
+                    CancellationToken token;
+                    lock (_ctsLock)
                     {
-                        CancellationToken token;
-                        lock (_ctsLock)
-                        {
-                            token = _cts.Token;
-                        }
-                        ProcessQueue(token);
-                    }, TaskCreationOptions.LongRunning);
-                }
-            }
-        }
-
-        private void ProcessQueue(CancellationToken token)
-        {
-            foreach (var operation in _operationQueue.GetConsumingEnumerable(token))
-            {
-                try
-                {
-                    operation();
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Exception occurred during operation processing");
-                }
-            }
-        }
-
-        public void EnqueueOperation(Action operation)
-        {
-            _operationQueue.Add(() =>
-            {
-                DesktopHelper.SwitchToInputDesktop();
-                operation();
-            });
-        }
-
-        public void StopProcessing()
-        {
-            lock (_ctsLock)
-            {
-                if (_cts != null)
-                {
-                    _cts.Cancel();
-                    _cts = null;
-                }
-            }
-        }
-
-        private void PrepareAndSendInput<TInput>(INPUT_TYPE inputType, TInput inputData, Func<INPUT, TInput, INPUT> fillInputData)
-        {
-            var input = GetInput();
-
-            input.type = inputType;
-            input = fillInputData(input, inputData);
-
-            var inputs = new Span<INPUT>(ref input);
-
-            SendInput(inputs, Marshal.SizeOf(typeof(INPUT)));
-
-            ReturnInput(input);
-        }
-
-        public void SendMouseCoordinates(MouseMoveDto dto, Viewer viewer)
-        {
-            EnqueueOperation(() =>
-            {
-                var xyPercent = GetAbsolutePercentFromRelativePercent(dto.X, dto.Y, viewer.ScreenCapturer);
-
-                var normalizedX = xyPercent.Item1 * 65535D;
-                var normalizedY = xyPercent.Item2 * 65535D;
-
-                PrepareAndSendInput(INPUT_TYPE.INPUT_MOUSE, dto, (input, data) =>
-                {
-                    input.Anonymous.mi = new MOUSEINPUT
-                    {
-                        dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE | MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE | MOUSE_EVENT_FLAGS.MOUSEEVENTF_VIRTUALDESK,
-                        dx = (int)normalizedX,
-                        dy = (int)normalizedY,
-                        time = 0,
-                        mouseData = 0,
-                        dwExtraInfo = (nuint)GetMessageExtraInfo().Value
-                    };
-
-                    return input;
-                });
-            });
-        }
-
-        public void SendMouseButton(MouseClickDto dto, Viewer viewer)
-        {
-            EnqueueOperation(() =>
-            {
-                var mouseEvent = dto.Button switch
-                {
-                    0 => dto.State switch
-                    {
-                        ButtonAction.Down => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN,
-                        ButtonAction.Up => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP
-                    },
-                    1 => dto.State switch
-                    {
-                        ButtonAction.Down => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEDOWN,
-                        ButtonAction.Up => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEUP
-                    },
-                    2 => dto.State switch
-                    {
-                        ButtonAction.Down => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN,
-                        ButtonAction.Up => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP
+                        token = _cts.Token;
                     }
+                    ProcessQueue(token);
+                }, TaskCreationOptions.LongRunning);
+            }
+        }
+    }
+
+    private void ProcessQueue(CancellationToken token)
+    {
+        foreach (var operation in _operationQueue.GetConsumingEnumerable(token))
+        {
+            try
+            {
+                operation();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Exception occurred during operation processing");
+            }
+        }
+    }
+
+    public void EnqueueOperation(Action operation)
+    {
+        _operationQueue.Add(() =>
+        {
+            DesktopHelper.SwitchToInputDesktop();
+            operation();
+        });
+    }
+
+    public void StopProcessing()
+    {
+        lock (_ctsLock)
+        {
+            if (_cts != null)
+            {
+                _cts.Cancel();
+                _cts = null;
+            }
+        }
+    }
+
+    private void PrepareAndSendInput<TInput>(INPUT_TYPE inputType, TInput inputData, Func<INPUT, TInput, INPUT> fillInputData)
+    {
+        var input = GetInput();
+
+        input.type = inputType;
+        input = fillInputData(input, inputData);
+
+        var inputs = new Span<INPUT>(ref input);
+
+        SendInput(inputs, Marshal.SizeOf(typeof(INPUT)));
+
+        ReturnInput(input);
+    }
+
+    public void SendMouseCoordinates(MouseMoveDto dto, Viewer viewer)
+    {
+        EnqueueOperation(() =>
+        {
+            var xyPercent = GetAbsolutePercentFromRelativePercent(dto.X, dto.Y, viewer.ScreenCapturer);
+
+            var normalizedX = xyPercent.Item1 * 65535D;
+            var normalizedY = xyPercent.Item2 * 65535D;
+
+            PrepareAndSendInput(INPUT_TYPE.INPUT_MOUSE, dto, (input, data) =>
+            {
+                input.Anonymous.mi = new MOUSEINPUT
+                {
+                    dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE | MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE | MOUSE_EVENT_FLAGS.MOUSEEVENTF_VIRTUALDESK,
+                    dx = (int)normalizedX,
+                    dy = (int)normalizedY,
+                    time = 0,
+                    mouseData = 0,
+                    dwExtraInfo = (nuint)GetMessageExtraInfo().Value
                 };
 
-                var xyPercent = GetAbsolutePercentFromRelativePercent(dto.X, dto.Y, viewer.ScreenCapturer);
-
-                var normalizedX = xyPercent.Item1 * 65535D;
-                var normalizedY = xyPercent.Item2 * 65535D;
-
-                PrepareAndSendInput(INPUT_TYPE.INPUT_MOUSE, dto, (input, data) =>
-                {
-                    input.Anonymous.mi = new MOUSEINPUT
-                    {
-                        dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE | mouseEvent | MOUSE_EVENT_FLAGS.MOUSEEVENTF_VIRTUALDESK,
-                        dx = (int)normalizedX,
-                        dy = (int)normalizedY
-                    };
-
-                    return input;
-                });
+                return input;
             });
-        }
+        });
+    }
 
-        public void SendMouseWheel(MouseWheelDto dto)
+    public void SendMouseButton(MouseClickDto dto, Viewer viewer)
+    {
+        EnqueueOperation(() =>
         {
-            EnqueueOperation(() =>
+            var mouseEvent = dto.Button switch
             {
-                PrepareAndSendInput(INPUT_TYPE.INPUT_MOUSE, dto, (input, data) =>
+                0 => dto.State switch
                 {
-                    input.Anonymous.mi = new MOUSEINPUT
-                    {
-                        dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_WHEEL,
-                        dx = 0,
-                        dy = 0,
-                        time = 0,
-                        mouseData = data.DeltaY < 0 ? 120 : data.DeltaY > 0 ? -120 : 0,
-                        dwExtraInfo = (nuint)GetMessageExtraInfo().Value
-                    };
-
-                    return input;
-                });
-            });
-        }
-
-        public void SendKeyboardInput(KeyboardKeyDto dto)
-        {
-            EnqueueOperation(() =>
-            {
-                PrepareAndSendInput(INPUT_TYPE.INPUT_KEYBOARD, dto, (input, data) =>
+                    ButtonAction.Down => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN,
+                    ButtonAction.Up => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP
+                },
+                1 => dto.State switch
                 {
-                    input.Anonymous.ki = new KEYBDINPUT
-                    {
-                        wVk = (VIRTUAL_KEY)data.Key,
-                        wScan = 0,
-                        time = 0,
-                        dwFlags = data.State == ButtonAction.Up ? KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP : 0,
-                        dwExtraInfo = (nuint)GetMessageExtraInfo().Value
-                    };
+                    ButtonAction.Down => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEDOWN,
+                    ButtonAction.Up => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEUP
+                },
+                2 => dto.State switch
+                {
+                    ButtonAction.Down => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN,
+                    ButtonAction.Up => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP
+                }
+            };
 
-                    return input;
-                });
+            var xyPercent = GetAbsolutePercentFromRelativePercent(dto.X, dto.Y, viewer.ScreenCapturer);
+
+            var normalizedX = xyPercent.Item1 * 65535D;
+            var normalizedY = xyPercent.Item2 * 65535D;
+
+            PrepareAndSendInput(INPUT_TYPE.INPUT_MOUSE, dto, (input, data) =>
+            {
+                input.Anonymous.mi = new MOUSEINPUT
+                {
+                    dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE | mouseEvent | MOUSE_EVENT_FLAGS.MOUSEEVENTF_VIRTUALDESK,
+                    dx = (int)normalizedX,
+                    dy = (int)normalizedY
+                };
+
+                return input;
             });
-        }
+        });
+    }
 
-        private INPUT GetInput()
+    public void SendMouseWheel(MouseWheelDto dto)
+    {
+        EnqueueOperation(() =>
         {
-            if (!_inputPool.TryTake(out var input))
+            PrepareAndSendInput(INPUT_TYPE.INPUT_MOUSE, dto, (input, data) =>
             {
-                input = new INPUT();
-            }
+                input.Anonymous.mi = new MOUSEINPUT
+                {
+                    dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_WHEEL,
+                    dx = 0,
+                    dy = 0,
+                    time = 0,
+                    mouseData = data.DeltaY < 0 ? 120 : data.DeltaY > 0 ? -120 : 0,
+                    dwExtraInfo = (nuint)GetMessageExtraInfo().Value
+                };
 
-            return input;
-        }
+                return input;
+            });
+        });
+    }
 
-        private void ReturnInput(INPUT input)
+    public void SendKeyboardInput(KeyboardKeyDto dto)
+    {
+        EnqueueOperation(() =>
         {
-            _inputPool.Add(input);
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (_disposed)
+            PrepareAndSendInput(INPUT_TYPE.INPUT_KEYBOARD, dto, (input, data) =>
             {
-                return;
-            }
+                input.Anonymous.ki = new KEYBDINPUT
+                {
+                    wVk = (VIRTUAL_KEY)data.Key,
+                    wScan = 0,
+                    time = 0,
+                    dwFlags = data.State == ButtonAction.Up ? KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP : 0,
+                    dwExtraInfo = (nuint)GetMessageExtraInfo().Value
+                };
 
-            if (disposing)
-            {
-                _operationQueue?.Dispose();
-                _cts?.Dispose();
-            }
+                return input;
+            });
+        });
+    }
 
-            _disposed = true;
-        }
-
-        ~InputSender()
+    private INPUT GetInput()
+    {
+        if (!_inputPool.TryTake(out var input))
         {
-            Dispose(false);
+            input = new INPUT();
         }
+
+        return input;
+    }
+
+    private void ReturnInput(INPUT input)
+    {
+        _inputPool.Add(input);
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        if (disposing)
+        {
+            _operationQueue?.Dispose();
+            _cts?.Dispose();
+        }
+
+        _disposed = true;
+    }
+
+    ~InputSender()
+    {
+        Dispose(false);
     }
 }
