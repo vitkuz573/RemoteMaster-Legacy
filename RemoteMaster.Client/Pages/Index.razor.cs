@@ -23,7 +23,7 @@ public partial class Index
     private bool SnackBarAutoDismiss = true;
     private int SnackBarDismissSeconds = 5;
     private BitSnackBarType SnackBarType;
-    private Dictionary<string, Node> _nodeLookup = new();
+    private readonly Dictionary<string, Node> _nodeLookup = new();
 
     [Inject]
     private IJSRuntime JSRuntime { get; set; }
