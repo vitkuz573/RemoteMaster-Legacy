@@ -50,7 +50,11 @@
 
                                 @for (int i = 0; i < displays.Count; i++)
                                 {
-                                    <option value="@displays[i].Name" selected="@displays[i].IsPrimary">@("Screen " + (@i + 1)) (@displays[i].Resolution.Width x @displays[i].Resolution.Height)</option>
+                                    var displayName = displays[i].Name == "VIRTUAL_SCREEN"
+                                    ? "Virtual Screen"
+                                    : $"Screen {i + 1}";
+
+                                    <option value="@displays[i].Name" selected="@displays[i].IsPrimary">@($"{displayName} ({displays[i].Resolution.Width} x {displays[i].Resolution.Height})")</option>
                                 }
                             }
                         </select>
