@@ -1,4 +1,4 @@
-﻿using Blazorise;
+﻿using Bit.BlazorUI;
 using RemoteMaster.Client.Models;
 using System.Collections.ObjectModel;
 
@@ -6,7 +6,8 @@ namespace RemoteMaster.Client.Components;
 
 public partial class AddComputerFromAD
 {
-    private Modal _modalRef;
+    private BitModal _modalRef;
+    private bool IsOpen = false;
     private ObservableCollection<Node> _adNodes = new();
     private IList<Node> _expandedNodes = new List<Node>();
     private Node _selectedNode;
@@ -14,11 +15,7 @@ public partial class AddComputerFromAD
     public void Show(ObservableCollection<Node> adNodes)
     {
         _adNodes = adNodes;
-        _modalRef.Show();
-    }
-
-    public void Hide()
-    {
-        _modalRef.Hide();
+        IsOpen = true;
+        StateHasChanged();
     }
 }

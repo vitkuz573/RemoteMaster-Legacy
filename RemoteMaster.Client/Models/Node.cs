@@ -1,5 +1,4 @@
-﻿using Blazorise;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RemoteMaster.Client.Models;
 
@@ -16,10 +15,4 @@ public abstract class Node
 
     [InverseProperty(nameof(Parent))]
     public ICollection<Node> Children { get; set; }
-
-    [NotMapped]
-    public virtual IconName Icon { get; set; }
-
-    [NotMapped]
-    public virtual IconName ExpandedIcon { get; set; }
 }

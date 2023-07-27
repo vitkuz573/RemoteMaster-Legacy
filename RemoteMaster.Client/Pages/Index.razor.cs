@@ -1,4 +1,4 @@
-﻿using Blazorise.Snackbar;
+﻿using Bit.BlazorUI;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using RemoteMaster.Client.Components;
@@ -11,16 +11,20 @@ namespace RemoteMaster.Client.Pages;
 
 public partial class Index
 {
-    private readonly ObservableCollection<Node> _nodes = new();
-    private IList<Node> _expandedNodes = new List<Node>();
+    private List<BitNavItem> _nodes = new();
     private Node _selectedNode;
 
     private AddFolder _addFolderRef;
     private AddComputerManual _addComputerManualRef;
     private AddComputerFromAD _addComputerFromADRef;
 
-    private string _getComputersFromADStatus;
-    private Snackbar _getComputersFromADStatusSnackbar;
+    private BitSnackBar _snackBar = new();
+    private BitSnackBarPosition SnackBarPosition = BitSnackBarPosition.BottomCenter;
+    private string SnackBarTitle = string.Empty;
+    private string? SnackBarBody;
+    private bool SnackBarAutoDismiss = true;
+    private int SnackBarDismissSeconds = 5;
+    private BitSnackBarType SnackBarType;
 
     [Inject]
     private IJSRuntime JSRuntime { get; set; }
@@ -31,14 +35,35 @@ public partial class Index
     [Inject]
     private ActiveDirectoryService ActiveDirectoryService { get; set; }
 
-    protected async override Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         var folders = DatabaseService.GetFolders();
 
-        foreach (var folder in folders)
+        _nodes = folders.Select(f => new BitNavItem
         {
-            _nodes.Add(folder);
-        }
+            Text = f.Name,
+            IconName = BitIconName.Folder,
+            ChildItems = f.Children
+                .Select(c =>
+                {
+                    if (c is Computer computer)
+                    {
+                        return new BitNavItem
+                        {
+                            Text = c.Name,
+                            Key = computer.IPAddress,
+                            IconName = BitIconName.ScreenCast
+                        };
+                    }
+
+                    return new BitNavItem
+                    {
+                        Text = c.Name,
+                        IconName = BitIconName.Folder
+                    };
+                })
+                .ToList()
+        }).ToList();
     }
 
     private async Task GetComputersFromAD()
@@ -46,7 +71,8 @@ public partial class Index
         try
         {
             var domainComputers = await ActiveDirectoryService.FetchComputers();
-            _getComputersFromADStatus = "Fetch has been completed successfully";
+            SnackBarType = BitSnackBarType.Success;
+            SnackBarBody = "Fetch has been completed successfully";
 
             var adNodes = new ObservableCollection<Node>();
 
@@ -66,10 +92,11 @@ public partial class Index
         }
         catch (Exception e)
         {
-            _getComputersFromADStatus = $"An error occurred during fetch: {e.Message}";
+            SnackBarType = BitSnackBarType.Error;
+            SnackBarBody = $"An error occurred during fetch: {e.Message}";
         }
 
-        _getComputersFromADStatusSnackbar.Show();
+        await _snackBar.Show(SnackBarTitle, SnackBarBody, SnackBarType);
     }
 
     private async Task OpenInNewTab(Computer computer)
@@ -90,5 +117,10 @@ public partial class Index
         };
 
         await Task.Run(() => Process.Start(startInfo));
+    }
+
+    private void OnItemClick(BitNavItem item)
+    {
+        // 
     }
 }

@@ -69,7 +69,7 @@
                         <h3 class="text-gray-600">Change Quality</h3>
                     </div>
                     <div class="relative inline-flex mt-2">
-                        <Slider TValue="int" Value="@_quality" Max="100" ValueChanged="ChangeQuality" />
+                        <BitSlider Max="100" DefaultValue="80" OnChange="ChangeQuality" />
                     </div>
                 </li>
 
@@ -81,7 +81,7 @@
                         <h3 class="text-gray-600">Cursor Tracking</h3>
                     </div>
                     <div class="relative inline-flex mt-2">
-                        <Switch TValue="bool" Checked="@_trackCursor" CheckedChanged="ToggleCursorTracking" Color="Color.Info" Size="Size.Small" />
+                        <BitToggle OnChange="ToggleCursorTracking" />
                     </div>
                 </li>
 
@@ -93,7 +93,7 @@
                         <h3 class="text-gray-600">Input Toggle</h3>
                     </div>
                     <div class="relative inline-flex mt-2">
-                        <Switch TValue="bool" Checked="@_inputEnabled" CheckedChanged="ToggleInputEnabled" Color="Color.Info" Size="Size.Small" />
+                        <BitToggle OnChange="ToggleInputEnabled" />
                     </div>
                 </li>
 
@@ -126,9 +126,7 @@
 
 @code {
     private bool _isMenuOpen = false;
-    private bool _trackCursor = true;
     private bool _inputEnabled = true;
-    private int _quality = 80;
 
     private void ToggleMenu()
     {
@@ -140,17 +138,13 @@
         await ControlFuncsService.ServerConnection.InvokeAsync("SendSelectedScreen", e.Value.ToString());
     }
 
-    private async void ChangeQuality(int quality)
+    private async void ChangeQuality(ChangeEventArgs e)
     {
-        _quality = quality;
-
-        await ControlFuncsService.ServerConnection.InvokeAsync("SetQuality", quality);
+        await ControlFuncsService.ServerConnection.InvokeAsync("SetQuality", Convert.ToInt32(e.Value));
     }
 
     private async Task ToggleCursorTracking(bool value)
     {
-        _trackCursor = value;
-
         await ControlFuncsService.ServerConnection.InvokeAsync("SetTrackCursor", value);
     }
 

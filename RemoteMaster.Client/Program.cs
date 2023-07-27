@@ -1,7 +1,3 @@
-using Blazorise;
-using Blazorise.FluentValidation;
-using Blazorise.Icons.FontAwesome;
-using Blazorise.Tailwind;
 using FluentValidation;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
@@ -20,12 +16,6 @@ builder.Services.AddSingleton<ActiveDirectoryService>();
 builder.Services.AddTransient<IHubConnectionBuilder>(s => new HubConnectionBuilder());
 builder.Services.AddValidatorsFromAssembly(typeof(App).Assembly);
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// Blazorise
-builder.Services.AddBlazorise(options =>
-{
-    options.Immediate = true;
-}).AddTailwindProviders().AddFontAwesomeIcons().AddBlazoriseFluentValidation();
 
 // Blazor Pages and Server-side Blazor
 builder.Services.AddRazorPages();

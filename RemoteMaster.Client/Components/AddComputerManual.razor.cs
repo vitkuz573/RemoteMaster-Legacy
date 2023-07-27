@@ -1,17 +1,15 @@
-﻿using Blazorise;
+﻿using System.Collections.ObjectModel;
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Client.Models;
 using RemoteMaster.Client.Services;
-using System.Collections.ObjectModel;
 
 namespace RemoteMaster.Client.Components;
 
 public partial class AddComputerManual
 {
-    public Modal _modalRef;
+    private bool IsOpen = false;
     public Computer _newComputer;
     public Guid? _selectedFolderId;
-    private Validations _fluentValidations;
 
     [Inject]
     private DatabaseService DatabaseService { get; set; }
@@ -25,28 +23,26 @@ public partial class AddComputerManual
         _selectedFolderId = null;
     }
 
-    public void Show() => _modalRef.Show();
-
-    public void Hide() => _modalRef.Hide();
-
-    public async void Add()
+    public void Show()
     {
-        if (await _fluentValidations.ValidateAll())
+        IsOpen = true;
+        StateHasChanged();
+    }
+
+    public void Add()
+    {
+        var folder = Nodes.OfType<Folder>().FirstOrDefault(f => f.NodeId == _selectedFolderId);
+
+        if (folder != null)
         {
-            var folder = Nodes.OfType<Folder>().FirstOrDefault(f => f.NodeId == _selectedFolderId);
-
-            if (folder != null)
-            {
-                _newComputer.ParentId = folder.NodeId;
-                folder.Children.Add(_newComputer);
-            }
-
-            DatabaseService.AddNode(_newComputer);
-
-            _newComputer = new Computer();
-            _selectedFolderId = null;
-            Hide();
+            _newComputer.ParentId = folder.NodeId;
+            folder.Children.Add(_newComputer);
         }
+
+        DatabaseService.AddNode(_newComputer);
+
+        _newComputer = new Computer();
+        _selectedFolderId = null;
     }
 
     private void OnSelectedFolderChanged(Guid? selectedId) => _selectedFolderId = selectedId;

@@ -1,4 +1,4 @@
-﻿using Blazorise;
+﻿using Bit.BlazorUI;
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Client.Models;
 using RemoteMaster.Client.Services;
@@ -8,9 +8,9 @@ namespace RemoteMaster.Client.Components;
 
 public partial class AddFolder
 {
-    public Modal _modalRef;
+    public BitModal _modalRef;
+    public bool IsOpen = false;
     public Folder _newFolder;
-    private Validations _fluentValidations;
 
     [Inject]
     private DatabaseService DatabaseService { get; set; }
@@ -23,20 +23,18 @@ public partial class AddFolder
         _newFolder = new Folder();
     }
 
-    public void Show() => _modalRef.Show();
-
-    public void Hide() => _modalRef.Hide();
-
-    public async void Add()
+    public void Show()
     {
-        if (await _fluentValidations.ValidateAll())
-        {
-            Nodes.Add(_newFolder);
+        IsOpen = true;
+        StateHasChanged();
+    }
 
-            DatabaseService.AddNode(_newFolder);
+    public void Add()
+    {
+        Nodes.Add(_newFolder);
 
-            _newFolder = new Folder();
-            Hide();
-        }
+        DatabaseService.AddNode(_newFolder);
+
+        _newFolder = new Folder();
     }
 }
