@@ -97,7 +97,7 @@ public abstract class ScreenCapturer : IScreenCapturer
         return ms.ToArray();
     }
 
-    protected unsafe byte[] SaveBitmap(Bitmap bitmap)
+    protected byte[] SaveBitmap(Bitmap bitmap)
     {
         var info = new SKImageInfo(bitmap.Width, bitmap.Height, SKColorType.Bgra8888);
 

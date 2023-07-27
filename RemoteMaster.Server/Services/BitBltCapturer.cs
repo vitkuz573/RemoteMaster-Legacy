@@ -33,7 +33,7 @@ public class BitBltCapturer : ScreenCapturer
         }
     }
 
-    protected override unsafe byte[]? GetFrame()
+    protected override byte[]? GetFrame()
     {
         try
         {
@@ -53,7 +53,7 @@ public class BitBltCapturer : ScreenCapturer
         }
     }
 
-    private unsafe byte[]? CaptureScreen(int width, int height, int left, int top)
+    private byte[]? CaptureScreen(int width, int height, int left, int top)
     {
         if (_bitmap.Width != width || _bitmap.Height != height)
         {
@@ -74,12 +74,12 @@ public class BitBltCapturer : ScreenCapturer
         return SaveBitmap(_bitmap);
     }
 
-    private unsafe byte[]? GetVirtualScreenFrame()
+    private byte[]? GetVirtualScreenFrame()
     {
         return CaptureScreen(VirtualScreenBounds.Width, VirtualScreenBounds.Height, VirtualScreenBounds.Left, VirtualScreenBounds.Top);
     }
 
-    private unsafe byte[]? GetSingleScreenFrame()
+    private byte[]? GetSingleScreenFrame()
     {
         return CaptureScreen(CurrentScreenBounds.Width, CurrentScreenBounds.Height, CurrentScreenBounds.Left, CurrentScreenBounds.Top);
     }
