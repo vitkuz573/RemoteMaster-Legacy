@@ -80,7 +80,7 @@ public class ControlHub : Hub
 
     public void SetQuality(int quality)
     {
-        ExecuteActionForViewer(viewer => viewer.ScreenCapturer.SetQuality(quality));
+        ExecuteActionForViewer(viewer => viewer.ScreenCapturer.Quality = quality);
     }
 
     public async Task KillServer()

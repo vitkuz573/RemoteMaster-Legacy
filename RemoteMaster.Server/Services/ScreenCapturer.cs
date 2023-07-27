@@ -14,6 +14,7 @@ public abstract class ScreenCapturer : IScreenCapturer
     protected readonly RecyclableMemoryStreamManager _recycleManager = new();
     protected readonly ILogger<ScreenCapturer> _logger;
     protected readonly object _screenBoundsLock = new();
+    private int _quality = 80;
 
     public virtual Dictionary<string, int> Screens { get; protected set; } = new();
 
@@ -23,7 +24,19 @@ public abstract class ScreenCapturer : IScreenCapturer
 
     public abstract string SelectedScreen { get; protected set; }
 
-    public int Quality { get; protected set; } = 80;
+    public int Quality
+    {
+        get => _quality;
+        set
+        {
+            if (value < 0 || value > 100)
+            {
+                throw new ArgumentException("Quality must be between 0 and 100");
+            }
+
+            _quality = value;
+        }
+    }
 
     public event EventHandler<Rectangle>? ScreenChanged;
 
@@ -66,16 +79,6 @@ public abstract class ScreenCapturer : IScreenCapturer
     public abstract void SetSelectedScreen(string displayName);
 
     protected abstract void RefreshCurrentScreenBounds();
-
-    public void SetQuality(int quality)
-    {
-        if (quality < 0 || quality > 100)
-        {
-            throw new ArgumentException("Quality must be between 0 and 100");
-        }
-
-        Quality = quality;
-    }
 
     protected byte[] EncodeBitmap(SKBitmap bitmap)
     {

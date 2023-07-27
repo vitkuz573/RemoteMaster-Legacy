@@ -5,6 +5,8 @@ namespace RemoteMaster.Server.Abstractions;
 
 public interface IScreenCapturer : IDisposable
 {
+    int Quality { get; set; }
+
     event EventHandler<Rectangle> ScreenChanged;
 
     Rectangle CurrentScreenBounds { get; }
@@ -18,6 +20,4 @@ public interface IScreenCapturer : IDisposable
     IEnumerable<DisplayInfo> GetDisplays();
 
     void SetSelectedScreen(string displayName);
-
-    void SetQuality(int quality);
 }
