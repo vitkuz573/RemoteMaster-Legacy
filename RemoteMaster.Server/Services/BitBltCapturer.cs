@@ -38,28 +38,14 @@ public class BitBltCapturer : ScreenCapturer
     {
         try
         {
-            var width = CurrentScreenBounds.Width;
-            var height = CurrentScreenBounds.Height;
-            var left = CurrentScreenBounds.Left;
-            var top = CurrentScreenBounds.Top;
-
-            if (_bitmap.Width != width || _bitmap.Height != height)
+            if (SelectedScreen == "VIRTUAL_SCREEN")
             {
-                _bitmap.Dispose();
-                _bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+                return GetVirtualScreenFrame();
             }
-
-            using var memoryGraphics = Graphics.FromImage(_bitmap);
-
-            var dc1 = GetDC(HWND.Null);
-            var dc2 = (HDC)memoryGraphics.GetHdc();
-
-            BitBlt(dc2, 0, 0, width, height, dc1, left, top, ROP_CODE.SRCCOPY);
-
-            memoryGraphics.ReleaseHdc(dc2);
-            ReleaseDC(HWND.Null, dc1);
-
-            return SaveBitmap(_bitmap);
+            else
+            {
+                return GetSingleScreenFrame();
+            }
         }
         catch (Exception ex)
         {
@@ -68,14 +54,75 @@ public class BitBltCapturer : ScreenCapturer
         }
     }
 
+    private unsafe byte[]? GetVirtualScreenFrame()
+    {
+        var width = VirtualScreenBounds.Width;
+        var height = VirtualScreenBounds.Height;
+        var left = VirtualScreenBounds.Left;
+        var top = VirtualScreenBounds.Top;
+
+        if (_bitmap.Width != width || _bitmap.Height != height)
+        {
+            _bitmap.Dispose();
+            _bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+        }
+
+        using var memoryGraphics = Graphics.FromImage(_bitmap);
+
+        var dc1 = GetDC(HWND.Null);
+        var dc2 = (HDC)memoryGraphics.GetHdc();
+
+        BitBlt(dc2, 0, 0, width, height, dc1, left, top, ROP_CODE.SRCCOPY);
+
+        memoryGraphics.ReleaseHdc(dc2);
+        ReleaseDC(HWND.Null, dc1);
+
+        return SaveBitmap(_bitmap);
+    }
+
+    private unsafe byte[]? GetSingleScreenFrame()
+    {
+        var width = CurrentScreenBounds.Width;
+        var height = CurrentScreenBounds.Height;
+        var left = CurrentScreenBounds.Left;
+        var top = CurrentScreenBounds.Top;
+
+        if (_bitmap.Width != width || _bitmap.Height != height)
+        {
+            _bitmap.Dispose();
+            _bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+        }
+
+        using var memoryGraphics = Graphics.FromImage(_bitmap);
+
+        var dc1 = GetDC(HWND.Null);
+        var dc2 = (HDC)memoryGraphics.GetHdc();
+
+        BitBlt(dc2, 0, 0, width, height, dc1, left, top, ROP_CODE.SRCCOPY);
+
+        memoryGraphics.ReleaseHdc(dc2);
+        ReleaseDC(HWND.Null, dc1);
+
+        return SaveBitmap(_bitmap);
+    }
+
     public override IEnumerable<DisplayInfo> GetDisplays()
     {
-        return Screen.AllScreens.Select(screen => new DisplayInfo
+        var screens = Screen.AllScreens.Select(screen => new DisplayInfo
         {
             Name = screen.DeviceName,
             IsPrimary = screen.Primary,
             Resolution = screen.Bounds.Size,
+        }).ToList();
+
+        screens.Add(new DisplayInfo
+        {
+            Name = "VIRTUAL_SCREEN",
+            IsPrimary = false,
+            Resolution = new Size(VirtualScreenBounds.Width, VirtualScreenBounds.Height),
         });
+
+        return screens;
     }
 
     public override void SetSelectedScreen(string displayName)
@@ -85,7 +132,7 @@ public class BitBltCapturer : ScreenCapturer
             return;
         }
 
-        if (Screens.ContainsKey(displayName))
+        if (displayName == "VIRTUAL_SCREEN" || Screens.ContainsKey(displayName))
         {
             SelectedScreen = displayName;
         }
@@ -99,7 +146,15 @@ public class BitBltCapturer : ScreenCapturer
 
     protected override void RefreshCurrentScreenBounds()
     {
-        CurrentScreenBounds = Screen.AllScreens[Screens[SelectedScreen]].Bounds;
+        if (SelectedScreen == "VIRTUAL_SCREEN")
+        {
+            CurrentScreenBounds = VirtualScreenBounds;
+        }
+        else
+        {
+            CurrentScreenBounds = Screen.AllScreens[Screens[SelectedScreen]].Bounds;
+        }
+
         RaiseScreenChangedEvent(CurrentScreenBounds);
     }
 
