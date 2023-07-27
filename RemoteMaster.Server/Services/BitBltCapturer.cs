@@ -54,13 +54,8 @@ public class BitBltCapturer : ScreenCapturer
         }
     }
 
-    private unsafe byte[]? GetVirtualScreenFrame()
+    private unsafe byte[]? CaptureScreen(int width, int height, int left, int top)
     {
-        var width = VirtualScreenBounds.Width;
-        var height = VirtualScreenBounds.Height;
-        var left = VirtualScreenBounds.Left;
-        var top = VirtualScreenBounds.Top;
-
         if (_bitmap.Width != width || _bitmap.Height != height)
         {
             _bitmap.Dispose();
@@ -80,30 +75,14 @@ public class BitBltCapturer : ScreenCapturer
         return SaveBitmap(_bitmap);
     }
 
+    private unsafe byte[]? GetVirtualScreenFrame()
+    {
+        return CaptureScreen(VirtualScreenBounds.Width, VirtualScreenBounds.Height, VirtualScreenBounds.Left, VirtualScreenBounds.Top);
+    }
+
     private unsafe byte[]? GetSingleScreenFrame()
     {
-        var width = CurrentScreenBounds.Width;
-        var height = CurrentScreenBounds.Height;
-        var left = CurrentScreenBounds.Left;
-        var top = CurrentScreenBounds.Top;
-
-        if (_bitmap.Width != width || _bitmap.Height != height)
-        {
-            _bitmap.Dispose();
-            _bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
-        }
-
-        using var memoryGraphics = Graphics.FromImage(_bitmap);
-
-        var dc1 = GetDC(HWND.Null);
-        var dc2 = (HDC)memoryGraphics.GetHdc();
-
-        BitBlt(dc2, 0, 0, width, height, dc1, left, top, ROP_CODE.SRCCOPY);
-
-        memoryGraphics.ReleaseHdc(dc2);
-        ReleaseDC(HWND.Null, dc1);
-
-        return SaveBitmap(_bitmap);
+        return CaptureScreen(CurrentScreenBounds.Width, CurrentScreenBounds.Height, CurrentScreenBounds.Left, CurrentScreenBounds.Top);
     }
 
     public override IEnumerable<DisplayInfo> GetDisplays()
