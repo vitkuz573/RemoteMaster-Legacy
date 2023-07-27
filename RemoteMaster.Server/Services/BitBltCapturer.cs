@@ -14,6 +14,8 @@ namespace RemoteMaster.Server.Services;
 public class BitBltCapturer : ScreenCapturer
 {
     private Bitmap _bitmap;
+    private Point? _lastCursorPoint;
+    private Icon? _lastCursorIcon;
 
     public override Rectangle CurrentScreenBounds { get; protected set; } = Screen.PrimaryScreen?.Bounds ?? Rectangle.Empty;
 
@@ -90,12 +92,32 @@ public class BitBltCapturer : ScreenCapturer
         return cursorInfo;
     }
 
-    private static void DrawCursor(Graphics g, CURSORINFO cursorInfo)
+
+    private void DrawCursor(Graphics g, CURSORINFO cursorInfo)
     {
         if (cursorInfo.flags == CURSORINFO_FLAGS.CURSOR_SHOWING)
         {
-            var icon = Icon.FromHandle(cursorInfo.hCursor);
-            g.DrawIcon(icon, cursorInfo.ptScreenPos.X, cursorInfo.ptScreenPos.Y);
+            var relativeX = cursorInfo.ptScreenPos.X - CurrentScreenBounds.Left;
+            var relativeY = cursorInfo.ptScreenPos.Y - CurrentScreenBounds.Top;
+
+            if (relativeX >= 0 && relativeX < CurrentScreenBounds.Width && relativeY >= 0 && relativeY < CurrentScreenBounds.Height)
+            {
+                Icon icon;
+
+                if (_lastCursorIcon == null || !_lastCursorPoint.HasValue || _lastCursorPoint.Value != cursorInfo.ptScreenPos)
+                {
+                    icon = Icon.FromHandle(cursorInfo.hCursor);
+                    _lastCursorIcon?.Dispose();
+                    _lastCursorIcon = icon;
+                    _lastCursorPoint = cursorInfo.ptScreenPos;
+                }
+                else
+                {
+                    icon = _lastCursorIcon;
+                }
+
+                g.DrawIcon(icon, relativeX, relativeY);
+            }
         }
     }
 
@@ -168,5 +190,6 @@ public class BitBltCapturer : ScreenCapturer
     {
         base.Dispose();
         _bitmap?.Dispose();
+        _lastCursorIcon?.Dispose();
     }
 }
