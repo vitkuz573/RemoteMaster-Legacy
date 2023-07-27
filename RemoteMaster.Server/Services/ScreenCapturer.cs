@@ -14,6 +14,8 @@ public abstract class ScreenCapturer : IScreenCapturer
     protected readonly RecyclableMemoryStreamManager _recycleManager = new();
     protected readonly ILogger<ScreenCapturer> _logger;
     protected readonly object _screenBoundsLock = new();
+    private readonly object _bitmapLock = new();
+    private SKBitmap _skBitmap;
     private int _quality = 80;
 
     public virtual Dictionary<string, int> Screens { get; protected set; } = new();
@@ -107,9 +109,12 @@ public abstract class ScreenCapturer : IScreenCapturer
 
         try
         {
-            var skBitmap = new SKBitmap(info);
-            skBitmap.InstallPixels(info, bitmapData.Scan0, bitmapData.Stride);
-            data = EncodeBitmap(skBitmap);
+            lock (_bitmapLock)
+            {
+                _skBitmap ??= new SKBitmap(info);
+                _skBitmap.InstallPixels(info, bitmapData.Scan0, bitmapData.Stride);
+                data = EncodeBitmap(_skBitmap);
+            }
         }
         finally
         {
