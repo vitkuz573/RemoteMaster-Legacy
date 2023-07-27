@@ -1,11 +1,11 @@
-﻿using Bit.BlazorUI;
+﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
+using Bit.BlazorUI;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using RemoteMaster.Client.Components;
 using RemoteMaster.Client.Models;
 using RemoteMaster.Client.Services;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
 
 namespace RemoteMaster.Client.Pages;
 
@@ -13,11 +13,9 @@ public partial class Index
 {
     private List<BitNavItem> _nodes = new();
     private Node _selectedNode;
-
     private AddFolder _addFolderRef;
     private AddComputerManual _addComputerManualRef;
     private AddComputerFromAD _addComputerFromADRef;
-
     private BitSnackBar _snackBar = new();
     private BitSnackBarPosition SnackBarPosition = BitSnackBarPosition.BottomCenter;
     private string SnackBarTitle = string.Empty;
@@ -25,45 +23,62 @@ public partial class Index
     private bool SnackBarAutoDismiss = true;
     private int SnackBarDismissSeconds = 5;
     private BitSnackBarType SnackBarType;
+    private Dictionary<string, Node> _nodeLookup = new();
 
     [Inject]
-    private IJSRuntime JSRuntime { get; set; }
+    private IJSRuntime JSRuntime
+    {
+        get; set;
+    }
 
     [Inject]
-    private DatabaseService DatabaseService { get; set; }
+    private DatabaseService DatabaseService
+    {
+        get; set;
+    }
 
     [Inject]
-    private ActiveDirectoryService ActiveDirectoryService { get; set; }
+    private ActiveDirectoryService ActiveDirectoryService
+    {
+        get; set;
+    }
 
     protected override void OnInitialized()
     {
         var folders = DatabaseService.GetFolders();
 
-        _nodes = folders.Select(f => new BitNavItem
-        {
-            Text = f.Name,
-            IconName = BitIconName.Folder,
-            ChildItems = f.Children
-                .Select(c =>
-                {
-                    if (c is Computer computer)
-                    {
-                        return new BitNavItem
-                        {
-                            Text = c.Name,
-                            Key = computer.IPAddress,
-                            IconName = BitIconName.ScreenCast
-                        };
-                    }
+        _nodes = folders.Select(f => CreateBitNavItem(f)).ToList();
+    }
 
-                    return new BitNavItem
-                    {
-                        Text = c.Name,
-                        IconName = BitIconName.Folder
-                    };
-                })
-                .ToList()
-        }).ToList();
+    private BitNavItem CreateBitNavItem(Node node)
+    {
+        if (node is Folder folder)
+        {
+            var key = folder.NodeId.ToString();
+            _nodeLookup.Add(key, folder);
+
+            return new BitNavItem
+            {
+                Key = key,
+                Text = folder.Name,
+                IconName = BitIconName.Folder,
+                ChildItems = folder.Children.Select(c => CreateBitNavItem(c)).ToList()
+            };
+        }
+        else if (node is Computer computer)
+        {
+            var key = computer.NodeId.ToString();
+            _nodeLookup.Add(key, computer);
+
+            return new BitNavItem
+            {
+                Key = key,
+                Text = computer.Name,
+                IconName = BitIconName.ScreenCast
+            };
+        }
+
+        throw new ArgumentException("Unsupported node type");
     }
 
     private async Task GetComputersFromAD()
@@ -74,9 +89,7 @@ public partial class Index
             SnackBarType = BitSnackBarType.Success;
             SnackBarBody = "Fetch has been completed successfully";
 
-            var adNodes = new ObservableCollection<Node>();
-
-            foreach (var ou in domainComputers)
+            var adNodes = new ObservableCollection<Node>(domainComputers.Select(ou =>
             {
                 var folder = new Folder(ou.Key);
 
@@ -85,8 +98,8 @@ public partial class Index
                     folder.Children.Add(computer);
                 }
 
-                adNodes.Add(folder);
-            }
+                return (Node)folder;
+            }).ToList());
 
             _addComputerFromADRef.Show(adNodes);
         }
@@ -121,6 +134,7 @@ public partial class Index
 
     private void OnItemClick(BitNavItem item)
     {
-        // 
+        _selectedNode = _nodeLookup[item.Key];
+        StateHasChanged();
     }
 }
