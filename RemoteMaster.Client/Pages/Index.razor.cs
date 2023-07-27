@@ -26,22 +26,13 @@ public partial class Index
     private Dictionary<string, Node> _nodeLookup = new();
 
     [Inject]
-    private IJSRuntime JSRuntime
-    {
-        get; set;
-    }
+    private IJSRuntime JSRuntime { get; set; }
 
     [Inject]
-    private DatabaseService DatabaseService
-    {
-        get; set;
-    }
+    private DatabaseService DatabaseService { get; set; }
 
     [Inject]
-    private ActiveDirectoryService ActiveDirectoryService
-    {
-        get; set;
-    }
+    private ActiveDirectoryService ActiveDirectoryService { get; set; }
 
     protected override void OnInitialized()
     {
