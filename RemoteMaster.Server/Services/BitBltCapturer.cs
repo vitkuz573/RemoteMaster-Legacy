@@ -93,12 +93,15 @@ public class BitBltCapturer : ScreenCapturer
             Resolution = screen.Bounds.Size,
         }).ToList();
 
-        screens.Add(new DisplayInfo
+        if (Screen.AllScreens.Length > 1)
         {
-            Name = "VIRTUAL_SCREEN",
-            IsPrimary = false,
-            Resolution = new Size(VirtualScreenBounds.Width, VirtualScreenBounds.Height),
-        });
+            screens.Add(new DisplayInfo
+            {
+                Name = "VIRTUAL_SCREEN",
+                IsPrimary = false,
+                Resolution = new Size(VirtualScreenBounds.Width, VirtualScreenBounds.Height),
+            });
+        }
 
         return screens;
     }
