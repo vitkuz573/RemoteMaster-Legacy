@@ -78,6 +78,11 @@ public class ControlHub : Hub
         _screenCaster.SetSelectedScreen(Context.ConnectionId, displayName);
     }
 
+    public void SetInputEnabled(bool inputEnabled)
+    {
+        _inputSender.InputEnabled = inputEnabled;
+    }
+
     public void SetQuality(int quality)
     {
         ExecuteActionForViewer(viewer => viewer.ScreenCapturer.Quality = quality);

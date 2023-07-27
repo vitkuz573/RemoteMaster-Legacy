@@ -5,6 +5,8 @@ namespace RemoteMaster.Server.Abstractions;
 
 public interface IInputSender : IDisposable
 {
+    bool InputEnabled { get; set; }
+
     void SendMouseCoordinates(MouseMoveDto dto, Viewer viewer);
 
     void SendMouseButton(MouseClickDto dto, Viewer viewer);

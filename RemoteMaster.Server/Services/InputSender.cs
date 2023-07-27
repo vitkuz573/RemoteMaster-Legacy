@@ -1,9 +1,9 @@
-﻿using RemoteMaster.Server.Abstractions;
+﻿using System.Collections.Concurrent;
+using System.Runtime.InteropServices;
+using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
 using RemoteMaster.Shared.Native.Windows;
-using System.Collections.Concurrent;
-using System.Runtime.InteropServices;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
 using static Windows.Win32.PInvoke;
 
@@ -18,6 +18,8 @@ public class InputSender : IInputSender
     private readonly object _ctsLock = new();
     private readonly ConcurrentBag<INPUT> _inputPool = new();
     private readonly ILogger<InputSender> _logger;
+
+    public bool InputEnabled { get; set; } = true;
 
     public InputSender(ILogger<InputSender> logger, int numWorkers = 4)
     {
@@ -38,20 +40,17 @@ public class InputSender : IInputSender
 
     private void StartWorkerThreads()
     {
-        lock (_ctsLock)
+        for (var i = 0; i < _numWorkers; i++)
         {
-            for (int i = 0; i < _numWorkers; i++)
+            Task.Factory.StartNew(() =>
             {
-                Task.Factory.StartNew(() =>
+                CancellationToken token;
+                lock (_ctsLock)
                 {
-                    CancellationToken token;
-                    lock (_ctsLock)
-                    {
-                        token = _cts.Token;
-                    }
-                    ProcessQueue(token);
-                }, TaskCreationOptions.LongRunning);
-            }
+                    token = _cts.Token;
+                }
+                ProcessQueue(token);
+            }, TaskCreationOptions.LongRunning);
         }
     }
 
@@ -107,6 +106,11 @@ public class InputSender : IInputSender
 
     public void SendMouseCoordinates(MouseMoveDto dto, Viewer viewer)
     {
+        if (!InputEnabled)
+        {
+            return;
+        }
+
         EnqueueOperation(() =>
         {
             var xyPercent = GetAbsolutePercentFromRelativePercent(dto.X, dto.Y, viewer.ScreenCapturer);
@@ -133,6 +137,11 @@ public class InputSender : IInputSender
 
     public void SendMouseButton(MouseClickDto dto, Viewer viewer)
     {
+        if (!InputEnabled)
+        {
+            return;
+        }
+
         EnqueueOperation(() =>
         {
             var mouseEvent = dto.Button switch
@@ -175,6 +184,11 @@ public class InputSender : IInputSender
 
     public void SendMouseWheel(MouseWheelDto dto)
     {
+        if (!InputEnabled)
+        {
+            return;
+        }
+
         EnqueueOperation(() =>
         {
             PrepareAndSendInput(INPUT_TYPE.INPUT_MOUSE, dto, (input, data) =>
@@ -196,6 +210,11 @@ public class InputSender : IInputSender
 
     public void SendKeyboardInput(KeyboardKeyDto dto)
     {
+        if (!InputEnabled)
+        {
+            return;
+        }
+
         EnqueueOperation(() =>
         {
             PrepareAndSendInput(INPUT_TYPE.INPUT_KEYBOARD, dto, (input, data) =>

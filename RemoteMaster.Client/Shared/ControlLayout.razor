@@ -85,6 +85,18 @@
                     </div>
                 </li>
 
+                <li>
+                    <div class="flex items-center space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <h3 class="text-gray-600">Input Toggle</h3>
+                    </div>
+                    <div class="relative inline-flex mt-2">
+                        <Switch TValue="bool" Checked="@_inputEnabled" CheckedChanged="ToggleInputEnabled" Color="Color.Info" Size="Size.Small" />
+                    </div>
+                </li>
+
                 <!-- Add new action here -->
             </ul>
             <div class="mt-4 text-lg font-semibold border-t pt-4">Dangerous Actions</div>
@@ -115,6 +127,7 @@
 @code {
     private bool _isMenuOpen = false;
     private bool _trackCursor = true;
+    private bool _inputEnabled = true;
 
     private void ToggleMenu()
     {
@@ -136,6 +149,13 @@
         _trackCursor = value;
 
         await ControlFuncsService.ServerConnection.InvokeAsync("SetTrackCursor", value);
+    }
+
+    private async Task ToggleInputEnabled(bool value)
+    {
+        _inputEnabled = value;
+
+        await ControlFuncsService.ServerConnection.InvokeAsync("SetInputEnabled", value);
     }
 
     private async void KillServer()
