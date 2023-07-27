@@ -2,7 +2,6 @@
 using System.Drawing.Imaging;
 using RemoteMaster.Shared.Models;
 using RemoteMaster.Shared.Native.Windows.ScreenHelper;
-using SkiaSharp;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
 using static Windows.Win32.PInvoke;
