@@ -83,6 +83,11 @@ public class ControlHub : Hub
         ExecuteActionForViewer(viewer => viewer.ScreenCapturer.Quality = quality);
     }
 
+    public void SetTrackCursor(bool trackCursor)
+    {
+        ExecuteActionForViewer(viewer => viewer.ScreenCapturer.TrackCursor = trackCursor);
+    }
+
     public async Task KillServer()
     {
         Environment.Exit(0);

@@ -18,6 +18,8 @@ public abstract class ScreenCapturer : IScreenCapturer
     private SKBitmap _skBitmap;
     private int _quality = 80;
 
+    public bool TrackCursor { get; set; } = true;
+
     public virtual Dictionary<string, int> Screens { get; protected set; } = new();
 
     public abstract Rectangle CurrentScreenBounds { get; protected set; }

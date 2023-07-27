@@ -5,6 +5,8 @@ namespace RemoteMaster.Server.Abstractions;
 
 public interface IScreenCapturer : IDisposable
 {
+    bool TrackCursor { get; set; }
+
     int Quality { get; set; }
 
     event EventHandler<Rectangle> ScreenChanged;

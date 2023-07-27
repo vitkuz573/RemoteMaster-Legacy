@@ -95,6 +95,11 @@ public class BitBltCapturer : ScreenCapturer
 
     private void DrawCursor(Graphics g, CURSORINFO cursorInfo)
     {
+        if (!TrackCursor)
+        {
+            return;
+        }
+
         if (cursorInfo.flags == CURSORINFO_FLAGS.CURSOR_SHOWING)
         {
             var relativeX = cursorInfo.ptScreenPos.X - CurrentScreenBounds.Left;

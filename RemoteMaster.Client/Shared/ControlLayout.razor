@@ -10,7 +10,7 @@
     <div class="absolute h-full w-full bg-gray-800 text-white p-6">
         <div class="flex items-center justify-between">
             <h1 class="text-2xl font-bold">Control Panel</h1>
-            <button @onclick="ToggleMenu" class="absolute right-6 top-1/2 transform -translate-y-1/2 px-3 py-2 rounded-lg bg-gray-500 hover:bg-gray-600 focus:outline-none opacity-50 @($"{(isMenuOpen ? "-translate-x-80" : "translate-x-0")}")">
+            <button @onclick="ToggleMenu" class="absolute right-6 top-1/2 transform -translate-y-1/2 px-3 py-2 rounded-lg bg-gray-500 hover:bg-gray-600 focus:outline-none opacity-50 @($"{(_isMenuOpen ? "-translate-x-80" : "translate-x-0")}")">
                 <span class="sr-only">Open Menu</span>
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -22,7 +22,7 @@
         </div>
     </div>
 
-    <aside class="fixed right-0 top-0 h-screen w-80 bg-white transform-gpu transition-transform duration-500 ease-in-out shadow-2xl overflow-y-auto" style="transform: @(isMenuOpen ? "translateX(0)" : "translateX(100%)");">
+    <aside class="fixed right-0 top-0 h-screen w-80 bg-white transform-gpu transition-transform duration-500 ease-in-out shadow-2xl overflow-y-auto" style="transform: @(_isMenuOpen ? "translateX(0)" : "translateX(100%)");">
         <div class="p-6">
             <div class="flex items-center justify-between mb-8">
                 <h2 class="text-2xl font-semibold">Actions</h2>
@@ -73,6 +73,18 @@
                     </div>
                 </li>
 
+                <li>
+                    <div class="flex items-center space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <h3 class="text-gray-600">Enable Cursor Tracking</h3>
+                    </div>
+                    <div class="relative inline-flex mt-2">
+                        <Switch TValue="bool" Checked="@_trackCursor" CheckedChanged="ToggleCursorTracking" Color="Color.Info" Size="Size.Small" />
+                    </div>
+                </li>
+
                 <!-- Add new action here -->
             </ul>
             <div class="mt-4 text-lg font-semibold border-t pt-4">Dangerous Actions</div>
@@ -101,14 +113,12 @@
 </style>
 
 @code {
-    private bool isMenuOpen = false;
-    private string MessageBoxTitle { get; set; }
-    private string MessageBoxText { get; set; }
-    private string MessageBoxStyle { get; set; } = "Info";
+    private bool _isMenuOpen = false;
+    private bool _trackCursor = true;
 
     private void ToggleMenu()
     {
-        isMenuOpen = !isMenuOpen;
+        _isMenuOpen = !_isMenuOpen;
     }
 
     private async void OnChangeScreen(ChangeEventArgs e)
@@ -119,6 +129,13 @@
     private async void OnChangeQuality(ChangeEventArgs e)
     {
         await ControlFuncsService.ServerConnection.InvokeAsync("SetQuality", Convert.ToInt32(e.Value));
+    }
+
+    private async Task ToggleCursorTracking(bool value)
+    {
+        _trackCursor = value;
+
+        await ControlFuncsService.ServerConnection.InvokeAsync("SetTrackCursor", value);
     }
 
     private async void KillServer()
