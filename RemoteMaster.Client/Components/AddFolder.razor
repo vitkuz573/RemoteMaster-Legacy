@@ -2,13 +2,13 @@
 
 <BitModal @ref="_modalRef" @bind-IsOpen="IsOpen" IsBlocking="true">
     <div class="modal-header">
-        <span>Add Folder</span>
+        <span>New Folder</span>
         <BitIconButton OnClick=@(()=> IsOpen = false) IconName="@BitIconName.ChromeClose" Title="Close" />
     </div>
     <div class="modal-body space-y-2">
-        <BitTextField Label="Name" IsRequired="true" MaxLength="10" />
+        <BitTextField Label="Name" IsRequired="true" MaxLength="10" IsUnderlined="true" />
         <BitButton>
-            Add
+            Create
         </BitButton>
     </div>
 </BitModal>

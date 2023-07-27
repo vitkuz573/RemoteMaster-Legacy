@@ -2,20 +2,16 @@
 
 <BitModal @bind-IsOpen="IsOpen" IsBlocking="true">
     <div class="modal-header">
-        <span>AutoToggleScroll = false</span>
+        <span>New Computer</span>
         <BitIconButton OnClick=@(()=> IsOpen = false) IconName="@BitIconName.ChromeClose" Title="Close" />
     </div>
-    <div class="modal-body">
-        <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas lorem nulla, malesuada ut sagittis sit
-            amet, vulputate in leo. Maecenas vulputate congue sapien eu tincidunt. Etiam eu sem turpis. Fusce tempor
-            sagittis nunc, ut interdum ipsum vestibulum non. Proin dolor elit, aliquam eget tincidunt non, vestibulum ut
-            turpis. In hac habitasse platea dictumst. In a odio eget enim porttitor maximus. Aliquam nulla nibh,
-            ullamcorper aliquam placerat eu, viverra et dui. Phasellus ex lectus, maximus in mollis ac, luctus vel eros.
-            Vivamus ultrices, turpis sed malesuada gravida, eros ipsum venenatis elit, et volutpat eros dui et ante.
-            Quisque ultricies mi nec leo ultricies mollis. Vivamus egestas volutpat lacinia. Quisque pharetra eleifend
-            efficitur.
-        </p>
+    <div class="modal-body space-y-2">
+        <BitTextField Label="Name" IsRequired="true" MaxLength="10" IsUnderlined="true" />
+        <BitTextField Label="IP Address" IsRequired="true" IsUnderlined="true" />
+        <BitDropdown Label="Folder" IsRequired="true" />
+        <BitButton>
+            Create
+        </BitButton>
     </div>
 </BitModal>
 
