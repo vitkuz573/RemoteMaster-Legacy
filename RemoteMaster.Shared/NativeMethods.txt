@@ -35,3 +35,4 @@ CreateDC
 DeleteDC
 EnumDisplayMonitors
 MessageBox
+GetCursorInfo

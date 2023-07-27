@@ -1,10 +1,13 @@
 ﻿using System.Drawing;
 using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 using RemoteMaster.Shared.Models;
 using RemoteMaster.Shared.Native.Windows.ScreenHelper;
+using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
 using static Windows.Win32.PInvoke;
+using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace RemoteMaster.Server.Services;
 
@@ -71,7 +74,29 @@ public class BitBltCapturer : ScreenCapturer
         memoryGraphics.ReleaseHdc(dc2);
         ReleaseDC(HWND.Null, dc1);
 
+        var cursorInfo = GetCursorInfo();
+        DrawCursor(memoryGraphics, cursorInfo);
+
         return SaveBitmap(_bitmap);
+    }
+
+    private static CURSORINFO GetCursorInfo()
+    {
+        var cursorInfo = new CURSORINFO();
+        cursorInfo.cbSize = (uint)Marshal.SizeOf(cursorInfo);
+
+        PInvoke.GetCursorInfo(ref cursorInfo);
+
+        return cursorInfo;
+    }
+
+    private static void DrawCursor(Graphics g, CURSORINFO cursorInfo)
+    {
+        if (cursorInfo.flags == CURSORINFO_FLAGS.CURSOR_SHOWING)
+        {
+            var icon = Icon.FromHandle(cursorInfo.hCursor);
+            g.DrawIcon(icon, cursorInfo.ptScreenPos.X, cursorInfo.ptScreenPos.Y);
+        }
     }
 
     private byte[]? GetVirtualScreenFrame()
