@@ -120,4 +120,9 @@ public abstract class ScreenCapturer : IScreenCapturer
     {
         ScreenChanged?.Invoke(this, currentScreenBounds);
     }
+
+    public virtual void Dispose()
+    {
+        //
+    }
 }

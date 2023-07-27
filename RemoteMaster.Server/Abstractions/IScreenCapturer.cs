@@ -3,7 +3,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Abstractions;
 
-public interface IScreenCapturer
+public interface IScreenCapturer : IDisposable
 {
     event EventHandler<Rectangle> ScreenChanged;
 

@@ -2,6 +2,7 @@
 using System.Drawing.Imaging;
 using RemoteMaster.Shared.Models;
 using RemoteMaster.Shared.Native.Windows.ScreenHelper;
+using SkiaSharp;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
 using static Windows.Win32.PInvoke;
@@ -10,6 +11,8 @@ namespace RemoteMaster.Server.Services;
 
 public class BitBltCapturer : ScreenCapturer
 {
+    private Bitmap _bitmap;
+
     public override Rectangle CurrentScreenBounds { get; protected set; } = Screen.PrimaryScreen?.Bounds ?? Rectangle.Empty;
 
     public override Rectangle VirtualScreenBounds { get; protected set; } = SystemInformation.VirtualScreen;
@@ -18,6 +21,7 @@ public class BitBltCapturer : ScreenCapturer
 
     public BitBltCapturer(ILogger<ScreenCapturer> logger) : base(logger)
     {
+        _bitmap = new Bitmap(CurrentScreenBounds.Width, CurrentScreenBounds.Height, PixelFormat.Format32bppArgb);
     }
 
     protected override void Init()
@@ -39,8 +43,13 @@ public class BitBltCapturer : ScreenCapturer
             var left = CurrentScreenBounds.Left;
             var top = CurrentScreenBounds.Top;
 
-            using var bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
-            using var memoryGraphics = Graphics.FromImage(bitmap);
+            if (_bitmap.Width != width || _bitmap.Height != height)
+            {
+                _bitmap.Dispose();
+                _bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+            }
+
+            using var memoryGraphics = Graphics.FromImage(_bitmap);
 
             var dc1 = GetDC(HWND.Null);
             var dc2 = (HDC)memoryGraphics.GetHdc();
@@ -50,7 +59,7 @@ public class BitBltCapturer : ScreenCapturer
             memoryGraphics.ReleaseHdc(dc2);
             ReleaseDC(HWND.Null, dc1);
 
-            return SaveBitmap(bitmap);
+            return SaveBitmap(_bitmap);
         }
         catch (Exception ex)
         {
@@ -92,5 +101,11 @@ public class BitBltCapturer : ScreenCapturer
     {
         CurrentScreenBounds = Screen.AllScreens[Screens[SelectedScreen]].Bounds;
         RaiseScreenChangedEvent(CurrentScreenBounds);
+    }
+
+    public override void Dispose()
+    {
+        base.Dispose();
+        _bitmap?.Dispose();
     }
 }
