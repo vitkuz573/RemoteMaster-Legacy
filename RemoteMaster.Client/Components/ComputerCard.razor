@@ -21,7 +21,7 @@
     [Parameter]
     public Computer Computer { get; set; }
 
-    void ShowContextMenu(MouseEventArgs args)
+    private void ShowContextMenu(MouseEventArgs args)
     {
         ContextMenuService.Open(args,
             new List<ContextMenuItem> {
@@ -30,7 +30,7 @@
             }, OnMenuItemClick);
     }
 
-    async void OnMenuItemClick(MenuItemEventArgs args)
+    private async void OnMenuItemClick(MenuItemEventArgs args)
     {
         if (args.Value.Equals("Command"))
         {
