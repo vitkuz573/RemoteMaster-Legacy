@@ -38,7 +38,6 @@
         }
         else if (args.Value.Equals("Tab"))
         {
-            // Open the URL in a new tab using JavaScript
             await JsRuntime.InvokeVoidAsync("open", $"http://127.0.0.1:5254/{Computer.IPAddress}/control", "_blank");
         }
 
