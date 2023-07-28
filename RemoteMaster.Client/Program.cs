@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
+using Radzen;
 using RemoteMaster.Client.Abstractions;
 using RemoteMaster.Client.Services;
 
@@ -13,6 +14,11 @@ builder.Services.AddScoped<DatabaseService>();
 builder.Services.AddSingleton<ActiveDirectoryService>();
 builder.Services.AddTransient<IHubConnectionBuilder>(s => new HubConnectionBuilder());
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<DialogService>();
+builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<TooltipService>();
+builder.Services.AddScoped<ContextMenuService>();
 
 // Blazor Pages and Server-side Blazor
 builder.Services.AddRazorPages();

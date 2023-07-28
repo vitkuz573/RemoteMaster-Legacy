@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Radzen;
 using Radzen.Blazor;
-using RemoteMaster.Client.Components;
 using RemoteMaster.Client.Models;
 using RemoteMaster.Client.Services;
 
@@ -15,9 +14,9 @@ public partial class Index
     private List<Node> _entries;
 
     private Node _selectedNode;
-    private AddFolder _addFolderRef;
-    private AddComputerManual _addComputerManualRef;
-    private AddComputerFromAD _addComputerFromADRef;
+
+    [Inject]
+    private DialogService DialogService { get; set; }
 
     [Inject]
     private IJSRuntime JSRuntime { get; set; }
@@ -95,7 +94,7 @@ public partial class Index
                 return (Node)folder;
             }).ToList());
 
-            _addComputerFromADRef.Show(adNodes);
+            // _addComputerFromADRef.Show(adNodes);
         }
         catch (Exception e)
         {
@@ -104,6 +103,14 @@ public partial class Index
         }
 
         // await _snackBar.Show(SnackBarTitle, SnackBarBody, SnackBarType);
+    }
+
+    public async Task OpenNewFolder()
+    {
+        await DialogService.OpenAsync<NewFolderPage>("New Folder", options: new DialogOptions
+        {
+            Draggable = true
+        });
     }
 
     private async Task OpenInNewTab(Computer computer)

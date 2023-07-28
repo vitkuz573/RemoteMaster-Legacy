@@ -9,15 +9,10 @@
         <RadzenButton Click="GetComputersFromAD" Text="Get Computers From AD" />
 
         <div class="space-x-4">
-            <RadzenButton Click="(() => _addFolderRef.Show())" Text="New Folder"  />
-            <RadzenButton Click="(() => _addComputerManualRef.Show())" Text="New Computer" />
+            <RadzenButton Text="New Folder" Click="OpenNewFolder" />
+            <RadzenButton Text="New Computer" />
         </div>
     </div>
-
-    <AddComputerFromAD @ref="_addComputerFromADRef" />
-
-    <AddFolder @ref="_addFolderRef" />
-    <AddComputerManual @ref="_addComputerManualRef" />
 
     <div class="row flex">
 

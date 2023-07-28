@@ -1,0 +1,10 @@
+﻿@page "/folder/new"
+@using Radzen;
+@using RemoteMaster.Client.Models;
+
+<RadzenContent Padding="20px">
+    <RadzenTemplateForm TItem="Folder">
+        <RadzenTextBox @bind-Value="_name" Name="FolderName" Placeholder="Enter Folder Name" Style="width:80%; margin-bottom:10px" />
+    </RadzenTemplateForm>
+    <RadzenButton Text="Add Folder" Click="Create" ButtonStyle="ButtonStyle.Primary" />
+</RadzenContent>
