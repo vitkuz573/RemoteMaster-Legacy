@@ -130,6 +130,14 @@ public partial class Index
         });
     }
 
+    public async Task OpenNewComputer()
+    {
+        await DialogService.OpenAsync<NewComputerPage>("New Computer", options: new DialogOptions
+        {
+            Draggable = true
+        });
+    }
+
     private async Task OpenInNewTab(Computer computer)
     {
         var url = $"http://localhost:5254/{computer.IPAddress}/control";

@@ -1,0 +1,12 @@
+﻿@page "/computer/new"
+@using Radzen;
+@using RemoteMaster.Client.Models;
+
+<RadzenContent Padding="20px">
+    <RadzenTemplateForm TItem="Computer">
+        <RadzenTextBox @bind-Value="_name" Name="ComputerName" Placeholder="Enter Computer Name" Style="width:80%; margin-bottom:10px" />
+        <RadzenTextBox @bind-Value="_ip" Name="IP" Placeholder="Enter IP" Style="width:80%; margin-bottom:10px" />
+        <RadzenDropDown @bind-Value="_selectedFolderId" TextProperty="Name" ValueProperty="NodeId" Data="_folders" Placeholder="Select a folder" Style="width:80%; margin-bottom:10px" />
+    </RadzenTemplateForm>
+    <RadzenButton Text="Add Computer" Click="Create" ButtonStyle="ButtonStyle.Primary" />
+</RadzenContent>
