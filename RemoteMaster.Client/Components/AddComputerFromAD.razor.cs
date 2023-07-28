@@ -1,5 +1,5 @@
-﻿using RemoteMaster.Client.Models;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
+using RemoteMaster.Client.Models;
 
 namespace RemoteMaster.Client.Components;
 

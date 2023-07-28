@@ -6,11 +6,20 @@ namespace RemoteMaster.Client.Components;
 public partial class ComputerCard : ComponentBase
 {
     [Parameter]
-    public Computer Computer { get; set; }
+    public Computer Computer
+    {
+        get; set;
+    }
 
     [Parameter]
-    public EventCallback<Computer> OnOpenShell { get; set; }
+    public EventCallback<Computer> OnOpenShell
+    {
+        get; set;
+    }
 
     [Parameter]
-    public EventCallback<Computer> OnOpenInNewTab { get; set; }
+    public EventCallback<Computer> OnOpenInNewTab
+    {
+        get; set;
+    }
 }

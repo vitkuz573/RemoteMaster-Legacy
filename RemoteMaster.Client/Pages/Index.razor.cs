@@ -96,8 +96,6 @@ public partial class Index
         try
         {
             var domainComputers = await ActiveDirectoryService.FetchComputers();
-            // SnackBarType = BitSnackBarType.Success;
-            // SnackBarBody = "Fetch has been completed successfully";
 
             var adNodes = new ObservableCollection<Node>(domainComputers.Select(ou =>
             {
@@ -110,16 +108,8 @@ public partial class Index
 
                 return (Node)folder;
             }).ToList());
-
-            // _addComputerFromADRef.Show(adNodes);
         }
-        catch (Exception e)
-        {
-            // SnackBarType = BitSnackBarType.Error;
-            // SnackBarBody = $"An error occurred during fetch: {e.Message}";
-        }
-
-        // await _snackBar.Show(SnackBarTitle, SnackBarBody, SnackBarType);
+        catch { }
     }
 
     public async Task OpenNewFolder()
