@@ -1,6 +1,8 @@
 ﻿@using Radzen
+@using Microsoft.AspNetCore.Components
 @using RemoteMaster.Client.Models;
 @inject ContextMenuService ContextMenuService
+@inject IJSRuntime JsRuntime
 
 <div @oncontextmenu:preventDefault="true" @oncontextmenu="@(args => ShowContextMenu(args))">
     <RadzenCard Style="width: 256px; height: 192px;" class="computer-card">
@@ -19,30 +21,27 @@
     [Parameter]
     public Computer Computer { get; set; }
 
-    [Inject]
-    private IJSRuntime JSRuntime { get; set; }
-
     void ShowContextMenu(MouseEventArgs args)
     {
         ContextMenuService.Open(args,
             new List<ContextMenuItem> {
             new ContextMenuItem(){ Text = "Open Command", Value = "Command", Icon = "terminal" },
             new ContextMenuItem(){ Text = "Open in Tab", Value = "Tab", Icon = "link" },
-                 }, OnMenuItemClick);
+            }, OnMenuItemClick);
     }
 
-    void OnMenuItemClick(MenuItemEventArgs args)
+    async void OnMenuItemClick(MenuItemEventArgs args)
     {
         if (args.Value.Equals("Command"))
         {
             // Put your command action here
-            // OnOpenShell.InvokeAsync(Computer)
         }
         else if (args.Value.Equals("Tab"))
         {
-            // Put your tab action here
-            // OnOpenInNewTab.InvokeAsync(Computer)
+            // Open the URL in a new tab using JavaScript
+            await JsRuntime.InvokeVoidAsync("open", $"http://127.0.0.1:5254/{Computer.IPAddress}/control", "_blank");
         }
+
         ContextMenuService.Close();
     }
 }
