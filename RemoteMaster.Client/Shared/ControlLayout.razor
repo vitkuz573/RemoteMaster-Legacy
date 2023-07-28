@@ -69,7 +69,7 @@
                         <h3 class="text-gray-600">Change Quality</h3>
                     </div>
                     <div class="relative inline-flex mt-2">
-                        <BitSlider Max="100" DefaultValue="80" OnChange="ChangeQuality" />
+                        <RadzenSlider @bind-Value="_quality" TValue="int" Min="0" Max="100" Change="ChangeQuality" />
                     </div>
                 </li>
 
@@ -81,7 +81,7 @@
                         <h3 class="text-gray-600">Cursor Tracking</h3>
                     </div>
                     <div class="relative inline-flex mt-2">
-                        <BitToggle OnChange="ToggleCursorTracking" />
+                        <RadzenSwitch @bind-Value="@_cursorTracking" Change="ToggleCursorTracking" />
                     </div>
                 </li>
 
@@ -93,7 +93,7 @@
                         <h3 class="text-gray-600">Input Toggle</h3>
                     </div>
                     <div class="relative inline-flex mt-2">
-                        <BitToggle OnChange="ToggleInputEnabled" />
+                        <RadzenSwitch @bind-Value="@_inputEnabled" Change="ToggleInputEnabled" />
                     </div>
                 </li>
 
@@ -127,6 +127,8 @@
 @code {
     private bool _isMenuOpen = false;
     private bool _inputEnabled = true;
+    private bool _cursorTracking = true;
+    private int _quality = 80;
 
     private void ToggleMenu()
     {
@@ -138,13 +140,17 @@
         await ControlFuncsService.ServerConnection.InvokeAsync("SendSelectedScreen", e.Value.ToString());
     }
 
-    private async void ChangeQuality(ChangeEventArgs e)
+    private async void ChangeQuality(int quality)
     {
-        await ControlFuncsService.ServerConnection.InvokeAsync("SetQuality", Convert.ToInt32(e.Value));
+        _quality = quality;
+
+        await ControlFuncsService.ServerConnection.InvokeAsync("SetQuality", quality);
     }
 
     private async Task ToggleCursorTracking(bool value)
     {
+        _cursorTracking = value;
+
         await ControlFuncsService.ServerConnection.InvokeAsync("SetTrackCursor", value);
     }
 
