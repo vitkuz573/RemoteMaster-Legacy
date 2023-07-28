@@ -1,22 +1,16 @@
 ﻿@page "/"
+@using Radzen;
 @using RemoteMaster.Client.Models;
 @using RemoteMaster.Client.Components;
 
 <div class="container mx-auto py-6 px-4">
 
     <div class="flex justify-between mb-4">
-        <BitButton OnClick="GetComputersFromAD">
-            Get Computers from AD
-        </BitButton>
+        <RadzenButton Click="GetComputersFromAD" Text="Get Computers From AD" />
 
         <div class="space-x-4">
-            <BitButton OnClick="(() => _addFolderRef.Show())">
-                Add Folder
-            </BitButton>
-
-            <BitButton OnClick="(() => _addComputerManualRef.Show())">
-                Add Computer
-            </BitButton>
+            <RadzenButton Click="(() => _addFolderRef.Show())" Text="New Folder"  />
+            <RadzenButton Click="(() => _addComputerManualRef.Show())" Text="New Computer" />
         </div>
     </div>
 
@@ -28,7 +22,11 @@
     <div class="row flex">
 
         <div class="border-r flex-none">
-            <BitNav Items="_nodes" OnItemClick="(BitNavItem item) => OnItemClick(item)" />
+            <RadzenCard>
+                <RadzenTree Data="_entries" Expand="LoadComputers">
+                    <RadzenTreeLevel Text="GetTextForNode" Template="ComputerTemplate" />
+                </RadzenTree>
+            </RadzenCard>
         </div>
 
         <div id="container" class="flex-grow grid grid-cols-4 gap-4">
@@ -46,7 +44,7 @@
 
     </div>
 
-    <BitSnackBar @ref="_snackBar" Position="SnackBarPosition" AutoDismiss="SnackBarAutoDismiss" AutoDismissTime="TimeSpan.FromSeconds(SnackBarDismissSeconds)" />
+    <!--<BitSnackBar @ref="_snackBar" Position="SnackBarPosition" AutoDismiss="SnackBarAutoDismiss" AutoDismissTime="TimeSpan.FromSeconds(SnackBarDismissSeconds)" />-->
 
     <!--<button onclick="openTabs()">Открыть выделенные</button>-->
 

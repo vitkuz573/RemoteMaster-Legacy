@@ -1,5 +1,4 @@
-﻿using Bit.BlazorUI;
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 using RemoteMaster.Client.Models;
 using RemoteMaster.Client.Services;
 using System.Collections.ObjectModel;
@@ -8,7 +7,7 @@ namespace RemoteMaster.Client.Components;
 
 public partial class AddFolder
 {
-    public BitModal _modalRef;
+    // public BitModal _modalRef;
     public bool IsOpen = false;
     public Folder _newFolder;
 

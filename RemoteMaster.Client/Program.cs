@@ -1,7 +1,5 @@
-using FluentValidation;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
-using RemoteMaster.Client;
 using RemoteMaster.Client.Abstractions;
 using RemoteMaster.Client.Services;
 
@@ -14,7 +12,6 @@ builder.Services.AddScoped<ControlFunctionsService>();
 builder.Services.AddScoped<DatabaseService>();
 builder.Services.AddSingleton<ActiveDirectoryService>();
 builder.Services.AddTransient<IHubConnectionBuilder>(s => new HubConnectionBuilder());
-builder.Services.AddValidatorsFromAssembly(typeof(App).Assembly);
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Blazor Pages and Server-side Blazor

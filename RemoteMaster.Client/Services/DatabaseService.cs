@@ -22,4 +22,12 @@ public class DatabaseService
         _context.Nodes.Add(node);
         _context.SaveChanges();
     }
+
+    public IList<Computer> GetComputersByFolderId(Guid folderId)
+    {
+        return _context.Nodes
+            .OfType<Computer>()
+            .Where(c => c.ParentId == folderId)
+            .ToList();
+    }
 }

@@ -1,8 +1,9 @@
 ﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
-using Bit.BlazorUI;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+using Radzen;
+using Radzen.Blazor;
 using RemoteMaster.Client.Components;
 using RemoteMaster.Client.Models;
 using RemoteMaster.Client.Services;
@@ -11,19 +12,12 @@ namespace RemoteMaster.Client.Pages;
 
 public partial class Index
 {
-    private List<BitNavItem> _nodes = new();
+    private List<Node> _entries;
+
     private Node _selectedNode;
     private AddFolder _addFolderRef;
     private AddComputerManual _addComputerManualRef;
     private AddComputerFromAD _addComputerFromADRef;
-    private BitSnackBar _snackBar = new();
-    private BitSnackBarPosition SnackBarPosition = BitSnackBarPosition.BottomCenter;
-    private string SnackBarTitle = string.Empty;
-    private string? SnackBarBody;
-    private bool SnackBarAutoDismiss = true;
-    private int SnackBarDismissSeconds = 5;
-    private BitSnackBarType SnackBarType;
-    private readonly Dictionary<string, Node> _nodeLookup = new();
 
     [Inject]
     private IJSRuntime JSRuntime { get; set; }
@@ -36,49 +30,58 @@ public partial class Index
 
     protected override void OnInitialized()
     {
+        _entries = new List<Node>();
+
         var folders = DatabaseService.GetFolders();
 
-        _nodes = folders.Select(f => CreateBitNavItem(f)).ToList();
+        foreach (var folder in folders)
+        {
+            _entries.Add(folder);
+        }
     }
 
-    private BitNavItem CreateBitNavItem(Node node)
+    private async void LoadComputers(TreeExpandEventArgs args)
     {
-        if (node is Folder folder)
-        {
-            var key = folder.NodeId.ToString();
-            _nodeLookup.Add(key, folder);
+        var node = args.Value as Node;
+        var nodeId = node.NodeId;
 
-            return new BitNavItem
-            {
-                Key = key,
-                Text = folder.Name,
-                IconName = BitIconName.Folder,
-                ChildItems = folder.Children.Select(c => CreateBitNavItem(c)).ToList()
-            };
-        }
-        else if (node is Computer computer)
-        {
-            var key = computer.NodeId.ToString();
-            _nodeLookup.Add(key, computer);
+        var computers = DatabaseService.GetComputersByFolderId(nodeId);
 
-            return new BitNavItem
-            {
-                Key = key,
-                Text = computer.Name,
-                IconName = BitIconName.ScreenCast
-            };
-        }
-
-        throw new ArgumentException("Unsupported node type");
+        args.Children.Data = computers;
+        args.Children.Text = GetTextForNode;
+        args.Children.HasChildren = (node) => false;
+        args.Children.Template = ComputerTemplate;
     }
+
+    private RenderFragment<RadzenTreeItem> ComputerTemplate = (context) => builder =>
+    {
+        if (context.Value is Computer computer)
+        {
+            builder.OpenComponent<RadzenIcon>(0);
+            builder.AddAttribute(1, "Icon", "desktop_windows");
+            builder.CloseComponent();
+
+            builder.AddContent(2, $" {computer.Name} ({computer.IPAddress})");
+        }
+        else if (context.Value is Folder folder)
+        {
+            builder.OpenComponent<RadzenIcon>(0);
+            builder.AddAttribute(1, "Icon", "folder");
+            builder.CloseComponent();
+
+            builder.AddContent(2, $" {folder.Name}");
+        }
+    };
+
+    private string GetTextForNode(object data) => data as string;
 
     private async Task GetComputersFromAD()
     {
         try
         {
             var domainComputers = await ActiveDirectoryService.FetchComputers();
-            SnackBarType = BitSnackBarType.Success;
-            SnackBarBody = "Fetch has been completed successfully";
+            // SnackBarType = BitSnackBarType.Success;
+            // SnackBarBody = "Fetch has been completed successfully";
 
             var adNodes = new ObservableCollection<Node>(domainComputers.Select(ou =>
             {
@@ -96,11 +99,11 @@ public partial class Index
         }
         catch (Exception e)
         {
-            SnackBarType = BitSnackBarType.Error;
-            SnackBarBody = $"An error occurred during fetch: {e.Message}";
+            // SnackBarType = BitSnackBarType.Error;
+            // SnackBarBody = $"An error occurred during fetch: {e.Message}";
         }
 
-        await _snackBar.Show(SnackBarTitle, SnackBarBody, SnackBarType);
+        // await _snackBar.Show(SnackBarTitle, SnackBarBody, SnackBarType);
     }
 
     private async Task OpenInNewTab(Computer computer)
@@ -121,11 +124,5 @@ public partial class Index
         };
 
         await Task.Run(() => Process.Start(startInfo));
-    }
-
-    private void OnItemClick(BitNavItem item)
-    {
-        _selectedNode = _nodeLookup[item.Key];
-        StateHasChanged();
     }
 }
