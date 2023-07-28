@@ -37,6 +37,23 @@ public partial class Index
         {
             _entries.Add(folder);
         }
+
+        DatabaseService.NodeAdded += OnNodeAdded;
+    }
+
+    private void OnNodeAdded(Node node)
+    {
+        if (node is Folder folder)
+        {
+            _entries.Add(folder);
+        }
+        else if (node is Computer computer)
+        {
+            var parentFolder = _entries.OfType<Folder>().First(f => f.NodeId == computer.ParentId);
+            parentFolder.Children.Add(computer);
+        }
+
+        StateHasChanged();
     }
 
     private async void LoadComputers(TreeExpandEventArgs args)
