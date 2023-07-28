@@ -1,44 +1,44 @@
-﻿@namespace RemoteMaster.Client.Components
+﻿@using Radzen
+@using RemoteMaster.Client.Models;
+@inject ContextMenuService ContextMenuService
 
-<div class="card h-48 w-64 bg-white rounded-lg overflow-hidden border-2 border-transparent hover:border-blue-500 transition-all shadow-md hover:shadow-lg flex flex-col selectable-nodes" data-ip-address="@Computer.IPAddress">
-    <div class="h-32 w-full">
-        <img src="https://placehold.co/500x300" alt="Screen preview" class="h-full w-full object-cover" />
-    </div>
-    <div class="flex-grow p-3 flex flex-col justify-between">
-        <div class="flex justify-between items-center">
-            <h3 class="text-sm text-gray-700 font-semibold">
-                @Computer.Name
-            </h3>
-            <div class="relative">
-                <Dropdown RightAligned ShowArrow="false">
-                    <DropdownToggle>
-                        <Button Margin="Margin.Is0" Padding="Padding.Is0" class="text-gray-500 hover:text-gray-700 focus:outline-none">
-                            <Icon Name="IconName.MoreVertical" />
-                        </Button>
-                    </DropdownToggle>
-                    <DropdownMenu>
-                        <DropdownItem Clicked="(() => OnOpenShell.InvokeAsync(Computer))">
-                            <span>
-                                <i class="fas fa-terminal mr-2"></i> Open Command
-                            </span>
-                        </DropdownItem>
-                        <DropdownItem Clicked="(() => OnOpenInNewTab.InvokeAsync(Computer))">
-                            <span>
-                                <i class="fas fa-external-link-alt mr-2"></i> Open in Tab
-                            </span>
-                        </DropdownItem>
-                    </DropdownMenu>
-                </Dropdown>
-            </div>
+<RadzenCard Style="width: 256px; height: 192px;">
+    <div class="p-3">
+        <RadzenImage Path="https://placehold.co/500x300" Style="height: 128px; width: 100%; object-fit: cover;" />
+
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <RadzenLabel Text="@Computer.Name" />
+            <RadzenButton Icon="more_vert" Style="border: none; background: transparent;"
+            @onclick="@(args => ShowContextMenu(args))" />
         </div>
-        <!-- Here you can add more details about the Computer -->
     </div>
-</div>
+</RadzenCard>
 
-<style>
-    .ds-selected {
-        border: 2px solid #0078d4;
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        background-color: #f5f5f5;
+@code {
+    [Parameter]
+    public Computer Computer { get; set; }
+
+    void ShowContextMenu(MouseEventArgs args)
+    {
+        ContextMenuService.Open(args,
+            new List<ContextMenuItem> {
+                new ContextMenuItem(){ Text = "Open Command", Value = "Command", Icon = "terminal" },
+                new ContextMenuItem(){ Text = "Open in Tab", Value = "Tab", Icon = "external_link_alt" },
+             }, OnMenuItemClick);
     }
-</style>
+
+    void OnMenuItemClick(MenuItemEventArgs args)
+    {
+        if (args.Value.Equals("Command"))
+        {
+            // Put your command action here
+            // OnOpenShell.InvokeAsync(Computer)
+        }
+        else if (args.Value.Equals("Tab"))
+        {
+            // Put your tab action here
+            // OnOpenInNewTab.InvokeAsync(Computer)
+        }
+        ContextMenuService.Close();
+    }
+}
