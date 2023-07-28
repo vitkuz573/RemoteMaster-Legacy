@@ -18,7 +18,7 @@
 
         <div class="border-r flex-none">
             <RadzenCard>
-                <RadzenTree Data="_entries" Expand="LoadComputers">
+                <RadzenTree Data="_entries" Expand="LoadComputers" Change="OnTreeChange">
                     <RadzenTreeLevel Text="GetTextForNode" Template="ComputerTemplate" />
                 </RadzenTree>
             </RadzenCard>

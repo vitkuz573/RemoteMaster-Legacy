@@ -138,6 +138,18 @@ public partial class Index
         });
     }
 
+    private void OnTreeChange(TreeEventArgs args)
+    {
+        var node = args.Value as Node;
+
+        if (node is Folder)
+        {
+            _selectedNode = node;
+        }
+
+        StateHasChanged();
+    }
+
     private async Task OpenInNewTab(Computer computer)
     {
         var url = $"http://localhost:5254/{computer.IPAddress}/control";
