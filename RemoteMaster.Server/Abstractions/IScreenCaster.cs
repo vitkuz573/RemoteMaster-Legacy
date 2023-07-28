@@ -1,6 +1,4 @@
-﻿using RemoteMaster.Shared.Dtos;
-
-namespace RemoteMaster.Server.Abstractions;
+﻿namespace RemoteMaster.Server.Abstractions;
 
 public interface IScreenCaster
 {

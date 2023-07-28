@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
-using RemoteMaster.Shared.Extensions;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text;
+using Microsoft.Extensions.Logging;
+using RemoteMaster.Shared.Extensions;
 
 namespace RemoteMaster.Shared;
 
@@ -27,7 +27,10 @@ public class FileLogger : ILogger
     {
         get
         {
-            if (!string.IsNullOrWhiteSpace(_logDir)) return _logDir;
+            if (!string.IsNullOrWhiteSpace(_logDir))
+            {
+                return _logDir;
+            }
 
             _logDir = OperatingSystem.IsWindows()
                 ? Directory.CreateDirectory(@"C:\sc\Logs").FullName

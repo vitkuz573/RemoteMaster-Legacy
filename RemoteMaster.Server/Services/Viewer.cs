@@ -4,7 +4,6 @@ using RemoteMaster.Server.Hubs;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Helpers;
 using RemoteMaster.Shared.Models;
-using System.Drawing;
 
 namespace RemoteMaster.Server.Services;
 

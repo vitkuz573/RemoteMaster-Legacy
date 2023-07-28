@@ -1,5 +1,5 @@
-﻿using RemoteMaster.Shared.Models;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
+using RemoteMaster.Shared.Models;
 using Windows.Win32.Foundation;
 using Windows.Win32.System.RemoteDesktop;
 using static Windows.Win32.PInvoke;

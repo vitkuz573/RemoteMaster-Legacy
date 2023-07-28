@@ -1,6 +1,6 @@
+using System.Text;
 using MessagePack.Resolvers;
 using RemoteMaster.Shared.Helpers;
-using System.Text;
 
 namespace RemoteMaster.Tests;
 

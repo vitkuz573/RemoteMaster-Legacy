@@ -1,8 +1,8 @@
-﻿using RemoteMaster.Client.Models;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.DirectoryServices.AccountManagement;
 using System.Net;
 using System.Net.Sockets;
+using RemoteMaster.Client.Models;
 
 namespace RemoteMaster.Client.Services;
 

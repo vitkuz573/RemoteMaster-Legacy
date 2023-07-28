@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using System.Diagnostics;
+using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Shared.Native.Windows;
-using System.Diagnostics;
 
 namespace RemoteMaster.Agent.Hubs;
 

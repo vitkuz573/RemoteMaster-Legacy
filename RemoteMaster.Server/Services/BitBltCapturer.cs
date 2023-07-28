@@ -6,8 +6,8 @@ using RemoteMaster.Shared.Native.Windows.ScreenHelper;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
-using static Windows.Win32.PInvoke;
 using Windows.Win32.UI.WindowsAndMessaging;
+using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Server.Services;
 
