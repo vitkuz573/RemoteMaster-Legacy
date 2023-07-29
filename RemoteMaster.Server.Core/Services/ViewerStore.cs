@@ -1,20 +1,20 @@
 ﻿using System.Collections.Concurrent;
-using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Core.Abstractions;
 
-namespace RemoteMaster.Server.Services;
+namespace RemoteMaster.Server.Core.Services;
 
 public class ViewerStore : IViewerStore
 {
-    private readonly ConcurrentDictionary<string, Viewer> _viewers = new();
+    private readonly ConcurrentDictionary<string, IViewer> _viewers = new();
 
-    public IReadOnlyDictionary<string, Viewer> Viewers => _viewers;
+    public IReadOnlyDictionary<string, IViewer> Viewers => _viewers;
 
-    public bool TryGetViewer(string connectionId, out Viewer viewer)
+    public bool TryGetViewer(string connectionId, out IViewer viewer)
     {
         return _viewers.TryGetValue(connectionId, out viewer);
     }
 
-    public bool TryAddViewer(Viewer viewer)
+    public bool TryAddViewer(IViewer viewer)
     {
         if (viewer == null)
         {

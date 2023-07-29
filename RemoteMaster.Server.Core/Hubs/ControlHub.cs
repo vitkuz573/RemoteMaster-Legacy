@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Services;
+using Microsoft.Extensions.Logging;
+using RemoteMaster.Server.Core.Abstractions;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Native.Windows;
 using Windows.Win32.Foundation;
 using static Windows.Win32.PInvoke;
 
-namespace RemoteMaster.Server.Hubs;
+namespace RemoteMaster.Server.Core.Hubs;
 
 public class ControlHub : Hub
 {
@@ -24,7 +24,7 @@ public class ControlHub : Hub
         _logger = logger;
     }
 
-    public async override Task OnConnectedAsync()
+    public override Task OnConnectedAsync()
     {
         _cancellationTokenSource = new CancellationTokenSource();
         var connectionId = Context.ConnectionId;
@@ -40,6 +40,8 @@ public class ControlHub : Hub
                 _logger.LogError(ex, "Error occurred while streaming");
             }
         });
+
+        return Task.CompletedTask;
     }
 
     public async override Task OnDisconnectedAsync(Exception? exception)
@@ -109,7 +111,7 @@ public class ControlHub : Hub
         MessageBox(HWND.Null, dto.Text, dto.Caption, dto.Style);
     }
 
-    private void ExecuteActionForViewer(Action<Viewer> action)
+    private void ExecuteActionForViewer(Action<IViewer> action)
     {
         if (_viewerStore.TryGetViewer(Context.ConnectionId, out var viewer))
         {

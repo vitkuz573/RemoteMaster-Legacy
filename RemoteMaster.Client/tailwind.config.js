@@ -1,19 +1,12 @@
 ﻿module.exports = {
-    content: ['./**/*.html', './**/*.razor'],
-    darkMode: 'media', // or 'class'
+    content: ['./**/*.cshtml', './**/*.razor'],
+    darkMode: 'class',
     theme: {
         extend: {},
     },
     variants: {
-        extend: {},
+        extend: {
+        },
     },
-    plugins: [
-        require('@tailwindcss/forms')({
-            strategy: 'class',
-            reset: {
-                'button[type="submit"]': false,
-                button: false,
-            },
-        }),
-    ],
+    plugins: [],
 }

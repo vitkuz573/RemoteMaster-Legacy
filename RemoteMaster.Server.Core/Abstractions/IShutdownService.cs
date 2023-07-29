@@ -1,4 +1,4 @@
-﻿namespace RemoteMaster.Server.Abstractions;
+﻿namespace RemoteMaster.Server.Core.Abstractions;
 
 public interface IShutdownService
 {

@@ -1,8 +1,10 @@
-﻿using Windows.Win32.Security;
+﻿using System.Runtime.Versioning;
+using Windows.Win32.Security;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Shared.Native.Windows;
 
+[SupportedOSPlatform("windows6.0.6000")]
 public static class TokenPrivilegeHelper
 {
     public static unsafe void AdjustTokenPrivilege(string privilegeName)

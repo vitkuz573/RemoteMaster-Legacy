@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using RemoteMaster.Shared.Models;
 using Windows.Win32.Foundation;
 using Windows.Win32.System.RemoteDesktop;
@@ -6,6 +7,7 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Shared.Native.Windows;
 
+[SupportedOSPlatform("windows6.0.6000")]
 public static class SessionHelper
 {
     public static unsafe List<WindowsSession> GetActiveSessions()

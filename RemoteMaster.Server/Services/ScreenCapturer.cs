@@ -2,7 +2,7 @@
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using Microsoft.IO;
-using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Core.Abstractions;
 using RemoteMaster.Shared.Models;
 using RemoteMaster.Shared.Native.Windows;
 using SkiaSharp;

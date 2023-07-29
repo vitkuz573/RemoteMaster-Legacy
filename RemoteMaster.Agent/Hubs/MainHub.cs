@@ -6,23 +6,29 @@ namespace RemoteMaster.Agent.Hubs;
 
 public class MainHub : Hub
 {
-    private static readonly string SERVER_NAME = "RemoteMaster.Server";
-    private static readonly string SERVER_PATH = @"C:\sc\RemoteMaster.Server\RemoteMaster.Server.exe";
+    private readonly string _serverPath;
+    private readonly string _serverName;
 
     private readonly ILogger<MainHub> _logger;
 
     public MainHub(ILogger<MainHub> logger)
     {
         _logger = logger;
+#if DEBUG
+        _serverPath = @"C:\sc\RemoteMaster.Server\RemoteMaster.Server.exe";
+#else
+        _serverPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), @"RemoteMaster\Server\RemoteMaster.Server.exe");
+#endif
+        _serverName = Path.GetFileNameWithoutExtension(_serverPath);
     }
 
-    public override async Task OnConnectedAsync()
+    public async override Task OnConnectedAsync()
     {
         if (!IsServerRunning())
         {
             try
             {
-                ProcessHelper.OpenInteractiveProcess(SERVER_PATH, -1, true, "default", true, out _);
+                ProcessHelper.OpenInteractiveProcess(_serverPath, -1, true, "default", true, out _);
             }
             catch (Exception ex)
             {
@@ -33,5 +39,5 @@ public class MainHub : Hub
         await base.OnConnectedAsync();
     }
 
-    private static bool IsServerRunning() => Process.GetProcessesByName(SERVER_NAME).Length > 0;
+    private bool IsServerRunning() => Process.GetProcessesByName(_serverName).Length > 0;
 }

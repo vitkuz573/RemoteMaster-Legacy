@@ -1,6 +1,8 @@
-﻿using RemoteMaster.Server.Abstractions;
+﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using RemoteMaster.Server.Core.Abstractions;
 
-namespace RemoteMaster.Server.Services;
+namespace RemoteMaster.Server.Core.Services;
 
 public class ShutdownService : IShutdownService
 {

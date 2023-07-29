@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using System.Runtime.Versioning;
 using Microsoft.Win32;
 using Windows.Win32;
 using Windows.Win32.Foundation;
@@ -7,6 +8,7 @@ using static Interop;
 
 namespace RemoteMaster.Shared.Native.Windows.ScreenHelper;
 
+[SupportedOSPlatform("windows6.0.6000")]
 public partial class Screen
 {
     private readonly HMONITOR _hmonitor;
@@ -113,9 +115,9 @@ public partial class Screen
         {
             if (SystemInformation.MultiMonitorSupport)
             {
-                Screen[] screens = AllScreens;
+                var screens = AllScreens;
 
-                for (int i = 0; i < screens.Length; i++)
+                for (var i = 0; i < screens.Length; i++)
                 {
                     if (screens[i]._primary)
                     {

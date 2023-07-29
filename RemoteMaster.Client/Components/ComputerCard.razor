@@ -1,46 +1,24 @@
 ﻿@using Radzen
 @using Microsoft.AspNetCore.Components
 @using RemoteMaster.Client.Models;
-@inject ContextMenuService ContextMenuService
-@inject IJSRuntime JsRuntime
 
-<div @oncontextmenu:preventDefault="true" @oncontextmenu="@(args => ShowContextMenu(args))">
-    <RadzenCard Style="width: 256px; height: 192px;" class="computer-card">
-        <div class="p-3">
-            <RadzenImage Path="https://placehold.co/500x300" Style="height: 128px; width: 100%; object-fit: cover;" />
-            <div class="d-flex justify-content-between align-items-center mt-3">
-                <RadzenLabel Text="@Computer.Name" />
-                <RadzenButton Icon="more_vert" Style="border: none; background: transparent;"
-                @onclick="@(args => ShowContextMenu(args))" />
+<div @oncontextmenu:preventDefault="true" @oncontextmenu="@(args => ShowContextMenu(args))" class="mb-5">
+    <RadzenCard class="computer-card w-full max-w-xs mx-auto bg-white shadow-md overflow-hidden md:max-w-2xl">
+        <div class="p-2">
+            <RadzenImage Path="https://placehold.co/500x300" class="h-32 w-full object-cover" />
+            <div class="mt-2 flex items-center justify-between">
+                <RadzenLabel Text="@Computer.Name" class="text-xl truncate"/>
             </div>
         </div>
     </RadzenCard>
 </div>
 
-@code {
-    [Parameter]
-    public Computer Computer { get; set; }
-
-    private void ShowContextMenu(MouseEventArgs args)
-    {
-        ContextMenuService.Open(args,
-            new List<ContextMenuItem> {
-            new ContextMenuItem(){ Text = "Open Command", Value = "Command", Icon = "terminal" },
-            new ContextMenuItem(){ Text = "Open in Tab", Value = "Tab", Icon = "link" },
-            }, OnMenuItemClick);
+<style>
+    .computer-card {
+        transition: all 0.3s cubic-bezier(.25,.8,.25,1);
     }
 
-    private async void OnMenuItemClick(MenuItemEventArgs args)
-    {
-        if (args.Value.Equals("Command"))
-        {
-            // Put your command action here
-        }
-        else if (args.Value.Equals("Tab"))
-        {
-            await JsRuntime.InvokeVoidAsync("open", $"http://127.0.0.1:5254/{Computer.IPAddress}/control", "_blank");
-        }
-
-        ContextMenuService.Close();
+    .computer-card:hover {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     }
-}
+</style>

@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using System.Runtime.Versioning;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
@@ -7,6 +8,7 @@ using static Windows.Win32.UI.WindowsAndMessaging.SYSTEM_PARAMETERS_INFO_ACTION;
 
 namespace RemoteMaster.Shared.Native.Windows.ScreenHelper;
 
+[SupportedOSPlatform("windows6.0.6000")]
 public static class SystemInformation
 {
     private static bool s_checkMultiMonitorSupport;
@@ -14,7 +16,7 @@ public static class SystemInformation
 
     public static Size PrimaryMonitorSize => GetSize(SM_CXSCREEN, SM_CYSCREEN);
 
-    public unsafe static Rectangle WorkingArea
+    public static unsafe Rectangle WorkingArea
     {
         get
         {

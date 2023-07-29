@@ -1,10 +1,12 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.Versioning;
 using Windows.Win32;
 using Windows.Win32.System.StationsAndDesktops;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Shared.Native.Windows;
 
+[SupportedOSPlatform("windows6.0.6000")]
 public static class DesktopHelper
 {
     private static CloseDesktopSafeHandle _lastInputDesktop;

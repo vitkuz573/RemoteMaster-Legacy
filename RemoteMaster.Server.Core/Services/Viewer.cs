@@ -1,13 +1,14 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Hubs;
+using Microsoft.Extensions.Logging;
+using RemoteMaster.Server.Core.Abstractions;
+using RemoteMaster.Server.Core.Hubs;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Helpers;
 using RemoteMaster.Shared.Models;
 
-namespace RemoteMaster.Server.Services;
+namespace RemoteMaster.Server.Core.Services;
 
-public class Viewer
+public class Viewer : IViewer
 {
     private readonly IHubContext<ControlHub> _hubContext;
     private readonly ILogger<Viewer> _logger;

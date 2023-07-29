@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
-using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Core.Abstractions;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
 using RemoteMaster.Shared.Native.Windows;
@@ -104,7 +104,7 @@ public class InputSender : IInputSender
         ReturnInput(input);
     }
 
-    public void SendMouseCoordinates(MouseMoveDto dto, Viewer viewer)
+    public void SendMouseCoordinates(MouseMoveDto dto, IViewer viewer)
     {
         if (!InputEnabled)
         {
@@ -135,7 +135,7 @@ public class InputSender : IInputSender
         });
     }
 
-    public void SendMouseButton(MouseClickDto dto, Viewer viewer)
+    public void SendMouseButton(MouseClickDto dto, IViewer viewer)
     {
         if (!InputEnabled)
         {

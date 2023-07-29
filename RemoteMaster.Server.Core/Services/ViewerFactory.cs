@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Hubs;
+using Microsoft.Extensions.Logging;
+using RemoteMaster.Server.Core.Abstractions;
+using RemoteMaster.Server.Core.Hubs;
 
-namespace RemoteMaster.Server.Services;
+namespace RemoteMaster.Server.Core.Services;
 
 public class ViewerFactory : IViewerFactory
 {
@@ -17,7 +18,7 @@ public class ViewerFactory : IViewerFactory
         _logger = logger;
     }
 
-    public Viewer Create(string connectionId)
+    public IViewer Create(string connectionId)
     {
         return new Viewer(_screenCapturer, _logger, _hubContext, connectionId);
     }
