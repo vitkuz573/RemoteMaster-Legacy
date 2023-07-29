@@ -1,6 +1,6 @@
 using RemoteMaster.Server.Core.Abstractions;
+using RemoteMaster.Server.Core.Extensions;
 using RemoteMaster.Server.Core.Hubs;
-using RemoteMaster.Server.Core.Services;
 using RemoteMaster.Server.Services;
 using RemoteMaster.Shared;
 
@@ -17,18 +17,12 @@ builder.Services.AddLogging(builder =>
 builder.Services.AddRazorPages();
 builder.Services.AddSignalR().AddMessagePackProtocol();
 
+// Регистрация сервисов Core
+builder.Services.AddCoreServices();
+
 // Регистрация Singleton services
 builder.Services.AddSingleton<IScreenCapturer, BitBltCapturer>();
 builder.Services.AddSingleton<IInputSender, InputSender>();
-builder.Services.AddSingleton<IViewerStore, ViewerStore>();
-builder.Services.AddSingleton<IShutdownService, ShutdownService>();
-builder.Services.AddSingleton<IIdleTimer, IdleTimer>();
-
-// Регистрация Scoped services
-builder.Services.AddScoped<IScreenCaster, ScreenCaster>();
-
-// Регистрация Transient services
-builder.Services.AddTransient<IViewerFactory, ViewerFactory>();
 
 var app = builder.Build();
 
