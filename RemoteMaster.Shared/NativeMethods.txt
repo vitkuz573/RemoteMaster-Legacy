@@ -34,5 +34,4 @@ MONITORINFOF_PRIMARY
 CreateDC
 DeleteDC
 EnumDisplayMonitors
-MessageBox
 GetCursorInfo

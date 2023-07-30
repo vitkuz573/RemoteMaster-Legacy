@@ -107,11 +107,6 @@ public class ControlHub : Hub
         InitiateSystemShutdown(null, null, 0, true, true);
     }
 
-    public async Task SendMessageBox(MessageBoxDto dto)
-    {
-        MessageBox(HWND.Null, dto.Text, dto.Caption, dto.Style);
-    }
-
     private void ExecuteActionForViewer(Action<IViewer> action)
     {
         if (_viewerStore.TryGetViewer(Context.ConnectionId, out var viewer))
