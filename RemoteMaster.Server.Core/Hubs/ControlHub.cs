@@ -90,12 +90,12 @@ public class ControlHub : Hub
         ExecuteActionForViewer(viewer => viewer.ScreenCapturer.TrackCursor = trackCursor);
     }
 
-    public async Task KillServer()
+    public void KillServer()
     {
         Environment.Exit(0);
     }
 
-    public async Task RebootComputer()
+    public void RebootComputer()
     {
         _powerManager.Reboot();
     }
