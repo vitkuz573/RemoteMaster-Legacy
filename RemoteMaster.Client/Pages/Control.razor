@@ -1,7 +1,7 @@
 ﻿@page "/{Host}/control"
 @layout ControlLayout
 
-<div class="h-full w-full">
+<div class="h-full w-full select-none">
     @if (!string.IsNullOrEmpty(_screenDataUrl))
     {
         <img id="screenImage" src="@_screenDataUrl" draggable="false" class="object-contain mx-auto max-h-full max-w-full" onload="window.revokeUrl(this.src)" @onmousemove="OnMouseMove" @onmousedown="OnMouseUpDown" @onmouseup="OnMouseUpDown" @onmouseover="OnMouseOver" @onmousewheel="OnMouseWheel" />
@@ -11,12 +11,3 @@
         <p class="text-white">Establishing connection...</p>
     }
 </div>
-
-<style>
-    body {
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-    }
-</style>
