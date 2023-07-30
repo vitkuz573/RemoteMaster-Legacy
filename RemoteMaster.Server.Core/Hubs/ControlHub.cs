@@ -2,9 +2,6 @@
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Server.Core.Abstractions;
 using RemoteMaster.Shared.Dtos;
-using RemoteMaster.Shared.Native.Windows;
-using Windows.Win32.Foundation;
-using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Server.Core.Hubs;
 
@@ -13,13 +10,15 @@ public class ControlHub : Hub
     private readonly IScreenCaster _screenCaster;
     private readonly IInputSender _inputSender;
     private readonly IViewerStore _viewerStore;
+    private readonly IPowerManager _powerManager;
     private readonly ILogger<ControlHub> _logger;
 
-    public ControlHub(IScreenCaster screenCaster, IInputSender inputSender, IViewerStore viewerStore, ILogger<ControlHub> logger)
+    public ControlHub(IScreenCaster screenCaster, IInputSender inputSender, IViewerStore viewerStore, IPowerManager powerManager, ILogger<ControlHub> logger)
     {
         _screenCaster = screenCaster;
         _inputSender = inputSender;
         _viewerStore = viewerStore;
+        _powerManager = powerManager;
         _logger = logger;
     }
 
@@ -98,8 +97,7 @@ public class ControlHub : Hub
 
     public async Task RebootComputer()
     {
-        TokenPrivilegeHelper.AdjustTokenPrivilege(SE_SHUTDOWN_NAME);
-        InitiateSystemShutdown(null, null, 0, true, true);
+        _powerManager.Reboot();
     }
 
     private void ExecuteActionForViewer(Action<IViewer> action)

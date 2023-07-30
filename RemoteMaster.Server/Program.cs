@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args).ConfigureCoreUrls();
 builder.Services.AddCoreServices();
 builder.Services.AddSingleton<IScreenCapturer, BitBltCapturer>();
 builder.Services.AddSingleton<IInputSender, InputSender>();
+builder.Services.AddSingleton<IPowerManager, PowerManager>();
 
 var app = builder.Build();
 
