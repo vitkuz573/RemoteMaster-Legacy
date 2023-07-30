@@ -72,8 +72,7 @@ public class Viewer : IViewer
         var dto = new ScreenDataDto
         {
             Displays = displays,
-            ScreenWidth = screenWidth,
-            ScreenHeight = screenHeight
+            ScreenSize = new Size(screenWidth, screenHeight)
         };
 
         await _hubContext.Clients.Client(ConnectionId).SendAsync("ScreenData", dto);
