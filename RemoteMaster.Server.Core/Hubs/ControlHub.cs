@@ -48,11 +48,6 @@ public class ControlHub : Hub
 
         _screenCaster.StopStreaming(connectionId);
 
-        if (!_viewerStore.TryRemoveViewer(connectionId))
-        {
-            _logger.LogError("Failed to remove viewer for connection ID {connectionId}", connectionId);
-        }
-
         await base.OnDisconnectedAsync(exception);
     }
 

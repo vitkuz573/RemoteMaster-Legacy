@@ -35,6 +35,7 @@ public class ScreenCaster : IScreenCaster
         if (_viewerStore.TryGetViewer(connectionId, out var viewer))
         {
             viewer.StopStreaming();
+            _viewerStore.TryRemoveViewer(connectionId);
         }
         else
         {
