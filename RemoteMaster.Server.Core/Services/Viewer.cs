@@ -12,6 +12,7 @@ public class Viewer : IViewer
 {
     private readonly IHubContext<ControlHub> _hubContext;
     private readonly ILogger<Viewer> _logger;
+    private CancellationTokenSource _streamingCts;
 
     public Viewer(IScreenCapturer screenCapturer, ILogger<Viewer> logger, IHubContext<ControlHub> hubContext, string connectionId)
     {
@@ -27,8 +28,11 @@ public class Viewer : IViewer
 
     public string ConnectionId { get; }
 
-    public async Task StartStreaming(CancellationToken cancellationToken)
+    public async Task StartStreaming()
     {
+        _streamingCts = new CancellationTokenSource();
+        var cancellationToken = _streamingCts.Token;
+
         var bounds = ScreenCapturer.CurrentScreenBounds;
 
         await SendScreenData(ScreenCapturer.GetDisplays(), bounds.Width, bounds.Height);
@@ -53,6 +57,13 @@ public class Viewer : IViewer
                 _logger.LogError("An error occurred during streaming: {Message}", ex.Message);
             }
         }
+    }
+
+    public void StopStreaming()
+    {
+        _logger.LogInformation("Stopping screen stream for ID {connectionId}", ConnectionId);
+
+        _streamingCts?.Cancel();
     }
 
     public async Task SendScreenData(IEnumerable<DisplayInfo> displays, int screenWidth, int screenHeight)

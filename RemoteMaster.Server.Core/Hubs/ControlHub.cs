@@ -10,7 +10,6 @@ namespace RemoteMaster.Server.Core.Hubs;
 
 public class ControlHub : Hub
 {
-    private CancellationTokenSource _cancellationTokenSource;
     private readonly IScreenCaster _screenCaster;
     private readonly IInputSender _inputSender;
     private readonly IViewerStore _viewerStore;
@@ -26,14 +25,13 @@ public class ControlHub : Hub
 
     public override Task OnConnectedAsync()
     {
-        _cancellationTokenSource = new CancellationTokenSource();
         var connectionId = Context.ConnectionId;
 
         var _ = Task.Run(async () =>
         {
             try
             {
-                await _screenCaster.StartStreaming(connectionId, _cancellationTokenSource.Token);
+                await _screenCaster.StartStreaming(connectionId);
             }
             catch (Exception ex)
             {
@@ -46,12 +44,15 @@ public class ControlHub : Hub
 
     public async override Task OnDisconnectedAsync(Exception? exception)
     {
-        if (!_viewerStore.TryRemoveViewer(Context.ConnectionId))
+        var connectionId = Context.ConnectionId;
+
+        _screenCaster.StopStreaming(connectionId);
+
+        if (!_viewerStore.TryRemoveViewer(connectionId))
         {
-            _logger.LogError("Failed to remove viewer for connection ID {connectionId}", Context.ConnectionId);
+            _logger.LogError("Failed to remove viewer for connection ID {connectionId}", connectionId);
         }
 
-        _cancellationTokenSource?.Cancel();
         await base.OnDisconnectedAsync(exception);
     }
 

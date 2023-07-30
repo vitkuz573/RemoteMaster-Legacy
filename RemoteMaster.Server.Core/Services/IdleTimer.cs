@@ -23,13 +23,14 @@ public class IdleTimer : IIdleTimer
 
     public void StartMonitoring()
     {
+        LastSeen = DateTime.UtcNow;
         _timer = new Timer(CheckViewers, null, TimeSpan.Zero, TimeSpan.FromSeconds(30));
     }
 
     public void StopMonitoring()
     {
-        _timer?.Dispose();
-        _timer = null;
+        var timer = Interlocked.Exchange(ref _timer, null);
+        timer?.Dispose();
     }
 
     private void CheckViewers(object state)

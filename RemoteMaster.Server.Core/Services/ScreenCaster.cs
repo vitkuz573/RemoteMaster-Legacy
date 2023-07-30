@@ -16,17 +16,29 @@ public class ScreenCaster : IScreenCaster
         _logger = logger;
     }
 
-    public async Task StartStreaming(string connectionId, CancellationToken cancellationToken)
+    public async Task StartStreaming(string connectionId)
     {
         var viewer = _viewerFactory.Create(connectionId);
 
         if (_viewerStore.TryAddViewer(viewer))
         {
-            await viewer.StartStreaming(cancellationToken);
+            await viewer.StartStreaming();
         }
         else
         {
             _logger.LogError("Failed to add viewer with connection ID {connectionId}", connectionId);
+        }
+    }
+
+    public void StopStreaming(string connectionId)
+    {
+        if (_viewerStore.TryGetViewer(connectionId, out var viewer))
+        {
+            viewer.StopStreaming();
+        }
+        else
+        {
+            _logger.LogError("Failed to find a viewer for connection ID {connectionId}", connectionId);
         }
     }
 
@@ -41,6 +53,4 @@ public class ScreenCaster : IScreenCaster
             _logger.LogError("Failed to find a viewer for connection ID {connectionId}", connectionId);
         }
     }
-
-    // You can also implement methods to stop streaming and remove viewers when a client disconnects
 }

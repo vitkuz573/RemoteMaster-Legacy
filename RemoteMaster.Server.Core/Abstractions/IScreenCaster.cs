@@ -2,7 +2,9 @@
 
 public interface IScreenCaster
 {
-    Task StartStreaming(string connectionId, CancellationToken cancellationToken);
+    Task StartStreaming(string connectionId);
+
+    void StopStreaming(string connectionId);
 
     void SetSelectedScreen(string connectionId, string displayName);
 }

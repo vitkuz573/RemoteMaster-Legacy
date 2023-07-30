@@ -8,7 +8,9 @@ public interface IViewer
 
     string ConnectionId { get; }
 
-    Task StartStreaming(CancellationToken cancellationToken);
+    Task StartStreaming();
+
+    void StopStreaming();
 
     Task SendScreenData(IEnumerable<DisplayInfo> displays, int screenWidth, int screenHeight);
 
