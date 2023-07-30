@@ -1,9 +1,11 @@
 ﻿using System.Diagnostics;
+using System.Runtime.Versioning;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Shared.Native.Windows;
 
 namespace RemoteMaster.Agent.Hubs;
 
+[SupportedOSPlatform("windows6.0.6000")]
 public class MainHub : Hub
 {
     private readonly string _serverPath;
