@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using System.Drawing;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Server.Core.Abstractions;
 using RemoteMaster.Server.Core.Hubs;
@@ -80,13 +81,7 @@ public class Viewer : IViewer
 
     public async Task SendScreenSize(int width, int height)
     {
-        var dto = new ScreenSizeDto
-        {
-            Width = width,
-            Height = height
-        };
-
-        await _hubContext.Clients.Client(ConnectionId).SendAsync("ScreenSize", dto);
+        await _hubContext.Clients.Client(ConnectionId).SendAsync("ScreenSize", new Size(width, height));
     }
 
     public void SetSelectedScreen(string displayName)
