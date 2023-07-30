@@ -31,11 +31,19 @@ public static class ProcessHelper
         return CreateInteractiveProcess(hUserTokenDup, applicationName, desktopName, hiddenWindow, out procInfo);
     }
 
-    private static uint GetSessionId(bool forceConsoleSession, int targetSessionId)
+    private static uint GetSessionId(bool forceConsoleSession, int? targetSessionId)
     {
-        return forceConsoleSession
-            ? WTSGetActiveConsoleSessionId()
-            : FindTargetSessionId(targetSessionId);
+        if (!forceConsoleSession)
+        {
+            if (!targetSessionId.HasValue)
+            {
+                throw new ArgumentNullException(nameof(targetSessionId), "Target session ID must be provided when forceConsoleSession is false.");
+            }
+
+            return FindTargetSessionId(targetSessionId.Value);
+        }
+
+        return WTSGetActiveConsoleSessionId();
     }
 
     private static uint GetWinlogonPidForSession(uint sessionId)
