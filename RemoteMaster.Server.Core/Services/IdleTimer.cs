@@ -5,7 +5,7 @@ namespace RemoteMaster.Server.Core.Services;
 
 public class IdleTimer : IIdleTimer
 {
-    private readonly IViewerStore _viewerStore;
+    private readonly IAppState _appState;
     private readonly IShutdownService _shutdownService;
     private readonly ILogger<IdleTimer> _logger;
     private Timer _timer;
@@ -13,9 +13,9 @@ public class IdleTimer : IIdleTimer
 
     public DateTime LastSeen { get; private set; }
 
-    public IdleTimer(IViewerStore viewerStore, IShutdownService shutdownService, ILogger<IdleTimer> logger)
+    public IdleTimer(IAppState appState, IShutdownService shutdownService, ILogger<IdleTimer> logger)
     {
-        _viewerStore = viewerStore;
+        _appState = appState;
         _shutdownService = shutdownService;
         _logger = logger;
         LastSeen = DateTime.UtcNow;
@@ -37,7 +37,7 @@ public class IdleTimer : IIdleTimer
     {
         try
         {
-            if (!_viewerStore.Viewers.Any())
+            if (!_appState.Viewers.Any())
             {
                 var now = DateTime.UtcNow;
 

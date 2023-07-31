@@ -3,8 +3,12 @@ using RemoteMaster.Server.Core.Abstractions;
 
 namespace RemoteMaster.Server.Core.Services;
 
-public class ViewerStore : IViewerStore
+public class AppState : IAppState
 {
+    public event EventHandler<IViewer> ViewerAdded;
+
+    public event EventHandler<IViewer> ViewerRemoved;
+
     private readonly ConcurrentDictionary<string, IViewer> _viewers = new();
 
     public IReadOnlyDictionary<string, IViewer> Viewers => _viewers;
@@ -21,11 +25,25 @@ public class ViewerStore : IViewerStore
             throw new ArgumentNullException(nameof(viewer));
         }
 
-        return _viewers.TryAdd(viewer.ConnectionId, viewer);
+        var result = _viewers.TryAdd(viewer.ConnectionId, viewer);
+
+        if (result)
+        {
+            viewer.StartStreaming();
+        }
+
+        return result;
     }
 
-    public bool TryRemoveViewer(string connectionId)
+    public bool TryRemoveViewer(string connectionId, out IViewer viewer)
     {
-        return _viewers.TryRemove(connectionId, out _);
+        var result = _viewers.TryRemove(connectionId, out viewer);
+
+        if (result)
+        {
+            viewer.StopStreaming();
+        }
+
+        return result;
     }
 }

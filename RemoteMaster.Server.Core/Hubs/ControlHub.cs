@@ -7,45 +7,33 @@ namespace RemoteMaster.Server.Core.Hubs;
 
 public class ControlHub : Hub
 {
-    private readonly IScreenCaster _screenCaster;
+    private readonly IAppState _appState;
+    private readonly IViewerFactory _viewerFactory;
     private readonly IInputSender _inputSender;
-    private readonly IViewerStore _viewerStore;
     private readonly IPowerManager _powerManager;
     private readonly ILogger<ControlHub> _logger;
 
-    public ControlHub(IScreenCaster screenCaster, IInputSender inputSender, IViewerStore viewerStore, IPowerManager powerManager, ILogger<ControlHub> logger)
+    public ControlHub(IAppState appState, IViewerFactory viewerFactory, IInputSender inputSender, IPowerManager powerManager, ILogger<ControlHub> logger)
     {
-        _screenCaster = screenCaster;
+        _appState = appState;
+        _viewerFactory = viewerFactory;
         _inputSender = inputSender;
-        _viewerStore = viewerStore;
         _powerManager = powerManager;
         _logger = logger;
     }
 
-    public override Task OnConnectedAsync()
+    public async override Task OnConnectedAsync()
     {
-        var connectionId = Context.ConnectionId;
+        var viewer = _viewerFactory.Create(Context.ConnectionId);
 
-        var _ = Task.Run(async () =>
-        {
-            try
-            {
-                await _screenCaster.StartStreaming(connectionId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while streaming");
-            }
-        });
+        _appState.TryAddViewer(viewer);
 
-        return Task.CompletedTask;
+        await base.OnConnectedAsync();
     }
 
     public async override Task OnDisconnectedAsync(Exception? exception)
     {
-        var connectionId = Context.ConnectionId;
-
-        _screenCaster.StopStreaming(connectionId);
+        _appState.TryRemoveViewer(Context.ConnectionId, out var _);
 
         await base.OnDisconnectedAsync(exception);
     }
@@ -72,7 +60,14 @@ public class ControlHub : Hub
 
     public void SendSelectedScreen(string displayName)
     {
-        _screenCaster.SetSelectedScreen(Context.ConnectionId, displayName);
+        if (_appState.TryGetViewer(Context.ConnectionId, out var viewer))
+        {
+            viewer.SetSelectedScreen(displayName);
+        }
+        else
+        {
+            _logger.LogError("Failed to find a viewer for connection ID {connectionId}", Context.ConnectionId);
+        }
     }
 
     public void SetInputEnabled(bool inputEnabled)
@@ -102,7 +97,7 @@ public class ControlHub : Hub
 
     private void ExecuteActionForViewer(Action<IViewer> action)
     {
-        if (_viewerStore.TryGetViewer(Context.ConnectionId, out var viewer))
+        if (_appState.TryGetViewer(Context.ConnectionId, out var viewer))
         {
             action(viewer);
         }

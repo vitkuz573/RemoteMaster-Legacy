@@ -19,10 +19,9 @@ public static class ServiceCollectionExtensions
 
         services.AddSignalR().AddMessagePackProtocol();
 
-        services.AddSingleton<IViewerStore, ViewerStore>();
+        services.AddSingleton<IAppState, AppState>();
         services.AddSingleton<IShutdownService, ShutdownService>();
         services.AddSingleton<IIdleTimer, IdleTimer>();
-        services.AddScoped<IScreenCaster, ScreenCaster>();
         services.AddTransient<IViewerFactory, ViewerFactory>();
 
         return services;
