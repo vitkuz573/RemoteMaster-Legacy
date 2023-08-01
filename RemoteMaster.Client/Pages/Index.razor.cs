@@ -41,16 +41,11 @@ public partial class Index
         DatabaseService.NodeAdded += OnNodeAdded;
     }
 
-    private void OnNodeAdded(Node node)
+    private void OnNodeAdded(object? sender, Node node)
     {
         if (node is Folder folder)
         {
             _entries.Add(folder);
-        }
-        else if (node is Computer computer)
-        {
-            var parentFolder = _entries.OfType<Folder>().First(f => f.NodeId == computer.ParentId);
-            parentFolder.Children.Add(computer);
         }
 
         StateHasChanged();
@@ -138,25 +133,5 @@ public partial class Index
         }
 
         StateHasChanged();
-    }
-
-    private async Task OpenInNewTab(Computer computer)
-    {
-        var url = $"http://localhost:5254/{computer.IPAddress}/control";
-        await JSRuntime.InvokeVoidAsync("openInNewTab", url);
-    }
-
-    private static async Task OpenShell(Computer computer)
-    {
-        var command = $"/C psexec \\\\{computer.IPAddress} -s powershell";
-
-        var startInfo = new ProcessStartInfo()
-        {
-            FileName = "cmd.exe",
-            Arguments = command,
-            UseShellExecute = true,
-        };
-
-        await Task.Run(() => Process.Start(startInfo));
     }
 }

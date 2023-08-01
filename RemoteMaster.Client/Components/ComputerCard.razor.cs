@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using System.Diagnostics;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using Radzen;
@@ -30,7 +31,16 @@ public partial class ComputerCard
     {
         if (args.Value.Equals("Command"))
         {
-            // Put your command action here
+            var command = $"/C psexec \\\\{Computer.IPAddress} -s powershell";
+
+            var startInfo = new ProcessStartInfo()
+            {
+                FileName = "cmd.exe",
+                Arguments = command,
+                UseShellExecute = true,
+            };
+
+            await Task.Run(() => Process.Start(startInfo));
         }
         else if (args.Value.Equals("Tab"))
         {

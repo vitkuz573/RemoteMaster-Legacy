@@ -5,11 +5,10 @@ namespace RemoteMaster.Client.Services;
 
 public class DatabaseService
 {
-    public delegate void NodeAddedEventHandler(Node node);
-    public event NodeAddedEventHandler NodeAdded;
-
+    public event EventHandler<Node> NodeAdded;
+    
     private readonly AppDbContext _context;
-
+    
     public DatabaseService(AppDbContext context)
     {
         _context = context;
@@ -25,7 +24,7 @@ public class DatabaseService
         _context.Nodes.Add(node);
         _context.SaveChanges();
 
-        NodeAdded?.Invoke(node);
+        NodeAdded?.Invoke(this, node);
     }
 
     public IList<Computer> GetComputersByFolderId(Guid folderId)
