@@ -5,6 +5,7 @@
 <RadzenContent Padding="20px">
     <RadzenTemplateForm TItem="Folder">
         <RadzenTextBox @bind-Value="_name" Name="FolderName" Placeholder="Enter Folder Name" Style="width:80%; margin-bottom:10px" />
+        <RadzenDropDown @bind-Value="_selectedParentId" TextProperty="Name" ValueProperty="NodeId" Data="_folders" Placeholder="Select a parent folder" Style="width:80%; margin-bottom:10px" />
     </RadzenTemplateForm>
     <RadzenButton Text="Add Folder" Click="Create" ButtonStyle="ButtonStyle.Primary" />
 </RadzenContent>

@@ -31,19 +31,38 @@ public partial class Index
 
         var folders = DatabaseService.GetFolders();
 
-        foreach (var folder in folders)
+        foreach (var folder in folders.Where(f => f.Parent == null))
         {
+            LoadChildren(folder);
             _entries.Add(folder);
         }
 
         DatabaseService.NodeAdded += OnNodeAdded;
     }
 
+    private void LoadChildren(Folder folder)
+    {
+        var children = DatabaseService.GetFolders().Where(f => f.Parent == folder);
+        
+        foreach (var child in children)
+        {
+            folder.Children.Add(child);
+            LoadChildren(child);
+        }
+    }
+
     private void OnNodeAdded(object? sender, Node node)
     {
         if (node is Folder folder)
         {
-            _entries.Add(folder);
+            if (folder.Parent == null)
+            {
+                _entries.Add(folder);
+            }
+            else
+            {
+                folder.Parent.Children.Add(folder);
+            }
         }
 
         StateHasChanged();
@@ -54,11 +73,17 @@ public partial class Index
         var node = args.Value as Node;
         var nodeId = node.NodeId;
 
+        var children = new List<Node>();
+
+        var subFolders = DatabaseService.GetFolders().Where(f => f.Parent == node);
         var computers = DatabaseService.GetComputersByFolderId(nodeId);
 
-        args.Children.Data = computers;
+        children.AddRange(subFolders);
+        children.AddRange(computers);
+
+        args.Children.Data = children;
         args.Children.Text = GetTextForNode;
-        args.Children.HasChildren = (node) => false;
+        args.Children.HasChildren = node => node is Folder && DatabaseService.GetFolders().Any(f => f.Parent == node);
         args.Children.Template = NodeTemplate;
     }
 

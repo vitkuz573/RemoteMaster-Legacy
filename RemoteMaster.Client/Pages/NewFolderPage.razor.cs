@@ -14,12 +14,22 @@ public partial class NewFolderPage
     private DatabaseService DatabaseService { get; set; }
 
     private string _name;
+    private Guid _selectedParentId;
+    private IList<Folder> _folders;
+
+    protected override void OnInitialized()
+    {
+        _folders = DatabaseService.GetFolders();
+    }
 
     private void Create()
     {
+        var parentFolder = _folders.FirstOrDefault(f => f.NodeId == _selectedParentId);
+
         var folder = new Folder
         {
             Name = _name,
+            Parent = parentFolder
         };
 
         DatabaseService.AddNode(folder);
