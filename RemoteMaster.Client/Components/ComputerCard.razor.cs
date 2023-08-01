@@ -60,7 +60,7 @@ public partial class ComputerCard
         }
         else if (args.Value.Equals("Tab"))
         {
-            await JSRuntime.InvokeVoidAsync("open", $"http://127.0.0.1:5254/{Computer.IPAddress}/control", "_blank");
+            await JSRuntime.InvokeVoidAsync("openTabs");
         }
 
         ContextMenuService.Close();
