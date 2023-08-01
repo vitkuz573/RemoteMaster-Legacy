@@ -2,7 +2,7 @@
 @using Microsoft.AspNetCore.Components
 @using RemoteMaster.Client.Models;
 
-<div @oncontextmenu:preventDefault="true" @oncontextmenu="@(args => ShowContextMenu(args))" class="mb-5">
+<div @oncontextmenu:preventDefault="true" @oncontextmenu="@(args => ShowContextMenu(args))" class="mb-5 selectable-node" data-ip-address="@Computer.IPAddress">
     <RadzenCard class="computer-card w-full max-w-xs mx-auto bg-white shadow-md overflow-hidden md:max-w-2xl">
         <div class="p-2">
             <RadzenImage Path="https://placehold.co/500x300" class="h-32 w-full object-cover" />
