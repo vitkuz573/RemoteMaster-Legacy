@@ -22,6 +22,9 @@ public partial class Index
     [Inject]
     private ActiveDirectoryService ActiveDirectoryService { get; set; }
 
+    [Inject]
+    private NotificationService NotificationService { get; set; }
+
     protected override void OnInitialized()
     {
         _entries = new List<Node>();
@@ -99,7 +102,16 @@ public partial class Index
                 return (Node)folder;
             }).ToList());
         }
-        catch { }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Error",
+                Detail = $"Failed to get computers from AD: {ex.Message}",
+                Duration = 4000
+            });
+        }
     }
 
     public async Task OpenNewFolder()
