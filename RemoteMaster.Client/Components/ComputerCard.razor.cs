@@ -18,13 +18,29 @@ public partial class ComputerCard
     [Inject]
     public ContextMenuService ContextMenuService { get; set; }
 
+    private readonly List<ContextMenuItem> _contextMenuItems;
+
+    public ComputerCard()
+    {
+        _contextMenuItems = new List<ContextMenuItem> {
+            new ContextMenuItem
+            {
+                Text = "Open Command",
+                Value = "Command",
+                Icon = "terminal"
+            },
+            new ContextMenuItem
+            {
+                Text = "Open in Tab",
+                Value = "Tab",
+                Icon = "link"
+            },
+        };
+    }
+
     private void ShowContextMenu(MouseEventArgs args)
     {
-        ContextMenuService.Open(args,
-            new List<ContextMenuItem> {
-            new ContextMenuItem(){ Text = "Open Command", Value = "Command", Icon = "terminal" },
-            new ContextMenuItem(){ Text = "Open in Tab", Value = "Tab", Icon = "link" },
-            }, OnMenuItemClick);
+        ContextMenuService.Open(args, _contextMenuItems, OnMenuItemClick);
     }
 
     private async void OnMenuItemClick(MenuItemEventArgs args)
