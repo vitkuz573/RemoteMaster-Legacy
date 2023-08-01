@@ -14,9 +14,9 @@
         </div>
     </div>
 
-    <div class="row flex">
+    <div class="flex">
 
-        <div class="border-r flex-none">
+        <div class="border-r-2 pr-5 flex-none">
             <RadzenCard>
                 <RadzenTree Data="_entries" Expand="LoadComputers" Change="OnTreeChange">
                     <RadzenTreeLevel Text="GetTextForNode" Template="NodeTemplate" />
@@ -24,7 +24,7 @@
             </RadzenCard>
         </div>
 
-        <div id="container" class="flex-grow grid grid-cols-4 gap-4">
+        <div id="container" class="flex-grow grid grid-cols-4 gap-4 p-5">
             @if (_selectedNode is Folder selectedFolder)
             {
                 foreach (var child in selectedFolder.Children)
@@ -39,10 +39,6 @@
 
     </div>
 
-    <!--<BitSnackBar @ref="_snackBar" Position="SnackBarPosition" AutoDismiss="SnackBarAutoDismiss" AutoDismissTime="TimeSpan.FromSeconds(SnackBarDismissSeconds)" />-->
-
-    <!--<button onclick="openTabs()">Открыть выделенные</button>-->
-
 </div>
 
 <style>
@@ -53,17 +49,9 @@
         user-select: none;
     }
 
-    .row {
-        display: flex;
-    }
-
     .border-r {
         /* adjust width as needed */
         width: 20%;
-        padding-right: 20px; /* Add right padding */
     }
 
-    #container {
-        padding: 20px;
-    }
 </style>
