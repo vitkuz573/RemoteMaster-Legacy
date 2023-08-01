@@ -13,7 +13,7 @@ public partial class ComputerCard
     public Computer Computer { get; set; }
 
     [Inject]
-    public IJSRuntime JsRuntime { get; set; }
+    public IJSRuntime JSRuntime { get; set; }
 
     [Inject]
     public ContextMenuService ContextMenuService { get; set; }
@@ -44,7 +44,7 @@ public partial class ComputerCard
         }
         else if (args.Value.Equals("Tab"))
         {
-            await JsRuntime.InvokeVoidAsync("open", $"http://127.0.0.1:5254/{Computer.IPAddress}/control", "_blank");
+            await JSRuntime.InvokeVoidAsync("open", $"http://127.0.0.1:5254/{Computer.IPAddress}/control", "_blank");
         }
 
         ContextMenuService.Close();

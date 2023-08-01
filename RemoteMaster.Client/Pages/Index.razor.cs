@@ -1,6 +1,5 @@
 ﻿using System.Collections.ObjectModel;
 using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
 using Radzen;
 using Radzen.Blazor;
 using RemoteMaster.Client.Models;
@@ -47,7 +46,7 @@ public partial class Index
         StateHasChanged();
     }
 
-    private async void LoadComputers(TreeExpandEventArgs args)
+    private void LoadComputers(TreeExpandEventArgs args)
     {
         var node = args.Value as Node;
         var nodeId = node.NodeId;
@@ -57,10 +56,10 @@ public partial class Index
         args.Children.Data = computers;
         args.Children.Text = GetTextForNode;
         args.Children.HasChildren = (node) => false;
-        args.Children.Template = ComputerTemplate;
+        args.Children.Template = NodeTemplate;
     }
 
-    private RenderFragment<RadzenTreeItem> ComputerTemplate = (context) => builder =>
+    private readonly RenderFragment<RadzenTreeItem> NodeTemplate = (context) => builder =>
     {
         if (context.Value is Computer computer)
         {
