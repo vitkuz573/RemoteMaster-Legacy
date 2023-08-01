@@ -14,16 +14,18 @@
 </div>
 
 <style>
-    .computer-card {
-        transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+    .selectable-node {
+        box-sizing: border-box;
+        padding: 5px;
+        background-color: transparent;
     }
 
-    .computer-card:hover {
-        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    .selectable-node:not(.ds-selected):hover {
+        background-color: #CFDCE7;
     }
 
     .ds-selected {
-        background-color: #0078D7; /* Синий цвет выделения Windows */
-        border: 1px solid #0078D7; /* Синяя граница вокруг выделенных элементов */
+        background-color: #CCE8FF;
+        border: 1px solid #99D1FF;
     }
 </style>

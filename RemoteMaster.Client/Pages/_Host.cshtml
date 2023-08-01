@@ -107,6 +107,16 @@
                 alert(confirmationMessage);
             }
         };
+
+        window.toggleSelection = function (ipAddress) {
+            const elements = document.querySelectorAll(`.selectable-node[data-ip-address="${ipAddress}"]`);
+            elements.forEach(element => {
+                element.classList.add('ds-selected');
+                if (!window.selectedIPs.includes(ipAddress)) {
+                    window.selectedIPs.push(ipAddress);
+                }
+            });
+        };
     </script>
 </body>
 </html>
