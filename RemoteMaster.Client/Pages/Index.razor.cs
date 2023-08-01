@@ -1,5 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using System.Diagnostics;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Radzen;
@@ -17,9 +16,6 @@ public partial class Index
 
     [Inject]
     private DialogService DialogService { get; set; }
-
-    [Inject]
-    private IJSRuntime JSRuntime { get; set; }
 
     [Inject]
     private DatabaseService DatabaseService { get; set; }
