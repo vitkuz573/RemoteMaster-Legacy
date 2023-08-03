@@ -4,7 +4,7 @@
 
 [*.cs]
 
-file_header_template = Copyright © 2023 Vitaly Kuzyaev. All rights reserved.\nUnauthorized copying of this file, via any medium is strictly prohibited.
+file_header_template = Copyright © 2023 Vitaly Kuzyaev. All rights reserved.\nThis file is part of the RemoteMaster project.\nLicensed under the GNU Affero General Public License v3.0.
 
 dotnet_diagnostic.CA1822.severity = error
 dotnet_diagnostic.CA1062.severity = error
