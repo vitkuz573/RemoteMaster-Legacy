@@ -1,6 +1,5 @@
 ﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
-// This file is part of the RemoteMaster project.
-// Licensed under the GNU Affero General Public License v3.0.
+// Unauthorized copying of this file, via any medium is strictly prohibited.
 
 using System.Collections.Concurrent;
 using System.DirectoryServices.AccountManagement;
@@ -15,7 +14,8 @@ public class ActiveDirectoryService
     public async Task<IDictionary<string, List<Computer>>> FetchComputers()
     {
         using var domainContext = new PrincipalContext(ContextType.Domain);
-        using var searcher = new PrincipalSearcher(new ComputerPrincipal(domainContext));
+        using var computerPrincipal = new ComputerPrincipal(domainContext);
+        using var searcher = new PrincipalSearcher(computerPrincipal);
 
         var domainComputers = new ConcurrentDictionary<string, List<Computer>>();
 

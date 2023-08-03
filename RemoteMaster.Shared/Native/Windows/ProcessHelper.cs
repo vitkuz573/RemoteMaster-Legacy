@@ -1,6 +1,5 @@
 ﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
-// This file is part of the RemoteMaster project.
-// Licensed under the GNU Affero General Public License v3.0.
+// Unauthorized copying of this file, via any medium is strictly prohibited.
 
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -20,19 +19,26 @@ public static class ProcessHelper
 
         var sessionId = GetSessionId(forceConsoleSession, targetSessionId);
         var winlogonPid = GetWinlogonPidForSession(sessionId);
-        var hProcess = OpenProcess_SafeHandle(PROCESS_ACCESS_RIGHTS.PROCESS_ALL_ACCESS, false, winlogonPid);
 
+        using var hProcess = OpenProcess_SafeHandle(PROCESS_ACCESS_RIGHTS.PROCESS_ALL_ACCESS, false, winlogonPid);
+        
         if (!OpenProcessToken(hProcess, TOKEN_ACCESS_MASK.TOKEN_DUPLICATE, out var hPToken))
         {
             return false;
         }
 
-        if (!DuplicateTokenEx(hPToken, TOKEN_ACCESS_MASK.TOKEN_ALL_ACCESS, null, SECURITY_IMPERSONATION_LEVEL.SecurityIdentification, TOKEN_TYPE.TokenPrimary, out var hUserTokenDup))
+        using (hPToken)
         {
-            return false;
-        }
+            if (!DuplicateTokenEx(hPToken, TOKEN_ACCESS_MASK.TOKEN_ALL_ACCESS, null, SECURITY_IMPERSONATION_LEVEL.SecurityIdentification, TOKEN_TYPE.TokenPrimary, out var hUserTokenDup))
+            {
+                return false;
+            }
 
-        return CreateInteractiveProcess(hUserTokenDup, applicationName, desktopName, hiddenWindow, out procInfo);
+            using (hUserTokenDup)
+            {
+                return CreateInteractiveProcess(hUserTokenDup, applicationName, desktopName, hiddenWindow, out procInfo);
+            }
+        }
     }
 
     private static uint GetSessionId(bool forceConsoleSession, int? targetSessionId)
