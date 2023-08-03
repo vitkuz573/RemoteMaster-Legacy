@@ -23,7 +23,7 @@ public abstract class ScreenCapturer : IScreenCapturer
 
     public bool TrackCursor { get; set; } = true;
 
-    public virtual Dictionary<string, int> Screens { get; protected set; } = new();
+    public virtual Dictionary<string, int> Screens { get; } = new();
 
     public abstract Rectangle CurrentScreenBounds { get; protected set; }
 

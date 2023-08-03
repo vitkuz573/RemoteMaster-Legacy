@@ -7,13 +7,11 @@ public class Folder : Node
 {
     public Folder()
     {
-        Children = new List<Node>();
     }
 
     public Folder(string name)
     {
         Name = name;
-        Children = new List<Node>();
     }
 }
 

@@ -8,6 +8,7 @@ file_header_template = Copyright © 2023 Vitaly Kuzyaev. All rights reserved.\nU
 
 dotnet_diagnostic.CA1822.severity = error
 dotnet_diagnostic.CA1062.severity = error
+dotnet_diagnostic.CA2227.severity = error
 
 #Core editorconfig formatting - indentation
 
