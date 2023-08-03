@@ -89,6 +89,11 @@ public abstract class ScreenCapturer : IScreenCapturer
 
     protected byte[] EncodeBitmap(SKBitmap bitmap)
     {
+        if (bitmap == null)
+        {
+            throw new ArgumentNullException(nameof(bitmap));
+        }
+
         using var ms = _recycleManager.GetStream();
 
         var encoderOptions = new SKJpegEncoderOptions
@@ -106,6 +111,11 @@ public abstract class ScreenCapturer : IScreenCapturer
 
     protected byte[] SaveBitmap(Bitmap bitmap)
     {
+        if (bitmap == null)
+        {
+            throw new ArgumentNullException(nameof(bitmap));
+        }
+
         var info = new SKImageInfo(bitmap.Width, bitmap.Height, SKColorType.Bgra8888);
 
         byte[] data;

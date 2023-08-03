@@ -1,6 +1,7 @@
 ﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
 // Unauthorized copying of this file, via any medium is strictly prohibited.
 
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Client.Models;
 
@@ -12,6 +13,7 @@ public class AppDbContext : DbContext
 
     public DbSet<Node> Nodes { get; set; }
 
+    [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "ModelBuilder will not be null.")]
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Node>()

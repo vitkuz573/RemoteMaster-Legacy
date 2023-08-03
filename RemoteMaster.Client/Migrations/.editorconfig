@@ -1,0 +1,6 @@
+root = false
+
+[*]
+dotnet_diagnostic.CA1062.severity = none
+file_header_template = 
+csharp_style_namespace_declarations = file_scoped:none

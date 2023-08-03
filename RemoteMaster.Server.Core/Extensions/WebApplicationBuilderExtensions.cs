@@ -10,6 +10,11 @@ public static class WebApplicationBuilderExtensions
 {
     public static WebApplicationBuilder ConfigureCoreUrls(this WebApplicationBuilder builder)
     {
+        if (builder == null)
+        {
+            throw new ArgumentNullException(nameof(builder));
+        }
+
         builder.WebHost.ConfigureKestrel(options =>
         {
             options.ListenAnyIP(5076);

@@ -63,6 +63,11 @@ public static class Chunker
 
     public static IEnumerable<ChunkWrapper> ChunkifyBytes(byte[] data, int chunkSize = 4096)
     {
+        if (data == null)
+        {
+            throw new ArgumentNullException(nameof(data));
+        }
+
         return GenerateChunks(data, chunkSize);
     }
 
@@ -91,6 +96,16 @@ public static class Chunker
 
     public static bool TryUnchunkify<T>(ChunkWrapper chunkDto, out T result, IFormatterResolver? resolver = null) where T : class
     {
+        if (chunkDto == null)
+        {
+            throw new ArgumentNullException(nameof(chunkDto));
+        }
+
+        if (chunkDto.Chunk == null)
+        {
+            throw new ArgumentNullException(nameof(chunkDto.Chunk));
+        }
+
         if (chunkDto.Chunk.Length == 0)
         {
             if (typeof(T) == typeof(string))
@@ -136,6 +151,16 @@ public static class Chunker
 
     public static bool TryUnchunkify(ChunkWrapper chunkDto, out byte[] result)
     {
+        if (chunkDto == null)
+        {
+            throw new ArgumentNullException(nameof(chunkDto));
+        }
+
+        if (chunkDto.Chunk == null)
+        {
+            throw new ArgumentNullException(nameof(chunkDto.Chunk));
+        }
+
         var chunks = AddToCache(chunkDto);
 
         if (!chunkDto.IsLastChunk)

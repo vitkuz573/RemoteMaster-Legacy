@@ -1,6 +1,7 @@
 ﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
 // Unauthorized copying of this file, via any medium is strictly prohibited.
 
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Server.Core.Abstractions;
@@ -88,6 +89,7 @@ public class ControlHub : Hub
         ExecuteActionForViewer(viewer => viewer.ScreenCapturer.TrackCursor = trackCursor);
     }
 
+    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "This method needs to be an instance method to be accessible by SignalR.")]
     public void KillServer()
     {
         Environment.Exit(0);

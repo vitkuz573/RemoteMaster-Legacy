@@ -4,6 +4,11 @@
 
 [*.cs]
 
+file_header_template = Copyright © 2023 Vitaly Kuzyaev. All rights reserved.\nUnauthorized copying of this file, via any medium is strictly prohibited.
+
+dotnet_diagnostic.CA1822.severity = error
+dotnet_diagnostic.CA1062.severity = error
+
 #Core editorconfig formatting - indentation
 
 #use soft tabs (spaces) for indentation
@@ -50,7 +55,7 @@ csharp_preserve_single_line_blocks = true
 #Style - Code block preferences
 
 #prefer curly braces even for one line of code
-csharp_prefer_braces = true:suggestion
+csharp_prefer_braces = true:error
 
 #Style - expression bodied member options
 
@@ -98,7 +103,7 @@ csharp_style_var_for_built_in_types = true:warning
 #Style - modifier options
 
 #prefer accessibility modifiers to be declared except for public interface members. This will currently not differ from always and will act as future proofing for if C# adds default interface methods.
-dotnet_style_require_accessibility_modifiers = for_non_interface_members:suggestion
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:error
 
 #Style - Modifier preferences
 
@@ -200,6 +205,3 @@ dotnet_style_prefer_inferred_tuple_names = true:suggestion
 dotnet_style_prefer_inferred_anonymous_type_member_names = true:suggestion
 dotnet_style_prefer_compound_assignment = true:warning
 dotnet_style_prefer_simplified_interpolation = true:suggestion
-
-[*.cs]
-file_header_template = Copyright © 2023 Vitaly Kuzyaev. All rights reserved.\nUnauthorized copying of this file, via any medium is strictly prohibited.
