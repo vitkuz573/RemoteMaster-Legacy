@@ -1,4 +1,7 @@
-﻿using System.Collections.Concurrent;
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+// Unauthorized copying of this file, via any medium is strictly prohibited.
+
+using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using RemoteMaster.Server.Core.Abstractions;
 using RemoteMaster.Shared.Dtos;

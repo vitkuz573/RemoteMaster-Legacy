@@ -1,4 +1,7 @@
-﻿using System.Runtime.InteropServices;
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+// Unauthorized copying of this file, via any medium is strictly prohibited.
+
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using RemoteMaster.Shared.Models;
 using Windows.Win32.Foundation;

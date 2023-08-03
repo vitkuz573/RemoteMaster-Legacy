@@ -200,3 +200,6 @@ dotnet_style_prefer_inferred_tuple_names = true:suggestion
 dotnet_style_prefer_inferred_anonymous_type_member_names = true:suggestion
 dotnet_style_prefer_compound_assignment = true:warning
 dotnet_style_prefer_simplified_interpolation = true:suggestion
+
+[*.cs]
+file_header_template = Copyright © 2023 Vitaly Kuzyaev. All rights reserved.\nUnauthorized copying of this file, via any medium is strictly prohibited.

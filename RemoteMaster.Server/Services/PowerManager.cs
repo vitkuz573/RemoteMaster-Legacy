@@ -1,4 +1,7 @@
-﻿using RemoteMaster.Server.Core.Abstractions;
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+// Unauthorized copying of this file, via any medium is strictly prohibited.
+
+using RemoteMaster.Server.Core.Abstractions;
 using RemoteMaster.Shared.Native.Windows;
 using static Windows.Win32.PInvoke;
 

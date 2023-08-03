@@ -1,4 +1,7 @@
-﻿using System.Collections.ObjectModel;
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+// Unauthorized copying of this file, via any medium is strictly prohibited.
+
+using System.Collections.ObjectModel;
 using Microsoft.AspNetCore.Components;
 using Radzen;
 using Radzen.Blazor;
@@ -43,7 +46,7 @@ public partial class Index
     private void LoadChildren(Folder folder)
     {
         var children = DatabaseService.GetFolders().Where(f => f.Parent == folder);
-        
+
         foreach (var child in children)
         {
             folder.Children.Add(child);

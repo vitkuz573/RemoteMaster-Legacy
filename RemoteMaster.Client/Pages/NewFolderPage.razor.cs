@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+// Unauthorized copying of this file, via any medium is strictly prohibited.
+
+using Microsoft.AspNetCore.Components;
 using Radzen;
 using RemoteMaster.Client.Models;
 using RemoteMaster.Client.Services;

@@ -1,4 +1,7 @@
-﻿using RemoteMaster.Shared.Dtos;
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+// Unauthorized copying of this file, via any medium is strictly prohibited.
+
+using RemoteMaster.Shared.Dtos;
 
 namespace RemoteMaster.Server.Core.Abstractions;
 

@@ -1,4 +1,7 @@
-﻿using System.Collections.ObjectModel;
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+// Unauthorized copying of this file, via any medium is strictly prohibited.
+
+using System.Collections.ObjectModel;
 using RemoteMaster.Client.Models;
 
 namespace RemoteMaster.Client.Components;

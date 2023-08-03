@@ -1,4 +1,7 @@
-﻿using System.Collections.Concurrent;
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+// Unauthorized copying of this file, via any medium is strictly prohibited.
+
+using System.Collections.Concurrent;
 using RemoteMaster.Server.Core.Abstractions;
 
 namespace RemoteMaster.Server.Core.Services;

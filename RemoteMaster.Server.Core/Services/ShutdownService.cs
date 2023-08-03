@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+// Unauthorized copying of this file, via any medium is strictly prohibited.
+
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Server.Core.Abstractions;
 
