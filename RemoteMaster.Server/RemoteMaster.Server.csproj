@@ -2,14 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>net7.0-windows</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="2.3.2" />
-    <PackageReference Include="SkiaSharp" Version="2.88.3" />
-    <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
+    <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" />
+    <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="System.Drawing.Common" />
   </ItemGroup>
 
   <ItemGroup>
