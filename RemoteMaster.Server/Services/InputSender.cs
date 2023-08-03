@@ -71,11 +71,14 @@ public class InputSender : IInputSender
 
     public void EnqueueOperation(Action operation)
     {
-        _operationQueue.Add(() =>
+        if (InputEnabled)
         {
-            DesktopHelper.SwitchToInputDesktop();
-            operation();
-        });
+            _operationQueue.Add(() =>
+            {
+                DesktopHelper.SwitchToInputDesktop();
+                operation();
+            });
+        }
     }
 
     public void StopProcessing()
@@ -106,11 +109,6 @@ public class InputSender : IInputSender
 
     public void SendMouseCoordinates(MouseMoveDto dto, IViewer viewer)
     {
-        if (!InputEnabled)
-        {
-            return;
-        }
-
         EnqueueOperation(() =>
         {
             var xyPercent = GetAbsolutePercentFromRelativePercent(dto.X, dto.Y, viewer.ScreenCapturer);
@@ -137,11 +135,6 @@ public class InputSender : IInputSender
 
     public void SendMouseButton(MouseClickDto dto, IViewer viewer)
     {
-        if (!InputEnabled)
-        {
-            return;
-        }
-
         EnqueueOperation(() =>
         {
             var mouseEvent = dto.Button switch
@@ -184,11 +177,6 @@ public class InputSender : IInputSender
 
     public void SendMouseWheel(MouseWheelDto dto)
     {
-        if (!InputEnabled)
-        {
-            return;
-        }
-
         EnqueueOperation(() =>
         {
             PrepareAndSendInput(INPUT_TYPE.INPUT_MOUSE, dto, (input, data) =>
@@ -210,11 +198,6 @@ public class InputSender : IInputSender
 
     public void SendKeyboardInput(KeyboardKeyDto dto)
     {
-        if (!InputEnabled)
-        {
-            return;
-        }
-
         EnqueueOperation(() =>
         {
             PrepareAndSendInput(INPUT_TYPE.INPUT_KEYBOARD, dto, (input, data) =>
