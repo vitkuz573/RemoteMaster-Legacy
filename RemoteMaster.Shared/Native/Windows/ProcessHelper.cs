@@ -1,5 +1,6 @@
 ﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
-// Unauthorized copying of this file, via any medium is strictly prohibited.
+// This file is part of the RemoteMaster project.
+// Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -21,7 +22,7 @@ public static class ProcessHelper
         var winlogonPid = GetWinlogonPidForSession(sessionId);
 
         using var hProcess = OpenProcess_SafeHandle(PROCESS_ACCESS_RIGHTS.PROCESS_ALL_ACCESS, false, winlogonPid);
-        
+
         if (!OpenProcessToken(hProcess, TOKEN_ACCESS_MASK.TOKEN_DUPLICATE, out var hPToken))
         {
             return false;
