@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net7.0-windows</TargetFramework>
+    <AssemblyName>RemoteMaster.Server</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

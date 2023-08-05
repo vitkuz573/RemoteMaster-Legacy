@@ -51,7 +51,7 @@ public partial class Control : IAsyncDisposable
     {
         if (firstRender)
         {
-            await JSRuntime.InvokeVoidAsync("setTitle", Host);
+            // await JSRuntime.InvokeVoidAsync("setTitle", Host);
 
             var uriCreated = Uri.TryCreate(NavManager.Uri, UriKind.Absolute, out var uri);
 
@@ -91,6 +91,8 @@ public partial class Control : IAsyncDisposable
 
             await JSRuntime.InvokeVoidAsync("addKeyDownEventListener", DotNetObjectReference.Create(this));
             await JSRuntime.InvokeVoidAsync("addKeyUpEventListener", DotNetObjectReference.Create(this));
+
+            Thread.Sleep(5000);
 
             await _serverConnection.StartAsync();
 

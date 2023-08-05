@@ -5,11 +5,11 @@ VisualStudioVersion = 17.6.33801.468
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Client", "RemoteMaster.Client\RemoteMaster.Client.csproj", "{3D8ED171-6553-4B59-9D0F-20713654C990}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Server", "RemoteMaster.Server\RemoteMaster.Server.csproj", "{3462A20B-02FA-472D-A55C-31DF1B54B9C0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Server.Windows", "RemoteMaster.Server.Windows\RemoteMaster.Server.Windows.csproj", "{3462A20B-02FA-472D-A55C-31DF1B54B9C0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Shared", "RemoteMaster.Shared\RemoteMaster.Shared.csproj", "{DFED8337-1138-4192-BC5D-354BDB952E2D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Agent", "RemoteMaster.Agent\RemoteMaster.Agent.csproj", "{01A08820-6471-41A9-8F76-A574B2DF3709}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Agent.Windows", "RemoteMaster.Agent.Windows\RemoteMaster.Agent.Windows.csproj", "{01A08820-6471-41A9-8F76-A574B2DF3709}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Server.Core", "RemoteMaster.Server.Core\RemoteMaster.Server.Core.csproj", "{D3317F38-ACDE-40C2-BE81-536EB7336E42}"
 EndProject
@@ -18,6 +18,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Элементы решен
 		Directory.Build.props = Directory.Build.props
 		Directory.Packages.props = Directory.Packages.props
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteMaster.Agent.Core", "RemoteMaster.Agent.Core\RemoteMaster.Agent.Core.csproj", "{41E5CC1D-7772-4695-9100-B75EBFE4C5B7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -111,6 +113,22 @@ Global
 		{D3317F38-ACDE-40C2-BE81-536EB7336E42}.Release|x64.Build.0 = Release|Any CPU
 		{D3317F38-ACDE-40C2-BE81-536EB7336E42}.Release|x86.ActiveCfg = Release|Any CPU
 		{D3317F38-ACDE-40C2-BE81-536EB7336E42}.Release|x86.Build.0 = Release|Any CPU
+		{41E5CC1D-7772-4695-9100-B75EBFE4C5B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{41E5CC1D-7772-4695-9100-B75EBFE4C5B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{41E5CC1D-7772-4695-9100-B75EBFE4C5B7}.Debug|arm64.ActiveCfg = Debug|Any CPU
+		{41E5CC1D-7772-4695-9100-B75EBFE4C5B7}.Debug|arm64.Build.0 = Debug|Any CPU
+		{41E5CC1D-7772-4695-9100-B75EBFE4C5B7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{41E5CC1D-7772-4695-9100-B75EBFE4C5B7}.Debug|x64.Build.0 = Debug|Any CPU
+		{41E5CC1D-7772-4695-9100-B75EBFE4C5B7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{41E5CC1D-7772-4695-9100-B75EBFE4C5B7}.Debug|x86.Build.0 = Debug|Any CPU
+		{41E5CC1D-7772-4695-9100-B75EBFE4C5B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{41E5CC1D-7772-4695-9100-B75EBFE4C5B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{41E5CC1D-7772-4695-9100-B75EBFE4C5B7}.Release|arm64.ActiveCfg = Release|Any CPU
+		{41E5CC1D-7772-4695-9100-B75EBFE4C5B7}.Release|arm64.Build.0 = Release|Any CPU
+		{41E5CC1D-7772-4695-9100-B75EBFE4C5B7}.Release|x64.ActiveCfg = Release|Any CPU
+		{41E5CC1D-7772-4695-9100-B75EBFE4C5B7}.Release|x64.Build.0 = Release|Any CPU
+		{41E5CC1D-7772-4695-9100-B75EBFE4C5B7}.Release|x86.ActiveCfg = Release|Any CPU
+		{41E5CC1D-7772-4695-9100-B75EBFE4C5B7}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

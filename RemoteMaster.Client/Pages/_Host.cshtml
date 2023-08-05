@@ -39,7 +39,7 @@
     <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
 
     <script type="module">
-        import DragSelect from 'https://unpkg.com/dragselect@latest/dist/ds.es6m.min.js'
+        // import DragSelect from 'https://unpkg.com/dragselect@latest/dist/ds.es6m.min.js'
 
         window.revokeUrl = function (url) {
             URL.revokeObjectURL(url);
@@ -74,49 +74,49 @@
 
         window.selectedIPs = [];
         
-        document.addEventListener('DOMContentLoaded', (event) => {
-            const ds = new DragSelect({
-                selectables: document.getElementsByClassName('selectable-node'),
-                area: document.querySelector('#container'),
-                draggability: false
-            });
-        
-            ds.subscribe('callback', (e) => {
-                var selectedItems = e.items;
-                var ipAddresses = Array.from(selectedItems).map(item => item.getAttribute('data-ip-address'));
-        
-                // сохраняем выбранные IP в глобальную переменную
-                window.selectedIPs = ipAddresses;
-
-                console.log(ipAddresses);
-            });
-        });
-        
-        window.openTabs = () => {
-            let blockedPopups = false;
-            window.selectedIPs.forEach(ipAddress => {
-                var url = `http://localhost:5254/${ipAddress}/control`;
-                const popupWindow = window.open(url, '_blank');
-                if (!popupWindow || popupWindow.closed || typeof popupWindow.closed === 'undefined') {
-                    blockedPopups = true;
-                }
-            });
-        
-            if (blockedPopups) {
-                const confirmationMessage = `Всплывающие окна были заблокированы. Пожалуйста, разрешите их для сайта и повторите попытку.`;
-                alert(confirmationMessage);
-            }
-        };
-
-        window.toggleSelection = function (ipAddress) {
-            const elements = document.querySelectorAll(`.selectable-node[data-ip-address="${ipAddress}"]`);
-            elements.forEach(element => {
-                element.classList.add('ds-selected');
-                if (!window.selectedIPs.includes(ipAddress)) {
-                    window.selectedIPs.push(ipAddress);
-                }
-            });
-        };
+        // document.addEventListener('DOMContentLoaded', (event) => {
+        //     const ds = new DragSelect({
+        //         selectables: document.getElementsByClassName('selectable-node'),
+        //         area: document.querySelector('#container'),
+        //         draggability: false
+        //     });
+        // 
+        //     ds.subscribe('callback', (e) => {
+        //         var selectedItems = e.items;
+        //         var ipAddresses = Array.from(selectedItems).map(item => item.getAttribute('data-ip-address'));
+        // 
+        //         // сохраняем выбранные IP в глобальную переменную
+        //         window.selectedIPs = ipAddresses;
+        // 
+        //         console.log(ipAddresses);
+        //     });
+        // });
+        // 
+        // window.openTabs = () => {
+        //     let blockedPopups = false;
+        //     window.selectedIPs.forEach(ipAddress => {
+        //         var url = `http://localhost:5254/${ipAddress}/control`;
+        //         const popupWindow = window.open(url, '_blank');
+        //         if (!popupWindow || popupWindow.closed || typeof popupWindow.closed === 'undefined') {
+        //             blockedPopups = true;
+        //         }
+        //     });
+        // 
+        //     if (blockedPopups) {
+        //         const confirmationMessage = `Всплывающие окна были заблокированы. Пожалуйста, разрешите их для сайта и повторите попытку.`;
+        //         alert(confirmationMessage);
+        //     }
+        // };
+        // 
+        // window.toggleSelection = function (ipAddress) {
+        //     const elements = document.querySelectorAll(`.selectable-node[data-ip-address="${ipAddress}"]`);
+        //     elements.forEach(element => {
+        //         element.classList.add('ds-selected');
+        //         if (!window.selectedIPs.includes(ipAddress)) {
+        //             window.selectedIPs.push(ipAddress);
+        //         }
+        //     });
+        // };
     </script>
 </body>
 </html>
