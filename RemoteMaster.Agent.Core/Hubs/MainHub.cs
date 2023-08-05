@@ -29,7 +29,7 @@ public class MainHub : Hub
     public async override Task OnConnectedAsync()
     {
         if (!IsServerRunning())
-        {            
+        {
             if (_signatureService.IsSignatureValid(_settings.Value.Path, _settings.Value.CertificateThumbprint))
             {
                 try
@@ -50,5 +50,24 @@ public class MainHub : Hub
         await base.OnConnectedAsync();
     }
 
-    private bool IsServerRunning() => Process.GetProcessesByName(Path.GetFileNameWithoutExtension(_settings.Value.Path)).Any();
+    private bool IsServerRunning()
+    {
+        var serverPath = Path.GetFullPath(_settings.Value.Path);
+        var originalSignature = _settings.Value.CertificateThumbprint;
+
+        foreach (var process in Process.GetProcesses())
+        {
+            if (_signatureService.IsProcessSignatureValid(process, serverPath, originalSignature))
+            {
+                return true;
+            }
+            else if (string.Equals(Path.GetFullPath(process.MainModule?.FileName), serverPath, StringComparison.InvariantCultureIgnoreCase))
+            {
+                _logger.LogWarning($"Detected a process with the same name as the server but different signature. Killing process ID: {process.Id}");
+                process.Kill();
+            }
+        }
+
+        return false;
+    }
 }
