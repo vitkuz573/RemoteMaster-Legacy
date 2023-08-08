@@ -53,67 +53,92 @@ public partial class Control : IAsyncDisposable
     {
         if (firstRender)
         {
-            var uriCreated = Uri.TryCreate(NavManager.Uri, UriKind.Absolute, out var uri);
+            ParseUriAndCheckParameters();
 
-            if (uriCreated && uri != null)
+            await InitializeAgentConnection();
+
+            InitializeServerConnection();
+
+            await SetupClientEventListeners();
+
+            await HandleAgentConnectionStatus();
+        }
+    }
+
+    private void ParseUriAndCheckParameters()
+    {
+        var uriCreated = Uri.TryCreate(NavManager.Uri, UriKind.Absolute, out var uri);
+
+        if (!uriCreated || uri == null)
+        {
+            throw new UriFormatException($"Could not parse the URI: {NavManager.Uri}");
+        }
+
+        var query = HttpUtility.ParseQueryString(uri.Query);
+        var skipAgentConnection = query.Get("skipAgent");
+
+        if (skipAgentConnection == "true")
+        {
+            // Handle or set a flag if needed
+        }
+    }
+
+    private async Task InitializeAgentConnection()
+    {
+        _agentConnection = HubConnectionFactory.Create(Host, 3564, "hubs/main");
+
+        _agentConnection.On<string>("ServerTampered", async message =>
+        {
+            Logger.LogInformation("Received ServerTampered message: {Message}", message);
+            _notificationMessage = message;
+            _serverTampered = true;
+            await InvokeAsync(StateHasChanged);
+            await _agentConnection.StopAsync();
+
+            _agentHandledTcs.SetResult(true);
+        });
+
+        await _agentConnection.StartAsync();
+    }
+
+    private void InitializeServerConnection()
+    {
+        _serverConnection = HubConnectionFactory.Create(Host, 5076, "hubs/control", withMessagePack: true);
+
+        _serverConnection.On<ScreenDataDto>("ScreenData", dto => ControlFuncsService.Displays = dto.Displays);
+
+        _serverConnection.On<ChunkWrapper>("ScreenUpdate", async chunk =>
+        {
+            if (Chunker.TryUnchunkify(chunk, out var allData))
             {
-                var query = HttpUtility.ParseQueryString(uri.Query);
-                var skipAgentConnection = query.Get("skipAgent");
-
-                if (skipAgentConnection != "true")
-                {
-                    _agentConnection = HubConnectionFactory.Create(Host, 3564, "hubs/main");
-
-                    _agentConnection.On<string>("ServerTampered", async message =>
-                    {
-                        Logger.LogInformation("Received ServerTampered message: {Message}", message);
-                        _notificationMessage = message;
-                        _serverTampered = true;
-                        await InvokeAsync(StateHasChanged);
-                        await _agentConnection.StopAsync();
-
-                        _agentHandledTcs.SetResult(true);
-                    });
-
-                    await _agentConnection.StartAsync(); 
-                }
+                _screenDataUrl = await JSRuntime.InvokeAsync<string>("createImageBlobUrl", allData);
+                await InvokeAsync(StateHasChanged);
+                await JSRuntime.InvokeVoidAsync("disableContextMenuOnImage");
             }
-            else
-            {
-                throw new UriFormatException($"Could not parse the URI: {NavManager.Uri}");
-            }
+        });
+    }
 
-            _serverConnection = HubConnectionFactory.Create(Host, 5076, "hubs/control", withMessagePack: true);
+    private async Task SetupClientEventListeners()
+    {
+        await JSRuntime.InvokeVoidAsync("addKeyDownEventListener", DotNetObjectReference.Create(this));
+        await JSRuntime.InvokeVoidAsync("addKeyUpEventListener", DotNetObjectReference.Create(this));
+    }
 
-            _serverConnection.On<ScreenDataDto>("ScreenData", dto => ControlFuncsService.Displays = dto.Displays);
+    private async Task HandleAgentConnectionStatus()
+    {
+        await WaitForAgentOrTimeoutAsync();
 
-            _serverConnection.On<ChunkWrapper>("ScreenUpdate", async chunk =>
-            {
-                if (Chunker.TryUnchunkify(chunk, out var allData))
-                {
-                    _screenDataUrl = await JSRuntime.InvokeAsync<string>("createImageBlobUrl", allData);
-                    await InvokeAsync(StateHasChanged);
-                    await JSRuntime.InvokeVoidAsync("disableContextMenuOnImage");
-                }
-            });
+        await _agentHandledTcs.Task;
 
-            await JSRuntime.InvokeVoidAsync("addKeyDownEventListener", DotNetObjectReference.Create(this));
-            await JSRuntime.InvokeVoidAsync("addKeyUpEventListener", DotNetObjectReference.Create(this));
-
-            await WaitForAgentOrTimeoutAsync();
-
-            await _agentHandledTcs.Task;
-
-            if (!_serverTampered)
-            {
-                Logger.LogInformation("Attempting to start _serverConnection");
-                await _serverConnection.StartAsync();
-                ControlFuncsService.ServerConnection = _serverConnection;
-            }
-            else
-            {
-                Logger.LogInformation("_serverTampered is true, not starting _serverConnection");
-            }
+        if (!_serverTampered)
+        {
+            Logger.LogInformation("Attempting to start _serverConnection");
+            await _serverConnection.StartAsync();
+            ControlFuncsService.ServerConnection = _serverConnection;
+        }
+        else
+        {
+            Logger.LogInformation("_serverTampered is true, not starting _serverConnection");
         }
     }
 
