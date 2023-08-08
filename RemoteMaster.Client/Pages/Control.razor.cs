@@ -33,7 +33,6 @@ public partial class Control : IAsyncDisposable
     [Inject]
     private ILogger<Control> Logger { get; set; }
 
-    private TaskCompletionSource<bool> _agentHandledTcs = new();
     private string _notificationMessage = "Establishing connection...";
     private string? _screenDataUrl;
     private HubConnection? _agentConnection;
@@ -71,9 +70,8 @@ public partial class Control : IAsyncDisposable
                         _notificationMessage = message;
                         _serverTampered = true;
                         await InvokeAsync(StateHasChanged);
-                        await _agentConnection.StopAsync();
 
-                        _agentHandledTcs.SetResult(true);
+                        await _agentConnection.StopAsync();
                     });
 
                     await _agentConnection.StartAsync(); 
@@ -101,7 +99,7 @@ public partial class Control : IAsyncDisposable
             await JSRuntime.InvokeVoidAsync("addKeyDownEventListener", DotNetObjectReference.Create(this));
             await JSRuntime.InvokeVoidAsync("addKeyUpEventListener", DotNetObjectReference.Create(this));
 
-            await _agentHandledTcs.Task;
+            Thread.Sleep(5000);
 
             if (!_serverTampered)
             {
