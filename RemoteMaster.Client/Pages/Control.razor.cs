@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using RemoteMaster.Client.Abstractions;
 using RemoteMaster.Client.Models;
@@ -33,6 +32,7 @@ public partial class Control : IAsyncDisposable
     [Inject]
     private ILogger<Control> Logger { get; set; }
 
+    private TaskCompletionSource<bool> _agentHandledTcs = new();
     private string _notificationMessage = "Establishing connection...";
     private string? _screenDataUrl;
     private HubConnection? _agentConnection;
@@ -70,8 +70,9 @@ public partial class Control : IAsyncDisposable
                         _notificationMessage = message;
                         _serverTampered = true;
                         await InvokeAsync(StateHasChanged);
-
                         await _agentConnection.StopAsync();
+
+                        _agentHandledTcs.SetResult(true);
                     });
 
                     await _agentConnection.StartAsync(); 
@@ -99,7 +100,9 @@ public partial class Control : IAsyncDisposable
             await JSRuntime.InvokeVoidAsync("addKeyDownEventListener", DotNetObjectReference.Create(this));
             await JSRuntime.InvokeVoidAsync("addKeyUpEventListener", DotNetObjectReference.Create(this));
 
-            Thread.Sleep(5000);
+            await WaitForAgentOrTimeoutAsync();
+
+            await _agentHandledTcs.Task;
 
             if (!_serverTampered)
             {
@@ -111,6 +114,18 @@ public partial class Control : IAsyncDisposable
             {
                 Logger.LogInformation("_serverTampered is true, not starting _serverConnection");
             }
+        }
+    }
+
+    private async Task WaitForAgentOrTimeoutAsync(int timeoutMilliseconds = 5000)
+    {
+        var timeoutTask = Task.Delay(timeoutMilliseconds);
+        var completedTask = await Task.WhenAny(_agentHandledTcs.Task, timeoutTask);
+
+        if (completedTask == timeoutTask)
+        {
+            Logger.LogWarning("Timeout while waiting for agent response.");
+            _agentHandledTcs.TrySetResult(false);
         }
     }
 
