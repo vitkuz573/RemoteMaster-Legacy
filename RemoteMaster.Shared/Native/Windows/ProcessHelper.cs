@@ -1,10 +1,7 @@
-﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
-// This file is part of the RemoteMaster project.
-// Licensed under the GNU Affero General Public License v3.0.
-
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using Microsoft.Win32.SafeHandles;
 using Windows.Win32.Security;
 using Windows.Win32.System.Threading;
 using static Windows.Win32.PInvoke;
@@ -17,29 +14,41 @@ public static class ProcessHelper
     public static bool OpenInteractiveProcess(string applicationName, int targetSessionId, bool forceConsoleSession, string desktopName, bool hiddenWindow, out PROCESS_INFORMATION procInfo)
     {
         procInfo = new PROCESS_INFORMATION();
-
         var sessionId = GetSessionId(forceConsoleSession, targetSessionId);
         var winlogonPid = GetWinlogonPidForSession(sessionId);
 
         using var hProcess = OpenProcess_SafeHandle(PROCESS_ACCESS_RIGHTS.PROCESS_ALL_ACCESS, false, winlogonPid);
 
-        if (!OpenProcessToken(hProcess, TOKEN_ACCESS_MASK.TOKEN_DUPLICATE, out var hPToken))
+        if (IsProcessOpen(hProcess) && TryGetProcessToken(hProcess, out var hPToken))
         {
-            return false;
-        }
-
-        using (hPToken)
-        {
-            if (!DuplicateTokenEx(hPToken, TOKEN_ACCESS_MASK.TOKEN_ALL_ACCESS, null, SECURITY_IMPERSONATION_LEVEL.SecurityIdentification, TOKEN_TYPE.TokenPrimary, out var hUserTokenDup))
+            using (hPToken)
             {
-                return false;
-            }
-
-            using (hUserTokenDup)
-            {
-                return CreateInteractiveProcess(hUserTokenDup, applicationName, desktopName, hiddenWindow, out procInfo);
+                if (TryDuplicateToken(hPToken, out var hUserTokenDup))
+                {
+                    using (hUserTokenDup)
+                    {
+                        return TryCreateInteractiveProcess(hUserTokenDup, applicationName, desktopName, hiddenWindow, out procInfo);
+                    }
+                }
             }
         }
+
+        return false;
+    }
+
+    private static bool IsProcessOpen(SafeHandle hProcess)
+    {
+        return !hProcess.IsInvalid && !hProcess.IsClosed;
+    }
+
+    private static bool TryGetProcessToken(SafeHandle hProcess, out SafeFileHandle hPToken)
+    {
+        return OpenProcessToken(hProcess, TOKEN_ACCESS_MASK.TOKEN_DUPLICATE, out hPToken);
+    }
+
+    private static bool TryDuplicateToken(SafeHandle hPToken, out SafeFileHandle hUserTokenDup)
+    {
+        return DuplicateTokenEx(hPToken, TOKEN_ACCESS_MASK.TOKEN_ALL_ACCESS, null, SECURITY_IMPERSONATION_LEVEL.SecurityIdentification, TOKEN_TYPE.TokenPrimary, out hUserTokenDup);
     }
 
     private static uint GetSessionId(bool forceConsoleSession, int? targetSessionId)
@@ -90,7 +99,7 @@ public static class ProcessHelper
         return targetSessionFound ? (uint)targetSessionId : lastSessionId;
     }
 
-    private static unsafe bool CreateInteractiveProcess(SafeHandle hUserTokenDup, string applicationName, string desktopName, bool hiddenWindow, out PROCESS_INFORMATION procInfo)
+    private static unsafe bool TryCreateInteractiveProcess(SafeHandle hUserTokenDup, string applicationName, string desktopName, bool hiddenWindow, out PROCESS_INFORMATION procInfo)
     {
         fixed (char* pDesktopName = $@"winsta0\{desktopName}")
         {

@@ -43,7 +43,8 @@ public class MainHub : Hub
             }
             else
             {
-                await Clients.Caller.SendAsync("ServerTampered", "The RemoteMaster server appears to be tampered with or its digital signature is not valid. Please contact support.");
+                _logger.LogInformation("Sending ServerTampered message to client");
+                await Clients.Client(Context.ConnectionId).SendAsync("ServerTampered", "The RemoteMaster server appears to be tampered with or its digital signature is not valid. Please contact support.");
             }
         }
 
@@ -57,14 +58,26 @@ public class MainHub : Hub
 
         foreach (var process in Process.GetProcesses())
         {
-            if (_signatureService.IsProcessSignatureValid(process, serverPath, originalSignature))
+            try
             {
-                return true;
+                if (_signatureService.IsProcessSignatureValid(process, serverPath, originalSignature))
+                {
+                    return true;
+                }
+                else if (process.MainModule != null &&
+                         string.Equals(Path.GetFullPath(process.MainModule.FileName), serverPath, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    _logger.LogWarning($"Detected a process with the same name as the server but different signature. Killing process ID: {process.Id}");
+                    process.Kill();
+                }
             }
-            else if (string.Equals(Path.GetFullPath(process.MainModule?.FileName), serverPath, StringComparison.InvariantCultureIgnoreCase))
+            catch (InvalidOperationException ex)
             {
-                _logger.LogWarning($"Detected a process with the same name as the server but different signature. Killing process ID: {process.Id}");
-                process.Kill();
+                _logger.LogError(ex, $"Unable to enumerate the process modules for process ID: {process.Id}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Unexpected error occurred when handling process ID: {process.Id}");
             }
         }
 

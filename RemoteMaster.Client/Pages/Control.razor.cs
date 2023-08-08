@@ -1,11 +1,8 @@
-﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
-// This file is part of the RemoteMaster project.
-// Licensed under the GNU Affero General Public License v3.0.
-
-using System.Web;
+﻿using System.Web;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using RemoteMaster.Client.Abstractions;
 using RemoteMaster.Client.Models;
@@ -33,9 +30,14 @@ public partial class Control : IAsyncDisposable
     [Inject]
     private IJSRuntime JSRuntime { get; set; }
 
+    [Inject]
+    private ILogger<Control> Logger { get; set; }
+
+    private string _notificationMessage = "Establishing connection...";
     private string? _screenDataUrl;
     private HubConnection? _agentConnection;
     private HubConnection? _serverConnection;
+    private bool _serverTampered = false;
 
     private static bool IsConnectionReady(HubConnection connection) => connection != null && connection.State == HubConnectionState.Connected;
 
@@ -51,8 +53,6 @@ public partial class Control : IAsyncDisposable
     {
         if (firstRender)
         {
-            // await JSRuntime.InvokeVoidAsync("setTitle", Host);
-
             var uriCreated = Uri.TryCreate(NavManager.Uri, UriKind.Absolute, out var uri);
 
             if (uriCreated && uri != null)
@@ -64,8 +64,17 @@ public partial class Control : IAsyncDisposable
                 {
                     _agentConnection = HubConnectionFactory.Create(Host, 3564, "hubs/main");
 
-                    await _agentConnection.StartAsync();
-                    await _agentConnection.StopAsync();
+                    _agentConnection.On<string>("ServerTampered", async message =>
+                    {
+                        Logger.LogInformation("Received ServerTampered message: {Message}", message);
+                        _notificationMessage = message;
+                        _serverTampered = true;
+                        await InvokeAsync(StateHasChanged);
+
+                        await _agentConnection.StopAsync();
+                    });
+
+                    await _agentConnection.StartAsync(); 
                 }
             }
             else
@@ -82,9 +91,7 @@ public partial class Control : IAsyncDisposable
                 if (Chunker.TryUnchunkify(chunk, out var allData))
                 {
                     _screenDataUrl = await JSRuntime.InvokeAsync<string>("createImageBlobUrl", allData);
-
                     await InvokeAsync(StateHasChanged);
-
                     await JSRuntime.InvokeVoidAsync("disableContextMenuOnImage");
                 }
             });
@@ -94,9 +101,16 @@ public partial class Control : IAsyncDisposable
 
             Thread.Sleep(5000);
 
-            await _serverConnection.StartAsync();
-
-            ControlFuncsService.ServerConnection = _serverConnection;
+            if (!_serverTampered)
+            {
+                Logger.LogInformation("Attempting to start _serverConnection");
+                await _serverConnection.StartAsync();
+                ControlFuncsService.ServerConnection = _serverConnection;
+            }
+            else
+            {
+                Logger.LogInformation("_serverTampered is true, not starting _serverConnection");
+            }
         }
     }
 
