@@ -81,35 +81,52 @@ public partial class Control : IAsyncDisposable
     {
         _agentConnection = HubConnectionFactory.Create(Host, 3564, "hubs/main");
 
-        _agentConnection.On<string>("ServerTampered", async message =>
-        {
-            Logger.LogInformation("Received ServerTampered message: {Message}", message);
-            _notificationMessage = message;
-            _serverTampered = true;
-            await InvokeAsync(StateHasChanged);
-            await _agentConnection.StopAsync();
-
-            _agentHandledTcs.SetResult(true);
-        });
+        RegisterAgentHandlers();
 
         await _agentConnection.StartAsync();
+    }
+
+    private void RegisterAgentHandlers()
+    {
+        _agentConnection.On<string>("ServerTampered", HandleServerTampered);
+    }
+
+    private void RegisterServerHandlers()
+    {
+        _serverConnection.On<ScreenDataDto>("ScreenData", HandleScreenData);
+        _serverConnection.On<ChunkWrapper>("ScreenUpdate", HandleScreenUpdate);
+    }
+
+    private void HandleScreenData(ScreenDataDto dto)
+    {
+        ControlFuncsService.Displays = dto.Displays;
+    }
+
+    private async Task HandleServerTampered(string message)
+    {
+        _notificationMessage = message;
+        _serverTampered = true;
+        await RefreshUI();
+        await _agentConnection.StopAsync();
+
+        _agentHandledTcs.SetResult(true);
     }
 
     private void InitializeServerConnection()
     {
         _serverConnection = HubConnectionFactory.Create(Host, 5076, "hubs/control", withMessagePack: true);
 
-        _serverConnection.On<ScreenDataDto>("ScreenData", dto => ControlFuncsService.Displays = dto.Displays);
+        RegisterServerHandlers();
+    }
 
-        _serverConnection.On<ChunkWrapper>("ScreenUpdate", async chunk =>
+    private async Task HandleScreenUpdate(ChunkWrapper chunk)
+    {
+        if (Chunker.TryUnchunkify(chunk, out var allData))
         {
-            if (Chunker.TryUnchunkify(chunk, out var allData))
-            {
-                _screenDataUrl = await JSRuntime.InvokeAsync<string>("createImageBlobUrl", allData);
-                await InvokeAsync(StateHasChanged);
-                await JSRuntime.InvokeVoidAsync("disableContextMenuOnImage");
-            }
-        });
+            _screenDataUrl = await JSRuntime.InvokeAsync<string>("createImageBlobUrl", allData);
+            await RefreshUI();
+            await JSRuntime.InvokeVoidAsync("disableContextMenuOnImage");
+        }
     }
 
     private async Task SetupClientEventListeners()
@@ -228,6 +245,11 @@ public partial class Control : IAsyncDisposable
         };
 
         await TryInvokeServerAsync("SendKeyboardInput", dto);
+    }
+
+    private async Task RefreshUI()
+    {
+        await InvokeAsync(StateHasChanged);
     }
 
     public async ValueTask DisposeAsync()
