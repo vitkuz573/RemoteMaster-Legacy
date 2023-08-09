@@ -40,11 +40,9 @@ public partial class Control : IAsyncDisposable
     private HubConnection? _serverConnection;
     private bool _serverTampered = false;
 
-    private bool IsServerReady() => _serverConnection != null && _serverConnection.State == HubConnectionState.Connected;
-
     private async Task TryInvokeServerAsync<T>(string method, T argument)
     {
-        if (IsServerReady())
+        if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
         {
             await _serverConnection.InvokeAsync(method, argument);
         }
@@ -111,7 +109,6 @@ public partial class Control : IAsyncDisposable
         {
             _screenDataUrl = await JSRuntime.InvokeAsync<string>("createImageBlobUrl", allData);
             await RefreshUI();
-            await JSRuntime.InvokeVoidAsync("disableContextMenuOnImage");
         }
     }
 

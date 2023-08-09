@@ -62,12 +62,6 @@
             };
         };
 
-        window.disableContextMenuOnImage = () => {
-            document.getElementById('screenImage').addEventListener('contextmenu', (event) => {
-                event.preventDefault();
-            });
-        };
-
         window.setTitle = (title) => {
             document.title = title;
         }
