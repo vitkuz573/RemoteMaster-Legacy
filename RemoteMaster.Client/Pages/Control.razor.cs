@@ -31,9 +31,6 @@ public partial class Control : IAsyncDisposable
     [Inject]
     private IUriParametersService UriParamsService { get; set; }
 
-    [Inject]
-    private ILogger<Control> Logger { get; set; }
-
     private TaskCompletionSource<bool> _agentHandledTcs = new();
     private string _notificationMessage = "Establishing connection...";
     private string? _screenDataUrl;
@@ -143,13 +140,8 @@ public partial class Control : IAsyncDisposable
 
         if (!_serverTampered)
         {
-            Logger.LogInformation("Attempting to start _serverConnection");
             await _serverConnection.StartAsync();
             ControlFuncsService.ServerConnection = _serverConnection;
-        }
-        else
-        {
-            Logger.LogInformation("_serverTampered is true, not starting _serverConnection");
         }
     }
 
@@ -160,7 +152,6 @@ public partial class Control : IAsyncDisposable
 
         if (completedTask == timeoutTask)
         {
-            Logger.LogWarning("Timeout while waiting for agent response.");
             _agentHandledTcs.TrySetResult(false);
         }
     }
