@@ -17,9 +17,6 @@ public partial class Control : IAsyncDisposable
     public string Host { get; set; }
 
     [Inject]
-    private NavigationManager NavManager { get; set; }
-
-    [Inject]
     private ControlFunctionsService ControlFuncsService { get; set; }
 
     [Inject]
@@ -31,6 +28,11 @@ public partial class Control : IAsyncDisposable
     [Inject]
     private IUriParametersService UriParamsService { get; set; }
 
+    private UriParameters UriParameters => new()
+    {
+        SkipAgent = UriParamsService.GetBoolParameter("skipAgent")
+    };
+
     private TaskCompletionSource<bool> _agentHandledTcs = new();
     private string _notificationMessage = "Establishing connection...";
     private string? _screenDataUrl;
@@ -38,11 +40,11 @@ public partial class Control : IAsyncDisposable
     private HubConnection? _serverConnection;
     private bool _serverTampered = false;
 
-    private static bool IsConnectionReady(HubConnection connection) => connection != null && connection.State == HubConnectionState.Connected;
+    private bool IsServerReady() => _serverConnection != null && _serverConnection.State == HubConnectionState.Connected;
 
     private async Task TryInvokeServerAsync<T>(string method, T argument)
     {
-        if (IsConnectionReady(_serverConnection))
+        if (IsServerReady())
         {
             await _serverConnection.InvokeAsync(method, argument);
         }
@@ -52,35 +54,24 @@ public partial class Control : IAsyncDisposable
     {
         if (firstRender)
         {
-            var uriParams = GetUriParameters();
-
             InitializeServerConnection();
+            RegisterServerHandlers();
 
-            if (!uriParams.SkipAgent)
+            if (!UriParameters.SkipAgent)
             {
-                await InitializeAgentConnection();
+                InitializeAgentConnection();
+                RegisterAgentHandlers();
+                await _agentConnection.StartAsync();
                 await HandleAgentConnectionStatus();
             }
 
             await SetupClientEventListeners();
         }
     }
-
-    private UriParameters GetUriParameters()
-    {
-        return new UriParameters
-        {
-            SkipAgent = UriParamsService.GetBoolParameter("skipAgent")
-        };
-    }
-
-    private async Task InitializeAgentConnection()
+    
+    private void InitializeAgentConnection()
     {
         _agentConnection = HubConnectionFactory.Create(Host, 3564, "hubs/main");
-
-        RegisterAgentHandlers();
-
-        await _agentConnection.StartAsync();
     }
 
     private void RegisterAgentHandlers()
@@ -112,8 +103,6 @@ public partial class Control : IAsyncDisposable
     private void InitializeServerConnection()
     {
         _serverConnection = HubConnectionFactory.Create(Host, 5076, "hubs/control", withMessagePack: true);
-
-        RegisterServerHandlers();
     }
 
     private async Task HandleScreenUpdate(ChunkWrapper chunk)
