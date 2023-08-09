@@ -30,6 +30,9 @@ public partial class Control : IAsyncDisposable
     private IJSRuntime JSRuntime { get; set; }
 
     [Inject]
+    private IUriParametersService UriParamsService { get; set; }
+
+    [Inject]
     private ILogger<Control> Logger { get; set; }
 
     private TaskCompletionSource<bool> _agentHandledTcs = new();
@@ -53,34 +56,26 @@ public partial class Control : IAsyncDisposable
     {
         if (firstRender)
         {
-            ParseUriAndCheckParameters();
-
-            await InitializeAgentConnection();
+            var uriParams = GetUriParameters();
 
             InitializeServerConnection();
 
-            await SetupClientEventListeners();
+            if (!uriParams.SkipAgent)
+            {
+                await InitializeAgentConnection();
+                await HandleAgentConnectionStatus();
+            }
 
-            await HandleAgentConnectionStatus();
+            await SetupClientEventListeners();
         }
     }
 
-    private void ParseUriAndCheckParameters()
+    private UriParameters GetUriParameters()
     {
-        var uriCreated = Uri.TryCreate(NavManager.Uri, UriKind.Absolute, out var uri);
-
-        if (!uriCreated || uri == null)
+        return new UriParameters
         {
-            throw new UriFormatException($"Could not parse the URI: {NavManager.Uri}");
-        }
-
-        var query = HttpUtility.ParseQueryString(uri.Query);
-        var skipAgentConnection = query.Get("skipAgent");
-
-        if (skipAgentConnection == "true")
-        {
-            // Handle or set a flag if needed
-        }
+            SkipAgent = UriParamsService.GetBoolParameter("skipAgent")
+        };
     }
 
     private async Task InitializeAgentConnection()
