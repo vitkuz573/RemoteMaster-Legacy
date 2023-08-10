@@ -54,19 +54,11 @@ public partial class Control : IAsyncDisposable
         {
             InitializeServerConnection();
             RegisterServerHandlers();
-
-            if (!UriParameters.SkipAgent)
-            {
-                InitializeAgentConnection();
-                RegisterAgentHandlers();
-                await _agentConnection.StartAsync();
-                await HandleAgentConnectionStatus();
-            }
-
+            await InitializeConnectionsAsync();
             await SetupClientEventListeners();
         }
     }
-    
+
     private void InitializeAgentConnection()
     {
         _agentConnection = HubConnectionFactory.Create(Host, 3564, "hubs/main");
@@ -94,7 +86,6 @@ public partial class Control : IAsyncDisposable
         _serverTampered = true;
         await RefreshUI();
         await _agentConnection.StopAsync();
-
         _agentHandledTcs.SetResult(true);
     }
 
@@ -118,16 +109,38 @@ public partial class Control : IAsyncDisposable
         await JSRuntime.InvokeVoidAsync("addKeyUpEventListener", DotNetObjectReference.Create(this));
     }
 
-    private async Task HandleAgentConnectionStatus()
+    private async Task InitializeConnectionsAsync()
     {
-        await WaitForAgentOrTimeoutAsync();
+        if (!UriParameters.SkipAgent)
+        {
+            InitializeAgentConnection();
+            RegisterAgentHandlers();
+            await _agentConnection.StartAsync();
+            await HandleAgentConnectionStatus();
+        }
+        else
+        {
+            await StartServerConnectionAsync();
+        }
+    }
 
-        await _agentHandledTcs.Task;
-
-        if (!_serverTampered)
+    private async Task StartServerConnectionAsync()
+    {
+        if (_serverConnection != null)
         {
             await _serverConnection.StartAsync();
             ControlFunctionsService.ServerConnection = _serverConnection;
+        }
+    }
+
+    private async Task HandleAgentConnectionStatus()
+    {
+        await WaitForAgentOrTimeoutAsync();
+        await _agentHandledTcs.Task;
+        
+        if (!_serverTampered)
+        {
+            await StartServerConnectionAsync();
         }
     }
 
@@ -135,7 +148,7 @@ public partial class Control : IAsyncDisposable
     {
         var timeoutTask = Task.Delay(timeoutMilliseconds);
         var completedTask = await Task.WhenAny(_agentHandledTcs.Task, timeoutTask);
-
+        
         if (completedTask == timeoutTask)
         {
             _agentHandledTcs.TrySetResult(false);
@@ -146,17 +159,15 @@ public partial class Control : IAsyncDisposable
     {
         var imgElement = await JSRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", "screenImage");
         var imgPosition = await imgElement.InvokeAsync<DOMRect>("getBoundingClientRect");
-
         var percentX = (e.ClientX - imgPosition.Left) / imgPosition.Width;
         var percentY = (e.ClientY - imgPosition.Top) / imgPosition.Height;
-
+        
         return (percentX, percentY);
     }
 
     private async Task OnMouseMove(MouseEventArgs e)
     {
         var xyPercent = await GetRelativeMousePositionOnPercent(e);
-
         var dto = new MouseMoveDto
         {
             X = xyPercent.Item1,
@@ -179,7 +190,6 @@ public partial class Control : IAsyncDisposable
     private async Task SendMouseButton(MouseEventArgs e, ButtonAction state)
     {
         var xyPercent = await GetRelativeMousePositionOnPercent(e);
-
         var dto = new MouseClickDto
         {
             Button = e.Button,
@@ -218,7 +228,7 @@ public partial class Control : IAsyncDisposable
         var dto = new KeyboardKeyDto
         {
             Key = keyCode,
-            State = state,
+            State = state
         };
 
         await TryInvokeServerAsync("SendKeyboardInput", dto);
@@ -235,7 +245,6 @@ public partial class Control : IAsyncDisposable
         {
             await _serverConnection.DisposeAsync();
         }
-
         if (_agentConnection != null)
         {
             await _agentConnection.DisposeAsync();
