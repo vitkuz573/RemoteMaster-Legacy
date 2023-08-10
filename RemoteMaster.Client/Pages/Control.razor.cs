@@ -137,7 +137,7 @@ public partial class Control : IAsyncDisposable
     {
         await WaitForAgentOrTimeoutAsync();
         await _agentHandledTcs.Task;
-        
+
         if (!_serverTampered)
         {
             await StartServerConnectionAsync();
@@ -148,26 +148,26 @@ public partial class Control : IAsyncDisposable
     {
         var timeoutTask = Task.Delay(timeoutMilliseconds);
         var completedTask = await Task.WhenAny(_agentHandledTcs.Task, timeoutTask);
-        
+
         if (completedTask == timeoutTask)
         {
             _agentHandledTcs.TrySetResult(false);
         }
     }
 
-    private async Task<(double, double)> GetRelativeMousePositionOnPercent(MouseEventArgs e)
+    private async Task<(double, double)> GetRelativeMousePositionPercentAsync(MouseEventArgs e)
     {
         var imgElement = await JSRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", "screenImage");
         var imgPosition = await imgElement.InvokeAsync<DOMRect>("getBoundingClientRect");
         var percentX = (e.ClientX - imgPosition.Left) / imgPosition.Width;
         var percentY = (e.ClientY - imgPosition.Top) / imgPosition.Height;
-        
+
         return (percentX, percentY);
     }
 
     private async Task OnMouseMove(MouseEventArgs e)
     {
-        var xyPercent = await GetRelativeMousePositionOnPercent(e);
+        var xyPercent = await GetRelativeMousePositionPercentAsync(e);
         var dto = new MouseMoveDto
         {
             X = xyPercent.Item1,
@@ -179,17 +179,18 @@ public partial class Control : IAsyncDisposable
 
     private async Task OnMouseUpDown(MouseEventArgs e)
     {
-        await SendMouseButton(e, e.Type == "mouseup" ? ButtonAction.Up : ButtonAction.Down);
+        var state = e.Type == "mouseup" ? ButtonAction.Up : ButtonAction.Down;
+        await SendMouseInputAsync(e, state);
     }
 
     private async Task OnMouseOver(MouseEventArgs e)
     {
-        await SendMouseButton(e, ButtonAction.Up);
+        await SendMouseInputAsync(e, ButtonAction.Up);
     }
 
-    private async Task SendMouseButton(MouseEventArgs e, ButtonAction state)
+    private async Task SendMouseInputAsync(MouseEventArgs e, ButtonAction state)
     {
-        var xyPercent = await GetRelativeMousePositionOnPercent(e);
+        var xyPercent = await GetRelativeMousePositionPercentAsync(e);
         var dto = new MouseClickDto
         {
             Button = e.Button,
@@ -214,24 +215,13 @@ public partial class Control : IAsyncDisposable
     [JSInvokable]
     public async Task OnKeyDown(int keyCode)
     {
-        await SendKeyboardInput(keyCode, ButtonAction.Down);
+        await TryInvokeServerAsync("SendKeyDown", keyCode);
     }
 
     [JSInvokable]
     public async Task OnKeyUp(int keyCode)
     {
-        await SendKeyboardInput(keyCode, ButtonAction.Up);
-    }
-
-    private async Task SendKeyboardInput(int keyCode, ButtonAction state)
-    {
-        var dto = new KeyboardKeyDto
-        {
-            Key = keyCode,
-            State = state
-        };
-
-        await TryInvokeServerAsync("SendKeyboardInput", dto);
+        await TryInvokeServerAsync("SendKeyUp", keyCode);
     }
 
     private async Task RefreshUI()
@@ -241,10 +231,8 @@ public partial class Control : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        if (_serverConnection != null)
-        {
-            await _serverConnection.DisposeAsync();
-        }
+        await _serverConnection.DisposeAsync();
+
         if (_agentConnection != null)
         {
             await _agentConnection.DisposeAsync();
