@@ -6,7 +6,5 @@ namespace RemoteMaster.Client.Abstractions;
 
 public interface IUriParametersService
 {
-    bool GetBoolParameter(string name);
-
-    string GetStringParameter(string name);
+    TType GetParameter<TType>(string name);
 }

@@ -17,7 +17,7 @@ public partial class Control : IAsyncDisposable
     public string Host { get; set; }
 
     [Inject]
-    private ControlFunctionsService ControlFuncsService { get; set; }
+    private ControlFunctionsService ControlFunctionsService { get; set; }
 
     [Inject]
     private IHubConnectionFactory HubConnectionFactory { get; set; }
@@ -26,15 +26,15 @@ public partial class Control : IAsyncDisposable
     private IJSRuntime JSRuntime { get; set; }
 
     [Inject]
-    private IUriParametersService UriParamsService { get; set; }
+    private IUriParametersService UriParametersService { get; set; }
 
     private UriParameters UriParameters => new()
     {
-        SkipAgent = UriParamsService.GetBoolParameter("skipAgent")
+        SkipAgent = UriParametersService.GetParameter<bool>("skipAgent")
     };
 
     private TaskCompletionSource<bool> _agentHandledTcs = new();
-    private string _notificationMessage = "Establishing connection...";
+    private string _statusMessage = "Establishing connection...";
     private string? _screenDataUrl;
     private HubConnection? _agentConnection;
     private HubConnection? _serverConnection;
@@ -85,12 +85,12 @@ public partial class Control : IAsyncDisposable
 
     private void HandleScreenData(ScreenDataDto dto)
     {
-        ControlFuncsService.Displays = dto.Displays;
+        ControlFunctionsService.Displays = dto.Displays;
     }
 
     private async Task HandleServerTampered(string message)
     {
-        _notificationMessage = message;
+        _statusMessage = message;
         _serverTampered = true;
         await RefreshUI();
         await _agentConnection.StopAsync();
@@ -127,7 +127,7 @@ public partial class Control : IAsyncDisposable
         if (!_serverTampered)
         {
             await _serverConnection.StartAsync();
-            ControlFuncsService.ServerConnection = _serverConnection;
+            ControlFunctionsService.ServerConnection = _serverConnection;
         }
     }
 

@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.ComponentModel;
 using System.Web;
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Client.Abstractions;
@@ -17,20 +18,27 @@ public class UriParametersService : IUriParametersService
         _navManager = navManager;
     }
 
-    public bool GetBoolParameter(string name)
+    public TType GetParameter<TType>(string name)
     {
         var uri = new Uri(_navManager.Uri);
         var query = HttpUtility.ParseQueryString(uri.Query);
         var paramValue = query.Get(name);
 
-        return bool.TryParse(paramValue, out var result) && result;
-    }
-    
-    public string GetStringParameter(string name)
-    {
-        var uri = new Uri(_navManager.Uri);
-        var query = HttpUtility.ParseQueryString(uri.Query);
+        var converter = TypeDescriptor.GetConverter(typeof(TType));
+        
+        if (converter != null && converter.CanConvertFrom(typeof(string)))
+        {
+            try
+            {
+                return (TType)converter.ConvertFromString(paramValue);
+            }
+            catch (Exception)
+            {
+                // Здесь можно обработать исключения, возникающие при конвертации.
+                // Возможно, добавить логирование или вернуть default.
+            }
+        }
 
-        return query.Get(name);
+        return default;
     }
 }
