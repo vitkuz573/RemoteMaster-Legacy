@@ -52,7 +52,7 @@ public class IdleTimer : IIdleTimer
                         if ((now - LastSeen).TotalSeconds > 30)
                         {
                             StopMonitoring();
-                            _shutdownService.InitiateShutdown();
+                            _shutdownService.SafeShutdown();
                         }
                     }
                     finally

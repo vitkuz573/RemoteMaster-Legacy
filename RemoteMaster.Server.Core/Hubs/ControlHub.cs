@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Server.Core.Abstractions;
@@ -17,16 +16,17 @@ public class ControlHub : Hub
     private readonly IViewerFactory _viewerFactory;
     private readonly IInputSender _inputSender;
     private readonly IPowerManager _powerManager;
+    private readonly IShutdownService _shutdownService;
+    private readonly IScreenCapturer _screenCapturer;
     private readonly ILogger<ControlHub> _logger;
 
-    private readonly IScreenCapturer _screenCapturer;
-
-    public ControlHub(IAppState appState, IViewerFactory viewerFactory, IInputSender inputSender, IPowerManager powerManager, IScreenCapturer screenCapturer, ILogger<ControlHub> logger)
+    public ControlHub(IAppState appState, IViewerFactory viewerFactory, IInputSender inputSender, IPowerManager powerManager, IShutdownService shutdownService, IScreenCapturer screenCapturer, ILogger<ControlHub> logger)
     {
         _appState = appState;
         _viewerFactory = viewerFactory;
         _inputSender = inputSender;
         _powerManager = powerManager;
+        _shutdownService = shutdownService;
         _screenCapturer = screenCapturer;
         _logger = logger;
     }
@@ -113,10 +113,9 @@ public class ControlHub : Hub
         ExecuteActionForViewer(viewer => viewer.ScreenCapturer.TrackCursor = trackCursor);
     }
 
-    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "This method needs to be an instance method to be accessible by SignalR.")]
     public void KillServer()
     {
-        Environment.Exit(0);
+        _shutdownService.ImmediateShutdown();
     }
 
     public void RebootComputer()

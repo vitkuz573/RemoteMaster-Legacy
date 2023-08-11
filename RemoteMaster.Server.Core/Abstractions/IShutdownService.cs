@@ -6,5 +6,7 @@ namespace RemoteMaster.Server.Core.Abstractions;
 
 public interface IShutdownService
 {
-    void InitiateShutdown();
+    void SafeShutdown();
+
+    void ImmediateShutdown();
 }

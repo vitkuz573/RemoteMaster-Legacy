@@ -19,9 +19,15 @@ public class ShutdownService : IShutdownService
         _logger = logger;
     }
 
-    public void InitiateShutdown()
+    public void SafeShutdown()
     {
-        _logger.LogInformation("Initiating shutdown...");
+        _logger.LogInformation("Initiating safe shutdown...");
         _appLifetime.StopApplication();
+    }
+
+    public void ImmediateShutdown()
+    {
+        _logger.LogInformation("Initiating immediate shutdown...");
+        Environment.Exit(0);
     }
 }
