@@ -187,7 +187,12 @@ public partial class Index
                         try
                         {
                             await agentConnection.StartAsync();
-                            Logger.LogInformation($"Started connect for IP {computer.IPAddress}");
+                            Logger.LogInformation($"Started agent connect for IP {computer.IPAddress}");
+
+                            Thread.Sleep(5000);
+
+                            await serverConnection.StartAsync();
+                            Logger.LogInformation($"Started server connect for IP {computer.IPAddress}");
                         }
                         catch
                         {
