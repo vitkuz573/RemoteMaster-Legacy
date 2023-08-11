@@ -26,4 +26,6 @@ public interface IScreenCapturer : IDisposable
     IEnumerable<DisplayInfo> GetDisplays();
 
     void SetSelectedScreen(string displayName);
+
+    byte[]? GetThumbnail(int maxWidth, int maxHeight);
 }

@@ -86,6 +86,25 @@ public abstract class ScreenCapturer : IScreenCapturer
 
     public abstract void SetSelectedScreen(string displayName);
 
+    public byte[]? GetThumbnail(int maxWidth, int maxHeight)
+    {
+        var frame = GetNextFrame();
+
+        if (frame == null)
+        {
+            return null;
+        }
+
+        using var fullImage = SKBitmap.Decode(frame);
+        var scale = Math.Min((float)maxWidth / fullImage.Width, (float)maxHeight / fullImage.Height);
+        var thumbWidth = (int)(fullImage.Width * scale);
+        var thumbHeight = (int)(fullImage.Height * scale);
+
+        using var thumbnail = fullImage.Resize(new SKImageInfo(thumbWidth, thumbHeight), SKFilterQuality.High);
+
+        return EncodeBitmap(thumbnail);
+    }
+
     protected abstract void RefreshCurrentScreenBounds();
 
     protected byte[] EncodeBitmap(SKBitmap bitmap)
