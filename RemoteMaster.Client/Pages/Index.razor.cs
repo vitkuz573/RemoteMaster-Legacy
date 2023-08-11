@@ -168,6 +168,8 @@ public partial class Index
 
     private async Task OnTreeChange(TreeEventArgs args)
     {
+        _connections.Clear();
+
         var node = args.Value as Node;
 
         if (node is Folder)
