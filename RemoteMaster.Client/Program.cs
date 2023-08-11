@@ -13,6 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddTransient<IHubConnectionFactory, HubConnectionFactory>();
 
 // Services
+builder.Services.AddScoped<ConnectionManager>();
 builder.Services.AddScoped<ControlFunctionsService>();
 builder.Services.AddScoped<DatabaseService>();
 builder.Services.AddScoped<IUriParametersService, UriParametersService>();

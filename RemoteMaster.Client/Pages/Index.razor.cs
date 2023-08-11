@@ -4,6 +4,7 @@
 
 using System.Collections.ObjectModel;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.SignalR.Client;
 using Radzen;
 using Radzen.Blazor;
 using RemoteMaster.Client.Models;
@@ -14,8 +15,8 @@ namespace RemoteMaster.Client.Pages;
 public partial class Index
 {
     private List<Node> _entries;
-
     private Node _selectedNode;
+    private Dictionary<string, (HubConnection agentConnection, HubConnection serverConnection)> _connections = new();
 
     [Inject]
     private DialogService DialogService { get; set; }
@@ -28,6 +29,12 @@ public partial class Index
 
     [Inject]
     private NotificationService NotificationService { get; set; }
+
+    [Inject]
+    private ConnectionManager ConnectionManager { get; set; }
+
+    [Inject]
+    private ILogger<Index> Logger { get; set; }
 
     protected override void OnInitialized()
     {
@@ -159,13 +166,36 @@ public partial class Index
         });
     }
 
-    private void OnTreeChange(TreeEventArgs args)
+    private async Task OnTreeChange(TreeEventArgs args)
     {
         var node = args.Value as Node;
 
         if (node is Folder)
         {
             _selectedNode = node;
+
+            foreach (var children in node.Children)
+            {
+                if (children is Computer computer)
+                {
+                    if (!_connections.ContainsKey(computer.IPAddress))
+                    {
+                        var agentConnection = ConnectionManager.CreateAgentConnection(computer.IPAddress);
+                        var serverConnection = ConnectionManager.CreateServerConnection(computer.IPAddress);
+                        _connections[computer.IPAddress] = (agentConnection, serverConnection);
+
+                        try
+                        {
+                            await agentConnection.StartAsync();
+                            Logger.LogInformation($"Started connect for IP {computer.IPAddress}");
+                        }
+                        catch
+                        {
+                            //
+                        }
+                    }
+                }
+            }
         }
 
         StateHasChanged();
