@@ -2,17 +2,6 @@
   "version": 2,
   "dependencies": {
     "net7.0-windows7.0": {
-      "Microsoft.AspNetCore.Authentication.Negotiate": {
-        "type": "Direct",
-        "requested": "[7.0.9, )",
-        "resolved": "7.0.9",
-        "contentHash": "/Sh+zGJAgG5MwQcHATWrKsFn4IY5psaX2c1QtKwSNPlEuTjZIZe3aVjEWMHT/ou2jkQ12S2kjOzaW5nMeg/cBA==",
-        "dependencies": {
-          "Microsoft.AspNetCore.Connections.Abstractions": "7.0.9",
-          "Microsoft.Extensions.Caching.Memory": "7.0.0",
-          "System.DirectoryServices.Protocols": "7.0.1"
-        }
-      },
       "Microsoft.AspNetCore.SignalR.Client": {
         "type": "Direct",
         "requested": "[7.0.9, )",
@@ -392,8 +381,8 @@
       },
       "System.DirectoryServices.Protocols": {
         "type": "Transitive",
-        "resolved": "7.0.1",
-        "contentHash": "t9hsL+UYRzNs30pnT2Tdx6ngX8McFUjru0a0ekNgu/YXfkXN+dx5OvSEv0/p7H2q3pdJLH7TJPWX7e55J8QB9A=="
+        "resolved": "7.0.0",
+        "contentHash": "QNC4ab+Gc3p3uLixavxxD0h5FOxrs2cT3hez4DSMckBU8lgREjrEB5a8reJypkSVlhFyUQ5YfpMJODdeSCYp2g=="
       },
       "System.IO.Pipelines": {
         "type": "Transitive",
@@ -474,7 +463,6 @@
         "dependencies": {
           "Microsoft.AspNetCore.SignalR.Protocols.MessagePack": "[7.0.9, )",
           "Microsoft.Extensions.Caching.Memory": "[7.0.0, )",
-          "Microsoft.Extensions.Logging": "[7.0.0, )",
           "Microsoft.Win32.SystemEvents": "[7.0.0, )",
           "Microsoft.Windows.SDK.Win32Metadata": "[53.0.14-preview, )"
         }

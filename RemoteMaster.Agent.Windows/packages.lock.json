@@ -388,7 +388,6 @@
         "dependencies": {
           "Microsoft.AspNetCore.SignalR.Protocols.MessagePack": "[7.0.9, )",
           "Microsoft.Extensions.Caching.Memory": "[7.0.0, )",
-          "Microsoft.Extensions.Logging": "[7.0.0, )",
           "Microsoft.Win32.SystemEvents": "[7.0.0, )",
           "Microsoft.Windows.SDK.Win32Metadata": "[53.0.14-preview, )"
         }
