@@ -176,14 +176,6 @@
         "resolved": "53.0.14-preview",
         "contentHash": "GkjImMPDK+p6dsE46GQu0+HDTH6jrY6V5eOFehyGic6QWiB/3TIyYNhhUlZC4hCiObjqmxOVKiJDs8GZ2pyMjg=="
       }
-    },
-    "net7.0/win-x64": {
-      "Microsoft.Win32.SystemEvents": {
-        "type": "CentralTransitive",
-        "requested": "[7.0.0, )",
-        "resolved": "7.0.0",
-        "contentHash": "2nXPrhdAyAzir0gLl8Yy8S5Mnm/uBSQQA7jEsILOS1MTyS7DbmV1NgViMtvV1sfCD1ebITpNwb1NIinKeJgUVQ=="
-      }
     }
   }
 }
