@@ -33,9 +33,6 @@ public partial class Index
     [Inject]
     private ConnectionManager ConnectionManager { get; set; }
 
-    [Inject]
-    private ILogger<Index> Logger { get; set; }
-
     protected override void OnInitialized()
     {
         _entries = new List<Node>();
@@ -189,30 +186,20 @@ public partial class Index
                         try
                         {
                             await agentConnection.StartAsync();
-                            Logger.LogInformation($"Started agent connect for IP {computer.IPAddress}");
 
                             Thread.Sleep(5000);
 
                             serverConnection.On<byte[]>("ReceiveThumbnail", async (thumbnailBytes) =>
                             {
-                                Logger.LogInformation($"Received thumbnail for IP {computer.IPAddress}");
-
                                 if (thumbnailBytes != null && thumbnailBytes.Length > 0)
                                 {
                                     computer.Thumbnail = thumbnailBytes;
                                     await InvokeAsync(StateHasChanged);
                                 }
-                                else
-                                {
-                                    Logger.LogWarning("Thumbnail bytes are empty or null");
-                                }
                             });
 
                             await serverConnection.StartAsync();
-                            Logger.LogInformation($"Started server connect for IP {computer.IPAddress}");
-
                             await serverConnection.InvokeAsync("ConnectAs", "GetThumbnail");
-                            Logger.LogInformation($"Requested thumbnail for IP {computer.IPAddress}");
                         }
                         catch
                         {
