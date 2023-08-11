@@ -25,7 +25,7 @@ public class UriParametersService : IUriParametersService
         var paramValue = query.Get(name);
 
         var converter = TypeDescriptor.GetConverter(typeof(TType));
-        
+
         if (converter != null && converter.CanConvertFrom(typeof(string)))
         {
             try
