@@ -13,6 +13,7 @@ namespace RemoteMaster.Client.Pages;
 
 public partial class Control : IAsyncDisposable
 {
+#nullable disable
     [Parameter]
     public string Host { get; set; }
 
@@ -27,12 +28,22 @@ public partial class Control : IAsyncDisposable
 
     [Inject]
     private IUriParametersService UriParametersService { get; set; }
+#nullable restore
 
-    private UriParameters UriParameters => new()
+    private UriParameters UriParameters
     {
-        SkipAgent = UriParametersService.GetParameter<bool>("skipAgent")
-    };
+        get
+        {
+            _uriParameters ??= new UriParameters
+            {
+                SkipAgent = UriParametersService.GetParameter<bool>("skipAgent")
+            };
 
+            return _uriParameters;
+        }
+    }
+
+    private UriParameters _uriParameters;
     private TaskCompletionSource<bool> _agentHandledTcs = new();
     private string _statusMessage = "Establishing connection...";
     private string? _screenDataUrl;
