@@ -141,6 +141,7 @@ public partial class Control : IAsyncDisposable
         {
             await _serverConnection.StartAsync();
             ControlFunctionsService.ServerConnection = _serverConnection;
+            await _serverConnection.InvokeAsync("ConnectAs", "StreamScreen");
         }
     }
 

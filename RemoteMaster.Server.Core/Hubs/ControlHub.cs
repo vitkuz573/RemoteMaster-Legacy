@@ -18,22 +18,44 @@ public class ControlHub : Hub
     private readonly IPowerManager _powerManager;
     private readonly ILogger<ControlHub> _logger;
 
-    public ControlHub(IAppState appState, IViewerFactory viewerFactory, IInputSender inputSender, IPowerManager powerManager, ILogger<ControlHub> logger)
+    private readonly IScreenCapturer _screenCapturer;
+
+    public ControlHub(IAppState appState, IViewerFactory viewerFactory, IInputSender inputSender, IPowerManager powerManager, IScreenCapturer screenCapturer, ILogger<ControlHub> logger)
     {
         _appState = appState;
         _viewerFactory = viewerFactory;
         _inputSender = inputSender;
         _powerManager = powerManager;
+        _screenCapturer = screenCapturer;
         _logger = logger;
     }
 
-    public async override Task OnConnectedAsync()
+    public async Task ConnectAs(string intention)
     {
-        var viewer = _viewerFactory.Create(Context.ConnectionId);
+        switch (intention)
+        {
+            case "GetThumbnail":
+                await Clients.Caller.SendAsync("ReceiveThumbnail", GetThumbnail());
+                Context.Abort();
+                break;
 
-        _appState.TryAddViewer(viewer);
+            case "StreamScreen":
+                var viewer = _viewerFactory.Create(Context.ConnectionId);
+                _appState.TryAddViewer(viewer);
+                break;
 
-        await base.OnConnectedAsync();
+            default:
+                _logger.LogError("Unknown intention: {intention}", intention);
+                break;
+        }
+    }
+
+    private byte[] GetThumbnail()
+    {
+        const int maxWidth = 320;
+        const int maxHeight = 240;
+
+        return _screenCapturer.GetThumbnail(maxWidth, maxHeight);
     }
 
     public async override Task OnDisconnectedAsync(Exception? exception)
