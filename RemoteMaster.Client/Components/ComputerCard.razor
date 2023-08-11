@@ -5,8 +5,7 @@
 <div @oncontextmenu:preventDefault="true" @oncontextmenu="@(args => ShowContextMenu(args))" class="mb-5 selectable-node bg-transparent box-border p-1" data-ip-address="@Computer.IPAddress">
     <RadzenCard class="computer-card w-full max-w-xs mx-auto bg-white shadow-md overflow-hidden md:max-w-2xl">
         <div class="p-2">
-            <RadzenImage Path="https://placehold.co/500x300" class="h-32 w-full object-cover" />
-            <div class="mt-2 flex items-center justify-between">
+            <RadzenImage Path="@ThumbnailPath" class="h-32 w-full object-cover" />            <div class="mt-2 flex items-center justify-between">
                 <RadzenLabel Text="@Computer.Name" class="text-xl truncate" />
             </div>
         </div>
