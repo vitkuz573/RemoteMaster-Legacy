@@ -8,5 +8,5 @@ public interface IShutdownService
 {
     void SafeShutdown();
 
-    void ImmediateShutdown();
+    void ImmediateShutdown(int exitCode = 0);
 }

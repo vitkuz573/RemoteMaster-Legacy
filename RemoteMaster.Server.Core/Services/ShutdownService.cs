@@ -25,9 +25,9 @@ public class ShutdownService : IShutdownService
         _appLifetime.StopApplication();
     }
 
-    public void ImmediateShutdown()
+    public void ImmediateShutdown(int exitCode = 0)
     {
         _logger.LogInformation("Initiating immediate shutdown...");
-        Environment.Exit(0);
+        Environment.Exit(exitCode);
     }
 }
