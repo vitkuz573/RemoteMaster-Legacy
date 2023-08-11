@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Server.Core.Abstractions;
 using RemoteMaster.Shared.Dtos;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Core.Hubs;
 
@@ -30,16 +31,16 @@ public class ControlHub : Hub
         _logger = logger;
     }
 
-    public async Task ConnectAs(string intention)
+    public async Task ConnectAs(Intention intention)
     {
         switch (intention)
         {
-            case "GetThumbnail":
+            case Intention.GetThumbnail:
                 await Clients.Caller.SendAsync("ReceiveThumbnail", GetThumbnail());
                 Context.Abort();
                 break;
 
-            case "StreamScreen":
+            case Intention.Control:
                 var viewer = _viewerFactory.Create(Context.ConnectionId);
                 _appState.TryAddViewer(viewer);
                 break;

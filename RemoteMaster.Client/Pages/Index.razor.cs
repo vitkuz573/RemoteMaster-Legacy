@@ -9,6 +9,7 @@ using Radzen;
 using Radzen.Blazor;
 using RemoteMaster.Client.Models;
 using RemoteMaster.Client.Services;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Client.Pages;
 
@@ -199,7 +200,7 @@ public partial class Index
                             });
 
                             await serverConnection.StartAsync();
-                            await serverConnection.InvokeAsync("ConnectAs", "GetThumbnail");
+                            await serverConnection.InvokeAsync("ConnectAs", Intention.GetThumbnail);
                         }
                         catch
                         {
