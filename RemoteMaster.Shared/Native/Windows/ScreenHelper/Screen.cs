@@ -8,7 +8,6 @@ using Microsoft.Win32;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
-using static Interop;
 
 namespace RemoteMaster.Shared.Native.Windows.ScreenHelper;
 
@@ -212,7 +211,7 @@ public partial class Screen
 
     public static Rectangle GetBounds(Rectangle rect) => FromRectangle(rect).Bounds;
 
-    public override int GetHashCode() => PARAM.ToInt(_hmonitor);
+    public override int GetHashCode() => (int)_hmonitor;
 
     private static void OnDisplaySettingsChanging(object? sender, EventArgs e)
     {
