@@ -10,7 +10,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Core.Hubs;
 
-public class ControlHub : Hub
+public class ControlHub : Hub<IControlClient>
 {
     private readonly IAppState _appState;
     private readonly IViewerFactory _viewerFactory;
@@ -36,7 +36,7 @@ public class ControlHub : Hub
         switch (intention)
         {
             case Intention.GetThumbnail:
-                await Clients.Caller.SendAsync("ReceiveThumbnail", GetThumbnail());
+                await Clients.Caller.ReceiveThumbnail(GetThumbnail());
                 Context.Abort();
                 break;
 
