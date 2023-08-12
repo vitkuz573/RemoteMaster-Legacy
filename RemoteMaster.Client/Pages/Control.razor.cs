@@ -228,16 +228,27 @@ public partial class Control : IAsyncDisposable
         await TryInvokeServerAsync("SendMouseWheel", dto);
     }
 
+    private async Task SendKeyboardInput(int keyCode, ButtonAction state)
+    {
+        var dto = new KeyboardKeyDto
+        {
+            Key = keyCode,
+            State = state
+        };
+
+        await TryInvokeServerAsync("SendKeyboardInput", dto);
+    }
+
     [JSInvokable]
     public async Task OnKeyDown(int keyCode)
     {
-        await TryInvokeServerAsync("SendKeyDown", keyCode);
+        await SendKeyboardInput(keyCode, ButtonAction.Down);
     }
 
     [JSInvokable]
     public async Task OnKeyUp(int keyCode)
     {
-        await TryInvokeServerAsync("SendKeyUp", keyCode);
+        await SendKeyboardInput(keyCode, ButtonAction.Up);
     }
 
     private async Task RefreshUI()
