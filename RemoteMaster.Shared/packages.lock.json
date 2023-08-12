@@ -4,12 +4,12 @@
     "net7.0": {
       "Microsoft.AspNetCore.SignalR.Protocols.MessagePack": {
         "type": "Direct",
-        "requested": "[7.0.9, )",
-        "resolved": "7.0.9",
-        "contentHash": "f+RguMjqVQS25dGv8n1SNwVCfXPC3u0Q3CxIH/bOUZ8I/c6XbkuF25dLjpYNq8mO2q1Wq2YonK+HDBvuncBBmA==",
+        "requested": "[7.0.10, )",
+        "resolved": "7.0.10",
+        "contentHash": "dte7paZdfuO7pBTF8k3ofaPkIgcDeJN7x0m9Gw/OekrsqQLh5994sgKoZxNQ4x+78tAdxUrmPjf+EEEimS5nJg==",
         "dependencies": {
           "MessagePack": "2.1.90",
-          "Microsoft.AspNetCore.SignalR.Common": "7.0.9"
+          "Microsoft.AspNetCore.SignalR.Common": "7.0.10"
         }
       },
       "Microsoft.Extensions.Caching.Memory": {
@@ -33,12 +33,12 @@
       },
       "Microsoft.Windows.CsWin32": {
         "type": "Direct",
-        "requested": "[0.3.21-beta, )",
-        "resolved": "0.3.21-beta",
-        "contentHash": "RccIrBt0v+GSHdZkLEl27mg3ABB1V2uwFp5fNDLK+qBBvYikKyIJCR7FvugE8rOG9uVBvY2Lvh07kRqNhCF+Hw==",
+        "requested": "[0.3.25-beta, )",
+        "resolved": "0.3.25-beta",
+        "contentHash": "6ILZPT7JRt5RRWZQh46qWLbHiHWnmffHyY0ZkRwH4HssbmBBo8NYm/ofu7QOQXnB0zGUyF8k/v1YIRefYjB+hQ==",
         "dependencies": {
-          "Microsoft.Windows.SDK.Win32Docs": "0.1.41-alpha",
-          "Microsoft.Windows.SDK.Win32Metadata": "52.0.65-preview",
+          "Microsoft.Windows.SDK.Win32Docs": "0.1.42-alpha",
+          "Microsoft.Windows.SDK.Win32Metadata": "54.0.44-preview",
           "Microsoft.Windows.WDK.Win32Metadata": "0.7.3-experimental",
           "System.Memory": "4.5.5",
           "System.Runtime.CompilerServices.Unsafe": "6.0.0"
@@ -46,9 +46,9 @@
       },
       "Microsoft.Windows.SDK.Win32Metadata": {
         "type": "Direct",
-        "requested": "[53.0.14-preview, )",
-        "resolved": "53.0.14-preview",
-        "contentHash": "GkjImMPDK+p6dsE46GQu0+HDTH6jrY6V5eOFehyGic6QWiB/3TIyYNhhUlZC4hCiObjqmxOVKiJDs8GZ2pyMjg=="
+        "requested": "[54.0.44-preview, )",
+        "resolved": "54.0.44-preview",
+        "contentHash": "pDfltYDFeJXSqnoyYIlDpoHL83M+Ia5PiVCjMtVoadC9HOCeBbonoJNBOXtLg67pGOwELX2Nzw97f2hHaCDdCw=="
       },
       "MessagePack": {
         "type": "Transitive",
@@ -71,19 +71,19 @@
       },
       "Microsoft.AspNetCore.Connections.Abstractions": {
         "type": "Transitive",
-        "resolved": "7.0.9",
-        "contentHash": "T/A7MkuL0g4r/oNuASR2gIukWoG2360/tuS9RoiU1dOwTlMYthHJaK8NEpswMihcImCDryiHp5dJCPTZHIs9TQ==",
+        "resolved": "7.0.10",
+        "contentHash": "WLHAvZbxrE21DtFXHVu0bVYNfQvg5uzcL6P5hbbFnkGC/IPN9+ytP3SSW+mtemGgIKYrqKN1eQznar4Klxel2w==",
         "dependencies": {
-          "Microsoft.Extensions.Features": "7.0.9",
+          "Microsoft.Extensions.Features": "7.0.10",
           "System.IO.Pipelines": "7.0.0"
         }
       },
       "Microsoft.AspNetCore.SignalR.Common": {
         "type": "Transitive",
-        "resolved": "7.0.9",
-        "contentHash": "u+mm77kNAm2qDjyXhZJnNDY1g0W6Tql4TbLClITMIK54KmOn+lzTsdpFBb41qJ1Jr1Qj+nC0yAXffEga008T6g==",
+        "resolved": "7.0.10",
+        "contentHash": "899XAeogJNJFSO2E+/fdMc9JakJD4fZ3BfJ5T9Ed2ng/DWFl7hXprHIglESF9Fw30+BTF7m20iew0+bi0Ve3wQ==",
         "dependencies": {
-          "Microsoft.AspNetCore.Connections.Abstractions": "7.0.9",
+          "Microsoft.AspNetCore.Connections.Abstractions": "7.0.10",
           "Microsoft.Extensions.Options": "7.0.1"
         }
       },
@@ -107,8 +107,8 @@
       },
       "Microsoft.Extensions.Features": {
         "type": "Transitive",
-        "resolved": "7.0.9",
-        "contentHash": "IJ2vdDt2OYCKyJ7ZJPIZKa4b0M0tsG36h0QUt1d/E8IMAnjIncI+1i9Am0nmheD/wpcVd9eDykiV4dklcwUd3Q=="
+        "resolved": "7.0.10",
+        "contentHash": "jodGLS4SoclKeYMCZzIKTM21mwfyMjCTq/Ex65kUYYAWuVatht4QayBrhcthwvh7amBeLGLCtS4rFlmGLwrAwA=="
       },
       "Microsoft.Extensions.Logging.Abstractions": {
         "type": "Transitive",
@@ -131,8 +131,8 @@
       },
       "Microsoft.Windows.SDK.Win32Docs": {
         "type": "Transitive",
-        "resolved": "0.1.41-alpha",
-        "contentHash": "UiiJ9XZtW5+SoFwnlve7g+gKjp1gDLdQ9bnOY8goSHXdxMVnmcLlZQy326CfHzSllqhx7+h2bEjQdjYNEaz8ew=="
+        "resolved": "0.1.42-alpha",
+        "contentHash": "Z/9po23gUA9aoukirh2ItMU2ZS9++Js9Gdds9fu5yuMojDrmArvY2y+tq9985tR3cxFxpZO1O35Wjfo0khj5HA=="
       },
       "Microsoft.Windows.WDK.Win32Metadata": {
         "type": "Transitive",
