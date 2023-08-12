@@ -58,14 +58,6 @@ public partial class Control : IAsyncDisposable
     private IControlHub _controlHubProxy;
     private bool _serverTampered = false;
 
-    private async Task TryInvokeServerAsync<T>(string method, T argument)
-    {
-        if (_serverConnection != null && _serverConnection.State == HubConnectionState.Connected)
-        {
-            await _serverConnection.InvokeAsync(method, argument);
-        }
-    }
-
     protected async override Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -188,13 +180,12 @@ public partial class Control : IAsyncDisposable
     private async Task OnMouseMove(MouseEventArgs e)
     {
         var xyPercent = await GetRelativeMousePositionPercentAsync(e);
-        var dto = new MouseMoveDto
+
+        await _controlHubProxy.SendMouseCoordinates(new MouseMoveDto
         {
             X = xyPercent.Item1,
             Y = xyPercent.Item2
-        };
-
-        await TryInvokeServerAsync("SendMouseCoordinates", dto);
+        });
     }
 
     private async Task OnMouseUpDown(MouseEventArgs e)
