@@ -5,12 +5,13 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Server.Core.Abstractions;
+using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Core.Hubs;
 
-public class ControlHub : Hub<IControlClient>
+public class ControlHub : Hub<IControlClient>, IControlHub
 {
     private readonly IAppState _appState;
     private readonly IViewerFactory _viewerFactory;
@@ -66,27 +67,27 @@ public class ControlHub : Hub<IControlClient>
         await base.OnDisconnectedAsync(exception);
     }
 
-    public void SendMouseCoordinates(MouseMoveDto dto)
+    public async Task SendMouseCoordinates(MouseMoveDto dto)
     {
         ExecuteActionForViewer(viewer => _inputSender.SendMouseCoordinates(dto, viewer));
     }
 
-    public void SendMouseButton(MouseClickDto dto)
+    public async Task SendMouseButton(MouseClickDto dto)
     {
         ExecuteActionForViewer(viewer => _inputSender.SendMouseButton(dto, viewer));
     }
 
-    public void SendMouseWheel(MouseWheelDto dto)
+    public async Task SendMouseWheel(MouseWheelDto dto)
     {
         _inputSender.SendMouseWheel(dto);
     }
 
-    public void SendKeyboardInput(KeyboardKeyDto dto)
+    public async Task SendKeyboardInput(KeyboardKeyDto dto)
     {
         _inputSender.SendKeyboardInput(dto);
     }
 
-    public void SendSelectedScreen(string displayName)
+    public async Task SendSelectedScreen(string displayName)
     {
         if (_appState.TryGetViewer(Context.ConnectionId, out var viewer))
         {
@@ -98,27 +99,27 @@ public class ControlHub : Hub<IControlClient>
         }
     }
 
-    public void SetInputEnabled(bool inputEnabled)
+    public async Task SetInputEnabled(bool inputEnabled)
     {
         _inputSender.InputEnabled = inputEnabled;
     }
 
-    public void SetQuality(int quality)
+    public async Task SetQuality(int quality)
     {
         ExecuteActionForViewer(viewer => viewer.ScreenCapturer.Quality = quality);
     }
 
-    public void SetTrackCursor(bool trackCursor)
+    public async Task SetTrackCursor(bool trackCursor)
     {
         ExecuteActionForViewer(viewer => viewer.ScreenCapturer.TrackCursor = trackCursor);
     }
 
-    public void KillServer()
+    public async Task KillServer()
     {
         _shutdownService.ImmediateShutdown();
     }
 
-    public void RebootComputer()
+    public async Task RebootComputer()
     {
         _powerManager.Reboot();
     }

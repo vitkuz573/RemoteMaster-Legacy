@@ -9,9 +9,11 @@ using Microsoft.JSInterop;
 using RemoteMaster.Client.Abstractions;
 using RemoteMaster.Client.Models;
 using RemoteMaster.Client.Services;
+using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Helpers;
 using RemoteMaster.Shared.Models;
+using TypedSignalR.Client;
 
 namespace RemoteMaster.Client.Pages;
 
@@ -53,6 +55,7 @@ public partial class Control : IAsyncDisposable
     private string? _screenDataUrl;
     private HubConnection? _agentConnection;
     private HubConnection? _serverConnection;
+    private IControlHub _controlHubProxy;
     private bool _serverTampered = false;
 
     private async Task TryInvokeServerAsync<T>(string method, T argument)
@@ -99,7 +102,7 @@ public partial class Control : IAsyncDisposable
     {
         _statusMessage = message;
         _serverTampered = true;
-        await RefreshUI();
+        await InvokeAsync(StateHasChanged);
         await _agentConnection.StopAsync();
         _agentHandledTcs.SetResult(true);
     }
@@ -107,6 +110,7 @@ public partial class Control : IAsyncDisposable
     private void InitializeServerConnection()
     {
         _serverConnection = HubConnectionFactory.Create(Host, 5076, "hubs/control", withMessagePack: true);
+        _controlHubProxy = _serverConnection.CreateHubProxy<IControlHub>();
     }
 
     private async Task HandleScreenUpdate(ChunkWrapper chunk)
@@ -114,7 +118,7 @@ public partial class Control : IAsyncDisposable
         if (Chunker.TryUnchunkify(chunk, out var allData))
         {
             _screenDataUrl = await JSRuntime.InvokeAsync<string>("createImageBlobUrl", allData);
-            await RefreshUI();
+            await InvokeAsync(StateHasChanged);
         }
     }
 
@@ -144,8 +148,8 @@ public partial class Control : IAsyncDisposable
         if (_serverConnection != null)
         {
             await _serverConnection.StartAsync();
-            ControlFunctionsService.ServerConnection = _serverConnection;
-            await _serverConnection.InvokeAsync("ConnectAs", Intention.Control);
+            ControlFunctionsService.ControlHubProxy = _controlHubProxy;
+            await _controlHubProxy.ConnectAs(Intention.Control);
         }
     }
 
@@ -207,36 +211,31 @@ public partial class Control : IAsyncDisposable
     private async Task SendMouseInputAsync(MouseEventArgs e, ButtonAction state)
     {
         var xyPercent = await GetRelativeMousePositionPercentAsync(e);
-        var dto = new MouseClickDto
+
+        await _controlHubProxy.SendMouseButton(new MouseClickDto
         {
             Button = e.Button,
             State = state,
             X = xyPercent.Item1,
             Y = xyPercent.Item2
-        };
-
-        await TryInvokeServerAsync("SendMouseButton", dto);
+        });
     }
 
     private async Task OnMouseWheel(WheelEventArgs e)
     {
-        var dto = new MouseWheelDto
+        await _controlHubProxy.SendMouseWheel(new MouseWheelDto
         {
             DeltaY = (int)e.DeltaY
-        };
-
-        await TryInvokeServerAsync("SendMouseWheel", dto);
+        });
     }
 
     private async Task SendKeyboardInput(int keyCode, ButtonAction state)
     {
-        var dto = new KeyboardKeyDto
+        await _controlHubProxy.SendKeyboardInput(new KeyboardKeyDto
         {
             Key = keyCode,
             State = state
-        };
-
-        await TryInvokeServerAsync("SendKeyboardInput", dto);
+        });
     }
 
     [JSInvokable]
@@ -249,11 +248,6 @@ public partial class Control : IAsyncDisposable
     public async Task OnKeyUp(int keyCode)
     {
         await SendKeyboardInput(keyCode, ButtonAction.Up);
-    }
-
-    private async Task RefreshUI()
-    {
-        await InvokeAsync(StateHasChanged);
     }
 
     public async ValueTask DisposeAsync()

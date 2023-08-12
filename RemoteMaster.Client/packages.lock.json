@@ -66,6 +66,12 @@
           "System.DirectoryServices.Protocols": "7.0.0"
         }
       },
+      "TypedSignalR.Client": {
+        "type": "Direct",
+        "requested": "[3.4.0, )",
+        "resolved": "3.4.0",
+        "contentHash": "gMCVL0cmndNInrzrz6mf2LWxhoEVX0XNYnt59SHMfnHGepnqXDmzLOE01SADbzcLiiaoyr8Wg3KTZzDMmBYTUw=="
+      },
       "Humanizer.Core": {
         "type": "Transitive",
         "resolved": "2.14.1",

@@ -17,5 +17,6 @@
     <PackageVersion Include="Microsoft.Win32.SystemEvents" Version="7.0.0" />
     <PackageVersion Include="Microsoft.Windows.CsWin32" Version="0.3.25-beta" />
     <PackageVersion Include="Microsoft.Windows.SDK.Win32Metadata" Version="54.0.44-preview" />
+    <PackageVersion Include="TypedSignalR.Client" Version="3.4.0" />
   </ItemGroup>
 </Project>

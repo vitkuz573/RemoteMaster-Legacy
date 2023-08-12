@@ -2,14 +2,14 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using Microsoft.AspNetCore.SignalR.Client;
+using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Client.Services;
 
 public class ControlFunctionsService
 {
-    public HubConnection ServerConnection { get; set; }
+    public IControlHub ControlHubProxy { get; set; }
 
     public IEnumerable<DisplayInfo> Displays { get; set; }
 }
