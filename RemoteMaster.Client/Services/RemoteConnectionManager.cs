@@ -10,7 +10,7 @@ namespace RemoteMaster.Client.Services;
 
 public class RemoteConnectionManager : IRemoteConnectionManager
 {
-    private readonly ConcurrentDictionary<string, HubConnection> _connections = new();
+    private readonly ConcurrentDictionary<string, (HubConnection connection, string url)> _connections = new();
     private readonly ILogger<RemoteConnectionManager> _logger;
 
     public RemoteConnectionManager(ILogger<RemoteConnectionManager> logger)
@@ -25,26 +25,24 @@ public class RemoteConnectionManager : IRemoteConnectionManager
             throw new ArgumentNullException(nameof(connectionType));
         }
 
-        try
+        if (_connections.ContainsKey(connectionType.Name))
         {
-            var connectionBuilder = new HubConnectionBuilder().WithUrl(url);
-
-            if (useMessagePack)
-            {
-                connectionBuilder.AddMessagePackProtocol();
-            }
-
-            var connection = connectionBuilder.Build();
-
-            if (!_connections.TryAdd(connectionType.Name, connection))
-            {
-                _logger.LogWarning("Connection of type {ConnectionType} already exists.", connectionType.Name);
-            }
+            _logger.LogWarning("Connection of type {ConnectionType} already exists.", connectionType.Name);
+            return;
         }
-        catch (Exception ex)
+
+        var connectionBuilder = new HubConnectionBuilder().WithUrl(url);
+
+        if (useMessagePack)
         {
-            _logger.LogError(ex, "Error creating connection of type {ConnectionType} to {URL}.", connectionType.Name, url);
-            throw;
+            connectionBuilder.AddMessagePackProtocol();
+        }
+
+        var connection = connectionBuilder.Build();
+
+        if (!_connections.TryAdd(connectionType.Name, (connection, url)))
+        {
+            _logger.LogWarning("Failed to add the connection of type {ConnectionType}.", connectionType.Name);
         }
     }
 
@@ -55,17 +53,9 @@ public class RemoteConnectionManager : IRemoteConnectionManager
             throw new ArgumentNullException(nameof(connectionType));
         }
 
-        try
+        if (_connections.TryRemove(connectionType.Name, out var connectionTuple))
         {
-            if (_connections.TryRemove(connectionType.Name, out var connection))
-            {
-                await connection.DisposeAsync();
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error removing connection of type {ConnectionType}.", connectionType.Name);
-            throw;
+            await connectionTuple.connection.DisposeAsync();
         }
     }
 
@@ -76,9 +66,8 @@ public class RemoteConnectionManager : IRemoteConnectionManager
             throw new ArgumentNullException(nameof(connectionType));
         }
 
-        _connections.TryGetValue(connectionType.Name, out var connection);
-
-        return connection;
+        _connections.TryGetValue(connectionType.Name, out var connectionTuple);
+        return connectionTuple.connection;
     }
 
     public async Task StartConnectionAsync(IConnectionType connectionType)
@@ -88,22 +77,10 @@ public class RemoteConnectionManager : IRemoteConnectionManager
             throw new ArgumentNullException(nameof(connectionType));
         }
 
-        try
+        if (_connections.TryGetValue(connectionType.Name, out var connectionTuple))
         {
-            if (_connections.TryGetValue(connectionType.Name, out var connection))
-            {
-                await connection.StartAsync();
-                _logger.LogInformation("Started connection of type {ConnectionType}.", connectionType.Name);
-            }
-            else
-            {
-                _logger.LogWarning("No connection of type {ConnectionType} found.", connectionType.Name);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error starting connection of type {ConnectionType}.", connectionType.Name);
-            throw;
+            await connectionTuple.connection.StartAsync();
+            _logger.LogInformation("Started connection of type {ConnectionType} with URL {Url}.", connectionType.Name, connectionTuple.url);
         }
     }
 
@@ -114,18 +91,10 @@ public class RemoteConnectionManager : IRemoteConnectionManager
             throw new ArgumentNullException(nameof(connectionType));
         }
 
-        try
+        if (_connections.TryGetValue(connectionType.Name, out var connectionTuple))
         {
-            if (_connections.TryGetValue(connectionType.Name, out var connection))
-            {
-                await connection.StopAsync();
-                _logger.LogInformation("Stopped connection of type {ConnectionType}.", connectionType.Name);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error stopping connection of type {ConnectionType}.", connectionType.Name);
-            throw;
+            await connectionTuple.connection.StopAsync();
+            _logger.LogInformation("Stopped connection of type {ConnectionType} with URL {Url}.", connectionType.Name, connectionTuple.url);
         }
     }
 }
