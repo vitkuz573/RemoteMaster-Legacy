@@ -27,7 +27,7 @@ public partial class Control : IAsyncDisposable
     private ControlFunctionsService ControlFunctionsService { get; set; }
 
     [Inject]
-    private IHubConnectionFactory HubConnectionFactory { get; set; }
+    private IRemoteConnectionManager RemoteConnectionManager { get; set; }
 
     [Inject]
     private IJSRuntime JSRuntime { get; set; }
@@ -53,8 +53,6 @@ public partial class Control : IAsyncDisposable
     private TaskCompletionSource<bool> _agentHandledTcs = new();
     private string _statusMessage = "Establishing connection...";
     private string? _screenDataUrl;
-    private HubConnection? _agentConnection;
-    private HubConnection? _serverConnection;
     private IControlHub _controlHubProxy;
     private bool _serverTampered = false;
 
@@ -71,18 +69,21 @@ public partial class Control : IAsyncDisposable
 
     private void InitializeAgentConnection()
     {
-        _agentConnection = HubConnectionFactory.Create(Host, 3564, "hubs/main");
+        RemoteConnectionManager.CreateConnectionAsync(ConnectionTypes.Agent, $"http://{Host}:3564/hubs/main");
     }
 
     private void RegisterAgentHandlers()
     {
-        _agentConnection.On<string>("ServerTampered", HandleServerTampered);
+        var agentConnection = RemoteConnectionManager.GetConnection(ConnectionTypes.Agent);
+        agentConnection?.On<string>("ServerTampered", HandleServerTampered);
     }
+
 
     private void RegisterServerHandlers()
     {
-        _serverConnection.On<ScreenDataDto>("ScreenData", HandleScreenData);
-        _serverConnection.On<ChunkWrapper>("ScreenUpdate", HandleScreenUpdate);
+        var serverConnection = RemoteConnectionManager.GetConnection(ConnectionTypes.Server);
+        serverConnection?.On<ScreenDataDto>("ScreenData", HandleScreenData);
+        serverConnection?.On<ChunkWrapper>("ScreenUpdate", HandleScreenUpdate);
     }
 
     private void HandleScreenData(ScreenDataDto dto)
@@ -95,14 +96,13 @@ public partial class Control : IAsyncDisposable
         _statusMessage = message;
         _serverTampered = true;
         await InvokeAsync(StateHasChanged);
-        await _agentConnection.StopAsync();
+        await RemoteConnectionManager.StopConnectionAsync(ConnectionTypes.Agent);
         _agentHandledTcs.SetResult(true);
     }
 
     private void InitializeServerConnection()
     {
-        _serverConnection = HubConnectionFactory.Create(Host, 5076, "hubs/control", withMessagePack: true);
-        _controlHubProxy = _serverConnection.CreateHubProxy<IControlHub>();
+        RemoteConnectionManager.CreateConnectionAsync(ConnectionTypes.Server, $"http://{Host}:5076/hubs/control", useMessagePack: true);
     }
 
     private async Task HandleScreenUpdate(ChunkWrapper chunk)
@@ -126,7 +126,7 @@ public partial class Control : IAsyncDisposable
         {
             InitializeAgentConnection();
             RegisterAgentHandlers();
-            await _agentConnection.StartAsync();
+            await RemoteConnectionManager.StartConnectionAsync(ConnectionTypes.Agent);
             await HandleAgentConnectionStatus();
         }
         else
@@ -137,9 +137,13 @@ public partial class Control : IAsyncDisposable
 
     private async Task StartServerConnectionAsync()
     {
-        if (_serverConnection != null)
+        var serverConnection = RemoteConnectionManager.GetConnection(ConnectionTypes.Server);
+        
+        await RemoteConnectionManager.StartConnectionAsync(ConnectionTypes.Server);
+
+        if (serverConnection != null)
         {
-            await _serverConnection.StartAsync();
+            _controlHubProxy = serverConnection.CreateHubProxy<IControlHub>();
             ControlFunctionsService.ControlHubProxy = _controlHubProxy;
             await _controlHubProxy.ConnectAs(Intention.Control);
         }
@@ -243,11 +247,7 @@ public partial class Control : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        await _serverConnection.DisposeAsync();
-
-        if (_agentConnection != null)
-        {
-            await _agentConnection.DisposeAsync();
-        }
+        await RemoteConnectionManager.RemoveConnectionAsync(ConnectionTypes.Server);
+        await RemoteConnectionManager.RemoveConnectionAsync(ConnectionTypes.Agent);
     }
 }
