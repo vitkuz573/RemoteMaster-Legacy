@@ -141,12 +141,9 @@ public partial class Control : IAsyncDisposable
         
         await RemoteConnectionManager.StartConnectionAsync(ConnectionTypes.Server);
 
-        if (serverConnection != null)
-        {
             _controlHubProxy = serverConnection.CreateHubProxy<IControlHub>();
             ControlFunctionsService.ControlHubProxy = _controlHubProxy;
             await _controlHubProxy.ConnectAs(Intention.Control);
-        }
     }
 
     private async Task HandleAgentConnectionStatus()

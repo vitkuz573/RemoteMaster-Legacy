@@ -77,6 +77,7 @@ public class RemoteConnectionManager : IRemoteConnectionManager
         }
 
         _connections.TryGetValue(connectionType.Name, out var connection);
+
         return connection;
     }
 
