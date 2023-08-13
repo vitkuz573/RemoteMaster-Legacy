@@ -15,7 +15,7 @@ public class RemoteConnectionManager : IRemoteConnectionManager
 
     public RemoteConnectionManager(ILogger<RemoteConnectionManager> logger)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _logger = logger;
     }
 
     public void CreateConnectionAsync(IConnectionType connectionType, string url, bool useMessagePack = false)
@@ -67,6 +67,7 @@ public class RemoteConnectionManager : IRemoteConnectionManager
         }
 
         _connections.TryGetValue(connectionType, out var connection);
+
         return connection;
     }
 
