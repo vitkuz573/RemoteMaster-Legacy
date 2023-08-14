@@ -98,4 +98,68 @@ public class RemoteConnectionManager : IRemoteConnectionManager
             _logger.LogInformation("Stopped connection of type {ConnectionType}.", connectionType.Name);
         }
     }
+
+    public void RegisterEventHandler<TPayload>(IConnectionType connectionType, string eventName, Action<TPayload> handler)
+    {
+        if (connectionType == null)
+        {
+            throw new ArgumentNullException(nameof(connectionType));
+        }
+
+        if (string.IsNullOrWhiteSpace(eventName))
+        {
+            throw new ArgumentException("Event name cannot be null or whitespace.", nameof(eventName));
+        }
+
+        if (handler == null)
+        {
+            throw new ArgumentNullException(nameof(handler));
+        }
+
+        if (_connections.TryGetValue(connectionType, out var connection))
+        {
+            connection.On(eventName, handler);
+        }
+    }
+
+    public void RegisterEventHandler<TPayload>(IConnectionType connectionType, string eventName, Func<TPayload, Task> handler)
+    {
+        if (connectionType == null)
+        {
+            throw new ArgumentNullException(nameof(connectionType));
+        }
+
+        if (string.IsNullOrWhiteSpace(eventName))
+        {
+            throw new ArgumentException("Event name cannot be null or whitespace.", nameof(eventName));
+        }
+
+        if (handler == null)
+        {
+            throw new ArgumentNullException(nameof(handler));
+        }
+
+        if (_connections.TryGetValue(connectionType, out var connection))
+        {
+            connection.On(eventName, handler);
+        }
+    }
+
+    public void RemoveEventHandler(IConnectionType connectionType, string eventName)
+    {
+        if (connectionType == null)
+        {
+            throw new ArgumentNullException(nameof(connectionType));
+        }
+
+        if (string.IsNullOrWhiteSpace(eventName))
+        {
+            throw new ArgumentException("Event name cannot be null or whitespace.", nameof(eventName));
+        }
+
+        if (_connections.TryGetValue(connectionType, out var connection))
+        {
+            connection.Remove(eventName);
+        }
+    }
 }

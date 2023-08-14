@@ -17,4 +17,10 @@ public interface IRemoteConnectionManager
     Task StartConnectionAsync(IConnectionType connectionType);
 
     Task StopConnectionAsync(IConnectionType connectionType);
+
+    void RegisterEventHandler<TPayload>(IConnectionType connectionType, string eventName, Action<TPayload> handler);
+
+    void RegisterEventHandler<TPayload>(IConnectionType connectionType, string eventName, Func<TPayload, Task> handler);
+
+    void RemoveEventHandler(IConnectionType connectionType, string eventName);
 }

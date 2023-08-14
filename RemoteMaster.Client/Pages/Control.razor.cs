@@ -74,16 +74,13 @@ public partial class Control : IAsyncDisposable
 
     private void RegisterAgentHandlers()
     {
-        var agentConnection = RemoteConnectionManager.GetConnection(ConnectionTypes.Agent);
-        agentConnection?.On<string>("ServerTampered", HandleServerTampered);
+        RemoteConnectionManager.RegisterEventHandler<string>(ConnectionTypes.Agent, "ServerTampered", HandleServerTampered);
     }
-
 
     private void RegisterServerHandlers()
     {
-        var serverConnection = RemoteConnectionManager.GetConnection(ConnectionTypes.Server);
-        serverConnection?.On<ScreenDataDto>("ScreenData", HandleScreenData);
-        serverConnection?.On<ChunkWrapper>("ScreenUpdate", HandleScreenUpdate);
+        RemoteConnectionManager.RegisterEventHandler<ScreenDataDto>(ConnectionTypes.Server, "ScreenData", HandleScreenData);
+        RemoteConnectionManager.RegisterEventHandler<ChunkWrapper>(ConnectionTypes.Server, "ScreenUpdate", HandleScreenUpdate);
     }
 
     private void HandleScreenData(ScreenDataDto dto)
@@ -141,9 +138,9 @@ public partial class Control : IAsyncDisposable
         
         await RemoteConnectionManager.StartConnectionAsync(ConnectionTypes.Server);
 
-            _controlHubProxy = serverConnection.CreateHubProxy<IControlHub>();
-            ControlFunctionsService.ControlHubProxy = _controlHubProxy;
-            await _controlHubProxy.ConnectAs(Intention.Control);
+        _controlHubProxy = serverConnection.CreateHubProxy<IControlHub>();
+        ControlFunctionsService.ControlHubProxy = _controlHubProxy;
+        await _controlHubProxy.ConnectAs(Intention.Control);
     }
 
     private async Task HandleAgentConnectionStatus()
