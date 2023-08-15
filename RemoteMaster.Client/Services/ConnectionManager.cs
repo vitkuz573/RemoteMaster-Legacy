@@ -25,7 +25,7 @@ public class ConnectionManager : IConnectionManager
         return context;
     }
 
-    public IConnectionContext Get(string connectionName)
+    public IConnectionContext? Get(string connectionName)
     {
         return _contexts.TryGetValue(connectionName, out var context) ? context : null;
     }

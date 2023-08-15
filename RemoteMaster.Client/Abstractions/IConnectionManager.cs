@@ -8,7 +8,7 @@ public interface IConnectionManager : IDisposable
 {
     IConnectionContext Connect(string name, string url, bool useMessagePack = false);
 
-    IConnectionContext Get(string name);
+    IConnectionContext? Get(string name);
 
     Task DisconnectAsync(string name);
 }
