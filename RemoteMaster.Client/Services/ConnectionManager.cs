@@ -10,16 +10,16 @@ namespace RemoteMaster.Client.Services;
 public class ConnectionManager : IConnectionManager
 {
     private readonly ConcurrentDictionary<string, IConnectionContext> _contexts = new();
-    private readonly Func<IConnectionContext> _connectionContextFactory;
+    private readonly IConnectionContextFactory _connectionContextFactory;
 
-    public ConnectionManager(Func<IConnectionContext> connectionContextFactory)
+    public ConnectionManager(IConnectionContextFactory connectionContextFactory)
     {
         _connectionContextFactory = connectionContextFactory;
     }
 
     public IConnectionContext Connect(string connectionName, string url, bool useMessagePack = false)
     {
-        var context = _connectionContextFactory().Configure(url, useMessagePack);
+        var context = _connectionContextFactory.Create().Configure(url, useMessagePack);
         _contexts[connectionName] = context;
 
         return context;
