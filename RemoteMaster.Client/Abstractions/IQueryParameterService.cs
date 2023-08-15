@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Client.Abstractions;
 
-public interface IUriParametersService
+public interface IQueryParameterService
 {
-    TType GetParameter<TType>(string name);
+    T GetValueFromQuery<T>(string parameterName);
 }

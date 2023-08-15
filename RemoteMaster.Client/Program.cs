@@ -16,7 +16,7 @@ builder.Services.AddTransient<IConnectionContextFactory, ConnectionContextFactor
 builder.Services.AddScoped<ConnectionManager>();
 builder.Services.AddScoped<ControlFunctionsService>();
 builder.Services.AddScoped<DatabaseService>();
-builder.Services.AddScoped<IUriParametersService, UriParametersService>();
+builder.Services.AddScoped<IQueryParameterService, QueryParameterService>();
 builder.Services.AddSingleton<ActiveDirectoryService>();
 builder.Services.AddTransient<IHubConnectionBuilder>(s => new HubConnectionBuilder());
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));

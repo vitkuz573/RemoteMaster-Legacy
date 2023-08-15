@@ -33,26 +33,9 @@ public partial class Control : IAsyncDisposable
     private IJSRuntime JSRuntime { get; set; }
 
     [Inject]
-    private IUriParametersService UriParametersService { get; set; }
-
-    [Inject]
-    private ILogger<Control> Logger { get; set; }
+    private IQueryParameterService QueryParameterService { get; set; }
 #nullable restore
 
-    private UriParameters UriParameters
-    {
-        get
-        {
-            _uriParameters ??= new UriParameters
-            {
-                SkipAgent = UriParametersService.GetParameter<bool>("skipAgent")
-            };
-
-            return _uriParameters;
-        }
-    }
-
-    private UriParameters _uriParameters;
     private TaskCompletionSource<bool> _agentHandledTcs = new();
     private string _statusMessage = "Establishing connection...";
     private string? _screenDataUrl;
@@ -106,7 +89,9 @@ public partial class Control : IAsyncDisposable
 
     private async Task InitializeAgentConnectionAsync()
     {
-        if (!UriParameters.SkipAgent)
+        var skipAgent = QueryParameterService.GetValueFromQuery<bool>("skipAgent");
+        
+        if (!skipAgent)
         {
             await ConnectionManager
                 .Connect("Agent", $"http://{Host}:3564/hubs/main")
