@@ -4,12 +4,16 @@
 
 using Microsoft.AspNetCore.SignalR.Client;
 using RemoteMaster.Client.Abstractions;
+using RemoteMaster.Client.Models;
 
 namespace RemoteMaster.Client.Services;
 
 public class ConnectionContext : IConnectionContext
 {
     public HubConnection Connection { get; private set; }
+
+    private DateTime _connectionStartTime;
+    private string _protocolUsed = "Default";
 
     public IConnectionContext Configure(string url, bool useMessagePack = false)
     {
@@ -18,6 +22,7 @@ public class ConnectionContext : IConnectionContext
         if (useMessagePack)
         {
             builder.AddMessagePackProtocol();
+            _protocolUsed = "MessagePack";
         }
 
         Connection = builder.Build();
@@ -25,10 +30,20 @@ public class ConnectionContext : IConnectionContext
         return this;
     }
 
+    public ConnectionDiagnostics GetConnectionDiagnostics()
+    {
+        return new ConnectionDiagnostics
+        {
+            ConnectionState = Connection.State.ToString(),
+            ConnectionDuration = DateTime.UtcNow - _connectionStartTime,
+            ConnectionId = Connection.ConnectionId,
+            ProtocolUsed = _protocolUsed
+        };
+    }
+
     public IConnectionContext On<T>(string methodName, Action<T> handler)
     {
         Connection.On(methodName, handler);
-
         return this;
     }
 
@@ -42,6 +57,7 @@ public class ConnectionContext : IConnectionContext
     public async Task<IConnectionContext> StartAsync()
     {
         await Connection.StartAsync();
+        _connectionStartTime = DateTime.UtcNow;
 
         return this;
     }

@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.SignalR.Client;
+using RemoteMaster.Client.Models;
 
 namespace RemoteMaster.Client.Abstractions;
 
@@ -11,6 +12,8 @@ public interface IConnectionContext
     HubConnection Connection { get; }
 
     IConnectionContext Configure(string url, bool useMessagePack = false);
+
+    ConnectionDiagnostics GetConnectionDiagnostics();
 
     IConnectionContext On<T>(string methodName, Action<T> handler);
 
