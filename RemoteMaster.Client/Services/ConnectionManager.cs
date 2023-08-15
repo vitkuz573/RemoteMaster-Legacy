@@ -2,39 +2,47 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Collections.Concurrent;
 using RemoteMaster.Client.Abstractions;
 
 namespace RemoteMaster.Client.Services;
 
 public class ConnectionManager : IConnectionManager
 {
-    private readonly Dictionary<string, object> _contexts = new();
-    private readonly IServiceProvider _serviceProvider;
+    private readonly ConcurrentDictionary<string, IConnectionContext> _contexts = new();
+    private readonly Func<IConnectionContext> _connectionContextFactory;
 
-    public ConnectionManager(IServiceProvider serviceProvider)
+    public ConnectionManager(Func<IConnectionContext> connectionContextFactory)
     {
-        _serviceProvider = serviceProvider;
+        _connectionContextFactory = connectionContextFactory;
     }
 
-    public IConnectionContext Connect(string name, string url, bool useMessagePack = false)
+    public IConnectionContext Connect(string connectionName, string url, bool useMessagePack = false)
     {
-        var context = _serviceProvider.GetRequiredService<IConnectionContext>().Configure(url, useMessagePack);
-        _contexts[name] = context;
+        var context = _connectionContextFactory().Configure(url, useMessagePack);
+        _contexts[connectionName] = context;
 
         return context;
     }
 
-    public IConnectionContext Get(string name)
+    public IConnectionContext Get(string connectionName)
     {
-        return _contexts.ContainsKey(name) ? _contexts[name] as IConnectionContext : null;
+        return _contexts.TryGetValue(connectionName, out var context) ? context : null;
     }
 
-    public async Task DisconnectAsync(string name)
+    public async Task DisconnectAsync(string connectionName)
     {
-        if (_contexts.ContainsKey(name) && _contexts[name] is IConnectionContext context)
+        if (_contexts.TryRemove(connectionName, out var context) && context is IConnectionContext connectionContext)
         {
-            await context.StopAsync();
-            _contexts.Remove(name);
+            await connectionContext.StopAsync();
+        }
+    }
+
+    public void Dispose()
+    {
+        foreach (var context in _contexts.Values)
+        {
+            context?.StopAsync().Wait();
         }
     }
 }

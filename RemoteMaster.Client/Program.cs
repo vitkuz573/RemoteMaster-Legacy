@@ -13,6 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Services
 builder.Services.AddScoped<IConnectionManager, ConnectionManager>();
 builder.Services.AddTransient<IConnectionContext, ConnectionContext>();
+builder.Services.AddScoped<Func<IConnectionContext>>(sp => () => sp.GetRequiredService<IConnectionContext>());
 builder.Services.AddScoped<ConnectionManager>();
 builder.Services.AddScoped<ControlFunctionsService>();
 builder.Services.AddScoped<DatabaseService>();

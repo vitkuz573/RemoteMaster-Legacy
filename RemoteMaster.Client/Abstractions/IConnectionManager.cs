@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Client.Abstractions;
 
-public interface IConnectionManager
+public interface IConnectionManager : IDisposable
 {
     IConnectionContext Connect(string name, string url, bool useMessagePack = false);
 
