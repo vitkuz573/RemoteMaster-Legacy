@@ -9,7 +9,6 @@ using Radzen;
 using Radzen.Blazor;
 using RemoteMaster.Client.Models;
 using RemoteMaster.Client.Services;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Client.Pages;
 
