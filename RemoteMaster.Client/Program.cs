@@ -10,10 +10,9 @@ using RemoteMaster.Client.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddTransient<IHubConnectionFactory, HubConnectionFactory>();
-
 // Services
-builder.Services.AddScoped<IRemoteConnectionManager, RemoteConnectionManager>();
+builder.Services.AddScoped<IConnectionManager, ConnectionManager>();
+builder.Services.AddTransient<IConnectionContext, ConnectionContext>();
 builder.Services.AddScoped<ConnectionManager>();
 builder.Services.AddScoped<ControlFunctionsService>();
 builder.Services.AddScoped<DatabaseService>();

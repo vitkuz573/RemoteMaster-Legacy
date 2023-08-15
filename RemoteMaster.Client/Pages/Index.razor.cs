@@ -174,41 +174,41 @@ public partial class Index
         {
             _selectedNode = node;
 
-            foreach (var children in node.Children)
-            {
-                if (children is Computer computer)
-                {
-                    if (!_connections.ContainsKey(computer.IPAddress))
-                    {
-                        var agentConnection = ConnectionManager.CreateAgentConnection(computer.IPAddress);
-                        var serverConnection = ConnectionManager.CreateServerConnection(computer.IPAddress);
-                        _connections[computer.IPAddress] = (agentConnection, serverConnection);
-
-                        try
-                        {
-                            await agentConnection.StartAsync();
-
-                            Thread.Sleep(5000);
-
-                            serverConnection.On<byte[]>("ReceiveThumbnail", async (thumbnailBytes) =>
-                            {
-                                if (thumbnailBytes != null && thumbnailBytes.Length > 0)
-                                {
-                                    computer.Thumbnail = thumbnailBytes;
-                                    await InvokeAsync(StateHasChanged);
-                                }
-                            });
-
-                            await serverConnection.StartAsync();
-                            await serverConnection.InvokeAsync("ConnectAs", Intention.GetThumbnail);
-                        }
-                        catch
-                        {
-                            //
-                        }
-                    }
-                }
-            }
+            // foreach (var children in node.Children)
+            // {
+            //     if (children is Computer computer)
+            //     {
+            //         if (!_connections.ContainsKey(computer.IPAddress))
+            //         {
+            //             var agentConnection = ConnectionManager.CreateAgentConnection(computer.IPAddress);
+            //             var serverConnection = ConnectionManager.CreateServerConnection(computer.IPAddress);
+            //             _connections[computer.IPAddress] = (agentConnection, serverConnection);
+            // 
+            //             try
+            //             {
+            //                 await agentConnection.StartAsync();
+            // 
+            //                 Thread.Sleep(5000);
+            // 
+            //                 serverConnection.On<byte[]>("ReceiveThumbnail", async (thumbnailBytes) =>
+            //                 {
+            //                     if (thumbnailBytes != null && thumbnailBytes.Length > 0)
+            //                     {
+            //                         computer.Thumbnail = thumbnailBytes;
+            //                         await InvokeAsync(StateHasChanged);
+            //                     }
+            //                 });
+            // 
+            //                 await serverConnection.StartAsync();
+            //                 await serverConnection.InvokeAsync("ConnectAs", Intention.GetThumbnail);
+            //             }
+            //             catch
+            //             {
+            //                 //
+            //             }
+            //         }
+            //     }
+            // }
         }
 
         StateHasChanged();

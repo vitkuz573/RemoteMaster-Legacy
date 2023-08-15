@@ -4,7 +4,11 @@
 
 namespace RemoteMaster.Client.Abstractions;
 
-public interface IConnectionType
+public interface IConnectionManager
 {
-    string Name { get; }
+    IConnectionContext Connect(string name, string url, bool useMessagePack = false);
+   
+    IConnectionContext Get(string name);
+    
+    Task DisconnectAsync(string name);
 }

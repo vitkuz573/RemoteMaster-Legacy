@@ -2,46 +2,39 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using Microsoft.AspNetCore.SignalR.Client;
 using RemoteMaster.Client.Abstractions;
 
 namespace RemoteMaster.Client.Services;
 
-public class ConnectionManager
+public class ConnectionManager : IConnectionManager
 {
-    private readonly IHubConnectionFactory _hubConnectionFactory;
-    private HubConnection _agentConnection;
+    private readonly Dictionary<string, object> _contexts = new();
+    private readonly IServiceProvider _serviceProvider;
 
-    public bool IsServerTampered { get; private set; }
-
-    public string StatusMessage { get; private set; }
-
-    public ConnectionManager(IHubConnectionFactory hubConnectionFactory)
+    public ConnectionManager(IServiceProvider serviceProvider)
     {
-        _hubConnectionFactory = hubConnectionFactory;
+        _serviceProvider = serviceProvider;
     }
 
-    public HubConnection CreateAgentConnection(string host)
+    public IConnectionContext Connect(string name, string url, bool useMessagePack = false)
     {
-        _agentConnection = _hubConnectionFactory.Create(host, 3564, "hubs/main");
-        RegisterAgentHandlers();
+        var context = _serviceProvider.GetRequiredService<IConnectionContext>().Configure(url, useMessagePack);
+        _contexts[name] = context;
 
-        return _agentConnection;
+        return context;
     }
 
-    public HubConnection CreateServerConnection(string host)
+    public IConnectionContext Get(string name)
     {
-        return _hubConnectionFactory.Create(host, 5076, "hubs/control", withMessagePack: true);
+        return _contexts.ContainsKey(name) ? _contexts[name] as IConnectionContext : null;
     }
 
-    private void RegisterAgentHandlers()
+    public async Task DisconnectAsync(string name)
     {
-        _agentConnection.On<string>("ServerTampered", HandleServerTampered);
-    }
-
-    private void HandleServerTampered(string message)
-    {
-        StatusMessage = message;
-        IsServerTampered = true;
+        if (_contexts.ContainsKey(name) && _contexts[name] is IConnectionContext context)
+        {
+            await context.StopAsync();
+            _contexts.Remove(name);
+        }
     }
 }
