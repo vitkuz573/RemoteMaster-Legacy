@@ -65,7 +65,7 @@ public partial class Control : IAsyncDisposable
             if (!_serverTampered)
             {
                 await InitializeServerConnectionAsync();
-                await StartServerConnectionAsync();
+                await _controlHubProxy.ConnectAs(Intention.Control);
             }
 
             await SetupClientEventListeners();
@@ -110,7 +110,8 @@ public partial class Control : IAsyncDisposable
                 .On<string>("ServerTampered", HandleServerTampered)
                 .StartAsync();
 
-            await HandleAgentConnectionStatus();
+            await WaitForAgentOrTimeoutAsync();
+            await _agentHandledTcs.Task;
         }
     }
 
@@ -124,17 +125,6 @@ public partial class Control : IAsyncDisposable
 
         _controlHubProxy = serverContext.Connection.CreateHubProxy<IControlHub>();
         ControlFunctionsService.ControlHubProxy = _controlHubProxy;
-    }
-
-    private async Task StartServerConnectionAsync()
-    {
-        await _controlHubProxy.ConnectAs(Intention.Control);
-    }
-
-    private async Task HandleAgentConnectionStatus()
-    {
-        await WaitForAgentOrTimeoutAsync();
-        await _agentHandledTcs.Task;
     }
 
     private async Task WaitForAgentOrTimeoutAsync(int timeoutMilliseconds = 5000)

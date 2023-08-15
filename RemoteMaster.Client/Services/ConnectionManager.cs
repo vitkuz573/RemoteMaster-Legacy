@@ -32,9 +32,9 @@ public class ConnectionManager : IConnectionManager
 
     public async Task DisconnectAsync(string connectionName)
     {
-        if (_contexts.TryRemove(connectionName, out var context) && context is IConnectionContext connectionContext)
+        if (_contexts.TryRemove(connectionName, out var context) && context != null)
         {
-            await connectionContext.StopAsync();
+            await context.StopAsync();
         }
     }
 
