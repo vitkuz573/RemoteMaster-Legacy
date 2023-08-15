@@ -14,6 +14,7 @@ public class ConnectionContext : IConnectionContext
 
     private DateTime _connectionStartTime;
     private string _protocolUsed = "Default";
+    private long _receivedMessagesCount = 0;
 
     public IConnectionContext Configure(string url, bool useMessagePack = false)
     {
@@ -37,19 +38,29 @@ public class ConnectionContext : IConnectionContext
             ConnectionState = Connection.State.ToString(),
             ConnectionDuration = DateTime.UtcNow - _connectionStartTime,
             ConnectionId = Connection.ConnectionId,
-            ProtocolUsed = _protocolUsed
+            ProtocolUsed = _protocolUsed,
+            ReceivedMessagesCount = Interlocked.Read(ref _receivedMessagesCount)
         };
     }
 
     public IConnectionContext On<T>(string methodName, Action<T> handler)
     {
-        Connection.On(methodName, handler);
+        Connection.On(methodName, (T payload) =>
+        {
+            Interlocked.Increment(ref _receivedMessagesCount);
+            handler(payload);
+        });
+
         return this;
     }
 
     public IConnectionContext On<T>(string methodName, Func<T, Task> handler)
     {
-        Connection.On(methodName, handler);
+        Connection.On(methodName, (T payload) =>
+        {
+            Interlocked.Increment(ref _receivedMessagesCount);
+            handler(payload);
+        });
 
         return this;
     }

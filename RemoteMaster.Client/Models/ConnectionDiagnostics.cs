@@ -13,4 +13,6 @@ public class ConnectionDiagnostics
     public string ConnectionId { get; set; }
 
     public string ProtocolUsed { get; set; }
+
+    public long ReceivedMessagesCount { get; set; }
 }
