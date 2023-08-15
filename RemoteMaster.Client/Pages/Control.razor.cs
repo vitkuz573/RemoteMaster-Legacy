@@ -128,13 +128,6 @@ public partial class Control : IAsyncDisposable
 
         _controlHubProxy = serverContext.Connection.CreateHubProxy<IControlHub>();
         ControlFunctionsService.ControlHubProxy = _controlHubProxy;
-
-        var diag = serverContext.GetConnectionDiagnostics();
-
-        Logger.LogInformation(diag.ProtocolUsed);
-        Logger.LogInformation(diag.ConnectionId);
-        Logger.LogInformation(diag.ConnectionDuration.TotalSeconds.ToString());
-        Logger.LogInformation(diag.ConnectionState.ToString());
     }
 
     private async Task WaitForAgentOrTimeoutAsync(int timeoutMilliseconds = 5000)
