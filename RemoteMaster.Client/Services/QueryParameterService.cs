@@ -14,10 +14,10 @@ public class QueryParameterService : IQueryParameterService
 
     public QueryParameterService(NavigationManager navigationManager)
     {
-        _navigationManager = navigationManager ?? throw new ArgumentNullException(nameof(navigationManager));
+        _navigationManager = navigationManager;
     }
 
-    public T GetValueFromQuery<T>(string parameterName)
+    public T? GetValueFromQuery<T>(string parameterName)
     {
         var uri = new Uri(_navigationManager.Uri);
         var query = HttpUtility.ParseQueryString(uri.Query);

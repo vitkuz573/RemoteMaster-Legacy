@@ -6,5 +6,5 @@ namespace RemoteMaster.Client.Abstractions;
 
 public interface IQueryParameterService
 {
-    T GetValueFromQuery<T>(string parameterName);
+    public T? GetValueFromQuery<T>(string parameterName);
 }
