@@ -46,7 +46,10 @@ public partial class Control : IAsyncDisposable
     {
         if (firstRender)
         {
-            await InitializeAgentConnectionAsync();
+            if (!QueryParameterService.GetValueFromQuery<bool>("skipAgent"))
+            {
+                await InitializeAgentConnectionAsync();
+            }
 
             if (!_serverTampered)
             {
@@ -89,18 +92,13 @@ public partial class Control : IAsyncDisposable
 
     private async Task InitializeAgentConnectionAsync()
     {
-        var skipAgent = QueryParameterService.GetValueFromQuery<bool>("skipAgent");
+        await ConnectionManager
+            .Connect("Agent", $"http://{Host}:3564/hubs/main")
+            .On<string>("ServerTampered", HandleServerTampered)
+            .StartAsync();
         
-        if (!skipAgent)
-        {
-            await ConnectionManager
-                .Connect("Agent", $"http://{Host}:3564/hubs/main")
-                .On<string>("ServerTampered", HandleServerTampered)
-                .StartAsync();
-
-            await WaitForAgentOrTimeoutAsync();
-            await _agentHandledTcs.Task;
-        }
+        await WaitForAgentOrTimeoutAsync();
+        await _agentHandledTcs.Task;
     }
 
     private async Task InitializeServerConnectionAsync()
