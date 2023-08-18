@@ -1,5 +1,8 @@
-﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
-// This file is part of the RemoteMaster project.
+﻿// Originally licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licensed the original code under the MIT license.
+//
+// Adapted by Vitaly Kuzyaev.
+// This adapted version is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Drawing;

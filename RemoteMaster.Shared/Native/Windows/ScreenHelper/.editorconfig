@@ -1,0 +1,2 @@
+[*.cs]
+file_header_template = Originally licensed to the .NET Foundation under one or more agreements.\nThe .NET Foundation licensed the original code under the MIT license.\n\nAdapted by Vitaly Kuzyaev.\nThis adapted version is part of the RemoteMaster project.\nLicensed under the GNU Affero General Public License v3.0.
