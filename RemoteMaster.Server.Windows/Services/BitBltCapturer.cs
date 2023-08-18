@@ -88,20 +88,20 @@ public class BitBltCapturer : ScreenCapturer
             _logger.LogError("Failed to release the device context.");
         }
 
-        var cursorInfo = GetCursorInfo();
+        var cursorInfo = GetCursorInformation();
         DrawCursor(memoryGraphics, cursorInfo);
 
         return SaveBitmap(_bitmap);
     }
 
-    private static CURSORINFO GetCursorInfo()
+    private static CURSORINFO GetCursorInformation()
     {
         var cursorInfo = new CURSORINFO
         {
             cbSize = (uint)Marshal.SizeOf(typeof(CURSORINFO))
         };
 
-        PInvoke.GetCursorInfo(ref cursorInfo);
+        GetCursorInfo(ref cursorInfo);
 
         return cursorInfo;
     }
