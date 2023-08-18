@@ -78,7 +78,13 @@ public class BitBltCapturer : ScreenCapturer
         BitBlt(dc2, 0, 0, width, height, dc1, left, top, ROP_CODE.SRCCOPY);
 
         memoryGraphics.ReleaseHdc(dc2);
-        ReleaseDC(HWND.Null, dc1);
+
+        var result = ReleaseDC(HWND.Null, dc1);
+
+        if (result == 0)
+        {
+            _logger.LogError("Failed to release the device context.");
+        }
 
         var cursorInfo = GetCursorInfo();
         DrawCursor(memoryGraphics, cursorInfo);
