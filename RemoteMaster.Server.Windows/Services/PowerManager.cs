@@ -8,17 +8,25 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Server.Services;
 
-public class PowerManager : IPowerManager
+public unsafe class PowerManager : IPowerManager
 {
-    public void Reboot()
+    public void Reboot(string message, uint timeout = 0, bool forceAppsClosed = true)
     {
         TokenPrivilegeHelper.AdjustTokenPrivilege(SE_SHUTDOWN_NAME);
-        InitiateSystemShutdown(null, null, 0, true, true);
+
+        fixed (char* pMessage = message)
+        {
+            InitiateSystemShutdown(null, pMessage, timeout, forceAppsClosed, true);
+        }
     }
 
-    public void Shutdown()
+    public void Shutdown(string message, uint timeout = 0, bool forceAppsClosed = true)
     {
         TokenPrivilegeHelper.AdjustTokenPrivilege(SE_SHUTDOWN_NAME);
-        InitiateSystemShutdown(null, null, 0, true, false);
+
+        fixed (char* pMessage = message)
+        {
+            InitiateSystemShutdown(null, pMessage, timeout, forceAppsClosed, false);
+        }
     }
 }

@@ -119,9 +119,9 @@ public class ControlHub : Hub<IControlClient>, IControlHub
         _shutdownService.ImmediateShutdown();
     }
 
-    public async Task RebootComputer()
+    public async Task RebootComputer(string message, int timeout, bool forceAppsClosed)
     {
-        _powerManager.Reboot();
+        _powerManager.Reboot(message, (uint)timeout, forceAppsClosed);
     }
 
     private void ExecuteActionForViewer(Action<IViewer> action)

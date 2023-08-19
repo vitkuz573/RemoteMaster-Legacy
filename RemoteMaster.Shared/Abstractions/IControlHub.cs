@@ -29,5 +29,5 @@ public interface IControlHub
 
     Task KillServer();
 
-    Task RebootComputer();
+    Task RebootComputer(string message, int timeout, bool forceAppsClosed);
 }
