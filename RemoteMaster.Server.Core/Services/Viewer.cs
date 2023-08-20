@@ -15,11 +15,11 @@ namespace RemoteMaster.Server.Core.Services;
 
 public class Viewer : IViewer
 {
-    private readonly IHubContext<ControlHub> _hubContext;
+    private readonly IHubContext<ControlHub, IControlClient> _hubContext;
     private readonly ILogger<Viewer> _logger;
     private CancellationTokenSource _streamingCts;
 
-    public Viewer(IScreenCapturer screenCapturer, ILogger<Viewer> logger, IHubContext<ControlHub> hubContext, string connectionId)
+    public Viewer(IScreenCapturer screenCapturer, ILogger<Viewer> logger, IHubContext<ControlHub, IControlClient> hubContext, string connectionId)
     {
         ScreenCapturer = screenCapturer;
         _hubContext = hubContext;
@@ -54,7 +54,7 @@ public class Viewer : IViewer
 
                 foreach (var chunk in screenDataChunks)
                 {
-                    await _hubContext.Clients.Client(ConnectionId).SendAsync("ScreenUpdate", chunk, cancellationToken);
+                    await _hubContext.Clients.Client(ConnectionId).ReceiveScreenUpdate(chunk);
                 }
             }
             catch (Exception ex)
@@ -79,12 +79,12 @@ public class Viewer : IViewer
             ScreenSize = new Size(screenWidth, screenHeight)
         };
 
-        await _hubContext.Clients.Client(ConnectionId).SendAsync("ScreenData", dto);
+        await _hubContext.Clients.Client(ConnectionId).ReceiveScreenData(dto);
     }
 
     public async Task SendScreenSize(int width, int height)
     {
-        await _hubContext.Clients.Client(ConnectionId).SendAsync("ScreenSize", new Size(width, height));
+        await _hubContext.Clients.Client(ConnectionId).ReceiveScreenSize(new Size(width, height));
     }
 
     public void SetSelectedScreen(string displayName)

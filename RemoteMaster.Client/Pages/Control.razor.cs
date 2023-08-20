@@ -105,8 +105,8 @@ public partial class Control : IAsyncDisposable
     {
         var serverContext = await ConnectionManager
             .Connect("Server", $"http://{Host}:5076/hubs/control", true)
-            .On<ScreenDataDto>("ScreenData", HandleScreenData)
-            .On<ChunkWrapper>("ScreenUpdate", HandleScreenUpdate)
+            .On<ScreenDataDto>("ReceiveScreenData", HandleScreenData)
+            .On<ChunkWrapper>("ReceiveScreenUpdate", HandleScreenUpdate)
             .StartAsync();
 
         _controlHubProxy = serverContext.Connection.CreateHubProxy<IControlHub>();
