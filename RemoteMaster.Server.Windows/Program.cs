@@ -5,11 +5,13 @@
 using RemoteMaster.Server.Core.Abstractions;
 using RemoteMaster.Server.Core.Extensions;
 using RemoteMaster.Server.Services;
+using RemoteMaster.Server.Abstractions;
 
 var builder = WebApplication.CreateBuilder(args).ConfigureCoreUrls();
 
 builder.Services.AddCoreServices();
 builder.Services.AddSingleton<IScreenCapturer, BitBltCapturer>();
+builder.Services.AddSingleton<ICursorRenderer, CursorRenderer>();
 builder.Services.AddSingleton<IInputSender, InputSender>();
 builder.Services.AddSingleton<IPowerManager, PowerManager>();
 

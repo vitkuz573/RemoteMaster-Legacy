@@ -4,12 +4,11 @@
 
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Runtime.InteropServices;
+using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Models;
 using RemoteMaster.Shared.Native.Windows.ScreenHelper;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
-using Windows.Win32.UI.WindowsAndMessaging;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Server.Services;
@@ -19,8 +18,6 @@ public class BitBltCapturer : ScreenCapturer
     private const string VIRTUAL_SCREEN_NAME = "VIRTUAL_SCREEN";
 
     private Bitmap _bitmap;
-    private Point? _lastCursorPoint;
-    private Icon? _lastCursorIcon;
 
     public override Rectangle CurrentScreenBounds { get; protected set; } = Screen.PrimaryScreen?.Bounds ?? Rectangle.Empty;
 
@@ -28,8 +25,13 @@ public class BitBltCapturer : ScreenCapturer
 
     public override string SelectedScreen { get; protected set; } = Screen.PrimaryScreen?.DeviceName ?? string.Empty;
 
-    public BitBltCapturer(ILogger<ScreenCapturer> logger) : base(logger)
+    private readonly ICursorRenderer _cursorRenderer;
+
+    public BitBltCapturer(ICursorRenderer cursorRenderer, ILogger<ScreenCapturer> logger) : base(logger)
     {
+        _cursorRenderer = cursorRenderer;
+        _cursorRenderer.RequestScreenBounds += () => CurrentScreenBounds;
+
         _bitmap = new Bitmap(CurrentScreenBounds.Width, CurrentScreenBounds.Height, PixelFormat.Format32bppArgb);
     }
 
@@ -87,56 +89,12 @@ public class BitBltCapturer : ScreenCapturer
             _logger.LogError("Failed to release the device context.");
         }
 
-        var cursorInfo = GetCursorInformation();
-        DrawCursor(memoryGraphics, cursorInfo);
+        if (TrackCursor)
+        {
+            _cursorRenderer.DrawCursor(memoryGraphics);
+        }
 
         return SaveBitmap(_bitmap);
-    }
-
-    private static CURSORINFO GetCursorInformation()
-    {
-        var cursorInfo = new CURSORINFO
-        {
-            cbSize = (uint)Marshal.SizeOf(typeof(CURSORINFO))
-        };
-
-        GetCursorInfo(ref cursorInfo);
-
-        return cursorInfo;
-    }
-
-
-    private void DrawCursor(Graphics g, CURSORINFO cursorInfo)
-    {
-        if (!TrackCursor)
-        {
-            return;
-        }
-
-        if (cursorInfo.flags == CURSORINFO_FLAGS.CURSOR_SHOWING)
-        {
-            var relativeX = cursorInfo.ptScreenPos.X - CurrentScreenBounds.Left;
-            var relativeY = cursorInfo.ptScreenPos.Y - CurrentScreenBounds.Top;
-
-            if (relativeX >= 0 && relativeX < CurrentScreenBounds.Width && relativeY >= 0 && relativeY < CurrentScreenBounds.Height)
-            {
-                Icon icon;
-
-                if (_lastCursorIcon == null || !_lastCursorPoint.HasValue || _lastCursorPoint.Value != cursorInfo.ptScreenPos)
-                {
-                    icon = Icon.FromHandle(cursorInfo.hCursor);
-                    _lastCursorIcon?.Dispose();
-                    _lastCursorIcon = icon;
-                    _lastCursorPoint = cursorInfo.ptScreenPos;
-                }
-                else
-                {
-                    icon = _lastCursorIcon;
-                }
-
-                g.DrawIcon(icon, relativeX, relativeY);
-            }
-        }
     }
 
     private byte[]? GetVirtualScreenFrame()
@@ -208,6 +166,5 @@ public class BitBltCapturer : ScreenCapturer
     {
         base.Dispose();
         _bitmap?.Dispose();
-        _lastCursorIcon?.Dispose();
     }
 }
