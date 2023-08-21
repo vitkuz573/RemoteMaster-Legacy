@@ -11,4 +11,6 @@ public interface ICursorRenderer : IDisposable
     event Func<Rectangle> RequestScreenBounds;
 
     void DrawCursor(Graphics g);
+
+    void UpdateScreenBounds(Rectangle newBounds);
 }

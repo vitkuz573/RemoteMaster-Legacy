@@ -14,6 +14,7 @@ public class CursorRenderer : ICursorRenderer
 {
     private Point? _lastCursorPoint;
     private Icon? _lastCursorIcon;
+    private Rectangle? _cachedScreenBounds;
 
     public event Func<Rectangle> RequestScreenBounds;
 
@@ -28,7 +29,7 @@ public class CursorRenderer : ICursorRenderer
 
         if (cursorInfo.flags == CURSORINFO_FLAGS.CURSOR_SHOWING)
         {
-            var currentScreenBounds = RequestScreenBounds?.Invoke();
+            var currentScreenBounds = _cachedScreenBounds ?? RequestScreenBounds?.Invoke();
 
             if (currentScreenBounds.HasValue)
             {
@@ -55,6 +56,11 @@ public class CursorRenderer : ICursorRenderer
                 }
             }
         }
+    }
+
+    public void UpdateScreenBounds(Rectangle newBounds)
+    {
+        _cachedScreenBounds = newBounds;
     }
 
     private static CURSORINFO GetCursorInformation()

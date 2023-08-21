@@ -160,6 +160,8 @@ public class BitBltCapturer : ScreenCapturer
         }
 
         RaiseScreenChangedEvent(CurrentScreenBounds);
+
+        _cursorRenderer.UpdateScreenBounds(CurrentScreenBounds);
     }
 
     public override void Dispose()
