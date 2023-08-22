@@ -141,7 +141,7 @@
     private string _rebootMessage = "test";
     private int _timeout = 60;
 
-    private bool _firstRender = true;
+    private bool _firstToggleMenu = true;
 
     [Inject]
     private ILogger<ControlLayout> Logger { get; set; }
@@ -150,11 +150,16 @@
     {
         _isMenuOpen = !_isMenuOpen;
 
-        var serverConfiguration = ControlFuncsService.ServerConfiguration;
+        if (_firstToggleMenu)
+        {
+            var serverConfiguration = ControlFuncsService.ServerConfiguration;
 
-        _inputEnabled = serverConfiguration.InputEnabled;
-        _cursorTracking = serverConfiguration.TrackCursor;
-        _quality = serverConfiguration.ImageQuality;
+            _inputEnabled = serverConfiguration.InputEnabled;
+            _cursorTracking = serverConfiguration.TrackCursor;
+            _quality = serverConfiguration.ImageQuality;
+
+            _firstToggleMenu = false;
+        }
     }
 
     private async void OnChangeScreen(ChangeEventArgs e)
