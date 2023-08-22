@@ -11,11 +11,11 @@ namespace RemoteMaster.Server.Core.Services;
 
 public class ViewerFactory : IViewerFactory
 {
-    private readonly IScreenCapturer _screenCapturer;
+    private readonly IScreenCapturerService _screenCapturer;
     private readonly IHubContext<ControlHub, IControlClient> _hubContext;
     private readonly ILogger<Viewer> _logger;
 
-    public ViewerFactory(IScreenCapturer screenCapturer, ILogger<Viewer> logger, IHubContext<ControlHub, IControlClient> hubContext)
+    public ViewerFactory(IScreenCapturerService screenCapturer, ILogger<Viewer> logger, IHubContext<ControlHub, IControlClient> hubContext)
     {
         _screenCapturer = screenCapturer;
         _hubContext = hubContext;

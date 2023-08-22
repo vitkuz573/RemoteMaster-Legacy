@@ -8,7 +8,7 @@ namespace RemoteMaster.Server.Core.Abstractions;
 
 public interface IViewer
 {
-    IScreenCapturer ScreenCapturer { get; }
+    IScreenCapturerService ScreenCapturer { get; }
 
     string ConnectionId { get; }
 

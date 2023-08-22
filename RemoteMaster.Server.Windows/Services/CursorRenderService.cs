@@ -10,7 +10,7 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Server.Services;
 
-public class CursorRenderer : ICursorRenderer
+public class CursorRenderService : ICursorRenderService
 {
     private Point? _lastCursorPoint;
     private Icon? _lastCursorIcon;

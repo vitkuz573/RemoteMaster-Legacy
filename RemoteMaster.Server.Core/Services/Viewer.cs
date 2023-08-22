@@ -19,7 +19,7 @@ public class Viewer : IViewer
     private readonly ILogger<Viewer> _logger;
     private CancellationTokenSource _streamingCts;
 
-    public Viewer(IScreenCapturer screenCapturer, ILogger<Viewer> logger, IHubContext<ControlHub, IControlClient> hubContext, string connectionId)
+    public Viewer(IScreenCapturerService screenCapturer, ILogger<Viewer> logger, IHubContext<ControlHub, IControlClient> hubContext, string connectionId)
     {
         ScreenCapturer = screenCapturer;
         _hubContext = hubContext;
@@ -29,7 +29,7 @@ public class Viewer : IViewer
         ScreenCapturer.ScreenChanged += async (sender, bounds) => await SendScreenSize(bounds.Width, bounds.Height);
     }
 
-    public IScreenCapturer ScreenCapturer { get; }
+    public IScreenCapturerService ScreenCapturer { get; }
 
     public string ConnectionId { get; }
 

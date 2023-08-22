@@ -8,7 +8,7 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Server.Services;
 
-public unsafe class PowerManager : IPowerManager
+public unsafe class PowerService : IPowerService
 {
     public void Reboot(string message, uint timeout = 0, bool forceAppsClosed = true)
     {

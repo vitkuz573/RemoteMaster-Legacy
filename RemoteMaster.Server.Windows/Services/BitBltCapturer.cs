@@ -13,7 +13,7 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Server.Services;
 
-public class BitBltCapturer : ScreenCapturer
+public class BitBltCapturer : ScreenCapturerService
 {
     private const string VIRTUAL_SCREEN_NAME = "VIRTUAL_SCREEN";
 
@@ -27,7 +27,7 @@ public class BitBltCapturer : ScreenCapturer
 
     private readonly ICursorRenderer _cursorRenderer;
 
-    public BitBltCapturer(ICursorRenderer cursorRenderer, ILogger<ScreenCapturer> logger) : base(logger)
+    public BitBltCapturer(ICursorRenderer cursorRenderer, ILogger<ScreenCapturerService> logger) : base(logger)
     {
         _cursorRenderer = cursorRenderer;
         _cursorRenderer.RequestScreenBounds += () => CurrentScreenBounds;

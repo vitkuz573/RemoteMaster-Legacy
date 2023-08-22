@@ -15,13 +15,13 @@ public class ControlHub : Hub<IControlClient>, IControlHub
 {
     private readonly IAppState _appState;
     private readonly IViewerFactory _viewerFactory;
-    private readonly IInputSender _inputSender;
-    private readonly IPowerManager _powerManager;
+    private readonly IInputService _inputSender;
+    private readonly IPowerService _powerManager;
     private readonly IShutdownService _shutdownService;
-    private readonly IScreenCapturer _screenCapturer;
+    private readonly IScreenCapturerService _screenCapturer;
     private readonly ILogger<ControlHub> _logger;
 
-    public ControlHub(IAppState appState, IViewerFactory viewerFactory, IInputSender inputSender, IPowerManager powerManager, IShutdownService shutdownService, IScreenCapturer screenCapturer, ILogger<ControlHub> logger)
+    public ControlHub(IAppState appState, IViewerFactory viewerFactory, IInputService inputSender, IPowerService powerManager, IShutdownService shutdownService, IScreenCapturerService screenCapturer, ILogger<ControlHub> logger)
     {
         _appState = appState;
         _viewerFactory = viewerFactory;

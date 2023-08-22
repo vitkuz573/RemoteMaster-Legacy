@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Server.Core.Abstractions;
 
-public interface IPowerManager
+public interface IPowerService
 {
     void Shutdown(string message, uint timeout = 0, bool forceAppsClosed = true);
 

@@ -6,7 +6,7 @@ using System.Drawing;
 
 namespace RemoteMaster.Server.Abstractions;
 
-public interface ICursorRenderer : IDisposable
+public interface ICursorRenderService : IDisposable
 {
     event Func<Rectangle> RequestScreenBounds;
 

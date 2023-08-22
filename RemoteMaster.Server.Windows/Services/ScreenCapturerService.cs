@@ -13,10 +13,10 @@ using SkiaSharp;
 
 namespace RemoteMaster.Server.Services;
 
-public abstract class ScreenCapturer : IScreenCapturer
+public abstract class ScreenCapturerService : IScreenCapturerService
 {
     protected readonly RecyclableMemoryStreamManager _recycleManager = new();
-    protected readonly ILogger<ScreenCapturer> _logger;
+    protected readonly ILogger<ScreenCapturerService> _logger;
     protected readonly object _screenBoundsLock = new();
     private readonly object _bitmapLock = new();
     private SKBitmap _skBitmap;
@@ -48,7 +48,7 @@ public abstract class ScreenCapturer : IScreenCapturer
 
     public event EventHandler<Rectangle>? ScreenChanged;
 
-    protected ScreenCapturer(ILogger<ScreenCapturer> logger)
+    protected ScreenCapturerService(ILogger<ScreenCapturerService> logger)
     {
         _logger = logger;
         Init();

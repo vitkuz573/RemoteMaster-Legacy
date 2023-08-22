@@ -6,7 +6,7 @@ using RemoteMaster.Shared.Dtos;
 
 namespace RemoteMaster.Server.Core.Abstractions;
 
-public interface IInputSender : IDisposable
+public interface IInputService : IDisposable
 {
     bool InputEnabled { get; set; }
 

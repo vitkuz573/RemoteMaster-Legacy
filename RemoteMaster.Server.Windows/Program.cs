@@ -10,10 +10,10 @@ using RemoteMaster.Server.Abstractions;
 var builder = WebApplication.CreateBuilder(args).ConfigureCoreUrls();
 
 builder.Services.AddCoreServices();
-builder.Services.AddSingleton<IScreenCapturer, BitBltCapturer>();
-builder.Services.AddSingleton<ICursorRenderer, CursorRenderer>();
-builder.Services.AddSingleton<IInputSender, InputSender>();
-builder.Services.AddSingleton<IPowerManager, PowerManager>();
+builder.Services.AddSingleton<IScreenCapturerService, BitBltCapturer>();
+builder.Services.AddSingleton<ICursorRenderer, CursorRenderService>();
+builder.Services.AddSingleton<IInputService, InputService>();
+builder.Services.AddSingleton<IPowerService, PowerService>();
 
 var app = builder.Build();
 

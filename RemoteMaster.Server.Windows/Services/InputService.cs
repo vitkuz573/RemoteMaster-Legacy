@@ -13,7 +13,7 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Server.Services;
 
-public class InputSender : IInputSender
+public class InputService : IInputService
 {
     private bool _disposed = false;
     private readonly BlockingCollection<Action> _operationQueue;
@@ -21,11 +21,11 @@ public class InputSender : IInputSender
     private readonly int _numWorkers;
     private readonly object _ctsLock = new();
     private readonly ConcurrentBag<INPUT> _inputPool = new();
-    private readonly ILogger<InputSender> _logger;
+    private readonly ILogger<InputService> _logger;
 
     public bool InputEnabled { get; set; } = true;
 
-    public InputSender(ILogger<InputSender> logger, int numWorkers = 4)
+    public InputService(ILogger<InputService> logger, int numWorkers = 4)
     {
         _logger = logger;
         _operationQueue = new BlockingCollection<Action>();
@@ -34,7 +34,7 @@ public class InputSender : IInputSender
         StartWorkerThreads();
     }
 
-    private static (double, double) GetAbsolutePercentFromRelativePercent(double percentX, double percentY, IScreenCapturer screenCapturer)
+    private static (double, double) GetAbsolutePercentFromRelativePercent(double percentX, double percentY, IScreenCapturerService screenCapturer)
     {
         var absoluteX = screenCapturer.CurrentScreenBounds.Width * percentX + screenCapturer.CurrentScreenBounds.Left - screenCapturer.VirtualScreenBounds.Left;
         var absoluteY = screenCapturer.CurrentScreenBounds.Height * percentY + screenCapturer.CurrentScreenBounds.Top - screenCapturer.VirtualScreenBounds.Top;
@@ -257,7 +257,7 @@ public class InputSender : IInputSender
         _disposed = true;
     }
 
-    ~InputSender()
+    ~InputService()
     {
         Dispose(false);
     }
