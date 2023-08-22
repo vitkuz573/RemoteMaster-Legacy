@@ -33,6 +33,9 @@ public partial class Control : IAsyncDisposable
     private IJSRuntime JSRuntime { get; set; }
 
     [Inject]
+    private ILogger<Control> Logger { get; set; }
+
+    [Inject]
     private IQueryParameterService QueryParameterService { get; set; }
 #nullable restore
 
@@ -59,6 +62,12 @@ public partial class Control : IAsyncDisposable
 
             await SetupClientEventListeners();
         }
+    }
+
+    private void HandleServerConfiguration(ServerConfigurationDto dto)
+    {
+        Logger.LogInformation("HandleServerConfiguration called with dto: " + dto?.ToString() ?? "null");
+        ControlFunctionsService.ServerConfiguration = dto;
     }
 
     private void HandleScreenData(ScreenDataDto dto)
@@ -105,6 +114,7 @@ public partial class Control : IAsyncDisposable
     {
         var serverContext = await ConnectionManager
             .Connect("Server", $"http://{Host}:5076/hubs/control", true)
+            .On<ServerConfigurationDto>("ReceiveServerConfiguration", HandleServerConfiguration)
             .On<ScreenDataDto>("ReceiveScreenData", HandleScreenData)
             .On<ChunkWrapper>("ReceiveScreenUpdate", HandleScreenUpdate)
             .StartAsync();

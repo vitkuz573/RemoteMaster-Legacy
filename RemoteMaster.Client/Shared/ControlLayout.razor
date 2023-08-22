@@ -134,16 +134,26 @@
 
 @code {
     private bool _isMenuOpen = false;
-    private bool _inputEnabled = true;
-    private bool _cursorTracking = true;
+    private bool _inputEnabled;
+    private bool _cursorTracking;
     private int _quality = 80;
 
     private string _rebootMessage = "test";
     private int _timeout = 60;
 
+    private bool _firstRender = true;
+
+    [Inject]
+    private ILogger<ControlLayout> Logger { get; set; }
+
     private void ToggleMenu()
     {
         _isMenuOpen = !_isMenuOpen;
+
+        var serverConfiguration = ControlFuncsService.ServerConfiguration;
+
+        _inputEnabled = serverConfiguration.InputEnabled;
+        _cursorTracking = serverConfiguration.TrackCursor;
     }
 
     private async void OnChangeScreen(ChangeEventArgs e)

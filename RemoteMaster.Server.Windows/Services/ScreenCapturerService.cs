@@ -22,7 +22,7 @@ public abstract class ScreenCapturerService : IScreenCapturerService
     private SKBitmap _skBitmap;
     private int _quality = 80;
 
-    public bool TrackCursor { get; set; } = true;
+    public bool TrackCursor { get; set; } = false;
 
     public virtual Dictionary<string, int> Screens { get; } = new();
 

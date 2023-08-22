@@ -25,9 +25,9 @@ public class BitBltCapturer : ScreenCapturerService
 
     public override string SelectedScreen { get; protected set; } = Screen.PrimaryScreen?.DeviceName ?? string.Empty;
 
-    private readonly ICursorRenderer _cursorRenderer;
+    private readonly ICursorRenderService _cursorRenderer;
 
-    public BitBltCapturer(ICursorRenderer cursorRenderer, ILogger<ScreenCapturerService> logger) : base(logger)
+    public BitBltCapturer(ICursorRenderService cursorRenderer, ILogger<ScreenCapturerService> logger) : base(logger)
     {
         _cursorRenderer = cursorRenderer;
         _cursorRenderer.RequestScreenBounds += () => CurrentScreenBounds;
