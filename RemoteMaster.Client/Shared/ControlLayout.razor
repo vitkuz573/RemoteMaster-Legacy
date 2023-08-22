@@ -136,7 +136,7 @@
     private bool _isMenuOpen = false;
     private bool _inputEnabled;
     private bool _cursorTracking;
-    private int _quality = 80;
+    private int _quality;
 
     private string _rebootMessage = "test";
     private int _timeout = 60;
@@ -154,6 +154,7 @@
 
         _inputEnabled = serverConfiguration.InputEnabled;
         _cursorTracking = serverConfiguration.TrackCursor;
+        _quality = serverConfiguration.ImageQuality;
     }
 
     private async void OnChangeScreen(ChangeEventArgs e)

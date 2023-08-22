@@ -24,6 +24,7 @@ public class ConfigurationService : IConfigurationService
         {
             InputEnabled = _inputService.InputEnabled,
             TrackCursor = _screenCapturerService.TrackCursor,
+            ImageQuality = _screenCapturerService.Quality
         };
     }
 }

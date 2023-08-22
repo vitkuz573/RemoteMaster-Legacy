@@ -10,8 +10,10 @@ public class ServerConfigurationDto
 
     public bool TrackCursor { get; init; }
 
+    public int ImageQuality { get; init; }
+
     public override string ToString()
     {
-        return $"ServerConfigurationDto: {{ InputEnabled: {InputEnabled}, TrackCursor: {TrackCursor} }}";
+        return $"ServerConfigurationDto: {{ InputEnabled: {InputEnabled}, TrackCursor: {TrackCursor}, ImageQuality: {ImageQuality} }}";
     }
 }
