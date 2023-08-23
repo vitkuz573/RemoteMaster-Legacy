@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using RemoteMaster.Server.Core.Abstractions;
 using RemoteMaster.Server.Core.Hubs;
 using RemoteMaster.Shared.Dtos;
-using RemoteMaster.Shared.Helpers;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Core.Services;
@@ -48,23 +47,30 @@ public class Viewer : IViewer
 
         _logger.LogInformation("Starting screen stream for ID {connectionId}", ConnectionId);
 
+        try
+        {
+            await foreach (var screenData in StreamScreenDataAsync(cancellationToken))
+            {
+                await _hubContext.Clients.Client(ConnectionId).ReceiveScreenUpdate(screenData);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("An error occurred during streaming: {Message}", ex.Message);
+        }
+    }
+
+    private async IAsyncEnumerable<byte[]> StreamScreenDataAsync(CancellationToken cancellationToken)
+    {
         while (!cancellationToken.IsCancellationRequested)
         {
-            try
+            var screenData = ScreenCapturer.GetNextFrame();
+            if (screenData != null)
             {
-                var screenData = ScreenCapturer.GetNextFrame();
-
-                var screenDataChunks = Chunker.ChunkifyBytes(screenData);
-
-                foreach (var chunk in screenDataChunks)
-                {
-                    await _hubContext.Clients.Client(ConnectionId).ReceiveScreenUpdate(chunk);
-                }
+                yield return screenData;
             }
-            catch (Exception ex)
-            {
-                _logger.LogError("An error occurred during streaming: {Message}", ex.Message);
-            }
+
+            await Task.Delay(16); // Добавить задержку для управления частотой кадров
         }
     }
 

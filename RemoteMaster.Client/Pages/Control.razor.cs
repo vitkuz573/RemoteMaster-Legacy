@@ -11,7 +11,6 @@ using RemoteMaster.Client.Models;
 using RemoteMaster.Client.Services;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Dtos;
-using RemoteMaster.Shared.Helpers;
 using RemoteMaster.Shared.Models;
 using TypedSignalR.Client;
 
@@ -83,13 +82,10 @@ public partial class Control : IAsyncDisposable
         _agentHandledTcs.SetResult(true);
     }
 
-    private async Task HandleScreenUpdate(ChunkWrapper chunk)
+    private async Task HandleScreenUpdate(byte[] screenData)
     {
-        if (Chunker.TryUnchunkify(chunk, out var allData))
-        {
-            _screenDataUrl = await JSRuntime.InvokeAsync<string>("createImageBlobUrl", allData);
-            await InvokeAsync(StateHasChanged);
-        }
+        _screenDataUrl = await JSRuntime.InvokeAsync<string>("createImageBlobUrl", screenData);
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task SetupClientEventListeners()
@@ -115,7 +111,7 @@ public partial class Control : IAsyncDisposable
             .Connect("Server", $"http://{Host}:5076/hubs/control", true)
             .On<ServerConfigurationDto>("ReceiveServerConfiguration", HandleServerConfiguration)
             .On<ScreenDataDto>("ReceiveScreenData", HandleScreenData)
-            .On<ChunkWrapper>("ReceiveScreenUpdate", HandleScreenUpdate)
+            .On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate)
             .StartAsync();
 
         _controlHubProxy = serverContext.Connection.CreateHubProxy<IControlHub>();

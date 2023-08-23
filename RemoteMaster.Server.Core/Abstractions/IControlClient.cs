@@ -11,7 +11,7 @@ public interface IControlClient
 {
     Task ReceiveThumbnail(byte[] thumbnail);
 
-    Task ReceiveScreenUpdate(ChunkWrapper screenUpdate);
+    Task ReceiveScreenUpdate(byte[] screenUpdate);
 
     Task ReceiveScreenData(ScreenDataDto screenData);
 
