@@ -66,7 +66,6 @@ public partial class Control : IAsyncDisposable
 
     private void HandleServerConfiguration(ServerConfigurationDto dto)
     {
-        Logger.LogInformation("HandleServerConfiguration called with dto: " + dto?.ToString() ?? "null");
         ControlFunctionsService.ServerConfiguration = dto;
     }
 
