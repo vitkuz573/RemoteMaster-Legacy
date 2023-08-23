@@ -6,6 +6,10 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.10" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.10" />
     <PackageVersion Include="Radzen.Blazor" Version="4.15.4" />
+    <PackageVersion Include="Serilog" Version="3.0.1" />
+    <PackageVersion Include="Serilog.Extensions.Logging" Version="7.0.0" />
+    <PackageVersion Include="Serilog.Sinks.Console" Version="4.1.0" />
+    <PackageVersion Include="Serilog.Sinks.File" Version="5.0.0" />
     <PackageVersion Include="System.DirectoryServices" Version="7.0.1" />
     <PackageVersion Include="System.DirectoryServices.AccountManagement" Version="7.0.0" />
     <PackageVersion Include="Microsoft.IO.RecyclableMemoryStream" Version="2.3.2" />

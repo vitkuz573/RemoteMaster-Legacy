@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Server.Core.Abstractions;
 using RemoteMaster.Server.Core.Services;
-using RemoteMaster.Shared;
+using Serilog;
 
 namespace RemoteMaster.Server.Core.Extensions;
 
@@ -14,11 +14,17 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddCoreServices(this IServiceCollection services)
     {
+        var serilogLogger = new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .WriteTo.Console()
+            .WriteTo.File(@"C:\Logs\RemoteMaster_Server.log", rollingInterval: RollingInterval.Day)
+            .CreateLogger();
+
         services.AddLogging(builder =>
         {
             builder.AddConsole().AddDebug();
+            builder.AddSerilog(serilogLogger);
             builder.SetMinimumLevel(LogLevel.Debug);
-            builder.AddProvider(new FileLoggerProvider("RemoteMaster_Server"));
         });
 
         services.AddSignalR().AddMessagePackProtocol();
