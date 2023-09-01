@@ -9,20 +9,46 @@ using RemoteMaster.Client.Core.Extensions;
 using RemoteMaster.Client.Services;
 using RemoteMaster.Shared.Models;
 
+void DisplayCoolHeader()
+{
+    Console.ForegroundColor = ConsoleColor.Green;
+    Console.WriteLine("#################################");
+    Console.WriteLine("##      RemoteMaster Client    ##");
+    Console.WriteLine("#################################");
+    Console.ResetColor();
+}
+
+void DisplayConfig(ConfigurationModel configData)
+{
+    Console.ForegroundColor = ConsoleColor.Yellow;
+    Console.WriteLine("Configuration:");
+    Console.ResetColor();
+    Console.WriteLine($"Server: {configData.Server}");
+    Console.WriteLine($"Group: {configData.Group}");
+}
+
+void AskForInstallation()
+{
+    Console.ForegroundColor = ConsoleColor.Blue;
+    Console.WriteLine("\nDo you want to install?");
+    Console.ResetColor();
+    Console.ReadLine();
+}
+
 var configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json");
+
+DisplayCoolHeader();
 
 if (File.Exists(configPath))
 {
     var configContent = File.ReadAllText(configPath);
     var configData = JsonSerializer.Deserialize<ConfigurationModel>(configContent);
-    Console.WriteLine("Configuration:");
-    Console.WriteLine($"Server: {configData.Server}");
-    Console.WriteLine($"Group: {configData.Group}");
+
+    DisplayConfig(configData);
 
     if (args.Length > 0 && args[0] == "install")
     {
-        Console.WriteLine("Do you want to install?");
-        Console.ReadLine();
+        AskForInstallation();
         Environment.Exit(0);
     }
 
@@ -42,6 +68,8 @@ if (File.Exists(configPath))
 }
 else
 {
+    Console.ForegroundColor = ConsoleColor.Red;
     Console.WriteLine("Config file is missing.");
+    Console.ResetColor();
     Environment.Exit(1);
 }
