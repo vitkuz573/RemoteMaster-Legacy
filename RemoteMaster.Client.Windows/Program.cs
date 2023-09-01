@@ -76,7 +76,26 @@ void DisplayConfig(ConfigurationModel configData)
 void AskForInstallation()
 {
     Console.ForegroundColor = ConsoleColor.Blue;
-    Console.WriteLine("\nDo you want to install?");
+    Console.Write("\nDo you want to install? [Y/N]: ");
     Console.ResetColor();
-    Console.ReadLine();
+
+    var key = Console.ReadKey().Key;
+    Console.WriteLine(); // Для переноса строки после нажатия клавиши
+
+    if (key == ConsoleKey.Y)
+    {
+        // Код для установки
+        Console.WriteLine("Installing...");
+    }
+    else if (key == ConsoleKey.N)
+    {
+        // Код для отмены установки
+        Console.WriteLine("Installation cancelled.");
+    }
+    else
+    {
+        // Код для неизвестного ввода
+        Console.WriteLine("Invalid input. Installation cancelled.");
+    }
 }
+
