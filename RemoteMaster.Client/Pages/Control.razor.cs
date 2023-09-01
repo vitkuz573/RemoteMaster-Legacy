@@ -1,4 +1,4 @@
-﻿ // Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
@@ -100,7 +100,7 @@ public partial class Control : IAsyncDisposable
             .Connect("Agent", $"http://{Host}:3564/hubs/main")
             .On<string>("ServerTampered", HandleServerTampered)
             .StartAsync();
-        
+
         await WaitForAgentOrTimeoutAsync();
         await _agentHandledTcs.Task;
     }

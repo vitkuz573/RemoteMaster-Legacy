@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Client.Core.Abstractions;
 using RemoteMaster.Client.Core.Hubs;
-using RemoteMaster.Client.Core.Services;
 
 namespace RemoteMaster.Client.Core.Services;
 
