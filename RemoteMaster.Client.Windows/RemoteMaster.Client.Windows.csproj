@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RemoteMaster.Server.Core\RemoteMaster.Client.Core.csproj" />
+    <ProjectReference Include="..\RemoteMaster.Client.Core\RemoteMaster.Client.Core.csproj" />
   </ItemGroup>
 
 </Project>
