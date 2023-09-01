@@ -26,6 +26,7 @@ public partial class ConfigurationGeneratorPage
         if (string.IsNullOrEmpty(_group))
         {
             Logger.LogWarning("Computer group is not selected.");
+
             return;
         }
 
@@ -37,13 +38,15 @@ public partial class ConfigurationGeneratorPage
             Group = _group
         };
 
-        var memoryStream = await ConfiguratorService.GenerateConfigFileAsync(config);
-        var bytes = memoryStream.ToArray();
+        byte[] bytes;
+
+        using (var memoryStream = await ConfiguratorService.GenerateConfigFileAsync(config))
+        {
+            bytes = memoryStream.ToArray();
+        }
 
         var fileName = "config.json";
-
         await JSRuntime.InvokeVoidAsync("downloadFile", fileName, bytes);
-
         _isConfigGenerated = true;
     }
 
