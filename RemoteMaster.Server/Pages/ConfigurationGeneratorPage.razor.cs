@@ -1,7 +1,5 @@
-﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
-// This file is part of the RemoteMaster project.
-// Licensed under the GNU Affero General Public License v3.0.
-
+﻿using System.Net;
+using System.Net.Sockets;
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
@@ -23,9 +21,10 @@ public partial class ConfigurationGeneratorPage
     {
         try
         {
+            var serverIpAddress = GetLocalIPAddress();
             var config = new ConfigurationModel
             {
-                ServerUrl = "http://example.com",
+                ServerUrl = serverIpAddress,
                 ClientId = Guid.NewGuid().ToString(),
                 Group = _group
             };
@@ -38,5 +37,20 @@ public partial class ConfigurationGeneratorPage
             Logger.LogError(ex, "An error occurred while generating the config.");
             _isConfigGenerated = false;
         }
+    }
+
+    private static string GetLocalIPAddress()
+    {
+        var host = Dns.GetHostEntry(Dns.GetHostName());
+
+        foreach (var ip in host.AddressList)
+        {
+            if (ip.AddressFamily == AddressFamily.InterNetwork)
+            {
+                return ip.ToString();
+            }
+        }
+
+        throw new Exception("No network adapters with an IPv4 address in the system!");
     }
 }
