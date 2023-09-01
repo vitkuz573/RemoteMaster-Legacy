@@ -9,4 +9,6 @@ public class ConfigurationModel
     public string ServerUrl { get; set; }
 
     public string ClientId { get; set; }
+
+    public string Group { get; set; }
 }

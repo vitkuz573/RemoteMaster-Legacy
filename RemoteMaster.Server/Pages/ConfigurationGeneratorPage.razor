@@ -3,9 +3,13 @@
 <RadzenCard>
     <RadzenHeading Size="H3" Text="Configuration Generator"></RadzenHeading>
 
+
+    <RadzenLabel Text="Computer Group:"></RadzenLabel>
+    <RadzenTextBox @bind-Value="_group"></RadzenTextBox>
+
     <RadzenButton Text="Generate Config" Click="@GenerateConfig"></RadzenButton>
 
-    @if (isConfigGenerated)
+    @if (_isConfigGenerated)
     {
         <RadzenNotification Style="success"></RadzenNotification>
     }

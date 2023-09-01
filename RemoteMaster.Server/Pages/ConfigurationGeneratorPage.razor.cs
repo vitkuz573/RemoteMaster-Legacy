@@ -10,7 +10,8 @@ namespace RemoteMaster.Server.Pages;
 
 public partial class ConfigurationGeneratorPage
 {
-    private bool isConfigGenerated = false;
+    private bool _isConfigGenerated = false;
+    private string _group;
 
     [Inject]
     private IConfiguratorService ConfiguratorService { get; set; }
@@ -25,16 +26,17 @@ public partial class ConfigurationGeneratorPage
             var config = new ConfigurationModel
             {
                 ServerUrl = "http://example.com",
-                ClientId = Guid.NewGuid().ToString()
+                ClientId = Guid.NewGuid().ToString(),
+                Group = _group
             };
 
             await ConfiguratorService.GenerateConfigFileAsync("C:/users/vitaly/Desktop/host.json", config);
-            isConfigGenerated = true;
+            _isConfigGenerated = true;
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "An error occurred while generating the config.");
-            isConfigGenerated = false;
+            _isConfigGenerated = false;
         }
     }
 }
