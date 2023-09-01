@@ -19,13 +19,12 @@ rootCommand.SetHandler(async () =>
 
     if (File.Exists(configPath))
     {
-        var configContent = await File.ReadAllTextAsync(configPath);
-        var configData = JsonSerializer.Deserialize<ConfigurationModel>(configContent);
-
-        DisplayConfig(configData);
-
         if (rootCommand.Parse(args).HasOption(installOption))
         {
+            var configContent = await File.ReadAllTextAsync(configPath);
+            var configData = JsonSerializer.Deserialize<ConfigurationModel>(configContent);
+
+            DisplayConfig(configData);
             AskForInstallation();
         }
         else
