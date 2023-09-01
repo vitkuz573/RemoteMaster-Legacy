@@ -2,13 +2,15 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Text.Json.Serialization;
+
 namespace RemoteMaster.Server.Models;
 
 public class ConfigurationModel
 {
-    public string ServerUrl { get; set; }
+    [JsonPropertyName("server_ip")]
+    public string ServerIp { get; set; }
 
-    public string ClientId { get; set; }
-
+    [JsonPropertyName("group")]
     public string Group { get; set; }
 }

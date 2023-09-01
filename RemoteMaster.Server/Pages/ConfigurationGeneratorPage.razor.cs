@@ -33,8 +33,7 @@ public partial class ConfigurationGeneratorPage
         var serverIpAddress = GetLocalIPAddress();
         var config = new ConfigurationModel
         {
-            ServerUrl = serverIpAddress,
-            ClientId = Guid.NewGuid().ToString(),
+            ServerIp = serverIpAddress,
             Group = _group
         };
 
