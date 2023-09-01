@@ -4,14 +4,14 @@
 
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
-using RemoteMaster.Server.Core.Abstractions;
+using RemoteMaster.Client.Core.Abstractions;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
 using RemoteMaster.Shared.Native.Windows;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
 using static Windows.Win32.PInvoke;
 
-namespace RemoteMaster.Server.Services;
+namespace RemoteMaster.Client.Services;
 
 public class InputService : IInputService
 {

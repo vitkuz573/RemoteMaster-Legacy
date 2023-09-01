@@ -7,9 +7,9 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using Radzen;
-using RemoteMaster.Client.Models;
+using RemoteMaster.Server.Models;
 
-namespace RemoteMaster.Client.Components;
+namespace RemoteMaster.Server.Components;
 
 public partial class ComputerCard
 {

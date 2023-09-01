@@ -4,9 +4,9 @@
 
 using System.Web;
 using Microsoft.AspNetCore.Components;
-using RemoteMaster.Client.Abstractions;
+using RemoteMaster.Server.Abstractions;
 
-namespace RemoteMaster.Client.Services;
+namespace RemoteMaster.Server.Services;
 
 public class QueryParameterService : IQueryParameterService
 {

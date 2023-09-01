@@ -4,9 +4,9 @@
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
-using RemoteMaster.Server.Core.Hubs;
+using RemoteMaster.Client.Core.Hubs;
 
-namespace RemoteMaster.Server.Core.Extensions;
+namespace RemoteMaster.Client.Core.Extensions;
 
 public static class EndpointRouteBuilderExtensions
 {

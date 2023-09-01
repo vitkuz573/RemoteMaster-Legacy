@@ -4,9 +4,9 @@
 
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using RemoteMaster.Server.Core.Abstractions;
+using RemoteMaster.Client.Core.Abstractions;
 
-namespace RemoteMaster.Server.Core.Services;
+namespace RemoteMaster.Client.Core.Services;
 
 public class ShutdownService : IShutdownService
 {

@@ -4,7 +4,7 @@
 
 using Microsoft.AspNetCore.SignalR.Client;
 
-namespace RemoteMaster.Client;
+namespace RemoteMaster.Server;
 
 public class RetryPolicy : IRetryPolicy
 {

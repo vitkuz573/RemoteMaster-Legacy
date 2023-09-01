@@ -4,11 +4,11 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using RemoteMaster.Server.Core.Abstractions;
-using RemoteMaster.Server.Core.Services;
+using RemoteMaster.Client.Core.Abstractions;
+using RemoteMaster.Client.Core.Services;
 using Serilog;
 
-namespace RemoteMaster.Server.Core.Extensions;
+namespace RemoteMaster.Client.Core.Extensions;
 
 public static class ServiceCollectionExtensions
 {

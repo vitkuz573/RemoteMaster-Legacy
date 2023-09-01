@@ -1,4 +1,4 @@
-﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+﻿ // Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
@@ -6,15 +6,15 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
-using RemoteMaster.Client.Abstractions;
-using RemoteMaster.Client.Models;
-using RemoteMaster.Client.Services;
+using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Models;
+using RemoteMaster.Server.Services;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
 using TypedSignalR.Client;
 
-namespace RemoteMaster.Client.Pages;
+namespace RemoteMaster.Server.Pages;
 
 public partial class Control : IAsyncDisposable
 {

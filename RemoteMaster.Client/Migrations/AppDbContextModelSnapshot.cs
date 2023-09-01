@@ -3,11 +3,11 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using RemoteMaster.Client.Services;
+using RemoteMaster.Server.Services;
 
 #nullable disable
 
-namespace RemoteMaster.Client.Migrations
+namespace RemoteMaster.Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     partial class AppDbContextModelSnapshot : ModelSnapshot

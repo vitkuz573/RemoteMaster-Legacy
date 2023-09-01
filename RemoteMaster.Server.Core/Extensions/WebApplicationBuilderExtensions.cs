@@ -5,7 +5,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 
-namespace RemoteMaster.Server.Core.Extensions;
+namespace RemoteMaster.Client.Core.Extensions;
 
 public static class WebApplicationBuilderExtensions
 {

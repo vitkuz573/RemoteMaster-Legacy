@@ -2,9 +2,9 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using RemoteMaster.Client.Abstractions;
+using RemoteMaster.Server.Abstractions;
 
-namespace RemoteMaster.Client.Services;
+namespace RemoteMaster.Server.Services;
 
 public class ConnectionContextFactory : IConnectionContextFactory
 {

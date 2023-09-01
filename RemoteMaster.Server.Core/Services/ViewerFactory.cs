@@ -4,10 +4,11 @@
 
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using RemoteMaster.Server.Core.Abstractions;
-using RemoteMaster.Server.Core.Hubs;
+using RemoteMaster.Client.Core.Abstractions;
+using RemoteMaster.Client.Core.Hubs;
+using RemoteMaster.Client.Core.Services;
 
-namespace RemoteMaster.Server.Core.Services;
+namespace RemoteMaster.Client.Core.Services;
 
 public class ViewerFactory : IViewerFactory
 {

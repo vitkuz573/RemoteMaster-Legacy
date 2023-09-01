@@ -4,7 +4,7 @@
 
 using RemoteMaster.Shared.Dtos;
 
-namespace RemoteMaster.Server.Core.Abstractions;
+namespace RemoteMaster.Client.Core.Abstractions;
 
 public interface IConfigurationService
 {

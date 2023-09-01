@@ -3,10 +3,10 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.SignalR.Client;
-using RemoteMaster.Client.Abstractions;
-using RemoteMaster.Client.Models;
+using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Models;
 
-namespace RemoteMaster.Client.Services;
+namespace RemoteMaster.Server.Services;
 
 public class ConnectionContext : IConnectionContext
 {

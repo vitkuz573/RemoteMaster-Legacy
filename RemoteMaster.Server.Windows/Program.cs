@@ -2,10 +2,10 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using RemoteMaster.Server.Core.Abstractions;
-using RemoteMaster.Server.Core.Extensions;
-using RemoteMaster.Server.Services;
-using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Client.Core.Abstractions;
+using RemoteMaster.Client.Core.Extensions;
+using RemoteMaster.Client.Services;
+using RemoteMaster.Client.Abstractions;
 
 var builder = WebApplication.CreateBuilder(args).ConfigureCoreUrls();
 

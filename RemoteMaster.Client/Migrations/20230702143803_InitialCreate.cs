@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace RemoteMaster.Client.Migrations
+namespace RemoteMaster.Server.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration

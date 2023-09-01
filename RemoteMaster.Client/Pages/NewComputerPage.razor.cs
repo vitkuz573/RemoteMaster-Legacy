@@ -4,10 +4,10 @@
 
 using Microsoft.AspNetCore.Components;
 using Radzen;
-using RemoteMaster.Client.Models;
-using RemoteMaster.Client.Services;
+using RemoteMaster.Server.Models;
+using RemoteMaster.Server.Services;
 
-namespace RemoteMaster.Client.Pages;
+namespace RemoteMaster.Server.Pages;
 
 public partial class NewComputerPage
 {

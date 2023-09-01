@@ -3,9 +3,9 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Collections.ObjectModel;
-using RemoteMaster.Client.Models;
+using RemoteMaster.Server.Models;
 
-namespace RemoteMaster.Client.Components;
+namespace RemoteMaster.Server.Components;
 
 public partial class AddComputerFromAD
 {

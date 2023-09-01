@@ -3,9 +3,9 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.EntityFrameworkCore;
-using RemoteMaster.Client.Models;
+using RemoteMaster.Server.Models;
 
-namespace RemoteMaster.Client.Services;
+namespace RemoteMaster.Server.Services;
 
 public class DatabaseService
 {

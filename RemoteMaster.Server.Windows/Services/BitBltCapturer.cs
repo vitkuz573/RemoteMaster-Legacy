@@ -4,14 +4,14 @@
 
 using System.Drawing;
 using System.Drawing.Imaging;
-using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Client.Abstractions;
 using RemoteMaster.Shared.Models;
 using RemoteMaster.Shared.Native.Windows.ScreenHelper;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
 using static Windows.Win32.PInvoke;
 
-namespace RemoteMaster.Server.Services;
+namespace RemoteMaster.Client.Services;
 
 public class BitBltCapturer : ScreenCapturerService
 {

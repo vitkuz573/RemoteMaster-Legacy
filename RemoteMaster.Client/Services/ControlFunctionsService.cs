@@ -6,7 +6,7 @@ using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
 
-namespace RemoteMaster.Client.Services;
+namespace RemoteMaster.Server.Services;
 
 public class ControlFunctionsService
 {

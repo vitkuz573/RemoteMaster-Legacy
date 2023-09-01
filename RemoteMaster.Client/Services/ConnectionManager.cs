@@ -3,9 +3,9 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Collections.Concurrent;
-using RemoteMaster.Client.Abstractions;
+using RemoteMaster.Server.Abstractions;
 
-namespace RemoteMaster.Client.Services;
+namespace RemoteMaster.Server.Services;
 
 public class ConnectionManager : IConnectionManager
 {

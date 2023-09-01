@@ -5,8 +5,8 @@
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
 using Radzen;
-using RemoteMaster.Client.Abstractions;
-using RemoteMaster.Client.Services;
+using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

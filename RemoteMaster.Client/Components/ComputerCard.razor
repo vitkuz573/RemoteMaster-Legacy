@@ -1,6 +1,6 @@
 ﻿@using Radzen
 @using Microsoft.AspNetCore.Components
-@using RemoteMaster.Client.Models;
+@using RemoteMaster.Server.Models;
 
 <div @oncontextmenu:preventDefault="true" @oncontextmenu="@(args => ShowContextMenu(args))" class="mb-5 selectable-node bg-transparent box-border p-1" data-ip-address="@Computer.IPAddress">
     <RadzenCard class="computer-card w-full max-w-xs mx-auto bg-white shadow-md overflow-hidden md:max-w-2xl">

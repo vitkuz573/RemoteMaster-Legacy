@@ -4,7 +4,7 @@
 
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace RemoteMaster.Client.Models;
+namespace RemoteMaster.Server.Models;
 
 public class Computer : Node
 {

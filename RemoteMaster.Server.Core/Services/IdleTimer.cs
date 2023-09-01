@@ -3,9 +3,9 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.Extensions.Logging;
-using RemoteMaster.Server.Core.Abstractions;
+using RemoteMaster.Client.Core.Abstractions;
 
-namespace RemoteMaster.Server.Core.Services;
+namespace RemoteMaster.Client.Core.Services;
 
 public class IdleTimer : IIdleTimer
 {

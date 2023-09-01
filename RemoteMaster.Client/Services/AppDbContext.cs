@@ -4,9 +4,9 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
-using RemoteMaster.Client.Models;
+using RemoteMaster.Server.Models;
 
-namespace RemoteMaster.Client.Services;
+namespace RemoteMaster.Server.Services;
 
 public class AppDbContext : DbContext
 {

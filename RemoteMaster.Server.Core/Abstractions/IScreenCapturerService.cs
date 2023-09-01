@@ -5,7 +5,7 @@
 using System.Drawing;
 using RemoteMaster.Shared.Models;
 
-namespace RemoteMaster.Server.Core.Abstractions;
+namespace RemoteMaster.Client.Core.Abstractions;
 
 public interface IScreenCapturerService : IDisposable
 {

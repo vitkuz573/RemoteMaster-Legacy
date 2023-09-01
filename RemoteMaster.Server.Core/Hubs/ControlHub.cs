@@ -4,12 +4,12 @@
 
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using RemoteMaster.Server.Core.Abstractions;
+using RemoteMaster.Client.Core.Abstractions;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
 
-namespace RemoteMaster.Server.Core.Hubs;
+namespace RemoteMaster.Client.Core.Hubs;
 
 public class ControlHub : Hub<IControlClient>, IControlHub
 {
