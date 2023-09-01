@@ -25,9 +25,6 @@ public partial class Index
     private DatabaseService DatabaseService { get; set; }
 
     [Inject]
-    private ActiveDirectoryService ActiveDirectoryService { get; set; }
-
-    [Inject]
     private NotificationService NotificationService { get; set; }
 
     [Inject]
@@ -116,52 +113,6 @@ public partial class Index
     };
 
     private string GetTextForNode(object data) => data as string;
-
-    private async Task GetComputersFromAD()
-    {
-        try
-        {
-            var domainComputers = await ActiveDirectoryService.FetchComputers();
-
-            var adNodes = new ObservableCollection<Node>(domainComputers.Select(ou =>
-            {
-                var folder = new Folder(ou.Key);
-
-                foreach (var computer in ou.Value)
-                {
-                    folder.Children.Add(computer);
-                }
-
-                return (Node)folder;
-            }).ToList());
-        }
-        catch (Exception ex)
-        {
-            NotificationService.Notify(new NotificationMessage
-            {
-                Severity = NotificationSeverity.Error,
-                Summary = "Error",
-                Detail = $"Failed to get computers from AD: {ex.Message}",
-                Duration = 4000
-            });
-        }
-    }
-
-    public async Task OpenNewFolder()
-    {
-        await DialogService.OpenAsync<NewFolderPage>("New Folder", options: new DialogOptions
-        {
-            Draggable = true
-        });
-    }
-
-    public async Task OpenNewComputer()
-    {
-        await DialogService.OpenAsync<NewComputerPage>("New Computer", options: new DialogOptions
-        {
-            Draggable = true
-        });
-    }
 
     private async Task OnTreeChange(TreeEventArgs args)
     {
