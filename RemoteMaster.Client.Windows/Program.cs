@@ -7,6 +7,13 @@ using RemoteMaster.Client.Core.Abstractions;
 using RemoteMaster.Client.Core.Extensions;
 using RemoteMaster.Client.Services;
 
+if (args.Length > 0 && args[0] == "install")
+{
+    Console.WriteLine("Do you want to install?");
+    Console.ReadLine();
+    Environment.Exit(0);
+}
+
 var builder = WebApplication.CreateBuilder(args).ConfigureCoreUrls();
 
 builder.Services.AddCoreServices();
