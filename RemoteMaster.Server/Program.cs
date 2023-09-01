@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
 using Radzen;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Hubs;
 using RemoteMaster.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -49,6 +50,7 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.MapBlazorHub();
+app.MapHub<ManagementHub>("/hubs/management");
 app.MapFallbackToPage("/_Host");
 
 app.Run();

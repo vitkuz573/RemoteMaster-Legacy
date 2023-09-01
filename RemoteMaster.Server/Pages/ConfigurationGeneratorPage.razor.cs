@@ -3,7 +3,7 @@ using System.Net.Sockets;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Models;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Pages;
 
