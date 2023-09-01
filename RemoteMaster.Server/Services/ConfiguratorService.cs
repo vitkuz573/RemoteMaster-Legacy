@@ -35,7 +35,7 @@ public class ConfiguratorService : IConfiguratorService
         {
             var json = JsonSerializer.Serialize(config, _jsonOptions);
             var bytes = Encoding.UTF8.GetBytes(json);
-            await memoryStream.WriteAsync(bytes, 0, bytes.Length);
+            await memoryStream.WriteAsync(new ReadOnlyMemory<byte>(bytes, 0, bytes.Length));
             _logger.LogInformation("Successfully generated config file.");
         }
         catch (Exception ex)
