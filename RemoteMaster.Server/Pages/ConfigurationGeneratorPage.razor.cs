@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
 
@@ -11,14 +12,11 @@ public partial class ConfigurationGeneratorPage
 {
     private bool isConfigGenerated = false;
 
-    private readonly IConfiguratorService _configuratorService;
-    private readonly ILogger<ConfigurationGeneratorPage> _logger;
+    [Inject]
+    private IConfiguratorService ConfiguratorService { get; set; }
 
-    public ConfigurationGeneratorPage(IConfiguratorService configuratorPage, ILogger<ConfigurationGeneratorPage> logger)
-    {
-        _configuratorService = configuratorPage;
-        _logger = logger;
-    }
+    [Inject]
+    private ILogger<ConfigurationGeneratorPage> Logger { get; set; }
 
     private async Task GenerateConfig()
     {
@@ -30,12 +28,12 @@ public partial class ConfigurationGeneratorPage
                 ClientId = Guid.NewGuid().ToString()
             };
 
-            await _configuratorService.GenerateConfigFileAsync("C:/users/vitaly/Desktop/host.json", config);
+            await ConfiguratorService.GenerateConfigFileAsync("C:/users/vitaly/Desktop/host.json", config);
             isConfigGenerated = true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An error occurred while generating the config.");
+            Logger.LogError(ex, "An error occurred while generating the config.");
             isConfigGenerated = false;
         }
     }

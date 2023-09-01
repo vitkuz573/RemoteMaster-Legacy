@@ -11,6 +11,7 @@ using RemoteMaster.Server.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Services
+builder.Services.AddTransient<IConfiguratorService, ConfiguratorService>();
 builder.Services.AddScoped<IConnectionManager, ConnectionManager>();
 builder.Services.AddTransient<IConnectionContextFactory, ConnectionContextFactory>();
 builder.Services.AddScoped<ConnectionManager>();

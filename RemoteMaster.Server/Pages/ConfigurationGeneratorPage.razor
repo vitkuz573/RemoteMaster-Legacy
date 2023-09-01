@@ -1,10 +1,12 @@
 ﻿@page "/config-generator"
 
-<h3>Configuration Generator</h3>
+<RadzenCard>
+    <RadzenHeading Size="H3" Text="Configuration Generator"></RadzenHeading>
 
-<button @onclick="GenerateConfig">Generate Config</button>
+    <RadzenButton Text="Generate Config" Click="@GenerateConfig"></RadzenButton>
 
-@if (isConfigGenerated)
-{
-    <p>Config successfully generated!</p>
-}
+    @if (isConfigGenerated)
+    {
+        <RadzenNotification Style="success"></RadzenNotification>
+    }
+</RadzenCard>
