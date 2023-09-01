@@ -8,7 +8,7 @@ namespace RemoteMaster.Server.Hubs;
 
 public class ManagementHub : Hub
 {
-    public async Task<bool> RegisterClient(string hostName, string ipAddress)
+    public async Task<bool> RegisterClient(string hostName, string ipAddress, string group)
     {
         // Ваша логика здесь
 

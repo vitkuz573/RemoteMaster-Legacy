@@ -107,7 +107,7 @@ async Task AskForInstallation(IInstallationService installationService, Configur
 
     if (key == ConsoleKey.Y)
     {
-        var success = await installationService.InstallClientAsync(configData, hostName, ipAddress);
+        var success = await installationService.InstallClientAsync(configData, hostName, ipAddress, configData.Group);
         Console.WriteLine(success ? "Installation succeeded." : "Installation failed.");
     }
     else if (key == ConsoleKey.N)

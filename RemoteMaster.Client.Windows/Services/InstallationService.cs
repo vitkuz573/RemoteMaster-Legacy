@@ -10,7 +10,7 @@ namespace RemoteMaster.Client.Services;
 
 public class InstallationService : IInstallationService
 {
-    public async Task<bool> InstallClientAsync(ConfigurationModel config, string hostName, string ipAddress)
+    public async Task<bool> InstallClientAsync(ConfigurationModel config, string hostName, string ipAddress, string group)
     {
         if (config == null)
         {
@@ -22,7 +22,7 @@ public class InstallationService : IInstallationService
             var connection = await ConnectToServerHub($"http://{config.Server}:5254");
 
             Console.WriteLine("Installing...");
-            var result = await connection.InvokeAsync<bool>("RegisterClient", hostName, ipAddress);
+            var result = await connection.InvokeAsync<bool>("RegisterClient", hostName, ipAddress, group);
 
             return result;
         }
