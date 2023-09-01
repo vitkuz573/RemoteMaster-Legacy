@@ -1,13 +1,60 @@
-// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
-// This file is part of the RemoteMaster project.
-// Licensed under the GNU Affero General Public License v3.0.
-
+using System.CommandLine;
+using System.CommandLine.Parsing;
 using System.Text.Json;
 using RemoteMaster.Client.Abstractions;
 using RemoteMaster.Client.Core.Abstractions;
 using RemoteMaster.Client.Core.Extensions;
 using RemoteMaster.Client.Services;
 using RemoteMaster.Shared.Models;
+
+var rootCommand = new RootCommand();
+
+var installOption = new Option<bool>("--install", "Install the application");
+rootCommand.AddOption(installOption);
+
+rootCommand.SetHandler(async () =>
+{
+    var configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json");
+    DisplayCoolHeader();
+
+    if (File.Exists(configPath))
+    {
+        var configContent = await File.ReadAllTextAsync(configPath);
+        var configData = JsonSerializer.Deserialize<ConfigurationModel>(configContent);
+
+        DisplayConfig(configData);
+
+        if (rootCommand.Parse(args).HasOption(installOption))
+        {
+            AskForInstallation();
+        }
+        else
+        {
+            var host = CreateHostBuilder(args).Build();
+            host.Run();
+        }
+    }
+    else
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine("Config file is missing.");
+        Console.ResetColor();
+        Environment.Exit(1);
+    }
+});
+
+rootCommand.Invoke(args);
+
+IHostBuilder CreateHostBuilder(string[] args) =>
+    Host.CreateDefaultBuilder(args)
+        .ConfigureServices((hostContext, services) =>
+        {
+            services.AddCoreServices();
+            services.AddSingleton<IScreenCapturerService, BitBltCapturer>();
+            services.AddSingleton<ICursorRenderService, CursorRenderService>();
+            services.AddSingleton<IInputService, InputService>();
+            services.AddSingleton<IPowerService, PowerService>();
+        });
 
 void DisplayCoolHeader()
 {
@@ -33,43 +80,4 @@ void AskForInstallation()
     Console.WriteLine("\nDo you want to install?");
     Console.ResetColor();
     Console.ReadLine();
-}
-
-var configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json");
-
-DisplayCoolHeader();
-
-if (File.Exists(configPath))
-{
-    var configContent = File.ReadAllText(configPath);
-    var configData = JsonSerializer.Deserialize<ConfigurationModel>(configContent);
-
-    DisplayConfig(configData);
-
-    if (args.Length > 0 && args[0] == "install")
-    {
-        AskForInstallation();
-        Environment.Exit(0);
-    }
-
-    var builder = WebApplication.CreateBuilder(args).ConfigureCoreUrls();
-
-    builder.Services.AddCoreServices();
-    builder.Services.AddSingleton<IScreenCapturerService, BitBltCapturer>();
-    builder.Services.AddSingleton<ICursorRenderService, CursorRenderService>();
-    builder.Services.AddSingleton<IInputService, InputService>();
-    builder.Services.AddSingleton<IPowerService, PowerService>();
-
-    var app = builder.Build();
-
-    app.MapCoreHubs();
-
-    app.Run();
-}
-else
-{
-    Console.ForegroundColor = ConsoleColor.Red;
-    Console.WriteLine("Config file is missing.");
-    Console.ResetColor();
-    Environment.Exit(1);
 }
