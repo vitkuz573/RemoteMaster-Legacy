@@ -8,4 +8,10 @@ namespace RemoteMaster.Server.Hubs;
 
 public class ManagementHub : Hub
 {
+    public async Task<bool> RegisterClient()
+    {
+        // Ваша логика здесь
+
+        return true;
+    }
 }
