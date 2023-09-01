@@ -15,12 +15,13 @@ rootCommand.AddOption(installOption);
 rootCommand.SetHandler(async () =>
 {
     var configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json");
-    DisplayCoolHeader();
 
     if (File.Exists(configPath))
     {
         if (rootCommand.Parse(args).HasOption(installOption))
         {
+            DisplayCoolHeader();
+
             var configContent = await File.ReadAllTextAsync(configPath);
             var configData = JsonSerializer.Deserialize<ConfigurationModel>(configContent);
 
@@ -95,4 +96,3 @@ void AskForInstallation()
         Console.WriteLine("Invalid input. Installation cancelled.");
     }
 }
-
