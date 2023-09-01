@@ -10,6 +10,7 @@ public partial class ConfigurationGeneratorPage
 {
     private bool _isConfigGenerated = false;
     private string _group;
+    private string _selectedFilePath = string.Empty;
 
     [Inject]
     private IConfiguratorService ConfiguratorService { get; set; }
@@ -19,24 +20,23 @@ public partial class ConfigurationGeneratorPage
 
     private async Task GenerateConfig()
     {
-        try
+        if (string.IsNullOrEmpty(_selectedFilePath))
         {
-            var serverIpAddress = GetLocalIPAddress();
-            var config = new ConfigurationModel
-            {
-                ServerUrl = serverIpAddress,
-                ClientId = Guid.NewGuid().ToString(),
-                Group = _group
-            };
+            Logger.LogWarning("File path is not selected.");
 
-            await ConfiguratorService.GenerateConfigFileAsync("C:/users/vitaly/Desktop/host.json", config);
-            _isConfigGenerated = true;
+            return;
         }
-        catch (Exception ex)
+
+        var serverIpAddress = GetLocalIPAddress();
+        var config = new ConfigurationModel
         {
-            Logger.LogError(ex, "An error occurred while generating the config.");
-            _isConfigGenerated = false;
-        }
+            ServerUrl = serverIpAddress,
+            ClientId = Guid.NewGuid().ToString(),
+            Group = _group
+        };
+
+        await ConfiguratorService.GenerateConfigFileAsync(_selectedFilePath, config);
+        _isConfigGenerated = true;
     }
 
     private static string GetLocalIPAddress()
