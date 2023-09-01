@@ -1,0 +1,10 @@
+﻿@page "/config-generator"
+
+<h3>Configuration Generator</h3>
+
+<button @onclick="GenerateConfig">Generate Config</button>
+
+@if (isConfigGenerated)
+{
+    <p>Config successfully generated!</p>
+}
