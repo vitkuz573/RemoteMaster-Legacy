@@ -19,7 +19,7 @@ public class InstallationService : IInstallationService
 
         try
         {
-            var connection = await ConnectToServerHub(config.Server);
+            var connection = await ConnectToServerHub($"http://{config.Server}:5254");
 
             Console.WriteLine("Installing...");
             var result = await connection.InvokeAsync<bool>("RegisterClient");
@@ -36,7 +36,7 @@ public class InstallationService : IInstallationService
     private static async Task<HubConnection> ConnectToServerHub(string serverUrl)
     {
         var hubConnection = new HubConnectionBuilder()
-            .WithUrl($"{serverUrl}/yourHubName") // Замените на имя вашего хаба
+            .WithUrl($"{serverUrl}/hubs/management")
             .Build();
 
         await hubConnection.StartAsync();
