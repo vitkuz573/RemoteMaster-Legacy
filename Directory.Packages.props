@@ -1,5 +1,6 @@
 <Project>
   <ItemGroup>
+    <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client.Core" Version="7.0.10" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.WindowsServices" Version="7.0.1" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="7.0.9" />
     <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="7.0.10" />
