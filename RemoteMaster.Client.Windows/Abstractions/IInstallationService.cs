@@ -8,5 +8,5 @@ namespace RemoteMaster.Client.Abstractions;
 
 public interface IInstallationService
 {
-    Task<bool> InstallClientAsync(ConfigurationModel config);
+    Task<bool> InstallClientAsync(ConfigurationModel config, string hostName, string ipAddress);
 }

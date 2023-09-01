@@ -4,6 +4,8 @@
 
 using System.CommandLine;
 using System.CommandLine.Parsing;
+using System.Net;
+using System.Net.Sockets;
 using System.Text.Json;
 using RemoteMaster.Client.Abstractions;
 using RemoteMaster.Client.Core.Abstractions;
@@ -33,7 +35,15 @@ rootCommand.SetHandler(async () =>
             var configData = JsonSerializer.Deserialize<ConfigurationModel>(configContent);
 
             DisplayConfig(configData);
-            await AskForInstallation(installationService, configData);
+
+            var hostName = Dns.GetHostName();
+            var allAddresses = Dns.GetHostAddresses(hostName);
+            var ipv4Address = Array.Find(allAddresses, a => a.AddressFamily == AddressFamily.InterNetwork)?.ToString();
+
+            Console.WriteLine($"Host Name: {hostName}");
+            Console.WriteLine($"IP Address: {ipv4Address}");
+
+            await AskForInstallation(installationService, configData, hostName, ipv4Address);
         }
         else
         {
@@ -86,7 +96,7 @@ void DisplayConfig(ConfigurationModel configData)
     Console.WriteLine($"Group: {configData.Group}");
 }
 
-async Task AskForInstallation(IInstallationService installationService, ConfigurationModel configData)
+async Task AskForInstallation(IInstallationService installationService, ConfigurationModel configData, string hostName, string ipAddress)
 {
     Console.ForegroundColor = ConsoleColor.Blue;
     Console.Write("\nDo you want to install? [Y/N]: ");
@@ -97,7 +107,7 @@ async Task AskForInstallation(IInstallationService installationService, Configur
 
     if (key == ConsoleKey.Y)
     {
-        var success = await installationService.InstallClientAsync(configData);
+        var success = await installationService.InstallClientAsync(configData, hostName, ipAddress);
         Console.WriteLine(success ? "Installation succeeded." : "Installation failed.");
     }
     else if (key == ConsoleKey.N)
