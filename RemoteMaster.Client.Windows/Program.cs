@@ -1,3 +1,7 @@
+// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+// This file is part of the RemoteMaster project.
+// Licensed under the GNU Affero General Public License v3.0.
+
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Text.Json;
@@ -6,6 +10,9 @@ using RemoteMaster.Client.Core.Abstractions;
 using RemoteMaster.Client.Core.Extensions;
 using RemoteMaster.Client.Services;
 using RemoteMaster.Shared.Models;
+
+var serviceProvider = BuildServiceProvider();
+var installationService = serviceProvider.GetRequiredService<IInstallationService>();
 
 var rootCommand = new RootCommand();
 
@@ -26,7 +33,7 @@ rootCommand.SetHandler(async () =>
             var configData = JsonSerializer.Deserialize<ConfigurationModel>(configContent);
 
             DisplayConfig(configData);
-            AskForInstallation();
+            await AskForInstallation(installationService, configData);
         }
         else
         {
@@ -44,6 +51,11 @@ rootCommand.SetHandler(async () =>
 });
 
 rootCommand.Invoke(args);
+
+ServiceProvider BuildServiceProvider() =>
+    new ServiceCollection()
+        .AddSingleton<IInstallationService, InstallationService>()
+        .BuildServiceProvider();
 
 IHostBuilder CreateHostBuilder(string[] args) =>
     Host.CreateDefaultBuilder(args)
@@ -74,7 +86,7 @@ void DisplayConfig(ConfigurationModel configData)
     Console.WriteLine($"Group: {configData.Group}");
 }
 
-void AskForInstallation()
+async Task AskForInstallation(IInstallationService installationService, ConfigurationModel configData)
 {
     Console.ForegroundColor = ConsoleColor.Blue;
     Console.Write("\nDo you want to install? [Y/N]: ");
@@ -85,7 +97,8 @@ void AskForInstallation()
 
     if (key == ConsoleKey.Y)
     {
-        Console.WriteLine("Installing...");
+        var success = await installationService.InstallClientAsync(configData);
+        Console.WriteLine(success ? "Installation succeeded." : "Installation failed.");
     }
     else if (key == ConsoleKey.N)
     {
