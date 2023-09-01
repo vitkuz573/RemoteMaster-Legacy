@@ -4,8 +4,6 @@
     <RadzenHeading Size="H3" Text="Configuration Generator"></RadzenHeading>
     <RadzenLabel Text="Computer Group:"></RadzenLabel>
     <RadzenTextBox @bind-Value="_group"></RadzenTextBox>
-    <RadzenLabel Text="File Path:"></RadzenLabel>
-    <RadzenTextBox @bind-Value="_selectedFilePath"></RadzenTextBox>
     <RadzenButton Text="Generate Config" Click="@GenerateConfig"></RadzenButton>
     @if (_isConfigGenerated)
     {

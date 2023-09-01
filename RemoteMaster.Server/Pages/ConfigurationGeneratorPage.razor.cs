@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Sockets;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
 
@@ -10,20 +11,21 @@ public partial class ConfigurationGeneratorPage
 {
     private bool _isConfigGenerated = false;
     private string _group;
-    private string _selectedFilePath = string.Empty;
 
     [Inject]
     private IConfiguratorService ConfiguratorService { get; set; }
+
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; }
 
     [Inject]
     private ILogger<ConfigurationGeneratorPage> Logger { get; set; }
 
     private async Task GenerateConfig()
     {
-        if (string.IsNullOrEmpty(_selectedFilePath))
+        if (string.IsNullOrEmpty(_group))
         {
-            Logger.LogWarning("File path is not selected.");
-
+            Logger.LogWarning("Computer group is not selected.");
             return;
         }
 
@@ -35,7 +37,13 @@ public partial class ConfigurationGeneratorPage
             Group = _group
         };
 
-        await ConfiguratorService.GenerateConfigFileAsync(_selectedFilePath, config);
+        var memoryStream = await ConfiguratorService.GenerateConfigFileAsync(config);
+        var bytes = memoryStream.ToArray();
+
+        var fileName = "config.json";
+
+        await JSRuntime.InvokeVoidAsync("downloadFile", fileName, bytes);
+
         _isConfigGenerated = true;
     }
 

@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using RemoteMaster.Server.Abstractions;
@@ -26,18 +27,23 @@ public class ConfiguratorService : IConfiguratorService
         };
     }
 
-    public async Task GenerateConfigFileAsync(string path, ConfigurationModel config)
+    public async Task<MemoryStream> GenerateConfigFileAsync(ConfigurationModel config)
     {
+        var memoryStream = new MemoryStream();
+
         try
         {
             var json = JsonSerializer.Serialize(config, _jsonOptions);
-            await File.WriteAllTextAsync(path, json);
-            _logger.LogInformation($"Successfully generated config file at {path}");
+            var bytes = Encoding.UTF8.GetBytes(json);
+            await memoryStream.WriteAsync(bytes, 0, bytes.Length);
+            _logger.LogInformation("Successfully generated config file.");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "An error occurred while generating config file.");
             throw;
         }
+
+        return memoryStream;
     }
 }
