@@ -30,10 +30,9 @@ public partial class ConfigurationGeneratorPage
             return;
         }
 
-        var serverIpAddress = GetLocalIPAddress();
         var config = new ConfigurationModel
         {
-            ServerIp = serverIpAddress,
+            Server = GetLocalIPAddress(),
             Group = _group
         };
 

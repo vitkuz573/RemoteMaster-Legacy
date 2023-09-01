@@ -8,8 +8,8 @@ namespace RemoteMaster.Server.Models;
 
 public class ConfigurationModel
 {
-    [JsonPropertyName("server_ip")]
-    public string ServerIp { get; set; }
+    [JsonPropertyName("server")]
+    public string Server { get; set; }
 
     [JsonPropertyName("group")]
     public string Group { get; set; }
