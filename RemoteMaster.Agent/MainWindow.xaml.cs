@@ -153,11 +153,18 @@ public partial class MainWindow : Window
     private static void StartService()
     {
         using var serviceController = new ServiceController(ServiceName);
-
-        if (serviceController.Status != ServiceControllerStatus.Running)
+        
+        try
         {
-            serviceController.Start();
-            serviceController.WaitForStatus(ServiceControllerStatus.Running);
+            if (serviceController.Status != ServiceControllerStatus.Running)
+            {
+                serviceController.Start();
+                serviceController.WaitForStatus(ServiceControllerStatus.Running);
+            }
+        }
+        catch (InvalidOperationException ex)
+        {
+            ShowErrorWithExit($"Unable to start the service. Detailed error: {ex.Message}");
         }
     }
 
