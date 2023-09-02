@@ -23,12 +23,12 @@ public partial class MainWindow : Window
     private void LoadConfigurationFromFile()
     {
         var fileName = $"{AppDomain.CurrentDomain.FriendlyName}.json";
-        
+
         if (File.Exists(fileName))
         {
             using var reader = new StreamReader(fileName);
             var json = reader.ReadToEnd();
-            
+
             try
             {
                 var config = JsonSerializer.Deserialize<ConfigurationModel>(json);
@@ -110,7 +110,7 @@ public partial class MainWindow : Window
                 Directory.CreateDirectory(newDirectoryPath);
             }
 
-            var currentExecutablePath = Environment.ProcessPath!;
+            var currentExecutablePath = Environment.ProcessPath;
             File.Copy(currentExecutablePath, newExecutablePath);
         }
     }
@@ -142,7 +142,7 @@ public partial class MainWindow : Window
     private static void StopAndRemoveService(string serviceName)
     {
         using var serviceController = new ServiceController(serviceName);
-        
+
         if (serviceController.Status != ServiceControllerStatus.Stopped)
         {
             serviceController.Stop();
@@ -172,5 +172,19 @@ public partial class MainWindow : Window
     {
         var serviceExists = IsServiceInstalled(ServiceName);
         UninstallButton.IsEnabled = serviceExists;
+
+        if (!serviceExists)
+        {
+            ServiceStatusTextBlock.Text = "Service Status: Not Installed";
+            return;
+        }
+
+        using var serviceController = new ServiceController(ServiceName);
+
+        ServiceStatusTextBlock.Text = serviceController.Status switch
+        {
+            ServiceControllerStatus.Running => "Service Status: Running",
+            _ => "Service Status: Not Running",
+        };
     }
 }
