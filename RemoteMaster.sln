@@ -9,8 +9,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Client.Windows
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Shared", "RemoteMaster.Shared\RemoteMaster.Shared.csproj", "{DFED8337-1138-4192-BC5D-354BDB952E2D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Agent.Windows", "RemoteMaster.Agent.Windows\RemoteMaster.Agent.Windows.csproj", "{01A08820-6471-41A9-8F76-A574B2DF3709}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Client.Core", "RemoteMaster.Client.Core\RemoteMaster.Client.Core.csproj", "{D3317F38-ACDE-40C2-BE81-536EB7336E42}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Элементы решения", "Элементы решения", "{82DF7DE8-BFC3-46F5-AC9A-2804913B45AF}"
@@ -21,7 +19,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Элементы решен
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Agent.Core", "RemoteMaster.Agent.Core\RemoteMaster.Agent.Core.csproj", "{41E5CC1D-7772-4695-9100-B75EBFE4C5B7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteMaster.Agent", "RemoteMaster.Agent\RemoteMaster.Agent.csproj", "{B25A70BC-F27D-4ED1-A04E-078D0D8E3125}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Agent.Windows", "RemoteMaster.Agent.Windows\RemoteMaster.Agent.Windows.csproj", "{B25A70BC-F27D-4ED1-A04E-078D0D8E3125}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -83,22 +81,6 @@ Global
 		{DFED8337-1138-4192-BC5D-354BDB952E2D}.Release|x64.Build.0 = Release|Any CPU
 		{DFED8337-1138-4192-BC5D-354BDB952E2D}.Release|x86.ActiveCfg = Release|Any CPU
 		{DFED8337-1138-4192-BC5D-354BDB952E2D}.Release|x86.Build.0 = Release|Any CPU
-		{01A08820-6471-41A9-8F76-A574B2DF3709}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{01A08820-6471-41A9-8F76-A574B2DF3709}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{01A08820-6471-41A9-8F76-A574B2DF3709}.Debug|arm64.ActiveCfg = Debug|Any CPU
-		{01A08820-6471-41A9-8F76-A574B2DF3709}.Debug|arm64.Build.0 = Debug|Any CPU
-		{01A08820-6471-41A9-8F76-A574B2DF3709}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{01A08820-6471-41A9-8F76-A574B2DF3709}.Debug|x64.Build.0 = Debug|Any CPU
-		{01A08820-6471-41A9-8F76-A574B2DF3709}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{01A08820-6471-41A9-8F76-A574B2DF3709}.Debug|x86.Build.0 = Debug|Any CPU
-		{01A08820-6471-41A9-8F76-A574B2DF3709}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{01A08820-6471-41A9-8F76-A574B2DF3709}.Release|Any CPU.Build.0 = Release|Any CPU
-		{01A08820-6471-41A9-8F76-A574B2DF3709}.Release|arm64.ActiveCfg = Release|Any CPU
-		{01A08820-6471-41A9-8F76-A574B2DF3709}.Release|arm64.Build.0 = Release|Any CPU
-		{01A08820-6471-41A9-8F76-A574B2DF3709}.Release|x64.ActiveCfg = Release|Any CPU
-		{01A08820-6471-41A9-8F76-A574B2DF3709}.Release|x64.Build.0 = Release|Any CPU
-		{01A08820-6471-41A9-8F76-A574B2DF3709}.Release|x86.ActiveCfg = Release|Any CPU
-		{01A08820-6471-41A9-8F76-A574B2DF3709}.Release|x86.Build.0 = Release|Any CPU
 		{D3317F38-ACDE-40C2-BE81-536EB7336E42}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D3317F38-ACDE-40C2-BE81-536EB7336E42}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D3317F38-ACDE-40C2-BE81-536EB7336E42}.Debug|arm64.ActiveCfg = Debug|Any CPU
