@@ -11,6 +11,7 @@ public partial class MainWindow : Window
 {
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Agent";
+    private const string ServiceName = "RCService";
 
     public MainWindow()
     {
@@ -22,25 +23,16 @@ public partial class MainWindow : Window
     private void LoadConfigurationFromFile()
     {
         var fileName = $"{AppDomain.CurrentDomain.FriendlyName}.json";
-
+        
         if (File.Exists(fileName))
         {
             using var reader = new StreamReader(fileName);
             var json = reader.ReadToEnd();
-
+            
             try
             {
                 var config = JsonSerializer.Deserialize<ConfigurationModel>(json);
-                
-                if (config == null || string.IsNullOrWhiteSpace(config.Server) || string.IsNullOrWhiteSpace(config.Group))
-                {
-                    ShowErrorAndExit("Configuration is invalid. The application will now exit.");
-                }
-                else
-                {
-                    ServerAddressTextBlock.Text = $"Server Address: {config.Server}";
-                    GroupTextBlock.Text = $"PC Group: {config.Group}";
-                }
+                ValidateAndSetConfig(config);
             }
             catch (JsonException)
             {
@@ -53,6 +45,19 @@ public partial class MainWindow : Window
         }
     }
 
+    private void ValidateAndSetConfig(ConfigurationModel? config)
+    {
+        if (config == null || string.IsNullOrWhiteSpace(config.Server) || string.IsNullOrWhiteSpace(config.Group))
+        {
+            ShowErrorAndExit("Configuration is invalid. The application will now exit.");
+        }
+        else
+        {
+            ServerAddressTextBlock.Text = $"Server Address: {config.Server}";
+            GroupTextBlock.Text = $"Group: {config.Group}";
+        }
+    }
+
     private static void ShowErrorAndExit(string message)
     {
         MessageBox.Show(message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -61,31 +66,66 @@ public partial class MainWindow : Window
 
     private void InstallUpdateButton_Click(object sender, RoutedEventArgs e)
     {
-        InstallWindowsService("RCService");
+        InstallWindowsService();
     }
 
-    private static void InstallWindowsService(string serviceName)
+    private static void InstallWindowsService()
     {
-        var currentExecutablePath = Process.GetCurrentProcess().MainModule.FileName;
-        var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-        var newExecutablePath = Path.Combine(programFilesPath, MainAppName, $"{MainAppName}.{SubAppName}.exe");
+        var newExecutablePath = GetNewExecutablePath();
+        EnsureFileIsCopied(newExecutablePath);
 
+        if (!IsServiceInstalled(ServiceName))
+        {
+            ExecuteServiceCommand($"create {ServiceName} binPath= \"{newExecutablePath}\" start= auto");
+        }
+    }
+
+    private static void UninstallService()
+    {
+        var newExecutablePath = GetNewExecutablePath();
+
+        if (IsServiceInstalled(ServiceName))
+        {
+            StopAndRemoveService(ServiceName);
+        }
+
+        RemoveServiceFiles(newExecutablePath);
+    }
+
+    private static string GetNewExecutablePath()
+    {
+        var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+
+        return Path.Combine(programFilesPath, MainAppName, SubAppName, $"{MainAppName}.{SubAppName}.exe");
+    }
+
+    private static void EnsureFileIsCopied(string newExecutablePath)
+    {
         if (!File.Exists(newExecutablePath))
         {
+            var newDirectoryPath = Path.GetDirectoryName(newExecutablePath);
+            
+            if (newDirectoryPath != null && !Directory.Exists(newDirectoryPath))
+            {
+                Directory.CreateDirectory(newDirectoryPath);
+            }
+
+            var currentExecutablePath = Environment.ProcessPath!;
             File.Copy(currentExecutablePath, newExecutablePath);
         }
+    }
 
-        using var serviceController = new ServiceController(serviceName);
-        
-        if (ServiceController.GetServices().Any(s => s.ServiceName == serviceName))
-        {
-            return;
-        }
+    private static bool IsServiceInstalled(string serviceName)
+    {
+        return ServiceController.GetServices().Any(s => s.ServiceName == serviceName);
+    }
 
+    private static void ExecuteServiceCommand(string arguments)
+    {
         var processStartInfo = new ProcessStartInfo
         {
             FileName = "sc",
-            Arguments = $"create {serviceName} binPath= \"{newExecutablePath}\" start= auto",
+            Arguments = arguments,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
@@ -99,60 +139,38 @@ public partial class MainWindow : Window
         process.WaitForExit();
     }
 
-    private void UninstallButton_Click(object sender, RoutedEventArgs e)
+    private static void StopAndRemoveService(string serviceName)
     {
-        UninstallService("RCService");
-    }
-
-    private static void UninstallService(string serviceName)
-    {
-        var currentExecutablePath = Process.GetCurrentProcess().MainModule.FileName;
-        var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-        var newExecutablePath = Path.Combine(programFilesPath, MainAppName, $"{MainAppName}.{SubAppName}.exe");
-
         using var serviceController = new ServiceController(serviceName);
         
-        if (ServiceController.GetServices().Any(s => s.ServiceName == serviceName))
+        if (serviceController.Status != ServiceControllerStatus.Stopped)
         {
-            if (serviceController.Status != ServiceControllerStatus.Stopped)
-            {
-                serviceController.Stop();
-                serviceController.WaitForStatus(ServiceControllerStatus.Stopped);
-            }
-
-            var processStartInfoDelete = new ProcessStartInfo
-            {
-                FileName = "sc",
-                Arguments = $"delete {serviceName}",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                Verb = "runas"
-            };
-
-            using var processDelete = new Process { StartInfo = processStartInfoDelete };
-            processDelete.Start();
-            processDelete.WaitForExit();
+            serviceController.Stop();
+            serviceController.WaitForStatus(ServiceControllerStatus.Stopped);
         }
 
+        ExecuteServiceCommand($"delete {serviceName}");
+    }
+
+    private static void RemoveServiceFiles(string newExecutablePath)
+    {
         if (File.Exists(newExecutablePath))
         {
             File.Delete(newExecutablePath);
         }
-        
-        Directory.Delete(Path.Combine(programFilesPath, MainAppName), true);
 
-        if (currentExecutablePath.Equals(newExecutablePath, StringComparison.InvariantCultureIgnoreCase))
-        {
-            Application.Current.Shutdown();
-        }
+        var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+        Directory.Delete(Path.Combine(programFilesPath, MainAppName), true);
+    }
+
+    private void UninstallButton_Click(object sender, RoutedEventArgs e)
+    {
+        UninstallService();
     }
 
     private void CheckServiceStatusAndToggleUninstallButton()
     {
-        var serviceName = "RCService";
-        var serviceExists = ServiceController.GetServices().Any(s => s.ServiceName == serviceName);
+        var serviceExists = IsServiceInstalled(ServiceName);
         UninstallButton.IsEnabled = serviceExists;
     }
 }
