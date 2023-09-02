@@ -12,6 +12,7 @@ public partial class MainWindow : Window
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Agent";
     private const string ServiceName = "RCService";
+    private const string ServiceDisplayName = "Remote Control Service";
 
     public MainWindow()
     {
@@ -129,7 +130,7 @@ public partial class MainWindow : Window
     private static void CopyExecutableToNewPath(string newExecutablePath)
     {
         var newDirectoryPath = Path.GetDirectoryName(newExecutablePath);
-        
+
         if (newDirectoryPath != null && !Directory.Exists(newDirectoryPath))
         {
             Directory.CreateDirectory(newDirectoryPath);
@@ -146,13 +147,13 @@ public partial class MainWindow : Window
 
     private static void CreateService(string newExecutablePath)
     {
-        ExecuteServiceCommand($"create {ServiceName} binPath= \"{newExecutablePath}\" start= auto");
+        ExecuteServiceCommand($"create {ServiceName} DisplayName= \"{ServiceDisplayName}\" binPath= \"{newExecutablePath}\" start= auto");
     }
 
     private static void StartService()
     {
         using var serviceController = new ServiceController(ServiceName);
-        
+
         if (serviceController.Status != ServiceControllerStatus.Running)
         {
             serviceController.Start();
@@ -182,7 +183,7 @@ public partial class MainWindow : Window
     private static void StopService()
     {
         using var serviceController = new ServiceController(ServiceName);
-        
+
         if (serviceController.Status != ServiceControllerStatus.Stopped)
         {
             serviceController.Stop();
@@ -198,7 +199,7 @@ public partial class MainWindow : Window
     private static void RemoveServiceFiles()
     {
         var newExecutablePath = GetNewExecutablePath();
-        
+
         if (File.Exists(newExecutablePath))
         {
             File.Delete(newExecutablePath);
@@ -206,7 +207,7 @@ public partial class MainWindow : Window
 
         var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
         var fullPath = Path.Combine(programFilesPath, MainAppName);
-        
+
         if (Directory.Exists(fullPath))
         {
             Directory.Delete(fullPath, true);
@@ -227,7 +228,7 @@ public partial class MainWindow : Window
         };
 
         using var process = new Process { StartInfo = processStartInfo };
-        
+
         process.Start();
         process.WaitForExit();
     }
