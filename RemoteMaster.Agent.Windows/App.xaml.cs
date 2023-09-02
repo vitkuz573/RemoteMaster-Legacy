@@ -1,8 +1,6 @@
-﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
-// This file is part of the RemoteMaster project.
-// Licensed under the GNU Affero General Public License v3.0.
-
-using System.Windows;
+﻿using System.Windows;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Hosting.WindowsServices;
@@ -30,6 +28,23 @@ public partial class App : Application
                     services.AddCoreServices(hostContext.Configuration);
                     services.AddSingleton<ISignatureService, SignatureService>();
                     services.AddSingleton<IProcessService, ProcessService>();
+                })
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.ConfigureKestrel(options =>
+                    {
+                        options.ListenAnyIP(3564);
+                    });
+
+                    webBuilder.Configure(app =>
+                    {
+                        app.UseRouting();
+
+                        app.UseEndpoints(endpoints =>
+                        {
+                            endpoints.MapCoreHubs();
+                        });
+                    });
                 })
                 .UseWindowsService()
                 .Build();
