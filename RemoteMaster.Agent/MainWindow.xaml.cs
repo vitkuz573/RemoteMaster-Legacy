@@ -67,6 +67,8 @@ public partial class MainWindow : Window
     private void InstallUpdateButton_Click(object sender, RoutedEventArgs e)
     {
         InstallWindowsService();
+        StartService(ServiceName);
+        CheckServiceStatusAndToggleUninstallButton();
     }
 
     private static void InstallWindowsService()
@@ -80,10 +82,21 @@ public partial class MainWindow : Window
         }
     }
 
+    private static void StartService(string serviceName)
+    {
+        using var serviceController = new ServiceController(serviceName);
+        
+        if (serviceController.Status != ServiceControllerStatus.Running)
+        {
+            serviceController.Start();
+            serviceController.WaitForStatus(ServiceControllerStatus.Running);
+        }
+    }
+
     private static void UninstallService()
     {
         var newExecutablePath = GetNewExecutablePath();
-
+        
         if (IsServiceInstalled(ServiceName))
         {
             StopAndRemoveService(ServiceName);
@@ -95,7 +108,7 @@ public partial class MainWindow : Window
     private static string GetNewExecutablePath()
     {
         var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-
+        
         return Path.Combine(programFilesPath, MainAppName, SubAppName, $"{MainAppName}.{SubAppName}.exe");
     }
 
@@ -142,7 +155,7 @@ public partial class MainWindow : Window
     private static void StopAndRemoveService(string serviceName)
     {
         using var serviceController = new ServiceController(serviceName);
-
+        
         if (serviceController.Status != ServiceControllerStatus.Stopped)
         {
             serviceController.Stop();
@@ -166,6 +179,7 @@ public partial class MainWindow : Window
     private void UninstallButton_Click(object sender, RoutedEventArgs e)
     {
         UninstallService();
+        CheckServiceStatusAndToggleUninstallButton();
     }
 
     private void CheckServiceStatusAndToggleUninstallButton()
@@ -173,18 +187,6 @@ public partial class MainWindow : Window
         var serviceExists = IsServiceInstalled(ServiceName);
         UninstallButton.IsEnabled = serviceExists;
 
-        if (!serviceExists)
-        {
-            ServiceStatusTextBlock.Text = "Service Status: Not Installed";
-            return;
-        }
-
-        using var serviceController = new ServiceController(ServiceName);
-
-        ServiceStatusTextBlock.Text = serviceController.Status switch
-        {
-            ServiceControllerStatus.Running => "Service Status: Running",
-            _ => "Service Status: Not Running",
-        };
+        ServiceStatusTextBlock.Text = serviceExists ? "Service Status: Installed" : "Service Status: Not Installed";
     }
 }
