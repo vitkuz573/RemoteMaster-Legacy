@@ -16,46 +16,78 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        LoadConfigurationFromFile();
-        CheckServiceStatusAndToggleUninstallButton();
+        LoadConfiguration();
+        UpdateServiceStatusDisplay();
     }
 
-    private void LoadConfigurationFromFile()
+    private void LoadConfiguration()
     {
-        var fileName = $"{AppDomain.CurrentDomain.FriendlyName}.json";
+        var config = LoadConfigurationFromFile();
+        SetConfiguration(config);
+    }
 
+    private static ConfigurationModel LoadConfigurationFromFile()
+    {
+        var fileName = GetConfigurationFileName();
+
+        if (!TryReadFile(fileName, out var json))
+        {
+            ShowErrorAndExit("Configuration file not found.");
+        }
+
+        if (!TryDeserializeJson(json, out var config) || !IsValidConfig(config))
+        {
+            ShowErrorAndExit("Error parsing or validating the configuration file.");
+        }
+
+        return config!;
+    }
+
+    private static string GetConfigurationFileName()
+    {
+        return $"{AppDomain.CurrentDomain.FriendlyName}.json";
+    }
+
+    private static bool TryReadFile(string fileName, out string content)
+    {
         if (File.Exists(fileName))
         {
             using var reader = new StreamReader(fileName);
-            var json = reader.ReadToEnd();
+            content = reader.ReadToEnd();
 
-            try
-            {
-                var config = JsonSerializer.Deserialize<ConfigurationModel>(json);
-                ValidateAndSetConfig(config);
-            }
-            catch (JsonException)
-            {
-                ShowErrorAndExit("Error parsing the configuration file. The application will now exit.");
-            }
+            return true;
         }
-        else
+
+        content = string.Empty;
+
+        return false;
+    }
+
+    private static bool TryDeserializeJson(string json, out ConfigurationModel? config)
+    {
+        try
         {
-            ShowErrorAndExit("Configuration file not found. The application will now exit.");
+            config = JsonSerializer.Deserialize<ConfigurationModel>(json);
+            
+            return true;
+        }
+        catch (JsonException)
+        {
+            config = null;
+
+            return false;
         }
     }
 
-    private void ValidateAndSetConfig(ConfigurationModel? config)
+    private static bool IsValidConfig(ConfigurationModel? config)
     {
-        if (config == null || string.IsNullOrWhiteSpace(config.Server) || string.IsNullOrWhiteSpace(config.Group))
-        {
-            ShowErrorAndExit("Configuration is invalid. The application will now exit.");
-        }
-        else
-        {
-            ServerAddressTextBlock.Text = $"Server Address: {config.Server}";
-            GroupTextBlock.Text = $"Group: {config.Group}";
-        }
+        return config != null && !string.IsNullOrWhiteSpace(config.Server) && !string.IsNullOrWhiteSpace(config.Group);
+    }
+
+    private void SetConfiguration(ConfigurationModel config)
+    {
+        ServerAddressTextBlock.Text = $"Server Address: {config.Server}";
+        GroupTextBlock.Text = $"Group: {config.Group}";
     }
 
     private static void ShowErrorAndExit(string message)
@@ -66,43 +98,25 @@ public partial class MainWindow : Window
 
     private void InstallUpdateButton_Click(object sender, RoutedEventArgs e)
     {
-        InstallWindowsService();
-        StartService(ServiceName);
-        CheckServiceStatusAndToggleUninstallButton();
+        InstallOrUpdateService();
     }
 
-    private static void InstallWindowsService()
+    private void InstallOrUpdateService()
     {
         var newExecutablePath = GetNewExecutablePath();
-        EnsureFileIsCopied(newExecutablePath);
 
-        if (!IsServiceInstalled(ServiceName))
+        if (!File.Exists(newExecutablePath))
         {
-            ExecuteServiceCommand($"create {ServiceName} binPath= \"{newExecutablePath}\" start= auto");
-        }
-    }
-
-    private static void StartService(string serviceName)
-    {
-        using var serviceController = new ServiceController(serviceName);
-        
-        if (serviceController.Status != ServiceControllerStatus.Running)
-        {
-            serviceController.Start();
-            serviceController.WaitForStatus(ServiceControllerStatus.Running);
-        }
-    }
-
-    private static void UninstallService()
-    {
-        var newExecutablePath = GetNewExecutablePath();
-        
-        if (IsServiceInstalled(ServiceName))
-        {
-            StopAndRemoveService(ServiceName);
+            CopyExecutableToNewPath(newExecutablePath);
         }
 
-        RemoveServiceFiles(newExecutablePath);
+        if (!IsServiceInstalled())
+        {
+            CreateService(newExecutablePath);
+        }
+
+        StartService();
+        UpdateServiceStatusDisplay();
     }
 
     private static string GetNewExecutablePath()
@@ -112,25 +126,91 @@ public partial class MainWindow : Window
         return Path.Combine(programFilesPath, MainAppName, SubAppName, $"{MainAppName}.{SubAppName}.exe");
     }
 
-    private static void EnsureFileIsCopied(string newExecutablePath)
+    private static void CopyExecutableToNewPath(string newExecutablePath)
     {
-        if (!File.Exists(newExecutablePath))
+        var newDirectoryPath = Path.GetDirectoryName(newExecutablePath);
+        
+        if (newDirectoryPath != null && !Directory.Exists(newDirectoryPath))
         {
-            var newDirectoryPath = Path.GetDirectoryName(newExecutablePath);
-            
-            if (newDirectoryPath != null && !Directory.Exists(newDirectoryPath))
-            {
-                Directory.CreateDirectory(newDirectoryPath);
-            }
+            Directory.CreateDirectory(newDirectoryPath);
+        }
 
-            var currentExecutablePath = Environment.ProcessPath;
-            File.Copy(currentExecutablePath, newExecutablePath);
+        var currentExecutablePath = Environment.ProcessPath;
+        File.Copy(currentExecutablePath, newExecutablePath);
+    }
+
+    private static bool IsServiceInstalled()
+    {
+        return ServiceController.GetServices().Any(s => s.ServiceName == ServiceName);
+    }
+
+    private static void CreateService(string newExecutablePath)
+    {
+        ExecuteServiceCommand($"create {ServiceName} binPath= \"{newExecutablePath}\" start= auto");
+    }
+
+    private static void StartService()
+    {
+        using var serviceController = new ServiceController(ServiceName);
+        
+        if (serviceController.Status != ServiceControllerStatus.Running)
+        {
+            serviceController.Start();
+            serviceController.WaitForStatus(ServiceControllerStatus.Running);
         }
     }
 
-    private static bool IsServiceInstalled(string serviceName)
+    private void UpdateServiceStatusDisplay()
     {
-        return ServiceController.GetServices().Any(s => s.ServiceName == serviceName);
+        var serviceExists = IsServiceInstalled();
+        UninstallButton.IsEnabled = serviceExists;
+        ServiceStatusTextBlock.Text = serviceExists ? "Service Status: Installed" : "Service Status: Not Installed";
+    }
+
+    private void UninstallButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (IsServiceInstalled())
+        {
+            StopService();
+            RemoveService();
+        }
+
+        RemoveServiceFiles();
+        UpdateServiceStatusDisplay();
+    }
+
+    private static void StopService()
+    {
+        using var serviceController = new ServiceController(ServiceName);
+        
+        if (serviceController.Status != ServiceControllerStatus.Stopped)
+        {
+            serviceController.Stop();
+            serviceController.WaitForStatus(ServiceControllerStatus.Stopped);
+        }
+    }
+
+    private static void RemoveService()
+    {
+        ExecuteServiceCommand($"delete {ServiceName}");
+    }
+
+    private static void RemoveServiceFiles()
+    {
+        var newExecutablePath = GetNewExecutablePath();
+        
+        if (File.Exists(newExecutablePath))
+        {
+            File.Delete(newExecutablePath);
+        }
+
+        var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+        var fullPath = Path.Combine(programFilesPath, MainAppName);
+        
+        if (Directory.Exists(fullPath))
+        {
+            Directory.Delete(fullPath, true);
+        }
     }
 
     private static void ExecuteServiceCommand(string arguments)
@@ -150,43 +230,5 @@ public partial class MainWindow : Window
         
         process.Start();
         process.WaitForExit();
-    }
-
-    private static void StopAndRemoveService(string serviceName)
-    {
-        using var serviceController = new ServiceController(serviceName);
-        
-        if (serviceController.Status != ServiceControllerStatus.Stopped)
-        {
-            serviceController.Stop();
-            serviceController.WaitForStatus(ServiceControllerStatus.Stopped);
-        }
-
-        ExecuteServiceCommand($"delete {serviceName}");
-    }
-
-    private static void RemoveServiceFiles(string newExecutablePath)
-    {
-        if (File.Exists(newExecutablePath))
-        {
-            File.Delete(newExecutablePath);
-        }
-
-        var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-        Directory.Delete(Path.Combine(programFilesPath, MainAppName), true);
-    }
-
-    private void UninstallButton_Click(object sender, RoutedEventArgs e)
-    {
-        UninstallService();
-        CheckServiceStatusAndToggleUninstallButton();
-    }
-
-    private void CheckServiceStatusAndToggleUninstallButton()
-    {
-        var serviceExists = IsServiceInstalled(ServiceName);
-        UninstallButton.IsEnabled = serviceExists;
-
-        ServiceStatusTextBlock.Text = serviceExists ? "Service Status: Installed" : "Service Status: Not Installed";
     }
 }
