@@ -21,6 +21,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Элементы решен
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Agent.Core", "RemoteMaster.Agent.Core\RemoteMaster.Agent.Core.csproj", "{41E5CC1D-7772-4695-9100-B75EBFE4C5B7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteMaster.Agent", "RemoteMaster.Agent\RemoteMaster.Agent.csproj", "{B25A70BC-F27D-4ED1-A04E-078D0D8E3125}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -129,6 +131,22 @@ Global
 		{41E5CC1D-7772-4695-9100-B75EBFE4C5B7}.Release|x64.Build.0 = Release|Any CPU
 		{41E5CC1D-7772-4695-9100-B75EBFE4C5B7}.Release|x86.ActiveCfg = Release|Any CPU
 		{41E5CC1D-7772-4695-9100-B75EBFE4C5B7}.Release|x86.Build.0 = Release|Any CPU
+		{B25A70BC-F27D-4ED1-A04E-078D0D8E3125}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B25A70BC-F27D-4ED1-A04E-078D0D8E3125}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B25A70BC-F27D-4ED1-A04E-078D0D8E3125}.Debug|arm64.ActiveCfg = Debug|Any CPU
+		{B25A70BC-F27D-4ED1-A04E-078D0D8E3125}.Debug|arm64.Build.0 = Debug|Any CPU
+		{B25A70BC-F27D-4ED1-A04E-078D0D8E3125}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B25A70BC-F27D-4ED1-A04E-078D0D8E3125}.Debug|x64.Build.0 = Debug|Any CPU
+		{B25A70BC-F27D-4ED1-A04E-078D0D8E3125}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B25A70BC-F27D-4ED1-A04E-078D0D8E3125}.Debug|x86.Build.0 = Debug|Any CPU
+		{B25A70BC-F27D-4ED1-A04E-078D0D8E3125}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B25A70BC-F27D-4ED1-A04E-078D0D8E3125}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B25A70BC-F27D-4ED1-A04E-078D0D8E3125}.Release|arm64.ActiveCfg = Release|Any CPU
+		{B25A70BC-F27D-4ED1-A04E-078D0D8E3125}.Release|arm64.Build.0 = Release|Any CPU
+		{B25A70BC-F27D-4ED1-A04E-078D0D8E3125}.Release|x64.ActiveCfg = Release|Any CPU
+		{B25A70BC-F27D-4ED1-A04E-078D0D8E3125}.Release|x64.Build.0 = Release|Any CPU
+		{B25A70BC-F27D-4ED1-A04E-078D0D8E3125}.Release|x86.ActiveCfg = Release|Any CPU
+		{B25A70BC-F27D-4ED1-A04E-078D0D8E3125}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
