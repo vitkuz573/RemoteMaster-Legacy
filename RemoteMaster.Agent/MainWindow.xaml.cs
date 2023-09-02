@@ -16,6 +16,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         LoadConfigurationFromFile();
+        CheckServiceStatusAndToggleUninstallButton();
     }
 
     private void LoadConfigurationFromFile()
@@ -30,7 +31,7 @@ public partial class MainWindow : Window
             try
             {
                 var config = JsonSerializer.Deserialize<ConfigurationModel>(json);
-
+                
                 if (config == null || string.IsNullOrWhiteSpace(config.Server) || string.IsNullOrWhiteSpace(config.Group))
                 {
                     ShowErrorAndExit("Configuration is invalid. The application will now exit.");
@@ -75,7 +76,7 @@ public partial class MainWindow : Window
         }
 
         using var serviceController = new ServiceController(serviceName);
-
+        
         if (ServiceController.GetServices().Any(s => s.ServiceName == serviceName))
         {
             return;
@@ -93,9 +94,65 @@ public partial class MainWindow : Window
         };
 
         using var process = new Process { StartInfo = processStartInfo };
+        
         process.Start();
         process.WaitForExit();
     }
 
-    private void UninstallButton_Click(object sender, RoutedEventArgs e) { }
+    private void UninstallButton_Click(object sender, RoutedEventArgs e)
+    {
+        UninstallService("RCService");
+    }
+
+    private static void UninstallService(string serviceName)
+    {
+        var currentExecutablePath = Process.GetCurrentProcess().MainModule.FileName;
+        var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+        var newExecutablePath = Path.Combine(programFilesPath, MainAppName, $"{MainAppName}.{SubAppName}.exe");
+
+        using var serviceController = new ServiceController(serviceName);
+        
+        if (ServiceController.GetServices().Any(s => s.ServiceName == serviceName))
+        {
+            if (serviceController.Status != ServiceControllerStatus.Stopped)
+            {
+                serviceController.Stop();
+                serviceController.WaitForStatus(ServiceControllerStatus.Stopped);
+            }
+
+            var processStartInfoDelete = new ProcessStartInfo
+            {
+                FileName = "sc",
+                Arguments = $"delete {serviceName}",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                Verb = "runas"
+            };
+
+            using var processDelete = new Process { StartInfo = processStartInfoDelete };
+            processDelete.Start();
+            processDelete.WaitForExit();
+        }
+
+        if (File.Exists(newExecutablePath))
+        {
+            File.Delete(newExecutablePath);
+        }
+        
+        Directory.Delete(Path.Combine(programFilesPath, MainAppName), true);
+
+        if (currentExecutablePath.Equals(newExecutablePath, StringComparison.InvariantCultureIgnoreCase))
+        {
+            Application.Current.Shutdown();
+        }
+    }
+
+    private void CheckServiceStatusAndToggleUninstallButton()
+    {
+        var serviceName = "RCService";
+        var serviceExists = ServiceController.GetServices().Any(s => s.ServiceName == serviceName);
+        UninstallButton.IsEnabled = serviceExists;
+    }
 }

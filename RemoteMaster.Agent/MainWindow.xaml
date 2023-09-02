@@ -25,7 +25,7 @@
         <!-- Button Panel -->
         <DockPanel Grid.Row="1" Margin="20">
             <Button DockPanel.Dock="Left" Content="Install/Update" Width="120" Height="30" Margin="5,0,5,0"/>
-            <Button DockPanel.Dock="Left" Content="Uninstall" Width="120" Height="30" Margin="5,0,5,0"/>
+            <Button x:Name="UninstallButton" DockPanel.Dock="Left" Content="Uninstall" Width="120" Height="30" Margin="5,0,5,0"/>
         </DockPanel>
     </Grid>
 </Window>
