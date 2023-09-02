@@ -138,6 +138,14 @@ public partial class MainWindow : Window
 
         var currentExecutablePath = Environment.ProcessPath;
         File.Copy(currentExecutablePath, newExecutablePath);
+
+        var currentConfigPath = GetConfigurationFileName();
+        var newConfigPath = Path.Combine(newDirectoryPath, GetConfigurationFileName());
+        
+        if (File.Exists(currentConfigPath))
+        {
+            File.Copy(currentConfigPath, newConfigPath, true);
+        }
     }
 
     private static bool IsServiceInstalled()
