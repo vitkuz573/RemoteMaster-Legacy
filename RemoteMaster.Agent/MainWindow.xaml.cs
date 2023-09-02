@@ -33,12 +33,12 @@ public partial class MainWindow : Window
 
         if (!TryReadFile(fileName, out var json))
         {
-            ShowErrorAndExit("Configuration file not found.");
+            ShowErrorWithExit("Configuration file not found.");
         }
 
         if (!TryDeserializeJson(json, out var config) || !IsValidConfig(config))
         {
-            ShowErrorAndExit("Error parsing or validating the configuration file.");
+            ShowErrorWithExit("Error parsing or validating the configuration file.");
         }
 
         return config!;
@@ -91,7 +91,7 @@ public partial class MainWindow : Window
         GroupTextBlock.Text = $"Group: {config.Group}";
     }
 
-    private static void ShowErrorAndExit(string message)
+    private static void ShowErrorWithExit(string message)
     {
         MessageBox.Show(message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         Application.Current.Shutdown();
