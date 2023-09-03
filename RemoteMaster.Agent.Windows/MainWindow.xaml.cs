@@ -18,13 +18,13 @@ public partial class MainWindow : Window
     private const string ServiceName = "RCService";
     private const string ServiceDisplayName = "Remote Control Service";
 
-    private readonly IInstallationService _installationService;
+    private readonly IClientService _clientService;
 
     public MainWindow()
     {
         InitializeComponent();
 
-        _installationService = ((App)Application.Current).ServiceProvider.GetRequiredService<IInstallationService>();
+        _clientService = ((App)Application.Current).ServiceProvider.GetRequiredService<IClientService>();
 
         LoadConfiguration();
         UpdateServiceStatusDisplay();
@@ -133,11 +133,11 @@ public partial class MainWindow : Window
         var allAddresses = Dns.GetHostAddresses(hostName);
         var ipv4Address = Array.Find(allAddresses, a => a.AddressFamily == AddressFamily.InterNetwork)?.ToString();
 
-        var installResult = await _installationService.InstallAsync(config, hostName, ipv4Address, config.Group);
+        var registerResult = await _clientService.RegisterAsync(config, hostName, ipv4Address, config.Group);
 
-        if (!installResult)
+        if (!registerResult)
         {
-            ShowErrorWithExit("Installation using IInstallationService failed.");
+            ShowErrorWithExit("Client registration failed.");
         }
     }
 

@@ -26,7 +26,7 @@ public partial class App : Application
             .ConfigureServices((hostContext, services) =>
             {
                 services.AddCoreServices(hostContext.Configuration);
-                services.AddSingleton<IInstallationService, InstallationService>();
+                services.AddSingleton<IClientService, ClientService>();
                 services.AddSingleton<ISignatureService, SignatureService>();
                 services.AddSingleton<IProcessService, ProcessService>();
                 services.AddSingleton<MainWindow>();

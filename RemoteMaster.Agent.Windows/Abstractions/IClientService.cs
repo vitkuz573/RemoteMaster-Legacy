@@ -6,7 +6,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Agent.Abstractions;
 
-public interface IInstallationService
+public interface IClientService
 {
-    Task<bool> InstallAsync(ConfigurationModel config, string hostName, string ipAddress, string group);
+    Task<bool> RegisterAsync(ConfigurationModel config, string hostName, string ipAddress, string group);
 }

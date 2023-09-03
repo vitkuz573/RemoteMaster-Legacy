@@ -9,16 +9,16 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Agent.Services;
 
-public class InstallationService : IInstallationService
+public class ClientService : IClientService
 {
-    private readonly ILogger<InstallationService> _logger;
+    private readonly ILogger<ClientService> _logger;
 
-    public InstallationService(ILogger<InstallationService> logger)
+    public ClientService(ILogger<ClientService> logger)
     {
         _logger = logger;
     }
 
-    public async Task<bool> InstallAsync(ConfigurationModel config, string hostName, string ipAddress, string group)
+    public async Task<bool> RegisterAsync(ConfigurationModel config, string hostName, string ipAddress, string group)
     {
         if (config == null)
         {
