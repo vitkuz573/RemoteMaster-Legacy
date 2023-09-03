@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using System.Net;
+using System.Net.Sockets;
 using System.ServiceProcess;
 using System.Text.Json;
 using System.Windows;
@@ -109,7 +111,7 @@ public partial class MainWindow : Window
         InstallOrUpdateService();
     }
 
-    private void InstallOrUpdateService()
+    private async Task InstallOrUpdateService()
     {
         var newExecutablePath = GetNewExecutablePath();
 
@@ -125,6 +127,18 @@ public partial class MainWindow : Window
 
         StartService();
         UpdateServiceStatusDisplay();
+
+        var config = LoadConfigurationFromFile();
+        var hostName = Dns.GetHostName();
+        var allAddresses = Dns.GetHostAddresses(hostName);
+        var ipv4Address = Array.Find(allAddresses, a => a.AddressFamily == AddressFamily.InterNetwork)?.ToString();
+
+        var installResult = await _installationService.InstallAsync(config, hostName, ipv4Address, config.Group);
+
+        if (!installResult)
+        {
+            ShowErrorWithExit("Installation using IInstallationService failed.");
+        }
     }
 
     private static string GetNewExecutablePath()
