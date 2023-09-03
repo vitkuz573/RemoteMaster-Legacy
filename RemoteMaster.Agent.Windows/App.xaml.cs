@@ -22,18 +22,20 @@ public partial class App : Application
 
     public App()
     {
+        var hostBuilder = Host.CreateDefaultBuilder()
+            .ConfigureServices((hostContext, services) =>
+            {
+                services.AddCoreServices(hostContext.Configuration);
+                services.AddSingleton<IInstallationService, InstallationService>();
+                services.AddSingleton<ISignatureService, SignatureService>();
+                services.AddSingleton<IProcessService, ProcessService>();
+                services.AddSingleton<MainWindow>();
+            });
+
         if (WindowsServiceHelpers.IsWindowsService())
         {
-            _host = Host.CreateDefaultBuilder()
+            _host = hostBuilder
                 .UseContentRoot(AppContext.BaseDirectory)
-                .ConfigureServices((hostContext, services) =>
-                {
-                    services.AddCoreServices(hostContext.Configuration);
-                    services.AddSingleton<IInstallationService, InstallationService>();
-                    services.AddSingleton<ISignatureService, SignatureService>();
-                    services.AddSingleton<IProcessService, ProcessService>();
-                    services.AddSingleton<MainWindow>();  // <- Регистрация MainWindow для DI
-                })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.ConfigureKestrel(options =>
@@ -63,6 +65,9 @@ public partial class App : Application
         }
         else
         {
+            _host = hostBuilder.Build();
+            _host.StartAsync();
+
             MainWindow = ServiceProvider.GetRequiredService<MainWindow>();
             MainWindow.Show();
         }
@@ -72,6 +77,6 @@ public partial class App : Application
     {
         base.OnExit(e);
 
-        _host?.StopAsync();
+        _host?.StopAsync().Wait();
     }
 }
