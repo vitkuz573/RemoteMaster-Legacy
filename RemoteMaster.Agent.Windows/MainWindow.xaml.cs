@@ -1,8 +1,6 @@
-﻿using System.Diagnostics;
-using System.IO;
+﻿using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.ServiceProcess;
 using System.Text.Json;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,10 +13,9 @@ public partial class MainWindow : Window
 {
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Agent";
-    private const string ServiceName = "RCService";
-    private const string ServiceDisplayName = "Remote Control Service";
 
     private readonly IClientService _clientService;
+    private readonly IServiceManager _serviceManager;
 
     public MainWindow()
     {
@@ -26,6 +23,7 @@ public partial class MainWindow : Window
 
         var serviceProvider = ((App)Application.Current).ServiceProvider;
         _clientService = serviceProvider.GetRequiredService<IClientService>();
+        _serviceManager = serviceProvider.GetRequiredService<IServiceManager>();
 
         LoadConfiguration();
         UpdateServiceStatusDisplay();
@@ -121,12 +119,12 @@ public partial class MainWindow : Window
             CopyExecutableToNewPath(newExecutablePath);
         }
 
-        if (!IsServiceInstalled())
+        if (!_serviceManager.IsServiceInstalled())
         {
-            CreateService(newExecutablePath);
+            _serviceManager.InstallService(newExecutablePath);
         }
 
-        StartService();
+        _serviceManager.StartService();
         UpdateServiceStatusDisplay();
 
         var config = LoadConfigurationFromFile();
@@ -170,67 +168,23 @@ public partial class MainWindow : Window
         }
     }
 
-    private static bool IsServiceInstalled()
-    {
-        return ServiceController.GetServices().Any(s => s.ServiceName == ServiceName);
-    }
-
-    private static void CreateService(string newExecutablePath)
-    {
-        ExecuteServiceCommand($"create {ServiceName} DisplayName= \"{ServiceDisplayName}\" binPath= \"{newExecutablePath}\" start= auto");
-    }
-
-    private static void StartService()
-    {
-        using var serviceController = new ServiceController(ServiceName);
-        
-        try
-        {
-            if (serviceController.Status != ServiceControllerStatus.Running)
-            {
-                serviceController.Start();
-                serviceController.WaitForStatus(ServiceControllerStatus.Running);
-            }
-        }
-        catch (InvalidOperationException ex)
-        {
-            ShowErrorWithExit($"Unable to start the service. Detailed error: {ex.Message}");
-        }
-    }
-
     private void UpdateServiceStatusDisplay()
     {
-        var serviceExists = IsServiceInstalled();
+        var serviceExists = _serviceManager.IsServiceInstalled();
         UninstallButton.IsEnabled = serviceExists;
         ServiceStatusTextBlock.Text = serviceExists ? "Service Status: Installed" : "Service Status: Not Installed";
     }
 
     private void UninstallButton_Click(object sender, RoutedEventArgs e)
     {
-        if (IsServiceInstalled())
+        if (_serviceManager.IsServiceInstalled())
         {
-            StopService();
-            RemoveService();
+            _serviceManager.StopService();
+            _serviceManager.UninstallService();
         }
 
         RemoveServiceFiles();
         UpdateServiceStatusDisplay();
-    }
-
-    private static void StopService()
-    {
-        using var serviceController = new ServiceController(ServiceName);
-
-        if (serviceController.Status != ServiceControllerStatus.Stopped)
-        {
-            serviceController.Stop();
-            serviceController.WaitForStatus(ServiceControllerStatus.Stopped);
-        }
-    }
-
-    private static void RemoveService()
-    {
-        ExecuteServiceCommand($"delete {ServiceName}");
     }
 
     private static void RemoveServiceFiles()
@@ -249,24 +203,5 @@ public partial class MainWindow : Window
         {
             Directory.Delete(fullPath, true);
         }
-    }
-
-    private static void ExecuteServiceCommand(string arguments)
-    {
-        var processStartInfo = new ProcessStartInfo
-        {
-            FileName = "sc",
-            Arguments = arguments,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            Verb = "runas"
-        };
-
-        using var process = new Process { StartInfo = processStartInfo };
-
-        process.Start();
-        process.WaitForExit();
     }
 }

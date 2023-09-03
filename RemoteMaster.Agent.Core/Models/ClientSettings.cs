@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Agent.Core.Models;
 
-public class ServerSettings
+public class ClientSettings
 {
     public string Path { get; set; }
 

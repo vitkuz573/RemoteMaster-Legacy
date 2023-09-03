@@ -34,7 +34,17 @@ public static class ServiceCollectionExtensions
             throw new ArgumentNullException(nameof(configuration));
         }
 
-        services.Configure<ServerSettings>(configuration.GetSection("Server"));
+        services.Configure<ClientSettings>(configuration.GetSection("Client"));
+
+        var clientSection = configuration.GetSection("Client");
+        if (!clientSection.Exists())
+        {
+            serilogLogger.Warning("Client section does not exist in the configuration.");
+        }
+        else
+        {
+            serilogLogger.Information("Client section exists with Path: {Path}, CertificateThumbprint: {Thumbprint}", clientSection["Path"], clientSection["CertificateThumbprint"]);
+        }
 
         return services;
     }

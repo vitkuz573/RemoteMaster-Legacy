@@ -27,6 +27,7 @@ public partial class App : Application
             {
                 services.AddCoreServices(hostContext.Configuration);
                 services.AddSingleton<IClientService, ClientService>();
+                services.AddSingleton<IServiceManager, ServiceManager>();
                 services.AddSingleton<ISignatureService, SignatureService>();
                 services.AddSingleton<IProcessService, ProcessService>();
                 services.AddSingleton<MainWindow>();
@@ -59,9 +60,9 @@ public partial class App : Application
             _host.StartAsync();
 
             var logger = _host.Services.GetRequiredService<ILogger<App>>();
-            var serverSettings = _host.Services.GetRequiredService<IOptions<ServerSettings>>().Value;
+            var clientSettings = _host.Services.GetRequiredService<IOptions<ClientSettings>>().Value;
 
-            logger.LogInformation("Client settings: Path = {Path}, CertificateThumbprint = {Thumbprint}", serverSettings.Path, serverSettings.CertificateThumbprint);
+            logger.LogInformation("Client settings: Path = {Path}, CertificateThumbprint = {Thumbprint}", clientSettings.Path, clientSettings.CertificateThumbprint);
         }
         else
         {

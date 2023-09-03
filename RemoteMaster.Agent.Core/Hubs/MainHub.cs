@@ -15,10 +15,10 @@ public class MainHub : Hub
 {
     private readonly ISignatureService _signatureService;
     private readonly IProcessService _processService;
-    private readonly IOptions<ServerSettings> _settings;
+    private readonly IOptions<ClientSettings> _settings;
     private readonly ILogger<MainHub> _logger;
 
-    public MainHub(ISignatureService signatureService, IProcessService processService, IOptions<ServerSettings> settings, ILogger<MainHub> logger)
+    public MainHub(ISignatureService signatureService, IProcessService processService, IOptions<ClientSettings> settings, ILogger<MainHub> logger)
     {
         _signatureService = signatureService;
         _processService = processService;
