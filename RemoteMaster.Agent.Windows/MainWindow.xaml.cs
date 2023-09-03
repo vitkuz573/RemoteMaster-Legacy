@@ -24,7 +24,8 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        _clientService = ((App)Application.Current).ServiceProvider.GetRequiredService<IClientService>();
+        var serviceProvider = ((App)Application.Current).ServiceProvider;
+        _clientService = serviceProvider.GetRequiredService<IClientService>();
 
         LoadConfiguration();
         UpdateServiceStatusDisplay();
