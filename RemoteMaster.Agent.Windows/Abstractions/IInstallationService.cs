@@ -4,9 +4,9 @@
 
 using RemoteMaster.Shared.Models;
 
-namespace RemoteMaster.Client.Abstractions;
+namespace RemoteMaster.Agent.Abstractions;
 
 public interface IInstallationService
 {
-    Task<bool> InstallClientAsync(ConfigurationModel config, string hostName, string ipAddress, string group);
+    Task<bool> InstallAsync(ConfigurationModel config, string hostName, string ipAddress, string group);
 }

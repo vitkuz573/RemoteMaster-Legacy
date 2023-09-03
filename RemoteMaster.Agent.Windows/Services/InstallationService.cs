@@ -3,14 +3,22 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.SignalR.Client;
-using RemoteMaster.Client.Abstractions;
+using Microsoft.Extensions.Logging;
+using RemoteMaster.Agent.Abstractions;
 using RemoteMaster.Shared.Models;
 
-namespace RemoteMaster.Client.Services;
+namespace RemoteMaster.Agent.Services;
 
 public class InstallationService : IInstallationService
 {
-    public async Task<bool> InstallClientAsync(ConfigurationModel config, string hostName, string ipAddress, string group)
+    private readonly ILogger<InstallationService> _logger;
+
+    public InstallationService(ILogger<InstallationService> logger)
+    {
+        _logger = logger;
+    }
+
+    public async Task<bool> InstallAsync(ConfigurationModel config, string hostName, string ipAddress, string group)
     {
         if (config == null)
         {
@@ -21,14 +29,15 @@ public class InstallationService : IInstallationService
         {
             var connection = await ConnectToServerHub($"http://{config.Server}:5254");
 
-            Console.WriteLine("Installing...");
+            _logger.LogInformation("Installing...");
             var result = await connection.InvokeAsync<bool>("RegisterClient", hostName, ipAddress, group);
 
             return result;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Installation failed: {ex.Message}");
+            _logger.LogError($"Installation failed: {ex.Message}");
+
             return false;
         }
     }

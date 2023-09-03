@@ -3,6 +3,8 @@ using System.IO;
 using System.ServiceProcess;
 using System.Text.Json;
 using System.Windows;
+using Microsoft.Extensions.DependencyInjection;
+using RemoteMaster.Agent.Abstractions;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Agent;
@@ -14,9 +16,14 @@ public partial class MainWindow : Window
     private const string ServiceName = "RCService";
     private const string ServiceDisplayName = "Remote Control Service";
 
+    private readonly IInstallationService _installationService;
+
     public MainWindow()
     {
         InitializeComponent();
+
+        _installationService = ((App)Application.Current).ServiceProvider.GetRequiredService<IInstallationService>();
+
         LoadConfiguration();
         UpdateServiceStatusDisplay();
     }
