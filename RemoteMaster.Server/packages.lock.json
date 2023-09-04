@@ -12,6 +12,16 @@
           "Microsoft.AspNetCore.SignalR.Client.Core": "7.0.10"
         }
       },
+      "Microsoft.AspNetCore.SignalR.Protocols.MessagePack": {
+        "type": "Direct",
+        "requested": "[7.0.10, )",
+        "resolved": "7.0.10",
+        "contentHash": "dte7paZdfuO7pBTF8k3ofaPkIgcDeJN7x0m9Gw/OekrsqQLh5994sgKoZxNQ4x+78tAdxUrmPjf+EEEimS5nJg==",
+        "dependencies": {
+          "MessagePack": "2.1.90",
+          "Microsoft.AspNetCore.SignalR.Common": "7.0.10"
+        }
+      },
       "Microsoft.EntityFrameworkCore.Design": {
         "type": "Direct",
         "requested": "[7.0.10, )",
@@ -455,7 +465,6 @@
       "remotemaster.shared": {
         "type": "Project",
         "dependencies": {
-          "Microsoft.AspNetCore.SignalR.Protocols.MessagePack": "[7.0.10, )",
           "Microsoft.Extensions.Caching.Memory": "[7.0.0, )",
           "Microsoft.Win32.SystemEvents": "[7.0.0, )",
           "Microsoft.Windows.SDK.Win32Metadata": "[54.0.44-preview, )"
@@ -472,16 +481,6 @@
           "Microsoft.Extensions.DependencyInjection": "7.0.0",
           "Microsoft.Extensions.Logging": "7.0.0",
           "System.Threading.Channels": "7.0.0"
-        }
-      },
-      "Microsoft.AspNetCore.SignalR.Protocols.MessagePack": {
-        "type": "CentralTransitive",
-        "requested": "[7.0.10, )",
-        "resolved": "7.0.10",
-        "contentHash": "dte7paZdfuO7pBTF8k3ofaPkIgcDeJN7x0m9Gw/OekrsqQLh5994sgKoZxNQ4x+78tAdxUrmPjf+EEEimS5nJg==",
-        "dependencies": {
-          "MessagePack": "2.1.90",
-          "Microsoft.AspNetCore.SignalR.Common": "7.0.10"
         }
       },
       "Microsoft.Extensions.Caching.Memory": {

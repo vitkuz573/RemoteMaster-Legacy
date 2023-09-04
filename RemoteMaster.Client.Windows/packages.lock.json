@@ -204,6 +204,7 @@
       "remotemaster.client.core": {
         "type": "Project",
         "dependencies": {
+          "Microsoft.AspNetCore.SignalR.Protocols.MessagePack": "[7.0.10, )",
           "RemoteMaster.Shared": "[1.0.0, )",
           "Serilog": "[3.0.1, )",
           "Serilog.Extensions.Logging": "[7.0.0, )",
@@ -214,7 +215,6 @@
       "remotemaster.shared": {
         "type": "Project",
         "dependencies": {
-          "Microsoft.AspNetCore.SignalR.Protocols.MessagePack": "[7.0.10, )",
           "Microsoft.Extensions.Caching.Memory": "[7.0.0, )",
           "Microsoft.Win32.SystemEvents": "[7.0.0, )",
           "Microsoft.Windows.SDK.Win32Metadata": "[54.0.44-preview, )"
