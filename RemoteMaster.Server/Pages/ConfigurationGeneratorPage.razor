@@ -19,7 +19,7 @@
             <RadzenButton Text="Download Config" Click="@DownloadConfig" Style="margin-right: 10px;"></RadzenButton>
 
             <!-- Spoiler to toggle content visibility -->
-            <RadzenButton Text="Show/Hide Content" Click="@ToggleSpoiler"></RadzenButton>
+            <RadzenButton Text="@(_isSpoilerVisible ? "Hide Content" : "Show Content")" Click="@ToggleSpoiler"></RadzenButton>
         </div>
 
         <div id="spoilerContent" style="display:none; margin: 20px 0;">

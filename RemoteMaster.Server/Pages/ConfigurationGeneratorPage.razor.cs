@@ -16,6 +16,8 @@ public partial class ConfigurationGeneratorPage
     private byte[] _configFileBytes;
     private string _configFileName = "config.json";
 
+    private bool _isSpoilerVisible = false;
+
     [Inject]
     private IConfiguratorService ConfiguratorService { get; set; }
 
@@ -59,6 +61,7 @@ public partial class ConfigurationGeneratorPage
 
     private async Task ToggleSpoiler()
     {
+        _isSpoilerVisible = !_isSpoilerVisible;
         await JSRuntime.InvokeVoidAsync("toggleSpoiler");
     }
 
