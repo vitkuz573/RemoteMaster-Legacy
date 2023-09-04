@@ -14,7 +14,7 @@ public partial class ConfigurationGeneratorPage
     private string _group;
 
     private byte[] _configFileBytes;
-    private string _configFileName = "config.json";
+    private string _configFileName = "RemoteMaster.Agent.json";
 
     private bool _isSpoilerVisible = false;
 
