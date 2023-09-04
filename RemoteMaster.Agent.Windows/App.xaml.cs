@@ -59,8 +59,8 @@ public partial class App : Application
 
             _host.StartAsync();
 
-            var logger = _host.Services.GetRequiredService<ILogger<App>>();
-            var clientSettings = _host.Services.GetRequiredService<IOptions<ClientSettings>>().Value;
+            var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
+            var clientSettings = ServiceProvider.GetRequiredService<IOptions<ClientSettings>>().Value;
 
             logger.LogInformation("Client settings: Path = {Path}, CertificateThumbprint = {Thumbprint}", clientSettings.Path, clientSettings.CertificateThumbprint);
         }

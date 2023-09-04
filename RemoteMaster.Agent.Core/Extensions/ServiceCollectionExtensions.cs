@@ -37,6 +37,7 @@ public static class ServiceCollectionExtensions
         services.Configure<ClientSettings>(configuration.GetSection("Client"));
 
         var clientSection = configuration.GetSection("Client");
+
         if (!clientSection.Exists())
         {
             serilogLogger.Warning("Client section does not exist in the configuration.");
