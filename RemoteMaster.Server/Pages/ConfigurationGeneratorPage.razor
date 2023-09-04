@@ -2,11 +2,28 @@
 
 <RadzenCard>
     <RadzenHeading Size="H3" Text="Configuration Generator"></RadzenHeading>
-    <RadzenLabel Text="Computer Group:"></RadzenLabel>
-    <RadzenTextBox @bind-Value="_group"></RadzenTextBox>
-    <RadzenButton Text="Generate Config" Click="@GenerateConfig"></RadzenButton>
+
+    <div style="margin: 20px 0;">
+        <RadzenLabel Text="Computer Group:" style="display: block; margin-bottom: 10px;"></RadzenLabel>
+        <RadzenTextBox @bind-Value="_group" Width="100%"></RadzenTextBox>
+    </div>
+
+    <div style="margin: 20px 0;">
+        <RadzenButton Text="Generate Config" Click="@GenerateConfig"></RadzenButton>
+    </div>
+
     @if (_isConfigGenerated)
     {
-        <RadzenNotification Style="success"></RadzenNotification>
+        <div style="margin: 20px 0;">
+            <!-- Download link button -->
+            <RadzenButton Text="Download Config" Click="@DownloadConfig" Style="margin-right: 10px;"></RadzenButton>
+
+            <!-- Spoiler to toggle content visibility -->
+            <RadzenButton Text="Show/Hide Content" Click="@ToggleSpoiler"></RadzenButton>
+        </div>
+
+        <div id="spoilerContent" style="display:none; margin: 20px 0;">
+            <textarea readonly style="width: 100%; height: 100px;">@GetConfigContent()</textarea>
+        </div>
     }
 </RadzenCard>

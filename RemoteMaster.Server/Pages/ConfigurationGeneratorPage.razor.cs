@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using RemoteMaster.Server.Abstractions;
@@ -11,6 +12,9 @@ public partial class ConfigurationGeneratorPage
 {
     private bool _isConfigGenerated = false;
     private string _group;
+
+    private byte[] _configFileBytes;
+    private string _configFileName = "config.json";
 
     [Inject]
     private IConfiguratorService ConfiguratorService { get; set; }
@@ -26,7 +30,6 @@ public partial class ConfigurationGeneratorPage
         if (string.IsNullOrEmpty(_group))
         {
             Logger.LogWarning("Computer group is not selected.");
-
             return;
         }
 
@@ -36,16 +39,27 @@ public partial class ConfigurationGeneratorPage
             Group = _group
         };
 
-        byte[] bytes;
-
         using (var memoryStream = await ConfiguratorService.GenerateConfigFileAsync(config))
         {
-            bytes = memoryStream.ToArray();
+            _configFileBytes = memoryStream.ToArray();
         }
 
-        var fileName = "config.json";
-        await JSRuntime.InvokeVoidAsync("downloadFile", fileName, bytes);
         _isConfigGenerated = true;
+    }
+
+    private async Task DownloadConfig()
+    {
+        await JSRuntime.InvokeVoidAsync("downloadFile", _configFileName, _configFileBytes);
+    }
+
+    private string GetConfigContent()
+    {
+        return _configFileBytes == null ? string.Empty : Encoding.UTF8.GetString(_configFileBytes);
+    }
+
+    private async Task ToggleSpoiler()
+    {
+        await JSRuntime.InvokeVoidAsync("toggleSpoiler");
     }
 
     private static string GetLocalIPAddress()
