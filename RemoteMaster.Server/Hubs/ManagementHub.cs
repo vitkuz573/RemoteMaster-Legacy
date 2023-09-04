@@ -52,6 +52,8 @@ public class ManagementHub : Hub
 
         if (folder == null)
         {
+            _logger.LogWarning($"Unregistration failed: Folder '{group}' not found.");
+
             return false;
         }
 
@@ -61,8 +63,17 @@ public class ManagementHub : Hub
         {
             _databaseService.RemoveNode(existingComputer);
 
+            var remainingComputers = _databaseService.GetComputersByFolderId(folder.NodeId);
+
+            if (!remainingComputers.Any())
+            {
+                _databaseService.RemoveNode(folder);
+            }
+
             return true;
         }
+
+        _logger.LogWarning($"Unregistration failed: Computer '{hostName}' not found in folder '{group}'.");
 
         return false;
     }
