@@ -48,6 +48,8 @@
                 <TextBlock x:Name="ServiceStatusTextBlock" Text="Service Status: Unknown" Margin="0,10,0,0" FontSize="15" Foreground="#333"/>
                 <TextBlock x:Name="ServerAddressTextBlock" Text="Server Address: 192.168.1.1" Margin="0,10,0,0" FontSize="15" Foreground="#333"/>
                 <TextBlock x:Name="GroupTextBlock" Text="PC Group: Group1" Margin="0,10,0,0" FontSize="15" Foreground="#333"/>
+                <TextBlock x:Name="HostNameTextBlock" Text="Host Name: Unknown" Margin="0,10,0,0" FontSize="15" Foreground="#333"/>
+                <TextBlock x:Name="IPV4AddressTextBlock" Text="IPv4 Address: Unknown" Margin="0,10,0,0" FontSize="15" Foreground="#333"/>
             </StackPanel>
         </GroupBox>
 

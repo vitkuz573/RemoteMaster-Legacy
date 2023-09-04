@@ -17,6 +17,9 @@ public partial class MainWindow : Window
     private readonly IClientService _clientService;
     private readonly IServiceManager _serviceManager;
 
+    private readonly string _hostName;
+    private readonly string _ipv4Address;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -24,6 +27,13 @@ public partial class MainWindow : Window
         var serviceProvider = ((App)Application.Current).ServiceProvider;
         _clientService = serviceProvider.GetRequiredService<IClientService>();
         _serviceManager = serviceProvider.GetRequiredService<IServiceManager>();
+
+        _hostName = Dns.GetHostName();
+        var allAddresses = Dns.GetHostAddresses(_hostName);
+        _ipv4Address = Array.Find(allAddresses, a => a.AddressFamily == AddressFamily.InterNetwork)?.ToString();
+
+        HostNameTextBlock.Text = $"Host Name: {_hostName}";
+        IPV4AddressTextBlock.Text = $"IPv4 Address: {_ipv4Address ?? "Not found"}";
 
         LoadConfiguration();
         UpdateServiceStatusDisplay();
@@ -132,11 +142,8 @@ public partial class MainWindow : Window
         UpdateServiceStatusDisplay();
 
         var config = LoadConfigurationFromFile();
-        var hostName = Dns.GetHostName();
-        var allAddresses = Dns.GetHostAddresses(hostName);
-        var ipv4Address = Array.Find(allAddresses, a => a.AddressFamily == AddressFamily.InterNetwork)?.ToString();
 
-        var registerResult = await _clientService.RegisterAsync(config, hostName, ipv4Address, config.Group);
+        var registerResult = await _clientService.RegisterAsync(config, _hostName, _ipv4Address, config.Group);
 
         if (!registerResult)
         {
