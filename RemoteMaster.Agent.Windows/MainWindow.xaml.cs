@@ -16,6 +16,7 @@ public partial class MainWindow : Window
 
     private readonly IClientService _clientService;
     private readonly IServiceManager _serviceManager;
+    private readonly IConfigurationService _configurationService;
     private readonly string _hostName;
     private readonly string _ipv4Address;
     private readonly ConfigurationModel _configuration;
@@ -27,11 +28,12 @@ public partial class MainWindow : Window
         var serviceProvider = ((App)Application.Current).ServiceProvider;
         _clientService = serviceProvider.GetRequiredService<IClientService>();
         _serviceManager = serviceProvider.GetRequiredService<IServiceManager>();
+        _configurationService = serviceProvider.GetRequiredService<IConfigurationService>();
 
         _hostName = Dns.GetHostName();
         _ipv4Address = GetIPv4Address(_hostName);
 
-        _configuration = LoadConfigurationFromFile();
+        _configuration = _configurationService.LoadConfiguration();
         DisplayConfigurationAndSystemInfo();
         UpdateServiceStatusDisplay();
     }
@@ -49,65 +51,6 @@ public partial class MainWindow : Window
         IPV4AddressTextBlock.Text = $"IPv4 Address: {_ipv4Address}";
         ServerAddressTextBlock.Text = $"Server Address: {_configuration.Server}";
         GroupTextBlock.Text = $"Group: {_configuration.Group}";
-    }
-
-    private static ConfigurationModel LoadConfigurationFromFile()
-    {
-        var fileName = GetConfigurationFileName();
-
-        if (!TryReadFile(fileName, out var json))
-        {
-            ShowError("Configuration file not found.");
-
-            return default;
-        }
-
-        if (!TryDeserializeJson(json, out var config) || !IsValidConfig(config))
-        {
-            ShowError("Error parsing or validating the configuration file.");
-            
-            return default;
-        }
-
-        return config;
-    }
-
-    private static string GetConfigurationFileName() => $"{AppDomain.CurrentDomain.FriendlyName}.json";
-
-    private static bool TryReadFile(string fileName, out string content)
-    {
-        if (File.Exists(fileName))
-        {
-            using var reader = new StreamReader(fileName);
-            content = reader.ReadToEnd();
-
-            return true;
-        }
-
-        content = string.Empty;
-
-        return false;
-    }
-
-    private static bool TryDeserializeJson(string json, out ConfigurationModel? config)
-    {
-        try
-        {
-            config = JsonSerializer.Deserialize<ConfigurationModel>(json);
-            
-            return true;
-        }
-        catch (JsonException)
-        {
-            config = null;
-
-            return false;
-        }
-    }
-
-    private static bool IsValidConfig(ConfigurationModel? config)
-    {
-        return config != null && !string.IsNullOrWhiteSpace(config.Server) && !string.IsNullOrWhiteSpace(config.Group);
     }
 
     private static void ShowError(string message)
@@ -153,7 +96,7 @@ public partial class MainWindow : Window
         return Path.Combine(programFilesPath, MainAppName, SubAppName, $"{MainAppName}.{SubAppName}.exe");
     }
 
-    private static void CopyExecutableToNewPath(string newExecutablePath)
+    private void CopyExecutableToNewPath(string newExecutablePath)
     {
         var newDirectoryPath = Path.GetDirectoryName(newExecutablePath);
         
@@ -165,12 +108,12 @@ public partial class MainWindow : Window
         var currentExecutablePath = Environment.ProcessPath;
         File.Copy(currentExecutablePath, newExecutablePath);
 
-        var currentConfigPath = GetConfigurationFileName();
-        var newConfigPath = Path.Combine(newDirectoryPath, GetConfigurationFileName());
+        var configName = _configurationService.GetConfigurationFileName();
+        var newConfigPath = Path.Combine(newDirectoryPath, configName);
 
-        if (File.Exists(currentConfigPath))
+        if (File.Exists(configName))
         {
-            File.Copy(currentConfigPath, newConfigPath, true);
+            File.Copy(configName, newConfigPath, true);
         }
     }
 

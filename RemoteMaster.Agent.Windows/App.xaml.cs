@@ -26,6 +26,7 @@ public partial class App : Application
             .ConfigureServices((hostContext, services) =>
             {
                 services.AddCoreServices(hostContext.Configuration);
+                services.AddSingleton<IConfigurationService, ConfigurationService>();
                 services.AddSingleton<IClientService, ClientService>();
                 services.AddSingleton<IServiceManager, ServiceManager>();
                 services.AddSingleton<ISignatureService, SignatureService>();
