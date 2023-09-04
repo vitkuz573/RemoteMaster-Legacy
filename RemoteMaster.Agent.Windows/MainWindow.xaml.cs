@@ -1,7 +1,6 @@
 ﻿using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Text.Json;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using RemoteMaster.Agent.Abstractions;
@@ -17,6 +16,7 @@ public partial class MainWindow : Window
     private readonly IClientService _clientService;
     private readonly IServiceManager _serviceManager;
     private readonly IConfigurationService _configurationService;
+    private readonly IHostInfoProvider _hostInfoProvider;
     private readonly string _hostName;
     private readonly string _ipv4Address;
     private readonly ConfigurationModel _configuration;
@@ -29,20 +29,14 @@ public partial class MainWindow : Window
         _clientService = serviceProvider.GetRequiredService<IClientService>();
         _serviceManager = serviceProvider.GetRequiredService<IServiceManager>();
         _configurationService = serviceProvider.GetRequiredService<IConfigurationService>();
+        _hostInfoProvider = serviceProvider.GetRequiredService<IHostInfoProvider>();
 
-        _hostName = Dns.GetHostName();
-        _ipv4Address = GetIPv4Address(_hostName);
+        _hostName = _hostInfoProvider.GetHostName();
+        _ipv4Address = _hostInfoProvider.GetIPv4Address();
 
         _configuration = _configurationService.LoadConfiguration();
         DisplayConfigurationAndSystemInfo();
         UpdateServiceStatusDisplay();
-    }
-
-    private static string GetIPv4Address(string hostName)
-    {
-        var allAddresses = Dns.GetHostAddresses(hostName);
-
-        return Array.Find(allAddresses, a => a.AddressFamily == AddressFamily.InterNetwork)?.ToString() ?? "Not found";
     }
 
     private void DisplayConfigurationAndSystemInfo()
