@@ -41,12 +41,12 @@ public partial class MainWindow : Window
 
         if (!TryReadFile(fileName, out var json))
         {
-            ShowErrorWithExit("Configuration file not found.");
+            ShowError("Configuration file not found.");
         }
 
         if (!TryDeserializeJson(json, out var config) || !IsValidConfig(config))
         {
-            ShowErrorWithExit("Error parsing or validating the configuration file.");
+            ShowError("Error parsing or validating the configuration file.");
         }
 
         return config!;
@@ -99,10 +99,14 @@ public partial class MainWindow : Window
         GroupTextBlock.Text = $"Group: {config.Group}";
     }
 
-    private static void ShowErrorWithExit(string message)
+    private static void ShowError(string message, bool shutdown = true)
     {
         MessageBox.Show(message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        Application.Current.Shutdown();
+
+        if (shutdown)
+        {
+            Application.Current?.Shutdown();
+        }
     }
 
     private void InstallUpdateButton_Click(object sender, RoutedEventArgs e)
@@ -136,7 +140,7 @@ public partial class MainWindow : Window
 
         if (!registerResult)
         {
-            ShowErrorWithExit("Client registration failed.");
+            ShowError("Client registration failed.");
         }
     }
 
