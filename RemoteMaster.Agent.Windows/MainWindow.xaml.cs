@@ -143,7 +143,7 @@ public partial class MainWindow : Window
 
         var config = LoadConfigurationFromFile();
 
-        var registerResult = await _clientService.RegisterAsync(config, _hostName, _ipv4Address, config.Group);
+        var registerResult = await _clientService.RegisterAsync(config, _hostName, _ipv4Address);
 
         if (!registerResult)
         {
@@ -186,10 +186,20 @@ public partial class MainWindow : Window
         ServiceStatusTextBlock.Text = serviceExists ? "Service Status: Installed" : "Service Status: Not Installed";
     }
 
-    private void UninstallButton_Click(object sender, RoutedEventArgs e)
+    private async void UninstallButton_Click(object sender, RoutedEventArgs e)
     {
         if (_serviceManager.IsServiceInstalled())
         {
+            var config = LoadConfigurationFromFile();
+            var unregisterResult = await _clientService.UnregisterAsync(config, _hostName);
+
+            if (!unregisterResult)
+            {
+                ShowError("Client unregistration failed.");
+                // Optionally, you can return here to avoid uninstalling if the client fails to unregister.
+                // return;
+            }
+
             _serviceManager.StopService();
             _serviceManager.UninstallService();
         }

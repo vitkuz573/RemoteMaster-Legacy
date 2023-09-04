@@ -18,7 +18,7 @@ public class ClientService : IClientService
         _logger = logger;
     }
 
-    public async Task<bool> RegisterAsync(ConfigurationModel config, string hostName, string ipAddress, string group)
+    public async Task<bool> RegisterAsync(ConfigurationModel config, string hostName, string ipAddress)
     {
         if (config == null)
         {
@@ -30,13 +30,37 @@ public class ClientService : IClientService
             var connection = await ConnectToServerHub($"http://{config.Server}:5254");
 
             _logger.LogInformation("Installing...");
-            var result = await connection.InvokeAsync<bool>("RegisterClient", hostName, ipAddress, group);
+            var result = await connection.InvokeAsync<bool>("RegisterClient", hostName, ipAddress, config.Group);
 
             return result;
         }
         catch (Exception ex)
         {
             _logger.LogError($"Installation failed: {ex.Message}");
+
+            return false;
+        }
+    }
+
+    public async Task<bool> UnregisterAsync(ConfigurationModel config, string hostName)
+    {
+        if (config == null)
+        {
+            throw new ArgumentNullException(nameof(config));
+        }
+
+        try
+        {
+            var connection = await ConnectToServerHub($"http://{config.Server}:5254");
+
+            _logger.LogInformation("Uninstalling...");
+            var result = await connection.InvokeAsync<bool>("UnregisterClient", hostName, config.Group);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Uninstallation failed: {ex.Message}");
 
             return false;
         }

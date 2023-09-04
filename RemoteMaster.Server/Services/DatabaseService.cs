@@ -38,4 +38,17 @@ public class DatabaseService
             .Where(c => c.ParentId == folderId)
             .ToList();
     }
+
+    public void RemoveNode(Node node)
+    {
+        _context.Nodes.Remove(node);
+        _context.SaveChanges();
+    }
+
+    public Computer GetComputerByNameAndFolderId(string computerName, Guid folderId)
+    {
+        return _context.Nodes
+            .OfType<Computer>()
+            .FirstOrDefault(c => c.Name == computerName && c.ParentId == folderId);
+    }
 }

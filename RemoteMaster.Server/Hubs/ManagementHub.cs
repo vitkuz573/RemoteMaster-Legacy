@@ -7,10 +7,12 @@ namespace RemoteMaster.Server.Hubs;
 public class ManagementHub : Hub
 {
     private readonly DatabaseService _databaseService;
+    private readonly ILogger<ManagementHub> _logger;
 
-    public ManagementHub(DatabaseService databaseService)
+    public ManagementHub(DatabaseService databaseService, ILogger<ManagementHub> logger)
     {
         _databaseService = databaseService;
+        _logger = logger;
     }
 
     public async Task<bool> RegisterClient(string hostName, string ipAddress, string group)
@@ -42,5 +44,26 @@ public class ManagementHub : Hub
         }
 
         return true;
+    }
+
+    public async Task<bool> UnregisterClient(string hostName, string group)
+    {
+        var folder = _databaseService.GetFolders().FirstOrDefault(f => f.Name == group);
+
+        if (folder == null)
+        {
+            return false;
+        }
+
+        var existingComputer = _databaseService.GetComputerByNameAndFolderId(hostName, folder.NodeId);
+
+        if (existingComputer != null)
+        {
+            _databaseService.RemoveNode(existingComputer);
+
+            return true;
+        }
+
+        return false;
     }
 }
