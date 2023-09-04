@@ -16,9 +16,9 @@ public partial class MainWindow : Window
 
     private readonly IClientService _clientService;
     private readonly IServiceManager _serviceManager;
-
     private readonly string _hostName;
     private readonly string _ipv4Address;
+    private readonly ConfigurationModel _configuration;
 
     public MainWindow()
     {
@@ -29,20 +29,26 @@ public partial class MainWindow : Window
         _serviceManager = serviceProvider.GetRequiredService<IServiceManager>();
 
         _hostName = Dns.GetHostName();
-        var allAddresses = Dns.GetHostAddresses(_hostName);
-        _ipv4Address = Array.Find(allAddresses, a => a.AddressFamily == AddressFamily.InterNetwork)?.ToString();
+        _ipv4Address = GetIPv4Address(_hostName);
 
-        HostNameTextBlock.Text = $"Host Name: {_hostName}";
-        IPV4AddressTextBlock.Text = $"IPv4 Address: {_ipv4Address ?? "Not found"}";
-
-        LoadConfiguration();
+        _configuration = LoadConfigurationFromFile();
+        DisplayConfigurationAndSystemInfo();
         UpdateServiceStatusDisplay();
     }
 
-    private void LoadConfiguration()
+    private static string GetIPv4Address(string hostName)
     {
-        var config = LoadConfigurationFromFile();
-        SetConfiguration(config);
+        var allAddresses = Dns.GetHostAddresses(hostName);
+
+        return Array.Find(allAddresses, a => a.AddressFamily == AddressFamily.InterNetwork)?.ToString() ?? "Not found";
+    }
+
+    private void DisplayConfigurationAndSystemInfo()
+    {
+        HostNameTextBlock.Text = $"Host Name: {_hostName}";
+        IPV4AddressTextBlock.Text = $"IPv4 Address: {_ipv4Address}";
+        ServerAddressTextBlock.Text = $"Server Address: {_configuration.Server}";
+        GroupTextBlock.Text = $"Group: {_configuration.Group}";
     }
 
     private static ConfigurationModel LoadConfigurationFromFile()
@@ -52,20 +58,21 @@ public partial class MainWindow : Window
         if (!TryReadFile(fileName, out var json))
         {
             ShowError("Configuration file not found.");
+
+            return default;
         }
 
         if (!TryDeserializeJson(json, out var config) || !IsValidConfig(config))
         {
             ShowError("Error parsing or validating the configuration file.");
+            
+            return default;
         }
 
-        return config!;
+        return config;
     }
 
-    private static string GetConfigurationFileName()
-    {
-        return $"{AppDomain.CurrentDomain.FriendlyName}.json";
-    }
+    private static string GetConfigurationFileName() => $"{AppDomain.CurrentDomain.FriendlyName}.json";
 
     private static bool TryReadFile(string fileName, out string content)
     {
@@ -103,20 +110,10 @@ public partial class MainWindow : Window
         return config != null && !string.IsNullOrWhiteSpace(config.Server) && !string.IsNullOrWhiteSpace(config.Group);
     }
 
-    private void SetConfiguration(ConfigurationModel config)
-    {
-        ServerAddressTextBlock.Text = $"Server Address: {config.Server}";
-        GroupTextBlock.Text = $"Group: {config.Group}";
-    }
-
-    private static void ShowError(string message, bool shutdown = true)
+    private static void ShowError(string message)
     {
         MessageBox.Show(message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-
-        if (shutdown)
-        {
-            Application.Current?.Shutdown();
-        }
+        Application.Current?.Shutdown();
     }
 
     private void InstallUpdateButton_Click(object sender, RoutedEventArgs e)
@@ -141,10 +138,8 @@ public partial class MainWindow : Window
         _serviceManager.StartService();
         UpdateServiceStatusDisplay();
 
-        var config = LoadConfigurationFromFile();
-
-        var registerResult = await _clientService.RegisterAsync(config, _hostName, _ipv4Address);
-
+        var registerResult = await _clientService.RegisterAsync(_configuration, _hostName, _ipv4Address);
+        
         if (!registerResult)
         {
             ShowError("Client registration failed.");
@@ -161,7 +156,7 @@ public partial class MainWindow : Window
     private static void CopyExecutableToNewPath(string newExecutablePath)
     {
         var newDirectoryPath = Path.GetDirectoryName(newExecutablePath);
-
+        
         if (newDirectoryPath != null && !Directory.Exists(newDirectoryPath))
         {
             Directory.CreateDirectory(newDirectoryPath);
@@ -172,7 +167,7 @@ public partial class MainWindow : Window
 
         var currentConfigPath = GetConfigurationFileName();
         var newConfigPath = Path.Combine(newDirectoryPath, GetConfigurationFileName());
-        
+
         if (File.Exists(currentConfigPath))
         {
             File.Copy(currentConfigPath, newConfigPath, true);
@@ -190,14 +185,11 @@ public partial class MainWindow : Window
     {
         if (_serviceManager.IsServiceInstalled())
         {
-            var config = LoadConfigurationFromFile();
-            var unregisterResult = await _clientService.UnregisterAsync(config, _hostName);
-
+            var unregisterResult = await _clientService.UnregisterAsync(_configuration, _hostName);
+            
             if (!unregisterResult)
             {
                 ShowError("Client unregistration failed.");
-                // Optionally, you can return here to avoid uninstalling if the client fails to unregister.
-                // return;
             }
 
             _serviceManager.StopService();
@@ -211,7 +203,7 @@ public partial class MainWindow : Window
     private static void RemoveServiceFiles()
     {
         var newExecutablePath = GetNewExecutablePath();
-
+        
         if (File.Exists(newExecutablePath))
         {
             File.Delete(newExecutablePath);
@@ -219,7 +211,7 @@ public partial class MainWindow : Window
 
         var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
         var fullPath = Path.Combine(programFilesPath, MainAppName);
-
+        
         if (Directory.Exists(fullPath))
         {
             Directory.Delete(fullPath, true);
