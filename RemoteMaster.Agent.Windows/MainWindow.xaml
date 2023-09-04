@@ -51,7 +51,7 @@
             </StackPanel>
         </GroupBox>
 
-        <DockPanel Grid.Row="1" Margin="10,10,10,10">
+        <DockPanel Grid.Row="1" Margin="10,0,10,10">
             <Button Style="{StaticResource CustomButton}" DockPanel.Dock="Left" Content="Install/Update" Width="130" Height="35" Margin="5,0,5,0" Click="InstallUpdateButton_Click" />
             <Button Style="{StaticResource CustomButton}" x:Name="UninstallButton" DockPanel.Dock="Left" Content="Uninstall" Width="130" Height="35" Margin="5,0,5,0" Click="UninstallButton_Click" Background="#F44336" BorderBrush="#F44336" IsEnabled="False"/>
         </DockPanel>
