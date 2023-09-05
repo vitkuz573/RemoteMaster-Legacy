@@ -32,9 +32,6 @@ public partial class Control : IAsyncDisposable
     private IJSRuntime JSRuntime { get; set; }
 
     [Inject]
-    private ILogger<Control> Logger { get; set; }
-
-    [Inject]
     private IQueryParameterService QueryParameterService { get; set; }
 #nullable restore
 
@@ -42,7 +39,7 @@ public partial class Control : IAsyncDisposable
     private string _statusMessage = "Establishing connection...";
     private string? _screenDataUrl;
     private IControlHub _controlHubProxy;
-    private bool _serverTampered = false;
+    private bool _clientTampered = false;
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
     {
@@ -53,9 +50,9 @@ public partial class Control : IAsyncDisposable
                 await InitializeAgentConnectionAsync();
             }
 
-            if (!_serverTampered)
+            if (!_clientTampered)
             {
-                await InitializeServerConnectionAsync();
+                await InitializeClientConnectionAsync();
                 await _controlHubProxy.ConnectAs(Intention.Control);
             }
 
@@ -63,9 +60,9 @@ public partial class Control : IAsyncDisposable
         }
     }
 
-    private void HandleServerConfiguration(ClientConfigurationDto dto)
+    private void HandleClientConfiguration(ClientConfigurationDto dto)
     {
-        ControlFunctionsService.ServerConfiguration = dto;
+        ControlFunctionsService.ClientConfiguration = dto;
     }
 
     private void HandleScreenData(ScreenDataDto dto)
@@ -73,10 +70,10 @@ public partial class Control : IAsyncDisposable
         ControlFunctionsService.Displays = dto.Displays;
     }
 
-    private async Task HandleServerTampered(string message)
+    private async Task HandleClientTampered(string message)
     {
         _statusMessage = message;
-        _serverTampered = true;
+        _clientTampered = true;
         await InvokeAsync(StateHasChanged);
         await ConnectionManager.DisconnectAsync("Agent");
         _agentHandledTcs.SetResult(true);
@@ -98,23 +95,23 @@ public partial class Control : IAsyncDisposable
     {
         await ConnectionManager
             .Connect("Agent", $"http://{Host}:3564/hubs/main")
-            .On<string>("ServerTampered", HandleServerTampered)
+            .On<string>("ClientTampered", HandleClientTampered)
             .StartAsync();
 
         await WaitForAgentOrTimeoutAsync();
         await _agentHandledTcs.Task;
     }
 
-    private async Task InitializeServerConnectionAsync()
+    private async Task InitializeClientConnectionAsync()
     {
-        var serverContext = await ConnectionManager
-            .Connect("Server", $"http://{Host}:5076/hubs/control", true)
-            .On<ClientConfigurationDto>("ReceiveServerConfiguration", HandleServerConfiguration)
+        var clientContext = await ConnectionManager
+            .Connect("Client", $"http://{Host}:5076/hubs/control", true)
+            .On<ClientConfigurationDto>("ReceiveClientConfiguration", HandleClientConfiguration)
             .On<ScreenDataDto>("ReceiveScreenData", HandleScreenData)
             .On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate)
             .StartAsync();
 
-        _controlHubProxy = serverContext.Connection.CreateHubProxy<IControlHub>();
+        _controlHubProxy = clientContext.Connection.CreateHubProxy<IControlHub>();
         ControlFunctionsService.ControlHubProxy = _controlHubProxy;
     }
 
@@ -205,7 +202,7 @@ public partial class Control : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        await ConnectionManager.DisconnectAsync("Server");
+        await ConnectionManager.DisconnectAsync("Client");
         await ConnectionManager.DisconnectAsync("Agent");
     }
 }

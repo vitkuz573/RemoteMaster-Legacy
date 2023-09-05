@@ -114,7 +114,7 @@ public class ControlHub : Hub<IControlClient>, IControlHub
         ExecuteActionForViewer(viewer => viewer.ScreenCapturer.TrackCursor = trackCursor);
     }
 
-    public async Task KillServer()
+    public async Task KillClient()
     {
         _shutdownService.ImmediateShutdown();
     }

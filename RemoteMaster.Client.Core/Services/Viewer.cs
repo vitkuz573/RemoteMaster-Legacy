@@ -39,7 +39,7 @@ public class Viewer : IViewer
         _streamingCts = new CancellationTokenSource();
         var cancellationToken = _streamingCts.Token;
 
-        await SendServerConfiguration();
+        await SendClientConfiguration();
 
         var bounds = ScreenCapturer.CurrentScreenBounds;
 
@@ -97,11 +97,11 @@ public class Viewer : IViewer
         await _hubContext.Clients.Client(ConnectionId).ReceiveScreenSize(new Size(width, height));
     }
 
-    private async Task SendServerConfiguration()
+    private async Task SendClientConfiguration()
     {
-        var serverConfiguration = _configurationService.Configure();
+        var clientConfiguration = _configurationService.Configure();
 
-        await _hubContext.Clients.Client(ConnectionId).ReceiveServerConfiguration(serverConfiguration);
+        await _hubContext.Clients.Client(ConnectionId).ReceiveClientConfiguration(clientConfiguration);
     }
 
     public void SetSelectedScreen(string displayName)

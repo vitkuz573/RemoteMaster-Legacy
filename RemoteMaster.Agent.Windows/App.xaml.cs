@@ -5,11 +5,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Hosting.WindowsServices;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using RemoteMaster.Agent.Abstractions;
 using RemoteMaster.Agent.Core.Abstractions;
 using RemoteMaster.Agent.Core.Extensions;
-using RemoteMaster.Agent.Core.Models;
 using RemoteMaster.Agent.Services;
 
 namespace RemoteMaster.Agent;
@@ -25,7 +23,7 @@ public partial class App : Application
         var hostBuilder = Host.CreateDefaultBuilder()
             .ConfigureServices((hostContext, services) =>
             {
-                services.AddCoreServices(hostContext.Configuration);
+                services.AddCoreServices();
                 services.AddSingleton<IConfigurationService, ConfigurationService>();
                 services.AddSingleton<IHostInfoProvider, HostInfoProvider>();
                 services.AddSingleton<IClientService, ClientService>();
@@ -60,11 +58,6 @@ public partial class App : Application
                 .Build();
 
             _host.StartAsync();
-
-            var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
-            var clientSettings = ServiceProvider.GetRequiredService<IOptions<ClientSettings>>().Value;
-
-            logger.LogInformation("Client settings: Path = {Path}, CertificateThumbprint = {Thumbprint}", clientSettings.Path, clientSettings.CertificateThumbprint);
         }
         else
         {

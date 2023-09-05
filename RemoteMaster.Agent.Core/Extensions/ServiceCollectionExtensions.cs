@@ -12,7 +12,7 @@ namespace RemoteMaster.Agent.Core.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddCoreServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddCoreServices(this IServiceCollection services)
     {
         var serilogLogger = new LoggerConfiguration()
             .MinimumLevel.Debug()
@@ -28,24 +28,6 @@ public static class ServiceCollectionExtensions
         });
 
         services.AddSignalR();
-
-        if (configuration == null)
-        {
-            throw new ArgumentNullException(nameof(configuration));
-        }
-
-        services.Configure<ClientSettings>(configuration.GetSection("Client"));
-
-        var clientSection = configuration.GetSection("Client");
-
-        if (!clientSection.Exists())
-        {
-            serilogLogger.Warning("Client section does not exist in the configuration.");
-        }
-        else
-        {
-            serilogLogger.Information("Client section exists with Path: {Path}, CertificateThumbprint: {Thumbprint}", clientSection["Path"], clientSection["CertificateThumbprint"]);
-        }
 
         return services;
     }

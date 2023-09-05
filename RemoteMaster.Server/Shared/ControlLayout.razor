@@ -152,7 +152,7 @@
 
         if (_firstToggleMenu)
         {
-            var serverConfiguration = ControlFuncsService.ServerConfiguration;
+            var serverConfiguration = ControlFuncsService.ClientConfiguration;
 
             _inputEnabled = serverConfiguration.InputEnabled;
             _cursorTracking = serverConfiguration.TrackCursor;
@@ -190,7 +190,7 @@
 
     private async void KillServer()
     {
-        await ControlFuncsService.ControlHubProxy.KillServer();
+        await ControlFuncsService.ControlHubProxy.KillClient();
     }
 
     private async void RebootComputer()
