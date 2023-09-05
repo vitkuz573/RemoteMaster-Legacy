@@ -12,7 +12,7 @@ public class MainHub : Hub
     private readonly ILogger<MainHub> _logger;
 
     private const string ClientPath = "C:\\Program Files\\RemoteMaster\\Client\\RemoteMaster.Client.exe";
-    private const string CertificateThumbprint = "861C0EC95B39365884CE7D5DF94073B8E7055819";
+    private const string CertificateThumbprint = "E0BD3A7C39AA4FC012A0F6CB3297B46D5D73210C";
 
     public MainHub(ISignatureService signatureService, IProcessService processService, ILogger<MainHub> logger)
     {
@@ -39,7 +39,7 @@ public class MainHub : Hub
             else
             {
                 _logger.LogInformation("Sending ClientTampered message to client");
-                await Clients.Client(Context.ConnectionId).SendAsync("ClientTampered", "The RemoteMaster client appears to be tampered with or its digital signature is not valid. Please contact support.");
+                await Clients.Client(Context.ConnectionId).SendAsync("ClientTampered", $"The RemoteMaster client appears to be tampered with or its digital signature is not valid. Please contact support. (Expected Thumbprint: {CertificateThumbprint})");
             }
         }
 

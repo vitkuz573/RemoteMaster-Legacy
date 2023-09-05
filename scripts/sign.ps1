@@ -1,4 +1,9 @@
-$certPath = "C:\Users\vitaly\certs\certificate.pfx"
-$password = ConvertTo-SecureString -String "password" -Force -AsPlainText
-$cert = New-Object -TypeName System.Security.Cryptography.X509Certificates.X509Certificate2 -ArgumentList $certPath, $password
-Set-AuthenticodeSignature -FilePath "C:\Users\vitaly\source\repos\RemoteMaster\RemoteMaster.Server\bin\Release\net7.0-windows\RemoteMaster.Server.exe" -Certificate $cert
+$tenYearsFromNow = (Get-Date).AddYears(10)
+$cert = New-SelfSignedCertificate -Subject "CN=RemoteMaster Development" -Type CodeSigning -CertStoreLocation cert:\CurrentUser\My -NotAfter $tenYearsFromNow
+$tempFilePath = Join-Path $env:TEMP "tempCert.cer"
+Export-Certificate -Cert $cert -FilePath $tempFilePath
+Import-Certificate -FilePath $tempFilePath -CertStoreLocation Cert:\LocalMachine\TrustedPublisher
+Import-Certificate -FilePath $tempFilePath -CertStoreLocation Cert:\LocalMachine\Root
+Remove-Item -Path $tempFilePath -Force
+Set-AuthenticodeSignature "C:\Program Files\RemoteMaster\Client\RemoteMaster.Client.exe" -Certificate $cert
+Get-AuthenticodeSignature -FilePath "C:\Program Files\RemoteMaster\Client\RemoteMaster.Client.exe"
