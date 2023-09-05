@@ -8,5 +8,5 @@ namespace RemoteMaster.Client.Core.Abstractions;
 
 public interface IConfigurationService
 {
-    ServerConfigurationDto Configure();
+    ClientConfigurationDto Configure();
 }

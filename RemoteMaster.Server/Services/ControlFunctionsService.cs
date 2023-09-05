@@ -12,7 +12,7 @@ public class ControlFunctionsService
 {
     public IControlHub ControlHubProxy { get; set; }
 
-    public ServerConfigurationDto ServerConfiguration { get; set; }
+    public ClientConfigurationDto ServerConfiguration { get; set; }
 
     public IEnumerable<DisplayInfo> Displays { get; set; }
 }

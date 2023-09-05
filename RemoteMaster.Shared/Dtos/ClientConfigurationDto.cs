@@ -6,7 +6,7 @@ using System.Text;
 
 namespace RemoteMaster.Shared.Dtos;
 
-public class ServerConfigurationDto
+public class ClientConfigurationDto
 {
     public bool InputEnabled { get; init; }
 
@@ -18,7 +18,7 @@ public class ServerConfigurationDto
     {
         var stringBuilder = new StringBuilder();
 
-        stringBuilder.AppendLine("Server Configuration:");
+        stringBuilder.AppendLine("Client Configuration:");
         stringBuilder.AppendLine("---------------------");
         stringBuilder.AppendLine($"Input Enabled: {InputEnabled,-5}\tTrack Cursor: {TrackCursor,-5}");
         stringBuilder.AppendLine($"Image Quality: {ImageQuality}%\t(Quality: {GetQualityLabel()})");

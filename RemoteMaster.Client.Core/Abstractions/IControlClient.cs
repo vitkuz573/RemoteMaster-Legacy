@@ -17,5 +17,5 @@ public interface IControlClient
 
     Task ReceiveScreenSize(Size size);
 
-    Task ReceiveServerConfiguration(ServerConfigurationDto serverConfiguration);
+    Task ReceiveServerConfiguration(ClientConfigurationDto serverConfiguration);
 }

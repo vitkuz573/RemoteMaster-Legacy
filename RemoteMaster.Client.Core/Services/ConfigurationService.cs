@@ -18,9 +18,9 @@ public class ConfigurationService : IConfigurationService
         _screenCapturerService = screenCapturerService;
     }
 
-    public ServerConfigurationDto Configure()
+    public ClientConfigurationDto Configure()
     {
-        return new ServerConfigurationDto
+        return new ClientConfigurationDto
         {
             InputEnabled = _inputService.InputEnabled,
             TrackCursor = _screenCapturerService.TrackCursor,

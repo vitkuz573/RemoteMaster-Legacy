@@ -63,7 +63,7 @@ public partial class Control : IAsyncDisposable
         }
     }
 
-    private void HandleServerConfiguration(ServerConfigurationDto dto)
+    private void HandleServerConfiguration(ClientConfigurationDto dto)
     {
         ControlFunctionsService.ServerConfiguration = dto;
     }
@@ -109,7 +109,7 @@ public partial class Control : IAsyncDisposable
     {
         var serverContext = await ConnectionManager
             .Connect("Server", $"http://{Host}:5076/hubs/control", true)
-            .On<ServerConfigurationDto>("ReceiveServerConfiguration", HandleServerConfiguration)
+            .On<ClientConfigurationDto>("ReceiveServerConfiguration", HandleServerConfiguration)
             .On<ScreenDataDto>("ReceiveScreenData", HandleScreenData)
             .On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate)
             .StartAsync();
