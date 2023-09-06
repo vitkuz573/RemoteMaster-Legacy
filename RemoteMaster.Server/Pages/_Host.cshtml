@@ -52,13 +52,11 @@
         window.setTitle = (title) => document.title = title;
 
         window.downloadFile = function (filename, data) {
-            var url = window.URL.createObjectURL(new Blob([data], { type: 'text/json' }));
-            var a = document.createElement('a');
-            a.href = url;
+            let a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([data], { type: 'text/json' }));
             a.download = filename;
-            document.body.appendChild(a);
             a.click();
-            URL.revokeObjectURL(url);
+            URL.revokeObjectURL(a.href);
         };
     </script>
 </body>
