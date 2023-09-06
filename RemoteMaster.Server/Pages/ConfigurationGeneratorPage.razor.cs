@@ -62,7 +62,6 @@ public partial class ConfigurationGeneratorPage
     private async Task ToggleSpoiler()
     {
         _isSpoilerVisible = !_isSpoilerVisible;
-        await JSRuntime.InvokeVoidAsync("toggleSpoiler");
     }
 
     private static string GetLocalIPAddress()

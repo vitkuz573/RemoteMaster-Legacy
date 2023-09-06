@@ -22,7 +22,7 @@
             <RadzenButton Text="@(_isSpoilerVisible ? "Hide Content" : "Show Content")" Click="@ToggleSpoiler"></RadzenButton>
         </div>
 
-        <div id="spoilerContent" style="display:none; margin: 20px 0;">
+        <div style="display: @(_isSpoilerVisible ? "block" : "none"); margin: 20px 0;">
             <textarea readonly style="width: 100%; height: 100px;">@GetConfigContent()</textarea>
         </div>
     }
