@@ -41,8 +41,12 @@
     <script>
         window.revokeUrl = URL.revokeObjectURL;
 
+        window.createObjectBlobUrl = function (data, type) {
+            return URL.createObjectURL(new Blob([data], { type: type }));
+        }
+
         window.createImageBlobUrl = function (data) {
-            return URL.createObjectURL(new Blob([data], { type: 'image/jpeg' }));
+            return window.createObjectBlobUrl(data, 'image/jpeg');
         }
 
         window.addKeyEvent = function (event, dotnetHelper) {
@@ -52,11 +56,12 @@
         window.setTitle = (title) => document.title = title;
 
         window.downloadFile = function (filename, data) {
+            let url = window.createObjectBlobUrl(data, 'text/json');
             let a = document.createElement('a');
-            a.href = URL.createObjectURL(new Blob([data], { type: 'text/json' }));
+            a.href = url;
             a.download = filename;
             a.click();
-            URL.revokeObjectURL(a.href);
+            window.revokeUrl(url);
         };
     </script>
 </body>
