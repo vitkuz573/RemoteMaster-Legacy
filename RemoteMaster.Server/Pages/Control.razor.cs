@@ -87,8 +87,8 @@ public partial class Control : IAsyncDisposable
 
     private async Task SetupClientEventListeners()
     {
-        await JSRuntime.InvokeVoidAsync("addKeyDownEventListener", DotNetObjectReference.Create(this));
-        await JSRuntime.InvokeVoidAsync("addKeyUpEventListener", DotNetObjectReference.Create(this));
+        await JSRuntime.InvokeVoidAsync("addKeyEvent", "keydown", DotNetObjectReference.Create(this));
+        await JSRuntime.InvokeVoidAsync("addKeyEvent", "keyup", DotNetObjectReference.Create(this));
     }
 
     private async Task InitializeAgentConnectionAsync()

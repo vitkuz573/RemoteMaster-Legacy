@@ -38,41 +38,27 @@
 
     <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
 
-    <script type="module">
-        window.revokeUrl = function (url) {
-            URL.revokeObjectURL(url);
-        }
+    <script>
+        window.revokeUrl = URL.revokeObjectURL;
 
         window.createImageBlobUrl = function (data) {
-            const blob = new Blob([data], { type: 'image/jpeg' });
-            return URL.createObjectURL(blob);
+            return URL.createObjectURL(new Blob([data], { type: 'image/jpeg' }));
         }
 
-        window.addKeyDownEventListener = (dotnetHelper) => {
-            window.onkeydown = (e) => {
-                dotnetHelper.invokeMethodAsync('OnKeyDown', e.keyCode);
-            };
+        window.addKeyEvent = function (event, dotnetHelper) {
+            window['on' + event] = (e) => dotnetHelper.invokeMethodAsync('On' + event, e.keyCode);
         };
 
-        window.addKeyUpEventListener = (dotnetHelper) => {
-            window.onkeyup = (e) => {
-                dotnetHelper.invokeMethodAsync('OnKeyUp', e.keyCode);
-            };
-        };
-
-        window.setTitle = (title) => {
-            document.title = title;
-        }
+        window.setTitle = (title) => document.title = title;
 
         window.downloadFile = function (filename, data) {
-            var blob = new Blob([data], { type: 'text/json' });
-            var url = window.URL.createObjectURL(blob);
+            var url = window.URL.createObjectURL(new Blob([data], { type: 'text/json' }));
             var a = document.createElement('a');
             a.href = url;
             a.download = filename;
             document.body.appendChild(a);
             a.click();
-            window.URL.revokeObjectURL(url);
+            URL.revokeObjectURL(url);
         };
     </script>
 </body>
