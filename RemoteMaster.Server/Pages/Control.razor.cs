@@ -30,31 +30,18 @@ public partial class Control : IAsyncDisposable
 
     [Inject]
     private IJSRuntime JSRuntime { get; set; }
-
-    [Inject]
-    private IQueryParameterService QueryParameterService { get; set; }
 #nullable restore
 
-    private TaskCompletionSource<bool> _agentHandledTcs = new();
     private string _statusMessage = "Establishing connection...";
     private string? _screenDataUrl;
     private IControlHub _controlHubProxy;
-    private bool _clientTampered = false;
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            if (!QueryParameterService.GetValueFromQuery<bool>("skipAgent"))
-            {
-                await InitializeAgentConnectionAsync();
-            }
-
-            if (!_clientTampered)
-            {
-                await InitializeClientConnectionAsync();
-                await _controlHubProxy.ConnectAs(Intention.Control);
-            }
+            await InitializeClientConnectionAsync();
+            await _controlHubProxy.ConnectAs(Intention.Control);
 
             await SetupClientEventListeners();
         }
@@ -70,15 +57,6 @@ public partial class Control : IAsyncDisposable
         ControlFunctionsService.Displays = dto.Displays;
     }
 
-    private async Task HandleClientTampered(string message)
-    {
-        _statusMessage = message;
-        _clientTampered = true;
-        await InvokeAsync(StateHasChanged);
-        await ConnectionManager.DisconnectAsync("Agent");
-        _agentHandledTcs.SetResult(true);
-    }
-
     private async Task HandleScreenUpdate(byte[] screenData)
     {
         _screenDataUrl = await JSRuntime.InvokeAsync<string>("createImageBlobUrl", screenData);
@@ -89,17 +67,6 @@ public partial class Control : IAsyncDisposable
     {
         await JSRuntime.InvokeVoidAsync("addKeyEvent", "keydown", DotNetObjectReference.Create(this));
         await JSRuntime.InvokeVoidAsync("addKeyEvent", "keyup", DotNetObjectReference.Create(this));
-    }
-
-    private async Task InitializeAgentConnectionAsync()
-    {
-        await ConnectionManager
-            .Connect("Agent", $"http://{Host}:3564/hubs/main")
-            .On<string>("ClientTampered", HandleClientTampered)
-            .StartAsync();
-
-        await WaitForAgentOrTimeoutAsync();
-        await _agentHandledTcs.Task;
     }
 
     private async Task InitializeClientConnectionAsync()
@@ -113,17 +80,6 @@ public partial class Control : IAsyncDisposable
 
         _controlHubProxy = clientContext.Connection.CreateHubProxy<IControlHub>();
         ControlFunctionsService.ControlHubProxy = _controlHubProxy;
-    }
-
-    private async Task WaitForAgentOrTimeoutAsync(int timeoutMilliseconds = 5000)
-    {
-        var timeoutTask = Task.Delay(timeoutMilliseconds);
-        var completedTask = await Task.WhenAny(_agentHandledTcs.Task, timeoutTask);
-
-        if (completedTask == timeoutTask)
-        {
-            _agentHandledTcs.TrySetResult(false);
-        }
     }
 
     private async Task<(double, double)> GetRelativeMousePositionPercentAsync(MouseEventArgs e)
@@ -203,6 +159,5 @@ public partial class Control : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         await ConnectionManager.DisconnectAsync("Client");
-        await ConnectionManager.DisconnectAsync("Agent");
     }
 }

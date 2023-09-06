@@ -11,4 +11,8 @@ public interface IClientService
     Task<bool> RegisterAsync(ConfigurationModel config, string hostName, string ipAddress);
 
     Task<bool> UnregisterAsync(ConfigurationModel config, string hostName);
+
+    bool IsClientRunning();
+
+    void StartClient();
 }

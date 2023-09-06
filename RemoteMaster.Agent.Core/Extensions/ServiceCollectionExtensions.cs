@@ -2,10 +2,8 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using RemoteMaster.Agent.Core.Models;
 using Serilog;
 
 namespace RemoteMaster.Agent.Core.Extensions;
@@ -26,8 +24,6 @@ public static class ServiceCollectionExtensions
             builder.AddSerilog(serilogLogger);
             builder.SetMinimumLevel(LogLevel.Debug);
         });
-
-        services.AddSignalR();
 
         return services;
     }

@@ -47,23 +47,19 @@ public partial class App : Application
                     webBuilder.Configure(app =>
                     {
                         app.UseRouting();
-
-                        app.UseEndpoints(endpoints =>
-                        {
-                            endpoints.MapCoreHubs();
-                        });
                     });
                 })
                 .UseWindowsService()
                 .Build();
 
             _host.StartAsync();
+
+            MonitorClient();
         }
         else
         {
             _host = hostBuilder.Build();
             _host.StartAsync();
-
             MainWindow = ServiceProvider.GetRequiredService<MainWindow>();
             MainWindow.Show();
         }
@@ -72,7 +68,21 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         base.OnExit(e);
-
         _host?.StopAsync().Wait();
+    }
+
+    private async void MonitorClient()
+    {
+        var clientService = ServiceProvider.GetRequiredService<IClientService>();
+
+        while (true)
+        {
+            if (!clientService.IsClientRunning())
+            {
+                clientService.StartClient();
+            }
+
+            await Task.Delay(TimeSpan.FromMinutes(1));
+        }
     }
 }
