@@ -59,7 +59,7 @@ public partial class ConfigurationGeneratorPage
         return _configFileBytes == null ? string.Empty : Encoding.UTF8.GetString(_configFileBytes);
     }
 
-    private async Task ToggleSpoiler()
+    private void ToggleSpoiler()
     {
         _isSpoilerVisible = !_isSpoilerVisible;
     }
