@@ -15,10 +15,7 @@
     @if (_isConfigGenerated)
     {
         <div style="margin: 20px 0;">
-            <!-- Download link button -->
             <RadzenButton Text="Download Config" Click="@DownloadConfig" Style="margin-right: 10px;"></RadzenButton>
-
-            <!-- Spoiler to toggle content visibility -->
             <RadzenButton Text="@(_isSpoilerVisible ? "Hide Content" : "Show Content")" Click="@ToggleSpoiler"></RadzenButton>
         </div>
 
