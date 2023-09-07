@@ -111,35 +111,63 @@ public partial class App : Application
 
     public void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs = true)
     {
-        var dir = new DirectoryInfo(sourceDirName);
-
-        if (!dir.Exists)
+        if (!new DirectoryInfo(sourceDirName).Exists)
         {
             throw new DirectoryNotFoundException($"Source directory does not exist or could not be found: {sourceDirName}");
         }
 
-        var dirs = dir.GetDirectories();
+        if (AreAllFilesAndSubdirectoriesPresent(sourceDirName, destDirName))
+        {
+            return;
+        }
 
         if (!Directory.Exists(destDirName))
         {
             Directory.CreateDirectory(destDirName);
         }
 
-        var files = dir.GetFiles();
-
-        foreach (var file in files)
+        foreach (var file in new DirectoryInfo(sourceDirName).GetFiles())
         {
             var tempPath = Path.Combine(destDirName, file.Name);
-            file.CopyTo(tempPath, false);
+
+            if (!File.Exists(tempPath))
+            {
+                file.CopyTo(tempPath, false);
+            }
         }
 
         if (copySubDirs)
         {
-            foreach (var subdir in dirs)
+            foreach (var subdir in new DirectoryInfo(sourceDirName).GetDirectories())
             {
                 var tempPath = Path.Combine(destDirName, subdir.Name);
                 DirectoryCopy(subdir.FullName, tempPath, copySubDirs);
             }
         }
+    }
+
+    private bool AreAllFilesAndSubdirectoriesPresent(string sourceDir, string destDir)
+    {
+        var sourceDirectoryInfo = new DirectoryInfo(sourceDir);
+
+        foreach (var file in sourceDirectoryInfo.GetFiles())
+        {
+            if (!File.Exists(Path.Combine(destDir, file.Name)))
+            {
+                return false;
+            }
+        }
+
+        foreach (var subDir in sourceDirectoryInfo.GetDirectories())
+        {
+            var destSubDir = Path.Combine(destDir, subDir.Name);
+
+            if (!Directory.Exists(destSubDir) || !AreAllFilesAndSubdirectoriesPresent(subDir.FullName, destSubDir))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
