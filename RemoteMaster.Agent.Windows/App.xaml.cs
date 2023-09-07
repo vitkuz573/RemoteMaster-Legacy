@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+﻿using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using Microsoft.AspNetCore.Builder;
@@ -11,6 +11,8 @@ using RemoteMaster.Agent.Abstractions;
 using RemoteMaster.Agent.Core.Abstractions;
 using RemoteMaster.Agent.Core.Extensions;
 using RemoteMaster.Agent.Services;
+using Windows.Win32.NetworkManagement.WNet;
+using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Agent;
 
@@ -19,6 +21,10 @@ public partial class App : Application
     private readonly IHost _host;
 
     public IServiceProvider ServiceProvider => _host.Services;
+
+    private const string SharedFolder = @"\\SERVER-DC02\Win\RemoteMaster";
+    private const string Login = "support@it-ktk.local";
+    private const string Password = "teacher123!!";
 
     public App()
     {
@@ -56,8 +62,8 @@ public partial class App : Application
 
             _host.StartAsync();
 
-            ExecuteNetUse(@"\\SERVER-DC02\Win\RemoteMaster", "support@it-ktk.local", "teacher123!!");
-            DirectoryCopy(@"\\SERVER-DC02\Win\RemoteMaster", $"{Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)}/RemoteMaster/Client");
+            MapNetworkDrive(SharedFolder, Login, Password);
+            DirectoryCopy(SharedFolder, $"{Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)}/RemoteMaster/Client");
 
             MonitorClient();
         }
@@ -91,22 +97,24 @@ public partial class App : Application
         }
     }
 
-    public static void ExecuteNetUse(string remotePath, string username, string password)
+    public static unsafe void MapNetworkDrive(string remotePath, string username, string password)
     {
-        var arguments = $"/c net use {remotePath} {password} /user:{username}";
-
-        var startInfo = new ProcessStartInfo("cmd.exe", arguments)
+        var netResource = new NETRESOURCEW
         {
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            CreateNoWindow = true
+            dwType = NET_RESOURCE_TYPE.RESOURCETYPE_DISK
         };
 
-        using var process = new Process { StartInfo = startInfo };
+        fixed (char* pRemotePath = remotePath)
+        {
+            netResource.lpRemoteName = pRemotePath;
 
-        process.Start();
-        process.StandardOutput.ReadToEnd();
-        process.WaitForExit();
+            var result = WNetAddConnection2W(in netResource, password, username, 0);
+
+            if (result != 0)
+            {
+                throw new Win32Exception((int)result);
+            }
+        }
     }
 
     public void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs = true)
