@@ -49,8 +49,16 @@
             return window.createObjectBlobUrl(data, 'image/jpeg');
         }
 
-        window.addKeyEvent = function (event, dotnetHelper) {
-            window['on' + event] = (e) => dotnetHelper.invokeMethodAsync('On' + event, e.keyCode);
+        window.addKeyDownEventListener = (dotnetHelper) => {
+            window.onkeydown = (e) => {
+                dotnetHelper.invokeMethodAsync('OnKeyDown', e.keyCode);
+            };
+        };
+
+        window.addKeyUpEventListener = (dotnetHelper) => {
+            window.onkeyup = (e) => {
+                dotnetHelper.invokeMethodAsync('OnKeyUp', e.keyCode);
+            };
         };
 
         window.setTitle = (title) => document.title = title;
