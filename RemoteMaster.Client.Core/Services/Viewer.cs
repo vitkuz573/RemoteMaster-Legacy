@@ -65,6 +65,7 @@ public class Viewer : IViewer
         while (!cancellationToken.IsCancellationRequested)
         {
             var screenData = ScreenCapturer.GetNextFrame();
+
             if (screenData != null)
             {
                 yield return screenData;

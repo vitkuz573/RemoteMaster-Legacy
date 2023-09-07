@@ -137,12 +137,19 @@
                     </div>
                 </li>
             </ul>
+            <!-- Display Client Version -->
+            <div class="mb-4 mt-2">
+                <h3 class="text-gray-600">Client Version:</h3>
+                <p>@_clientVersion</p>
+            </div>
+            <!-- End Display Client Version -->
         </div>
     </aside>
 </div>
 
 @code {
     private bool _isMenuOpen = false;
+    private string _clientVersion;
     private bool _inputEnabled;
     private bool _cursorTracking;
     private int _quality;
@@ -161,11 +168,12 @@
 
         if (_firstToggleMenu)
         {
-            var serverConfiguration = ControlFuncsService.ClientConfiguration;
+            var clientConfiguration = ControlFuncsService.ClientConfiguration;
 
-            _inputEnabled = serverConfiguration.InputEnabled;
-            _cursorTracking = serverConfiguration.TrackCursor;
-            _quality = serverConfiguration.ImageQuality;
+            _clientVersion = clientConfiguration.AppVersion;
+            _inputEnabled = clientConfiguration.InputEnabled;
+            _cursorTracking = clientConfiguration.TrackCursor;
+            _quality = clientConfiguration.ImageQuality;
 
             _firstToggleMenu = false;
         }

@@ -8,6 +8,8 @@ namespace RemoteMaster.Shared.Dtos;
 
 public class ClientConfigurationDto
 {
+    public string AppVersion { get; init; }
+
     public bool InputEnabled { get; init; }
 
     public bool TrackCursor { get; init; }
