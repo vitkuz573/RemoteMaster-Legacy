@@ -93,32 +93,29 @@ public partial class App : Application
 
     public static void ExecuteNetUse(string remotePath, string username, string password)
     {
-        var startInfo = new ProcessStartInfo()
+        var arguments = $"/c net use {remotePath} {password} /user:{username}";
+
+        var startInfo = new ProcessStartInfo("cmd.exe", arguments)
         {
-            FileName = "cmd.exe",
-            Arguments = $"/c net use {remotePath} {password} /user:{username}",
             UseShellExecute = false,
             RedirectStandardOutput = true,
             CreateNoWindow = true
         };
 
-        using var process = new Process();
-        process.StartInfo = startInfo;
+        using var process = new Process { StartInfo = startInfo };
+
         process.Start();
-        var output = process.StandardOutput.ReadToEnd();
+        process.StandardOutput.ReadToEnd();
         process.WaitForExit();
     }
 
     public void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs = true)
     {
-        if (!new DirectoryInfo(sourceDirName).Exists)
+        var sourceDir = new DirectoryInfo(sourceDirName);
+
+        if (!sourceDir.Exists)
         {
             throw new DirectoryNotFoundException($"Source directory does not exist or could not be found: {sourceDirName}");
-        }
-
-        if (AreAllFilesAndSubdirectoriesPresent(sourceDirName, destDirName))
-        {
-            return;
         }
 
         if (!Directory.Exists(destDirName))
@@ -126,48 +123,23 @@ public partial class App : Application
             Directory.CreateDirectory(destDirName);
         }
 
-        foreach (var file in new DirectoryInfo(sourceDirName).GetFiles())
+        foreach (var file in sourceDir.GetFiles())
         {
-            var tempPath = Path.Combine(destDirName, file.Name);
+            var destPath = Path.Combine(destDirName, file.Name);
 
-            if (!File.Exists(tempPath))
+            if (!File.Exists(destPath))
             {
-                file.CopyTo(tempPath, false);
+                file.CopyTo(destPath, false);
             }
         }
 
         if (copySubDirs)
         {
-            foreach (var subdir in new DirectoryInfo(sourceDirName).GetDirectories())
+            foreach (var subdir in sourceDir.GetDirectories())
             {
-                var tempPath = Path.Combine(destDirName, subdir.Name);
-                DirectoryCopy(subdir.FullName, tempPath, copySubDirs);
+                var destSubDir = Path.Combine(destDirName, subdir.Name);
+                DirectoryCopy(subdir.FullName, destSubDir, true);
             }
         }
-    }
-
-    private bool AreAllFilesAndSubdirectoriesPresent(string sourceDir, string destDir)
-    {
-        var sourceDirectoryInfo = new DirectoryInfo(sourceDir);
-
-        foreach (var file in sourceDirectoryInfo.GetFiles())
-        {
-            if (!File.Exists(Path.Combine(destDir, file.Name)))
-            {
-                return false;
-            }
-        }
-
-        foreach (var subDir in sourceDirectoryInfo.GetDirectories())
-        {
-            var destSubDir = Path.Combine(destDir, subDir.Name);
-
-            if (!Directory.Exists(destSubDir) || !AreAllFilesAndSubdirectoriesPresent(subDir.FullName, destSubDir))
-            {
-                return false;
-            }
-        }
-
-        return true;
     }
 }
