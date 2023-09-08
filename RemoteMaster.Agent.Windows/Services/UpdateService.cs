@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -39,7 +38,7 @@ public class UpdateService : IUpdateService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occurred while installing client.");
+            _logger.LogError(ex, "Error occurred while installing client: {Message}", ex.Message);
             throw;
         }
     }
@@ -49,18 +48,20 @@ public class UpdateService : IUpdateService
         try
         {
             var processes = Process.GetProcessesByName("RemoteMaster.Client");
+
             if (processes.Length == 0)
             {
                 _logger.LogInformation("No RemoteMaster.Client processes found.");
             }
             else
             {
-                _logger.LogInformation($"Found {processes.Length} RemoteMaster.Client processes.");
+                _logger.LogInformation("Found {ProcessCount} RemoteMaster.Client processes.", processes.Length);
+
                 foreach (var client in processes)
                 {
-                    _logger.LogInformation($"Attempting to kill process with ID: {client.Id}");
+                    _logger.LogInformation("Attempting to kill process with ID: {ClientID}", client.Id);
                     client.Kill();
-                    _logger.LogInformation($"Process with ID: {client.Id} has been killed.");
+                    _logger.LogInformation("Process with ID: {ClientID} has been killed.", client.Id);
                 }
             }
 
@@ -74,7 +75,7 @@ public class UpdateService : IUpdateService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occurred while updating client.");
+            _logger.LogError(ex, "Error occurred while updating client: {Message}", ex.Message);
             throw;
         }
     }
@@ -83,7 +84,7 @@ public class UpdateService : IUpdateService
     {
         try
         {
-            _logger.LogDebug($"Mapping network drive: {remotePath} with user: {username}.");
+            _logger.LogDebug("Mapping network drive: {RemotePath} with user: {Username}.", remotePath, username);
 
             var netResource = new NETRESOURCEW
             {
@@ -109,7 +110,7 @@ public class UpdateService : IUpdateService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Failed to map network drive: {remotePath}.");
+            _logger.LogError(ex, "Failed to map network drive: {RemotePath}. Message: {Message}", remotePath, ex.Message);
             throw;
         }
     }
@@ -118,7 +119,7 @@ public class UpdateService : IUpdateService
     {
         try
         {
-            _logger.LogDebug($"Disconnecting network drive: {remotePath}.");
+            _logger.LogDebug("Disconnecting network drive: {RemotePath}.", remotePath);
 
             fixed (char* pRemotePath = remotePath)
             {
@@ -132,7 +133,7 @@ public class UpdateService : IUpdateService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Failed to disconnect network drive: {remotePath}.");
+            _logger.LogError(ex, "Failed to disconnect network drive: {RemotePath}. Message: {Message}", remotePath, ex.Message);
             throw;
         }
     }
@@ -141,7 +142,7 @@ public class UpdateService : IUpdateService
     {
         try
         {
-            _logger.LogDebug($"Copying directory from {sourceDirName} to {destDirName}.");
+            _logger.LogDebug("Copying directory from {SourceDir} to {DestDir}.", sourceDirName, destDirName);
 
             var sourceDir = new DirectoryInfo(sourceDirName);
 
@@ -158,6 +159,7 @@ public class UpdateService : IUpdateService
             foreach (var file in sourceDir.GetFiles())
             {
                 var destPath = Path.Combine(destDirName, file.Name);
+
                 if (!File.Exists(destPath) || overwriteExisting)
                 {
                     file.CopyTo(destPath, true);
@@ -175,7 +177,7 @@ public class UpdateService : IUpdateService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Failed to copy directory from {sourceDirName} to {destDirName}.");
+            _logger.LogError(ex, "Failed to copy directory from {SourceDir} to {DestDir}. Message: {Message}", sourceDirName, destDirName, ex.Message);
             throw;
         }
     }
