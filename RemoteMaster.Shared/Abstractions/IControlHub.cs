@@ -30,4 +30,6 @@ public interface IControlHub
     Task KillClient();
 
     Task RebootComputer(string message, int timeout, bool forceAppsClosed);
+
+    Task SendCtrlAltDel();
 }
