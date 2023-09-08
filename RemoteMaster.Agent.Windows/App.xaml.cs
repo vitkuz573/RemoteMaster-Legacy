@@ -19,10 +19,6 @@ public partial class App : Application
 
     public IServiceProvider ServiceProvider => _host.Services;
 
-    private const string SharedFolder = @"\\SERVER-DC02\Win\RemoteMaster";
-    private const string Login = "support@it-ktk.local";
-    private const string Password = "teacher123!!";
-
     public App()
     {
         var hostBuilder = Host.CreateDefaultBuilder()

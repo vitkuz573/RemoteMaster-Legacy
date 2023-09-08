@@ -42,3 +42,6 @@ WTSEnumerateSessions
 WNetAddConnection2
 
 SendSAS
+
+WIN32_ERROR
+SetSecurityInfo

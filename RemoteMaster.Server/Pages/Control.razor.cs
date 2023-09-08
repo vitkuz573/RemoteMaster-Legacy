@@ -41,6 +41,7 @@ public partial class Control : IAsyncDisposable
         if (firstRender)
         {
             await InitializeClientConnectionAsync();
+            await InitializeAgentConnectionAsync();
             await _controlHubProxy.ConnectAs(Intention.Control);
 
             await SetupClientEventListeners();
@@ -80,6 +81,15 @@ public partial class Control : IAsyncDisposable
 
         _controlHubProxy = clientContext.Connection.CreateHubProxy<IControlHub>();
         ControlFunctionsService.ControlHubProxy = _controlHubProxy;
+    }
+
+    private async Task InitializeAgentConnectionAsync()
+    {
+        var agentContext = await ConnectionManager
+            .Connect("Agent", $"http://{Host}:3564/hubs/maintenance")
+            .StartAsync();
+
+        ControlFunctionsService.AgentConnection = agentContext.Connection;
     }
 
     private async Task<(double, double)> GetRelativeMousePositionPercentAsync(MouseEventArgs e)

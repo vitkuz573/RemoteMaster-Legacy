@@ -8,6 +8,8 @@ using System.IO;
 using RemoteMaster.Agent.Core.Abstractions;
 using Windows.Win32.NetworkManagement.WNet;
 using static Windows.Win32.PInvoke;
+using Windows.Win32.Foundation;
+using Microsoft.Extensions.Logging;
 
 namespace RemoteMaster.Agent.Windows.Services;
 
@@ -17,68 +19,120 @@ public class UpdateService : IUpdateService
     private const string Login = "support@it-ktk.local";
     private const string Password = "teacher123!!";
 
+    private readonly ILogger<UpdateService> _logger;
+
+    public UpdateService(ILogger<UpdateService> logger)
+    {
+        _logger = logger;
+    }
+
     public void InstallClient()
     {
-        MapNetworkDrive(SharedFolder, Login, Password);
-        DirectoryCopy(SharedFolder, $"{Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)}/RemoteMaster/Client");
+        try
+        {
+            _logger.LogInformation("Installing client...");
+            MapNetworkDrive(SharedFolder, Login, Password);
+            DirectoryCopy(SharedFolder, $"{Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)}/RemoteMaster/Client");
+            _logger.LogInformation("Client installed successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while installing client.");
+            throw;
+        }
     }
 
     public void UpdateClient()
     {
-        MapNetworkDrive(SharedFolder, Login, Password);
-        DirectoryCopy(SharedFolder, $"{Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)}/RemoteMaster/Client", true, true);
+        try
+        {
+            _logger.LogInformation("Updating client...");
+            MapNetworkDrive(SharedFolder, Login, Password);
+            DirectoryCopy(SharedFolder, $"{Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)}/RemoteMaster/Client", true, true);
+            _logger.LogInformation("Client updated successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while updating client.");
+            throw;
+        }
     }
 
-    private static unsafe void MapNetworkDrive(string remotePath, string username, string password)
+    private unsafe void MapNetworkDrive(string remotePath, string username, string password)
     {
-        var netResource = new NETRESOURCEW
+        try
         {
-            dwType = NET_RESOURCE_TYPE.RESOURCETYPE_DISK
-        };
+            _logger.LogDebug($"Mapping network drive: {remotePath} with user: {username}.");
 
-        fixed (char* pRemotePath = remotePath)
-        {
-            netResource.lpRemoteName = pRemotePath;
-
-            var result = WNetAddConnection2W(in netResource, password, username, 0);
-
-            if (result != 0)
+            var netResource = new NETRESOURCEW
             {
-                throw new Win32Exception((int)result);
+                dwType = NET_RESOURCE_TYPE.RESOURCETYPE_DISK
+            };
+
+            fixed (char* pRemotePath = remotePath)
+            {
+                netResource.lpRemoteName = pRemotePath;
+
+                var result = WNetAddConnection2W(in netResource, password, username, 0);
+
+                if (result != (uint)WIN32_ERROR.NO_ERROR)
+                {
+                    if (result == (uint)WIN32_ERROR.ERROR_ALREADY_ASSIGNED)
+                    {
+                        return;
+                    }
+
+                    throw new Win32Exception((int)result);
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Failed to map network drive: {remotePath}.");
+            throw;
         }
     }
 
     private void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs = true, bool overwriteExisting = false)
     {
-        var sourceDir = new DirectoryInfo(sourceDirName);
-
-        if (!sourceDir.Exists)
+        try
         {
-            throw new DirectoryNotFoundException($"Source directory does not exist or could not be found: {sourceDirName}");
-        }
+            _logger.LogDebug($"Copying directory from {sourceDirName} to {destDirName}.");
 
-        if (!Directory.Exists(destDirName))
-        {
-            Directory.CreateDirectory(destDirName);
-        }
+            var sourceDir = new DirectoryInfo(sourceDirName);
 
-        foreach (var file in sourceDir.GetFiles())
-        {
-            var destPath = Path.Combine(destDirName, file.Name);
-            if (!File.Exists(destPath) || overwriteExisting)
+            if (!sourceDir.Exists)
             {
-                file.CopyTo(destPath, true);
+                throw new DirectoryNotFoundException($"Source directory does not exist or could not be found: {sourceDirName}");
+            }
+
+            if (!Directory.Exists(destDirName))
+            {
+                Directory.CreateDirectory(destDirName);
+            }
+
+            foreach (var file in sourceDir.GetFiles())
+            {
+                var destPath = Path.Combine(destDirName, file.Name);
+                if (!File.Exists(destPath) || overwriteExisting)
+                {
+                    file.CopyTo(destPath, true);
+                }
+            }
+
+            if (copySubDirs)
+            {
+                foreach (var subdir in sourceDir.GetDirectories())
+                {
+                    var destSubDir = Path.Combine(destDirName, subdir.Name);
+                    DirectoryCopy(subdir.FullName, destSubDir, true, overwriteExisting);
+                }
             }
         }
-
-        if (copySubDirs)
+        catch (Exception ex)
         {
-            foreach (var subdir in sourceDir.GetDirectories())
-            {
-                var destSubDir = Path.Combine(destDirName, subdir.Name);
-                DirectoryCopy(subdir.FullName, destSubDir, true, overwriteExisting);
-            }
+            _logger.LogError(ex, $"Failed to copy directory from {sourceDirName} to {destDirName}.");
+            throw;
         }
     }
 }

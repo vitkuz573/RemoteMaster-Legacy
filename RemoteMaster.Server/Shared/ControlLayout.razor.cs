@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.SignalR.Client;
 using RemoteMaster.Server.Services;
 
 namespace RemoteMaster.Server.Shared;
@@ -81,7 +82,8 @@ public partial class ControlLayout
         await ControlFunctionsService.ControlHubProxy.SendCtrlAltDel();
     }
 
-    private static async void UpdateClient()
+    private async void UpdateClient()
     {
+        await ControlFunctionsService.AgentConnection.InvokeAsync("SendClientUpdate");
     }
 }
