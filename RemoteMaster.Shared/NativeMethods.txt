@@ -40,3 +40,5 @@ WTSQuerySessionInformation
 WTSEnumerateSessions
 
 WNetAddConnection2
+
+SendSAS

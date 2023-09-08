@@ -9,4 +9,6 @@ public interface IPowerService
     void Shutdown(string message, uint timeout = 0, bool forceAppsClosed = true);
 
     void Reboot(string message, uint timeout = 0, bool forceAppsClosed = true);
+
+    void SendCtrlAltDel();
 }
