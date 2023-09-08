@@ -2,7 +2,6 @@
 @using RemoteMaster.Shared.Dtos;
 @using Windows.Win32.UI.WindowsAndMessaging;
 @inherits LayoutComponentBase
-@inject ControlFunctionsService ControlFuncsService
 
 <PageTitle>RemoteMaster.Client - Control</PageTitle>
 
@@ -43,9 +42,9 @@
                     <div class="relative inline-flex mt-2">
                         <svg class="w-2 h-2 absolute top-0 right-0 m-4 pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 412 232"><path d="M206 171.144L42.678 7.822c-9.763-9.763-25.592-9.763-35.355 0-9.763 9.763-9.763 25.592 0 35.355l189.21 189.211c9.372 9.373 24.749 9.373 34.121 0l189.21-189.211c9.763-9.763 9.763-25.592 0-35.355-9.763-9.763-25.592-9.763-35.355 0L206 171.144z" fill="#648299" fill-rule="nonzero" /></svg>
                         <select class="border border-gray-300 rounded-full text-gray-600 h-10 pl-5 pr-10 bg-white hover:border-gray-400 focus:outline-none appearance-none" @onchange="OnChangeScreen">
-                            @if (ControlFuncsService.Displays != null)
+                            @if (ControlFunctionsService.Displays != null)
                             {
-                                var displays = ControlFuncsService.Displays.ToList();
+                                var displays = ControlFunctionsService.Displays.ToList();
 
                                 @for (int i = 0; i < displays.Count; i++)
                                 {
@@ -153,81 +152,3 @@
         </div>
     </aside>
 </div>
-
-@code {
-    private bool _isMenuOpen = false;
-    private string _clientVersion;
-    private bool _inputEnabled;
-    private bool _cursorTracking;
-    private int _quality;
-
-    private string _rebootMessage = "test";
-    private int _timeout = 60;
-
-    private bool _firstToggleMenu = true;
-
-    [Inject]
-    private ILogger<ControlLayout> Logger { get; set; }
-
-    private void ToggleMenu()
-    {
-        _isMenuOpen = !_isMenuOpen;
-
-        if (_firstToggleMenu)
-        {
-            var clientConfiguration = ControlFuncsService.ClientConfiguration;
-
-            _clientVersion = clientConfiguration.AppVersion;
-            _inputEnabled = clientConfiguration.InputEnabled;
-            _cursorTracking = clientConfiguration.TrackCursor;
-            _quality = clientConfiguration.ImageQuality;
-
-            _firstToggleMenu = false;
-        }
-    }
-
-    private async void OnChangeScreen(ChangeEventArgs e)
-    {
-        await ControlFuncsService.ControlHubProxy.SendSelectedScreen(e.Value.ToString());
-    }
-
-    private async void ChangeQuality(int quality)
-    {
-        _quality = quality;
-
-        await ControlFuncsService.ControlHubProxy.SetQuality(quality);
-    }
-
-    private async Task ToggleCursorTracking(bool value)
-    {
-        _cursorTracking = value;
-
-        await ControlFuncsService.ControlHubProxy.SetTrackCursor(value);
-    }
-
-    private async Task ToggleInputEnabled(bool value)
-    {
-        _inputEnabled = value;
-
-        await ControlFuncsService.ControlHubProxy.SetInputEnabled(value);
-    }
-
-    private async void KillClient()
-    {
-        await ControlFuncsService.ControlHubProxy.KillClient();
-    }
-
-    private async void RebootComputer()
-    {
-        await ControlFuncsService.ControlHubProxy.RebootComputer(_rebootMessage, _timeout, true);
-    }
-
-    private async void SendCtrlAltDel()
-    {
-        await ControlFuncsService.ControlHubProxy.SendCtrlAltDel();
-    }
-
-    private async void UpdateClient()
-    {
-    }
-}
