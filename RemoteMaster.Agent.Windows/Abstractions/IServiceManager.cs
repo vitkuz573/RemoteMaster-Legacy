@@ -15,6 +15,4 @@ public interface IServiceManager
     void StopService();
 
     void UninstallService();
-
-    void UpdateServiceFiles();
 }

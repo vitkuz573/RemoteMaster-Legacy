@@ -50,11 +50,6 @@ public class ServiceManager : IServiceManager
         ExecuteServiceCommand($"delete {ServiceName}");
     }
 
-    public void UpdateServiceFiles()
-    {
-        // Add the logic to update the service files if needed
-    }
-
     private static void ExecuteServiceCommand(string arguments)
     {
         var processStartInfo = new ProcessStartInfo
