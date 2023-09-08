@@ -4,12 +4,13 @@
 
 
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Agent.Core.Abstractions;
+using Windows.Win32.Foundation;
 using Windows.Win32.NetworkManagement.WNet;
 using static Windows.Win32.PInvoke;
-using Windows.Win32.Foundation;
-using Microsoft.Extensions.Logging;
 
 namespace RemoteMaster.Agent.Windows.Services;
 
@@ -33,6 +34,7 @@ public class UpdateService : IUpdateService
             _logger.LogInformation("Installing client...");
             MapNetworkDrive(SharedFolder, Login, Password);
             DirectoryCopy(SharedFolder, $"{Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)}/RemoteMaster/Client");
+            CancelNetworkDrive(SharedFolder);
             _logger.LogInformation("Client installed successfully.");
         }
         catch (Exception ex)
@@ -46,9 +48,28 @@ public class UpdateService : IUpdateService
     {
         try
         {
+            var processes = Process.GetProcessesByName("RemoteMaster.Client");
+            if (processes.Length == 0)
+            {
+                _logger.LogInformation("No RemoteMaster.Client processes found.");
+            }
+            else
+            {
+                _logger.LogInformation($"Found {processes.Length} RemoteMaster.Client processes.");
+                foreach (var client in processes)
+                {
+                    _logger.LogInformation($"Attempting to kill process with ID: {client.Id}");
+                    client.Kill();
+                    _logger.LogInformation($"Process with ID: {client.Id} has been killed.");
+                }
+            }
+
+            Thread.Sleep(10000);
+
             _logger.LogInformation("Updating client...");
             MapNetworkDrive(SharedFolder, Login, Password);
             DirectoryCopy(SharedFolder, $"{Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)}/RemoteMaster/Client", true, true);
+            CancelNetworkDrive(SharedFolder);
             _logger.LogInformation("Client updated successfully.");
         }
         catch (Exception ex)
@@ -89,6 +110,29 @@ public class UpdateService : IUpdateService
         catch (Exception ex)
         {
             _logger.LogError(ex, $"Failed to map network drive: {remotePath}.");
+            throw;
+        }
+    }
+
+    private unsafe void CancelNetworkDrive(string remotePath)
+    {
+        try
+        {
+            _logger.LogDebug($"Disconnecting network drive: {remotePath}.");
+
+            fixed (char* pRemotePath = remotePath)
+            {
+                var result = WNetCancelConnection2W(pRemotePath, 0, true);
+
+                if (result != (uint)WIN32_ERROR.NO_ERROR)
+                {
+                    throw new Win32Exception((int)result);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Failed to disconnect network drive: {remotePath}.");
             throw;
         }
     }
