@@ -19,7 +19,6 @@
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
     <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" />
     <PackageReference Include="SkiaSharp" />
-    <PackageReference Include="System.CommandLine" />
     <PackageReference Include="System.Drawing.Common" />
   </ItemGroup>
 

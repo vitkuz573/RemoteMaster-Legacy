@@ -465,7 +465,6 @@
       "remotemaster.shared": {
         "type": "Project",
         "dependencies": {
-          "Microsoft.Extensions.Caching.Memory": "[7.0.0, )",
           "Microsoft.Win32.SystemEvents": "[7.0.0, )",
           "Microsoft.Windows.SDK.Win32Metadata": "[54.0.44-preview, )"
         }

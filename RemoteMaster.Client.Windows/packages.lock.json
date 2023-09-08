@@ -28,12 +28,6 @@
           "SkiaSharp.NativeAssets.macOS": "2.88.3"
         }
       },
-      "System.CommandLine": {
-        "type": "Direct",
-        "requested": "[2.0.0-beta4.22272.1, )",
-        "resolved": "2.0.0-beta4.22272.1",
-        "contentHash": "1uqED/q2H0kKoLJ4+hI2iPSBSEdTuhfCYADeJrAqERmiGQ2NNacYKRNEQ+gFbU4glgVyK8rxI+ZOe1onEtr/Pg=="
-      },
       "System.Drawing.Common": {
         "type": "Direct",
         "requested": "[7.0.0, )",
@@ -110,14 +104,6 @@
         "type": "Transitive",
         "resolved": "1.0.0",
         "contentHash": "K63Y4hORbBcKLWH5wnKgzyn7TOfYzevIEwIedQHBIkmkEBA9SCqgvom+XTuE+fAFGvINGkhFItaZ2dvMGdT5iw=="
-      },
-      "Microsoft.Extensions.Caching.Abstractions": {
-        "type": "Transitive",
-        "resolved": "7.0.0",
-        "contentHash": "IeimUd0TNbhB4ded3AbgBLQv2SnsiVugDyGV1MvspQFVlA07nDC7Zul7kcwH5jWN3JiTcp/ySE83AIJo8yfKjg==",
-        "dependencies": {
-          "Microsoft.Extensions.Primitives": "7.0.0"
-        }
       },
       "Microsoft.Extensions.DependencyInjection": {
         "type": "Transitive",
@@ -215,7 +201,6 @@
       "remotemaster.shared": {
         "type": "Project",
         "dependencies": {
-          "Microsoft.Extensions.Caching.Memory": "[7.0.0, )",
           "Microsoft.Win32.SystemEvents": "[7.0.0, )",
           "Microsoft.Windows.SDK.Win32Metadata": "[54.0.44-preview, )"
         }
@@ -241,19 +226,6 @@
         "dependencies": {
           "MessagePack": "2.1.90",
           "Microsoft.AspNetCore.SignalR.Common": "7.0.10"
-        }
-      },
-      "Microsoft.Extensions.Caching.Memory": {
-        "type": "CentralTransitive",
-        "requested": "[7.0.0, )",
-        "resolved": "7.0.0",
-        "contentHash": "xpidBs2KCE2gw1JrD0quHE72kvCaI3xFql5/Peb2GRtUuZX+dYPoK/NTdVMiM67Svym0M0Df9A3xyU0FbMQhHw==",
-        "dependencies": {
-          "Microsoft.Extensions.Caching.Abstractions": "7.0.0",
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "7.0.0",
-          "Microsoft.Extensions.Logging.Abstractions": "7.0.0",
-          "Microsoft.Extensions.Options": "7.0.0",
-          "Microsoft.Extensions.Primitives": "7.0.0"
         }
       },
       "Microsoft.Extensions.Logging": {

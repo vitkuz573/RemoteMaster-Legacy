@@ -9,7 +9,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
     <PackageReference Include="Microsoft.Win32.SystemEvents" />
     <PackageReference Include="Microsoft.Windows.CsWin32">
       <PrivateAssets>all</PrivateAssets>
