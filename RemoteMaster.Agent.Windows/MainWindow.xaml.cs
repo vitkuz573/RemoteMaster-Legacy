@@ -2,6 +2,7 @@
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using RemoteMaster.Agent.Abstractions;
+using RemoteMaster.Agent.Core.Abstractions;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Agent;
