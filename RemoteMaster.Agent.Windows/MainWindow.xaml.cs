@@ -1,4 +1,8 @@
-﻿using System.IO;
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+// This file is part of the RemoteMaster project.
+// Licensed under the GNU Affero General Public License v3.0.
+
+using System.IO;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using RemoteMaster.Agent.Abstractions;
@@ -75,7 +79,7 @@ public partial class MainWindow : Window
         UpdateServiceStatusDisplay();
 
         var registerResult = await _clientService.RegisterAsync(_configuration, _hostName, _ipv4Address);
-        
+
         if (!registerResult)
         {
             ShowError("Client registration failed.");
@@ -85,14 +89,14 @@ public partial class MainWindow : Window
     private static string GetNewExecutablePath()
     {
         var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-        
+
         return Path.Combine(programFilesPath, MainAppName, SubAppName, $"{MainAppName}.{SubAppName}.exe");
     }
 
     private void CopyExecutableToNewPath(string newExecutablePath)
     {
         var newDirectoryPath = Path.GetDirectoryName(newExecutablePath);
-        
+
         if (newDirectoryPath != null && !Directory.Exists(newDirectoryPath))
         {
             Directory.CreateDirectory(newDirectoryPath);
@@ -122,7 +126,7 @@ public partial class MainWindow : Window
         if (_serviceManager.IsServiceInstalled())
         {
             var unregisterResult = await _clientService.UnregisterAsync(_configuration, _hostName);
-            
+
             if (!unregisterResult)
             {
                 ShowError("Client unregistration failed.");
@@ -139,7 +143,7 @@ public partial class MainWindow : Window
     private static void RemoveServiceFiles()
     {
         var newExecutablePath = GetNewExecutablePath();
-        
+
         if (File.Exists(newExecutablePath))
         {
             File.Delete(newExecutablePath);
@@ -147,7 +151,7 @@ public partial class MainWindow : Window
 
         var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
         var fullPath = Path.Combine(programFilesPath, MainAppName);
-        
+
         if (Directory.Exists(fullPath))
         {
             Directory.Delete(fullPath, true);

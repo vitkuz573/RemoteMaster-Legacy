@@ -49,13 +49,13 @@ public class ConfigurationService : IConfigurationService
         try
         {
             config = JsonSerializer.Deserialize<ConfigurationModel>(json);
-            
+
             return true;
         }
         catch (JsonException)
         {
             config = null;
-            
+
             return false;
         }
     }

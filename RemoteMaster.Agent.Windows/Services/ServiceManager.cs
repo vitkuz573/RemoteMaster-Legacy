@@ -2,9 +2,9 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using RemoteMaster.Agent.Abstractions;
 using System.Diagnostics;
 using System.ServiceProcess;
+using RemoteMaster.Agent.Abstractions;
 
 namespace RemoteMaster.Agent.Services;
 
