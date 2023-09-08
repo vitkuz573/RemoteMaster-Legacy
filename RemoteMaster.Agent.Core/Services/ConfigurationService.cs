@@ -2,12 +2,11 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using RemoteMaster.Agent.Abstractions;
-using RemoteMaster.Shared.Models;
-using System.IO;
 using System.Text.Json;
+using RemoteMaster.Agent.Core.Abstractions;
+using RemoteMaster.Shared.Models;
 
-namespace RemoteMaster.Agent.Services;
+namespace RemoteMaster.Agent.Core.Services;
 
 public class ConfigurationService : IConfigurationService
 {

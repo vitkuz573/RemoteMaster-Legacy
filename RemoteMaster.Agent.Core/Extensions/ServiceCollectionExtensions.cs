@@ -4,6 +4,8 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using RemoteMaster.Agent.Core.Abstractions;
+using RemoteMaster.Agent.Core.Services;
 using Serilog;
 
 namespace RemoteMaster.Agent.Core.Extensions;
@@ -24,6 +26,8 @@ public static class ServiceCollectionExtensions
             builder.AddSerilog(serilogLogger);
             builder.SetMinimumLevel(LogLevel.Debug);
         });
+
+        services.AddSingleton<IConfigurationService, ConfigurationService>();
 
         services.AddSignalR();
 
