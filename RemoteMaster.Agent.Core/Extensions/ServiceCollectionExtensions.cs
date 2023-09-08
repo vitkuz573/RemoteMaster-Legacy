@@ -25,6 +25,8 @@ public static class ServiceCollectionExtensions
             builder.SetMinimumLevel(LogLevel.Debug);
         });
 
+        services.AddSignalR();
+
         return services;
     }
 }

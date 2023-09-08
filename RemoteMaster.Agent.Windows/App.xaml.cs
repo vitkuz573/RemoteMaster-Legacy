@@ -1,6 +1,4 @@
-﻿using System.ComponentModel;
-using System.IO;
-using System.Windows;
+﻿using System.Windows;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,8 +9,7 @@ using RemoteMaster.Agent.Abstractions;
 using RemoteMaster.Agent.Core.Abstractions;
 using RemoteMaster.Agent.Core.Extensions;
 using RemoteMaster.Agent.Services;
-using Windows.Win32.NetworkManagement.WNet;
-using static Windows.Win32.PInvoke;
+using RemoteMaster.Agent.Windows.Services;
 
 namespace RemoteMaster.Agent;
 
@@ -38,6 +35,7 @@ public partial class App : Application
                 services.AddSingleton<IServiceManager, ServiceManager>();
                 services.AddSingleton<ISignatureService, SignatureService>();
                 services.AddSingleton<IProcessService, ProcessService>();
+                services.AddSingleton<IUpdateService, UpdateService>();
                 services.AddSingleton<MainWindow>();
             });
 
@@ -55,6 +53,11 @@ public partial class App : Application
                     webBuilder.Configure(app =>
                     {
                         app.UseRouting();
+
+                        app.UseEndpoints(endpoints =>
+                        {
+                            endpoints.MapCoreHubs();
+                        });
                     });
                 })
                 .UseWindowsService()
@@ -62,8 +65,8 @@ public partial class App : Application
 
             _host.StartAsync();
 
-            MapNetworkDrive(SharedFolder, Login, Password);
-            DirectoryCopy(SharedFolder, $"{Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)}/RemoteMaster/Client");
+            var updateService = ServiceProvider.GetRequiredService<IUpdateService>();
+            updateService.InstallClient();
 
             MonitorClient();
         }
@@ -94,60 +97,6 @@ public partial class App : Application
             }
 
             await Task.Delay(TimeSpan.FromMinutes(1));
-        }
-    }
-
-    public static unsafe void MapNetworkDrive(string remotePath, string username, string password)
-    {
-        var netResource = new NETRESOURCEW
-        {
-            dwType = NET_RESOURCE_TYPE.RESOURCETYPE_DISK
-        };
-
-        fixed (char* pRemotePath = remotePath)
-        {
-            netResource.lpRemoteName = pRemotePath;
-
-            var result = WNetAddConnection2W(in netResource, password, username, 0);
-
-            if (result != 0)
-            {
-                throw new Win32Exception((int)result);
-            }
-        }
-    }
-
-    public void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs = true)
-    {
-        var sourceDir = new DirectoryInfo(sourceDirName);
-
-        if (!sourceDir.Exists)
-        {
-            throw new DirectoryNotFoundException($"Source directory does not exist or could not be found: {sourceDirName}");
-        }
-
-        if (!Directory.Exists(destDirName))
-        {
-            Directory.CreateDirectory(destDirName);
-        }
-
-        foreach (var file in sourceDir.GetFiles())
-        {
-            var destPath = Path.Combine(destDirName, file.Name);
-
-            if (!File.Exists(destPath))
-            {
-                file.CopyTo(destPath, false);
-            }
-        }
-
-        if (copySubDirs)
-        {
-            foreach (var subdir in sourceDir.GetDirectories())
-            {
-                var destSubDir = Path.Combine(destDirName, subdir.Name);
-                DirectoryCopy(subdir.FullName, destSubDir, true);
-            }
         }
     }
 }
