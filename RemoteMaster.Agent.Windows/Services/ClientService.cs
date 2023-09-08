@@ -9,22 +9,21 @@ using Microsoft.Extensions.Logging;
 using RemoteMaster.Agent.Abstractions;
 using RemoteMaster.Agent.Core.Abstractions;
 using RemoteMaster.Shared.Models;
+using RemoteMaster.Shared.Native.Windows;
 
 namespace RemoteMaster.Agent.Services;
 
 public class ClientService : IClientService
 {
     private readonly ISignatureService _signatureService;
-    private readonly IProcessService _processService;
     private readonly ILogger<ClientService> _logger;
 
     private const string ClientPath = "C:\\Program Files\\RemoteMaster\\Client\\RemoteMaster.Client.exe";
     private const string CertificateThumbprint = "E0BD3A7C39AA4FC012A0F6CB3297B46D5D73210C";
 
-    public ClientService(ISignatureService signatureService, IProcessService processService, ILogger<ClientService> logger)
+    public ClientService(ISignatureService signatureService, ILogger<ClientService> logger)
     {
         _signatureService = signatureService;
-        _processService = processService;
         _logger = logger;
     }
 
@@ -124,7 +123,7 @@ public class ClientService : IClientService
         {
             try
             {
-                _processService.Start(ClientPath);
+                ProcessHelper.OpenInteractiveProcess(ClientPath, -1, true, "default", true, out _);
             }
             catch (Exception ex)
             {

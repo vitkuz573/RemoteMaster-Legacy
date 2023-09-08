@@ -28,7 +28,6 @@ public partial class App : Application
                 services.AddSingleton<IClientService, ClientService>();
                 services.AddSingleton<IServiceManager, ServiceManager>();
                 services.AddSingleton<ISignatureService, SignatureService>();
-                services.AddSingleton<IProcessService, ProcessService>();
                 services.AddSingleton<IUpdateService, UpdateService>();
                 services.AddSingleton<MainWindow>();
             });
