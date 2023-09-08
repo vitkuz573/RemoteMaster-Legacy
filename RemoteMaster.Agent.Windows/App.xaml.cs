@@ -15,13 +15,35 @@ namespace RemoteMaster.Agent;
 
 public partial class App : Application
 {
-    private readonly IHost _host;
+    private IHost _host;
 
     public IServiceProvider ServiceProvider => _host.Services;
 
     public App()
     {
-        var hostBuilder = Host.CreateDefaultBuilder()
+        var hostBuilder = CreateDefaultHostBuilder();
+
+        if (WindowsServiceHelpers.IsWindowsService())
+        {
+            ConfigureAsWindowsService(hostBuilder);
+        }
+        else
+        {
+            ConfigureAsWpfApp(hostBuilder);
+        }
+
+        _host.StartAsync();
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        base.OnExit(e);
+        _host?.StopAsync().Wait();
+    }
+
+    private static IHostBuilder CreateDefaultHostBuilder()
+    {
+        return Host.CreateDefaultBuilder()
             .ConfigureServices((hostContext, services) =>
             {
                 services.AddCoreServices();
@@ -31,51 +53,35 @@ public partial class App : Application
                 services.AddSingleton<IUpdateService, UpdateService>();
                 services.AddSingleton<MainWindow>();
             });
-
-        if (WindowsServiceHelpers.IsWindowsService())
-        {
-            _host = hostBuilder
-                .UseContentRoot(AppContext.BaseDirectory)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.ConfigureKestrel(options =>
-                    {
-                        options.ListenAnyIP(3564);
-                    });
-
-                    webBuilder.Configure(app =>
-                    {
-                        app.UseRouting();
-
-                        app.UseEndpoints(endpoints =>
-                        {
-                            endpoints.MapCoreHubs();
-                        });
-                    });
-                })
-                .UseWindowsService()
-                .Build();
-
-            _host.StartAsync();
-
-            var updateService = ServiceProvider.GetRequiredService<IUpdateService>();
-            updateService.InstallClient();
-
-            MonitorClient();
-        }
-        else
-        {
-            _host = hostBuilder.Build();
-            _host.StartAsync();
-            MainWindow = ServiceProvider.GetRequiredService<MainWindow>();
-            MainWindow.Show();
-        }
     }
 
-    protected override void OnExit(ExitEventArgs e)
+    private void ConfigureAsWindowsService(IHostBuilder hostBuilder)
     {
-        base.OnExit(e);
-        _host?.StopAsync().Wait();
+        _host = hostBuilder
+            .UseContentRoot(AppContext.BaseDirectory)
+            .ConfigureWebHostDefaults(webBuilder =>
+            {
+                webBuilder.ConfigureKestrel(options => options.ListenAnyIP(3564));
+                webBuilder.Configure(app =>
+                {
+                    app.UseRouting();
+                    app.UseEndpoints(endpoints => endpoints.MapCoreHubs());
+                });
+            })
+            .UseWindowsService()
+            .Build();
+
+        var updateService = ServiceProvider.GetRequiredService<IUpdateService>();
+        updateService.InstallClient();
+
+        MonitorClient();
+    }
+
+    private void ConfigureAsWpfApp(IHostBuilder hostBuilder)
+    {
+        _host = hostBuilder.Build();
+        MainWindow = ServiceProvider.GetRequiredService<MainWindow>();
+        MainWindow.Show();
     }
 
     private async void MonitorClient()
