@@ -103,7 +103,8 @@ public partial class MainWindow : Window
         }
 
         var currentExecutablePath = Environment.ProcessPath;
-        File.Copy(currentExecutablePath, newExecutablePath);
+
+        File.Copy(currentExecutablePath, newExecutablePath, true);
 
         var configName = _configurationService.GetConfigurationFileName();
         var newConfigPath = Path.Combine(newDirectoryPath, configName);
