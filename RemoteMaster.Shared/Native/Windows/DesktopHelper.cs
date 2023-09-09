@@ -5,6 +5,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Versioning;
 using Windows.Win32;
+using Windows.Win32.Foundation;
 using Windows.Win32.System.StationsAndDesktops;
 using static Windows.Win32.PInvoke;
 
@@ -15,7 +16,7 @@ public static class DesktopHelper
 {
     private static CloseDesktopSafeHandle _lastInputDesktop;
 
-    public static CloseDesktopSafeHandle OpenInputDesktop() => OpenInputDesktop_SafeHandle(0, true, (DESKTOP_ACCESS_FLAGS)0x10000000);
+    public static CloseDesktopSafeHandle OpenInputDesktop() => OpenInputDesktop_SafeHandle(0, true, (DESKTOP_ACCESS_FLAGS)GENERIC_ACCESS_RIGHTS.GENERIC_ALL);
 
     public static unsafe bool GetCurrentDesktop([NotNullWhen(true)] out string? desktopName)
     {
