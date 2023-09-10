@@ -5,13 +5,16 @@
 namespace RemoteMaster.Shared;
 
 /// <summary>
-/// Interface for operation result.
+/// Interface for operation results.
 /// </summary>
 public interface IResult
 {
     bool IsSuccess { get; }
+
     bool IsFailure { get; }
+
     IReadOnlyCollection<string> ErrorMessages { get; }
+
     Exception? Exception { get; }
 }
 
@@ -21,10 +24,16 @@ public interface IResult
 public class Result : IResult
 {
     public bool IsSuccess { get; protected set; }
+
     public IReadOnlyCollection<string> ErrorMessages { get; protected set; } = Array.Empty<string>();
+    
     public Exception? Exception { get; protected set; }
+    
     public bool IsFailure => !IsSuccess;
 
+    /// <summary>
+    /// Protected constructor for base result.
+    /// </summary>
     protected Result(bool isSuccess, IEnumerable<string> errorMessages = null, Exception ex = null)
     {
         IsSuccess = isSuccess;
@@ -35,19 +44,23 @@ public class Result : IResult
     /// <summary>
     /// Constructs a successful result.
     /// </summary>
-    public static Result Success() => new Result(true);
+    public static Result Success() => new(true);
 
     /// <summary>
     /// Constructs a failed result with an error message.
     /// </summary>
     public static Result Failure(string errorMessage, Exception ex = null)
-        => new Result(false, new[] { errorMessage }, ex);
+    {
+        return new Result(false, new[] { errorMessage }, ex);
+    }
 
     /// <summary>
     /// Constructs a failed result with multiple error messages.
     /// </summary>
     public static Result Failure(IEnumerable<string> errorMessages, Exception ex = null)
-        => new Result(false, errorMessages, ex);
+    {
+        return new Result(false, errorMessages, ex);
+    }
 
     /// <summary>
     /// Executes an action if the result is successful.
@@ -59,7 +72,14 @@ public class Result : IResult
             throw new ArgumentNullException(nameof(func));
         }
 
-        return IsSuccess ? func() : this;
+        if (IsSuccess)
+        {
+            return func();
+        }
+        else
+        {
+            return this;
+        }
     }
 
     /// <summary>
@@ -72,7 +92,14 @@ public class Result : IResult
             throw new ArgumentNullException(nameof(func));
         }
 
-        return IsFailure ? func() : this;
+        if (IsFailure)
+        {
+            return func();
+        }
+        else
+        {
+            return this;
+        }
     }
 
     /// <summary>
@@ -109,6 +136,46 @@ public class Result : IResult
             return Failure(errorHandler?.Invoke(ex) ?? ex.Message, ex);
         }
     }
+
+    /// <summary>
+    /// Asynchronously executes an action if the result is successful.
+    /// </summary>
+    public async Task<Result> OnSuccessAsync(Func<Task<Result>> func)
+    {
+        if (func == null)
+        {
+            throw new ArgumentNullException(nameof(func));
+        }
+
+        if (IsSuccess)
+        {
+            return await func();
+        }
+        else
+        {
+            return this;
+        }
+    }
+
+    /// <summary>
+    /// Asynchronously executes an action if the result is a failure.
+    /// </summary>
+    public async Task<Result> OnFailureAsync(Func<Task<Result>> func)
+    {
+        if (func == null)
+        {
+            throw new ArgumentNullException(nameof(func));
+        }
+
+        if (IsFailure)
+        {
+            return await func();
+        }
+        else
+        {
+            return this;
+        }
+    }
 }
 
 /// <summary>
@@ -117,11 +184,18 @@ public class Result : IResult
 public class Result<T> : IResult
 {
     public T Value { get; private set; }
+    
     public bool IsSuccess { get; private set; }
+    
     public IReadOnlyCollection<string> ErrorMessages { get; private set; } = Array.Empty<string>();
+    
     public Exception? Exception { get; private set; }
+    
     public bool IsFailure => !IsSuccess;
 
+    /// <summary>
+    /// Private constructor for typed result.
+    /// </summary>
     private Result(bool isSuccess, T value = default, IEnumerable<string> errorMessages = null, Exception ex = null)
     {
         IsSuccess = isSuccess;
@@ -133,19 +207,23 @@ public class Result<T> : IResult
     /// <summary>
     /// Constructs a successful result with a value.
     /// </summary>
-    public static Result<T> Success(T value) => new Result<T>(true, value);
+    public static Result<T> Success(T value) => new(true, value);
 
     /// <summary>
     /// Constructs a failed result with an error message.
     /// </summary>
     public static Result<T> Failure(string errorMessage, Exception ex = null)
-        => new Result<T>(false, default, new[] { errorMessage }, ex);
+    {
+        return new Result<T>(false, default, new[] { errorMessage }, ex);
+    }
 
     /// <summary>
     /// Constructs a failed result with multiple error messages.
     /// </summary>
     public static Result<T> Failure(IEnumerable<string> errorMessages, Exception ex = null)
-        => new Result<T>(false, default, errorMessages, ex);
+    {
+        return new Result<T>(false, default, errorMessages, ex);
+    }
 
     /// <summary>
     /// Executes an action if the result is successful.
@@ -157,7 +235,14 @@ public class Result<T> : IResult
             throw new ArgumentNullException(nameof(func));
         }
 
-        return IsSuccess ? func(Value) : this;
+        if (IsSuccess)
+        {
+            return func(Value);
+        }
+        else
+        {
+            return this;
+        }
     }
 
     /// <summary>
@@ -170,7 +255,14 @@ public class Result<T> : IResult
             throw new ArgumentNullException(nameof(func));
         }
 
-        return IsFailure ? func(ErrorMessages, Exception) : this;
+        if (IsFailure)
+        {
+            return func(ErrorMessages, Exception);
+        }
+        else
+        {
+            return this;
+        }
     }
 
     /// <summary>
@@ -189,7 +281,7 @@ public class Result<T> : IResult
     }
 
     /// <summary>
-    /// Tries to execute a function and wraps the result or exception in a Result.
+    /// Tries to execute a function and wraps the result or exception in a Result<T>.
     /// </summary>
     public static Result<T> Try(Func<Result<T>> func, Func<Exception, string> errorHandler = null)
     {
@@ -209,7 +301,47 @@ public class Result<T> : IResult
     }
 
     /// <summary>
-    /// Transforms the value of this result to another type.
+    /// Asynchronously executes an action if the result is successful.
+    /// </summary>
+    public async Task<Result<T>> OnSuccessAsync(Func<T, Task<Result<T>>> func)
+    {
+        if (func == null)
+        {
+            throw new ArgumentNullException(nameof(func));
+        }
+
+        if (IsSuccess)
+        {
+            return await func(Value);
+        }
+        else
+        {
+            return this;
+        }
+    }
+
+    /// <summary>
+    /// Asynchronously executes an action if the result is a failure.
+    /// </summary>
+    public async Task<Result<T>> OnFailureAsync(Func<IReadOnlyCollection<string>, Exception, Task<Result<T>>> func)
+    {
+        if (func == null)
+        {
+            throw new ArgumentNullException(nameof(func));
+        }
+
+        if (IsFailure)
+        {
+            return await func(ErrorMessages, Exception);
+        }
+        else
+        {
+            return this;
+        }
+    }
+
+    /// <summary>
+    /// Converts the result's value using the provided converter.
     /// </summary>
     public Result<U> Convert<U>(Func<T, U> converter)
     {
@@ -218,6 +350,13 @@ public class Result<T> : IResult
             throw new ArgumentNullException(nameof(converter));
         }
 
-        return IsSuccess ? Result<U>.Success(converter(Value)) : Result<U>.Failure(ErrorMessages, Exception);
+        if (IsSuccess)
+        {
+            return Result<U>.Success(converter(Value));
+        }
+        else
+        {
+            return Result<U>.Failure(ErrorMessages, Exception);
+        }
     }
 }
