@@ -4,94 +4,67 @@
 
 namespace RemoteMaster.Shared;
 
-public class Result<T>
+public interface IResult
 {
-    public bool IsSuccess { get; private set; }
+    bool IsSuccess { get; }
 
-    public T Value { get; private set; }
+    bool IsFailure { get; }
 
-    public string ErrorMessage { get; private set; }
+    IEnumerable<string> ErrorMessages { get; }
 
-    public Exception Exception { get; private set; }
+    Exception Exception { get; }
+}
 
-    protected Result(bool isSuccess, T value = default, string errorMessage = null, Exception ex = null)
+/// <summary>
+/// Represents a basic operation result.
+/// </summary>
+public class Result : IResult
+{
+    public bool IsSuccess { get; protected set; }
+
+    public IEnumerable<string> ErrorMessages { get; protected set; }
+
+    public Exception Exception { get; protected set; }
+
+    protected Result(bool isSuccess, IEnumerable<string> errorMessages = null, Exception ex = null)
     {
         IsSuccess = isSuccess;
-        Value = value;
-        ErrorMessage = errorMessage;
+        ErrorMessages = errorMessages ?? Enumerable.Empty<string>();
         Exception = ex;
     }
 
-    /// <summary>
-    /// Creates a successful result.
-    /// </summary>
-    public static Result<T> Success(T value) => new(true, value);
+    public bool IsFailure => !IsSuccess;
 
     /// <summary>
-    /// Creates a failure result.
+    /// Constructs a successful result.
     /// </summary>
-    public static Result<T> Failure(string errorMessage, Exception ex = null)
-        => new(false, default, errorMessage, ex);
+    public static Result Success() => new(true);
 
     /// <summary>
-    /// Tries an action and returns a Result.
+    /// Constructs a failed result with an error message.
     /// </summary>
-    public static Result<T> Try(Func<T> action, string errorMessage = "An error occurred")
-    {
-        if (action == null)
-        {
-            throw new ArgumentNullException(nameof(action));
-        }
-
-        try
-        {
-            return Success(action());
-        }
-        catch (Exception ex)
-        {
-            return Failure(errorMessage, ex);
-        }
-    }
+    public static Result Failure(string errorMessage, Exception ex = null)
+        => new(false, new[] { errorMessage }, ex);
 
     /// <summary>
-    /// Transforms the value if the result is successful.
+    /// Constructs a failed result with multiple error messages.
     /// </summary>
-    public Result<TOut> Map<TOut>(Func<T, TOut> transform)
-    {
-        if (transform == null)
-        {
-            throw new ArgumentNullException(nameof(transform));
-        }
-
-        return IsFailure ? Result<TOut>.Failure(ErrorMessage, Exception) : Result<TOut>.Success(transform(Value));
-    }
-
-    /// <summary>
-    /// Transforms the error message if the result is a failure.
-    /// </summary>
-    public Result<T> MapError(Func<string, string> transform)
-    {
-        if (transform == null)
-        {
-            throw new ArgumentNullException(nameof(transform));
-        }
-
-        return IsSuccess ? this : Failure(transform(ErrorMessage), Exception);
-    }
+    public static Result Failure(IEnumerable<string> errorMessages, Exception ex = null)
+        => new(false, errorMessages, ex);
 
     /// <summary>
     /// Executes an action if the result is successful.
     /// </summary>
-    public Result<T> OnSuccess(Action<T> action)
+    public Result OnSuccess(Action action)
     {
         if (action == null)
         {
             throw new ArgumentNullException(nameof(action));
-        }
+        }    
 
         if (IsSuccess)
         {
-            action(Value);
+            action();
         }
 
         return this;
@@ -100,7 +73,7 @@ public class Result<T>
     /// <summary>
     /// Executes an action if the result is a failure.
     /// </summary>
-    public Result<T> OnFailure(Action<string, Exception> action)
+    public Result OnFailure(Action<IEnumerable<string>, Exception> action)
     {
         if (action == null)
         {
@@ -109,90 +82,136 @@ public class Result<T>
 
         if (IsFailure)
         {
-            action(ErrorMessage, Exception);
+            action(ErrorMessages, Exception);
         }
 
         return this;
     }
 
-    /// <summary>
-    /// Indicates if the result is a failure.
-    /// </summary>
-    public bool IsFailure => !IsSuccess;
-
-    /// <summary>
-    /// Combines multiple results. Returns the last successful value or the first failure.
-    /// </summary>
-    public static Result<T> Combine(params Result<T>[] results)
+    // Conversion operators for easier usage
+    public static implicit operator Result(string errorMessage) => Failure(errorMessage);
+    
+    public static implicit operator Result(Exception ex)
     {
-        if (results == null)
+        if (ex == null)
         {
-            throw new ArgumentNullException(nameof(results));
+            throw new ArgumentNullException(nameof(ex));
         }
 
-        foreach (var result in results)
-        {
-            if (result.IsFailure)
-            {
-                return result;
-            }
-        }
-
-        var lastResult = results.LastOrDefault();
-
-        if (lastResult == null || lastResult.IsFailure)
-        {
-            return Failure("All combined results were failures.");
-        }
-
-        return Success(lastResult.Value);
+        return Failure(ex.Message, ex);
     }
 
-    /// <summary>
-    /// Returns a string representation of the result.
-    /// </summary>
-    public override string ToString() => IsSuccess ? $"Success: {Value}" : $"Failure: {ErrorMessage}";
+    public static explicit operator bool(Result result)
+    {
+        if (result == null)
+        {
+            throw new ArgumentNullException(nameof(result));
+        }
+
+        return result.IsSuccess;
+    }
+
 }
 
-public class Result : Result<string>
+/// <summary>
+/// Represents a typed operation result.
+/// </summary>
+public class Result<T> : Result
 {
-    /// <summary>
-    /// Creates a successful result.
-    /// </summary>
-    public static new Result Success() => new(true);
+    public T Value { get; private set; }
 
-    /// <summary>
-    /// Creates a failure result.
-    /// </summary>
-    public static Result Failure(string errorMessage, Exception ex = null)
-        => new(false, errorMessage: errorMessage, ex: ex);
-
-    /// <summary>
-    /// Implicit conversion from string to Result.
-    /// </summary>
-    public static implicit operator Result(string message) => new(true, value: message);
-
-    /// <summary>
-    /// Tries an action and returns a Result.
-    /// </summary>
-    public static Result Try(Action action, string errorMessage = "An error occurred")
+    protected Result(bool isSuccess, T value = default, IEnumerable<string> errorMessages = null, Exception ex = null)
+        : base(isSuccess, errorMessages, ex)
     {
-        if (action == null)
-        {
-            throw new ArgumentNullException(nameof(action));
-        }
-
-        try
-        {
-            action();
-            return Success();
-        }
-        catch (Exception ex)
-        {
-            return Failure(errorMessage, ex);
-        }
+        Value = value;
     }
 
-    private Result(bool isSuccess, string value = null, string errorMessage = null, Exception ex = null)
-        : base(isSuccess, value, errorMessage, ex) { }
+    /// <summary>
+    /// Constructs a successful result with a value.
+    /// </summary>
+    public static Result<T> Success(T value) => new(true, value);
+
+    /// <summary>
+    /// Constructs a failed result with an error message.
+    /// </summary>
+    public static new Result<T> Failure(string errorMessage, Exception ex = null)
+        => new(false, default, new[] { errorMessage }, ex);
+
+    /// <summary>
+    /// Constructs a failed result with multiple error messages.
+    /// </summary>
+    public static Result<T> Failure(IEnumerable<string> errorMessages, Exception ex = null)
+        => new(false, default, errorMessages, ex);
+
+    /// <summary>
+    /// Transforms the result value if successful.
+    /// </summary>
+    public Result<TOut> Map<TOut>(Func<T, TOut> transform)
+    {
+        if (transform == null)
+        {
+            throw new ArgumentNullException(nameof(transform));
+        }
+
+        return IsFailure
+            ? Result<TOut>.Failure(ErrorMessages, Exception)
+            : Result<TOut>.Success(transform(Value));
+    }
+
+    /// <summary>
+    /// Chains the result with a new operation if successful.
+    /// </summary>
+    public Result<TOut> AndThen<TOut>(Func<T, Result<TOut>> next)
+    {
+        if (next == null)
+        {
+            throw new ArgumentNullException(nameof(next));
+        }
+
+        return IsSuccess
+            ? next(Value)
+            : Result<TOut>.Failure(ErrorMessages, Exception);
+    }
+
+    /// <summary>
+    /// Combines multiple results into one.
+    /// </summary>
+    public static Result<IEnumerable<T>> Combine(params Result<T>[] results)
+    {
+        var failedResults = results.Where(r => r.IsFailure).ToList();
+       
+        if (failedResults.Any())
+        {
+            var allErrors = failedResults.SelectMany(r => r.ErrorMessages);
+            
+            return Result<IEnumerable<T>>.Failure(allErrors);
+        }
+
+        return Result<IEnumerable<T>>.Success(results.Select(r => r.Value));
+    }
+
+    // Conversion operators for easier usage
+    public static implicit operator Result<T>(string errorMessage) => Failure(errorMessage);
+    
+    public static implicit operator Result<T>(Exception ex)
+    {
+        if (ex == null)
+        {
+            throw new ArgumentNullException(nameof(ex));
+        }
+
+        return Failure(ex.Message, ex);
+    }
+
+    public static explicit operator bool(Result<T> result)
+    {
+        if (result == null)
+        {
+            throw new ArgumentNullException(nameof(result));
+        }
+
+        return result.IsSuccess;
+    }
+
+    public static implicit operator Result<T>(T value) => Success(value);
 }
