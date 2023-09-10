@@ -13,7 +13,6 @@ using RemoteMaster.Agent.Abstractions;
 using RemoteMaster.Agent.Core.Abstractions;
 using RemoteMaster.Agent.Core.Extensions;
 using RemoteMaster.Agent.Services;
-using RemoteMaster.Agent.Windows.Services;
 
 namespace RemoteMaster.Agent;
 
@@ -51,6 +50,7 @@ public partial class App : Application
             .ConfigureServices((hostContext, services) =>
             {
                 services.AddCoreServices();
+                services.AddSingleton<IAgentServiceManager, AgentServiceManager>();
                 services.AddSingleton<IClientService, ClientService>();
                 services.AddSingleton<IServiceManager, ServiceManager>();
                 services.AddSingleton<ISignatureService, SignatureService>();

@@ -1,25 +1,19 @@
-﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
-// This file is part of the RemoteMaster project.
-// Licensed under the GNU Affero General Public License v3.0.
-
-using System.IO;
-using System.Windows;
+﻿using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using RemoteMaster.Agent.Abstractions;
 using RemoteMaster.Agent.Core.Abstractions;
+using RemoteMaster.Agent.Models;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Agent;
 
 public partial class MainWindow : Window
 {
-    private const string MainAppName = "RemoteMaster";
-    private const string SubAppName = "Agent";
-
-    private readonly IClientService _clientService;
     private readonly IServiceManager _serviceManager;
     private readonly IConfigurationService _configurationService;
     private readonly IHostInfoProvider _hostInfoProvider;
+    private readonly IAgentServiceManager _agentServiceManager;
+
     private readonly string _hostName;
     private readonly string _ipv4Address;
     private readonly ConfigurationModel _configuration;
@@ -29,17 +23,24 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         var serviceProvider = ((App)Application.Current).ServiceProvider;
-        _clientService = serviceProvider.GetRequiredService<IClientService>();
         _serviceManager = serviceProvider.GetRequiredService<IServiceManager>();
         _configurationService = serviceProvider.GetRequiredService<IConfigurationService>();
         _hostInfoProvider = serviceProvider.GetRequiredService<IHostInfoProvider>();
+        _agentServiceManager = serviceProvider.GetRequiredService<IAgentServiceManager>();
+        
+        _agentServiceManager.MessageReceived += OnMessageReceived;
 
         _hostName = _hostInfoProvider.GetHostName();
         _ipv4Address = _hostInfoProvider.GetIPv4Address();
-
         _configuration = _configurationService.LoadConfiguration();
+
         DisplayConfigurationAndSystemInfo();
         UpdateServiceStatusDisplay();
+    }
+
+    private void OnMessageReceived(string message, MessageType type)
+    {
+        MessageBox.Show(message, type.ToString(), MessageBoxButton.OK, type == MessageType.Error ? MessageBoxImage.Error : MessageBoxImage.Information);
     }
 
     private void DisplayConfigurationAndSystemInfo()
@@ -50,69 +51,18 @@ public partial class MainWindow : Window
         GroupTextBlock.Text = $"Group: {_configuration.Group}";
     }
 
-    private static void ShowError(string message)
+    private async void InstallUpdateButton_Click(object sender, RoutedEventArgs e)
     {
-        MessageBox.Show(message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        Application.Current?.Shutdown();
-    }
+        await _agentServiceManager.InstallOrUpdateService(_configuration, _hostName, _ipv4Address);
 
-    private void InstallUpdateButton_Click(object sender, RoutedEventArgs e)
-    {
-        InstallOrUpdateService();
-    }
-
-    private async Task InstallOrUpdateService()
-    {
-        var newExecutablePath = GetNewExecutablePath();
-
-        if (!File.Exists(newExecutablePath))
-        {
-            CopyExecutableToNewPath(newExecutablePath);
-        }
-
-        if (!_serviceManager.IsServiceInstalled())
-        {
-            _serviceManager.InstallService(newExecutablePath);
-        }
-
-        _serviceManager.StartService();
         UpdateServiceStatusDisplay();
-
-        var registerResult = await _clientService.RegisterAsync(_configuration, _hostName, _ipv4Address);
-
-        if (!registerResult)
-        {
-            ShowError("Client registration failed.");
-        }
     }
 
-    private static string GetNewExecutablePath()
+    private async void UninstallButton_Click(object sender, RoutedEventArgs e)
     {
-        var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+        await _agentServiceManager.UninstallService(_configuration, _hostName);
 
-        return Path.Combine(programFilesPath, MainAppName, SubAppName, $"{MainAppName}.{SubAppName}.exe");
-    }
-
-    private void CopyExecutableToNewPath(string newExecutablePath)
-    {
-        var newDirectoryPath = Path.GetDirectoryName(newExecutablePath);
-
-        if (newDirectoryPath != null && !Directory.Exists(newDirectoryPath))
-        {
-            Directory.CreateDirectory(newDirectoryPath);
-        }
-
-        var currentExecutablePath = Environment.ProcessPath;
-
-        File.Copy(currentExecutablePath, newExecutablePath, true);
-
-        var configName = _configurationService.GetConfigurationFileName();
-        var newConfigPath = Path.Combine(newDirectoryPath, configName);
-
-        if (File.Exists(configName))
-        {
-            File.Copy(configName, newConfigPath, true);
-        }
+        UpdateServiceStatusDisplay();
     }
 
     private void UpdateServiceStatusDisplay()
@@ -120,42 +70,5 @@ public partial class MainWindow : Window
         var serviceExists = _serviceManager.IsServiceInstalled();
         UninstallButton.IsEnabled = serviceExists;
         ServiceStatusTextBlock.Text = serviceExists ? "Service Status: Installed" : "Service Status: Not Installed";
-    }
-
-    private async void UninstallButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (_serviceManager.IsServiceInstalled())
-        {
-            var unregisterResult = await _clientService.UnregisterAsync(_configuration, _hostName);
-
-            if (!unregisterResult)
-            {
-                ShowError("Client unregistration failed.");
-            }
-
-            _serviceManager.StopService();
-            _serviceManager.UninstallService();
-        }
-
-        RemoveServiceFiles();
-        UpdateServiceStatusDisplay();
-    }
-
-    private static void RemoveServiceFiles()
-    {
-        var newExecutablePath = GetNewExecutablePath();
-
-        if (File.Exists(newExecutablePath))
-        {
-            File.Delete(newExecutablePath);
-        }
-
-        var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-        var fullPath = Path.Combine(programFilesPath, MainAppName);
-
-        if (Directory.Exists(fullPath))
-        {
-            Directory.Delete(fullPath, true);
-        }
     }
 }
