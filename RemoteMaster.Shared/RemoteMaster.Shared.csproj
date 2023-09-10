@@ -1,10 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <None Remove="NativeMethods.json" />
     <None Remove="NativeMethods.txt" />
   </ItemGroup>
 
   <ItemGroup>
+    <AdditionalFiles Include="NativeMethods.json" />
     <AdditionalFiles Include="NativeMethods.txt" />
   </ItemGroup>
 
