@@ -1,18 +1,17 @@
-﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
-// This file is part of the RemoteMaster project.
-// Licensed under the GNU Affero General Public License v3.0.
+﻿namespace RemoteMaster.Shared;
 
-namespace RemoteMaster.Shared;
-
+/// <summary>
+/// Interface for operation result.
+/// </summary>
 public interface IResult
 {
     bool IsSuccess { get; }
 
     bool IsFailure { get; }
 
-    IEnumerable<string> ErrorMessages { get; }
+    IReadOnlyCollection<string> ErrorMessages { get; }
 
-    Exception Exception { get; }
+    Exception? Exception { get; }
 }
 
 /// <summary>
@@ -22,35 +21,35 @@ public class Result : IResult
 {
     public bool IsSuccess { get; protected set; }
 
-    public IEnumerable<string> ErrorMessages { get; protected set; }
+    public IReadOnlyCollection<string> ErrorMessages { get; protected set; } = Array.Empty<string>();
 
-    public Exception Exception { get; protected set; }
+    public Exception? Exception { get; protected set; }
+
+    public bool IsFailure => !IsSuccess;
 
     protected Result(bool isSuccess, IEnumerable<string> errorMessages = null, Exception ex = null)
     {
         IsSuccess = isSuccess;
-        ErrorMessages = errorMessages ?? Enumerable.Empty<string>();
+        ErrorMessages = errorMessages?.ToArray() ?? Array.Empty<string>();
         Exception = ex;
     }
-
-    public bool IsFailure => !IsSuccess;
 
     /// <summary>
     /// Constructs a successful result.
     /// </summary>
-    public static Result Success() => new(true);
+    public static Result Success() => new Result(true);
 
     /// <summary>
     /// Constructs a failed result with an error message.
     /// </summary>
     public static Result Failure(string errorMessage, Exception ex = null)
-        => new(false, new[] { errorMessage }, ex);
+        => new Result(false, new[] { errorMessage }, ex);
 
     /// <summary>
     /// Constructs a failed result with multiple error messages.
     /// </summary>
     public static Result Failure(IEnumerable<string> errorMessages, Exception ex = null)
-        => new(false, errorMessages, ex);
+        => new Result(false, errorMessages, ex);
 
     /// <summary>
     /// Executes an action if the result is successful.
@@ -60,7 +59,7 @@ public class Result : IResult
         if (action == null)
         {
             throw new ArgumentNullException(nameof(action));
-        }    
+        }
 
         if (IsSuccess)
         {
@@ -87,61 +86,47 @@ public class Result : IResult
 
         return this;
     }
-
-    // Conversion operators for easier usage
-    public static implicit operator Result(string errorMessage) => Failure(errorMessage);
-    
-    public static implicit operator Result(Exception ex)
-    {
-        if (ex == null)
-        {
-            throw new ArgumentNullException(nameof(ex));
-        }
-
-        return Failure(ex.Message, ex);
-    }
-
-    public static explicit operator bool(Result result)
-    {
-        if (result == null)
-        {
-            throw new ArgumentNullException(nameof(result));
-        }
-
-        return result.IsSuccess;
-    }
-
 }
 
 /// <summary>
 /// Represents a typed operation result.
 /// </summary>
-public class Result<T> : Result
+public class Result<T> : IResult
 {
     public T Value { get; private set; }
 
-    protected Result(bool isSuccess, T value = default, IEnumerable<string> errorMessages = null, Exception ex = null)
-        : base(isSuccess, errorMessages, ex)
+    public bool IsSuccess { get; private set; }
+
+    public IReadOnlyCollection<string> ErrorMessages { get; private set; } = Array.Empty<string>();
+
+    public Exception? Exception { get; private set; }
+
+    public bool IsFailure => !IsSuccess;
+
+    private Result(bool isSuccess, T value = default, IEnumerable<string> errorMessages = null, Exception ex = null)
     {
+        IsSuccess = isSuccess;
         Value = value;
+        ErrorMessages = errorMessages?.ToArray() ?? Array.Empty<string>();
+        Exception = ex;
     }
 
     /// <summary>
     /// Constructs a successful result with a value.
     /// </summary>
-    public static Result<T> Success(T value) => new(true, value);
+    public static Result<T> Success(T value) => new Result<T>(true, value);
 
     /// <summary>
     /// Constructs a failed result with an error message.
     /// </summary>
-    public static new Result<T> Failure(string errorMessage, Exception ex = null)
-        => new(false, default, new[] { errorMessage }, ex);
+    public static Result<T> Failure(string errorMessage, Exception ex = null)
+        => new Result<T>(false, default, new[] { errorMessage }, ex);
 
     /// <summary>
     /// Constructs a failed result with multiple error messages.
     /// </summary>
     public static Result<T> Failure(IEnumerable<string> errorMessages, Exception ex = null)
-        => new(false, default, errorMessages, ex);
+        => new Result<T>(false, default, errorMessages, ex);
 
     /// <summary>
     /// Transforms the result value if successful.
@@ -174,44 +159,20 @@ public class Result<T> : Result
     }
 
     /// <summary>
-    /// Combines multiple results into one.
+    /// Combines multiple results into a single result.
     /// </summary>
     public static Result<IEnumerable<T>> Combine(params Result<T>[] results)
     {
         var failedResults = results.Where(r => r.IsFailure).ToList();
-       
+
         if (failedResults.Any())
         {
             var allErrors = failedResults.SelectMany(r => r.ErrorMessages);
-            
             return Result<IEnumerable<T>>.Failure(allErrors);
         }
-
-        return Result<IEnumerable<T>>.Success(results.Select(r => r.Value));
-    }
-
-    // Conversion operators for easier usage
-    public static implicit operator Result<T>(string errorMessage) => Failure(errorMessage);
-    
-    public static implicit operator Result<T>(Exception ex)
-    {
-        if (ex == null)
+        else
         {
-            throw new ArgumentNullException(nameof(ex));
+            return Result<IEnumerable<T>>.Success(results.Select(r => r.Value));
         }
-
-        return Failure(ex.Message, ex);
     }
-
-    public static explicit operator bool(Result<T> result)
-    {
-        if (result == null)
-        {
-            throw new ArgumentNullException(nameof(result));
-        }
-
-        return result.IsSuccess;
-    }
-
-    public static implicit operator Result<T>(T value) => Success(value);
 }
