@@ -4,9 +4,9 @@
 
 using System.Diagnostics;
 using System.ServiceProcess;
-using RemoteMaster.Agent.Abstractions;
+using RemoteMaster.Shared.Abstractions;
 
-namespace RemoteMaster.Agent.Services;
+namespace RemoteMaster.Shared.Services;
 
 public class ServiceManager : IServiceManager
 {

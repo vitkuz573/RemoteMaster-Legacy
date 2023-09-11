@@ -125,6 +125,11 @@
         "resolved": "7.0.0",
         "contentHash": "um1KU5kxcRp3CNuI8o/GrZtD4AIOXDk+RLsytjZ9QPok3ttLUelLKpilVPuaFT3TFjOhSibUAso0odbOaCDj3Q=="
       },
+      "System.Diagnostics.EventLog": {
+        "type": "Transitive",
+        "resolved": "7.0.0",
+        "contentHash": "eUDP47obqQm3SFJfP6z+Fx2nJ4KKTQbXB4Q9Uesnzw9SbYdhjyoGXuvDn/gEmFY6N5Z3bFFbpAQGA7m6hrYJCw=="
+      },
       "System.IO.Pipelines": {
         "type": "Transitive",
         "resolved": "7.0.0",
@@ -159,7 +164,8 @@
         "type": "Project",
         "dependencies": {
           "Microsoft.Win32.SystemEvents": "[7.0.0, )",
-          "Microsoft.Windows.SDK.Win32Metadata": "[54.0.44-preview, )"
+          "Microsoft.Windows.SDK.Win32Metadata": "[54.0.44-preview, )",
+          "System.ServiceProcess.ServiceController": "[7.0.1, )"
         }
       },
       "Microsoft.Extensions.Logging": {
@@ -185,6 +191,15 @@
         "requested": "[54.0.44-preview, )",
         "resolved": "54.0.44-preview",
         "contentHash": "pDfltYDFeJXSqnoyYIlDpoHL83M+Ia5PiVCjMtVoadC9HOCeBbonoJNBOXtLg67pGOwELX2Nzw97f2hHaCDdCw=="
+      },
+      "System.ServiceProcess.ServiceController": {
+        "type": "CentralTransitive",
+        "requested": "[7.0.1, )",
+        "resolved": "7.0.1",
+        "contentHash": "rPfXTJzYU46AmWYXRATQzQQ01hICrkl3GuUHgpAr9mnUwAVSsga5x3mBxanFPlJBV9ilzqMXbQyDLJQAbyTnSw==",
+        "dependencies": {
+          "System.Diagnostics.EventLog": "7.0.0"
+        }
       }
     }
   }

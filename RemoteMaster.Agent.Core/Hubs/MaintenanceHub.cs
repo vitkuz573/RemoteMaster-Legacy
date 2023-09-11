@@ -10,9 +10,9 @@ namespace RemoteMaster.Agent.Core.Hubs;
 public class MaintenanceHub : Hub<IMaintenanceClient>
 {
     private readonly IConfigurationProvider _configurationProvider;
-    private readonly IUpdateService _updateService;
+    private readonly IClientUpdater _updateService;
 
-    public MaintenanceHub(IConfigurationProvider configurationProvider, IUpdateService updateService)
+    public MaintenanceHub(IConfigurationProvider configurationProvider, IClientUpdater updateService)
     {
         _configurationProvider = configurationProvider;
         _updateService = updateService;

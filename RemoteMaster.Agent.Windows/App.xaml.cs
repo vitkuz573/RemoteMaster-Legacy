@@ -13,6 +13,8 @@ using RemoteMaster.Agent.Abstractions;
 using RemoteMaster.Agent.Core.Abstractions;
 using RemoteMaster.Agent.Core.Extensions;
 using RemoteMaster.Agent.Services;
+using RemoteMaster.Shared.Abstractions;
+using RemoteMaster.Shared.Services;
 
 namespace RemoteMaster.Agent;
 
@@ -54,7 +56,7 @@ public partial class App : Application
                 services.AddSingleton<IClientService, ClientService>();
                 services.AddSingleton<IServiceManager, ServiceManager>();
                 services.AddSingleton<ISignatureService, SignatureService>();
-                services.AddSingleton<IUpdateService, UpdateService>();
+                services.AddSingleton<IClientUpdater, ClientUpdater>();
                 services.AddSingleton<MainWindow>();
             });
     }
@@ -75,7 +77,7 @@ public partial class App : Application
             .UseWindowsService()
             .Build();
 
-        var updateService = ServiceProvider.GetRequiredService<IUpdateService>();
+        var updateService = ServiceProvider.GetRequiredService<IClientUpdater>();
         updateService.InstallClient();
 
         MonitorClient();

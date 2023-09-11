@@ -13,6 +13,7 @@ namespace RemoteMaster.Client.Core.Hubs;
 
 public class ControlHub : Hub<IControlClient>, IControlHub
 {
+    private readonly IAgentUpdater _agentUpdater;
     private readonly IAppState _appState;
     private readonly IViewerFactory _viewerFactory;
     private readonly IInputService _inputSender;
@@ -21,8 +22,9 @@ public class ControlHub : Hub<IControlClient>, IControlHub
     private readonly IScreenCapturerService _screenCapturer;
     private readonly ILogger<ControlHub> _logger;
 
-    public ControlHub(IAppState appState, IViewerFactory viewerFactory, IInputService inputSender, IPowerService powerManager, IShutdownService shutdownService, IScreenCapturerService screenCapturer, ILogger<ControlHub> logger)
+    public ControlHub(IAgentUpdater agentUpdater, IAppState appState, IViewerFactory viewerFactory, IInputService inputSender, IPowerService powerManager, IShutdownService shutdownService, IScreenCapturerService screenCapturer, ILogger<ControlHub> logger)
     {
+        _agentUpdater = agentUpdater;
         _appState = appState;
         _viewerFactory = viewerFactory;
         _inputSender = inputSender;
@@ -139,5 +141,10 @@ public class ControlHub : Hub<IControlClient>, IControlHub
         {
             _logger.LogError("Failed to find a viewer for connection ID {connectionId}", Context.ConnectionId);
         }
+    }
+
+    public async Task SendAgentUpdate()
+    {
+        _agentUpdater.Update();
     }
 }

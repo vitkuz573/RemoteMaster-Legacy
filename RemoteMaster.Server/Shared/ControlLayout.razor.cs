@@ -91,4 +91,9 @@ public partial class ControlLayout
     {
         await ControlFunctionsService.AgentConnection.InvokeAsync("SendClientUpdate");
     }
+
+    private async void UpdateAgent()
+    {
+        await ControlFunctionsService.ControlHubProxy.SendAgentUpdate();
+    }
 }

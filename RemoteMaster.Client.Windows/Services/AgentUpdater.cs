@@ -3,81 +3,42 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.ComponentModel;
-using System.Diagnostics;
-using System.IO;
-using Microsoft.Extensions.Logging;
-using RemoteMaster.Agent.Core.Abstractions;
+using RemoteMaster.Client.Core.Abstractions;
+using RemoteMaster.Shared.Abstractions;
 using Windows.Win32.Foundation;
 using Windows.Win32.NetworkManagement.WNet;
 using static Windows.Win32.PInvoke;
 
-namespace RemoteMaster.Agent.Services;
+namespace RemoteMaster.Client.Services;
 
-public class UpdateService : IUpdateService
+public class AgentUpdater : IAgentUpdater
 {
     private const string SharedFolder = @"\\SERVER-DC02\Win\RemoteMaster";
     private const string Login = "support@it-ktk.local";
     private const string Password = "teacher123!!";
 
-    private readonly ILogger<UpdateService> _logger;
+    private readonly IServiceManager _serviceManager;
+    private readonly ILogger<AgentUpdater> _logger;
 
-    public UpdateService(ILogger<UpdateService> logger)
-    {
+    public AgentUpdater(IServiceManager serviceManager, ILogger<AgentUpdater> logger)
+    { 
+        _serviceManager = serviceManager;
         _logger = logger;
     }
 
-    public void InstallClient()
+    public void Update()
     {
-        try
-        {
-            _logger.LogInformation("Installing client...");
-            MapNetworkDrive(SharedFolder, Login, Password);
-            DirectoryCopy(SharedFolder, $"{Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)}/RemoteMaster/Client");
-            CancelNetworkDrive(SharedFolder);
-            _logger.LogInformation("Client installed successfully.");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred while installing client: {Message}", ex.Message);
-            throw;
-        }
-    }
+        _serviceManager.StopService();
 
-    public void UpdateClient()
-    {
-        try
-        {
-            var processes = Process.GetProcessesByName("RemoteMaster.Client");
+        Thread.Sleep(30000);
 
-            if (processes.Length == 0)
-            {
-                _logger.LogInformation("No RemoteMaster.Client processes found.");
-            }
-            else
-            {
-                _logger.LogInformation("Found {ProcessCount} RemoteMaster.Client processes.", processes.Length);
+        _logger.LogInformation("Updating agent...");
+        MapNetworkDrive(SharedFolder, Login, Password);
+        DirectoryCopy($"{SharedFolder}/Agent", $"{Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)}/RemoteMaster/Agent", true, true);
+        CancelNetworkDrive(SharedFolder);
+        _logger.LogInformation("Agent updated successfully.");
 
-                foreach (var client in processes)
-                {
-                    _logger.LogInformation("Attempting to kill process with ID: {ClientID}", client.Id);
-                    client.Kill();
-                    _logger.LogInformation("Process with ID: {ClientID} has been killed.", client.Id);
-                }
-            }
-
-            Thread.Sleep(10000);
-
-            _logger.LogInformation("Updating client...");
-            MapNetworkDrive(SharedFolder, Login, Password);
-            DirectoryCopy(SharedFolder, $"{Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)}/RemoteMaster/Client", true, true);
-            CancelNetworkDrive(SharedFolder);
-            _logger.LogInformation("Client updated successfully.");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred while updating client: {Message}", ex.Message);
-            throw;
-        }
+        _serviceManager.StartService();
     }
 
     private unsafe void MapNetworkDrive(string remotePath, string username, string password)
