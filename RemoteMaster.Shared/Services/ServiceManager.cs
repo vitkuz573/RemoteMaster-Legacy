@@ -12,16 +12,20 @@ public class ServiceManager : IServiceManager
 {
     private const string ServiceName = "RCService";
     private const string ServiceDisplayName = "Remote Control Service";
+    private const string ServiceStartType = "auto";
+    private static readonly string[] ServiceDependencies = { "LanmanWorkstation" };
 
-    public bool IsServiceInstalled()
-    {
-        return ServiceController.GetServices().Any(s => s.ServiceName == ServiceName);
-    }
+    public bool IsServiceInstalled() => ServiceController.GetServices().Any(service => service.ServiceName == ServiceName);
 
     public void InstallService(string executablePath)
     {
-        ExecuteServiceCommand($"create {ServiceName} DisplayName= \"{ServiceDisplayName}\" binPath= \"{executablePath}\" start= auto");
-        ExecuteServiceCommand($"config {ServiceName} depend= LanmanWorkstation");
+        ExecuteServiceCommand($"create {ServiceName} DisplayName= \"{ServiceDisplayName}\" binPath= \"{executablePath}\" start= {ServiceStartType}");
+
+        if (ServiceDependencies.Any())
+        {
+            var dependencies = string.Join("/", ServiceDependencies);
+            ExecuteServiceCommand($"config {ServiceName} depend= {dependencies}");
+        }
     }
 
     public void StartService()
@@ -46,25 +50,23 @@ public class ServiceManager : IServiceManager
         }
     }
 
-    public void UninstallService()
-    {
-        ExecuteServiceCommand($"delete {ServiceName}");
-    }
+    public void UninstallService() => ExecuteServiceCommand($"delete {ServiceName}");
 
     private static void ExecuteServiceCommand(string arguments)
     {
-        var processStartInfo = new ProcessStartInfo
+        using var process = new Process
         {
-            FileName = "sc",
-            Arguments = arguments,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            Verb = "runas"
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = "sc",
+                Arguments = arguments,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                Verb = "runas"
+            }
         };
-
-        using var process = new Process { StartInfo = processStartInfo };
 
         process.Start();
         process.WaitForExit();

@@ -1,0 +1,4 @@
+﻿WNetAddConnection2W
+WNetCancelConnection2W
+
+WIN32_ERROR

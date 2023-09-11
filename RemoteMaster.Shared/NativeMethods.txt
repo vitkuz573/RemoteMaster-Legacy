@@ -39,12 +39,7 @@ WTSGetActiveConsoleSessionId
 WTSQuerySessionInformation
 WTSEnumerateSessions
 
-WNetAddConnection2
-WNetCancelConnection2
-
 SendSAS
-
-WIN32_ERROR
 
 GENERIC_ACCESS_RIGHTS
 

@@ -27,6 +27,6 @@ public class MaintenanceHub : Hub<IMaintenanceClient>
 
     public async Task SendClientUpdate()
     {
-        _updateService.UpdateClient();
+        _updateService.Update();
     }
 }

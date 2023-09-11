@@ -6,7 +6,7 @@ namespace RemoteMaster.Agent.Core.Abstractions;
 
 public interface IClientUpdater
 {
-    void InstallClient();
+    void Install();
 
-    void UpdateClient();
+    void Update();
 }

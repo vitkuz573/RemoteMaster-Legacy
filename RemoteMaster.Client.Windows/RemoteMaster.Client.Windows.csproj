@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RemoteMaster.Client.Core\RemoteMaster.Client.Core.csproj" />
+    <ProjectReference Include="..\RemoteMaster.Updater.Common\RemoteMaster.Updater.Common.csproj" />
   </ItemGroup>
 
   <Target Name="AfterFileSystemPublish" AfterTargets="FileSystemPublish">

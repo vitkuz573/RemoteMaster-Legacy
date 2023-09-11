@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RemoteMaster.Agent.Core\RemoteMaster.Agent.Core.csproj" />
+    <ProjectReference Include="..\RemoteMaster.Updater.Common\RemoteMaster.Updater.Common.csproj" />
   </ItemGroup>
 
 </Project>

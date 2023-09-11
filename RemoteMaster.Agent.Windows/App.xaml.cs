@@ -78,7 +78,7 @@ public partial class App : Application
             .Build();
 
         var updateService = ServiceProvider.GetRequiredService<IClientUpdater>();
-        updateService.InstallClient();
+        updateService.Install();
 
         MonitorClient();
     }
