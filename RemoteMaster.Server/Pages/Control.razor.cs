@@ -48,6 +48,11 @@ public partial class Control : IAsyncDisposable
         }
     }
 
+    private void HandleAgentConfiguration(AgentConfigurationDto dto)
+    {
+        ControlFunctionsService.AgentConfiguration = dto;
+    }
+
     private void HandleClientConfiguration(ClientConfigurationDto dto)
     {
         ControlFunctionsService.ClientConfiguration = dto;
@@ -87,6 +92,7 @@ public partial class Control : IAsyncDisposable
     {
         var agentContext = await ConnectionManager
             .Connect("Agent", $"http://{Host}:3564/hubs/maintenance")
+            .On<AgentConfigurationDto>("ReceiveAgentConfiguration", HandleAgentConfiguration)
             .StartAsync();
 
         ControlFunctionsService.AgentConnection = agentContext.Connection;

@@ -15,6 +15,8 @@ public class ControlFunctionsService
 
     public HubConnection AgentConnection { get; set; }
 
+    public AgentConfigurationDto AgentConfiguration { get; set; }
+
     public ClientConfigurationDto ClientConfiguration { get; set; }
 
     public IEnumerable<DisplayInfo> Displays { get; set; }

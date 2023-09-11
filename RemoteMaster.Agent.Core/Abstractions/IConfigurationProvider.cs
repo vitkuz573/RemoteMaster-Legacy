@@ -4,9 +4,9 @@
 
 using RemoteMaster.Shared.Dtos;
 
-namespace RemoteMaster.Client.Core.Abstractions;
+namespace RemoteMaster.Agent.Core.Abstractions;
 
-public interface IConfigurationService
+public interface IConfigurationProvider
 {
-    ClientConfigurationDto Configure();
+    AgentConfigurationDto Fetch();
 }

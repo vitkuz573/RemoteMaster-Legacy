@@ -28,6 +28,7 @@ public static class ServiceCollectionExtensions
         });
 
         services.AddSingleton<IConfigurationService, ConfigurationService>();
+        services.AddSingleton<IConfigurationProvider, ConfigurationProvider>();
         services.AddSingleton<IHostInfoProvider, HostInfoProvider>();
 
         services.AddSignalR();

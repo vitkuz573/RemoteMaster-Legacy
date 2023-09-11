@@ -8,18 +8,18 @@ using RemoteMaster.Shared.Dtos;
 
 namespace RemoteMaster.Client.Core.Services;
 
-public class ConfigurationService : IConfigurationService
+public class ConfigurationProvider : IConfigurationProvider
 {
     private readonly IInputService _inputService;
     private readonly IScreenCapturerService _screenCapturerService;
 
-    public ConfigurationService(IInputService inputService, IScreenCapturerService screenCapturerService)
+    public ConfigurationProvider(IInputService inputService, IScreenCapturerService screenCapturerService)
     {
         _inputService = inputService;
         _screenCapturerService = screenCapturerService;
     }
 
-    public ClientConfigurationDto Configure()
+    public ClientConfigurationDto Fetch()
     {
         var version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
 

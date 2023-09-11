@@ -12,6 +12,7 @@ public partial class ControlLayout
 {
     private bool _isMenuOpen = false;
     private string _clientVersion;
+    private string _agentVersion;
     private bool _inputEnabled;
     private bool _cursorTracking;
     private int _quality;
@@ -30,6 +31,10 @@ public partial class ControlLayout
 
         if (_firstToggleMenu)
         {
+            var agentConfiguration = ControlFunctionsService.AgentConfiguration;
+
+            _agentVersion = agentConfiguration.AppVersion;
+
             var clientConfiguration = ControlFunctionsService.ClientConfiguration;
 
             _clientVersion = clientConfiguration.AppVersion;

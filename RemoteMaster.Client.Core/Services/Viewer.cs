@@ -15,15 +15,15 @@ namespace RemoteMaster.Client.Core.Services;
 public class Viewer : IViewer
 {
     private readonly IHubContext<ControlHub, IControlClient> _hubContext;
-    private readonly IConfigurationService _configurationService;
+    private readonly IConfigurationProvider _configurationProvider;
     private readonly ILogger<Viewer> _logger;
     private CancellationTokenSource _streamingCts;
 
-    public Viewer(IScreenCapturerService screenCapturer, IConfigurationService configurationService, ILogger<Viewer> logger, IHubContext<ControlHub, IControlClient> hubContext, string connectionId)
+    public Viewer(IScreenCapturerService screenCapturer, IConfigurationProvider configurationService, ILogger<Viewer> logger, IHubContext<ControlHub, IControlClient> hubContext, string connectionId)
     {
         ScreenCapturer = screenCapturer;
         _hubContext = hubContext;
-        _configurationService = configurationService;
+        _configurationProvider = configurationService;
         _logger = logger;
         ConnectionId = connectionId;
 
@@ -100,9 +100,9 @@ public class Viewer : IViewer
 
     private async Task SendClientConfiguration()
     {
-        var clientConfiguration = _configurationService.Configure();
+        var configuration = _configurationProvider.Fetch();
 
-        await _hubContext.Clients.Client(ConnectionId).ReceiveClientConfiguration(clientConfiguration);
+        await _hubContext.Clients.Client(ConnectionId).ReceiveClientConfiguration(configuration);
     }
 
     public void SetSelectedScreen(string displayName)

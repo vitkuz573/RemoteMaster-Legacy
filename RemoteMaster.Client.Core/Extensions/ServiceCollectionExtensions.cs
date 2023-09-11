@@ -29,7 +29,7 @@ public static class ServiceCollectionExtensions
 
         services.AddSignalR().AddMessagePackProtocol();
 
-        services.AddScoped<IConfigurationService, ConfigurationService>();
+        services.AddScoped<IConfigurationProvider, ConfigurationProvider>();
         services.AddSingleton<IAppState, AppState>();
         services.AddSingleton<IShutdownService, ShutdownService>();
         services.AddSingleton<IIdleTimer, IdleTimer>();
