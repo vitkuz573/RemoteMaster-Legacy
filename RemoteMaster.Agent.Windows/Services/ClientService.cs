@@ -98,11 +98,6 @@ public class ClientService : IClientService
                 {
                     return true;
                 }
-                else if (process.MainModule != null && string.Equals(Path.GetFullPath(process.MainModule.FileName), clientFullPath, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    _logger.LogWarning($"Detected a process with the same name as the client but different signature. Killing process ID: {process.Id}");
-                    process.Kill();
-                }
             }
             catch (InvalidOperationException ex)
             {
