@@ -21,6 +21,7 @@ public class ServiceManager : IServiceManager
     public void InstallService(string executablePath)
     {
         ExecuteServiceCommand($"create {ServiceName} DisplayName= \"{ServiceDisplayName}\" binPath= \"{executablePath}\" start= auto");
+        ExecuteServiceCommand($"config {ServiceName} depend= LanmanWorkstation");
     }
 
     public void StartService()
