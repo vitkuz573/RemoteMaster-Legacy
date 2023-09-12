@@ -30,7 +30,7 @@ public class HiddenWindow : Window
         Loaded += (sender, e) =>
         {
             var hwndSource = PresentationSource.FromVisual(this) as HwndSource;
-            var result = WTSRegisterSessionNotification((HWND)hwndSource.Handle, NOTIFY_FOR_ALL_SESSIONS);
+            var result = WTSRegisterSessionNotification((HWND)hwndSource!.Handle, NOTIFY_FOR_ALL_SESSIONS);
 
             if (!result)
             {
@@ -45,7 +45,7 @@ public class HiddenWindow : Window
         Unloaded += (sender, e) =>
         {
             var hwndSource = PresentationSource.FromVisual(this) as HwndSource;
-            WTSUnRegisterSessionNotification((HWND)hwndSource.Handle);
+            WTSUnRegisterSessionNotification((HWND)hwndSource!.Handle);
             _logger.LogInformation("Unregistered from session notifications.");
         };
     }
@@ -55,26 +55,26 @@ public class HiddenWindow : Window
         base.OnSourceInitialized(e);
 
         var source = PresentationSource.FromVisual(this) as HwndSource;
-        source.AddHook(WndProc);
+        source!.AddHook(WndProc);
     }
 
-    private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    private nint WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
     {
         if (msg == WM_WTSSESSION_CHANGE)
         {
             var sessionChangeReason = wParam switch
             {
-                (IntPtr)WTS_SESSION_LOCK => HandleSessionLock(lParam),
-                (IntPtr)WTS_SESSION_UNLOCK => HandleSessionUnlock(lParam),
-                (IntPtr)WTS_CONSOLE_DISCONNECT => HandleConsoleDisconnect(),
-                (IntPtr)WTS_CONSOLE_CONNECT => HandleConsoleConnect(),
+                (nint)WTS_SESSION_LOCK => HandleSessionLock(lParam),
+                (nint)WTS_SESSION_UNLOCK => HandleSessionUnlock(lParam),
+                (nint)WTS_CONSOLE_DISCONNECT => HandleConsoleDisconnect(),
+                (nint)WTS_CONSOLE_CONNECT => HandleConsoleConnect(),
                 _ => "Unknown session change reason."
             };
 
-            _logger.LogInformation($"Received session change notification. Reason: {sessionChangeReason}");
+            _logger.LogInformation("Received session change notification. Reason: {SessionChangeReason}", sessionChangeReason);
         }
 
-        return IntPtr.Zero;
+        return nint.Zero;
     }
 
     private string HandleSessionLock(nint sessionId)
