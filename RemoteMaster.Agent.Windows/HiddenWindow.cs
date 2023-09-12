@@ -80,34 +80,40 @@ public class HiddenWindow : Window
     private string HandleSessionLock(nint sessionId)
     {
         StopAndStartClient();
+
         return $"A session has been locked. Session ID: {sessionId}";
     }
 
     private string HandleSessionUnlock(nint sessionId)
     {
         StopAndStartClient();
+
         return $"A session has been unlocked. Session ID: {sessionId}";
     }
 
     private string HandleConsoleDisconnect()
     {
         StopAndStartClient();
+
         return "A session was disconnected from the console terminal.";
     }
 
     private string HandleConsoleConnect()
     {
         StopAndStartClient();
+
         return "A session was connected to the console terminal.";
     }
 
     private void StopAndStartClient()
     {
         _clientService.StopClient();
+
         while (_clientService.IsClientRunning())
         {
             Task.Delay(50).Wait();
         }
+
         _clientService.StartClient();
     }
 }
