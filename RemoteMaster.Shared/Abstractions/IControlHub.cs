@@ -31,7 +31,5 @@ public interface IControlHub
 
     Task RebootComputer(string message, int timeout, bool forceAppsClosed);
 
-    Task SendCtrlAltDel();
-
     Task SendAgentUpdate();
 }

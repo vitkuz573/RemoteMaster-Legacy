@@ -126,11 +126,6 @@ public class ControlHub : Hub<IControlClient>, IControlHub
         _powerManager.Reboot(message, (uint)timeout, forceAppsClosed);
     }
 
-    public async Task SendCtrlAltDel()
-    {
-        _powerManager.SendCtrlAltDel();
-    }
-
     private void ExecuteActionForViewer(Action<IViewer> action)
     {
         if (_appState.TryGetViewer(Context.ConnectionId, out var viewer))

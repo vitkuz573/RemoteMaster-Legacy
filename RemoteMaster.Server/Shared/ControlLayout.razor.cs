@@ -84,7 +84,7 @@ public partial class ControlLayout
 
     private async void SendCtrlAltDel()
     {
-        await ControlFunctionsService.ControlHubProxy.SendCtrlAltDel();
+        await ControlFunctionsService.AgentConnection.InvokeAsync("SendCtrlAltDel");
     }
 
     private async void UpdateClient()
