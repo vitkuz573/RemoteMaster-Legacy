@@ -1,15 +1,14 @@
 ﻿@using Radzen
 @using Microsoft.AspNetCore.Components
-@using RemoteMaster.Server.Models;
+@using RemoteMaster.Server.Models
 
-<div @oncontextmenu:preventDefault="true" @oncontextmenu="@(args => ShowContextMenu(args))" class="mb-5 selectable-node bg-transparent box-border p-1" data-ip-address="@Computer.IPAddress">
-    <RadzenCard class="computer-card w-full max-w-xs mx-auto bg-white shadow-md overflow-hidden md:max-w-2xl">
-        <div class="p-2">
-            <RadzenImage Path="@ThumbnailPath" class="h-32 w-full object-cover" />            <div class="mt-2 flex items-center justify-between">
-                <RadzenLabel Text="@Computer.Name" class="text-xl truncate" />
-            </div>
+<div @oncontextmenu:preventDefault="true" @oncontextmenu="@(args => ShowContextMenu(args))" class="mb-4 selectable-node bg-transparent box-border p-1" data-ip-address="@Computer.IPAddress">
+    <div class="bg-white shadow-lg rounded-md overflow-hidden">
+        <img src="@ThumbnailPath" alt="Thumbnail" class="h-40 w-full object-cover" />
+        <div class="p-3">
+            <span class="text-center text-lg">@Computer.Name</span>
         </div>
-    </RadzenCard>
+    </div>
 </div>
 
 <style>
