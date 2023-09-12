@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Interop;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using RemoteMaster.Agent.Abstractions;
 using Windows.Win32.Foundation;
 using static Windows.Win32.PInvoke;
 
@@ -14,13 +15,13 @@ namespace RemoteMaster.Agent.Windows;
 public class HiddenWindow : Window
 {
     private readonly ILogger<HiddenWindow> _logger;
+    private readonly IClientService _clientService;
 
     public HiddenWindow()
     {
         var serviceProvider = ((App)Application.Current).ServiceProvider;
         _logger = serviceProvider.GetRequiredService<ILogger<HiddenWindow>>();
-
-        _logger.LogInformation("Initializing HiddenWindow.");
+        _clientService = serviceProvider.GetRequiredService<IClientService>();
 
         Visibility = Visibility.Hidden;
         ShowInTaskbar = false;
@@ -28,15 +29,12 @@ public class HiddenWindow : Window
 
         Loaded += (sender, e) =>
         {
-            _logger.LogInformation("HiddenWindow Loaded event triggered.");
-
             var hwndSource = PresentationSource.FromVisual(this) as HwndSource;
             var result = WTSRegisterSessionNotification((HWND)hwndSource.Handle, NOTIFY_FOR_ALL_SESSIONS);
 
             if (!result)
             {
                 _logger.LogError("Failed to register session notifications.");
-                // Обработайте ошибку
             }
             else
             {
@@ -46,11 +44,8 @@ public class HiddenWindow : Window
 
         Unloaded += (sender, e) =>
         {
-            _logger.LogInformation("HiddenWindow Unloaded event triggered.");
-
             var hwndSource = PresentationSource.FromVisual(this) as HwndSource;
             WTSUnRegisterSessionNotification((HWND)hwndSource.Handle);
-
             _logger.LogInformation("Unregistered from session notifications.");
         };
     }
@@ -61,8 +56,6 @@ public class HiddenWindow : Window
 
         var source = PresentationSource.FromVisual(this) as HwndSource;
         source.AddHook(WndProc);
-
-        _logger.LogInformation("Source initialized and hook added.");
     }
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -71,15 +64,10 @@ public class HiddenWindow : Window
         {
             var sessionChangeReason = wParam switch
             {
-                (IntPtr)WTS_CONSOLE_CONNECT => "A session was connected to the console terminal.",
-                (IntPtr)WTS_CONSOLE_DISCONNECT => "A session was disconnected from the console terminal.",
-                (IntPtr)WTS_REMOTE_CONNECT => "A session was connected to the remote terminal.",
-                (IntPtr)WTS_REMOTE_DISCONNECT => "A session was disconnected from the remote terminal.",
-                (IntPtr)WTS_SESSION_LOGON => $"A user has logged on to the session. Session ID: {lParam}",
-                (IntPtr)WTS_SESSION_LOGOFF => $"A user has logged off the session. Session ID: {lParam}",
-                (IntPtr)WTS_SESSION_LOCK => $"A session has been locked. Session ID: {lParam}",
-                (IntPtr)WTS_SESSION_UNLOCK => $"A session has been unlocked. Session ID: {lParam}",
-                (IntPtr)WTS_SESSION_REMOTE_CONTROL => $"A session has changed its remote controlled status. Session ID: {lParam}",
+                (IntPtr)WTS_SESSION_LOCK => HandleSessionLock(lParam),
+                (IntPtr)WTS_SESSION_UNLOCK => HandleSessionUnlock(lParam),
+                (IntPtr)WTS_CONSOLE_DISCONNECT => HandleConsoleDisconnect(),
+                (IntPtr)WTS_CONSOLE_CONNECT => HandleConsoleConnect(),
                 _ => "Unknown session change reason."
             };
 
@@ -87,5 +75,39 @@ public class HiddenWindow : Window
         }
 
         return IntPtr.Zero;
+    }
+
+    private string HandleSessionLock(nint sessionId)
+    {
+        StopAndStartClient();
+        return $"A session has been locked. Session ID: {sessionId}";
+    }
+
+    private string HandleSessionUnlock(nint sessionId)
+    {
+        StopAndStartClient();
+        return $"A session has been unlocked. Session ID: {sessionId}";
+    }
+
+    private string HandleConsoleDisconnect()
+    {
+        StopAndStartClient();
+        return "A session was disconnected from the console terminal.";
+    }
+
+    private string HandleConsoleConnect()
+    {
+        StopAndStartClient();
+        return "A session was connected to the console terminal.";
+    }
+
+    private void StopAndStartClient()
+    {
+        _clientService.StopClient();
+        while (_clientService.IsClientRunning())
+        {
+            Task.Delay(50).Wait();
+        }
+        _clientService.StartClient();
     }
 }
