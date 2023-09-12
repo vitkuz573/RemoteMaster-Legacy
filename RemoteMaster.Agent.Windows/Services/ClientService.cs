@@ -130,4 +130,29 @@ public class ClientService : IClientService
             _logger.LogError("The RemoteMaster client appears to be tampered with or its digital signature is not valid.");
         }
     }
+
+    public void StopClient()
+    {
+        var clientFullPath = Path.GetFullPath(ClientPath);
+
+        foreach (var process in Process.GetProcessesByName("RemoteMaster.Client"))
+        {
+            try
+            {
+                if (_signatureService.IsProcessSignatureValid(process, clientFullPath, CertificateThumbprint))
+                {
+                    process.Kill();
+                    _logger.LogInformation("RemoteMaster Client stopped successfully.");
+                }
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError(ex, $"Unable to stop the process for process ID: {process.Id}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Unexpected error occurred when stopping process ID: {process.Id}");
+            }
+        }
+    }
 }

@@ -15,4 +15,6 @@ public interface IClientService
     bool IsClientRunning();
 
     void StartClient();
+
+    void StopClient();
 }
