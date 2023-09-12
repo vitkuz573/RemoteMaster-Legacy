@@ -26,9 +26,9 @@ public class Result : IResult
     public bool IsSuccess { get; protected set; }
 
     public IReadOnlyCollection<string> ErrorMessages { get; protected set; } = Array.Empty<string>();
-    
+
     public Exception? Exception { get; protected set; }
-    
+
     public bool IsFailure => !IsSuccess;
 
     /// <summary>
@@ -184,13 +184,13 @@ public class Result : IResult
 public class Result<T> : IResult
 {
     public T Value { get; private set; }
-    
+
     public bool IsSuccess { get; private set; }
-    
+
     public IReadOnlyCollection<string> ErrorMessages { get; private set; } = Array.Empty<string>();
-    
+
     public Exception? Exception { get; private set; }
-    
+
     public bool IsFailure => !IsSuccess;
 
     /// <summary>

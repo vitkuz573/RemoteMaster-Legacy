@@ -1,4 +1,8 @@
-﻿using System.Windows;
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+// This file is part of the RemoteMaster project.
+// Licensed under the GNU Affero General Public License v3.0.
+
+using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using RemoteMaster.Agent.Abstractions;
 using RemoteMaster.Agent.Core.Abstractions;
@@ -28,7 +32,7 @@ public partial class MainWindow : Window
         _configurationService = serviceProvider.GetRequiredService<IConfigurationService>();
         _hostInfoProvider = serviceProvider.GetRequiredService<IHostInfoProvider>();
         _agentServiceManager = serviceProvider.GetRequiredService<IAgentServiceManager>();
-        
+
         _agentServiceManager.MessageReceived += OnMessageReceived;
 
         _hostName = _hostInfoProvider.GetHostName();

@@ -4,12 +4,12 @@
     "net7.0": {
       "Microsoft.AspNetCore.SignalR.Protocols.MessagePack": {
         "type": "Direct",
-        "requested": "[7.0.10, )",
-        "resolved": "7.0.10",
-        "contentHash": "dte7paZdfuO7pBTF8k3ofaPkIgcDeJN7x0m9Gw/OekrsqQLh5994sgKoZxNQ4x+78tAdxUrmPjf+EEEimS5nJg==",
+        "requested": "[7.0.11, )",
+        "resolved": "7.0.11",
+        "contentHash": "xtWXhOmfp/+h4OUamqgpXcIu3FZO6h1a+Q25PxMBOyqM6kz0swlSj45yKcNKscfQS840FguiryQlllSkVFWprw==",
         "dependencies": {
           "MessagePack": "2.1.90",
-          "Microsoft.AspNetCore.SignalR.Common": "7.0.10"
+          "Microsoft.AspNetCore.SignalR.Common": "7.0.11"
         }
       },
       "Serilog": {
@@ -67,19 +67,19 @@
       },
       "Microsoft.AspNetCore.Connections.Abstractions": {
         "type": "Transitive",
-        "resolved": "7.0.10",
-        "contentHash": "WLHAvZbxrE21DtFXHVu0bVYNfQvg5uzcL6P5hbbFnkGC/IPN9+ytP3SSW+mtemGgIKYrqKN1eQznar4Klxel2w==",
+        "resolved": "7.0.11",
+        "contentHash": "zE/12cfNKnvtv3t5oB5f7bhXnyJ9zMi17XFjX95QVCmq8OiTqlT6U+S0JLwBi0f62m7ZTUIvelvleZZnEqQ7Kw==",
         "dependencies": {
-          "Microsoft.Extensions.Features": "7.0.10",
+          "Microsoft.Extensions.Features": "7.0.11",
           "System.IO.Pipelines": "7.0.0"
         }
       },
       "Microsoft.AspNetCore.SignalR.Common": {
         "type": "Transitive",
-        "resolved": "7.0.10",
-        "contentHash": "899XAeogJNJFSO2E+/fdMc9JakJD4fZ3BfJ5T9Ed2ng/DWFl7hXprHIglESF9Fw30+BTF7m20iew0+bi0Ve3wQ==",
+        "resolved": "7.0.11",
+        "contentHash": "MNP/h1mkGPTDXmYIeQky9lTHHXebo07mbJSrYenG+wuwauduU+2XMwetoIYOHYTGB13T7hm1Sro7l/ZmKTj+dA==",
         "dependencies": {
-          "Microsoft.AspNetCore.Connections.Abstractions": "7.0.10",
+          "Microsoft.AspNetCore.Connections.Abstractions": "7.0.11",
           "Microsoft.Extensions.Options": "7.0.1"
         }
       },
@@ -103,8 +103,8 @@
       },
       "Microsoft.Extensions.Features": {
         "type": "Transitive",
-        "resolved": "7.0.10",
-        "contentHash": "jodGLS4SoclKeYMCZzIKTM21mwfyMjCTq/Ex65kUYYAWuVatht4QayBrhcthwvh7amBeLGLCtS4rFlmGLwrAwA=="
+        "resolved": "7.0.11",
+        "contentHash": "gEMAI/gM2sxFlXRKDO7ilzvcv9D4La1fMiWQ3SOUFH8Vni15BQCCu+i04KcIUCbs2Z5KH5bFgJBcr3XXXkahGA=="
       },
       "Microsoft.Extensions.Options": {
         "type": "Transitive",

@@ -50,12 +50,12 @@ public class AgentServiceManager : IAgentServiceManager
         if (!registerResult)
         {
             MessageReceived?.Invoke("Client registration failed.", MessageType.Error);
-            
+
             return false;
         }
 
         MessageReceived?.Invoke("Service installed and started successfully.", MessageType.Information);
-        
+
         return true;
     }
 
@@ -68,7 +68,7 @@ public class AgentServiceManager : IAgentServiceManager
             if (!unregisterResult)
             {
                 MessageReceived?.Invoke("Client unregistration failed.", MessageType.Error);
-                
+
                 return false;
             }
 
@@ -76,19 +76,19 @@ public class AgentServiceManager : IAgentServiceManager
             _serviceManager.UninstallService();
             RemoveServiceFiles();
             MessageReceived?.Invoke("Service uninstalled successfully.", MessageType.Information);
-            
+
             return true;
         }
 
         MessageReceived?.Invoke("Service is not installed.", MessageType.Information);
-        
+
         return false;
     }
 
     private static string GetNewExecutablePath()
     {
         var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-        
+
         return Path.Combine(programFilesPath, MainAppName, SubAppName, $"{MainAppName}.{SubAppName}.exe");
     }
 
@@ -116,7 +116,7 @@ public class AgentServiceManager : IAgentServiceManager
     private static void RemoveServiceFiles()
     {
         var newExecutablePath = GetNewExecutablePath();
-        
+
         if (File.Exists(newExecutablePath))
         {
             File.Delete(newExecutablePath);
