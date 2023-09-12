@@ -22,7 +22,7 @@ public class AgentUpdater : UpdaterBase, IAgentUpdater
         Thread.Sleep(30000);
 
         MapNetworkDrive(SharedFolder, Login, Password);
-        DirectoryCopy(Folder, $"{Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)}/RemoteMaster", true, true);
+        DirectoryCopy(Folder, $"{Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)}/RemoteMaster/Agent", true, true);
         CancelNetworkDrive(SharedFolder);
 
         _serviceManager.StartService();
