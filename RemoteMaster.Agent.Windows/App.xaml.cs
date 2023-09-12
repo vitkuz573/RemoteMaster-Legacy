@@ -13,14 +13,17 @@ using RemoteMaster.Agent.Abstractions;
 using RemoteMaster.Agent.Core.Abstractions;
 using RemoteMaster.Agent.Core.Extensions;
 using RemoteMaster.Agent.Services;
+using RemoteMaster.Agent.Windows;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Services;
+using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Agent;
 
 public partial class App : Application
 {
     private IHost _host;
+    private HiddenWindow _hiddenWindow;
 
     public IServiceProvider ServiceProvider => _host.Services;
 
@@ -31,6 +34,9 @@ public partial class App : Application
         if (WindowsServiceHelpers.IsWindowsService())
         {
             ConfigureAsWindowsService(hostBuilder);
+
+            _hiddenWindow = new HiddenWindow();
+            _hiddenWindow.Show();
         }
         else
         {
