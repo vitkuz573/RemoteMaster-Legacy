@@ -15,14 +15,16 @@
         </RadzenTree>
     </div>
 
-    <div class="w-3/4 p-4 flex flex-wrap gap-4">
+    <div class="w-3/4 p-4 flex flex-wrap gap-4 items-start">
         @if (_selectedNode is Folder selectedFolder)
         {
             foreach (var child in selectedFolder.Children)
             {
                 if (child is Computer computer)
                 {
-                    <ComputerCard Computer="computer" />
+                    <div class="w-1/4 p-2">
+                        <ComputerCard Computer="computer" />
+                    </div>
                 }
             }
         }
