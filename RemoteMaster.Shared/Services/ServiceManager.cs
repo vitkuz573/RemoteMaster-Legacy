@@ -12,7 +12,7 @@ public class ServiceManager : IServiceManager
 {
     private const string ServiceName = "RCService";
     private const string ServiceDisplayName = "Remote Control Service";
-    private const string ServiceStartType = "auto";
+    private const string ServiceStartType = "delayed-auto";
     private static readonly string[] ServiceDependencies = { "LanmanWorkstation" };
 
     public bool IsServiceInstalled() => ServiceController.GetServices().Any(service => service.ServiceName == ServiceName);
