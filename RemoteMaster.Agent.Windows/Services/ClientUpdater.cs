@@ -36,7 +36,7 @@ public class ClientUpdater : UpdaterBase, IClientUpdater
         Thread.Sleep(10000);
 
         MapNetworkDrive(SharedFolder, Login, Password);
-        DirectoryCopy(Folder, $"{Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)}/RemoteMaster/Client", true, true);
+        DirectoryCopy(Folder, $"{Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)}/RemoteMaster", true, true);
         CancelNetworkDrive(SharedFolder);
     }
 }

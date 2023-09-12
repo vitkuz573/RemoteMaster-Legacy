@@ -11,6 +11,7 @@ public abstract class UpdaterBase
     protected const string SharedFolder = @"\\SERVER-DC02\Win\RemoteMaster";
     protected const string Login = "support@it-ktk.local";
     protected const string Password = "teacher123!!";
+
     protected readonly ILogger _logger;
 
     protected UpdaterBase(ILogger logger)
