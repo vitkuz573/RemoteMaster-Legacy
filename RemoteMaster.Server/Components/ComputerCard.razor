@@ -2,7 +2,7 @@
 @using Microsoft.AspNetCore.Components
 @using RemoteMaster.Server.Models
 
-<div @oncontextmenu:preventDefault="true" @oncontextmenu="@(args => ShowContextMenu(args))" class="mb-4 selectable-node bg-transparent box-border p-1" data-ip-address="@Computer.IPAddress">
+<div @oncontextmenu:preventDefault="true" @oncontextmenu="@(args => ShowContextMenu(args))" class="mb-4 bg-transparent box-border p-1 ui-selectable" data-ip-address="@Computer.IPAddress">
     <div class="bg-white shadow-lg rounded-md overflow-hidden">
         <img src="@ThumbnailPath" alt="Thumbnail" class="h-40 w-full object-cover" />
         <div class="p-3">
@@ -10,14 +10,3 @@
         </div>
     </div>
 </div>
-
-<style>
-    .selectable-node:not(.ds-selected):hover {
-        background-color: #CFDCE7;
-    }
-
-    .ds-selected {
-        background-color: #CCE8FF;
-        border: 1px solid #99D1FF;
-    }
-</style>

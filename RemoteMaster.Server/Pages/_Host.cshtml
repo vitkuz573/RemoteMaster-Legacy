@@ -38,6 +38,8 @@
 
     <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/selectable.js@latest/selectable.min.js"></script>
+
     <script>
         window.revokeUrl = URL.revokeObjectURL;
 
@@ -71,6 +73,12 @@
             a.click();
             window.revokeUrl(url);
         };
+
+        const selectable = new Selectable();
+
+        selectable.on("selecteditem", function (item) {
+            console.log(item);
+        });
     </script>
 </body>
 </html>
