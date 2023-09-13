@@ -99,7 +99,7 @@ public partial class Index
             builder.AddAttribute(1, "Icon", "desktop_windows");
             builder.CloseComponent();
 
-            builder.AddContent(2, $" {computer.Name} ({computer.IPAddress})");
+            builder.AddContent(2, $" {computer.Name}");
         }
         else if (context.Value is Folder folder)
         {
