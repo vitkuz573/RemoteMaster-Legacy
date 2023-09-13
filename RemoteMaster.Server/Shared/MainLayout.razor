@@ -8,44 +8,9 @@
 <RadzenTooltip />
 
 <div class="flex h-screen bg-gray-200">
-    <div class="@NavMenuContainerClasses" style="transform: @(collapseNavMenu ? "translateX(-100%)" : "translateX(0)");">
-        <NavMenu OnToggleNavMenu="ToggleNavMenu" collapseNavMenu="@collapseNavMenu" />
-    </div>
-    @if (collapseNavMenu)
-    {
-        <button title="Navigation menu" class="w-8 h-8 rounded flex justify-center items-center bg-gray-600 absolute left-0 top-0 m-5 z-10" @onclick="ToggleNavMenu">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-5 w-5">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
-            </svg>
-        </button>
-    }
     <main class="flex-1 flex flex-col overflow-hidden">
-        <header class="flex items-center justify-between p-6 bg-white border-b border-gray-200">
-            <div class="flex items-center">
-                <div class="mx-10">
-                    <!-- added here -->
-                    <LoginDisplay />
-                </div>
-            </div>
-            <div class="flex items-center">
-                <a href="https://docs.microsoft.com/aspnet/" target="_blank" class="text-gray-500 hover:text-gray-600">About</a>
-            </div>
-        </header>
-
-        <article class="p-6 flex-1 overflow-y-auto bg-white">
+        <article class="flex-1 overflow-x-hidden overflow-y-hidden bg-white">
             @Body
         </article>
     </main>
 </div>
-
-@code {
-    private bool collapseNavMenu = true;
-
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
-
-    private string NavMenuContainerClasses =>
-        $"fixed h-screen z-20 flex flex-col w-64 transition-transform duration-300 ease-in-out";
-}

@@ -7,7 +7,7 @@
     Remote Control
 </div>
 
-<div class="flex h-screen">
+<div class="flex h-screen overflow-x-hidden overflow-y-hidden">
 
     <div class="w-1/4 bg-gray-100 p-4 overflow-y-auto noselect">
         <RadzenTree Data="_entries" Change="OnTreeChange" Expand="LoadComputers" Style="list-style-type: none;">
@@ -15,7 +15,7 @@
         </RadzenTree>
     </div>
 
-    <div class="w-3/4 p-4 flex flex-wrap gap-4 items-start">
+    <div class="w-3/4 p-4 flex flex-wrap gap-4 items-start overflow-y-auto">
         @if (_selectedNode is Folder selectedFolder)
         {
             foreach (var child in selectedFolder.Children)
