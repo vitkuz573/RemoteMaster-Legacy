@@ -44,12 +44,6 @@ public partial class ComputerCard
         };
     }
 
-    private async void ShowContextMenu(MouseEventArgs args)
-    {
-        await JSRuntime.InvokeVoidAsync("toggleSelection", Computer.IPAddress);
-        ContextMenuService.Open(args, _contextMenuItems, OnMenuItemClick);
-    }
-
     private async void OnMenuItemClick(MenuItemEventArgs args)
     {
         if (args.Value.Equals("Command"))

@@ -7,15 +7,15 @@
     Remote Control
 </div>
 
-<div class="flex h-screen overflow-x-hidden overflow-y-hidden">
+<div class="flex h-screen overflow-x-hidden overflow-y-hidden selectable-container">
 
-    <div class="bg-gray-100 p-4 overflow-y-auto noselect">
+    <div class="bg-gray-100 p-4 overflow-y-auto">
         <RadzenTree Data="_entries" Change="OnTreeChange" Expand="LoadComputers" Style="list-style-type: none;">
             <RadzenTreeLevel Text="GetTextForNode" Template="NodeTemplate" />
         </RadzenTree>
     </div>
 
-    <div class="w-3/4 p-4 flex flex-wrap gap-4 items-start overflow-y-auto">
+    <div class="w-3/4 p-4 flex flex-wrap gap-4 items-start overflow-y-auto bg-gray-600">
         @if (_selectedNode is Folder selectedFolder)
         {
             foreach (var child in selectedFolder.Children)
@@ -30,15 +30,6 @@
         }
     </div>
 
-</div>
+    <div id="sampleContextMenu" class="context-menu"></div>
 
-<style>
-    .noselect {
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        -khtml-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-    }
-</style>
+</div>
