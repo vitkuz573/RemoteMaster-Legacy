@@ -12,6 +12,11 @@ using RemoteMaster.Server.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Services
+builder.Services.AddHttpClient("DefaultClient", client =>
+{
+    client.BaseAddress = new Uri("http://127.0.0.1:5254");
+});
+
 builder.Services.AddTransient<IConfiguratorService, ConfiguratorService>();
 builder.Services.AddScoped<IConnectionManager, ConnectionManager>();
 builder.Services.AddTransient<IConnectionContextFactory, ConnectionContextFactory>();
@@ -44,10 +49,10 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
+app.MapControllers();
 app.MapBlazorHub();
 app.MapHub<ManagementHub>("/hubs/management");
 app.MapFallbackToPage("/_Host");

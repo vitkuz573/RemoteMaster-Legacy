@@ -2,12 +2,10 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Net;
-using System.Net.Sockets;
 using System.Text;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Pages;
@@ -23,10 +21,12 @@ public partial class ConfigurationGeneratorPage
     private bool _isSpoilerVisible = false;
 
     [Inject]
-    private IConfiguratorService ConfiguratorService { get; set; }
+    private IJSRuntime JSRuntime { get; set; }
 
     [Inject]
-    private IJSRuntime JSRuntime { get; set; }
+    public IHttpClientFactory HttpClientFactory { get; set; }
+
+    private HttpClient HttpClient => HttpClientFactory.CreateClient("DefaultClient");
 
     [Inject]
     private ILogger<ConfigurationGeneratorPage> Logger { get; set; }
@@ -41,16 +41,23 @@ public partial class ConfigurationGeneratorPage
 
         var config = new ConfigurationModel
         {
-            Server = GetLocalIPAddress(),
-            Group = _group
+            Group = _group,
         };
 
-        using (var memoryStream = await ConfiguratorService.GenerateConfigFileAsync(config))
-        {
-            _configFileBytes = memoryStream.ToArray();
-        }
+        var response = await HttpClient.PostAsJsonAsync("api/config/generate", config);
 
-        _isConfigGenerated = true;
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<ConfigResponse>();
+            _configFileBytes = Encoding.UTF8.GetBytes(result.FileContent);
+            _configFileName = result.FileName;
+
+            _isConfigGenerated = true;
+        }
+        else
+        {
+            Logger.LogError("Failed to generate configuration file.");
+        }
     }
 
     private async Task DownloadConfig()
@@ -66,20 +73,5 @@ public partial class ConfigurationGeneratorPage
     private void ToggleSpoiler()
     {
         _isSpoilerVisible = !_isSpoilerVisible;
-    }
-
-    private static string GetLocalIPAddress()
-    {
-        var host = Dns.GetHostEntry(Dns.GetHostName());
-
-        foreach (var ip in host.AddressList)
-        {
-            if (ip.AddressFamily == AddressFamily.InterNetwork)
-            {
-                return ip.ToString();
-            }
-        }
-
-        throw new Exception("No network adapters with an IPv4 address in the system!");
     }
 }

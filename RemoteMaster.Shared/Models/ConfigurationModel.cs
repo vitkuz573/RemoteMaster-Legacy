@@ -9,7 +9,7 @@ namespace RemoteMaster.Shared.Models;
 public class ConfigurationModel
 {
     [JsonPropertyName("server")]
-    public string Server { get; set; }
+    public string? Server { get; set; }
 
     [JsonPropertyName("group")]
     public string Group { get; set; }
