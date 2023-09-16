@@ -16,11 +16,11 @@ namespace RemoteMaster.Server.Pages;
 
 public partial class Index
 {
-    private List<Node> _entries = new();
+    private readonly List<Node> _entries = new();
     private Node _selectedNode;
 
     private bool _anyComputerSelected = false;
-    private List<Computer> _selectedComputers = new();
+    private readonly List<Computer> _selectedComputers = new();
 
     [Inject]
     private DatabaseService DatabaseService { get; set; }
