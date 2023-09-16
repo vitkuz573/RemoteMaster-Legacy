@@ -17,8 +17,14 @@
 
     <div class="flex-grow p-4 flex flex-col gap-4 bg-gray-300 selectable-container">
         <!-- Область для кнопок -->
-        <div class="border-b border-gray-500 pb-2 mb-2 w-full flex justify-end">
-            <RadzenButton Click="HandleRefreshClick" Text="Refresh" />
+        <div class="border-b border-gray-500 pb-2 mb-2 w-full flex">
+            <!-- Переместите эти три кнопки в начало контейнера flex -->
+            <RadzenButton Text="Manage" Disabled="@(!_anyComputerSelected)" class="mr-2" />
+            <RadzenButton Text="View" Disabled="@(!_anyComputerSelected)" class="mr-2" />
+            <RadzenButton Text="Open CMD" Disabled="@(!_anyComputerSelected)" />
+
+            <!-- Добавьте класс ml-auto к кнопке Refresh, чтобы она "отталкивалась" к правому краю -->
+            <RadzenButton Click="HandleRefreshClick" Text="Refresh" class="ml-auto" />
         </div>
 
         <!-- Контент с карточками ПК -->
@@ -30,7 +36,7 @@
                     if (child is Computer computer)
                     {
                         <div class="w-1/4 p-2">
-                            <ComputerCard Computer="computer" />
+                            <ComputerCard @key="computer" Computer="computer" IsSelectedChanged="@(isSelected => HandleComputerSelection(computer, isSelected))" />
                         </div>
                     }
                 }

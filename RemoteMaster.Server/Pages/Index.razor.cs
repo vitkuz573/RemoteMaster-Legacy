@@ -19,6 +19,9 @@ public partial class Index
     private List<Node> _entries = new();
     private Node _selectedNode;
 
+    private bool _anyComputerSelected = false;
+    private List<Computer> _selectedComputers = new();
+
     [Inject]
     private DatabaseService DatabaseService { get; set; }
 
@@ -36,6 +39,21 @@ public partial class Index
         }
 
         DatabaseService.NodeAdded += OnNodeAdded;
+    }
+
+    private void HandleComputerSelection(Computer computer, bool isSelected)
+    {
+        if (isSelected)
+        {
+            _selectedComputers.Add(computer);
+        }
+        else
+        {
+            _selectedComputers.Remove(computer);
+        }
+
+        _anyComputerSelected = _selectedComputers.Any();
+        StateHasChanged();
     }
 
     private async Task LoadChildrenAsync(Folder folder)
@@ -136,7 +154,7 @@ public partial class Index
             catch {}
         }
     }
-
+    
     private async Task HandleRefreshClick()
     {
         if (_selectedNode is Folder selectedFolder)

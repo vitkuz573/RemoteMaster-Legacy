@@ -4,7 +4,6 @@
 
 using System.Diagnostics;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using Radzen;
 using RemoteMaster.Server.Models;
@@ -26,9 +25,16 @@ public partial class ComputerCard
 
     private readonly List<ContextMenuItem> _contextMenuItems;
 
+    [Parameter]
+    public bool IsSelected { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsSelectedChanged { get; set; }
+
     public ComputerCard()
     {
-        _contextMenuItems = new List<ContextMenuItem> {
+        _contextMenuItems = new List<ContextMenuItem>
+        {
             new ContextMenuItem
             {
                 Text = "Open Command",
@@ -65,5 +71,12 @@ public partial class ComputerCard
         }
 
         ContextMenuService.Close();
+    }
+
+    private async Task HandleCheckboxChange()
+    {
+        IsSelected = !IsSelected;
+
+        await IsSelectedChanged.InvokeAsync(IsSelected);
     }
 }

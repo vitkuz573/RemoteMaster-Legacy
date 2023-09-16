@@ -1,4 +1,4 @@
-﻿@using Radzen
+@using Radzen
 @using Microsoft.AspNetCore.Components
 @using RemoteMaster.Server.Models
 
@@ -6,6 +6,7 @@
     <div class="bg-white shadow-lg rounded-md overflow-hidden">
         <img src="@ThumbnailPath" alt="Thumbnail" class="h-40 w-full object-cover" />
         <div class="p-3">
+            <input type="checkbox" checked="@IsSelected" @onchange="HandleCheckboxChange" class="mr-2" />
             <span class="text-center text-lg">@Computer.Name</span>
         </div>
     </div>
