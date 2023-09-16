@@ -118,6 +118,9 @@ public partial class Index
 
     private async Task OnTreeChange(TreeEventArgs args)
     {
+        _selectedComputers.Clear();
+        _anyComputerSelected = false;
+    
         var node = args.Value as Node;
 
         if (node is Folder)
