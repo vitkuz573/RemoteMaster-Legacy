@@ -183,7 +183,7 @@ public partial class Index
         {
             if (await IsComputerAvailable(computer.IPAddress))
             {
-                await OpenWindow($"http://localhost:5254/{computer.IPAddress}/control");
+                await OpenWindow($"/{computer.IPAddress}/control");
             }
         }
     }
