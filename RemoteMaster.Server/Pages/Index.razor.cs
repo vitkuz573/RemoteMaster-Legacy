@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Diagnostics;
 using Microsoft.AspNetCore.Components;
 using Radzen;
 using Radzen.Blazor;
@@ -163,6 +164,23 @@ public partial class Index
         if (_selectedNode is Folder selectedFolder)
         {
             await UpdateComputersThumbnailsAsync(selectedFolder.Children.OfType<Computer>());
+        }
+    }
+
+    private async Task OpenCmd()
+    {
+        foreach (var computer in _selectedComputers)
+        {
+            var command = $"/C psexec \\\\{computer.IPAddress} -s powershell";
+
+            var startInfo = new ProcessStartInfo()
+            {
+                FileName = "cmd.exe",
+                Arguments = command,
+                UseShellExecute = true,
+            };
+
+            await Task.Run(() => Process.Start(startInfo));
         }
     }
 }

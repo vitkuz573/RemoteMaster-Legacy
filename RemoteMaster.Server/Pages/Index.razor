@@ -21,7 +21,7 @@
             <!-- Переместите эти три кнопки в начало контейнера flex -->
             <RadzenButton Text="Manage" Disabled="@(!_anyComputerSelected)" class="mr-2" />
             <RadzenButton Text="View" Disabled="@(!_anyComputerSelected)" class="mr-2" />
-            <RadzenButton Text="Open CMD" Disabled="@(!_anyComputerSelected)" />
+            <RadzenButton Text="Open CMD" Disabled="@(!_anyComputerSelected)" Click="OpenCmd" />
 
             <!-- Добавьте класс ml-auto к кнопке Refresh, чтобы она "отталкивалась" к правому краю -->
             <RadzenButton Click="HandleRefreshClick" Text="Refresh" class="ml-auto" />

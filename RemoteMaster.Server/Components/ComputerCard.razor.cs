@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Diagnostics;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Radzen;
@@ -23,55 +22,11 @@ public partial class ComputerCard
 
     private string ThumbnailPath => Computer.Thumbnail != null ? $"data:image/png;base64,{Convert.ToBase64String(Computer.Thumbnail)}" : "https://placehold.co/500x300";
 
-    private readonly List<ContextMenuItem> _contextMenuItems;
-
     [Parameter]
     public bool IsSelected { get; set; }
 
     [Parameter]
     public EventCallback<bool> IsSelectedChanged { get; set; }
-
-    public ComputerCard()
-    {
-        _contextMenuItems = new List<ContextMenuItem>
-        {
-            new ContextMenuItem
-            {
-                Text = "Open Command",
-                Value = "Command",
-                Icon = "terminal"
-            },
-            new ContextMenuItem
-            {
-                Text = "Open in Tab",
-                Value = "Tab",
-                Icon = "link"
-            },
-        };
-    }
-
-    private async void OnMenuItemClick(MenuItemEventArgs args)
-    {
-        if (args.Value.Equals("Command"))
-        {
-            var command = $"/C psexec \\\\{Computer.IPAddress} -s powershell";
-
-            var startInfo = new ProcessStartInfo()
-            {
-                FileName = "cmd.exe",
-                Arguments = command,
-                UseShellExecute = true,
-            };
-
-            await Task.Run(() => Process.Start(startInfo));
-        }
-        else if (args.Value.Equals("Tab"))
-        {
-            await JSRuntime.InvokeVoidAsync("openTabs");
-        }
-
-        ContextMenuService.Close();
-    }
 
     private async Task HandleCheckboxChange()
     {
