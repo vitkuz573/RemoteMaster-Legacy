@@ -3,11 +3,11 @@
 @using RemoteMaster.Server.Models;
 @using RemoteMaster.Server.Components;
 
-<div class="bg-blue-600 text-white text-center py-2 font-semibold">
+<div class="bg-blue-600 text-white text-center py-2 font-semibold select-none">
     Remote Control
 </div>
 
-<div class="flex h-screen overflow-x-hidden overflow-y-hidden">
+<div class="flex h-screen overflow-x-hidden overflow-y-hidden select-none">
 
     <div class="bg-gray-100 p-4 overflow-y-auto">
         <RadzenTree Data="_entries" Change="OnTreeChange" Expand="LoadComputers" Style="list-style-type: none;">
