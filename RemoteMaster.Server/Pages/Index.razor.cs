@@ -3,13 +3,14 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.SignalR.Client;
 using Radzen;
 using Radzen.Blazor;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
+using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;
+using TypedSignalR.Client;
 
 namespace RemoteMaster.Server.Pages;
 
@@ -17,7 +18,6 @@ public partial class Index
 {
     private List<Node> _entries;
     private Node _selectedNode;
-    private Dictionary<string, (HubConnection agentConnection, HubConnection serverConnection)> _connections = new();
 
     [Inject]
     private DatabaseService DatabaseService { get; set; }
@@ -111,8 +111,6 @@ public partial class Index
 
     private async Task OnTreeChange(TreeEventArgs args)
     {
-        _connections.Clear();
-
         var node = args.Value as Node;
 
         if (node is Folder)
@@ -123,26 +121,25 @@ public partial class Index
             {
                 if (children is Computer computer)
                 {
-                    if (!_connections.ContainsKey(computer.IPAddress))
+                    var clientContext = ConnectionManager.Connect("Client", $"http://{computer.IPAddress}:5076/hubs/control", true);
+
+                    try
                     {
-                        var clientContext = ConnectionManager.Connect("Client", $"http://{computer.IPAddress}:5076/hubs/control", true);
-            
-                        try
-                        {            
-                            clientContext.On<byte[]>("ReceiveThumbnail", async (thumbnailBytes) =>
+                        clientContext.On<byte[]>("ReceiveThumbnail", async (thumbnailBytes) =>
+                        {
+                            if (thumbnailBytes != null && thumbnailBytes.Length > 0)
                             {
-                                if (thumbnailBytes != null && thumbnailBytes.Length > 0)
-                                {
-                                    computer.Thumbnail = thumbnailBytes;
-                                    await InvokeAsync(StateHasChanged);
-                                }
-                            });
-            
-                            await clientContext.StartAsync();
-                            await clientContext.Connection.InvokeAsync("ConnectAs", Intention.GetThumbnail);
-                        }
-                        catch { }
+                                computer.Thumbnail = thumbnailBytes;
+                                await InvokeAsync(StateHasChanged);
+                            }
+                        });
+
+                        await clientContext.StartAsync();
+
+                        var proxy = clientContext.Connection.CreateHubProxy<IControlHub>();
+                        await proxy.ConnectAs(Intention.GetThumbnail);
                     }
+                    catch { }
                 }
             }
         }
