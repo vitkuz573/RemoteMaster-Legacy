@@ -56,7 +56,7 @@ public class ManagementHub : Hub
 
         if (folder == null)
         {
-            _logger.LogWarning($"Unregistration failed: Folder '{group}' not found.");
+            _logger.LogWarning("Unregistration failed: Folder '{Group}' not found.", group);
 
             return false;
         }
@@ -77,7 +77,7 @@ public class ManagementHub : Hub
             return true;
         }
 
-        _logger.LogWarning($"Unregistration failed: Computer '{hostName}' not found in folder '{group}'.");
+        _logger.LogWarning("Unregistration failed: Computer '{HostName}' not found in folder '{Group}'.", hostName, group);
 
         return false;
     }

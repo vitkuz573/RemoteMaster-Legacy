@@ -49,15 +49,15 @@ public class ControlHub : Hub<IControlClient>, IControlHub
                 break;
 
             default:
-                _logger.LogError("Unknown intention: {intention}", intention);
+                _logger.LogError("Unknown intention: {Intention}", intention);
                 break;
         }
     }
 
     private byte[] GetThumbnail()
     {
-        const int maxWidth = 320;
-        const int maxHeight = 240;
+        const int maxWidth = 500;
+        const int maxHeight = 300;
 
         return _screenCapturer.GetThumbnail(maxWidth, maxHeight);
     }
