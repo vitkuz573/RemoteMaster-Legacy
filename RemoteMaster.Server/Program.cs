@@ -20,7 +20,6 @@ builder.Services.AddHttpClient("DefaultClient", client =>
 builder.Services.AddTransient<IConfiguratorService, ConfiguratorService>();
 builder.Services.AddScoped<IConnectionManager, ConnectionManager>();
 builder.Services.AddTransient<IConnectionContextFactory, ConnectionContextFactory>();
-builder.Services.AddScoped<ConnectionManager>();
 builder.Services.AddScoped<ControlFunctionsService>();
 builder.Services.AddScoped<DatabaseService>();
 builder.Services.AddScoped<IQueryParameterService, QueryParameterService>();

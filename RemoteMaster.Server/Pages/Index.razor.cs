@@ -6,8 +6,10 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using Radzen;
 using Radzen.Blazor;
+using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Pages;
 
@@ -18,16 +20,10 @@ public partial class Index
     private Dictionary<string, (HubConnection agentConnection, HubConnection serverConnection)> _connections = new();
 
     [Inject]
-    private DialogService DialogService { get; set; }
-
-    [Inject]
     private DatabaseService DatabaseService { get; set; }
 
     [Inject]
-    private NotificationService NotificationService { get; set; }
-
-    [Inject]
-    private ConnectionManager ConnectionManager { get; set; }
+    private IConnectionManager ConnectionManager { get; set; }
 
     protected override void OnInitialized()
     {
@@ -123,41 +119,32 @@ public partial class Index
         {
             _selectedNode = node;
 
-            // foreach (var children in node.Children)
-            // {
-            //     if (children is Computer computer)
-            //     {
-            //         if (!_connections.ContainsKey(computer.IPAddress))
-            //         {
-            //             var agentConnection = ConnectionManager.CreateAgentConnection(computer.IPAddress);
-            //             var serverConnection = ConnectionManager.CreateServerConnection(computer.IPAddress);
-            //             _connections[computer.IPAddress] = (agentConnection, serverConnection);
-            // 
-            //             try
-            //             {
-            //                 await agentConnection.StartAsync();
-            // 
-            //                 Thread.Sleep(5000);
-            // 
-            //                 serverConnection.On<byte[]>("ReceiveThumbnail", async (thumbnailBytes) =>
-            //                 {
-            //                     if (thumbnailBytes != null && thumbnailBytes.Length > 0)
-            //                     {
-            //                         computer.Thumbnail = thumbnailBytes;
-            //                         await InvokeAsync(StateHasChanged);
-            //                     }
-            //                 });
-            // 
-            //                 await serverConnection.StartAsync();
-            //                 await serverConnection.InvokeAsync("ConnectAs", Intention.GetThumbnail);
-            //             }
-            //             catch
-            //             {
-            //                 //
-            //             }
-            //         }
-            //     }
-            // }
+            foreach (var children in node.Children)
+            {
+                if (children is Computer computer)
+                {
+                    if (!_connections.ContainsKey(computer.IPAddress))
+                    {
+                        var clientContext = ConnectionManager.Connect("Client", $"http://{computer.IPAddress}:5076/hubs/control", true);
+            
+                        try
+                        {            
+                            clientContext.On<byte[]>("ReceiveThumbnail", async (thumbnailBytes) =>
+                            {
+                                if (thumbnailBytes != null && thumbnailBytes.Length > 0)
+                                {
+                                    computer.Thumbnail = thumbnailBytes;
+                                    await InvokeAsync(StateHasChanged);
+                                }
+                            });
+            
+                            await clientContext.StartAsync();
+                            await clientContext.Connection.InvokeAsync("ConnectAs", Intention.GetThumbnail);
+                        }
+                        catch { }
+                    }
+                }
+            }
         }
 
         StateHasChanged();
