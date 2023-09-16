@@ -15,21 +15,27 @@
         </RadzenTree>
     </div>
 
-    <div class="w-3/4 p-4 flex flex-wrap gap-4 items-start overflow-y-auto bg-gray-600 selectable-container">
-        @if (_selectedNode is Folder selectedFolder)
-        {
-            foreach (var child in selectedFolder.Children)
+    <div class="flex-grow p-4 flex flex-col gap-4 bg-gray-300 selectable-container">
+        <!-- Область для кнопок -->
+        <div class="border-b border-gray-500 pb-2 mb-2 w-full flex justify-end">
+            <button @onclick="HandleRefreshClick" class="bg-white text-blue-600 px-3 py-1 rounded">Refresh</button>
+        </div>
+
+        <!-- Контент с карточками ПК -->
+        <div class="flex flex-wrap gap-4 items-start overflow-y-auto">
+            @if (_selectedNode is Folder selectedFolder)
             {
-                if (child is Computer computer)
+                foreach (var child in selectedFolder.Children)
                 {
-                    <div class="w-1/4 p-2">
-                        <ComputerCard Computer="computer" />
-                    </div>
+                    if (child is Computer computer)
+                    {
+                        <div class="w-1/4 p-2">
+                            <ComputerCard Computer="computer" />
+                        </div>
+                    }
                 }
             }
-        }
+        </div>
     </div>
-
-    <div id="sampleContextMenu" class="context-menu"></div>
 
 </div>

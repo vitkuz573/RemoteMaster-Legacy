@@ -136,4 +136,12 @@ public partial class Index
             catch {}
         }
     }
+
+    private async Task HandleRefreshClick()
+    {
+        if (_selectedNode is Folder selectedFolder)
+        {
+            await UpdateComputersThumbnailsAsync(selectedFolder.Children.OfType<Computer>());
+        }
+    }
 }
