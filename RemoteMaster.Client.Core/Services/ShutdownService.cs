@@ -27,7 +27,7 @@ public class ShutdownService : IShutdownService
 
     public void ImmediateShutdown(int exitCode = 0)
     {
-        _logger.LogInformation("Initiating immediate shutdown...");
+        _logger.LogInformation("Initiating immediate shutdown with exit code {ExitCode}...", exitCode);
         Environment.Exit(exitCode);
     }
 }
