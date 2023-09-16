@@ -16,7 +16,7 @@ namespace RemoteMaster.Server.Pages;
 
 public partial class Index
 {
-    private List<Node> _entries;
+    private List<Node> _entries = new();
     private Node _selectedNode;
 
     [Inject]
@@ -25,29 +25,27 @@ public partial class Index
     [Inject]
     private IConnectionManager ConnectionManager { get; set; }
 
-    protected override void OnInitialized()
+    protected async override Task OnInitializedAsync()
     {
-        _entries = new List<Node>();
+        var rootFolders = DatabaseService.GetFolders().Where(f => f.Parent == null).ToList();
 
-        var folders = DatabaseService.GetFolders();
-
-        foreach (var folder in folders.Where(f => f.Parent == null))
+        foreach (var folder in rootFolders)
         {
-            LoadChildren(folder);
+            await LoadChildrenAsync(folder);
             _entries.Add(folder);
         }
 
         DatabaseService.NodeAdded += OnNodeAdded;
     }
 
-    private void LoadChildren(Folder folder)
+    private async Task LoadChildrenAsync(Folder folder)
     {
         var children = DatabaseService.GetFolders().Where(f => f.Parent == folder);
 
         foreach (var child in children)
         {
             folder.Children.Add(child);
-            LoadChildren(child);
+            await LoadChildrenAsync(child);
         }
     }
 
@@ -71,40 +69,31 @@ public partial class Index
     private void LoadComputers(TreeExpandEventArgs args)
     {
         var node = args.Value as Node;
-        var nodeId = node.NodeId;
 
-        var children = new List<Node>();
-
-        var subFolders = DatabaseService.GetFolders().Where(f => f.Parent == node);
-        var computers = DatabaseService.GetComputersByFolderId(nodeId);
-
-        children.AddRange(subFolders);
-        children.AddRange(computers);
-
-        args.Children.Data = children;
+        args.Children.Data = GetChildrenForNode(node);
         args.Children.Text = GetTextForNode;
-        args.Children.HasChildren = node => node is Folder && DatabaseService.GetFolders().Any(f => f.Parent == node);
+        args.Children.HasChildren = n => n is Folder && DatabaseService.GetFolders().Any(f => f.Parent == n);
         args.Children.Template = NodeTemplate;
+    }
+
+    private IEnumerable<Node> GetChildrenForNode(Node node)
+    {
+        var children = new List<Node>();
+        children.AddRange(DatabaseService.GetFolders().Where(f => f.Parent == node));
+        children.AddRange(DatabaseService.GetComputersByFolderId(node.NodeId));
+        
+        return children;
     }
 
     private readonly RenderFragment<RadzenTreeItem> NodeTemplate = (context) => builder =>
     {
-        if (context.Value is Computer computer)
-        {
-            builder.OpenComponent<RadzenIcon>(0);
-            builder.AddAttribute(1, "Icon", "desktop_windows");
-            builder.CloseComponent();
+        var icon = context.Value is Computer ? "desktop_windows" : "folder";
+        var name = context.Value is Computer computer ? computer.Name : (context.Value as Folder)?.Name;
 
-            builder.AddContent(2, $" {computer.Name}");
-        }
-        else if (context.Value is Folder folder)
-        {
-            builder.OpenComponent<RadzenIcon>(0);
-            builder.AddAttribute(1, "Icon", "folder");
-            builder.CloseComponent();
-
-            builder.AddContent(2, $" {folder.Name}");
-        }
+        builder.OpenComponent<RadzenIcon>(0);
+        builder.AddAttribute(1, "Icon", icon);
+        builder.CloseComponent();
+        builder.AddContent(2, $" {name}");
     };
 
     private string GetTextForNode(object data) => data as string;
@@ -116,34 +105,35 @@ public partial class Index
         if (node is Folder)
         {
             _selectedNode = node;
-
-            foreach (var children in node.Children)
-            {
-                if (children is Computer computer)
-                {
-                    var clientContext = ConnectionManager.Connect("Client", $"http://{computer.IPAddress}:5076/hubs/control", true);
-
-                    try
-                    {
-                        clientContext.On<byte[]>("ReceiveThumbnail", async (thumbnailBytes) =>
-                        {
-                            if (thumbnailBytes != null && thumbnailBytes.Length > 0)
-                            {
-                                computer.Thumbnail = thumbnailBytes;
-                                await InvokeAsync(StateHasChanged);
-                            }
-                        });
-
-                        await clientContext.StartAsync();
-
-                        var proxy = clientContext.Connection.CreateHubProxy<IControlHub>();
-                        await proxy.ConnectAs(Intention.GetThumbnail);
-                    }
-                    catch { }
-                }
-            }
+            await UpdateComputersThumbnailsAsync(node.Children.OfType<Computer>());
         }
 
         StateHasChanged();
+    }
+
+    private async Task UpdateComputersThumbnailsAsync(IEnumerable<Computer> computers)
+    {
+        foreach (var computer in computers)
+        {
+            var clientContext = ConnectionManager.Connect("Client", $"http://{computer.IPAddress}:5076/hubs/control", true);
+
+            try
+            {
+                clientContext.On<byte[]>("ReceiveThumbnail", async (thumbnailBytes) =>
+                {
+                    if (thumbnailBytes?.Length > 0)
+                    {
+                        computer.Thumbnail = thumbnailBytes;
+                        await InvokeAsync(StateHasChanged);
+                    }
+                });
+
+                await clientContext.StartAsync();
+
+                var proxy = clientContext.Connection.CreateHubProxy<IControlHub>();
+                await proxy.ConnectAs(Intention.GetThumbnail);
+            }
+            catch {}
+        }
     }
 }
