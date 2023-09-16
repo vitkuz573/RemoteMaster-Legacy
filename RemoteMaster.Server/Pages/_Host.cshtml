@@ -71,6 +71,10 @@
             a.click();
             window.revokeUrl(url);
         };
+
+        window.openNewWindow = function (url) {
+            return window.open(url, '_blank', 'toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes');
+        };
     </script>
 </body>
 </html>

@@ -3,7 +3,9 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
+using System.Net.NetworkInformation;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using Radzen;
 using Radzen.Blazor;
 using RemoteMaster.Server.Abstractions;
@@ -28,6 +30,9 @@ public partial class Index
 
     [Inject]
     private IConnectionManager ConnectionManager { get; set; }
+
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; }
 
     protected async override Task OnInitializedAsync()
     {
@@ -167,20 +172,54 @@ public partial class Index
         }
     }
 
+    private async Task OpenWindow(string url)
+    {
+        await JSRuntime.InvokeVoidAsync("openNewWindow", url);
+    }
+
+    private async Task Manage()
+    {
+        foreach (var computer in _selectedComputers)
+        {
+            if (await IsComputerAvailable(computer.IPAddress))
+            {
+                await OpenWindow($"http://localhost:5254/{computer.IPAddress}/control");
+            }
+        }
+    }
+
     private async Task OpenCmd()
     {
         foreach (var computer in _selectedComputers)
         {
-            var command = $"/C psexec \\\\{computer.IPAddress} -s powershell";
-
-            var startInfo = new ProcessStartInfo()
+            if (await IsComputerAvailable(computer.IPAddress))
             {
-                FileName = "cmd.exe",
-                Arguments = command,
-                UseShellExecute = true,
-            };
+                var command = $"/C psexec \\\\{computer.IPAddress} -s powershell";
 
-            await Task.Run(() => Process.Start(startInfo));
+                var startInfo = new ProcessStartInfo()
+                {
+                    FileName = "cmd.exe",
+                    Arguments = command,
+                    UseShellExecute = true,
+                };
+
+                await Task.Run(() => Process.Start(startInfo));
+            }
+        }
+    }
+
+    private static async Task<bool> IsComputerAvailable(string ipAddress)
+    {
+        try
+        {
+            using var ping = new Ping();
+            var reply = await ping.SendPingAsync(ipAddress, 1000);
+
+            return reply.Status == IPStatus.Success;
+        }
+        catch
+        {
+            return false;
         }
     }
 }

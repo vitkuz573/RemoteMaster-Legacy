@@ -19,7 +19,7 @@
         <!-- Область для кнопок -->
         <div class="border-b border-gray-500 pb-2 mb-2 w-full flex">
             <!-- Переместите эти три кнопки в начало контейнера flex -->
-            <RadzenButton Text="Manage" Disabled="@(!_anyComputerSelected)" class="mr-2" />
+            <RadzenButton Text="Manage" Disabled="@(!_anyComputerSelected)" Click="Manage" class="mr-2" />
             <RadzenButton Text="View" Disabled="@(!_anyComputerSelected)" class="mr-2" />
             <RadzenButton Text="Open CMD" Disabled="@(!_anyComputerSelected)" Click="OpenCmd" />
 
