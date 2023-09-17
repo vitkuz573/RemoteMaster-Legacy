@@ -179,11 +179,14 @@ public partial class Index
 
     private async Task Control()
     {
-        foreach (var computer in _selectedComputers)
+        var tasks = _selectedComputers.Select(computer => IsComputerAvailable(computer.IPAddress)).ToArray();
+        var results = await Task.WhenAll(tasks);
+
+        foreach (var result in results)
         {
-            if (await IsComputerAvailable(computer.IPAddress))
+            if (result.isAvailable)
             {
-                await OpenWindow($"/{computer.IPAddress}/control");
+                await OpenWindow($"/{result.ipAddress}/control");
             }
         }
     }
@@ -193,12 +196,14 @@ public partial class Index
         if (item != null)
         {
             var sParameter = item.Text.Contains("System") ? "-s" : "";
+            var tasks = _selectedComputers.Select(computer => IsComputerAvailable(computer.IPAddress)).ToArray();
+            var results = await Task.WhenAll(tasks);
 
-            foreach (var computer in _selectedComputers)
+            foreach (var result in results)
             {
-                if (await IsComputerAvailable(computer.IPAddress))
+                if (result.isAvailable)
                 {
-                    var command = @$"/C psexec \\{computer.IPAddress} {sParameter} -nobanner {item.Value}";
+                    var command = @$"/C psexec \\{result.ipAddress} {sParameter} -nobanner {item.Value}";
 
                     var startInfo = new ProcessStartInfo()
                     {
@@ -213,18 +218,18 @@ public partial class Index
         }
     }
 
-    private static async Task<bool> IsComputerAvailable(string ipAddress)
+    private static async Task<(string ipAddress, bool isAvailable)> IsComputerAvailable(string ipAddress)
     {
         try
         {
             using var ping = new Ping();
             var reply = await ping.SendPingAsync(ipAddress, 1000);
 
-            return reply.Status == IPStatus.Success;
+            return (ipAddress, reply.Status == IPStatus.Success);
         }
         catch
         {
-            return false;
+            return (ipAddress, false);
         }
     }
 }
