@@ -177,7 +177,7 @@ public partial class Index
         await JSRuntime.InvokeVoidAsync("openNewWindow", url);
     }
 
-    private async Task Manage()
+    private async Task Control()
     {
         foreach (var computer in _selectedComputers)
         {
@@ -188,22 +188,27 @@ public partial class Index
         }
     }
 
-    private async Task OpenCmd()
+    private async Task OpenShell(RadzenSplitButtonItem item)
     {
-        foreach (var computer in _selectedComputers)
+        if (item != null)
         {
-            if (await IsComputerAvailable(computer.IPAddress))
+            var sParameter = item.Text.Contains("System") ? "-s" : "";
+
+            foreach (var computer in _selectedComputers)
             {
-                var command = $"/C psexec \\\\{computer.IPAddress} -s powershell";
-
-                var startInfo = new ProcessStartInfo()
+                if (await IsComputerAvailable(computer.IPAddress))
                 {
-                    FileName = "cmd.exe",
-                    Arguments = command,
-                    UseShellExecute = true,
-                };
+                    var command = @$"/C psexec \\{computer.IPAddress} {sParameter} -nobanner {item.Value}";
 
-                await Task.Run(() => Process.Start(startInfo));
+                    var startInfo = new ProcessStartInfo()
+                    {
+                        FileName = "cmd.exe",
+                        Arguments = command,
+                        UseShellExecute = true,
+                    };
+
+                    await Task.Run(() => Process.Start(startInfo));
+                }
             }
         }
     }
