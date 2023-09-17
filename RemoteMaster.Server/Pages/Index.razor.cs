@@ -182,11 +182,11 @@ public partial class Index
         var tasks = _selectedComputers.Select(computer => IsComputerAvailable(computer.IPAddress)).ToArray();
         var results = await Task.WhenAll(tasks);
 
-        foreach (var result in results)
+        foreach (var (ipAddress, isAvailable) in results)
         {
-            if (result.isAvailable)
+            if (isAvailable)
             {
-                await OpenWindow($"/{result.ipAddress}/control");
+                await OpenWindow($"/{ipAddress}/control");
             }
         }
     }
@@ -199,11 +199,11 @@ public partial class Index
             var tasks = _selectedComputers.Select(computer => IsComputerAvailable(computer.IPAddress)).ToArray();
             var results = await Task.WhenAll(tasks);
 
-            foreach (var result in results)
+            foreach (var (ipAddress, isAvailable) in results)
             {
-                if (result.isAvailable)
+                if (isAvailable)
                 {
-                    var command = @$"/C psexec \\{result.ipAddress} {sParameter} -nobanner {item.Value}";
+                    var command = @$"/C psexec \\{ipAddress} {sParameter} -nobanner {item.Value}";
 
                     var startInfo = new ProcessStartInfo()
                     {
