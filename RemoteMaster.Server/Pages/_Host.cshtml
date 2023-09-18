@@ -76,6 +76,18 @@
         window.openNewWindow = function (url) {
             return window.open(url, '_blank', 'toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes');
         };
+
+        let previousClipboardContent = "";
+
+        window.startClipboardMonitoring = function (dotNetReference) {
+            setInterval(async function () {
+                let currentContent = await navigator.clipboard.readText();
+                if (currentContent !== previousClipboardContent) {
+                    previousClipboardContent = currentContent;
+                    dotNetReference.invokeMethodAsync("ClipboardContentChanged", currentContent);
+                }
+            }, 1000);
+        }
     </script>
 </body>
 </html>

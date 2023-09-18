@@ -45,6 +45,8 @@ public partial class Control : IAsyncDisposable
             await _controlHubProxy.ConnectAs(Intention.Control);
 
             await SetupClientEventListeners();
+
+            // await JSRuntime.InvokeVoidAsync("startClipboardMonitoring", DotNetObjectReference.Create(this));
         }
     }
 
