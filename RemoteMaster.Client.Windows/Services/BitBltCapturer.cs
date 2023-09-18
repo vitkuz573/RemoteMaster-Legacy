@@ -25,6 +25,10 @@ public class BitBltCapturer : ScreenCapturerService
 
     public override string SelectedScreen { get; protected set; } = Screen.PrimaryScreen?.DeviceName ?? string.Empty;
 
+    protected override bool HasMultipleScreens => Screen.AllScreens.Length > 1;
+
+    protected override string VirtualScreenName => VIRTUAL_SCREEN_NAME;
+
     private readonly ICursorRenderService _cursorRenderer;
 
     public BitBltCapturer(ICursorRenderService cursorRenderer, ILogger<ScreenCapturerService> logger) : base(logger)

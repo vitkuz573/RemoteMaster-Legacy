@@ -9,6 +9,7 @@ using Microsoft.IO;
 using RemoteMaster.Client.Core.Abstractions;
 using RemoteMaster.Shared.Models;
 using RemoteMaster.Shared.Native.Windows;
+using RemoteMaster.Shared.Native.Windows.ScreenHelper;
 using SkiaSharp;
 
 namespace RemoteMaster.Client.Services;
@@ -31,6 +32,10 @@ public abstract class ScreenCapturerService : IScreenCapturerService
     public abstract Rectangle VirtualScreenBounds { get; protected set; }
 
     public abstract string SelectedScreen { get; protected set; }
+
+    protected abstract bool HasMultipleScreens { get; }
+
+    protected abstract string VirtualScreenName { get; }
 
     public int Quality
     {
@@ -88,7 +93,18 @@ public abstract class ScreenCapturerService : IScreenCapturerService
 
     public byte[]? GetThumbnail(int maxWidth, int maxHeight)
     {
+        var originalScreen = SelectedScreen;
+
+        // If there are multiple screens, set to VirtualScreenName temporarily
+        if (HasMultipleScreens)
+        {
+            SetSelectedScreen(VirtualScreenName);
+        }
+
         var frame = GetNextFrame();
+
+        // Restore the original selected screen
+        SetSelectedScreen(originalScreen);
 
         if (frame == null)
         {
