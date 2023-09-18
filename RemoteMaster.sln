@@ -21,7 +21,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Agent.Core", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Agent.Windows", "RemoteMaster.Agent.Windows\RemoteMaster.Agent.Windows.csproj", "{B25A70BC-F27D-4ED1-A04E-078D0D8E3125}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteMaster.Updater.Common", "RemoteMaster.Updater.Common\RemoteMaster.Updater.Common.csproj", "{BCC42B2E-678B-4814-983D-2FB70286F06E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Updater.Common", "RemoteMaster.Updater.Common\RemoteMaster.Updater.Common.csproj", "{BCC42B2E-678B-4814-983D-2FB70286F06E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
