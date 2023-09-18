@@ -203,7 +203,7 @@ public partial class Index
             {
                 if (isAvailable)
                 {
-                    var command = @$"/C psexec \\{ipAddress} {sParameter} -nobanner {item.Value}";
+                    var command = @$"/C psexec \\{ipAddress} {sParameter} -nobanner -accepteula {item.Value}";
 
                     var startInfo = new ProcessStartInfo()
                     {
