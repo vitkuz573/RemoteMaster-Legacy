@@ -10,7 +10,7 @@ using RemoteMaster.Agent.Abstractions;
 using Windows.Win32.Foundation;
 using static Windows.Win32.PInvoke;
 
-namespace RemoteMaster.Agent.Windows;
+namespace RemoteMaster.Agent;
 
 public class HiddenWindow : Window
 {

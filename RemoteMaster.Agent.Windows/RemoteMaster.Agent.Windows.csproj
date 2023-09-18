@@ -20,4 +20,8 @@
     <ProjectReference Include="..\RemoteMaster.Updater.Common\RemoteMaster.Updater.Common.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Helpers\AdvFirewall\" />
+  </ItemGroup>
+
 </Project>
