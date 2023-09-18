@@ -3,8 +3,12 @@
 @using RemoteMaster.Server.Models
 @using RemoteMaster.Server.Components
 
-<div class="bg-blue-600 text-white text-center py-2 font-semibold select-none">
-    Remote Control
+<div class="bg-blue-600 text-white py-2 font-semibold select-none flex justify-between items-center">
+    <div></div> <!-- Этот пустой div нужен для "выравнивания" flexbox -->
+    <div>Remote Control</div>
+    <div class="flex items-center space-x-4">
+        <LoginDisplay />
+    </div>
 </div>
 
 <div class="flex h-screen overflow-x-hidden overflow-y-hidden select-none">

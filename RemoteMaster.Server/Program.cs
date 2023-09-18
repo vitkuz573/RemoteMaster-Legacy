@@ -59,6 +59,20 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+app.Use(async (context, next) =>
+{
+    var path = context.Request.Path.Value.ToLower();
+
+    if (path.StartsWith("/identity/account") &&
+        !path.StartsWith("/identity/account/login") &&
+        !path.StartsWith("/identity/account/logout"))
+    {
+        context.Response.StatusCode = 404;
+        return;
+    }
+    await next.Invoke();
+});
+
 app.UseStaticFiles();
 app.UseRouting();
 
