@@ -16,7 +16,6 @@ using RemoteMaster.Agent.Services;
 using RemoteMaster.Agent.Windows;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Services;
-using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Agent;
 
