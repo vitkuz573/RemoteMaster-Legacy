@@ -68,17 +68,28 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+var enableRegistration = builder.Configuration.GetValue<bool>("EnableRegistration");
+
 app.Use(async (context, next) =>
 {
     var path = context.Request.Path.Value.ToLower();
 
-    if (path.StartsWith("/identity/account") &&
-        !path.StartsWith("/identity/account/login") &&
-        !path.StartsWith("/identity/account/logout"))
+    if (!enableRegistration && (path.StartsWith("/identity/account/register") || path.StartsWith("/identity/account/confirmemail")))
     {
         context.Response.StatusCode = 404;
         return;
     }
+
+    if (path.StartsWith("/identity/account") &&
+        !path.StartsWith("/identity/account/login") &&
+        !path.StartsWith("/identity/account/logout") &&
+        !path.StartsWith("/identity/account/register") &&
+        !path.StartsWith("/identity/account/confirmemail"))
+    {
+        context.Response.StatusCode = 404;
+        return;
+    }
+
     await next.Invoke();
 });
 
