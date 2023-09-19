@@ -46,6 +46,15 @@ builder.Services.AddScoped<ContextMenuService>();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
+using (var scope = builder.Services.BuildServiceProvider().CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    dbContext.Database.Migrate();
+
+    var identityContext = scope.ServiceProvider.GetRequiredService<IdentityDataContext>();
+    identityContext.Database.Migrate();
+}
+
 var app = builder.Build();
 
 app.Urls.Clear();
