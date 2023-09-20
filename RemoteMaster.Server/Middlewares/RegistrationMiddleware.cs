@@ -11,14 +11,16 @@ public class RegistrationMiddleware
 
     private static readonly List<string> RestrictedRoutes = new()
     {
-        "/identity/account/register"
+        "/identity/account/register",
+        "/identity/account/manage/personaldata"
     };
 
     private static readonly List<string> AllowedRoutes = new()
     {
         "/identity/account/login",
         "/identity/account/logout",
-        "/identity/account/accessdenied"
+        "/identity/account/accessdenied",
+        "/identity/account/manage"
     };
 
     private static readonly List<string> AllowedManageRoutes = new()
@@ -41,6 +43,14 @@ public class RegistrationMiddleware
 
         var path = context.Request.Path.Value.ToLower();
 
+        // Проверка для маршрута "/identity/account/manage/personaldata"
+        if (path == "/identity/account/manage/personaldata")
+        {
+            context.Response.StatusCode = 404;
+
+            return;
+        }
+
         var isRestrictedRoute = RestrictedRoutes.Any(path.StartsWith);
         var isAllowedRoute = AllowedRoutes.Any(path.StartsWith);
         var isAllowedManageRoute = AllowedManageRoutes.Any(path.StartsWith);
@@ -52,6 +62,7 @@ public class RegistrationMiddleware
             !isAllowedManageRoute)
         {
             context.Response.Redirect("/Identity/Account/AccessDenied");
+
             return;
         }
 
