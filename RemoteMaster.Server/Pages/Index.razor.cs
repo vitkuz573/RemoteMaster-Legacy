@@ -177,113 +177,76 @@ public partial class Index
         await JSRuntime.InvokeVoidAsync("openNewWindow", url);
     }
 
-    private async Task Control()
+    private async Task ExecuteOnAvailableComputers(Func<string, IControlHub, Task> actionOnComputer)
     {
         var tasks = _selectedComputers.Select(computer => IsComputerAvailable(computer.IPAddress)).ToArray();
         var results = await Task.WhenAll(tasks);
 
-        foreach (var (ipAddress, isAvailable) in results)
+        var availableComputers = results.Where(r => r.isAvailable).Select(r => r.ipAddress);
+
+        foreach (var ipAddress in availableComputers)
         {
-            if (isAvailable)
-            {
-                await OpenWindow($"/{ipAddress}/control");
-            }
+            var clientContext = ConnectionManager.Connect("Client", $"http://{ipAddress}:5076/hubs/control", true);
+            await clientContext.StartAsync();
+
+            var proxy = clientContext.Connection.CreateHubProxy<IControlHub>();
+            await actionOnComputer(ipAddress, proxy);
         }
+
+        StateHasChanged();
+    }
+
+    private async Task Control()
+    {
+        await ExecuteOnAvailableComputers(async (ipAddress, proxy) =>
+        {
+            await OpenWindow($"/{ipAddress}/control");
+        });
     }
 
     private async Task OpenShell(RadzenSplitButtonItem item)
     {
-        if (item != null)
+        var sParameter = item.Text.Contains("System") ? "-s" : "";
+
+        await ExecuteOnAvailableComputers(async (ipAddress, proxy) =>
         {
-            var sParameter = item.Text.Contains("System") ? "-s" : "";
-            var tasks = _selectedComputers.Select(computer => IsComputerAvailable(computer.IPAddress)).ToArray();
-            var results = await Task.WhenAll(tasks);
+            var command = @$"/C psexec \\{ipAddress} {sParameter} -nobanner -accepteula {item.Value}";
 
-            foreach (var (ipAddress, isAvailable) in results)
+            var startInfo = new ProcessStartInfo()
             {
-                if (isAvailable)
-                {
-                    var command = @$"/C psexec \\{ipAddress} {sParameter} -nobanner -accepteula {item.Value}";
+                FileName = "cmd.exe",
+                Arguments = command,
+                UseShellExecute = true,
+            };
 
-                    var startInfo = new ProcessStartInfo()
-                    {
-                        FileName = "cmd.exe",
-                        Arguments = command,
-                        UseShellExecute = true,
-                    };
-
-                    await Task.Run(() => Process.Start(startInfo));
-                }
-            }
-        }
+            await Task.Run(() => Process.Start(startInfo));
+        });
     }
 
     private async Task Power(RadzenSplitButtonItem item)
     {
-        var tasks = _selectedComputers.Select(computer => IsComputerAvailable(computer.IPAddress)).ToArray();
-        var results = await Task.WhenAll(tasks);
-
-        foreach (var (ipAddress, isAvailable) in results)
+        await ExecuteOnAvailableComputers(async (ipAddress, proxy) =>
         {
-            if (isAvailable)
+            if (item.Value == "shutdown")
             {
-                var clientContext = ConnectionManager.Connect("Client", $"http://{ipAddress}:5076/hubs/control", true);
-
-                await clientContext.StartAsync();
-
-                var proxy = clientContext.Connection.CreateHubProxy<IControlHub>();
-
-                if (item.Value == "shutdown")
-                {
-                    // shutdown logic
-                }
-
-                if (item.Value == "reboot")
-                {
-                    await proxy.RebootComputer("", 0, true);
-                }
+                // shutdown logic
             }
-        }
+
+            if (item.Value == "reboot")
+            {
+                await proxy.RebootComputer("", 0, true);
+            }
+        });
     }
 
     private async Task StartMassRecording()
     {
-        // Check if computers are available
-        var tasks = _selectedComputers.Select(computer => IsComputerAvailable(computer.IPAddress)).ToArray();
-        var results = await Task.WhenAll(tasks);
-
-        foreach (var (ipAddress, isAvailable) in results)
-        {
-            if (isAvailable)
-            {
-                var clientContext = ConnectionManager.Connect("Client", $"http://{ipAddress}:5076/hubs/control", true);
-
-                await clientContext.StartAsync();
-
-                var proxy = clientContext.Connection.CreateHubProxy<IControlHub>();
-                await proxy.StartScreenRecording(@"C:\test.mp4"); // Assuming this method is added in the IControlHub interface
-            }
-        }
+        await ExecuteOnAvailableComputers(async (ipAddress, proxy) => await proxy.StartScreenRecording(@"C:\test.mp4"));
     }
 
     private async Task StopMassRecording()
     {
-        // Check if computers are available
-        var tasks = _selectedComputers.Select(computer => IsComputerAvailable(computer.IPAddress)).ToArray();
-        var results = await Task.WhenAll(tasks);
-
-        foreach (var (ipAddress, isAvailable) in results)
-        {
-            if (isAvailable)
-            {
-                var clientContext = ConnectionManager.Connect("Client", $"http://{ipAddress}:5076/hubs/control", true);
-
-                await clientContext.StartAsync();
-
-                var proxy = clientContext.Connection.CreateHubProxy<IControlHub>();
-                await proxy.StopScreenRecording(); // Assuming this method is added in the IControlHub interface
-            }
-        }
+        await ExecuteOnAvailableComputers(async (ipAddress, proxy) => await proxy.StopScreenRecording());
     }
 
     private static async Task<(string ipAddress, bool isAvailable)> IsComputerAvailable(string ipAddress)
