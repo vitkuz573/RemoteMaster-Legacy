@@ -206,6 +206,11 @@ public partial class Index
 
     private async Task OpenShell(RadzenSplitButtonItem item)
     {
+        if (item == null)
+        {
+            return;
+        }
+
         var sParameter = item.Text.Contains("System") ? "-s" : "";
 
         await ExecuteOnAvailableComputers(async (ipAddress, proxy) =>
@@ -225,6 +230,11 @@ public partial class Index
 
     private async Task Power(RadzenSplitButtonItem item)
     {
+        if (item == null)
+        {
+            return;
+        }
+
         await ExecuteOnAvailableComputers(async (ipAddress, proxy) =>
         {
             if (item.Value == "shutdown")
