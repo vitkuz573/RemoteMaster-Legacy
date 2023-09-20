@@ -5,6 +5,7 @@
 using System.Diagnostics;
 using System.Net.NetworkInformation;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using Radzen;
 using Radzen.Blazor;
@@ -245,6 +246,30 @@ public partial class Index
             if (item.Value == "reboot")
             {
                 await proxy.RebootComputer("", 0, true);
+            }
+        });
+    }
+
+    private async Task Update(RadzenSplitButtonItem item)
+    {
+        if (item == null)
+        {
+            return;
+        }
+
+        await ExecuteOnAvailableComputers(async (ipAddress, proxy) =>
+        {
+            if (item.Value == "client")
+            {
+                var clientContext = ConnectionManager.Connect("Agent", $"http://{ipAddress}:3564/hubs/maintenance");
+                await clientContext.StartAsync();
+
+                await clientContext.Connection.InvokeAsync("SendClientUpdate");
+            }
+
+            if (item.Value == "agent")
+            {
+                await proxy.SendAgentUpdate();
             }
         });
     }
