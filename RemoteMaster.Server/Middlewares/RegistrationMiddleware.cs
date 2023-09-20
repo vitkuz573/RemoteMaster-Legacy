@@ -23,7 +23,7 @@ public class RegistrationMiddleware
 
     private static readonly List<string> AllowedManageRoutes = new()
     {
-        "/identity/account/manage/"
+        "/identity/account/manage"
     };
 
     public RegistrationMiddleware(RequestDelegate next, bool enableRegistration)
