@@ -218,6 +218,34 @@ public partial class Index
         }
     }
 
+    private async Task Power(RadzenSplitButtonItem item)
+    {
+        var tasks = _selectedComputers.Select(computer => IsComputerAvailable(computer.IPAddress)).ToArray();
+        var results = await Task.WhenAll(tasks);
+
+        foreach (var (ipAddress, isAvailable) in results)
+        {
+            if (isAvailable)
+            {
+                var clientContext = ConnectionManager.Connect("Client", $"http://{ipAddress}:5076/hubs/control", true);
+
+                await clientContext.StartAsync();
+
+                var proxy = clientContext.Connection.CreateHubProxy<IControlHub>();
+
+                if (item.Value == "shutdown")
+                {
+                    // shutdown logic
+                }
+
+                if (item.Value == "reboot")
+                {
+                    await proxy.RebootComputer("", 0, true);
+                }
+            }
+        }
+    }
+
     private async Task StartMassRecording()
     {
         // Check if computers are available

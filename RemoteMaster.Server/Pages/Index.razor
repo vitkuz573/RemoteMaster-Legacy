@@ -35,6 +35,13 @@
                 </ChildContent>
             </RadzenSplitButton>
 
+            <RadzenSplitButton Text="Power" Disabled="@(!_anyComputerSelected)" Click="@(args => Power(args))" class="mr-2">
+                <ChildContent>
+                    <RadzenSplitButtonItem Text="Shutdown" Value="shutdown" />
+                    <RadzenSplitButtonItem Text="Reboot" Value="reboot" />
+                </ChildContent>
+            </RadzenSplitButton>
+
             <RadzenButton Text="Start Recording" Disabled="@(!_anyComputerSelected)" Click="StartMassRecording" class="mr-2" />
             <RadzenButton Text="Stop Recording" Disabled="@(!_anyComputerSelected)" Click="StopMassRecording" />
 
