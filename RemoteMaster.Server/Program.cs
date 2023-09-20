@@ -50,7 +50,7 @@ void ConfigureServices(WebApplicationBuilder builder)
     // Database contexts
     builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
     builder.Services.AddDbContext<IdentityDataContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
-    builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<IdentityDataContext>();
+    builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false).AddEntityFrameworkStores<IdentityDataContext>();
 
     // UI services
     builder.Services.AddScoped<DialogService>();

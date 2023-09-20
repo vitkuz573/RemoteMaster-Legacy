@@ -11,8 +11,7 @@ public class RegistrationMiddleware
 
     private static readonly List<string> RestrictedRoutes = new()
     {
-        "/identity/account/register",
-        "/identity/account/confirmemail"
+        "/identity/account/register"
     };
 
     private static readonly List<string> AllowedRoutes = new()
