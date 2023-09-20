@@ -88,7 +88,8 @@ WebApplication ConfigureApplication(WebApplicationBuilder builder)
 
     var enableRegistration = builder.Configuration.GetValue<bool>("EnableRegistration");
 
-    app.UseMiddleware<RegistrationMiddleware>(enableRegistration);
+    app.UseMiddleware<RegistrationRestrictionMiddleware>(enableRegistration);
+    app.UseMiddleware<RouteRestrictionMiddleware>();
 
     app.UseStaticFiles();
     app.UseRouting();

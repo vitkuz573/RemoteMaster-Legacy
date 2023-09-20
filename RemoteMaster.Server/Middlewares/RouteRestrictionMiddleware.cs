@@ -4,15 +4,14 @@
 
 namespace RemoteMaster.Server.Middlewares;
 
-public class RegistrationMiddleware
+public class RouteRestrictionMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly bool _enableRegistration;
 
     private static readonly List<string> RestrictedRoutes = new()
     {
-        "/identity/account/register",
-        "/identity/account/manage/personaldata"
+        "/identity/account/manage/personaldata",
+        "/identity/account/manage/deletepersonaldata"
     };
 
     private static readonly List<string> AllowedRoutes = new()
@@ -23,15 +22,9 @@ public class RegistrationMiddleware
         "/identity/account/manage"
     };
 
-    private static readonly List<string> AllowedManageRoutes = new()
-    {
-        "/identity/account/manage"
-    };
-
-    public RegistrationMiddleware(RequestDelegate next, bool enableRegistration)
+    public RouteRestrictionMiddleware(RequestDelegate next)
     {
         _next = next;
-        _enableRegistration = enableRegistration;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -43,23 +36,16 @@ public class RegistrationMiddleware
 
         var path = context.Request.Path.Value.ToLower();
 
-        // Проверка для маршрута "/identity/account/manage/personaldata"
-        if (path == "/identity/account/manage/personaldata")
+        if (RestrictedRoutes.Contains(path))
         {
             context.Response.StatusCode = 404;
 
             return;
         }
 
-        var isRestrictedRoute = RestrictedRoutes.Any(path.StartsWith);
         var isAllowedRoute = AllowedRoutes.Any(path.StartsWith);
-        var isAllowedManageRoute = AllowedManageRoutes.Any(path.StartsWith);
 
-        if (!_enableRegistration && isRestrictedRoute ||
-            path.StartsWith("/identity/account") &&
-            !isAllowedRoute &&
-            !isRestrictedRoute &&
-            !isAllowedManageRoute)
+        if (path.StartsWith("/identity/account") && !isAllowedRoute)
         {
             context.Response.Redirect("/Identity/Account/AccessDenied");
 
