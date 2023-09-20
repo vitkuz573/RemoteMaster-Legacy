@@ -68,6 +68,8 @@ public class ScreenRecorderService : IScreenRecorderService
 
             // Обернуть Bitmap с помощью BitmapVideoFrameWrapper
             yield return new BitmapVideoFrameWrapper(bitmap);
+
+            Thread.Sleep((int)(1000.0 / 30));
         }
     }
 }
