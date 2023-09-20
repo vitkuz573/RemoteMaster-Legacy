@@ -276,7 +276,14 @@ public partial class Index
 
     private async Task StartMassRecording()
     {
-        await ExecuteOnAvailableComputers(async (ipAddress, proxy) => await proxy.StartScreenRecording(@"C:\test.mp4"));
+        await ExecuteOnAvailableComputers(async (ipAddress, proxy) =>
+        {
+            var requesterName = Environment.MachineName;
+            var currentDate = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            var fileName = $@"C:\{requesterName}_{ipAddress}_{currentDate}.mp4";
+
+            await proxy.StartScreenRecording(fileName);
+        });
     }
 
     private async Task StopMassRecording()
