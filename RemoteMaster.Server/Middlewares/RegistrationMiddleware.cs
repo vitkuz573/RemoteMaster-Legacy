@@ -21,6 +21,11 @@ public class RegistrationMiddleware
         "/identity/account/accessdenied"
     };
 
+    private static readonly List<string> AllowedManageRoutes = new()
+    {
+        "/identity/account/manage/"
+    };
+
     public RegistrationMiddleware(RequestDelegate next, bool enableRegistration)
     {
         _next = next;
@@ -38,11 +43,15 @@ public class RegistrationMiddleware
 
         var isRestrictedRoute = RestrictedRoutes.Any(path.StartsWith);
         var isAllowedRoute = AllowedRoutes.Any(path.StartsWith);
+        var isAllowedManageRoute = AllowedManageRoutes.Any(path.StartsWith);
 
-        if (!_enableRegistration && isRestrictedRoute || path.StartsWith("/identity/account") && !isAllowedRoute && !isRestrictedRoute)
+        if (!_enableRegistration && isRestrictedRoute ||
+            path.StartsWith("/identity/account") &&
+            !isAllowedRoute &&
+            !isRestrictedRoute &&
+            !isAllowedManageRoute)
         {
             context.Response.Redirect("/Identity/Account/AccessDenied");
-
             return;
         }
 
