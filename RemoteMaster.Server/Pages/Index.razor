@@ -26,7 +26,7 @@
             <RadzenButton Text="Control" Disabled="@(!_anyComputerSelected)" Click="Control" class="mr-2" />
             <RadzenButton Text="View" Disabled="@(!_anyComputerSelected)" class="mr-2" />
 
-            <RadzenSplitButton Text="Open Shell" Disabled="@(!_anyComputerSelected)" Click="@(args => OpenShell(args))">
+            <RadzenSplitButton Text="Open Shell" Disabled="@(!_anyComputerSelected)" Click="@(args => OpenShell(args))" class="mr-2">
                 <ChildContent>
                     <RadzenSplitButtonItem Text="Command line" Value="cmd" />
                     <RadzenSplitButtonItem Text="PowerShell" Value="powershell" />
@@ -34,6 +34,9 @@
                     <RadzenSplitButtonItem Text="PowerShell (System)" Value="powershell" />
                 </ChildContent>
             </RadzenSplitButton>
+
+            <RadzenButton Text="Start Recording" Disabled="@(!_anyComputerSelected)" Click="StartMassRecording" class="mr-2" />
+            <RadzenButton Text="Stop Recording" Disabled="@(!_anyComputerSelected)" Click="StopMassRecording" />
 
             <RadzenButton Click="HandleRefreshClick" Text="Refresh" class="ml-auto" />
         </div>

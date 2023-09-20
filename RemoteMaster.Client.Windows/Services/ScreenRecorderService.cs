@@ -11,7 +11,7 @@ using RemoteMaster.Client.Core.Abstractions;
 
 namespace RemoteMaster.Client.Services;
 
-public class ScreenRecorderService
+public class ScreenRecorderService : IScreenRecorderService
 {
     private readonly IScreenCapturerService _screenCapturerService;
     private CancellationTokenSource _cancellationTokenSource;
@@ -26,6 +26,7 @@ public class ScreenRecorderService
     {
         _cancellationTokenSource = new CancellationTokenSource();
         _recordingTask = RecordVideo(outputPath, _cancellationTokenSource.Token);
+
         return Task.CompletedTask;
     }
 

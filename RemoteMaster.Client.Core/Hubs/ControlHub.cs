@@ -20,9 +20,10 @@ public class ControlHub : Hub<IControlClient>, IControlHub
     private readonly IPowerService _powerManager;
     private readonly IShutdownService _shutdownService;
     private readonly IScreenCapturerService _screenCapturer;
+    private readonly IScreenRecorderService _screenRecorderService;
     private readonly ILogger<ControlHub> _logger;
 
-    public ControlHub(IAgentUpdater agentUpdater, IAppState appState, IViewerFactory viewerFactory, IInputService inputSender, IPowerService powerManager, IShutdownService shutdownService, IScreenCapturerService screenCapturer, ILogger<ControlHub> logger)
+    public ControlHub(IAgentUpdater agentUpdater, IAppState appState, IViewerFactory viewerFactory, IInputService inputSender, IPowerService powerManager, IShutdownService shutdownService, IScreenCapturerService screenCapturer, IScreenRecorderService screenRecorderService, ILogger<ControlHub> logger)
     {
         _agentUpdater = agentUpdater;
         _appState = appState;
@@ -31,6 +32,7 @@ public class ControlHub : Hub<IControlClient>, IControlHub
         _powerManager = powerManager;
         _shutdownService = shutdownService;
         _screenCapturer = screenCapturer;
+        _screenRecorderService = screenRecorderService;
         _logger = logger;
     }
 
@@ -141,5 +143,15 @@ public class ControlHub : Hub<IControlClient>, IControlHub
     public async Task SendAgentUpdate()
     {
         _agentUpdater.Update();
+    }
+
+    public async Task StartScreenRecording(string outputPath)
+    {
+        await _screenRecorderService.StartRecordingAsync(outputPath);
+    }
+
+    public async Task StopScreenRecording()
+    {
+        await _screenRecorderService.StopRecordingAsync();
     }
 }

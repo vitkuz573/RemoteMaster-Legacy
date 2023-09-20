@@ -218,6 +218,46 @@ public partial class Index
         }
     }
 
+    private async Task StartMassRecording()
+    {
+        // Check if computers are available
+        var tasks = _selectedComputers.Select(computer => IsComputerAvailable(computer.IPAddress)).ToArray();
+        var results = await Task.WhenAll(tasks);
+
+        foreach (var (ipAddress, isAvailable) in results)
+        {
+            if (isAvailable)
+            {
+                var clientContext = ConnectionManager.Connect("Client", $"http://{ipAddress}:5076/hubs/control", true);
+
+                await clientContext.StartAsync();
+
+                var proxy = clientContext.Connection.CreateHubProxy<IControlHub>();
+                await proxy.StartScreenRecording(@"C:\test.mp4"); // Assuming this method is added in the IControlHub interface
+            }
+        }
+    }
+
+    private async Task StopMassRecording()
+    {
+        // Check if computers are available
+        var tasks = _selectedComputers.Select(computer => IsComputerAvailable(computer.IPAddress)).ToArray();
+        var results = await Task.WhenAll(tasks);
+
+        foreach (var (ipAddress, isAvailable) in results)
+        {
+            if (isAvailable)
+            {
+                var clientContext = ConnectionManager.Connect("Client", $"http://{ipAddress}:5076/hubs/control", true);
+
+                await clientContext.StartAsync();
+
+                var proxy = clientContext.Connection.CreateHubProxy<IControlHub>();
+                await proxy.StopScreenRecording(); // Assuming this method is added in the IControlHub interface
+            }
+        }
+    }
+
     private static async Task<(string ipAddress, bool isAvailable)> IsComputerAvailable(string ipAddress)
     {
         try
