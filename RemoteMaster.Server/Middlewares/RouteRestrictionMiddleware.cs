@@ -19,7 +19,8 @@ public class RouteRestrictionMiddleware
         "/identity/account/login",
         "/identity/account/logout",
         "/identity/account/accessdenied",
-        "/identity/account/manage"
+        "/identity/account/manage",
+        "/identity/account/register"
     };
 
     public RouteRestrictionMiddleware(RequestDelegate next)

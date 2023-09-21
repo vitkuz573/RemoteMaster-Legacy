@@ -347,52 +347,6 @@
           "System.Diagnostics.EventLog": "7.0.0"
         }
       }
-    },
-    "net7.0-windows7.0/win-x64": {
-      "System.Drawing.Common": {
-        "type": "Direct",
-        "requested": "[7.0.0, )",
-        "resolved": "7.0.0",
-        "contentHash": "KIX+oBU38pxkKPxvLcLfIkOV5Ien8ReN78wro7OF5/erwcmortzeFx+iBswlh2Vz6gVne0khocQudGwaO1Ey6A==",
-        "dependencies": {
-          "Microsoft.Win32.SystemEvents": "7.0.0"
-        }
-      },
-      "SkiaSharp.NativeAssets.macOS": {
-        "type": "Transitive",
-        "resolved": "2.88.5",
-        "contentHash": "snAA6ghUHBeXSOEa/lbjYMUPDKdNh4YRjU+dBoU85EMDEPlAwtkM9gESTM8FKY67ozqX8tqLzad1RRDNistGsg=="
-      },
-      "SkiaSharp.NativeAssets.Win32": {
-        "type": "Transitive",
-        "resolved": "2.88.5",
-        "contentHash": "U0GuMsdtdbHjVmuyTPRbb+ifaTPYBIV8WvPFx81ZHwzfL2TVe8SQjum8AMXSZDDlf90rhxOC5slzaL33uoHUhA=="
-      },
-      "System.Diagnostics.EventLog": {
-        "type": "Transitive",
-        "resolved": "7.0.0",
-        "contentHash": "eUDP47obqQm3SFJfP6z+Fx2nJ4KKTQbXB4Q9Uesnzw9SbYdhjyoGXuvDn/gEmFY6N5Z3bFFbpAQGA7m6hrYJCw=="
-      },
-      "System.Text.Encodings.Web": {
-        "type": "Transitive",
-        "resolved": "7.0.0",
-        "contentHash": "OP6umVGxc0Z0MvZQBVigj4/U31Pw72ITihDWP9WiWDm+q5aoe0GaJivsfYGq53o6dxH7DcXWiCTl7+0o2CGdmg=="
-      },
-      "Microsoft.Win32.SystemEvents": {
-        "type": "CentralTransitive",
-        "requested": "[7.0.0, )",
-        "resolved": "7.0.0",
-        "contentHash": "2nXPrhdAyAzir0gLl8Yy8S5Mnm/uBSQQA7jEsILOS1MTyS7DbmV1NgViMtvV1sfCD1ebITpNwb1NIinKeJgUVQ=="
-      },
-      "System.ServiceProcess.ServiceController": {
-        "type": "CentralTransitive",
-        "requested": "[7.0.1, )",
-        "resolved": "7.0.1",
-        "contentHash": "rPfXTJzYU46AmWYXRATQzQQ01hICrkl3GuUHgpAr9mnUwAVSsga5x3mBxanFPlJBV9ilzqMXbQyDLJQAbyTnSw==",
-        "dependencies": {
-          "System.Diagnostics.EventLog": "7.0.0"
-        }
-      }
     }
   }
 }
