@@ -20,6 +20,6 @@ public static class HardwareHelper
 
     public static void SetMonitorState(MonitorState state)
     {
-        SendMessage((HWND)0xFFFF, WM_SYSCOMMAND, SC_MONITORPOWER, (int)state);
+        SendMessage(HWND.HWND_BROADCAST, WM_SYSCOMMAND, SC_MONITORPOWER, (int)state);
     }
 }
