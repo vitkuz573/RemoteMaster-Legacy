@@ -54,7 +54,7 @@ public abstract class UpdaterBase
         {
             var result = WNetCancelConnection2W(pRemotePath, 0, true);
 
-            if (result != (uint)WIN32_ERROR.NO_ERROR)
+            if (result != WIN32_ERROR.NO_ERROR)
             {
                 throw new Win32Exception((int)result);
             }
@@ -73,6 +73,7 @@ public abstract class UpdaterBase
         foreach (var file in sourceDir.GetFiles())
         {
             var destPath = Path.Combine(destDirName, file.Name);
+
             if (!File.Exists(destPath) || overwriteExisting)
             {
                 file.CopyTo(destPath, true);
