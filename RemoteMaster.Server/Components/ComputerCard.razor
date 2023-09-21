@@ -4,7 +4,7 @@
 
 <div class="mb-4 bg-transparent box-border p-1 selectable-item" data-ip-address="@Computer.IPAddress">
     <div class="bg-white shadow-lg rounded-md overflow-hidden">
-        <img src="@ThumbnailPath" alt="Thumbnail" class="h-40 w-full object-cover" />
+        <img src="@ThumbnailPath" alt="Thumbnail" class="h-40 w-full" />
         <div class="p-3">
             <input type="checkbox" checked="@IsSelected" @onchange="HandleCheckboxChange" class="mr-2" />
             <span class="text-center text-lg">@Computer.Name</span>

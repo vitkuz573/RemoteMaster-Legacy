@@ -20,7 +20,7 @@ public partial class ComputerCard
     [Inject]
     public ContextMenuService ContextMenuService { get; set; }
 
-    private string ThumbnailPath => Computer.Thumbnail != null ? $"data:image/png;base64,{Convert.ToBase64String(Computer.Thumbnail)}" : "https://placehold.co/500x300";
+    private string ThumbnailPath => Computer.Thumbnail != null ? $"data:image/png;base64,{Convert.ToBase64String(Computer.Thumbnail)}" : "/img/notconnected.png";
 
     [Parameter]
     public bool IsSelected { get; set; }
