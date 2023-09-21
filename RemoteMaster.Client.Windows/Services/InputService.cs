@@ -191,7 +191,7 @@ public class InputService : IInputService
                     dx = 0,
                     dy = 0,
                     time = 0,
-                    mouseData = data.DeltaY < 0 ? 120 : data.DeltaY > 0 ? -120 : 0,
+                    mouseData = data.DeltaY < 0 ? 120u : data.DeltaY > 0 ? unchecked((uint)-120) : 0u,
                     dwExtraInfo = (nuint)GetMessageExtraInfo().Value
                 };
 

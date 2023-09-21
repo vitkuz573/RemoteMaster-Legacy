@@ -8,7 +8,7 @@ namespace RemoteMaster.Agent.Abstractions;
 
 public interface IClientService
 {
-    Task<bool> RegisterAsync(ConfigurationModel config, string hostName, string ipAddress);
+    Task<bool> RegisterAsync(ConfigurationModel config, string hostName, string ipAddress, string macAddress);
 
     Task<bool> UnregisterAsync(ConfigurationModel config, string hostName);
 

@@ -27,7 +27,7 @@ public class ClientService : IClientService
         _logger = logger;
     }
 
-    public async Task<bool> RegisterAsync(ConfigurationModel config, string hostName, string ipAddress)
+    public async Task<bool> RegisterAsync(ConfigurationModel config, string hostName, string ipAddress, string macAddress)
     {
         if (config == null)
         {
@@ -39,7 +39,7 @@ public class ClientService : IClientService
             var connection = await ConnectToServerHub($"http://{config.Server}:5254");
 
             _logger.LogInformation("Installing...");
-            var result = await connection.InvokeAsync<bool>("RegisterClient", hostName, ipAddress, config.Group);
+            var result = await connection.InvokeAsync<bool>("RegisterClient", hostName, ipAddress, macAddress, config.Group);
 
             return result;
         }

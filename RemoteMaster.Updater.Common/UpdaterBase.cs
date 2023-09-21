@@ -36,9 +36,9 @@ public abstract class UpdaterBase
 
             var result = WNetAddConnection2W(in netResource, password, username, 0);
 
-            if (result != (uint)WIN32_ERROR.NO_ERROR)
+            if (result != WIN32_ERROR.NO_ERROR)
             {
-                if (result == (uint)WIN32_ERROR.ERROR_ALREADY_ASSIGNED)
+                if (result == WIN32_ERROR.ERROR_ALREADY_ASSIGNED)
                 {
                     return;
                 }

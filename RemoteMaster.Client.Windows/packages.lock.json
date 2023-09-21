@@ -240,7 +240,7 @@
         "type": "Project",
         "dependencies": {
           "Microsoft.Win32.SystemEvents": "[7.0.0, )",
-          "Microsoft.Windows.SDK.Win32Metadata": "[54.0.44-preview, )",
+          "Microsoft.Windows.SDK.Win32Metadata": "[55.0.45-preview, )",
           "System.ServiceProcess.ServiceController": "[7.0.1, )"
         }
       },
@@ -248,7 +248,7 @@
         "type": "Project",
         "dependencies": {
           "Microsoft.Extensions.Logging.Abstractions": "[7.0.1, )",
-          "Microsoft.Windows.SDK.Win32Metadata": "[54.0.44-preview, )"
+          "Microsoft.Windows.SDK.Win32Metadata": "[55.0.45-preview, )"
         }
       },
       "Microsoft.AspNetCore.SignalR.Client.Core": {
@@ -300,9 +300,9 @@
       },
       "Microsoft.Windows.SDK.Win32Metadata": {
         "type": "CentralTransitive",
-        "requested": "[54.0.44-preview, )",
-        "resolved": "54.0.44-preview",
-        "contentHash": "pDfltYDFeJXSqnoyYIlDpoHL83M+Ia5PiVCjMtVoadC9HOCeBbonoJNBOXtLg67pGOwELX2Nzw97f2hHaCDdCw=="
+        "requested": "[55.0.45-preview, )",
+        "resolved": "55.0.45-preview",
+        "contentHash": "2i1kVIk8rMuMCYtoeYeWbmCRLqNgb63Berac3Gv+J/pjp0oucopasKgLQNslryhsgBl4xex9ENhJX2MXEW5vdA=="
       },
       "Serilog": {
         "type": "CentralTransitive",

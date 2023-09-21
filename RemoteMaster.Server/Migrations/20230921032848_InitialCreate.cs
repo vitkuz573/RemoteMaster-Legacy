@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -18,7 +19,8 @@ namespace RemoteMaster.Server.Migrations
                     Name = table.Column<string>(type: "TEXT", nullable: false),
                     ParentId = table.Column<Guid>(type: "TEXT", nullable: true),
                     NodeType = table.Column<string>(type: "TEXT", nullable: false),
-                    IPAddress = table.Column<string>(type: "TEXT", nullable: true)
+                    IPAddress = table.Column<string>(type: "TEXT", nullable: true),
+                    MACAddress = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {

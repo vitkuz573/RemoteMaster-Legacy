@@ -29,7 +29,7 @@ public class AgentServiceManager : IAgentServiceManager
         _configurationService = configurationService;
     }
 
-    public async Task<bool> InstallOrUpdateService(ConfigurationModel configuration, string hostName, string ipv4Address)
+    public async Task<bool> InstallOrUpdateService(ConfigurationModel configuration, string hostName, string ipv4Address, string macAddress)
     {
         var newExecutablePath = GetNewExecutablePath();
 
@@ -45,7 +45,7 @@ public class AgentServiceManager : IAgentServiceManager
 
         _serviceManager.StartService();
 
-        var registerResult = await _clientService.RegisterAsync(configuration, hostName, ipv4Address);
+        var registerResult = await _clientService.RegisterAsync(configuration, hostName, ipv4Address, macAddress);
 
         if (!registerResult)
         {

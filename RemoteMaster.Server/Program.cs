@@ -43,6 +43,8 @@ void ConfigureServices(WebApplicationBuilder builder)
     builder.Services.AddScoped<ControlFunctionsService>();
     builder.Services.AddScoped<DatabaseService>();
     builder.Services.AddScoped<IQueryParameterService, QueryParameterService>();
+    builder.Services.AddSingleton<IPacketSender, UdpPacketSender>();
+    builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
 
     // Hub services
     builder.Services.AddTransient<IHubConnectionBuilder>(s => new HubConnectionBuilder());
@@ -89,7 +91,7 @@ WebApplication ConfigureApplication(WebApplicationBuilder builder)
     var enableRegistration = builder.Configuration.GetValue<bool>("EnableRegistration");
 
     app.UseMiddleware<RegistrationRestrictionMiddleware>(enableRegistration);
-    app.UseMiddleware<RouteRestrictionMiddleware>();
+    // app.UseMiddleware<RouteRestrictionMiddleware>();
 
     app.UseStaticFiles();
     app.UseRouting();

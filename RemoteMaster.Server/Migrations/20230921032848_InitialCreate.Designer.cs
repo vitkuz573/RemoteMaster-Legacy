@@ -11,16 +11,16 @@ using RemoteMaster.Server.Services;
 namespace RemoteMaster.Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20230702143803_InitialCreate")]
+    [Migration("20230921032848_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "7.0.8");
+            modelBuilder.HasAnnotation("ProductVersion", "7.0.11");
 
-            modelBuilder.Entity("RemoteMaster.Client.Models.Node", b =>
+            modelBuilder.Entity("RemoteMaster.Server.Models.Node", b =>
                 {
                     b.Property<Guid>("NodeId")
                         .ValueGeneratedOnAdd()
@@ -48,34 +48,38 @@ namespace RemoteMaster.Server.Migrations
                     b.UseTphMappingStrategy();
                 });
 
-            modelBuilder.Entity("RemoteMaster.Client.Models.Computer", b =>
+            modelBuilder.Entity("RemoteMaster.Server.Models.Computer", b =>
                 {
-                    b.HasBaseType("RemoteMaster.Client.Models.Node");
+                    b.HasBaseType("RemoteMaster.Server.Models.Node");
 
                     b.Property<string>("IPAddress")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MACAddress")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasDiscriminator().HasValue("Computer");
                 });
 
-            modelBuilder.Entity("RemoteMaster.Client.Models.Folder", b =>
+            modelBuilder.Entity("RemoteMaster.Server.Models.Folder", b =>
                 {
-                    b.HasBaseType("RemoteMaster.Client.Models.Node");
+                    b.HasBaseType("RemoteMaster.Server.Models.Node");
 
                     b.HasDiscriminator().HasValue("Folder");
                 });
 
-            modelBuilder.Entity("RemoteMaster.Client.Models.Node", b =>
+            modelBuilder.Entity("RemoteMaster.Server.Models.Node", b =>
                 {
-                    b.HasOne("RemoteMaster.Client.Models.Node", "Parent")
+                    b.HasOne("RemoteMaster.Server.Models.Node", "Parent")
                         .WithMany("Children")
                         .HasForeignKey("ParentId");
 
                     b.Navigation("Parent");
                 });
 
-            modelBuilder.Entity("RemoteMaster.Client.Models.Node", b =>
+            modelBuilder.Entity("RemoteMaster.Server.Models.Node", b =>
                 {
                     b.Navigation("Children");
                 });

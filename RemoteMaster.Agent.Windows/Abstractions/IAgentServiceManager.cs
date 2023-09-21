@@ -11,7 +11,7 @@ public interface IAgentServiceManager
 {
     event Action<string, MessageType> MessageReceived;
 
-    Task<bool> InstallOrUpdateService(ConfigurationModel configuration, string hostName, string ipv4Address);
+    Task<bool> InstallOrUpdateService(ConfigurationModel configuration, string hostName, string ipv4Address, string macAddress);
 
     Task<bool> UninstallService(ConfigurationModel configuration, string hostName);
 }

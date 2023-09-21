@@ -20,6 +20,8 @@ public class Computer : Node
 
     public string IPAddress { get; set; }
 
+    public string MACAddress { get; set; }
+
     [NotMapped]
     public byte[]? Thumbnail { get; set; }
 }

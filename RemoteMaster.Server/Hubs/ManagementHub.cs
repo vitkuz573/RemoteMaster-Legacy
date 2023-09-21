@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
@@ -19,7 +20,7 @@ public class ManagementHub : Hub
         _logger = logger;
     }
 
-    public async Task<bool> RegisterClient(string hostName, string ipAddress, string group)
+    public async Task<bool> RegisterClient(string hostName, string ipAddress, string macAddress, string group)
     {
         var folder = _databaseService.GetFolders().FirstOrDefault(f => f.Name == group);
 
@@ -41,6 +42,7 @@ public class ManagementHub : Hub
             {
                 Name = hostName,
                 IPAddress = ipAddress,
+                MACAddress = Regex.Replace(macAddress, "(..)(?!$)", "$1:"),
                 Parent = folder
             };
 

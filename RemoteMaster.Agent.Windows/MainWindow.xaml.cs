@@ -2,6 +2,8 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net.NetworkInformation;
+using System.Text.RegularExpressions;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using RemoteMaster.Agent.Abstractions;
@@ -21,6 +23,7 @@ public partial class MainWindow : Window
 
     private readonly string _hostName;
     private readonly string _ipv4Address;
+    private readonly string _macAddress;
     private readonly ConfigurationModel _configuration;
 
     public MainWindow()
@@ -37,6 +40,7 @@ public partial class MainWindow : Window
 
         _hostName = _hostInfoProvider.GetHostName();
         _ipv4Address = _hostInfoProvider.GetIPv4Address();
+        _macAddress = GetMacAddressForIp(_ipv4Address);
         _configuration = _configurationService.LoadConfiguration();
 
         DisplayConfigurationAndSystemInfo();
@@ -52,13 +56,14 @@ public partial class MainWindow : Window
     {
         HostNameTextBlock.Text = $"Host Name: {_hostName}";
         IPV4AddressTextBlock.Text = $"IPv4 Address: {_ipv4Address}";
+        MACAddressTextBlock.Text = $"MAC Address: {Regex.Replace(_macAddress, "(..)(?!$)", "$1:")}";
         ServerAddressTextBlock.Text = $"Server Address: {_configuration.Server}";
         GroupTextBlock.Text = $"Group: {_configuration.Group}";
     }
 
     private async void InstallUpdateButton_Click(object sender, RoutedEventArgs e)
     {
-        await _agentServiceManager.InstallOrUpdateService(_configuration, _hostName, _ipv4Address);
+        await _agentServiceManager.InstallOrUpdateService(_configuration, _hostName, _ipv4Address, _macAddress);
 
         UpdateServiceStatusDisplay();
     }
@@ -69,7 +74,25 @@ public partial class MainWindow : Window
 
         UpdateServiceStatusDisplay();
     }
-
+    
+    public static string GetMacAddressForIp(string ipAddress)
+    {
+        foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
+        {
+            var ipProperties = nic.GetIPProperties();
+        
+            foreach (var ip in ipProperties.UnicastAddresses)
+            {
+                if (ip.Address.ToString() == ipAddress)
+                {
+                    return nic.GetPhysicalAddress().ToString();
+                }
+            }
+        }
+        
+        return string.Empty;
+    }
+    
     private void UpdateServiceStatusDisplay()
     {
         var serviceExists = _serviceManager.IsServiceInstalled();

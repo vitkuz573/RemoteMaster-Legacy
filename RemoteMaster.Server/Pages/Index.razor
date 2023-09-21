@@ -50,7 +50,9 @@
             </RadzenSplitButton>
 
             <RadzenButton Text="Start Recording" Disabled="@(!_anyComputerSelected)" Click="StartMassRecording" class="mr-2" />
-            <RadzenButton Text="Stop Recording" Disabled="@(!_anyComputerSelected)" Click="StopMassRecording" />
+            <RadzenButton Text="Stop Recording" Disabled="@(!_anyComputerSelected)" Click="StopMassRecording" class="mr-2" />
+
+            <RadzenButton Text="Wake" Disabled="@(!_anyComputerSelected)" Click="Wake" />
 
             <RadzenButton Click="HandleRefreshClick" Text="Refresh" class="ml-auto" />
         </div>

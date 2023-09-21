@@ -33,6 +33,9 @@ public partial class Index
     private IConnectionManager ConnectionManager { get; set; }
 
     [Inject]
+    private IWakeOnLanService WakeOnLanService { get; set; }
+
+    [Inject]
     private IJSRuntime JSRuntime { get; set; }
 
     protected async override Task OnInitializedAsync()
@@ -178,20 +181,20 @@ public partial class Index
         await JSRuntime.InvokeVoidAsync("openNewWindow", url);
     }
 
-    private async Task ExecuteOnAvailableComputers(Func<string, IControlHub, Task> actionOnComputer)
+    private async Task ExecuteOnAvailableComputers(Func<Computer, IControlHub, Task> actionOnComputer)
     {
-        var tasks = _selectedComputers.Select(computer => IsComputerAvailable(computer.IPAddress)).ToArray();
+        var tasks = _selectedComputers.Select(IsComputerAvailable).ToArray();
         var results = await Task.WhenAll(tasks);
 
-        var availableComputers = results.Where(r => r.isAvailable).Select(r => r.ipAddress);
+        var availableComputers = results.Where(r => r.isAvailable);
 
-        foreach (var ipAddress in availableComputers)
+        foreach (var (computer, isAvailable) in availableComputers)
         {
-            var clientContext = ConnectionManager.Connect("Client", $"http://{ipAddress}:5076/hubs/control", true);
+            var clientContext = ConnectionManager.Connect("Client", $"http://{computer.IPAddress}:5076/hubs/control", true);
             await clientContext.StartAsync();
 
             var proxy = clientContext.Connection.CreateHubProxy<IControlHub>();
-            await actionOnComputer(ipAddress, proxy);
+            await actionOnComputer(computer, proxy);
         }
 
         StateHasChanged();
@@ -199,9 +202,9 @@ public partial class Index
 
     private async Task Control()
     {
-        await ExecuteOnAvailableComputers(async (ipAddress, proxy) =>
+        await ExecuteOnAvailableComputers(async (computer, proxy) =>
         {
-            await OpenWindow($"/{ipAddress}/control");
+            await OpenWindow($"/{computer.IPAddress}/control");
         });
     }
 
@@ -214,9 +217,9 @@ public partial class Index
 
         var sParameter = item.Text.Contains("System") ? "-s" : "";
 
-        await ExecuteOnAvailableComputers(async (ipAddress, proxy) =>
+        await ExecuteOnAvailableComputers(async (computer, proxy) =>
         {
-            var command = @$"/C psexec \\{ipAddress} {sParameter} -nobanner -accepteula {item.Value}";
+            var command = @$"/C psexec \\{computer.IPAddress} {sParameter} -nobanner -accepteula {item.Value}";
 
             var startInfo = new ProcessStartInfo()
             {
@@ -236,7 +239,7 @@ public partial class Index
             return;
         }
 
-        await ExecuteOnAvailableComputers(async (ipAddress, proxy) =>
+        await ExecuteOnAvailableComputers(async (computer, proxy) =>
         {
             if (item.Value == "shutdown")
             {
@@ -257,11 +260,11 @@ public partial class Index
             return;
         }
 
-        await ExecuteOnAvailableComputers(async (ipAddress, proxy) =>
+        await ExecuteOnAvailableComputers(async (computer, proxy) =>
         {
             if (item.Value == "client")
             {
-                var clientContext = ConnectionManager.Connect("Agent", $"http://{ipAddress}:3564/hubs/maintenance");
+                var clientContext = ConnectionManager.Connect("Agent", $"http://{computer.IPAddress}:3564/hubs/maintenance");
                 await clientContext.StartAsync();
 
                 await clientContext.Connection.InvokeAsync("SendClientUpdate");
@@ -276,11 +279,11 @@ public partial class Index
 
     private async Task StartMassRecording()
     {
-        await ExecuteOnAvailableComputers(async (ipAddress, proxy) =>
+        await ExecuteOnAvailableComputers(async (computer, proxy) =>
         {
             var requesterName = Environment.MachineName;
             var currentDate = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-            var fileName = $@"C:\{requesterName}_{ipAddress}_{currentDate}.mp4";
+            var fileName = $@"C:\{requesterName}_{computer.IPAddress}_{currentDate}.mp4";
 
             await proxy.StartScreenRecording(fileName);
         });
@@ -288,21 +291,29 @@ public partial class Index
 
     private async Task StopMassRecording()
     {
-        await ExecuteOnAvailableComputers(async (ipAddress, proxy) => await proxy.StopScreenRecording());
+        await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.StopScreenRecording());
     }
 
-    private static async Task<(string ipAddress, bool isAvailable)> IsComputerAvailable(string ipAddress)
+    private async Task Wake()
+    {
+        foreach (var computer in _selectedComputers)
+        {
+            WakeOnLanService.WakeUp(computer.MACAddress);
+        }
+    }
+
+    private static async Task<(Computer computer, bool isAvailable)> IsComputerAvailable(Computer computer)
     {
         try
         {
             using var ping = new Ping();
-            var reply = await ping.SendPingAsync(ipAddress, 1000);
+            var reply = await ping.SendPingAsync(computer.IPAddress, 1000);
 
-            return (ipAddress, reply.Status == IPStatus.Success);
+            return (computer, reply.Status == IPStatus.Success);
         }
         catch
         {
-            return (ipAddress, false);
+            return (computer, false);
         }
     }
 }
