@@ -63,20 +63,21 @@ void ConfigureServices(WebApplicationBuilder builder)
     // Blazor services
     builder.Services.AddRazorPages();
     builder.Services.AddServerSideBlazor();
-
-    // Database migrations
-    using var scope = builder.Services.BuildServiceProvider().CreateScope();
-
-    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    dbContext.Database.Migrate();
-
-    var identityContext = scope.ServiceProvider.GetRequiredService<IdentityDataContext>();
-    identityContext.Database.Migrate();
 }
 
 WebApplication ConfigureApplication(WebApplicationBuilder builder)
 {
     var app = builder.Build();
+
+    // Perform database migrations
+    using (var scope = app.Services.CreateScope())
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        dbContext.Database.Migrate();
+
+        var identityContext = scope.ServiceProvider.GetRequiredService<IdentityDataContext>();
+        identityContext.Database.Migrate();
+    }
 
     app.Urls.Clear();
     app.Urls.Add("http://0.0.0.0:5254");
