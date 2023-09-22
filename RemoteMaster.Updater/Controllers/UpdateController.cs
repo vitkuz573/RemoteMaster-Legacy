@@ -20,7 +20,7 @@ public class UpdateController : ControllerBase
     }
 
     [HttpGet("check")]
-    public async Task<IActionResult> CheckForUpdates()
+    public async Task<IActionResult> CheckForUpdates([FromQuery] string sharedFolder, [FromQuery] string login, [FromQuery] string password)
     {
         var updateResults = new List<UpdateResponse>();
 
@@ -30,7 +30,7 @@ public class UpdateController : ControllerBase
 
             try
             {
-                var result = await updater.IsUpdateAvailableAsync();
+                var result = await updater.IsUpdateAvailableAsync(sharedFolder, login, password);
                 response.CurrentVersion = result.CurrentVersion;
                 response.AvailableVersion = result.AvailableVersion;
                 response.IsUpdateAvailable = result.IsUpdateAvailable;
@@ -52,7 +52,7 @@ public class UpdateController : ControllerBase
     }
 
     [HttpPost("update")]
-    public async Task<IActionResult> Update()
+    public async Task<IActionResult> Update([FromQuery] string sharedFolder, [FromQuery] string login, [FromQuery] string password)
     {
         var updateResults = new List<UpdateResponse>();
 
@@ -62,11 +62,11 @@ public class UpdateController : ControllerBase
 
             try
             {
-                var updateCheckResponse = await updater.IsUpdateAvailableAsync();
+                var updateCheckResponse = await updater.IsUpdateAvailableAsync(sharedFolder, login, password);
 
                 if (updateCheckResponse.IsUpdateAvailable)
                 {
-                    await updater.UpdateAsync();
+                    await updater.UpdateAsync(sharedFolder, login, password);
                     response.Message = "Update completed successfully.";
                 }
                 else

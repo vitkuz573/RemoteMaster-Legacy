@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
-using Microsoft.Extensions.Logging;
 using RemoteMaster.Shared.Helpers;
 using RemoteMaster.Updater.Abstractions;
 using RemoteMaster.Updater.Models;
@@ -14,10 +13,6 @@ public class ClientComponentUpdater : IComponentUpdater
 {
     private readonly ILogger<ClientComponentUpdater> _logger;
 
-    protected const string SharedFolder = @"\\SERVER-DC02\Win\RemoteMaster";
-    protected const string Login = "support@it-ktk.local";
-    protected const string Password = "bonesgamer123!!";
-
     public string ComponentName => "Client";
 
     public ClientComponentUpdater(ILogger<ClientComponentUpdater> logger)
@@ -25,10 +20,10 @@ public class ClientComponentUpdater : IComponentUpdater
         _logger = logger;
     }
 
-    public async Task<UpdateResponse> IsUpdateAvailableAsync()
+    public async Task<UpdateResponse> IsUpdateAvailableAsync(string sharedFolder, string login, string password)
     {
         var localExeFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Client", "RemoteMaster.Client.exe");
-        var sharedExeFilePath = Path.Combine(SharedFolder, ComponentName, "RemoteMaster.Client.exe");
+        var sharedExeFilePath = Path.Combine(sharedFolder, ComponentName, "RemoteMaster.Client.exe");
 
         if (!File.Exists(localExeFilePath))
         {
@@ -48,7 +43,7 @@ public class ClientComponentUpdater : IComponentUpdater
 
         try
         {
-            NetworkDriveHelper.MapNetworkDrive(SharedFolder, Login, Password);
+            NetworkDriveHelper.MapNetworkDrive(sharedFolder, login, password);
 
             if (!File.Exists(sharedExeFilePath))
             {
@@ -63,13 +58,13 @@ public class ClientComponentUpdater : IComponentUpdater
         }
         finally
         {
-            NetworkDriveHelper.CancelNetworkDrive(SharedFolder);
+            NetworkDriveHelper.CancelNetworkDrive(sharedFolder);
         }
 
         return response;
     }
 
-    public async Task UpdateAsync()
+    public async Task UpdateAsync(string sharedFolder, string login, string password)
     {
         var destinationFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", ComponentName);
         var backupFolder = Path.Combine(destinationFolder, "Backup");
@@ -84,7 +79,7 @@ public class ClientComponentUpdater : IComponentUpdater
                 process.WaitForExit();
             }
 
-            var sourceFolder = Path.Combine(SharedFolder, ComponentName);
+            var sourceFolder = Path.Combine(sharedFolder, ComponentName);
             
             if (!Directory.Exists(backupFolder))
             {
@@ -97,7 +92,7 @@ public class ClientComponentUpdater : IComponentUpdater
                 File.Copy(file, backupPath, true);
             }
 
-            NetworkDriveHelper.MapNetworkDrive(SharedFolder, Login, Password);
+            NetworkDriveHelper.MapNetworkDrive(sharedFolder, login, password);
 
             var maxRetries = 5;
             var retryDelay = 2000;
@@ -115,14 +110,14 @@ public class ClientComponentUpdater : IComponentUpdater
                 if (retryCount == maxRetries)
                 {
                     RestoreFromBackup(backupFolder, destinationFolder);
-                    NetworkDriveHelper.CancelNetworkDrive(SharedFolder);
+                    NetworkDriveHelper.CancelNetworkDrive(sharedFolder);
 
                     throw new InvalidOperationException($"Unable to access file {filePath} after {maxRetries} retries.");
                 }
             }
 
             NetworkDriveHelper.DirectoryCopy(sourceFolder, destinationFolder, true, true);
-            NetworkDriveHelper.CancelNetworkDrive(SharedFolder);
+            NetworkDriveHelper.CancelNetworkDrive(sharedFolder);
 
             if (Directory.Exists(backupFolder))
             {

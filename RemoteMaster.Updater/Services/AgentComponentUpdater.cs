@@ -16,10 +16,6 @@ public class AgentComponentUpdater : IComponentUpdater
     private readonly IServiceManager _serviceManager;
     private readonly ILogger<AgentComponentUpdater> _logger;
 
-    protected const string SharedFolder = @"\\SERVER-DC02\Win\RemoteMaster";
-    protected const string Login = "support@it-ktk.local";
-    protected const string Password = "bonesgamer123!!";
-
     public string ComponentName => "Agent";
 
     public AgentComponentUpdater(IServiceManager serviceManager, ILogger<AgentComponentUpdater> logger)
@@ -28,10 +24,10 @@ public class AgentComponentUpdater : IComponentUpdater
         _logger = logger;
     }
 
-    public async Task<UpdateResponse> IsUpdateAvailableAsync()
+    public async Task<UpdateResponse> IsUpdateAvailableAsync(string sharedFolder, string login, string password)
     {
         var localExeFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Agent", "RemoteMaster.Agent.exe");
-        var sharedExeFilePath = Path.Combine(SharedFolder, ComponentName, "RemoteMaster.Agent.exe");
+        var sharedExeFilePath = Path.Combine(sharedFolder, ComponentName, "RemoteMaster.Agent.exe");
 
         if (!File.Exists(localExeFilePath))
         {
@@ -51,7 +47,7 @@ public class AgentComponentUpdater : IComponentUpdater
 
         try
         {
-            NetworkDriveHelper.MapNetworkDrive(SharedFolder, Login, Password);
+            NetworkDriveHelper.MapNetworkDrive(sharedFolder, login, password);
 
             if (!File.Exists(sharedExeFilePath))
             {
@@ -66,13 +62,13 @@ public class AgentComponentUpdater : IComponentUpdater
         }
         finally
         {
-            NetworkDriveHelper.CancelNetworkDrive(SharedFolder);
+            NetworkDriveHelper.CancelNetworkDrive(sharedFolder);
         }
 
         return response;
     }
 
-    public async Task UpdateAsync()
+    public async Task UpdateAsync(string sharedFolder, string login, string password)
     {
         var destinationFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", ComponentName);
         var backupFolder = Path.Combine(destinationFolder, "Backup");
@@ -82,7 +78,7 @@ public class AgentComponentUpdater : IComponentUpdater
             _serviceManager.StopService();
             await WaitForServiceToStop();
 
-            var sourceFolder = Path.Combine(SharedFolder, ComponentName);
+            var sourceFolder = Path.Combine(sharedFolder, ComponentName);
 
             if (!Directory.Exists(backupFolder))
             {
@@ -95,7 +91,7 @@ public class AgentComponentUpdater : IComponentUpdater
                 File.Copy(file, backupPath, true);
             }
 
-            NetworkDriveHelper.MapNetworkDrive(SharedFolder, Login, Password);
+            NetworkDriveHelper.MapNetworkDrive(sharedFolder, login, password);
 
             var maxRetries = 5;
             var retryDelay = 2000;
@@ -113,14 +109,14 @@ public class AgentComponentUpdater : IComponentUpdater
                 if (retryCount == maxRetries)
                 {
                     RestoreFromBackup(backupFolder, destinationFolder);
-                    NetworkDriveHelper.CancelNetworkDrive(SharedFolder);
+                    NetworkDriveHelper.CancelNetworkDrive(sharedFolder);
 
                     throw new InvalidOperationException($"Unable to access file {filePath} after {maxRetries} retries.");
                 }
             }
 
             NetworkDriveHelper.DirectoryCopy(sourceFolder, destinationFolder, true, true);
-            NetworkDriveHelper.CancelNetworkDrive(SharedFolder);
+            NetworkDriveHelper.CancelNetworkDrive(sharedFolder);
 
             if (Directory.Exists(backupFolder))
             {

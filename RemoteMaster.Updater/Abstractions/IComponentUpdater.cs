@@ -8,9 +8,9 @@ namespace RemoteMaster.Updater.Abstractions;
 
 public interface IComponentUpdater
 {
-    Task<UpdateResponse> IsUpdateAvailableAsync();
+    Task<UpdateResponse> IsUpdateAvailableAsync(string sharedFolder, string login, string password);
 
-    Task UpdateAsync();
+    Task UpdateAsync(string sharedFolder, string login, string password);
 
     string ComponentName { get; }
 }
