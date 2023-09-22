@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
+using System.ServiceProcess;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Helpers;
 using RemoteMaster.Updater.Abstractions;
@@ -13,6 +14,7 @@ namespace RemoteMaster.Updater.Services;
 public class AgentComponentUpdater : IComponentUpdater
 {
     private readonly IServiceManager _serviceManager;
+    private readonly ILogger<AgentComponentUpdater> _logger;
 
     protected const string SharedFolder = @"\\SERVER-DC02\Win\RemoteMaster";
     protected const string Login = "support@it-ktk.local";
@@ -20,9 +22,10 @@ public class AgentComponentUpdater : IComponentUpdater
 
     public string ComponentName => "Agent";
 
-    public AgentComponentUpdater(IServiceManager serviceManager)
+    public AgentComponentUpdater(IServiceManager serviceManager, ILogger<AgentComponentUpdater> logger)
     {
         _serviceManager = serviceManager;
+        _logger = logger;
     }
 
     public async Task<UpdateResponse> IsUpdateAvailableAsync()
@@ -71,19 +74,113 @@ public class AgentComponentUpdater : IComponentUpdater
 
     public async Task UpdateAsync()
     {
-        _serviceManager.StopService();
-
-        Thread.Sleep(30000);
-
-        var sourceFolder = Path.Combine(SharedFolder, ComponentName);
         var destinationFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", ComponentName);
+        var backupFolder = Path.Combine(destinationFolder, "Backup");
 
-        NetworkDriveHelper.MapNetworkDrive(SharedFolder, Login, Password);
-        NetworkDriveHelper.DirectoryCopy(sourceFolder, destinationFolder, true, true);
-        NetworkDriveHelper.CancelNetworkDrive(SharedFolder);
+        try
+        {
+            _serviceManager.StopService();
+            await WaitForServiceToStop();
 
-        _serviceManager.StartService();
+            var sourceFolder = Path.Combine(SharedFolder, ComponentName);
 
-        await Task.CompletedTask;
+            if (!Directory.Exists(backupFolder))
+            {
+                Directory.CreateDirectory(backupFolder);
+            }
+
+            foreach (var file in Directory.GetFiles(destinationFolder))
+            {
+                var backupPath = Path.Combine(backupFolder, Path.GetFileName(file));
+                File.Copy(file, backupPath, true);
+            }
+
+            NetworkDriveHelper.MapNetworkDrive(SharedFolder, Login, Password);
+
+            var maxRetries = 5;
+            var retryDelay = 2000;
+
+            foreach (var filePath in Directory.GetFiles(destinationFolder))
+            {
+                var retryCount = 0;
+
+                while (IsFileLocked(filePath) && retryCount < maxRetries)
+                {
+                    await Task.Delay(retryDelay);
+                    retryCount++;
+                }
+
+                if (retryCount == maxRetries)
+                {
+                    RestoreFromBackup(backupFolder, destinationFolder);
+                    NetworkDriveHelper.CancelNetworkDrive(SharedFolder);
+
+                    throw new InvalidOperationException($"Unable to access file {filePath} after {maxRetries} retries.");
+                }
+            }
+
+            NetworkDriveHelper.DirectoryCopy(sourceFolder, destinationFolder, true, true);
+            NetworkDriveHelper.CancelNetworkDrive(SharedFolder);
+
+            if (Directory.Exists(backupFolder))
+            {
+                Directory.Delete(backupFolder, true);
+            }
+
+            _serviceManager.StartService();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating component {ComponentName}", ComponentName);
+            RestoreFromBackup(backupFolder, destinationFolder);
+            _serviceManager.StartService();
+        }
+    }
+
+    private static async Task WaitForServiceToStop()
+    {
+        using var serviceController = new ServiceController("RCService");
+        var timeout = TimeSpan.FromSeconds(30);
+        var sw = Stopwatch.StartNew();
+
+        while (serviceController.Status != ServiceControllerStatus.Stopped)
+        {
+            if (sw.Elapsed > timeout)
+            {
+                throw new System.TimeoutException("Timeout waiting for service to stop.");
+            }
+
+            await Task.Delay(1000);
+            serviceController.Refresh();
+        }
+    }
+
+    private static void RestoreFromBackup(string backupFolder, string destinationFolder)
+    {
+        foreach (var file in Directory.GetFiles(backupFolder))
+        {
+            var restorePath = Path.Combine(destinationFolder, Path.GetFileName(file));
+            File.Copy(file, restorePath, true);
+        }
+    }
+
+    private static bool IsFileLocked(string filePath)
+    {
+        FileStream stream = null;
+
+        try
+        {
+            stream = File.Open(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+        }
+        catch (IOException)
+        {
+            return true;
+        }
+        finally
+        {
+            stream?.Close();
+        }
+
+        return false;
     }
 }
