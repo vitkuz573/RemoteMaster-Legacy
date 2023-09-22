@@ -7,6 +7,15 @@
 	<RootNamespace>RemoteMaster.Client</RootNamespace>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <VersionPrefix>1.40.</VersionPrefix>
+    <VersionSuffix>0</VersionSuffix>
+    <Version>$(VersionPrefix)$(VersionSuffix)</Version>
+    <AssemblyVersion>$(Version)</AssemblyVersion>
+    <FileVersion Condition="'$(BUILD_BUILDID)' != ''">$(VersionPrefix)$(BUILD_BUILDID)</FileVersion>
+    <FileVersion Condition="'$(BUILD_BUILDID)' == ''">$(Version)</FileVersion>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="FFMpegCore" />
     <PackageReference Include="FFMpegCore.Extensions.System.Drawing.Common" />
@@ -18,7 +27,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RemoteMaster.Client.Core\RemoteMaster.Client.Core.csproj" />
-    <ProjectReference Include="..\RemoteMaster.Updater.Common\RemoteMaster.Updater.Common.csproj" />
   </ItemGroup>
 
   <Target Name="AfterFileSystemPublish" AfterTargets="FileSystemPublish">

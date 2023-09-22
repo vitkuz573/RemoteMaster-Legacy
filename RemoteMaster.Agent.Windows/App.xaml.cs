@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO;
 using System.Windows;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -14,6 +15,7 @@ using RemoteMaster.Agent.Core.Abstractions;
 using RemoteMaster.Agent.Core.Extensions;
 using RemoteMaster.Agent.Services;
 using RemoteMaster.Shared.Abstractions;
+using RemoteMaster.Shared.Helpers;
 using RemoteMaster.Shared.Services;
 
 namespace RemoteMaster.Agent;
@@ -22,6 +24,10 @@ public partial class App : Application
 {
     private IHost _host;
     private HiddenWindow _hiddenWindow;
+
+    protected const string SharedFolder = @"\\SERVER-DC02\Win\RemoteMaster";
+    protected const string Login = "support@it-ktk.local";
+    protected const string Password = "bonesgamer123!!";
 
     public IServiceProvider ServiceProvider => _host.Services;
 
@@ -60,7 +66,6 @@ public partial class App : Application
                 services.AddSingleton<IClientService, ClientService>();
                 services.AddSingleton<IServiceManager, ServiceManager>();
                 services.AddSingleton<ISignatureService, SignatureService>();
-                services.AddSingleton<IClientUpdater, ClientUpdater>();
                 services.AddSingleton<MainWindow>();
             });
     }
@@ -79,10 +84,14 @@ public partial class App : Application
                 });
             })
             .UseWindowsService()
-            .Build();
+        .Build();
 
-        var updateService = ServiceProvider.GetRequiredService<IClientUpdater>();
-        updateService.Install();
+        var sourceFolder = Path.Combine(SharedFolder, "Client");
+        var destinationFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Client");
+
+        NetworkDriveHelper.MapNetworkDrive(SharedFolder, Login, Password);
+        NetworkDriveHelper.DirectoryCopy(sourceFolder, destinationFolder);
+        NetworkDriveHelper.CancelNetworkDrive(SharedFolder);
 
         MonitorClient();
     }

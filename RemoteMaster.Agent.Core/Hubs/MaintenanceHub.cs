@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Agent.Core.Abstractions;
 using Windows.Win32;
@@ -11,12 +12,10 @@ namespace RemoteMaster.Agent.Core.Hubs;
 public class MaintenanceHub : Hub<IMaintenanceClient>
 {
     private readonly IConfigurationProvider _configurationProvider;
-    private readonly IClientUpdater _updateService;
 
-    public MaintenanceHub(IConfigurationProvider configurationProvider, IClientUpdater updateService)
+    public MaintenanceHub(IConfigurationProvider configurationProvider)
     {
         _configurationProvider = configurationProvider;
-        _updateService = updateService;
     }
 
     public async override Task OnConnectedAsync()
@@ -26,15 +25,10 @@ public class MaintenanceHub : Hub<IMaintenanceClient>
         await Clients.Caller.ReceiveAgentConfiguration(configuration);
     }
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Пометьте члены как статические", Justification = "<Ожидание>")]
+    [SuppressMessage("Performance", "CA1822:Пометьте члены как статические", Justification = "<Ожидание>")]
     public async Task SendCtrlAltDel()
     {
         PInvoke.SendSAS(true);
         PInvoke.SendSAS(false);
-    }
-
-    public async Task SendClientUpdate()
-    {
-        _updateService.Update();
     }
 }

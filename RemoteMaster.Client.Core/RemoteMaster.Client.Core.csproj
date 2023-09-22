@@ -8,15 +8,6 @@
     <ProjectReference Include="..\RemoteMaster.Shared\RemoteMaster.Shared.csproj" />
   </ItemGroup>
 
-  <PropertyGroup>
-    <VersionPrefix>1.31.</VersionPrefix>
-    <VersionSuffix>0</VersionSuffix>
-    <Version>$(VersionPrefix)$(VersionSuffix)</Version>
-    <AssemblyVersion>$(Version)</AssemblyVersion>
-    <FileVersion Condition="'$(BUILD_BUILDID)' != ''">$(VersionPrefix)$(BUILD_BUILDID)</FileVersion>
-    <FileVersion Condition="'$(BUILD_BUILDID)' == ''">$(Version)</FileVersion>
-  </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" />
     <PackageReference Include="Serilog" />

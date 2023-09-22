@@ -18,7 +18,6 @@ builder.Services.AddSingleton<ICursorRenderService, CursorRenderService>();
 builder.Services.AddSingleton<IInputService, InputService>();
 builder.Services.AddSingleton<IPowerService, PowerService>();
 builder.Services.AddSingleton<IServiceManager, ServiceManager>();
-builder.Services.AddSingleton<IAgentUpdater, AgentUpdater>();
 
 var app = builder.Build();
 

@@ -42,12 +42,7 @@
                 </ChildContent>
             </RadzenSplitButton>
 
-            <RadzenSplitButton Text="Update" Disabled="@(!_anyComputerSelected)" Click="@(args => Update(args))" class="mr-2">
-                <ChildContent>
-                    <RadzenSplitButtonItem Text="Update Client" Value="client" />
-                    <RadzenSplitButtonItem Text="Update Agent" Value="agent" />
-                </ChildContent>
-            </RadzenSplitButton>
+            <RadzenButton Text="Update" Disabled="@(!_anyComputerSelected)" Click="Update" class="mr-2" />
 
             <RadzenButton Text="Start Recording" Disabled="@(!_anyComputerSelected)" Click="StartMassRecording" class="mr-2" />
             <RadzenButton Text="Stop Recording" Disabled="@(!_anyComputerSelected)" Click="StopMassRecording" class="mr-2" />
