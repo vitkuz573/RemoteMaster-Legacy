@@ -144,30 +144,33 @@ public partial class Index
 
     private async Task UpdateComputersThumbnailsAsync(IEnumerable<Computer> computers)
     {
-        foreach (var computer in computers)
-        {
-            var clientContext = ConnectionManager.Connect("Client", $"http://{computer.IPAddress}:5076/hubs/control", true);
-
-            try
-            {
-                clientContext.On<byte[]>("ReceiveThumbnail", async (thumbnailBytes) =>
-                {
-                    if (thumbnailBytes?.Length > 0)
-                    {
-                        computer.Thumbnail = thumbnailBytes;
-                        await InvokeAsync(StateHasChanged);
-                    }
-                });
-
-                await clientContext.StartAsync();
-
-                var proxy = clientContext.Connection.CreateHubProxy<IControlHub>();
-                await proxy.ConnectAs(Intention.GetThumbnail);
-            }
-            catch {}
-        }
+        var tasks = computers.Select(UpdateComputerThumbnailAsync).ToArray();
+        await Task.WhenAll(tasks);
     }
-    
+
+    private async Task UpdateComputerThumbnailAsync(Computer computer)
+    {
+        var clientContext = ConnectionManager.Connect("Client", $"http://{computer.IPAddress}:5076/hubs/control", true);
+        
+        try
+        {
+            clientContext.On<byte[]>("ReceiveThumbnail", async (thumbnailBytes) =>
+            {
+                if (thumbnailBytes?.Length > 0)
+                {
+                    computer.Thumbnail = thumbnailBytes;
+                    await InvokeAsync(StateHasChanged);
+                }
+            });
+
+            await clientContext.StartAsync();
+
+            var proxy = clientContext.Connection.CreateHubProxy<IControlHub>();
+            await proxy.ConnectAs(Intention.GetThumbnail);
+        }
+        catch {}
+    }
+
     private async Task HandleRefreshClick()
     {
         if (_selectedNode is Folder selectedFolder)
@@ -202,10 +205,7 @@ public partial class Index
 
     private async Task Control()
     {
-        await ExecuteOnAvailableComputers(async (computer, proxy) =>
-        {
-            await OpenWindow($"/{computer.IPAddress}/control");
-        });
+        await ExecuteOnAvailableComputers(async (computer, proxy) => await OpenWindow($"/{computer.IPAddress}/control"));
     }
 
     private async Task OpenShell(RadzenSplitButtonItem item)
