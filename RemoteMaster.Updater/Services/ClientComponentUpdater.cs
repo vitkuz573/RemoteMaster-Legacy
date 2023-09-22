@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Shared.Helpers;
 using RemoteMaster.Updater.Abstractions;
 using RemoteMaster.Updater.Models;
@@ -11,11 +12,18 @@ namespace RemoteMaster.Updater.Services;
 
 public class ClientComponentUpdater : IComponentUpdater
 {
+    private readonly ILogger<ClientComponentUpdater> _logger;
+
     protected const string SharedFolder = @"\\SERVER-DC02\Win\RemoteMaster";
     protected const string Login = "support@it-ktk.local";
     protected const string Password = "bonesgamer123!!";
 
     public string ComponentName => "Client";
+
+    public ClientComponentUpdater(ILogger<ClientComponentUpdater> logger)
+    {
+        _logger = logger;
+    }
 
     public async Task<UpdateResponse> IsUpdateAvailableAsync()
     {
@@ -63,22 +71,98 @@ public class ClientComponentUpdater : IComponentUpdater
 
     public async Task UpdateAsync()
     {
-        var processes = Process.GetProcessesByName("RemoteMaster.Client");
+        var destinationFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", ComponentName);
+        var backupFolder = Path.Combine(destinationFolder, "Backup");
 
-        foreach (var process in processes)
+        try
         {
-            process.Kill();
+            var processes = Process.GetProcessesByName("RemoteMaster.Client");
+
+            foreach (var process in processes)
+            {
+                process.Kill();
+                process.WaitForExit();
+            }
+
+            var sourceFolder = Path.Combine(SharedFolder, ComponentName);
+            
+            if (!Directory.Exists(backupFolder))
+            {
+                Directory.CreateDirectory(backupFolder);
+            }
+
+            foreach (var file in Directory.GetFiles(destinationFolder))
+            {
+                var backupPath = Path.Combine(backupFolder, Path.GetFileName(file));
+                File.Copy(file, backupPath, true);
+            }
+
+            NetworkDriveHelper.MapNetworkDrive(SharedFolder, Login, Password);
+
+            var maxRetries = 5;
+            var retryDelay = 2000;
+
+            foreach (var filePath in Directory.GetFiles(destinationFolder))
+            {
+                var retryCount = 0;
+
+                while (IsFileLocked(filePath) && retryCount < maxRetries)
+                {
+                    await Task.Delay(retryDelay);
+                    retryCount++;
+                }
+
+                if (retryCount == maxRetries)
+                {
+                    RestoreFromBackup(backupFolder, destinationFolder);
+                    NetworkDriveHelper.CancelNetworkDrive(SharedFolder);
+
+                    throw new InvalidOperationException($"Unable to access file {filePath} after {maxRetries} retries.");
+                }
+            }
+
+            NetworkDriveHelper.DirectoryCopy(sourceFolder, destinationFolder, true, true);
+            NetworkDriveHelper.CancelNetworkDrive(SharedFolder);
+
+            if (Directory.Exists(backupFolder))
+            {
+                Directory.Delete(backupFolder, true);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating component {ComponentName}", ComponentName);
+
+            RestoreFromBackup(backupFolder, destinationFolder);
+        }
+    }
+
+    private static void RestoreFromBackup(string backupFolder, string destinationFolder)
+    {
+        foreach (var file in Directory.GetFiles(backupFolder))
+        {
+            var restorePath = Path.Combine(destinationFolder, Path.GetFileName(file));
+            File.Copy(file, restorePath, true);
+        }
+    }
+
+    private static bool IsFileLocked(string filePath)
+    {
+        FileStream stream = null;
+
+        try
+        {
+            stream = File.Open(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+        }
+        catch (IOException)
+        {
+            return true;
+        }
+        finally
+        {
+            stream?.Close();
         }
 
-        await Task.Delay(10000);
-
-        var sourceFolder = Path.Combine(SharedFolder, ComponentName);
-        var destinationFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", ComponentName);
-
-        NetworkDriveHelper.MapNetworkDrive(SharedFolder, Login, Password);
-        NetworkDriveHelper.DirectoryCopy(sourceFolder, destinationFolder, true, true);
-        NetworkDriveHelper.CancelNetworkDrive(SharedFolder);
-
-        await Task.CompletedTask;
+        return false;
     }
 }
