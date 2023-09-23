@@ -3,8 +3,8 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
-using RemoteMaster.Shared.Helpers;
 using RemoteMaster.Updater.Abstractions;
+using RemoteMaster.Updater.Helpers;
 using RemoteMaster.Updater.Models;
 
 namespace RemoteMaster.Updater.Services;

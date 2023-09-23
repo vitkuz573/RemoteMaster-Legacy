@@ -1,8 +1,7 @@
 ﻿using System.Diagnostics;
 using System.ServiceProcess;
-using RemoteMaster.Shared.Abstractions;
-using RemoteMaster.Shared.Helpers;
 using RemoteMaster.Updater.Abstractions;
+using RemoteMaster.Updater.Helpers;
 using RemoteMaster.Updater.Models;
 
 namespace RemoteMaster.Updater.Services;
@@ -11,6 +10,7 @@ public class AgentComponentUpdater : IComponentUpdater
 {
     private readonly IServiceManager _serviceManager;
     private readonly ILogger<AgentComponentUpdater> _logger;
+
     public string ComponentName => "Agent";
 
     public AgentComponentUpdater(IServiceManager serviceManager, ILogger<AgentComponentUpdater> logger)
