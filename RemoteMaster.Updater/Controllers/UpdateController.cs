@@ -26,11 +26,15 @@ public class UpdateController : ControllerBase
 
         foreach (var updater in _componentUpdaters)
         {
-            var response = new UpdateResponse { ComponentName = updater.ComponentName };
+            var response = new UpdateResponse
+            {
+                ComponentName = updater.ComponentName
+            };
 
             try
             {
                 var result = await updater.IsUpdateAvailableAsync(sharedFolder, login, password);
+                
                 response.CurrentVersion = result.CurrentVersion;
                 response.AvailableVersion = result.AvailableVersion;
                 response.IsUpdateAvailable = result.IsUpdateAvailable;

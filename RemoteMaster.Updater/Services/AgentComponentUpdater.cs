@@ -1,4 +1,8 @@
-﻿using System.Diagnostics;
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+// This file is part of the RemoteMaster project.
+// Licensed under the GNU Affero General Public License v3.0.
+
+using System.Diagnostics;
 using System.ServiceProcess;
 using RemoteMaster.Updater.Abstractions;
 using RemoteMaster.Updater.Helpers;
@@ -8,14 +12,12 @@ namespace RemoteMaster.Updater.Services;
 
 public class AgentComponentUpdater : IComponentUpdater
 {
-    private readonly IServiceManager _serviceManager;
     private readonly ILogger<AgentComponentUpdater> _logger;
 
     public string ComponentName => "Agent";
 
-    public AgentComponentUpdater(IServiceManager serviceManager, ILogger<AgentComponentUpdater> logger)
+    public AgentComponentUpdater(ILogger<AgentComponentUpdater> logger)
     {
-        _serviceManager = serviceManager;
         _logger = logger;
     }
 
@@ -78,7 +80,7 @@ public class AgentComponentUpdater : IComponentUpdater
 
         try
         {
-            _serviceManager.StopService();
+            StopService();
             await WaitForServiceToStop();
 
             var sourceFolder = string.IsNullOrEmpty(sharedFolder) || string.IsNullOrEmpty(login) || string.IsNullOrEmpty(password) ? null : Path.Combine(sharedFolder, ComponentName);
@@ -97,7 +99,7 @@ public class AgentComponentUpdater : IComponentUpdater
                     {
                         var fileBytes = await response.Content.ReadAsByteArrayAsync();
                         await File.WriteAllBytesAsync(destinationPath, fileBytes);
-                        
+
                         return;
                     }
                     else
@@ -156,13 +158,13 @@ public class AgentComponentUpdater : IComponentUpdater
                 Directory.Delete(backupFolder, true);
             }
 
-            _serviceManager.StartService();
+            StartService();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating component {ComponentName}", ComponentName);
             RestoreFromBackup(backupFolder, destinationFolder);
-            _serviceManager.StartService();
+            StartService();
         }
     }
 
@@ -211,5 +213,27 @@ public class AgentComponentUpdater : IComponentUpdater
         }
 
         return false;
+    }
+
+    public void StartService()
+    {
+        using var serviceController = new ServiceController("RCService");
+
+        if (serviceController.Status != ServiceControllerStatus.Running)
+        {
+            serviceController.Start();
+            serviceController.WaitForStatus(ServiceControllerStatus.Running);
+        }
+    }
+
+    public void StopService()
+    {
+        using var serviceController = new ServiceController("RCService");
+
+        if (serviceController.Status != ServiceControllerStatus.Stopped)
+        {
+            serviceController.Stop();
+            serviceController.WaitForStatus(ServiceControllerStatus.Stopped);
+        }
     }
 }
