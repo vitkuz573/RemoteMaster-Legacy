@@ -6,8 +6,6 @@ namespace RemoteMaster.Updater.Models;
 
 public class ErrorResponse
 {
-    public string ComponentName { get; set; }
-
     public string ErrorMessage { get; set; }
 
     public string StackTrace { get; set; }

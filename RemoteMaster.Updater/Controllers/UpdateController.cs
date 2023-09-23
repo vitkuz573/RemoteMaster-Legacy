@@ -20,7 +20,7 @@ public class UpdateController : ControllerBase
     }
 
     [HttpGet("check")]
-    public async Task<IActionResult> CheckForUpdates([FromQuery] string sharedFolder, [FromQuery] string login, [FromQuery] string password)
+    public async Task<IActionResult> CheckForUpdates([FromQuery] string? sharedFolder = null, [FromQuery] string? login = null, [FromQuery] string? password = null)
     {
         var updateResults = new List<UpdateResponse>();
 
@@ -52,7 +52,7 @@ public class UpdateController : ControllerBase
     }
 
     [HttpPost("update")]
-    public async Task<IActionResult> Update([FromQuery] string sharedFolder, [FromQuery] string login, [FromQuery] string password)
+    public async Task<IActionResult> Update([FromQuery] string? sharedFolder = null, [FromQuery] string? login = null, [FromQuery] string? password = null)
     {
         var updateResults = new List<UpdateResponse>();
 

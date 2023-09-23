@@ -1,8 +1,4 @@
-﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
-// This file is part of the RemoteMaster project.
-// Licensed under the GNU Affero General Public License v3.0.
-
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.ServiceProcess;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Helpers;
@@ -15,7 +11,6 @@ public class AgentComponentUpdater : IComponentUpdater
 {
     private readonly IServiceManager _serviceManager;
     private readonly ILogger<AgentComponentUpdater> _logger;
-
     public string ComponentName => "Agent";
 
     public AgentComponentUpdater(IServiceManager serviceManager, ILogger<AgentComponentUpdater> logger)
@@ -26,8 +21,8 @@ public class AgentComponentUpdater : IComponentUpdater
 
     public async Task<UpdateResponse> IsUpdateAvailableAsync(string sharedFolder, string login, string password)
     {
-        var localExeFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Agent", "RemoteMaster.Agent.exe");
-        var sharedExeFilePath = Path.Combine(sharedFolder, ComponentName, "RemoteMaster.Agent.exe");
+        var localExeFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", ComponentName, $"RemoteMaster.{ComponentName}.exe");
+        var sharedExeFilePath = string.IsNullOrWhiteSpace(sharedFolder) ? null : Path.Combine(sharedFolder, ComponentName, $"RemoteMaster.{ComponentName}.exe");
 
         if (!File.Exists(localExeFilePath))
         {
@@ -36,20 +31,18 @@ public class AgentComponentUpdater : IComponentUpdater
 
         var localVersionInfo = FileVersionInfo.GetVersionInfo(localExeFilePath);
         var localVersion = new Version(localVersionInfo.FileMajorPart, localVersionInfo.FileMinorPart, localVersionInfo.FileBuildPart, localVersionInfo.FilePrivatePart);
+        var response = new UpdateResponse { ComponentName = ComponentName, CurrentVersion = localVersion, AvailableVersion = localVersion, IsUpdateAvailable = false };
 
-        var response = new UpdateResponse
+        if (string.IsNullOrWhiteSpace(sharedFolder) || string.IsNullOrWhiteSpace(login) || string.IsNullOrWhiteSpace(password))
         {
-            ComponentName = ComponentName,
-            CurrentVersion = localVersion,
-            AvailableVersion = localVersion,
-            IsUpdateAvailable = false
-        };
+            return response;
+        }
 
         try
         {
             NetworkDriveHelper.MapNetworkDrive(sharedFolder, login, password);
-
-            if (!File.Exists(sharedExeFilePath))
+            
+            if (sharedExeFilePath == null || !File.Exists(sharedExeFilePath))
             {
                 return response;
             }
@@ -78,7 +71,35 @@ public class AgentComponentUpdater : IComponentUpdater
             _serviceManager.StopService();
             await WaitForServiceToStop();
 
-            var sourceFolder = Path.Combine(sharedFolder, ComponentName);
+            var sourceFolder = string.IsNullOrEmpty(sharedFolder) || string.IsNullOrEmpty(login) || string.IsNullOrEmpty(password) ? null : Path.Combine(sharedFolder, ComponentName);
+
+            if (sourceFolder == null || !Directory.Exists(sourceFolder))
+            {
+                try
+                {
+                    var url = $"https://remotemaster.com/downloads/{ComponentName.ToLower()}/RemoteMaster.{ComponentName}.exe";
+                    var destinationPath = Path.Combine(destinationFolder, $"RemoteMaster.{ComponentName}.exe");
+
+                    using var httpClient = new HttpClient();
+                    var response = await httpClient.GetAsync(url);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var fileBytes = await response.Content.ReadAsByteArrayAsync();
+                        await File.WriteAllBytesAsync(destinationPath, fileBytes);
+                        
+                        return;
+                    }
+                    else
+                    {
+                        _logger.LogError("Failed to download the update from the website. Status Code: {StatusCode}", response.StatusCode);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error downloading the update from the website.");
+                }
+            }
 
             if (!Directory.Exists(backupFolder))
             {
@@ -91,32 +112,34 @@ public class AgentComponentUpdater : IComponentUpdater
                 File.Copy(file, backupPath, true);
             }
 
-            NetworkDriveHelper.MapNetworkDrive(sharedFolder, login, password);
-
-            var maxRetries = 5;
-            var retryDelay = 2000;
-
-            foreach (var filePath in Directory.GetFiles(destinationFolder))
+            if (sourceFolder != null)
             {
-                var retryCount = 0;
+                NetworkDriveHelper.MapNetworkDrive(sharedFolder, login, password);
 
-                while (IsFileLocked(filePath) && retryCount < maxRetries)
+                var maxRetries = 5;
+                var retryDelay = 2000;
+
+                foreach (var filePath in Directory.GetFiles(destinationFolder))
                 {
-                    await Task.Delay(retryDelay);
-                    retryCount++;
+                    var retryCount = 0;
+
+                    while (IsFileLocked(filePath) && retryCount < maxRetries)
+                    {
+                        await Task.Delay(retryDelay);
+                        retryCount++;
+                    }
+
+                    if (retryCount == maxRetries)
+                    {
+                        RestoreFromBackup(backupFolder, destinationFolder);
+                        NetworkDriveHelper.CancelNetworkDrive(sharedFolder);
+                        throw new InvalidOperationException($"Unable to access file {filePath} after {maxRetries} retries.");
+                    }
                 }
 
-                if (retryCount == maxRetries)
-                {
-                    RestoreFromBackup(backupFolder, destinationFolder);
-                    NetworkDriveHelper.CancelNetworkDrive(sharedFolder);
-
-                    throw new InvalidOperationException($"Unable to access file {filePath} after {maxRetries} retries.");
-                }
+                NetworkDriveHelper.DirectoryCopy(sourceFolder, destinationFolder, true, true);
+                NetworkDriveHelper.CancelNetworkDrive(sharedFolder);
             }
-
-            NetworkDriveHelper.DirectoryCopy(sourceFolder, destinationFolder, true, true);
-            NetworkDriveHelper.CancelNetworkDrive(sharedFolder);
 
             if (Directory.Exists(backupFolder))
             {
