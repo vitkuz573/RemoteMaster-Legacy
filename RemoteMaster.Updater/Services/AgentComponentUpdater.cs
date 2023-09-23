@@ -22,7 +22,10 @@ public class AgentComponentUpdater : IComponentUpdater
     public async Task<UpdateResponse> IsUpdateAvailableAsync(string sharedFolder, string login, string password)
     {
         var localExeFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", ComponentName, $"RemoteMaster.{ComponentName}.exe");
-        var sharedExeFilePath = string.IsNullOrWhiteSpace(sharedFolder) ? null : Path.Combine(sharedFolder, ComponentName, $"RemoteMaster.{ComponentName}.exe");
+
+        var sharedExeFilePath = string.IsNullOrWhiteSpace(sharedFolder)
+            ? null
+            : Path.Combine(sharedFolder, ComponentName, $"RemoteMaster.{ComponentName}.exe");
 
         if (!File.Exists(localExeFilePath))
         {
@@ -31,7 +34,14 @@ public class AgentComponentUpdater : IComponentUpdater
 
         var localVersionInfo = FileVersionInfo.GetVersionInfo(localExeFilePath);
         var localVersion = new Version(localVersionInfo.FileMajorPart, localVersionInfo.FileMinorPart, localVersionInfo.FileBuildPart, localVersionInfo.FilePrivatePart);
-        var response = new UpdateResponse { ComponentName = ComponentName, CurrentVersion = localVersion, AvailableVersion = localVersion, IsUpdateAvailable = false };
+
+        var response = new UpdateResponse
+        {
+            ComponentName = ComponentName,
+            CurrentVersion = localVersion,
+            AvailableVersion = localVersion,
+            IsUpdateAvailable = false
+        };
 
         if (string.IsNullOrWhiteSpace(sharedFolder) || string.IsNullOrWhiteSpace(login) || string.IsNullOrWhiteSpace(password))
         {
@@ -41,7 +51,7 @@ public class AgentComponentUpdater : IComponentUpdater
         try
         {
             NetworkDriveHelper.MapNetworkDrive(sharedFolder, login, password);
-            
+
             if (sharedExeFilePath == null || !File.Exists(sharedExeFilePath))
             {
                 return response;
