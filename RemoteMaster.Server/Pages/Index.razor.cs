@@ -4,6 +4,7 @@
 
 using System.Diagnostics;
 using System.Net.NetworkInformation;
+using System.Net.Security;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Radzen;
@@ -258,7 +259,25 @@ public partial class Index
         {
             var url = $"http://{computer.IPAddress}:5124/api/update";
 
-            using var client = new HttpClient();
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) =>
+                {
+                    if (sslPolicyErrors == SslPolicyErrors.None)
+                    {
+                        return true; // Нет ошибок
+                    }
+
+                    if ((sslPolicyErrors & SslPolicyErrors.RemoteCertificateNameMismatch) != 0)
+                    {
+                        return true; // Игнорируем ошибки DNS имени
+                    }
+
+                    return false;
+                }
+            };
+
+            using var client = new HttpClient(handler);
 
             var values = new List<KeyValuePair<string, string>>
             {
