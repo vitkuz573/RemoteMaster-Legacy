@@ -28,6 +28,7 @@ public class UpdateController : ControllerBase
             {
                 ErrorMessage = "Required parameters (sharedFolder, login, password) are missing."
             };
+
             return BadRequest(errorResponse);
         }
 
@@ -76,7 +77,10 @@ public class UpdateController : ControllerBase
 
         foreach (var updater in _componentUpdaters)
         {
-            var response = new UpdateResponse { ComponentName = updater.ComponentName };
+            var response = new UpdateResponse
+            {
+                ComponentName = updater.ComponentName
+            };
             
             try
             {
