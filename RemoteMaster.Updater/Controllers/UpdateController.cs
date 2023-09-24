@@ -20,36 +20,40 @@ public class UpdateController : ControllerBase
     }
 
     [HttpGet("check")]
-    public async Task<IActionResult> CheckForUpdates([FromQuery] string? sharedFolder = null, [FromQuery] string? login = null, [FromQuery] string? password = null)
+    public async Task<IActionResult> CheckForUpdates([FromQuery] string? sharedFolder, [FromQuery] string? login, [FromQuery] string? password)
     {
+        if (string.IsNullOrWhiteSpace(sharedFolder) || string.IsNullOrWhiteSpace(login) || string.IsNullOrWhiteSpace(password))
+        {
+            var errorResponse = new ErrorResponse
+            {
+                ErrorMessage = "Required parameters (sharedFolder, login, password) are missing."
+            };
+
+            return BadRequest(errorResponse);
+        }
+
         var updateResults = new List<UpdateResponse>();
 
         foreach (var updater in _componentUpdaters)
         {
-            var response = new UpdateResponse
-            {
-                ComponentName = updater.ComponentName
-            };
-
             try
             {
                 var result = await updater.IsUpdateAvailableAsync(sharedFolder, login, password);
-                
-                response.CurrentVersion = result.CurrentVersion;
-                response.AvailableVersion = result.AvailableVersion;
-                response.IsUpdateAvailable = result.IsUpdateAvailable;
-                response.Message = result.IsUpdateAvailable ? "Update is available." : "No updates available.";
+                updateResults.Add(result);
             }
             catch (Exception ex)
             {
-                response.Error = new ErrorResponse
+                var response = new UpdateResponse
                 {
-                    ErrorMessage = ex.Message,
-                    StackTrace = ex.StackTrace
+                    ComponentName = updater.ComponentName,
+                    Error = new ErrorResponse
+                    {
+                        ErrorMessage = ex.Message,
+                        StackTrace = ex.StackTrace
+                    }
                 };
+                updateResults.Add(response);
             }
-
-            updateResults.Add(response);
         }
 
         return Ok(updateResults);

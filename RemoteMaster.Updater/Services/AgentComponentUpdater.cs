@@ -85,34 +85,6 @@ public class AgentComponentUpdater : IComponentUpdater
 
             var sourceFolder = string.IsNullOrEmpty(sharedFolder) || string.IsNullOrEmpty(login) || string.IsNullOrEmpty(password) ? null : Path.Combine(sharedFolder, ComponentName);
 
-            if (sourceFolder == null || !Directory.Exists(sourceFolder))
-            {
-                try
-                {
-                    var url = $"https://remotemaster.com/downloads/{ComponentName.ToLower()}/RemoteMaster.{ComponentName}.exe";
-                    var destinationPath = Path.Combine(destinationFolder, $"RemoteMaster.{ComponentName}.exe");
-
-                    using var httpClient = new HttpClient();
-                    var response = await httpClient.GetAsync(url);
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var fileBytes = await response.Content.ReadAsByteArrayAsync();
-                        await File.WriteAllBytesAsync(destinationPath, fileBytes);
-
-                        return;
-                    }
-                    else
-                    {
-                        _logger.LogError("Failed to download the update from the website. Status Code: {StatusCode}", response.StatusCode);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error downloading the update from the website.");
-                }
-            }
-
             if (!Directory.Exists(backupFolder))
             {
                 Directory.CreateDirectory(backupFolder);
