@@ -25,7 +25,7 @@ store.Open(OpenFlags.ReadOnly);
 
 var certificate = store.Certificates
     .OfType<X509Certificate2>()
-    .First(c => c.Thumbprint == "5B7E57CCB01A4BFE780F0B6A05B0C71B77FDD29F");
+    .First(c => c.Thumbprint == "A8497F97BDDF23FA00956C3D11B2BD2FC9F5E136");
 
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {

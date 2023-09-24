@@ -20,15 +20,14 @@ public class UpdateController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> CheckForUpdates([FromQuery] string? sharedFolder, [FromQuery] string? login, [FromQuery] string? password)
+    public async Task<IActionResult> CheckForUpdates([FromQuery] UpdateRequest updateRequest)
     {
-        if (string.IsNullOrWhiteSpace(sharedFolder) || string.IsNullOrWhiteSpace(login) || string.IsNullOrWhiteSpace(password))
+        if (updateRequest == null || string.IsNullOrWhiteSpace(updateRequest.SharedFolder) || string.IsNullOrWhiteSpace(updateRequest.Login) || string.IsNullOrWhiteSpace(updateRequest.Password))
         {
             var errorResponse = new ErrorResponse
             {
                 ErrorMessage = "Required parameters (sharedFolder, login, password) are missing."
             };
-
             return BadRequest(errorResponse);
         }
 
@@ -38,7 +37,7 @@ public class UpdateController : ControllerBase
         {
             try
             {
-                var result = await updater.IsUpdateAvailableAsync(sharedFolder, login, password);
+                var result = await updater.IsUpdateAvailableAsync(updateRequest.SharedFolder, updateRequest.Login, updateRequest.Password);
                 updateResults.Add(result);
             }
             catch (Exception ex)
@@ -52,6 +51,7 @@ public class UpdateController : ControllerBase
                         StackTrace = ex.StackTrace
                     }
                 };
+
                 updateResults.Add(response);
             }
         }
@@ -60,21 +60,31 @@ public class UpdateController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Update([FromQuery] string? sharedFolder = null, [FromQuery] string? login = null, [FromQuery] string? password = null)
+    public async Task<IActionResult> Update([FromBody] UpdateRequest updateRequest)
     {
+        if (updateRequest == null || string.IsNullOrWhiteSpace(updateRequest.SharedFolder) || string.IsNullOrWhiteSpace(updateRequest.Login) || string.IsNullOrWhiteSpace(updateRequest.Password))
+        {
+            var errorResponse = new ErrorResponse
+            {
+                ErrorMessage = "Required parameters (sharedFolder, login, password) are missing."
+            };
+
+            return BadRequest(errorResponse);
+        }
+
         var updateResults = new List<UpdateResponse>();
 
         foreach (var updater in _componentUpdaters)
         {
             var response = new UpdateResponse { ComponentName = updater.ComponentName };
-
+            
             try
             {
-                var updateCheckResponse = await updater.IsUpdateAvailableAsync(sharedFolder, login, password);
+                var updateCheckResponse = await updater.IsUpdateAvailableAsync(updateRequest.SharedFolder, updateRequest.Login, updateRequest.Password);
 
                 if (updateCheckResponse.IsUpdateAvailable)
                 {
-                    await updater.UpdateAsync(sharedFolder, login, password);
+                    await updater.UpdateAsync(updateRequest.SharedFolder, updateRequest.Login, updateRequest.Password);
                     response.Message = "Update completed successfully.";
                 }
                 else
