@@ -19,7 +19,7 @@ public class UpdateController : ControllerBase
         _componentUpdaters = componentUpdaters;
     }
 
-    [HttpGet("check")]
+    [HttpGet]
     public async Task<IActionResult> CheckForUpdates([FromQuery] string? sharedFolder, [FromQuery] string? login, [FromQuery] string? password)
     {
         if (string.IsNullOrWhiteSpace(sharedFolder) || string.IsNullOrWhiteSpace(login) || string.IsNullOrWhiteSpace(password))
@@ -59,7 +59,7 @@ public class UpdateController : ControllerBase
         return Ok(updateResults);
     }
 
-    [HttpPost("update")]
+    [HttpPost]
     public async Task<IActionResult> Update([FromQuery] string? sharedFolder = null, [FromQuery] string? login = null, [FromQuery] string? password = null)
     {
         var updateResults = new List<UpdateResponse>();

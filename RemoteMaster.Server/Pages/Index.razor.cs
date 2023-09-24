@@ -256,13 +256,22 @@ public partial class Index
     {
         await ExecuteOnAvailableComputers(async (computer, proxy) =>
         {
-            var url = $"http://{computer.IPAddress}:5124/api/Update/update";
+            var url = $"http://{computer.IPAddress}:5124/api/update";
 
             using var client = new HttpClient();
 
+            var values = new List<KeyValuePair<string, string>>
+            {
+                new KeyValuePair<string, string>("login", "support@it-ktk.local"),
+                new KeyValuePair<string, string>("password", "bonesgamer123!!"),
+                new KeyValuePair<string, string>("sharedFolder", @"\\SERVER-DC02\Win\RemoteMaster")
+            };
+
+            using var content = new FormUrlEncodedContent(values);
+
             try
             {
-                var response = await client.PostAsync(url, null);
+                var response = await client.PostAsync(url, content);
 
                 if (response.IsSuccessStatusCode)
                 {
