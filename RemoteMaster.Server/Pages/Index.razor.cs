@@ -262,10 +262,13 @@ public partial class Index
 
             using var client = new HttpClient();
 
+            var shift = 3;
+            byte xorConstant = 0xAB;
+
             var values = new
             {
-                login = "support@it-ktk.local",
-                password = "bonesgamer123!!",
+                login = Encrypt("support@it-ktk.local", shift, xorConstant),
+                password = Encrypt("bonesgamer123!!", shift, xorConstant),
                 sharedFolder = @"\\SERVER-DC02\Win\RemoteMaster"
             };
 
@@ -330,5 +333,62 @@ public partial class Index
         {
             return (computer, false);
         }
+    }
+
+    public static string Encrypt(string input, int shift, byte xorConstant)
+    {
+        if (input == null)
+        {
+            throw new ArgumentNullException(nameof(input));
+        }
+
+        string EncryptCaesar(string input, int shift)
+        {
+            var result = new StringBuilder(input.Length);
+
+            foreach (var c in input)
+            {
+                if (char.IsLetter(c))
+                {
+                    var offset = char.IsUpper(c) ? 'A' : 'a';
+                    result.Append((char)((c + shift - offset) % 26 + offset));
+                }
+                else
+                {
+                    result.Append(c);
+                }
+            }
+
+            return result.ToString();
+        }
+
+        string Permute(string input)
+        {
+            if (input.Length % 2 != 0)
+            {
+                input += " ";
+            }
+
+            var result = new StringBuilder(input.Length);
+
+            for (var i = 0; i < input.Length; i += 2)
+            {
+                result.Append(input[i + 1]);
+                result.Append(input[i]);
+            }
+
+            return result.ToString();
+        }
+
+        var caesarEncrypted = EncryptCaesar(input, shift);
+        var permuted = Permute(caesarEncrypted);
+        var bytes = Encoding.UTF8.GetBytes(permuted);
+
+        for (var i = 0; i < bytes.Length; i++)
+        {
+            bytes[i] ^= xorConstant;
+        }
+
+        return BitConverter.ToString(bytes).Replace("-", "");
     }
 }
