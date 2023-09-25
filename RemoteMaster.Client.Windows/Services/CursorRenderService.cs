@@ -10,13 +10,19 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Client.Services;
 
-public class CursorRenderService : ICursorRenderService
+public class CursorRenderService : ICursorRenderService, IDisposable
 {
     private Point? _lastCursorPoint;
     private Icon? _lastCursorIcon;
     private Rectangle? _cachedScreenBounds;
+    private readonly uint _cursorInfoSize;
 
     public event Func<Rectangle> RequestScreenBounds;
+
+    public CursorRenderService()
+    {
+        _cursorInfoSize = (uint)Marshal.SizeOf(typeof(CURSORINFO));
+    }
 
     public void DrawCursor(Graphics g)
     {
@@ -27,35 +33,37 @@ public class CursorRenderService : ICursorRenderService
 
         var cursorInfo = GetCursorInformation();
 
-        if (cursorInfo.flags == CURSORINFO_FLAGS.CURSOR_SHOWING)
+        if (cursorInfo.flags != CURSORINFO_FLAGS.CURSOR_SHOWING)
         {
-            var currentScreenBounds = _cachedScreenBounds ?? RequestScreenBounds?.Invoke();
-
-            if (currentScreenBounds.HasValue)
-            {
-                var relativeX = cursorInfo.ptScreenPos.X - currentScreenBounds.Value.Left;
-                var relativeY = cursorInfo.ptScreenPos.Y - currentScreenBounds.Value.Top;
-
-                if (relativeX >= 0 && relativeX < currentScreenBounds.Value.Width && relativeY >= 0 && relativeY < currentScreenBounds.Value.Height)
-                {
-                    Icon icon;
-
-                    if (_lastCursorIcon == null || !_lastCursorPoint.HasValue || _lastCursorPoint.Value != cursorInfo.ptScreenPos)
-                    {
-                        icon = Icon.FromHandle(cursorInfo.hCursor);
-                        _lastCursorIcon?.Dispose();
-                        _lastCursorIcon = icon;
-                        _lastCursorPoint = cursorInfo.ptScreenPos;
-                    }
-                    else
-                    {
-                        icon = _lastCursorIcon;
-                    }
-
-                    g.DrawIcon(icon, relativeX, relativeY);
-                }
-            }
+            return;
         }
+
+        var currentScreenBounds = _cachedScreenBounds ?? RequestScreenBounds?.Invoke() ?? Rectangle.Empty;
+
+        var relativeX = cursorInfo.ptScreenPos.X - currentScreenBounds.Left;
+        var relativeY = cursorInfo.ptScreenPos.Y - currentScreenBounds.Top;
+
+        if (relativeX < 0 || relativeX >= currentScreenBounds.Width || relativeY < 0 || relativeY >= currentScreenBounds.Height)
+        {
+            return;
+        }
+
+        Icon icon;
+
+        if (_lastCursorIcon == null || !_lastCursorPoint.HasValue || _lastCursorPoint.Value != cursorInfo.ptScreenPos)
+        {
+            icon = Icon.FromHandle(cursorInfo.hCursor);
+
+            _lastCursorIcon?.Dispose();
+            _lastCursorIcon = icon;
+            _lastCursorPoint = cursorInfo.ptScreenPos;
+        }
+        else
+        {
+            icon = _lastCursorIcon;
+        }
+
+        g.DrawIcon(icon, relativeX, relativeY);
     }
 
     public void UpdateScreenBounds(Rectangle newBounds)
@@ -63,11 +71,11 @@ public class CursorRenderService : ICursorRenderService
         _cachedScreenBounds = newBounds;
     }
 
-    private static CURSORINFO GetCursorInformation()
+    private CURSORINFO GetCursorInformation()
     {
         var cursorInfo = new CURSORINFO
         {
-            cbSize = (uint)Marshal.SizeOf(typeof(CURSORINFO))
+            cbSize = _cursorInfoSize
         };
 
         GetCursorInfo(ref cursorInfo);
