@@ -10,27 +10,22 @@ namespace RemoteMaster.Shared.Services;
 
 public class ServiceManager : IServiceManager
 {
-    private const string ServiceName = "RCService";
-    private const string ServiceDisplayName = "Remote Control Service";
-    private const string ServiceStartType = "delayed-auto";
-    private static readonly string[] ServiceDependencies = { "LanmanWorkstation" };
+    public bool IsServiceInstalled(string serviceName) => ServiceController.GetServices().Any(service => service.ServiceName == serviceName);
 
-    public bool IsServiceInstalled() => ServiceController.GetServices().Any(service => service.ServiceName == ServiceName);
-
-    public void InstallService(string executablePath)
+    public void InstallService(string serviceName, string displayName, string executablePath, string startType, IEnumerable<string> dependencies)
     {
-        ExecuteServiceCommand($"create {ServiceName} DisplayName= \"{ServiceDisplayName}\" binPath= \"{executablePath}\" start= {ServiceStartType}");
+        ExecuteServiceCommand($"create {serviceName} DisplayName= \"{displayName}\" binPath= \"{executablePath}\" start= {startType}");
 
-        if (ServiceDependencies.Any())
+        if (dependencies != null && dependencies.Any())
         {
-            var dependencies = string.Join("/", ServiceDependencies);
-            ExecuteServiceCommand($"config {ServiceName} depend= {dependencies}");
+            var dependenciesStr = string.Join("/", dependencies);
+            ExecuteServiceCommand($"config {serviceName} depend= {dependenciesStr}");
         }
     }
 
-    public void StartService()
+    public void StartService(string serviceName)
     {
-        using var serviceController = new ServiceController(ServiceName);
+        using var serviceController = new ServiceController(serviceName);
 
         if (serviceController.Status != ServiceControllerStatus.Running)
         {
@@ -39,9 +34,9 @@ public class ServiceManager : IServiceManager
         }
     }
 
-    public void StopService()
+    public void StopService(string serviceName)
     {
-        using var serviceController = new ServiceController(ServiceName);
+        using var serviceController = new ServiceController(serviceName);
 
         if (serviceController.Status != ServiceControllerStatus.Stopped)
         {
@@ -50,7 +45,7 @@ public class ServiceManager : IServiceManager
         }
     }
 
-    public void UninstallService() => ExecuteServiceCommand($"delete {ServiceName}");
+    public void UninstallService(string serviceName) => ExecuteServiceCommand($"delete {serviceName}");
 
     private static void ExecuteServiceCommand(string arguments)
     {

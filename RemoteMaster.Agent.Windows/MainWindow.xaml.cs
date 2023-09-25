@@ -11,6 +11,7 @@ using RemoteMaster.Agent.Core.Abstractions;
 using RemoteMaster.Agent.Models;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;
+using RemoteMaster.Shared.Services;
 
 namespace RemoteMaster.Agent;
 
@@ -20,6 +21,7 @@ public partial class MainWindow : Window
     private readonly IConfigurationService _configurationService;
     private readonly IHostInfoProvider _hostInfoProvider;
     private readonly IAgentServiceManager _agentServiceManager;
+    private readonly AgentServiceConfigProvider _agentServiceConfig;
 
     private readonly string _hostName;
     private readonly string _ipv4Address;
@@ -35,6 +37,7 @@ public partial class MainWindow : Window
         _configurationService = serviceProvider.GetRequiredService<IConfigurationService>();
         _hostInfoProvider = serviceProvider.GetRequiredService<IHostInfoProvider>();
         _agentServiceManager = serviceProvider.GetRequiredService<IAgentServiceManager>();
+        _agentServiceConfig = serviceProvider.GetRequiredService<AgentServiceConfigProvider>();
 
         _agentServiceManager.MessageReceived += OnMessageReceived;
 
@@ -95,7 +98,7 @@ public partial class MainWindow : Window
     
     private void UpdateServiceStatusDisplay()
     {
-        var serviceExists = _serviceManager.IsServiceInstalled();
+        var serviceExists = _serviceManager.IsServiceInstalled(_agentServiceConfig.ServiceName);
         UninstallButton.IsEnabled = serviceExists;
         ServiceStatusTextBlock.Text = serviceExists ? "Service Status: Installed" : "Service Status: Not Installed";
     }

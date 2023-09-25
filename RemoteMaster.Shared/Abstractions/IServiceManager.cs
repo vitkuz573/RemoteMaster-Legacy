@@ -6,13 +6,13 @@ namespace RemoteMaster.Shared.Abstractions;
 
 public interface IServiceManager
 {
-    bool IsServiceInstalled();
+    bool IsServiceInstalled(string serviceName);
 
-    void InstallService(string executablePath);
+    void InstallService(string serviceName, string displayName, string executablePath, string startType, IEnumerable<string> dependencies);
 
-    void StartService();
+    void StartService(string serviceName);
 
-    void StopService();
+    void StopService(string serviceName);
 
-    void UninstallService();
+    void UninstallService(string serviceName);
 }

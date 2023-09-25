@@ -8,6 +8,7 @@ using RemoteMaster.Agent.Core.Abstractions;
 using RemoteMaster.Agent.Models;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;
+using RemoteMaster.Shared.Services;
 
 namespace RemoteMaster.Agent.Services;
 
@@ -18,15 +19,17 @@ public class AgentServiceManager : IAgentServiceManager
     private readonly IClientService _clientService;
     private readonly IServiceManager _serviceManager;
     private readonly IConfigurationService _configurationService;
+    private readonly AgentServiceConfigProvider _agentServiceConfig;
 
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Agent";
 
-    public AgentServiceManager(IClientService clientService, IServiceManager serviceManager, IConfigurationService configurationService)
+    public AgentServiceManager(IClientService clientService, IServiceManager serviceManager, IConfigurationService configurationService, AgentServiceConfigProvider agentServiceConfig)
     {
         _clientService = clientService;
         _serviceManager = serviceManager;
         _configurationService = configurationService;
+        _agentServiceConfig = agentServiceConfig;
     }
 
     public async Task<bool> InstallOrUpdateService(ConfigurationModel configuration, string hostName, string ipv4Address, string macAddress)
@@ -38,12 +41,12 @@ public class AgentServiceManager : IAgentServiceManager
             CopyExecutableToNewPath(newExecutablePath);
         }
 
-        if (!_serviceManager.IsServiceInstalled())
+        if (!_serviceManager.IsServiceInstalled(_agentServiceConfig.ServiceName))
         {
-            _serviceManager.InstallService(newExecutablePath);
+            _serviceManager.InstallService(_agentServiceConfig.ServiceName, _agentServiceConfig.ServiceDisplayName, newExecutablePath, _agentServiceConfig.ServiceStartType, _agentServiceConfig.ServiceDependencies);
         }
 
-        _serviceManager.StartService();
+        _serviceManager.StartService(_agentServiceConfig.ServiceName);
 
         var registerResult = await _clientService.RegisterAsync(configuration, hostName, ipv4Address, macAddress);
 
@@ -61,7 +64,7 @@ public class AgentServiceManager : IAgentServiceManager
 
     public async Task<bool> UninstallService(ConfigurationModel configuration, string hostName)
     {
-        if (_serviceManager.IsServiceInstalled())
+        if (_serviceManager.IsServiceInstalled(_agentServiceConfig.ServiceName))
         {
             var unregisterResult = await _clientService.UnregisterAsync(configuration, hostName);
 
@@ -72,8 +75,8 @@ public class AgentServiceManager : IAgentServiceManager
                 return false;
             }
 
-            _serviceManager.StopService();
-            _serviceManager.UninstallService();
+            _serviceManager.StopService(_agentServiceConfig.ServiceName);
+            _serviceManager.UninstallService(_agentServiceConfig.ServiceName);
             RemoveServiceFiles();
             MessageReceived?.Invoke("Service uninstalled successfully.", MessageType.Information);
 

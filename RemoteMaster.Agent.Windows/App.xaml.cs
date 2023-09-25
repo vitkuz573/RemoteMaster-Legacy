@@ -64,6 +64,7 @@ public partial class App : Application
                 services.AddCoreServices();
                 services.AddSingleton<IAgentServiceManager, AgentServiceManager>();
                 services.AddSingleton<IClientService, ClientService>();
+                services.AddSingleton<AgentServiceConfigProvider>();
                 services.AddSingleton<IServiceManager, ServiceManager>();
                 services.AddSingleton<ISignatureService, SignatureService>();
                 services.AddSingleton<MainWindow>();
