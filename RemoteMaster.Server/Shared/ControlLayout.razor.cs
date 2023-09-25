@@ -101,7 +101,7 @@ public partial class ControlLayout
             return;
         }
 
-        var url = $"http://{ControlFunctionsService.Host}:5124/api/update/versions";
+        var url = $"http://{ControlFunctionsService.Host}:5124/api/versions";
 
         using var client = new HttpClient();
 

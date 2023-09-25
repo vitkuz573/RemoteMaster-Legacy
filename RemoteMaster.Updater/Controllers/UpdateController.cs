@@ -112,29 +112,4 @@ public class UpdateController : ControllerBase
 
         return Ok(updateResults);
     }
-
-    [HttpGet("versions")]
-    public async Task<IActionResult> GetVersions()
-    {
-        var versions = new List<ComponentVersionResponse>();
-
-        foreach (var updater in _componentUpdaters)
-        {
-            try
-            {
-                var version = await updater.GetCurrentVersionAsync();
-                versions.Add(version);
-            }
-            catch
-            {
-                versions.Add(new ComponentVersionResponse
-                {
-                    ComponentName = updater.ComponentName,
-                    CurrentVersion = null
-                });
-            }
-        }
-
-        return Ok(versions);
-    }
 }
