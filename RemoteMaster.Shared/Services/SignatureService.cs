@@ -3,13 +3,12 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
-using System.IO;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Logging;
-using RemoteMaster.Agent.Core.Abstractions;
+using RemoteMaster.Shared.Abstractions;
 
-namespace RemoteMaster.Agent.Services;
+namespace RemoteMaster.Shared.Services;
 
 public class SignatureService : ISignatureService
 {

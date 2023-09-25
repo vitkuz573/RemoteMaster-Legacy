@@ -11,7 +11,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Hosting.WindowsServices;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Agent.Abstractions;
-using RemoteMaster.Agent.Core.Abstractions;
 using RemoteMaster.Agent.Core.Extensions;
 using RemoteMaster.Agent.Services;
 using RemoteMaster.Shared.Abstractions;

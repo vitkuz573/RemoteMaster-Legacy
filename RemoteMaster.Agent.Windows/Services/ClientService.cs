@@ -7,7 +7,7 @@ using System.IO;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Agent.Abstractions;
-using RemoteMaster.Agent.Core.Abstractions;
+using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;
 using RemoteMaster.Shared.Native.Windows;
 
@@ -147,11 +147,11 @@ public class ClientService : IClientService
             }
             catch (InvalidOperationException ex)
             {
-                _logger.LogError(ex, $"Unable to stop the process for process ID: {process.Id}");
+                _logger.LogError(ex, "Unable to stop the process for process ID: {ProcessId}", process.Id);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Unexpected error occurred when stopping process ID: {process.Id}");
+                _logger.LogError(ex, "Unexpected error occurred when stopping process ID: {ProcessId}", process.Id);
             }
         }
     }

@@ -4,7 +4,7 @@
 
 using System.Diagnostics;
 
-namespace RemoteMaster.Agent.Core.Abstractions;
+namespace RemoteMaster.Shared.Abstractions;
 
 public interface ISignatureService
 {

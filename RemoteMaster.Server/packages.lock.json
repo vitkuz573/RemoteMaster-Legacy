@@ -2238,6 +2238,7 @@
       "remotemaster.shared": {
         "type": "Project",
         "dependencies": {
+          "Microsoft.Extensions.Logging.Abstractions": "[7.0.1, )",
           "Microsoft.Win32.SystemEvents": "[7.0.0, )",
           "Microsoft.Windows.SDK.Win32Metadata": "[55.0.45-preview, )",
           "System.ServiceProcess.ServiceController": "[7.0.1, )"
