@@ -6,7 +6,7 @@ using System.Windows;
 using System.Windows.Interop;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using RemoteMaster.Agent.Abstractions;
+using RemoteMaster.Agent.Core.Abstractions;
 using Windows.Win32.Foundation;
 using static Windows.Win32.PInvoke;
 
@@ -107,13 +107,13 @@ public class HiddenWindow : Window
 
     private void StopAndStartClient()
     {
-        _clientService.StopClient();
+        _clientService.Stop();
 
-        while (_clientService.IsClientRunning())
+        while (_clientService.IsRunning())
         {
             Task.Delay(50).Wait();
         }
 
-        _clientService.StartClient();
+        _clientService.Start();
     }
 }

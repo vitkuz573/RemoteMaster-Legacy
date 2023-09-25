@@ -21,6 +21,7 @@ public partial class MainWindow : Window
     private readonly IConfigurationService _configurationService;
     private readonly IHostInfoProvider _hostInfoProvider;
     private readonly IAgentServiceManager _agentServiceManager;
+    private readonly IUpdaterServiceManager _updaterServiceManager;
     private readonly AgentServiceConfigProvider _agentServiceConfig;
 
     private readonly string _hostName;
@@ -37,9 +38,11 @@ public partial class MainWindow : Window
         _configurationService = serviceProvider.GetRequiredService<IConfigurationService>();
         _hostInfoProvider = serviceProvider.GetRequiredService<IHostInfoProvider>();
         _agentServiceManager = serviceProvider.GetRequiredService<IAgentServiceManager>();
+        _updaterServiceManager = serviceProvider.GetRequiredService<IUpdaterServiceManager>();
         _agentServiceConfig = serviceProvider.GetRequiredService<AgentServiceConfigProvider>();
 
         _agentServiceManager.MessageReceived += OnMessageReceived;
+        _updaterServiceManager.MessageReceived += OnMessageReceived;
 
         _hostName = _hostInfoProvider.GetHostName();
         _ipv4Address = _hostInfoProvider.GetIPv4Address();
@@ -66,14 +69,16 @@ public partial class MainWindow : Window
 
     private async void InstallUpdateButton_Click(object sender, RoutedEventArgs e)
     {
-        await _agentServiceManager.InstallOrUpdateService(_configuration, _hostName, _ipv4Address, _macAddress);
+        await _agentServiceManager.InstallOrUpdate(_configuration, _hostName, _ipv4Address, _macAddress);
+        await _updaterServiceManager.InstallOrUpdate();
 
         UpdateServiceStatusDisplay();
     }
 
     private async void UninstallButton_Click(object sender, RoutedEventArgs e)
     {
-        await _agentServiceManager.UninstallService(_configuration, _hostName);
+        await _agentServiceManager.Uninstall(_configuration, _hostName);
+        await _updaterServiceManager.Uninstall();
 
         UpdateServiceStatusDisplay();
     }

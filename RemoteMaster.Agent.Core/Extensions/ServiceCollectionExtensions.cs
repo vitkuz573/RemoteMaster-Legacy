@@ -27,6 +27,7 @@ public static class ServiceCollectionExtensions
             builder.SetMinimumLevel(LogLevel.Debug);
         });
 
+        services.AddSingleton<IRegistratorService, RegistratorService>();
         services.AddSingleton<IConfigurationService, ConfigurationService>();
         services.AddSingleton<IHostInfoProvider, HostInfoProvider>();
 

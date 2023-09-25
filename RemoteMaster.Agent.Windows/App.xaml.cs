@@ -11,6 +11,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Hosting.WindowsServices;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Agent.Abstractions;
+using RemoteMaster.Agent.Core.Abstractions;
 using RemoteMaster.Agent.Core.Extensions;
 using RemoteMaster.Agent.Services;
 using RemoteMaster.Shared.Abstractions;
@@ -61,9 +62,11 @@ public partial class App : Application
             .ConfigureServices((hostContext, services) =>
             {
                 services.AddCoreServices();
-                services.AddSingleton<IAgentServiceManager, AgentServiceManager>();
                 services.AddSingleton<IClientService, ClientService>();
+                services.AddSingleton<IAgentServiceManager, AgentServiceManager>();
+                services.AddSingleton<IUpdaterServiceManager, UpdaterServiceManager>();
                 services.AddSingleton<AgentServiceConfigProvider>();
+                services.AddSingleton<UpdaterServiceConfigProvider>();
                 services.AddSingleton<IServiceManager, ServiceManager>();
                 services.AddSingleton<ISignatureService, SignatureService>();
                 services.AddSingleton<MainWindow>();
@@ -109,9 +112,9 @@ public partial class App : Application
 
         while (true)
         {
-            if (!clientService.IsClientRunning())
+            if (!clientService.IsRunning())
             {
-                clientService.StartClient();
+                clientService.Start();
             }
 
             await Task.Delay(TimeSpan.FromMinutes(1));

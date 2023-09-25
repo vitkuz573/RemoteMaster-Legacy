@@ -16,7 +16,7 @@ public class AgentServiceManager : IAgentServiceManager
 {
     public event Action<string, MessageType> MessageReceived;
 
-    private readonly IClientService _clientService;
+    private readonly IRegistratorService _clientService;
     private readonly IServiceManager _serviceManager;
     private readonly IConfigurationService _configurationService;
     private readonly AgentServiceConfigProvider _agentServiceConfig;
@@ -24,7 +24,7 @@ public class AgentServiceManager : IAgentServiceManager
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Agent";
 
-    public AgentServiceManager(IClientService clientService, IServiceManager serviceManager, IConfigurationService configurationService, AgentServiceConfigProvider agentServiceConfig)
+    public AgentServiceManager(IRegistratorService clientService, IServiceManager serviceManager, IConfigurationService configurationService, AgentServiceConfigProvider agentServiceConfig)
     {
         _clientService = clientService;
         _serviceManager = serviceManager;
@@ -32,7 +32,7 @@ public class AgentServiceManager : IAgentServiceManager
         _agentServiceConfig = agentServiceConfig;
     }
 
-    public async Task<bool> InstallOrUpdateService(ConfigurationModel configuration, string hostName, string ipv4Address, string macAddress)
+    public async Task<bool> InstallOrUpdate(ConfigurationModel configuration, string hostName, string ipv4Address, string macAddress)
     {
         var newExecutablePath = GetNewExecutablePath();
 
@@ -62,7 +62,7 @@ public class AgentServiceManager : IAgentServiceManager
         return true;
     }
 
-    public async Task<bool> UninstallService(ConfigurationModel configuration, string hostName)
+    public async Task<bool> Uninstall(ConfigurationModel configuration, string hostName)
     {
         if (_serviceManager.IsServiceInstalled(_agentServiceConfig.ServiceName))
         {

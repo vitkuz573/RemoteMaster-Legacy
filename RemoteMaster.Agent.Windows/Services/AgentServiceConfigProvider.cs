@@ -12,5 +12,5 @@ public class AgentServiceConfigProvider
 
     public string ServiceStartType { get; } = "delayed-auto";
 
-    public IEnumerable<string> ServiceDependencies { get; } = new[] { "LanmanWorkstation" };
+    public IEnumerable<string>? ServiceDependencies { get; } = new[] { "LanmanWorkstation" };
 }

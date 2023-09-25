@@ -4,17 +4,11 @@
 
 using RemoteMaster.Shared.Models;
 
-namespace RemoteMaster.Agent.Abstractions;
+namespace RemoteMaster.Agent.Core.Abstractions;
 
-public interface IClientService
+public interface IRegistratorService
 {
     Task<bool> RegisterAsync(ConfigurationModel config, string hostName, string ipAddress, string macAddress);
 
     Task<bool> UnregisterAsync(ConfigurationModel config, string hostName);
-
-    bool IsClientRunning();
-
-    void StartClient();
-
-    void StopClient();
 }

@@ -2246,7 +2246,7 @@
       },
       "Microsoft.AspNetCore.SignalR.Client.Core": {
         "type": "CentralTransitive",
-        "requested": "[7.0.10, )",
+        "requested": "[7.0.11, )",
         "resolved": "7.0.11",
         "contentHash": "zlkRiPNJJNv7K9vqJOCcCB6c047lcd1zO8immgw2kDOowoK+MPU79D856G0HtXXRktve2EfZ2/TqClI01FAM4g==",
         "dependencies": {

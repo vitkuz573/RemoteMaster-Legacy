@@ -3,15 +3,14 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Agent.Models;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Agent.Abstractions;
 
-public interface IAgentServiceManager
+public interface IUpdaterServiceManager
 {
     event Action<string, MessageType> MessageReceived;
 
-    Task<bool> InstallOrUpdate(ConfigurationModel configuration, string hostName, string ipv4Address, string macAddress);
+    Task<bool> InstallOrUpdate();
 
-    Task<bool> Uninstall(ConfigurationModel configuration, string hostName);
+    Task<bool> Uninstall();
 }

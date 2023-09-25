@@ -3,23 +3,22 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
-using System.IO;
-using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
-using RemoteMaster.Agent.Abstractions;
+using RemoteMaster.Agent.Core.Abstractions;
 using RemoteMaster.Shared.Abstractions;
-using RemoteMaster.Shared.Models;
 using RemoteMaster.Shared.Native.Windows;
 
 namespace RemoteMaster.Agent.Services;
 
 public class ClientService : IClientService
 {
+    private const string MainAppName = "RemoteMaster";
+    private const string SubAppName = "Client";
+    private const string Path = "C:\\Program Files\\RemoteMaster\\Client\\RemoteMaster.Client.exe";
+    private const string CertificateThumbprint = "E0BD3A7C39AA4FC012A0F6CB3297B46D5D73210C";
+
     private readonly ISignatureService _signatureService;
     private readonly ILogger<ClientService> _logger;
-
-    private const string ClientPath = "C:\\Program Files\\RemoteMaster\\Client\\RemoteMaster.Client.exe";
-    private const string CertificateThumbprint = "E0BD3A7C39AA4FC012A0F6CB3297B46D5D73210C";
 
     public ClientService(ISignatureService signatureService, ILogger<ClientService> logger)
     {
@@ -27,68 +26,9 @@ public class ClientService : IClientService
         _logger = logger;
     }
 
-    public async Task<bool> RegisterAsync(ConfigurationModel config, string hostName, string ipAddress, string macAddress)
+    public bool IsRunning()
     {
-        if (config == null)
-        {
-            throw new ArgumentNullException(nameof(config));
-        }
-
-        try
-        {
-            var connection = await ConnectToServerHub($"http://{config.Server}:5254");
-
-            _logger.LogInformation("Installing...");
-            var result = await connection.InvokeAsync<bool>("RegisterClient", hostName, ipAddress, macAddress, config.Group);
-
-            return result;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError($"Installation failed: {ex.Message}");
-
-            return false;
-        }
-    }
-
-    public async Task<bool> UnregisterAsync(ConfigurationModel config, string hostName)
-    {
-        if (config == null)
-        {
-            throw new ArgumentNullException(nameof(config));
-        }
-
-        try
-        {
-            var connection = await ConnectToServerHub($"http://{config.Server}:5254");
-
-            _logger.LogInformation("Uninstalling...");
-            var result = await connection.InvokeAsync<bool>("UnregisterClient", hostName, config.Group);
-
-            return result;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError("Uninstallation failed: {Message}", ex.Message);
-
-            return false;
-        }
-    }
-
-    private static async Task<HubConnection> ConnectToServerHub(string serverUrl)
-    {
-        var hubConnection = new HubConnectionBuilder()
-            .WithUrl($"{serverUrl}/hubs/management")
-            .Build();
-
-        await hubConnection.StartAsync();
-
-        return hubConnection;
-    }
-
-    public bool IsClientRunning()
-    {
-        var clientFullPath = Path.GetFullPath(ClientPath);
+        var clientFullPath = System.IO.Path.GetFullPath(Path);
 
         foreach (var process in Process.GetProcesses())
         {
@@ -112,37 +52,37 @@ public class ClientService : IClientService
         return false;
     }
 
-    public void StartClient()
+    public void Start()
     {
-        if (_signatureService.IsSignatureValid(ClientPath, CertificateThumbprint))
+        if (_signatureService.IsSignatureValid(Path, CertificateThumbprint))
         {
             try
             {
-                ProcessHelper.OpenInteractiveProcess(ClientPath, -1, true, "default", true, out _);
+                ProcessHelper.OpenInteractiveProcess(Path, -1, true, "default", true, out _);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error starting RemoteMaster Client");
+                _logger.LogError(ex, "Error starting {MainAppName} {SubAppName}", MainAppName, SubAppName);
             }
         }
         else
         {
-            _logger.LogError("The RemoteMaster client appears to be tampered with or its digital signature is not valid.");
+            _logger.LogError("The {MainAppName} {SubAppName} appears to be tampered with or its digital signature is not valid.", MainAppName, SubAppName);
         }
     }
 
-    public void StopClient()
+    public void Stop()
     {
-        var clientFullPath = Path.GetFullPath(ClientPath);
+        var clientFullPath = System.IO.Path.GetFullPath(Path);
 
-        foreach (var process in Process.GetProcessesByName("RemoteMaster.Client"))
+        foreach (var process in Process.GetProcessesByName($"{MainAppName}.{SubAppName}"))
         {
             try
             {
                 if (_signatureService.IsProcessSignatureValid(process, clientFullPath, CertificateThumbprint))
                 {
                     process.Kill();
-                    _logger.LogInformation("RemoteMaster Client stopped successfully.");
+                    _logger.LogInformation("{MainAppName} {SubAppName} stopped successfully.", MainAppName, SubAppName);
                 }
             }
             catch (InvalidOperationException ex)
