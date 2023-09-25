@@ -17,7 +17,7 @@ public static class ServiceCollectionExtensions
         var serilogLogger = new LoggerConfiguration()
             .MinimumLevel.Debug()
             .WriteTo.Console()
-            .WriteTo.File(@"C:\Logs\RemoteMaster_Client.log", rollingInterval: RollingInterval.Day)
+            .WriteTo.File(@"C:\ProgramData\RemoteMaster\Client\RemoteMaster_Client.log", rollingInterval: RollingInterval.Day)
             .CreateLogger();
 
         services.AddLogging(builder =>
