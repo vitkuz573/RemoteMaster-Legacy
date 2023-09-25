@@ -21,7 +21,7 @@ public abstract class ScreenCapturerService : IScreenCapturerService
     protected readonly object _screenBoundsLock = new();
     private readonly object _bitmapLock = new();
     private SKBitmap _skBitmap;
-    private int _quality = 80;
+    private int _quality = 25;
 
     public bool TrackCursor { get; set; } = false;
 
