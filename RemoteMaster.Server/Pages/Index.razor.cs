@@ -244,7 +244,7 @@ public partial class Index
         {
             if (item.Value == "shutdown")
             {
-                // shutdown logic
+                await proxy.ShutdownComputer("", 0, true);
             }
 
             if (item.Value == "reboot")

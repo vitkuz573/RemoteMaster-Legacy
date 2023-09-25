@@ -126,6 +126,11 @@ public class ControlHub : Hub<IControlClient>, IControlHub
         _powerManager.Reboot(message, (uint)timeout, forceAppsClosed);
     }
 
+    public async Task ShutdownComputer(string message, int timeout, bool forceAppsClosed)
+    {
+        _powerManager.Shutdown(message, (uint)timeout, forceAppsClosed);
+    }
+
     private void ExecuteActionForViewer(Action<IViewer> action)
     {
         if (_appState.TryGetViewer(Context.ConnectionId, out var viewer))

@@ -31,6 +31,8 @@ public interface IControlHub
 
     Task RebootComputer(string message, int timeout, bool forceAppsClosed);
 
+    Task ShutdownComputer(string message, int timeout, bool forceAppsClosed);
+
     Task StartScreenRecording(string outputPath);
 
     Task StopScreenRecording();

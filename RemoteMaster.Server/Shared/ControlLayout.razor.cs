@@ -19,7 +19,7 @@ public partial class ControlLayout
     private bool _cursorTracking;
     private int _quality;
 
-    private string _rebootMessage = "test";
+    private string _powerMessage = "test";
     private int _timeout = 60;
 
     private bool _firstToggleMenu = true;
@@ -80,7 +80,12 @@ public partial class ControlLayout
 
     private async void RebootComputer()
     {
-        await ControlFunctionsService.ControlHubProxy.RebootComputer(_rebootMessage, _timeout, true);
+        await ControlFunctionsService.ControlHubProxy.RebootComputer(_powerMessage, _timeout, true);
+    }
+
+    private async void ShutdownComputer()
+    {
+        await ControlFunctionsService.ControlHubProxy.ShutdownComputer(_powerMessage, _timeout, true);
     }
 
     private async void SendCtrlAltDel()
