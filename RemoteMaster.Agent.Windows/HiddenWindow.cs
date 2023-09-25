@@ -53,7 +53,7 @@ public class HiddenWindow : Window
     protected override void OnSourceInitialized(EventArgs e)
     {
         base.OnSourceInitialized(e);
-
+        
         var source = PresentationSource.FromVisual(this) as HwndSource;
         source!.AddHook(WndProc);
     }
@@ -64,10 +64,10 @@ public class HiddenWindow : Window
         {
             var sessionChangeReason = wParam switch
             {
-                (nint)WTS_SESSION_LOCK => HandleSessionLock(lParam),
-                (nint)WTS_SESSION_UNLOCK => HandleSessionUnlock(lParam),
-                (nint)WTS_CONSOLE_DISCONNECT => HandleConsoleDisconnect(),
-                (nint)WTS_CONSOLE_CONNECT => HandleConsoleConnect(),
+                (nint)WTS_SESSION_LOCK => HandleSessionChange("A session has been locked", lParam),
+                (nint)WTS_SESSION_UNLOCK => HandleSessionChange("A session has been unlocked", lParam),
+                (nint)WTS_CONSOLE_DISCONNECT => HandleSessionChange("A session was disconnected from the console terminal"),
+                (nint)WTS_CONSOLE_CONNECT => HandleSessionChange("A session was connected to the console terminal"),
                 _ => "Unknown session change reason."
             };
 
@@ -77,35 +77,14 @@ public class HiddenWindow : Window
         return nint.Zero;
     }
 
-    private string HandleSessionLock(nint sessionId)
+    private string HandleSessionChange(string changeDescription, nint sessionId = default)
     {
-        StopAndStartClient();
+        RestartClient();
 
-        return $"A session has been locked. Session ID: {sessionId}";
+        return sessionId != default ? $"{changeDescription}. Session ID: {sessionId}" : changeDescription;
     }
 
-    private string HandleSessionUnlock(nint sessionId)
-    {
-        StopAndStartClient();
-
-        return $"A session has been unlocked. Session ID: {sessionId}";
-    }
-
-    private string HandleConsoleDisconnect()
-    {
-        StopAndStartClient();
-
-        return "A session was disconnected from the console terminal.";
-    }
-
-    private string HandleConsoleConnect()
-    {
-        StopAndStartClient();
-
-        return "A session was connected to the console terminal.";
-    }
-
-    private void StopAndStartClient()
+    private void RestartClient()
     {
         _clientService.Stop();
 
