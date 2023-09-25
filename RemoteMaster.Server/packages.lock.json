@@ -85,11 +85,11 @@
       },
       "Radzen.Blazor": {
         "type": "Direct",
-        "requested": "[4.16.0, )",
-        "resolved": "4.16.0",
-        "contentHash": "4T5waRdXhn80u72W1yAIdkmwSfifC9iJ3LW9e8aEODicBLNGLag2ALE4LnfIDEd2xzT8xEol4lWLmteKHsd5Vw==",
+        "requested": "[4.16.2, )",
+        "resolved": "4.16.2",
+        "contentHash": "pu6wVSJnAg6TfA01iayGieq8O55k08Ew9Opl8EctC//9JVQcgJKvnRerjj6tDsNaRAjHlhfSYnDjv32Xs2EIMA==",
         "dependencies": {
-          "LibSassBuilder": "2.0.1",
+          "DartSassBuilder": "1.0.0",
           "Microsoft.AspNetCore.Components": "7.0.0",
           "Microsoft.AspNetCore.Components.Web": "7.0.0",
           "System.Linq.Dynamic.Core": "1.3.0"
@@ -100,6 +100,11 @@
         "requested": "[3.4.0, )",
         "resolved": "3.4.0",
         "contentHash": "gMCVL0cmndNInrzrz6mf2LWxhoEVX0XNYnt59SHMfnHGepnqXDmzLOE01SADbzcLiiaoyr8Wg3KTZzDMmBYTUw=="
+      },
+      "DartSassBuilder": {
+        "type": "Transitive",
+        "resolved": "1.0.0",
+        "contentHash": "bcM9YuWmNUuneEIp5rSFeHNQaZFqC0zKdK8JQvCFGzjX3pLyyQ0ReHPbawqOkTtfubQz4JPkzFzgJAo9Aixiew=="
       },
       "Humanizer": {
         "type": "Transitive",
@@ -544,11 +549,6 @@
         "dependencies": {
           "Humanizer.Core": "[2.14.1]"
         }
-      },
-      "LibSassBuilder": {
-        "type": "Transitive",
-        "resolved": "2.0.1",
-        "contentHash": "f+7TWQtCirW94VdzKL9SaAfeSF96TeEqdtDztmTGbndrcUlZZlL6uJLZKQCXQgj1BB3OqX0584OCvqFHrkAusA=="
       },
       "MessagePack": {
         "type": "Transitive",

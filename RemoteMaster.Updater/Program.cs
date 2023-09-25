@@ -2,8 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Security.Cryptography.X509Certificates;
-using Microsoft.AspNetCore.Server.Kestrel.Https;
 using RemoteMaster.Updater.Abstractions;
 using RemoteMaster.Updater.Services;
 
@@ -19,26 +17,10 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<IComponentUpdater, ClientComponentUpdater>();
 builder.Services.AddScoped<IComponentUpdater, AgentComponentUpdater>();
 
-// Configure HTTPS with the certificate
-// using var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
-// store.Open(OpenFlags.ReadOnly);
-// 
-// var certificate = store.Certificates
-//     .OfType<X509Certificate2>()
-//     .First(c => c.Thumbprint == "A8497F97BDDF23FA00956C3D11B2BD2FC9F5E136");
-
-builder.WebHost.ConfigureKestrel(serverOptions =>
-{
-    serverOptions.ListenAnyIP(5124, listenOptions =>
-    {
-        // listenOptions.UseHttps(new HttpsConnectionAdapterOptions
-        // {
-        //     ServerCertificate = certificate,
-        // });
-    });
-});
-
 var app = builder.Build();
+
+app.Urls.Clear();
+app.Urls.Add("http://0.0.0.0:5124");
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
