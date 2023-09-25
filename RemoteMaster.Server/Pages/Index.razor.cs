@@ -5,6 +5,8 @@
 using System.Diagnostics;
 using System.Net.NetworkInformation;
 using System.Net.Security;
+using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Radzen;
@@ -259,34 +261,17 @@ public partial class Index
         {
             var url = $"http://{computer.IPAddress}:5124/api/update";
 
-            var handler = new HttpClientHandler
+            using var client = new HttpClient();
+
+            var values = new
             {
-                ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) =>
-                {
-                    if (sslPolicyErrors == SslPolicyErrors.None)
-                    {
-                        return true; // Нет ошибок
-                    }
-
-                    if ((sslPolicyErrors & SslPolicyErrors.RemoteCertificateNameMismatch) != 0)
-                    {
-                        return true; // Игнорируем ошибки DNS имени
-                    }
-
-                    return false;
-                }
+                login = "support@it-ktk.local",
+                password = "bonesgamer123!!",
+                sharedFolder = @"\\SERVER-DC02\Win\RemoteMaster"
             };
 
-            using var client = new HttpClient(handler);
-
-            var values = new List<KeyValuePair<string, string>>
-            {
-                new KeyValuePair<string, string>("login", "support@it-ktk.local"),
-                new KeyValuePair<string, string>("password", "bonesgamer123!!"),
-                new KeyValuePair<string, string>("sharedFolder", @"\\SERVER-DC02\Win\RemoteMaster")
-            };
-
-            using var content = new FormUrlEncodedContent(values);
+            var json = JsonSerializer.Serialize(values);
+            using var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             try
             {

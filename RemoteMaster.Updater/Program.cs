@@ -20,21 +20,21 @@ builder.Services.AddScoped<IComponentUpdater, ClientComponentUpdater>();
 builder.Services.AddScoped<IComponentUpdater, AgentComponentUpdater>();
 
 // Configure HTTPS with the certificate
-using var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
-store.Open(OpenFlags.ReadOnly);
-
-var certificate = store.Certificates
-    .OfType<X509Certificate2>()
-    .First(c => c.Thumbprint == "A8497F97BDDF23FA00956C3D11B2BD2FC9F5E136");
+// using var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
+// store.Open(OpenFlags.ReadOnly);
+// 
+// var certificate = store.Certificates
+//     .OfType<X509Certificate2>()
+//     .First(c => c.Thumbprint == "A8497F97BDDF23FA00956C3D11B2BD2FC9F5E136");
 
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
     serverOptions.ListenAnyIP(5124, listenOptions =>
     {
-        listenOptions.UseHttps(new HttpsConnectionAdapterOptions
-        {
-            ServerCertificate = certificate,
-        });
+        // listenOptions.UseHttps(new HttpsConnectionAdapterOptions
+        // {
+        //     ServerCertificate = certificate,
+        // });
     });
 });
 

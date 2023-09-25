@@ -83,6 +83,8 @@ public class AgentComponentUpdater : IComponentUpdater
             StopService();
             await WaitForServiceToStop();
 
+            Thread.Sleep(30000);
+
             var sourceFolder = string.IsNullOrEmpty(sharedFolder) || string.IsNullOrEmpty(login) || string.IsNullOrEmpty(password) ? null : Path.Combine(sharedFolder, ComponentName);
 
             if (!Directory.Exists(backupFolder))
