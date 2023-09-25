@@ -64,8 +64,6 @@ public class HiddenWindow : Window
         {
             var sessionChangeReason = wParam switch
             {
-                (nint)WTS_SESSION_LOCK => HandleSessionChange("A session has been locked", lParam),
-                (nint)WTS_SESSION_UNLOCK => HandleSessionChange("A session has been unlocked", lParam),
                 (nint)WTS_CONSOLE_DISCONNECT => HandleSessionChange("A session was disconnected from the console terminal"),
                 (nint)WTS_CONSOLE_CONNECT => HandleSessionChange("A session was connected to the console terminal"),
                 _ => "Unknown session change reason."
@@ -77,11 +75,11 @@ public class HiddenWindow : Window
         return nint.Zero;
     }
 
-    private string HandleSessionChange(string changeDescription, nint sessionId = default)
+    private string HandleSessionChange(string changeDescription)
     {
         RestartClient();
 
-        return sessionId != default ? $"{changeDescription}. Session ID: {sessionId}" : changeDescription;
+        return changeDescription;
     }
 
     private void RestartClient()
