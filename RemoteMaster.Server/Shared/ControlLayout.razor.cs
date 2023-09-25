@@ -93,18 +93,15 @@ public partial class ControlLayout
     {
         if (ControlFunctionsService == null)
         {
-            Console.WriteLine("ControlFunctionsService is null");
             return;
         }
 
         if (string.IsNullOrEmpty(ControlFunctionsService.Host))
         {
-            Console.WriteLine("ControlFunctionsService.Host is null or empty");
             return;
         }
 
         var url = $"http://{ControlFunctionsService.Host}:5124/api/update/versions";
-        Console.WriteLine($"URL: {url}");
 
         using var client = new HttpClient();
 
@@ -115,11 +112,9 @@ public partial class ControlLayout
             if (response.IsSuccessStatusCode)
             {
                 var result = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Response: {result}");
 
                 if (string.IsNullOrEmpty(result))
                 {
-                    Console.WriteLine("Response content is null or empty");
                     return;
                 }
 
@@ -127,7 +122,6 @@ public partial class ControlLayout
 
                 if (versions == null || versions.Count == 0)
                 {
-                    Console.WriteLine("Deserialized versions list is null or empty");
                     return;
                 }
 
