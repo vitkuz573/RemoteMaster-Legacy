@@ -4,27 +4,12 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.SignalR;
-using RemoteMaster.Agent.Core.Abstractions;
 using Windows.Win32;
 
 namespace RemoteMaster.Agent.Core.Hubs;
 
-public class MaintenanceHub : Hub<IMaintenanceClient>
+public class MaintenanceHub : Hub
 {
-    private readonly IConfigurationProvider _configurationProvider;
-
-    public MaintenanceHub(IConfigurationProvider configurationProvider)
-    {
-        _configurationProvider = configurationProvider;
-    }
-
-    public async override Task OnConnectedAsync()
-    {
-        var configuration = _configurationProvider.Fetch();
-
-        await Clients.Caller.ReceiveAgentConfiguration(configuration);
-    }
-
     [SuppressMessage("Performance", "CA1822:Пометьте члены как статические", Justification = "<Ожидание>")]
     public async Task SendCtrlAltDel()
     {

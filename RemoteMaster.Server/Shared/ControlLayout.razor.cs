@@ -31,13 +31,8 @@ public partial class ControlLayout
 
         if (_firstToggleMenu)
         {
-            var agentConfiguration = ControlFunctionsService.AgentConfiguration;
-
-            _agentVersion = agentConfiguration.AppVersion;
-
             var clientConfiguration = ControlFunctionsService.ClientConfiguration;
 
-            _clientVersion = clientConfiguration.AppVersion;
             _inputEnabled = clientConfiguration.InputEnabled;
             _cursorTracking = clientConfiguration.TrackCursor;
             _quality = clientConfiguration.ImageQuality;

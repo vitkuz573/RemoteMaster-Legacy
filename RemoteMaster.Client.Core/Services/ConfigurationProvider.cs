@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Reflection;
 using RemoteMaster.Client.Core.Abstractions;
 using RemoteMaster.Shared.Dtos;
 
@@ -21,11 +20,8 @@ public class ConfigurationProvider : IConfigurationProvider
 
     public ClientConfigurationDto Fetch()
     {
-        var version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-
         return new ClientConfigurationDto
         {
-            AppVersion = version,
             InputEnabled = _inputService.InputEnabled,
             TrackCursor = _screenCapturerService.TrackCursor,
             ImageQuality = _screenCapturerService.Quality

@@ -50,11 +50,6 @@ public partial class Control : IAsyncDisposable
         }
     }
 
-    private void HandleAgentConfiguration(AgentConfigurationDto dto)
-    {
-        ControlFunctionsService.AgentConfiguration = dto;
-    }
-
     private void HandleClientConfiguration(ClientConfigurationDto dto)
     {
         ControlFunctionsService.ClientConfiguration = dto;
@@ -88,13 +83,13 @@ public partial class Control : IAsyncDisposable
 
         _controlHubProxy = clientContext.Connection.CreateHubProxy<IControlHub>();
         ControlFunctionsService.ControlHubProxy = _controlHubProxy;
+        ControlFunctionsService.Host = Host;
     }
 
     private async Task InitializeAgentConnectionAsync()
     {
         var agentContext = await ConnectionManager
             .Connect("Agent", $"http://{Host}:3564/hubs/maintenance")
-            .On<AgentConfigurationDto>("ReceiveAgentConfiguration", HandleAgentConfiguration)
             .StartAsync();
 
         ControlFunctionsService.AgentConnection = agentContext.Connection;

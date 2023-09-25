@@ -11,11 +11,11 @@ namespace RemoteMaster.Server.Services;
 
 public class ControlFunctionsService
 {
+    public string Host { get; set; }
+
     public IControlHub ControlHubProxy { get; set; }
 
     public HubConnection AgentConnection { get; set; }
-
-    public AgentConfigurationDto AgentConfiguration { get; set; }
 
     public ClientConfigurationDto ClientConfiguration { get; set; }
 
