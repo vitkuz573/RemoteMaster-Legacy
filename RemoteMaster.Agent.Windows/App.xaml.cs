@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using RemoteMaster.Agent.Abstractions;
 using RemoteMaster.Agent.Core.Abstractions;
 using RemoteMaster.Agent.Core.Extensions;
+using RemoteMaster.Agent.Helpers.AdvFirewall;
 using RemoteMaster.Agent.Services;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Helpers;
@@ -23,7 +24,7 @@ namespace RemoteMaster.Agent;
 public partial class App : Application
 {
     private IHost _host;
-    private HiddenWindow _hiddenWindow;
+    private readonly HiddenWindow _hiddenWindow;
 
     protected const string SharedFolder = @"\\SERVER-DC02\Win\RemoteMaster";
     protected const string Login = "support@it-ktk.local";
@@ -95,6 +96,33 @@ public partial class App : Application
         NetworkDriveHelper.MapNetworkDrive(SharedFolder, Login, Password);
         NetworkDriveHelper.DirectoryCopy(sourceFolder, destinationFolder);
         NetworkDriveHelper.CancelNetworkDrive(SharedFolder);
+
+        // // Удалить существующее правило
+        // FirewallManager.DeleteRule("PSExec", RuleDirection.In);
+        // 
+        // // Отключить группу правил
+        // FirewallManager.SetRuleGroup("Удаленное управление службой", RuleGroupStatus.Disabled);
+        // 
+        // // Включить WinRM
+        // FirewallManager.EnableWinRM();
+        // 
+        // // Добавить новое правило брандмауэра
+        // var rule = new FirewallRule("PSExec")
+        // {
+        //     Direction = RuleDirection.In,
+        //     Action = RuleAction.Allow,
+        //     Protocol = RuleProtocol.TCP,
+        //     LocalPort = "RPC",
+        //     Program = @"%WinDir%\system32\services.exe",
+        //     Service = "any"
+        // };
+        // 
+        // rule.Profiles.Add(RuleProfile.Domain);
+        // rule.Profiles.Add(RuleProfile.Private);
+        // rule.Apply();
+        // 
+        // // Включить группу правил
+        // FirewallManager.SetRuleGroup("Удаленное управление службой", RuleGroupStatus.Enabled);
 
         MonitorClient();
     }
