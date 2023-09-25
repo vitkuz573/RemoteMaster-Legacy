@@ -69,7 +69,7 @@ public class ClientService : IClientService
         }
         catch (Exception ex)
         {
-            _logger.LogError($"Uninstallation failed: {ex.Message}");
+            _logger.LogError("Uninstallation failed: {Message}", ex.Message);
 
             return false;
         }
@@ -101,11 +101,11 @@ public class ClientService : IClientService
             }
             catch (InvalidOperationException ex)
             {
-                _logger.LogError(ex, $"Unable to enumerate the process modules for process ID: {process.Id}");
+                _logger.LogError(ex, "Unable to enumerate the process modules for process ID: {ProcessId}", process.Id);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Unexpected error occurred when handling process ID: {process.Id}");
+                _logger.LogError(ex, "Unexpected error occurred when handling process ID: {ProcessId}", process.Id);
             }
         }
 
