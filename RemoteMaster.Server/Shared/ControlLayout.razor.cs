@@ -86,15 +86,4 @@ public partial class ControlLayout
     {
         await ControlFunctionsService.AgentConnection.InvokeAsync("SendCtrlAltDel");
     }
-
-    private async void UpdateClient()
-    {
-        await ControlFunctionsService.AgentConnection.InvokeAsync("SendClientUpdate");
-    }
-
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Пометьте члены как статические", Justification = "<Ожидание>")]
-    private async void UpdateAgent()
-    {
-        // await ControlFunctionsService.ControlHubProxy.SendAgentUpdate();
-    }
 }
