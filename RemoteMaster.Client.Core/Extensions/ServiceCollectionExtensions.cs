@@ -33,7 +33,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IConfigurationProvider, ConfigurationProvider>();
         services.AddSingleton<IAppState, AppState>();
         services.AddSingleton<IShutdownService, ShutdownService>();
-        services.AddSingleton<IIdleTimer, IdleTimer>();
         services.AddTransient<IViewerFactory, ViewerFactory>();
 
         return services;
