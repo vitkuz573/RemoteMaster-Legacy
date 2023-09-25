@@ -18,6 +18,7 @@ public static class ServiceCollectionExtensions
             .MinimumLevel.Debug()
             .WriteTo.Console()
             .WriteTo.File(@"C:\ProgramData\RemoteMaster\Client\RemoteMaster_Client.log", rollingInterval: RollingInterval.Day)
+            .Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Received hub invocation"))
             .CreateLogger();
 
         services.AddLogging(builder =>
