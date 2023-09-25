@@ -15,7 +15,7 @@ public class UdpPacketSender : IPacketSender
         if (packet == null)
         {
             throw new ArgumentNullException(nameof(packet));
-        }    
+        }
 
         using var client = new UdpClient()
         {

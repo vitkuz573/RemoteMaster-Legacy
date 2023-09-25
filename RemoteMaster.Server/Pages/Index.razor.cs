@@ -110,7 +110,7 @@ public partial class Index
         var children = new List<Node>();
         children.AddRange(DatabaseService.GetFolders().Where(f => f.Parent == node));
         children.AddRange(DatabaseService.GetComputersByFolderId(node.NodeId));
-        
+
         return children;
     }
 
@@ -131,7 +131,7 @@ public partial class Index
     {
         _selectedComputers.Clear();
         _anyComputerSelected = false;
-    
+
         var node = args.Value as Node;
 
         if (node is Folder)
@@ -152,7 +152,7 @@ public partial class Index
     private async Task UpdateComputerThumbnailAsync(Computer computer)
     {
         var clientContext = ConnectionManager.Connect("Client", $"http://{computer.IPAddress}:5076/hubs/control", true);
-        
+
         try
         {
             clientContext.On<byte[]>("ReceiveThumbnail", async (thumbnailBytes) =>
@@ -169,7 +169,7 @@ public partial class Index
             var proxy = clientContext.Connection.CreateHubProxy<IControlHub>();
             await proxy.ConnectAs(Intention.GetThumbnail);
         }
-        catch {}
+        catch { }
     }
 
     private async Task HandleRefreshClick()

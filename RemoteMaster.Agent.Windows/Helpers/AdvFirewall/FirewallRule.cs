@@ -17,7 +17,7 @@ public class FirewallRule
     public string LocalPort { get; set; }
 
     public List<RuleProfile> Profiles { get; } = new List<RuleProfile>();
-   
+
     public string Program { get; set; }
 
     public string Service { get; set; }

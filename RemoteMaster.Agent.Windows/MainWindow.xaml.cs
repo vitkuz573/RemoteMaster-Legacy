@@ -77,13 +77,13 @@ public partial class MainWindow : Window
 
         UpdateServiceStatusDisplay();
     }
-    
+
     public static string GetMacAddressForIp(string ipAddress)
     {
         foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
         {
             var ipProperties = nic.GetIPProperties();
-        
+
             foreach (var ip in ipProperties.UnicastAddresses)
             {
                 if (ip.Address.ToString() == ipAddress)
@@ -92,10 +92,10 @@ public partial class MainWindow : Window
                 }
             }
         }
-        
+
         return string.Empty;
     }
-    
+
     private void UpdateServiceStatusDisplay()
     {
         var serviceExists = _serviceManager.IsServiceInstalled(_agentServiceConfig.ServiceName);

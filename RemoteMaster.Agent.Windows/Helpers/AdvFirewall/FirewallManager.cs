@@ -34,7 +34,7 @@ public static class FirewallManager
     public static string ShowRuleDetails(string ruleName)
     {
         var cmdArgs = $"AdvFirewall firewall show rule name=\"{ruleName}\"";
-        
+
         return ExecuteCommandWithOutput("netsh", cmdArgs);
     }
 

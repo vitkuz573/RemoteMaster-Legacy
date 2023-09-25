@@ -9,7 +9,6 @@ using Microsoft.IO;
 using RemoteMaster.Client.Core.Abstractions;
 using RemoteMaster.Shared.Models;
 using RemoteMaster.Shared.Native.Windows;
-using RemoteMaster.Shared.Native.Windows.ScreenHelper;
 using SkiaSharp;
 
 namespace RemoteMaster.Client.Services;
