@@ -2,8 +2,11 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
+using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
 
 namespace RemoteMaster.Server.Shared;
@@ -25,8 +28,10 @@ public partial class ControlLayout
     [Inject]
     private ControlFunctionsService ControlFunctionsService { get; set; }
 
-    private void ToggleMenu()
+    private async Task ToggleMenu()
     {
+        await GetVersions();
+
         _isMenuOpen = !_isMenuOpen;
 
         if (_firstToggleMenu)
@@ -39,6 +44,8 @@ public partial class ControlLayout
 
             _firstToggleMenu = false;
         }
+
+        await InvokeAsync(StateHasChanged);
     }
 
     private async void OnChangeScreen(ChangeEventArgs e)
@@ -80,5 +87,70 @@ public partial class ControlLayout
     private async void SendCtrlAltDel()
     {
         await ControlFunctionsService.AgentConnection.InvokeAsync("SendCtrlAltDel");
+    }
+
+    private async Task GetVersions()
+    {
+        if (ControlFunctionsService == null)
+        {
+            Console.WriteLine("ControlFunctionsService is null");
+            return;
+        }
+
+        if (string.IsNullOrEmpty(ControlFunctionsService.Host))
+        {
+            Console.WriteLine("ControlFunctionsService.Host is null or empty");
+            return;
+        }
+
+        var url = $"http://{ControlFunctionsService.Host}:5124/api/update/versions";
+        Console.WriteLine($"URL: {url}");
+
+        using var client = new HttpClient();
+
+        try
+        {
+            var response = await client.GetAsync(url);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Response: {result}");
+
+                if (string.IsNullOrEmpty(result))
+                {
+                    Console.WriteLine("Response content is null or empty");
+                    return;
+                }
+
+                var versions = JsonSerializer.Deserialize<List<VersionInfo>>(result);
+
+                if (versions == null || versions.Count == 0)
+                {
+                    Console.WriteLine("Deserialized versions list is null or empty");
+                    return;
+                }
+
+                foreach (var version in versions)
+                {
+                    if (version.ComponentName.Equals("Agent", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _agentVersion = version.CurrentVersion;
+                    }
+                    else if (version.ComponentName.Equals("Client", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _clientVersion = version.CurrentVersion;
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Error: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception: {ex.Message}");
+        }
     }
 }

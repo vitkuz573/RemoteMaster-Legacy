@@ -12,5 +12,7 @@ public interface IComponentUpdater
 
     Task UpdateAsync(string sharedFolder, string login, string password);
 
+    Task<ComponentVersionResponse> GetCurrentVersionAsync();
+
     string ComponentName { get; }
 }
