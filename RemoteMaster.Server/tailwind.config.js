@@ -2,11 +2,14 @@
     content: ['./**/*.cshtml', './**/*.razor'],
     darkMode: 'class',
     theme: {
-        extend: {},
+        extend: {
+            backgroundColor: {
+                'de876c': '#DE876C',
+            }
+        },
     },
     variants: {
-        extend: {
-        },
+        extend: {},
     },
     plugins: [],
 }

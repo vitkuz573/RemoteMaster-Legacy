@@ -4,7 +4,7 @@
 
 <div class="mb-4 bg-transparent box-border p-1 selectable-item" data-ip-address="@Computer.IPAddress">
     <div class="bg-white shadow-lg rounded-md overflow-hidden">
-        <div class="flex items-center justify-center h-32 bg-gray-200">
+        <div class="flex items-center justify-center h-32 @(ThumbnailPath == "/img/notconnected.png" ? "bg-de876c" : "bg-gray-200")">
             <img src="@ThumbnailPath" alt="Thumbnail" class="max-h-32 object-cover object-center" />
         </div>
 
