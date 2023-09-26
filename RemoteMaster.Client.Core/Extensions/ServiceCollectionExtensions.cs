@@ -30,7 +30,6 @@ public static class ServiceCollectionExtensions
 
         services.AddSignalR().AddMessagePackProtocol();
 
-        services.AddScoped<IConfigurationProvider, ConfigurationProvider>();
         services.AddSingleton<IAppState, AppState>();
         services.AddSingleton<IShutdownService, ShutdownService>();
         services.AddTransient<IViewerFactory, ViewerFactory>();

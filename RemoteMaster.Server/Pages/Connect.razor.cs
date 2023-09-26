@@ -51,36 +51,49 @@ public partial class Connect : IAsyncDisposable
     private IControlHub _controlHubProxy;
     private HubConnection _agentConnection;
 
-    protected async override Task OnAfterRenderAsync(bool firstRender)
+    protected async override Task OnInitializedAsync()
     {
-        if (firstRender)
+        await InitializeClientConnectionAsync();
+
+        await _controlHubProxy.ConnectAs(Intention.Control);
+
+        var uri = new Uri(NavigationManager.Uri);
+        var queryParameters = QueryHelpers.ParseQuery(uri.Query);
+
+        if (queryParameters.TryGetValue("imageQuality", out var imageQualityValue) && int.TryParse(imageQualityValue, out var imageQuality))
         {
-            await GetVersions();
+            _imageQuality = imageQuality;
+            await _controlHubProxy.SetQuality(imageQuality);
+        }
 
-            await InitializeClientConnectionAsync();
-            await InitializeAgentConnectionAsync();
-            await _controlHubProxy.ConnectAs(Intention.Control);
+        if (queryParameters.TryGetValue("cursorTracking", out var cursorTrackingValue) && bool.TryParse(cursorTrackingValue, out var cursorTracking))
+        {
+            _cursorTracking = cursorTracking;
+            await _controlHubProxy.SetTrackCursor(cursorTracking);
+        }
 
-            await SetupClientEventListeners();
+        if (queryParameters.TryGetValue("inputEnabled", out var inputEnabledValue) && bool.TryParse(inputEnabledValue, out var inputEnabled))
+        {
+            _inputEnabled = inputEnabled;
+            await _controlHubProxy.SetInputEnabled(inputEnabled);
+        }
 
-            var uri = new Uri(NavigationManager.Uri);
-            var queryParameters = QueryHelpers.ParseQuery(uri.Query);
-
-            if (queryParameters.TryGetValue("intention", out var intentionValue))
+        if (queryParameters.TryGetValue("intention", out var intentionValue))
+        {
+            if (Enum.TryParse(typeof(Intention), intentionValue, true, out var parsedIntention))
             {
-                if (Enum.TryParse(typeof(Intention), intentionValue, true, out var parsedIntention))
-                {
-                    var intention = (Intention)parsedIntention;
-                }
+                var intention = (Intention)parsedIntention;
             }
         }
+
+        await GetVersions();
+
+        await InitializeAgentConnectionAsync();
     }
 
-    private void HandleClientConfiguration(ClientConfigurationDto dto)
+    protected async override Task OnAfterRenderAsync(bool firstRender)
     {
-        _inputEnabled = dto.InputEnabled;
-        _cursorTracking = dto.TrackCursor;
-        _imageQuality = dto.ImageQuality;
+        await SetupClientEventListeners();
     }
 
     private void HandleScreenData(ScreenDataDto dto)
@@ -104,13 +117,11 @@ public partial class Connect : IAsyncDisposable
     {
         var clientContext = await ConnectionManager
             .Connect("Client", $"http://{Host}:5076/hubs/control", true)
-            .On<ClientConfigurationDto>("ReceiveClientConfiguration", HandleClientConfiguration)
             .On<ScreenDataDto>("ReceiveScreenData", HandleScreenData)
             .On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate)
             .StartAsync();
 
         _controlHubProxy = clientContext.Connection.CreateHubProxy<IControlHub>();
-
     }
 
     private async Task InitializeAgentConnectionAsync()
