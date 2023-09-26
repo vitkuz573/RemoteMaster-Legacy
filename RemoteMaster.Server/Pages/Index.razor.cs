@@ -211,14 +211,7 @@ public partial class Index
             return;
         }
 
-        if (item.Value == "control")
-        {
-            await ExecuteOnAvailableComputers(async (computer, proxy) => await OpenWindow($"/{computer.IPAddress}/control"));
-        }
-        else
-        {
-            // view logic
-        }
+        await ExecuteOnAvailableComputers(async (computer, proxy) => await OpenWindow($"/{computer.IPAddress}/connect?intention={item.Value}"));
     }
 
     private async Task OpenShell(RadzenSplitButtonItem item)

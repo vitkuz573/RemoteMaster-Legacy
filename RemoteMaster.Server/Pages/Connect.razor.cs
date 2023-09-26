@@ -16,7 +16,7 @@ using TypedSignalR.Client;
 
 namespace RemoteMaster.Server.Pages;
 
-public partial class Control : IAsyncDisposable
+public partial class Connect : IAsyncDisposable
 {
 #nullable disable
     [Parameter]
