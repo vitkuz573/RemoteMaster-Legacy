@@ -151,7 +151,7 @@ public partial class Index
 
     private async Task UpdateComputerThumbnailAsync(Computer computer)
     {
-        Console.WriteLine($"UpdateComputerThumbnailAsync Called for {computer.IPAddress}"); // Add this line
+        Console.WriteLine($"UpdateComputerThumbnailAsync Called for {computer.IPAddress}");
 
         var clientContext = ConnectionManager.Connect("Client", $"http://{computer.IPAddress}:5076/hubs/control", true);
 
@@ -169,7 +169,7 @@ public partial class Index
             await clientContext.StartAsync();
 
             var proxy = clientContext.Connection.CreateHubProxy<IControlHub>();
-            Console.WriteLine($"Calling ConnectAs with Intention.GetThumbnail for {computer.IPAddress}"); // Add this line
+            Console.WriteLine($"Calling ConnectAs with Intention.GetThumbnail for {computer.IPAddress}");
             await proxy.ConnectAs(Intention.GetThumbnail);
         }
         catch (Exception ex)
@@ -217,7 +217,15 @@ public partial class Index
             return;
         }
 
-        await ExecuteOnAvailableComputers(async (computer, proxy) => await OpenWindow($"/{computer.IPAddress}/connect?intention={item.Value}"));
+        if (item.Value == "control")
+        {
+            await ExecuteOnAvailableComputers(async (computer, proxy) => await OpenWindow($"/{computer.IPAddress}/connect?imageQuality=25&cursorTracking=false&inputEnabled=true"));
+        }
+
+        if (item.Value == "view")
+        {
+            await ExecuteOnAvailableComputers(async (computer, proxy) => await OpenWindow($"/{computer.IPAddress}/connect?imageQuality=25&cursorTracking=true&inputEnabled=false"));
+        }
     }
 
     private async Task OpenShell(RadzenSplitButtonItem item)
