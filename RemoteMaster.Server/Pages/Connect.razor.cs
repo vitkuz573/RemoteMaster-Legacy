@@ -78,14 +78,6 @@ public partial class Connect : IAsyncDisposable
             await _controlHubProxy.SetInputEnabled(inputEnabled);
         }
 
-        if (queryParameters.TryGetValue("intention", out var intentionValue))
-        {
-            if (Enum.TryParse(typeof(Intention), intentionValue, true, out var parsedIntention))
-            {
-                var intention = (Intention)parsedIntention;
-            }
-        }
-
         await GetVersions();
 
         await InitializeAgentConnectionAsync();
