@@ -312,6 +312,23 @@ public partial class Index
         await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.StopScreenRecording());
     }
 
+    private async Task SetMonitorState(RadzenSplitButtonItem item)
+    {
+        if (item == null)
+        {
+            return;
+        }
+
+        var state = item.Value switch
+        {
+            "on" => MonitorState.On,
+            "standby" => MonitorState.Standby,
+            "off" => MonitorState.Off
+        };
+
+        await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.SetMonitorState(state));
+    }
+
     private async Task Wake()
     {
         foreach (var computer in _selectedComputers)

@@ -36,4 +36,6 @@ public interface IControlHub
     Task StartScreenRecording(string outputPath);
 
     Task StopScreenRecording();
+
+    Task SetMonitorState(MonitorState state);
 }

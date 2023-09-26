@@ -5,6 +5,7 @@
 using RemoteMaster.Client.Abstractions;
 using RemoteMaster.Client.Core.Abstractions;
 using RemoteMaster.Client.Core.Extensions;
+using RemoteMaster.Client.Helpers;
 using RemoteMaster.Client.Services;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Services;
@@ -17,6 +18,7 @@ builder.Services.AddSingleton<IScreenRecorderService, ScreenRecorderService>();
 builder.Services.AddSingleton<ICursorRenderService, CursorRenderService>();
 builder.Services.AddSingleton<IInputService, InputService>();
 builder.Services.AddSingleton<IPowerService, PowerService>();
+builder.Services.AddSingleton<IHardwareService, HardwareService>();
 builder.Services.AddSingleton<IServiceManager, ServiceManager>();
 
 var app = builder.Build();
