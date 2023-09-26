@@ -51,6 +51,8 @@ public partial class Connect : IAsyncDisposable
     private IControlHub _controlHubProxy;
     private HubConnection _agentConnection;
 
+    private string _newUri;
+
     protected async override Task OnInitializedAsync()
     {
         await InitializeClientConnectionAsync();
@@ -60,6 +62,7 @@ public partial class Connect : IAsyncDisposable
         var queryParameters = QueryHelpers.ParseQuery(uri.Query);
         var newUri = uri.ToString();
 
+        // Processing imageQuality parameter
         if (!queryParameters.TryGetValue("imageQuality", out var imageQualityValue) || !int.TryParse(imageQualityValue, out var imageQuality))
         {
             _imageQuality = 25;
@@ -72,6 +75,7 @@ public partial class Connect : IAsyncDisposable
 
         await _controlHubProxy.SetQuality(_imageQuality);
 
+        // Processing cursorTracking parameter
         if (!queryParameters.TryGetValue("cursorTracking", out var cursorTrackingValue) || !bool.TryParse(cursorTrackingValue, out var cursorTracking))
         {
             _cursorTracking = false;
@@ -84,6 +88,7 @@ public partial class Connect : IAsyncDisposable
 
         await _controlHubProxy.SetTrackCursor(_cursorTracking);
 
+        // Processing inputEnabled parameter
         if (!queryParameters.TryGetValue("inputEnabled", out var inputEnabledValue) || !bool.TryParse(inputEnabledValue, out var inputEnabled))
         {
             _inputEnabled = true;
@@ -96,18 +101,31 @@ public partial class Connect : IAsyncDisposable
 
         await _controlHubProxy.SetInputEnabled(_inputEnabled);
 
+        // Update _newUri if newUri is different from the original uri
         if (newUri != uri.ToString())
         {
-            await JSRuntime.InvokeVoidAsync("eval", $"history.replaceState(null, '', '{newUri}');");
+            _newUri = newUri;
         }
 
         await GetVersions();
         await InitializeAgentConnectionAsync();
     }
 
-    protected async override Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await SetupClientEventListeners();
+        if (firstRender)
+        {
+            // Update the URL using JavaScript Interop if _newUri is not empty
+            if (!string.IsNullOrEmpty(_newUri))
+            {
+                await JSRuntime.InvokeVoidAsync("eval", $"history.replaceState(null, '', '{_newUri}');");
+            }
+
+            // Existing OnAfterRenderAsync code
+            await SetupClientEventListeners();
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
     }
 
     private void HandleScreenData(ScreenDataDto dto)
