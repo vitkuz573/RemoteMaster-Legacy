@@ -2,15 +2,15 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Runtime.Versioning;
+using System.Diagnostics.CodeAnalysis;
 using Windows.Win32.Security;
 using static Windows.Win32.PInvoke;
 
-namespace RemoteMaster.Shared.Native.Windows;
+namespace RemoteMaster.Client.Helpers;
 
-[SupportedOSPlatform("windows6.0.6000")]
 public static class TokenPrivilegeHelper
 {
+    [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "All disposable objects are properly handled.")]
     /// <summary>
     /// Adjusts the token privilege for the current process.
     /// </summary>

@@ -3,7 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Client.Core.Abstractions;
-using RemoteMaster.Shared.Native.Windows;
+using RemoteMaster.Client.Helpers;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Client.Services;
