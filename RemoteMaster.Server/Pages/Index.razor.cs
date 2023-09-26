@@ -348,7 +348,7 @@ public partial class Index
         await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.SetMonitorState(state));
     }
 
-    private async Task Wake()
+    private async Task WakeUp()
     {
         foreach (var computer in _selectedComputers)
         {
