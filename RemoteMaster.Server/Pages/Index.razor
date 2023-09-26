@@ -42,6 +42,7 @@
                 <ChildContent>
                     <RadzenSplitButtonItem Text="Shutdown" Value="shutdown" />
                     <RadzenSplitButtonItem Text="Reboot" Value="reboot" />
+                    <RadzenSplitButtonItem Text="Wake Up" Value="wakeup" />
                 </ChildContent>
             </RadzenSplitButton>
 
@@ -61,8 +62,6 @@
                     <RadzenSplitButtonItem Text="Off" Value="off" />
                 </ChildContent>
             </RadzenSplitButton>
-
-            <RadzenButton Text="Wake Up" Disabled="@(!_anyComputerSelected)" Click="WakeUp" />
 
             <RadzenButton Click="HandleRefreshClick" Text="Refresh" class="ml-auto" />
         </div>

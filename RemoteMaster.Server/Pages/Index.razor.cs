@@ -252,18 +252,21 @@ public partial class Index
             return;
         }
 
-        await ExecuteOnAvailableComputers(async (computer, proxy) =>
+        if (item.Value == "shutdown")
         {
-            if (item.Value == "shutdown")
+            await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.ShutdownComputer("", 0, true));
+        }
+        else if (item.Value == "reboot")
+        {
+            await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.RebootComputer("", 0, true));
+        }
+        else if (item.Value == "wakeup")
+        {
+            foreach (var computer in _selectedComputers)
             {
-                await proxy.ShutdownComputer("", 0, true);
+                WakeOnLanService.WakeUp(computer.MACAddress);
             }
-
-            if (item.Value == "reboot")
-            {
-                await proxy.RebootComputer("", 0, true);
-            }
-        });
+        }
     }
 
     private async Task Update()
@@ -346,14 +349,6 @@ public partial class Index
         };
 
         await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.SetMonitorState(state));
-    }
-
-    private async Task WakeUp()
-    {
-        foreach (var computer in _selectedComputers)
-        {
-            WakeOnLanService.WakeUp(computer.MACAddress);
-        }
     }
 
     private static async Task<(Computer computer, bool isAvailable)> IsComputerAvailable(Computer computer)
