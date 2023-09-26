@@ -19,7 +19,6 @@ namespace RemoteMaster.Server.Pages;
 
 public partial class Connect : IAsyncDisposable
 {
-#nullable disable
     [Parameter]
     public string Host { get; set; }
 
@@ -31,24 +30,25 @@ public partial class Connect : IAsyncDisposable
 
     [Inject]
     private IJSRuntime JSRuntime { get; set; }
-#nullable restore
 
     private string _statusMessage = "Establishing connection...";
     private string? _screenDataUrl;
-    private IControlHub _controlHubProxy;
 
     private bool _isMenuOpen = false;
+
     private string _clientVersion;
     private string _agentVersion;
+    
     private bool _inputEnabled;
     private bool _cursorTracking;
-    private int _quality;
+    private int _imageQuality;
 
     private string _powerMessage = "test";
     private int _timeout = 60;
 
     private IEnumerable<DisplayInfo> _displays;
 
+    private IControlHub _controlHubProxy;
     private HubConnection _agentConnection;
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
@@ -70,7 +70,7 @@ public partial class Connect : IAsyncDisposable
             {
                 if (Enum.TryParse(typeof(Intention), intentionValue, true, out var parsedIntention))
                 {
-                    // (Intention)parsedIntention;
+                    var intention = (Intention)parsedIntention;
                 }
             }
         }
@@ -80,7 +80,7 @@ public partial class Connect : IAsyncDisposable
     {
         _inputEnabled = dto.InputEnabled;
         _cursorTracking = dto.TrackCursor;
-        _quality = dto.ImageQuality;
+        _imageQuality = dto.ImageQuality;
     }
 
     private void HandleScreenData(ScreenDataDto dto)
@@ -214,7 +214,7 @@ public partial class Connect : IAsyncDisposable
 
     private async void ChangeQuality(int quality)
     {
-        _quality = quality;
+        _imageQuality = quality;
 
         await _controlHubProxy.SetQuality(quality);
     }
