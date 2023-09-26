@@ -1,7 +1,3 @@
-@using Radzen
-@using Microsoft.AspNetCore.Components
-@using RemoteMaster.Server.Models
-
 <div class="mb-4 bg-transparent box-border p-1 selectable-item" data-ip-address="@Computer.IPAddress">
     <div class="bg-white shadow-lg rounded-md overflow-hidden">
         <div class="flex items-center justify-center h-32 @(ThumbnailPath == "/img/notconnected.png" ? "bg-de876c" : "bg-gray-200")">

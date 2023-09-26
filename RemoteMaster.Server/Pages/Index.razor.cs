@@ -151,6 +151,8 @@ public partial class Index
 
     private async Task UpdateComputerThumbnailAsync(Computer computer)
     {
+        Console.WriteLine($"UpdateComputerThumbnailAsync Called for {computer.IPAddress}"); // Add this line
+
         var clientContext = ConnectionManager.Connect("Client", $"http://{computer.IPAddress}:5076/hubs/control", true);
 
         try
@@ -167,9 +169,13 @@ public partial class Index
             await clientContext.StartAsync();
 
             var proxy = clientContext.Connection.CreateHubProxy<IControlHub>();
+            Console.WriteLine($"Calling ConnectAs with Intention.GetThumbnail for {computer.IPAddress}"); // Add this line
             await proxy.ConnectAs(Intention.GetThumbnail);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception in UpdateComputerThumbnailAsync for {computer.IPAddress}: {ex.Message}");
+        }
     }
 
     private async Task HandleRefreshClick()

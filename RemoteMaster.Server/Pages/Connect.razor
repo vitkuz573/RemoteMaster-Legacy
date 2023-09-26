@@ -1,13 +1,162 @@
 ﻿@page "/{Host}/connect"
-@layout ControlLayout
 
-<div class="h-full w-full select-none">
-    @if (!string.IsNullOrEmpty(_screenDataUrl))
-    {
-        <img id="screenImage" src="@_screenDataUrl" @oncontextmenu:preventDefault="true" @oncontextmenu="(MouseEventArgs e) => {}" draggable="false" class="object-contain mx-auto max-h-full max-w-full" onload="window.revokeUrl(this.src)" @onmousemove="OnMouseMove" @onmousedown="OnMouseUpDown" @onmouseup="OnMouseUpDown" @onmouseover="OnMouseOver" @onmousewheel="OnMouseWheel" />
-    }
-    else
-    {
-        <p class="text-white">@_statusMessage</p>
-    }
+<div class="relative h-screen w-screen overflow-hidden flex justify-center items-center select-none">
+    <div class="absolute h-full w-full bg-gray-800 text-white p-6">
+        <div class="flex items-center justify-between">
+            <button @onclick="ToggleMenu" class="absolute right-6 top-1/2 transform px-3 py-2 rounded-lg bg-gray-500 hover:bg-gray-600 focus:outline-none opacity-50 @($"{(_isMenuOpen ? "translate-x-20" : "translate-x-0")}")">
+                <span class="sr-only">Open Menu</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </button>
+        </div>
+        <div class="h-full w-full overflow-y-auto">
+            <div class="h-full w-full select-none">
+                @if (!string.IsNullOrEmpty(_screenDataUrl))
+                {
+                    <img id="screenImage" src="@_screenDataUrl" @oncontextmenu:preventDefault="true" @oncontextmenu="(MouseEventArgs e) => {}" draggable="false" class="object-contain mx-auto max-h-full max-w-full" onload="window.revokeUrl(this.src)" @onmousemove="OnMouseMove" @onmousedown="OnMouseUpDown" @onmouseup="OnMouseUpDown" @onmouseover="OnMouseOver" @onmousewheel="OnMouseWheel" />
+                }
+                else
+                {
+                    <p class="text-white">@_statusMessage</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <aside class="fixed right-0 top-0 h-screen w-80 bg-white transform-gpu transition-transform duration-500 ease-in-out shadow-2xl overflow-y-auto" style="transform: @(_isMenuOpen ? "translateX(0)" : "translateX(100%)");">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="text-2xl font-semibold">Actions</h2>
+                <button @onclick="ToggleMenu" class="px-2 py-2 rounded-full bg-red-500 hover:bg-red-600 focus:outline-none">
+                    <span class="sr-only">Close Menu</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <ul class="space-y-2">
+                <li>
+                    <div class="flex items-center space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8h18a1 1 0 011 1v6a1 1 0 01-1 1H3a1 1 0 01-1-1V9a1 1 0 011-1zm0 12h18" />
+                        </svg>
+                        <h3 class="text-gray-600">Switch Screen</h3>
+                    </div>
+                    <div class="relative inline-flex mt-2">
+                        <svg class="w-2 h-2 absolute top-0 right-0 m-4 pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 412 232"><path d="M206 171.144L42.678 7.822c-9.763-9.763-25.592-9.763-35.355 0-9.763 9.763-9.763 25.592 0 35.355l189.21 189.211c9.372 9.373 24.749 9.373 34.121 0l189.21-189.211c9.763-9.763 9.763-25.592 0-35.355-9.763-9.763-25.592-9.763-35.355 0L206 171.144z" fill="#648299" fill-rule="nonzero" /></svg>
+                        <select class="border border-gray-300 rounded-full text-gray-600 h-10 pl-5 pr-10 bg-white hover:border-gray-400 focus:outline-none appearance-none" @onchange="OnChangeScreen">
+                            @if (_displays != null)
+                            {
+                                var displays = _displays.ToList();
+
+                                @for (int i = 0; i < displays.Count; i++)
+                                {
+                                    var displayName = displays[i].Name == "VIRTUAL_SCREEN"
+                                    ? "Virtual Screen"
+                                    : $"Screen {i + 1}";
+
+                                    <option value="@displays[i].Name" selected="@displays[i].IsPrimary">@($"{displayName} ({displays[i].Resolution.Width} x {displays[i].Resolution.Height})")</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </li>
+
+                <li>
+                    <div class="flex items-center space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 1.5a10.5 10.5 0 100 21 10.5 10.5 0 000-21z" />
+                        </svg>
+                        <h3 class="text-gray-600">Change Quality</h3>
+                    </div>
+                    <div class="relative inline-flex mt-2">
+                        <RadzenSlider @bind-Value="_quality" TValue="int" Min="0" Max="100" Change="ChangeQuality" />
+                    </div>
+                </li>
+
+                <li>
+                    <div class="flex items-center space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <h3 class="text-gray-600">Cursor Tracking</h3>
+                    </div>
+                    <div class="relative inline-flex mt-2">
+                        <RadzenSwitch @bind-Value="@_cursorTracking" Change="ToggleCursorTracking" />
+                    </div>
+                </li>
+
+                <li>
+                    <div class="flex items-center space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <h3 class="text-gray-600">Input Toggle</h3>
+                    </div>
+                    <div class="relative inline-flex mt-2">
+                        <RadzenSwitch @bind-Value="@_inputEnabled" Change="ToggleInputEnabled" />
+                    </div>
+                </li>
+
+                <!-- Add new action here -->
+            </ul>
+            <div class="mt-4 text-lg font-semibold border-t pt-4">Dangerous Actions</div>
+            <ul class="mt-2 space-y-2">
+                <li class="flex items-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <a class="text-red-500 hover:text-red-600 hover:underline" @onclick="KillClient">Kill Client</a>
+                </li>
+
+                <li class="flex items-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <a class="text-red-500 hover:text-red-600 hover:underline" @onclick="SendCtrlAltDel">Send Ctrl+Alt+Del</a>
+                </li>
+
+                <li>
+                    <div class="flex flex-col items-start space-y-2">
+                        <label for="rebootMessage" class="text-gray-600">Reboot Message:</label>
+                        <RadzenTextBox @bind-Value="@_powerMessage" Placeholder="Enter reboot message" ID="rebootMessage" />
+                    </div>
+                </li>
+
+                <li>
+                    <div class="flex flex-col items-start space-y-2">
+                        <label for="timeout" class="text-gray-600">Timeout (seconds):</label>
+                        <RadzenNumeric @bind-Value="@_timeout" Min="1" Max="3600" Step="1" TValue="int" ID="timeout" />
+                    </div>
+                </li>
+
+                <li class="flex items-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <a class="text-red-500 hover:text-red-600 hover:underline" @onclick="RebootComputer">Reboot Computer</a>
+                </li>
+
+                <li class="flex items-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <a class="text-red-500 hover:text-red-600 hover:underline" @onclick="ShutdownComputer">Shutdown Computer</a>
+                </li>
+            </ul>
+            <!-- Display Client Version -->
+            <div class="mb-4 mt-2">
+                <h3 class="text-gray-600">Client Version:</h3>
+                <p>@(_clientVersion ?? "Not Available")</p>
+            </div>
+            <!-- End Display Client Version -->
+            <!-- Display Agent Version -->
+            <div class="mb-4 mt-2">
+                <h3 class="text-gray-600">Agent Version:</h3>
+                <p>@(_agentVersion ?? "Not Available")</p>
+            </div>
+            <!-- End Display Agent Version -->
+        </div>
+    </aside>
 </div>

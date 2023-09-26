@@ -8,4 +8,5 @@ public enum Intention
 {
     GetThumbnail,
     Control,
+    View
 }
