@@ -13,6 +13,8 @@ public class WoLConfiguratorService : IWoLConfigurator
 {
     private readonly ILogger<WoLConfiguratorService> _logger;
 
+    private const int AllowToTurnOff = 0x18;
+
     public WoLConfiguratorService(ILogger<WoLConfiguratorService> logger)
     {
         _logger = logger;
@@ -106,7 +108,7 @@ public class WoLConfiguratorService : IWoLConfigurator
                 try
                 {
                     using var subKey = key.OpenSubKey(subKeyName, true);
-                    
+
                     if (subKey == null)
                     {
                         continue;
@@ -114,8 +116,11 @@ public class WoLConfiguratorService : IWoLConfigurator
 
                     if (subKey.GetValue("PnPCapabilities") != null)
                     {
-                        subKey.SetValue("PnPCapabilities", 0x18);
-                        _logger.LogInformation("Disabled power management for adapter: {Adapter}", subKeyName);
+                        var currentValue = (int)subKey.GetValue("PnPCapabilities");
+                        _logger.LogInformation("Current PnPCapabilities for adapter {Adapter}: {Value}", subKeyName, currentValue);
+
+                        subKey.SetValue("PnPCapabilities", AllowToTurnOff); // или другое значение
+                        _logger.LogInformation("Set PnPCapabilities for adapter {Adapter} to {Value}", subKeyName, AllowToTurnOff);
                     }
                 }
                 catch (Exception ex)
