@@ -29,10 +29,4 @@ public unsafe class PowerService : IPowerService
             InitiateSystemShutdown(null, pMessage, timeout, forceAppsClosed, false);
         }
     }
-
-    public void SendCtrlAltDel()
-    {
-        SendSAS(true);
-        // SendSAS(false);
-    }
 }
