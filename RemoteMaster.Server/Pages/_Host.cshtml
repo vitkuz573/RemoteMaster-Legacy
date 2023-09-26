@@ -88,6 +88,13 @@
                 }
             }, 1000);
         }
+
+        window.addEventListener("keydown", function (e) {
+            if (e.ctrlKey && e.which == 83) {
+                e.preventDefault();
+                console.log("Ctrl+S was pressed but its action was prevented.");
+            }
+        });
     </script>
 </body>
 </html>
