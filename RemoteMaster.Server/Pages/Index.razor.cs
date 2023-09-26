@@ -295,21 +295,28 @@ public partial class Index
         });
     }
 
-    private async Task StartMassRecording()
+    private async Task ScreenRecording(RadzenSplitButtonItem item)
     {
-        await ExecuteOnAvailableComputers(async (computer, proxy) =>
+        if (item == null)
         {
-            var requesterName = Environment.MachineName;
-            var currentDate = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-            var fileName = $@"C:\{requesterName}_{computer.IPAddress}_{currentDate}.mp4";
+            return;
+        }
 
-            await proxy.StartScreenRecording(fileName);
-        });
-    }
+        if (item.Value == "start")
+        {
+            await ExecuteOnAvailableComputers(async (computer, proxy) =>
+            {
+                var requesterName = Environment.MachineName;
+                var currentDate = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                var fileName = $@"C:\{requesterName}_{computer.IPAddress}_{currentDate}.mp4";
 
-    private async Task StopMassRecording()
-    {
-        await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.StopScreenRecording());
+                await proxy.StartScreenRecording(fileName);
+            });
+        }
+        else
+        {
+            await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.StopScreenRecording());
+        }
     }
 
     private async Task SetMonitorState(RadzenSplitButtonItem item)

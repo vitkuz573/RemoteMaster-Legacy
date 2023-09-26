@@ -44,8 +44,12 @@
 
             <RadzenButton Text="Update" Disabled="@(!_anyComputerSelected)" Click="Update" class="mr-2" />
 
-            <RadzenButton Text="Start Recording" Disabled="@(!_anyComputerSelected)" Click="StartMassRecording" class="mr-2" />
-            <RadzenButton Text="Stop Recording" Disabled="@(!_anyComputerSelected)" Click="StopMassRecording" class="mr-2" />
+            <RadzenSplitButton Text="Screen Recording" Disabled="@(!_anyComputerSelected)" Click="@(args => ScreenRecording(args))" class="mr-2">
+                <ChildContent>
+                    <RadzenSplitButtonItem Text="Start" Value="start" />
+                    <RadzenSplitButtonItem Text="Stop" Value="stop" />
+                </ChildContent>
+            </RadzenSplitButton>
 
             <RadzenSplitButton Text="Set Monitor State" Disabled="@(!_anyComputerSelected)" Click="@(args => SetMonitorState(args))" class="mr-2">
                 <ChildContent>
