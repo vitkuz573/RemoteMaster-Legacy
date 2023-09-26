@@ -38,7 +38,7 @@ public partial class Connect : IAsyncDisposable
 
     private string _clientVersion;
     private string _agentVersion;
-    
+
     private bool _inputEnabled;
     private bool _cursorTracking;
     private int _imageQuality;
@@ -54,32 +54,54 @@ public partial class Connect : IAsyncDisposable
     protected async override Task OnInitializedAsync()
     {
         await InitializeClientConnectionAsync();
-
         await _controlHubProxy.ConnectAs(Intention.Control);
 
         var uri = new Uri(NavigationManager.Uri);
         var queryParameters = QueryHelpers.ParseQuery(uri.Query);
+        var newUri = uri.ToString();
 
-        if (queryParameters.TryGetValue("imageQuality", out var imageQualityValue) && int.TryParse(imageQualityValue, out var imageQuality))
+        if (!queryParameters.TryGetValue("imageQuality", out var imageQualityValue) || !int.TryParse(imageQualityValue, out var imageQuality))
+        {
+            _imageQuality = 25;
+            newUri = QueryHelpers.AddQueryString(newUri, "imageQuality", "25");
+        }
+        else
         {
             _imageQuality = imageQuality;
-            await _controlHubProxy.SetQuality(imageQuality);
         }
 
-        if (queryParameters.TryGetValue("cursorTracking", out var cursorTrackingValue) && bool.TryParse(cursorTrackingValue, out var cursorTracking))
+        await _controlHubProxy.SetQuality(_imageQuality);
+
+        if (!queryParameters.TryGetValue("cursorTracking", out var cursorTrackingValue) || !bool.TryParse(cursorTrackingValue, out var cursorTracking))
+        {
+            _cursorTracking = false;
+            newUri = QueryHelpers.AddQueryString(newUri, "cursorTracking", "false");
+        }
+        else
         {
             _cursorTracking = cursorTracking;
-            await _controlHubProxy.SetTrackCursor(cursorTracking);
         }
 
-        if (queryParameters.TryGetValue("inputEnabled", out var inputEnabledValue) && bool.TryParse(inputEnabledValue, out var inputEnabled))
+        await _controlHubProxy.SetTrackCursor(_cursorTracking);
+
+        if (!queryParameters.TryGetValue("inputEnabled", out var inputEnabledValue) || !bool.TryParse(inputEnabledValue, out var inputEnabled))
+        {
+            _inputEnabled = true;
+            newUri = QueryHelpers.AddQueryString(newUri, "inputEnabled", "true");
+        }
+        else
         {
             _inputEnabled = inputEnabled;
-            await _controlHubProxy.SetInputEnabled(inputEnabled);
+        }
+
+        await _controlHubProxy.SetInputEnabled(_inputEnabled);
+
+        if (newUri != uri.ToString())
+        {
+            await JSRuntime.InvokeVoidAsync("eval", $"history.replaceState(null, '', '{newUri}');");
         }
 
         await GetVersions();
-
         await InitializeAgentConnectionAsync();
     }
 
