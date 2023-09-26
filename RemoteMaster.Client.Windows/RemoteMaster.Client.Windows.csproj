@@ -23,6 +23,7 @@
     <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" />
     <PackageReference Include="SkiaSharp" />
     <PackageReference Include="System.Drawing.Common" />
+    <PackageReference Include="System.Management" />
   </ItemGroup>
 
   <ItemGroup>
