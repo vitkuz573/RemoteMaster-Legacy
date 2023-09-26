@@ -204,9 +204,21 @@ public partial class Index
         StateHasChanged();
     }
 
-    private async Task Control()
+    private async Task Connect(RadzenSplitButtonItem item)
     {
-        await ExecuteOnAvailableComputers(async (computer, proxy) => await OpenWindow($"/{computer.IPAddress}/control"));
+        if (item == null)
+        {
+            return;
+        }
+
+        if (item.Value == "control")
+        {
+            await ExecuteOnAvailableComputers(async (computer, proxy) => await OpenWindow($"/{computer.IPAddress}/control"));
+        }
+        else
+        {
+            // view logic
+        }
     }
 
     private async Task OpenShell(RadzenSplitButtonItem item)
