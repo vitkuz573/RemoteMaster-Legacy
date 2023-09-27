@@ -1,13 +1,16 @@
-﻿AdjustTokenPrivileges
+﻿// Process and Privilege Management
+AdjustTokenPrivileges
 CreateProcessAsUser
-GetCurrentProcess
 DuplicateTokenEx
+GetCurrentProcess
+InitiateSystemShutdown
 LookupPrivilegeValue
 OpenProcess
 OpenProcessToken
 SE_SHUTDOWN_NAME
-InitiateSystemShutdown
+GENERIC_ACCESS_RIGHTS
 
+// Display and Monitor Management
 BitBlt
 CreateDC
 DeleteDC
@@ -15,47 +18,43 @@ EnumDisplayMonitors
 GetDC
 GetDeviceCaps
 GetMonitorInfo
-MONITORINFOEXW
-MONITORINFOF_PRIMARY
 MonitorFromPoint
 MonitorFromRect
 MonitorFromWindow
 ReleaseDC
+MONITORINFOEXW
+MONITORINFOF_PRIMARY
 
+// Input Management
 GetCursorInfo
 SendInput
-
 GetMessageExtraInfo
 GetSystemMetrics
 SystemParametersInfo
 
+// Desktop and User Session Management
 OpenInputDesktop
 SetThreadDesktop
 SwitchDesktop
 GetUserObjectInformation
-
 WTSFreeMemory
 WTSGetActiveConsoleSessionId
 WTSQuerySessionInformation
 WTSEnumerateSessions
-
 SendSAS
-
-GENERIC_ACCESS_RIGHTS
-
-SendMessage
-WM_SYSCOMMAND
-SC_MONITORPOWER
-
 WTSRegisterSessionNotification
 WTSUnRegisterSessionNotification
 NOTIFY_FOR_ALL_SESSIONS
-WM_WTSSESSION_CHANGE 
-
+WM_WTSSESSION_CHANGE
 WTS_CONSOLE_CONNECT
 WTS_CONSOLE_DISCONNECT
 
+// Message Sending and Window Management
+SendMessage
+WM_SYSCOMMAND
+SC_MONITORPOWER
 HWND_BROADCAST
 
+// Network Connection Management
 WNetAddConnection2W
 WNetCancelConnection2W
