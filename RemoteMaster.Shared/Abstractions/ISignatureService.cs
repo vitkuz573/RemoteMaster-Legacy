@@ -9,6 +9,4 @@ namespace RemoteMaster.Shared.Abstractions;
 public interface ISignatureService
 {
     bool IsSignatureValid(string filePath, string expectedThumbprint);
-
-    bool IsProcessSignatureValid(Process process, string expectedPath, string expectedThumbprint);
 }

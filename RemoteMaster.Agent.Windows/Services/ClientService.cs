@@ -28,25 +28,9 @@ public class ClientService : IClientService
 
     public bool IsRunning()
     {
-        var clientFullPath = System.IO.Path.GetFullPath(Path);
-
-        foreach (var process in Process.GetProcesses())
+        if (Process.GetProcessesByName($"{MainAppName}.{SubAppName}").Any())
         {
-            try
-            {
-                if (_signatureService.IsProcessSignatureValid(process, clientFullPath, CertificateThumbprint))
-                {
-                    return true;
-                }
-            }
-            catch (InvalidOperationException ex)
-            {
-                _logger.LogError(ex, "Unable to enumerate the process modules for process ID: {ProcessId}", process.Id);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unexpected error occurred when handling process ID: {ProcessId}", process.Id);
-            }
+            return true;
         }
 
         return false;
@@ -73,26 +57,9 @@ public class ClientService : IClientService
 
     public void Stop()
     {
-        var clientFullPath = System.IO.Path.GetFullPath(Path);
-
         foreach (var process in Process.GetProcessesByName($"{MainAppName}.{SubAppName}"))
         {
-            try
-            {
-                if (_signatureService.IsProcessSignatureValid(process, clientFullPath, CertificateThumbprint))
-                {
-                    process.Kill();
-                    _logger.LogInformation("{MainAppName} {SubAppName} stopped successfully.", MainAppName, SubAppName);
-                }
-            }
-            catch (InvalidOperationException ex)
-            {
-                _logger.LogError(ex, "Unable to stop the process for process ID: {ProcessId}", process.Id);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unexpected error occurred when stopping process ID: {ProcessId}", process.Id);
-            }
+            process.Kill();
         }
     }
 }

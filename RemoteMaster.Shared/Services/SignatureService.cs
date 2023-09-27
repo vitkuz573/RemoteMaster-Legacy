@@ -59,31 +59,4 @@ public class SignatureService : ISignatureService
             return false;
         }
     }
-
-    public bool IsProcessSignatureValid(Process process, string expectedPath, string expectedThumbprint)
-    {
-        if (process == null)
-        {
-            throw new ArgumentNullException(nameof(process));
-        }
-
-        try
-        {
-            var processPath = process.MainModule?.FileName;
-
-            if (!string.Equals(Path.GetFullPath(processPath), expectedPath, StringComparison.InvariantCultureIgnoreCase))
-            {
-                return false;
-            }
-
-            using var cert = X509Certificate.CreateFromSignedFile(processPath);
-            using var cert2 = new X509Certificate2(cert);
-
-            return cert2.Thumbprint.Equals(expectedThumbprint, StringComparison.OrdinalIgnoreCase);
-        }
-        catch
-        {
-            return false;
-        }
-    }
 }
