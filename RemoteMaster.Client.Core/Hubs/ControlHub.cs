@@ -45,7 +45,7 @@ public class ControlHub : Hub<IControlClient>, IControlHub
                 Context.Abort();
                 break;
 
-            case Intention.Control:
+            case Intention.Connect:
                 var viewer = _viewerFactory.Create(Context.ConnectionId);
                 _appState.TryAddViewer(viewer);
                 break;

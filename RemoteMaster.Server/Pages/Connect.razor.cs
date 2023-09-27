@@ -56,7 +56,7 @@ public partial class Connect : IAsyncDisposable
     protected async override Task OnInitializedAsync()
     {
         await InitializeClientConnectionAsync();
-        await _controlHubProxy.ConnectAs(Intention.Control);
+        await _controlHubProxy.ConnectAs(Intention.Connect);
 
         var uri = new Uri(NavigationManager.Uri);
         var queryParameters = QueryHelpers.ParseQuery(uri.Query);
