@@ -31,11 +31,13 @@ public static class DesktopHelper
             if (!GetUserObjectInformation(inputDesktop, USER_OBJECT_INFORMATION_INDEX.UOI_NAME, pDesktopBytes, maxLength, &cbLengthNeeded))
             {
                 desktopName = null;
+
                 return false;
             }
 
             var charLength = (int)cbLengthNeeded / sizeof(char) - 1;
             desktopName = new string(pDesktopBytes, 0, charLength);
+
             return true;
         }
     }

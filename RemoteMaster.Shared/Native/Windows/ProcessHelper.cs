@@ -115,6 +115,9 @@ public static class ProcessHelper
 
             var dwCreationFlags = SetCreationFlags(hiddenWindow);
 
+            // Appending a null character to applicationName.
+            // This is necessary because the CreateProcessAsUser function expects lpCommandLine to be a null-terminated string 
+            // (C-style string) to correctly determine its end.
             applicationName += char.MinValue;
             var appName = new Span<char>(applicationName.ToCharArray());
 
