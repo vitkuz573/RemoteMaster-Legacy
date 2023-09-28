@@ -2,8 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Net.NetworkInformation;
-using System.Text.RegularExpressions;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using RemoteMaster.Agent.Abstractions;
@@ -19,7 +17,7 @@ public partial class MainWindow : Window
 {
     private readonly IServiceManager _serviceManager;
     private readonly IConfigurationService _configurationService;
-    private readonly IHostInfoProvider _hostInfoProvider;
+    private readonly IHostInfoService _hostInfoService;
     private readonly IAgentServiceManager _agentServiceManager;
     private readonly IUpdaterServiceManager _updaterServiceManager;
     private readonly AgentServiceConfigProvider _agentServiceConfig;
@@ -36,7 +34,7 @@ public partial class MainWindow : Window
         var serviceProvider = ((App)Application.Current).ServiceProvider;
         _serviceManager = serviceProvider.GetRequiredService<IServiceManager>();
         _configurationService = serviceProvider.GetRequiredService<IConfigurationService>();
-        _hostInfoProvider = serviceProvider.GetRequiredService<IHostInfoProvider>();
+        _hostInfoService = serviceProvider.GetRequiredService<IHostInfoService>();
         _agentServiceManager = serviceProvider.GetRequiredService<IAgentServiceManager>();
         _updaterServiceManager = serviceProvider.GetRequiredService<IUpdaterServiceManager>();
         _agentServiceConfig = serviceProvider.GetRequiredService<AgentServiceConfigProvider>();
@@ -44,9 +42,9 @@ public partial class MainWindow : Window
         _agentServiceManager.MessageReceived += OnMessageReceived;
         _updaterServiceManager.MessageReceived += OnMessageReceived;
 
-        _hostName = _hostInfoProvider.GetHostName();
-        _ipv4Address = _hostInfoProvider.GetIPv4Address();
-        _macAddress = GetMacAddressForIp(_ipv4Address);
+        _hostName = _hostInfoService.GetHostName();
+        _ipv4Address = _hostInfoService.GetIPv4Address();
+        _macAddress = _hostInfoService.GetMacAddress();
         _configuration = _configurationService.LoadConfiguration();
 
         DisplayConfigurationAndSystemInfo();
@@ -62,7 +60,7 @@ public partial class MainWindow : Window
     {
         HostNameTextBlock.Text = $"Host Name: {_hostName}";
         IPV4AddressTextBlock.Text = $"IPv4 Address: {_ipv4Address}";
-        MACAddressTextBlock.Text = $"MAC Address: {Regex.Replace(_macAddress, "(..)(?!$)", "$1:")}";
+        MACAddressTextBlock.Text = $"MAC Address: {_macAddress}";
         ServerAddressTextBlock.Text = $"Server Address: {_configuration.Server}";
         GroupTextBlock.Text = $"Group: {_configuration.Group}";
     }
@@ -83,27 +81,10 @@ public partial class MainWindow : Window
         UpdateServiceStatusDisplay();
     }
 
-    public static string GetMacAddressForIp(string ipAddress)
-    {
-        foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
-        {
-            var ipProperties = nic.GetIPProperties();
-
-            foreach (var ip in ipProperties.UnicastAddresses)
-            {
-                if (ip.Address.ToString() == ipAddress)
-                {
-                    return nic.GetPhysicalAddress().ToString();
-                }
-            }
-        }
-
-        return string.Empty;
-    }
-
     private void UpdateServiceStatusDisplay()
     {
         var serviceExists = _serviceManager.IsServiceInstalled(_agentServiceConfig.ServiceName);
+        
         UninstallButton.IsEnabled = serviceExists;
         ServiceStatusTextBlock.Text = serviceExists ? "Service Status: Installed" : "Service Status: Not Installed";
     }

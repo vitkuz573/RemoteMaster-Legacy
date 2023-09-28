@@ -4,9 +4,11 @@
 
 namespace RemoteMaster.Agent.Core.Abstractions;
 
-public interface IHostInfoProvider
+public interface IHostInfoService
 {
     string GetHostName();
 
     string GetIPv4Address();
+
+    string GetMacAddress();
 }
