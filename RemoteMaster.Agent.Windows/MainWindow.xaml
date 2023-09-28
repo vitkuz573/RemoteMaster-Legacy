@@ -3,33 +3,33 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:RemoteMaster.Agent"
         Title="RemoteMaster Client" SizeToContent="WidthAndHeight"
-        WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize" Background="#F0F0F0">
+
     <Window.Resources>
         <Style x:Key="CustomButton" TargetType="Button">
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="Background" Value="#2196F3"/>
-            <Setter Property="BorderBrush" Value="#2196F3"/>
+            <Setter Property="Background" Value="#4CAF50"/>
+            <Setter Property="BorderBrush" Value="#4CAF50"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Padding" Value="10 5"/>
             <Setter Property="SnapsToDevicePixels" Value="True"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="3">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="5">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#1976D2"/>
+                                <Setter Property="Background" Value="#43A047"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#388E3C"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.6"/>
                             </Trigger>
-                            <MultiTrigger>
-                                <MultiTrigger.Conditions>
-                                    <Condition Property="IsEnabled" Value="True"/>
-                                    <Condition Property="IsMouseOver" Value="True"/>
-                                </MultiTrigger.Conditions>
-                                <Setter Property="Background" Value="#1976D2"/>
-                            </MultiTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -37,24 +37,46 @@
         </Style>
     </Window.Resources>
 
-    <Grid Background="#f5f5f5">
+    <Grid Background="#F5F5F5">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <GroupBox Grid.Row="0" Header="Configuration" Margin="10" Background="#ffffff" BorderBrush="#ddd">
-            <StackPanel Margin="5">
-                <TextBlock x:Name="ServiceStatusTextBlock" Text="Service Status: Unknown" Margin="0,10,0,0" FontSize="15" Foreground="#333"/>
-                <TextBlock x:Name="ServerAddressTextBlock" Text="Server Address: 192.168.1.1" Margin="0,10,0,0" FontSize="15" Foreground="#333"/>
-                <TextBlock x:Name="GroupTextBlock" Text="PC Group: Group1" Margin="0,10,0,0" FontSize="15" Foreground="#333"/>
-                <TextBlock x:Name="HostNameTextBlock" Text="Host Name: Unknown" Margin="0,10,0,0" FontSize="15" Foreground="#333"/>
-                <TextBlock x:Name="IPV4AddressTextBlock" Text="IPv4 Address: Unknown" Margin="0,10,0,0" FontSize="15" Foreground="#333"/>
-                <TextBlock x:Name="MACAddressTextBlock" Text="MAC Address: Unknown" Margin="0,10,0,0" FontSize="15" Foreground="#333"/>
-            </StackPanel>
+        <GroupBox Grid.Row="0" Header="Configuration" Margin="20" Background="#FFFFFF" BorderBrush="#DDD" Padding="10">
+            <GroupBox.Content>
+                <Border Background="{Binding Background, RelativeSource={RelativeSource AncestorType=GroupBox}}" CornerRadius="10">
+                    <StackPanel Margin="5">
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <TextBlock Text="Service Status:" FontSize="15" Foreground="#333"/>
+                            <TextBlock x:Name="ServiceStatusValueTextBlock" Text=" Unknown" FontSize="15" Foreground="#333"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <TextBlock Text="Server Address:" FontSize="15" Foreground="#333"/>
+                            <TextBlock x:Name="ServerAddressValueTextBlock" Text=" Unknown" FontSize="15" Foreground="#333"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <TextBlock Text="Group:" FontSize="15" Foreground="#333"/>
+                            <TextBlock x:Name="GroupValueTextBlock" Text=" Unknown" FontSize="15" Foreground="#333"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <TextBlock Text="Host Name:" FontSize="15" Foreground="#333"/>
+                            <TextBlock x:Name="HostNameValueTextBlock" Text=" Unknown" FontSize="15" Foreground="#333"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <TextBlock Text="IPv4 Address:" FontSize="15" Foreground="#333"/>
+                            <TextBlock x:Name="IPV4AddressValueTextBlock" Text=" Unknown" FontSize="15" Foreground="#333"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <TextBlock Text="MAC Address:" FontSize="15" Foreground="#333"/>
+                            <TextBlock x:Name="MACAddressValueTextBlock" Text=" Unknown" FontSize="15" Foreground="#333"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </GroupBox.Content>
         </GroupBox>
 
-        <DockPanel Grid.Row="1" Margin="10,0,10,10">
+        <DockPanel Grid.Row="1" Margin="20,0,20,20">
             <Button Style="{StaticResource CustomButton}" DockPanel.Dock="Left" Content="Install/Update" Width="130" Height="35" Margin="5,0,5,0" Click="InstallUpdateButton_Click" />
             <Button Style="{StaticResource CustomButton}" x:Name="UninstallButton" DockPanel.Dock="Left" Content="Uninstall" Width="130" Height="35" Margin="5,0,5,0" Click="UninstallButton_Click" Background="#F44336" BorderBrush="#F44336" IsEnabled="False"/>
         </DockPanel>

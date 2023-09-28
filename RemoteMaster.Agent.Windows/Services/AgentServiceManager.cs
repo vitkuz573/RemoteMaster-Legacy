@@ -71,8 +71,6 @@ public class AgentServiceManager : IAgentServiceManager
             if (!unregisterResult)
             {
                 MessageReceived?.Invoke("Client unregistration failed.", MessageType.Error);
-
-                return false;
             }
 
             _serviceManager.StopService(_agentServiceConfig.ServiceName);

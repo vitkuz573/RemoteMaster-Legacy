@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using RemoteMaster.Agent.Abstractions;
@@ -45,7 +46,23 @@ public partial class MainWindow : Window
         _hostName = _hostInfoService.GetHostName();
         _ipv4Address = _hostInfoService.GetIPv4Address();
         _macAddress = _hostInfoService.GetMacAddress();
-        _configuration = _configurationService.LoadConfiguration();
+
+        try
+        {
+            _configuration = _configurationService.LoadConfiguration();
+        }
+        catch (FileNotFoundException)
+        {
+            MessageBox.Show("Configuration file not found. Please check your configuration.", "Configuration Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            Application.Current.Shutdown();
+            return;
+        }
+        catch (InvalidDataException)
+        {
+            MessageBox.Show("Error parsing or validating the configuration file. Please check your configuration.", "Configuration Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            Application.Current.Shutdown();
+            return;
+        }
 
         DisplayConfigurationAndSystemInfo();
         UpdateServiceStatusDisplay();
@@ -58,11 +75,11 @@ public partial class MainWindow : Window
 
     private void DisplayConfigurationAndSystemInfo()
     {
-        HostNameTextBlock.Text = $"Host Name: {_hostName}";
-        IPV4AddressTextBlock.Text = $"IPv4 Address: {_ipv4Address}";
-        MACAddressTextBlock.Text = $"MAC Address: {_macAddress}";
-        ServerAddressTextBlock.Text = $"Server Address: {_configuration.Server}";
-        GroupTextBlock.Text = $"Group: {_configuration.Group}";
+        HostNameValueTextBlock.Text = _hostName;
+        IPV4AddressValueTextBlock.Text = _ipv4Address;
+        MACAddressValueTextBlock.Text = _macAddress;
+        ServerAddressValueTextBlock.Text = _configuration.Server;
+        GroupValueTextBlock.Text = _configuration.Group;
     }
 
     private async void InstallUpdateButton_Click(object sender, RoutedEventArgs e)
@@ -86,6 +103,6 @@ public partial class MainWindow : Window
         var serviceExists = _serviceManager.IsServiceInstalled(_agentServiceConfig.ServiceName);
         
         UninstallButton.IsEnabled = serviceExists;
-        ServiceStatusTextBlock.Text = serviceExists ? "Service Status: Installed" : "Service Status: Not Installed";
+        ServiceStatusValueTextBlock.Text = serviceExists ? "Installed" : "Not Installed";
     }
 }
