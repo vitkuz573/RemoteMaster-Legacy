@@ -6,6 +6,7 @@ using System.IO;
 using System.Windows;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Hosting.WindowsServices;
@@ -35,7 +36,16 @@ public partial class App : Application
 
     public App()
     {
-        var hostBuilder = CreateDefaultHostBuilder();
+        var args = Environment.GetCommandLineArgs();
+
+        var hostBuilder = CreateDefaultHostBuilder(args);
+
+        if (args.Contains("--install"))
+        {
+            var host = hostBuilder.Build();
+            var silentInstall = host.Services.GetRequiredService<SilentInstall>();
+            _ = silentInstall.Install();
+        }
 
         if (WindowsServiceHelpers.IsWindowsService())
         {
@@ -58,9 +68,13 @@ public partial class App : Application
         _host?.StopAsync().Wait();
     }
 
-    private static IHostBuilder CreateDefaultHostBuilder()
+    private static IHostBuilder CreateDefaultHostBuilder(string[] args)
     {
-        return Host.CreateDefaultBuilder()
+        return Host.CreateDefaultBuilder(args)
+            .ConfigureAppConfiguration((hostingContext, config) =>
+            {
+                config.AddCommandLine(args);
+            })
             .ConfigureServices((hostContext, services) =>
             {
                 services.AddCoreServices();
@@ -70,6 +84,7 @@ public partial class App : Application
                 services.AddSingleton<IServiceManager, ServiceManager>();
                 services.AddSingleton<ISignatureService, SignatureService>();
                 services.AddSingleton<MainWindow>();
+                services.AddSingleton<SilentInstall>();
 
                 services.AddSingleton<AgentServiceConfig>();
                 services.AddSingleton<UpdaterServiceConfig>();

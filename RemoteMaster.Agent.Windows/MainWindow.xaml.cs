@@ -10,7 +10,6 @@ using RemoteMaster.Agent.Core.Abstractions;
 using RemoteMaster.Agent.Models;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;
-using RemoteMaster.Shared.Services;
 
 namespace RemoteMaster.Agent;
 
