@@ -145,7 +145,7 @@ public class AgentServiceManager : IAgentServiceManager
             Directory.CreateDirectory(newDirectoryPath);
         }
 
-        var currentExecutablePath = Assembly.GetExecutingAssembly().Location;
+        var currentExecutablePath = Environment.ProcessPath;
         
         try
         {
@@ -153,7 +153,7 @@ public class AgentServiceManager : IAgentServiceManager
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"Failed to copy the executable to {targetPath}.", ex);
+            throw new InvalidOperationException($"Failed to copy the executable to {targetPath}. Details: {ex.Message}", ex);
         }
 
         var configName = _configurationService.GetConfigurationFileName();
