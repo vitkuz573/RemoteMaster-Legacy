@@ -105,32 +105,32 @@ public partial class App : Application
         NetworkDriveHelper.DirectoryCopy(sourceFolder, destinationFolder);
         NetworkDriveHelper.CancelNetworkDrive(SharedFolder);
 
-        // // Удалить существующее правило
-        // FirewallManager.DeleteRule("PSExec", RuleDirection.In);
-        // 
-        // // Отключить группу правил
-        // FirewallManager.SetRuleGroup("Удаленное управление службой", RuleGroupStatus.Disabled);
-        // 
-        // // Включить WinRM
-        // FirewallManager.EnableWinRM();
-        // 
-        // // Добавить новое правило брандмауэра
-        // var rule = new FirewallRule("PSExec")
-        // {
-        //     Direction = RuleDirection.In,
-        //     Action = RuleAction.Allow,
-        //     Protocol = RuleProtocol.TCP,
-        //     LocalPort = "RPC",
-        //     Program = @"%WinDir%\system32\services.exe",
-        //     Service = "any"
-        // };
-        // 
-        // rule.Profiles.Add(RuleProfile.Domain);
-        // rule.Profiles.Add(RuleProfile.Private);
-        // rule.Apply();
-        // 
-        // // Включить группу правил
-        // FirewallManager.SetRuleGroup("Удаленное управление службой", RuleGroupStatus.Enabled);
+        // Удалить существующее правило
+        FirewallManager.DeleteRule("PSExec", RuleDirection.In);
+        
+        // Отключить группу правил
+        FirewallManager.SetRuleGroup("Удаленное управление службой", RuleGroupStatus.Disabled);
+        
+        // Включить WinRM
+        FirewallManager.EnableWinRM();
+        
+        // Добавить новое правило брандмауэра
+        var rule = new FirewallRule("PSExec")
+        {
+            Direction = RuleDirection.In,
+            Action = RuleAction.Allow,
+            Protocol = RuleProtocol.TCP,
+            LocalPort = "RPC",
+            Program = @"%WinDir%\system32\services.exe",
+            Service = "any"
+        };
+        
+        rule.Profiles.Add(RuleProfile.Domain);
+        rule.Profiles.Add(RuleProfile.Private);
+        rule.Apply();
+        
+        // Включить группу правил
+        FirewallManager.SetRuleGroup("Удаленное управление службой", RuleGroupStatus.Enabled);
 
         MonitorClient();
     }

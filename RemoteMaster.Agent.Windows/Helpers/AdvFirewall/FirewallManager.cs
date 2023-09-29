@@ -49,8 +49,8 @@ public static class FirewallManager
     {
         var startInfo = new ProcessStartInfo
         {
-            FileName = cmd,
-            Arguments = args,
+            FileName = "cmd.exe",
+            Arguments = $"/c {cmd} {args}",
             RedirectStandardOutput = true,
             UseShellExecute = false,
             CreateNoWindow = true
