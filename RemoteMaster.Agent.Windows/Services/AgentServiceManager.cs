@@ -25,9 +25,9 @@ public class AgentServiceManager : IAgentServiceManager
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Agent";
 
-    public AgentServiceManager(IRegistratorService clientService, IServiceManager serviceManager, IConfigurationService configurationService)
+    public AgentServiceManager(IRegistratorService registratorService, IServiceManager serviceManager, IConfigurationService configurationService)
     {
-        _registratorService = clientService;
+        _registratorService = registratorService;
         _serviceManager = serviceManager;
         _configurationService = configurationService;
     }
@@ -61,7 +61,7 @@ public class AgentServiceManager : IAgentServiceManager
 
             if (!registerResult)
             {
-                MessageReceived?.Invoke("Client registration failed.", MessageType.Error);
+                MessageReceived?.Invoke("Computer registration failed.", MessageType.Error);
 
                 return false;
             }
@@ -82,7 +82,7 @@ public class AgentServiceManager : IAgentServiceManager
     {
         try
         {
-            var processes = Process.GetProcessesByName("RemoteMaster.Client");
+            var processes = Process.GetProcessesByName($"{MainAppName}.Client");
            
             foreach (var process in processes)
             {
@@ -109,7 +109,7 @@ public class AgentServiceManager : IAgentServiceManager
             
             if (!unregisterResult)
             {
-                MessageReceived?.Invoke("Client unregistration failed.", MessageType.Error);
+                MessageReceived?.Invoke("Computer unregistration failed.", MessageType.Error);
                
                 return false;
             }
