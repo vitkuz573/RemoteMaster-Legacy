@@ -18,7 +18,7 @@ public class AgentServiceManager : IAgentServiceManager
 {
     public event Action<string, MessageType> MessageReceived;
 
-    private readonly IRegistratorService _clientService;
+    private readonly IRegistratorService _registratorService;
     private readonly IServiceManager _serviceManager;
     private readonly IConfigurationService _configurationService;
 
@@ -27,7 +27,7 @@ public class AgentServiceManager : IAgentServiceManager
 
     public AgentServiceManager(IRegistratorService clientService, IServiceManager serviceManager, IConfigurationService configurationService)
     {
-        _clientService = clientService;
+        _registratorService = clientService;
         _serviceManager = serviceManager;
         _configurationService = configurationService;
     }
@@ -57,7 +57,7 @@ public class AgentServiceManager : IAgentServiceManager
                 _serviceManager.StartService(AgentServiceConfig.ServiceName);
             }
 
-            var registerResult = await _clientService.RegisterAsync(configuration, hostName, ipv4Address, macAddress);
+            var registerResult = await _registratorService.RegisterAsync(configuration, hostName, ipv4Address, macAddress);
 
             if (!registerResult)
             {
@@ -105,7 +105,7 @@ public class AgentServiceManager : IAgentServiceManager
                 MessageReceived?.Invoke($"{AgentServiceConfig.ServiceName} uninstalled successfully.", MessageType.Information);
             }
 
-            var unregisterResult = await _clientService.UnregisterAsync(configuration, hostName);
+            var unregisterResult = await _registratorService.UnregisterAsync(configuration, hostName);
             
             if (!unregisterResult)
             {
