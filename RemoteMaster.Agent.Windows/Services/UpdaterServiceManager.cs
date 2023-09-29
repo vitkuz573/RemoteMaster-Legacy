@@ -7,7 +7,6 @@ using RemoteMaster.Agent.Abstractions;
 using RemoteMaster.Agent.Models;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Helpers;
-using RemoteMaster.Shared.Services;
 
 namespace RemoteMaster.Agent.Services;
 
@@ -16,15 +15,13 @@ public class UpdaterServiceManager : IUpdaterServiceManager
     public event Action<string, MessageType> MessageReceived;
 
     private readonly IServiceManager _serviceManager;
-    private readonly UpdaterServiceConfigProvider _updaterServiceConfig;
 
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Updater";
 
-    public UpdaterServiceManager(IServiceManager serviceManager, UpdaterServiceConfigProvider updaterServiceConfig)
+    public UpdaterServiceManager(IServiceManager serviceManager)
     {
         _serviceManager = serviceManager;
-        _updaterServiceConfig = updaterServiceConfig;
     }
 
     public async Task<bool> InstallOrUpdate()
@@ -43,12 +40,12 @@ public class UpdaterServiceManager : IUpdaterServiceManager
             var sourcePath = Path.Combine(@"\\SERVER-DC02\Win\RemoteMaster", SubAppName);
             NetworkDriveHelper.DirectoryCopy(sourcePath, newExecutableDirectoryPath, true, true);
 
-            if (!_serviceManager.IsServiceInstalled(_updaterServiceConfig.ServiceName))
+            if (!_serviceManager.IsServiceInstalled(UpdaterServiceConfig.ServiceName))
             {
-                _serviceManager.InstallService(_updaterServiceConfig.ServiceName, _updaterServiceConfig.ServiceDisplayName, newExecutablePath, _updaterServiceConfig.ServiceStartType, _updaterServiceConfig.ServiceDependencies);
+                _serviceManager.InstallService(UpdaterServiceConfig.ServiceName, UpdaterServiceConfig.ServiceDisplayName, newExecutablePath, UpdaterServiceConfig.ServiceStartType, UpdaterServiceConfig.ServiceDependencies);
             }
 
-            _serviceManager.StartService(_updaterServiceConfig.ServiceName);
+            _serviceManager.StartService(UpdaterServiceConfig.ServiceName);
             MessageReceived?.Invoke("Updater Service installed and started successfully.", MessageType.Information);
 
             return true;
@@ -68,10 +65,10 @@ public class UpdaterServiceManager : IUpdaterServiceManager
     {
         try
         {
-            if (_serviceManager.IsServiceInstalled(_updaterServiceConfig.ServiceName))
+            if (_serviceManager.IsServiceInstalled(UpdaterServiceConfig.ServiceName))
             {
-                _serviceManager.StopService(_updaterServiceConfig.ServiceName);
-                _serviceManager.UninstallService(_updaterServiceConfig.ServiceName);
+                _serviceManager.StopService(UpdaterServiceConfig.ServiceName);
+                _serviceManager.UninstallService(UpdaterServiceConfig.ServiceName);
                 RemoveServiceFiles();
                 MessageReceived?.Invoke("Updater Service uninstalled successfully.", MessageType.Information);
 

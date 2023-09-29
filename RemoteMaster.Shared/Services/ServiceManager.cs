@@ -12,7 +12,7 @@ public class ServiceManager : IServiceManager
 {
     public bool IsServiceInstalled(string serviceName) => ServiceController.GetServices().Any(service => service.ServiceName == serviceName);
 
-    public void InstallService(string serviceName, string displayName, string executablePath, string startType, IEnumerable<string> dependencies)
+    public void InstallService(string serviceName, string displayName, string executablePath, string startType, IEnumerable<string>? dependencies)
     {
         ExecuteServiceCommand($"create {serviceName} DisplayName= \"{displayName}\" binPath= \"{executablePath}\" start= {startType}");
 

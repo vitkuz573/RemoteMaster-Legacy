@@ -21,7 +21,6 @@ public partial class MainWindow : Window
     private readonly IHostInfoService _hostInfoService;
     private readonly IAgentServiceManager _agentServiceManager;
     private readonly IUpdaterServiceManager _updaterServiceManager;
-    private readonly AgentServiceConfigProvider _agentServiceConfig;
 
     private readonly string _hostName;
     private readonly string _ipv4Address;
@@ -38,7 +37,6 @@ public partial class MainWindow : Window
         _hostInfoService = serviceProvider.GetRequiredService<IHostInfoService>();
         _agentServiceManager = serviceProvider.GetRequiredService<IAgentServiceManager>();
         _updaterServiceManager = serviceProvider.GetRequiredService<IUpdaterServiceManager>();
-        _agentServiceConfig = serviceProvider.GetRequiredService<AgentServiceConfigProvider>();
 
         _agentServiceManager.MessageReceived += OnMessageReceived;
         _updaterServiceManager.MessageReceived += OnMessageReceived;
@@ -100,7 +98,7 @@ public partial class MainWindow : Window
 
     private void UpdateServiceStatusDisplay()
     {
-        var serviceExists = _serviceManager.IsServiceInstalled(_agentServiceConfig.ServiceName);
+        var serviceExists = _serviceManager.IsServiceInstalled(AgentServiceConfig.ServiceName);
         
         UninstallButton.IsEnabled = serviceExists;
         ServiceStatusValueTextBlock.Text = serviceExists ? "Installed" : "Not Installed";
