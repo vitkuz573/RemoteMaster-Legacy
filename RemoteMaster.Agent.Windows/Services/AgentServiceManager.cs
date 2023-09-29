@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Diagnostics;
 using System.IO;
 using System.ServiceProcess;
 using RemoteMaster.Agent.Abstractions;
@@ -90,6 +91,11 @@ public class AgentServiceManager : IAgentServiceManager
 
                 await Task.Delay(TimeSpan.FromSeconds(30));
 
+                foreach (var process in Process.GetProcessesByName("RemoteMaster.Client"))
+                {
+                    process.Kill();
+                }
+
                 DeleteFiles();
 
                 MessageReceived?.Invoke($"{SubAppName} Service uninstalled successfully.", MessageType.Information);
@@ -154,18 +160,24 @@ public class AgentServiceManager : IAgentServiceManager
 
     private void DeleteFiles()
     {
-        var directoryPath = GetDirectoryPath();
+        var mainDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), MainAppName);
+        var subAppNames = new[] { SubAppName, "Client" };
 
-        if (Directory.Exists(directoryPath))
+        foreach (var subAppName in subAppNames)
         {
-            try
+            var directoryPath = Path.Combine(mainDirectoryPath, subAppName);
+
+            if (Directory.Exists(directoryPath))
             {
-                Directory.Delete(directoryPath, true);
-                MessageReceived?.Invoke($"{SubAppName} files deleted successfully.", MessageType.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageReceived?.Invoke($"Deleting {SubAppName.ToLower()} files failed: {ex.Message}", MessageType.Error);
+                try
+                {
+                    Directory.Delete(directoryPath, true);
+                    MessageReceived?.Invoke($"{subAppName} files deleted successfully.", MessageType.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageReceived?.Invoke($"Deleting {subAppName.ToLower()} files failed: {ex.Message}", MessageType.Error);
+                }
             }
         }
     }

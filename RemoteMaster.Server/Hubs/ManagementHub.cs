@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
@@ -42,7 +41,7 @@ public class ManagementHub : Hub
             {
                 Name = hostName,
                 IPAddress = ipAddress,
-                MACAddress = Regex.Replace(macAddress, "(..)(?!$)", "$1:"),
+                MACAddress = macAddress,
                 Parent = folder
             };
 
