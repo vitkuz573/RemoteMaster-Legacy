@@ -2,15 +2,17 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using RemoteMaster.Shared.Abstractions;
+
 namespace RemoteMaster.Agent.Models;
 
-public static class UpdaterServiceConfig
+public class UpdaterServiceConfig : IServiceConfig
 {
-    public static string ServiceName { get; } = "RCSUpdater";
+    public string Name { get; } = "RCSUpdater";
 
-    public static string ServiceDisplayName { get; } = "Remote Control Updater";
+    public string DisplayName { get; } = "Remote Control Updater";
 
-    public static string ServiceStartType { get; } = "auto";
+    public string StartType { get; } = "auto";
 
-    public static IEnumerable<string>? ServiceDependencies { get; } = null;
+    public IEnumerable<string>? Dependencies { get; } = null;
 }

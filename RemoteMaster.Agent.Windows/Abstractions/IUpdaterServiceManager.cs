@@ -10,7 +10,7 @@ public interface IUpdaterServiceManager
 {
     event Action<string, MessageType> MessageReceived;
 
-    Task<bool> InstallOrUpdate();
+    void InstallOrUpdate();
 
-    Task<bool> Uninstall();
+    void Uninstall();
 }

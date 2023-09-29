@@ -2,9 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.ServiceProcess;
 using RemoteMaster.Agent.Abstractions;
 using RemoteMaster.Agent.Core.Abstractions;
@@ -22,171 +20,153 @@ public class AgentServiceManager : IAgentServiceManager
     private readonly IServiceManager _serviceManager;
     private readonly IConfigurationService _configurationService;
 
+    private readonly IServiceConfig _agentConfig;
+
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Agent";
 
-    public AgentServiceManager(IRegistratorService registratorService, IServiceManager serviceManager, IConfigurationService configurationService)
+    public AgentServiceManager(IRegistratorService registratorService, IServiceManager serviceManager, IConfigurationService configurationService, IDictionary<string, IServiceConfig> configs)
     {
+        if (configs == null)
+        {
+            throw new ArgumentNullException(nameof(configs));
+        }
+
         _registratorService = registratorService;
         _serviceManager = serviceManager;
         _configurationService = configurationService;
+        _agentConfig = configs["agent"];
     }
 
-    public async Task<bool> InstallOrUpdate(ConfigurationModel configuration, string hostName, string ipv4Address, string macAddress)
+    public async Task InstallOrUpdate(ConfigurationModel configuration, string hostName, string ipv4Address, string macAddress)
     {
         try
         {
-            var agentPath = GetAgentExecutablePath();
+            var directoryPath = GetDirectoryPath();
 
-            if (_serviceManager.IsServiceInstalled(AgentServiceConfig.ServiceName))
+            if (_serviceManager.IsServiceInstalled(_agentConfig.Name))
             {
-                using var serviceController = new ServiceController(AgentServiceConfig.ServiceName);
+                using var serviceController = new ServiceController(_agentConfig.Name);
 
                 if (serviceController.Status != ServiceControllerStatus.Stopped)
                 {
-                    _serviceManager.StopService(AgentServiceConfig.ServiceName);
+                    _serviceManager.StopService(_agentConfig.Name);
                 }
 
-                CopyExecutableToTargetPath(agentPath);
-                _serviceManager.StartService(AgentServiceConfig.ServiceName);
+                CopyToTargetPath(directoryPath);
             }
             else
             {
-                CopyExecutableToTargetPath(agentPath);
-                _serviceManager.InstallService(AgentServiceConfig.ServiceName, AgentServiceConfig.ServiceDisplayName, agentPath, AgentServiceConfig.ServiceStartType, AgentServiceConfig.ServiceDependencies);
-                _serviceManager.StartService(AgentServiceConfig.ServiceName);
+                CopyToTargetPath(directoryPath);
+                var agentPath = Path.Combine(directoryPath, $"{MainAppName}.{SubAppName}.exe");
+                _serviceManager.InstallService(_agentConfig, agentPath);
             }
+
+            _serviceManager.StartService(_agentConfig.Name);
+
+            MessageReceived?.Invoke($"{_agentConfig.Name} installed and started successfully.", MessageType.Information);
 
             var registerResult = await _registratorService.RegisterAsync(configuration, hostName, ipv4Address, macAddress);
 
             if (!registerResult)
             {
                 MessageReceived?.Invoke("Computer registration failed.", MessageType.Error);
-
-                return false;
             }
-
-            MessageReceived?.Invoke($"{AgentServiceConfig.ServiceName} installed and started successfully.", MessageType.Information);
-
-            return true;
         }
         catch (Exception ex)
         {
             MessageReceived?.Invoke($"An error occurred: {ex.Message}", MessageType.Error);
-
-            return false;
         }
     }
 
-    public async Task<bool> Uninstall(ConfigurationModel configuration, string hostName)
+    public async Task Uninstall(ConfigurationModel configuration, string hostName)
     {
         try
         {
-            var processes = Process.GetProcessesByName($"{MainAppName}.Client");
-           
-            foreach (var process in processes)
+            if (_serviceManager.IsServiceInstalled(_agentConfig.Name))
             {
-                process.Kill();
-                process.WaitForExit();
+                _serviceManager.StopService(_agentConfig.Name);
+                _serviceManager.UninstallService(_agentConfig.Name);
+
+                await Task.Delay(TimeSpan.FromSeconds(30));
+
+                DeleteFiles();
+
+                MessageReceived?.Invoke($"{SubAppName} Service uninstalled successfully.", MessageType.Information);
+            }
+            else
+            {
+                MessageReceived?.Invoke($"{SubAppName} Service is not installed.", MessageType.Information);
             }
 
-            if (_serviceManager.IsServiceInstalled(UpdaterServiceConfig.ServiceName))
-            {
-                _serviceManager.StopService(UpdaterServiceConfig.ServiceName);
-                _serviceManager.UninstallService(UpdaterServiceConfig.ServiceName);
-                MessageReceived?.Invoke($"{UpdaterServiceConfig.ServiceName} service uninstalled successfully.", MessageType.Information);
-            }
-
-            if (_serviceManager.IsServiceInstalled(AgentServiceConfig.ServiceName))
-            {
-                _serviceManager.StopService(AgentServiceConfig.ServiceName);
-                _serviceManager.UninstallService(AgentServiceConfig.ServiceName);
-                RemoveApplication();
-                MessageReceived?.Invoke($"{AgentServiceConfig.ServiceName} uninstalled successfully.", MessageType.Information);
-            }
-
-            var unregisterResult = await _registratorService.UnregisterAsync(configuration, hostName);
-            
-            if (!unregisterResult)
+            if (!await _registratorService.UnregisterAsync(configuration, hostName))
             {
                 MessageReceived?.Invoke("Computer unregistration failed.", MessageType.Error);
-               
-                return false;
             }
-
-            return true;
         }
         catch (Exception ex)
         {
             MessageReceived?.Invoke($"An error occurred: {ex.Message}", MessageType.Error);
-
-            return false;
         }
     }
 
-    private static string GetAgentExecutablePath()
+    private static string GetDirectoryPath()
     {
         var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
 
-        return Path.Combine(programFilesPath, MainAppName, SubAppName, $"{MainAppName}.{SubAppName}.exe");
+        return Path.Combine(programFilesPath, MainAppName, SubAppName);
     }
 
-    private void CopyExecutableToTargetPath(string targetPath)
+    private void CopyToTargetPath(string targetDirectoryPath)
     {
-        var newDirectoryPath = Path.GetDirectoryName(targetPath);
-
-        if (string.IsNullOrEmpty(newDirectoryPath))
+        if (!Directory.Exists(targetDirectoryPath))
         {
-            throw new InvalidOperationException("The directory path is invalid.");
+            Directory.CreateDirectory(targetDirectoryPath);
         }
 
-        if (!Directory.Exists(newDirectoryPath))
-        {
-            Directory.CreateDirectory(newDirectoryPath);
-        }
+        var targetExecutablePath = Path.Combine(targetDirectoryPath, $"{MainAppName}.{SubAppName}.exe");
 
-        var currentExecutablePath = Environment.ProcessPath;
-        
         try
         {
-            File.Copy(currentExecutablePath, targetPath, true);
+            File.Copy(Environment.ProcessPath!, targetExecutablePath, true);
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"Failed to copy the executable to {targetPath}. Details: {ex.Message}", ex);
+            throw new InvalidOperationException($"Failed to copy the executable to {targetExecutablePath}. Details: {ex.Message}", ex);
         }
 
         var configName = _configurationService.GetConfigurationFileName();
-        var newConfigPath = Path.Combine(newDirectoryPath, configName);
+        var sourceConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory!, configName);
+        var targetConfigPath = Path.Combine(targetDirectoryPath, configName);
 
-        if (File.Exists(configName))
+        if (File.Exists(sourceConfigPath))
         {
             try
             {
-                File.Copy(configName, newConfigPath, true);
+                File.Copy(sourceConfigPath, targetConfigPath, true);
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException($"Failed to copy the configuration file to {newConfigPath}.", ex);
+                throw new InvalidOperationException($"Failed to copy the configuration file to {targetConfigPath}.", ex);
             }
         }
     }
 
-    private static void RemoveApplication()
+    private void DeleteFiles()
     {
-        var agentPath = GetAgentExecutablePath();
+        var directoryPath = GetDirectoryPath();
 
-        if (File.Exists(agentPath))
+        if (Directory.Exists(directoryPath))
         {
-            File.Delete(agentPath);
-        }
-
-        var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-        var fullPath = Path.Combine(programFilesPath, MainAppName);
-
-        if (Directory.Exists(fullPath))
-        {
-            Directory.Delete(fullPath, true);
+            try
+            {
+                Directory.Delete(directoryPath, true);
+                MessageReceived?.Invoke($"{SubAppName} files deleted successfully.", MessageType.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageReceived?.Invoke($"Deleting {SubAppName.ToLower()} files failed: {ex.Message}", MessageType.Error);
+            }
         }
     }
 }

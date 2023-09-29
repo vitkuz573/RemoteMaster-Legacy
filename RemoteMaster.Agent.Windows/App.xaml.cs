@@ -14,6 +14,7 @@ using RemoteMaster.Agent.Abstractions;
 using RemoteMaster.Agent.Core.Abstractions;
 using RemoteMaster.Agent.Core.Extensions;
 using RemoteMaster.Agent.Helpers.AdvFirewall;
+using RemoteMaster.Agent.Models;
 using RemoteMaster.Agent.Services;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Helpers;
@@ -69,6 +70,15 @@ public partial class App : Application
                 services.AddSingleton<IServiceManager, ServiceManager>();
                 services.AddSingleton<ISignatureService, SignatureService>();
                 services.AddSingleton<MainWindow>();
+
+                services.AddSingleton<AgentServiceConfig>();
+                services.AddSingleton<UpdaterServiceConfig>();
+
+                services.AddSingleton<IDictionary<string, IServiceConfig>>(sp => new Dictionary<string, IServiceConfig>
+                {
+                    { "agent", sp.GetRequiredService<AgentServiceConfig>() },
+                    { "updater", sp.GetRequiredService<UpdaterServiceConfig>() }
+                });
             });
     }
 

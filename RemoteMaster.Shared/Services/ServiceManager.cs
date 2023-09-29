@@ -12,14 +12,19 @@ public class ServiceManager : IServiceManager
 {
     public bool IsServiceInstalled(string serviceName) => ServiceController.GetServices().Any(service => service.ServiceName == serviceName);
 
-    public void InstallService(string serviceName, string displayName, string executablePath, string startType, IEnumerable<string>? dependencies)
+    public void InstallService(IServiceConfig serviceConfig, string executablePath)
     {
-        ExecuteServiceCommand($"create {serviceName} DisplayName= \"{displayName}\" binPath= \"{executablePath}\" start= {startType}");
-
-        if (dependencies != null && dependencies.Any())
+        if (serviceConfig == null)
         {
-            var dependenciesStr = string.Join("/", dependencies);
-            ExecuteServiceCommand($"config {serviceName} depend= {dependenciesStr}");
+            throw new ArgumentNullException(nameof(serviceConfig));
+        }
+
+        ExecuteServiceCommand($"create {serviceConfig.Name} DisplayName= \"{serviceConfig.DisplayName}\" binPath= \"{executablePath}\" start= {serviceConfig.StartType}");
+
+        if (serviceConfig.Dependencies != null && serviceConfig.Dependencies.Any())
+        {
+            var dependenciesStr = string.Join("/", serviceConfig.Dependencies);
+            ExecuteServiceCommand($"config {serviceConfig.Name} depend= {dependenciesStr}");
         }
     }
 

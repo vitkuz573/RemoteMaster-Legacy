@@ -2,15 +2,17 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using RemoteMaster.Shared.Abstractions;
+
 namespace RemoteMaster.Agent.Models;
 
-public static class AgentServiceConfig
+public class AgentServiceConfig : IServiceConfig
 {
-    public static string ServiceName { get; } = "RCService";
+    public string Name { get; } = "RCService";
 
-    public static string ServiceDisplayName { get; } = "Remote Control Service";
+    public string DisplayName { get; } = "Remote Control Service";
 
-    public static string ServiceStartType { get; } = "delayed-auto";
+    public string StartType { get; } = "delayed-auto";
 
-    public static IEnumerable<string>? ServiceDependencies { get; } = new[] { "LanmanWorkstation" };
+    public IEnumerable<string>? Dependencies { get; } = new[] { "LanmanWorkstation" };
 }

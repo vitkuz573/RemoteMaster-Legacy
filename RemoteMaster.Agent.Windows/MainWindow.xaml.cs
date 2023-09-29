@@ -63,7 +63,7 @@ public partial class MainWindow : Window
         }
 
         DisplayConfigurationAndSystemInfo();
-        UpdateServiceStatusDisplay();
+        UpdateAgentStatusDisplay();
     }
 
     private void OnMessageReceived(string message, MessageType type)
@@ -83,22 +83,22 @@ public partial class MainWindow : Window
     private async void InstallUpdateButton_Click(object sender, RoutedEventArgs e)
     {
         await _agentServiceManager.InstallOrUpdate(_configuration, _hostName, _ipv4Address, _macAddress);
-        await _updaterServiceManager.InstallOrUpdate();
+        _updaterServiceManager.InstallOrUpdate();
 
-        UpdateServiceStatusDisplay();
+        UpdateAgentStatusDisplay();
     }
 
     private async void UninstallButton_Click(object sender, RoutedEventArgs e)
     {
         await _agentServiceManager.Uninstall(_configuration, _hostName);
-        await _updaterServiceManager.Uninstall();
+        _updaterServiceManager.Uninstall();
 
-        UpdateServiceStatusDisplay();
+        UpdateAgentStatusDisplay();
     }
 
-    private void UpdateServiceStatusDisplay()
+    private void UpdateAgentStatusDisplay()
     {
-        var serviceExists = _serviceManager.IsServiceInstalled(AgentServiceConfig.ServiceName);
+        var serviceExists = _serviceManager.IsServiceInstalled("RCService");
         
         UninstallButton.IsEnabled = serviceExists;
         ServiceStatusValueTextBlock.Text = serviceExists ? "Installed" : "Not Installed";

@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.IO;
+using System.ServiceProcess;
 using RemoteMaster.Agent.Abstractions;
 using RemoteMaster.Agent.Models;
 using RemoteMaster.Shared.Abstractions;
@@ -16,44 +17,53 @@ public class UpdaterServiceManager : IUpdaterServiceManager
 
     private readonly IServiceManager _serviceManager;
 
+    private readonly IServiceConfig _updaterConfig;
+
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Updater";
 
-    public UpdaterServiceManager(IServiceManager serviceManager)
+    public UpdaterServiceManager(IServiceManager serviceManager, IDictionary<string, IServiceConfig> configs)
     {
+        if (configs == null)
+        {
+            throw new ArgumentNullException(nameof(configs));
+        }
+
         _serviceManager = serviceManager;
+        _updaterConfig = configs["updater"];
     }
 
-    public async Task<bool> InstallOrUpdate()
+    public void InstallOrUpdate()
     {
         try
         {
-            var newExecutablePath = GetNewExecutablePath();
-            var newExecutableDirectoryPath = Path.GetDirectoryName(newExecutablePath);
+            var directoryPath = GetDirectoryPath();
 
-            if (newExecutableDirectoryPath != null && !Directory.Exists(newExecutableDirectoryPath))
+            if (_serviceManager.IsServiceInstalled(_updaterConfig.Name))
             {
-                Directory.CreateDirectory(newExecutableDirectoryPath);
+                using var serviceController = new ServiceController(_updaterConfig.Name);
+
+                if (serviceController.Status != ServiceControllerStatus.Stopped)
+                {
+                    _serviceManager.StopService(_updaterConfig.Name);
+                }
+
+                CopyToTargetPath(directoryPath);
+            }
+            else
+            {
+                CopyToTargetPath(directoryPath);
+                var updaterPath = Path.Combine(directoryPath, $"{MainAppName}.{SubAppName}.exe");
+                _serviceManager.InstallService(_updaterConfig, updaterPath);
             }
 
-            NetworkDriveHelper.MapNetworkDrive(@"\\SERVER-DC02\Win\RemoteMaster", "support@it-ktk.local", "bonesgamer123!!");
-            var sourcePath = Path.Combine(@"\\SERVER-DC02\Win\RemoteMaster", SubAppName);
-            NetworkDriveHelper.DirectoryCopy(sourcePath, newExecutableDirectoryPath, true, true);
+            _serviceManager.StartService(_updaterConfig.Name);
 
-            if (!_serviceManager.IsServiceInstalled(UpdaterServiceConfig.ServiceName))
-            {
-                _serviceManager.InstallService(UpdaterServiceConfig.ServiceName, UpdaterServiceConfig.ServiceDisplayName, newExecutablePath, UpdaterServiceConfig.ServiceStartType, UpdaterServiceConfig.ServiceDependencies);
-            }
-
-            _serviceManager.StartService(UpdaterServiceConfig.ServiceName);
-            MessageReceived?.Invoke("Updater Service installed and started successfully.", MessageType.Information);
-
-            return true;
+            MessageReceived?.Invoke($"{SubAppName} Service installed and started successfully.", MessageType.Information);
         }
         catch (Exception ex)
         {
             MessageReceived?.Invoke($"Updater Service installation failed: {ex.Message}", MessageType.Error);
-            return false;
         }
         finally
         {
@@ -61,56 +71,73 @@ public class UpdaterServiceManager : IUpdaterServiceManager
         }
     }
 
-    public async Task<bool> Uninstall()
+    public void Uninstall()
     {
         try
         {
-            if (_serviceManager.IsServiceInstalled(UpdaterServiceConfig.ServiceName))
+            if (_serviceManager.IsServiceInstalled(_updaterConfig.Name))
             {
-                _serviceManager.StopService(UpdaterServiceConfig.ServiceName);
-                _serviceManager.UninstallService(UpdaterServiceConfig.ServiceName);
-                RemoveServiceFiles();
-                MessageReceived?.Invoke("Updater Service uninstalled successfully.", MessageType.Information);
+                _serviceManager.StopService(_updaterConfig.Name);
+                _serviceManager.UninstallService(_updaterConfig.Name);
 
-                return true;
+                DeleteUpdaterFiles();
+
+                MessageReceived?.Invoke($"{SubAppName} Service uninstalled successfully.", MessageType.Information);
             }
             else
             {
-                MessageReceived?.Invoke("Updater Service is not installed.", MessageType.Information);
-
-                return false;
+                MessageReceived?.Invoke($"{SubAppName} Service is not installed.", MessageType.Information);
             }
         }
         catch (Exception ex)
         {
             MessageReceived?.Invoke($"Updater Service uninstallation failed: {ex.Message}", MessageType.Error);
-
-            return false;
         }
     }
 
-    private static string GetNewExecutablePath()
+    private static string GetDirectoryPath()
     {
         var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
 
-        return Path.Combine(programFilesPath, MainAppName, SubAppName, $"{MainAppName}.{SubAppName}.exe");
+        return Path.Combine(programFilesPath, MainAppName, SubAppName);
     }
 
-    private static void RemoveServiceFiles()
+    private static void CopyToTargetPath(string targetDirectoryPath)
     {
-        var newExecutablePath = GetNewExecutablePath();
-
-        if (File.Exists(newExecutablePath))
+        if (!Directory.Exists(targetDirectoryPath))
         {
-            File.Delete(newExecutablePath);
+            Directory.CreateDirectory(targetDirectoryPath);
         }
 
-        var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-        var fullPath = Path.Combine(programFilesPath, MainAppName);
+        var targetExecutablePath = Path.Combine(targetDirectoryPath, $"{MainAppName}.{SubAppName}.exe");
 
-        if (Directory.Exists(fullPath))
+        try
         {
-            Directory.Delete(fullPath, true);
+            NetworkDriveHelper.MapNetworkDrive(@"\\SERVER-DC02\Win\RemoteMaster", "support@it-ktk.local", "bonesgamer123!!");
+            var sourcePath = Path.Combine(@"\\SERVER-DC02\Win\RemoteMaster", SubAppName);
+            NetworkDriveHelper.DirectoryCopy(sourcePath, targetDirectoryPath, true, true);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Failed to copy the executable to {targetExecutablePath}. Details: {ex.Message}", ex);
+        }
+    }
+
+    private void DeleteUpdaterFiles()
+    {
+        var directoryPath = GetDirectoryPath();
+
+        if (directoryPath != null && Directory.Exists(directoryPath))
+        {
+            try
+            {
+                Directory.Delete(directoryPath, true);
+                MessageReceived?.Invoke($"{SubAppName} files deleted successfully.", MessageType.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageReceived?.Invoke($"Deleting {SubAppName.ToLower()} files failed: {ex.Message}", MessageType.Error);
+            }
         }
     }
 }
