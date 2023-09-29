@@ -235,18 +235,31 @@ public partial class Index
             return;
         }
 
-        var sParameter = item.Text.Contains("System") ? "-s" : "";
-
         await ExecuteOnAvailableComputers(async (computer, proxy) =>
         {
-            var command = @$"/C psexec \\{computer.IPAddress} {sParameter} -nobanner -accepteula {item.Value}";
+            ProcessStartInfo startInfo;
 
-            var startInfo = new ProcessStartInfo()
+            if (item.Value == "ssh")
             {
-                FileName = "cmd.exe",
-                Arguments = command,
-                UseShellExecute = true,
-            };
+                var command = $"ssh user@{computer.IPAddress}";
+                startInfo = new ProcessStartInfo()
+                {
+                    FileName = "cmd.exe",
+                    Arguments = $"/C {command}",
+                    UseShellExecute = true,
+                };
+            }
+            else
+            {
+                var sParameter = item.Text.Contains("System") ? "-s" : "";
+                var command = @$"/C psexec \\{computer.IPAddress} {sParameter} -nobanner -accepteula {item.Value}";
+                startInfo = new ProcessStartInfo()
+                {
+                    FileName = "cmd.exe",
+                    Arguments = command,
+                    UseShellExecute = true,
+                };
+            }
 
             await Task.Run(() => Process.Start(startInfo));
         });
