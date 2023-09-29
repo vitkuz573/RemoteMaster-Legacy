@@ -48,7 +48,7 @@ void ConfigureServices(WebApplicationBuilder builder)
     builder.Services.AddTransient<IHubConnectionBuilder>(s => new HubConnectionBuilder());
 
     // Database contexts
-    builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("NodesDataContextConnection")));
     builder.Services.AddDbContext<IdentityDataContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("IdentityDataContextConnection")));
     builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false).AddEntityFrameworkStores<IdentityDataContext>();
 
