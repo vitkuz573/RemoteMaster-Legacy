@@ -1,12 +1,8 @@
-﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
-// This file is part of the RemoteMaster project.
-// Licensed under the GNU Affero General Public License v3.0.
-
-using System.Net;
+﻿using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.Text.RegularExpressions;
 using RemoteMaster.Agent.Core.Abstractions;
+using RemoteMaster.Agent.Core.Extensions;
 
 namespace RemoteMaster.Agent.Core.Services;
 
@@ -17,31 +13,22 @@ public partial class HostInfoService : IHostInfoService
     public string GetIPv4Address()
     {
         var hostName = GetHostName();
-        var allAddresses = Dns.GetHostAddresses(hostName);
+        var ipv4Address = Dns.GetHostAddresses(hostName)
+                            .FirstOrDefault(a => a.AddressFamily == AddressFamily.InterNetwork);
 
-        return Array.Find(allAddresses, a => a.AddressFamily == AddressFamily.InterNetwork)?.ToString() ?? "Not found";
+        return ipv4Address == null ? throw new InvalidOperationException("IPv4 address not found") : ipv4Address.ToString();
     }
 
     public string GetMacAddress()
     {
         var ipv4Address = GetIPv4Address();
 
-        foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
-        {
-            var ipProperties = nic.GetIPProperties();
+        var targetInterface = NetworkInterface.GetAllNetworkInterfaces()
+            .FirstOrDefault(nic => nic.GetIPProperties()
+            .UnicastAddresses
+            .Any(address => address.Address.ToString() == ipv4Address))
+            ?? throw new InvalidOperationException("MAC address not found");
 
-            foreach (var ip in ipProperties.UnicastAddresses)
-            {
-                if (ip.Address.ToString() == ipv4Address)
-                {
-                    return MacAddressRegex().Replace(nic.GetPhysicalAddress().ToString(), "$1:");
-                }
-            }
-        }
-
-        return string.Empty;
+        return targetInterface.GetMacAddress();
     }
-
-    [GeneratedRegex("(..)(?!$)")]
-    private static partial Regex MacAddressRegex();
 }

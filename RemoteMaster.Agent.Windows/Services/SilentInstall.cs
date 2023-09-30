@@ -57,7 +57,7 @@ public class SilentInstall
 
     private void OnMessageReceived(string message, MessageType type)
     {
-        Console.WriteLine($"{type}: {message}");
+        MessageBox.Show($"{type}: {message}");
     }
 
     public async Task Install()

@@ -95,11 +95,18 @@ public partial class MainWindow : Window
         UpdateAgentStatusDisplay();
     }
 
+    private void CloseButton_Click(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+
     private void UpdateAgentStatusDisplay()
     {
-        var serviceExists = _serviceManager.IsServiceInstalled("RCService");
+        var agentServiceExists = _serviceManager.IsServiceInstalled("RCService");
+        var updaterServiceExists = _serviceManager.IsServiceInstalled("RCSUpdater");
         
-        UninstallButton.IsEnabled = serviceExists;
-        ServiceStatusValueTextBlock.Text = serviceExists ? "Installed" : "Not Installed";
+        UninstallButton.IsEnabled = agentServiceExists;
+        AgentServiceStatusValueTextBlock.Text = agentServiceExists ? "Installed" : "Not Installed";
+        UpdaterServiceStatusValueTextBlock.Text = updaterServiceExists ? "Installed" : "Not Installed";
     }
 }
