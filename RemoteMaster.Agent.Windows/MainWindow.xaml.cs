@@ -104,8 +104,8 @@ public partial class MainWindow : Window
     {
         var agentServiceExists = _serviceManager.IsServiceInstalled("RCService");
         var updaterServiceExists = _serviceManager.IsServiceInstalled("RCSUpdater");
-        
-        UninstallButton.IsEnabled = agentServiceExists;
+
+        UninstallButton.IsEnabled = agentServiceExists || updaterServiceExists;
         AgentServiceStatusValueTextBlock.Text = agentServiceExists ? "Installed" : "Not Installed";
         UpdaterServiceStatusValueTextBlock.Text = updaterServiceExists ? "Installed" : "Not Installed";
     }
