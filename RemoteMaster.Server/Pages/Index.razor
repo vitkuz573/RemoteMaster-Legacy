@@ -64,6 +64,13 @@
                 </ChildContent>
             </RadzenSplitButton>
 
+            <RadzenSplitButton Text="PSExec Rules" Disabled="@(!_anyComputerSelected)" Click="@(args => ManagePSExecRules(args))" class="mr-2">
+                <ChildContent>
+                    <RadzenSplitButtonItem Text="Enable" Value="enable" />
+                    <RadzenSplitButtonItem Text="Disable" Value="disable" />
+                </ChildContent>
+            </RadzenSplitButton>
+
             <RadzenButton Click="HandleRefreshClick" Text="Refresh" class="ml-auto" />
         </div>
 

@@ -11,7 +11,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <VersionPrefix>1.80.</VersionPrefix>
+    <VersionPrefix>1.85.</VersionPrefix>
     <VersionSuffix>0</VersionSuffix>
     <Version>$(VersionPrefix)$(VersionSuffix)</Version>
     <AssemblyVersion>$(Version)</AssemblyVersion>
@@ -27,10 +27,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RemoteMaster.Agent.Core\RemoteMaster.Agent.Core.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Helpers\AdvFirewall\" />
   </ItemGroup>
 
 </Project>

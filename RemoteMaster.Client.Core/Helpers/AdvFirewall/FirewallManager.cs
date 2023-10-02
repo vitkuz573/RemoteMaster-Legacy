@@ -4,7 +4,7 @@
 
 using System.Diagnostics;
 
-namespace RemoteMaster.Agent.Helpers.AdvFirewall;
+namespace RemoteMaster.Client.Core.Helpers.AdvFirewall;
 
 public static class FirewallManager
 {

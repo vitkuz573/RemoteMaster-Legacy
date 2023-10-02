@@ -5,6 +5,7 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Client.Core.Abstractions;
+using RemoteMaster.Client.Core.Helpers.AdvFirewall;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
@@ -158,5 +159,37 @@ public class ControlHub : Hub<IControlClient>, IControlHub
     public async Task SetMonitorState(MonitorState state)
     {
         _hardwareService.SetMonitorState(state);
+    }
+
+    public async Task SetPSExecRules(bool enable)
+    {
+        if (enable)
+        {
+            FirewallManager.DeleteRule("PSExec", RuleDirection.In);
+            FirewallManager.SetRuleGroup("Удаленное управление службой", RuleGroupStatus.Disabled);
+
+            FirewallManager.EnableWinRM();
+
+            var rule = new FirewallRule("PSExec")
+            {
+                Direction = RuleDirection.In,
+                Action = RuleAction.Allow,
+                Protocol = RuleProtocol.TCP,
+                LocalPort = "RPC",
+                Program = @"%WinDir%\system32\services.exe",
+                Service = "any"
+            };
+
+            rule.Profiles.Add(RuleProfile.Domain);
+            rule.Profiles.Add(RuleProfile.Private);
+            rule.Apply();
+
+            FirewallManager.SetRuleGroup("Удаленное управление службой", RuleGroupStatus.Enabled);
+        }
+        else
+        {
+            FirewallManager.DeleteRule("PSExec", RuleDirection.In);
+            FirewallManager.SetRuleGroup("Удаленное управление службой", RuleGroupStatus.Disabled);
+        }
     }
 }

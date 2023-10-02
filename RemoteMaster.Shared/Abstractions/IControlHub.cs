@@ -38,4 +38,6 @@ public interface IControlHub
     Task StopScreenRecording();
 
     Task SetMonitorState(MonitorState state);
+
+    Task SetPSExecRules(bool enable);
 }

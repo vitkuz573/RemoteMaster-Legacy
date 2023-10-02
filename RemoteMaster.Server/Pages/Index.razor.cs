@@ -371,6 +371,23 @@ public partial class Index
         await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.SetMonitorState(state));
     }
 
+    private async Task ManagePSExecRules(RadzenSplitButtonItem item)
+    {
+        if (item == null)
+        {
+            return;
+        }
+
+        if (item.Value == "enable")
+        {
+            await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.SetPSExecRules(true));
+        }
+        else
+        {
+            await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.SetPSExecRules(false));
+        }
+    }
+
     private static async Task<(Computer computer, bool isAvailable)> IsComputerAvailable(Computer computer)
     {
         try
