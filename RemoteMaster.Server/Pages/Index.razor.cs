@@ -41,15 +41,13 @@ public partial class Index
 
     protected async override Task OnInitializedAsync()
     {
-        var rootFolders = DatabaseService.GetFolders().Where(f => f.Parent == null).ToList();
+        var rootFolders = (await DatabaseService.GetNodesAsync(f => f.Parent == null && f is Folder)).Cast<Folder>().ToList();
 
         foreach (var folder in rootFolders)
         {
             await LoadChildrenAsync(folder);
             _entries.Add(folder);
         }
-
-        DatabaseService.NodeAdded += OnNodeAdded;
     }
 
     private void HandleComputerSelection(Computer computer, bool isSelected)
@@ -69,7 +67,7 @@ public partial class Index
 
     private async Task LoadChildrenAsync(Folder folder)
     {
-        var children = DatabaseService.GetFolders().Where(f => f.Parent == folder);
+        var children = await DatabaseService.GetChildrenByParentIdAsync<Folder>(folder.NodeId);
 
         foreach (var child in children)
         {
@@ -78,40 +76,19 @@ public partial class Index
         }
     }
 
-    private void OnNodeAdded(object? sender, Node node)
-    {
-        if (node is Folder folder)
-        {
-            if (folder.Parent == null)
-            {
-                _entries.Add(folder);
-            }
-            else
-            {
-                folder.Parent.Children.Add(folder);
-            }
-        }
-
-        StateHasChanged();
-    }
-
     private void LoadComputers(TreeExpandEventArgs args)
     {
         var node = args.Value as Node;
 
-        args.Children.Data = GetChildrenForNode(node);
+        args.Children.Data = GetChildrenForNodeAsync(node).Result;
         args.Children.Text = GetTextForNode;
-        args.Children.HasChildren = n => n is Folder && DatabaseService.GetFolders().Any(f => f.Parent == n);
+        args.Children.HasChildren = n => n is Folder && n is Node node && DatabaseService.HasChildrenAsync(node).Result;
         args.Children.Template = NodeTemplate;
     }
 
-    private IEnumerable<Node> GetChildrenForNode(Node node)
+    private async Task<IEnumerable<Node>> GetChildrenForNodeAsync(Node node)
     {
-        var children = new List<Node>();
-        children.AddRange(DatabaseService.GetFolders().Where(f => f.Parent == node));
-        children.AddRange(DatabaseService.GetComputersByFolderId(node.NodeId));
-
-        return children;
+        return node is Folder ? await DatabaseService.GetChildrenByParentIdAsync<Node>(node.NodeId) : Enumerable.Empty<Node>();
     }
 
     private readonly RenderFragment<RadzenTreeItem> NodeTemplate = (context) => builder =>

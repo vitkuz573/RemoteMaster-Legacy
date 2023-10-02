@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Models;
 
@@ -9,8 +10,6 @@ namespace RemoteMaster.Server.Services;
 
 public class DatabaseService
 {
-    public event EventHandler<Node> NodeAdded;
-
     private readonly AppDbContext _context;
 
     public DatabaseService(AppDbContext context)
@@ -18,37 +17,42 @@ public class DatabaseService
         _context = context;
     }
 
-    public IList<Folder> GetFolders()
+    public async Task<IList<Node>> GetNodesAsync(Expression<Func<Node, bool>> predicate = null)
     {
-        return _context.Nodes.OfType<Folder>().Include(f => f.Children).ToList();
+        var query = _context.Nodes.AsQueryable();
+
+        if (predicate != null)
+        {
+            query = query.Where(predicate);
+        }
+
+        return await query.Include(node => node.Children).ToListAsync();
     }
 
-    public void AddNode(Node node)
+    public async Task<IList<T>> GetChildrenByParentIdAsync<T>(Guid parentId) where T : Node
     {
-        _context.Nodes.Add(node);
-        _context.SaveChanges();
-
-        NodeAdded?.Invoke(this, node);
+        return await _context.Nodes.OfType<T>().Where(node => node.ParentId == parentId).ToListAsync();
     }
 
-    public IList<Computer> GetComputersByFolderId(Guid folderId)
+    public async Task AddNodeAsync(Node node)
     {
-        return _context.Nodes
-            .OfType<Computer>()
-            .Where(c => c.ParentId == folderId)
-            .ToList();
+        await _context.Nodes.AddAsync(node);
+        await _context.SaveChangesAsync();
     }
 
-    public void RemoveNode(Node node)
+    public async Task RemoveNodeAsync(Node node)
     {
         _context.Nodes.Remove(node);
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
     }
 
-    public Computer GetComputerByNameAndFolderId(string computerName, Guid folderId)
+    public async Task<Node> GetNodeByNameAndParentIdAsync(string nodeName, Guid parentId)
     {
-        return _context.Nodes
-            .OfType<Computer>()
-            .FirstOrDefault(c => c.Name == computerName && c.ParentId == folderId);
+        return await _context.Nodes.FirstOrDefaultAsync(node => node.Name == nodeName && node.ParentId == parentId);
+    }
+
+    public async Task<bool> HasChildrenAsync(Node node)
+    {
+        return await _context.Nodes.AnyAsync(n => n.ParentId == node.NodeId);
     }
 }

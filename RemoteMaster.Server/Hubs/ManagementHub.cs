@@ -19,17 +19,17 @@ public class ManagementHub : Hub
         _logger = logger;
     }
 
-    public async Task<bool> RegisterClient(string hostName, string ipAddress, string macAddress, string group)
+    public async Task<bool> RegisterClientAsync(string hostName, string ipAddress, string macAddress, string group)
     {
-        var folder = _databaseService.GetFolders().FirstOrDefault(f => f.Name == group);
+        var folder = (await _databaseService.GetNodesAsync(f => f.Name == group && f is Folder)).OfType<Folder>().FirstOrDefault();
 
         if (folder == null)
         {
             folder = new Folder(group);
-            _databaseService.AddNode(folder);
+            await _databaseService.AddNodeAsync(folder);
         }
 
-        var existingComputer = _databaseService.GetComputersByFolderId(folder.NodeId).FirstOrDefault(c => c.Name == hostName);
+        var existingComputer = (await _databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId)).FirstOrDefault(c => c.Name == hostName);
 
         if (existingComputer != null)
         {
@@ -45,15 +45,15 @@ public class ManagementHub : Hub
                 Parent = folder
             };
 
-            _databaseService.AddNode(computer);
+            await _databaseService.AddNodeAsync(computer);
         }
 
         return true;
     }
 
-    public async Task<bool> UnregisterClient(string hostName, string group)
+    public async Task<bool> UnregisterClientAsync(string hostName, string group)
     {
-        var folder = _databaseService.GetFolders().FirstOrDefault(f => f.Name == group);
+        var folder = (await _databaseService.GetNodesAsync(f => f.Name == group && f is Folder)).OfType<Folder>().FirstOrDefault();
 
         if (folder == null)
         {
@@ -62,17 +62,18 @@ public class ManagementHub : Hub
             return false;
         }
 
-        var existingComputer = _databaseService.GetComputerByNameAndFolderId(hostName, folder.NodeId);
+        var existingComputer = (await _databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId))
+                               .FirstOrDefault(c => c.Name == hostName);
 
         if (existingComputer != null)
         {
-            _databaseService.RemoveNode(existingComputer);
+            await _databaseService.RemoveNodeAsync(existingComputer);
 
-            var remainingComputers = _databaseService.GetComputersByFolderId(folder.NodeId);
+            var remainingComputers = await _databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId);
 
             if (!remainingComputers.Any())
             {
-                _databaseService.RemoveNode(folder);
+                await _databaseService.RemoveNodeAsync(folder);
             }
 
             return true;

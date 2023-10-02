@@ -30,7 +30,7 @@ public class RegistratorService : IRegistratorService
             var connection = await ConnectToServerHub($"http://{config.Server}:5254");
 
             _logger.LogInformation("Installing...");
-            var result = await connection.InvokeAsync<bool>("RegisterClient", hostName, ipAddress, macAddress, config.Group);
+            var result = await connection.InvokeAsync<bool>("RegisterClientAsync", hostName, ipAddress, macAddress, config.Group);
 
             return result;
         }
@@ -54,7 +54,7 @@ public class RegistratorService : IRegistratorService
             var connection = await ConnectToServerHub($"http://{config.Server}:5254");
 
             _logger.LogInformation("Uninstalling...");
-            var result = await connection.InvokeAsync<bool>("UnregisterClient", hostName, config.Group);
+            var result = await connection.InvokeAsync<bool>("UnregisterClientAsync", hostName, config.Group);
 
             return result;
         }
