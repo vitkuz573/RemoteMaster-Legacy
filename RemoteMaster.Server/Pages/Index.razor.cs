@@ -378,13 +378,15 @@ public partial class Index
             return;
         }
 
-        if (item.Value == "enable")
+        bool isEnabled;
+
+        if (bool.TryParse(item.Value, out isEnabled))
         {
-            await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.SetPSExecRules(true));
+            await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.SetPSExecRules(isEnabled));
         }
         else
         {
-            await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.SetPSExecRules(false));
+            Console.WriteLine($"Failed to convert the value: {item.Value}");
         }
     }
 
