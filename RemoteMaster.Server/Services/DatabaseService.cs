@@ -4,6 +4,7 @@
 
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Services;

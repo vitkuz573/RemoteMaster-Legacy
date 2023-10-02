@@ -6,7 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Models;
 
-namespace RemoteMaster.Server.Services;
+namespace RemoteMaster.Server.Data;
 
 public class NodesDataContext : DbContext
 {

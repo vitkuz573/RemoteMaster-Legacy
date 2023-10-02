@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Radzen;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Areas.Identity.Data;
+using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Hubs;
 using RemoteMaster.Server.Middlewares;
 using RemoteMaster.Server.Services;
