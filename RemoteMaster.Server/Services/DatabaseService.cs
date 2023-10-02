@@ -46,11 +46,6 @@ public class DatabaseService
         await _context.SaveChangesAsync();
     }
 
-    public async Task<Node> GetNodeByNameAndParentIdAsync(string nodeName, Guid parentId)
-    {
-        return await _context.Nodes.FirstOrDefaultAsync(node => node.Name == nodeName && node.ParentId == parentId);
-    }
-
     public async Task<bool> HasChildrenAsync(Node node)
     {
         return await _context.Nodes.AnyAsync(n => n.ParentId == node.NodeId);
