@@ -37,6 +37,9 @@ public partial class Index
     private IWakeOnLanService WakeOnLanService { get; set; }
 
     [Inject]
+    private IHttpClientFactory HttpClientFactory { get; set; }
+
+    [Inject]
     private IJSRuntime JSRuntime { get; set; }
 
     protected async override Task OnInitializedAsync()
@@ -270,9 +273,8 @@ public partial class Index
     {
         await ExecuteOnAvailableComputers(async (computer, proxy) =>
         {
-            var url = $"http://{computer.IPAddress}:5124/api/update";
-
-            using var client = new HttpClient();
+            var client = HttpClientFactory.CreateClient();
+            client.BaseAddress = new Uri($"http://{computer.IPAddress}:5124");
 
             var shift = 3;
             byte xorConstant = 0xAB;
@@ -289,7 +291,7 @@ public partial class Index
 
             try
             {
-                var response = await client.PostAsync(url, content);
+                var response = await client.PostAsync("/api/update", content);
 
                 if (response.IsSuccessStatusCode)
                 {
