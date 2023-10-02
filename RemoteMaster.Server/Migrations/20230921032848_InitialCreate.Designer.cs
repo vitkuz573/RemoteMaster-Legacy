@@ -10,7 +10,7 @@ using RemoteMaster.Server.Services;
 
 namespace RemoteMaster.Server.Migrations
 {
-    [DbContext(typeof(AppDbContext))]
+    [DbContext(typeof(NodesDataContext))]
     [Migration("20230921032848_InitialCreate")]
     partial class InitialCreate
     {

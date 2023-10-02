@@ -10,9 +10,9 @@ namespace RemoteMaster.Server.Services;
 
 public class DatabaseService
 {
-    private readonly AppDbContext _context;
+    private readonly NodesDataContext _context;
 
-    public DatabaseService(AppDbContext context)
+    public DatabaseService(NodesDataContext context)
     {
         _context = context;
     }

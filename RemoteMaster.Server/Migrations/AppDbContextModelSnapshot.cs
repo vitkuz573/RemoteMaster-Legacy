@@ -9,7 +9,7 @@ using RemoteMaster.Server.Services;
 
 namespace RemoteMaster.Server.Migrations
 {
-    [DbContext(typeof(AppDbContext))]
+    [DbContext(typeof(NodesDataContext))]
     partial class AppDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)

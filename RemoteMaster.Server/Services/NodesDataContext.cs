@@ -8,9 +8,9 @@ using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class AppDbContext : DbContext
+public class NodesDataContext : DbContext
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+    public NodesDataContext(DbContextOptions<NodesDataContext> options) : base(options) { }
 
     public DbSet<Node> Nodes { get; set; }
 

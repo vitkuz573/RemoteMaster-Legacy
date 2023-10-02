@@ -48,7 +48,7 @@ void ConfigureServices(WebApplicationBuilder builder)
     builder.Services.AddTransient<IHubConnectionBuilder>(s => new HubConnectionBuilder());
 
     // Database contexts
-    builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("NodesDataContextConnection")));
+    builder.Services.AddDbContext<NodesDataContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("NodesDataContextConnection")));
     builder.Services.AddDbContext<IdentityDataContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("IdentityDataContextConnection")));
     builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false).AddEntityFrameworkStores<IdentityDataContext>();
 
@@ -70,7 +70,7 @@ WebApplication ConfigureApplication(WebApplicationBuilder builder)
     // Perform database migrations
     using (var scope = app.Services.CreateScope())
     {
-        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var dbContext = scope.ServiceProvider.GetRequiredService<NodesDataContext>();
         dbContext.Database.Migrate();
 
         var identityContext = scope.ServiceProvider.GetRequiredService<IdentityDataContext>();
