@@ -13,8 +13,6 @@ public interface IConnectionContext
 
     IConnectionContext Configure(string url, bool useMessagePack = false);
 
-    ConnectionDiagnostics GetConnectionDiagnostics();
-
     IConnectionContext On<T>(string methodName, Action<T> handler);
 
     IConnectionContext On<T>(string methodName, Func<T, Task> handler);
