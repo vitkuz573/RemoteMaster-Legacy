@@ -31,8 +31,6 @@ public partial class App : Application
     protected const string Login = "support@it-ktk.local";
     protected const string Password = "bonesgamer123!!";
 
-    private const int DelayBetweenChecksMilliseconds = 10000; // Define delay between checks (10 seconds)
-
     public IServiceProvider ServiceProvider => _host.Services;
 
     public App()
@@ -160,7 +158,7 @@ public partial class App : Application
 
     private static async Task<bool> TryExecuteWithRetryAsync(Func<Task<bool>> operation)
     {
-        while (true) // Infinite loop to keep checking indefinitely
+        while (true)
         {
             try
             {
@@ -169,12 +167,9 @@ public partial class App : Application
                     return true;
                 }
             }
-            catch
-            {
-                // Log exception if needed
-            }
+            catch { }
 
-            await Task.Delay(DelayBetweenChecksMilliseconds);
+            await Task.Delay(10000);
         }
     }
 }
