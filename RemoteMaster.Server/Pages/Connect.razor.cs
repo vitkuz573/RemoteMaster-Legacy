@@ -29,6 +29,9 @@ public partial class Connect : IAsyncDisposable
     private NavigationManager NavigationManager { get; set; }
 
     [Inject]
+    private IHttpClientFactory HttpClientFactory { get; set; }
+
+    [Inject]
     private IJSRuntime JSRuntime { get; set; }
 
     private string _statusMessage = "Establishing connection...";
@@ -292,13 +295,12 @@ public partial class Connect : IAsyncDisposable
 
     private async Task GetVersions()
     {
-        var url = $"http://{Host}:5124/api/versions";
-
-        using var client = new HttpClient();
+        using var client = HttpClientFactory.CreateClient();
+        client.BaseAddress = new Uri($"http://{Host}:5124");
 
         try
         {
-            var response = await client.GetAsync(url);
+            var response = await client.GetAsync("/api/versions");
 
             if (response.IsSuccessStatusCode)
             {
