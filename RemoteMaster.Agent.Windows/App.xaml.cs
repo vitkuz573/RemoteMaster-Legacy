@@ -31,8 +31,7 @@ public partial class App : Application
     protected const string Login = "support@it-ktk.local";
     protected const string Password = "bonesgamer123!!";
 
-    private const int MaxRetries = 5; // Define maximum retries
-    private const int RetryDelayMilliseconds = 5000; // Define delay between retries (5 seconds)
+    private const int DelayBetweenChecksMilliseconds = 10000; // Define delay between checks (10 seconds)
 
     public IServiceProvider ServiceProvider => _host.Services;
 
@@ -161,9 +160,7 @@ public partial class App : Application
 
     private static async Task<bool> TryExecuteWithRetryAsync(Func<Task<bool>> operation)
     {
-        var attempt = 0;
-
-        while (attempt < MaxRetries)
+        while (true) // Infinite loop to keep checking indefinitely
         {
             try
             {
@@ -177,10 +174,7 @@ public partial class App : Application
                 // Log exception if needed
             }
 
-            attempt++;
-            await Task.Delay(RetryDelayMilliseconds);
+            await Task.Delay(DelayBetweenChecksMilliseconds);
         }
-
-        return false; // Indicate that all retry attempts failed
     }
 }
