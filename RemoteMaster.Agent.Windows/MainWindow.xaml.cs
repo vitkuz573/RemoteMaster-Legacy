@@ -27,15 +27,22 @@ public partial class MainWindow : Window
     {
         var args = Environment.GetCommandLineArgs();
 
+        InitializeServices();
+
+        if (_configuration == null || string.IsNullOrEmpty(_configuration.Server))
+        {
+            MessageBox.Show("Configuration file is missing or invalid", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            Application.Current.Shutdown();
+            return;
+        }
+
         if (args.Contains("--install"))
         {
-            InitializeServices();
             InstallAndUpdate();
         }
         else
         {
             InitializeComponent();
-            InitializeServices();
             DisplayConfigurationAndSystemInfo();
             UpdateAgentStatusDisplay();
         }
