@@ -1,8 +1,5 @@
-﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
-// This file is part of the RemoteMaster project.
-// Licensed under the GNU Affero General Public License v3.0.
+﻿// Файл MainWindow.xaml.cs
 
-using System.IO;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using RemoteMaster.Agent.Abstractions;
@@ -15,21 +12,37 @@ namespace RemoteMaster.Agent;
 
 public partial class MainWindow : Window
 {
-    private readonly IServiceManager _serviceManager;
-    private readonly IConfigurationService _configurationService;
-    private readonly IHostInfoService _hostInfoService;
-    private readonly IAgentServiceManager _agentServiceManager;
-    private readonly IUpdaterServiceManager _updaterServiceManager;
+    private IServiceManager _serviceManager;
+    private IConfigurationService _configurationService;
+    private IHostInfoService _hostInfoService;
+    private IAgentServiceManager _agentServiceManager;
+    private IUpdaterServiceManager _updaterServiceManager;
 
-    private readonly string _hostName;
-    private readonly string _ipv4Address;
-    private readonly string _macAddress;
-    private readonly ConfigurationModel _configuration;
+    private string _hostName;
+    private string _ipv4Address;
+    private string _macAddress;
+    private ConfigurationModel _configuration;
 
     public MainWindow()
     {
-        InitializeComponent();
+        var args = Environment.GetCommandLineArgs();
 
+        if (args.Contains("--install"))
+        {
+            InitializeServices();
+            InstallAndUpdate();
+        }
+        else
+        {
+            InitializeComponent();
+            InitializeServices();
+            DisplayConfigurationAndSystemInfo();
+            UpdateAgentStatusDisplay();
+        }
+    }
+
+    private void InitializeServices()
+    {
         var serviceProvider = ((App)Application.Current).ServiceProvider;
         _serviceManager = serviceProvider.GetRequiredService<IServiceManager>();
         _configurationService = serviceProvider.GetRequiredService<IConfigurationService>();
@@ -48,26 +61,29 @@ public partial class MainWindow : Window
         {
             _configuration = _configurationService.LoadConfiguration();
         }
-        catch (FileNotFoundException)
+        catch (Exception ex)
         {
-            MessageBox.Show("Configuration file not found. Please check your configuration.", "Configuration Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            // Обработка исключений
             Application.Current.Shutdown();
             return;
         }
-        catch (InvalidDataException)
-        {
-            MessageBox.Show("Error parsing or validating the configuration file. Please check your configuration.", "Configuration Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            Application.Current.Shutdown();
-            return;
-        }
+    }
 
-        DisplayConfigurationAndSystemInfo();
-        UpdateAgentStatusDisplay();
+    private async void InstallAndUpdate()
+    {
+        await _agentServiceManager.InstallOrUpdate(_configuration, _hostName, _ipv4Address, _macAddress);
+        _updaterServiceManager.InstallOrUpdate();
+        Application.Current.Shutdown();
     }
 
     private void OnMessageReceived(string message, MessageType type)
     {
-        MessageBox.Show(message, type.ToString(), MessageBoxButton.OK, type == MessageType.Error ? MessageBoxImage.Error : MessageBoxImage.Information);
+        var args = Environment.GetCommandLineArgs();
+
+        if (!args.Contains("--install"))
+        {
+            MessageBox.Show(message, type.ToString(), MessageBoxButton.OK, type == MessageType.Error ? MessageBoxImage.Error : MessageBoxImage.Information);
+        }
     }
 
     private void DisplayConfigurationAndSystemInfo()
@@ -80,6 +96,11 @@ public partial class MainWindow : Window
     }
 
     private async void InstallUpdateButton_Click(object sender, RoutedEventArgs e)
+    {
+        await InstallAndUpdateAsync();
+    }
+
+    private async Task InstallAndUpdateAsync()
     {
         await _agentServiceManager.InstallOrUpdate(_configuration, _hostName, _ipv4Address, _macAddress);
         _updaterServiceManager.InstallOrUpdate();

@@ -39,13 +39,6 @@ public partial class App : Application
 
         var hostBuilder = CreateDefaultHostBuilder(args);
 
-        if (args.Contains("--install"))
-        {
-            var host = hostBuilder.Build();
-            var silentInstall = host.Services.GetRequiredService<SilentInstall>();
-            _ = silentInstall.Install();
-        }
-
         if (WindowsServiceHelpers.IsWindowsService())
         {
             ConfigureAsWindowsService(hostBuilder);
@@ -70,10 +63,6 @@ public partial class App : Application
     private static IHostBuilder CreateDefaultHostBuilder(string[] args)
     {
         return Host.CreateDefaultBuilder(args)
-            .ConfigureAppConfiguration((hostingContext, config) =>
-            {
-                config.AddCommandLine(args);
-            })
             .ConfigureServices((hostContext, services) =>
             {
                 services.AddCoreServices();
@@ -83,7 +72,6 @@ public partial class App : Application
                 services.AddSingleton<IServiceManager, ServiceManager>();
                 services.AddSingleton<ISignatureService, SignatureService>();
                 services.AddSingleton<MainWindow>();
-                services.AddSingleton<SilentInstall>();
 
                 services.AddSingleton<AgentServiceConfig>();
                 services.AddSingleton<UpdaterServiceConfig>();
