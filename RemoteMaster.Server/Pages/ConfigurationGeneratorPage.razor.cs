@@ -36,6 +36,7 @@ public partial class ConfigurationGeneratorPage
         if (string.IsNullOrEmpty(_group))
         {
             Logger.LogWarning("Computer group is not selected.");
+
             return;
         }
 
@@ -49,9 +50,9 @@ public partial class ConfigurationGeneratorPage
         if (response.IsSuccessStatusCode)
         {
             var result = await response.Content.ReadFromJsonAsync<ConfigResponse>();
+
             _configFileBytes = Encoding.UTF8.GetBytes(result.FileContent);
             _configFileName = result.FileName;
-
             _isConfigGenerated = true;
         }
         else

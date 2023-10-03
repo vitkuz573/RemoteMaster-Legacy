@@ -25,12 +25,6 @@ public class ConfigController : ControllerBase
 
     }
 
-    [HttpGet("suka")]
-    public IActionResult Suka()
-    {
-        return Ok("suka");
-    }
-
     [HttpPost("generate")]
     public IActionResult GenerateConfig([FromBody] ConfigurationModel config)
     {
@@ -39,6 +33,7 @@ public class ConfigController : ControllerBase
         if (!ModelState.IsValid)
         {
             _logger.LogError("Model validation failed.", ModelState);
+
             return BadRequest(ModelState);
         }
 
