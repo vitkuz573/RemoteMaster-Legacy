@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Primitives;
 using Microsoft.JSInterop;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
@@ -58,56 +59,75 @@ public partial class Connect : IAsyncDisposable
 
     protected async override Task OnInitializedAsync()
     {
+        await InitializeConnectionsAsync();
+        await SetParametersFromUriAsync();
+        await GetVersions();
+    }
+
+    private async Task InitializeConnectionsAsync()
+    {
         await InitializeClientConnectionAsync();
         await _controlHubProxy.ConnectAs(Intention.Connect);
+        await InitializeAgentConnectionAsync();
+    }
 
+    private async Task SetParametersFromUriAsync()
+    {
         var uri = new Uri(NavigationManager.Uri);
         var queryParameters = QueryHelpers.ParseQuery(uri.Query);
         var newUri = uri.ToString();
 
-        if (!queryParameters.TryGetValue("imageQuality", out var imageQualityValue) || !int.TryParse(imageQualityValue, out var imageQuality))
-        {
-            _imageQuality = 25;
-            newUri = QueryHelpers.AddQueryString(newUri, "imageQuality", "25");
-        }
-        else
-        {
-            _imageQuality = imageQuality;
-        }
-
+        _imageQuality = GetQueryParameter(queryParameters, "imageQuality", 25, out newUri);
         await _controlHubProxy.SetQuality(_imageQuality);
 
-        if (!queryParameters.TryGetValue("cursorTracking", out var cursorTrackingValue) || !bool.TryParse(cursorTrackingValue, out var cursorTracking))
-        {
-            _cursorTracking = false;
-            newUri = QueryHelpers.AddQueryString(newUri, "cursorTracking", "false");
-        }
-        else
-        {
-            _cursorTracking = cursorTracking;
-        }
-
+        _cursorTracking = GetQueryParameter(queryParameters, "cursorTracking", false, out newUri);
         await _controlHubProxy.SetTrackCursor(_cursorTracking);
 
-        if (!queryParameters.TryGetValue("inputEnabled", out var inputEnabledValue) || !bool.TryParse(inputEnabledValue, out var inputEnabled))
-        {
-            _inputEnabled = true;
-            newUri = QueryHelpers.AddQueryString(newUri, "inputEnabled", "true");
-        }
-        else
-        {
-            _inputEnabled = inputEnabled;
-        }
-
+        _inputEnabled = GetQueryParameter(queryParameters, "inputEnabled", true, out newUri);
         await _controlHubProxy.SetInputEnabled(_inputEnabled);
 
         if (newUri != uri.ToString())
         {
             _newUri = newUri;
         }
+    }
 
-        await GetVersions();
-        await InitializeAgentConnectionAsync();
+    private T GetQueryParameter<T>(IDictionary<string, StringValues> queryParameters, string key, T defaultValue, out string updatedUri)
+    {
+        updatedUri = NavigationManager.Uri;
+
+        if (!queryParameters.TryGetValue(key, out var valueString) || !TryParse(valueString, out T value))
+        {
+            value = defaultValue;
+            updatedUri = QueryHelpers.AddQueryString(updatedUri, key, value.ToString());
+        }
+
+        return value;
+    }
+
+    private static bool TryParse<T>(StringValues stringValue, out T result)
+    {
+        if (typeof(T) == typeof(int))
+        {
+            if (int.TryParse(stringValue, out var intValue))
+            {
+                result = (T)(object)intValue;
+
+                return true;
+            }
+        }
+        else if (typeof(T) == typeof(bool))
+        {
+            if (bool.TryParse(stringValue, out var boolValue))
+            {
+                result = (T)(object)boolValue;
+
+                return true;
+            }
+        }
+
+        result = default;
+        return false;
     }
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
