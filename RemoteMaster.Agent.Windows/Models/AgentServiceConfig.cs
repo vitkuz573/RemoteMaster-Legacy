@@ -12,7 +12,7 @@ public class AgentServiceConfig : IServiceConfig
 
     public string DisplayName { get; } = "Remote Control Service";
 
-    public string StartType { get; } = "delayed-auto";
+    public string StartType { get; } = "auto";
 
     public IEnumerable<string>? Dependencies { get; } = new[] { "LanmanWorkstation" };
 }

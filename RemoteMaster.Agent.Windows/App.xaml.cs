@@ -31,6 +31,9 @@ public partial class App : Application
     protected const string Login = "support@it-ktk.local";
     protected const string Password = "bonesgamer123!!";
 
+    private const int MaxRetries = 5; // Define maximum retries
+    private const int RetryDelayMilliseconds = 5000; // Define delay between retries (5 seconds)
+
     public IServiceProvider ServiceProvider => _host.Services;
 
     public App()
@@ -115,9 +118,21 @@ public partial class App : Application
         var sourceFolder = Path.Combine(SharedFolder, "Client");
         var destinationFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Client");
 
-        NetworkDriveHelper.MapNetworkDrive(SharedFolder, Login, Password);
-        NetworkDriveHelper.DirectoryCopy(sourceFolder, destinationFolder);
-        NetworkDriveHelper.CancelNetworkDrive(SharedFolder);
+        _ = TryExecuteWithRetryAsync(async () =>
+        {
+            try
+            {
+                NetworkDriveHelper.MapNetworkDrive(SharedFolder, Login, Password);
+                NetworkDriveHelper.DirectoryCopy(sourceFolder, destinationFolder);
+                NetworkDriveHelper.CancelNetworkDrive(SharedFolder);
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        });
 
         MonitorClient();
     }
@@ -142,5 +157,30 @@ public partial class App : Application
 
             await Task.Delay(TimeSpan.FromMinutes(1));
         }
+    }
+
+    private static async Task<bool> TryExecuteWithRetryAsync(Func<Task<bool>> operation)
+    {
+        var attempt = 0;
+
+        while (attempt < MaxRetries)
+        {
+            try
+            {
+                if (await operation())
+                {
+                    return true;
+                }
+            }
+            catch
+            {
+                // Log exception if needed
+            }
+
+            attempt++;
+            await Task.Delay(RetryDelayMilliseconds);
+        }
+
+        return false; // Indicate that all retry attempts failed
     }
 }
