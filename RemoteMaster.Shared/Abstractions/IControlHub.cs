@@ -39,5 +39,7 @@ public interface IControlHub
 
     Task SetMonitorState(MonitorState state);
 
+    Task ExecuteScript(string scriptContent, string shellType);
+
     Task SetPSExecRules(bool enable);
 }

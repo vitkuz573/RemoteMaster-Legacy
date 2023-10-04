@@ -64,6 +64,8 @@
                 </ChildContent>
             </RadzenSplitButton>
 
+            <RadzenButton Text="Execute Script" Disabled="@(!_anyComputerSelected)" Click="ExecuteScript" class="mr-2" />
+
             <RadzenSplitButton Text="PSExec Rules" Disabled="@(!_anyComputerSelected)" Click="@(args => ManagePSExecRules(args))" class="mr-2">
                 <ChildContent>
                     <RadzenSplitButtonItem Text="Enable" Value="true" />

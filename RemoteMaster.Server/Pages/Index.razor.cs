@@ -350,6 +350,36 @@ public partial class Index
         await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.SetMonitorState(state));
     }
 
+    private async Task ExecuteScript()
+    {
+        var fileData = await JSRuntime.InvokeAsync<JsonElement>("selectFile");
+
+        if (fileData.TryGetProperty("content", out var contentElement)
+            && fileData.TryGetProperty("name", out var nameElement))
+        {
+            var fileContent = contentElement.GetString();
+            var fileName = nameElement.GetString();
+
+            var extension = Path.GetExtension(fileName);
+            string shellType;
+
+            switch (extension)
+            {
+                case ".ps1":
+                    shellType = "PowerShell";
+                    break;
+                case ".bat":
+                    shellType = "CMD";
+                    break;
+                default:
+                    Console.WriteLine("Unknown script type.");
+                    return;
+            }
+
+            await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.ExecuteScript(fileContent, shellType));
+        }
+    }
+
     private async Task ManagePSExecRules(RadzenSplitButtonItem item)
     {
         if (item == null)

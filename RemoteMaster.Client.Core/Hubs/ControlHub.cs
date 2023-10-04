@@ -2,6 +2,8 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Diagnostics;
+using System.Management.Automation;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Client.Core.Abstractions;
@@ -159,6 +161,48 @@ public class ControlHub : Hub<IControlClient>, IControlHub
     public async Task SetMonitorState(MonitorState state)
     {
         _hardwareService.SetMonitorState(state);
+    }
+
+    public async Task ExecuteScript(string scriptContent, string shellType)
+    {
+        _logger.LogInformation($"Executing script with shell type: {shellType}");
+
+        switch (shellType)
+        {
+            case "CMD":
+                using (var process = new Process())
+                {
+                    process.StartInfo.FileName = "cmd.exe";
+                    process.StartInfo.Arguments = $"/c {scriptContent}";
+                    process.StartInfo.RedirectStandardOutput = true;
+                    process.StartInfo.UseShellExecute = false;
+                    process.StartInfo.CreateNoWindow = true;
+
+                    process.Start();
+                    var output = process.StandardOutput.ReadToEnd();
+                    process.WaitForExit();
+
+                    _logger.LogInformation($"CMD Output: {output}");
+                }
+                break;
+
+            case "PowerShell":
+                using (var powerShell = PowerShell.Create())
+                {
+                    powerShell.AddScript(scriptContent);
+
+                    var results = powerShell.Invoke();
+
+                    foreach (var result in results)
+                    {
+                        _logger.LogInformation($"PowerShell Output: {result}");
+                    }
+                }
+                break;
+            default:
+                _logger.LogError($"Unsupported shell type encountered: {shellType}");
+                throw new InvalidOperationException($"Unsupported shell type: {shellType}");
+        }
     }
 
     public async Task SetPSExecRules(bool enable)

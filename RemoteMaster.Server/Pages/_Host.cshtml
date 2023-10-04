@@ -94,6 +94,25 @@
                 e.preventDefault();
             }
         });
+
+        window.selectFile = function () {
+            return new Promise((resolve, reject) => {
+                var input = document.createElement('input');
+                input.type = 'file';
+                input.onchange = function (e) {
+                    var file = e.target.files[0];
+                    var reader = new FileReader();
+                    reader.onload = function (event) {
+                        resolve({ content: event.target.result, name: file.name });
+                    };
+                    reader.onerror = function (error) {
+                        reject("Error reading file: " + error.toString());
+                    };
+                    reader.readAsText(file);
+                };
+                input.click();
+            });
+        };
     </script>
 </body>
 </html>
