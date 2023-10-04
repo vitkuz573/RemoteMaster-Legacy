@@ -6,7 +6,6 @@ using System.IO;
 using System.Windows;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Hosting.WindowsServices;
@@ -25,7 +24,7 @@ namespace RemoteMaster.Agent;
 public partial class App : Application
 {
     private IHost _host;
-    private readonly HiddenWindow _hiddenWindow;
+    private HiddenWindow _hiddenWindow;
 
     protected const string SharedFolder = @"\\SERVER-DC02\Win\RemoteMaster";
     protected const string Login = "support@it-ktk.local";
@@ -33,11 +32,9 @@ public partial class App : Application
 
     public IServiceProvider ServiceProvider => _host.Services;
 
-    public App()
+    protected override void OnStartup(StartupEventArgs e)
     {
-        var args = Environment.GetCommandLineArgs();
-
-        var hostBuilder = CreateDefaultHostBuilder(args);
+        var hostBuilder = CreateDefaultHostBuilder();
 
         if (WindowsServiceHelpers.IsWindowsService())
         {
@@ -60,9 +57,9 @@ public partial class App : Application
         _host?.StopAsync().Wait();
     }
 
-    private static IHostBuilder CreateDefaultHostBuilder(string[] args)
+    private static IHostBuilder CreateDefaultHostBuilder()
     {
-        return Host.CreateDefaultBuilder(args)
+        return Host.CreateDefaultBuilder()
             .ConfigureServices((hostContext, services) =>
             {
                 services.AddCoreServices();
