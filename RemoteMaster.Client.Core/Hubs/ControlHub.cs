@@ -170,16 +170,32 @@ public class ControlHub : Hub<IControlClient>, IControlHub
 
         if (shellType == "CMD")
         {
-            tempFilePath += ".bat";
+            tempFilePath = Path.ChangeExtension(tempFilePath, ".bat");
         }
         else if (shellType == "PowerShell")
         {
-            tempFilePath += ".ps1";
+            tempFilePath = Path.ChangeExtension(tempFilePath, ".ps1");
         }
+        else
+        {
+            _logger.LogError("Unsupported shell type encountered: {ShellType}", shellType);
+            throw new InvalidOperationException($"Unsupported shell type: {shellType}");
+        }
+
+        _logger.LogInformation("Temporary file path: {TempFilePath}", tempFilePath);
 
         try
         {
             File.WriteAllText(tempFilePath, scriptContent);
+
+            if (!File.Exists(tempFilePath))
+            {
+                _logger.LogError("Temp file was not created: {TempFilePath}", tempFilePath);
+                return;
+            }
+
+            var fileContents = File.ReadAllText(tempFilePath);
+            _logger.LogInformation("Temp file contents: {FileContents}", fileContents);
 
             var applicationToRun = shellType switch
             {
@@ -188,9 +204,13 @@ public class ControlHub : Hub<IControlClient>, IControlHub
                 _ => "",
             };
 
-            if (!ProcessHelper.OpenInteractiveProcess(applicationToRun, -1, true, "default", true, true, out _))
+            if (!ProcessHelper.OpenInteractiveProcess(applicationToRun, -1, true, "default", true, true, out var procInfo))
             {
                 _logger.LogError("Failed to start interactive process for: {ApplicationToRun}", applicationToRun);
+            }
+            else
+            {
+                _logger.LogInformation("Process started with ID: {ProcessID}, Thread ID: {ThreadID}", procInfo.dwProcessId, procInfo.dwThreadId);
             }
         }
         finally
