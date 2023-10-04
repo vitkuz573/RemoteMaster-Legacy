@@ -166,28 +166,38 @@ public class ControlHub : Hub<IControlClient>, IControlHub
 
     public async Task ExecuteScript(string scriptContent, string shellType)
     {
-        _logger.LogInformation($"Executing script with shell type: {shellType}");
-
-        string applicationToRun;
-
-        switch (shellType)
+        if (scriptContent == null)
         {
-            case "CMD":
-                applicationToRun = $"cmd.exe /c {scriptContent}";
-                break;
-
-            case "PowerShell":
-                applicationToRun = $"powershell.exe -Command {scriptContent}";
-                break;
-
-            default:
-                _logger.LogError($"Unsupported shell type encountered: {shellType}");
-                throw new InvalidOperationException($"Unsupported shell type: {shellType}");
+            throw new ArgumentNullException(nameof(scriptContent));
         }
 
-        if (!ProcessHelper.OpenInteractiveProcess(applicationToRun, -1, true, "default", true, true, out var procInfo))
+        _logger.LogInformation($"Executing script with shell type: {shellType}");
+
+        var scriptLines = scriptContent.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+
+        foreach (var line in scriptLines)
         {
-            _logger.LogError($"Failed to start interactive process for: {applicationToRun}");
+            string applicationToRun;
+
+            switch (shellType)
+            {
+                case "CMD":
+                    applicationToRun = $"cmd.exe /c \"{line}\"";
+                    break;
+
+                case "PowerShell":
+                    applicationToRun = $"powershell.exe -Command \"{line}\"";
+                    break;
+
+                default:
+                    _logger.LogError($"Unsupported shell type encountered: {shellType}");
+                    throw new InvalidOperationException($"Unsupported shell type: {shellType}");
+            }
+
+            if (!ProcessHelper.OpenInteractiveProcess(applicationToRun, -1, true, "default", true, true, out var procInfo))
+            {
+                _logger.LogError($"Failed to start interactive process for: {applicationToRun}");
+            }
         }
     }
 
