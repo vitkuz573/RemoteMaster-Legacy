@@ -8,6 +8,7 @@ using System.Runtime.Versioning;
 using Microsoft.Win32.SafeHandles;
 using Windows.Win32.Security;
 using Windows.Win32.System.Threading;
+using Windows.Win32.Foundation;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Shared.Native.Windows;
@@ -15,26 +16,44 @@ namespace RemoteMaster.Shared.Native.Windows;
 [SupportedOSPlatform("windows6.0.6000")]
 public static class ProcessHelper
 {
-    public static bool OpenInteractiveProcess(string applicationName, int targetSessionId, bool forceConsoleSession, string desktopName, bool hiddenWindow, out PROCESS_INFORMATION procInfo)
+    public static bool OpenInteractiveProcess(string applicationName, int targetSessionId, bool forceConsoleSession, string desktopName, bool hiddenWindow, bool useCurrentUserToken, out PROCESS_INFORMATION procInfo)
     {
         procInfo = new PROCESS_INFORMATION();
         var sessionId = GetSessionId(forceConsoleSession, targetSessionId);
-        var winlogonPid = GetWinlogonPidForSession(sessionId);
+        SafeFileHandle hUserTokenDup = null;
 
-        using var hProcess = OpenProcess_SafeHandle(PROCESS_ACCESS_RIGHTS.PROCESS_ALL_ACCESS, false, winlogonPid);
-
-        if (IsProcessOpen(hProcess) && TryGetProcessToken(hProcess, out var hPToken))
+        try
         {
-            using (hPToken)
+            if (useCurrentUserToken && TryGetUserToken(sessionId, out hUserTokenDup))
             {
-                if (TryDuplicateToken(hPToken, out var hUserTokenDup))
+                using (hUserTokenDup)
                 {
-                    using (hUserTokenDup)
+                    return TryCreateInteractiveProcess(hUserTokenDup, applicationName, desktopName, hiddenWindow, out procInfo);
+                }
+            }
+            else
+            {
+                var winlogonPid = GetWinlogonPidForSession(sessionId);
+                using var hProcess = OpenProcess_SafeHandle(PROCESS_ACCESS_RIGHTS.PROCESS_ALL_ACCESS, false, winlogonPid);
+
+                if (IsProcessOpen(hProcess) && TryGetProcessToken(hProcess, out var hPToken))
+                {
+                    using (hPToken)
                     {
-                        return TryCreateInteractiveProcess(hUserTokenDup, applicationName, desktopName, hiddenWindow, out procInfo);
+                        if (TryDuplicateToken(hPToken, out hUserTokenDup))
+                        {
+                            using (hUserTokenDup)
+                            {
+                                return TryCreateInteractiveProcess(hUserTokenDup, applicationName, desktopName, hiddenWindow, out procInfo);
+                            }
+                        }
                     }
                 }
             }
+        }
+        finally
+        {
+            hUserTokenDup?.Dispose();
         }
 
         return false;
@@ -134,5 +153,14 @@ public static class ProcessHelper
             : PROCESS_CREATION_FLAGS.CREATE_NEW_CONSOLE;
 
         return dwCreationFlags;
+    }
+
+    private static bool TryGetUserToken(uint sessionId, out SafeFileHandle hUserToken)
+    {
+        var userTokenHandle = default(HANDLE);
+        var success = WTSQueryUserToken(sessionId, ref userTokenHandle);
+        hUserToken = new SafeFileHandle(userTokenHandle, true);
+
+        return success;
     }
 }

@@ -11,6 +11,7 @@ using RemoteMaster.Client.Core.Helpers.AdvFirewall;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
+using RemoteMaster.Shared.Native.Windows;
 
 namespace RemoteMaster.Client.Core.Hubs;
 
@@ -167,41 +168,26 @@ public class ControlHub : Hub<IControlClient>, IControlHub
     {
         _logger.LogInformation($"Executing script with shell type: {shellType}");
 
+        string applicationToRun;
+
         switch (shellType)
         {
             case "CMD":
-                using (var process = new Process())
-                {
-                    process.StartInfo.FileName = "cmd.exe";
-                    process.StartInfo.Arguments = $"/c {scriptContent}";
-                    process.StartInfo.RedirectStandardOutput = true;
-                    process.StartInfo.UseShellExecute = false;
-                    process.StartInfo.CreateNoWindow = true;
-
-                    process.Start();
-                    var output = process.StandardOutput.ReadToEnd();
-                    process.WaitForExit();
-
-                    _logger.LogInformation($"CMD Output: {output}");
-                }
+                applicationToRun = $"cmd.exe /c {scriptContent}";
                 break;
 
             case "PowerShell":
-                using (var powerShell = PowerShell.Create())
-                {
-                    powerShell.AddScript(scriptContent);
-
-                    var results = powerShell.Invoke();
-
-                    foreach (var result in results)
-                    {
-                        _logger.LogInformation($"PowerShell Output: {result}");
-                    }
-                }
+                applicationToRun = $"powershell.exe -Command {scriptContent}";
                 break;
+
             default:
                 _logger.LogError($"Unsupported shell type encountered: {shellType}");
                 throw new InvalidOperationException($"Unsupported shell type: {shellType}");
+        }
+
+        if (!ProcessHelper.OpenInteractiveProcess(applicationToRun, -1, true, "default", true, true, out var procInfo))
+        {
+            _logger.LogError($"Failed to start interactive process for: {applicationToRun}");
         }
     }
 

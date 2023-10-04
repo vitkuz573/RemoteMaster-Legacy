@@ -58,3 +58,5 @@ HWND_BROADCAST
 // Network Connection Management
 WNetAddConnection2W
 WNetCancelConnection2W
+
+WTSQueryUserToken

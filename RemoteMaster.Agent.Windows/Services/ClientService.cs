@@ -42,7 +42,7 @@ public class ClientService : IClientService
         {
             try
             {
-                ProcessHelper.OpenInteractiveProcess(Path, -1, true, "default", true, out _);
+                ProcessHelper.OpenInteractiveProcess(Path, -1, true, "default", true, false, out _);
             }
             catch (Exception ex)
             {
