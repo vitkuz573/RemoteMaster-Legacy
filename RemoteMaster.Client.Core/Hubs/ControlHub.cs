@@ -168,6 +168,15 @@ public class ControlHub : Hub<IControlClient>, IControlHub
 
         var tempFilePath = Path.GetTempFileName();
 
+        if (shellType == "CMD")
+        {
+            tempFilePath += ".bat";
+        }
+        else if (shellType == "PowerShell")
+        {
+            tempFilePath += ".ps1";
+        }
+
         try
         {
             File.WriteAllText(tempFilePath, scriptContent);
