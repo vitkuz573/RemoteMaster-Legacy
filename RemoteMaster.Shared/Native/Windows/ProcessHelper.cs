@@ -6,9 +6,9 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using Microsoft.Win32.SafeHandles;
+using Windows.Win32.Foundation;
 using Windows.Win32.Security;
 using Windows.Win32.System.Threading;
-using Windows.Win32.Foundation;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Shared.Native.Windows;
