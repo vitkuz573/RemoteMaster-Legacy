@@ -369,6 +369,7 @@ public partial class Index
                     shellType = "PowerShell";
                     break;
                 case ".bat":
+                case ".cmd":
                     shellType = "CMD";
                     break;
                 default:

@@ -2,8 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Diagnostics;
-using System.Management.Automation;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Client.Core.Abstractions;
@@ -166,38 +164,29 @@ public class ControlHub : Hub<IControlClient>, IControlHub
 
     public async Task ExecuteScript(string scriptContent, string shellType)
     {
-        if (scriptContent == null)
+        _logger.LogInformation("Executing script with shell type: {ShellType}", shellType);
+
+        var tempFilePath = Path.GetTempFileName();
+
+        try
         {
-            throw new ArgumentNullException(nameof(scriptContent));
+            File.WriteAllText(tempFilePath, scriptContent);
+
+            var applicationToRun = shellType switch
+            {
+                "CMD" => $"cmd.exe /c \"{tempFilePath}\"",
+                "PowerShell" => $"powershell.exe -ExecutionPolicy Bypass -File \"{tempFilePath}\"",
+                _ => "",
+            };
+
+            if (!ProcessHelper.OpenInteractiveProcess(applicationToRun, -1, true, "default", true, true, out _))
+            {
+                _logger.LogError("Failed to start interactive process for: {ApplicationToRun}", applicationToRun);
+            }
         }
-
-        _logger.LogInformation($"Executing script with shell type: {shellType}");
-
-        var scriptLines = scriptContent.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-
-        foreach (var line in scriptLines)
+        finally
         {
-            string applicationToRun;
-
-            switch (shellType)
-            {
-                case "CMD":
-                    applicationToRun = $"cmd.exe /c \"{line}\"";
-                    break;
-
-                case "PowerShell":
-                    applicationToRun = $"powershell.exe -Command \"{line}\"";
-                    break;
-
-                default:
-                    _logger.LogError($"Unsupported shell type encountered: {shellType}");
-                    throw new InvalidOperationException($"Unsupported shell type: {shellType}");
-            }
-
-            if (!ProcessHelper.OpenInteractiveProcess(applicationToRun, -1, true, "default", true, true, out var procInfo))
-            {
-                _logger.LogError($"Failed to start interactive process for: {applicationToRun}");
-            }
+            File.Delete(tempFilePath);
         }
     }
 
