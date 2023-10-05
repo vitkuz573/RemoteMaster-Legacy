@@ -16,4 +16,6 @@ public interface IControlClient
     Task ReceiveScreenData(ScreenDataDto screenData);
 
     Task ReceiveScreenSize(Size size);
+
+    Task ReceiveScriptResult(string result);
 }

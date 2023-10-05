@@ -22,6 +22,7 @@ namespace RemoteMaster.Server.Pages;
 
 public partial class Index
 {
+    private Dictionary<Computer, string> _scriptResults = new();
     private readonly List<Node> _entries = new();
     private Node _selectedNode;
 
@@ -185,6 +186,14 @@ public partial class Index
         foreach (var (computer, isAvailable) in availableComputers)
         {
             var clientContext = ConnectionManager.Connect("Client", $"http://{computer.IPAddress}:5076/hubs/control", true);
+
+            clientContext.On<string>("ReceiveScriptResult", async (result) =>
+            {
+                _scriptResults[computer] = result;
+
+                await InvokeAsync(StateHasChanged);
+            });
+
             await clientContext.StartAsync();
 
             var proxy = clientContext.Connection.CreateHubProxy<IControlHub>();
@@ -385,7 +394,7 @@ public partial class Index
 
             var dialogParameters = new Dictionary<string, object>
             {
-                { "Computers", _selectedComputers }
+                { "Results", _scriptResults }
             };
 
             var dialogOptions = new DialogOptions

@@ -1,6 +1,7 @@
 ﻿@page "/script-result"
 
-@foreach (var computer in Computers)
+@foreach (var computer in Results.Keys)
 {
-    <p>@computer.IPAddress</p>
+    <p>IP Address: @computer.IPAddress</p>
+    <p>Script Result: @Results[computer]</p>
 }
