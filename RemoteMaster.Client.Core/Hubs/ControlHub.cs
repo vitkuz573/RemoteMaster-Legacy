@@ -186,34 +186,40 @@ public class ControlHub : Hub<IControlClient>, IControlHub
         _logger.LogInformation("Temporary file path: {TempFilePath}", tempFilePath);
         File.WriteAllText(tempFilePath, scriptContent);
 
-        if (!File.Exists(tempFilePath))
+        try
         {
-            _logger.LogError("Temp file was not created: {TempFilePath}", tempFilePath);
-            return;
+            if (!File.Exists(tempFilePath))
+            {
+                _logger.LogError("Temp file was not created: {TempFilePath}", tempFilePath);
+                return;
+            }
+
+            var applicationToRun = shellType switch
+            {
+                "CMD" => $"cmd.exe /c \"{tempFilePath}\"",
+                "PowerShell" => $"powershell.exe -ExecutionPolicy Bypass -File \"{tempFilePath}\"",
+                _ => "",
+            };
+
+            if (!ProcessHelper.OpenInteractiveProcess(applicationToRun, -1, true, "default", true, true, out var procInfo))
+            {
+                _logger.LogError("Failed to start interactive process for: {ApplicationToRun}", applicationToRun);
+            }
+            else
+            {
+                _logger.LogInformation("Process started with ID: {ProcessID}, Thread ID: {ThreadID}", procInfo.dwProcessId, procInfo.dwThreadId);
+
+                var process = Process.GetProcessById((int)procInfo.dwProcessId);
+                process.WaitForExit();
+            }
         }
-
-        var fileContents = File.ReadAllText(tempFilePath);
-
-        var applicationToRun = shellType switch
+        finally
         {
-            "CMD" => $"cmd.exe /c \"{tempFilePath}\"",
-            "PowerShell" => $"powershell.exe -ExecutionPolicy Bypass -File \"{tempFilePath}\"",
-            _ => "",
-        };
-
-        if (!ProcessHelper.OpenInteractiveProcess(applicationToRun, -1, true, "default", true, true, out var procInfo))
-        {
-            _logger.LogError("Failed to start interactive process for: {ApplicationToRun}", applicationToRun);
+            if (File.Exists(tempFilePath))
+            {
+                File.Delete(tempFilePath);
+            }
         }
-        else
-        {
-            _logger.LogInformation("Process started with ID: {ProcessID}, Thread ID: {ThreadID}", procInfo.dwProcessId, procInfo.dwThreadId);
-
-            var process = Process.GetProcessById((int)procInfo.dwProcessId);
-            process.WaitForExit();
-        }
-
-        File.Delete(tempFilePath);
     }
 
     public async Task SetPSExecRules(bool enable)
