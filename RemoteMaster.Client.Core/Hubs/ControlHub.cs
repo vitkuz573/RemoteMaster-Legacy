@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Diagnostics;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Client.Core.Abstractions;
@@ -183,40 +184,37 @@ public class ControlHub : Hub<IControlClient>, IControlHub
         }
 
         _logger.LogInformation("Temporary file path: {TempFilePath}", tempFilePath);
+        File.WriteAllText(tempFilePath, scriptContent);
 
-        try
+        if (!File.Exists(tempFilePath))
         {
-            File.WriteAllText(tempFilePath, scriptContent);
-
-            if (!File.Exists(tempFilePath))
-            {
-                _logger.LogError("Temp file was not created: {TempFilePath}", tempFilePath);
-                return;
-            }
-
-            var fileContents = File.ReadAllText(tempFilePath);
-            _logger.LogInformation("Temp file contents: {FileContents}", fileContents);
-
-            var applicationToRun = shellType switch
-            {
-                "CMD" => $"cmd.exe /c \"{tempFilePath}\"",
-                "PowerShell" => $"powershell.exe -ExecutionPolicy Bypass -File \"{tempFilePath}\"",
-                _ => "",
-            };
-
-            if (!ProcessHelper.OpenInteractiveProcess(applicationToRun, -1, true, "default", true, true, out var procInfo))
-            {
-                _logger.LogError("Failed to start interactive process for: {ApplicationToRun}", applicationToRun);
-            }
-            else
-            {
-                _logger.LogInformation("Process started with ID: {ProcessID}, Thread ID: {ThreadID}", procInfo.dwProcessId, procInfo.dwThreadId);
-            }
+            _logger.LogError("Temp file was not created: {TempFilePath}", tempFilePath);
+            return;
         }
-        finally
+
+        var fileContents = File.ReadAllText(tempFilePath);
+        _logger.LogInformation("Temp file contents: {FileContents}", fileContents);
+
+        var applicationToRun = shellType switch
         {
-            File.Delete(tempFilePath);
+            "CMD" => $"cmd.exe /c \"{tempFilePath}\"",
+            "PowerShell" => $"powershell.exe -ExecutionPolicy Bypass -File \"{tempFilePath}\"",
+            _ => "",
+        };
+
+        if (!ProcessHelper.OpenInteractiveProcess(applicationToRun, -1, true, "default", true, true, out var procInfo))
+        {
+            _logger.LogError("Failed to start interactive process for: {ApplicationToRun}", applicationToRun);
         }
+        else
+        {
+            _logger.LogInformation("Process started with ID: {ProcessID}, Thread ID: {ThreadID}", procInfo.dwProcessId, procInfo.dwThreadId);
+
+            var process = Process.GetProcessById((int)procInfo.dwProcessId);
+            process.WaitForExit();
+        }
+
+        File.Delete(tempFilePath);
     }
 
     public async Task SetPSExecRules(bool enable)
