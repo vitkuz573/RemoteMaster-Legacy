@@ -193,7 +193,6 @@ public class ControlHub : Hub<IControlClient>, IControlHub
         }
 
         var fileContents = File.ReadAllText(tempFilePath);
-        _logger.LogInformation("Temp file contents: {FileContents}", fileContents);
 
         var applicationToRun = shellType switch
         {
