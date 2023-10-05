@@ -167,21 +167,24 @@ public class ControlHub : Hub<IControlClient>, IControlHub
     {
         _logger.LogInformation("Executing script with shell type: {ShellType}", shellType);
 
-        var tempFilePath = Path.GetTempFileName();
+        var publicDirectory = @"C:\Users\Public";
+        var fileName = $"{Guid.NewGuid()}";
 
         if (shellType == "CMD")
         {
-            tempFilePath = Path.ChangeExtension(tempFilePath, ".bat");
+            fileName += ".bat";
         }
         else if (shellType == "PowerShell")
         {
-            tempFilePath = Path.ChangeExtension(tempFilePath, ".ps1");
+            fileName += ".ps1";
         }
         else
         {
             _logger.LogError("Unsupported shell type encountered: {ShellType}", shellType);
             throw new InvalidOperationException($"Unsupported shell type: {shellType}");
         }
+
+        var tempFilePath = Path.Combine(publicDirectory, fileName);
 
         _logger.LogInformation("Temporary file path: {TempFilePath}", tempFilePath);
         File.WriteAllText(tempFilePath, scriptContent);
