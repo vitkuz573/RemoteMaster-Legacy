@@ -11,6 +11,6 @@ namespace RemoteMaster.Server.Components;
 public partial class ScriptResultPage
 {
     [Parameter]
-    [SuppressMessage("CRITICAL", "CA2227")]
+    [SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Required for Blazor parameter")]
     public Dictionary<Computer, string> Results { get; set; }
 }
