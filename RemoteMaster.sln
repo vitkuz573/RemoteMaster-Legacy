@@ -23,9 +23,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Agent.Windows"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Updater", "RemoteMaster.Updater\RemoteMaster.Updater.csproj", "{D9F12236-05DC-4445-A54F-22399927AE75}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteMaster.Updater.Tests", "RemoteMaster.Updater.Tests\RemoteMaster.Updater.Tests.csproj", "{2E53BE33-1007-4929-B637-A5FFCADB9246}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Updater.Tests", "RemoteMaster.Updater.Tests\RemoteMaster.Updater.Tests.csproj", "{2E53BE33-1007-4929-B637-A5FFCADB9246}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteMaster.Shared.Tests", "RemoteMaster.Shared.Tests\RemoteMaster.Shared.Tests.csproj", "{18172EBB-ADF2-4DDD-842A-6FA08975B764}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Shared.Tests", "RemoteMaster.Shared.Tests\RemoteMaster.Shared.Tests.csproj", "{18172EBB-ADF2-4DDD-842A-6FA08975B764}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

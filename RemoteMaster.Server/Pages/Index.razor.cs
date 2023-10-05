@@ -11,6 +11,7 @@ using Microsoft.JSInterop;
 using Radzen;
 using Radzen.Blazor;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Components;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
 using RemoteMaster.Shared.Abstractions;
@@ -38,6 +39,9 @@ public partial class Index
 
     [Inject]
     private IHttpClientFactory HttpClientFactory { get; set; }
+
+    [Inject]
+    private DialogService DialogService { get; set; }
 
     [Inject]
     private IJSRuntime JSRuntime { get; set; }
@@ -378,6 +382,18 @@ public partial class Index
             }
 
             await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.ExecuteScript(fileContent, shellType));
+
+            var dialogParameters = new Dictionary<string, object>
+            {
+                { "Computers", _selectedComputers }
+            };
+
+            var dialogOptions = new DialogOptions
+            {
+                Draggable = true
+            };
+
+            await DialogService.OpenAsync<ScriptResultPage>("Script Result", dialogParameters, dialogOptions);
         }
     }
 
