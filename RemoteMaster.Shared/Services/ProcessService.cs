@@ -23,30 +23,31 @@ public class ProcessService : IProcessService
         var sessionId = GetSessionId(forceConsoleSession, targetSessionId);
 
         SafeFileHandle hUserTokenDup = null;
-        
+        SafeFileHandle stdOutputReadHandle;
+
         try
         {
             if (useCurrentUserToken && TryGetUserToken(sessionId, out hUserTokenDup))
             {
-                if (TryCreateInteractiveProcess(hUserTokenDup, applicationName, desktopName, hiddenWindow, out procInfo))
+                if (TryCreateInteractiveProcess(hUserTokenDup, applicationName, desktopName, hiddenWindow, out procInfo, out stdOutputReadHandle))
                 {
-                    return new NativeProcess(procInfo);
+                    return new NativeProcess(procInfo, stdOutputReadHandle);
                 }
             }
             else
             {
                 var winlogonPid = GetWinlogonPidForSession(sessionId);
                 using var hProcess = OpenProcess_SafeHandle(PROCESS_ACCESS_RIGHTS.PROCESS_ALL_ACCESS, false, winlogonPid);
-                
+
                 if (IsProcessOpen(hProcess) && TryGetProcessToken(hProcess, out var hPToken))
                 {
                     using (hPToken)
                     {
                         if (TryDuplicateToken(hPToken, out hUserTokenDup))
                         {
-                            if (TryCreateInteractiveProcess(hUserTokenDup, applicationName, desktopName, hiddenWindow, out procInfo))
+                            if (TryCreateInteractiveProcess(hUserTokenDup, applicationName, desktopName, hiddenWindow, out procInfo, out stdOutputReadHandle))
                             {
-                                return new NativeProcess(procInfo);
+                                return new NativeProcess(procInfo, stdOutputReadHandle);
                             }
                         }
                     }
@@ -119,21 +120,41 @@ public class ProcessService : IProcessService
         return targetSessionFound ? (uint)targetSessionId : lastSessionId;
     }
 
-    private static unsafe bool TryCreateInteractiveProcess(SafeHandle hUserTokenDup, string applicationName, string desktopName, bool hiddenWindow, out PROCESS_INFORMATION procInfo)
+    private static unsafe bool TryCreateInteractiveProcess(SafeHandle hUserTokenDup, string applicationName, string desktopName, bool hiddenWindow, out PROCESS_INFORMATION procInfo, out SafeFileHandle stdOutputReadHandle)
     {
-        fixed (char* pDesktopName = $@"winsta0\{desktopName}")
+        // Создание анонимных каналов для перенаправления стандартного вывода.
+        if (!CreatePipe(out stdOutputReadHandle, out SafeFileHandle stdOutputWriteHandle, null, 0))
         {
-            var startupInfo = new STARTUPINFOW
+            throw new Exception("Failed to create pipe for standard output.");
+        }
+
+        try
+        {
+            fixed (char* pDesktopName = $@"winsta0\{desktopName}")
             {
-                cb = (uint)Marshal.SizeOf<STARTUPINFOW>(),
-                lpDesktop = pDesktopName
-            };
+                var startupInfo = new STARTUPINFOW
+                {
+                    cb = (uint)Marshal.SizeOf<STARTUPINFOW>(),
+                    lpDesktop = pDesktopName,
+                    hStdOutput = (HANDLE)stdOutputWriteHandle.DangerousGetHandle(),
+                    hStdError = (HANDLE)stdOutputWriteHandle.DangerousGetHandle(),
+                    dwFlags = STARTUPINFOW_FLAGS.STARTF_USESTDHANDLES
+                };
 
-            var dwCreationFlags = SetCreationFlags(hiddenWindow);
-            applicationName += char.MinValue;
-            var appName = new Span<char>(applicationName.ToCharArray());
+                var dwCreationFlags = SetCreationFlags(hiddenWindow);
+                applicationName += char.MinValue;
+                var appName = new Span<char>(applicationName.ToCharArray());
 
-            return CreateProcessAsUser(hUserTokenDup, null, ref appName, null, null, false, dwCreationFlags, null, null, startupInfo, out procInfo);
+                bool result = CreateProcessAsUser(hUserTokenDup, null, ref appName, null, null, false, dwCreationFlags, null, null, startupInfo, out procInfo);
+                stdOutputWriteHandle.Close();
+
+                return result;
+            }
+        }
+        catch
+        {
+            stdOutputReadHandle.Close();
+            throw;
         }
     }
 

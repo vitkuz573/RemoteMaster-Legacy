@@ -17,11 +17,14 @@ public class NativeProcess
 
     public SafeFileHandle ThreadHandle { get; }
 
-    public NativeProcess(PROCESS_INFORMATION procInfo)
+    public SafeFileHandle StdOutputReadHandle { get; }
+
+    public NativeProcess(PROCESS_INFORMATION procInfo, SafeFileHandle stdOutputReadHandle)
     {
         ProcessId = procInfo.dwProcessId;
         ThreadId = procInfo.dwThreadId;
         ProcessHandle = new SafeFileHandle(procInfo.hProcess, true);
         ThreadHandle = new SafeFileHandle(procInfo.hThread, true);
+        StdOutputReadHandle = stdOutputReadHandle;
     }
 }
