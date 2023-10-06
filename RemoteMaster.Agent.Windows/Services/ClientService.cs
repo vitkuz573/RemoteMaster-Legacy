@@ -6,6 +6,7 @@ using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Agent.Core.Abstractions;
 using RemoteMaster.Shared.Abstractions;
+using RemoteMaster.Shared.Models;
 using RemoteMaster.Shared.Native.Windows;
 
 namespace RemoteMaster.Agent.Services;
@@ -44,7 +45,15 @@ public class ClientService : IClientService
         {
             try
             {
-                _processService.Start(Path, -1, true, "default", true, false);
+                var options = new ProcessStartOptions(Path, -1)
+                {
+                    ForceConsoleSession = true,
+                    DesktopName = "default",
+                    HiddenWindow = true,
+                    UseCurrentUserToken = false
+                };
+
+                _processService.Start(options);
             }
             catch (Exception ex)
             {

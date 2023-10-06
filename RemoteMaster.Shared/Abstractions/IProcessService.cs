@@ -10,5 +10,5 @@ namespace RemoteMaster.Shared.Abstractions;
 [SupportedOSPlatform("windows6.0.6000")]
 public interface IProcessService
 {
-    NativeProcess Start(string applicationName, int targetSessionId, bool forceConsoleSession, string desktopName, bool hiddenWindow, bool useCurrentUserToken);
+    NativeProcess Start(ProcessStartOptions options);
 }

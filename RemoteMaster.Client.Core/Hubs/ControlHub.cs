@@ -207,7 +207,15 @@ public class ControlHub : Hub<IControlClient>, IControlHub
                 _ => "",
             };
 
-            var nativeProcess = _processService.Start(applicationToRun, -1, true, "default", true, true);
+            var options = new ProcessStartOptions(applicationToRun, -1)
+            {
+                ForceConsoleSession = true,
+                DesktopName = "default",
+                HiddenWindow = true,
+                UseCurrentUserToken = true
+            };
+
+            var nativeProcess = _processService.Start(options);
 
             if (nativeProcess == null)
             {
