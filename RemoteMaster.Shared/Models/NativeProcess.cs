@@ -8,7 +8,7 @@ using Windows.Win32.System.Threading;
 
 namespace RemoteMaster.Shared.Models;
 
-public class NativeProcess
+public class NativeProcess : IDisposable
 {
     public uint ProcessId { get; }
 
@@ -47,5 +47,12 @@ public class NativeProcess
         {
             OutputReceived?.Invoke(line);
         }
+    }
+
+    public void Dispose()
+    {
+        ProcessHandle?.Dispose();
+        ThreadHandle?.Dispose();
+        StdOutputReadHandle?.Dispose();
     }
 }
