@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Text;
 using Microsoft.Win32.SafeHandles;
 using Windows.Win32.System.Threading;
 
@@ -26,5 +27,25 @@ public class NativeProcess
         ProcessHandle = new SafeFileHandle(procInfo.hProcess, true);
         ThreadHandle = new SafeFileHandle(procInfo.hThread, true);
         StdOutputReadHandle = stdOutputReadHandle;
+    }
+
+    public event Action<string> OutputReceived;
+
+    public async Task StartListeningToOutputAsync()
+    {
+        if (StdOutputReadHandle == null || StdOutputReadHandle.IsInvalid)
+        {
+            throw new InvalidOperationException("Invalid standard output handle.");
+        }
+
+        using var fs = new FileStream(StdOutputReadHandle, FileAccess.Read, 4096, true);
+        using var reader = new StreamReader(fs, Encoding.UTF8);
+
+        string line;
+
+        while ((line = await reader.ReadLineAsync()) != null)
+        {
+            OutputReceived?.Invoke(line);
+        }
     }
 }

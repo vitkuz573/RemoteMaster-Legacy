@@ -182,6 +182,7 @@ public class ControlHub : Hub<IControlClient>, IControlHub
         else
         {
             _logger.LogError("Unsupported shell type encountered: {ShellType}", shellType);
+            
             throw new InvalidOperationException($"Unsupported shell type: {shellType}");
         }
 
@@ -195,6 +196,7 @@ public class ControlHub : Hub<IControlClient>, IControlHub
             if (!File.Exists(tempFilePath))
             {
                 _logger.LogError("Temp file was not created: {TempFilePath}", tempFilePath);
+                
                 return;
             }
 
@@ -215,10 +217,15 @@ public class ControlHub : Hub<IControlClient>, IControlHub
             {
                 _logger.LogInformation("Process started with ID: {ProcessID}, Thread ID: {ThreadID}", nativeProcess.ProcessId, nativeProcess.ThreadId);
 
+                var _ = nativeProcess.StartListeningToOutputAsync();
+                
+                nativeProcess.OutputReceived += (output) =>
+                {
+                    _ = Clients.Caller.ReceiveScriptResult(output);
+                };
+
                 var process = Process.GetProcessById((int)nativeProcess.ProcessId);
                 process.WaitForExit();
-
-                await Clients.Caller.ReceiveScriptResult($"Script executed");
             }
         }
         finally
