@@ -63,6 +63,7 @@ public partial class App : Application
             .ConfigureServices((hostContext, services) =>
             {
                 services.AddCoreServices();
+                services.AddSingleton<IProcessService, ProcessService>();
                 services.AddSingleton<IClientService, ClientService>();
                 services.AddSingleton<IAgentServiceManager, AgentServiceManager>();
                 services.AddSingleton<IUpdaterServiceManager, UpdaterServiceManager>();

@@ -4,47 +4,49 @@
 
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
 using Microsoft.Win32.SafeHandles;
+using RemoteMaster.Shared.Abstractions;
+using RemoteMaster.Shared.Models;
+using RemoteMaster.Shared.Native.Windows;
 using Windows.Win32.Foundation;
 using Windows.Win32.Security;
 using Windows.Win32.System.Threading;
 using static Windows.Win32.PInvoke;
 
-namespace RemoteMaster.Shared.Native.Windows;
+namespace RemoteMaster.Shared.Services;
 
-[SupportedOSPlatform("windows6.0.6000")]
-public static class ProcessHelper
+public class ProcessService : IProcessService
 {
-    public static bool OpenInteractiveProcess(string applicationName, int targetSessionId, bool forceConsoleSession, string desktopName, bool hiddenWindow, bool useCurrentUserToken, out PROCESS_INFORMATION procInfo)
+    public NativeProcess Start(string applicationName, int targetSessionId, bool forceConsoleSession, string desktopName, bool hiddenWindow, bool useCurrentUserToken)
     {
-        procInfo = new PROCESS_INFORMATION();
+        var procInfo = new PROCESS_INFORMATION();
         var sessionId = GetSessionId(forceConsoleSession, targetSessionId);
-        SafeFileHandle hUserTokenDup = null;
 
+        SafeFileHandle hUserTokenDup = null;
+        
         try
         {
             if (useCurrentUserToken && TryGetUserToken(sessionId, out hUserTokenDup))
             {
-                using (hUserTokenDup)
+                if (TryCreateInteractiveProcess(hUserTokenDup, applicationName, desktopName, hiddenWindow, out procInfo))
                 {
-                    return TryCreateInteractiveProcess(hUserTokenDup, applicationName, desktopName, hiddenWindow, out procInfo);
+                    return new NativeProcess(procInfo);
                 }
             }
             else
             {
                 var winlogonPid = GetWinlogonPidForSession(sessionId);
                 using var hProcess = OpenProcess_SafeHandle(PROCESS_ACCESS_RIGHTS.PROCESS_ALL_ACCESS, false, winlogonPid);
-
+                
                 if (IsProcessOpen(hProcess) && TryGetProcessToken(hProcess, out var hPToken))
                 {
                     using (hPToken)
                     {
                         if (TryDuplicateToken(hPToken, out hUserTokenDup))
                         {
-                            using (hUserTokenDup)
+                            if (TryCreateInteractiveProcess(hUserTokenDup, applicationName, desktopName, hiddenWindow, out procInfo))
                             {
-                                return TryCreateInteractiveProcess(hUserTokenDup, applicationName, desktopName, hiddenWindow, out procInfo);
+                                return new NativeProcess(procInfo);
                             }
                         }
                     }
@@ -56,7 +58,7 @@ public static class ProcessHelper
             hUserTokenDup?.Dispose();
         }
 
-        return false;
+        return null;
     }
 
     private static bool IsProcessOpen(SafeHandle hProcess)
@@ -78,11 +80,6 @@ public static class ProcessHelper
     {
         if (!forceConsoleSession)
         {
-            if (!targetSessionId.HasValue)
-            {
-                throw new ArgumentNullException(nameof(targetSessionId), "Target session ID must be provided when forceConsoleSession is false.");
-            }
-
             return FindTargetSessionId(targetSessionId.Value);
         }
 
@@ -133,10 +130,6 @@ public static class ProcessHelper
             };
 
             var dwCreationFlags = SetCreationFlags(hiddenWindow);
-
-            // Appending a null character to applicationName.
-            // This is necessary because the CreateProcessAsUser function expects lpCommandLine to be a null-terminated string 
-            // (C-style string) to correctly determine its end.
             applicationName += char.MinValue;
             var appName = new Span<char>(applicationName.ToCharArray());
 
@@ -147,11 +140,11 @@ public static class ProcessHelper
     private static PROCESS_CREATION_FLAGS SetCreationFlags(bool hiddenWindow)
     {
         var dwCreationFlags = PROCESS_CREATION_FLAGS.NORMAL_PRIORITY_CLASS | PROCESS_CREATION_FLAGS.CREATE_UNICODE_ENVIRONMENT;
-
-        dwCreationFlags |= hiddenWindow
-            ? PROCESS_CREATION_FLAGS.CREATE_NO_WINDOW
+        
+        dwCreationFlags |= hiddenWindow 
+            ? PROCESS_CREATION_FLAGS.CREATE_NO_WINDOW 
             : PROCESS_CREATION_FLAGS.CREATE_NEW_CONSOLE;
-
+        
         return dwCreationFlags;
     }
 
@@ -160,7 +153,7 @@ public static class ProcessHelper
         var userTokenHandle = default(HANDLE);
         var success = WTSQueryUserToken(sessionId, ref userTokenHandle);
         hUserToken = new SafeFileHandle(userTokenHandle, true);
-
+        
         return success;
     }
 }

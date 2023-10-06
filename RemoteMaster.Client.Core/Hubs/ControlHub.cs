@@ -10,13 +10,13 @@ using RemoteMaster.Client.Core.Helpers.AdvFirewall;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
-using RemoteMaster.Shared.Native.Windows;
 
 namespace RemoteMaster.Client.Core.Hubs;
 
 public class ControlHub : Hub<IControlClient>, IControlHub
 {
     private readonly IAppState _appState;
+    private readonly IProcessService _processService;
     private readonly IViewerFactory _viewerFactory;
     private readonly IInputService _inputSender;
     private readonly IPowerService _powerManager;
@@ -26,9 +26,10 @@ public class ControlHub : Hub<IControlClient>, IControlHub
     private readonly IScreenRecorderService _screenRecorderService;
     private readonly ILogger<ControlHub> _logger;
 
-    public ControlHub(IAppState appState, IViewerFactory viewerFactory, IInputService inputSender, IPowerService powerManager, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturer, IScreenRecorderService screenRecorderService, ILogger<ControlHub> logger)
+    public ControlHub(IAppState appState, IProcessService processService, IViewerFactory viewerFactory, IInputService inputSender, IPowerService powerManager, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturer, IScreenRecorderService screenRecorderService, ILogger<ControlHub> logger)
     {
         _appState = appState;
+        _processService = processService;
         _viewerFactory = viewerFactory;
         _inputSender = inputSender;
         _powerManager = powerManager;
@@ -204,15 +205,17 @@ public class ControlHub : Hub<IControlClient>, IControlHub
                 _ => "",
             };
 
-            if (!ProcessHelper.OpenInteractiveProcess(applicationToRun, -1, true, "default", true, true, out var procInfo))
+            var nativeProcess = _processService.Start(applicationToRun, -1, true, "default", true, true);
+
+            if (nativeProcess == null)
             {
                 _logger.LogError("Failed to start interactive process for: {ApplicationToRun}", applicationToRun);
             }
             else
             {
-                _logger.LogInformation("Process started with ID: {ProcessID}, Thread ID: {ThreadID}", procInfo.dwProcessId, procInfo.dwThreadId);
+                _logger.LogInformation("Process started with ID: {ProcessID}, Thread ID: {ThreadID}", nativeProcess.ProcessId, nativeProcess.ThreadId);
 
-                var process = Process.GetProcessById((int)procInfo.dwProcessId);
+                var process = Process.GetProcessById((int)nativeProcess.ProcessId);
                 process.WaitForExit();
 
                 await Clients.Caller.ReceiveScriptResult($"Script executed");

@@ -18,11 +18,13 @@ public class ClientService : IClientService
     private const string CertificateThumbprint = "E0BD3A7C39AA4FC012A0F6CB3297B46D5D73210C";
 
     private readonly ISignatureService _signatureService;
+    private readonly IProcessService _processService;
     private readonly ILogger<ClientService> _logger;
 
-    public ClientService(ISignatureService signatureService, ILogger<ClientService> logger)
+    public ClientService(IProcessService processService, ISignatureService signatureService, ILogger<ClientService> logger)
     {
         _signatureService = signatureService;
+        _processService = processService;
         _logger = logger;
     }
 
@@ -42,7 +44,7 @@ public class ClientService : IClientService
         {
             try
             {
-                ProcessHelper.OpenInteractiveProcess(Path, -1, true, "default", true, false, out _);
+                _processService.Start(Path, -1, true, "default", true, false);
             }
             catch (Exception ex)
             {
