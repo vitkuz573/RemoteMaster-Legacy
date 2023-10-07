@@ -10,13 +10,13 @@ using RemoteMaster.Client.Core.Helpers.AdvFirewall;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
+using RemoteMaster.Shared.Services;
 
 namespace RemoteMaster.Client.Core.Hubs;
 
 public class ControlHub : Hub<IControlClient>, IControlHub
 {
     private readonly IAppState _appState;
-    private readonly IProcessService _processService;
     private readonly IViewerFactory _viewerFactory;
     private readonly IInputService _inputSender;
     private readonly IPowerService _powerManager;
@@ -26,10 +26,9 @@ public class ControlHub : Hub<IControlClient>, IControlHub
     private readonly IScreenRecorderService _screenRecorderService;
     private readonly ILogger<ControlHub> _logger;
 
-    public ControlHub(IAppState appState, IProcessService processService, IViewerFactory viewerFactory, IInputService inputSender, IPowerService powerManager, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturer, IScreenRecorderService screenRecorderService, ILogger<ControlHub> logger)
+    public ControlHub(IAppState appState, IViewerFactory viewerFactory, IInputService inputSender, IPowerService powerManager, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturer, IScreenRecorderService screenRecorderService, ILogger<ControlHub> logger)
     {
         _appState = appState;
-        _processService = processService;
         _viewerFactory = viewerFactory;
         _inputSender = inputSender;
         _powerManager = powerManager;
@@ -215,7 +214,7 @@ public class ControlHub : Hub<IControlClient>, IControlHub
                 UseCurrentUserToken = true
             };
 
-            var nativeProcess = _processService.Start(options);
+            using var nativeProcess = NativeProcess.Start(options);
 
             if (nativeProcess == null)
             {

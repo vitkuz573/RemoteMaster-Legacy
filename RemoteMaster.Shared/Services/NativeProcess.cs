@@ -4,29 +4,88 @@
 
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Text;
 using Microsoft.Win32.SafeHandles;
-using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;
-using RemoteMaster.Shared.Native.Windows;
 using Windows.Win32.Foundation;
 using Windows.Win32.Security;
+using Windows.Win32.System.RemoteDesktop;
 using Windows.Win32.System.Threading;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Shared.Services;
 
-public class ProcessService : IProcessService
+public class NativeProcess : IDisposable
 {
-    public NativeProcess Start(ProcessStartOptions options)
+    public uint ProcessId { get; private set; }
+
+    public uint ThreadId { get; private set; }
+
+    public SafeFileHandle ProcessHandle { get; private set; }
+
+    public SafeFileHandle ThreadHandle { get; private set; }
+
+    public SafeFileHandle StdOutputReadHandle { get; private set; }
+
+
+    public event Action<string> OutputReceived;
+
+    public ProcessStartOptions StartOptions { get; set; }
+
+    public NativeProcess(ProcessStartOptions options)
     {
-        if (options == null)
+        StartOptions = options;
+    }
+
+    public NativeProcess(PROCESS_INFORMATION procInfo, SafeFileHandle stdOutputReadHandle)
+    {
+        ProcessId = procInfo.dwProcessId;
+        ThreadId = procInfo.dwThreadId;
+        ProcessHandle = new SafeFileHandle(procInfo.hProcess, true);
+        ThreadHandle = new SafeFileHandle(procInfo.hThread, true);
+        StdOutputReadHandle = stdOutputReadHandle;
+    }
+
+    public void Start()
+    {
+        var proc = StartInternal(StartOptions);
+
+        ProcessId = proc.ProcessId;
+        ThreadId = proc.ThreadId;
+        ProcessHandle = proc.ProcessHandle;
+        ThreadHandle = proc.ThreadHandle;
+        StdOutputReadHandle = proc.StdOutputReadHandle;
+    }
+
+    public static NativeProcess Start(ProcessStartOptions options)
+    {
+        var process = new NativeProcess(options);
+        process.Start();
+
+        return process;
+    }
+
+    public async Task StartListeningToOutputAsync()
+    {
+        if (StdOutputReadHandle == null || StdOutputReadHandle.IsInvalid)
         {
-            throw new ArgumentNullException(nameof(options));
+            throw new InvalidOperationException("Invalid standard output handle.");
         }
 
+        using var fs = new FileStream(StdOutputReadHandle, FileAccess.Read, 4096, true);
+        using var reader = new StreamReader(fs, Encoding.UTF8);
+        string line;
+
+        while ((line = await reader.ReadLineAsync()) != null)
+        {
+            OutputReceived?.Invoke(line);
+        }
+    }
+
+    private static NativeProcess StartInternal(ProcessStartOptions options)
+    {
         var procInfo = new PROCESS_INFORMATION();
         var sessionId = GetSessionId(options.ForceConsoleSession, options.TargetSessionId);
-
         SafeFileHandle hUserTokenDup = null;
         SafeFileHandle stdOutputReadHandle = null;
 
@@ -36,17 +95,13 @@ public class ProcessService : IProcessService
             {
                 if (TryCreateInteractiveProcess(hUserTokenDup, options.ApplicationName, options.DesktopName, options.HiddenWindow, out procInfo, out stdOutputReadHandle))
                 {
-                    var resultProcess = new NativeProcess(procInfo, stdOutputReadHandle);
-                    stdOutputReadHandle = null;
-
-                    return resultProcess;
+                    return new NativeProcess(procInfo, stdOutputReadHandle);
                 }
             }
             else
             {
                 var winlogonPid = GetWinlogonPidForSession(sessionId);
                 using var hProcess = OpenProcess_SafeHandle(PROCESS_ACCESS_RIGHTS.PROCESS_ALL_ACCESS, false, winlogonPid);
-
                 if (IsProcessOpen(hProcess) && TryGetProcessToken(hProcess, out var hPToken))
                 {
                     using (hPToken)
@@ -55,10 +110,7 @@ public class ProcessService : IProcessService
                         {
                             if (TryCreateInteractiveProcess(hUserTokenDup, options.ApplicationName, options.DesktopName, options.HiddenWindow, out procInfo, out stdOutputReadHandle))
                             {
-                                var resultProcess = new NativeProcess(procInfo, stdOutputReadHandle);
-                                stdOutputReadHandle = null;
-                                
-                                return resultProcess;
+                                return new NativeProcess(procInfo, stdOutputReadHandle);
                             }
                         }
                     }
@@ -80,7 +132,12 @@ public class ProcessService : IProcessService
 
     private static bool TryDuplicateToken(SafeHandle hPToken, out SafeFileHandle hUserTokenDup) => DuplicateTokenEx(hPToken, TOKEN_ACCESS_MASK.TOKEN_ALL_ACCESS, null, SECURITY_IMPERSONATION_LEVEL.SecurityIdentification, TOKEN_TYPE.TokenPrimary, out hUserTokenDup);
 
-    private static uint GetSessionId(bool forceConsoleSession, int? targetSessionId) => !forceConsoleSession ? FindTargetSessionId(targetSessionId.Value) : WTSGetActiveConsoleSessionId();
+    private static uint GetSessionId(bool forceConsoleSession, int? targetSessionId)
+    {
+        return !forceConsoleSession
+            ? FindTargetSessionId(targetSessionId.Value)
+            : WTSGetActiveConsoleSessionId();
+    }
 
     private static uint GetWinlogonPidForSession(uint sessionId)
     {
@@ -97,22 +154,24 @@ public class ProcessService : IProcessService
 
     private static uint FindTargetSessionId(int targetSessionId)
     {
-        var activeSessions = SessionHelper.GetActiveSessions();
+        var activeSessions = GetActiveSessions();
         uint lastSessionId = 0;
         var targetSessionFound = false;
 
         foreach (var session in activeSessions)
         {
-            lastSessionId = session.Id;
-
-            if (session.Id == targetSessionId)
+            lastSessionId = session.SessionId;
+            
+            if (session.SessionId == targetSessionId)
             {
                 targetSessionFound = true;
                 break;
             }
         }
 
-        return targetSessionFound ? (uint)targetSessionId : lastSessionId;
+        return targetSessionFound
+            ? (uint)targetSessionId
+            : lastSessionId;
     }
 
     private static unsafe bool TryCreateInteractiveProcess(SafeHandle hUserTokenDup, string applicationName, string desktopName, bool hiddenWindow, out PROCESS_INFORMATION procInfo, out SafeFileHandle stdOutputReadHandle)
@@ -135,11 +194,12 @@ public class ProcessService : IProcessService
 
             var dwCreationFlags = SetCreationFlags(hiddenWindow);
             applicationName += char.MinValue;
+            
             var appName = new Span<char>(applicationName.ToCharArray());
-
-            bool result = CreateProcessAsUser(hUserTokenDup, null, ref appName, null, null, false, dwCreationFlags, null, null, startupInfo, out procInfo);
+            var result = CreateProcessAsUser(hUserTokenDup, null, ref appName, null, null, false, dwCreationFlags, null, null, startupInfo, out procInfo);
+            
             stdOutputWriteHandle.Close();
-
+            
             return result;
         }
     }
@@ -147,7 +207,11 @@ public class ProcessService : IProcessService
     private static PROCESS_CREATION_FLAGS SetCreationFlags(bool hiddenWindow)
     {
         var dwCreationFlags = PROCESS_CREATION_FLAGS.NORMAL_PRIORITY_CLASS | PROCESS_CREATION_FLAGS.CREATE_UNICODE_ENVIRONMENT;
-        dwCreationFlags |= hiddenWindow ? PROCESS_CREATION_FLAGS.CREATE_NO_WINDOW : PROCESS_CREATION_FLAGS.CREATE_NEW_CONSOLE;
+        
+        dwCreationFlags |= hiddenWindow
+            ? PROCESS_CREATION_FLAGS.CREATE_NO_WINDOW
+            : PROCESS_CREATION_FLAGS.CREATE_NEW_CONSOLE;
+        
         return dwCreationFlags;
     }
 
@@ -156,6 +220,51 @@ public class ProcessService : IProcessService
         var userTokenHandle = default(HANDLE);
         var success = WTSQueryUserToken(sessionId, ref userTokenHandle);
         hUserToken = new SafeFileHandle(userTokenHandle, true);
+        
         return success;
+    }
+
+    public static unsafe List<WTS_SESSION_INFOW> GetActiveSessions()
+    {
+        var sessions = new List<WTS_SESSION_INFOW>();
+        
+        if (WTSEnumerateSessions(HANDLE.Null, 0, 1, out var sessionInfo, out var count))
+        {
+            var dataSize = Marshal.SizeOf<WTS_SESSION_INFOW>();
+            var current = sessionInfo;
+            
+            for (var i = 0; i < count; i++)
+            {
+                var session = Marshal.PtrToStructure<WTS_SESSION_INFOW>((IntPtr)current);
+                current += dataSize;
+                
+                if (session.State == WTS_CONNECTSTATE_CLASS.WTSActive)
+                {
+                    sessions.Add(session);
+                }
+            }
+        }
+
+        return sessions;
+    }
+
+    public static unsafe string GetUsernameFromSessionId(uint sessionId)
+    {
+        if (!WTSQuerySessionInformation(HANDLE.Null, sessionId, WTS_INFO_CLASS.WTSUserName, out var buffer, out var strLen) || strLen <= 1)
+        {
+            return string.Empty;
+        }
+
+        var username = buffer.ToString();
+        WTSFreeMemory(buffer);
+
+        return username;
+    }
+
+    public void Dispose()
+    {
+        ProcessHandle?.Dispose();
+        ThreadHandle?.Dispose();
+        StdOutputReadHandle?.Dispose();
     }
 }

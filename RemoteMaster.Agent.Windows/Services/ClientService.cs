@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 using RemoteMaster.Agent.Core.Abstractions;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;
-using RemoteMaster.Shared.Native.Windows;
+using RemoteMaster.Shared.Services;
 
 namespace RemoteMaster.Agent.Services;
 
@@ -19,13 +19,11 @@ public class ClientService : IClientService
     private const string CertificateThumbprint = "E0BD3A7C39AA4FC012A0F6CB3297B46D5D73210C";
 
     private readonly ISignatureService _signatureService;
-    private readonly IProcessService _processService;
     private readonly ILogger<ClientService> _logger;
 
-    public ClientService(IProcessService processService, ISignatureService signatureService, ILogger<ClientService> logger)
+    public ClientService(ISignatureService signatureService, ILogger<ClientService> logger)
     {
         _signatureService = signatureService;
-        _processService = processService;
         _logger = logger;
     }
 
@@ -53,7 +51,7 @@ public class ClientService : IClientService
                     UseCurrentUserToken = false
                 };
 
-                _processService.Start(options);
+                using var _ = NativeProcess.Start(options);
             }
             catch (Exception ex)
             {
