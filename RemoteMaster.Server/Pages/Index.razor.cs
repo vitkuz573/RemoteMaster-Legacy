@@ -402,7 +402,7 @@ public partial class Index
                 Draggable = true
             };
 
-            await DialogService.OpenAsync<ScriptResultPage>("Script Result", dialogParameters, dialogOptions);
+            await DialogService.OpenAsync<ScriptResults>("Script Results", dialogParameters, dialogOptions);
         }
     }
 
@@ -442,7 +442,12 @@ public partial class Index
 
     private async Task OpenClientConfigGenerator()
     {
-        await DialogService.OpenAsync<ClientConfigurationGenerator>("Client Configuration Generator");
+        var dialogOptions = new DialogOptions
+        {
+            Draggable = true
+        };
+
+        await DialogService.OpenAsync<ClientConfigurationGenerator>("Client Configuration Generator", null, dialogOptions);
     }
 
     public static string Encrypt(string input, int shift, byte xorConstant)
