@@ -4,10 +4,17 @@
 @using RemoteMaster.Server.Components
 
 <div class="bg-blue-600 text-white py-2 font-semibold select-none flex justify-between items-center">
+    <div class="ml-2">
+        <RadzenMenu>
+            <RadzenMenuItem Text="Service" Icon="assessment">
+                <RadzenMenuItem Text="Client Configuration Generator" Click="OpenClientConfigGenerator" Icon="attach_file" />
+            </RadzenMenuItem>
+        </RadzenMenu>
+    </div>
+
     <div></div> <!-- Этот пустой div нужен для "выравнивания" flexbox -->
-    <div>Remote Control</div>
+
     <div class="flex items-center space-x-4">
-        <RadzenButton Text="Config Generator" Click="OpenClientConfigGenerator" />
         <LoginDisplay />
     </div>
 </div>
