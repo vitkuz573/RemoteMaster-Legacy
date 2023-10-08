@@ -1,26 +1,18 @@
-﻿@page "/config-generator"
+﻿@using Radzen
+
+@page "/config-generator"
 
 <RadzenCard>
     <RadzenHeading Size="H3" Text="Configuration Generator"></RadzenHeading>
 
-    <div style="margin: 20px 0;">
-        <RadzenLabel Text="Computer Group:" style="display: block; margin-bottom: 10px;"></RadzenLabel>
-        <RadzenTextBox @bind-Value="_group" Width="100%"></RadzenTextBox>
-    </div>
-
-    <div style="margin: 20px 0;">
-        <RadzenButton Text="Generate Config" Click="@GenerateConfig"></RadzenButton>
-    </div>
-
-    @if (_isConfigGenerated)
-    {
+    <form method="post" action="api/ClientConfiguration/generate">
         <div style="margin: 20px 0;">
-            <RadzenButton Text="Download Config" Click="@DownloadConfig" Style="margin-right: 10px;"></RadzenButton>
-            <RadzenButton Text="@(_isSpoilerVisible ? "Hide Content" : "Show Content")" Click="@ToggleSpoiler"></RadzenButton>
+            <RadzenLabel Text="Computer Group:" style="display: block; margin-bottom: 10px;"></RadzenLabel>
+            <RadzenTextBox @bind-Value="_group" Width="100%" Name="Group"></RadzenTextBox>
         </div>
 
-        <div style="display: @(_isSpoilerVisible ? "block" : "none"); margin: 20px 0;">
-            <textarea readonly style="width: 100%; height: 100px;">@GetConfigContent()</textarea>
+        <div style="margin: 20px 0;">
+            <RadzenButton ButtonType=ButtonType.Submit Text="Generate and Download Config"></RadzenButton>
         </div>
-    }
+    </form>
 </RadzenCard>

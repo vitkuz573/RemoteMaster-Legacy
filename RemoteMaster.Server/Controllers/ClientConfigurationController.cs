@@ -4,8 +4,8 @@
 
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Net.Http.Headers;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Models;
 
@@ -23,7 +23,7 @@ public class ClientConfigurationController : ControllerBase
     }
 
     [HttpPost("generate")]
-    public async Task<IActionResult> GenerateConfig([FromBody] ConfigurationModel config)
+    public async Task<IActionResult> GenerateConfig([FromForm] ConfigurationModel config)
     {
         if (!ModelState.IsValid)
         {
@@ -44,11 +44,14 @@ public class ClientConfigurationController : ControllerBase
             configFileBytes = memoryStream.ToArray();
         }
 
-        return Ok(new
+        var contentDisposition = new ContentDispositionHeaderValue("attachment")
         {
-            FileName = "RemoteMaster.Agent.json",
-            FileContent = Encoding.UTF8.GetString(configFileBytes)
-        });
+            FileName = "RemoteMaster.Agent.json"
+        };
+
+        Response.Headers[HeaderNames.ContentDisposition] = contentDisposition.ToString();
+
+        return File(configFileBytes, "application/octet-stream");
     }
 
     private static string GetLocalIPAddress()

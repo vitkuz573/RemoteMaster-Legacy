@@ -64,15 +64,6 @@
 
         window.setTitle = (title) => document.title = title;
 
-        window.downloadFile = function (filename, data) {
-            let url = window.createObjectBlobUrl(data, 'text/json');
-            let a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            a.click();
-            window.revokeUrl(url);
-        };
-
         window.openNewWindow = function (url) {
             return window.open(url, '_blank', 'toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes');
         };
