@@ -2,9 +2,9 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-namespace RemoteMaster.Server.Pages;
+namespace RemoteMaster.Server.Components;
 
-public partial class ConfigurationGeneratorPage
+public partial class ClientConfigurationGenerator
 {
     private string _group;
 }

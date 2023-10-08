@@ -440,6 +440,11 @@ public partial class Index
         }
     }
 
+    private async Task OpenClientConfigGenerator()
+    {
+        await DialogService.OpenAsync<ClientConfigurationGenerator>("Client Configuration Generator");
+    }
+
     public static string Encrypt(string input, int shift, byte xorConstant)
     {
         if (input == null)
