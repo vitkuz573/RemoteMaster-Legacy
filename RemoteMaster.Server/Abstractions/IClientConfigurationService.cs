@@ -6,7 +6,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Abstractions;
 
-public interface IConfiguratorService
+public interface IClientConfigurationService
 {
     Task<MemoryStream> GenerateConfigFileAsync(ConfigurationModel config);
 }

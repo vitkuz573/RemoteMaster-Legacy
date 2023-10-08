@@ -45,7 +45,7 @@ public partial class ConfigurationGeneratorPage
             Group = _group,
         };
 
-        var response = await HttpClient.PostAsJsonAsync("api/config/generate", config);
+        var response = await HttpClient.PostAsJsonAsync("api/ClientConfiguration/generate", config);
 
         if (response.IsSuccessStatusCode)
         {

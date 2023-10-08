@@ -38,12 +38,13 @@ void ConfigureServices(WebApplicationBuilder builder)
     });
 
     // Business services
-    builder.Services.AddTransient<IConfiguratorService, ConfiguratorService>();
+    builder.Services.AddTransient<IClientConfigurationService, ClientConfigurationService>();
     builder.Services.AddScoped<IConnectionManager, ConnectionManager>();
     builder.Services.AddTransient<IConnectionContextFactory, ConnectionContextFactory>();
     builder.Services.AddScoped<DatabaseService>();
     builder.Services.AddSingleton<IPacketSender, UdpPacketSender>();
     builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
+    builder.Services.AddSingleton<ISerializationService, JsonSerializerService>();
 
     // Hub services
     builder.Services.AddTransient<IHubConnectionBuilder>(s => new HubConnectionBuilder());

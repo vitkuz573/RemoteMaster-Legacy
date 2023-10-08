@@ -13,27 +13,20 @@ namespace RemoteMaster.Server.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class ConfigController : ControllerBase
+public class ClientConfigurationController : ControllerBase
 {
-    private readonly IConfiguratorService _configuratorService;
-    private readonly ILogger<ConfigController> _logger;
+    private readonly IClientConfigurationService _clientConfigurationService;
 
-    public ConfigController(IConfiguratorService configuratorService, ILogger<ConfigController> logger)
+    public ClientConfigurationController(IClientConfigurationService clientConfigurationService)
     {
-        _configuratorService = configuratorService;
-        _logger = logger;
-
+        _clientConfigurationService = clientConfigurationService;
     }
 
     [HttpPost("generate")]
-    public IActionResult GenerateConfig([FromBody] ConfigurationModel config)
+    public async Task<IActionResult> GenerateConfig([FromBody] ConfigurationModel config)
     {
-        _logger.LogInformation("Entered GenerateConfig method.");
-
         if (!ModelState.IsValid)
         {
-            _logger.LogError("Model validation failed.", ModelState);
-
             return BadRequest(ModelState);
         }
 
@@ -46,7 +39,7 @@ public class ConfigController : ControllerBase
 
         byte[] configFileBytes;
 
-        using (var memoryStream = _configuratorService.GenerateConfigFileAsync(config).Result)
+        using (var memoryStream = await _clientConfigurationService.GenerateConfigFileAsync(config))
         {
             configFileBytes = memoryStream.ToArray();
         }
