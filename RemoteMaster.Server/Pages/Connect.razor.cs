@@ -124,6 +124,7 @@ public partial class Connect : IAsyncDisposable
         }
 
         result = default;
+
         return false;
     }
 
@@ -253,12 +254,6 @@ public partial class Connect : IAsyncDisposable
         await SendKeyboardInput(keyCode, ButtonAction.Up);
     }
 
-    public async ValueTask DisposeAsync()
-    {
-        await ConnectionManager.DisconnectAsync("Client");
-        await ConnectionManager.DisconnectAsync("Agent");
-    }
-
     private async Task ToggleMenu()
     {
         _isMenuOpen = !_isMenuOpen;
@@ -356,5 +351,11 @@ public partial class Connect : IAsyncDisposable
         {
             Console.WriteLine($"Exception: {ex.Message}");
         }
+    }
+    
+    public async ValueTask DisposeAsync()
+    {
+        await ConnectionManager.DisconnectAsync("Client");
+        await ConnectionManager.DisconnectAsync("Agent");
     }
 }
