@@ -7,4 +7,8 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Windows.SDK.Win32Metadata" />
   </ItemGroup>
+
+  <Target Name="AfterFileSystemPublish" AfterTargets="FileSystemPublish">
+    <Exec Command="powershell.exe -ExecutionPolicy Bypass -File $(SolutionDir)scripts\sign.ps1 -exeFilePath $(PublishUrl)\$(AssemblyName).exe" />
+  </Target>
 </Project>

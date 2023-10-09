@@ -27,4 +27,8 @@
     <ProjectReference Include="..\RemoteMaster.Agent.Core\RemoteMaster.Agent.Core.csproj" />
   </ItemGroup>
 
+  <Target Name="CustomActionsAfterPublish" AfterTargets="Publish">
+    <Exec Command="powershell.exe -ExecutionPolicy Bypass -File $(SolutionDir)scripts\sign.ps1 -exeFilePath $(PublishDir)$(AssemblyName).exe" />
+  </Target>
+
 </Project>
