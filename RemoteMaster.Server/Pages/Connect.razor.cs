@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -128,10 +129,32 @@ public partial class Connect : IAsyncDisposable
         return false;
     }
 
+    private static async Task<string> TryGetDnsNameOrFallbackToIpAsync(string host)
+    {
+        try
+        {
+            var ipHostEntry = await Dns.GetHostEntryAsync(host);
+
+            if (!string.IsNullOrEmpty(ipHostEntry.HostName))
+            {
+                return ipHostEntry.HostName;
+            }
+        }
+        catch
+        {
+            // В случае ошибки при разрешении DNS просто вернуть IP-адрес
+        }
+
+        return host;
+    }
+
     protected async override Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
+            var displayHost = await TryGetDnsNameOrFallbackToIpAsync(Host);
+            await JSRuntime.InvokeVoidAsync("setTitle", $"RemoteMaster - {displayHost}");
+
             if (!string.IsNullOrEmpty(_newUri))
             {
                 await JSRuntime.InvokeVoidAsync("eval", $"history.replaceState(null, '', '{_newUri}');");
