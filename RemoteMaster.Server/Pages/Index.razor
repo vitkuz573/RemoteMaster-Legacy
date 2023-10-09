@@ -27,62 +27,71 @@
         </RadzenTree>
     </div>
 
-    <div class="flex-grow p-4 flex flex-col gap-4 bg-gray-300 selectable-container">
+    <div class="flex-grow p-4 flex flex-col gap-4 bg-gray-300">
         <!-- Область для кнопок -->
-        <div class="border-b border-gray-500 pb-2 mb-2 w-full flex">
-            <RadzenSplitButton Text="Connect" Disabled="@(!_anyComputerSelected)" Click="@(args => Connect(args))" class="mr-2">
-                <ChildContent>
-                    <RadzenSplitButtonItem Text="Control" Value="control" />
-                    <RadzenSplitButtonItem Text="View" Value="view" />
-                </ChildContent>
-            </RadzenSplitButton>
 
-            <RadzenSplitButton Text="Open Shell" Disabled="@(!_anyComputerSelected)" Click="@(args => OpenShell(args))" class="mr-2">
-                <ChildContent>
-                    <RadzenSplitButtonItem Text="Command line" Value="cmd" />
-                    <RadzenSplitButtonItem Text="PowerShell" Value="powershell" />
-                    <RadzenSplitButtonItem Text="Command line (System)" Value="cmd" />
-                    <RadzenSplitButtonItem Text="PowerShell (System)" Value="powershell" />
-                    <RadzenSplitButtonItem Text="SSH" Value="ssh" />
-                </ChildContent>
-            </RadzenSplitButton>
+        <RadzenTabs>
+            <Tabs>
+                <RadzenTabsItem Text="Main">
+                    <div class="border-gray-500 w-full flex">
+                        <RadzenSplitButton Text="Power" Disabled="@(!_anyComputerSelected)" Click="@(args => Power(args))" class="mr-2">
+                            <ChildContent>
+                                <RadzenSplitButtonItem Text="Shutdown" Value="shutdown" />
+                                <RadzenSplitButtonItem Text="Reboot" Value="reboot" />
+                                <RadzenSplitButtonItem Text="Wake Up" Value="wakeup" />
+                            </ChildContent>
+                        </RadzenSplitButton>
 
-            <RadzenSplitButton Text="Power" Disabled="@(!_anyComputerSelected)" Click="@(args => Power(args))" class="mr-2">
-                <ChildContent>
-                    <RadzenSplitButtonItem Text="Shutdown" Value="shutdown" />
-                    <RadzenSplitButtonItem Text="Reboot" Value="reboot" />
-                    <RadzenSplitButtonItem Text="Wake Up" Value="wakeup" />
-                </ChildContent>
-            </RadzenSplitButton>
+                        <RadzenSplitButton Text="Connect" Disabled="@(!_anyComputerSelected)" Click="@(args => Connect(args))" class="mr-2">
+                            <ChildContent>
+                                <RadzenSplitButtonItem Text="Control" Value="control" />
+                                <RadzenSplitButtonItem Text="View" Value="view" />
+                            </ChildContent>
+                        </RadzenSplitButton>
 
-            <RadzenButton Text="Update" Disabled="@(!_anyComputerSelected)" Click="Update" class="mr-2" />
+                        <RadzenSplitButton Text="Open Shell" Disabled="@(!_anyComputerSelected)" Click="@(args => OpenShell(args))" class="mr-2">
+                            <ChildContent>
+                                <RadzenSplitButtonItem Text="Command line" Value="cmd" />
+                                <RadzenSplitButtonItem Text="PowerShell" Value="powershell" />
+                                <RadzenSplitButtonItem Text="Command line (System)" Value="cmd" />
+                                <RadzenSplitButtonItem Text="PowerShell (System)" Value="powershell" />
+                                <RadzenSplitButtonItem Text="SSH" Value="ssh" />
+                            </ChildContent>
+                        </RadzenSplitButton>
 
-            <RadzenSplitButton Text="Screen Recording" Disabled="@(!_anyComputerSelected)" Click="@(args => ScreenRecording(args))" class="mr-2">
-                <ChildContent>
-                    <RadzenSplitButtonItem Text="Start" Value="start" />
-                    <RadzenSplitButtonItem Text="Stop" Value="stop" />
-                </ChildContent>
-            </RadzenSplitButton>
+                        <RadzenButton Text="Execute Script" Disabled="@(!_anyComputerSelected)" Click="ExecuteScript" class="mr-2" />
 
-            <RadzenSplitButton Text="Set Monitor State" Disabled="@(!_anyComputerSelected)" Click="@(args => SetMonitorState(args))" class="mr-2">
-                <ChildContent>
-                    <RadzenSplitButtonItem Text="On" Value="on" />
-                    <RadzenSplitButtonItem Text="Standby" Value="standby" />
-                    <RadzenSplitButtonItem Text="Off" Value="off" />
-                </ChildContent>
-            </RadzenSplitButton>
+                        <RadzenButton Click="HandleRefreshClick" Text="Refresh" class="ml-auto" />
+                    </div>
+                </RadzenTabsItem>
 
-            <RadzenButton Text="Execute Script" Disabled="@(!_anyComputerSelected)" Click="ExecuteScript" class="mr-2" />
+                <RadzenTabsItem Text="Service">
+                    <RadzenSplitButton Text="Set Monitor State" Disabled="@(!_anyComputerSelected)" Click="@(args => SetMonitorState(args))" class="mr-2">
+                        <ChildContent>
+                            <RadzenSplitButtonItem Text="On" Value="on" />
+                            <RadzenSplitButtonItem Text="Standby" Value="standby" />
+                            <RadzenSplitButtonItem Text="Off" Value="off" />
+                        </ChildContent>
+                    </RadzenSplitButton>
 
-            <RadzenSplitButton Text="PSExec Rules" Disabled="@(!_anyComputerSelected)" Click="@(args => ManagePSExecRules(args))" class="mr-2">
-                <ChildContent>
-                    <RadzenSplitButtonItem Text="Enable" Value="true" />
-                    <RadzenSplitButtonItem Text="Disable" Value="false" />
-                </ChildContent>
-            </RadzenSplitButton>
+                    <RadzenSplitButton Text="PSExec Rules" Disabled="@(!_anyComputerSelected)" Click="@(args => ManagePSExecRules(args))" class="mr-2">
+                        <ChildContent>
+                            <RadzenSplitButtonItem Text="Enable" Value="true" />
+                            <RadzenSplitButtonItem Text="Disable" Value="false" />
+                        </ChildContent>
+                    </RadzenSplitButton>
 
-            <RadzenButton Click="HandleRefreshClick" Text="Refresh" class="ml-auto" />
-        </div>
+                    <RadzenSplitButton Text="Screen Recording" Disabled="@(!_anyComputerSelected)" Click="@(args => ScreenRecording(args))" class="mr-2">
+                        <ChildContent>
+                            <RadzenSplitButtonItem Text="Start" Value="start" />
+                            <RadzenSplitButtonItem Text="Stop" Value="stop" />
+                        </ChildContent>
+                    </RadzenSplitButton>
+
+                    <RadzenButton Text="Update" Disabled="@(!_anyComputerSelected)" Click="Update" class="mr-2" />
+                </RadzenTabsItem>
+            </Tabs>
+        </RadzenTabs>
 
         <!-- Контент с карточками ПК -->
         <div class="flex flex-wrap gap-4 items-start overflow-y-auto">
@@ -92,7 +101,7 @@
                 {
                     if (child is Computer computer)
                     {
-                        <div class="w-1/5 p-2">
+                        <div class="w-1/5">
                             <ComputerCard @key="computer" Computer="computer" IsSelectedChanged="@(isSelected => HandleComputerSelection(computer, isSelected))" />
                         </div>
                     }
