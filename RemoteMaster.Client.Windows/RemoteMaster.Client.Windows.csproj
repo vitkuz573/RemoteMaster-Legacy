@@ -5,10 +5,12 @@
     <AssemblyName>RemoteMaster.Client</AssemblyName>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	<RootNamespace>RemoteMaster.Client</RootNamespace>
+	<IsTransformWebConfigDisabled>true</IsTransformWebConfigDisabled>
+	<IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
   </PropertyGroup>
 
   <PropertyGroup>
-    <VersionPrefix>1.250.</VersionPrefix>
+    <VersionPrefix>1.260.</VersionPrefix>
     <VersionSuffix>0</VersionSuffix>
     <Version>$(VersionPrefix)$(VersionSuffix)</Version>
     <AssemblyVersion>$(Version)</AssemblyVersion>
@@ -37,6 +39,24 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RemoteMaster.Client.Core\RemoteMaster.Client.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="appsettings.Development.json">
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </Content>
+	  
+    <Content Update="appsettings.json">
+		<CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="packages.lock.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="wwwroot\**" />
   </ItemGroup>
 
   <Target Name="AfterFileSystemPublish" AfterTargets="FileSystemPublish">
