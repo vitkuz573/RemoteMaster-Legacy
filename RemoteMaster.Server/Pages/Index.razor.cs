@@ -401,7 +401,8 @@ public partial class Index
 
             var dialogOptions = new DialogOptions
             {
-                Draggable = true
+                Draggable = true,
+                CssClass = "select-none"
             };
 
             await DialogService.OpenAsync<ScriptResults>("Script Results", dialogParameters, dialogOptions);
