@@ -47,9 +47,6 @@ public partial class Connect : IAsyncDisposable
     private bool _cursorTracking;
     private int _imageQuality;
 
-    private string _powerMessage = "test";
-    private int _timeout = 60;
-
     private IEnumerable<DisplayInfo> _displays;
 
     private IControlHub _controlHubProxy;
@@ -300,12 +297,12 @@ public partial class Connect : IAsyncDisposable
 
     private async void RebootComputer()
     {
-        await _controlHubProxy.RebootComputer(_powerMessage, _timeout, true);
+        await _controlHubProxy.RebootComputer(string.Empty, 0, true);
     }
 
     private async void ShutdownComputer()
     {
-        await _controlHubProxy.ShutdownComputer(_powerMessage, _timeout, true);
+        await _controlHubProxy.ShutdownComputer(string.Empty, 0, true);
     }
 
     private async void SendCtrlAltDel()
