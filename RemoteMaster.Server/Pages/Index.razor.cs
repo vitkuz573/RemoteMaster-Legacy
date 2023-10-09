@@ -22,7 +22,7 @@ namespace RemoteMaster.Server.Pages;
 
 public partial class Index
 {
-    private Dictionary<Computer, string> _scriptResults = new();
+    private readonly Dictionary<Computer, string> _scriptResults = new();
     private readonly List<Node> _entries = new();
     private Node _selectedNode;
 
@@ -46,6 +46,9 @@ public partial class Index
 
     [Inject]
     private IJSRuntime JSRuntime { get; set; }
+
+    [Inject]
+    private ILogger<Index> Logger { get; set; }
 
     protected async override Task OnInitializedAsync()
     {
@@ -136,7 +139,7 @@ public partial class Index
 
     private async Task UpdateComputerThumbnailAsync(Computer computer)
     {
-        Console.WriteLine($"UpdateComputerThumbnailAsync Called for {computer.IPAddress}");
+        Logger.LogInformation("UpdateComputerThumbnailAsync Called for {IPAddress}", computer.IPAddress);
 
         var clientContext = ConnectionManager.Connect("Client", $"http://{computer.IPAddress}:5076/hubs/control", true);
 
@@ -154,12 +157,12 @@ public partial class Index
             await clientContext.StartAsync();
 
             var proxy = clientContext.Connection.CreateHubProxy<IControlHub>();
-            Console.WriteLine($"Calling ConnectAs with Intention.GetThumbnail for {computer.IPAddress}");
+            Logger.LogInformation("Calling ConnectAs with Intention.GetThumbnail for {IPAddress}", computer.IPAddress);
             await proxy.ConnectAs(Intention.GetThumbnail);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Exception in UpdateComputerThumbnailAsync for {computer.IPAddress}: {ex.Message}");
+            Logger.LogError("Exception in UpdateComputerThumbnailAsync for {IPAddress}: {Message}", computer.IPAddress, ex.Message);
         }
     }
 
@@ -312,12 +315,12 @@ public partial class Index
                 }
                 else
                 {
-                    Console.WriteLine($"Error: {response.StatusCode}");
+                    Logger.LogError("Error: {StatusCode}", response.StatusCode);
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Exception: {ex.Message}");
+                Logger.LogError("Exception: {Message}", ex.Message);
             }
         });
     }
@@ -367,8 +370,7 @@ public partial class Index
     {
         var fileData = await JSRuntime.InvokeAsync<JsonElement>("selectFile");
 
-        if (fileData.TryGetProperty("content", out var contentElement)
-            && fileData.TryGetProperty("name", out var nameElement))
+        if (fileData.TryGetProperty("content", out var contentElement) && fileData.TryGetProperty("name", out var nameElement))
         {
             var fileContent = contentElement.GetString();
             var fileName = nameElement.GetString();
@@ -386,7 +388,7 @@ public partial class Index
                     shellType = "CMD";
                     break;
                 default:
-                    Console.WriteLine("Unknown script type.");
+                    Logger.LogError("Unknown script type.");
                     return;
             }
 
@@ -421,7 +423,7 @@ public partial class Index
         }
         else
         {
-            Console.WriteLine($"Failed to convert the value: {item.Value}");
+            Logger.LogError("Failed to convert the value: {Value}", item.Value);
         }
     }
 
