@@ -2,7 +2,7 @@
 
 <form method="post" action="api/ClientConfiguration/generate" class="select-none">
     <RadzenLabel Text="Computer Group:" style="display: block; margin-bottom: 10px;"></RadzenLabel>
-    <RadzenTextBox @bind-Value="_group" Width="100%" Name="Group"></RadzenTextBox>
+    <RadzenTextBox @bind-Value="_group" Width="100%" Name="Group" required></RadzenTextBox>
 
     <div style="margin: 20px 0;">
         <RadzenButton ButtonType=ButtonType.Submit Text="Generate"></RadzenButton>
