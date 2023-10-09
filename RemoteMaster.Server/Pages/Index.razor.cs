@@ -445,7 +445,8 @@ public partial class Index
         var dialogOptions = new DialogOptions
         {
             Draggable = true,
-            CssClass = "select-none"
+            CssClass = "select-none",
+            AutoFocusFirstElement = true
         };
 
         await DialogService.OpenAsync<ClientConfigurationGenerator>("Client Configuration Generator", null, dialogOptions);
