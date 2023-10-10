@@ -36,6 +36,9 @@ public partial class Connect : IAsyncDisposable
     [Inject]
     private IJSRuntime JSRuntime { get; set; }
 
+    [Inject]
+    private IHttpContextAccessor HttpContextAccessor { get; set; }
+
     private string _statusMessage = "Establishing connection...";
     private string? _screenDataUrl;
 
@@ -185,8 +188,14 @@ public partial class Connect : IAsyncDisposable
 
     private async Task InitializeClientConnectionAsync()
     {
+        var httpContext = HttpContextAccessor.HttpContext;
+        var jwtToken = httpContext.Request.Cookies["jwtToken"];
+
         var clientContext = await ConnectionManager
-            .Connect("Client", $"http://{Host}:5076/hubs/control", true)
+            .Connect("Client", $"http://{Host}:5076/hubs/control", options =>
+            {
+                options.Headers.Add("Authorization", $"Bearer {jwtToken}");
+            }, true)
             .On<ScreenDataDto>("ReceiveScreenData", HandleScreenData)
             .On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate)
             .StartAsync();

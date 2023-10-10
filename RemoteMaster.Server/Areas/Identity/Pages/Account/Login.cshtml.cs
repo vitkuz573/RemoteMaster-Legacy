@@ -3,10 +3,14 @@
 #nullable disable
 
 using System.ComponentModel.DataAnnotations;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.IdentityModel.Tokens;
 
 namespace RemoteMaster.Server.Areas.Identity.Pages.Account;
 
@@ -117,6 +121,35 @@ public class LoginModel : PageModel
             if (result.Succeeded)
             {
                 _logger.LogInformation("User logged in.");
+
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.Name, Input.Email)
+                };
+
+                var privateKeyPath = @"C:\RemoteMaster\Security\private_key.pem";
+                var privateKey = System.IO.File.ReadAllText(privateKeyPath);
+                using var rsa = new RSACryptoServiceProvider();
+                rsa.ImportFromPem(privateKey.ToCharArray());
+
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var tokenDescriptor = new SecurityTokenDescriptor
+                {
+                    Subject = new ClaimsIdentity(claims),
+                    Expires = DateTime.UtcNow.AddHours(1),
+                    SigningCredentials = new SigningCredentials(new RsaSecurityKey(rsa), SecurityAlgorithms.RsaSha256)
+                };
+
+                var token = tokenHandler.CreateToken(tokenDescriptor);
+                var tokenString = tokenHandler.WriteToken(token);
+
+                var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Expires = DateTime.UtcNow.AddHours(1)
+                };
+
+                Response.Cookies.Append("jwtToken", tokenString, cookieOptions);
 
                 return LocalRedirect("/");
             }

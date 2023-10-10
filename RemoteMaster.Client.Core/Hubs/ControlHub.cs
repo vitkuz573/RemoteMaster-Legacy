@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Client.Core.Abstractions;
@@ -14,6 +15,7 @@ using RemoteMaster.Shared.Services;
 
 namespace RemoteMaster.Client.Core.Hubs;
 
+[Authorize]
 public class ControlHub : Hub<IControlClient>, IControlHub
 {
     private readonly IAppState _appState;

@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Collections.Concurrent;
+using Microsoft.AspNetCore.Http.Connections.Client;
 using RemoteMaster.Server.Abstractions;
 
 namespace RemoteMaster.Server.Services;
@@ -17,9 +18,9 @@ public class ConnectionManager : IConnectionManager
         _connectionContextFactory = connectionContextFactory;
     }
 
-    public IConnectionContext Connect(string connectionName, string url, bool useMessagePack = false)
+    public IConnectionContext Connect(string connectionName, string url, Action<HttpConnectionOptions> configureOptions = null, bool useMessagePack = false)
     {
-        var context = _connectionContextFactory.Create().Configure(url, useMessagePack);
+        var context = _connectionContextFactory.Create().Configure(url, configureOptions, useMessagePack);
         _contexts[connectionName] = context;
 
         return context;

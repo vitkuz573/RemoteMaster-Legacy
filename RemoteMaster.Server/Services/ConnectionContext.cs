@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Microsoft.AspNetCore.Http.Connections.Client;
 using Microsoft.AspNetCore.SignalR.Client;
 using RemoteMaster.Server.Abstractions;
 
@@ -11,9 +12,18 @@ public class ConnectionContext : IConnectionContext
 {
     public HubConnection Connection { get; private set; }
 
-    public IConnectionContext Configure(string url, bool useMessagePack = false)
+    public IConnectionContext Configure(string url, Action<HttpConnectionOptions> configureOptions, bool useMessagePack = false)
     {
-        var builder = new HubConnectionBuilder().WithUrl(url);
+        var builder = new HubConnectionBuilder();
+
+        if (configureOptions != null)
+        {
+            builder.WithUrl(url, configureOptions);
+        }
+        else
+        {
+            builder.WithUrl(url);
+        }
 
         if (useMessagePack)
         {

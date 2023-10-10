@@ -48,6 +48,9 @@ public partial class Index
     private IJSRuntime JSRuntime { get; set; }
 
     [Inject]
+    private IHttpContextAccessor HttpContextAccessor { get; set; }
+
+    [Inject]
     private ILogger<Index> Logger { get; set; }
 
     protected async override Task OnInitializedAsync()
@@ -141,7 +144,13 @@ public partial class Index
     {
         Logger.LogInformation("UpdateComputerThumbnailAsync Called for {IPAddress}", computer.IPAddress);
 
-        var clientContext = ConnectionManager.Connect("Client", $"http://{computer.IPAddress}:5076/hubs/control", true);
+        var httpContext = HttpContextAccessor.HttpContext;
+        var jwtToken = httpContext.Request.Cookies["jwtToken"];
+
+        var clientContext = ConnectionManager.Connect("Client", $"http://{computer.IPAddress}:5076/hubs/control", options =>
+        {
+            options.Headers.Add("Authorization", $"Bearer {jwtToken}");
+        }, true);
 
         try
         {
@@ -188,7 +197,13 @@ public partial class Index
 
         foreach (var (computer, isAvailable) in availableComputers)
         {
-            var clientContext = ConnectionManager.Connect("Client", $"http://{computer.IPAddress}:5076/hubs/control", true);
+            var httpContext = HttpContextAccessor.HttpContext;
+            var jwtToken = httpContext.Request.Cookies["jwtToken"];
+
+            var clientContext = ConnectionManager.Connect("Client", $"http://{computer.IPAddress}:5076/hubs/control", options =>
+            {
+                options.Headers.Add("Authorization", $"Bearer {jwtToken}");
+            }, true);
 
             clientContext.On<string>("ReceiveScriptResult", async (result) =>
             {
