@@ -3,24 +3,23 @@
 #nullable disable
 
 using System.ComponentModel.DataAnnotations;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.IdentityModel.Tokens;
+using RemoteMaster.Server.Abstractions;
 
 namespace RemoteMaster.Server.Areas.Identity.Pages.Account;
 
 public class LoginModel : PageModel
 {
+    private readonly ITokenService _tokenService;
     private readonly SignInManager<IdentityUser> _signInManager;
     private readonly ILogger<LoginModel> _logger;
 
-    public LoginModel(SignInManager<IdentityUser> signInManager, ILogger<LoginModel> logger)
+    public LoginModel(ITokenService tokenService, SignInManager<IdentityUser> signInManager, ILogger<LoginModel> logger)
     {
+        _tokenService = tokenService;
         _signInManager = signInManager;
         _logger = logger;
     }
@@ -122,29 +121,7 @@ public class LoginModel : PageModel
             {
                 _logger.LogInformation("User logged in.");
 
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Name, Input.Email)
-                };
-
-                var privateKeyPath = @"C:\RemoteMaster\Security\private_key.pem";
-                var privateKey = System.IO.File.ReadAllText(privateKeyPath);
-#pragma warning disable CA2000
-                var rsa = RSA.Create();
-#pragma warning restore CA2000
-                rsa.ImportFromPem(privateKey.ToCharArray());
-
-                var tokenHandler = new JwtSecurityTokenHandler();
-                var tokenDescriptor = new SecurityTokenDescriptor
-                {
-                    Subject = new ClaimsIdentity(claims),
-                    Expires = DateTime.UtcNow.AddHours(2),
-                    SigningCredentials = new SigningCredentials(new RsaSecurityKey(rsa), SecurityAlgorithms.RsaSha256),
-                    Audience = "RMServiceAPI"
-                };
-
-                var token = tokenHandler.CreateToken(tokenDescriptor);
-                var tokenString = tokenHandler.WriteToken(token);
+                var tokenString = _tokenService.GenerateToken(Input.Email);
 
                 var cookieOptions = new CookieOptions
                 {

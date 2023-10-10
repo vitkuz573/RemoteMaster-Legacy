@@ -11,6 +11,7 @@ using RemoteMaster.Server.Areas.Identity.Data;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Hubs;
 using RemoteMaster.Server.Middlewares;
+using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -45,6 +46,8 @@ void ConfigureServices(WebApplicationBuilder builder)
     builder.Services.AddSingleton<IPacketSender, UdpPacketSender>();
     builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
     builder.Services.AddSingleton<ISerializationService, JsonSerializerService>();
+    builder.Services.AddTransient<ITokenService, TokenService>();
+    builder.Services.Configure<TokenServiceOptions>(builder.Configuration.GetSection("Jwt"));
 
     // Hub services
     builder.Services.AddTransient<IHubConnectionBuilder>(s => new HubConnectionBuilder());
