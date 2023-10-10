@@ -129,15 +129,18 @@ public class LoginModel : PageModel
 
                 var privateKeyPath = @"C:\RemoteMaster\Security\private_key.pem";
                 var privateKey = System.IO.File.ReadAllText(privateKeyPath);
-                using var rsa = new RSACryptoServiceProvider();
+#pragma warning disable CA2000
+                var rsa = RSA.Create();
+#pragma warning restore CA2000
                 rsa.ImportFromPem(privateKey.ToCharArray());
 
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var tokenDescriptor = new SecurityTokenDescriptor
                 {
                     Subject = new ClaimsIdentity(claims),
-                    Expires = DateTime.UtcNow.AddHours(1),
-                    SigningCredentials = new SigningCredentials(new RsaSecurityKey(rsa), SecurityAlgorithms.RsaSha256)
+                    Expires = DateTime.UtcNow.AddHours(2),
+                    SigningCredentials = new SigningCredentials(new RsaSecurityKey(rsa), SecurityAlgorithms.RsaSha256),
+                    Audience = "RMServiceAPI"
                 };
 
                 var token = tokenHandler.CreateToken(tokenDescriptor);

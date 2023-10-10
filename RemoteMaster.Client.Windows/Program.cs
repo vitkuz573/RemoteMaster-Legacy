@@ -34,9 +34,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateAudience = false,
+            ValidateAudience = true,
             ValidateIssuer = false,
-            IssuerSigningKey = new RsaSecurityKey(rsa)
+            ValidAudience = "RMServiceAPI",
+            IssuerSigningKey = new RsaSecurityKey(rsa),
         };
     });
 
