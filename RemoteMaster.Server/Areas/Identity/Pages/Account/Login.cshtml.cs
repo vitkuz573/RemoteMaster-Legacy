@@ -146,7 +146,7 @@ public class LoginModel : PageModel
                 var cookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
-                    Expires = DateTime.UtcNow.AddHours(1)
+                    Expires = DateTime.UtcNow.AddHours(2)
                 };
 
                 Response.Cookies.Append("jwtToken", tokenString, cookieOptions);

@@ -20,23 +20,23 @@ public class ControlHub : Hub<IControlClient>, IControlHub
 {
     private readonly IAppState _appState;
     private readonly IViewerFactory _viewerFactory;
-    private readonly IInputService _inputSender;
+    private readonly IInputService _inputService;
     private readonly IPowerService _powerManager;
     private readonly IHardwareService _hardwareService;
     private readonly IShutdownService _shutdownService;
-    private readonly IScreenCapturerService _screenCapturer;
+    private readonly IScreenCapturerService _screenCapturerService;
     private readonly IScreenRecorderService _screenRecorderService;
     private readonly ILogger<ControlHub> _logger;
 
-    public ControlHub(IAppState appState, IViewerFactory viewerFactory, IInputService inputSender, IPowerService powerManager, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturer, IScreenRecorderService screenRecorderService, ILogger<ControlHub> logger)
+    public ControlHub(IAppState appState, IViewerFactory viewerFactory, IInputService inputService, IPowerService powerManager, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturerService, IScreenRecorderService screenRecorderService, ILogger<ControlHub> logger)
     {
         _appState = appState;
         _viewerFactory = viewerFactory;
-        _inputSender = inputSender;
+        _inputService = inputService;
         _powerManager = powerManager;
         _hardwareService = hardwareService;
         _shutdownService = shutdownService;
-        _screenCapturer = screenCapturer;
+        _screenCapturerService = screenCapturerService;
         _screenRecorderService = screenRecorderService;
         _logger = logger;
     }
@@ -66,7 +66,7 @@ public class ControlHub : Hub<IControlClient>, IControlHub
         const int maxWidth = 500;
         const int maxHeight = 300;
 
-        return _screenCapturer.GetThumbnail(maxWidth, maxHeight);
+        return _screenCapturerService.GetThumbnail(maxWidth, maxHeight);
     }
 
     public async override Task OnDisconnectedAsync(Exception? exception)
@@ -78,22 +78,22 @@ public class ControlHub : Hub<IControlClient>, IControlHub
 
     public async Task SendMouseCoordinates(MouseMoveDto dto)
     {
-        ExecuteActionForViewer(viewer => _inputSender.SendMouseCoordinates(dto, viewer));
+        ExecuteActionForViewer(viewer => _inputService.SendMouseCoordinates(dto, viewer));
     }
 
     public async Task SendMouseButton(MouseClickDto dto)
     {
-        ExecuteActionForViewer(viewer => _inputSender.SendMouseButton(dto, viewer));
+        ExecuteActionForViewer(viewer => _inputService.SendMouseButton(dto, viewer));
     }
 
     public async Task SendMouseWheel(MouseWheelDto dto)
     {
-        _inputSender.SendMouseWheel(dto);
+        _inputService.SendMouseWheel(dto);
     }
 
     public async Task SendKeyboardInput(KeyboardKeyDto dto)
     {
-        _inputSender.SendKeyboardInput(dto);
+        _inputService.SendKeyboardInput(dto);
     }
 
     public async Task SendSelectedScreen(string displayName)
@@ -110,7 +110,7 @@ public class ControlHub : Hub<IControlClient>, IControlHub
 
     public async Task SetInputEnabled(bool inputEnabled)
     {
-        _inputSender.InputEnabled = inputEnabled;
+        _inputService.InputEnabled = inputEnabled;
     }
 
     public async Task SetQuality(int quality)
