@@ -37,10 +37,11 @@ public class TokenService : ITokenService
         var tokenHandler = new JwtSecurityTokenHandler();
         var tokenDescriptor = new SecurityTokenDescriptor
         {
+            Issuer = _options.Issuer,
+            Audience = _options.Audience,
             Subject = new ClaimsIdentity(claims),
             Expires = DateTime.UtcNow.AddHours(2),
-            SigningCredentials = new SigningCredentials(new RsaSecurityKey(rsa), SecurityAlgorithms.RsaSha256),
-            Audience = _options.Audience
+            SigningCredentials = new SigningCredentials(new RsaSecurityKey(rsa), SecurityAlgorithms.RsaSha256)
         };
 
         var token = tokenHandler.CreateToken(tokenDescriptor);
