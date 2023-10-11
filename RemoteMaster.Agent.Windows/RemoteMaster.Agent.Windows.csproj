@@ -29,6 +29,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" />
+    <PackageReference Include="System.DirectoryServices.AccountManagement" />
   </ItemGroup>
 
   <ItemGroup>

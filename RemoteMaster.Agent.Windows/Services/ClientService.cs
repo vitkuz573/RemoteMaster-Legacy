@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
+using System.DirectoryServices.AccountManagement;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Agent.Core.Abstractions;
 using RemoteMaster.Shared.Abstractions;
@@ -37,9 +38,16 @@ public class ClientService : IClientService
         return false;
     }
 
+    private static bool IsDomainJoined()
+    {
+        using var context = new PrincipalContext(ContextType.Machine);
+
+        return context.ConnectedServer != null;
+    }
+
     public void Start()
     {
-        if (_signatureService.IsSignatureValid(Path, CertificateThumbprint))
+        if (!IsDomainJoined() || (_signatureService.IsSignatureValid(Path, CertificateThumbprint)))
         {
             try
             {
