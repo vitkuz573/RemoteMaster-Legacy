@@ -16,13 +16,13 @@
       },
       "Microsoft.Windows.CsWin32": {
         "type": "Direct",
-        "requested": "[0.3.46-beta, )",
-        "resolved": "0.3.46-beta",
-        "contentHash": "+TElBsl2jAnmLwC0IxDz3f6ggbi4r+mpoVv8NyXxWuPKOoNQXnEKmxSCEyIrLzDvnIc1vetxfPZ/XladzyvSXA==",
+        "requested": "[0.3.50-beta, )",
+        "resolved": "0.3.50-beta",
+        "contentHash": "BUW0V46nKRs9OSZJdZ5/oS6JX+JC7sXfTVrhTlA8bhV9Zr7ljfnYdIkRURprSyF4i64Y9J9pyuirU5MkRsuomw==",
         "dependencies": {
           "Microsoft.Windows.SDK.Win32Docs": "0.1.42-alpha",
-          "Microsoft.Windows.SDK.Win32Metadata": "54.0.44-preview",
-          "Microsoft.Windows.WDK.Win32Metadata": "0.7.3-experimental",
+          "Microsoft.Windows.SDK.Win32Metadata": "55.0.45-preview",
+          "Microsoft.Windows.WDK.Win32Metadata": "0.9.9-experimental",
           "System.Memory": "4.5.5",
           "System.Runtime.CompilerServices.Unsafe": "6.0.0"
         }
@@ -49,10 +49,10 @@
       },
       "Microsoft.Windows.WDK.Win32Metadata": {
         "type": "Transitive",
-        "resolved": "0.7.3-experimental",
-        "contentHash": "69eabYuDI6y5SdMfVH+b/+mblw/eMk+j07dzNnZljFjr0UloFaxoXm1kG3B/GelFol9qT8pNTePpejQc14su6A==",
+        "resolved": "0.9.9-experimental",
+        "contentHash": "cncPlxLqR25mFOuvpxZPgXgJqRmXyV5eTULj/9w8AQvO/c1xJDEapohRsWkYaia7hCR/EwEzBHr7RU9u93T03w==",
         "dependencies": {
-          "Microsoft.Windows.SDK.Win32Metadata": "52.0.65-preview"
+          "Microsoft.Windows.SDK.Win32Metadata": "55.0.45-preview"
         }
       },
       "System.Diagnostics.EventLog": {
@@ -69,28 +69,6 @@
         "type": "Transitive",
         "resolved": "6.0.0",
         "contentHash": "/iUeP3tq1S0XdNNoMz5C9twLSrM/TH+qElHkXWaPvuNOt+99G75NrV0OS2EqHx5wMN7popYjpc8oTjC1y16DLg=="
-      }
-    },
-    "net7.0/win-x64": {
-      "Microsoft.Win32.SystemEvents": {
-        "type": "Direct",
-        "requested": "[7.0.0, )",
-        "resolved": "7.0.0",
-        "contentHash": "2nXPrhdAyAzir0gLl8Yy8S5Mnm/uBSQQA7jEsILOS1MTyS7DbmV1NgViMtvV1sfCD1ebITpNwb1NIinKeJgUVQ=="
-      },
-      "System.ServiceProcess.ServiceController": {
-        "type": "Direct",
-        "requested": "[7.0.1, )",
-        "resolved": "7.0.1",
-        "contentHash": "rPfXTJzYU46AmWYXRATQzQQ01hICrkl3GuUHgpAr9mnUwAVSsga5x3mBxanFPlJBV9ilzqMXbQyDLJQAbyTnSw==",
-        "dependencies": {
-          "System.Diagnostics.EventLog": "7.0.0"
-        }
-      },
-      "System.Diagnostics.EventLog": {
-        "type": "Transitive",
-        "resolved": "7.0.0",
-        "contentHash": "eUDP47obqQm3SFJfP6z+Fx2nJ4KKTQbXB4Q9Uesnzw9SbYdhjyoGXuvDn/gEmFY6N5Z3bFFbpAQGA7m6hrYJCw=="
       }
     }
   }
