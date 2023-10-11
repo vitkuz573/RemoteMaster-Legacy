@@ -28,15 +28,15 @@ public class ControlHub : Hub<IControlClient>, IControlHub
     private readonly IScreenRecorderService _screenRecorderService;
     private readonly ILogger<ControlHub> _logger;
 
-    public ControlHub(IAppState appState, IViewerFactory viewerFactory, IInputService inputService, IPowerService powerManager, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturerService, IScreenRecorderService screenRecorderService, ILogger<ControlHub> logger)
+    public ControlHub(IAppState appState, IViewerFactory viewerFactory, IInputService inputSender, IPowerService powerManager, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturer, IScreenRecorderService screenRecorderService, ILogger<ControlHub> logger)
     {
         _appState = appState;
         _viewerFactory = viewerFactory;
-        _inputService = inputService;
+        _inputService = inputSender;
         _powerManager = powerManager;
         _hardwareService = hardwareService;
         _shutdownService = shutdownService;
-        _screenCapturerService = screenCapturerService;
+        _screenCapturerService = screenCapturer;
         _screenRecorderService = screenRecorderService;
         _logger = logger;
     }

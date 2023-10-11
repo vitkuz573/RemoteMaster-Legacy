@@ -11,19 +11,19 @@ namespace RemoteMaster.Client.Core.Services;
 
 public class ViewerFactory : IViewerFactory
 {
-    private readonly IScreenCapturerService _screenCapturer;
+    private readonly IScreenCapturerService _screenCapturerService;
     private readonly IHubContext<ControlHub, IControlClient> _hubContext;
     private readonly ILogger<Viewer> _logger;
 
-    public ViewerFactory(IScreenCapturerService screenCapturer, ILogger<Viewer> logger, IHubContext<ControlHub, IControlClient> hubContext)
+    public ViewerFactory(IScreenCapturerService screenCapturerService, ILogger<Viewer> logger, IHubContext<ControlHub, IControlClient> hubContext)
     {
-        _screenCapturer = screenCapturer;
+        _screenCapturerService = screenCapturerService;
         _hubContext = hubContext;
         _logger = logger;
     }
 
     public IViewer Create(string connectionId)
     {
-        return new Viewer(_screenCapturer, _logger, _hubContext, connectionId);
+        return new Viewer(_screenCapturerService, _logger, _hubContext, connectionId);
     }
 }
