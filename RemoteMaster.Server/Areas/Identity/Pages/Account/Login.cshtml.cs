@@ -121,15 +121,31 @@ public class LoginModel : PageModel
             {
                 _logger.LogInformation("User logged in.");
 
-                var tokenString = _tokenService.GenerateToken(Input.Email);
+                var accessTokenString = _tokenService.GenerateAccessToken(Input.Email);
 
                 var cookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
-                    Expires = DateTime.UtcNow.AddHours(2)
+                    Expires = DateTime.UtcNow.AddMinutes(10)
                 };
 
-                Response.Cookies.Append("jwtToken", tokenString, cookieOptions);
+                Response.Cookies.Append("accessToken", accessTokenString, cookieOptions);
+
+                var refreshTokenString = _tokenService.GenerateRefreshToken();
+                var isSaved = await _tokenService.SaveRefreshToken(Input.Email, refreshTokenString);
+
+                if (!isSaved)
+                {
+                    _logger.LogError("Failed to save refresh token for user.");
+                }
+
+                var refreshCookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Expires = DateTime.UtcNow.AddDays(7)
+                };
+
+                Response.Cookies.Append("refreshToken", refreshTokenString, refreshCookieOptions);
 
                 return LocalRedirect("/");
             }
