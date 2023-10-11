@@ -4,6 +4,7 @@
 
 using Microsoft.AspNetCore.Mvc;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Controllers;
 
@@ -19,11 +20,16 @@ public class TokenController : ControllerBase
     }
 
     [HttpPost("refresh")]
-    public async Task<IActionResult> Refresh([FromBody] string refreshToken)
+    public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
     {
+        if (request == null)
+        {
+            throw new ArgumentNullException(nameof(request));
+        }
+
         try
         {
-            var newAccessToken = await _tokenService.RefreshAccessToken(refreshToken);
+            var newAccessToken = await _tokenService.RefreshAccessToken(request.RefreshToken);
 
             var cookieOptions = new CookieOptions
             {
