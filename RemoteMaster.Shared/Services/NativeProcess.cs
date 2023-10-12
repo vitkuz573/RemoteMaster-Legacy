@@ -112,6 +112,7 @@ public class NativeProcess : IDisposable
             {
                 var winlogonPid = GetWinlogonPidForSession(sessionId);
                 using var hProcess = OpenProcess_SafeHandle(PROCESS_ACCESS_RIGHTS.PROCESS_ALL_ACCESS, false, winlogonPid);
+                
                 if (IsProcessOpen(hProcess) && TryGetProcessToken(hProcess, out var hPToken))
                 {
                     using (hPToken)
@@ -212,7 +213,7 @@ public class NativeProcess : IDisposable
                 cb = (uint)Marshal.SizeOf<STARTUPINFOW>(),
                 lpDesktop = pDesktopName,
                 hStdOutput = (HANDLE)stdOutWriteHandle.DangerousGetHandle(),
-                hStdError = (HANDLE)stdOutWriteHandle.DangerousGetHandle(),
+                hStdError = (HANDLE)stdErrWriteHandle.DangerousGetHandle(),
                 dwFlags = STARTUPINFOW_FLAGS.STARTF_USESTDHANDLES
             };
 
