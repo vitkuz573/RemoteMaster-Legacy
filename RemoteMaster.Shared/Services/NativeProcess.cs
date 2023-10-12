@@ -251,38 +251,28 @@ public class NativeProcess : IDisposable
     public static unsafe List<WTS_SESSION_INFOW> GetActiveSessions()
     {
         var sessions = new List<WTS_SESSION_INFOW>();
-        
-        if (WTSEnumerateSessions(HANDLE.Null, 0, 1, out var sessionInfo, out var count))
+
+        if (WTSEnumerateSessions(HANDLE.Null, 0, 1, out var ppSessionInfo, out var count))
         {
-            var dataSize = Marshal.SizeOf<WTS_SESSION_INFOW>();
-            var current = sessionInfo;
-            
-            for (var i = 0; i < count; i++)
+            try
             {
-                var session = Marshal.PtrToStructure<WTS_SESSION_INFOW>((IntPtr)current);
-                current += dataSize;
-                
-                if (session.State == WTS_CONNECTSTATE_CLASS.WTSActive)
+                for (var i = 0; i < count; i++)
                 {
-                    sessions.Add(session);
+                    var session = ppSessionInfo[i];
+
+                    if (session.State == WTS_CONNECTSTATE_CLASS.WTSActive)
+                    {
+                        sessions.Add(session);
+                    }
                 }
+            }
+            finally
+            {
+                WTSFreeMemory(ppSessionInfo);
             }
         }
 
         return sessions;
-    }
-
-    public static unsafe string GetUsernameFromSessionId(uint sessionId)
-    {
-        if (!WTSQuerySessionInformation(HANDLE.Null, sessionId, WTS_INFO_CLASS.WTSUserName, out var buffer, out var strLen) || strLen <= 1)
-        {
-            return string.Empty;
-        }
-
-        var username = buffer.ToString();
-        WTSFreeMemory(buffer);
-
-        return username;
     }
 
     public void Dispose()
