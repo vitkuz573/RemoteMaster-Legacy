@@ -193,6 +193,7 @@ public class NativeProcess : IDisposable
             throw new Exception("Failed to create pipe for standard input.");
         }
 
+#pragma warning disable CA2000
         if (!CreatePipe(out stdOutReadHandle, out var stdOutWriteHandle, null, 0))
         {
             throw new Exception("Failed to create pipe for standard output.");
@@ -202,6 +203,7 @@ public class NativeProcess : IDisposable
         {
             throw new Exception("Failed to create pipe for standard error");
         }
+#pragma warning restore CA2000
 
         fixed (char* pDesktopName = $@"winsta0\{desktopName}")
         {
@@ -221,8 +223,6 @@ public class NativeProcess : IDisposable
             var result = CreateProcessAsUser(hUserTokenDup, null, ref appName, null, null, false, dwCreationFlags, null, null, startupInfo, out procInfo);
 
             stdInWriteHandle.Close();
-            stdOutWriteHandle.Close();
-            stdErrWriteHandle.Close();
             
             return result;
         }

@@ -145,11 +145,11 @@ public partial class Index
         Logger.LogInformation("UpdateComputerThumbnailAsync Called for {IPAddress}", computer.IPAddress);
 
         var httpContext = HttpContextAccessor.HttpContext;
-        var jwtToken = httpContext.Request.Cookies["jwtToken"];
+        var accessToken = httpContext.Request.Cookies["accessToken"];
 
         var clientContext = ConnectionManager.Connect("Client", $"http://{computer.IPAddress}:5076/hubs/control", options =>
         {
-            options.Headers.Add("Authorization", $"Bearer {jwtToken}");
+            options.Headers.Add("Authorization", $"Bearer {accessToken}");
         }, true);
 
         try
@@ -198,11 +198,11 @@ public partial class Index
         foreach (var (computer, isAvailable) in availableComputers)
         {
             var httpContext = HttpContextAccessor.HttpContext;
-            var jwtToken = httpContext.Request.Cookies["jwtToken"];
+            var accessToken = httpContext.Request.Cookies["accessToken"];
 
             var clientContext = ConnectionManager.Connect("Client", $"http://{computer.IPAddress}:5076/hubs/control", options =>
             {
-                options.Headers.Add("Authorization", $"Bearer {jwtToken}");
+                options.Headers.Add("Authorization", $"Bearer {accessToken}");
             }, true);
 
             clientContext.On<string>("ReceiveScriptResult", async (result) =>

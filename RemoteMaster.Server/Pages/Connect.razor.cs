@@ -189,12 +189,12 @@ public partial class Connect : IAsyncDisposable
     private async Task InitializeClientConnectionAsync()
     {
         var httpContext = HttpContextAccessor.HttpContext;
-        var jwtToken = httpContext.Request.Cookies["jwtToken"];
+        var accessToken = httpContext.Request.Cookies["accessToken"];
 
         var clientContext = await ConnectionManager
             .Connect("Client", $"http://{Host}:5076/hubs/control", options =>
             {
-                options.Headers.Add("Authorization", $"Bearer {jwtToken}");
+                options.Headers.Add("Authorization", $"Bearer {accessToken}");
             }, true)
             .On<ScreenDataDto>("ReceiveScreenData", HandleScreenData)
             .On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate)
