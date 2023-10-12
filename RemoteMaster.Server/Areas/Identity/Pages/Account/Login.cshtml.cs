@@ -126,7 +126,7 @@ public class LoginModel : PageModel
                 var cookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
-                    Expires = DateTime.UtcNow.AddMinutes(10)
+                    Expires = DateTime.UtcNow.AddHours(2)
                 };
 
                 Response.Cookies.Append("accessToken", accessTokenString, cookieOptions);
