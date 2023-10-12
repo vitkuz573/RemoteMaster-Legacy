@@ -25,7 +25,11 @@ public class NativeProcess : IDisposable
 
     public SafeFileHandle ThreadHandle { get; private set; }
 
-    public SafeFileHandle StdOutputReadHandle { get; private set; }
+    public SafeFileHandle StdInReadHandle { get; private set; }
+
+    public SafeFileHandle StdOutReadHandle { get; private set; }
+
+    public SafeFileHandle StdErrReadHandle { get; private set; }
 
 
     public event Action<string> OutputReceived;
@@ -37,13 +41,15 @@ public class NativeProcess : IDisposable
         StartOptions = options;
     }
 
-    public NativeProcess(PROCESS_INFORMATION procInfo, SafeFileHandle stdOutputReadHandle)
+    public NativeProcess(PROCESS_INFORMATION procInfo, SafeFileHandle stdInReadHandle, SafeFileHandle stdOutReadHandle, SafeFileHandle stdErrReadHandle)
     {
         ProcessId = procInfo.dwProcessId;
         ThreadId = procInfo.dwThreadId;
         ProcessHandle = new SafeFileHandle(procInfo.hProcess, true);
         ThreadHandle = new SafeFileHandle(procInfo.hThread, true);
-        StdOutputReadHandle = stdOutputReadHandle;
+        StdInReadHandle = stdInReadHandle;
+        StdOutReadHandle = stdOutReadHandle;
+        StdErrReadHandle = stdErrReadHandle;
     }
 
     public void Start()
@@ -54,7 +60,7 @@ public class NativeProcess : IDisposable
         ThreadId = proc.ThreadId;
         ProcessHandle = proc.ProcessHandle;
         ThreadHandle = proc.ThreadHandle;
-        StdOutputReadHandle = proc.StdOutputReadHandle;
+        StdOutReadHandle = proc.StdOutReadHandle;
     }
 
     public static NativeProcess Start(ProcessStartOptions options)
@@ -67,12 +73,12 @@ public class NativeProcess : IDisposable
 
     public async Task StartListeningToOutputAsync()
     {
-        if (StdOutputReadHandle == null || StdOutputReadHandle.IsInvalid)
+        if (StdOutReadHandle == null || StdOutReadHandle.IsInvalid)
         {
             throw new InvalidOperationException("Invalid standard output handle.");
         }
 
-        using var fs = new FileStream(StdOutputReadHandle, FileAccess.Read, 4096, true);
+        using var fs = new FileStream(StdOutReadHandle, FileAccess.Read, 4096, true);
         using var reader = new StreamReader(fs, Encoding.UTF8);
         string line;
 
@@ -86,16 +92,20 @@ public class NativeProcess : IDisposable
     {
         var procInfo = new PROCESS_INFORMATION();
         var sessionId = GetSessionId(options.ForceConsoleSession, options.TargetSessionId);
+
         SafeFileHandle hUserTokenDup = null;
-        SafeFileHandle stdOutputReadHandle = null;
+        
+        SafeFileHandle stdInReadHandle = null;
+        SafeFileHandle stdOutReadHandle = null;
+        SafeFileHandle stdErrReadHandle = null;
 
         try
         {
             if (options.UseCurrentUserToken && TryGetUserToken(sessionId, out hUserTokenDup))
             {
-                if (TryCreateInteractiveProcess(hUserTokenDup, options.ApplicationName, options.DesktopName, options.HiddenWindow, out procInfo, out stdOutputReadHandle))
+                if (TryCreateInteractiveProcess(hUserTokenDup, options.ApplicationName, options.DesktopName, options.HiddenWindow, out procInfo, out stdInReadHandle, out stdOutReadHandle, out stdErrReadHandle))
                 {
-                    return new NativeProcess(procInfo, stdOutputReadHandle);
+                    return new NativeProcess(procInfo, stdInReadHandle, stdOutReadHandle, stdErrReadHandle);
                 }
             }
             else
@@ -108,9 +118,9 @@ public class NativeProcess : IDisposable
                     {
                         if (TryDuplicateToken(hPToken, out hUserTokenDup))
                         {
-                            if (TryCreateInteractiveProcess(hUserTokenDup, options.ApplicationName, options.DesktopName, options.HiddenWindow, out procInfo, out stdOutputReadHandle))
+                            if (TryCreateInteractiveProcess(hUserTokenDup, options.ApplicationName, options.DesktopName, options.HiddenWindow, out procInfo, out stdInReadHandle, out stdOutReadHandle, out stdErrReadHandle))
                             {
-                                return new NativeProcess(procInfo, stdOutputReadHandle);
+                                return new NativeProcess(procInfo, stdInReadHandle, stdOutReadHandle, stdErrReadHandle);
                             }
                         }
                     }
@@ -120,7 +130,9 @@ public class NativeProcess : IDisposable
         finally
         {
             hUserTokenDup?.Dispose();
-            stdOutputReadHandle?.Dispose();
+            stdInReadHandle?.Dispose();
+            stdOutReadHandle?.Dispose();
+            stdErrReadHandle?.Dispose();
         }
 
         return null;
@@ -174,11 +186,21 @@ public class NativeProcess : IDisposable
             : lastSessionId;
     }
 
-    private static unsafe bool TryCreateInteractiveProcess(SafeHandle hUserTokenDup, string applicationName, string desktopName, bool hiddenWindow, out PROCESS_INFORMATION procInfo, out SafeFileHandle stdOutputReadHandle)
+    private static unsafe bool TryCreateInteractiveProcess(SafeHandle hUserTokenDup, string applicationName, string desktopName, bool hiddenWindow, out PROCESS_INFORMATION procInfo, out SafeFileHandle stdInReadHandle, out SafeFileHandle stdOutReadHandle, out SafeFileHandle stdErrReadHandle)
     {
-        if (!CreatePipe(out stdOutputReadHandle, out SafeFileHandle stdOutputWriteHandle, null, 0))
+        if (!CreatePipe(out stdInReadHandle, out var stdInWriteHandle, null, 0))
+        {
+            throw new Exception("Failed to create pipe for standard input.");
+        }
+
+        if (!CreatePipe(out stdOutReadHandle, out var stdOutWriteHandle, null, 0))
         {
             throw new Exception("Failed to create pipe for standard output.");
+        }
+
+        if (!CreatePipe(out stdErrReadHandle, out var stdErrWriteHandle, null, 0))
+        {
+            throw new Exception("Failed to create pipe for standard error");
         }
 
         fixed (char* pDesktopName = $@"winsta0\{desktopName}")
@@ -187,8 +209,8 @@ public class NativeProcess : IDisposable
             {
                 cb = (uint)Marshal.SizeOf<STARTUPINFOW>(),
                 lpDesktop = pDesktopName,
-                hStdOutput = (HANDLE)stdOutputWriteHandle.DangerousGetHandle(),
-                hStdError = (HANDLE)stdOutputWriteHandle.DangerousGetHandle(),
+                hStdOutput = (HANDLE)stdOutWriteHandle.DangerousGetHandle(),
+                hStdError = (HANDLE)stdOutWriteHandle.DangerousGetHandle(),
                 dwFlags = STARTUPINFOW_FLAGS.STARTF_USESTDHANDLES
             };
 
@@ -197,8 +219,10 @@ public class NativeProcess : IDisposable
             
             var appName = new Span<char>(applicationName.ToCharArray());
             var result = CreateProcessAsUser(hUserTokenDup, null, ref appName, null, null, false, dwCreationFlags, null, null, startupInfo, out procInfo);
-            
-            stdOutputWriteHandle.Close();
+
+            stdInWriteHandle.Close();
+            stdOutWriteHandle.Close();
+            stdErrWriteHandle.Close();
             
             return result;
         }
@@ -265,6 +289,6 @@ public class NativeProcess : IDisposable
     {
         ProcessHandle?.Dispose();
         ThreadHandle?.Dispose();
-        StdOutputReadHandle?.Dispose();
+        StdOutReadHandle?.Dispose();
     }
 }
