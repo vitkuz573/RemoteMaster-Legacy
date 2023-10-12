@@ -420,6 +420,11 @@ public partial class Index
                 CssClass = "select-none"
             };
 
+            foreach (var result in _scriptResults)
+            {
+                Console.WriteLine(result.Value);
+            }
+
             await DialogService.OpenAsync<ScriptResults>("Script Results", dialogParameters, dialogOptions);
         }
     }

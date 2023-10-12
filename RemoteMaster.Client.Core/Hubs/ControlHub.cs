@@ -235,6 +235,8 @@ public class ControlHub : Hub<IControlClient>, IControlHub
 
                 var process = Process.GetProcessById((int)nativeProcess.ProcessId);
                 process.WaitForExit();
+
+                await Clients.Caller.ReceiveScriptResult("Script executed!");
             }
         }
         finally
