@@ -2,7 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Diagnostics.CodeAnalysis;
+using Microsoft.Win32.SafeHandles;
 using Windows.Win32.Security;
 using static Windows.Win32.PInvoke;
 
@@ -10,7 +10,6 @@ namespace RemoteMaster.Client.Helpers;
 
 public static class TokenPrivilegeHelper
 {
-    [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "All disposable objects are properly handled.")]
     /// <summary>
     /// Adjusts the token privilege for the current process.
     /// </summary>
@@ -36,24 +35,28 @@ public static class TokenPrivilegeHelper
             }
         };
 
-        if (!OpenProcessToken(hProcess, TOKEN_ACCESS_MASK.TOKEN_ADJUST_PRIVILEGES | TOKEN_ACCESS_MASK.TOKEN_QUERY, out var hToken))
-        {
-            return false;
-        }
+        SafeFileHandle hToken = null;
 
-        using (hToken)
+        try
         {
+            var tokenOpened = OpenProcessToken(hProcess, TOKEN_ACCESS_MASK.TOKEN_ADJUST_PRIVILEGES | TOKEN_ACCESS_MASK.TOKEN_QUERY, out hToken);
+            hToken ??= new SafeFileHandle(nint.Zero, false);
+
+            if (!tokenOpened)
+            {
+                return false;
+            }
+
             if (!LookupPrivilegeValue(null, privilegeName, out tkp.Privileges._0.Luid))
             {
                 return false;
             }
 
-            if (!AdjustTokenPrivileges(hToken, false, tkp, 0, null, (uint*)0))
-            {
-                return false;
-            }
+            return AdjustTokenPrivileges(hToken, false, tkp, 0, null, null);
         }
-
-        return true;
+        finally
+        {
+            hToken?.Dispose();
+        }
     }
 }
