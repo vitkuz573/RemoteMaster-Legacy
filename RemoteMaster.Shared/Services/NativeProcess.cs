@@ -4,6 +4,7 @@
 
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Text;
 using Microsoft.Win32.SafeHandles;
 using RemoteMaster.Shared.Models;
@@ -15,6 +16,7 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Shared.Services;
 
+[SupportedOSPlatform("windows6.0.6000")]
 public class NativeProcess : IDisposable
 {
     public uint ProcessId { get; private set; }
@@ -45,8 +47,10 @@ public class NativeProcess : IDisposable
     {
         ProcessId = procInfo.dwProcessId;
         ThreadId = procInfo.dwThreadId;
+
         ProcessHandle = new SafeFileHandle(procInfo.hProcess, true);
         ThreadHandle = new SafeFileHandle(procInfo.hThread, true);
+
         StdInReadHandle = stdInReadHandle;
         StdOutReadHandle = stdOutReadHandle;
         StdErrReadHandle = stdErrReadHandle;
@@ -58,9 +62,13 @@ public class NativeProcess : IDisposable
 
         ProcessId = proc.ProcessId;
         ThreadId = proc.ThreadId;
+
         ProcessHandle = proc.ProcessHandle;
         ThreadHandle = proc.ThreadHandle;
+
+        StdInReadHandle = proc.StdInReadHandle;
         StdOutReadHandle = proc.StdOutReadHandle;
+        StdErrReadHandle = proc.StdErrReadHandle;
     }
 
     public static NativeProcess Start(ProcessStartOptions options)
@@ -78,7 +86,12 @@ public class NativeProcess : IDisposable
             throw new InvalidOperationException("Invalid standard output handle.");
         }
 
-        using var fs = new FileStream(StdOutReadHandle, FileAccess.Read, 4096, true);
+        if (OutputReceived == null)
+        {
+            throw new InvalidOperationException("No subscribers to OutputReceived event.");
+        }
+
+        using var fs = new FileStream(StdOutReadHandle, FileAccess.Read, 4096, false);
         using var reader = new StreamReader(fs, Encoding.UTF8);
         string line;
 
@@ -131,9 +144,8 @@ public class NativeProcess : IDisposable
         finally
         {
             hUserTokenDup?.Dispose();
+
             stdInReadHandle?.Dispose();
-            stdOutReadHandle?.Dispose();
-            stdErrReadHandle?.Dispose();
         }
 
         return null;
@@ -206,6 +218,28 @@ public class NativeProcess : IDisposable
         }
 #pragma warning restore CA2000
 
+        const uint HANDLE_FLAG_INHERIT = 1;
+
+        if (!SetHandleInformation(stdOutWriteHandle, HANDLE_FLAG_INHERIT, HANDLE_FLAGS.HANDLE_FLAG_INHERIT))
+        {
+            throw new Exception("Не удалось установить атрибут наследования для hStdOutput дескриптора.");
+        }
+
+        if (!SetHandleInformation(stdErrWriteHandle, HANDLE_FLAG_INHERIT, HANDLE_FLAGS.HANDLE_FLAG_INHERIT))
+        {
+            throw new Exception("Не удалось установить атрибут наследования для hStdError дескриптора.");
+        }
+
+        if (!GetHandleInformation(stdOutWriteHandle, out uint stdOutFlags) || (stdOutFlags & HANDLE_FLAG_INHERIT) != HANDLE_FLAG_INHERIT)
+        {
+            throw new Exception("hStdOutput дескриптор не наследуемый.");
+        }
+
+        if (!GetHandleInformation(stdErrWriteHandle, out uint stdErrFlags) || (stdErrFlags & HANDLE_FLAG_INHERIT) != HANDLE_FLAG_INHERIT)
+        {
+            throw new Exception("hStdError дескриптор не наследуемый.");
+        }
+
         fixed (char* pDesktopName = $@"winsta0\{desktopName}")
         {
             var startupInfo = new STARTUPINFOW
@@ -224,6 +258,8 @@ public class NativeProcess : IDisposable
             var result = CreateProcessAsUser(hUserTokenDup, null, ref appName, null, null, false, dwCreationFlags, null, null, startupInfo, out procInfo);
 
             stdInWriteHandle.Close();
+            stdOutWriteHandle.Close();
+            stdErrWriteHandle.Close();
             
             return result;
         }
@@ -280,6 +316,9 @@ public class NativeProcess : IDisposable
     {
         ProcessHandle?.Dispose();
         ThreadHandle?.Dispose();
+
+        StdInReadHandle?.Dispose();
         StdOutReadHandle?.Dispose();
+        StdErrReadHandle?.Dispose();
     }
 }

@@ -61,3 +61,6 @@ WNetAddConnection2W
 WNetCancelConnection2W
 
 CreatePipe
+
+GetHandleInformation
+SetHandleInformation
