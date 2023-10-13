@@ -212,32 +212,17 @@ public class ControlHub : Hub<IControlClient>, IControlHub
             {
                 ForceConsoleSession = true,
                 DesktopName = "default",
-                HiddenWindow = true,
-                UseCurrentUserToken = true
+                HiddenWindow = false,
+                UseCurrentUserToken = false
             };
 
             using var nativeProcess = NativeProcess.Start(options);
+            nativeProcess.OutputReceived += (output) => {
+                _logger.LogInformation(output);
 
-            if (nativeProcess == null)
-            {
-                _logger.LogError("Failed to start interactive process for: {ApplicationToRun}", applicationToRun);
-            }
-            else
-            {
-                _logger.LogInformation("Process started with ID: {ProcessID}, Thread ID: {ThreadID}", nativeProcess.ProcessId, nativeProcess.ThreadId);
-
-                var _ = nativeProcess.StartListeningToOutputAsync();
-                
-                nativeProcess.OutputReceived += (output) =>
-                {
-                    _ = Clients.Caller.ReceiveScriptResult(output);
-                };
-
-                var process = Process.GetProcessById((int)nativeProcess.ProcessId);
-                process.WaitForExit();
-
-                await Clients.Caller.ReceiveScriptResult("Script executed!");
-            }
+                _ = Clients.Caller.ReceiveScriptResult(output);
+            };
+            await nativeProcess.StartListeningToOutputAsync();
         }
         finally
         {

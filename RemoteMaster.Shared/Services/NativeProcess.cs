@@ -101,6 +101,7 @@ public class NativeProcess : IDisposable
         }
     }
 
+#pragma warning disable CA2000
     private static NativeProcess StartInternal(ProcessStartOptions options)
     {
         var procInfo = new PROCESS_INFORMATION();
@@ -150,6 +151,7 @@ public class NativeProcess : IDisposable
 
         return null;
     }
+#pragma warning restore CA2000
 
     private static bool IsProcessOpen(SafeHandle hProcess) => !hProcess.IsInvalid && !hProcess.IsClosed;
 
@@ -258,9 +260,7 @@ public class NativeProcess : IDisposable
             var result = CreateProcessAsUser(hUserTokenDup, null, ref appName, null, null, true, dwCreationFlags, null, null, startupInfo, out procInfo);
 
             stdInWriteHandle.Close();
-            stdOutWriteHandle.Close();
-            stdErrWriteHandle.Close();
-            
+
             return result;
         }
     }
