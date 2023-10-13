@@ -220,24 +220,22 @@ public class NativeProcess : IDisposable
         }
 #pragma warning restore CA2000
 
-        const uint HANDLE_FLAG_INHERIT = 1;
-
-        if (!SetHandleInformation(stdOutWriteHandle, HANDLE_FLAG_INHERIT, HANDLE_FLAGS.HANDLE_FLAG_INHERIT))
+        if (!SetHandleInformation(stdOutWriteHandle, (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT, HANDLE_FLAGS.HANDLE_FLAG_INHERIT))
         {
             throw new Exception("Не удалось установить атрибут наследования для hStdOutput дескриптора.");
         }
 
-        if (!SetHandleInformation(stdErrWriteHandle, HANDLE_FLAG_INHERIT, HANDLE_FLAGS.HANDLE_FLAG_INHERIT))
+        if (!SetHandleInformation(stdErrWriteHandle, (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT, HANDLE_FLAGS.HANDLE_FLAG_INHERIT))
         {
             throw new Exception("Не удалось установить атрибут наследования для hStdError дескриптора.");
         }
 
-        if (!GetHandleInformation(stdOutWriteHandle, out uint stdOutFlags) || (stdOutFlags & HANDLE_FLAG_INHERIT) != HANDLE_FLAG_INHERIT)
+        if (!GetHandleInformation(stdOutWriteHandle, out var stdOutFlags) || (stdOutFlags & (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT) != (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT)
         {
             throw new Exception("hStdOutput дескриптор не наследуемый.");
         }
 
-        if (!GetHandleInformation(stdErrWriteHandle, out uint stdErrFlags) || (stdErrFlags & HANDLE_FLAG_INHERIT) != HANDLE_FLAG_INHERIT)
+        if (!GetHandleInformation(stdErrWriteHandle, out var stdErrFlags) || (stdErrFlags & (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT) != (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT)
         {
             throw new Exception("hStdError дескриптор не наследуемый.");
         }

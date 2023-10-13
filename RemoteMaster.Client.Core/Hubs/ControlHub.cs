@@ -212,7 +212,7 @@ public class ControlHub : Hub<IControlClient>, IControlHub
             {
                 ForceConsoleSession = true,
                 DesktopName = "default",
-                HiddenWindow = false,
+                HiddenWindow = true,
                 UseCurrentUserToken = false
             };
 
