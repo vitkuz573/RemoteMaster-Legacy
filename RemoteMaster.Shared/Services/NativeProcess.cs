@@ -255,7 +255,7 @@ public class NativeProcess : IDisposable
             applicationName += char.MinValue;
             
             var appName = new Span<char>(applicationName.ToCharArray());
-            var result = CreateProcessAsUser(hUserTokenDup, null, ref appName, null, null, false, dwCreationFlags, null, null, startupInfo, out procInfo);
+            var result = CreateProcessAsUser(hUserTokenDup, null, ref appName, null, null, true, dwCreationFlags, null, null, startupInfo, out procInfo);
 
             stdInWriteHandle.Close();
             stdOutWriteHandle.Close();
