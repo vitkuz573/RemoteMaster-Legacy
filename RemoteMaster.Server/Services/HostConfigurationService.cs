@@ -8,26 +8,26 @@ using RemoteMaster.Shared.Models;
 namespace RemoteMaster.Server.Services;
 
 /// <summary>
-/// Service responsible for generating client configuration files.
+/// Service responsible for generating host configuration files.
 /// </summary>
-public class ClientConfigurationService : IClientConfigurationService
+public class HostConfigurationService : IHostConfigurationService
 {
-    private readonly ILogger<ClientConfigurationService> _logger;
     private readonly ISerializationService _serializationService;
+    private readonly ILogger<HostConfigurationService> _logger;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ClientConfigurationService"/> class.
+    /// Initializes a new instance of the <see cref="HostConfigurationService"/> class.
     /// </summary>
     /// <param name="logger">The logger instance.</param>
     /// <param name="serializationService">The serialization service instance.</param>
-    public ClientConfigurationService(ILogger<ClientConfigurationService> logger, ISerializationService serializationService)
+    public HostConfigurationService(ISerializationService serializationService, ILogger<HostConfigurationService> logger)
     {
-        _logger = logger;
         _serializationService = serializationService;
+        _logger = logger;
     }
 
     /// <summary>
-    /// Generates a configuration file for the client based on the given configuration model.
+    /// Generates a configuration file for the host based on the given configuration model.
     /// </summary>
     /// <param name="config">The configuration model.</param>
     /// <returns>A memory stream containing the configuration file.</returns>

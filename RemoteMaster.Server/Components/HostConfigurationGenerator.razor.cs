@@ -6,15 +6,15 @@ using Microsoft.AspNetCore.Components;
 
 namespace RemoteMaster.Server.Components;
 
-public partial class ClientConfigurationGenerator
+public partial class HostConfigurationGenerator
 {
     private string _group;
 
     [Inject]
     public NavigationManager NavigationManager { get; set; }
 
-    public void DownloadAgent()
+    public void DownloadHost()
     {
-        NavigationManager.NavigateTo("api/ClientConfiguration/download-agent", true);
+        NavigationManager.NavigateTo("api/HostConfiguration/download-host", true);
     }
 }

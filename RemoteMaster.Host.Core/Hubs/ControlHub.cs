@@ -123,7 +123,7 @@ public class ControlHub : Hub<IControlClient>, IControlHub
         ExecuteActionForViewer(viewer => viewer.ScreenCapturer.TrackCursor = trackCursor);
     }
 
-    public async Task KillClient()
+    public async Task KillHost()
     {
         _shutdownService.ImmediateShutdown();
     }

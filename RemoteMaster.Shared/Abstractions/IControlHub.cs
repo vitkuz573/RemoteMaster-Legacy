@@ -27,7 +27,7 @@ public interface IControlHub
 
     Task SetTrackCursor(bool trackCursor);
 
-    Task KillClient();
+    Task KillHost();
 
     Task RebootComputer(string message, int timeout, bool forceAppsClosed);
 

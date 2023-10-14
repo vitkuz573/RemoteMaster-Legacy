@@ -19,7 +19,7 @@ public class ManagementHub : Hub
         _logger = logger;
     }
 
-    public async Task<bool> RegisterClientAsync(string hostName, string ipAddress, string macAddress, string group)
+    public async Task<bool> RegisterHostAsync(string hostName, string ipAddress, string macAddress, string group)
     {
         var folder = (await _databaseService.GetNodesAsync(f => f.Name == group && f is Folder)).OfType<Folder>().FirstOrDefault();
 
@@ -51,7 +51,7 @@ public class ManagementHub : Hub
         return true;
     }
 
-    public async Task<bool> UnregisterClientAsync(string hostName, string group)
+    public async Task<bool> UnregisterHostAsync(string hostName, string group)
     {
         var folder = (await _databaseService.GetNodesAsync(f => f.Name == group && f is Folder)).OfType<Folder>().FirstOrDefault();
 

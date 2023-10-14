@@ -16,13 +16,13 @@ namespace RemoteMaster.Server.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
-public class ClientConfigurationController : ControllerBase
+public class HostConfigurationController : ControllerBase
 {
-    private readonly IClientConfigurationService _clientConfigurationService;
+    private readonly IHostConfigurationService _hostConfigurationService;
 
-    public ClientConfigurationController(IClientConfigurationService clientConfigurationService)
+    public HostConfigurationController(IHostConfigurationService hostConfigurationService)
     {
-        _clientConfigurationService = clientConfigurationService;
+        _hostConfigurationService = hostConfigurationService;
     }
 
     [HttpPost("generate")]
@@ -42,14 +42,14 @@ public class ClientConfigurationController : ControllerBase
 
         byte[] configFileBytes;
 
-        using (var memoryStream = await _clientConfigurationService.GenerateConfigFileAsync(config))
+        using (var memoryStream = await _hostConfigurationService.GenerateConfigFileAsync(config))
         {
             configFileBytes = memoryStream.ToArray();
         }
 
         var contentDisposition = new ContentDispositionHeaderValue("attachment")
         {
-            FileName = "RemoteMaster.Agent.json"
+            FileName = "RemoteMaster.Host.json"
         };
 
         Response.Headers[HeaderNames.ContentDisposition] = contentDisposition.ToString();
@@ -57,10 +57,10 @@ public class ClientConfigurationController : ControllerBase
         return File(configFileBytes, "application/octet-stream");
     }
 
-    [HttpGet("download-agent")]
-    public IActionResult DownloadAgent()
+    [HttpGet("download-host")]
+    public IActionResult DownloadHost()
     {
-        var networkPath = @"\\SERVER-DC02\Win\RemoteMaster\Agent\RemoteMaster.Agent.exe";
+        var networkPath = @"\\SERVER-DC02\Win\RemoteMaster\Host\RemoteMaster.Host.exe";
         var username = "support@it-ktk.local";
         var password = "bonesgamer123!!";
 
@@ -78,7 +78,7 @@ public class ClientConfigurationController : ControllerBase
 
         var contentDisposition = new ContentDispositionHeaderValue("attachment")
         {
-            FileName = "RemoteMaster.Agent.exe"
+            FileName = "RemoteMaster.Host.exe"
         };
 
         Response.Headers[HeaderNames.ContentDisposition] = contentDisposition.ToString();

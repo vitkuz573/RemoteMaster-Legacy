@@ -44,8 +44,7 @@ public partial class Connect : IAsyncDisposable
 
     private bool _isMenuOpen = false;
 
-    private string _clientVersion;
-    private string _agentVersion;
+    private string _hostVersion;
 
     private bool _inputEnabled;
     private bool _cursorTracking;
@@ -54,7 +53,6 @@ public partial class Connect : IAsyncDisposable
     private IEnumerable<DisplayInfo> _displays;
 
     private IControlHub _controlHubProxy;
-    private HubConnection _agentConnection;
 
     private string _newUri;
 
@@ -67,9 +65,8 @@ public partial class Connect : IAsyncDisposable
 
     private async Task InitializeConnectionsAsync()
     {
-        await InitializeClientConnectionAsync();
+        await InitializeHostConnectionAsync();
         await _controlHubProxy.ConnectAs(Intention.Connect);
-        await InitializeAgentConnectionAsync();
     }
 
     private async Task SetParametersFromUriAsync()
@@ -163,7 +160,7 @@ public partial class Connect : IAsyncDisposable
                 await JSRuntime.InvokeVoidAsync("eval", $"history.replaceState(null, '', '{_newUri}');");
             }
 
-            await SetupClientEventListeners();
+            await SetupEventListeners();
         }
 
         await base.OnAfterRenderAsync(firstRender);
@@ -180,19 +177,19 @@ public partial class Connect : IAsyncDisposable
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task SetupClientEventListeners()
+    private async Task SetupEventListeners()
     {
         await JSRuntime.InvokeVoidAsync("addKeyDownEventListener", DotNetObjectReference.Create(this));
         await JSRuntime.InvokeVoidAsync("addKeyUpEventListener", DotNetObjectReference.Create(this));
     }
 
-    private async Task InitializeClientConnectionAsync()
+    private async Task InitializeHostConnectionAsync()
     {
         var httpContext = HttpContextAccessor.HttpContext;
         var accessToken = httpContext.Request.Cookies["accessToken"];
 
-        var clientContext = await ConnectionManager
-            .Connect("Client", $"http://{Host}:5076/hubs/control", options =>
+        var hostContext = await ConnectionManager
+            .Connect("Host", $"http://{Host}:5076/hubs/control", options =>
             {
                 options.Headers.Add("Authorization", $"Bearer {accessToken}");
             }, true)
@@ -200,16 +197,7 @@ public partial class Connect : IAsyncDisposable
             .On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate)
             .StartAsync();
 
-        _controlHubProxy = clientContext.Connection.CreateHubProxy<IControlHub>();
-    }
-
-    private async Task InitializeAgentConnectionAsync()
-    {
-        var agentContext = await ConnectionManager
-            .Connect("Agent", $"http://{Host}:3564/hubs/maintenance")
-            .StartAsync();
-
-        _agentConnection = agentContext.Connection;
+        _controlHubProxy = hostContext.Connection.CreateHubProxy<IControlHub>();
     }
 
     private async Task<(double, double)> GetRelativeMousePositionPercentAsync(MouseEventArgs e)
@@ -317,9 +305,9 @@ public partial class Connect : IAsyncDisposable
         await _controlHubProxy.SetInputEnabled(value);
     }
 
-    private async void KillClient()
+    private async void KillHost()
     {
-        await _controlHubProxy.KillClient();
+        await _controlHubProxy.KillHost();
     }
 
     private async void RebootComputer()
@@ -332,10 +320,11 @@ public partial class Connect : IAsyncDisposable
         await _controlHubProxy.ShutdownComputer(string.Empty, 0, true);
     }
 
+#pragma warning disable CA1822
     private async void SendCtrlAltDel()
     {
-        await _agentConnection.InvokeAsync("SendCtrlAltDel");
     }
+#pragma warning restore CA1822
 
     private async Task GetVersions()
     {
@@ -364,13 +353,9 @@ public partial class Connect : IAsyncDisposable
 
                 foreach (var version in versions)
                 {
-                    if (version.ComponentName.Equals("Agent", StringComparison.OrdinalIgnoreCase))
+                    if (version.ComponentName.Equals("Host", StringComparison.OrdinalIgnoreCase))
                     {
-                        _agentVersion = version.CurrentVersion;
-                    }
-                    else if (version.ComponentName.Equals("Client", StringComparison.OrdinalIgnoreCase))
-                    {
-                        _clientVersion = version.CurrentVersion;
+                        _hostVersion = version.CurrentVersion;
                     }
                 }
             }
@@ -387,7 +372,6 @@ public partial class Connect : IAsyncDisposable
     
     public async ValueTask DisposeAsync()
     {
-        await ConnectionManager.DisconnectAsync("Client");
-        await ConnectionManager.DisconnectAsync("Agent");
+        await ConnectionManager.DisconnectAsync("Host");
     }
 }

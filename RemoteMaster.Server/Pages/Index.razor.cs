@@ -147,14 +147,14 @@ public partial class Index
         var httpContext = HttpContextAccessor.HttpContext;
         var accessToken = httpContext.Request.Cookies["accessToken"];
 
-        var clientContext = ConnectionManager.Connect("Client", $"http://{computer.IPAddress}:5076/hubs/control", options =>
+        var hostContext = ConnectionManager.Connect("Host", $"http://{computer.IPAddress}:5076/hubs/control", options =>
         {
             options.Headers.Add("Authorization", $"Bearer {accessToken}");
         }, true);
 
         try
         {
-            clientContext.On<byte[]>("ReceiveThumbnail", async (thumbnailBytes) =>
+            hostContext.On<byte[]>("ReceiveThumbnail", async (thumbnailBytes) =>
             {
                 if (thumbnailBytes?.Length > 0)
                 {
@@ -163,9 +163,9 @@ public partial class Index
                 }
             });
 
-            await clientContext.StartAsync();
+            await hostContext.StartAsync();
 
-            var proxy = clientContext.Connection.CreateHubProxy<IControlHub>();
+            var proxy = hostContext.Connection.CreateHubProxy<IControlHub>();
             Logger.LogInformation("Calling ConnectAs with Intention.GetThumbnail for {IPAddress}", computer.IPAddress);
             await proxy.ConnectAs(Intention.GetThumbnail);
         }
@@ -200,21 +200,21 @@ public partial class Index
             var httpContext = HttpContextAccessor.HttpContext;
             var accessToken = httpContext.Request.Cookies["accessToken"];
 
-            var clientContext = ConnectionManager.Connect("Client", $"http://{computer.IPAddress}:5076/hubs/control", options =>
+            var hostContext = ConnectionManager.Connect("Host", $"http://{computer.IPAddress}:5076/hubs/control", options =>
             {
                 options.Headers.Add("Authorization", $"Bearer {accessToken}");
             }, true);
 
-            clientContext.On<string>("ReceiveScriptResult", async (result) =>
+            hostContext.On<string>("ReceiveScriptResult", async (result) =>
             {
                 _scriptResults[computer] = result;
 
                 await InvokeAsync(StateHasChanged);
             });
 
-            await clientContext.StartAsync();
+            await hostContext.StartAsync();
 
-            var proxy = clientContext.Connection.CreateHubProxy<IControlHub>();
+            var proxy = hostContext.Connection.CreateHubProxy<IControlHub>();
             await actionOnComputer(computer, proxy);
         }
 
@@ -463,7 +463,7 @@ public partial class Index
         }
     }
 
-    private async Task OpenClientConfigGenerator()
+    private async Task OpenHostConfigGenerator()
     {
         var dialogOptions = new DialogOptions
         {
@@ -472,7 +472,7 @@ public partial class Index
             AutoFocusFirstElement = true
         };
 
-        await DialogService.OpenAsync<ClientConfigurationGenerator>("Client Configuration Generator", null, dialogOptions);
+        await DialogService.OpenAsync<HostConfigurationGenerator>("Host Configuration Generator", null, dialogOptions);
     }
 
     public static string Encrypt(string input, int shift, byte xorConstant)
