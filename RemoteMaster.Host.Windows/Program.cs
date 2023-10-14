@@ -70,6 +70,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+if (!isServiceMode)
+{
+    builder.ConfigureCoreUrls();
+}
+
 var app = builder.Build();
 
 if (args.Contains("--install"))
@@ -85,11 +90,6 @@ if (args.Contains("--install"))
 
     await hostServiceManager.InstallOrUpdate(configuration, hostName, ipv4Address, macAddress);
     return;
-}
-
-if (!isServiceMode)
-{
-    builder.ConfigureCoreUrls();
 }
 
 var hiddenWindow = app.Services.GetRequiredService<HiddenWindow>();
