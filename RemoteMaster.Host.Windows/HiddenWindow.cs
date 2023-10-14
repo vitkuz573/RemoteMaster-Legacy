@@ -9,8 +9,8 @@ namespace RemoteMaster.Host;
 public unsafe class HiddenWindow
 {
     private const string CLASS_NAME = "HiddenWindowClass";
-    private HWND _hwnd;
-    private WNDPROC _wndProcDelegate;
+    private readonly HWND _hwnd;
+    private readonly WNDPROC _wndProcDelegate;
 
     private readonly ILogger<HiddenWindow> _logger;
     private readonly IClientService _clientService;
