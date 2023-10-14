@@ -15,6 +15,8 @@ using RemoteMaster.Host.Services;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Services;
 
+var isServiceMode = args.Contains("--service-mode");
+
 var options = new WebApplicationOptions
 {
     ContentRootPath = AppContext.BaseDirectory,
@@ -68,7 +70,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-if (!args.Contains("--service-mode"))
+if (!isServiceMode)
 {
     builder.ConfigureCoreUrls();
 }
@@ -79,7 +81,7 @@ var hiddenWindow = app.Services.GetRequiredService<HiddenWindow>();
 var hostService = app.Services.GetRequiredService<IHostService>();
 
 
-if (args.Contains("--service-mode"))
+if (isServiceMode)
 {
     hiddenWindow.Initialize();
 
