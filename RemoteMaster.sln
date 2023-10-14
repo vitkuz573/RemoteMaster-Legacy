@@ -13,7 +13,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Элементы решен
 		Directory.Packages.props = Directory.Packages.props
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Host.Core", "RemoteMaster.Agent.Core\RemoteMaster.Host.Core.csproj", "{41E5CC1D-7772-4695-9100-B75EBFE4C5B7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Host.Core", "RemoteMaster.Host.Core\RemoteMaster.Host.Core.csproj", "{41E5CC1D-7772-4695-9100-B75EBFE4C5B7}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Updater", "RemoteMaster.Updater\RemoteMaster.Updater.csproj", "{D9F12236-05DC-4445-A54F-22399927AE75}"
 EndProject
@@ -21,7 +21,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Updater.Tests"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Shared.Tests", "RemoteMaster.Shared.Tests\RemoteMaster.Shared.Tests.csproj", "{18172EBB-ADF2-4DDD-842A-6FA08975B764}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteMaster.Host.Windows", "RemoteMaster.Host\RemoteMaster.Host.Windows.csproj", "{997141CA-F785-485B-BAE7-1759A1AB091C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteMaster.Host.Windows", "RemoteMaster.Host.Windows\RemoteMaster.Host.Windows.csproj", "{997141CA-F785-485B-BAE7-1759A1AB091C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
