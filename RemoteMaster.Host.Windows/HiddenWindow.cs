@@ -85,6 +85,17 @@ public unsafe class HiddenWindow
         return changeDescription;
     }
 
+    public void RunMessageLoop()
+    {
+        MSG msg;
+
+        while (GetMessage(out msg, _hwnd, 0, 0))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(in msg);
+        }
+    }
+
     private void RestartClient()
     {
         _clientService.Stop();

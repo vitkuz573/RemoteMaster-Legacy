@@ -69,3 +69,6 @@ CreateWindowEx
 HWND_MESSAGE
 RegisterClassEx
 DefWindowProc
+GetMessage
+TranslateMessage
+DispatchMessage
