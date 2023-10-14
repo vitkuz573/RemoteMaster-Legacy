@@ -106,7 +106,10 @@ if (args.Contains("--install"))
     var hostName = hostInfoService.GetHostName();
     var ipv4Address = hostInfoService.GetIPv4Address();
     var macAddress = hostInfoService.GetMacAddress();
-
+    
+    Console.WriteLine($"Server: {configuration.Server}");
+    Console.WriteLine($"Group: {configuration.Group}");
+    
     Console.WriteLine($"Host Name: {hostName}");
     Console.WriteLine($"IPv4 Address: {ipv4Address}");
     Console.WriteLine($"MAC Address: {macAddress}");
