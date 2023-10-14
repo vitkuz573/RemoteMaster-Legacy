@@ -107,6 +107,10 @@ if (args.Contains("--install"))
     var ipv4Address = hostInfoService.GetIPv4Address();
     var macAddress = hostInfoService.GetMacAddress();
 
+    Console.WriteLine($"Host Name: {hostName}");
+    Console.WriteLine($"IPv4 Address: {ipv4Address}");
+    Console.WriteLine($"MAC Address: {macAddress}");
+
     await hostServiceManager.InstallOrUpdate(configuration, hostName, ipv4Address, macAddress);
    
     return;
