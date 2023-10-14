@@ -45,7 +45,7 @@ builder.Host.UseContentRoot(AppContext.BaseDirectory);
 builder.Host.UseWindowsService();
 
 builder.Services.AddCoreServices();
-builder.Services.AddSingleton<IClientService, ClientService>();
+builder.Services.AddSingleton<IHostService, HostService>();
 builder.Services.AddSingleton<IAgentServiceManager, AgentServiceManager>();
 builder.Services.AddSingleton<IUpdaterServiceManager, UpdaterServiceManager>();
 builder.Services.AddSingleton<IServiceManager, ServiceManager>();

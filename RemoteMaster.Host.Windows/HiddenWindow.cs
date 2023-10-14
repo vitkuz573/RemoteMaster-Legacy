@@ -13,11 +13,11 @@ public unsafe class HiddenWindow
     private readonly WNDPROC _wndProcDelegate;
 
     private readonly ILogger<HiddenWindow> _logger;
-    private readonly IClientService _clientService;
+    private readonly IHostService _hostService;
 
-    public HiddenWindow(IClientService clientService, ILogger<HiddenWindow> logger)
+    public HiddenWindow(IHostService hostService, ILogger<HiddenWindow> logger)
     {
-        _clientService = clientService;
+        _hostService = hostService;
         _logger = logger;
 
         _wndProcDelegate = WndProc;
@@ -98,13 +98,13 @@ public unsafe class HiddenWindow
 
     private void RestartClient()
     {
-        _clientService.Stop();
+        _hostService.Stop();
 
-        while (_clientService.IsRunning())
+        while (_hostService.IsRunning())
         {
             Task.Delay(50).Wait();
         }
 
-        _clientService.Start();
+        _hostService.Start();
     }
 }

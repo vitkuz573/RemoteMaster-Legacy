@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface IClientService
+public interface IHostService
 {
     bool IsRunning();
 
