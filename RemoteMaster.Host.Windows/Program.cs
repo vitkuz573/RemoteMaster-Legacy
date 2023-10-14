@@ -15,24 +15,6 @@ using RemoteMaster.Host.Services;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Services;
 
-if (args.Contains("--install"))
-{
-    var configurationService = app.Services.GetRequiredService<IConfigurationService>();
-    var hostInfoService = app.Services.GetRequiredService<IHostInfoService>();
-    var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
-
-    // Загрузите конфигурацию
-    var configuration = configurationService.LoadConfiguration();
-
-    var hostName = hostInfoService.GetHostName();
-    var ipv4Address = hostInfoService.GetIPv4Address();
-    var macAddress = hostInfoService.GetMacAddress();
-
-    await hostServiceManager.InstallOrUpdate(configuration, hostName, ipv4Address, macAddress);
-
-    return;
-}
-
 var isServiceMode = args.Contains("--service-mode");
 
 var options = new WebApplicationOptions
@@ -88,21 +70,34 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+var app = builder.Build();
+
+if (args.Contains("--install"))
+{
+    var configurationService = app.Services.GetRequiredService<IConfigurationService>();
+    var hostInfoService = app.Services.GetRequiredService<IHostInfoService>();
+    var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
+
+    var configuration = configurationService.LoadConfiguration();
+    var hostName = hostInfoService.GetHostName();
+    var ipv4Address = hostInfoService.GetIPv4Address();
+    var macAddress = hostInfoService.GetMacAddress();
+
+    await hostServiceManager.InstallOrUpdate(configuration, hostName, ipv4Address, macAddress);
+    return;
+}
+
 if (!isServiceMode)
 {
     builder.ConfigureCoreUrls();
 }
 
-var app = builder.Build();
-
 var hiddenWindow = app.Services.GetRequiredService<HiddenWindow>();
 var hostService = app.Services.GetRequiredService<IHostService>();
-
 
 if (isServiceMode)
 {
     hiddenWindow.Initialize();
-
     hostService.Start();
 }
 
