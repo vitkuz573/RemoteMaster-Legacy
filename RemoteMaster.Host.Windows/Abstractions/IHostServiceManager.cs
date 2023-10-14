@@ -7,7 +7,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Abstractions;
 
-public interface IAgentServiceManager
+public interface IHostServiceManager
 {
     event Action<string, MessageType> MessageReceived;
 

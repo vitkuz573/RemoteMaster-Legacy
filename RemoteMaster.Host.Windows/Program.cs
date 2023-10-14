@@ -15,6 +15,24 @@ using RemoteMaster.Host.Services;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Services;
 
+if (args.Contains("--install"))
+{
+    var configurationService = app.Services.GetRequiredService<IConfigurationService>();
+    var hostInfoService = app.Services.GetRequiredService<IHostInfoService>();
+    var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
+
+    // Загрузите конфигурацию
+    var configuration = configurationService.LoadConfiguration();
+
+    var hostName = hostInfoService.GetHostName();
+    var ipv4Address = hostInfoService.GetIPv4Address();
+    var macAddress = hostInfoService.GetMacAddress();
+
+    await hostServiceManager.InstallOrUpdate(configuration, hostName, ipv4Address, macAddress);
+
+    return;
+}
+
 var isServiceMode = args.Contains("--service-mode");
 
 var options = new WebApplicationOptions
@@ -30,10 +48,10 @@ builder.Host.UseWindowsService();
 
 builder.Services.AddCoreServices();
 builder.Services.AddSingleton<IHostService, HostService>();
-builder.Services.AddSingleton<IAgentServiceManager, AgentServiceManager>();
+builder.Services.AddSingleton<IHostServiceManager, HostServiceManager>();
 builder.Services.AddSingleton<IUpdaterServiceManager, UpdaterServiceManager>();
 builder.Services.AddSingleton<IServiceManager, ServiceManager>();
-builder.Services.AddSingleton<AgentServiceConfig>();
+builder.Services.AddSingleton<HostServiceConfig>();
 builder.Services.AddSingleton<UpdaterServiceConfig>();
 builder.Services.AddSingleton<IScreenCapturerService, BitBltCapturer>();
 builder.Services.AddSingleton<IScreenRecorderService, ScreenRecorderService>();
@@ -45,7 +63,7 @@ builder.Services.AddSingleton<HiddenWindow>();
 
 builder.Services.AddSingleton<IDictionary<string, IServiceConfig>>(sp => new Dictionary<string, IServiceConfig>
 {
-    { "agent", sp.GetRequiredService<AgentServiceConfig>() },
+    { "host", sp.GetRequiredService<HostServiceConfig>() },
     { "updater", sp.GetRequiredService<UpdaterServiceConfig>() }
 });
 

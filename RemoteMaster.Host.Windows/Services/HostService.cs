@@ -13,7 +13,7 @@ public class HostService : IHostService
 {
     private readonly ILogger<HostService> _logger;
 
-    private static string CurrentExecutablePath => Environment.ProcessPath;
+    private static string CurrentExecutablePath => Environment.ProcessPath!;
     private const string InstanceArgument = "--user-instance";
 
     public HostService(ILogger<HostService> logger)

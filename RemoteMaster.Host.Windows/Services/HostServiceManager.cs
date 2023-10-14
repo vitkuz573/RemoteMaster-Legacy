@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
-using System.IO;
 using System.ServiceProcess;
 using RemoteMaster.Host.Abstractions;
 using RemoteMaster.Host.Core.Abstractions;
@@ -13,7 +12,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Services;
 
-public class AgentServiceManager : IAgentServiceManager
+public class HostServiceManager : IHostServiceManager
 {
     public event Action<string, MessageType> MessageReceived;
 
@@ -21,12 +20,12 @@ public class AgentServiceManager : IAgentServiceManager
     private readonly IServiceManager _serviceManager;
     private readonly IConfigurationService _configurationService;
 
-    private readonly IServiceConfig _agentConfig;
+    private readonly IServiceConfig _hostConfig;
 
     private const string MainAppName = "RemoteMaster";
-    private const string SubAppName = "Agent";
+    private const string SubAppName = "Host";
 
-    public AgentServiceManager(IRegistratorService registratorService, IServiceManager serviceManager, IConfigurationService configurationService, IDictionary<string, IServiceConfig> configs)
+    public HostServiceManager(IRegistratorService registratorService, IServiceManager serviceManager, IConfigurationService configurationService, IDictionary<string, IServiceConfig> configs)
     {
         if (configs == null)
         {
@@ -36,7 +35,7 @@ public class AgentServiceManager : IAgentServiceManager
         _registratorService = registratorService;
         _serviceManager = serviceManager;
         _configurationService = configurationService;
-        _agentConfig = configs["agent"];
+        _hostConfig = configs["host"];
     }
 
     public async Task InstallOrUpdate(ConfigurationModel configuration, string hostName, string ipv4Address, string macAddress)
@@ -45,13 +44,13 @@ public class AgentServiceManager : IAgentServiceManager
         {
             var directoryPath = GetDirectoryPath();
 
-            if (_serviceManager.IsServiceInstalled(_agentConfig.Name))
+            if (_serviceManager.IsServiceInstalled(_hostConfig.Name))
             {
-                using var serviceController = new ServiceController(_agentConfig.Name);
+                using var serviceController = new ServiceController(_hostConfig.Name);
 
                 if (serviceController.Status != ServiceControllerStatus.Stopped)
                 {
-                    _serviceManager.StopService(_agentConfig.Name);
+                    _serviceManager.StopService(_hostConfig.Name);
                 }
 
                 CopyToTargetPath(directoryPath);
@@ -59,13 +58,13 @@ public class AgentServiceManager : IAgentServiceManager
             else
             {
                 CopyToTargetPath(directoryPath);
-                var agentPath = Path.Combine(directoryPath, $"{MainAppName}.{SubAppName}.exe");
-                _serviceManager.InstallService(_agentConfig, agentPath);
+                var hostPath = Path.Combine(directoryPath, $"{MainAppName}.{SubAppName}.exe");
+                _serviceManager.InstallService(_hostConfig, hostPath);
             }
 
-            _serviceManager.StartService(_agentConfig.Name);
+            _serviceManager.StartService(_hostConfig.Name);
 
-            MessageReceived?.Invoke($"{_agentConfig.Name} installed and started successfully.", MessageType.Information);
+            MessageReceived?.Invoke($"{_hostConfig.Name} installed and started successfully.", MessageType.Information);
 
             var registerResult = await _registratorService.RegisterAsync(configuration, hostName, ipv4Address, macAddress);
 
@@ -84,10 +83,10 @@ public class AgentServiceManager : IAgentServiceManager
     {
         try
         {
-            if (_serviceManager.IsServiceInstalled(_agentConfig.Name))
+            if (_serviceManager.IsServiceInstalled(_hostConfig.Name))
             {
-                _serviceManager.StopService(_agentConfig.Name);
-                _serviceManager.UninstallService(_agentConfig.Name);
+                _serviceManager.StopService(_hostConfig.Name);
+                _serviceManager.UninstallService(_hostConfig.Name);
 
                 await Task.Delay(TimeSpan.FromSeconds(30));
 
@@ -161,23 +160,19 @@ public class AgentServiceManager : IAgentServiceManager
     private void DeleteFiles()
     {
         var mainDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), MainAppName);
-        var subAppNames = new[] { SubAppName, "Client" };
 
-        foreach (var subAppName in subAppNames)
+        var directoryPath = Path.Combine(mainDirectoryPath, SubAppName);
+
+        if (Directory.Exists(directoryPath))
         {
-            var directoryPath = Path.Combine(mainDirectoryPath, subAppName);
-
-            if (Directory.Exists(directoryPath))
+            try
             {
-                try
-                {
-                    Directory.Delete(directoryPath, true);
-                    MessageReceived?.Invoke($"{subAppName} files deleted successfully.", MessageType.Information);
-                }
-                catch (Exception ex)
-                {
-                    MessageReceived?.Invoke($"Deleting {subAppName.ToLower()} files failed: {ex.Message}", MessageType.Error);
-                }
+                Directory.Delete(directoryPath, true);
+                MessageReceived?.Invoke($"{SubAppName} files deleted successfully.", MessageType.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageReceived?.Invoke($"Deleting {SubAppName.ToLower()} files failed: {ex.Message}", MessageType.Error);
             }
         }
     }

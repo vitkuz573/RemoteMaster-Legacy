@@ -6,7 +6,7 @@ using RemoteMaster.Shared.Abstractions;
 
 namespace RemoteMaster.Host.Models;
 
-public class AgentServiceConfig : IServiceConfig
+public class HostServiceConfig : IServiceConfig
 {
     public string Name { get; } = "RCService";
 
