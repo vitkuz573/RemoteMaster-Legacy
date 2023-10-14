@@ -17,6 +17,15 @@ using RemoteMaster.Shared.Models;
 using RemoteMaster.Shared.Services;
 
 var isServiceMode = args.Contains("--service-mode");
+var isInstallMode = args.Contains("--install");
+var isUninstallMode = args.Contains("--uninstall");
+
+if (new[] { isServiceMode, isInstallMode, isUninstallMode }.Count(val => val) > 1)
+{
+    Console.WriteLine("[ERROR] Arguments --install, --uninstall, and --service-mode are mutually exclusive. Please specify only one.");
+   
+    return;
+}
 
 var options = new WebApplicationOptions
 {
@@ -25,7 +34,6 @@ var options = new WebApplicationOptions
 };
 
 var builder = WebApplication.CreateBuilder(options);
-
 builder.Host.UseContentRoot(AppContext.BaseDirectory);
 builder.Host.UseWindowsService();
 
@@ -78,7 +86,7 @@ if (!isServiceMode)
 
 var app = builder.Build();
 
-if (args.Contains("--install"))
+if (isInstallMode)
 {
     var configurationService = app.Services.GetRequiredService<IConfigurationService>();
     var hostInfoService = app.Services.GetRequiredService<IHostInfoService>();
@@ -93,13 +101,13 @@ if (args.Contains("--install"))
     catch (FileNotFoundException ex)
     {
         Console.WriteLine($"[ERROR] Configuration file not found: {ex.Message}");
-        
+
         return;
     }
     catch (InvalidDataException ex)
     {
         Console.WriteLine($"[ERROR] Invalid configuration data: {ex.Message}");
-        
+
         return;
     }
 
@@ -124,7 +132,7 @@ if (args.Contains("--install"))
     return;
 }
 
-if (args.Contains("--uninstall"))
+if (isUninstallMode)
 {
     var configurationService = app.Services.GetRequiredService<IConfigurationService>();
     var hostInfoService = app.Services.GetRequiredService<IHostInfoService>();
@@ -172,7 +180,5 @@ if (!app.Environment.IsDevelopment())
 
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapCoreHubs();
-
 app.Run();
