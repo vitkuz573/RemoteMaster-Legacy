@@ -1,10 +1,10 @@
 ﻿using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using RemoteMaster.Agent.Core.Abstractions;
-using RemoteMaster.Agent.Core.Extensions;
+using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Extensions;
 
-namespace RemoteMaster.Agent.Core.Services;
+namespace RemoteMaster.Host.Core.Services;
 
 public partial class HostInfoService : IHostInfoService
 {

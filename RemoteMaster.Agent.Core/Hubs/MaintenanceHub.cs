@@ -6,7 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.SignalR;
 using Windows.Win32;
 
-namespace RemoteMaster.Agent.Core.Hubs;
+namespace RemoteMaster.Host.Core.Hubs;
 
 public class MaintenanceHub : Hub
 {

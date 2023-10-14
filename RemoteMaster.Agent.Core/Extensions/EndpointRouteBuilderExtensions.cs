@@ -4,14 +4,15 @@
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
-using RemoteMaster.Agent.Core.Hubs;
+using RemoteMaster.Host.Core.Hubs;
 
-namespace RemoteMaster.Agent.Core.Extensions;
+namespace RemoteMaster.Host.Core.Extensions;
 
 public static class EndpointRouteBuilderExtensions
 {
     public static IEndpointRouteBuilder MapCoreHubs(this IEndpointRouteBuilder endpoints)
     {
+        endpoints.MapHub<ControlHub>("/hubs/control");
         endpoints.MapHub<MaintenanceHub>("/hubs/maintenance");
 
         return endpoints;

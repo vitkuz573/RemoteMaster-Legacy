@@ -4,11 +4,11 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using RemoteMaster.Agent.Core.Abstractions;
-using RemoteMaster.Agent.Core.Services;
+using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Services;
 using Serilog;
 
-namespace RemoteMaster.Agent.Core.Extensions;
+namespace RemoteMaster.Host.Core.Extensions;
 
 public static class ServiceCollectionExtensions
 {
@@ -18,6 +18,7 @@ public static class ServiceCollectionExtensions
             .MinimumLevel.Debug()
             .WriteTo.Console()
             .WriteTo.File(@"C:\ProgramData\RemoteMaster\Agent\RemoteMaster_Agent.log", rollingInterval: RollingInterval.Day)
+            .Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Received hub invocation"))
             .CreateLogger();
 
         services.AddLogging(builder =>
@@ -30,8 +31,11 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IRegistratorService, RegistratorService>();
         services.AddSingleton<IConfigurationService, ConfigurationService>();
         services.AddSingleton<IHostInfoService, HostInfoService>();
+        services.AddSingleton<IAppState, AppState>();
+        services.AddSingleton<IShutdownService, ShutdownService>();
+        services.AddTransient<IViewerFactory, ViewerFactory>();
 
-        services.AddSignalR();
+        services.AddSignalR().AddMessagePackProtocol();
 
         return services;
     }

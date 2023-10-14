@@ -3,10 +3,10 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Text.Json;
-using RemoteMaster.Agent.Core.Abstractions;
+using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Models;
 
-namespace RemoteMaster.Agent.Core.Services;
+namespace RemoteMaster.Host.Core.Services;
 
 public class ConfigurationService : IConfigurationService
 {

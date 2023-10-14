@@ -4,7 +4,7 @@
 
 using System.Net.NetworkInformation;
 
-namespace RemoteMaster.Agent.Core.Extensions;
+namespace RemoteMaster.Host.Core.Extensions;
 
 public static class NetworkInterfaceExtensions
 {

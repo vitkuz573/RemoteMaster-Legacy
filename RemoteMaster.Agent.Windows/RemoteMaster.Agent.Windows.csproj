@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <TargetFramework>net7.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
@@ -28,12 +28,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FFMpegCore.Extensions.System.Drawing.Common" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" />
+    <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" />
+    <PackageReference Include="SkiaSharp" />
     <PackageReference Include="System.DirectoryServices.AccountManagement" />
+    <PackageReference Include="System.Drawing.Common" />
+    <PackageReference Include="System.Management" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RemoteMaster.Agent.Core\RemoteMaster.Agent.Core.csproj" />
+    <ProjectReference Include="..\RemoteMaster.Agent.Core\RemoteMaster.Host.Core.csproj" />
   </ItemGroup>
 
   <Target Name="CustomActionsAfterPublish" AfterTargets="Publish">

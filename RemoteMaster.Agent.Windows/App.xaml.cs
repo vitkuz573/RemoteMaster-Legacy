@@ -1,160 +1,81 @@
-﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
-// This file is part of the RemoteMaster project.
-// Licensed under the GNU Affero General Public License v3.0.
-
-using System.IO;
+﻿using System.IO;
+using System.Security.Cryptography;
 using System.Windows;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Hosting.WindowsServices;
-using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
+using RemoteMaster.Agent;
 using RemoteMaster.Agent.Abstractions;
 using RemoteMaster.Agent.Core.Abstractions;
 using RemoteMaster.Agent.Core.Extensions;
+using RemoteMaster.Agent.Helpers;
 using RemoteMaster.Agent.Models;
 using RemoteMaster.Agent.Services;
 using RemoteMaster.Shared.Abstractions;
-using RemoteMaster.Shared.Helpers;
 using RemoteMaster.Shared.Services;
 
-namespace RemoteMaster.Agent;
+var builder = WebApplication.CreateBuilder().ConfigureCoreUrls();
+
+builder.Host.UseContentRoot(AppContext.BaseDirectory);
+builder.Host.UseWindowsService();
+
+builder.Services.AddCoreServices();
+builder.Services.AddSingleton<IClientService, ClientService>();
+builder.Services.AddSingleton<IAgentServiceManager, AgentServiceManager>();
+builder.Services.AddSingleton<IUpdaterServiceManager, UpdaterServiceManager>();
+builder.Services.AddSingleton<IServiceManager, ServiceManager>();
+builder.Services.AddSingleton<MainWindow>();
+builder.Services.AddSingleton<AgentServiceConfig>();
+builder.Services.AddSingleton<UpdaterServiceConfig>();
+builder.Services.AddSingleton<IDictionary<string, IServiceConfig>>(sp => new Dictionary<string, IServiceConfig>
+{
+    { "agent", sp.GetRequiredService<AgentServiceConfig>() },
+    { "updater", sp.GetRequiredService<UpdaterServiceConfig>() }
+});
+
+builder.Services.AddSingleton<IScreenCapturerService, BitBltCapturer>();
+builder.Services.AddSingleton<IScreenRecorderService, ScreenRecorderService>();
+builder.Services.AddSingleton<ICursorRenderService, CursorRenderService>();
+builder.Services.AddSingleton<IInputService, InputService>();
+builder.Services.AddSingleton<IPowerService, PowerService>();
+builder.Services.AddSingleton<IHardwareService, HardwareService>();
+builder.Services.AddSingleton<IServiceManager, ServiceManager>();
+
+var publicKeyPath = @"C:\RemoteMaster\Security\public_key.pem";
+var publicKey = File.ReadAllText(publicKeyPath);
+
+using var rsa = new RSACryptoServiceProvider();
+rsa.ImportFromPem(publicKey.ToCharArray());
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateIssuerSigningKey = true,
+            ValidateLifetime = true,
+            ValidIssuer = "RemoteMaster Server",
+            ValidAudience = "RMServiceAPI",
+            IssuerSigningKey = new RsaSecurityKey(rsa)
+        };
+    });
+
+var app = builder.Build();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapCoreHubs();
+
+app.Run();
 
 public partial class App : Application
 {
-    private IHost _host;
-    private HiddenWindow _hiddenWindow;
-
-    protected const string SharedFolder = @"\\SERVER-DC02\Win\RemoteMaster";
-    protected const string Login = "support@it-ktk.local";
-    protected const string Password = "bonesgamer123!!";
+    private WebApplication _host;
 
     public IServiceProvider ServiceProvider => _host.Services;
-
-    protected override void OnStartup(StartupEventArgs e)
-    {
-        var hostBuilder = CreateDefaultHostBuilder();
-
-        if (WindowsServiceHelpers.IsWindowsService())
-        {
-            ConfigureAsWindowsService(hostBuilder);
-
-            _hiddenWindow = new HiddenWindow();
-            _hiddenWindow.Show();
-        }
-        else
-        {
-            ConfigureAsWpfApp(hostBuilder);
-        }
-
-        _host.StartAsync();
-    }
-
-    protected override void OnExit(ExitEventArgs e)
-    {
-        base.OnExit(e);
-        _host?.StopAsync().Wait();
-    }
-
-    private static IHostBuilder CreateDefaultHostBuilder()
-    {
-        return Host.CreateDefaultBuilder()
-            .ConfigureServices((hostContext, services) =>
-            {
-                services.AddCoreServices();
-                services.AddSingleton<IClientService, ClientService>();
-                services.AddSingleton<IAgentServiceManager, AgentServiceManager>();
-                services.AddSingleton<IUpdaterServiceManager, UpdaterServiceManager>();
-                services.AddSingleton<IServiceManager, ServiceManager>();
-                services.AddSingleton<ISignatureService, SignatureService>();
-                services.AddSingleton<MainWindow>();
-
-                services.AddSingleton<AgentServiceConfig>();
-                services.AddSingleton<UpdaterServiceConfig>();
-
-                services.AddSingleton<IDictionary<string, IServiceConfig>>(sp => new Dictionary<string, IServiceConfig>
-                {
-                    { "agent", sp.GetRequiredService<AgentServiceConfig>() },
-                    { "updater", sp.GetRequiredService<UpdaterServiceConfig>() }
-                });
-            });
-    }
-
-    private void ConfigureAsWindowsService(IHostBuilder hostBuilder)
-    {
-        _host = hostBuilder
-            .UseContentRoot(AppContext.BaseDirectory)
-            .ConfigureWebHostDefaults(webBuilder =>
-            {
-                webBuilder.ConfigureKestrel(options => options.ListenAnyIP(3564));
-                webBuilder.Configure(app =>
-                {
-                    app.UseRouting();
-                    app.UseEndpoints(endpoints => endpoints.MapCoreHubs());
-                });
-            })
-            .UseWindowsService()
-        .Build();
-
-        var sourceFolder = Path.Combine(SharedFolder, "Client");
-        var destinationFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Client");
-
-        _ = TryExecuteWithRetryAsync(async () =>
-        {
-            try
-            {
-                NetworkDriveHelper.MapNetworkDrive(SharedFolder, Login, Password);
-                NetworkDriveHelper.DirectoryCopy(sourceFolder, destinationFolder);
-                NetworkDriveHelper.CancelNetworkDrive(SharedFolder);
-
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        });
-
-        MonitorClient();
-    }
-
-    private void ConfigureAsWpfApp(IHostBuilder hostBuilder)
-    {
-        _host = hostBuilder.Build();
-        MainWindow = ServiceProvider.GetRequiredService<MainWindow>();
-        MainWindow.Show();
-    }
-
-    private async void MonitorClient()
-    {
-        var clientService = ServiceProvider.GetRequiredService<IClientService>();
-
-        while (true)
-        {
-            if (!clientService.IsRunning())
-            {
-                clientService.Start();
-            }
-
-            await Task.Delay(TimeSpan.FromMinutes(1));
-        }
-    }
-
-    private static async Task<bool> TryExecuteWithRetryAsync(Func<Task<bool>> operation)
-    {
-        while (true)
-        {
-            try
-            {
-                if (await operation())
-                {
-                    return true;
-                }
-            }
-            catch { }
-
-            await Task.Delay(10000);
-        }
-    }
 }

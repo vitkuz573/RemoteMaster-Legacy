@@ -4,7 +4,7 @@
 
 using RemoteMaster.Shared.Models;
 
-namespace RemoteMaster.Agent.Core.Abstractions;
+namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IConfigurationService
 {

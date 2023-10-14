@@ -4,10 +4,10 @@
 
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
-using RemoteMaster.Agent.Core.Abstractions;
+using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Models;
 
-namespace RemoteMaster.Agent.Core.Services;
+namespace RemoteMaster.Host.Core.Services;
 
 public class RegistratorService : IRegistratorService
 {
