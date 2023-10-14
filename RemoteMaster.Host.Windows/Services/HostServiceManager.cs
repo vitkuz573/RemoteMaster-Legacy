@@ -87,8 +87,6 @@ public class HostServiceManager : IHostServiceManager
                 _serviceManager.StopService(_hostConfig.Name);
                 _serviceManager.UninstallService(_hostConfig.Name);
 
-                await Task.Delay(TimeSpan.FromSeconds(30));
-
                 foreach (var process in Process.GetProcessesByName($"{MainAppName}.{SubAppName}"))
                 {
                     process.Kill();

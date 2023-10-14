@@ -124,6 +124,38 @@ if (args.Contains("--install"))
     return;
 }
 
+if (args.Contains("--uninstall"))
+{
+    var configurationService = app.Services.GetRequiredService<IConfigurationService>();
+    var hostInfoService = app.Services.GetRequiredService<IHostInfoService>();
+    var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
+
+    ConfigurationModel configuration;
+
+    try
+    {
+        configuration = configurationService.LoadConfiguration();
+    }
+    catch (FileNotFoundException ex)
+    {
+        Console.WriteLine($"[ERROR] Configuration file not found: {ex.Message}");
+
+        return;
+    }
+    catch (InvalidDataException ex)
+    {
+        Console.WriteLine($"[ERROR] Invalid configuration data: {ex.Message}");
+
+        return;
+    }
+
+    var hostName = hostInfoService.GetHostName();
+
+    await hostServiceManager.Uninstall(configuration, hostName);
+
+    return;
+}
+
 var hiddenWindow = app.Services.GetRequiredService<HiddenWindow>();
 var hostService = app.Services.GetRequiredService<IHostService>();
 
