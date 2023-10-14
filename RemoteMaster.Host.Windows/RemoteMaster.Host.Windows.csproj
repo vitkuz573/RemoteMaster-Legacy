@@ -5,6 +5,15 @@
 	<RootNamespace>RemoteMaster.Host</RootNamespace>
 	<AssemblyName>RemoteMaster.Host</AssemblyName>
 	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	<ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>none</DebugType>
   </PropertyGroup>
 
   <ItemGroup>
