@@ -17,7 +17,7 @@ public static class ServiceCollectionExtensions
         var serilogLogger = new LoggerConfiguration()
             .MinimumLevel.Debug()
             .WriteTo.Console()
-            .WriteTo.File(@"C:\ProgramData\RemoteMaster\Agent\RemoteMaster_Agent.log", rollingInterval: RollingInterval.Day)
+            .WriteTo.File(@"C:\ProgramData\RemoteMaster\Host\RemoteMaster_Host.log", rollingInterval: RollingInterval.Day)
             .Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Received hub invocation"))
             .CreateLogger();
 
