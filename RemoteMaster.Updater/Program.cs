@@ -14,8 +14,7 @@ builder.Host.UseWindowsService();
 
 builder.Services.AddControllers();
 
-builder.Services.AddScoped<IComponentUpdater, ClientComponentUpdater>();
-builder.Services.AddScoped<IComponentUpdater, AgentComponentUpdater>();
+builder.Services.AddScoped<IComponentUpdater, HostComponentUpdater>();
 
 var app = builder.Build();
 

@@ -3,19 +3,20 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
+using System.ServiceProcess;
 using RemoteMaster.Updater.Abstractions;
 using RemoteMaster.Updater.Helpers;
 using RemoteMaster.Updater.Models;
 
 namespace RemoteMaster.Updater.Services;
 
-public class ClientComponentUpdater : IComponentUpdater
+public class HostComponentUpdater : IComponentUpdater
 {
-    private readonly ILogger<ClientComponentUpdater> _logger;
+    private readonly ILogger<HostComponentUpdater> _logger;
 
-    public string ComponentName => "Client";
+    public string ComponentName => "Host";
 
-    public ClientComponentUpdater(ILogger<ClientComponentUpdater> logger)
+    public HostComponentUpdater(ILogger<HostComponentUpdater> logger)
     {
         _logger = logger;
     }
@@ -79,17 +80,12 @@ public class ClientComponentUpdater : IComponentUpdater
 
         try
         {
-            var processes = Process.GetProcessesByName($"RemoteMaster.{ComponentName}");
+            StopService();
+            await WaitForServiceToStop();
 
-            foreach (var process in processes)
-            {
-                process.Kill();
-                process.WaitForExit();
-            }
+            Thread.Sleep(30000);
 
-            var sourceFolder = string.IsNullOrEmpty(sharedFolder) || string.IsNullOrEmpty(login) || string.IsNullOrEmpty(password)
-                ? null
-                : Path.Combine(sharedFolder, ComponentName);
+            var sourceFolder = string.IsNullOrEmpty(sharedFolder) || string.IsNullOrEmpty(login) || string.IsNullOrEmpty(password) ? null : Path.Combine(sharedFolder, ComponentName);
 
             if (!Directory.Exists(backupFolder))
             {
@@ -123,7 +119,6 @@ public class ClientComponentUpdater : IComponentUpdater
                     {
                         RestoreFromBackup(backupFolder, destinationFolder);
                         NetworkDriveHelper.CancelNetworkDrive(sharedFolder);
-
                         throw new InvalidOperationException($"Unable to access file {filePath} after {maxRetries} retries.");
                     }
                 }
@@ -136,12 +131,14 @@ public class ClientComponentUpdater : IComponentUpdater
             {
                 Directory.Delete(backupFolder, true);
             }
+
+            StartService();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating component {ComponentName}", ComponentName);
-
             RestoreFromBackup(backupFolder, destinationFolder);
+            StartService();
         }
     }
 
@@ -162,6 +159,24 @@ public class ClientComponentUpdater : IComponentUpdater
             ComponentName = ComponentName,
             CurrentVersion = localVersion
         });
+    }
+
+    private static async Task WaitForServiceToStop()
+    {
+        using var serviceController = new ServiceController("RCService");
+        var timeout = TimeSpan.FromSeconds(30);
+        var sw = Stopwatch.StartNew();
+
+        while (serviceController.Status != ServiceControllerStatus.Stopped)
+        {
+            if (sw.Elapsed > timeout)
+            {
+                throw new System.TimeoutException("Timeout waiting for service to stop.");
+            }
+
+            await Task.Delay(1000);
+            serviceController.Refresh();
+        }
     }
 
     private static void RestoreFromBackup(string backupFolder, string destinationFolder)
@@ -191,5 +206,27 @@ public class ClientComponentUpdater : IComponentUpdater
         }
 
         return false;
+    }
+
+    public void StartService()
+    {
+        using var serviceController = new ServiceController("RCService");
+
+        if (serviceController.Status != ServiceControllerStatus.Running)
+        {
+            serviceController.Start();
+            serviceController.WaitForStatus(ServiceControllerStatus.Running);
+        }
+    }
+
+    public void StopService()
+    {
+        using var serviceController = new ServiceController("RCService");
+
+        if (serviceController.Status != ServiceControllerStatus.Stopped)
+        {
+            serviceController.Stop();
+            serviceController.WaitForStatus(ServiceControllerStatus.Stopped);
+        }
     }
 }
