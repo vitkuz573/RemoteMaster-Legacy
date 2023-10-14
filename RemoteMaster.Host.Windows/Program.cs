@@ -93,11 +93,13 @@ if (args.Contains("--install"))
     catch (FileNotFoundException ex)
     {
         Console.WriteLine($"[ERROR] Configuration file not found: {ex.Message}");
+        
         return;
     }
     catch (InvalidDataException ex)
     {
         Console.WriteLine($"[ERROR] Invalid configuration data: {ex.Message}");
+        
         return;
     }
 
@@ -105,7 +107,6 @@ if (args.Contains("--install"))
     var ipv4Address = hostInfoService.GetIPv4Address();
     var macAddress = hostInfoService.GetMacAddress();
 
-    // Structured and formatted output
     Console.WriteLine(new string('=', 40));
     Console.WriteLine("INSTALLATION DETAILS:");
     Console.WriteLine(new string('-', 40));
