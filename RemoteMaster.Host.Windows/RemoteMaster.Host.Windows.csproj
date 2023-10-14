@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RemoteMaster.Agent.Core\RemoteMaster.Host.Core.csproj" />
+    <ProjectReference Include="..\RemoteMaster.Host.Core\RemoteMaster.Host.Core.csproj" />
   </ItemGroup>
 
 </Project>

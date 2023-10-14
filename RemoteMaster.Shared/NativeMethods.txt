@@ -64,3 +64,8 @@ CreatePipe
 
 GetHandleInformation
 SetHandleInformation
+
+CreateWindowEx
+HWND_MESSAGE
+RegisterClassEx
+DefWindowProc
