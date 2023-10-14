@@ -13,16 +13,15 @@ namespace RemoteMaster.Host.Services;
 
 public class UpdaterServiceManager : IUpdaterServiceManager
 {
-    public event Action<string, MessageType> MessageReceived;
-
     private readonly IServiceManager _serviceManager;
 
     private readonly IServiceConfig _updaterConfig;
+    private readonly ILogger<UpdaterServiceManager> _logger;
 
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Updater";
 
-    public UpdaterServiceManager(IServiceManager serviceManager, IDictionary<string, IServiceConfig> configs)
+    public UpdaterServiceManager(IServiceManager serviceManager, IDictionary<string, IServiceConfig> configs, ILogger<UpdaterServiceManager> logger)
     {
         if (configs == null)
         {
@@ -31,6 +30,7 @@ public class UpdaterServiceManager : IUpdaterServiceManager
 
         _serviceManager = serviceManager;
         _updaterConfig = configs["updater"];
+        _logger = logger;
     }
 
     public void InstallOrUpdate()
@@ -59,11 +59,11 @@ public class UpdaterServiceManager : IUpdaterServiceManager
 
             _serviceManager.StartService(_updaterConfig.Name);
 
-            MessageReceived?.Invoke($"{SubAppName} Service installed and started successfully.", MessageType.Information);
+            _logger.LogInformation("{ServiceName} Service installed and started successfully.", _updaterConfig.Name);
         }
         catch (Exception ex)
         {
-            MessageReceived?.Invoke($"Updater Service installation failed: {ex.Message}", MessageType.Error);
+            _logger.LogError("{ServiceName} Service installation failed: {Message}", _updaterConfig.Name, ex.Message);
         }
         finally
         {
@@ -82,16 +82,16 @@ public class UpdaterServiceManager : IUpdaterServiceManager
 
                 DeleteUpdaterFiles();
 
-                MessageReceived?.Invoke($"{SubAppName} Service uninstalled successfully.", MessageType.Information);
+                _logger.LogInformation("{ServiceName} Service uninstalled successfully.", _updaterConfig.Name);
             }
             else
             {
-                MessageReceived?.Invoke($"{SubAppName} Service is not installed.", MessageType.Information);
+                _logger.LogInformation("{ServiceName} Service is not installed.", _updaterConfig.Name);
             }
         }
         catch (Exception ex)
         {
-            MessageReceived?.Invoke($"Updater Service uninstallation failed: {ex.Message}", MessageType.Error);
+            _logger.LogError("{ServiceName} Service uninstallation failed: {Message}", _updaterConfig.Name, ex.Message);
         }
     }
 
@@ -132,11 +132,11 @@ public class UpdaterServiceManager : IUpdaterServiceManager
             try
             {
                 Directory.Delete(directoryPath, true);
-                MessageReceived?.Invoke($"{SubAppName} files deleted successfully.", MessageType.Information);
+                _logger.LogInformation("{AppName} files deleted successfully.", SubAppName);
             }
             catch (Exception ex)
             {
-                MessageReceived?.Invoke($"Deleting {SubAppName.ToLower()} files failed: {ex.Message}", MessageType.Error);
+                _logger.LogError("Deleting {AppName} files failed: {Message}", SubAppName, ex.Message);
             }
         }
     }

@@ -8,8 +8,6 @@ namespace RemoteMaster.Host.Abstractions;
 
 public interface IUpdaterServiceManager
 {
-    event Action<string, MessageType> MessageReceived;
-
     void InstallOrUpdate();
 
     void Uninstall();

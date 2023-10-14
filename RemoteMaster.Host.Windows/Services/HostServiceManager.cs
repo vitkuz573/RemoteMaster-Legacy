@@ -6,7 +6,6 @@ using System.Diagnostics;
 using System.ServiceProcess;
 using RemoteMaster.Host.Abstractions;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Models;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;
 
@@ -14,18 +13,17 @@ namespace RemoteMaster.Host.Services;
 
 public class HostServiceManager : IHostServiceManager
 {
-    public event Action<string, MessageType> MessageReceived;
-
     private readonly IRegistratorService _registratorService;
     private readonly IServiceManager _serviceManager;
     private readonly IConfigurationService _configurationService;
+    private readonly ILogger<HostServiceManager> _logger;
 
     private readonly IServiceConfig _hostConfig;
 
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Host";
 
-    public HostServiceManager(IRegistratorService registratorService, IServiceManager serviceManager, IConfigurationService configurationService, IDictionary<string, IServiceConfig> configs)
+    public HostServiceManager(IRegistratorService registratorService, IServiceManager serviceManager, IConfigurationService configurationService, IDictionary<string, IServiceConfig> configs, ILogger<HostServiceManager> logger)
     {
         if (configs == null)
         {
@@ -36,6 +34,7 @@ public class HostServiceManager : IHostServiceManager
         _serviceManager = serviceManager;
         _configurationService = configurationService;
         _hostConfig = configs["host"];
+        _logger = logger;
     }
 
     public async Task InstallOrUpdate(ConfigurationModel configuration, string hostName, string ipv4Address, string macAddress)
@@ -64,18 +63,18 @@ public class HostServiceManager : IHostServiceManager
 
             _serviceManager.StartService(_hostConfig.Name);
 
-            MessageReceived?.Invoke($"{_hostConfig.Name} installed and started successfully.", MessageType.Information);
+            _logger.LogInformation("{ServiceName} installed and started successfully.", _hostConfig.Name);
 
             var registerResult = await _registratorService.RegisterAsync(configuration, hostName, ipv4Address, macAddress);
 
             if (!registerResult)
             {
-                MessageReceived?.Invoke("Computer registration failed.", MessageType.Error);
+                _logger.LogError("Computer registration failed.");
             }
         }
         catch (Exception ex)
         {
-            MessageReceived?.Invoke($"An error occurred: {ex.Message}", MessageType.Error);
+            _logger.LogError("An error occurred: {Message}", ex.Message);
         }
     }
 
@@ -90,28 +89,28 @@ public class HostServiceManager : IHostServiceManager
 
                 await Task.Delay(TimeSpan.FromSeconds(30));
 
-                foreach (var process in Process.GetProcessesByName("RemoteMaster.Host"))
+                foreach (var process in Process.GetProcessesByName($"{MainAppName}.{SubAppName}"))
                 {
                     process.Kill();
                 }
 
                 DeleteFiles();
 
-                MessageReceived?.Invoke($"{SubAppName} Service uninstalled successfully.", MessageType.Information);
+                _logger.LogInformation("{ServiceName} Service uninstalled successfully.", _hostConfig.Name);
             }
             else
             {
-                MessageReceived?.Invoke($"{SubAppName} Service is not installed.", MessageType.Information);
+                _logger.LogInformation("{ServiceName} Service is not installed.", _hostConfig.Name);
             }
 
             if (!await _registratorService.UnregisterAsync(configuration, hostName))
             {
-                MessageReceived?.Invoke("Computer unregistration failed.", MessageType.Error);
+                _logger.LogError("Computer unregistration failed.");
             }
         }
         catch (Exception ex)
         {
-            MessageReceived?.Invoke($"An error occurred: {ex.Message}", MessageType.Error);
+            _logger.LogError("An error occurred: {Message}", ex.Message);
         }
     }
 
@@ -168,11 +167,11 @@ public class HostServiceManager : IHostServiceManager
             try
             {
                 Directory.Delete(directoryPath, true);
-                MessageReceived?.Invoke($"{SubAppName} files deleted successfully.", MessageType.Information);
+                _logger.LogInformation("{AppName} files deleted successfully.", SubAppName);
             }
             catch (Exception ex)
             {
-                MessageReceived?.Invoke($"Deleting {SubAppName.ToLower()} files failed: {ex.Message}", MessageType.Error);
+                _logger.LogError("Deleting {AppName} files failed: {Message}", SubAppName, ex.Message);
             }
         }
     }

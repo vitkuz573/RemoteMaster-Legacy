@@ -13,6 +13,7 @@ using RemoteMaster.Host.Helpers;
 using RemoteMaster.Host.Models;
 using RemoteMaster.Host.Services;
 using RemoteMaster.Shared.Abstractions;
+using RemoteMaster.Shared.Models;
 using RemoteMaster.Shared.Services;
 
 var isServiceMode = args.Contains("--service-mode");
@@ -83,12 +84,31 @@ if (args.Contains("--install"))
     var hostInfoService = app.Services.GetRequiredService<IHostInfoService>();
     var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
 
-    var configuration = configurationService.LoadConfiguration();
+    ConfigurationModel configuration;
+
+    try
+    {
+        configuration = configurationService.LoadConfiguration();
+    }
+    catch (FileNotFoundException ex)
+    {
+        Console.WriteLine("Error: " + ex.Message);
+
+        return;
+    }
+    catch (InvalidDataException ex)
+    {
+        Console.WriteLine("Error: " + ex.Message);
+
+        return;
+    }
+
     var hostName = hostInfoService.GetHostName();
     var ipv4Address = hostInfoService.GetIPv4Address();
     var macAddress = hostInfoService.GetMacAddress();
 
     await hostServiceManager.InstallOrUpdate(configuration, hostName, ipv4Address, macAddress);
+   
     return;
 }
 
