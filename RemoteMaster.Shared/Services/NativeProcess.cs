@@ -117,7 +117,7 @@ public class NativeProcess : IDisposable
         {
             if (options.UseCurrentUserToken && TryGetUserToken(sessionId, out hUserTokenDup))
             {
-                if (TryCreateInteractiveProcess(hUserTokenDup, options.ApplicationName, options.DesktopName, options.HiddenWindow, out procInfo, out stdInReadHandle, out stdOutReadHandle, out stdErrReadHandle))
+                if (TryCreateInteractiveProcess(options, hUserTokenDup, options.ApplicationName, options.DesktopName, options.HiddenWindow, out procInfo, out stdInReadHandle, out stdOutReadHandle, out stdErrReadHandle))
                 {
                     return new NativeProcess(procInfo, stdInReadHandle, stdOutReadHandle, stdErrReadHandle);
                 }
@@ -133,7 +133,7 @@ public class NativeProcess : IDisposable
                     {
                         if (TryDuplicateToken(hPToken, out hUserTokenDup))
                         {
-                            if (TryCreateInteractiveProcess(hUserTokenDup, options.ApplicationName, options.DesktopName, options.HiddenWindow, out procInfo, out stdInReadHandle, out stdOutReadHandle, out stdErrReadHandle))
+                            if (TryCreateInteractiveProcess(options, hUserTokenDup, options.ApplicationName, options.DesktopName, options.HiddenWindow, out procInfo, out stdInReadHandle, out stdOutReadHandle, out stdErrReadHandle))
                             {
                                 return new NativeProcess(procInfo, stdInReadHandle, stdOutReadHandle, stdErrReadHandle);
                             }
@@ -201,7 +201,7 @@ public class NativeProcess : IDisposable
             : lastSessionId;
     }
 
-    private static unsafe bool TryCreateInteractiveProcess(SafeHandle hUserTokenDup, string applicationName, string desktopName, bool hiddenWindow, out PROCESS_INFORMATION procInfo, out SafeFileHandle stdInReadHandle, out SafeFileHandle stdOutReadHandle, out SafeFileHandle stdErrReadHandle)
+    private static unsafe bool TryCreateInteractiveProcess(ProcessStartOptions options, SafeHandle hUserTokenDup, string applicationName, string desktopName, bool hiddenWindow, out PROCESS_INFORMATION procInfo, out SafeFileHandle stdInReadHandle, out SafeFileHandle stdOutReadHandle, out SafeFileHandle stdErrReadHandle)
     {
         if (!CreatePipe(out stdInReadHandle, out var stdInWriteHandle, null, 0))
         {
@@ -252,10 +252,11 @@ public class NativeProcess : IDisposable
             };
 
             var dwCreationFlags = SetCreationFlags(hiddenWindow);
-            applicationName += char.MinValue;
-            
-            var appName = new Span<char>(applicationName.ToCharArray());
-            var result = CreateProcessAsUser(hUserTokenDup, null, ref appName, null, null, true, dwCreationFlags, null, null, startupInfo, out procInfo);
+
+            var fullCommand = $"{applicationName} {options.Arguments ?? string.Empty}";
+            fullCommand += char.MinValue;
+            var commandSpan = new Span<char>(fullCommand.ToCharArray());
+            var result = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, null, null, false, dwCreationFlags, null, null, startupInfo, out procInfo);
 
             stdInWriteHandle.Close();
 

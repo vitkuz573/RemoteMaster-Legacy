@@ -31,11 +31,12 @@ public class HostService : IHostService
     {
         try
         {
-            var options = new ProcessStartOptions($"{CurrentExecutablePath} {InstanceArgument}", -1)
+            var options = new ProcessStartOptions(CurrentExecutablePath, -1)
             {
+                Arguments = InstanceArgument,
                 ForceConsoleSession = true,
                 DesktopName = "default",
-                HiddenWindow = true,
+                HiddenWindow = false,
                 UseCurrentUserToken = false
             };
 

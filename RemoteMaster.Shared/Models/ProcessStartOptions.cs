@@ -8,6 +8,8 @@ public class ProcessStartOptions
 {
     public string ApplicationName { get; set; }
 
+    public string Arguments { get; set; }
+
     public int TargetSessionId { get; set; }
 
     public bool ForceConsoleSession { get; set; }

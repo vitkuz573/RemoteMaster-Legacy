@@ -13,7 +13,6 @@ using RemoteMaster.Host.Helpers;
 using RemoteMaster.Host.Models;
 using RemoteMaster.Host.Services;
 using RemoteMaster.Shared.Abstractions;
-using RemoteMaster.Shared.Models;
 using RemoteMaster.Shared.Services;
 
 var options = new WebApplicationOptions
@@ -69,27 +68,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-var app = builder.Build();
-
-var hiddenWindow = app.Services.GetRequiredService<HiddenWindow>();
-
 if (!args.Contains("--service-mode"))
 {
     builder.ConfigureCoreUrls();
 }
-else
+
+var app = builder.Build();
+
+var hiddenWindow = app.Services.GetRequiredService<HiddenWindow>();
+var hostService = app.Services.GetRequiredService<IHostService>();
+
+
+if (args.Contains("--service-mode"))
 {
-    hiddenWindow.RunMessageLoop();
+    hiddenWindow.Initialize();
 
-    var processOptions = new ProcessStartOptions($"{Environment.ProcessPath} --user-instance", -1)
-    {
-        ForceConsoleSession = true,
-        DesktopName = "default",
-        HiddenWindow = false,
-        UseCurrentUserToken = false
-    };
-
-    using var _ = NativeProcess.Start(processOptions);
+    hostService.Start();
 }
 
 if (!app.Environment.IsDevelopment())

@@ -1,8 +1,4 @@
-﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
-// This file is part of the RemoteMaster project.
-// Licensed under the GNU Affero General Public License v3.0.
-
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using RemoteMaster.Host.Core.Abstractions;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
@@ -13,7 +9,7 @@ namespace RemoteMaster.Host;
 public unsafe class HiddenWindow
 {
     private const string CLASS_NAME = "HiddenWindowClass";
-    private readonly HWND _hwnd;
+    private HWND _hwnd;
     private readonly WNDPROC _wndProcDelegate;
 
     private readonly ILogger<HiddenWindow> _logger;
@@ -23,20 +19,28 @@ public unsafe class HiddenWindow
     {
         _hostService = hostService;
         _logger = logger;
-
         _wndProcDelegate = WndProc;
+    }
 
-        var wc = new WNDCLASSEXW();
-        wc.cbSize = (uint)Marshal.SizeOf(wc);
-        wc.lpfnWndProc = _wndProcDelegate;
+    public void Initialize()
+    {
+        InitializeWindow();
+        StartMessageLoop();
+    }
+
+    private void InitializeWindow()
+    {
+        var wc = new WNDCLASSEXW
+        {
+            cbSize = (uint)Marshal.SizeOf<WNDCLASSEXW>(),
+            lpfnWndProc = _wndProcDelegate
+        };
 
         fixed (char* pClassName = CLASS_NAME)
         {
             wc.lpszClassName = pClassName;
 
-            var atom = RegisterClassEx(in wc);
-
-            if (atom == 0)
+            if (RegisterClassEx(in wc) == 0)
             {
                 _logger.LogError("Failed to register the window class.");
 
@@ -53,9 +57,7 @@ public unsafe class HiddenWindow
             return;
         }
 
-        var result = WTSRegisterSessionNotification(_hwnd, NOTIFY_FOR_ALL_SESSIONS);
-
-        if (!result)
+        if (!WTSRegisterSessionNotification(_hwnd, NOTIFY_FOR_ALL_SESSIONS))
         {
             _logger.LogError("Failed to register session notifications.");
         }
@@ -63,6 +65,20 @@ public unsafe class HiddenWindow
         {
             _logger.LogInformation("Successfully registered for session notifications.");
         }
+    }
+
+    private void StartMessageLoop()
+    {
+        Task.Run(() =>
+        {
+            MSG msg;
+
+            while (GetMessage(out msg, _hwnd, 0, 0))
+            {
+                TranslateMessage(&msg);
+                DispatchMessage(in msg);
+            }
+        });
     }
 
     private LRESULT WndProc(HWND hwnd, uint msg, WPARAM wParam, LPARAM lParam)
@@ -76,7 +92,7 @@ public unsafe class HiddenWindow
                 _ => "Unknown session change reason."
             };
 
-            _logger.LogInformation("Received session change notification. Reason: {SessionChangeReason}", sessionChangeReason);
+            _logger.LogInformation("Received session change notification. Reason: {Reason}", sessionChangeReason);
         }
 
         return DefWindowProc(hwnd, msg, wParam, lParam);
@@ -87,17 +103,6 @@ public unsafe class HiddenWindow
         RestartHost();
 
         return changeDescription;
-    }
-
-    public void RunMessageLoop()
-    {
-        MSG msg;
-
-        while (GetMessage(out msg, _hwnd, 0, 0))
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(in msg);
-        }
     }
 
     private void RestartHost()
