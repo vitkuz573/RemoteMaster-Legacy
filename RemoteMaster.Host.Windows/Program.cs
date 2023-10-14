@@ -2,10 +2,10 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Reflection;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using RemoteMaster.Host;
 using RemoteMaster.Host.Abstractions;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Extensions;
@@ -24,23 +24,6 @@ var options = new WebApplicationOptions
 
 var builder = WebApplication.CreateBuilder(options);
 
-if (!args.Contains("--service-mode"))
-{
-    builder.ConfigureCoreUrls();
-}
-else
-{
-    var processOptions = new ProcessStartOptions(Environment.ProcessPath, -1)
-    {
-        ForceConsoleSession = true,
-        DesktopName = "default",
-        HiddenWindow = false,
-        UseCurrentUserToken = false
-    };
-
-    using var _ = NativeProcess.Start(processOptions);
-}
-
 builder.Host.UseContentRoot(AppContext.BaseDirectory);
 builder.Host.UseWindowsService();
 
@@ -57,6 +40,8 @@ builder.Services.AddSingleton<ICursorRenderService, CursorRenderService>();
 builder.Services.AddSingleton<IInputService, InputService>();
 builder.Services.AddSingleton<IPowerService, PowerService>();
 builder.Services.AddSingleton<IHardwareService, HardwareService>();
+builder.Services.AddSingleton<HiddenWindow>();
+
 builder.Services.AddSingleton<IDictionary<string, IServiceConfig>>(sp => new Dictionary<string, IServiceConfig>
 {
     { "agent", sp.GetRequiredService<AgentServiceConfig>() },
@@ -85,6 +70,27 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 var app = builder.Build();
+
+var hiddenWindow = app.Services.GetRequiredService<HiddenWindow>();
+
+if (!args.Contains("--service-mode"))
+{
+    builder.ConfigureCoreUrls();
+}
+else
+{
+    hiddenWindow.RunMessageLoop();
+
+    var processOptions = new ProcessStartOptions($"{Environment.ProcessPath} --user-instance", -1)
+    {
+        ForceConsoleSession = true,
+        DesktopName = "default",
+        HiddenWindow = false,
+        UseCurrentUserToken = false
+    };
+
+    using var _ = NativeProcess.Start(processOptions);
+}
 
 if (!app.Environment.IsDevelopment())
 {

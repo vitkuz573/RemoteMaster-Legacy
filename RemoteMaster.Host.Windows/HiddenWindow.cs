@@ -1,4 +1,8 @@
-﻿using System.Runtime.InteropServices;
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+// This file is part of the RemoteMaster project.
+// Licensed under the GNU Affero General Public License v3.0.
+
+using System.Runtime.InteropServices;
 using RemoteMaster.Host.Core.Abstractions;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
@@ -80,7 +84,7 @@ public unsafe class HiddenWindow
 
     private string HandleSessionChange(string changeDescription)
     {
-        RestartClient();
+        RestartHost();
 
         return changeDescription;
     }
@@ -96,7 +100,7 @@ public unsafe class HiddenWindow
         }
     }
 
-    private void RestartClient()
+    private void RestartHost()
     {
         _hostService.Stop();
 
