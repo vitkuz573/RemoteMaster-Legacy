@@ -25,6 +25,10 @@
     <PackageReference Include="System.DirectoryServices.AccountManagement" />
     <PackageReference Include="System.Drawing.Common" />
     <PackageReference Include="System.Management" />
+    <PackageReference Include="TypedSignalR.Client">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
