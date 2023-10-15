@@ -99,9 +99,7 @@ public unsafe class HiddenWindow
 
     private string HandleSessionChange(string changeDescription)
     {
-        _logger.LogInformation(changeDescription);
-
-        // RestartHost();
+        RestartHost();
 
         return changeDescription;
     }
