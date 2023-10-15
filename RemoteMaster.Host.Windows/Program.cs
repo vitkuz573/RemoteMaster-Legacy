@@ -2,6 +2,8 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -17,13 +19,14 @@ using RemoteMaster.Shared.Models;
 using RemoteMaster.Shared.Services;
 
 var isServiceMode = args.Contains("--service-mode");
+var isUserInstanceMode = args.Contains("--user-instance");
 var isInstallMode = args.Contains("--install");
 var isUninstallMode = args.Contains("--uninstall");
 
-if (new[] { isServiceMode, isInstallMode, isUninstallMode }.Count(val => val) > 1)
+if (new[] { isServiceMode, isUserInstanceMode, isInstallMode, isUninstallMode }.Count(val => val) > 1)
 {
-    Console.WriteLine("[ERROR] Arguments --install, --uninstall, and --service-mode are mutually exclusive. Please specify only one.");
-   
+    Console.WriteLine("[ERROR] Arguments --install, --uninstall, --service-mode and --user-instance are mutually exclusive. Please specify only one.");
+
     return;
 }
 
@@ -77,6 +80,26 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = "RMServiceAPI",
             IssuerSigningKey = new RsaSecurityKey(rsa)
         };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var remoteIp = context.HttpContext.Connection.RemoteIpAddress;
+                var localIPv6Mapped = IPAddress.Parse("::ffff:127.0.0.1");
+
+                if (remoteIp.Equals(IPAddress.Loopback) || remoteIp.Equals(IPAddress.IPv6Loopback) || remoteIp.Equals(localIPv6Mapped))
+                {
+                    Console.WriteLine("Localhost detected");
+                    var identity = new ClaimsIdentity();
+                    
+                    context.Principal = new ClaimsPrincipal(identity);
+                    context.Success();
+                }
+
+                return Task.CompletedTask;
+            }
+        };
     });
 
 if (!isServiceMode)
@@ -86,6 +109,7 @@ if (!isServiceMode)
 else
 {
     builder.Services.AddHostedService<HiddenWindowService>();
+    builder.Services.AddHostedService<ServiceCommandListener>();
 }
 
 var app = builder.Build();
@@ -168,11 +192,10 @@ if (isUninstallMode)
     return;
 }
 
-var hiddenWindow = app.Services.GetRequiredService<HiddenWindow>();
-var hostService = app.Services.GetRequiredService<IHostService>();
-
 if (isServiceMode)
 {
+    var hostService = app.Services.GetRequiredService<IHostService>();
+
     hostService.Start();
 }
 

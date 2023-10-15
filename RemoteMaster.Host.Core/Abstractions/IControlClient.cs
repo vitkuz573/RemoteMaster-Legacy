@@ -18,4 +18,6 @@ public interface IControlClient
     Task ReceiveScreenSize(Size size);
 
     Task ReceiveScriptResult(string result);
+
+    Task ReceiveCommand(string command);
 }

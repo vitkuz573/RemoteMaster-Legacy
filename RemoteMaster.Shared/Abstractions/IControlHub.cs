@@ -42,4 +42,10 @@ public interface IControlHub
     Task ExecuteScript(string scriptContent, string shellType);
 
     Task SetPSExecRules(bool enable);
+
+    Task JoinGroup(string groupName);
+
+    Task LeaveGroup(string groupName);
+
+    Task SendCommandToService(string command);
 }

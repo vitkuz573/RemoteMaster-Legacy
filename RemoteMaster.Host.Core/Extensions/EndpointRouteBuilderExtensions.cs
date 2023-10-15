@@ -13,7 +13,6 @@ public static class EndpointRouteBuilderExtensions
     public static IEndpointRouteBuilder MapCoreHubs(this IEndpointRouteBuilder endpoints)
     {
         endpoints.MapHub<ControlHub>("/hubs/control");
-        endpoints.MapHub<MaintenanceHub>("/hubs/maintenance");
 
         return endpoints;
     }

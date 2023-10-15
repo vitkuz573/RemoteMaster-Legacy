@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Diagnostics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -263,5 +262,20 @@ public class ControlHub : Hub<IControlClient>, IControlHub
             FirewallManager.DeleteRule("PSExec", RuleDirection.In);
             FirewallManager.SetRuleGroup("Удаленное управление службой", RuleGroupStatus.Disabled);
         }
+    }
+
+    public async Task JoinGroup(string groupName)
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
+    }
+
+    public async Task LeaveGroup(string groupName)
+    {
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
+    }
+
+    public async Task SendCommandToService(string command)
+    {
+        await Clients.Group("serviceGroup").ReceiveCommand(command);
     }
 }

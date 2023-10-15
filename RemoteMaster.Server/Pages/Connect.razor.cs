@@ -320,11 +320,10 @@ public partial class Connect : IAsyncDisposable
         await _controlHubProxy.ShutdownComputer(string.Empty, 0, true);
     }
 
-#pragma warning disable CA1822
     private async void SendCtrlAltDel()
     {
+        await _controlHubProxy.SendCommandToService("CtrlAltDel");
     }
-#pragma warning restore CA1822
 
     private async Task GetVersions()
     {
