@@ -9,6 +9,8 @@ OpenProcess
 OpenProcessToken
 SE_SHUTDOWN_NAME
 GENERIC_ACCESS_RIGHTS
+GetHandleInformation
+SetHandleInformation
 
 // Display and Monitor Management
 BitBlt
@@ -31,6 +33,9 @@ SendInput
 GetMessageExtraInfo
 GetSystemMetrics
 SystemParametersInfo
+GetMessage
+TranslateMessage
+DispatchMessage
 
 // Desktop and User Session Management
 OpenInputDesktop
@@ -55,20 +60,14 @@ SendMessage
 WM_SYSCOMMAND
 SC_MONITORPOWER
 HWND_BROADCAST
+CreateWindowEx
+HWND_MESSAGE
+RegisterClassEx
+DefWindowProc
 
 // Network Connection Management
 WNetAddConnection2W
 WNetCancelConnection2W
 
+// Miscellaneous
 CreatePipe
-
-GetHandleInformation
-SetHandleInformation
-
-CreateWindowEx
-HWND_MESSAGE
-RegisterClassEx
-DefWindowProc
-GetMessage
-TranslateMessage
-DispatchMessage
