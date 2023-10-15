@@ -20,7 +20,7 @@ public class ServiceCommandListener : IHostedService
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Started Listening Service Commmands");
+        _logger.LogInformation("Starting listen service commands");
 
         var connection = new HubConnectionBuilder()
             .WithUrl("http://127.0.0.1:5076/hubs/control")
