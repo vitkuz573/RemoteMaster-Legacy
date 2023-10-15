@@ -174,13 +174,13 @@ if (isUninstallMode)
     }
     catch (FileNotFoundException ex)
     {
-        Console.WriteLine($"[ERROR] Configuration file not found: {ex.Message}");
+        Console.WriteLine($"[ERROR] Configuration error: {ex.Message}");
 
         return;
     }
     catch (InvalidDataException ex)
     {
-        Console.WriteLine($"[ERROR] Invalid configuration data: {ex.Message}");
+        Console.WriteLine($"[ERROR] Configuration Error: {ex.Message}");
 
         return;
     }
