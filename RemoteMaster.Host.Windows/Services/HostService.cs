@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
+using System.Management;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Models;
 using RemoteMaster.Shared.Services;
@@ -24,7 +25,7 @@ public class HostService : IHostService
     public bool IsRunning()
     {
         return Process.GetProcessesByName(Path.GetFileNameWithoutExtension(CurrentExecutablePath))
-                      .Any(p => p.StartInfo.Arguments.Contains(InstanceArgument));
+                      .Any(p => GetCommandLineOfProcess(p.Id)?.Contains(InstanceArgument) ?? false);
     }
 
     public void Start()
@@ -48,14 +49,35 @@ public class HostService : IHostService
         }
     }
 
+    public string GetCommandLineOfProcess(int processId)
+    {
+        var query = $"SELECT CommandLine FROM Win32_Process WHERE ProcessId = {processId}";
+        
+        using var searcher = new ManagementObjectSearcher(query);
+        using var objects = searcher.Get();
+        
+        var commandLine = objects.Cast<ManagementBaseObject>().SingleOrDefault()?["CommandLine"]?.ToString();
+        
+        return commandLine;
+    }
+
     public void Stop()
     {
-        foreach (var process in Process.GetProcessesByName(Path.GetFileNameWithoutExtension(CurrentExecutablePath)))
+        try
         {
-            if (process.StartInfo.Arguments.Contains(InstanceArgument))
+            foreach (var process in Process.GetProcessesByName(Path.GetFileNameWithoutExtension(CurrentExecutablePath)))
             {
-                process.Kill();
+                var commandLine = GetCommandLineOfProcess(process.Id);
+                
+                if (commandLine != null && commandLine.Contains(InstanceArgument))
+                {
+                    process.Kill();
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogInformation(ex.Message);
         }
     }
 }

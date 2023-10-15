@@ -72,6 +72,3 @@ DefWindowProc
 GetMessage
 TranslateMessage
 DispatchMessage
-
-WTS_SESSION_LOCK
-WTS_SESSION_UNLOCK
