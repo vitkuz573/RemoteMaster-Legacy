@@ -83,6 +83,10 @@ if (!isServiceMode)
 {
     builder.ConfigureCoreUrls();
 }
+else
+{
+    builder.Services.AddHostedService<HiddenWindowService>();
+}
 
 var app = builder.Build();
 
@@ -169,7 +173,6 @@ var hostService = app.Services.GetRequiredService<IHostService>();
 
 if (isServiceMode)
 {
-    hiddenWindow.Initialize();
     hostService.Start();
 }
 

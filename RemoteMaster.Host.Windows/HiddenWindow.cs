@@ -69,16 +69,13 @@ public unsafe class HiddenWindow
 
     private void StartMessageLoop()
     {
-        Task.Run(() =>
-        {
-            MSG msg;
+        MSG msg;
 
-            while (GetMessage(out msg, _hwnd, 0, 0))
-            {
-                TranslateMessage(&msg);
-                DispatchMessage(in msg);
-            }
-        });
+        while (GetMessage(out msg, _hwnd, 0, 0))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(in msg);
+        }
     }
 
     private LRESULT WndProc(HWND hwnd, uint msg, WPARAM wParam, LPARAM lParam)
@@ -89,6 +86,8 @@ public unsafe class HiddenWindow
             {
                 WTS_CONSOLE_DISCONNECT => HandleSessionChange("A session was disconnected from the console terminal"),
                 WTS_CONSOLE_CONNECT => HandleSessionChange("A session was connected to the console terminal"),
+                WTS_SESSION_LOCK => HandleSessionChange("A session was locked"),
+                WTS_SESSION_UNLOCK => HandleSessionChange("A session was unlocked"),
                 _ => "Unknown session change reason."
             };
 
@@ -100,7 +99,9 @@ public unsafe class HiddenWindow
 
     private string HandleSessionChange(string changeDescription)
     {
-        RestartHost();
+        _logger.LogInformation(changeDescription);
+
+        // RestartHost();
 
         return changeDescription;
     }
