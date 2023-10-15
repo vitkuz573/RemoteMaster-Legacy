@@ -19,9 +19,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Updater", "Rem
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Updater.Tests", "RemoteMaster.Updater.Tests\RemoteMaster.Updater.Tests.csproj", "{2E53BE33-1007-4929-B637-A5FFCADB9246}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Shared.Tests", "RemoteMaster.Shared.Tests\RemoteMaster.Shared.Tests.csproj", "{18172EBB-ADF2-4DDD-842A-6FA08975B764}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteMaster.Host.Windows", "RemoteMaster.Host.Windows\RemoteMaster.Host.Windows.csproj", "{997141CA-F785-485B-BAE7-1759A1AB091C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Host.Windows", "RemoteMaster.Host.Windows\RemoteMaster.Host.Windows.csproj", "{997141CA-F785-485B-BAE7-1759A1AB091C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -115,22 +113,6 @@ Global
 		{2E53BE33-1007-4929-B637-A5FFCADB9246}.Release|x64.Build.0 = Release|Any CPU
 		{2E53BE33-1007-4929-B637-A5FFCADB9246}.Release|x86.ActiveCfg = Release|Any CPU
 		{2E53BE33-1007-4929-B637-A5FFCADB9246}.Release|x86.Build.0 = Release|Any CPU
-		{18172EBB-ADF2-4DDD-842A-6FA08975B764}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{18172EBB-ADF2-4DDD-842A-6FA08975B764}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{18172EBB-ADF2-4DDD-842A-6FA08975B764}.Debug|arm64.ActiveCfg = Debug|Any CPU
-		{18172EBB-ADF2-4DDD-842A-6FA08975B764}.Debug|arm64.Build.0 = Debug|Any CPU
-		{18172EBB-ADF2-4DDD-842A-6FA08975B764}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{18172EBB-ADF2-4DDD-842A-6FA08975B764}.Debug|x64.Build.0 = Debug|Any CPU
-		{18172EBB-ADF2-4DDD-842A-6FA08975B764}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{18172EBB-ADF2-4DDD-842A-6FA08975B764}.Debug|x86.Build.0 = Debug|Any CPU
-		{18172EBB-ADF2-4DDD-842A-6FA08975B764}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{18172EBB-ADF2-4DDD-842A-6FA08975B764}.Release|Any CPU.Build.0 = Release|Any CPU
-		{18172EBB-ADF2-4DDD-842A-6FA08975B764}.Release|arm64.ActiveCfg = Release|Any CPU
-		{18172EBB-ADF2-4DDD-842A-6FA08975B764}.Release|arm64.Build.0 = Release|Any CPU
-		{18172EBB-ADF2-4DDD-842A-6FA08975B764}.Release|x64.ActiveCfg = Release|Any CPU
-		{18172EBB-ADF2-4DDD-842A-6FA08975B764}.Release|x64.Build.0 = Release|Any CPU
-		{18172EBB-ADF2-4DDD-842A-6FA08975B764}.Release|x86.ActiveCfg = Release|Any CPU
-		{18172EBB-ADF2-4DDD-842A-6FA08975B764}.Release|x86.Build.0 = Release|Any CPU
 		{997141CA-F785-485B-BAE7-1759A1AB091C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{997141CA-F785-485B-BAE7-1759A1AB091C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{997141CA-F785-485B-BAE7-1759A1AB091C}.Debug|arm64.ActiveCfg = Debug|Any CPU
