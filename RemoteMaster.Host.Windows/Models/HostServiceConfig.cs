@@ -8,9 +8,9 @@ namespace RemoteMaster.Host.Models;
 
 public class HostServiceConfig : IServiceConfig
 {
-    public string Name { get; } = "RCService";
+    public string Name { get; } = "RCHost";
 
-    public string DisplayName { get; } = "Remote Control Service";
+    public string DisplayName { get; } = "Remote Control Host";
 
     public string StartType { get; } = "auto";
 
