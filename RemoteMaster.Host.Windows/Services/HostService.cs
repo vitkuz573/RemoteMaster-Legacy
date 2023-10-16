@@ -37,7 +37,7 @@ public class HostService : IHostService
                 Arguments = InstanceArgument,
                 ForceConsoleSession = true,
                 DesktopName = "default",
-                HiddenWindow = false,
+                HiddenWindow = true,
                 UseCurrentUserToken = false
             };
 

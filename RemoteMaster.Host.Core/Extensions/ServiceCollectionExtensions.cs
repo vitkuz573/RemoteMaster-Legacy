@@ -23,9 +23,7 @@ public static class ServiceCollectionExtensions
 
         services.AddLogging(builder =>
         {
-            builder.AddConsole().AddDebug();
             builder.AddSerilog(serilogLogger);
-            builder.SetMinimumLevel(LogLevel.Debug);
         });
 
         services.AddSingleton<IRegistratorService, RegistratorService>();
