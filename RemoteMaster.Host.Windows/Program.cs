@@ -114,6 +114,7 @@ internal class Program
         else
         {
             builder.Services.AddHostedService<HiddenWindowService>();
+            builder.Services.AddHostedService<HostMonitorService>();
             // builder.Services.AddHostedService<ServiceCommandListener>();
         }
 
@@ -201,13 +202,6 @@ internal class Program
             updaterServiceManager.Uninstall();
 
             return;
-        }
-
-        if (serviceMode)
-        {
-            var hostService = app.Services.GetRequiredService<IHostService>();
-
-            hostService.Start();
         }
 
         if (!app.Environment.IsDevelopment())
