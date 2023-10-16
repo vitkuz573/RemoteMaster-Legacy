@@ -43,7 +43,6 @@ internal class Program
         };
 
         var builder = WebApplication.CreateBuilder(options);
-        builder.Host.UseContentRoot(AppContext.BaseDirectory);
         builder.Host.UseWindowsService();
 
         builder.Services.AddCoreServices();
