@@ -6,6 +6,8 @@
 	<AssemblyName>RemoteMaster.Host</AssemblyName>
 	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	<ApplicationManifest>app.manifest</ApplicationManifest>
+	<IsTransformWebConfigDisabled>true</IsTransformWebConfigDisabled>
+	<IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -15,6 +17,20 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DebugType>none</DebugType>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Update="appsettings.Development.json">
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </Content>
+
+    <Content Update="appsettings.json">
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="wwwroot\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="FFMpegCore.Extensions.System.Drawing.Common" />
@@ -35,5 +51,9 @@
   <ItemGroup>
     <ProjectReference Include="..\RemoteMaster.Host.Core\RemoteMaster.Host.Core.csproj" />
   </ItemGroup>
+	
+  <Target Name="AfterFileSystemPublish" AfterTargets="FileSystemPublish">
+    <Exec Command="powershell.exe -ExecutionPolicy Bypass -File $(SolutionDir)scripts\sign.ps1 -exeFilePath $(PublishUrl)\$(AssemblyName).exe" />
+  </Target>
 
 </Project>
