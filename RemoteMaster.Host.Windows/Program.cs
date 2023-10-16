@@ -124,6 +124,7 @@ internal class Program
             var configurationService = app.Services.GetRequiredService<IConfigurationService>();
             var hostInfoService = app.Services.GetRequiredService<IHostInfoService>();
             var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
+            var updaterServiceManager = app.Services.GetRequiredService<IUpdaterServiceManager>();
 
             ConfigurationModel configuration;
 
@@ -162,6 +163,8 @@ internal class Program
 
             await hostServiceManager.InstallOrUpdate(configuration, hostName, ipv4Address, macAddress);
 
+            updaterServiceManager.InstallOrUpdate();
+
             return;
         }
 
@@ -170,6 +173,7 @@ internal class Program
             var configurationService = app.Services.GetRequiredService<IConfigurationService>();
             var hostInfoService = app.Services.GetRequiredService<IHostInfoService>();
             var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
+            var updaterServiceManager = app.Services.GetRequiredService<IUpdaterServiceManager>();
 
             ConfigurationModel configuration;
 
@@ -193,6 +197,8 @@ internal class Program
             var hostName = hostInfoService.GetHostName();
 
             await hostServiceManager.Uninstall(configuration, hostName);
+
+            updaterServiceManager.Uninstall();
 
             return;
         }

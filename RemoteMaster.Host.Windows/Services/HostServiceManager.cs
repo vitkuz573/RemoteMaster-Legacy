@@ -69,7 +69,7 @@ public class HostServiceManager : IHostServiceManager
 
             if (!registerResult)
             {
-                _logger.LogError("Computer registration failed.");
+                _logger.LogError("Host registration failed.");
             }
         }
         catch (Exception ex)
@@ -91,6 +91,8 @@ public class HostServiceManager : IHostServiceManager
                 {
                     process.Kill();
                 }
+
+                Thread.Sleep(30000);
 
                 DeleteFiles();
 
@@ -156,21 +158,30 @@ public class HostServiceManager : IHostServiceManager
 
     private void DeleteFiles()
     {
-        var mainDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), MainAppName);
+        _logger.LogInformation("Deleting files");
 
-        var directoryPath = Path.Combine(mainDirectoryPath, SubAppName);
-
-        if (Directory.Exists(directoryPath))
+        try
         {
-            try
+            var mainDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), MainAppName);
+
+            var directoryPath = Path.Combine(mainDirectoryPath, SubAppName);
+
+            if (Directory.Exists(directoryPath))
             {
-                Directory.Delete(directoryPath, true);
-                _logger.LogInformation("{AppName} files deleted successfully.", SubAppName);
+                try
+                {
+                    Directory.Delete(directoryPath, true);
+                    _logger.LogInformation("{AppName} files deleted successfully.", SubAppName);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError("Deleting {AppName} files failed: {Message}", SubAppName, ex.Message);
+                }
             }
-            catch (Exception ex)
-            {
-                _logger.LogError("Deleting {AppName} files failed: {Message}", SubAppName, ex.Message);
-            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.Message);
         }
     }
 }
