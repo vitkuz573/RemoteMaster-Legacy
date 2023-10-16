@@ -22,25 +22,32 @@ public class ServiceCommandListener : IHostedService
     {
         _logger.LogInformation("Starting listen service commands");
 
-        var connection = new HubConnectionBuilder()
-            .WithUrl("http://127.0.0.1:5076/hubs/control")
-            .WithAutomaticReconnect()
-            .Build();
-
-        connection.On<string>("ReceiveCommand", command =>
+        try
         {
-            if (command == "CtrlAltDel")
+            var connection = new HubConnectionBuilder()
+    .WithUrl("http://127.0.0.1:5076/hubs/control")
+    .WithAutomaticReconnect()
+    .Build();
+
+            connection.On<string>("ReceiveCommand", command =>
             {
-                SendSAS(true);
-                SendSAS(false);
-            }
-        });
+                if (command == "CtrlAltDel")
+                {
+                    SendSAS(true);
+                    SendSAS(false);
+                }
+            });
 
-        await connection.StartAsync();
+            await connection.StartAsync();
 
-        var proxy = connection.CreateHubProxy<IControlHub>();
+            var proxy = connection.CreateHubProxy<IControlHub>();
 
-        await proxy.JoinGroup("serviceGroup");
+            await proxy.JoinGroup("serviceGroup");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Connection error");
+        }
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
