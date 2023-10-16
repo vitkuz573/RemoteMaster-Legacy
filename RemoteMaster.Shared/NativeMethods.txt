@@ -71,3 +71,6 @@ WNetCancelConnection2W
 
 // Miscellaneous
 CreatePipe
+
+WTS_SESSION_LOCK
+WTS_SESSION_UNLOCK

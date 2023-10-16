@@ -114,7 +114,7 @@ internal class Program
         else
         {
             builder.Services.AddHostedService<HiddenWindowService>();
-            builder.Services.AddHostedService<ServiceCommandListener>();
+            // builder.Services.AddHostedService<ServiceCommandListener>();
         }
 
         var app = builder.Build();

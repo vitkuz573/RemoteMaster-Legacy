@@ -30,8 +30,11 @@ public class HiddenWindow
 
     public void Initialize()
     {
-        InitializeWindow();
-        StartMessageLoop();
+        Task.Run(() =>
+        {
+            InitializeWindow();
+            StartMessageLoop();
+        });
     }
 
     private void InitializeWindow()
@@ -128,6 +131,8 @@ public class HiddenWindow
         {
             WTS_CONSOLE_DISCONNECT => HandleSessionChange("A session was disconnected from the console terminal"),
             WTS_CONSOLE_CONNECT => HandleSessionChange("A session was connected to the console terminal"),
+            WTS_SESSION_LOCK => HandleSessionChange("A session was locked"),
+            WTS_SESSION_UNLOCK => HandleSessionChange("A session was unlocked"),
             _ => "Unknown session change reason."
         };
     }
