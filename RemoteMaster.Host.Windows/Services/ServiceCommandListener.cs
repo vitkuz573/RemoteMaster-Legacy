@@ -25,9 +25,9 @@ public class ServiceCommandListener : IHostedService
         try
         {
             var connection = new HubConnectionBuilder()
-    .WithUrl("http://127.0.0.1:5076/hubs/control")
-    .WithAutomaticReconnect()
-    .Build();
+                .WithUrl("http://127.0.0.1:5076/hubs/control")
+                .WithAutomaticReconnect()
+                .Build();
 
             connection.On<string>("ReceiveCommand", command =>
             {

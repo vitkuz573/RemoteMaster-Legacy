@@ -37,6 +37,8 @@ internal class Program
             return;
         }
 
+        ILogger<Program> logger = null;
+
         var options = new WebApplicationOptions
         {
             ContentRootPath = AppContext.BaseDirectory,
@@ -93,10 +95,16 @@ internal class Program
                         var remoteIp = context.HttpContext.Connection.RemoteIpAddress;
                         var localIPv6Mapped = IPAddress.Parse("::ffff:127.0.0.1");
 
+                        logger.LogInformation($"Incoming request from IP: {remoteIp}");
+
                         if (remoteIp.Equals(IPAddress.Loopback) || remoteIp.Equals(IPAddress.IPv6Loopback) || remoteIp.Equals(localIPv6Mapped))
                         {
-                            Console.WriteLine("Localhost detected");
-                            var identity = new ClaimsIdentity();
+                            logger.LogInformation("Localhost detected");
+
+                            var identity = new ClaimsIdentity(new[]
+                            {
+                                new Claim(ClaimTypes.Name, "localhost@localdomain"),
+                            }, "LocalAuth");
 
                             context.Principal = new ClaimsPrincipal(identity);
                             context.Success();
@@ -119,6 +127,8 @@ internal class Program
         }
 
         var app = builder.Build();
+
+        logger = app.Services.GetRequiredService<ILogger<Program>>();
 
         if (install)
         {
