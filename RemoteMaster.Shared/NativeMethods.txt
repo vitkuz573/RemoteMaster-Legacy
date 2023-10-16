@@ -74,3 +74,6 @@ CreatePipe
 
 WTS_SESSION_LOCK
 WTS_SESSION_UNLOCK
+
+PostMessage
+WM_QUIT

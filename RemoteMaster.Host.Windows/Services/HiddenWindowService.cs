@@ -16,12 +16,14 @@ public class HiddenWindowService : IHostedService
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _hiddenWindow.Initialize();
+
         return Task.CompletedTask;
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        // Если у вас есть какая-то логика остановки, вызовите её здесь.
+        _hiddenWindow.StopMessageLoop();
+
         return Task.CompletedTask;
     }
 }

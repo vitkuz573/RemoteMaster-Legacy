@@ -109,6 +109,11 @@ public class HiddenWindow
         }
     }
 
+    public void StopMessageLoop()
+    {
+        PostMessage(_hwnd, WM_QUIT, new WPARAM(0), new LPARAM(0));
+    }
+
     private LRESULT WndProc(HWND hwnd, uint msg, WPARAM wParam, LPARAM lParam)
     {
         if (msg == WM_WTSSESSION_CHANGE)
