@@ -24,24 +24,14 @@ public class HostService : IHostService
 
     public bool IsRunning()
     {
-        return Process.GetProcessesByName(Path.GetFileNameWithoutExtension(CurrentExecutablePath))
-                      .Any(p => GetCommandLineOfProcess(p.Id)?.Contains(InstanceArgument) ?? false);
+        return FindHostProcesses().Any(IsUserInstance);
     }
 
     public void Start()
     {
         try
         {
-            var options = new ProcessStartOptions(CurrentExecutablePath, -1)
-            {
-                Arguments = InstanceArgument,
-                ForceConsoleSession = true,
-                DesktopName = "default",
-                HiddenWindow = true,
-                UseCurrentUserToken = false
-            };
-
-            using var _ = NativeProcess.Start(options);
+            StartNewInstance();
         }
         catch (Exception ex)
         {
@@ -49,27 +39,13 @@ public class HostService : IHostService
         }
     }
 
-    public string GetCommandLineOfProcess(int processId)
-    {
-        var query = $"SELECT CommandLine FROM Win32_Process WHERE ProcessId = {processId}";
-        
-        using var searcher = new ManagementObjectSearcher(query);
-        using var objects = searcher.Get();
-        
-        var commandLine = objects.Cast<ManagementBaseObject>().SingleOrDefault()?["CommandLine"]?.ToString();
-        
-        return commandLine;
-    }
-
     public void Stop()
     {
         try
         {
-            foreach (var process in Process.GetProcessesByName(Path.GetFileNameWithoutExtension(CurrentExecutablePath)))
+            foreach (var process in FindHostProcesses())
             {
-                var commandLine = GetCommandLineOfProcess(process.Id);
-                
-                if (commandLine != null && commandLine.Contains(InstanceArgument))
+                if (IsUserInstance(process))
                 {
                     process.Kill();
                 }
@@ -77,7 +53,43 @@ public class HostService : IHostService
         }
         catch (Exception ex)
         {
-            _logger.LogInformation(ex.Message);
+            _logger.LogInformation("{Message}", ex.Message);
         }
+    }
+
+    private static void StartNewInstance()
+    {
+        var options = new ProcessStartOptions(CurrentExecutablePath, -1)
+        {
+            Arguments = InstanceArgument,
+            ForceConsoleSession = true,
+            DesktopName = "default",
+            HiddenWindow = true,
+            UseCurrentUserToken = false
+        };
+
+        using var _ = NativeProcess.Start(options);
+    }
+
+    private static IEnumerable<Process> FindHostProcesses()
+    {
+        return Process.GetProcessesByName(Path.GetFileNameWithoutExtension(CurrentExecutablePath));
+    }
+
+    private bool IsUserInstance(Process process)
+    {
+        var commandLine = GetCommandLineOfProcess(process.Id);
+        
+        return commandLine != null && commandLine.Contains(InstanceArgument);
+    }
+
+    public string GetCommandLineOfProcess(int processId)
+    {
+        var query = $"SELECT CommandLine FROM Win32_Process WHERE ProcessId = {processId}";
+
+        using var searcher = new ManagementObjectSearcher(query);
+        using var objects = searcher.Get();
+
+        return objects.Cast<ManagementBaseObject>().SingleOrDefault()?["CommandLine"]?.ToString();
     }
 }
