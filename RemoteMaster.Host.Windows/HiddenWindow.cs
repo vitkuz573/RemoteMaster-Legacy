@@ -1,4 +1,8 @@
-﻿using System.Runtime.InteropServices;
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+// This file is part of the RemoteMaster project.
+// Licensed under the GNU Affero General Public License v3.0.
+
+using System.Runtime.InteropServices;
 using RemoteMaster.Host.Core.Abstractions;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
@@ -6,12 +10,13 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host;
 
-public unsafe class HiddenWindow
+public class HiddenWindow
 {
     private const string CLASS_NAME = "HiddenWindowClass";
+    private const int RESTART_DELAY = 50;
+
     private HWND _hwnd;
     private readonly WNDPROC _wndProcDelegate;
-
     private readonly ILogger<HiddenWindow> _logger;
     private readonly IHostService _hostService;
 
@@ -19,6 +24,7 @@ public unsafe class HiddenWindow
     {
         _hostService = hostService;
         _logger = logger;
+
         _wndProcDelegate = WndProc;
     }
 
@@ -30,25 +36,14 @@ public unsafe class HiddenWindow
 
     private void InitializeWindow()
     {
-        var wc = new WNDCLASSEXW
+        if (!TryRegisterClass(out _))
         {
-            cbSize = (uint)Marshal.SizeOf<WNDCLASSEXW>(),
-            lpfnWndProc = _wndProcDelegate
-        };
+            _logger.LogError("Failed to register the window class.");
 
-        fixed (char* pClassName = CLASS_NAME)
-        {
-            wc.lpszClassName = pClassName;
-
-            if (RegisterClassEx(in wc) == 0)
-            {
-                _logger.LogError("Failed to register the window class.");
-
-                return;
-            }
+            return;
         }
 
-        _hwnd = CreateWindowEx(0, CLASS_NAME, "", 0, 0, 0, 0, 0, HWND.HWND_MESSAGE, null, null, null);
+        _hwnd = CreateHiddenWindow();
 
         if (_hwnd.IsNull)
         {
@@ -57,6 +52,36 @@ public unsafe class HiddenWindow
             return;
         }
 
+        RegisterForSessionNotifications();
+    }
+
+    private bool TryRegisterClass(out ushort classAtom)
+    {
+        var wc = new WNDCLASSEXW
+        {
+            cbSize = (uint)Marshal.SizeOf<WNDCLASSEXW>(),
+            lpfnWndProc = _wndProcDelegate
+        };
+
+        unsafe
+        {
+            fixed (char* pClassName = CLASS_NAME)
+            {
+                wc.lpszClassName = pClassName;
+                classAtom = RegisterClassEx(in wc);
+            }
+        }
+
+        return classAtom != 0;
+    }
+
+    private static unsafe HWND CreateHiddenWindow()
+    {
+        return CreateWindowEx(0, CLASS_NAME, "", 0, 0, 0, 0, 0, HWND.HWND_MESSAGE, null, null, null);
+    }
+
+    private void RegisterForSessionNotifications()
+    {
         if (!WTSRegisterSessionNotification(_hwnd, NOTIFY_FOR_ALL_SESSIONS))
         {
             _logger.LogError("Failed to register session notifications.");
@@ -71,10 +96,13 @@ public unsafe class HiddenWindow
     {
         MSG msg;
 
-        while (GetMessage(out msg, _hwnd, 0, 0))
+        unsafe
         {
-            TranslateMessage(&msg);
-            DispatchMessage(in msg);
+            while (GetMessage(out msg, _hwnd, 0, 0))
+            {
+                TranslateMessage(&msg);
+                DispatchMessage(in msg);
+            }
         }
     }
 
@@ -82,35 +110,45 @@ public unsafe class HiddenWindow
     {
         if (msg == WM_WTSSESSION_CHANGE)
         {
-            var sessionChangeReason = (ulong)wParam.Value switch
-            {
-                WTS_CONSOLE_DISCONNECT => HandleSessionChange("A session was disconnected from the console terminal"),
-                WTS_CONSOLE_CONNECT => HandleSessionChange("A session was connected to the console terminal"),
-                _ => "Unknown session change reason."
-            };
-
-            _logger.LogInformation("Received session change notification. Reason: {Reason}", sessionChangeReason);
+            LogSessionChange(wParam);
         }
 
         return DefWindowProc(hwnd, msg, wParam, lParam);
     }
 
+    private void LogSessionChange(WPARAM wParam)
+    {
+        var sessionChangeReason = GetSessionChangeDescription(wParam);
+        _logger.LogInformation("Received session change notification. Reason: {Reason}", sessionChangeReason);
+    }
+
+    private string GetSessionChangeDescription(WPARAM wParam)
+    {
+        return (ulong)wParam.Value switch
+        {
+            WTS_CONSOLE_DISCONNECT => HandleSessionChange("A session was disconnected from the console terminal"),
+            WTS_CONSOLE_CONNECT => HandleSessionChange("A session was connected to the console terminal"),
+            _ => "Unknown session change reason."
+        };
+    }
+
     private string HandleSessionChange(string changeDescription)
     {
-        RestartHost();
+        RestartHostAsync().Wait();
 
         return changeDescription;
     }
 
-    private void RestartHost()
+    private async Task RestartHostAsync()
     {
         _hostService.Stop();
-        
+
         while (_hostService.IsRunning())
         {
-            Task.Delay(50).Wait();
+            await Task.Delay(RESTART_DELAY);
         }
-        
+
         _hostService.Start();
     }
 }
+
