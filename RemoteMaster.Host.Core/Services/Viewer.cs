@@ -2,7 +2,9 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Diagnostics;
 using System.Drawing;
+using System.Reflection;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
@@ -24,6 +26,8 @@ public class Viewer : IViewer
         _hubContext = hubContext;
         _logger = logger;
         ConnectionId = connectionId;
+
+        _ = SendHostVersion();
 
         ScreenCapturer.ScreenChanged += async (sender, bounds) => await SendScreenSize(bounds.Width, bounds.Height);
     }
@@ -92,6 +96,11 @@ public class Viewer : IViewer
     public async Task SendScreenSize(int width, int height)
     {
         await _hubContext.Clients.Client(ConnectionId).ReceiveScreenSize(new Size(width, height));
+    }
+
+    public async Task SendHostVersion()
+    {
+        await _hubContext.Clients.Clients(ConnectionId).ReceiveHostVersion(Assembly.GetExecutingAssembly().GetName().Version ?? new Version());
     }
 
     public void SetSelectedScreen(string displayName)

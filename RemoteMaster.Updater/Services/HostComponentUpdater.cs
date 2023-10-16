@@ -142,25 +142,6 @@ public class HostComponentUpdater : IComponentUpdater
         }
     }
 
-    public Task<ComponentVersionResponse> GetCurrentVersionAsync()
-    {
-        var localExeFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", ComponentName, $"RemoteMaster.{ComponentName}.exe");
-
-        if (!File.Exists(localExeFilePath))
-        {
-            throw new FileNotFoundException($"Local file {localExeFilePath} does not exist");
-        }
-
-        var localVersionInfo = FileVersionInfo.GetVersionInfo(localExeFilePath);
-        var localVersion = new Version(localVersionInfo.FileMajorPart, localVersionInfo.FileMinorPart, localVersionInfo.FileBuildPart, localVersionInfo.FilePrivatePart);
-
-        return Task.FromResult(new ComponentVersionResponse
-        {
-            ComponentName = ComponentName,
-            CurrentVersion = localVersion
-        });
-    }
-
     private static async Task WaitForServiceToStop()
     {
         using var serviceController = new ServiceController("RCService");

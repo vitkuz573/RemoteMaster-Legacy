@@ -60,7 +60,6 @@ public partial class Connect : IAsyncDisposable
     {
         await InitializeConnectionsAsync();
         await SetParametersFromUriAsync();
-        await GetVersions();
     }
 
     private async Task InitializeConnectionsAsync()
@@ -195,6 +194,7 @@ public partial class Connect : IAsyncDisposable
             }, true)
             .On<ScreenDataDto>("ReceiveScreenData", HandleScreenData)
             .On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate)
+            .On<Version>("ReceiveHostVersion", version => _hostVersion = version.ToString())
             .StartAsync();
 
         _controlHubProxy = hostContext.Connection.CreateHubProxy<IControlHub>();
@@ -323,50 +323,6 @@ public partial class Connect : IAsyncDisposable
     private async void SendCtrlAltDel()
     {
         await _controlHubProxy.SendCommandToService("CtrlAltDel");
-    }
-
-    private async Task GetVersions()
-    {
-        using var client = HttpClientFactory.CreateClient();
-        client.BaseAddress = new Uri($"http://{Host}:5124");
-
-        try
-        {
-            var response = await client.GetAsync("/api/versions");
-
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadAsStringAsync();
-
-                if (string.IsNullOrEmpty(result))
-                {
-                    return;
-                }
-
-                var versions = JsonSerializer.Deserialize<List<VersionInfo>>(result);
-
-                if (versions == null || versions.Count == 0)
-                {
-                    return;
-                }
-
-                foreach (var version in versions)
-                {
-                    if (version.ComponentName.Equals("Host", StringComparison.OrdinalIgnoreCase))
-                    {
-                        _hostVersion = version.CurrentVersion;
-                    }
-                }
-            }
-            else
-            {
-                Console.WriteLine($"Error: {response.StatusCode}");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Exception: {ex.Message}");
-        }
     }
     
     public async ValueTask DisposeAsync()

@@ -20,4 +20,6 @@ public interface IControlClient
     Task ReceiveScriptResult(string result);
 
     Task ReceiveCommand(string command);
+
+    Task ReceiveHostVersion(Version version);
 }
