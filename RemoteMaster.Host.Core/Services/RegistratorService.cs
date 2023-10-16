@@ -29,14 +29,14 @@ public class RegistratorService : IRegistratorService
         {
             var connection = await ConnectToServerHub($"http://{config.Server}:5254");
 
-            _logger.LogInformation("Installing...");
-            var result = await connection.InvokeAsync<bool>("RegisterClientAsync", hostName, ipAddress, macAddress, config.Group);
+            _logger.LogInformation("Registering host...");
+            var result = await connection.InvokeAsync<bool>("RegisterHostAsync", hostName, ipAddress, macAddress, config.Group);
 
             return result;
         }
         catch (Exception ex)
         {
-            _logger.LogError("Installation failed: {Message}", ex.Message);
+            _logger.LogError("Registering host failed: {Message}", ex.Message);
 
             return false;
         }
@@ -53,14 +53,14 @@ public class RegistratorService : IRegistratorService
         {
             var connection = await ConnectToServerHub($"http://{config.Server}:5254");
 
-            _logger.LogInformation("Uninstalling...");
-            var result = await connection.InvokeAsync<bool>("UnregisterClientAsync", hostName, config.Group);
+            _logger.LogInformation("Unregistering host...");
+            var result = await connection.InvokeAsync<bool>("UnregisterHostAsync", hostName, config.Group);
 
             return result;
         }
         catch (Exception ex)
         {
-            _logger.LogError("Uninstallation failed: {Message}", ex.Message);
+            _logger.LogError("Unregistering host failed: {Message}", ex.Message);
 
             return false;
         }

@@ -58,7 +58,7 @@ public class HostServiceManager : IHostServiceManager
             {
                 CopyToTargetPath(directoryPath);
                 var hostPath = Path.Combine(directoryPath, $"{MainAppName}.{SubAppName}.exe");
-                _serviceManager.InstallService(_hostConfig, hostPath);
+                _serviceManager.InstallService(_hostConfig, $"{hostPath} --service-mode");
             }
 
             _serviceManager.StartService(_hostConfig.Name);
