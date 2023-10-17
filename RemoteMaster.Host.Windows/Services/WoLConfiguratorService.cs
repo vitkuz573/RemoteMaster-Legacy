@@ -4,7 +4,6 @@
 
 using System.Diagnostics;
 using System.Management;
-using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using RemoteMaster.Host.Core.Abstractions;
 
@@ -73,6 +72,7 @@ public class WoLConfiguratorService : IWoLConfigurator
                 CreateNoWindow = true
             }
         };
+
         process.Start();
 
         var output = process.StandardOutput.ReadToEnd();

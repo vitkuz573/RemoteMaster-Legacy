@@ -87,21 +87,19 @@ public class HostServiceManager : IHostServiceManager
                 _serviceManager.StopService(_hostConfig.Name);
                 _serviceManager.UninstallService(_hostConfig.Name);
 
-                foreach (var process in Process.GetProcessesByName($"{MainAppName}.{SubAppName}"))
-                {
-                    process.Kill();
-                }
-
-                Thread.Sleep(30000);
-
-                DeleteFiles();
-
                 _logger.LogInformation("{ServiceName} Service uninstalled successfully.", _hostConfig.Name);
             }
             else
             {
                 _logger.LogInformation("{ServiceName} Service is not installed.", _hostConfig.Name);
             }
+
+            foreach (var process in Process.GetProcessesByName($"{MainAppName}.{SubAppName}"))
+            {
+                process.Kill();
+            }
+
+            DeleteFiles();
 
             if (!await _registratorService.UnregisterAsync(configuration, hostName))
             {
@@ -158,30 +156,19 @@ public class HostServiceManager : IHostServiceManager
 
     private void DeleteFiles()
     {
-        _logger.LogInformation("Deleting files");
+        var directoryPath = GetDirectoryPath();
 
-        try
+        if (directoryPath != null && Directory.Exists(directoryPath))
         {
-            var mainDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), MainAppName);
-
-            var directoryPath = Path.Combine(mainDirectoryPath, SubAppName);
-
-            if (Directory.Exists(directoryPath))
+            try
             {
-                try
-                {
-                    Directory.Delete(directoryPath, true);
-                    _logger.LogInformation("{AppName} files deleted successfully.", SubAppName);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError("Deleting {AppName} files failed: {Message}", SubAppName, ex.Message);
-                }
+                Directory.Delete(directoryPath, true);
+                _logger.LogInformation("{AppName} files deleted successfully.", SubAppName);
             }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex.Message);
+            catch (Exception ex)
+            {
+                _logger.LogError("Deleting {AppName} files failed: {Message}", SubAppName, ex.Message);
+            }
         }
     }
 }
