@@ -25,7 +25,6 @@
       <TreatAsUsed>true</TreatAsUsed>
     </PackageReference>
     <PackageReference Include="Microsoft.Windows.SDK.Win32Metadata" />
-    <PackageReference Include="System.ServiceProcess.ServiceController" />
   </ItemGroup>
 
 </Project>
