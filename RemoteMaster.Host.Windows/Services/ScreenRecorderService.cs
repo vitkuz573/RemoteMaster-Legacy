@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Drawing;
-using System.IO;
 using FFMpegCore;
 using FFMpegCore.Enums;
 using FFMpegCore.Extensions.System.Drawing.Common;

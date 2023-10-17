@@ -5,7 +5,6 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
-using Microsoft.Extensions.Logging;
 using Microsoft.IO;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Models;
@@ -16,9 +15,9 @@ namespace RemoteMaster.Host.Services;
 
 public abstract class ScreenCapturerService : IScreenCapturerService
 {
-    protected readonly RecyclableMemoryStreamManager _recycleManager = new();
-    protected readonly ILogger<ScreenCapturerService> _logger;
-    protected readonly object _screenBoundsLock = new();
+    private readonly RecyclableMemoryStreamManager _recycleManager = new();
+    private readonly ILogger<ScreenCapturerService> _logger;
+    private readonly object _screenBoundsLock = new();
     private readonly object _bitmapLock = new();
     private SKBitmap _skBitmap;
     private int _quality = 25;
