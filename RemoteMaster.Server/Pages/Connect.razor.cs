@@ -3,14 +3,12 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Net;
-using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
 using Microsoft.JSInterop;
-using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Dtos;
@@ -19,19 +17,13 @@ using TypedSignalR.Client;
 
 namespace RemoteMaster.Server.Pages;
 
-public partial class Connect : IAsyncDisposable
+public partial class Connect
 {
     [Parameter]
     public string Host { get; set; }
 
     [Inject]
-    private IConnectionManager ConnectionManager { get; set; }
-
-    [Inject]
     private NavigationManager NavigationManager { get; set; }
-
-    [Inject]
-    private IHttpClientFactory HttpClientFactory { get; set; }
 
     [Inject]
     private IJSRuntime JSRuntime { get; set; }
@@ -187,17 +179,21 @@ public partial class Connect : IAsyncDisposable
         var httpContext = HttpContextAccessor.HttpContext;
         var accessToken = httpContext.Request.Cookies["accessToken"];
 
-        var hostContext = await ConnectionManager
-            .Connect("Host", $"http://{Host}:5076/hubs/control", options =>
+        var connection = new HubConnectionBuilder()
+            .WithUrl($"http://{Host}:5076/hubs/control", options =>
             {
                 options.Headers.Add("Authorization", $"Bearer {accessToken}");
-            }, true)
-            .On<ScreenDataDto>("ReceiveScreenData", HandleScreenData)
-            .On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate)
-            .On<Version>("ReceiveHostVersion", version => _hostVersion = version.ToString())
-            .StartAsync();
+            })
+            .AddMessagePackProtocol()
+            .Build();
 
-        _controlHubProxy = hostContext.Connection.CreateHubProxy<IControlHub>();
+        connection.On<ScreenDataDto>("ReceiveScreenData", HandleScreenData);
+        connection.On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate);
+        connection.On<Version>("ReceiveHostVersion", version => _hostVersion = version.ToString());
+
+        await connection.StartAsync();
+
+        _controlHubProxy = connection.CreateHubProxy<IControlHub>();
     }
 
     private async Task<(double, double)> GetRelativeMousePositionPercentAsync(MouseEventArgs e)
@@ -323,10 +319,5 @@ public partial class Connect : IAsyncDisposable
     private async void SendCtrlAltDel()
     {
         await _controlHubProxy.SendCommandToService("CtrlAltDel");
-    }
-    
-    public async ValueTask DisposeAsync()
-    {
-        await ConnectionManager.DisconnectAsync("Host");
     }
 }

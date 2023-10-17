@@ -7,6 +7,7 @@ using System.Net.NetworkInformation;
 using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using Radzen;
 using Radzen.Blazor;
@@ -31,9 +32,6 @@ public partial class Index
 
     [Inject]
     private DatabaseService DatabaseService { get; set; }
-
-    [Inject]
-    private IConnectionManager ConnectionManager { get; set; }
 
     [Inject]
     private IWakeOnLanService WakeOnLanService { get; set; }
@@ -147,14 +145,17 @@ public partial class Index
         var httpContext = HttpContextAccessor.HttpContext;
         var accessToken = httpContext.Request.Cookies["accessToken"];
 
-        var hostContext = ConnectionManager.Connect("Host", $"http://{computer.IPAddress}:5076/hubs/control", options =>
-        {
-            options.Headers.Add("Authorization", $"Bearer {accessToken}");
-        }, true);
+        var connection = new HubConnectionBuilder()
+            .WithUrl($"http://{computer.IPAddress}:5076/hubs/control", options =>
+            {
+                options.Headers.Add("Authorization", $"Bearer {accessToken}");
+            })
+            .AddMessagePackProtocol()
+            .Build();
 
         try
         {
-            hostContext.On<byte[]>("ReceiveThumbnail", async (thumbnailBytes) =>
+            connection.On<byte[]>("ReceiveThumbnail", async (thumbnailBytes) =>
             {
                 if (thumbnailBytes?.Length > 0)
                 {
@@ -163,9 +164,9 @@ public partial class Index
                 }
             });
 
-            await hostContext.StartAsync();
+            await connection.StartAsync();
 
-            var proxy = hostContext.Connection.CreateHubProxy<IControlHub>();
+            var proxy = connection.CreateHubProxy<IControlHub>();
             Logger.LogInformation("Calling ConnectAs with Intention.GetThumbnail for {IPAddress}", computer.IPAddress);
             await proxy.ConnectAs(Intention.GetThumbnail);
         }
@@ -200,21 +201,24 @@ public partial class Index
             var httpContext = HttpContextAccessor.HttpContext;
             var accessToken = httpContext.Request.Cookies["accessToken"];
 
-            var hostContext = ConnectionManager.Connect("Host", $"http://{computer.IPAddress}:5076/hubs/control", options =>
-            {
-                options.Headers.Add("Authorization", $"Bearer {accessToken}");
-            }, true);
+            var connection = new HubConnectionBuilder()
+                .WithUrl($"http://{computer.IPAddress}:5076/hubs/control", options =>
+                {
+                    options.Headers.Add("Authorization", $"Bearer {accessToken}");
+                })
+                .AddMessagePackProtocol()
+                .Build();
 
-            hostContext.On<string>("ReceiveScriptResult", async (result) =>
+            connection.On<string>("ReceiveScriptResult", async (result) =>
             {
                 _scriptResults[computer] = result;
 
                 await InvokeAsync(StateHasChanged);
             });
 
-            await hostContext.StartAsync();
+            await connection.StartAsync();
 
-            var proxy = hostContext.Connection.CreateHubProxy<IControlHub>();
+            var proxy = connection.CreateHubProxy<IControlHub>();
             await actionOnComputer(computer, proxy);
         }
 
