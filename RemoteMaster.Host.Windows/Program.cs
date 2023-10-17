@@ -14,9 +14,7 @@ using RemoteMaster.Host.Core.Extensions;
 using RemoteMaster.Host.Helpers;
 using RemoteMaster.Host.Models;
 using RemoteMaster.Host.Services;
-using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;
-using RemoteMaster.Shared.Services;
 
 internal class Program
 {

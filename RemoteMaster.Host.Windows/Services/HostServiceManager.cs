@@ -6,7 +6,6 @@ using System.Diagnostics;
 using System.ServiceProcess;
 using RemoteMaster.Host.Abstractions;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Services;
