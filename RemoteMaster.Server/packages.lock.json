@@ -104,12 +104,6 @@
           "System.Linq.Dynamic.Core": "1.3.0"
         }
       },
-      "TypedSignalR.Client": {
-        "type": "Direct",
-        "requested": "[3.4.0, )",
-        "resolved": "3.4.0",
-        "contentHash": "gMCVL0cmndNInrzrz6mf2LWxhoEVX0XNYnt59SHMfnHGepnqXDmzLOE01SADbzcLiiaoyr8Wg3KTZzDMmBYTUw=="
-      },
       "DartSassBuilder": {
         "type": "Transitive",
         "resolved": "1.0.0",

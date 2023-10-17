@@ -40,8 +40,6 @@ void ConfigureServices(WebApplicationBuilder builder)
 
     // Business services
     builder.Services.AddTransient<IHostConfigurationService, HostConfigurationService>();
-    builder.Services.AddScoped<IConnectionManager, ConnectionManager>();
-    builder.Services.AddTransient<IConnectionContextFactory, ConnectionContextFactory>();
     builder.Services.AddScoped<DatabaseService>();
     builder.Services.AddSingleton<IPacketSender, UdpPacketSender>();
     builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();

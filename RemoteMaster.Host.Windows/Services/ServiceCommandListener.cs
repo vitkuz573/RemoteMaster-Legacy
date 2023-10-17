@@ -3,8 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.SignalR.Client;
-using RemoteMaster.Shared.Abstractions;
-using TypedSignalR.Client;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Services;
@@ -40,9 +38,7 @@ public class ServiceCommandListener : IHostedService
 
             await connection.StartAsync();
 
-            var proxy = connection.CreateHubProxy<IControlHub>();
-
-            await proxy.JoinGroup("serviceGroup");
+            await connection.InvokeAsync("JoinGroup", "serviceGroup");
         }
         catch (Exception ex)
         {

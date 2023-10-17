@@ -10,10 +10,8 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
 using Microsoft.JSInterop;
 using RemoteMaster.Server.Models;
-using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
-using TypedSignalR.Client;
 
 namespace RemoteMaster.Server.Pages;
 
@@ -44,20 +42,14 @@ public partial class Connect
 
     private IEnumerable<DisplayInfo> _displays;
 
-    private IControlHub _controlHubProxy;
-
     private string _newUri;
+
+    private HubConnection _connection;
 
     protected async override Task OnInitializedAsync()
     {
-        await InitializeConnectionsAsync();
-        await SetParametersFromUriAsync();
-    }
-
-    private async Task InitializeConnectionsAsync()
-    {
         await InitializeHostConnectionAsync();
-        await _controlHubProxy.ConnectAs(Intention.Connect);
+        await SetParametersFromUriAsync();
     }
 
     private async Task SetParametersFromUriAsync()
@@ -67,13 +59,13 @@ public partial class Connect
         var newUri = uri.ToString();
 
         _imageQuality = GetQueryParameter(queryParameters, "imageQuality", 25, out newUri);
-        await _controlHubProxy.SetQuality(_imageQuality);
+        await _connection.InvokeAsync("SetQuality", _imageQuality);
 
         _cursorTracking = GetQueryParameter(queryParameters, "cursorTracking", false, out newUri);
-        await _controlHubProxy.SetTrackCursor(_cursorTracking);
+        await _connection.InvokeAsync("SetTrackCursor", _cursorTracking);
 
         _inputEnabled = GetQueryParameter(queryParameters, "inputEnabled", true, out newUri);
-        await _controlHubProxy.SetInputEnabled(_inputEnabled);
+        await _connection.InvokeAsync("SetInputEnabled", _inputEnabled);
 
         if (newUri != uri.ToString())
         {
@@ -132,9 +124,7 @@ public partial class Connect
             }
         }
         catch
-        {
-            // В случае ошибки при разрешении DNS просто вернуть IP-адрес
-        }
+        { }
 
         return host;
     }
@@ -179,7 +169,7 @@ public partial class Connect
         var httpContext = HttpContextAccessor.HttpContext;
         var accessToken = httpContext.Request.Cookies["accessToken"];
 
-        var connection = new HubConnectionBuilder()
+        _connection = new HubConnectionBuilder()
             .WithUrl($"http://{Host}:5076/hubs/control", options =>
             {
                 options.Headers.Add("Authorization", $"Bearer {accessToken}");
@@ -187,13 +177,13 @@ public partial class Connect
             .AddMessagePackProtocol()
             .Build();
 
-        connection.On<ScreenDataDto>("ReceiveScreenData", HandleScreenData);
-        connection.On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate);
-        connection.On<Version>("ReceiveHostVersion", version => _hostVersion = version.ToString());
+        _connection.On<ScreenDataDto>("ReceiveScreenData", HandleScreenData);
+        _connection.On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate);
+        _connection.On<Version>("ReceiveHostVersion", version => _hostVersion = version.ToString());
 
-        await connection.StartAsync();
+        await _connection.StartAsync();
 
-        _controlHubProxy = connection.CreateHubProxy<IControlHub>();
+        await _connection.InvokeAsync("ConnectAs", Intention.Connect);
     }
 
     private async Task<(double, double)> GetRelativeMousePositionPercentAsync(MouseEventArgs e)
@@ -210,7 +200,7 @@ public partial class Connect
     {
         var xyPercent = await GetRelativeMousePositionPercentAsync(e);
 
-        await _controlHubProxy.SendMouseCoordinates(new MouseMoveDto
+        await _connection.InvokeAsync("SendMouseCoordinates", new MouseMoveDto
         {
             X = xyPercent.Item1,
             Y = xyPercent.Item2
@@ -232,7 +222,7 @@ public partial class Connect
     {
         var xyPercent = await GetRelativeMousePositionPercentAsync(e);
 
-        await _controlHubProxy.SendMouseButton(new MouseClickDto
+        await _connection.InvokeAsync("SendMouseButton", new MouseClickDto
         {
             Button = e.Button,
             State = state,
@@ -243,7 +233,7 @@ public partial class Connect
 
     private async Task OnMouseWheel(WheelEventArgs e)
     {
-        await _controlHubProxy.SendMouseWheel(new MouseWheelDto
+        await _connection.InvokeAsync("SendMouseWheel", new MouseWheelDto
         {
             DeltaY = (int)e.DeltaY
         });
@@ -251,7 +241,7 @@ public partial class Connect
 
     private async Task SendKeyboardInput(int keyCode, ButtonAction state)
     {
-        await _controlHubProxy.SendKeyboardInput(new KeyboardKeyDto
+        await _connection.InvokeAsync("SendKeyboardInput", new KeyboardKeyDto
         {
             Key = keyCode,
             State = state
@@ -277,47 +267,47 @@ public partial class Connect
 
     private async void OnChangeScreen(ChangeEventArgs e)
     {
-        await _controlHubProxy.SendSelectedScreen(e.Value.ToString());
+        await _connection.InvokeAsync("SendSelectedScreen", e.Value.ToString());
     }
 
     private async void ChangeQuality(int quality)
     {
         _imageQuality = quality;
 
-        await _controlHubProxy.SetQuality(quality);
+        await _connection.InvokeAsync("SetQuality", quality);
     }
 
     private async Task ToggleCursorTracking(bool value)
     {
         _cursorTracking = value;
 
-        await _controlHubProxy.SetTrackCursor(value);
+        await _connection.InvokeAsync("SetTrackCursor", value);
     }
 
     private async Task ToggleInputEnabled(bool value)
     {
         _inputEnabled = value;
 
-        await _controlHubProxy.SetInputEnabled(value);
+        await _connection.InvokeAsync("SetInputEnabled", value);
     }
 
     private async void KillHost()
     {
-        await _controlHubProxy.KillHost();
+        await _connection.InvokeAsync("KillHost");
     }
 
     private async void RebootComputer()
     {
-        await _controlHubProxy.RebootComputer(string.Empty, 0, true);
+        await _connection.InvokeAsync("RebootComputer", string.Empty, 0, true);
     }
 
     private async void ShutdownComputer()
     {
-        await _controlHubProxy.ShutdownComputer(string.Empty, 0, true);
+        await _connection.InvokeAsync("ShutdownComputer", string.Empty, 0, true);
     }
 
     private async void SendCtrlAltDel()
     {
-        await _controlHubProxy.SendCommandToService("CtrlAltDel");
+        await _connection.InvokeAsync("SendCommandToService", "CtrlAltDel");
     }
 }

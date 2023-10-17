@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -15,7 +16,7 @@ using RemoteMaster.Shared.Services;
 namespace RemoteMaster.Host.Core.Hubs;
 
 [Authorize]
-public class ControlHub : Hub<IControlClient>, IControlHub
+public class ControlHub : Hub<IControlClient>
 {
     private readonly IAppState _appState;
     private readonly IViewerFactory _viewerFactory;
@@ -232,6 +233,7 @@ public class ControlHub : Hub<IControlClient>, IControlHub
         }
     }
 
+    [SuppressMessage("Performance", "CA1822:Пометьте члены как статические", Justification = "<Ожидание>")]
     public async Task SetPSExecRules(bool enable)
     {
         if (enable)

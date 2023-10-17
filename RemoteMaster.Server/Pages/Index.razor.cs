@@ -15,9 +15,7 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Components;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
-using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;
-using TypedSignalR.Client;
 
 namespace RemoteMaster.Server.Pages;
 
@@ -166,9 +164,8 @@ public partial class Index
 
             await connection.StartAsync();
 
-            var proxy = connection.CreateHubProxy<IControlHub>();
             Logger.LogInformation("Calling ConnectAs with Intention.GetThumbnail for {IPAddress}", computer.IPAddress);
-            await proxy.ConnectAs(Intention.GetThumbnail);
+            await connection.InvokeAsync("ConnectAs", Intention.GetThumbnail);
         }
         catch (Exception ex)
         {
@@ -189,7 +186,7 @@ public partial class Index
         await JSRuntime.InvokeVoidAsync("openNewWindow", url);
     }
 
-    private async Task ExecuteOnAvailableComputers(Func<Computer, IControlHub, Task> actionOnComputer)
+    private async Task ExecuteOnAvailableComputers(Func<Computer, HubConnection, Task> actionOnComputer)
     {
         var tasks = _selectedComputers.Select(IsComputerAvailable).ToArray();
         var results = await Task.WhenAll(tasks);
@@ -218,8 +215,7 @@ public partial class Index
 
             await connection.StartAsync();
 
-            var proxy = connection.CreateHubProxy<IControlHub>();
-            await actionOnComputer(computer, proxy);
+            await actionOnComputer(computer, connection);
         }
 
         StateHasChanged();
@@ -234,12 +230,12 @@ public partial class Index
 
         if (item.Value == "control")
         {
-            await ExecuteOnAvailableComputers(async (computer, proxy) => await OpenWindow($"/{computer.IPAddress}/connect?imageQuality=25&cursorTracking=false&inputEnabled=true"));
+            await ExecuteOnAvailableComputers(async (computer, connection) => await OpenWindow($"/{computer.IPAddress}/connect?imageQuality=25&cursorTracking=false&inputEnabled=true"));
         }
 
         if (item.Value == "view")
         {
-            await ExecuteOnAvailableComputers(async (computer, proxy) => await OpenWindow($"/{computer.IPAddress}/connect?imageQuality=25&cursorTracking=true&inputEnabled=false"));
+            await ExecuteOnAvailableComputers(async (computer, connection) => await OpenWindow($"/{computer.IPAddress}/connect?imageQuality=25&cursorTracking=true&inputEnabled=false"));
         }
     }
 
@@ -250,7 +246,7 @@ public partial class Index
             return;
         }
 
-        await ExecuteOnAvailableComputers(async (computer, proxy) =>
+        await ExecuteOnAvailableComputers(async (computer, connection) =>
         {
             ProcessStartInfo startInfo;
 
@@ -289,11 +285,11 @@ public partial class Index
 
         if (item.Value == "shutdown")
         {
-            await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.ShutdownComputer("", 0, true));
+            await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("ShutdownComputer", "", 0, true));
         }
         else if (item.Value == "reboot")
         {
-            await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.RebootComputer("", 0, true));
+            await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("RebootComputer", "", 0, true));
         }
         else if (item.Value == "wakeup")
         {
@@ -306,7 +302,7 @@ public partial class Index
 
     private async Task Update()
     {
-        await ExecuteOnAvailableComputers(async (computer, proxy) =>
+        await ExecuteOnAvailableComputers(async (computer, connection) =>
         {
             var client = HttpClientFactory.CreateClient();
             client.BaseAddress = new Uri($"http://{computer.IPAddress}:5124");
@@ -353,18 +349,18 @@ public partial class Index
 
         if (item.Value == "start")
         {
-            await ExecuteOnAvailableComputers(async (computer, proxy) =>
+            await ExecuteOnAvailableComputers(async (computer, connection) =>
             {
                 var requesterName = Environment.MachineName;
                 var currentDate = DateTime.Now.ToString("yyyyMMdd_HHmmss");
                 var fileName = $@"C:\{requesterName}_{computer.IPAddress}_{currentDate}.mp4";
 
-                await proxy.StartScreenRecording(fileName);
+                await connection.InvokeAsync("StartScreenRecording", fileName);
             });
         }
         else
         {
-            await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.StopScreenRecording());
+            await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("StopScreenRecording"));
         }
     }
 
@@ -382,7 +378,7 @@ public partial class Index
             "off" => MonitorState.Off
         };
 
-        await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.SetMonitorState(state));
+        await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SetMonitorState", state));
     }
 
     private async Task ExecuteScript()
@@ -411,7 +407,7 @@ public partial class Index
                     return;
             }
 
-            await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.ExecuteScript(fileContent, shellType));
+            await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("ExecuteScript", fileContent, shellType));
 
             var dialogParameters = new Dictionary<string, object>
             {
@@ -444,7 +440,7 @@ public partial class Index
 
         if (bool.TryParse(item.Value, out isEnabled))
         {
-            await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.SetPSExecRules(isEnabled));
+            await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SetPSExecRules", isEnabled));
         }
         else
         {
