@@ -9,7 +9,7 @@ using Windows.Win32.Foundation;
 using Windows.Win32.System.StationsAndDesktops;
 using static Windows.Win32.PInvoke;
 
-namespace RemoteMaster.Shared.Native.Windows;
+namespace RemoteMaster.Host.Helpers;
 
 [SupportedOSPlatform("windows6.0.6000")]
 public static class DesktopHelper

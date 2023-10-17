@@ -7,8 +7,8 @@ using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using Microsoft.IO;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Helpers;
 using RemoteMaster.Shared.Models;
-using RemoteMaster.Shared.Native.Windows;
 using SkiaSharp;
 
 namespace RemoteMaster.Host.Services;

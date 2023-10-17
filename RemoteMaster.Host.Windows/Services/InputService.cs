@@ -4,11 +4,10 @@
 
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
-using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Helpers;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
-using RemoteMaster.Shared.Native.Windows;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
 using static Windows.Win32.PInvoke;
 
