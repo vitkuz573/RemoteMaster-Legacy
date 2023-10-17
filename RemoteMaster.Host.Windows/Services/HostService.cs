@@ -83,7 +83,7 @@ public class HostService : IHostService
         return commandLine != null && commandLine.Contains(InstanceArgument);
     }
 
-    public string GetCommandLineOfProcess(int processId)
+    private static string GetCommandLineOfProcess(int processId)
     {
         var query = $"SELECT CommandLine FROM Win32_Process WHERE ProcessId = {processId}";
 
