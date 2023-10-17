@@ -14,7 +14,7 @@ using Windows.Win32.System.RemoteDesktop;
 using Windows.Win32.System.Threading;
 using static Windows.Win32.PInvoke;
 
-namespace RemoteMaster.Host.Core.Services;
+namespace RemoteMaster.Host.Services;
 
 [SupportedOSPlatform("windows6.0.6000")]
 public class NativeProcess : IDisposable

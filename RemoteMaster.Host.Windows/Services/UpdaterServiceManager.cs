@@ -4,7 +4,7 @@
 
 using System.ServiceProcess;
 using RemoteMaster.Host.Abstractions;
-using RemoteMaster.Shared.Helpers;
+using RemoteMaster.Host.Helpers;
 
 namespace RemoteMaster.Host.Services;
 

@@ -4,10 +4,9 @@
 
 using System.Drawing;
 using System.Drawing.Imaging;
-using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Abstractions;
+using RemoteMaster.Host.Helpers.ScreenHelper;
 using RemoteMaster.Shared.Models;
-using RemoteMaster.Shared.Native.Windows.ScreenHelper;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
 using static Windows.Win32.PInvoke;

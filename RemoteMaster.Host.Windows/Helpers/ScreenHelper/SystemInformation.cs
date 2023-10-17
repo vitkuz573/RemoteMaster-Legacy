@@ -13,7 +13,7 @@ using Windows.Win32.UI.WindowsAndMessaging;
 using static Windows.Win32.UI.WindowsAndMessaging.SYSTEM_METRICS_INDEX;
 using static Windows.Win32.UI.WindowsAndMessaging.SYSTEM_PARAMETERS_INFO_ACTION;
 
-namespace RemoteMaster.Shared.Native.Windows.ScreenHelper;
+namespace RemoteMaster.Host.Helpers.ScreenHelper;
 
 [SupportedOSPlatform("windows6.0.6000")]
 public static class SystemInformation

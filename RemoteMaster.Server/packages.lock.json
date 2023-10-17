@@ -2289,11 +2289,7 @@
         }
       },
       "remotemaster.shared": {
-        "type": "Project",
-        "dependencies": {
-          "Microsoft.Win32.SystemEvents": "[7.0.0, )",
-          "Microsoft.Windows.SDK.Win32Metadata": "[55.0.45-preview, )"
-        }
+        "type": "Project"
       },
       "Microsoft.AspNetCore.SignalR.Client.Core": {
         "type": "CentralTransitive",
@@ -2342,14 +2338,8 @@
       "Microsoft.Win32.SystemEvents": {
         "type": "CentralTransitive",
         "requested": "[7.0.0, )",
-        "resolved": "7.0.0",
-        "contentHash": "2nXPrhdAyAzir0gLl8Yy8S5Mnm/uBSQQA7jEsILOS1MTyS7DbmV1NgViMtvV1sfCD1ebITpNwb1NIinKeJgUVQ=="
-      },
-      "Microsoft.Windows.SDK.Win32Metadata": {
-        "type": "CentralTransitive",
-        "requested": "[55.0.45-preview, )",
-        "resolved": "55.0.45-preview",
-        "contentHash": "2i1kVIk8rMuMCYtoeYeWbmCRLqNgb63Berac3Gv+J/pjp0oucopasKgLQNslryhsgBl4xex9ENhJX2MXEW5vdA=="
+        "resolved": "6.0.0",
+        "contentHash": "hqTM5628jSsQiv+HGpiq3WKBl2c8v1KZfby2J6Pr7pEPlK9waPdgEO6b8A/+/xn/yZ9ulv8HuqK71ONy2tg67A=="
       },
       "System.Drawing.Common": {
         "type": "CentralTransitive",

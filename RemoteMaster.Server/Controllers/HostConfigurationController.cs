@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Net.Http.Headers;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Shared.Helpers;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Controllers;
@@ -64,7 +63,7 @@ public class HostConfigurationController : ControllerBase
         var username = "support@it-ktk.local";
         var password = "bonesgamer123!!";
 
-        NetworkDriveHelper.MapNetworkDrive(@"\\SERVER-DC02\Win\RemoteMaster", username, password);
+        // NetworkDriveHelper.MapNetworkDrive(@"\\SERVER-DC02\Win\RemoteMaster", username, password);
 
         byte[] fileBytes;
         try
@@ -73,7 +72,7 @@ public class HostConfigurationController : ControllerBase
         }
         finally
         {
-            NetworkDriveHelper.CancelNetworkDrive(@"\\SERVER-DC02\Win\RemoteMaster");
+            // NetworkDriveHelper.CancelNetworkDrive(@"\\SERVER-DC02\Win\RemoteMaster");
         }
 
         var contentDisposition = new ContentDispositionHeaderValue("attachment")

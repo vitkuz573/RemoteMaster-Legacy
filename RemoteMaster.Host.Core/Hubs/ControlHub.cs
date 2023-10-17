@@ -164,72 +164,73 @@ public class ControlHub : Hub<IControlClient>
         _hardwareService.SetMonitorState(state);
     }
 
+    [SuppressMessage("Performance", "CA1822:Пометьте члены как статические", Justification = "<Ожидание>")]
     public async Task ExecuteScript(string scriptContent, string shellType)
     {
-        _logger.LogInformation("Executing script with shell type: {ShellType}", shellType);
-
-        var publicDirectory = @"C:\Users\Public";
-        var fileName = $"{Guid.NewGuid()}";
-
-        if (shellType == "CMD")
-        {
-            fileName += ".bat";
-        }
-        else if (shellType == "PowerShell")
-        {
-            fileName += ".ps1";
-        }
-        else
-        {
-            _logger.LogError("Unsupported shell type encountered: {ShellType}", shellType);
-            
-            throw new InvalidOperationException($"Unsupported shell type: {shellType}");
-        }
-
-        var tempFilePath = Path.Combine(publicDirectory, fileName);
-
-        _logger.LogInformation("Temporary file path: {TempFilePath}", tempFilePath);
-        File.WriteAllText(tempFilePath, scriptContent);
-
-        try
-        {
-            if (!File.Exists(tempFilePath))
-            {
-                _logger.LogError("Temp file was not created: {TempFilePath}", tempFilePath);
-                
-                return;
-            }
-
-            var applicationToRun = shellType switch
-            {
-                "CMD" => $"cmd.exe /c \"{tempFilePath}\"",
-                "PowerShell" => $"powershell.exe -ExecutionPolicy Bypass -File \"{tempFilePath}\"",
-                _ => "",
-            };
-
-            var options = new ProcessStartOptions(applicationToRun, -1)
-            {
-                ForceConsoleSession = true,
-                DesktopName = "default",
-                HiddenWindow = true,
-                UseCurrentUserToken = false
-            };
-
-            using var nativeProcess = NativeProcess.Start(options);
-            nativeProcess.OutputReceived += (output) => {
-                _logger.LogInformation(output);
-
-                _ = Clients.Caller.ReceiveScriptResult(output);
-            };
-            await nativeProcess.StartListeningToOutputAsync();
-        }
-        finally
-        {
-            if (File.Exists(tempFilePath))
-            {
-                File.Delete(tempFilePath);
-            }
-        }
+        // _logger.LogInformation("Executing script with shell type: {ShellType}", shellType);
+        // 
+        // var publicDirectory = @"C:\Users\Public";
+        // var fileName = $"{Guid.NewGuid()}";
+        // 
+        // if (shellType == "CMD")
+        // {
+        //     fileName += ".bat";
+        // }
+        // else if (shellType == "PowerShell")
+        // {
+        //     fileName += ".ps1";
+        // }
+        // else
+        // {
+        //     _logger.LogError("Unsupported shell type encountered: {ShellType}", shellType);
+        //     
+        //     throw new InvalidOperationException($"Unsupported shell type: {shellType}");
+        // }
+        // 
+        // var tempFilePath = Path.Combine(publicDirectory, fileName);
+        // 
+        // _logger.LogInformation("Temporary file path: {TempFilePath}", tempFilePath);
+        // File.WriteAllText(tempFilePath, scriptContent);
+        // 
+        // try
+        // {
+        //     if (!File.Exists(tempFilePath))
+        //     {
+        //         _logger.LogError("Temp file was not created: {TempFilePath}", tempFilePath);
+        //         
+        //         return;
+        //     }
+        // 
+        //     var applicationToRun = shellType switch
+        //     {
+        //         "CMD" => $"cmd.exe /c \"{tempFilePath}\"",
+        //         "PowerShell" => $"powershell.exe -ExecutionPolicy Bypass -File \"{tempFilePath}\"",
+        //         _ => "",
+        //     };
+        // 
+        //     var options = new ProcessStartOptions(applicationToRun, -1)
+        //     {
+        //         ForceConsoleSession = true,
+        //         DesktopName = "default",
+        //         HiddenWindow = true,
+        //         UseCurrentUserToken = false
+        //     };
+        // 
+        //     using var nativeProcess = NativeProcess.Start(options);
+        //     nativeProcess.OutputReceived += (output) => {
+        //         _logger.LogInformation(output);
+        // 
+        //         _ = Clients.Caller.ReceiveScriptResult(output);
+        //     };
+        //     await nativeProcess.StartListeningToOutputAsync();
+        // }
+        // finally
+        // {
+        //     if (File.Exists(tempFilePath))
+        //     {
+        //         File.Delete(tempFilePath);
+        //     }
+        // }
     }
 
     [SuppressMessage("Performance", "CA1822:Пометьте члены как статические", Justification = "<Ожидание>")]
