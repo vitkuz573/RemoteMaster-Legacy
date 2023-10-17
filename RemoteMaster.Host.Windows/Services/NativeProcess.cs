@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
 using Microsoft.Win32.SafeHandles;
-using RemoteMaster.Shared.Models;
+using RemoteMaster.Host.Models;
 using Windows.Win32.Foundation;
 using Windows.Win32.Security;
 using Windows.Win32.System.RemoteDesktop;
