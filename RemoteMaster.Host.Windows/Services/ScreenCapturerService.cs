@@ -16,7 +16,7 @@ namespace RemoteMaster.Host.Services;
 public abstract class ScreenCapturerService : IScreenCapturerService
 {
     private readonly RecyclableMemoryStreamManager _recycleManager = new();
-    private readonly ILogger<ScreenCapturerService> _logger;
+    protected readonly ILogger<ScreenCapturerService> _logger;
     private readonly object _screenBoundsLock = new();
     private readonly object _bitmapLock = new();
     private SKBitmap _skBitmap;
