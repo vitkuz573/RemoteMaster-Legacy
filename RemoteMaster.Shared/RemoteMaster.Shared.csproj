@@ -8,8 +8,4 @@
     <DebugType>none</DebugType>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Folder Include="Helpers\" />
-  </ItemGroup>
-
 </Project>
