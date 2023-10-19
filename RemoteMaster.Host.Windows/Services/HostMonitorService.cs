@@ -8,11 +8,11 @@ namespace RemoteMaster.Host.Services;
 
 public class HostMonitorService : IHostedService
 {
-    private readonly IHostService _hostService;
+    private readonly IHostInstanceService _hostService;
     private readonly ILogger<HostMonitorService> _logger;
     private Timer _timer;
 
-    public HostMonitorService(IHostService hostService, ILogger<HostMonitorService> logger)
+    public HostMonitorService(IHostInstanceService hostService, ILogger<HostMonitorService> logger)
     {
         _hostService = hostService;
         _logger = logger;

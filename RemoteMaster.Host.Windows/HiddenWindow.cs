@@ -18,9 +18,9 @@ public class HiddenWindow
     private HWND _hwnd;
     private readonly WNDPROC _wndProcDelegate;
     private readonly ILogger<HiddenWindow> _logger;
-    private readonly IHostService _hostService;
+    private readonly IHostInstanceService _hostService;
 
-    public HiddenWindow(IHostService hostService, ILogger<HiddenWindow> logger)
+    public HiddenWindow(IHostInstanceService hostService, ILogger<HiddenWindow> logger)
     {
         _hostService = hostService;
         _logger = logger;

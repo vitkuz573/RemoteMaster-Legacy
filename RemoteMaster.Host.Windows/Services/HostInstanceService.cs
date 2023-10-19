@@ -9,14 +9,14 @@ using RemoteMaster.Host.Models;
 
 namespace RemoteMaster.Host.Services;
 
-public class HostService : IHostService
+public class HostInstanceService : IHostInstanceService
 {
-    private readonly ILogger<HostService> _logger;
+    private readonly ILogger<HostInstanceService> _logger;
 
     private static string CurrentExecutablePath => Environment.ProcessPath!;
     private const string InstanceArgument = "--user-instance";
 
-    public HostService(ILogger<HostService> logger)
+    public HostInstanceService(ILogger<HostInstanceService> logger)
     {
         _logger = logger;
     }
