@@ -12,7 +12,7 @@ namespace RemoteMaster.Host.Services;
 
 public class HostServiceManager : IHostServiceManager
 {
-    private readonly IHostLifecycleService _registratorService;
+    private readonly IHostLifecycleService _hostLifecycleService;
     private readonly IServiceManager _serviceManager;
     private readonly IConfigurationService _configurationService;
     private readonly ILogger<HostServiceManager> _logger;
@@ -22,14 +22,14 @@ public class HostServiceManager : IHostServiceManager
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Host";
 
-    public HostServiceManager(IHostLifecycleService registratorService, IServiceManager serviceManager, IConfigurationService configurationService, IDictionary<string, IServiceConfig> configs, ILogger<HostServiceManager> logger)
+    public HostServiceManager(IHostLifecycleService hostLifecycleService, IServiceManager serviceManager, IConfigurationService configurationService, IDictionary<string, IServiceConfig> configs, ILogger<HostServiceManager> logger)
     {
         if (configs == null)
         {
             throw new ArgumentNullException(nameof(configs));
         }
 
-        _registratorService = registratorService;
+        _hostLifecycleService = hostLifecycleService;
         _serviceManager = serviceManager;
         _configurationService = configurationService;
         _hostConfig = configs["host"];
@@ -64,7 +64,7 @@ public class HostServiceManager : IHostServiceManager
 
             _logger.LogInformation("{ServiceName} installed and started successfully.", _hostConfig.Name);
 
-            var registerResult = await _registratorService.RegisterAsync(configuration, hostName, ipv4Address, macAddress);
+            var registerResult = await _hostLifecycleService.RegisterAsync(configuration, hostName, ipv4Address, macAddress);
 
             if (!registerResult)
             {
@@ -100,7 +100,7 @@ public class HostServiceManager : IHostServiceManager
 
             DeleteFiles();
 
-            if (!await _registratorService.UnregisterAsync(configuration, hostName))
+            if (!await _hostLifecycleService.UnregisterAsync(configuration, hostName))
             {
                 _logger.LogError("Computer unregistration failed.");
             }
