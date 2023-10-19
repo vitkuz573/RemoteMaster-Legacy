@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
 using Microsoft.JSInterop;
+using Polly;
+using Polly.Retry;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
@@ -45,6 +47,15 @@ public partial class Connect
     private string _newUri;
 
     private HubConnection _connection;
+
+    private readonly AsyncRetryPolicy _retryPolicy = Policy
+        .Handle<Exception>()
+        .WaitAndRetryAsync(new[]
+        {
+            TimeSpan.FromSeconds(5),
+            TimeSpan.FromSeconds(7),
+            TimeSpan.FromSeconds(10),
+        });
 
     protected async override Task OnInitializedAsync()
     {
@@ -110,6 +121,21 @@ public partial class Connect
         result = default;
 
         return false;
+    }
+
+    private async Task SafeInvokeAsync(Func<Task> action)
+    {
+        await _retryPolicy.ExecuteAsync(async () =>
+        {
+            if (_connection.State == HubConnectionState.Connected)
+            {
+                await action();
+            }
+            else
+            {
+                throw new InvalidOperationException("Connection is not active");
+            }
+        });
     }
 
     private static async Task<string> TryGetDnsNameOrFallbackToIpAsync(string host)
@@ -181,9 +207,16 @@ public partial class Connect
         _connection.On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate);
         _connection.On<Version>("ReceiveHostVersion", version => _hostVersion = version.ToString());
 
+        _connection.Closed += async (error) =>
+        {
+            await Task.Delay(TimeSpan.FromSeconds(5)); // ждем немного перед попыткой
+            await _connection.StartAsync(); // переподключаемся
+            await SafeInvokeAsync(() => _connection.InvokeAsync("ConnectAs", Intention.Connect)); // инициализируем подключение
+        };
+
         await _connection.StartAsync();
 
-        await _connection.InvokeAsync("ConnectAs", Intention.Connect);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("ConnectAs", Intention.Connect));
     }
 
     private async Task<(double, double)> GetRelativeMousePositionPercentAsync(MouseEventArgs e)
@@ -200,11 +233,11 @@ public partial class Connect
     {
         var xyPercent = await GetRelativeMousePositionPercentAsync(e);
 
-        await _connection.InvokeAsync("SendMouseCoordinates", new MouseMoveDto
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendMouseCoordinates", new MouseMoveDto
         {
             X = xyPercent.Item1,
             Y = xyPercent.Item2
-        });
+        }));
     }
 
     private async Task OnMouseUpDown(MouseEventArgs e)
@@ -222,30 +255,30 @@ public partial class Connect
     {
         var xyPercent = await GetRelativeMousePositionPercentAsync(e);
 
-        await _connection.InvokeAsync("SendMouseButton", new MouseClickDto
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendMouseButton", new MouseClickDto
         {
             Button = e.Button,
             State = state,
             X = xyPercent.Item1,
             Y = xyPercent.Item2
-        });
+        }));
     }
 
     private async Task OnMouseWheel(WheelEventArgs e)
     {
-        await _connection.InvokeAsync("SendMouseWheel", new MouseWheelDto
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendMouseWheel", new MouseWheelDto
         {
             DeltaY = (int)e.DeltaY
-        });
+        }));
     }
 
     private async Task SendKeyboardInput(int keyCode, ButtonAction state)
     {
-        await _connection.InvokeAsync("SendKeyboardInput", new KeyboardKeyDto
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendKeyboardInput", new KeyboardKeyDto
         {
             Key = keyCode,
             State = state
-        });
+        }));
     }
 
     [JSInvokable]
@@ -267,47 +300,47 @@ public partial class Connect
 
     private async void OnChangeScreen(ChangeEventArgs e)
     {
-        await _connection.InvokeAsync("SendSelectedScreen", e.Value.ToString());
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendSelectedScreen", e.Value.ToString()));
     }
 
     private async void ChangeQuality(int quality)
     {
         _imageQuality = quality;
 
-        await _connection.InvokeAsync("SetQuality", quality);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SetQuality", quality));
     }
 
     private async Task ToggleCursorTracking(bool value)
     {
         _cursorTracking = value;
 
-        await _connection.InvokeAsync("SetTrackCursor", value);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SetTrackCursor", value));
     }
 
     private async Task ToggleInputEnabled(bool value)
     {
         _inputEnabled = value;
 
-        await _connection.InvokeAsync("SetInputEnabled", value);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SetInputEnabled", value));
     }
 
     private async void KillHost()
     {
-        await _connection.InvokeAsync("KillHost");
+        await SafeInvokeAsync(() => _connection.InvokeAsync("KillHost"));
     }
 
     private async void RebootComputer()
     {
-        await _connection.InvokeAsync("RebootComputer", string.Empty, 0, true);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("RebootComputer", string.Empty, 0, true));
     }
 
     private async void ShutdownComputer()
     {
-        await _connection.InvokeAsync("ShutdownComputer", string.Empty, 0, true);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("ShutdownComputer", string.Empty, 0, true));
     }
 
     private async void SendCtrlAltDel()
     {
-        await _connection.InvokeAsync("SendCommandToService", "CtrlAltDel");
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendCommandToService", "CtrlAltDel"));
     }
 }

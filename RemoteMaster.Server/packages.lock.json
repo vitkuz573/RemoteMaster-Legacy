@@ -92,6 +92,15 @@
           "Microsoft.VisualStudio.Web.CodeGenerators.Mvc": "7.0.10"
         }
       },
+      "Polly": {
+        "type": "Direct",
+        "requested": "[8.0.0, )",
+        "resolved": "8.0.0",
+        "contentHash": "vwIDGI+vUCrufIFi2IpN0EnMyKFRyKHCiJ47yQUvBtAkE76f8xgFjrI7cLmLWv4NwSXZH6DxUG088QmEuHwIFw==",
+        "dependencies": {
+          "Polly.Core": "8.0.0"
+        }
+      },
       "Radzen.Blazor": {
         "type": "Direct",
         "requested": "[4.17.1, )",
@@ -1260,6 +1269,11 @@
         "type": "Transitive",
         "resolved": "6.6.1",
         "contentHash": "Wm/AOFICTIrCgbVxv9dNWusraTzcggbo5W4ao7hD8NNVq911an9TGwW+uNuYc8I5PkpTeMuSXneV2u6hbi1P4w=="
+      },
+      "Polly.Core": {
+        "type": "Transitive",
+        "resolved": "8.0.0",
+        "contentHash": "g+8HnRjFTs8Ujz4Si4slrVrEK9M92DjvF75WvNpnF/lbT8M3/xW+tuD2udTiv2KuOsFOsRfOcZ12PddizrtXVA=="
       },
       "runtime.debian.8-x64.runtime.native.System.Security.Cryptography.OpenSsl": {
         "type": "Transitive",
