@@ -43,7 +43,7 @@ public class NativeProcess : IDisposable
         StartOptions = options;
     }
 
-    public NativeProcess(PROCESS_INFORMATION procInfo, SafeFileHandle stdInReadHandle, SafeFileHandle stdOutReadHandle, SafeFileHandle stdErrReadHandle)
+    internal NativeProcess(PROCESS_INFORMATION procInfo, SafeFileHandle stdInReadHandle, SafeFileHandle stdOutReadHandle, SafeFileHandle stdErrReadHandle)
     {
         ProcessId = procInfo.dwProcessId;
         ThreadId = procInfo.dwThreadId;
@@ -284,7 +284,7 @@ public class NativeProcess : IDisposable
         return success;
     }
 
-    public static unsafe List<WTS_SESSION_INFOW> GetActiveSessions()
+    internal static unsafe List<WTS_SESSION_INFOW> GetActiveSessions()
     {
         var sessions = new List<WTS_SESSION_INFOW>();
 

@@ -16,7 +16,7 @@ public static class DesktopHelper
 {
     private static CloseDesktopSafeHandle _lastInputDesktop;
 
-    public static CloseDesktopSafeHandle OpenInputDesktop() => OpenInputDesktop_SafeHandle(0, true, (DESKTOP_ACCESS_FLAGS)GENERIC_ACCESS_RIGHTS.GENERIC_ALL);
+    internal static CloseDesktopSafeHandle OpenInputDesktop() => OpenInputDesktop_SafeHandle(0, true, (DESKTOP_ACCESS_FLAGS)GENERIC_ACCESS_RIGHTS.GENERIC_ALL);
 
     public static unsafe bool GetCurrentDesktop([NotNullWhen(true)] out string? desktopName)
     {
