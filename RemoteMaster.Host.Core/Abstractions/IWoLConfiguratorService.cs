@@ -4,8 +4,8 @@
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface IWoLConfigurator
+public interface IWoLConfiguratorService
 {
-    void EnableWoL();
+    void Configure();
 }
 

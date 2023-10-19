@@ -9,7 +9,7 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Services;
 
-public class WoLConfiguratorService : IWoLConfigurator
+public class WoLConfiguratorService : IWoLConfiguratorService
 {
     private readonly ILogger<WoLConfiguratorService> _logger;
 
@@ -20,7 +20,7 @@ public class WoLConfiguratorService : IWoLConfigurator
         _logger = logger;
     }
 
-    public void EnableWoL()
+    public void Configure()
     {
         try
         {
