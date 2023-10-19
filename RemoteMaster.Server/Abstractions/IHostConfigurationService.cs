@@ -8,5 +8,5 @@ namespace RemoteMaster.Server.Abstractions;
 
 public interface IHostConfigurationService
 {
-    Task<MemoryStream> GenerateConfigFileAsync(ConfigurationModel config);
+    Task<MemoryStream> GenerateConfigFileAsync(HostConfiguration config);
 }

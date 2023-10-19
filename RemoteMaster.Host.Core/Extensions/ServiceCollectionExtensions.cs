@@ -26,7 +26,7 @@ public static class ServiceCollectionExtensions
             builder.AddSerilog(serilogLogger);
         });
 
-        services.AddSingleton<IRegistratorService, RegistratorService>();
+        services.AddSingleton<IHostLifecycleService, HostLifecycleService>();
         services.AddSingleton<IConfigurationService, ConfigurationService>();
         services.AddSingleton<IHostInfoService, HostInfoService>();
         services.AddSingleton<IAppState, AppState>();

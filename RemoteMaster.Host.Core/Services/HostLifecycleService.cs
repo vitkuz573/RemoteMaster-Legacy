@@ -9,16 +9,16 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class RegistratorService : IRegistratorService
+public class HostLifecycleService : IHostLifecycleService
 {
-    private readonly ILogger<RegistratorService> _logger;
+    private readonly ILogger<HostLifecycleService> _logger;
 
-    public RegistratorService(ILogger<RegistratorService> logger)
+    public HostLifecycleService(ILogger<HostLifecycleService> logger)
     {
         _logger = logger;
     }
 
-    public async Task<bool> RegisterAsync(ConfigurationModel config, string hostName, string ipAddress, string macAddress)
+    public async Task<bool> RegisterAsync(HostConfiguration config, string hostName, string ipAddress, string macAddress)
     {
         if (config == null)
         {
@@ -42,7 +42,7 @@ public class RegistratorService : IRegistratorService
         }
     }
 
-    public async Task<bool> UnregisterAsync(ConfigurationModel config, string hostName)
+    public async Task<bool> UnregisterAsync(HostConfiguration config, string hostName)
     {
         if (config == null)
         {

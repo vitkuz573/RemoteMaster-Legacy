@@ -12,7 +12,7 @@ namespace RemoteMaster.Host.Services;
 
 public class HostServiceManager : IHostServiceManager
 {
-    private readonly IRegistratorService _registratorService;
+    private readonly IHostLifecycleService _registratorService;
     private readonly IServiceManager _serviceManager;
     private readonly IConfigurationService _configurationService;
     private readonly ILogger<HostServiceManager> _logger;
@@ -22,7 +22,7 @@ public class HostServiceManager : IHostServiceManager
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Host";
 
-    public HostServiceManager(IRegistratorService registratorService, IServiceManager serviceManager, IConfigurationService configurationService, IDictionary<string, IServiceConfig> configs, ILogger<HostServiceManager> logger)
+    public HostServiceManager(IHostLifecycleService registratorService, IServiceManager serviceManager, IConfigurationService configurationService, IDictionary<string, IServiceConfig> configs, ILogger<HostServiceManager> logger)
     {
         if (configs == null)
         {
@@ -36,7 +36,7 @@ public class HostServiceManager : IHostServiceManager
         _logger = logger;
     }
 
-    public async Task InstallOrUpdate(ConfigurationModel configuration, string hostName, string ipv4Address, string macAddress)
+    public async Task InstallOrUpdate(HostConfiguration configuration, string hostName, string ipv4Address, string macAddress)
     {
         try
         {
@@ -77,7 +77,7 @@ public class HostServiceManager : IHostServiceManager
         }
     }
 
-    public async Task Uninstall(ConfigurationModel configuration, string hostName)
+    public async Task Uninstall(HostConfiguration configuration, string hostName)
     {
         try
         {

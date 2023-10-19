@@ -8,7 +8,7 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IConfigurationService
 {
-    ConfigurationModel LoadConfiguration();
+    HostConfiguration LoadConfiguration();
 
     string GetConfigurationFileName();
 }

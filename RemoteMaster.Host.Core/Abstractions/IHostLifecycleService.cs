@@ -6,9 +6,9 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface IRegistratorService
+public interface IHostLifecycleService
 {
-    Task<bool> RegisterAsync(ConfigurationModel config, string hostName, string ipAddress, string macAddress);
+    Task<bool> RegisterAsync(HostConfiguration config, string hostName, string ipAddress, string macAddress);
 
-    Task<bool> UnregisterAsync(ConfigurationModel config, string hostName);
+    Task<bool> UnregisterAsync(HostConfiguration config, string hostName);
 }

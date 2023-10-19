@@ -25,7 +25,7 @@ public class HostConfigurationController : ControllerBase
     }
 
     [HttpPost("generate")]
-    public async Task<IActionResult> GenerateConfig([FromForm] ConfigurationModel config)
+    public async Task<IActionResult> GenerateConfig([FromForm] HostConfiguration config)
     {
         if (!ModelState.IsValid)
         {

@@ -135,7 +135,7 @@ internal class Program
             var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
             var updaterServiceManager = app.Services.GetRequiredService<IUpdaterServiceManager>();
 
-            ConfigurationModel configuration;
+            HostConfiguration configuration;
 
             try
             {
@@ -184,7 +184,7 @@ internal class Program
             var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
             var updaterServiceManager = app.Services.GetRequiredService<IUpdaterServiceManager>();
 
-            ConfigurationModel configuration;
+            HostConfiguration configuration;
 
             try
             {

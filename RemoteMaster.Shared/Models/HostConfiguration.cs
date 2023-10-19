@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace RemoteMaster.Shared.Models;
 
-public class ConfigurationModel
+public class HostConfiguration
 {
     [JsonPropertyName("server")]
     public string? Server { get; set; }

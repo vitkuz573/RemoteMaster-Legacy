@@ -31,7 +31,7 @@ public class HostConfigurationService : IHostConfigurationService
     /// </summary>
     /// <param name="config">The configuration model.</param>
     /// <returns>A memory stream containing the configuration file.</returns>
-    public async Task<MemoryStream> GenerateConfigFileAsync(ConfigurationModel config)
+    public async Task<MemoryStream> GenerateConfigFileAsync(HostConfiguration config)
     {
         var jsonBytes = _serializationService.SerializeToJsonBytes(config);
         

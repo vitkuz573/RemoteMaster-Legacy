@@ -9,7 +9,7 @@ namespace RemoteMaster.Host.Abstractions;
 
 public interface IHostServiceManager
 {
-    Task InstallOrUpdate(ConfigurationModel configuration, string hostName, string ipv4Address, string macAddress);
+    Task InstallOrUpdate(HostConfiguration configuration, string hostName, string ipv4Address, string macAddress);
 
-    Task Uninstall(ConfigurationModel configuration, string hostName);
+    Task Uninstall(HostConfiguration configuration, string hostName);
 }

@@ -10,7 +10,7 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class ConfigurationService : IConfigurationService
 {
-    public ConfigurationModel LoadConfiguration()
+    public HostConfiguration LoadConfiguration()
     {
         var fileName = GetConfigurationFileName();
 
@@ -44,11 +44,11 @@ public class ConfigurationService : IConfigurationService
         return false;
     }
 
-    private static bool TryDeserializeJson(string json, out ConfigurationModel? config)
+    private static bool TryDeserializeJson(string json, out HostConfiguration? config)
     {
         try
         {
-            config = JsonSerializer.Deserialize<ConfigurationModel>(json);
+            config = JsonSerializer.Deserialize<HostConfiguration>(json);
 
             return true;
         }
@@ -60,7 +60,7 @@ public class ConfigurationService : IConfigurationService
         }
     }
 
-    private static bool IsValidConfig(ConfigurationModel? config)
+    private static bool IsValidConfig(HostConfiguration? config)
     {
         return config != null && !string.IsNullOrWhiteSpace(config.Server) && !string.IsNullOrWhiteSpace(config.Group);
     }
