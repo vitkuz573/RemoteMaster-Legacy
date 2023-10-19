@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.ServiceProcess;
 using RemoteMaster.Host.Abstractions;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Models;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Services;
@@ -17,22 +18,17 @@ public class HostServiceManager : IHostServiceManager
     private readonly IConfigurationService _configurationService;
     private readonly ILogger<HostServiceManager> _logger;
 
-    private readonly IServiceConfig _hostConfig;
+    private readonly HostServiceConfig _hostServiceConfig;
 
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Host";
 
-    public HostServiceManager(IHostLifecycleService hostLifecycleService, IServiceManager serviceManager, IConfigurationService configurationService, IDictionary<string, IServiceConfig> configs, ILogger<HostServiceManager> logger)
+    public HostServiceManager(IHostLifecycleService hostLifecycleService, IServiceManager serviceManager, IConfigurationService configurationService, HostServiceConfig hostServiceConfig, ILogger<HostServiceManager> logger)
     {
-        if (configs == null)
-        {
-            throw new ArgumentNullException(nameof(configs));
-        }
-
         _hostLifecycleService = hostLifecycleService;
         _serviceManager = serviceManager;
         _configurationService = configurationService;
-        _hostConfig = configs["host"];
+        _hostServiceConfig = hostServiceConfig;
         _logger = logger;
     }
 
@@ -42,13 +38,13 @@ public class HostServiceManager : IHostServiceManager
         {
             var directoryPath = GetDirectoryPath();
 
-            if (_serviceManager.IsServiceInstalled(_hostConfig.Name))
+            if (_serviceManager.IsServiceInstalled(_hostServiceConfig.Name))
             {
-                using var serviceController = new ServiceController(_hostConfig.Name);
+                using var serviceController = new ServiceController(_hostServiceConfig.Name);
 
                 if (serviceController.Status != ServiceControllerStatus.Stopped)
                 {
-                    _serviceManager.StopService(_hostConfig.Name);
+                    _serviceManager.StopService(_hostServiceConfig.Name);
                 }
 
                 CopyToTargetPath(directoryPath);
@@ -57,12 +53,12 @@ public class HostServiceManager : IHostServiceManager
             {
                 CopyToTargetPath(directoryPath);
                 var hostPath = Path.Combine(directoryPath, $"{MainAppName}.{SubAppName}.exe");
-                _serviceManager.InstallService(_hostConfig, $"{hostPath} --service-mode");
+                _serviceManager.InstallService(_hostServiceConfig, $"{hostPath} --service-mode");
             }
 
-            _serviceManager.StartService(_hostConfig.Name);
+            _serviceManager.StartService(_hostServiceConfig.Name);
 
-            _logger.LogInformation("{ServiceName} installed and started successfully.", _hostConfig.Name);
+            _logger.LogInformation("{ServiceName} installed and started successfully.", _hostServiceConfig.Name);
 
             var registerResult = await _hostLifecycleService.RegisterAsync(configuration, hostName, ipv4Address, macAddress);
 
@@ -81,16 +77,16 @@ public class HostServiceManager : IHostServiceManager
     {
         try
         {
-            if (_serviceManager.IsServiceInstalled(_hostConfig.Name))
+            if (_serviceManager.IsServiceInstalled(_hostServiceConfig.Name))
             {
-                _serviceManager.StopService(_hostConfig.Name);
-                _serviceManager.UninstallService(_hostConfig.Name);
+                _serviceManager.StopService(_hostServiceConfig.Name);
+                _serviceManager.UninstallService(_hostServiceConfig.Name);
 
-                _logger.LogInformation("{ServiceName} Service uninstalled successfully.", _hostConfig.Name);
+                _logger.LogInformation("{ServiceName} Service uninstalled successfully.", _hostServiceConfig.Name);
             }
             else
             {
-                _logger.LogInformation("{ServiceName} Service is not installed.", _hostConfig.Name);
+                _logger.LogInformation("{ServiceName} Service is not installed.", _hostServiceConfig.Name);
             }
 
             foreach (var process in Process.GetProcessesByName($"{MainAppName}.{SubAppName}"))

@@ -48,10 +48,8 @@ internal class Program
         builder.Services.AddCoreServices();
         builder.Services.AddSingleton<IHostInstanceService, HostInstanceService>();
         builder.Services.AddSingleton<IHostServiceManager, HostServiceManager>();
-        builder.Services.AddSingleton<IUpdaterServiceManager, UpdaterServiceManager>();
         builder.Services.AddSingleton<IServiceManager, ServiceManager>();
         builder.Services.AddSingleton<HostServiceConfig>();
-        builder.Services.AddSingleton<UpdaterServiceConfig>();
         builder.Services.AddSingleton<IScreenCapturerService, BitBltCapturer>();
         builder.Services.AddSingleton<IScreenRecorderService, ScreenRecorderService>();
         builder.Services.AddSingleton<ICursorRenderService, CursorRenderService>();
@@ -59,12 +57,6 @@ internal class Program
         builder.Services.AddSingleton<IPowerService, PowerService>();
         builder.Services.AddSingleton<IHardwareService, HardwareService>();
         builder.Services.AddSingleton<HiddenWindow>();
-
-        builder.Services.AddSingleton<IDictionary<string, IServiceConfig>>(sp => new Dictionary<string, IServiceConfig>
-        {
-            { "host", sp.GetRequiredService<HostServiceConfig>() },
-            { "updater", sp.GetRequiredService<UpdaterServiceConfig>() }
-        });
 
         var publicKeyPath = @"C:\RemoteMaster\Security\public_key.pem";
         var publicKey = File.ReadAllText(publicKeyPath);
@@ -133,7 +125,6 @@ internal class Program
             var configurationService = app.Services.GetRequiredService<IConfigurationService>();
             var hostInfoService = app.Services.GetRequiredService<IHostInfoService>();
             var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
-            var updaterServiceManager = app.Services.GetRequiredService<IUpdaterServiceManager>();
 
             HostConfiguration configuration;
 
@@ -172,8 +163,6 @@ internal class Program
 
             await hostServiceManager.InstallOrUpdate(configuration, hostName, ipv4Address, macAddress);
 
-            updaterServiceManager.InstallOrUpdate();
-
             return;
         }
 
@@ -182,7 +171,6 @@ internal class Program
             var configurationService = app.Services.GetRequiredService<IConfigurationService>();
             var hostInfoService = app.Services.GetRequiredService<IHostInfoService>();
             var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
-            var updaterServiceManager = app.Services.GetRequiredService<IUpdaterServiceManager>();
 
             HostConfiguration configuration;
 
@@ -206,8 +194,6 @@ internal class Program
             var hostName = hostInfoService.GetHostName();
 
             await hostServiceManager.Uninstall(configuration, hostName);
-
-            updaterServiceManager.Uninstall();
 
             return;
         }
