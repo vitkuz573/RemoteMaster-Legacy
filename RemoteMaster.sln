@@ -15,10 +15,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Элементы решен
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Host.Core", "RemoteMaster.Host.Core\RemoteMaster.Host.Core.csproj", "{41E5CC1D-7772-4695-9100-B75EBFE4C5B7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Updater", "RemoteMaster.Updater\RemoteMaster.Updater.csproj", "{D9F12236-05DC-4445-A54F-22399927AE75}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Updater.Tests", "RemoteMaster.Updater.Tests\RemoteMaster.Updater.Tests.csproj", "{2E53BE33-1007-4929-B637-A5FFCADB9246}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Host.Windows", "RemoteMaster.Host.Windows\RemoteMaster.Host.Windows.csproj", "{997141CA-F785-485B-BAE7-1759A1AB091C}"
 EndProject
 Global
@@ -81,38 +77,6 @@ Global
 		{41E5CC1D-7772-4695-9100-B75EBFE4C5B7}.Release|x64.Build.0 = Release|Any CPU
 		{41E5CC1D-7772-4695-9100-B75EBFE4C5B7}.Release|x86.ActiveCfg = Release|Any CPU
 		{41E5CC1D-7772-4695-9100-B75EBFE4C5B7}.Release|x86.Build.0 = Release|Any CPU
-		{D9F12236-05DC-4445-A54F-22399927AE75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D9F12236-05DC-4445-A54F-22399927AE75}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D9F12236-05DC-4445-A54F-22399927AE75}.Debug|arm64.ActiveCfg = Debug|Any CPU
-		{D9F12236-05DC-4445-A54F-22399927AE75}.Debug|arm64.Build.0 = Debug|Any CPU
-		{D9F12236-05DC-4445-A54F-22399927AE75}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{D9F12236-05DC-4445-A54F-22399927AE75}.Debug|x64.Build.0 = Debug|Any CPU
-		{D9F12236-05DC-4445-A54F-22399927AE75}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{D9F12236-05DC-4445-A54F-22399927AE75}.Debug|x86.Build.0 = Debug|Any CPU
-		{D9F12236-05DC-4445-A54F-22399927AE75}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D9F12236-05DC-4445-A54F-22399927AE75}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D9F12236-05DC-4445-A54F-22399927AE75}.Release|arm64.ActiveCfg = Release|Any CPU
-		{D9F12236-05DC-4445-A54F-22399927AE75}.Release|arm64.Build.0 = Release|Any CPU
-		{D9F12236-05DC-4445-A54F-22399927AE75}.Release|x64.ActiveCfg = Release|Any CPU
-		{D9F12236-05DC-4445-A54F-22399927AE75}.Release|x64.Build.0 = Release|Any CPU
-		{D9F12236-05DC-4445-A54F-22399927AE75}.Release|x86.ActiveCfg = Release|Any CPU
-		{D9F12236-05DC-4445-A54F-22399927AE75}.Release|x86.Build.0 = Release|Any CPU
-		{2E53BE33-1007-4929-B637-A5FFCADB9246}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2E53BE33-1007-4929-B637-A5FFCADB9246}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2E53BE33-1007-4929-B637-A5FFCADB9246}.Debug|arm64.ActiveCfg = Debug|Any CPU
-		{2E53BE33-1007-4929-B637-A5FFCADB9246}.Debug|arm64.Build.0 = Debug|Any CPU
-		{2E53BE33-1007-4929-B637-A5FFCADB9246}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{2E53BE33-1007-4929-B637-A5FFCADB9246}.Debug|x64.Build.0 = Debug|Any CPU
-		{2E53BE33-1007-4929-B637-A5FFCADB9246}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{2E53BE33-1007-4929-B637-A5FFCADB9246}.Debug|x86.Build.0 = Debug|Any CPU
-		{2E53BE33-1007-4929-B637-A5FFCADB9246}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2E53BE33-1007-4929-B637-A5FFCADB9246}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2E53BE33-1007-4929-B637-A5FFCADB9246}.Release|arm64.ActiveCfg = Release|Any CPU
-		{2E53BE33-1007-4929-B637-A5FFCADB9246}.Release|arm64.Build.0 = Release|Any CPU
-		{2E53BE33-1007-4929-B637-A5FFCADB9246}.Release|x64.ActiveCfg = Release|Any CPU
-		{2E53BE33-1007-4929-B637-A5FFCADB9246}.Release|x64.Build.0 = Release|Any CPU
-		{2E53BE33-1007-4929-B637-A5FFCADB9246}.Release|x86.ActiveCfg = Release|Any CPU
-		{2E53BE33-1007-4929-B637-A5FFCADB9246}.Release|x86.Build.0 = Release|Any CPU
 		{997141CA-F785-485B-BAE7-1759A1AB091C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{997141CA-F785-485B-BAE7-1759A1AB091C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{997141CA-F785-485B-BAE7-1759A1AB091C}.Debug|arm64.ActiveCfg = Debug|Any CPU
