@@ -3,13 +3,26 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.SignalR.Client;
+using Polly;
+using Polly.Retry;
+using RemoteMaster.Shared.Models;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Services;
 
 public class ServiceCommandListener : IHostedService
 {
+    private HubConnection _connection;
     private readonly ILogger<ServiceCommandListener> _logger;
+
+    private readonly AsyncRetryPolicy _retryPolicy = Policy
+        .Handle<Exception>()
+        .WaitAndRetryAsync(new[]
+        {
+            TimeSpan.FromSeconds(5),
+            TimeSpan.FromSeconds(7),
+            TimeSpan.FromSeconds(10),
+        });
 
     public ServiceCommandListener(ILogger<ServiceCommandListener> logger)
     {
@@ -22,12 +35,11 @@ public class ServiceCommandListener : IHostedService
 
         try
         {
-            var connection = new HubConnectionBuilder()
+            _connection = new HubConnectionBuilder()
                 .WithUrl("http://127.0.0.1:5076/hubs/control")
-                .WithAutomaticReconnect()
                 .Build();
 
-            connection.On<string>("ReceiveCommand", command =>
+            _connection.On<string>("ReceiveCommand", command =>
             {
                 if (command == "CtrlAltDel")
                 {
@@ -36,9 +48,16 @@ public class ServiceCommandListener : IHostedService
                 }
             });
 
-            await connection.StartAsync();
+            _connection.Closed += async (error) =>
+            {
+                await Task.Delay(TimeSpan.FromSeconds(5));
+                await _connection.StartAsync();
+                await SafeInvokeAsync(async () => await _connection.InvokeAsync("JoinGroup", "serviceGroup"));
+            };
 
-            await connection.InvokeAsync("JoinGroup", "serviceGroup");
+            await _connection.StartAsync();
+
+            await _connection.InvokeAsync("JoinGroup", "serviceGroup");
         }
         catch (Exception ex)
         {
@@ -46,9 +65,23 @@ public class ServiceCommandListener : IHostedService
         }
     }
 
-    public Task StopAsync(CancellationToken cancellationToken)
+    public async Task StopAsync(CancellationToken cancellationToken)
     {
-        // Если у вас есть какая-то логика остановки, вызовите её здесь.
-        return Task.CompletedTask;
+        await _connection.StopAsync();
+    }
+
+    private async Task SafeInvokeAsync(Func<Task> action)
+    {
+        await _retryPolicy.ExecuteAsync(async () =>
+        {
+            if (_connection.State == HubConnectionState.Connected)
+            {
+                await action();
+            }
+            else
+            {
+                throw new InvalidOperationException("Connection is not active");
+            }
+        });
     }
 }
