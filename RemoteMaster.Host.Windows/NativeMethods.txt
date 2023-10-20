@@ -2,14 +2,14 @@
 AdjustTokenPrivileges
 CreateProcessAsUser
 DuplicateTokenEx
+GENERIC_ACCESS_RIGHTS
 GetCurrentProcess
+GetHandleInformation
 InitiateSystemShutdown
 LookupPrivilegeValue
 OpenProcess
 OpenProcessToken
 SE_SHUTDOWN_NAME
-GENERIC_ACCESS_RIGHTS
-GetHandleInformation
 SetHandleInformation
 
 // Display and Monitor Management
@@ -20,50 +20,52 @@ EnumDisplayMonitors
 GetDC
 GetDeviceCaps
 GetMonitorInfo
+MONITORINFOEXW
+MONITORINFOF_PRIMARY
 MonitorFromPoint
 MonitorFromRect
 MonitorFromWindow
 ReleaseDC
-MONITORINFOEXW
-MONITORINFOF_PRIMARY
 
 // Input Management
+DispatchMessage
 GetCursorInfo
-SendInput
+GetMessage
 GetMessageExtraInfo
 GetSystemMetrics
+SendInput
 SystemParametersInfo
-GetMessage
 TranslateMessage
-DispatchMessage
 
 // Desktop and User Session Management
+GetUserObjectInformation
+NOTIFY_FOR_ALL_SESSIONS
 OpenInputDesktop
+SendSAS
 SetThreadDesktop
 SwitchDesktop
-GetUserObjectInformation
+WTS_CONSOLE_CONNECT
+WTS_CONSOLE_DISCONNECT
+WTSEnumerateSessions
 WTSFreeMemory
 WTSGetActiveConsoleSessionId
 WTSQuerySessionInformation
-WTSEnumerateSessions
 WTSQueryUserToken
-SendSAS
 WTSRegisterSessionNotification
 WTSUnRegisterSessionNotification
-NOTIFY_FOR_ALL_SESSIONS
 WM_WTSSESSION_CHANGE
-WTS_CONSOLE_CONNECT
-WTS_CONSOLE_DISCONNECT
 
 // Message Sending and Window Management
+CreateWindowEx
+DefWindowProc
+HWND_BROADCAST
+HWND_MESSAGE
+PostMessage
+RegisterClassEx
 SendMessage
+WM_QUIT
 WM_SYSCOMMAND
 SC_MONITORPOWER
-HWND_BROADCAST
-CreateWindowEx
-HWND_MESSAGE
-RegisterClassEx
-DefWindowProc
 
 // Network Connection Management
 WNetAddConnection2W
@@ -71,6 +73,3 @@ WNetCancelConnection2W
 
 // Miscellaneous
 CreatePipe
-
-PostMessage
-WM_QUIT
