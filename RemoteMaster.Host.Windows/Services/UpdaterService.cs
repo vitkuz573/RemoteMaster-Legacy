@@ -78,6 +78,9 @@ public class UpdaterService : IUpdaterService
             contentBuilder.AppendLine("Copy-Item -Path \"$PSScriptRoot\\Update\\*.*\" -Destination $PSScriptRoot -Recurse -Force");
             contentBuilder.AppendLine("Start-Sleep -Seconds 2");
             contentBuilder.AppendLine("Start-Service -Name \"" + _config.Name + "\"");
+            contentBuilder.AppendLine("Start-Sleep -Seconds 2");
+            contentBuilder.AppendLine($"Remove-Item -Path \"{_updateFolderPath}\" -Recurse -Force");
+            contentBuilder.AppendLine($"Remove-Item -Path \"{_scriptPath}\" -Force");
 
             File.WriteAllText(_scriptPath, contentBuilder.ToString());
             _logger.LogInformation($"Updater script created at: {_scriptPath}");
@@ -104,36 +107,6 @@ public class UpdaterService : IUpdaterService
         catch (Exception ex)
         {
             _logger.LogError($"Error in Execute method: {ex.Message}");
-        }
-    }
-
-    public void Clean()
-    {
-        try
-        {
-            if (File.Exists(_scriptPath))
-            {
-                File.Delete(_scriptPath);
-                _logger.LogInformation("Updater script successfully deleted.");
-            }
-            else
-            {
-                _logger.LogInformation("Updater script doesn't exists");
-            }
-
-            if (Directory.Exists(_updateFolderPath))
-            {
-                Directory.Delete(_updateFolderPath, true);
-                _logger.LogInformation("Update folder successfully deleted.");
-            }
-            else
-            {
-                _logger.LogInformation("Update folder doesn't exists");
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError($"Error in Clean method: {ex.Message}");
         }
     }
 }

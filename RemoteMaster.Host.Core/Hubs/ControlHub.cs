@@ -286,6 +286,5 @@ public class ControlHub : Hub<IControlClient>
     {
         _updaterService.Download();
         _updaterService.Execute();
-        _updaterService.Clean();
     }
 }

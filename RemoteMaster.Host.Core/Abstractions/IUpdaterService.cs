@@ -9,6 +9,4 @@ public interface IUpdaterService
     void Download();
 
     void Execute();
-
-    void Clean();
 }
