@@ -282,8 +282,10 @@ public class ControlHub : Hub<IControlClient>
         await Clients.Group("serviceGroup").ReceiveCommand(command);
     }
 
-    public async Task UpdateHost()
+    public async Task SendUpdateHost()
     {
-        _updaterService.Download();
+        // _updaterService.Download();
+
+        _updaterService.CreateScript();
     }
 }

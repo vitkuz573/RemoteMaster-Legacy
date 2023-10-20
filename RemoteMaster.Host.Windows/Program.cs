@@ -56,6 +56,7 @@ internal class Program
         builder.Services.AddSingleton<IInputService, InputService>();
         builder.Services.AddSingleton<IPowerService, PowerService>();
         builder.Services.AddSingleton<IHardwareService, HardwareService>();
+        builder.Services.AddSingleton<IUpdaterService, UpdaterService>();
         builder.Services.AddSingleton<HiddenWindow>();
 
         var publicKeyPath = @"C:\RemoteMaster\Security\public_key.pem";

@@ -302,42 +302,7 @@ public partial class Index
 
     private async Task Update()
     {
-        await ExecuteOnAvailableComputers(async (computer, connection) =>
-        {
-            var client = HttpClientFactory.CreateClient();
-            client.BaseAddress = new Uri($"http://{computer.IPAddress}:5124");
-
-            var shift = 3;
-            byte xorConstant = 0xAB;
-
-            var values = new
-            {
-                login = Encrypt("support@it-ktk.local", shift, xorConstant),
-                password = Encrypt("bonesgamer123!!", shift, xorConstant),
-                sharedFolder = @"\\SERVER-DC02\Win\RemoteMaster"
-            };
-
-            var json = JsonSerializer.Serialize(values);
-            using var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-            try
-            {
-                var response = await client.PostAsync("/api/update", content);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var result = await response.Content.ReadAsStringAsync();
-                }
-                else
-                {
-                    Logger.LogError("Error: {StatusCode}", response.StatusCode);
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError("Exception: {Message}", ex.Message);
-            }
-        });
+        await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendUpdateHost"));
     }
 
     private async Task ScreenRecording(RadzenSplitButtonItem item)

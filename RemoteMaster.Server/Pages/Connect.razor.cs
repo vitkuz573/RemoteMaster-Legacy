@@ -209,9 +209,9 @@ public partial class Connect
 
         _connection.Closed += async (error) =>
         {
-            await Task.Delay(TimeSpan.FromSeconds(5)); // ждем немного перед попыткой
-            await _connection.StartAsync(); // переподключаемся
-            await SafeInvokeAsync(() => _connection.InvokeAsync("ConnectAs", Intention.Connect)); // инициализируем подключение
+            await Task.Delay(TimeSpan.FromSeconds(5));
+            await _connection.StartAsync();
+            await SafeInvokeAsync(() => _connection.InvokeAsync("ConnectAs", Intention.Connect));
         };
 
         await _connection.StartAsync();

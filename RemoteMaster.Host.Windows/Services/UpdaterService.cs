@@ -17,6 +17,8 @@ public class UpdaterService : IUpdaterService
 
     private readonly HostServiceConfig _config;
 
+    public string ScriptPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "update.bat");
+
     public UpdaterService(HostServiceConfig config)
     {
         _config = config;
@@ -34,13 +36,11 @@ public class UpdaterService : IUpdaterService
 
     public void CreateScript()
     {
-        var scriptPath = Path.Combine(SHARED_FOLDER, "Host", "update.bat");
-
         var contentBuilder = new StringBuilder();
         contentBuilder.AppendLine($"sc stop {_config.Name}");
         contentBuilder.AppendLine(@"xcopy /y /s "".\Update\*.*"" "".\*.*""");
         contentBuilder.AppendLine($"sc start {_config.Name}");
 
-        File.WriteAllText(scriptPath, contentBuilder.ToString());
+        File.WriteAllText(ScriptPath, contentBuilder.ToString());
     }
 }
