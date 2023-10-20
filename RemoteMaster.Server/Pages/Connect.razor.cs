@@ -188,6 +188,7 @@ public partial class Connect : IDisposable
     {
         await JSRuntime.InvokeVoidAsync("addKeyDownEventListener", DotNetObjectReference.Create(this));
         await JSRuntime.InvokeVoidAsync("addKeyUpEventListener", DotNetObjectReference.Create(this));
+        await JSRuntime.InvokeVoidAsync("addBeforeUnloadListener", DotNetObjectReference.Create(this));
     }
 
     private async Task InitializeHostConnectionAsync()
@@ -342,6 +343,12 @@ public partial class Connect : IDisposable
     private async void SendCtrlAltDel()
     {
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendCommandToService", "CtrlAltDel"));
+    }
+
+    [JSInvokable]
+    public void OnBeforeUnload()
+    {
+        Dispose();
     }
 
     public void Dispose()

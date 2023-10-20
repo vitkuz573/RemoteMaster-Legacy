@@ -93,6 +93,12 @@
                 input.click();
             });
         };
+
+        window.addBeforeUnloadListener = (instance) => {
+            window.addEventListener("beforeunload", function (event) {
+                instance.invokeMethodAsync("OnBeforeUnload");
+            });
+        };
     </script>
 </body>
 </html>
