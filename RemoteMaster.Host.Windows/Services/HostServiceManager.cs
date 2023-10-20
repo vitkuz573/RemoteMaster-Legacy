@@ -14,6 +14,7 @@ namespace RemoteMaster.Host.Services;
 public class HostServiceManager : IHostServiceManager
 {
     private readonly IHostLifecycleService _hostLifecycleService;
+    private readonly IHostInstanceService _hostInstanceService;
     private readonly IServiceManager _serviceManager;
     private readonly IConfigurationService _configurationService;
     private readonly ILogger<HostServiceManager> _logger;
@@ -23,9 +24,10 @@ public class HostServiceManager : IHostServiceManager
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Host";
 
-    public HostServiceManager(IHostLifecycleService hostLifecycleService, IServiceManager serviceManager, IConfigurationService configurationService, HostServiceConfig hostServiceConfig, ILogger<HostServiceManager> logger)
+    public HostServiceManager(IHostLifecycleService hostLifecycleService, IHostInstanceService hostInstanceService, IServiceManager serviceManager, IConfigurationService configurationService, HostServiceConfig hostServiceConfig, ILogger<HostServiceManager> logger)
     {
         _hostLifecycleService = hostLifecycleService;
+        _hostInstanceService = hostInstanceService;
         _serviceManager = serviceManager;
         _configurationService = configurationService;
         _hostServiceConfig = hostServiceConfig;
@@ -89,16 +91,18 @@ public class HostServiceManager : IHostServiceManager
                 _logger.LogInformation("{ServiceName} Service is not installed.", _hostServiceConfig.Name);
             }
 
-            foreach (var process in Process.GetProcessesByName($"{MainAppName}.{SubAppName}"))
+            if (_hostInstanceService.IsRunning())
             {
-                process.Kill();
+                _hostInstanceService.Stop();
             }
 
             DeleteFiles();
 
-            if (!await _hostLifecycleService.UnregisterAsync(configuration, hostName))
+            var unregisterResult = await _hostLifecycleService.UnregisterAsync(configuration, hostName);
+
+            if (!unregisterResult)
             {
-                _logger.LogError("Computer unregistration failed.");
+                _logger.LogError("Host unregistration failed.");
             }
         }
         catch (Exception ex)
