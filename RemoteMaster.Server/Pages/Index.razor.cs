@@ -4,19 +4,19 @@
 
 using System.Diagnostics;
 using System.Net.NetworkInformation;
-using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
+using Polly;
+using Polly.Retry;
 using Radzen;
 using Radzen.Blazor;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Components;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
-using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;
-using TypedSignalR.Client;
 
 namespace RemoteMaster.Server.Pages;
 
@@ -31,9 +31,6 @@ public partial class Index
 
     [Inject]
     private DatabaseService DatabaseService { get; set; }
-
-    [Inject]
-    private IConnectionManager ConnectionManager { get; set; }
 
     [Inject]
     private IWakeOnLanService WakeOnLanService { get; set; }
@@ -52,6 +49,15 @@ public partial class Index
 
     [Inject]
     private ILogger<Index> Logger { get; set; }
+
+    private readonly AsyncRetryPolicy _retryPolicy = Policy
+        .Handle<Exception>()
+        .WaitAndRetryAsync(new[]
+        {
+            TimeSpan.FromSeconds(5),
+            TimeSpan.FromSeconds(7),
+            TimeSpan.FromSeconds(10),
+        });
 
     protected async override Task OnInitializedAsync()
     {
@@ -147,14 +153,17 @@ public partial class Index
         var httpContext = HttpContextAccessor.HttpContext;
         var accessToken = httpContext.Request.Cookies["accessToken"];
 
-        var clientContext = ConnectionManager.Connect("Client", $"http://{computer.IPAddress}:5076/hubs/control", options =>
-        {
-            options.Headers.Add("Authorization", $"Bearer {accessToken}");
-        }, true);
+        var connection = new HubConnectionBuilder()
+            .WithUrl($"http://{computer.IPAddress}:5076/hubs/control", options =>
+            {
+                options.Headers.Add("Authorization", $"Bearer {accessToken}");
+            })
+            .AddMessagePackProtocol()
+            .Build();
 
         try
         {
-            clientContext.On<byte[]>("ReceiveThumbnail", async (thumbnailBytes) =>
+            connection.On<byte[]>("ReceiveThumbnail", async (thumbnailBytes) =>
             {
                 if (thumbnailBytes?.Length > 0)
                 {
@@ -163,11 +172,10 @@ public partial class Index
                 }
             });
 
-            await clientContext.StartAsync();
+            await connection.StartAsync();
 
-            var proxy = clientContext.Connection.CreateHubProxy<IControlHub>();
             Logger.LogInformation("Calling ConnectAs with Intention.GetThumbnail for {IPAddress}", computer.IPAddress);
-            await proxy.ConnectAs(Intention.GetThumbnail);
+            await connection.InvokeAsync("ConnectAs", Intention.GetThumbnail);
         }
         catch (Exception ex)
         {
@@ -188,7 +196,7 @@ public partial class Index
         await JSRuntime.InvokeVoidAsync("openNewWindow", url);
     }
 
-    private async Task ExecuteOnAvailableComputers(Func<Computer, IControlHub, Task> actionOnComputer)
+    private async Task ExecuteOnAvailableComputers(Func<Computer, HubConnection, Task> actionOnComputer)
     {
         var tasks = _selectedComputers.Select(IsComputerAvailable).ToArray();
         var results = await Task.WhenAll(tasks);
@@ -197,25 +205,32 @@ public partial class Index
 
         foreach (var (computer, isAvailable) in availableComputers)
         {
-            var httpContext = HttpContextAccessor.HttpContext;
-            var accessToken = httpContext.Request.Cookies["accessToken"];
+            var accessToken = HttpContextAccessor.HttpContext?.Request.Cookies["accessToken"];
 
-            var clientContext = ConnectionManager.Connect("Client", $"http://{computer.IPAddress}:5076/hubs/control", options =>
-            {
-                options.Headers.Add("Authorization", $"Bearer {accessToken}");
-            }, true);
+            var connection = new HubConnectionBuilder()
+                .WithUrl($"http://{computer.IPAddress}:5076/hubs/control", options =>
+                {
+                    options.Headers.Add("Authorization", $"Bearer {accessToken}");
+                })
+                .AddMessagePackProtocol()
+                .Build();
 
-            clientContext.On<string>("ReceiveScriptResult", async (result) =>
+            connection.On<string>("ReceiveScriptResult", async (result) =>
             {
                 _scriptResults[computer] = result;
 
                 await InvokeAsync(StateHasChanged);
             });
 
-            await clientContext.StartAsync();
+            await connection.StartAsync();
 
-            var proxy = clientContext.Connection.CreateHubProxy<IControlHub>();
-            await actionOnComputer(computer, proxy);
+            await _retryPolicy.ExecuteAsync(async () =>
+            {
+                if (connection.State == HubConnectionState.Connected)
+                {
+                    await actionOnComputer(computer, connection);
+                }
+            });
         }
 
         StateHasChanged();
@@ -230,12 +245,12 @@ public partial class Index
 
         if (item.Value == "control")
         {
-            await ExecuteOnAvailableComputers(async (computer, proxy) => await OpenWindow($"/{computer.IPAddress}/connect?imageQuality=25&cursorTracking=false&inputEnabled=true"));
+            await ExecuteOnAvailableComputers(async (computer, connection) => await OpenWindow($"/{computer.IPAddress}/connect?imageQuality=25&cursorTracking=false&inputEnabled=true"));
         }
 
         if (item.Value == "view")
         {
-            await ExecuteOnAvailableComputers(async (computer, proxy) => await OpenWindow($"/{computer.IPAddress}/connect?imageQuality=25&cursorTracking=true&inputEnabled=false"));
+            await ExecuteOnAvailableComputers(async (computer, connection) => await OpenWindow($"/{computer.IPAddress}/connect?imageQuality=25&cursorTracking=true&inputEnabled=false"));
         }
     }
 
@@ -246,7 +261,7 @@ public partial class Index
             return;
         }
 
-        await ExecuteOnAvailableComputers(async (computer, proxy) =>
+        await ExecuteOnAvailableComputers(async (computer, connection) =>
         {
             ProcessStartInfo startInfo;
 
@@ -285,11 +300,11 @@ public partial class Index
 
         if (item.Value == "shutdown")
         {
-            await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.ShutdownComputer("", 0, true));
+            await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("ShutdownComputer", "", 0, true));
         }
         else if (item.Value == "reboot")
         {
-            await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.RebootComputer("", 0, true));
+            await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("RebootComputer", "", 0, true));
         }
         else if (item.Value == "wakeup")
         {
@@ -302,42 +317,7 @@ public partial class Index
 
     private async Task Update()
     {
-        await ExecuteOnAvailableComputers(async (computer, proxy) =>
-        {
-            var client = HttpClientFactory.CreateClient();
-            client.BaseAddress = new Uri($"http://{computer.IPAddress}:5124");
-
-            var shift = 3;
-            byte xorConstant = 0xAB;
-
-            var values = new
-            {
-                login = Encrypt("support@it-ktk.local", shift, xorConstant),
-                password = Encrypt("bonesgamer123!!", shift, xorConstant),
-                sharedFolder = @"\\SERVER-DC02\Win\RemoteMaster"
-            };
-
-            var json = JsonSerializer.Serialize(values);
-            using var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-            try
-            {
-                var response = await client.PostAsync("/api/update", content);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var result = await response.Content.ReadAsStringAsync();
-                }
-                else
-                {
-                    Logger.LogError("Error: {StatusCode}", response.StatusCode);
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError("Exception: {Message}", ex.Message);
-            }
-        });
+        await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendUpdateHost"));
     }
 
     private async Task ScreenRecording(RadzenSplitButtonItem item)
@@ -349,18 +329,18 @@ public partial class Index
 
         if (item.Value == "start")
         {
-            await ExecuteOnAvailableComputers(async (computer, proxy) =>
+            await ExecuteOnAvailableComputers(async (computer, connection) =>
             {
                 var requesterName = Environment.MachineName;
                 var currentDate = DateTime.Now.ToString("yyyyMMdd_HHmmss");
                 var fileName = $@"C:\{requesterName}_{computer.IPAddress}_{currentDate}.mp4";
 
-                await proxy.StartScreenRecording(fileName);
+                await connection.InvokeAsync("StartScreenRecording", fileName);
             });
         }
         else
         {
-            await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.StopScreenRecording());
+            await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("StopScreenRecording"));
         }
     }
 
@@ -378,7 +358,7 @@ public partial class Index
             "off" => MonitorState.Off
         };
 
-        await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.SetMonitorState(state));
+        await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SetMonitorState", state));
     }
 
     private async Task ExecuteScript()
@@ -407,7 +387,7 @@ public partial class Index
                     return;
             }
 
-            await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.ExecuteScript(fileContent, shellType));
+            await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("ExecuteScript", fileContent, shellType));
 
             var dialogParameters = new Dictionary<string, object>
             {
@@ -440,7 +420,7 @@ public partial class Index
 
         if (bool.TryParse(item.Value, out isEnabled))
         {
-            await ExecuteOnAvailableComputers(async (computer, proxy) => await proxy.SetPSExecRules(isEnabled));
+            await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SetPSExecRules", isEnabled));
         }
         else
         {
@@ -463,7 +443,7 @@ public partial class Index
         }
     }
 
-    private async Task OpenClientConfigGenerator()
+    private async Task OpenHostConfigGenerator()
     {
         var dialogOptions = new DialogOptions
         {
@@ -472,63 +452,6 @@ public partial class Index
             AutoFocusFirstElement = true
         };
 
-        await DialogService.OpenAsync<ClientConfigurationGenerator>("Client Configuration Generator", null, dialogOptions);
-    }
-
-    public static string Encrypt(string input, int shift, byte xorConstant)
-    {
-        if (input == null)
-        {
-            throw new ArgumentNullException(nameof(input));
-        }
-
-        string EncryptCaesar(string input, int shift)
-        {
-            var result = new StringBuilder(input.Length);
-
-            foreach (var c in input)
-            {
-                if (char.IsLetter(c))
-                {
-                    var offset = char.IsUpper(c) ? 'A' : 'a';
-                    result.Append((char)((c + shift - offset) % 26 + offset));
-                }
-                else
-                {
-                    result.Append(c);
-                }
-            }
-
-            return result.ToString();
-        }
-
-        string Permute(string input)
-        {
-            if (input.Length % 2 != 0)
-            {
-                input += " ";
-            }
-
-            var result = new StringBuilder(input.Length);
-
-            for (var i = 0; i < input.Length; i += 2)
-            {
-                result.Append(input[i + 1]);
-                result.Append(input[i]);
-            }
-
-            return result.ToString();
-        }
-
-        var caesarEncrypted = EncryptCaesar(input, shift);
-        var permuted = Permute(caesarEncrypted);
-        var bytes = Encoding.UTF8.GetBytes(permuted);
-
-        for (var i = 0; i < bytes.Length; i++)
-        {
-            bytes[i] ^= xorConstant;
-        }
-
-        return BitConverter.ToString(bytes).Replace("-", "");
+        await DialogService.OpenAsync<HostConfigurationGenerator>("Host Configuration Generator", null, dialogOptions);
     }
 }

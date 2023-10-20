@@ -1,0 +1,79 @@
+﻿// Process and Privilege Management
+AdjustTokenPrivileges
+CreateProcessAsUser
+DuplicateTokenEx
+GetCurrentProcess
+InitiateSystemShutdown
+LookupPrivilegeValue
+OpenProcess
+OpenProcessToken
+SE_SHUTDOWN_NAME
+GENERIC_ACCESS_RIGHTS
+GetHandleInformation
+SetHandleInformation
+
+// Display and Monitor Management
+BitBlt
+CreateDC
+DeleteDC
+EnumDisplayMonitors
+GetDC
+GetDeviceCaps
+GetMonitorInfo
+MonitorFromPoint
+MonitorFromRect
+MonitorFromWindow
+ReleaseDC
+MONITORINFOEXW
+MONITORINFOF_PRIMARY
+
+// Input Management
+GetCursorInfo
+SendInput
+GetMessageExtraInfo
+GetSystemMetrics
+SystemParametersInfo
+GetMessage
+TranslateMessage
+DispatchMessage
+
+// Desktop and User Session Management
+OpenInputDesktop
+SetThreadDesktop
+SwitchDesktop
+GetUserObjectInformation
+WTSFreeMemory
+WTSGetActiveConsoleSessionId
+WTSQuerySessionInformation
+WTSEnumerateSessions
+WTSQueryUserToken
+SendSAS
+WTSRegisterSessionNotification
+WTSUnRegisterSessionNotification
+NOTIFY_FOR_ALL_SESSIONS
+WM_WTSSESSION_CHANGE
+WTS_CONSOLE_CONNECT
+WTS_CONSOLE_DISCONNECT
+
+// Message Sending and Window Management
+SendMessage
+WM_SYSCOMMAND
+SC_MONITORPOWER
+HWND_BROADCAST
+CreateWindowEx
+HWND_MESSAGE
+RegisterClassEx
+DefWindowProc
+
+// Network Connection Management
+WNetAddConnection2W
+WNetCancelConnection2W
+
+// Miscellaneous
+CreatePipe
+
+WTS_SESSION_LOCK
+WTS_SESSION_UNLOCK
+
+PostMessage
+WM_QUIT

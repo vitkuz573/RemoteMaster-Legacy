@@ -13,7 +13,7 @@ public partial class LoginDisplay
 
     private void Logout()
     {
-        NavigationManager.NavigateTo("Identity/Account", true);
+        NavigationManager.NavigateTo("Identity/Account/Logout", true);
     }
 
     private void Profile()

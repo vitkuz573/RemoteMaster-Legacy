@@ -3,35 +3,27 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Net;
-using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
 using Microsoft.JSInterop;
-using RemoteMaster.Server.Abstractions;
+using Polly;
+using Polly.Retry;
 using RemoteMaster.Server.Models;
-using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
-using TypedSignalR.Client;
 
 namespace RemoteMaster.Server.Pages;
 
-public partial class Connect : IAsyncDisposable
+public partial class Connect : IDisposable
 {
     [Parameter]
     public string Host { get; set; }
 
     [Inject]
-    private IConnectionManager ConnectionManager { get; set; }
-
-    [Inject]
     private NavigationManager NavigationManager { get; set; }
-
-    [Inject]
-    private IHttpClientFactory HttpClientFactory { get; set; }
 
     [Inject]
     private IJSRuntime JSRuntime { get; set; }
@@ -44,8 +36,7 @@ public partial class Connect : IAsyncDisposable
 
     private bool _isMenuOpen = false;
 
-    private string _clientVersion;
-    private string _agentVersion;
+    private string _hostVersion;
 
     private bool _inputEnabled;
     private bool _cursorTracking;
@@ -53,23 +44,23 @@ public partial class Connect : IAsyncDisposable
 
     private IEnumerable<DisplayInfo> _displays;
 
-    private IControlHub _controlHubProxy;
-    private HubConnection _agentConnection;
-
     private string _newUri;
+
+    private HubConnection _connection;
+
+    private readonly AsyncRetryPolicy _retryPolicy = Policy
+        .Handle<Exception>()
+        .WaitAndRetryAsync(new[]
+        {
+            TimeSpan.FromSeconds(5),
+            TimeSpan.FromSeconds(7),
+            TimeSpan.FromSeconds(10),
+        });
 
     protected async override Task OnInitializedAsync()
     {
-        await InitializeConnectionsAsync();
+        await InitializeHostConnectionAsync();
         await SetParametersFromUriAsync();
-        await GetVersions();
-    }
-
-    private async Task InitializeConnectionsAsync()
-    {
-        await InitializeClientConnectionAsync();
-        await _controlHubProxy.ConnectAs(Intention.Connect);
-        await InitializeAgentConnectionAsync();
     }
 
     private async Task SetParametersFromUriAsync()
@@ -79,13 +70,13 @@ public partial class Connect : IAsyncDisposable
         var newUri = uri.ToString();
 
         _imageQuality = GetQueryParameter(queryParameters, "imageQuality", 25, out newUri);
-        await _controlHubProxy.SetQuality(_imageQuality);
+        await _connection.InvokeAsync("SetQuality", _imageQuality);
 
         _cursorTracking = GetQueryParameter(queryParameters, "cursorTracking", false, out newUri);
-        await _controlHubProxy.SetTrackCursor(_cursorTracking);
+        await _connection.InvokeAsync("SetTrackCursor", _cursorTracking);
 
         _inputEnabled = GetQueryParameter(queryParameters, "inputEnabled", true, out newUri);
-        await _controlHubProxy.SetInputEnabled(_inputEnabled);
+        await _connection.InvokeAsync("SetInputEnabled", _inputEnabled);
 
         if (newUri != uri.ToString())
         {
@@ -132,6 +123,21 @@ public partial class Connect : IAsyncDisposable
         return false;
     }
 
+    private async Task SafeInvokeAsync(Func<Task> action)
+    {
+        await _retryPolicy.ExecuteAsync(async () =>
+        {
+            if (_connection.State == HubConnectionState.Connected)
+            {
+                await action();
+            }
+            else
+            {
+                throw new InvalidOperationException("Connection is not active");
+            }
+        });
+    }
+
     private static async Task<string> TryGetDnsNameOrFallbackToIpAsync(string host)
     {
         try
@@ -144,9 +150,7 @@ public partial class Connect : IAsyncDisposable
             }
         }
         catch
-        {
-            // В случае ошибки при разрешении DNS просто вернуть IP-адрес
-        }
+        { }
 
         return host;
     }
@@ -163,7 +167,7 @@ public partial class Connect : IAsyncDisposable
                 await JSRuntime.InvokeVoidAsync("eval", $"history.replaceState(null, '', '{_newUri}');");
             }
 
-            await SetupClientEventListeners();
+            await SetupEventListeners();
         }
 
         await base.OnAfterRenderAsync(firstRender);
@@ -180,36 +184,40 @@ public partial class Connect : IAsyncDisposable
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task SetupClientEventListeners()
+    private async Task SetupEventListeners()
     {
         await JSRuntime.InvokeVoidAsync("addKeyDownEventListener", DotNetObjectReference.Create(this));
         await JSRuntime.InvokeVoidAsync("addKeyUpEventListener", DotNetObjectReference.Create(this));
+        await JSRuntime.InvokeVoidAsync("addBeforeUnloadListener", DotNetObjectReference.Create(this));
     }
 
-    private async Task InitializeClientConnectionAsync()
+    private async Task InitializeHostConnectionAsync()
     {
         var httpContext = HttpContextAccessor.HttpContext;
         var accessToken = httpContext.Request.Cookies["accessToken"];
 
-        var clientContext = await ConnectionManager
-            .Connect("Client", $"http://{Host}:5076/hubs/control", options =>
+        _connection = new HubConnectionBuilder()
+            .WithUrl($"http://{Host}:5076/hubs/control", options =>
             {
                 options.Headers.Add("Authorization", $"Bearer {accessToken}");
-            }, true)
-            .On<ScreenDataDto>("ReceiveScreenData", HandleScreenData)
-            .On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate)
-            .StartAsync();
+            })
+            .AddMessagePackProtocol()
+            .Build();
 
-        _controlHubProxy = clientContext.Connection.CreateHubProxy<IControlHub>();
-    }
+        _connection.On<ScreenDataDto>("ReceiveScreenData", HandleScreenData);
+        _connection.On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate);
+        _connection.On<Version>("ReceiveHostVersion", version => _hostVersion = version.ToString());
 
-    private async Task InitializeAgentConnectionAsync()
-    {
-        var agentContext = await ConnectionManager
-            .Connect("Agent", $"http://{Host}:3564/hubs/maintenance")
-            .StartAsync();
+        _connection.Closed += async (error) =>
+        {
+            await Task.Delay(TimeSpan.FromSeconds(5));
+            await _connection.StartAsync();
+            await SafeInvokeAsync(() => _connection.InvokeAsync("ConnectAs", Intention.Connect));
+        };
 
-        _agentConnection = agentContext.Connection;
+        await _connection.StartAsync();
+
+        await SafeInvokeAsync(() => _connection.InvokeAsync("ConnectAs", Intention.Connect));
     }
 
     private async Task<(double, double)> GetRelativeMousePositionPercentAsync(MouseEventArgs e)
@@ -226,11 +234,11 @@ public partial class Connect : IAsyncDisposable
     {
         var xyPercent = await GetRelativeMousePositionPercentAsync(e);
 
-        await _controlHubProxy.SendMouseCoordinates(new MouseMoveDto
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendMouseCoordinates", new MouseMoveDto
         {
             X = xyPercent.Item1,
             Y = xyPercent.Item2
-        });
+        }));
     }
 
     private async Task OnMouseUpDown(MouseEventArgs e)
@@ -248,30 +256,30 @@ public partial class Connect : IAsyncDisposable
     {
         var xyPercent = await GetRelativeMousePositionPercentAsync(e);
 
-        await _controlHubProxy.SendMouseButton(new MouseClickDto
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendMouseButton", new MouseClickDto
         {
             Button = e.Button,
             State = state,
             X = xyPercent.Item1,
             Y = xyPercent.Item2
-        });
+        }));
     }
 
     private async Task OnMouseWheel(WheelEventArgs e)
     {
-        await _controlHubProxy.SendMouseWheel(new MouseWheelDto
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendMouseWheel", new MouseWheelDto
         {
             DeltaY = (int)e.DeltaY
-        });
+        }));
     }
 
     private async Task SendKeyboardInput(int keyCode, ButtonAction state)
     {
-        await _controlHubProxy.SendKeyboardInput(new KeyboardKeyDto
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendKeyboardInput", new KeyboardKeyDto
         {
             Key = keyCode,
             State = state
-        });
+        }));
     }
 
     [JSInvokable]
@@ -293,101 +301,58 @@ public partial class Connect : IAsyncDisposable
 
     private async void OnChangeScreen(ChangeEventArgs e)
     {
-        await _controlHubProxy.SendSelectedScreen(e.Value.ToString());
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendSelectedScreen", e.Value.ToString()));
     }
 
     private async void ChangeQuality(int quality)
     {
         _imageQuality = quality;
 
-        await _controlHubProxy.SetQuality(quality);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SetQuality", quality));
     }
 
     private async Task ToggleCursorTracking(bool value)
     {
         _cursorTracking = value;
 
-        await _controlHubProxy.SetTrackCursor(value);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SetTrackCursor", value));
     }
 
     private async Task ToggleInputEnabled(bool value)
     {
         _inputEnabled = value;
 
-        await _controlHubProxy.SetInputEnabled(value);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SetInputEnabled", value));
     }
 
-    private async void KillClient()
+    private async void KillHost()
     {
-        await _controlHubProxy.KillClient();
+        await SafeInvokeAsync(() => _connection.InvokeAsync("KillHost"));
     }
 
     private async void RebootComputer()
     {
-        await _controlHubProxy.RebootComputer(string.Empty, 0, true);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("RebootComputer", string.Empty, 0, true));
     }
 
     private async void ShutdownComputer()
     {
-        await _controlHubProxy.ShutdownComputer(string.Empty, 0, true);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("ShutdownComputer", string.Empty, 0, true));
     }
 
     private async void SendCtrlAltDel()
     {
-        await _agentConnection.InvokeAsync("SendCtrlAltDel");
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendCommandToService", "CtrlAltDel"));
     }
 
-    private async Task GetVersions()
+    [JSInvokable]
+    public void OnBeforeUnload()
     {
-        using var client = HttpClientFactory.CreateClient();
-        client.BaseAddress = new Uri($"http://{Host}:5124");
-
-        try
-        {
-            var response = await client.GetAsync("/api/versions");
-
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadAsStringAsync();
-
-                if (string.IsNullOrEmpty(result))
-                {
-                    return;
-                }
-
-                var versions = JsonSerializer.Deserialize<List<VersionInfo>>(result);
-
-                if (versions == null || versions.Count == 0)
-                {
-                    return;
-                }
-
-                foreach (var version in versions)
-                {
-                    if (version.ComponentName.Equals("Agent", StringComparison.OrdinalIgnoreCase))
-                    {
-                        _agentVersion = version.CurrentVersion;
-                    }
-                    else if (version.ComponentName.Equals("Client", StringComparison.OrdinalIgnoreCase))
-                    {
-                        _clientVersion = version.CurrentVersion;
-                    }
-                }
-            }
-            else
-            {
-                Console.WriteLine($"Error: {response.StatusCode}");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Exception: {ex.Message}");
-        }
+        Dispose();
     }
-    
-    public async ValueTask DisposeAsync()
+
+    public void Dispose()
     {
-        await ConnectionManager.DisconnectAsync("Client");
-        await ConnectionManager.DisconnectAsync("Agent");
+        _connection?.DisposeAsync();
     }
 }

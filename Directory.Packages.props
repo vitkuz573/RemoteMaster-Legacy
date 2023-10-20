@@ -16,12 +16,14 @@
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.1" />
     <PackageVersion Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="7.0.10" />
     <PackageVersion Include="Moq" Version="4.20.69" />
+    <PackageVersion Include="Polly" Version="8.0.0" />
     <PackageVersion Include="Radzen.Blazor" Version="4.17.1" />
     <PackageVersion Include="Serilog" Version="3.0.1" />
     <PackageVersion Include="Serilog.Extensions.Logging" Version="7.0.0" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="4.1.0" />
     <PackageVersion Include="Serilog.Sinks.File" Version="5.0.0" />
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+    <PackageVersion Include="System.CommandLine.DragonFruit" Version="0.4.0-alpha.22272.1" />
     <PackageVersion Include="System.DirectoryServices" Version="7.0.1" />
     <PackageVersion Include="System.DirectoryServices.AccountManagement" Version="7.0.1" />
     <PackageVersion Include="Microsoft.IO.RecyclableMemoryStream" Version="2.3.2" />
@@ -38,8 +40,8 @@
     <PackageVersion Include="System.ServiceProcess.ServiceController" Version="7.0.1" />
     <PackageVersion Include="TypedSignalR.Client" Version="3.4.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.7.2" />
-    <PackageVersion Include="xunit" Version="2.5.1" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.1" />
+    <PackageVersion Include="xunit" Version="2.5.2" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.3" />
     <PackageVersion Include="coverlet.collector" Version="6.0.0" />
   </ItemGroup>
 </Project>
