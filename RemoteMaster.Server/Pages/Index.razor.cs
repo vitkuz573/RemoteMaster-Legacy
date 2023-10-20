@@ -4,13 +4,12 @@
 
 using System.Diagnostics;
 using System.Net.NetworkInformation;
-using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
-using Polly.Retry;
 using Polly;
+using Polly.Retry;
 using Radzen;
 using Radzen.Blazor;
 using RemoteMaster.Server.Abstractions;
@@ -18,7 +17,6 @@ using RemoteMaster.Server.Components;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
 using RemoteMaster.Shared.Models;
-using System.Net.WebSockets;
 
 namespace RemoteMaster.Server.Pages;
 
@@ -207,8 +205,7 @@ public partial class Index
 
         foreach (var (computer, isAvailable) in availableComputers)
         {
-            var httpContext = HttpContextAccessor.HttpContext;
-            var accessToken = httpContext.Request.Cookies["accessToken"];
+            var accessToken = HttpContextAccessor.HttpContext?.Request.Cookies["accessToken"];
 
             var connection = new HubConnectionBuilder()
                 .WithUrl($"http://{computer.IPAddress}:5076/hubs/control", options =>
@@ -227,7 +224,13 @@ public partial class Index
 
             await connection.StartAsync();
 
-            await actionOnComputer(computer, connection);
+            await _retryPolicy.ExecuteAsync(async () =>
+            {
+                if (connection.State == HubConnectionState.Connected)
+                {
+                    await actionOnComputer(computer, connection);
+                }
+            });
         }
 
         StateHasChanged();
@@ -450,62 +453,5 @@ public partial class Index
         };
 
         await DialogService.OpenAsync<HostConfigurationGenerator>("Host Configuration Generator", null, dialogOptions);
-    }
-
-    public static string Encrypt(string input, int shift, byte xorConstant)
-    {
-        if (input == null)
-        {
-            throw new ArgumentNullException(nameof(input));
-        }
-
-        string EncryptCaesar(string input, int shift)
-        {
-            var result = new StringBuilder(input.Length);
-
-            foreach (var c in input)
-            {
-                if (char.IsLetter(c))
-                {
-                    var offset = char.IsUpper(c) ? 'A' : 'a';
-                    result.Append((char)((c + shift - offset) % 26 + offset));
-                }
-                else
-                {
-                    result.Append(c);
-                }
-            }
-
-            return result.ToString();
-        }
-
-        string Permute(string input)
-        {
-            if (input.Length % 2 != 0)
-            {
-                input += " ";
-            }
-
-            var result = new StringBuilder(input.Length);
-
-            for (var i = 0; i < input.Length; i += 2)
-            {
-                result.Append(input[i + 1]);
-                result.Append(input[i]);
-            }
-
-            return result.ToString();
-        }
-
-        var caesarEncrypted = EncryptCaesar(input, shift);
-        var permuted = Permute(caesarEncrypted);
-        var bytes = Encoding.UTF8.GetBytes(permuted);
-
-        for (var i = 0; i < bytes.Length; i++)
-        {
-            bytes[i] ^= xorConstant;
-        }
-
-        return BitConverter.ToString(bytes).Replace("-", "");
     }
 }
