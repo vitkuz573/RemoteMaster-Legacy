@@ -6,9 +6,9 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IUpdaterService
 {
-    string ScriptPath { get; }
-
     void Download();
 
-    void CreateScript();
+    void Execute();
+
+    void Clean();
 }

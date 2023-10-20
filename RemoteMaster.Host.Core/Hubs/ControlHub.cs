@@ -284,8 +284,8 @@ public class ControlHub : Hub<IControlClient>
 
     public async Task SendUpdateHost()
     {
-        // _updaterService.Download();
-
-        _updaterService.CreateScript();
+        _updaterService.Download();
+        _updaterService.Execute();
+        _updaterService.Clean();
     }
 }
