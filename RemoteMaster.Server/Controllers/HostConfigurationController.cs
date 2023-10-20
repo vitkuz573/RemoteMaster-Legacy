@@ -60,20 +60,8 @@ public class HostConfigurationController : ControllerBase
     public IActionResult DownloadHost()
     {
         var networkPath = @"\\SERVER-DC02\Win\RemoteMaster\Host\RemoteMaster.Host.exe";
-        var username = "support@it-ktk.local";
-        var password = "bonesgamer123!!";
 
-        // NetworkDriveHelper.MapNetworkDrive(@"\\SERVER-DC02\Win\RemoteMaster", username, password);
-
-        byte[] fileBytes;
-        try
-        {
-            fileBytes = System.IO.File.ReadAllBytes(networkPath);
-        }
-        finally
-        {
-            // NetworkDriveHelper.CancelNetworkDrive(@"\\SERVER-DC02\Win\RemoteMaster");
-        }
+        var fileBytes = System.IO.File.ReadAllBytes(networkPath);
 
         var contentDisposition = new ContentDispositionHeaderValue("attachment")
         {
