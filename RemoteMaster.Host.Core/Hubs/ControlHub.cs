@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Helpers.AdvFirewall;
-using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
 
@@ -23,11 +22,12 @@ public class ControlHub : Hub<IControlClient>
     private readonly IPowerService _powerManager;
     private readonly IHardwareService _hardwareService;
     private readonly IShutdownService _shutdownService;
+    private readonly IUpdaterService _updaterService;
     private readonly IScreenCapturerService _screenCapturerService;
     private readonly IScreenRecorderService _screenRecorderService;
     private readonly ILogger<ControlHub> _logger;
 
-    public ControlHub(IAppState appState, IViewerFactory viewerFactory, IInputService inputSender, IPowerService powerManager, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturer, IScreenRecorderService screenRecorderService, ILogger<ControlHub> logger)
+    public ControlHub(IAppState appState, IViewerFactory viewerFactory, IInputService inputSender, IPowerService powerManager, IHardwareService hardwareService, IShutdownService shutdownService, IUpdaterService updaterService, IScreenCapturerService screenCapturer, IScreenRecorderService screenRecorderService, ILogger<ControlHub> logger)
     {
         _appState = appState;
         _viewerFactory = viewerFactory;
@@ -35,6 +35,7 @@ public class ControlHub : Hub<IControlClient>
         _powerManager = powerManager;
         _hardwareService = hardwareService;
         _shutdownService = shutdownService;
+        _updaterService = updaterService;
         _screenCapturerService = screenCapturer;
         _screenRecorderService = screenRecorderService;
         _logger = logger;
@@ -279,5 +280,10 @@ public class ControlHub : Hub<IControlClient>
     public async Task SendCommandToService(string command)
     {
         await Clients.Group("serviceGroup").ReceiveCommand(command);
+    }
+
+    public async Task UpdateHost()
+    {
+        _updaterService.Download();
     }
 }
