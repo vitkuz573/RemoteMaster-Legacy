@@ -17,7 +17,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Pages;
 
-public partial class Connect
+public partial class Connect : IDisposable
 {
     [Parameter]
     public string Host { get; set; }
@@ -342,5 +342,10 @@ public partial class Connect
     private async void SendCtrlAltDel()
     {
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendCommandToService", "CtrlAltDel"));
+    }
+
+    public void Dispose()
+    {
+        _connection?.DisposeAsync();
     }
 }

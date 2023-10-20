@@ -314,7 +314,7 @@ public partial class Index
 
     private async Task Update()
     {
-        await ExecuteOnAvailableComputers(async (computer, connection) => await _retryPolicy.ExecuteAsync(async () => await connection.InvokeAsync("SendUpdateHost")));
+        await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendUpdateHost"));
     }
 
     private async Task ScreenRecording(RadzenSplitButtonItem item)
