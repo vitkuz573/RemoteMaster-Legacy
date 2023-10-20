@@ -45,7 +45,7 @@ public class TokenService : ITokenService
             Issuer = _options.Issuer,
             Audience = _options.Audience,
             Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddMinutes(10),
+            Expires = DateTime.UtcNow.AddHours(2),
             SigningCredentials = new SigningCredentials(new RsaSecurityKey(rsa), SecurityAlgorithms.RsaSha256)
         };
 
