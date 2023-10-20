@@ -9,6 +9,8 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
+using Polly.Retry;
+using Polly;
 using Radzen;
 using Radzen.Blazor;
 using RemoteMaster.Server.Abstractions;
@@ -16,6 +18,7 @@ using RemoteMaster.Server.Components;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
 using RemoteMaster.Shared.Models;
+using System.Net.WebSockets;
 
 namespace RemoteMaster.Server.Pages;
 
@@ -48,6 +51,15 @@ public partial class Index
 
     [Inject]
     private ILogger<Index> Logger { get; set; }
+
+    private readonly AsyncRetryPolicy _retryPolicy = Policy
+        .Handle<Exception>()
+        .WaitAndRetryAsync(new[]
+        {
+            TimeSpan.FromSeconds(5),
+            TimeSpan.FromSeconds(7),
+            TimeSpan.FromSeconds(10),
+        });
 
     protected async override Task OnInitializedAsync()
     {
@@ -302,7 +314,7 @@ public partial class Index
 
     private async Task Update()
     {
-        await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendUpdateHost"));
+        await ExecuteOnAvailableComputers(async (computer, connection) => await _retryPolicy.ExecuteAsync(async () => await connection.InvokeAsync("SendUpdateHost")));
     }
 
     private async Task ScreenRecording(RadzenSplitButtonItem item)
