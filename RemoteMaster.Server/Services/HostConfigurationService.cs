@@ -34,7 +34,7 @@ public class HostConfigurationService : IHostConfigurationService
     public async Task<MemoryStream> GenerateConfigFileAsync(HostConfiguration config)
     {
         var jsonBytes = _serializationService.SerializeToJsonBytes(config);
-        
+
         return await WriteToMemoryStreamAsync(jsonBytes);
     }
 

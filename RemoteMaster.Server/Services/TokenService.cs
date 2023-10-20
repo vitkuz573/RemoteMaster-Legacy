@@ -57,17 +57,17 @@ public class TokenService : ITokenService
     public string GenerateRefreshToken()
     {
         var randomNumber = new byte[32];
-       
+
         using var rng = RandomNumberGenerator.Create();
         rng.GetBytes(randomNumber);
-        
+
         return Convert.ToBase64String(randomNumber);
     }
 
     public async Task<bool> SaveRefreshToken(string email, string refreshToken)
     {
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
-        
+
         if (user == null)
         {
             return false;

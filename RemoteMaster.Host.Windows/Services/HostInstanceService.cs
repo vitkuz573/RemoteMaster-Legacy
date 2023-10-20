@@ -78,7 +78,7 @@ public class HostInstanceService : IHostInstanceService
     private bool IsUserInstance(Process process)
     {
         var commandLine = GetCommandLineOfProcess(process.Id);
-        
+
         return commandLine != null && commandLine.Contains(InstanceArgument);
     }
 

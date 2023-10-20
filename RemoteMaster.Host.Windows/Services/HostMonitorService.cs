@@ -21,7 +21,7 @@ public class HostMonitorService : IHostedService
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _timer = new Timer(MonitorHostInstance, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
-       
+
         return Task.CompletedTask;
     }
 
@@ -37,7 +37,7 @@ public class HostMonitorService : IHostedService
     public Task StopAsync(CancellationToken cancellationToken)
     {
         _timer?.Dispose();
-        
+
         return Task.CompletedTask;
     }
 }

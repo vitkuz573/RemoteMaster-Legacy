@@ -108,7 +108,7 @@ public class NativeProcess : IDisposable
         var sessionId = GetSessionId(options.ForceConsoleSession, options.TargetSessionId);
 
         SafeFileHandle hUserTokenDup = null;
-        
+
         SafeFileHandle stdInReadHandle = null;
         SafeFileHandle stdOutReadHandle = null;
         SafeFileHandle stdErrReadHandle = null;
@@ -126,7 +126,7 @@ public class NativeProcess : IDisposable
             {
                 var winlogonPid = GetWinlogonPidForSession(sessionId);
                 using var hProcess = OpenProcess_SafeHandle(PROCESS_ACCESS_RIGHTS.PROCESS_ALL_ACCESS, false, winlogonPid);
-                
+
                 if (IsProcessOpen(hProcess) && TryGetProcessToken(hProcess, out var hPToken))
                 {
                     using (hPToken)
@@ -188,7 +188,7 @@ public class NativeProcess : IDisposable
         foreach (var session in activeSessions)
         {
             lastSessionId = session.SessionId;
-            
+
             if (session.SessionId == targetSessionId)
             {
                 targetSessionFound = true;
@@ -267,11 +267,11 @@ public class NativeProcess : IDisposable
     private static PROCESS_CREATION_FLAGS SetCreationFlags(bool hiddenWindow)
     {
         var dwCreationFlags = PROCESS_CREATION_FLAGS.NORMAL_PRIORITY_CLASS | PROCESS_CREATION_FLAGS.CREATE_UNICODE_ENVIRONMENT;
-        
+
         dwCreationFlags |= hiddenWindow
             ? PROCESS_CREATION_FLAGS.CREATE_NO_WINDOW
             : PROCESS_CREATION_FLAGS.CREATE_NEW_CONSOLE;
-        
+
         return dwCreationFlags;
     }
 
@@ -280,7 +280,7 @@ public class NativeProcess : IDisposable
         var userTokenHandle = default(HANDLE);
         var success = WTSQueryUserToken(sessionId, ref userTokenHandle);
         hUserToken = new SafeFileHandle(userTokenHandle, true);
-        
+
         return success;
     }
 

@@ -5,7 +5,6 @@
 using Microsoft.AspNetCore.SignalR.Client;
 using Polly;
 using Polly.Retry;
-using RemoteMaster.Shared.Models;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Services;

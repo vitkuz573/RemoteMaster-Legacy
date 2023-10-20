@@ -7,10 +7,10 @@ namespace RemoteMaster.Host.Abstractions;
 public interface IServiceConfig
 {
     string Name { get; }
-    
+
     string DisplayName { get; }
-    
+
     string StartType { get; }
-    
+
     IEnumerable<string>? Dependencies { get; }
 }

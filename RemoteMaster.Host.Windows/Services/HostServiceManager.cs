@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Diagnostics;
 using System.ServiceProcess;
 using RemoteMaster.Host.Abstractions;
 using RemoteMaster.Host.Core.Abstractions;

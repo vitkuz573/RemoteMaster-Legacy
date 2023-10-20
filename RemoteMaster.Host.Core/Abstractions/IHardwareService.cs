@@ -8,5 +8,5 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IHardwareService
 {
-    void SetMonitorState(MonitorState state); 
+    void SetMonitorState(MonitorState state);
 }
