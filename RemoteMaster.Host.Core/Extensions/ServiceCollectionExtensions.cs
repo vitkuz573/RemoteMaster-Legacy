@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Services;
 using Serilog;
@@ -22,6 +23,7 @@ public static class ServiceCollectionExtensions
 
         services.AddLogging(builder =>
         {
+            builder.ClearProviders();
             builder.AddSerilog(serilogLogger);
         });
 
