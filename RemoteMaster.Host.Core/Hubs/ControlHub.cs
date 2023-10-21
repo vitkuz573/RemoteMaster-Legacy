@@ -282,9 +282,9 @@ public class ControlHub : Hub<IControlClient>
         await Clients.Group("serviceGroup").ReceiveCommand(command);
     }
 
-    public async Task SendUpdateHost()
+    public async Task SendUpdateHost(string sharedFolder, string username, string password)
     {
-        _updaterService.Download();
+        _updaterService.Download(sharedFolder, username, password);
         _updaterService.Execute();
     }
 }

@@ -12,10 +12,6 @@ namespace RemoteMaster.Host.Services;
 
 public class UpdaterService : IUpdaterService
 {
-    private const string SHARED_FOLDER = @"\\SERVER-DC02\Win\RemoteMaster";
-    private const string LOGIN = "support@it-ktk.local";
-    private const string PASSWORD = "bonesgamer123!!";
-
     private readonly string _baseFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
     private readonly string _scriptPath;
     private readonly string _updateFolderPath;
@@ -32,20 +28,20 @@ public class UpdaterService : IUpdaterService
         _logger = logger;
     }
 
-    public void Download()
+    public void Download(string sharedFolder, string username, string password)
     {
         try
         {
-            var sourceFolder = Path.Combine(SHARED_FOLDER, "Host");
+            var sourceFolder = Path.Combine(sharedFolder, "Host");
 
-            NetworkDriveHelper.MapNetworkDrive(SHARED_FOLDER, LOGIN, PASSWORD);
-            _logger.LogInformation($"Mapped network drive: {SHARED_FOLDER}");
+            NetworkDriveHelper.MapNetworkDrive(sharedFolder, username, password);
+            _logger.LogInformation($"Mapped network drive: {sharedFolder}");
 
             NetworkDriveHelper.DirectoryCopy(sourceFolder, _updateFolderPath, true, true);
             _logger.LogInformation($"Copied from {sourceFolder} to {_updateFolderPath}");
 
-            NetworkDriveHelper.CancelNetworkDrive(SHARED_FOLDER);
-            _logger.LogInformation($"Unmapped network drive: {SHARED_FOLDER}");
+            NetworkDriveHelper.CancelNetworkDrive(sharedFolder);
+            _logger.LogInformation($"Unmapped network drive: {sharedFolder}");
         }
         catch (Exception ex)
         {

@@ -317,7 +317,11 @@ public partial class Index
 
     private async Task Update()
     {
-        await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendUpdateHost"));
+        var sharedFolder = @"\\SERVER-DC02\Win\RemoteMaster";
+        var username = "support@it-ktk.local";
+        var password = "bonesgamer123!!";
+        
+        await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendUpdateHost", sharedFolder, username, password));
     }
 
     private async Task ScreenRecording(RadzenSplitButtonItem item)
