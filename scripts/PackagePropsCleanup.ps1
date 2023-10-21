@@ -16,6 +16,12 @@ function Extract-Packages {
 
     Write-Host "Analyzing $($csprojPath):" -ForegroundColor Magenta
 
+    # Check if there are no package references in the .csproj
+    if ($packageReferences.Count -eq 0) {
+        Write-Host "  No packages found in this project." -ForegroundColor Yellow
+        return
+    }
+
     foreach ($packageRef in $packageReferences) {
         if ($packageRef.NodeType -eq "Element" -and $null -ne $packageRef.Include) {
             $packages[$packageRef.Include] = $true
@@ -49,6 +55,8 @@ foreach ($packageVersion in $packageVersions) {
         $packagesToRemove += $packageVersion
     }
 }
+
+Write-Host ""
 
 if ($packagesToRemove.Count -gt 0) {
     Write-Host "The following unused packages are identified:" -ForegroundColor Yellow
