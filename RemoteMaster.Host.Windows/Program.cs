@@ -49,7 +49,7 @@ internal class Program
         builder.Services.AddSingleton<IHostInstanceService, HostInstanceService>();
         builder.Services.AddSingleton<IHostServiceManager, HostServiceManager>();
         builder.Services.AddSingleton<IServiceManager, ServiceManager>();
-        builder.Services.AddSingleton<HostServiceConfig>();
+        builder.Services.AddSingleton<IServiceConfig, HostServiceConfig>();
         builder.Services.AddSingleton<IScreenCapturerService, BitBltCapturer>();
         builder.Services.AddSingleton<IScreenRecorderService, ScreenRecorderService>();
         builder.Services.AddSingleton<ICursorRenderService, CursorRenderService>();
@@ -57,7 +57,6 @@ internal class Program
         builder.Services.AddSingleton<IPowerService, PowerService>();
         builder.Services.AddSingleton<IHardwareService, HardwareService>();
         builder.Services.AddSingleton<IUpdaterService, UpdaterService>();
-        builder.Services.AddSingleton<HiddenWindow>();
 
         var publicKeyPath = @"C:\RemoteMaster\Security\public_key.pem";
         var publicKey = File.ReadAllText(publicKeyPath);
@@ -112,7 +111,7 @@ internal class Program
         }
         else
         {
-            builder.Services.AddHostedService<HiddenWindowService>();
+            builder.Services.AddHostedService<MessageLoopService>();
             builder.Services.AddHostedService<HostMonitorService>();
             builder.Services.AddHostedService<ServiceCommandListener>();
         }

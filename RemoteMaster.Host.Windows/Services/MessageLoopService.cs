@@ -8,19 +8,19 @@ using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
 using static Windows.Win32.PInvoke;
 
-namespace RemoteMaster.Host;
+namespace RemoteMaster.Host.Services;
 
-public class HiddenWindow
+public class MessageLoopService : IHostedService
 {
     private const string CLASS_NAME = "HiddenWindowClass";
     private const int RESTART_DELAY = 50;
 
     private HWND _hwnd;
     private readonly WNDPROC _wndProcDelegate;
-    private readonly ILogger<HiddenWindow> _logger;
+    private readonly ILogger<MessageLoopService> _logger;
     private readonly IHostInstanceService _hostService;
 
-    public HiddenWindow(IHostInstanceService hostService, ILogger<HiddenWindow> logger)
+    public MessageLoopService(IHostInstanceService hostService, ILogger<MessageLoopService> logger)
     {
         _hostService = hostService;
         _logger = logger;
@@ -28,13 +28,22 @@ public class HiddenWindow
         _wndProcDelegate = WndProc;
     }
 
-    public void Initialize()
+    public Task StartAsync(CancellationToken cancellationToken)
     {
         Task.Run(() =>
         {
             InitializeWindow();
             StartMessageLoop();
         });
+
+        return Task.CompletedTask;
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        PostMessage(_hwnd, WM_QUIT, new WPARAM(0), new LPARAM(0));
+
+        return Task.CompletedTask;
     }
 
     private void InitializeWindow()
@@ -109,11 +118,6 @@ public class HiddenWindow
         }
     }
 
-    public void StopMessageLoop()
-    {
-        PostMessage(_hwnd, WM_QUIT, new WPARAM(0), new LPARAM(0));
-    }
-
     private LRESULT WndProc(HWND hwnd, uint msg, WPARAM wParam, LPARAM lParam)
     {
         if (msg == WM_WTSSESSION_CHANGE)
@@ -159,4 +163,3 @@ public class HiddenWindow
         _hostService.Start();
     }
 }
-

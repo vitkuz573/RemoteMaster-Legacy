@@ -18,7 +18,7 @@ public class HostServiceManager : IHostServiceManager
     private readonly IConfigurationService _configurationService;
     private readonly ILogger<HostServiceManager> _logger;
 
-    private readonly HostServiceConfig _hostServiceConfig;
+    private readonly IServiceConfig _hostServiceConfig;
 
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Host";
