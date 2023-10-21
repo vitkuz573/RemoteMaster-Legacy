@@ -1,5 +1,6 @@
-# Directory containing the script and csproj files
-$solutionDir = "C:\Users\vitaly\source\repos\RemoteMaster"
+# Solution Directory
+$currentScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$solutionDir = Resolve-Path "$currentScriptDir\.."
 
 # Hashtable to store unique packages
 $packages = @{}
