@@ -12,7 +12,9 @@ public class HostServiceConfig : IServiceConfig
 
     public string DisplayName { get; } = "Remote Control Host";
 
+    public string? Description => "Provides remote control and management capabilities for authorized clients. This service allows remote access to system functionalities and resources.";
+
     public string StartType { get; } = "auto";
 
-    public IEnumerable<string>? Dependencies { get; } = new[] { "LanmanWorkstation" };
+    public IEnumerable<string>? Dependencies { get; } = null;
 }

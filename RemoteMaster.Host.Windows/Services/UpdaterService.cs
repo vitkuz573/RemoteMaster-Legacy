@@ -35,17 +35,17 @@ public class UpdaterService : IUpdaterService
             var sourceFolder = Path.Combine(sharedFolder, "Host");
 
             NetworkDriveHelper.MapNetworkDrive(sharedFolder, username, password);
-            _logger.LogInformation($"Mapped network drive: {sharedFolder}");
+            _logger.LogInformation("Mapped network drive: {SharedFolder}", sharedFolder);
 
             NetworkDriveHelper.DirectoryCopy(sourceFolder, _updateFolderPath, true, true);
-            _logger.LogInformation($"Copied from {sourceFolder} to {_updateFolderPath}");
+            _logger.LogInformation("Copied from {SourceFolder} to {UpdateFolderPath}", sourceFolder, _updateFolderPath);
 
             NetworkDriveHelper.CancelNetworkDrive(sharedFolder);
-            _logger.LogInformation($"Unmapped network drive: {sharedFolder}");
+            _logger.LogInformation("Unmapped network drive: {SharedFolder}", sharedFolder);
         }
         catch (Exception ex)
         {
-            _logger.LogError($"Error in Download method: {ex.Message}");
+            _logger.LogError("Error in Download method: {Message}", ex.Message);
         }
     }
 
@@ -79,7 +79,7 @@ public class UpdaterService : IUpdaterService
             contentBuilder.AppendLine($"Remove-Item -Path \"{_scriptPath}\" -Force");
 
             File.WriteAllText(_scriptPath, contentBuilder.ToString());
-            _logger.LogInformation($"Updater script created at: {_scriptPath}");
+            _logger.LogInformation("Updater script created at: {ScriptPath}", _scriptPath);
 
             using var process = new Process
             {
@@ -102,7 +102,7 @@ public class UpdaterService : IUpdaterService
         }
         catch (Exception ex)
         {
-            _logger.LogError($"Error in Execute method: {ex.Message}");
+            _logger.LogError("Error in Execute method: {Message}", ex.Message);
         }
     }
 }

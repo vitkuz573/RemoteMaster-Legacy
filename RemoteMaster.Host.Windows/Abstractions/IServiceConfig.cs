@@ -10,6 +10,8 @@ public interface IServiceConfig
 
     string DisplayName { get; }
 
+    string? Description { get; }
+
     string StartType { get; }
 
     IEnumerable<string>? Dependencies { get; }

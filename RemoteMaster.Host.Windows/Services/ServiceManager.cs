@@ -21,6 +21,11 @@ public class ServiceManager : IServiceManager
 
         ExecuteServiceCommand($"create {serviceConfig.Name} DisplayName= \"{serviceConfig.DisplayName}\" binPath= \"{executablePath}\" start= {serviceConfig.StartType}");
 
+        if (!string.IsNullOrWhiteSpace(serviceConfig.Description))
+        {
+            ExecuteServiceCommand($"description {serviceConfig.Name} \"{serviceConfig.Description}\"");
+        }
+
         if (serviceConfig.Dependencies != null && serviceConfig.Dependencies.Any())
         {
             var dependenciesStr = string.Join("/", serviceConfig.Dependencies);

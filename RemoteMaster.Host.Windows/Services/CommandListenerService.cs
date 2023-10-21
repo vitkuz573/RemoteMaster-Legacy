@@ -9,10 +9,10 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Services;
 
-public class ServiceCommandListener : IHostedService
+public class CommandListenerService : IHostedService
 {
     private HubConnection _connection;
-    private readonly ILogger<ServiceCommandListener> _logger;
+    private readonly ILogger<CommandListenerService> _logger;
 
     private readonly AsyncRetryPolicy _retryPolicy = Policy
         .Handle<Exception>()
@@ -23,7 +23,7 @@ public class ServiceCommandListener : IHostedService
             TimeSpan.FromSeconds(10),
         });
 
-    public ServiceCommandListener(ILogger<ServiceCommandListener> logger)
+    public CommandListenerService(ILogger<CommandListenerService> logger)
     {
         _logger = logger;
     }

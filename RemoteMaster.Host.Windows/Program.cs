@@ -113,7 +113,7 @@ internal class Program
         {
             builder.Services.AddHostedService<MessageLoopService>();
             builder.Services.AddHostedService<HostMonitorService>();
-            builder.Services.AddHostedService<ServiceCommandListener>();
+            builder.Services.AddHostedService<CommandListenerService>();
         }
 
         var app = builder.Build();
