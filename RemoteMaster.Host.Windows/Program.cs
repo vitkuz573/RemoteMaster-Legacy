@@ -62,7 +62,7 @@ internal class Program
         var publicKeyPath = @"C:\RemoteMaster\Security\public_key.pem";
         var publicKey = File.ReadAllText(publicKeyPath);
 
-        using var rsa = new RSACryptoServiceProvider();
+        using var rsa = RSA.Create();
         rsa.ImportFromPem(publicKey.ToCharArray());
 
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
