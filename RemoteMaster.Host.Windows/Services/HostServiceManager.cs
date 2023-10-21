@@ -23,7 +23,7 @@ public class HostServiceManager : IHostServiceManager
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Host";
 
-    public HostServiceManager(IHostLifecycleService hostLifecycleService, IHostInstanceService hostInstanceService, IServiceManager serviceManager, IConfigurationService configurationService, HostServiceConfig hostServiceConfig, ILogger<HostServiceManager> logger)
+    public HostServiceManager(IHostLifecycleService hostLifecycleService, IHostInstanceService hostInstanceService, IServiceManager serviceManager, IConfigurationService configurationService, IServiceConfig hostServiceConfig, ILogger<HostServiceManager> logger)
     {
         _hostLifecycleService = hostLifecycleService;
         _hostInstanceService = hostInstanceService;
