@@ -59,8 +59,21 @@ if ($packagesToRemove.Count -gt 0) {
         # Remove unused packages from the XML
         $packagesToRemove | ForEach-Object { $packagePropsXml.Project.ItemGroup.RemoveChild($_) }
 
-        # Save the modified XML back to the file
-        $packagePropsXml.OuterXml | Set-Content -Path $packagePropsPath
+        # Formatting XML for better readability
+        $settings = New-Object System.Xml.XmlWriterSettings
+        $settings.Indent = $true
+        $settings.IndentChars = "    "
+        $settings.NewLineChars = "`r`n"
+        $settings.NewLineHandling = [System.Xml.NewLineHandling]::Replace
+        $memoryStream = New-Object System.IO.MemoryStream
+        $xmlWriter = [System.Xml.XmlWriter]::Create($memoryStream, $settings)
+
+        $packagePropsXml.Save($xmlWriter)
+        $xmlWriter.Flush()
+        $memoryStream.Position = 0
+
+        $formattedXml = New-Object System.IO.StreamReader -ArgumentList $memoryStream
+        Set-Content -Path $packagePropsPath -Value $formattedXml.ReadToEnd()
 
         Write-Host "Removed the specified packages. Directory.Packages.props has been updated." -ForegroundColor Green
     } else {
