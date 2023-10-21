@@ -17,10 +17,10 @@ function Extract-Packages {
     Write-Host "Analyzing $($csprojPath):" -ForegroundColor Magenta
 
     foreach ($packageRef in $packageReferences) {
-        if ($null -ne $packageRef.Include) {
+        if ($packageRef.NodeType -eq "Element" -and $null -ne $packageRef.Include) {
             $packages[$packageRef.Include] = $true
             Write-Host "  Found package: $($packageRef.Include)" -ForegroundColor DarkCyan
-        } else {
+        } elseif ($packageRef.NodeType -eq "Element") {
             Write-Host "  Warning: Package reference without an 'Include' attribute found." -ForegroundColor Yellow
         }
     }
