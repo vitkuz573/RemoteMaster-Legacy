@@ -84,7 +84,7 @@ internal class Program
                         var remoteIp = context.HttpContext.Connection.RemoteIpAddress;
                         var localIPv6Mapped = IPAddress.Parse("::ffff:127.0.0.1");
 
-                        logger.LogInformation($"Incoming request from IP: {remoteIp}");
+                        logger.LogInformation("Incoming request from IP: {Ip}", remoteIp);
 
                         if (remoteIp.Equals(IPAddress.Loopback) || remoteIp.Equals(IPAddress.IPv6Loopback) || remoteIp.Equals(localIPv6Mapped))
                         {

@@ -55,7 +55,7 @@
   </ItemGroup>
 
   <Target Name="AfterFileSystemPublish" AfterTargets="FileSystemPublish">
-    <Exec Command="powershell.exe -ExecutionPolicy Bypass -File $(SolutionDir)scripts\sign.ps1 -exeFilePath $(PublishUrl)\$(AssemblyName).exe" />
+    <Exec Command="powershell.exe -ExecutionPolicy Bypass -File $(SolutionDir)scripts\DigitalSignExecutable.ps1 -exeFilePath $(PublishUrl)\$(AssemblyName).exe" />
   </Target>
 
 </Project>
