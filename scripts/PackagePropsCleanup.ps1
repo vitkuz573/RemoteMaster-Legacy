@@ -26,9 +26,7 @@ function Extract-Packages {
         if ($packageRef.NodeType -eq "Element" -and $null -ne $packageRef.Include) {
             $packages[$packageRef.Include] = $true
             Write-Host "  Found package: $($packageRef.Include)" -ForegroundColor DarkCyan
-        } elseif ($packageRef.NodeType -eq "Element") {
-            Write-Host "  Warning: Package reference without an 'Include' attribute found." -ForegroundColor Yellow
-        }
+		}
     }
 }
 
