@@ -35,9 +35,9 @@ public class TokenService : ITokenService
         var privateKey = File.ReadAllText(_options.PrivateKeyPath);
 
 #pragma warning disable CA2000
-        var rsa = RSA.Create();
+        var ecdsa = ECDsa.Create();
 #pragma warning restore CA2000
-        rsa.ImportFromPem(privateKey.ToCharArray());
+        ecdsa.ImportFromPem(privateKey.ToCharArray());
 
         var tokenHandler = new JwtSecurityTokenHandler();
         var tokenDescriptor = new SecurityTokenDescriptor
@@ -46,7 +46,7 @@ public class TokenService : ITokenService
             Audience = _options.Audience,
             Subject = new ClaimsIdentity(claims),
             Expires = DateTime.UtcNow.AddHours(2),
-            SigningCredentials = new SigningCredentials(new RsaSecurityKey(rsa), SecurityAlgorithms.RsaSha256)
+            SigningCredentials = new SigningCredentials(new ECDsaSecurityKey(ecdsa), SecurityAlgorithms.EcdsaSha256)
         };
 
         var token = tokenHandler.CreateToken(tokenDescriptor);

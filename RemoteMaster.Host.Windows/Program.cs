@@ -60,8 +60,8 @@ internal class Program
         var publicKeyPath = @"C:\RemoteMaster\Security\public_key.pem";
         var publicKey = File.ReadAllText(publicKeyPath);
 
-        using var rsa = RSA.Create();
-        rsa.ImportFromPem(publicKey.ToCharArray());
+        using var ecdsa = ECDsa.Create();
+        ecdsa.ImportFromPem(publicKey.ToCharArray());
 
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
@@ -74,7 +74,7 @@ internal class Program
                     ValidateLifetime = true,
                     ValidIssuer = "RemoteMaster Server",
                     ValidAudience = "RMServiceAPI",
-                    IssuerSigningKey = new RsaSecurityKey(rsa)
+                    IssuerSigningKey = new ECDsaSecurityKey(ecdsa)
                 };
 
                 options.Events = new JwtBearerEvents

@@ -4,9 +4,9 @@
 
 using System.Diagnostics;
 using System.Text;
+using RemoteMaster.Host.Abstractions;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Helpers;
-using RemoteMaster.Host.Models;
 
 namespace RemoteMaster.Host.Services;
 
@@ -16,15 +16,15 @@ public class UpdaterService : IUpdaterService
     private readonly string _scriptPath;
     private readonly string _updateFolderPath;
 
-    private readonly HostServiceConfig _config;
+    private readonly IServiceConfig _hostServiceConfig;
     private readonly ILogger<UpdaterService> _logger;
 
-    public UpdaterService(HostServiceConfig config, ILogger<UpdaterService> logger)
+    public UpdaterService(IServiceConfig hostServiceConfig, ILogger<UpdaterService> logger)
     {
         _scriptPath = Path.Combine(_baseFolderPath, "update.ps1");
         _updateFolderPath = Path.Combine(_baseFolderPath, "Update");
 
-        _config = config;
+        _hostServiceConfig = hostServiceConfig;
         _logger = logger;
     }
 
@@ -54,7 +54,7 @@ public class UpdaterService : IUpdaterService
         try
         {
             var contentBuilder = new StringBuilder();
-            contentBuilder.AppendLine("Stop-Service -Name \"" + _config.Name + "\"");
+            contentBuilder.AppendLine("Stop-Service -Name \"" + _hostServiceConfig.Name + "\"");
             contentBuilder.AppendLine("Get-Process -Name \"RemoteMaster.Host\" -ErrorAction SilentlyContinue | Stop-Process -Force");
             contentBuilder.AppendLine("$filesLocked = $true");
             contentBuilder.AppendLine("while ($filesLocked) {");
@@ -73,7 +73,7 @@ public class UpdaterService : IUpdaterService
             contentBuilder.AppendLine("}");
             contentBuilder.AppendLine("Copy-Item -Path \"$PSScriptRoot\\Update\\*.*\" -Destination $PSScriptRoot -Recurse -Force");
             contentBuilder.AppendLine("Start-Sleep -Seconds 2");
-            contentBuilder.AppendLine("Start-Service -Name \"" + _config.Name + "\"");
+            contentBuilder.AppendLine("Start-Service -Name \"" + _hostServiceConfig.Name + "\"");
             contentBuilder.AppendLine("Start-Sleep -Seconds 2");
             contentBuilder.AppendLine($"Remove-Item -Path \"{_updateFolderPath}\" -Recurse -Force");
             contentBuilder.AppendLine($"Remove-Item -Path \"{_scriptPath}\" -Force");
