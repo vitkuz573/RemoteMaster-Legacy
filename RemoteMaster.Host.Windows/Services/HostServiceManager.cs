@@ -18,12 +18,12 @@ public class HostServiceManager : IHostServiceManager
     private readonly IHostConfigurationService _configurationService;
     private readonly ILogger<HostServiceManager> _logger;
 
-    private readonly IServiceConfig _hostServiceConfig;
+    private readonly IServiceConfiguration _hostServiceConfig;
 
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Host";
 
-    public HostServiceManager(IHostLifecycleService hostLifecycleService, IHostInstanceService hostInstanceService, IServiceManager serviceManager, IHostConfigurationService configurationService, IServiceConfig hostServiceConfig, ILogger<HostServiceManager> logger)
+    public HostServiceManager(IHostLifecycleService hostLifecycleService, IHostInstanceService hostInstanceService, IServiceManager serviceManager, IHostConfigurationService configurationService, IServiceConfiguration hostServiceConfig, ILogger<HostServiceManager> logger)
     {
         _hostLifecycleService = hostLifecycleService;
         _hostInstanceService = hostInstanceService;

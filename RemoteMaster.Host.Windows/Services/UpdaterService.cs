@@ -16,10 +16,10 @@ public class UpdaterService : IUpdaterService
     private readonly string _scriptPath;
     private readonly string _updateFolderPath;
 
-    private readonly IServiceConfig _hostServiceConfig;
+    private readonly IServiceConfiguration _hostServiceConfig;
     private readonly ILogger<UpdaterService> _logger;
 
-    public UpdaterService(IServiceConfig hostServiceConfig, ILogger<UpdaterService> logger)
+    public UpdaterService(IServiceConfiguration hostServiceConfig, ILogger<UpdaterService> logger)
     {
         _scriptPath = Path.Combine(_baseFolderPath, "update.ps1");
         _updateFolderPath = Path.Combine(_baseFolderPath, "Update");

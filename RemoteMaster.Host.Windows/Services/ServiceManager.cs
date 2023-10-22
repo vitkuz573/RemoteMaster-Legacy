@@ -12,7 +12,7 @@ public class ServiceManager : IServiceManager
 {
     public bool IsServiceInstalled(string serviceName) => ServiceController.GetServices().Any(service => service.ServiceName == serviceName);
 
-    public void InstallService(IServiceConfig serviceConfig, string executablePath)
+    public void InstallService(IServiceConfiguration serviceConfig, string executablePath)
     {
         if (serviceConfig == null)
         {

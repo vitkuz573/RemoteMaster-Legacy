@@ -8,7 +8,7 @@ public interface IServiceManager
 {
     bool IsServiceInstalled(string serviceName);
 
-    void InstallService(IServiceConfig serviceConfig, string executablePath);
+    void InstallService(IServiceConfiguration serviceConfig, string executablePath);
 
     void StartService(string serviceName);
 

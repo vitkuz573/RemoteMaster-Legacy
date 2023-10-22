@@ -18,23 +18,20 @@ public class HostLifecycleService : IHostLifecycleService
         _logger = logger;
     }
 
-    public async Task<bool> RegisterAsync(HostConfiguration config, string hostName, string ipAddress, string macAddress)
+    public async Task RegisterAsync(HostConfiguration config, string hostName, string ipAddress, string macAddress)
     {
         if (config == null)
         {
             throw new ArgumentNullException(nameof(config));
         }
 
-        var result = false;
-
         try
         {
             var connection = await ConnectToServerHub($"http://{config.Server}:5254");
 
             _logger.LogInformation("Attempting to register host...");
-            result = await connection.InvokeAsync<bool>("RegisterHostAsync", hostName, ipAddress, macAddress, config.Group);
-
-            if (result)
+            
+            if (await connection.InvokeAsync<bool>("RegisterHostAsync", hostName, ipAddress, macAddress, config.Group))
             {
                 _logger.LogInformation("Host registration successful.");
             }
@@ -47,27 +44,22 @@ public class HostLifecycleService : IHostLifecycleService
         {
             _logger.LogError("Registering host failed: {Message}", ex.Message);
         }
-
-        return result;
     }
 
-    public async Task<bool> UnregisterAsync(HostConfiguration config, string hostName)
+    public async Task UnregisterAsync(HostConfiguration config, string hostName)
     {
         if (config == null)
         {
             throw new ArgumentNullException(nameof(config));
         }
 
-        var result = false;
-
         try
         {
             var connection = await ConnectToServerHub($"http://{config.Server}:5254");
 
             _logger.LogInformation("Attempting to unregister host...");
-            result = await connection.InvokeAsync<bool>("UnregisterHostAsync", hostName, config.Group);
 
-            if (result)
+            if (await connection.InvokeAsync<bool>("UnregisterHostAsync", hostName, config.Group))
             {
                 _logger.LogInformation("Host unregistration successful.");
             }
@@ -80,8 +72,6 @@ public class HostLifecycleService : IHostLifecycleService
         {
             _logger.LogError("Unregistering host failed: {Message}", ex.Message);
         }
-
-        return result;
     }
 
     private static async Task<HubConnection> ConnectToServerHub(string serverUrl)

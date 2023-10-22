@@ -6,7 +6,7 @@ using RemoteMaster.Host.Abstractions;
 
 namespace RemoteMaster.Host.Models;
 
-public class HostServiceConfig : IServiceConfig
+public class HostServiceConfiguration : IServiceConfiguration
 {
     public string Name { get; } = "RCHost";
 

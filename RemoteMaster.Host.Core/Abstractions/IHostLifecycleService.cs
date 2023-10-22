@@ -8,7 +8,7 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IHostLifecycleService
 {
-    Task<bool> RegisterAsync(HostConfiguration config, string hostName, string ipAddress, string macAddress);
+    Task RegisterAsync(HostConfiguration config, string hostName, string ipAddress, string macAddress);
 
-    Task<bool> UnregisterAsync(HostConfiguration config, string hostName);
+    Task UnregisterAsync(HostConfiguration config, string hostName);
 }

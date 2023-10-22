@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Host.Abstractions;
 
-public interface IServiceConfig
+public interface IServiceConfiguration
 {
     string Name { get; }
 

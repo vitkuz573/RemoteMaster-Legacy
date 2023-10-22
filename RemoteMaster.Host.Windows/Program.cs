@@ -48,7 +48,7 @@ internal class Program
         builder.Services.AddSingleton<IHostInstanceService, HostInstanceService>();
         builder.Services.AddSingleton<IHostServiceManager, HostServiceManager>();
         builder.Services.AddSingleton<IServiceManager, ServiceManager>();
-        builder.Services.AddSingleton<IServiceConfig, HostServiceConfig>();
+        builder.Services.AddSingleton<IServiceConfiguration, HostServiceConfiguration>();
         builder.Services.AddSingleton<IScreenCapturerService, BitBltCapturer>();
         builder.Services.AddSingleton<IScreenRecorderService, ScreenRecorderService>();
         builder.Services.AddSingleton<ICursorRenderService, CursorRenderService>();
