@@ -3,18 +3,15 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.Win32.SafeHandles;
+using RemoteMaster.Host.Abstractions;
 using Windows.Win32.Security;
 using static Windows.Win32.PInvoke;
 
-namespace RemoteMaster.Host.Helpers;
+namespace RemoteMaster.Host.Services;
 
-public static class TokenPrivilegeHelper
+public class TokenPrivilegeService : ITokenPrivilegeService
 {
-    /// <summary>
-    /// Adjusts the token privilege for the current process.
-    /// </summary>
-    /// <param name="privilegeName">The name of the privilege to adjust.</param>
-    public static unsafe bool AdjustTokenPrivilege(string privilegeName)
+    public unsafe bool AdjustPrivilege(string privilegeName)
     {
         if (string.IsNullOrEmpty(privilegeName))
         {
