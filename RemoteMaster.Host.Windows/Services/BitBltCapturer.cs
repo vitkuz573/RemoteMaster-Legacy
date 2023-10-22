@@ -5,7 +5,7 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 using RemoteMaster.Host.Abstractions;
-using RemoteMaster.Host.Helpers.ScreenHelper;
+using RemoteMaster.Host.Services.ScreenHelper;
 using RemoteMaster.Shared.Models;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
@@ -31,7 +31,7 @@ public class BitBltCapturer : ScreenCapturerService
 
     private readonly ICursorRenderService _cursorRenderer;
 
-    public BitBltCapturer(ICursorRenderService cursorRenderer, ILogger<ScreenCapturerService> logger) : base(logger)
+    public BitBltCapturer(ICursorRenderService cursorRenderer, IDesktopService desktopService, ILogger<ScreenCapturerService> logger) : base(desktopService, logger)
     {
         _cursorRenderer = cursorRenderer;
         _cursorRenderer.RequestScreenBounds += () => CurrentScreenBounds;

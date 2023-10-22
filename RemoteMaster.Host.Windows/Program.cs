@@ -10,7 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 using RemoteMaster.Host.Abstractions;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Extensions;
-using RemoteMaster.Host.Helpers;
+using RemoteMaster.Host.Services;
 using RemoteMaster.Host.Models;
 using RemoteMaster.Host.Services;
 using RemoteMaster.Shared.Models;
@@ -57,6 +57,7 @@ internal class Program
         builder.Services.AddSingleton<IHardwareService, HardwareService>();
         builder.Services.AddSingleton<IUpdaterService, UpdaterService>();
         builder.Services.AddSingleton<ITokenPrivilegeService, TokenPrivilegeService>();
+        builder.Services.AddSingleton<IDesktopService, DesktopService>();
 
         var publicKeyPath = @"C:\RemoteMaster\Security\public_key.pem";
         var publicKey = File.ReadAllText(publicKeyPath);

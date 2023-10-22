@@ -4,8 +4,9 @@
 
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
+using RemoteMaster.Host.Abstractions;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Helpers;
+using RemoteMaster.Host.Services;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
@@ -21,12 +22,14 @@ public class InputService : IInputService
     private readonly int _numWorkers;
     private readonly object _ctsLock = new();
     private readonly ConcurrentBag<INPUT> _inputPool = new();
+    private readonly IDesktopService _desktopService;
     private readonly ILogger<InputService> _logger;
 
     public bool InputEnabled { get; set; } = true;
 
-    public InputService(ILogger<InputService> logger, int numWorkers = 4)
+    public InputService(IDesktopService desktopService, ILogger<InputService> logger, int numWorkers = 4)
     {
+        _desktopService = desktopService;
         _logger = logger;
         _operationQueue = new BlockingCollection<Action>();
         _cts = new CancellationTokenSource();
@@ -79,7 +82,7 @@ public class InputService : IInputService
         {
             _operationQueue.Add(() =>
             {
-                DesktopHelper.SwitchToInputDesktop();
+                _desktopService.SwitchToInputDesktop();
                 operation();
             });
         }

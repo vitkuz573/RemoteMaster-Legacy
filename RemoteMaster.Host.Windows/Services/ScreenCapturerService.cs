@@ -6,8 +6,8 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using Microsoft.IO;
+using RemoteMaster.Host.Abstractions;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Helpers;
 using RemoteMaster.Shared.Models;
 using SkiaSharp;
 
@@ -16,6 +16,7 @@ namespace RemoteMaster.Host.Services;
 public abstract class ScreenCapturerService : IScreenCapturerService
 {
     private readonly RecyclableMemoryStreamManager _recycleManager = new();
+    private readonly IDesktopService _desktopService;
     protected readonly ILogger<ScreenCapturerService> _logger;
     private readonly object _screenBoundsLock = new();
     private readonly object _bitmapLock = new();
@@ -52,8 +53,9 @@ public abstract class ScreenCapturerService : IScreenCapturerService
 
     public event EventHandler<Rectangle>? ScreenChanged;
 
-    protected ScreenCapturerService(ILogger<ScreenCapturerService> logger)
+    protected ScreenCapturerService(IDesktopService desktopService, ILogger<ScreenCapturerService> logger)
     {
+        _desktopService = desktopService;
         _logger = logger;
         Init();
     }
@@ -66,7 +68,7 @@ public abstract class ScreenCapturerService : IScreenCapturerService
         {
             try
             {
-                if (!DesktopHelper.SwitchToInputDesktop())
+                if (!_desktopService.SwitchToInputDesktop())
                 {
                     var errCode = Marshal.GetLastWin32Error();
                     _logger.LogError("Failed to switch to input desktop. Last Win32 error code: {errCode}", errCode);

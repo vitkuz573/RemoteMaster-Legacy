@@ -12,7 +12,7 @@ using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
 
-namespace RemoteMaster.Host.Helpers.ScreenHelper;
+namespace RemoteMaster.Host.Services.ScreenHelper;
 
 [SupportedOSPlatform("windows6.0.6000")]
 public partial class Screen

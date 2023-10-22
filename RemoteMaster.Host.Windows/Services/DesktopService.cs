@@ -3,22 +3,28 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.Versioning;
+using RemoteMaster.Host.Abstractions;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.System.StationsAndDesktops;
 using static Windows.Win32.PInvoke;
 
-namespace RemoteMaster.Host.Helpers;
+namespace RemoteMaster.Host.Services;
 
-[SupportedOSPlatform("windows6.0.6000")]
-public static class DesktopHelper
+public class DesktopService : IDesktopService
 {
-    private static CloseDesktopSafeHandle _lastInputDesktop;
+    private readonly ILogger<DesktopService> _logger;
+
+    private CloseDesktopSafeHandle? _lastInputDesktop;
+
+    public DesktopService(ILogger<DesktopService> logger)
+    {
+        _logger = logger;
+    }
 
     internal static CloseDesktopSafeHandle OpenInputDesktop() => OpenInputDesktop_SafeHandle(0, true, (DESKTOP_ACCESS_FLAGS)GENERIC_ACCESS_RIGHTS.GENERIC_ALL);
 
-    public static unsafe bool GetCurrentDesktop([NotNullWhen(true)] out string? desktopName)
+    public unsafe bool GetCurrentDesktop([NotNullWhen(true)] out string? desktopName)
     {
         using var inputDesktop = OpenInputDesktop();
 
@@ -42,7 +48,7 @@ public static class DesktopHelper
         }
     }
 
-    public static bool SwitchToInputDesktop()
+    public bool SwitchToInputDesktop()
     {
         try
         {
@@ -62,7 +68,7 @@ public static class DesktopHelper
         }
         catch (Exception ex)
         {
-            Console.WriteLine("Error: " + ex.Message);
+            _logger.LogError("Error: {Message}", ex.Message);
 
             return false;
         }
