@@ -34,11 +34,11 @@ public class NativeProcess : IDisposable
 
     public event Action<string> OutputReceived;
 
-    public NativeProcessStartInfo StartOptions { get; set; }
+    public NativeProcessStartInfo StartInfo { get; set; }
 
-    public NativeProcess(NativeProcessStartInfo options)
+    public NativeProcess(NativeProcessStartInfo startInfo)
     {
-        StartOptions = options;
+        StartInfo = startInfo;
     }
 
     internal NativeProcess(PROCESS_INFORMATION procInfo, SafeFileHandle stdInReadHandle, SafeFileHandle stdOutReadHandle, SafeFileHandle stdErrReadHandle)
@@ -56,7 +56,7 @@ public class NativeProcess : IDisposable
 
     public void Start()
     {
-        var proc = StartInternal(StartOptions);
+        var proc = StartInternal(StartInfo);
 
         ProcessId = proc.ProcessId;
         ThreadId = proc.ThreadId;
@@ -69,9 +69,9 @@ public class NativeProcess : IDisposable
         StdErrReadHandle = proc.StdErrReadHandle;
     }
 
-    public static NativeProcess Start(NativeProcessStartInfo options)
+    public static NativeProcess Start(NativeProcessStartInfo startInfo)
     {
-        var process = new NativeProcess(options);
+        var process = new NativeProcess(startInfo);
         process.Start();
 
         return process;
@@ -100,10 +100,10 @@ public class NativeProcess : IDisposable
     }
 
 #pragma warning disable CA2000
-    private static NativeProcess StartInternal(NativeProcessStartInfo options)
+    private static NativeProcess StartInternal(NativeProcessStartInfo startInfo)
     {
         var procInfo = new PROCESS_INFORMATION();
-        var sessionId = GetSessionId(options.ForceConsoleSession, options.TargetSessionId);
+        var sessionId = GetSessionId(startInfo.ForceConsoleSession, startInfo.TargetSessionId);
 
         SafeFileHandle hUserTokenDup = null;
 
@@ -113,9 +113,9 @@ public class NativeProcess : IDisposable
 
         try
         {
-            if (options.UseCurrentUserToken && TryGetUserToken(sessionId, out hUserTokenDup))
+            if (startInfo.UseCurrentUserToken && TryGetUserToken(sessionId, out hUserTokenDup))
             {
-                if (TryCreateInteractiveProcess(options, hUserTokenDup, out procInfo, out stdInReadHandle, out stdOutReadHandle, out stdErrReadHandle))
+                if (TryCreateInteractiveProcess(startInfo, hUserTokenDup, out procInfo, out stdInReadHandle, out stdOutReadHandle, out stdErrReadHandle))
                 {
                     return new NativeProcess(procInfo, stdInReadHandle, stdOutReadHandle, stdErrReadHandle);
                 }
@@ -131,7 +131,7 @@ public class NativeProcess : IDisposable
                     {
                         if (TryDuplicateToken(hPToken, out hUserTokenDup))
                         {
-                            if (TryCreateInteractiveProcess(options, hUserTokenDup, out procInfo, out stdInReadHandle, out stdOutReadHandle, out stdErrReadHandle))
+                            if (TryCreateInteractiveProcess(startInfo, hUserTokenDup, out procInfo, out stdInReadHandle, out stdOutReadHandle, out stdErrReadHandle))
                             {
                                 return new NativeProcess(procInfo, stdInReadHandle, stdOutReadHandle, stdErrReadHandle);
                             }
@@ -258,6 +258,7 @@ public class NativeProcess : IDisposable
 
             var fullCommand = $"{startInfo.ApplicationName} {startInfo.Arguments ?? string.Empty}";
             fullCommand += char.MinValue;
+            
             var commandSpan = new Span<char>(fullCommand.ToCharArray());
             var result = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, null, null, false, dwCreationFlags, null, null, startupInfo, out procInfo);
 
