@@ -220,22 +220,22 @@ public class NativeProcess : IDisposable
 
         if (!SetHandleInformation(stdOutWriteHandle, (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT, HANDLE_FLAGS.HANDLE_FLAG_INHERIT))
         {
-            throw new Exception("Не удалось установить атрибут наследования для hStdOutput дескриптора.");
+            throw new Exception("Failed to set inheritance attribute for the hStdOutput handle.");
         }
 
         if (!SetHandleInformation(stdErrWriteHandle, (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT, HANDLE_FLAGS.HANDLE_FLAG_INHERIT))
         {
-            throw new Exception("Не удалось установить атрибут наследования для hStdError дескриптора.");
+            throw new Exception("Failed to set inheritance attribute for the hStdError handle.");
         }
 
         if (!GetHandleInformation(stdOutWriteHandle, out var stdOutFlags) || (stdOutFlags & (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT) != (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT)
         {
-            throw new Exception("hStdOutput дескриптор не наследуемый.");
+            throw new Exception("hStdOutput handle is not inheritable.");
         }
 
         if (!GetHandleInformation(stdErrWriteHandle, out var stdErrFlags) || (stdErrFlags & (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT) != (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT)
         {
-            throw new Exception("hStdError дескриптор не наследуемый.");
+            throw new Exception("hStdError handle is not inheritable.");
         }
 
         fixed (char* pDesktopName = $@"winsta0\{desktopName}")
