@@ -58,7 +58,7 @@ public class HostInstanceService : IHostInstanceService
 
     private static void StartNewInstance()
     {
-        var options = new ProcessStartOptions(CurrentExecutablePath, -1)
+        var options = new NativeProcessStartInfo(CurrentExecutablePath, -1)
         {
             Arguments = InstanceArgument,
             ForceConsoleSession = true,

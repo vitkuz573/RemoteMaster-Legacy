@@ -34,9 +34,9 @@ public class NativeProcess : IDisposable
 
     public event Action<string> OutputReceived;
 
-    public ProcessStartOptions StartOptions { get; set; }
+    public NativeProcessStartInfo StartOptions { get; set; }
 
-    public NativeProcess(ProcessStartOptions options)
+    public NativeProcess(NativeProcessStartInfo options)
     {
         StartOptions = options;
     }
@@ -69,7 +69,7 @@ public class NativeProcess : IDisposable
         StdErrReadHandle = proc.StdErrReadHandle;
     }
 
-    public static NativeProcess Start(ProcessStartOptions options)
+    public static NativeProcess Start(NativeProcessStartInfo options)
     {
         var process = new NativeProcess(options);
         process.Start();
@@ -100,7 +100,7 @@ public class NativeProcess : IDisposable
     }
 
 #pragma warning disable CA2000
-    private static NativeProcess StartInternal(ProcessStartOptions options)
+    private static NativeProcess StartInternal(NativeProcessStartInfo options)
     {
         var procInfo = new PROCESS_INFORMATION();
         var sessionId = GetSessionId(options.ForceConsoleSession, options.TargetSessionId);
@@ -199,7 +199,7 @@ public class NativeProcess : IDisposable
             : lastSessionId;
     }
 
-    private static unsafe bool TryCreateInteractiveProcess(ProcessStartOptions options, SafeHandle hUserTokenDup, string applicationName, string desktopName, bool hiddenWindow, out PROCESS_INFORMATION procInfo, out SafeFileHandle stdInReadHandle, out SafeFileHandle stdOutReadHandle, out SafeFileHandle stdErrReadHandle)
+    private static unsafe bool TryCreateInteractiveProcess(NativeProcessStartInfo options, SafeHandle hUserTokenDup, string applicationName, string desktopName, bool hiddenWindow, out PROCESS_INFORMATION procInfo, out SafeFileHandle stdInReadHandle, out SafeFileHandle stdOutReadHandle, out SafeFileHandle stdErrReadHandle)
     {
         if (!CreatePipe(out stdInReadHandle, out var stdInWriteHandle, null, 0))
         {

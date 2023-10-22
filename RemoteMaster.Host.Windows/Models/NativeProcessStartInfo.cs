@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Host.Windows.Models;
 
-public class ProcessStartOptions
+public class NativeProcessStartInfo
 {
     public string ApplicationName { get; set; }
 
@@ -20,7 +20,7 @@ public class ProcessStartOptions
 
     public bool UseCurrentUserToken { get; set; }
 
-    public ProcessStartOptions(string applicationName, int targetSessionId)
+    public NativeProcessStartInfo(string applicationName, int targetSessionId)
     {
         ApplicationName = applicationName;
         TargetSessionId = targetSessionId;
