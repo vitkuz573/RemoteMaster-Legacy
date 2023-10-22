@@ -199,7 +199,7 @@ public class NativeProcess : IDisposable
             : lastSessionId;
     }
 
-    private static unsafe bool TryCreateInteractiveProcess(NativeProcessStartInfo options, SafeHandle hUserTokenDup, out PROCESS_INFORMATION procInfo, out SafeFileHandle stdInReadHandle, out SafeFileHandle stdOutReadHandle, out SafeFileHandle stdErrReadHandle)
+    private static unsafe bool TryCreateInteractiveProcess(NativeProcessStartInfo startInfo, SafeHandle hUserTokenDup, out PROCESS_INFORMATION procInfo, out SafeFileHandle stdInReadHandle, out SafeFileHandle stdOutReadHandle, out SafeFileHandle stdErrReadHandle)
     {
         if (!CreatePipe(out stdInReadHandle, out var stdInWriteHandle, null, 0))
         {
@@ -238,7 +238,7 @@ public class NativeProcess : IDisposable
             throw new Exception("hStdError handle is not inheritable.");
         }
 
-        fixed (char* pDesktopName = $@"winsta0\{options.DesktopName}")
+        fixed (char* pDesktopName = $@"winsta0\{startInfo.DesktopName}")
         {
             var startupInfo = new STARTUPINFOW
             {
@@ -250,9 +250,13 @@ public class NativeProcess : IDisposable
                 dwFlags = STARTUPINFOW_FLAGS.STARTF_USESTDHANDLES
             };
 
-            var dwCreationFlags = SetCreationFlags(options.CreateNoWindow);
+            var dwCreationFlags = PROCESS_CREATION_FLAGS.NORMAL_PRIORITY_CLASS | PROCESS_CREATION_FLAGS.CREATE_UNICODE_ENVIRONMENT;
 
-            var fullCommand = $"{options.ApplicationName} {options.Arguments ?? string.Empty}";
+            dwCreationFlags |= startInfo.CreateNoWindow
+                ? PROCESS_CREATION_FLAGS.CREATE_NO_WINDOW
+                : PROCESS_CREATION_FLAGS.CREATE_NEW_CONSOLE;
+
+            var fullCommand = $"{startInfo.ApplicationName} {startInfo.Arguments ?? string.Empty}";
             fullCommand += char.MinValue;
             var commandSpan = new Span<char>(fullCommand.ToCharArray());
             var result = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, null, null, false, dwCreationFlags, null, null, startupInfo, out procInfo);
@@ -261,17 +265,6 @@ public class NativeProcess : IDisposable
 
             return result;
         }
-    }
-
-    private static PROCESS_CREATION_FLAGS SetCreationFlags(bool createNoWindow)
-    {
-        var dwCreationFlags = PROCESS_CREATION_FLAGS.NORMAL_PRIORITY_CLASS | PROCESS_CREATION_FLAGS.CREATE_UNICODE_ENVIRONMENT;
-
-        dwCreationFlags |= createNoWindow
-            ? PROCESS_CREATION_FLAGS.CREATE_NO_WINDOW
-            : PROCESS_CREATION_FLAGS.CREATE_NEW_CONSOLE;
-
-        return dwCreationFlags;
     }
 
     private static bool TryGetUserToken(uint sessionId, out SafeFileHandle hUserToken)
