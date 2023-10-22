@@ -263,11 +263,11 @@ public class NativeProcess : IDisposable
         }
     }
 
-    private static PROCESS_CREATION_FLAGS SetCreationFlags(bool hiddenWindow)
+    private static PROCESS_CREATION_FLAGS SetCreationFlags(bool createNoWindow)
     {
         var dwCreationFlags = PROCESS_CREATION_FLAGS.NORMAL_PRIORITY_CLASS | PROCESS_CREATION_FLAGS.CREATE_UNICODE_ENVIRONMENT;
 
-        dwCreationFlags |= hiddenWindow
+        dwCreationFlags |= createNoWindow
             ? PROCESS_CREATION_FLAGS.CREATE_NO_WINDOW
             : PROCESS_CREATION_FLAGS.CREATE_NEW_CONSOLE;
 
