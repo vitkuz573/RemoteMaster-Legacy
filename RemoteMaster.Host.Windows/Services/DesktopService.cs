@@ -3,13 +3,13 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics.CodeAnalysis;
-using RemoteMaster.Host.Abstractions;
+using RemoteMaster.Host.Windows.Abstractions;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.System.StationsAndDesktops;
 using static Windows.Win32.PInvoke;
 
-namespace RemoteMaster.Host.Services;
+namespace RemoteMaster.Host.Windows.Services;
 
 public class DesktopService : IDesktopService
 {

@@ -4,11 +4,11 @@
 
 using System.Drawing;
 using System.Runtime.InteropServices;
-using RemoteMaster.Host.Abstractions;
+using RemoteMaster.Host.Windows.Abstractions;
 using Windows.Win32.UI.WindowsAndMessaging;
 using static Windows.Win32.PInvoke;
 
-namespace RemoteMaster.Host.Services;
+namespace RemoteMaster.Host.Windows.Services;
 
 public class CursorRenderService : ICursorRenderService
 {

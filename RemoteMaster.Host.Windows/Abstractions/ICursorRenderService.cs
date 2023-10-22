@@ -4,7 +4,7 @@
 
 using System.Drawing;
 
-namespace RemoteMaster.Host.Abstractions;
+namespace RemoteMaster.Host.Windows.Abstractions;
 
 public interface ICursorRenderService : IDisposable
 {

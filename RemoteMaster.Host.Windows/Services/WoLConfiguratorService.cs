@@ -7,7 +7,7 @@ using System.Management;
 using Microsoft.Win32;
 using RemoteMaster.Host.Core.Abstractions;
 
-namespace RemoteMaster.Host.Services;
+namespace RemoteMaster.Host.Windows.Services;
 
 public class WoLConfiguratorService : IWoLConfiguratorService
 {

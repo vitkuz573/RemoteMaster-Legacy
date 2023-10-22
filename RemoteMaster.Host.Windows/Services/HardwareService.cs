@@ -7,7 +7,7 @@ using RemoteMaster.Shared.Models;
 using Windows.Win32.Foundation;
 using static Windows.Win32.PInvoke;
 
-namespace RemoteMaster.Host.Services;
+namespace RemoteMaster.Host.Windows.Services;
 
 public class HardwareService : IHardwareService
 {

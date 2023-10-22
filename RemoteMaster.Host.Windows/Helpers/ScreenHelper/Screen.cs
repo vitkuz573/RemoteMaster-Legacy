@@ -11,7 +11,7 @@ using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
 
-namespace RemoteMaster.Host.Helpers.ScreenHelper;
+namespace RemoteMaster.Host.Windows.Helpers.ScreenHelper;
 
 public partial class Screen
 {

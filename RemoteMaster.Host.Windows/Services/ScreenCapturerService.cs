@@ -6,12 +6,12 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using Microsoft.IO;
-using RemoteMaster.Host.Abstractions;
+using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Models;
 using SkiaSharp;
 
-namespace RemoteMaster.Host.Services;
+namespace RemoteMaster.Host.Windows.Services;
 
 public abstract class ScreenCapturerService : IScreenCapturerService
 {

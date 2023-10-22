@@ -4,19 +4,17 @@
 
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
 using System.Text;
 using Microsoft.Win32.SafeHandles;
-using RemoteMaster.Host.Models;
+using RemoteMaster.Host.Windows.Models;
 using Windows.Win32.Foundation;
 using Windows.Win32.Security;
 using Windows.Win32.System.RemoteDesktop;
 using Windows.Win32.System.Threading;
 using static Windows.Win32.PInvoke;
 
-namespace RemoteMaster.Host.Services;
+namespace RemoteMaster.Host.Windows.Services;
 
-[SupportedOSPlatform("windows6.0.6000")]
 public class NativeProcess : IDisposable
 {
     public uint ProcessId { get; private set; }

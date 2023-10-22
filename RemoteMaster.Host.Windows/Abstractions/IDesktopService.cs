@@ -4,7 +4,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-namespace RemoteMaster.Host.Abstractions;
+namespace RemoteMaster.Host.Windows.Abstractions;
 
 public interface IDesktopService
 {

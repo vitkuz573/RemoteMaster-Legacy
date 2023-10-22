@@ -3,11 +3,11 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.Win32.SafeHandles;
-using RemoteMaster.Host.Abstractions;
+using RemoteMaster.Host.Windows.Abstractions;
 using Windows.Win32.Security;
 using static Windows.Win32.PInvoke;
 
-namespace RemoteMaster.Host.Services;
+namespace RemoteMaster.Host.Windows.Services;
 
 public class TokenPrivilegeService : ITokenPrivilegeService
 {

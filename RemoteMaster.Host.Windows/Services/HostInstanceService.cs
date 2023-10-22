@@ -5,9 +5,9 @@
 using System.Diagnostics;
 using System.Management;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Models;
+using RemoteMaster.Host.Windows.Models;
 
-namespace RemoteMaster.Host.Services;
+namespace RemoteMaster.Host.Windows.Services;
 
 public class HostInstanceService : IHostInstanceService
 {

@@ -7,7 +7,7 @@ using Windows.Win32.Foundation;
 using Windows.Win32.NetworkManagement.WNet;
 using static Windows.Win32.PInvoke;
 
-namespace RemoteMaster.Host.Helpers;
+namespace RemoteMaster.Host.Windows.Helpers;
 
 public abstract class NetworkDriveHelper
 {

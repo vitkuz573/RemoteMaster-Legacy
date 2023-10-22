@@ -4,11 +4,11 @@
 
 using System.Reflection;
 using System.ServiceProcess;
-using RemoteMaster.Host.Abstractions;
+using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Models;
 
-namespace RemoteMaster.Host.Services;
+namespace RemoteMaster.Host.Windows.Services;
 
 public class HostServiceManager : IHostServiceManager
 {
