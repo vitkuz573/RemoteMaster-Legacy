@@ -4,9 +4,8 @@
 
 using System.Diagnostics;
 using System.Text;
-using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Windows.Helpers;
+using RemoteMaster.Host.Windows.Abstractions;
 
 namespace RemoteMaster.Host.Windows.Services;
 
@@ -16,14 +15,16 @@ public class UpdaterService : IUpdaterService
     private readonly string _scriptPath;
     private readonly string _updateFolderPath;
 
+    private readonly INetworkDriveService _networkDriveService;
     private readonly IServiceConfiguration _hostServiceConfig;
     private readonly ILogger<UpdaterService> _logger;
 
-    public UpdaterService(IServiceConfiguration hostServiceConfig, ILogger<UpdaterService> logger)
+    public UpdaterService(INetworkDriveService networkDriveService, IServiceConfiguration hostServiceConfig, ILogger<UpdaterService> logger)
     {
         _scriptPath = Path.Combine(_baseFolderPath, "update.ps1");
         _updateFolderPath = Path.Combine(_baseFolderPath, "Update");
 
+        _networkDriveService = networkDriveService;
         _hostServiceConfig = hostServiceConfig;
         _logger = logger;
     }
@@ -34,13 +35,13 @@ public class UpdaterService : IUpdaterService
         {
             var sourceFolder = Path.Combine(sharedFolder, "Host");
 
-            NetworkDriveHelper.MapNetworkDrive(sharedFolder, username, password);
+            _networkDriveService.MapNetworkDrive(sharedFolder, username, password);
             _logger.LogInformation("Mapped network drive: {SharedFolder}", sharedFolder);
 
-            NetworkDriveHelper.DirectoryCopy(sourceFolder, _updateFolderPath, true, true);
+            DirectoryCopy(sourceFolder, _updateFolderPath, true, true);
             _logger.LogInformation("Copied from {SourceFolder} to {UpdateFolderPath}", sourceFolder, _updateFolderPath);
 
-            NetworkDriveHelper.CancelNetworkDrive(sharedFolder);
+            _networkDriveService.CancelNetworkDrive(sharedFolder);
             _logger.LogInformation("Unmapped network drive: {SharedFolder}", sharedFolder);
         }
         catch (Exception ex)
@@ -103,6 +104,35 @@ public class UpdaterService : IUpdaterService
         catch (Exception ex)
         {
             _logger.LogError("Error in Execute method: {Message}", ex.Message);
+        }
+    }
+
+    private void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs = true, bool overwriteExisting = false)
+    {
+        var sourceDir = new DirectoryInfo(sourceDirName);
+
+        if (!Directory.Exists(destDirName))
+        {
+            Directory.CreateDirectory(destDirName);
+        }
+
+        foreach (var file in sourceDir.GetFiles())
+        {
+            var destPath = Path.Combine(destDirName, file.Name);
+
+            if (!File.Exists(destPath) || overwriteExisting)
+            {
+                file.CopyTo(destPath, true);
+            }
+        }
+
+        if (copySubDirs)
+        {
+            foreach (var subdir in sourceDir.GetDirectories())
+            {
+                var destSubDir = Path.Combine(destDirName, subdir.Name);
+                DirectoryCopy(subdir.FullName, destSubDir, true, overwriteExisting);
+            }
         }
     }
 }

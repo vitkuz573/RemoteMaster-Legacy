@@ -7,9 +7,9 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Extensions;
+using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Host.Windows.Services;
 using RemoteMaster.Shared.Models;
@@ -59,6 +59,7 @@ internal class Program
         builder.Services.AddSingleton<IUpdaterService, UpdaterService>();
         builder.Services.AddSingleton<ITokenPrivilegeService, TokenPrivilegeService>();
         builder.Services.AddSingleton<IDesktopService, DesktopService>();
+        builder.Services.AddSingleton<INetworkDriveService, NetworkDriveService>();
 
         var publicKeyPath = @"C:\RemoteMaster\Security\public_key.pem";
         var publicKey = File.ReadAllText(publicKeyPath);
