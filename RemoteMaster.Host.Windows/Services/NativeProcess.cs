@@ -244,6 +244,7 @@ public class NativeProcess : IDisposable
             {
                 cb = (uint)Marshal.SizeOf<STARTUPINFOW>(),
                 lpDesktop = pDesktopName,
+                hStdInput = (HANDLE)stdInReadHandle.DangerousGetHandle(),
                 hStdOutput = (HANDLE)stdOutWriteHandle.DangerousGetHandle(),
                 hStdError = (HANDLE)stdErrWriteHandle.DangerousGetHandle(),
                 dwFlags = STARTUPINFOW_FLAGS.STARTF_USESTDHANDLES
