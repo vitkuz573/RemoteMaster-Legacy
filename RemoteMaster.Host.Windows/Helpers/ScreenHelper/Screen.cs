@@ -6,15 +6,13 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Drawing;
-using System.Runtime.Versioning;
 using Microsoft.Win32;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
 
-namespace RemoteMaster.Host.Services.ScreenHelper;
+namespace RemoteMaster.Host.Helpers.ScreenHelper;
 
-[SupportedOSPlatform("windows6.0.6000")]
 public partial class Screen
 {
     private readonly HMONITOR _hmonitor;

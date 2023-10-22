@@ -6,16 +6,14 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Drawing;
-using System.Runtime.Versioning;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
 using static Windows.Win32.UI.WindowsAndMessaging.SYSTEM_METRICS_INDEX;
 using static Windows.Win32.UI.WindowsAndMessaging.SYSTEM_PARAMETERS_INFO_ACTION;
 
-namespace RemoteMaster.Host.Services.ScreenHelper;
+namespace RemoteMaster.Host.Helpers.ScreenHelper;
 
-[SupportedOSPlatform("windows6.0.6000")]
 public static class SystemInformation
 {
     private static bool s_checkMultiMonitorSupport;

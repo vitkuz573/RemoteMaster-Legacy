@@ -5,7 +5,7 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 using RemoteMaster.Host.Abstractions;
-using RemoteMaster.Host.Services.ScreenHelper;
+using RemoteMaster.Host.Helpers.ScreenHelper;
 using RemoteMaster.Shared.Models;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
