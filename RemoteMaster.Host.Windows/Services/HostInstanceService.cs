@@ -64,7 +64,8 @@ public class HostInstanceService : IHostInstanceService
             ForceConsoleSession = true,
             DesktopName = "default",
             CreateNoWindow = false,
-            UseCurrentUserToken = false
+            UseCurrentUserToken = false,
+            InheritHandles = false
         };
 
         NativeProcess.Start(options);
