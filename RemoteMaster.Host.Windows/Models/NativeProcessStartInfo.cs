@@ -16,7 +16,7 @@ public class NativeProcessStartInfo
 
     public string DesktopName { get; set; }
 
-    public bool HiddenWindow { get; set; }
+    public bool CreateNoWindow { get; set; }
 
     public bool UseCurrentUserToken { get; set; }
 

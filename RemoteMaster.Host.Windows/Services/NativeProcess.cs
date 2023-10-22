@@ -115,7 +115,7 @@ public class NativeProcess : IDisposable
         {
             if (options.UseCurrentUserToken && TryGetUserToken(sessionId, out hUserTokenDup))
             {
-                if (TryCreateInteractiveProcess(options, hUserTokenDup, options.ApplicationName, options.DesktopName, options.HiddenWindow, out procInfo, out stdInReadHandle, out stdOutReadHandle, out stdErrReadHandle))
+                if (TryCreateInteractiveProcess(options, hUserTokenDup, out procInfo, out stdInReadHandle, out stdOutReadHandle, out stdErrReadHandle))
                 {
                     return new NativeProcess(procInfo, stdInReadHandle, stdOutReadHandle, stdErrReadHandle);
                 }
@@ -131,7 +131,7 @@ public class NativeProcess : IDisposable
                     {
                         if (TryDuplicateToken(hPToken, out hUserTokenDup))
                         {
-                            if (TryCreateInteractiveProcess(options, hUserTokenDup, options.ApplicationName, options.DesktopName, options.HiddenWindow, out procInfo, out stdInReadHandle, out stdOutReadHandle, out stdErrReadHandle))
+                            if (TryCreateInteractiveProcess(options, hUserTokenDup, out procInfo, out stdInReadHandle, out stdOutReadHandle, out stdErrReadHandle))
                             {
                                 return new NativeProcess(procInfo, stdInReadHandle, stdOutReadHandle, stdErrReadHandle);
                             }
@@ -199,7 +199,7 @@ public class NativeProcess : IDisposable
             : lastSessionId;
     }
 
-    private static unsafe bool TryCreateInteractiveProcess(NativeProcessStartInfo options, SafeHandle hUserTokenDup, string applicationName, string desktopName, bool hiddenWindow, out PROCESS_INFORMATION procInfo, out SafeFileHandle stdInReadHandle, out SafeFileHandle stdOutReadHandle, out SafeFileHandle stdErrReadHandle)
+    private static unsafe bool TryCreateInteractiveProcess(NativeProcessStartInfo options, SafeHandle hUserTokenDup, out PROCESS_INFORMATION procInfo, out SafeFileHandle stdInReadHandle, out SafeFileHandle stdOutReadHandle, out SafeFileHandle stdErrReadHandle)
     {
         if (!CreatePipe(out stdInReadHandle, out var stdInWriteHandle, null, 0))
         {
@@ -238,7 +238,7 @@ public class NativeProcess : IDisposable
             throw new Exception("hStdError handle is not inheritable.");
         }
 
-        fixed (char* pDesktopName = $@"winsta0\{desktopName}")
+        fixed (char* pDesktopName = $@"winsta0\{options.DesktopName}")
         {
             var startupInfo = new STARTUPINFOW
             {
@@ -249,9 +249,9 @@ public class NativeProcess : IDisposable
                 dwFlags = STARTUPINFOW_FLAGS.STARTF_USESTDHANDLES
             };
 
-            var dwCreationFlags = SetCreationFlags(hiddenWindow);
+            var dwCreationFlags = SetCreationFlags(options.CreateNoWindow);
 
-            var fullCommand = $"{applicationName} {options.Arguments ?? string.Empty}";
+            var fullCommand = $"{options.ApplicationName} {options.Arguments ?? string.Empty}";
             fullCommand += char.MinValue;
             var commandSpan = new Span<char>(fullCommand.ToCharArray());
             var result = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, null, null, false, dwCreationFlags, null, null, startupInfo, out procInfo);
