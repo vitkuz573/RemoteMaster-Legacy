@@ -38,11 +38,15 @@ public class DesktopService : IDesktopService
             {
                 desktopName = null;
 
+                _logger.LogError("Failed to get user object information.");
+                
                 return false;
             }
 
             var charLength = (int)cbLengthNeeded / sizeof(char) - 1;
             desktopName = new string(pDesktopBytes, 0, charLength);
+            
+            _logger.LogInformation("Retrieved desktop name: {DesktopName}", desktopName);
 
             return true;
         }
@@ -58,17 +62,28 @@ public class DesktopService : IDesktopService
 
             if (inputDesktop == null)
             {
+                _logger.LogWarning("Failed to open input desktop.");
+                
                 return false;
             }
 
             var result = SetThreadDesktop(inputDesktop) && SwitchDesktop(inputDesktop);
             _lastInputDesktop = inputDesktop;
 
+            if (result)
+            {
+                _logger.LogInformation("Successfully switched to input desktop.");
+            }
+            else
+            {
+                _logger.LogWarning("Failed to switch to input desktop.");
+            }
+
             return result;
         }
         catch (Exception ex)
         {
-            _logger.LogError("Error: {Message}", ex.Message);
+            _logger.LogError(ex, "Error encountered while attempting to switch to input desktop.");
 
             return false;
         }
