@@ -4,7 +4,6 @@
 
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Text;
 using Microsoft.Win32.SafeHandles;
 using RemoteMaster.Host.Windows.Models;
 using Windows.Win32.Foundation;
@@ -15,153 +14,61 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class NativeProcess : IDisposable
+public class NativeProcess
 {
-    public uint ProcessId { get; private set; }
-
-    public uint ThreadId { get; private set; }
-
-    public SafeFileHandle ProcessHandle { get; private set; }
-
-    public SafeFileHandle ThreadHandle { get; private set; }
-
-    public SafeFileHandle StdInReadHandle { get; private set; }
-
-    public SafeFileHandle StdOutReadHandle { get; private set; }
-
-    public SafeFileHandle StdErrReadHandle { get; private set; }
-
-
-    public event Action<string> OutputReceived;
-
     public NativeProcessStartInfo StartInfo { get; set; }
-
-    public NativeProcess(NativeProcessStartInfo startInfo)
-    {
-        StartInfo = startInfo;
-    }
-
-    internal NativeProcess(PROCESS_INFORMATION procInfo, SafeFileHandle stdInReadHandle, SafeFileHandle stdOutReadHandle, SafeFileHandle stdErrReadHandle)
-    {
-        ProcessId = procInfo.dwProcessId;
-        ThreadId = procInfo.dwThreadId;
-
-        ProcessHandle = new SafeFileHandle(procInfo.hProcess, true);
-        ThreadHandle = new SafeFileHandle(procInfo.hThread, true);
-
-        StdInReadHandle = stdInReadHandle;
-        StdOutReadHandle = stdOutReadHandle;
-        StdErrReadHandle = stdErrReadHandle;
-    }
-
-    public void Start()
-    {
-        var proc = StartInternal(StartInfo);
-
-        ProcessId = proc.ProcessId;
-        ThreadId = proc.ThreadId;
-
-        ProcessHandle = proc.ProcessHandle;
-        ThreadHandle = proc.ThreadHandle;
-
-        StdInReadHandle = proc.StdInReadHandle;
-        StdOutReadHandle = proc.StdOutReadHandle;
-        StdErrReadHandle = proc.StdErrReadHandle;
-    }
 
     public static NativeProcess Start(NativeProcessStartInfo startInfo)
     {
-        var process = new NativeProcess(startInfo);
-        process.Start();
+        if (startInfo == null)
+        {
+            throw new ArgumentNullException(nameof(startInfo));
+        }
 
-        return process;
+        return StartInternal(startInfo);
     }
 
-    public async Task StartListeningToOutputAsync()
-    {
-        if (StdOutReadHandle == null || StdOutReadHandle.IsInvalid)
-        {
-            throw new InvalidOperationException("Invalid standard output handle.");
-        }
-
-        if (OutputReceived == null)
-        {
-            throw new InvalidOperationException("No subscribers to OutputReceived event.");
-        }
-
-        using var fs = new FileStream(StdOutReadHandle, FileAccess.Read, 4096, false);
-        using var reader = new StreamReader(fs, Encoding.UTF8);
-        string line;
-
-        while ((line = await reader.ReadLineAsync()) != null)
-        {
-            OutputReceived?.Invoke(line);
-        }
-    }
-
-#pragma warning disable CA2000
     private static NativeProcess StartInternal(NativeProcessStartInfo startInfo)
     {
         var procInfo = new PROCESS_INFORMATION();
-        var sessionId = GetSessionId(startInfo.ForceConsoleSession, startInfo.TargetSessionId);
+
+        var sessionId = !startInfo.ForceConsoleSession
+            ? FindTargetSessionId(startInfo.TargetSessionId)
+            : WTSGetActiveConsoleSessionId();
 
         SafeFileHandle hUserTokenDup = null;
-
         SafeFileHandle stdInReadHandle = null;
         SafeFileHandle stdOutReadHandle = null;
         SafeFileHandle stdErrReadHandle = null;
 
         try
         {
-            if (startInfo.UseCurrentUserToken && TryGetUserToken(sessionId, out hUserTokenDup))
-            {
-                if (TryCreateInteractiveProcess(startInfo, hUserTokenDup, out procInfo, out stdInReadHandle, out stdOutReadHandle, out stdErrReadHandle))
-                {
-                    return new NativeProcess(procInfo, stdInReadHandle, stdOutReadHandle, stdErrReadHandle);
-                }
-            }
-            else
+            if (!startInfo.UseCurrentUserToken || !TryGetUserToken(sessionId, out hUserTokenDup))
             {
                 var winlogonPid = GetWinlogonPidForSession(sessionId);
                 using var hProcess = OpenProcess_SafeHandle(PROCESS_ACCESS_RIGHTS.PROCESS_ALL_ACCESS, false, winlogonPid);
 
-                if (IsProcessOpen(hProcess) && TryGetProcessToken(hProcess, out var hPToken))
+                if (!hProcess.IsInvalid && !hProcess.IsClosed && OpenProcessToken(hProcess, TOKEN_ACCESS_MASK.TOKEN_DUPLICATE, out var hPToken))
                 {
                     using (hPToken)
                     {
-                        if (TryDuplicateToken(hPToken, out hUserTokenDup))
-                        {
-                            if (TryCreateInteractiveProcess(startInfo, hUserTokenDup, out procInfo, out stdInReadHandle, out stdOutReadHandle, out stdErrReadHandle))
-                            {
-                                return new NativeProcess(procInfo, stdInReadHandle, stdOutReadHandle, stdErrReadHandle);
-                            }
-                        }
+                        DuplicateTokenEx(hPToken, TOKEN_ACCESS_MASK.TOKEN_ALL_ACCESS, null, SECURITY_IMPERSONATION_LEVEL.SecurityIdentification, TOKEN_TYPE.TokenPrimary, out hUserTokenDup);
                     }
                 }
+            }
+
+            if (hUserTokenDup != null)
+            {
+                TryCreateInteractiveProcess(startInfo, hUserTokenDup, out procInfo);
             }
         }
         finally
         {
             hUserTokenDup?.Dispose();
-
             stdInReadHandle?.Dispose();
         }
 
         return null;
-    }
-#pragma warning restore CA2000
-
-    private static bool IsProcessOpen(SafeHandle hProcess) => !hProcess.IsInvalid && !hProcess.IsClosed;
-
-    private static bool TryGetProcessToken(SafeHandle hProcess, out SafeFileHandle hPToken) => OpenProcessToken(hProcess, TOKEN_ACCESS_MASK.TOKEN_DUPLICATE, out hPToken);
-
-    private static bool TryDuplicateToken(SafeHandle hPToken, out SafeFileHandle hUserTokenDup) => DuplicateTokenEx(hPToken, TOKEN_ACCESS_MASK.TOKEN_ALL_ACCESS, null, SECURITY_IMPERSONATION_LEVEL.SecurityIdentification, TOKEN_TYPE.TokenPrimary, out hUserTokenDup);
-
-    private static uint GetSessionId(bool forceConsoleSession, int? targetSessionId)
-    {
-        return !forceConsoleSession
-            ? FindTargetSessionId(targetSessionId.Value)
-            : WTSGetActiveConsoleSessionId();
     }
 
     private static uint GetWinlogonPidForSession(uint sessionId)
@@ -199,20 +106,20 @@ public class NativeProcess : IDisposable
             : lastSessionId;
     }
 
-    private static unsafe bool TryCreateInteractiveProcess(NativeProcessStartInfo startInfo, SafeHandle hUserTokenDup, out PROCESS_INFORMATION procInfo, out SafeFileHandle stdInReadHandle, out SafeFileHandle stdOutReadHandle, out SafeFileHandle stdErrReadHandle)
+    private static unsafe bool TryCreateInteractiveProcess(NativeProcessStartInfo startInfo, SafeHandle hUserTokenDup, out PROCESS_INFORMATION procInfo)
     {
-        if (!CreatePipe(out stdInReadHandle, out var stdInWriteHandle, null, 0))
+#pragma warning disable CA2000
+        if (!CreatePipe(out var stdInReadHandle, out var stdInWriteHandle, null, 0))
         {
             throw new Exception("Failed to create pipe for standard input.");
         }
 
-#pragma warning disable CA2000
-        if (!CreatePipe(out stdOutReadHandle, out var stdOutWriteHandle, null, 0))
+        if (!CreatePipe(out var stdOutReadHandle, out var stdOutWriteHandle, null, 0))
         {
             throw new Exception("Failed to create pipe for standard output.");
         }
 
-        if (!CreatePipe(out stdErrReadHandle, out var stdErrWriteHandle, null, 0))
+        if (!CreatePipe(out var stdErrReadHandle, out var stdErrWriteHandle, null, 0))
         {
             throw new Exception("Failed to create pipe for standard error");
         }
@@ -226,16 +133,6 @@ public class NativeProcess : IDisposable
         if (!SetHandleInformation(stdErrWriteHandle, (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT, HANDLE_FLAGS.HANDLE_FLAG_INHERIT))
         {
             throw new Exception("Failed to set inheritance attribute for the hStdError handle.");
-        }
-
-        if (!GetHandleInformation(stdOutWriteHandle, out var stdOutFlags) || (stdOutFlags & (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT) != (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT)
-        {
-            throw new Exception("hStdOutput handle is not inheritable.");
-        }
-
-        if (!GetHandleInformation(stdErrWriteHandle, out var stdErrFlags) || (stdErrFlags & (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT) != (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT)
-        {
-            throw new Exception("hStdError handle is not inheritable.");
         }
 
         fixed (char* pDesktopName = $@"winsta0\{startInfo.DesktopName}")
@@ -302,15 +199,5 @@ public class NativeProcess : IDisposable
         }
 
         return sessions;
-    }
-
-    public void Dispose()
-    {
-        ProcessHandle?.Dispose();
-        ThreadHandle?.Dispose();
-
-        StdInReadHandle?.Dispose();
-        StdOutReadHandle?.Dispose();
-        StdErrReadHandle?.Dispose();
     }
 }

@@ -67,7 +67,7 @@ public class HostInstanceService : IHostInstanceService
             UseCurrentUserToken = false
         };
 
-        using var _ = NativeProcess.Start(options);
+        NativeProcess.Start(options);
     }
 
     private static IEnumerable<Process> FindHostProcesses()
