@@ -20,6 +20,8 @@ public class NativeProcessStartInfo
 
     public bool UseCurrentUserToken { get; init; }
 
+    public bool InheritHandles { get; init; } = false;
+
     public NativeProcessStartInfo(string applicationName, int targetSessionId)
     {
         ApplicationName = applicationName;

@@ -171,12 +171,30 @@ public class NativeProcess
             fullCommand += char.MinValue;
             
             var commandSpan = new Span<char>(fullCommand.ToCharArray());
-            var result = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, null, null, false, dwCreationFlags, null, null, startupInfo, out procInfo);
+            var result = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, null, null, startInfo.InheritHandles, dwCreationFlags, null, null, startupInfo, out procInfo);
 
             stdInWriteHandle.Close();
 
+            Task.Run(() => ReadFromStream(stdOutReadHandle));
+            Task.Run(() => ReadFromStream(stdErrReadHandle));
+
             return result;
         }
+    }
+
+    private static void ReadFromStream(SafeFileHandle handle)
+    {
+        using (var reader = new StreamReader(new FileStream(handle, FileAccess.Read)))
+        {
+            string line;
+
+            while ((line = reader.ReadLine()) != null)
+            {
+                Console.WriteLine(line);
+            }
+        }
+
+        handle.Close();
     }
 
     private static bool TryGetUserToken(uint sessionId, out SafeFileHandle hUserToken)
