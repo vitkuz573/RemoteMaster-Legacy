@@ -61,12 +61,7 @@ public class HostServiceManager : IHostServiceManager
 
             _logger.LogInformation("{ServiceName} installed and started successfully.", _hostServiceConfig.Name);
 
-            var registerResult = await _hostLifecycleService.RegisterAsync(configuration, hostName, ipv4Address, macAddress);
-
-            if (!registerResult)
-            {
-                _logger.LogError("Host registration failed.");
-            }
+            await _hostLifecycleService.RegisterAsync(configuration, hostName, ipv4Address, macAddress);
         }
         catch (Exception ex)
         {
@@ -97,12 +92,7 @@ public class HostServiceManager : IHostServiceManager
 
             DeleteFiles();
 
-            var unregisterResult = await _hostLifecycleService.UnregisterAsync(configuration, hostName);
-
-            if (!unregisterResult)
-            {
-                _logger.LogError("Host unregistration failed.");
-            }
+            await _hostLifecycleService.UnregisterAsync(configuration, hostName);
         }
         catch (Exception ex)
         {
