@@ -28,7 +28,7 @@ public static class ServiceCollectionExtensions
         });
 
         services.AddSingleton<IHostLifecycleService, HostLifecycleService>();
-        services.AddSingleton<IConfigurationService, ConfigurationService>();
+        services.AddSingleton<IHostConfigurationService, HostConfigurationService>();
         services.AddSingleton<IHostInfoService, HostInfoService>();
         services.AddSingleton<IAppState, AppState>();
         services.AddSingleton<IShutdownService, ShutdownService>();

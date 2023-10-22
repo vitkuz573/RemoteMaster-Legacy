@@ -6,9 +6,9 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface IConfigurationService
+public interface IHostConfigurationService
 {
-    HostConfiguration LoadConfiguration();
+    string ConfigurationFileName { get; }
 
-    string GetConfigurationFileName();
+    Task<HostConfiguration> LoadConfigurationAsync();
 }

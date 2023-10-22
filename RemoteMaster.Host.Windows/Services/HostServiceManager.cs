@@ -15,7 +15,7 @@ public class HostServiceManager : IHostServiceManager
     private readonly IHostLifecycleService _hostLifecycleService;
     private readonly IHostInstanceService _hostInstanceService;
     private readonly IServiceManager _serviceManager;
-    private readonly IConfigurationService _configurationService;
+    private readonly IHostConfigurationService _configurationService;
     private readonly ILogger<HostServiceManager> _logger;
 
     private readonly IServiceConfig _hostServiceConfig;
@@ -23,7 +23,7 @@ public class HostServiceManager : IHostServiceManager
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Host";
 
-    public HostServiceManager(IHostLifecycleService hostLifecycleService, IHostInstanceService hostInstanceService, IServiceManager serviceManager, IConfigurationService configurationService, IServiceConfig hostServiceConfig, ILogger<HostServiceManager> logger)
+    public HostServiceManager(IHostLifecycleService hostLifecycleService, IHostInstanceService hostInstanceService, IServiceManager serviceManager, IHostConfigurationService configurationService, IServiceConfig hostServiceConfig, ILogger<HostServiceManager> logger)
     {
         _hostLifecycleService = hostLifecycleService;
         _hostInstanceService = hostInstanceService;
@@ -135,7 +135,7 @@ public class HostServiceManager : IHostServiceManager
             throw new InvalidOperationException($"Failed to copy the executable to {targetExecutablePath}. Details: {ex.Message}", ex);
         }
 
-        var configName = _configurationService.GetConfigurationFileName();
+        var configName = _configurationService.ConfigurationFileName;
         var sourceConfigPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, configName);
         var targetConfigPath = Path.Combine(targetDirectoryPath, configName);
 

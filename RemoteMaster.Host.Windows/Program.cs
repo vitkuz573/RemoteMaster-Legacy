@@ -121,7 +121,7 @@ internal class Program
 
         if (install)
         {
-            var configurationService = app.Services.GetRequiredService<IConfigurationService>();
+            var configurationService = app.Services.GetRequiredService<IHostConfigurationService>();
             var hostInfoService = app.Services.GetRequiredService<IHostInfoService>();
             var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
 
@@ -129,7 +129,7 @@ internal class Program
 
             try
             {
-                configuration = configurationService.LoadConfiguration();
+                configuration = await configurationService.LoadConfigurationAsync();
             }
             catch (FileNotFoundException ex)
             {
@@ -167,7 +167,7 @@ internal class Program
 
         if (uninstall)
         {
-            var configurationService = app.Services.GetRequiredService<IConfigurationService>();
+            var configurationService = app.Services.GetRequiredService<IHostConfigurationService>();
             var hostInfoService = app.Services.GetRequiredService<IHostInfoService>();
             var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
 
@@ -175,7 +175,7 @@ internal class Program
 
             try
             {
-                configuration = configurationService.LoadConfiguration();
+                configuration = await configurationService.LoadConfigurationAsync();
             }
             catch (FileNotFoundException ex)
             {
