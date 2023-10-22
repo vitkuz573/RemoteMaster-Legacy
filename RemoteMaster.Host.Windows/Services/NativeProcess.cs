@@ -16,7 +16,15 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class NativeProcess
 {
-    public NativeProcessStartInfo StartInfo { get; set; }
+    public NativeProcessStartInfo StartInfo { get; private set; }
+
+    public uint Id { get; private set; }
+
+    private NativeProcess(NativeProcessStartInfo startInfo, uint processId)
+    {
+        StartInfo = startInfo;
+        Id = processId;
+    }
 
     public static NativeProcess Start(NativeProcessStartInfo startInfo)
     {
@@ -61,6 +69,12 @@ public class NativeProcess
             {
                 TryCreateInteractiveProcess(startInfo, hUserTokenDup, out procInfo);
             }
+            else
+            {
+                throw new InvalidOperationException("Failed to get or duplicate user token.");
+            }
+
+            return new NativeProcess(startInfo, procInfo.dwProcessId);
         }
         finally
         {
