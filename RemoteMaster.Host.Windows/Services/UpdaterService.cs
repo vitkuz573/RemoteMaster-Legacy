@@ -36,13 +36,11 @@ public class UpdaterService : IUpdaterService
             var sourceFolder = Path.Combine(sharedFolder, "Host");
 
             _networkDriveService.MapNetworkDrive(sharedFolder, username, password);
-            _logger.LogInformation("Mapped network drive: {SharedFolder}", sharedFolder);
 
             DirectoryCopy(sourceFolder, _updateFolderPath, true, true);
             _logger.LogInformation("Copied from {SourceFolder} to {UpdateFolderPath}", sourceFolder, _updateFolderPath);
 
             _networkDriveService.CancelNetworkDrive(sharedFolder);
-            _logger.LogInformation("Unmapped network drive: {SharedFolder}", sharedFolder);
         }
         catch (Exception ex)
         {
