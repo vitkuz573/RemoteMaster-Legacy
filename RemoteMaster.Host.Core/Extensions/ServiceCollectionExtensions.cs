@@ -19,6 +19,7 @@ public static class ServiceCollectionExtensions
             .WriteTo.Console()
             .WriteTo.File(@"C:\ProgramData\RemoteMaster\Host\RemoteMaster_Host.log", rollingInterval: RollingInterval.Day)
             .Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Received hub invocation"))
+            .Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Successfully switched to input desktop"))
             .CreateLogger();
 
         services.AddLogging(builder =>
