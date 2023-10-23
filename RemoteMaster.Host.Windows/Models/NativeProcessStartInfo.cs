@@ -6,7 +6,7 @@ namespace RemoteMaster.Host.Windows.Models;
 
 public class NativeProcessStartInfo
 {
-    public string ApplicationName { get; init; }
+    public string FileName { get; init; }
 
     public string Arguments { get; init; }
 
@@ -24,7 +24,7 @@ public class NativeProcessStartInfo
 
     public NativeProcessStartInfo(string applicationName, int targetSessionId)
     {
-        ApplicationName = applicationName;
+        FileName = applicationName;
         TargetSessionId = targetSessionId;
     }
 }

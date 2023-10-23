@@ -167,7 +167,7 @@ public class NativeProcess
                 ? PROCESS_CREATION_FLAGS.CREATE_NO_WINDOW
                 : PROCESS_CREATION_FLAGS.CREATE_NEW_CONSOLE;
 
-            var fullCommand = $"{startInfo.ApplicationName} {startInfo.Arguments ?? string.Empty}";
+            var fullCommand = $"{startInfo.FileName} {startInfo.Arguments ?? string.Empty}";
             fullCommand += char.MinValue;
             
             var commandSpan = new Span<char>(fullCommand.ToCharArray());
