@@ -20,6 +20,8 @@ public class NativeProcess
 
     public uint Id { get; private set; }
 
+    public SafeFileHandle ProcessHandle { get; private set; }
+
     private NativeProcess(NativeProcessStartInfo startInfo, uint processId)
     {
         StartInfo = startInfo;
@@ -74,15 +76,16 @@ public class NativeProcess
                 throw new InvalidOperationException("Failed to get or duplicate user token.");
             }
 
-            return new NativeProcess(startInfo, procInfo.dwProcessId);
+            return new NativeProcess(startInfo, procInfo.dwProcessId)
+            {
+                ProcessHandle = new SafeFileHandle(procInfo.hProcess, true)
+            };
         }
         finally
         {
             hUserTokenDup?.Dispose();
             stdInReadHandle?.Dispose();
         }
-
-        return null;
     }
 
     private static uint GetWinlogonPidForSession(uint sessionId)
@@ -231,5 +234,17 @@ public class NativeProcess
         }
 
         return sessions;
+    }
+
+    public bool WaitForExit(uint millisecondsTimeout = uint.MaxValue)
+    {
+        if (ProcessHandle == null || ProcessHandle.IsInvalid || ProcessHandle.IsClosed)
+        {
+            throw new InvalidOperationException("No process is associated with this NativeProcess object.");
+        }
+
+        var result = WaitForSingleObject(ProcessHandle, millisecondsTimeout);
+
+        return result == WAIT_EVENT.WAIT_OBJECT_0;
     }
 }

@@ -73,3 +73,5 @@ WNetCancelConnection2W
 
 // Miscellaneous
 CreatePipe
+
+WaitForSingleObject
