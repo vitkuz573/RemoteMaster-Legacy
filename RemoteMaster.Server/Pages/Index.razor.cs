@@ -315,21 +315,20 @@ public partial class Index
         }
     }
 
-    private async Task UnjoinFromDomain()
-    {
-        var username = "vitaly@it-ktk.local";
-        var password = "WaLL@8V1";
-
-        await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendUnjoinFromDomain", username, password));
-    }
-
-    private async Task JoinToDomain()
+    private async Task DomainMember(RadzenSplitButtonItem item)
     {
         var domain = "it-ktk.local";
         var username = "vitaly@it-ktk.local";
         var password = "WaLL@8V1";
 
-        await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendJoinToDomain", domain, username, password));
+        if (item.Value == "join")
+        {
+            await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendJoinToDomain", domain, username, password));
+        }
+        else
+        {
+            await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendUnjoinFromDomain", username, password));
+        }
     }
 
     private async Task Update()
