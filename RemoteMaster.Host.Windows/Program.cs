@@ -30,7 +30,7 @@ internal class Program
     {
         if (new[] { serviceMode, userInstance, install, uninstall }.Count(val => val) > 1)
         {
-            Console.WriteLine("Arguments --install, --uninstall, --service-mode and --user-instance are mutually exclusive. Please specify only one.");
+            Console.Error.WriteLine("Arguments --install, --uninstall, --service-mode and --user-instance are mutually exclusive. Please specify only one.");
 
             return;
         }
@@ -138,13 +138,13 @@ internal class Program
             }
             catch (FileNotFoundException ex)
             {
-                Console.WriteLine($"Configuration file not found: {ex.Message}");
+                logger.LogError(ex, "Configuration file not found.");
 
                 return;
             }
             catch (InvalidDataException ex)
             {
-                Console.WriteLine($"Invalid configuration data: {ex.Message}");
+                logger.LogError(ex, "Invalid configuration data.");
 
                 return;
             }
@@ -153,17 +153,17 @@ internal class Program
             var ipv4Address = hostInfoService.GetIPv4Address();
             var macAddress = hostInfoService.GetMacAddress();
 
-            Console.WriteLine(new string('=', 40));
-            Console.WriteLine("INSTALLATION DETAILS:");
-            Console.WriteLine(new string('-', 40));
-            Console.WriteLine($"Server: {configuration.Server}");
-            Console.WriteLine($"Group: {configuration.Group}");
-            Console.WriteLine(new string('-', 40));
-            Console.WriteLine("HOST INFORMATION:");
-            Console.WriteLine($"Host Name: {hostName}");
-            Console.WriteLine($"IPv4 Address: {ipv4Address}");
-            Console.WriteLine($"MAC Address: {macAddress}");
-            Console.WriteLine(new string('=', 40));
+            logger.LogInformation(new string('=', 40));
+            logger.LogInformation("INSTALLATION DETAILS:");
+            logger.LogInformation(new string('-', 40));
+            logger.LogInformation("Server: {Server}", configuration.Server);
+            logger.LogInformation("Group: {Group}", configuration.Group);
+            logger.LogInformation(new string('-', 40));
+            logger.LogInformation("HOST INFORMATION:");
+            logger.LogInformation("Host Name: {HostName}", hostName);
+            logger.LogInformation("IPv4 Address: {IPv4Address}", ipv4Address);
+            logger.LogInformation("MAC Address: {MacAddress}", macAddress);
+            logger.LogInformation(new string('=', 40));
 
             await hostServiceManager.InstallOrUpdate(configuration, hostName, ipv4Address, macAddress);
 
@@ -184,13 +184,13 @@ internal class Program
             }
             catch (FileNotFoundException ex)
             {
-                Console.WriteLine($"[ERROR] Configuration error: {ex.Message}");
+                logger.LogError(ex, "Configuration error.");
 
                 return;
             }
             catch (InvalidDataException ex)
             {
-                Console.WriteLine($"[ERROR] Configuration Error: {ex.Message}");
+                logger.LogError(ex, "Configuration Error.");
 
                 return;
             }
