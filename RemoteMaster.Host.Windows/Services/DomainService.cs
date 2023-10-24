@@ -3,7 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.ComponentModel;
-using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Host.Core.Abstractions;
 using Windows.Win32.NetworkManagement.NetManagement;
 using static Windows.Win32.PInvoke;
 
@@ -23,7 +23,7 @@ public class DomainService : IDomainService
 
     public void UnjoinFromDomain(string user, string password)
     {
-        var result = NetUnjoinDomain(null, user, password, 0x00000004); // NETSETUP_ACCT_DELETE
+        var result = NetUnjoinDomain(null, user, password, NETSETUP_ACCT_DELETE);
 
         if (result != 0)
         {

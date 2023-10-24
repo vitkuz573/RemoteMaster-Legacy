@@ -87,6 +87,10 @@
                             <RadzenSplitButtonItem Text="Stop" Value="stop" />
                         </ChildContent>
                     </RadzenSplitButton>
+                    
+                    <RadzenButton Text="Join to domain" Disabled="@(!_anyComputerSelected)" Click="JoinToDomain" class="mr-2" />
+
+                    <RadzenButton Text="Unjoin from domain" Disabled="@(!_anyComputerSelected)" Click="UnjoinFromDomain" class="mr-2" />
 
                     <RadzenButton Text="Update" Disabled="@(!_anyComputerSelected)" Click="Update" class="mr-2" />
                 </RadzenTabsItem>

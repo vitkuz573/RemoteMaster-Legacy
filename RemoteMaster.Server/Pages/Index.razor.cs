@@ -315,6 +315,23 @@ public partial class Index
         }
     }
 
+    private async Task UnjoinFromDomain()
+    {
+        var username = "vitaly@it-ktk.local";
+        var password = "WaLL@8V1";
+
+        await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendUnjoinFromDomain", username, password));
+    }
+
+    private async Task JoinToDomain()
+    {
+        var domain = "it-ktk.local";
+        var username = "vitaly@it-ktk.local";
+        var password = "WaLL@8V1";
+
+        await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendJoinToDomain", domain, username, password));
+    }
+
     private async Task Update()
     {
         var sharedFolder = @"\\SERVER-DC02\Win\RemoteMaster";

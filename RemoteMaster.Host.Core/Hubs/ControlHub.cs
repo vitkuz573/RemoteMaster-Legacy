@@ -18,6 +18,7 @@ public class ControlHub : Hub<IControlClient>
 {
     private readonly IAppState _appState;
     private readonly IViewerFactory _viewerFactory;
+    private readonly IDomainService _domainService;
     private readonly IInputService _inputService;
     private readonly IPowerService _powerManager;
     private readonly IHardwareService _hardwareService;
@@ -27,10 +28,11 @@ public class ControlHub : Hub<IControlClient>
     private readonly IScreenRecorderService _screenRecorderService;
     private readonly ILogger<ControlHub> _logger;
 
-    public ControlHub(IAppState appState, IViewerFactory viewerFactory, IInputService inputSender, IPowerService powerManager, IHardwareService hardwareService, IShutdownService shutdownService, IUpdaterService updaterService, IScreenCapturerService screenCapturer, IScreenRecorderService screenRecorderService, ILogger<ControlHub> logger)
+    public ControlHub(IAppState appState, IViewerFactory viewerFactory, IDomainService domainService, IInputService inputSender, IPowerService powerManager, IHardwareService hardwareService, IShutdownService shutdownService, IUpdaterService updaterService, IScreenCapturerService screenCapturer, IScreenRecorderService screenRecorderService, ILogger<ControlHub> logger)
     {
         _appState = appState;
         _viewerFactory = viewerFactory;
+        _domainService = domainService;
         _inputService = inputSender;
         _powerManager = powerManager;
         _hardwareService = hardwareService;
@@ -286,5 +288,15 @@ public class ControlHub : Hub<IControlClient>
     {
         _updaterService.Download(sharedFolder, username, password);
         _updaterService.Execute();
+    }
+
+    public async Task SendJoinToDomain(string domain, string user, string password)
+    {
+        _domainService.JoinToDomain(domain, user, password);
+    }
+
+    public async Task SendUnjoinFromDomain(string user, string password)
+    {
+        _domainService.UnjoinFromDomain(user, password);
     }
 }
