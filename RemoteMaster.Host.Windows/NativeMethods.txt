@@ -75,3 +75,6 @@ WNetCancelConnection2W
 CreatePipe
 
 WaitForSingleObject
+
+NetJoinDomain
+NetUnjoinDomain
