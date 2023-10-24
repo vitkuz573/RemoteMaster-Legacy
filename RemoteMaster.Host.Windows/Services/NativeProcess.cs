@@ -35,11 +35,6 @@ public class NativeProcess
             throw new ArgumentNullException(nameof(startInfo));
         }
 
-        return StartInternal(startInfo);
-    }
-
-    private static NativeProcess StartInternal(NativeProcessStartInfo startInfo)
-    {
         var procInfo = new PROCESS_INFORMATION();
 
         var sessionId = !startInfo.ForceConsoleSession
