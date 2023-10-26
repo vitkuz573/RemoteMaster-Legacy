@@ -48,11 +48,11 @@ public class HostServiceManager : IHostServiceManager
                     _serviceManager.StopService(_hostServiceConfig.Name);
                 }
 
-                CopyToTargetPath(directoryPath);
+                CopyToTargetPath(directoryPath, ipv4Address);
             }
             else
             {
-                CopyToTargetPath(directoryPath);
+                CopyToTargetPath(directoryPath, ipv4Address);
                 var hostPath = Path.Combine(directoryPath, $"{MainAppName}.{SubAppName}.exe");
                 _serviceManager.InstallService(_hostServiceConfig, $"{hostPath} --service-mode");
             }
@@ -107,7 +107,7 @@ public class HostServiceManager : IHostServiceManager
         return Path.Combine(programFilesPath, MainAppName, SubAppName);
     }
 
-    private void CopyToTargetPath(string targetDirectoryPath)
+    private void CopyToTargetPath(string targetDirectoryPath, string ipv4Address)
     {
         if (!Directory.Exists(targetDirectoryPath))
         {
@@ -140,6 +140,18 @@ public class HostServiceManager : IHostServiceManager
             {
                 throw new InvalidOperationException($"Failed to copy the configuration file to {targetConfigPath}.", ex);
             }
+        }
+
+        var ipAddressFilePath = Path.Combine(targetDirectoryPath, "IPAddress.txt");
+        
+        try
+        {
+            File.WriteAllText(ipAddressFilePath, ipv4Address);
+            _logger.LogInformation("IP Address file created successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Failed to create the IP Address file: {Message}", ex.Message);
         }
     }
 
