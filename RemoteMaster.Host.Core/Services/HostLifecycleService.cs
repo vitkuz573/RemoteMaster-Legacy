@@ -4,6 +4,7 @@
 
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
+using Org.BouncyCastle.X509;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Models;
 
@@ -11,10 +12,12 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class HostLifecycleService : IHostLifecycleService
 {
+    private readonly ICertificateRequestService _certificateRequestService;
     private readonly ILogger<HostLifecycleService> _logger;
 
-    public HostLifecycleService(ILogger<HostLifecycleService> logger)
+    public HostLifecycleService(ICertificateRequestService certificateRequestService, ILogger<HostLifecycleService> logger)
     {
+        _certificateRequestService = certificateRequestService;
         _logger = logger;
     }
 
@@ -30,8 +33,27 @@ public class HostLifecycleService : IHostLifecycleService
             var connection = await ConnectToServerHub($"http://{config.Server}:5254");
 
             _logger.LogInformation("Attempting to register host...");
-            
-            if (await connection.InvokeAsync<bool>("RegisterHostAsync", hostName, ipAddress, macAddress, config.Group))
+
+            var csr = _certificateRequestService.GenerateCSR($"CN={hostName}", out _);
+
+            connection.On<byte[]>("ReceiveCertificate", certificateBytes =>
+            {
+                _logger.LogInformation("Received certificate from server.");
+
+                try
+                {
+                    var certificate = new X509Certificate(certificateBytes); // Это может выбросить исключение
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError("Ошибка при обработке сертификата: {Message}", ex.Message);
+                }
+
+                var certificateFilePath = @"C:\certificate.der";
+                File.WriteAllBytes(certificateFilePath, certificateBytes);
+            });
+
+            if (await connection.InvokeAsync<bool>("RegisterHostAsync", hostName, ipAddress, macAddress, config.Group, csr.GetDerEncoded()))
             {
                 _logger.LogInformation("Host registration successful.");
             }

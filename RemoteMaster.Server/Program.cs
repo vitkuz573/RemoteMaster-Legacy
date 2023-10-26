@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Configuration;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Radzen;
@@ -43,11 +44,13 @@ void ConfigureBusinessServices(WebApplicationBuilder builder)
 {
     builder.Services.AddTransient<IHostConfigurationService, HostConfigurationService>();
     builder.Services.AddScoped<DatabaseService>();
+    builder.Services.AddSingleton<ICertificateService, CertificateService>();
     builder.Services.AddSingleton<IPacketSender, UdpPacketSender>();
     builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
     builder.Services.AddSingleton<ISerializationService, JsonSerializerService>();
     builder.Services.AddTransient<ITokenService, TokenService>();
     builder.Services.Configure<TokenServiceOptions>(builder.Configuration.GetSection("Jwt"));
+    builder.Services.Configure<CertificateSettings>(builder.Configuration.GetSection("CertificateSettings"));
 }
 
 void ConfigureDatabaseContexts(WebApplicationBuilder builder)

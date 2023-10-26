@@ -28,6 +28,7 @@ public static class ServiceCollectionExtensions
             builder.AddSerilog(serilogLogger);
         });
 
+        services.AddSingleton<ICertificateRequestService, CertificateRequestService>();
         services.AddSingleton<IHostLifecycleService, HostLifecycleService>();
         services.AddSingleton<IHostConfigurationService, HostConfigurationService>();
         services.AddSingleton<IHostInfoService, HostInfoService>();

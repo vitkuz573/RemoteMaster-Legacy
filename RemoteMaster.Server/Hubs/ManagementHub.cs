@@ -3,6 +3,8 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.SignalR;
+using Org.BouncyCastle.Pkcs;
+using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
 
@@ -10,17 +12,36 @@ namespace RemoteMaster.Server.Hubs;
 
 public class ManagementHub : Hub
 {
+    private readonly ICertificateService _certificateService;
     private readonly DatabaseService _databaseService;
     private readonly ILogger<ManagementHub> _logger;
 
-    public ManagementHub(DatabaseService databaseService, ILogger<ManagementHub> logger)
+    public ManagementHub(ICertificateService certificateService, DatabaseService databaseService, ILogger<ManagementHub> logger)
     {
+        _certificateService = certificateService;
         _databaseService = databaseService;
         _logger = logger;
     }
 
-    public async Task<bool> RegisterHostAsync(string hostName, string ipAddress, string macAddress, string group)
+    public async Task<bool> RegisterHostAsync(string hostName, string ipAddress, string macAddress, string group, byte[] csrBytes)
     {
+        Pkcs10CertificationRequest csr;
+
+        try
+        {
+            csr = new Pkcs10CertificationRequest(csrBytes);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Failed to parse CSR: {Message}", ex.Message);
+
+            return false;
+        }
+
+        var certificate = _certificateService.GenerateCertificateFromCSR(csr);
+
+        await Clients.Caller.SendAsync("ReceiveCertificate", certificate.GetEncoded());
+
         var folder = (await _databaseService.GetNodesAsync(f => f.Name == group && f is Folder)).OfType<Folder>().FirstOrDefault();
 
         if (folder == null)

@@ -1,0 +1,101 @@
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+// This file is part of the RemoteMaster project.
+// Licensed under the GNU Affero General Public License v3.0.
+
+using Microsoft.Extensions.Options;
+using Org.BouncyCastle.Asn1.X509;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Operators;
+using Org.BouncyCastle.Math;
+using Org.BouncyCastle.Pkcs;
+using Org.BouncyCastle.X509;
+using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Models;
+
+namespace RemoteMaster.Server.Services;
+
+public class CertificateService : ICertificateService
+{
+    private readonly CertificateSettings _settings;
+
+    public CertificateService(IOptions<CertificateSettings> options)
+    {
+        if (options == null)
+        {
+            throw new ArgumentNullException(nameof(options));
+        }
+
+        _settings = options.Value;
+    }
+
+    private AsymmetricKeyParameter GetCAPrivateKey()
+    {
+        using var fs = new FileStream(_settings.PfxPath, FileMode.Open, FileAccess.Read);
+        var pfxStore = new Pkcs12StoreBuilder().Build();
+        pfxStore.Load(fs, _settings.PfxPassword.ToCharArray());
+
+        string alias = null;
+
+        foreach (var al in pfxStore.Aliases)
+        {
+            if (pfxStore.IsKeyEntry(al) && pfxStore.GetKey(al).Key.IsPrivate)
+            {
+                alias = al;
+                break;
+            }
+        }
+
+        if (alias == null)
+        {
+            throw new Exception("No private key found in PFX");
+        }
+
+        return pfxStore.GetKey(alias).Key;
+    }
+
+    private X509Name GetCACertificateIssuerDN()
+    {
+        using var fs = new FileStream(_settings.PfxPath, FileMode.Open, FileAccess.Read);
+        var pfxStore = new Pkcs12StoreBuilder().Build();
+        pfxStore.Load(fs, _settings.PfxPassword.ToCharArray());
+
+        foreach (var alias in pfxStore.Aliases)
+        {
+            if (pfxStore.IsCertificateEntry(alias))
+            {
+                var certificateEntry = pfxStore.GetCertificate(alias);
+                return certificateEntry.Certificate.IssuerDN;
+            }
+        }
+
+        throw new Exception("No CA certificate found in PFX");
+    }
+
+    private static ISignatureFactory GetSignatureFactory(AsymmetricKeyParameter privateKey)
+    {
+        return new Asn1SignatureFactory("SHA256WITHRSA", privateKey);
+    }
+
+    public X509Certificate GenerateCertificateFromCSR(Pkcs10CertificationRequest csr)
+    {
+        if (csr == null)
+        {
+            throw new ArgumentNullException(nameof(csr));
+        }
+
+        var caPrivateKey = GetCAPrivateKey();
+        var signatureFactory = GetSignatureFactory(caPrivateKey);
+
+        // Generate the certificate using the CSR
+        var certGenerator = new X509V3CertificateGenerator();
+        certGenerator.SetSerialNumber(BigInteger.ProbablePrime(120, new Random()));
+        certGenerator.SetIssuerDN(GetCACertificateIssuerDN());
+        certGenerator.SetNotBefore(DateTime.UtcNow);
+        certGenerator.SetNotAfter(DateTime.UtcNow.AddYears(1));
+        certGenerator.SetSubjectDN(csr.GetCertificationRequestInfo().Subject);
+        certGenerator.SetPublicKey(csr.GetPublicKey());
+
+        // Sign the certificate with the CA's private key
+        return certGenerator.Generate(signatureFactory);
+    }
+}
