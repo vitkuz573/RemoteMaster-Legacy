@@ -40,15 +40,6 @@ public class HostLifecycleService : IHostLifecycleService
             {
                 _logger.LogInformation("Received certificate from server.");
 
-                try
-                {
-                    var certificate = new X509Certificate(certificateBytes); // Это может выбросить исключение
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError("Ошибка при обработке сертификата: {Message}", ex.Message);
-                }
-
                 var certificateFilePath = @"C:\certificate.der";
                 File.WriteAllBytes(certificateFilePath, certificateBytes);
             });
