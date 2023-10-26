@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 
@@ -18,7 +19,21 @@ public static class WebApplicationBuilderExtensions
 
         builder.WebHost.ConfigureKestrel(options =>
         {
-            options.ListenAnyIP(5076);
+            var cert = @"C:\certificate.pfx";
+
+            if (File.Exists(cert))
+            {
+                var httpsCertificate = new X509Certificate2(@"C:\certificate.pfx", "YourPfxPassword");
+
+                options.ListenAnyIP(5076, listenOptions =>
+                {
+                    listenOptions.UseHttps(httpsCertificate);
+                });
+            }
+            else
+            {
+                options.ListenAnyIP(5076);
+            }
         });
 
         return builder;

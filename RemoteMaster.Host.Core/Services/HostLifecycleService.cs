@@ -4,6 +4,9 @@
 
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Pkcs;
+using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Models;
@@ -34,14 +37,17 @@ public class HostLifecycleService : IHostLifecycleService
 
             _logger.LogInformation("Attempting to register host...");
 
-            var csr = _certificateRequestService.GenerateCSR($"CN={hostName}", out _);
+            var csr = _certificateRequestService.GenerateCSR($"CN={hostName}", out var keyPair);
 
             connection.On<byte[]>("ReceiveCertificate", certificateBytes =>
             {
                 _logger.LogInformation("Received certificate from server.");
 
-                var certificateFilePath = @"C:\certificate.der";
-                File.WriteAllBytes(certificateFilePath, certificateBytes);
+                var pfxFilePath = @"C:\certificate.pfx";
+                var pfxPassword = "YourPfxPassword";
+                CreatePfxFile(certificateBytes, keyPair, pfxFilePath, pfxPassword);
+
+                _logger.LogInformation("PFX file created successfully.");
             });
 
             if (await connection.InvokeAsync<bool>("RegisterHostAsync", hostName, ipAddress, macAddress, config.Group, csr.GetDerEncoded()))
@@ -96,5 +102,18 @@ public class HostLifecycleService : IHostLifecycleService
         await hubConnection.StartAsync();
 
         return hubConnection;
+    }
+
+    private static void CreatePfxFile(byte[] certificateBytes, AsymmetricCipherKeyPair keyPair, string outputPfxPath, string password)
+    {
+        var cert = new X509CertificateParser().ReadCertificate(certificateBytes);
+
+        var storeBuilder = new Pkcs12StoreBuilder();
+        var store = storeBuilder.Build();
+
+        store.SetKeyEntry("key", new AsymmetricKeyEntry(keyPair.Private), new[] { new X509CertificateEntry(cert) });
+
+        using var fs = new FileStream(outputPfxPath, FileMode.Create);
+        store.Save(fs, password.ToCharArray(), new SecureRandom());
     }
 }
