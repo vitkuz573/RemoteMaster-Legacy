@@ -37,7 +37,14 @@ public class HostLifecycleService : IHostLifecycleService
 
             _logger.LogInformation("Attempting to register host...");
 
-            var csr = _certificateRequestService.GenerateCSR($"CN={hostName}", out var keyPair);
+            var ipAddresses = new List<string>
+            {
+                ipAddress
+            };
+
+            var csr = _certificateRequestService.GenerateCSR($"CN={hostName}", ipAddresses, out var keyPair);
+
+            File.WriteAllBytes(@"C:\csr.csr", csr.GetDerEncoded());
 
             connection.On<byte[]>("ReceiveCertificate", certificateBytes =>
             {

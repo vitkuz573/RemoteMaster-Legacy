@@ -2,7 +2,10 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Collections;
 using Microsoft.Extensions.Logging;
+using Org.BouncyCastle.Asn1;
+using Org.BouncyCastle.Asn1.Pkcs;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Generators;
@@ -22,7 +25,7 @@ public class CertificateRequestService : ICertificateRequestService
         _logger = logger;
     }
 
-    public Pkcs10CertificationRequest GenerateCSR(string subjectName, out AsymmetricCipherKeyPair keyPair)
+    public Pkcs10CertificationRequest GenerateCSR(string subjectName, List<string> ipAddresses, out AsymmetricCipherKeyPair keyPair)
     {
         _logger.LogInformation("Starting CSR generation for subject: {SubjectName}", subjectName);
 
@@ -37,7 +40,16 @@ public class CertificateRequestService : ICertificateRequestService
         using var csrWriter = new PemWriter(new StreamWriter(csrStream));
 
         var subject = new X509Name(subjectName);
-        var csr = new Pkcs10CertificationRequest("SHA256WITHRSA", subject, keyPair.Public, null, keyPair.Private);
+
+        var genNames = ipAddresses.Select(ip => new GeneralName(GeneralName.IPAddress, ip)).ToArray();
+
+        var extensionsGenerator = new X509ExtensionsGenerator();
+        extensionsGenerator.AddExtension(X509Extensions.SubjectAlternativeName, false, new DerSequence(genNames));
+        var extensions = extensionsGenerator.Generate();
+
+        var attributePkcs = new AttributePkcs(PkcsObjectIdentifiers.Pkcs9AtExtensionRequest, new DerSet(extensions));
+
+        var csr = new Pkcs10CertificationRequest("SHA256WITHRSA", subject, keyPair.Public, new DerSet(attributePkcs), keyPair.Private);
 
         csrWriter.WriteObject(csr);
         csrWriter.Writer.Flush();

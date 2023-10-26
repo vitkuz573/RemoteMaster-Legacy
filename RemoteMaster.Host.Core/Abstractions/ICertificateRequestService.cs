@@ -9,5 +9,5 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface ICertificateRequestService
 {
-    Pkcs10CertificationRequest GenerateCSR(string subjectName, out AsymmetricCipherKeyPair keyPair);
+    public Pkcs10CertificationRequest GenerateCSR(string subjectName, List<string> ipAddresses, out AsymmetricCipherKeyPair keyPair);
 }

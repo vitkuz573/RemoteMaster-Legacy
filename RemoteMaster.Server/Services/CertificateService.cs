@@ -3,6 +3,8 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.Extensions.Options;
+using Org.BouncyCastle.Asn1;
+using Org.BouncyCastle.Asn1.Pkcs;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Operators;
@@ -94,6 +96,27 @@ public class CertificateService : ICertificateService
         certGenerator.SetNotAfter(DateTime.UtcNow.AddYears(1));
         certGenerator.SetSubjectDN(csr.GetCertificationRequestInfo().Subject);
         certGenerator.SetPublicKey(csr.GetPublicKey());
+
+        var csrAttributes = csr.GetCertificationRequestInfo().Attributes;
+
+        foreach (var attr in csrAttributes)
+        {
+            if (attr.ToAsn1Object() is Asn1Sequence seq)
+            {
+                var attrPkcs = AttributePkcs.GetInstance(seq);
+
+                if (attrPkcs.AttrType.Equals(PkcsObjectIdentifiers.Pkcs9AtExtensionRequest))
+                {
+                    var extensions = X509Extensions.GetInstance((Asn1Sequence)attrPkcs.AttrValues[0]);
+                    var sanExtension = extensions.GetExtension(X509Extensions.SubjectAlternativeName);
+
+                    if (sanExtension != null)
+                    {
+                        certGenerator.AddExtension(X509Extensions.SubjectAlternativeName, sanExtension.IsCritical, sanExtension.GetParsedValue());
+                    }
+                }
+            }
+        }
 
         // Sign the certificate with the CA's private key
         return certGenerator.Generate(signatureFactory);
