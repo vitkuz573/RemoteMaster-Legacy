@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Security.Cryptography;
 using Microsoft.Extensions.Options;
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.Pkcs;
@@ -90,7 +91,7 @@ public class CertificateService : ICertificateService
 
         // Generate the certificate using the CSR
         var certGenerator = new X509V3CertificateGenerator();
-        certGenerator.SetSerialNumber(BigInteger.ProbablePrime(120, new Random()));
+        certGenerator.SetSerialNumber(GenerateSerialNumber());
         certGenerator.SetIssuerDN(GetCACertificateIssuerDN());
         certGenerator.SetNotBefore(DateTime.UtcNow);
         certGenerator.SetNotAfter(DateTime.UtcNow.AddYears(1));
@@ -120,5 +121,19 @@ public class CertificateService : ICertificateService
 
         // Sign the certificate with the CA's private key
         return certGenerator.Generate(signatureFactory);
+    }
+
+    private static BigInteger GenerateSerialNumber()
+    {
+        var serialNumberBytes = new byte[16];
+
+        using (var rng = RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(serialNumberBytes);
+        }
+
+        var serialNumber = new BigInteger(1, serialNumberBytes);
+
+        return serialNumber;
     }
 }
