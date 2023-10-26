@@ -124,6 +124,55 @@ internal class Program
 
         logger = app.Services.GetRequiredService<ILogger<Program>>();
 
+        if (serviceMode)
+        {
+            var configurationService = app.Services.GetRequiredService<IHostConfigurationService>();
+            var hostInfoService = app.Services.GetRequiredService<IHostInfoService>();
+            var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
+            
+            HostConfiguration configuration;
+            
+            try
+            {
+                configuration = await configurationService.LoadConfigurationAsync();
+            }
+            catch (FileNotFoundException ex)
+            {
+                logger.LogError(ex, "Configuration file not found.");
+            
+                return;
+            }
+            catch (InvalidDataException ex)
+            {
+                logger.LogError(ex, "Invalid configuration data.");
+            
+                return;
+            }
+
+            var savedIPAddress = ReadSavedIPAddress();
+            var currentIPAddress = hostInfoService.GetIPv4Address();
+
+            if (!string.IsNullOrEmpty(savedIPAddress) && savedIPAddress == currentIPAddress)
+            {
+                logger.LogInformation("Current IP matches the saved IP. No action required.");
+                
+                return;
+            }
+            else
+            {
+                await hostServiceManager.InstallOrUpdate(configuration, hostInfoService.GetHostName(), currentIPAddress, hostInfoService.GetMacAddress());
+            
+                try
+                {
+                    File.WriteAllText(@"C:\Program Files\RemoteMaster\Host\IPAddress.txt", currentIPAddress);
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"Error saving the current IP address: {ex.Message}");
+                }
+            }
+        }
+
         if (install)
         {
             var configurationService = app.Services.GetRequiredService<IHostConfigurationService>();
@@ -211,5 +260,24 @@ internal class Program
         app.UseAuthorization();
         app.MapCoreHubs();
         app.Run();
+    }
+
+    private static string ReadSavedIPAddress()
+    {
+        var filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "IPAddress.txt");
+
+        try
+        {
+            if (File.Exists(filePath))
+            {
+                return File.ReadAllText(filePath).Trim();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error reading the saved IP address: {ex.Message}");
+        }
+
+        return null;
     }
 }
