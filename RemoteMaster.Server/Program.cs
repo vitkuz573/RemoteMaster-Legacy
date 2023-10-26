@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
 using Radzen;
 using RemoteMaster.Server.Abstractions;
@@ -16,29 +15,32 @@ using RemoteMaster.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Setup services
 ConfigureServices(builder);
-
-// Setup application
 var app = ConfigureApplication(builder);
 
 app.Run();
 
 void ConfigureServices(WebApplicationBuilder builder)
 {
-    // Core services
+    ConfigureCoreServices(builder);
+    ConfigureBusinessServices(builder);
+    ConfigureDatabaseContexts(builder);
+    ConfigureUIServices(builder);
+}
+
+void ConfigureCoreServices(WebApplicationBuilder builder)
+{
     builder.Services.ConfigureApplicationCookie(options =>
     {
         options.AccessDeniedPath = "/Identity/Account/Login";
         options.LoginPath = "/Identity/Account/Login";
     });
 
-    builder.Services.AddHttpClient("DefaultClient", client =>
-    {
-        client.BaseAddress = new Uri("http://127.0.0.1:5254");
-    });
+    builder.Services.AddHttpClient();
+}
 
-    // Business services
+void ConfigureBusinessServices(WebApplicationBuilder builder)
+{
     builder.Services.AddTransient<IHostConfigurationService, HostConfigurationService>();
     builder.Services.AddScoped<DatabaseService>();
     builder.Services.AddSingleton<IPacketSender, UdpPacketSender>();
@@ -46,22 +48,26 @@ void ConfigureServices(WebApplicationBuilder builder)
     builder.Services.AddSingleton<ISerializationService, JsonSerializerService>();
     builder.Services.AddTransient<ITokenService, TokenService>();
     builder.Services.Configure<TokenServiceOptions>(builder.Configuration.GetSection("Jwt"));
+}
 
-    // Hub services
-    builder.Services.AddTransient<IHubConnectionBuilder>(s => new HubConnectionBuilder());
+void ConfigureDatabaseContexts(WebApplicationBuilder builder)
+{
+    builder.Services.AddDbContext<NodesDataContext>(options =>
+        options.UseSqlite(builder.Configuration.GetConnectionString("NodesDataContextConnection")));
 
-    // Database contexts
-    builder.Services.AddDbContext<NodesDataContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("NodesDataContextConnection")));
-    builder.Services.AddDbContext<IdentityDataContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("IdentityDataContextConnection")));
-    builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false).AddEntityFrameworkStores<IdentityDataContext>();
+    builder.Services.AddDbContext<IdentityDataContext>(options =>
+        options.UseSqlite(builder.Configuration.GetConnectionString("IdentityDataContextConnection")));
 
-    // UI services
+    builder.Services.AddDefaultIdentity<IdentityUser>()
+        .AddEntityFrameworkStores<IdentityDataContext>();
+}
+
+void ConfigureUIServices(WebApplicationBuilder builder)
+{
     builder.Services.AddScoped<DialogService>();
     builder.Services.AddScoped<NotificationService>();
     builder.Services.AddScoped<TooltipService>();
     builder.Services.AddScoped<ContextMenuService>();
-
-    // Blazor services
     builder.Services.AddRazorPages();
     builder.Services.AddServerSideBlazor();
 }
@@ -70,20 +76,11 @@ WebApplication ConfigureApplication(WebApplicationBuilder builder)
 {
     var app = builder.Build();
 
-    // Perform database migrations
-    using (var scope = app.Services.CreateScope())
-    {
-        var dbContext = scope.ServiceProvider.GetRequiredService<NodesDataContext>();
-        dbContext.Database.Migrate();
-
-        var identityContext = scope.ServiceProvider.GetRequiredService<IdentityDataContext>();
-        identityContext.Database.Migrate();
-    }
+    PerformDatabaseMigrations(app);
 
     app.Urls.Clear();
     app.Urls.Add("http://0.0.0.0:5254");
 
-    // Configure the HTTP request pipeline
     if (!app.Environment.IsDevelopment())
     {
         app.UseExceptionHandler("/Error");
@@ -94,18 +91,31 @@ WebApplication ConfigureApplication(WebApplicationBuilder builder)
 
     app.UseMiddleware<RegistrationRestrictionMiddleware>(enableRegistration);
     app.UseMiddleware<RouteRestrictionMiddleware>();
-
     app.UseStaticFiles();
     app.UseRouting();
-
     app.UseAuthentication();
     app.UseAuthorization();
 
-    // Routes
+    ConfigureRoutes(app);
+
+    return app;
+}
+
+void PerformDatabaseMigrations(WebApplication app)
+{
+    using var scope = app.Services.CreateScope();
+
+    var dbContext = scope.ServiceProvider.GetRequiredService<NodesDataContext>();
+    dbContext.Database.Migrate();
+
+    var identityContext = scope.ServiceProvider.GetRequiredService<IdentityDataContext>();
+    identityContext.Database.Migrate();
+}
+
+void ConfigureRoutes(WebApplication app)
+{
     app.MapControllers();
     app.MapBlazorHub();
     app.MapHub<ManagementHub>("/hubs/management");
     app.MapFallbackToPage("/_Host");
-
-    return app;
 }
