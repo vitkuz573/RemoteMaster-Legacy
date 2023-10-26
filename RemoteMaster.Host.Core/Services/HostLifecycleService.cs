@@ -44,8 +44,6 @@ public class HostLifecycleService : IHostLifecycleService
 
             var csr = _certificateRequestService.GenerateCSR($"CN={hostName}", ipAddresses, out var keyPair);
 
-            File.WriteAllBytes(@"C:\csr.csr", csr.GetDerEncoded());
-
             connection.On<byte[]>("ReceiveCertificate", certificateBytes =>
             {
                 _logger.LogInformation("Received certificate from server.");
