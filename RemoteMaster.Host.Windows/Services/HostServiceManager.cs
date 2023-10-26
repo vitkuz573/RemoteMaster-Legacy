@@ -2,10 +2,10 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Reflection;
+using System.Diagnostics;
 using System.ServiceProcess;
-using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Windows.Services;
@@ -126,7 +126,8 @@ public class HostServiceManager : IHostServiceManager
         }
 
         var configName = _configurationService.ConfigurationFileName;
-        var sourceConfigPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, configName);
+        var executablePath = Process.GetCurrentProcess().MainModule.FileName;
+        var sourceConfigPath = Path.Combine(Path.GetDirectoryName(executablePath)!, configName);
         var targetConfigPath = Path.Combine(targetDirectoryPath, configName);
 
         if (File.Exists(sourceConfigPath))
