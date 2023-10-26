@@ -197,7 +197,7 @@ public partial class Connect : IDisposable
         var accessToken = httpContext.Request.Cookies["accessToken"];
 
         _connection = new HubConnectionBuilder()
-            .WithUrl($"http://{Host}:5076/hubs/control", options =>
+            .WithUrl($"https://{Host}:5076/hubs/control", options =>
             {
                 options.Headers.Add("Authorization", $"Bearer {accessToken}");
             })

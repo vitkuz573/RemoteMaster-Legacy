@@ -36,9 +36,6 @@ public partial class Index
     private IWakeOnLanService WakeOnLanService { get; set; }
 
     [Inject]
-    private IHttpClientFactory HttpClientFactory { get; set; }
-
-    [Inject]
     private DialogService DialogService { get; set; }
 
     [Inject]
@@ -154,7 +151,7 @@ public partial class Index
         var accessToken = httpContext.Request.Cookies["accessToken"];
 
         var connection = new HubConnectionBuilder()
-            .WithUrl($"http://{computer.IPAddress}:5076/hubs/control", options =>
+            .WithUrl($"https://{computer.IPAddress}:5076/hubs/control", options =>
             {
                 options.Headers.Add("Authorization", $"Bearer {accessToken}");
             })
@@ -208,7 +205,7 @@ public partial class Index
             var accessToken = HttpContextAccessor.HttpContext?.Request.Cookies["accessToken"];
 
             var connection = new HubConnectionBuilder()
-                .WithUrl($"http://{computer.IPAddress}:5076/hubs/control", options =>
+                .WithUrl($"https://{computer.IPAddress}:5076/hubs/control", options =>
                 {
                     options.Headers.Add("Authorization", $"Bearer {accessToken}");
                 })
