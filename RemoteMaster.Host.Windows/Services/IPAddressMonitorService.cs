@@ -68,7 +68,7 @@ public class IPAddressMonitorService : IHostedService
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"Error saving the current IP address: {ex.Message}");
+                _logger.LogError("Error saving the current IP address: {Message}", ex.Message);
             }
         }
     }
