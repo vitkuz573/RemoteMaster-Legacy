@@ -22,6 +22,18 @@ public class HostConfigurationService : IHostConfigurationService
         throw new InvalidDataException($"Error reading, parsing, or validating the configuration file '{ConfigurationFileName}'.");
     }
 
+    public async Task<HostConfiguration> LoadConfigurationAsync(string filePath)
+    {
+        var config = await TryReadAndDeserializeFileAsync(filePath);
+
+        if (config != null)
+        {
+            return config;
+        }
+
+        throw new InvalidDataException($"Error reading, parsing, or validating the configuration file '{filePath}'.");
+    }
+
     public string ConfigurationFileName => $"{AppDomain.CurrentDomain.FriendlyName}.json";
 
     private static async Task<HostConfiguration?> TryReadAndDeserializeFileAsync(string fileName)

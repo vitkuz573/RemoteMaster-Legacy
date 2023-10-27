@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Diagnostics;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Models;
@@ -29,7 +30,10 @@ public class IPAddressMonitorService : IHostedService
 
         try
         {
-            configuration = await _hostConfigurationService.LoadConfigurationAsync();
+            var configName = _hostConfigurationService.ConfigurationFileName;
+            var executablePath = Process.GetCurrentProcess().MainModule.FileName;
+            var configPath = Path.Combine(Path.GetDirectoryName(executablePath)!, configName);
+            configuration = await _hostConfigurationService.LoadConfigurationAsync(configPath);
         }
         catch (FileNotFoundException ex)
         {
