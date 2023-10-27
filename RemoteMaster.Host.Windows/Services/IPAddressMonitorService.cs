@@ -44,7 +44,7 @@ public class IPAddressMonitorService : IHostedService
             return;
         }
 
-        var savedIPAddress = ReadSavedIPAddress();
+        var savedIPAddress = await ReadSavedIPAddress();
         var currentIPAddress = _hostInfoService.GetIPv4Address();
 
         if (!string.IsNullOrEmpty(savedIPAddress) && savedIPAddress == currentIPAddress)
@@ -73,7 +73,7 @@ public class IPAddressMonitorService : IHostedService
         return Task.CompletedTask;
     }
 
-    private string? ReadSavedIPAddress()
+    private async Task<string> ReadSavedIPAddress()
     {
         var filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "IPAddress.txt");
 
@@ -81,7 +81,9 @@ public class IPAddressMonitorService : IHostedService
         {
             if (File.Exists(filePath))
             {
-                return File.ReadAllText(filePath).Trim();
+                var ipAddress = await File.ReadAllTextAsync(filePath);
+
+                return ipAddress.Trim();
             }
         }
         catch (Exception ex)
@@ -89,6 +91,6 @@ public class IPAddressMonitorService : IHostedService
             _logger.LogInformation("Error reading the saved IP address: {Message}", ex.Message);
         }
 
-        return null;
+        return string.Empty;
     }
 }
