@@ -16,7 +16,7 @@ $param = @{
     CertStoreLocation = "Cert:\CurrentUser\My"
     KeyExportPolicy   = "Exportable"
     NotAfter          = (Get-Date).AddYears(10) # Validity of 10 years
-	KeyUsage          = "CertSign"
+    KeyUsage          = "CertSign"
     FriendlyName      = $caName
 }
 
