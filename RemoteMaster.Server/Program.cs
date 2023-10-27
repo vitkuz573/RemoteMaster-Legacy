@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Configuration;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Radzen;
@@ -90,9 +89,9 @@ WebApplication ConfigureApplication(WebApplicationBuilder builder)
         app.UseHsts();
     }
 
-    var registerAllowed = builder.Configuration.GetValue<bool>("RegisterAllowed");
+    var isRegisterAllowed = builder.Configuration.GetValue<bool>("RegisterAllowed");
 
-    app.UseMiddleware<RegistrationRestrictionMiddleware>(registerAllowed);
+    app.UseMiddleware<RegistrationRestrictionMiddleware>(isRegisterAllowed);
     app.UseMiddleware<RouteRestrictionMiddleware>();
     app.UseStaticFiles();
     app.UseRouting();
