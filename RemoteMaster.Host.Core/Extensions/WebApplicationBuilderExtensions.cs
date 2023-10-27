@@ -23,7 +23,7 @@ public static class WebApplicationBuilderExtensions
 
             if (File.Exists(cert))
             {
-                var httpsCertificate = new X509Certificate2(@"C:\certificate.pfx", "YourPfxPassword");
+                var httpsCertificate = new X509Certificate2(cert, "YourPfxPassword");
 
                 options.ListenAnyIP(5076, listenOptions =>
                 {
