@@ -90,9 +90,9 @@ WebApplication ConfigureApplication(WebApplicationBuilder builder)
         app.UseHsts();
     }
 
-    var enableRegistration = builder.Configuration.GetValue<bool>("EnableRegistration");
+    var registerAllowed = builder.Configuration.GetValue<bool>("RegisterAllowed");
 
-    app.UseMiddleware<RegistrationRestrictionMiddleware>(enableRegistration);
+    app.UseMiddleware<RegistrationRestrictionMiddleware>(registerAllowed);
     app.UseMiddleware<RouteRestrictionMiddleware>();
     app.UseStaticFiles();
     app.UseRouting();
