@@ -120,7 +120,7 @@ public class HostLifecycleService : IHostLifecycleService
         }
         catch (Exception ex)
         {
-            _logger.LogError("Unregistering host failed: {Message}", ex.Message);
+            _logger.LogError("Update host information failed: {Message}", ex.Message);
         }
     }
 
