@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Diagnostics;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Models;
@@ -15,6 +14,8 @@ public class IPAddressMonitorService : IHostedService
     private readonly IHostInfoService _hostInfoService;
     private readonly IHostServiceManager _hostServiceManager;
     private readonly ILogger<IPAddressMonitorService> _logger;
+
+    private readonly string _ipAddressFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "IPAddress.txt");
 
     public IPAddressMonitorService(IHostConfigurationService hostConfigurationService, IHostInfoService hostInfoService, IHostServiceManager hostServiceManager, ILogger<IPAddressMonitorService> logger)
     {
@@ -30,9 +31,7 @@ public class IPAddressMonitorService : IHostedService
 
         try
         {
-            var configName = _hostConfigurationService.ConfigurationFileName;
-            var executablePath = Process.GetCurrentProcess().MainModule.FileName;
-            var configPath = Path.Combine(Path.GetDirectoryName(executablePath)!, configName);
+            var configPath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, _hostConfigurationService.ConfigurationFileName);
             configuration = await _hostConfigurationService.LoadConfigurationAsync(configPath);
         }
         catch (FileNotFoundException ex)
@@ -59,11 +58,13 @@ public class IPAddressMonitorService : IHostedService
         }
         else
         {
-            await _hostServiceManager.InstallOrUpdate(configuration, _hostInfoService.GetHostName(), currentIPAddress, _hostInfoService.GetMacAddress());
+            var hostname = _hostInfoService.GetHostName();
+
+            await _hostServiceManager.UpdateHostInformation(configuration, hostname, currentIPAddress);
 
             try
             {
-                File.WriteAllText(@"C:\Program Files\RemoteMaster\Host\IPAddress.txt", currentIPAddress);
+                File.WriteAllText(_ipAddressFilePath, currentIPAddress);
             }
             catch (Exception ex)
             {
@@ -79,13 +80,11 @@ public class IPAddressMonitorService : IHostedService
 
     private async Task<string> ReadSavedIPAddress()
     {
-        var filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "IPAddress.txt");
-
         try
         {
-            if (File.Exists(filePath))
+            if (File.Exists(_ipAddressFilePath))
             {
-                var ipAddress = await File.ReadAllTextAsync(filePath);
+                var ipAddress = await File.ReadAllTextAsync(_ipAddressFilePath);
 
                 return ipAddress.Trim();
             }

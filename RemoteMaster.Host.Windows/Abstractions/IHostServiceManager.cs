@@ -11,4 +11,6 @@ public interface IHostServiceManager
     Task InstallOrUpdate(HostConfiguration configuration, string hostName, string ipv4Address, string macAddress);
 
     Task Uninstall(HostConfiguration configuration, string hostName);
+
+    Task UpdateHostInformation(HostConfiguration configuration, string hostname, string ipAddress);
 }

@@ -104,4 +104,26 @@ public class ManagementHub : Hub
 
         return false;
     }
+
+    public async Task<bool> UpdateHostInformationAsync(string hostName, string group, string ipAddress)
+    {
+        var folder = (await _databaseService.GetNodesAsync(f => f.Name == group && f is Folder)).OfType<Folder>().FirstOrDefault();
+
+        if (folder == null)
+        {
+            return false;
+        }
+
+        var computer = (await _databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId))
+                       .FirstOrDefault(c => c.Name == hostName);
+
+        if (computer != null)
+        {
+            await _databaseService.UpdateComputerAsync(computer, ipAddress);
+
+            return true;
+        }
+
+        return false;
+    }
 }

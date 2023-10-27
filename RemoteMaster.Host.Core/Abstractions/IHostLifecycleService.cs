@@ -11,4 +11,6 @@ public interface IHostLifecycleService
     Task RegisterAsync(HostConfiguration config, string hostName, string ipAddress, string macAddress);
 
     Task UnregisterAsync(HostConfiguration config, string hostName);
+
+    Task UpdateHostInformationAsync(HostConfiguration config, string hostname, string ipAddress);
 }

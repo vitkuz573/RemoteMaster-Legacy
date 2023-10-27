@@ -4,6 +4,8 @@
 
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
 
@@ -44,6 +46,17 @@ public class DatabaseService
     public async Task RemoveNodeAsync(Node node)
     {
         _context.Nodes.Remove(node);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task UpdateComputerAsync(Computer computer, string ipAddress)
+    {
+        if (computer != null)
+        {
+            computer.IPAddress = ipAddress;
+            _context.Nodes.Update(computer);
+        }
+
         await _context.SaveChangesAsync();
     }
 

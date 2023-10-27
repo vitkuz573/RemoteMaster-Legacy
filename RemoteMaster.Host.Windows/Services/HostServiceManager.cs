@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Diagnostics;
 using System.ServiceProcess;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
@@ -100,6 +99,11 @@ public class HostServiceManager : IHostServiceManager
         }
     }
 
+    public async Task UpdateHostInformation(HostConfiguration configuration, string hostname, string ipAddress)
+    {
+        await _hostLifecycleService.UpdateHostInformationAsync(configuration, hostname, ipAddress);
+    }
+
     private static string GetDirectoryPath()
     {
         var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
@@ -126,8 +130,7 @@ public class HostServiceManager : IHostServiceManager
         }
 
         var configName = _configurationService.ConfigurationFileName;
-        var executablePath = Process.GetCurrentProcess().MainModule.FileName;
-        var sourceConfigPath = Path.Combine(Path.GetDirectoryName(executablePath)!, configName);
+        var sourceConfigPath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, configName);
         var targetConfigPath = Path.Combine(targetDirectoryPath, configName);
 
         if (File.Exists(sourceConfigPath))

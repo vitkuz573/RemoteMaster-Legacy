@@ -98,6 +98,32 @@ public class HostLifecycleService : IHostLifecycleService
         }
     }
 
+    public async Task UpdateHostInformationAsync(HostConfiguration config, string hostname, string ipAddress)
+    {
+        if (config == null)
+        {
+            throw new ArgumentNullException(nameof(config));
+        }
+
+        try
+        {
+            var connection = await ConnectToServerHub($"http://{config.Server}:5254");
+
+            if (await connection.InvokeAsync<bool>("UpdateHostInformationAsync", hostname, config.Group, ipAddress))
+            {
+                _logger.LogInformation("Host information updated successful.");
+            }
+            else
+            {
+                _logger.LogWarning("Host information update was not successful.");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Unregistering host failed: {Message}", ex.Message);
+        }
+    }
+
     private static async Task<HubConnection> ConnectToServerHub(string serverUrl)
     {
         var hubConnection = new HubConnectionBuilder()
