@@ -2,15 +2,10 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Logging;
-using Org.BouncyCastle.Asn1;
-using Org.BouncyCastle.Asn1.Pkcs;
-using Org.BouncyCastle.Asn1.X509;
-using Org.BouncyCastle.Crypto;
-using Org.BouncyCastle.Crypto.Generators;
-using Org.BouncyCastle.OpenSsl;
-using Org.BouncyCastle.Pkcs;
-using Org.BouncyCastle.Security;
 using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Services;
@@ -24,39 +19,43 @@ public class CertificateRequestService : ICertificateRequestService
         _logger = logger;
     }
 
-    public Pkcs10CertificationRequest GenerateCSR(string subjectName, List<string> ipAddresses, out AsymmetricCipherKeyPair keyPair)
+    public CertificateRequest GenerateCSR(string subjectName, List<string> ipAddresses, out RSA rsaKeyPair)
     {
+        if (ipAddresses == null)
+        {
+            throw new ArgumentNullException(nameof(ipAddresses));
+        }
+
         _logger.LogInformation("Starting CSR generation for subject: {SubjectName}", subjectName);
 
-        var keyGenerationParameters = new KeyGenerationParameters(new SecureRandom(), 2048);
-        var keyPairGenerator = new RsaKeyPairGenerator();
-        keyPairGenerator.Init(keyGenerationParameters);
-        keyPair = keyPairGenerator.GenerateKeyPair();
+        rsaKeyPair = RSA.Create(2048);
 
-        _logger.LogDebug("Key pair generated successfully with length {KeyLength}.", 2048);
+        _logger.LogDebug("RSA key pair generated successfully with key size {KeySize}.", rsaKeyPair.KeySize);
+        _logger.LogDebug("RSA key pair public key parameters: {PublicKeyParameters}", rsaKeyPair.ExportParameters(false));
 
-        var csrStream = new MemoryStream();
-        using var csrWriter = new PemWriter(new StreamWriter(csrStream));
+        var subject = new X500DistinguishedName(subjectName);
+        var csr = new CertificateRequest(subject, rsaKeyPair, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
-        var subject = new X509Name(subjectName);
+        _logger.LogDebug("CSR Subject: {CSRSubject}", csr.SubjectName.Name);
 
-        var genNames = ipAddresses.Select(ip => new GeneralName(GeneralName.IPAddress, ip)).ToArray();
+        var sanBuilder = new SubjectAlternativeNameBuilder();
 
-        var extensionsGenerator = new X509ExtensionsGenerator();
-        extensionsGenerator.AddExtension(X509Extensions.SubjectAlternativeName, false, new DerSequence(genNames));
-        var extensions = extensionsGenerator.Generate();
+        foreach (var ipAddress in ipAddresses)
+        {
+            sanBuilder.AddIpAddress(IPAddress.Parse(ipAddress));
+        }
 
-        var attributePkcs = new AttributePkcs(PkcsObjectIdentifiers.Pkcs9AtExtensionRequest, new DerSet(extensions));
+        var sanExtension = sanBuilder.Build();
+        csr.CertificateExtensions.Add(sanExtension);
 
-        var csr = new Pkcs10CertificationRequest("SHA256WITHRSA", subject, keyPair.Public, new DerSet(attributePkcs), keyPair.Private);
+        _logger.LogDebug("Added Subject Alternative Name extension with {SANCount} IP addresses.", ipAddresses.Count);
 
-        csrWriter.WriteObject(csr);
-        csrWriter.Writer.Flush();
+        foreach (var extension in csr.CertificateExtensions)
+        {
+            _logger.LogDebug("CSR Extension: {ExtensionOid} - {ExtensionFriendlyName} - {ExtensionRawData}", extension.Oid, extension.Oid?.FriendlyName ?? "Unknown", extension.RawData);
+        }
 
         _logger.LogInformation("CSR generated successfully for subject: {SubjectName}.", subjectName);
-        _logger.LogDebug("CSR Signature Algorithm: {SignatureAlgorithm}", csr.SignatureAlgorithm.Algorithm.Id);
-        _logger.LogDebug("CSR Version: {Version}", csr.GetCertificationRequestInfo().Version);
-        _logger.LogDebug("CSR Subject: {CSRSubject}", csr.GetCertificationRequestInfo().Subject.ToString());
 
         return csr;
     }

@@ -2,12 +2,10 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
-using Org.BouncyCastle.Crypto;
-using Org.BouncyCastle.Pkcs;
-using Org.BouncyCastle.Security;
-using Org.BouncyCastle.X509;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Models;
 
@@ -42,7 +40,8 @@ public class HostLifecycleService : IHostLifecycleService
                 ipAddress
             };
 
-            var csr = _certificateRequestService.GenerateCSR($"CN={hostName}", ipAddresses, out var keyPair);
+            RSA rsaKeyPair;
+            var csr = _certificateRequestService.GenerateCSR($"CN={hostName}", ipAddresses, out rsaKeyPair);
 
             connection.On<byte[]>("ReceiveCertificate", certificateBytes =>
             {
@@ -50,12 +49,12 @@ public class HostLifecycleService : IHostLifecycleService
 
                 var pfxFilePath = @"C:\certificate.pfx";
                 var pfxPassword = "YourPfxPassword";
-                CreatePfxFile(certificateBytes, keyPair, pfxFilePath, pfxPassword);
+                CreatePfxFile(certificateBytes, rsaKeyPair, pfxFilePath, pfxPassword);
 
                 _logger.LogInformation("PFX file created successfully.");
             });
 
-            if (await connection.InvokeAsync<bool>("RegisterHostAsync", hostName, ipAddress, macAddress, config.Group, csr.GetDerEncoded()))
+            if (await connection.InvokeAsync<bool>("RegisterHostAsync", hostName, ipAddress, macAddress, config.Group, csr.CreateSigningRequest()))
             {
                 _logger.LogInformation("Host registration successful.");
             }
@@ -63,6 +62,8 @@ public class HostLifecycleService : IHostLifecycleService
             {
                 _logger.LogWarning("Host registration was not successful.");
             }
+
+            rsaKeyPair.Dispose();
         }
         catch (Exception ex)
         {
@@ -135,16 +136,11 @@ public class HostLifecycleService : IHostLifecycleService
         return hubConnection;
     }
 
-    private static void CreatePfxFile(byte[] certificateBytes, AsymmetricCipherKeyPair keyPair, string outputPfxPath, string password)
+    private static void CreatePfxFile(byte[] certificateBytes, RSA rsaKeyPair, string outputPfxPath, string password)
     {
-        var cert = new X509CertificateParser().ReadCertificate(certificateBytes);
+        using var certificate = new X509Certificate2(certificateBytes);
+        var pfxBytes = certificate.CopyWithPrivateKey(rsaKeyPair).Export(X509ContentType.Pfx, password);
 
-        var storeBuilder = new Pkcs12StoreBuilder();
-        var store = storeBuilder.Build();
-
-        store.SetKeyEntry("key", new AsymmetricKeyEntry(keyPair.Private), new[] { new X509CertificateEntry(cert) });
-
-        using var fs = new FileStream(outputPfxPath, FileMode.Create);
-        store.Save(fs, password.ToCharArray(), new SecureRandom());
+        File.WriteAllBytes(outputPfxPath, pfxBytes);
     }
 }
