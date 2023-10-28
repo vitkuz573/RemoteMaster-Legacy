@@ -31,7 +31,6 @@ public class CertificateRequestService : ICertificateRequestService
         rsaKeyPair = RSA.Create(2048);
 
         _logger.LogDebug("RSA key pair generated successfully with key size {KeySize}.", rsaKeyPair.KeySize);
-        _logger.LogDebug("RSA key pair public key parameters: {PublicKeyParameters}", rsaKeyPair.ExportParameters(false));
 
         var subject = new X500DistinguishedName(subjectName);
         var csr = new CertificateRequest(subject, rsaKeyPair, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
@@ -52,7 +51,10 @@ public class CertificateRequestService : ICertificateRequestService
 
         foreach (var extension in csr.CertificateExtensions)
         {
-            _logger.LogDebug("CSR Extension: {ExtensionOid} - {ExtensionFriendlyName} - {ExtensionRawData}", extension.Oid, extension.Oid?.FriendlyName ?? "Unknown", extension.RawData);
+            var asnData = new AsnEncodedData(extension.Oid, extension.RawData);
+            var formattedData = asnData.Format(true);
+
+            _logger.LogDebug("CSR Extension: {ExtensionOid} - {ExtensionFriendlyName} - {ExtensionFormattedData}", extension.Oid?.Value ?? "Unknown", extension.Oid?.FriendlyName ?? "Unknown", formattedData);
         }
 
         _logger.LogInformation("CSR generated successfully for subject: {SubjectName}.", subjectName);
