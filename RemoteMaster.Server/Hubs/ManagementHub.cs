@@ -2,8 +2,8 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.SignalR;
-using Org.BouncyCastle.Pkcs;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
@@ -25,22 +25,9 @@ public class ManagementHub : Hub
 
     public async Task<bool> RegisterHostAsync(string hostName, string ipAddress, string macAddress, string group, byte[] csrBytes)
     {
-        Pkcs10CertificationRequest csr;
+        var certificate = _certificateService.GenerateCertificateFromCSR(csrBytes);
 
-        try
-        {
-            csr = new Pkcs10CertificationRequest(csrBytes);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError("Failed to parse CSR: {Message}", ex.Message);
-
-            return false;
-        }
-
-        var certificate = _certificateService.GenerateCertificateFromCSR(csr);
-
-        await Clients.Caller.SendAsync("ReceiveCertificate", certificate.GetEncoded());
+        await Clients.Caller.SendAsync("ReceiveCertificate", certificate.Export(X509ContentType.Pfx));
 
         var folder = (await _databaseService.GetNodesAsync(f => f.Name == group && f is Folder)).OfType<Folder>().FirstOrDefault();
 

@@ -2,12 +2,11 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using Org.BouncyCastle.Pkcs;
-using Org.BouncyCastle.X509;
+using System.Security.Cryptography.X509Certificates;
 
 namespace RemoteMaster.Server.Abstractions;
 
 public interface ICertificateService
 {
-    X509Certificate GenerateCertificateFromCSR(Pkcs10CertificationRequest csr);
+    X509Certificate2 GenerateCertificateFromCSR(byte[] csrBytes);
 }
