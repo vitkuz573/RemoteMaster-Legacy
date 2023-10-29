@@ -69,7 +69,7 @@ if ($packagesToRemove.Count -gt 0) {
         # Formatting XML for better readability
         $settings = New-Object System.Xml.XmlWriterSettings
         $settings.Indent = $true
-        $settings.IndentChars = "    "
+        $settings.IndentChars = "  "
         $settings.NewLineChars = "`r`n"
         $settings.NewLineHandling = [System.Xml.NewLineHandling]::Replace
         $memoryStream = New-Object System.IO.MemoryStream
