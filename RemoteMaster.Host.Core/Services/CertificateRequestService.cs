@@ -44,10 +44,19 @@ public class CertificateRequestService : ICertificateRequestService
             sanBuilder.AddIpAddress(IPAddress.Parse(ipAddress));
         }
 
-        var sanExtension = sanBuilder.Build();
+        var sanExtension = sanBuilder.Build(true);
         csr.CertificateExtensions.Add(sanExtension);
 
         _logger.LogDebug("Added Subject Alternative Name extension with {SANCount} IP addresses.", ipAddresses.Count);
+
+        var enhancedKeyUsages = new OidCollection
+        {
+            new Oid("1.3.6.1.5.5.7.3.1")
+        };
+
+        csr.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(enhancedKeyUsages, true));
+
+        _logger.LogDebug("Added Enhanced Key Usages extension with {OIDCount} OIDs.", enhancedKeyUsages.Count);
 
         foreach (var extension in csr.CertificateExtensions)
         {
