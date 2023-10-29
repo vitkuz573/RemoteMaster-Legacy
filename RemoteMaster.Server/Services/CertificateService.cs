@@ -33,7 +33,7 @@ public class CertificateService : ICertificateService
             throw new ArgumentNullException(nameof(csrBytes));
         }
 
-        var csr = CertificateRequest.LoadSigningRequest(csrBytes, HashAlgorithmName.SHA256);
+        var csr = CertificateRequest.LoadSigningRequest(csrBytes, HashAlgorithmName.SHA256, CertificateRequestLoadOptions.UnsafeLoadCertificateExtensions);
 
         using var caCertificate = new X509Certificate2(_settings.PfxPath, _settings.PfxPassword);
         var subjectName = new X500DistinguishedName(caCertificate.SubjectName);
@@ -46,11 +46,6 @@ public class CertificateService : ICertificateService
 
         foreach (var extension in csr.CertificateExtensions)
         {
-            var asnData = new AsnEncodedData(extension.Oid, extension.RawData);
-            var formattedData = asnData.Format(true);
-
-            _logger.LogDebug("CSR Extension: {ExtensionOid} - {ExtensionFriendlyName} - {ExtensionFormattedData}", extension.Oid?.Value ?? "Unknown", extension.Oid?.FriendlyName ?? "Unknown", formattedData);
-            
             certificate.Extensions.Add(extension);
         }
 
