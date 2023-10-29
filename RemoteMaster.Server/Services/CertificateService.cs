@@ -35,6 +35,13 @@ public class CertificateService : ICertificateService
 
         var csr = CertificateRequest.LoadSigningRequest(csrBytes, HashAlgorithmName.SHA256, CertificateRequestLoadOptions.UnsafeLoadCertificateExtensions);
 
+        var basicConstraints = csr.CertificateExtensions.OfType<X509BasicConstraintsExtension>().FirstOrDefault();
+        
+        if (basicConstraints != null && basicConstraints.CertificateAuthority)
+        {
+            throw new Exception("CSR for CA certificates are not allowed.");
+        }
+
         using var caCertificate = new X509Certificate2(_settings.PfxPath, _settings.PfxPassword);
         var subjectName = new X500DistinguishedName(caCertificate.SubjectName);
         var signatureGenerator = X509SignatureGenerator.CreateForRSA(caCertificate.GetRSAPrivateKey(), RSASignaturePadding.Pkcs1);
