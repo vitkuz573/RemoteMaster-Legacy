@@ -43,7 +43,7 @@ public class CertificateService : ICertificateService
         }
 
         using var caCertificate = new X509Certificate2(_settings.PfxPath, _settings.PfxPassword);
-        var subjectName = new X500DistinguishedName(caCertificate.SubjectName);
+        var subjectName = caCertificate.SubjectName;
         var signatureGenerator = X509SignatureGenerator.CreateForRSA(caCertificate.GetRSAPrivateKey(), RSASignaturePadding.Pkcs1);
         var notBefore = DateTimeOffset.UtcNow;
         var notAfter = DateTimeOffset.UtcNow.AddYears(1);
