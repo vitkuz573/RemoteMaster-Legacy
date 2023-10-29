@@ -126,7 +126,8 @@ public class LoginModel : PageModel
                 var cookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
-                    Expires = DateTime.UtcNow.AddHours(2)
+                    Expires = DateTime.UtcNow.AddHours(2),
+                    Secure = true
                 };
 
                 Response.Cookies.Append("accessToken", accessTokenString, cookieOptions);
@@ -142,7 +143,8 @@ public class LoginModel : PageModel
                 var refreshCookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
-                    Expires = DateTime.UtcNow.AddDays(7)
+                    Expires = DateTime.UtcNow.AddDays(7),
+                    Secure = true
                 };
 
                 Response.Cookies.Append("refreshToken", refreshTokenString, refreshCookieOptions);

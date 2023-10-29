@@ -8,4 +8,4 @@ CN = DESKTOP-QKB642V
 subjectAltName = @alt_names
 extendedKeyUsage = serverAuth
 [alt_names]
-IP.1 = 192.168.5.122
+IP.1 = 192.168.0.100
