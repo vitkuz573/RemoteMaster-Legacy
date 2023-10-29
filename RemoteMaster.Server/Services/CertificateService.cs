@@ -50,8 +50,6 @@ public class CertificateService : ICertificateService
 
         var certificate = csr.Create(subjectName, signatureGenerator, notBefore, notAfter, serialNumber);
 
-        certificate.FriendlyName = "RemoteMaster Host Certificate";
-
         _logger.LogInformation("Certificate generated successfully.");
 
         return certificate;
