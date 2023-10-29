@@ -28,7 +28,7 @@ basicConstraints = CA:TRUE
 $config | Out-File "$destDirectory\openssl.cnf" -Encoding ascii
 
 # Generate a self-signed certificate with Basic Constraints set to CA:TRUE
-& $opensslPath x509 -req -days 3650 -in "$destDirectory\$caName.csr" -signkey "$destDirectory\$caName.key" -out "$destDirectory\$caName.crt" -extfile "$destDirectory\openssl.cnf" -extensions v3_req
+& $opensslPath x509 -req -days 3650 -in "$destDirectory\$subjectName.csr" -CA "..\..\$caName.crt" -CAkey "..\..\$caName.key" -set_serial 01 -out "$destDirectory\$subjectName.crt" -extfile "$destDirectory\$subjectName.cnf" -extensions v3_req
 
 # Convert the certificate and private key to a PFX file
 & $opensslPath pkcs12 -export -out "$destDirectory\$caName.pfx" -inkey "$destDirectory\$caName.key" -in "$destDirectory\$caName.crt" -name $caName

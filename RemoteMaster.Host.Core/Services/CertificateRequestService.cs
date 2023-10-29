@@ -57,7 +57,7 @@ public class CertificateRequestService : ICertificateRequestService
 
         csr.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(enhancedKeyUsages, true));
 
-        _logger.LogDebug("Added Enhanced Key Usages extension with {OIDCount} OIDs.", enhancedKeyUsages.Count);
+        _logger.LogDebug("Added Enhanced Key Usage extension with {OIDCount} OIDs.", enhancedKeyUsages.Count);
 
         foreach (var extension in csr.CertificateExtensions)
         {

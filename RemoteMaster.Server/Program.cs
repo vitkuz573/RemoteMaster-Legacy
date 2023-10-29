@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Radzen;
@@ -76,12 +77,19 @@ void ConfigureUIServices(WebApplicationBuilder builder)
 
 WebApplication ConfigureApplication(WebApplicationBuilder builder)
 {
+    builder.WebHost.ConfigureKestrel(options =>
+    {
+        var httpsCertificate = new X509Certificate2(@"C:\Users\vitaly\source\repos\RemoteMaster\scripts\InternalCA\ServerCert\DESKTOP-QKB642V.pfx", "bonesgamer123!!");
+
+        options.ListenAnyIP(5254, listenOptions =>
+        {
+            listenOptions.UseHttps(httpsCertificate);
+        });
+    });
+
     var app = builder.Build();
 
     PerformDatabaseMigrations(app);
-
-    app.Urls.Clear();
-    app.Urls.Add("http://0.0.0.0:5254");
 
     if (!app.Environment.IsDevelopment())
     {

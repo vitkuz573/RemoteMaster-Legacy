@@ -31,7 +31,7 @@ public class HostLifecycleService : IHostLifecycleService
 
         try
         {
-            var connection = await ConnectToServerHub($"http://{config.Server}:5254");
+            var connection = await ConnectToServerHub($"https://{config.Server}:5254");
 
             _logger.LogInformation("Attempting to register host...");
 
@@ -80,7 +80,7 @@ public class HostLifecycleService : IHostLifecycleService
 
         try
         {
-            var connection = await ConnectToServerHub($"http://{config.Server}:5254");
+            var connection = await ConnectToServerHub($"https://{config.Server}:5254");
 
             _logger.LogInformation("Attempting to unregister host...");
 
@@ -95,7 +95,7 @@ public class HostLifecycleService : IHostLifecycleService
         }
         catch (Exception ex)
         {
-            _logger.LogError("Unregistering host failed: {Message}", ex.Message);
+            _logger.LogError(ex, "Unregistering host failed: {Message}", ex.Message);
         }
     }
 
@@ -108,7 +108,7 @@ public class HostLifecycleService : IHostLifecycleService
 
         try
         {
-            var connection = await ConnectToServerHub($"http://{config.Server}:5254");
+            var connection = await ConnectToServerHub($"https://{config.Server}:5254");
 
             if (await connection.InvokeAsync<bool>("UpdateHostInformationAsync", hostname, config.Group, ipAddress))
             {
