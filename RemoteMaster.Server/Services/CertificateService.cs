@@ -36,7 +36,7 @@ public class CertificateService : ICertificateService
         var csr = CertificateRequest.LoadSigningRequest(csrBytes, HashAlgorithmName.SHA256, CertificateRequestLoadOptions.UnsafeLoadCertificateExtensions);
 
         var basicConstraints = csr.CertificateExtensions.OfType<X509BasicConstraintsExtension>().FirstOrDefault();
-        
+
         if (basicConstraints != null && basicConstraints.CertificateAuthority)
         {
             throw new Exception("CSR for CA certificates are not allowed.");
@@ -50,11 +50,6 @@ public class CertificateService : ICertificateService
         var serialNumber = GenerateSerialNumber();
 
         var certificate = csr.Create(subjectName, signatureGenerator, notBefore, notAfter, serialNumber);
-
-        foreach (var extension in csr.CertificateExtensions)
-        {
-            certificate.Extensions.Add(extension);
-        }
 
         return certificate;
     }
