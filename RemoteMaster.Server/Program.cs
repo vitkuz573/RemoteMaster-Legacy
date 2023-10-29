@@ -79,7 +79,7 @@ WebApplication ConfigureApplication(WebApplicationBuilder builder)
 {
     builder.WebHost.ConfigureKestrel(options =>
     {
-        var httpsCertificate = new X509Certificate2(@"C:\Users\vitaly\source\repos\RemoteMaster\scripts\InternalCA\ServerCert\DESKTOP-QKB642V.pfx", "bonesgamer123!!");
+        var httpsCertificate = new X509Certificate2(@"C:\Users\vitaly\source\repos\RemoteMaster\scripts\ServerCert\DESKTOP-QKB642V.pfx", "bonesgamer123!!");
 
         options.ListenAnyIP(5254, listenOptions =>
         {
