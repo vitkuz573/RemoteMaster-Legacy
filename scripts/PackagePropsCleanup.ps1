@@ -56,6 +56,22 @@ foreach ($packageVersion in $packageVersions) {
 
 Write-Host ""
 
+# Formatting XML for better readability
+$settings = New-Object System.Xml.XmlWriterSettings
+$settings.Indent = $true
+$settings.IndentChars = "  "
+$settings.NewLineChars = "`r`n"
+$settings.NewLineHandling = [System.Xml.NewLineHandling]::Replace
+$memoryStream = New-Object System.IO.MemoryStream
+$xmlWriter = [System.Xml.XmlWriter]::Create($memoryStream, $settings)
+
+$packagePropsXml.Save($xmlWriter)
+$xmlWriter.Flush()
+$memoryStream.Position = 0
+
+$formattedXml = New-Object System.IO.StreamReader -ArgumentList $memoryStream
+$formattedXmlContent = $formattedXml.ReadToEnd().TrimEnd()
+
 if ($packagesToRemove.Count -gt 0) {
     Write-Host "The following unused packages are identified:" -ForegroundColor Yellow
     $packagesToRemove | ForEach-Object { Write-Host $_.Include -ForegroundColor Red }
@@ -66,21 +82,7 @@ if ($packagesToRemove.Count -gt 0) {
         # Remove unused packages from the XML
         $packagesToRemove | ForEach-Object { $packagePropsXml.Project.ItemGroup.RemoveChild($_) }
 
-        # Formatting XML for better readability
-        $settings = New-Object System.Xml.XmlWriterSettings
-        $settings.Indent = $true
-        $settings.IndentChars = "  "
-        $settings.NewLineChars = "`r`n"
-        $settings.NewLineHandling = [System.Xml.NewLineHandling]::Replace
-        $memoryStream = New-Object System.IO.MemoryStream
-        $xmlWriter = [System.Xml.XmlWriter]::Create($memoryStream, $settings)
-
-        $packagePropsXml.Save($xmlWriter)
-        $xmlWriter.Flush()
-        $memoryStream.Position = 0
-
-        $formattedXml = New-Object System.IO.StreamReader -ArgumentList $memoryStream
-        Set-Content -Path $packagePropsPath -Value $formattedXml.ReadToEnd()
+        Set-Content -Path $packagePropsPath -Value $formattedXmlContent
 
         Write-Host "Removed the specified packages. Directory.Packages.props has been updated." -ForegroundColor Green
     } else {
@@ -89,3 +91,6 @@ if ($packagesToRemove.Count -gt 0) {
 } else {
     Write-Host "No unused packages found. Directory.Packages.props remains unchanged." -ForegroundColor Yellow
 }
+
+# Save the formatted XML even if no packages were removed
+Set-Content -Path $packagePropsPath -Value $formattedXmlContent
