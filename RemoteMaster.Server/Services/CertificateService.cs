@@ -15,21 +15,19 @@ public class CertificateService : ICertificateService
     private readonly CertificateSettings _settings;
     private readonly ILogger<CertificateService> _logger;
 
+    private const int CertificateValidityYears = 1;
+
     public CertificateService(IOptions<CertificateSettings> options, ILogger<CertificateService> logger)
     {
-        if (options == null)
-        {
-            throw new ArgumentNullException(nameof(options));
-        }
-
-        _settings = options.Value;
+        _settings = options?.Value ?? throw new ArgumentNullException(nameof(options));
         _logger = logger;
     }
 
     public X509Certificate2 GenerateCertificateFromCSR(byte[] csrBytes)
     {
-        if (csrBytes == null)
+        if (csrBytes is null)
         {
+            _logger.LogError($"{nameof(csrBytes)} are null.");
             throw new ArgumentNullException(nameof(csrBytes));
         }
 
@@ -39,17 +37,20 @@ public class CertificateService : ICertificateService
 
         if (basicConstraints != null && basicConstraints.CertificateAuthority)
         {
-            throw new Exception("CSR for CA certificates are not allowed.");
+            _logger.LogError("CSR for CA certificates are not allowed.");
+            throw new InvalidOperationException("CSR for CA certificates are not allowed.");
         }
 
         using var caCertificate = new X509Certificate2(_settings.PfxPath, _settings.PfxPassword);
         var subjectName = caCertificate.SubjectName;
         var signatureGenerator = X509SignatureGenerator.CreateForRSA(caCertificate.GetRSAPrivateKey(), RSASignaturePadding.Pkcs1);
         var notBefore = DateTimeOffset.UtcNow;
-        var notAfter = DateTimeOffset.UtcNow.AddYears(1);
+        var notAfter = DateTimeOffset.UtcNow.AddYears(CertificateValidityYears);
         var serialNumber = GenerateSerialNumber();
 
         var certificate = csr.Create(subjectName, signatureGenerator, notBefore, notAfter, serialNumber);
+
+        _logger.LogInformation("Certificate generated successfully.");
 
         return certificate;
     }
