@@ -19,19 +19,20 @@ public class CertificateRequestService : ICertificateRequestService
         _logger = logger;
     }
 
-    public CertificateRequest GenerateCSR(string subjectName, List<string> ipAddresses, out RSA rsaKeyPair)
+    public CertificateRequest GenerateCSR(string commonName, string organization, string locality, string state, string country, List<string> ipAddresses, out RSA rsaKeyPair)
     {
         if (ipAddresses == null)
         {
             throw new ArgumentNullException(nameof(ipAddresses));
         }
 
-        _logger.LogInformation("Starting CSR generation for subject: {SubjectName}", subjectName);
+        _logger.LogInformation("Starting CSR generation for subject: {CommonName}", commonName);
 
         rsaKeyPair = RSA.Create(2048);
 
         _logger.LogDebug("RSA key pair generated successfully with key size {KeySize}.", rsaKeyPair.KeySize);
 
+        var subjectName = $"CN={commonName}, O={organization}, L={locality}, ST={state}, C={country}";
         var subject = new X500DistinguishedName(subjectName);
         var csr = new CertificateRequest(subject, rsaKeyPair, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
@@ -66,7 +67,7 @@ public class CertificateRequestService : ICertificateRequestService
             _logger.LogDebug("CSR Extension: {ExtensionOid} - {ExtensionFriendlyName} - {ExtensionFormattedData}", extension.Oid?.Value ?? "Unknown", extension.Oid?.FriendlyName ?? "Unknown", formattedData);
         }
 
-        _logger.LogInformation("CSR generated successfully for subject: {SubjectName}.", subjectName);
+        _logger.LogInformation("CSR generated successfully for subject: {CommonName}.", commonName);
 
         return csr;
     }

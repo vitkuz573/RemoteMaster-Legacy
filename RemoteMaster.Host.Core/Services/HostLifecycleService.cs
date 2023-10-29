@@ -41,7 +41,7 @@ public class HostLifecycleService : IHostLifecycleService
             };
 
             RSA rsaKeyPair;
-            var csr = _certificateRequestService.GenerateCSR($"CN={hostName}", ipAddresses, out rsaKeyPair);
+            var csr = _certificateRequestService.GenerateCSR(hostName, "RemoteMaster", "Kurgan", "Kurgan Oblast", "RU", ipAddresses, out rsaKeyPair);
 
             connection.On<byte[]>("ReceiveCertificate", certificateBytes =>
             {
