@@ -364,3 +364,7 @@ FodyWeavers.xsd
 
 RemoteMaster.Identity.*
 RemoteMaster.Nodes.*
+
+scripts/InternalCA
+scripts/ServerCert
+scripts/keys

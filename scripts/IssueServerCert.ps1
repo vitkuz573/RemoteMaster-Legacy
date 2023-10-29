@@ -38,10 +38,10 @@ extendedKeyUsage = serverAuth
 [alt_names]
 IP.1 = $ip
 "@
-$config | Out-File "$serverCertDirectory\$subjectName.cnf" -Encoding ascii
+$config | Out-File "$serverCertDirectory\openssl.cnf" -Encoding ascii
 
 # Generate a certificate using the CSR and sign it using the CA's private key
-& $opensslPath x509 -req -days 3650 -in "$serverCertDirectory\$subjectName.csr" -CA "$caDirectory\$caName.crt" -CAkey "$caDirectory\$caName.key" -set_serial 01 -out "$serverCertDirectory\$subjectName.crt" -extfile "$serverCertDirectory\$subjectName.cnf" -extensions v3_req
+& $opensslPath x509 -req -days 365 -in "$serverCertDirectory\$subjectName.csr" -CA "$caDirectory\$caName.crt" -CAkey "$caDirectory\$caName.key" -set_serial 01 -out "$serverCertDirectory\$subjectName.crt" -extfile "$serverCertDirectory\openssl.cnf" -extensions v3_req
 
 # Ask for password to secure the private key
 $password = Read-Host -Prompt "Enter password for the private key" -AsSecureString
