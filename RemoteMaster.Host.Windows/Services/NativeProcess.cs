@@ -26,9 +26,6 @@ public class NativeProcess
 
     public StreamReader StandardError { get; private set; }
 
-    private SafeFileHandle _stdOutReadHandle;
-    private SafeFileHandle _stdErrReadHandle;
-
     private NativeProcess(NativeProcessStartInfo startInfo, uint processId)
     {
         StartInfo = startInfo;
@@ -80,8 +77,6 @@ public class NativeProcess
             var nativeProcess = new NativeProcess(startInfo, procInfo.dwProcessId)
             {
                 ProcessHandle = new SafeFileHandle(procInfo.hProcess, true),
-                _stdOutReadHandle = stdOutReadHandle,
-                _stdErrReadHandle = stdErrReadHandle,
                 StandardOutput = new StreamReader(new FileStream(stdOutReadHandle, FileAccess.Read)),
                 StandardError = new StreamReader(new FileStream(stdErrReadHandle, FileAccess.Read))
             };
@@ -237,8 +232,6 @@ public class NativeProcess
 
     public void Close()
     {
-        _stdOutReadHandle?.Close();
-        _stdErrReadHandle?.Close();
         StandardOutput?.Dispose();
         StandardError?.Dispose();
         ProcessHandle?.Close();
