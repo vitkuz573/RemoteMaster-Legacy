@@ -50,7 +50,8 @@ public class ControlHub : Hub<IControlClient>
         switch (intention)
         {
             case Intention.GetThumbnail:
-                await Clients.Caller.ReceiveThumbnail(GetThumbnail());
+                var thumbnail = _screenCapturerService.GetThumbnail(500, 300);
+                await Clients.Caller.ReceiveThumbnail(thumbnail);
                 Context.Abort();
                 break;
 
@@ -65,14 +66,6 @@ public class ControlHub : Hub<IControlClient>
         }
     }
 
-    private byte[] GetThumbnail()
-    {
-        const int maxWidth = 500;
-        const int maxHeight = 300;
-
-        return _screenCapturerService.GetThumbnail(maxWidth, maxHeight);
-    }
-
     public async override Task OnDisconnectedAsync(Exception? exception)
     {
         _appState.TryRemoveViewer(Context.ConnectionId, out var _);
@@ -80,27 +73,27 @@ public class ControlHub : Hub<IControlClient>
         await base.OnDisconnectedAsync(exception);
     }
 
-    public async Task SendMouseCoordinates(MouseMoveDto dto)
+    public void SendMouseCoordinates(MouseMoveDto dto)
     {
         ExecuteActionForViewer(viewer => _inputService.SendMouseCoordinates(dto, viewer));
     }
 
-    public async Task SendMouseButton(MouseClickDto dto)
+    public void SendMouseButton(MouseClickDto dto)
     {
         ExecuteActionForViewer(viewer => _inputService.SendMouseButton(dto, viewer));
     }
 
-    public async Task SendMouseWheel(MouseWheelDto dto)
+    public void SendMouseWheel(MouseWheelDto dto)
     {
         _inputService.SendMouseWheel(dto);
     }
 
-    public async Task SendKeyboardInput(KeyboardKeyDto dto)
+    public void SendKeyboardInput(KeyboardKeyDto dto)
     {
         _inputService.SendKeyboardInput(dto);
     }
 
-    public async Task SendSelectedScreen(string displayName)
+    public void SendSelectedScreen(string displayName)
     {
         if (_appState.TryGetViewer(Context.ConnectionId, out var viewer))
         {
@@ -112,32 +105,32 @@ public class ControlHub : Hub<IControlClient>
         }
     }
 
-    public async Task SetInputEnabled(bool inputEnabled)
+    public void SetInputEnabled(bool inputEnabled)
     {
         _inputService.InputEnabled = inputEnabled;
     }
 
-    public async Task SetQuality(int quality)
+    public void SetQuality(int quality)
     {
         ExecuteActionForViewer(viewer => viewer.ScreenCapturer.Quality = quality);
     }
 
-    public async Task SetTrackCursor(bool trackCursor)
+    public void SetTrackCursor(bool trackCursor)
     {
         ExecuteActionForViewer(viewer => viewer.ScreenCapturer.TrackCursor = trackCursor);
     }
 
-    public async Task KillHost()
+    public void KillHost()
     {
         _shutdownService.ImmediateShutdown();
     }
 
-    public async Task RebootComputer(string message, int timeout, bool forceAppsClosed)
+    public void RebootComputer(string message, int timeout, bool forceAppsClosed)
     {
         _powerService.Reboot(message, (uint)timeout, forceAppsClosed);
     }
 
-    public async Task ShutdownComputer(string message, int timeout, bool forceAppsClosed)
+    public void ShutdownComputer(string message, int timeout, bool forceAppsClosed)
     {
         _powerService.Shutdown(message, (uint)timeout, forceAppsClosed);
     }
@@ -164,18 +157,18 @@ public class ControlHub : Hub<IControlClient>
         await _screenRecorderService.StopRecordingAsync();
     }
 
-    public async Task SetMonitorState(MonitorState state)
+    public void SetMonitorState(MonitorState state)
     {
         _hardwareService.SetMonitorState(state);
     }
 
-    public async Task ExecuteScript(string script, string shell)
+    public void ExecuteScript(string script, string shell)
     {
         _scriptService.Execute(shell, script);
     }
 
     [SuppressMessage("Performance", "CA1822:Пометьте члены как статические", Justification = "<Ожидание>")]
-    public async Task SetPSExecRules(bool enable)
+    public void SetPSExecRules(bool enable)
     {
         if (enable)
         {
@@ -222,18 +215,18 @@ public class ControlHub : Hub<IControlClient>
         await Clients.Group("serviceGroup").ReceiveCommand(command);
     }
 
-    public async Task SendUpdateHost(string sharedFolder, string username, string password)
+    public void SendUpdateHost(string sharedFolder, string username, string password)
     {
         _updaterService.Download(sharedFolder, username, password);
         _updaterService.Execute();
     }
 
-    public async Task SendJoinToDomain(string domain, string user, string password)
+    public void SendJoinToDomain(string domain, string user, string password)
     {
         _domainService.JoinToDomain(domain, user, password);
     }
 
-    public async Task SendUnjoinFromDomain(string user, string password)
+    public void SendUnjoinFromDomain(string user, string password)
     {
         _domainService.UnjoinFromDomain(user, password);
     }
