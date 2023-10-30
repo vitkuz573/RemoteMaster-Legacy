@@ -18,20 +18,20 @@ public class NativeProcess
 {
     public NativeProcessStartInfo StartInfo { get; private set; }
 
-    public uint Id { get; private set; }
+    public uint? Id { get; private set; }
 
-    public SafeFileHandle ProcessHandle { get; private set; }
+    public SafeFileHandle? ProcessHandle { get; private set; }
 
-    public StreamReader StandardOutput { get; private set; }
+    public StreamReader? StandardOutput { get; private set; }
 
-    public StreamReader StandardError { get; private set; }
+    public StreamReader? StandardError { get; private set; }
 
     public NativeProcess(NativeProcessStartInfo startInfo)
     {
         StartInfo = startInfo;
     }
 
-    public static NativeProcess Start(NativeProcessStartInfo startInfo)
+    public static NativeProcess? Start(NativeProcessStartInfo startInfo)
     {
         if (startInfo == null)
         {
@@ -73,15 +73,20 @@ public class NativeProcess
                 throw new InvalidOperationException("Failed to get or duplicate user token.");
             }
 
-            var nativeProcess = new NativeProcess(startInfo)
+            if (stdOutReadHandle != null && stdErrReadHandle != null)
             {
-                Id = procInfo.dwProcessId,
-                ProcessHandle = new SafeFileHandle(procInfo.hProcess, true),
-                StandardOutput = new StreamReader(new FileStream(stdOutReadHandle, FileAccess.Read)),
-                StandardError = new StreamReader(new FileStream(stdErrReadHandle, FileAccess.Read))
-            };
+                var nativeProcess = new NativeProcess(startInfo)
+                {
+                    Id = procInfo.dwProcessId,
+                    ProcessHandle = new SafeFileHandle(procInfo.hProcess, true),
+                    StandardOutput = new StreamReader(new FileStream(stdOutReadHandle, FileAccess.Read)),
+                    StandardError = new StreamReader(new FileStream(stdErrReadHandle, FileAccess.Read))
+                };
 
-            return nativeProcess;
+                return nativeProcess;
+            }
+
+            return null;
         }
         finally
         {
