@@ -26,10 +26,9 @@ public class NativeProcess
 
     public StreamReader StandardError { get; private set; }
 
-    private NativeProcess(NativeProcessStartInfo startInfo, uint processId)
+    public NativeProcess(NativeProcessStartInfo startInfo)
     {
         StartInfo = startInfo;
-        Id = processId;
     }
 
     public static NativeProcess Start(NativeProcessStartInfo startInfo)
@@ -74,8 +73,9 @@ public class NativeProcess
                 throw new InvalidOperationException("Failed to get or duplicate user token.");
             }
 
-            var nativeProcess = new NativeProcess(startInfo, procInfo.dwProcessId)
+            var nativeProcess = new NativeProcess(startInfo)
             {
+                Id = procInfo.dwProcessId,
                 ProcessHandle = new SafeFileHandle(procInfo.hProcess, true),
                 StandardOutput = new StreamReader(new FileStream(stdOutReadHandle, FileAccess.Read)),
                 StandardError = new StreamReader(new FileStream(stdErrReadHandle, FileAccess.Read))
