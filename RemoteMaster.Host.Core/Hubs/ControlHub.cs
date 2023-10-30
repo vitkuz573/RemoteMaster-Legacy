@@ -2,12 +2,10 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Core.Helpers.AdvFirewall;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
 
@@ -165,39 +163,6 @@ public class ControlHub : Hub<IControlClient>
     public void ExecuteScript(string script, string shell)
     {
         _scriptService.Execute(shell, script);
-    }
-
-    [SuppressMessage("Performance", "CA1822:Пометьте члены как статические", Justification = "<Ожидание>")]
-    public void SetPSExecRules(bool enable)
-    {
-        if (enable)
-        {
-            FirewallManager.DeleteRule("PSExec", RuleDirection.In);
-            FirewallManager.SetRuleGroup("Удаленное управление службой", RuleGroupStatus.Disabled);
-
-            FirewallManager.EnableWinRM();
-
-            var rule = new FirewallRule("PSExec")
-            {
-                Direction = RuleDirection.In,
-                Action = RuleAction.Allow,
-                Protocol = RuleProtocol.TCP,
-                LocalPort = "RPC",
-                Program = @"%WinDir%\system32\services.exe",
-                Service = "any"
-            };
-
-            rule.Profiles.Add(RuleProfile.Domain);
-            rule.Profiles.Add(RuleProfile.Private);
-            rule.Apply();
-
-            FirewallManager.SetRuleGroup("Удаленное управление службой", RuleGroupStatus.Enabled);
-        }
-        else
-        {
-            FirewallManager.DeleteRule("PSExec", RuleDirection.In);
-            FirewallManager.SetRuleGroup("Удаленное управление службой", RuleGroupStatus.Disabled);
-        }
     }
 
     public async Task JoinGroup(string groupName)
