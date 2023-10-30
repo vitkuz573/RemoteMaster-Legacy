@@ -49,7 +49,12 @@ public class ControlHub : Hub<IControlClient>
         {
             case Intention.GetThumbnail:
                 var thumbnail = _screenCapturerService.GetNextFrame(500, 300, true);
-                await Clients.Caller.ReceiveThumbnail(thumbnail);
+                
+                if (thumbnail != null)
+                {
+                    await Clients.Caller.ReceiveThumbnail(thumbnail);
+                }
+
                 Context.Abort();
                 break;
 
