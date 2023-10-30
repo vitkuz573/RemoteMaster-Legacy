@@ -22,6 +22,13 @@ public class NativeProcess
 
     public SafeFileHandle ProcessHandle { get; private set; }
 
+    public StreamReader StandardOutput { get; private set; }
+
+    public StreamReader StandardError { get; private set; }
+
+    private SafeFileHandle _stdOutReadHandle;
+    private SafeFileHandle _stdErrReadHandle;
+
     private NativeProcess(NativeProcessStartInfo startInfo, uint processId)
     {
         StartInfo = startInfo;
@@ -35,16 +42,13 @@ public class NativeProcess
             throw new ArgumentNullException(nameof(startInfo));
         }
 
-        var procInfo = new PROCESS_INFORMATION();
-
-        var sessionId = !startInfo.ForceConsoleSession
-            ? FindTargetSessionId(startInfo.TargetSessionId)
-            : WTSGetActiveConsoleSessionId();
-
-        SafeFileHandle hUserTokenDup = null;
-        SafeFileHandle stdInReadHandle = null;
-        SafeFileHandle stdOutReadHandle = null;
-        SafeFileHandle stdErrReadHandle = null;
+        _ = new PROCESS_INFORMATION();
+        var sessionId = !startInfo.ForceConsoleSession ? FindTargetSessionId(startInfo.TargetSessionId) : WTSGetActiveConsoleSessionId();
+        
+        SafeFileHandle? hUserTokenDup = null;
+        SafeFileHandle? stdInReadHandle = null;
+        SafeFileHandle? stdOutReadHandle = null;
+        SafeFileHandle? stdErrReadHandle = null;
 
         try
         {
@@ -62,6 +66,8 @@ public class NativeProcess
                 }
             }
 
+            PROCESS_INFORMATION procInfo;
+
             if (hUserTokenDup != null)
             {
                 TryCreateInteractiveProcess(startInfo, hUserTokenDup, out procInfo);
@@ -71,10 +77,16 @@ public class NativeProcess
                 throw new InvalidOperationException("Failed to get or duplicate user token.");
             }
 
-            return new NativeProcess(startInfo, procInfo.dwProcessId)
+            var nativeProcess = new NativeProcess(startInfo, procInfo.dwProcessId)
             {
-                ProcessHandle = new SafeFileHandle(procInfo.hProcess, true)
+                ProcessHandle = new SafeFileHandle(procInfo.hProcess, true),
+                _stdOutReadHandle = stdOutReadHandle,
+                _stdErrReadHandle = stdErrReadHandle,
+                StandardOutput = new StreamReader(new FileStream(stdOutReadHandle, FileAccess.Read)),
+                StandardError = new StreamReader(new FileStream(stdErrReadHandle, FileAccess.Read))
             };
+
+            return nativeProcess;
         }
         finally
         {
@@ -113,9 +125,7 @@ public class NativeProcess
             }
         }
 
-        return targetSessionFound
-            ? (uint)targetSessionId
-            : lastSessionId;
+        return targetSessionFound ? (uint)targetSessionId : lastSessionId;
     }
 
     private static unsafe bool TryCreateInteractiveProcess(NativeProcessStartInfo startInfo, SafeHandle hUserTokenDup, out PROCESS_INFORMATION procInfo)
@@ -167,32 +177,14 @@ public class NativeProcess
 
             var fullCommand = $"{startInfo.FileName} {startInfo.Arguments ?? string.Empty}";
             fullCommand += char.MinValue;
-            
+
             var commandSpan = new Span<char>(fullCommand.ToCharArray());
             var result = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, null, null, startInfo.InheritHandles, dwCreationFlags, null, null, startupInfo, out procInfo);
 
             stdInWriteHandle.Close();
 
-            Task.Run(() => ReadFromStream(stdOutReadHandle));
-            Task.Run(() => ReadFromStream(stdErrReadHandle));
-
             return result;
         }
-    }
-
-    private static void ReadFromStream(SafeFileHandle handle)
-    {
-        using (var reader = new StreamReader(new FileStream(handle, FileAccess.Read)))
-        {
-            string line;
-
-            while ((line = reader.ReadLine()) != null)
-            {
-                Console.WriteLine(line);
-            }
-        }
-
-        handle.Close();
     }
 
     private static bool TryGetUserToken(uint sessionId, out SafeFileHandle hUserToken)
@@ -241,5 +233,14 @@ public class NativeProcess
         var result = WaitForSingleObject(ProcessHandle, millisecondsTimeout);
 
         return result == WAIT_EVENT.WAIT_OBJECT_0;
+    }
+
+    public void Close()
+    {
+        _stdOutReadHandle?.Close();
+        _stdErrReadHandle?.Close();
+        StandardOutput?.Dispose();
+        StandardError?.Dispose();
+        ProcessHandle?.Close();
     }
 }
