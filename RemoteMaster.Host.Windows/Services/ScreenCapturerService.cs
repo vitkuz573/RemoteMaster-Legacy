@@ -6,8 +6,8 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using Microsoft.IO;
-using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Models;
 using SkiaSharp;
 
@@ -62,7 +62,7 @@ public abstract class ScreenCapturerService : IScreenCapturerService
 
     protected abstract void Init();
 
-    public byte[]? GetNextFrame()
+    public byte[]? GetNextFrame(int? maxWidth = null, int? maxHeight = null, bool isThumbnail = false)
     {
         lock (_screenBoundsLock)
         {
@@ -74,13 +74,37 @@ public abstract class ScreenCapturerService : IScreenCapturerService
                     _logger.LogError("Failed to switch to input desktop. Last Win32 error code: {errCode}", errCode);
                 }
 
+                var originalScreen = SelectedScreen;
+
+                // If there are multiple screens and a thumbnail is being created, set to VirtualScreenName temporarily
+                if (HasMultipleScreens && isThumbnail)
+                {
+                    SetSelectedScreen(VirtualScreenName);
+                }
+
                 var result = GetFrame();
+
+                // Restore the original selected screen
+                SetSelectedScreen(originalScreen);
+
+                if (maxWidth.HasValue && maxHeight.HasValue && result != null)
+                {
+                    using var fullImage = SKBitmap.Decode(result);
+                    var scale = Math.Min((float)maxWidth.Value / fullImage.Width, (float)maxHeight.Value / fullImage.Height);
+                    var thumbWidth = (int)(fullImage.Width * scale);
+                    var thumbHeight = (int)(fullImage.Height * scale);
+
+                    using var thumbnail = fullImage.Resize(new SKImageInfo(thumbWidth, thumbHeight), SKFilterQuality.High);
+
+                    result = EncodeBitmap(thumbnail);
+                }
 
                 return result;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while getting next frame.");
+
                 return null;
             }
         }
@@ -91,36 +115,6 @@ public abstract class ScreenCapturerService : IScreenCapturerService
     public abstract IEnumerable<DisplayInfo> GetDisplays();
 
     public abstract void SetSelectedScreen(string displayName);
-
-    public byte[]? GetThumbnail(int maxWidth, int maxHeight)
-    {
-        var originalScreen = SelectedScreen;
-
-        // If there are multiple screens, set to VirtualScreenName temporarily
-        if (HasMultipleScreens)
-        {
-            SetSelectedScreen(VirtualScreenName);
-        }
-
-        var frame = GetNextFrame();
-
-        // Restore the original selected screen
-        SetSelectedScreen(originalScreen);
-
-        if (frame == null)
-        {
-            return null;
-        }
-
-        using var fullImage = SKBitmap.Decode(frame);
-        var scale = Math.Min((float)maxWidth / fullImage.Width, (float)maxHeight / fullImage.Height);
-        var thumbWidth = (int)(fullImage.Width * scale);
-        var thumbHeight = (int)(fullImage.Height * scale);
-
-        using var thumbnail = fullImage.Resize(new SKImageInfo(thumbWidth, thumbHeight), SKFilterQuality.High);
-
-        return EncodeBitmap(thumbnail);
-    }
 
     protected abstract void RefreshCurrentScreenBounds();
 
