@@ -34,15 +34,9 @@ public class IPAddressMonitorService : IHostedService
             var configPath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, _hostConfigurationService.ConfigurationFileName);
             configuration = await _hostConfigurationService.LoadConfigurationAsync(configPath);
         }
-        catch (FileNotFoundException ex)
+        catch (Exception ex) when (ex is FileNotFoundException || ex is InvalidDataException)
         {
-            _logger.LogError(ex, "Configuration file not found.");
-
-            return;
-        }
-        catch (InvalidDataException ex)
-        {
-            _logger.LogError(ex, "Invalid configuration data.");
+            _logger.LogError(ex, "Error loading configuration.");
 
             return;
         }
@@ -50,13 +44,7 @@ public class IPAddressMonitorService : IHostedService
         var savedIPAddress = await ReadSavedIPAddress();
         var currentIPAddress = _hostInfoService.GetIPv4Address();
 
-        if (!string.IsNullOrEmpty(savedIPAddress) && savedIPAddress == currentIPAddress)
-        {
-            _logger.LogInformation("Current IP matches the saved IP. No action required.");
-
-            return;
-        }
-        else
+        if (string.IsNullOrEmpty(savedIPAddress) || savedIPAddress != currentIPAddress)
         {
             var hostname = _hostInfoService.GetHostName();
 
@@ -64,15 +52,19 @@ public class IPAddressMonitorService : IHostedService
 
             try
             {
-                File.WriteAllText(_ipAddressFilePath, currentIPAddress);
+                await File.WriteAllTextAsync(_ipAddressFilePath, currentIPAddress);
             }
             catch (Exception ex)
             {
-                _logger.LogError("Error saving the current IP address: {Message}", ex.Message);
+                _logger.LogError(ex, "Error saving the current IP address.");
             }
         }
+        else
+        {
+            _logger.LogInformation("Current IP matches the saved IP. No action required.");
+        }
     }
-    
+
     public Task StopAsync(CancellationToken cancellationToken)
     {
         return Task.CompletedTask;
