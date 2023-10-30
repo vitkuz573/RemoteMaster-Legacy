@@ -61,6 +61,7 @@ internal class Program
         builder.Services.AddSingleton<IDesktopService, DesktopService>();
         builder.Services.AddSingleton<INetworkDriveService, NetworkDriveService>();
         builder.Services.AddSingleton<IDomainService, DomainService>();
+        builder.Services.AddSingleton<IScriptService, ScriptService>();
 
         var publicKeyPath = @"C:\RemoteMaster\Security\public_key.pem";
         var publicKey = File.ReadAllText(publicKeyPath);

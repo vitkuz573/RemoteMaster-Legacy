@@ -18,6 +18,7 @@ public class ControlHub : Hub<IControlClient>
 {
     private readonly IAppState _appState;
     private readonly IViewerFactory _viewerFactory;
+    private readonly IScriptService _scriptService;
     private readonly IDomainService _domainService;
     private readonly IInputService _inputService;
     private readonly IPowerService _powerService;
@@ -28,10 +29,11 @@ public class ControlHub : Hub<IControlClient>
     private readonly IScreenRecorderService _screenRecorderService;
     private readonly ILogger<ControlHub> _logger;
 
-    public ControlHub(IAppState appState, IViewerFactory viewerFactory, IDomainService domainService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IUpdaterService updaterService, IScreenCapturerService screenCapturerService, IScreenRecorderService screenRecorderService, ILogger<ControlHub> logger)
+    public ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IDomainService domainService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IUpdaterService updaterService, IScreenCapturerService screenCapturerService, IScreenRecorderService screenRecorderService, ILogger<ControlHub> logger)
     {
         _appState = appState;
         _viewerFactory = viewerFactory;
+        _scriptService = scriptService;
         _domainService = domainService;
         _inputService = inputService;
         _powerService = powerService;
@@ -167,73 +169,9 @@ public class ControlHub : Hub<IControlClient>
         _hardwareService.SetMonitorState(state);
     }
 
-    [SuppressMessage("Performance", "CA1822:Пометьте члены как статические", Justification = "<Ожидание>")]
-    public async Task ExecuteScript(string scriptContent, string shellType)
+    public async Task ExecuteScript(string script, string shell)
     {
-        // _logger.LogInformation("Executing script with shell type: {ShellType}", shellType);
-        // 
-        // var publicDirectory = @"C:\Users\Public";
-        // var fileName = $"{Guid.NewGuid()}";
-        // 
-        // if (shellType == "CMD")
-        // {
-        //     fileName += ".bat";
-        // }
-        // else if (shellType == "PowerShell")
-        // {
-        //     fileName += ".ps1";
-        // }
-        // else
-        // {
-        //     _logger.LogError("Unsupported shell type encountered: {ShellType}", shellType);
-        //     
-        //     throw new InvalidOperationException($"Unsupported shell type: {shellType}");
-        // }
-        // 
-        // var tempFilePath = Path.Combine(publicDirectory, fileName);
-        // 
-        // _logger.LogInformation("Temporary file path: {TempFilePath}", tempFilePath);
-        // File.WriteAllText(tempFilePath, scriptContent);
-        // 
-        // try
-        // {
-        //     if (!File.Exists(tempFilePath))
-        //     {
-        //         _logger.LogError("Temp file was not created: {TempFilePath}", tempFilePath);
-        //         
-        //         return;
-        //     }
-        // 
-        //     var applicationToRun = shellType switch
-        //     {
-        //         "CMD" => $"cmd.exe /c \"{tempFilePath}\"",
-        //         "PowerShell" => $"powershell.exe -ExecutionPolicy Bypass -File \"{tempFilePath}\"",
-        //         _ => "",
-        //     };
-        // 
-        //     var options = new ProcessStartOptions(applicationToRun, -1)
-        //     {
-        //         ForceConsoleSession = true,
-        //         DesktopName = "default",
-        //         HiddenWindow = true,
-        //         UseCurrentUserToken = false
-        //     };
-        // 
-        //     using var nativeProcess = NativeProcess.Start(options);
-        //     nativeProcess.OutputReceived += (output) => {
-        //         _logger.LogInformation(output);
-        // 
-        //         _ = Clients.Caller.ReceiveScriptResult(output);
-        //     };
-        //     await nativeProcess.StartListeningToOutputAsync();
-        // }
-        // finally
-        // {
-        //     if (File.Exists(tempFilePath))
-        //     {
-        //         File.Delete(tempFilePath);
-        //     }
-        // }
+        _scriptService.Execute(shell, script);
     }
 
     [SuppressMessage("Performance", "CA1822:Пометьте члены как статические", Justification = "<Ожидание>")]
