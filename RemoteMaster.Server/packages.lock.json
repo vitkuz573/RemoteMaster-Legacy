@@ -103,9 +103,9 @@
       },
       "Radzen.Blazor": {
         "type": "Direct",
-        "requested": "[4.19.0, )",
-        "resolved": "4.19.0",
-        "contentHash": "32h/fCmZ70nXf8yEMfaoNwXbL4fn6hPjf6w8XHYY49lKh4eYXHL0o5eirCFi6UWUpJrctinmUrB4DfmvITkXDQ==",
+        "requested": "[4.19.1, )",
+        "resolved": "4.19.1",
+        "contentHash": "aq9L4YJHB8sneaql/q/06b3mCqhEeTFQlWfLLjj7iMVzunwdBKsfalgl0PZQgVWZ9n28M+Dv6uslEt2oDHiT0Q==",
         "dependencies": {
           "DartSassBuilder": "1.0.0",
           "Microsoft.AspNetCore.Components": "7.0.0",

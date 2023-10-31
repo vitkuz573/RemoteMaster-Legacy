@@ -16,11 +16,11 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class NativeProcess
 {
+    private SafeFileHandle? _processHandle;
+
     public NativeProcessStartInfo StartInfo { get; private set; }
 
     public uint? Id { get; private set; }
-
-    public SafeFileHandle? ProcessHandle { get; private set; }
 
     public StreamReader? StandardOutput { get; private set; }
 
@@ -38,7 +38,6 @@ public class NativeProcess
             throw new ArgumentNullException(nameof(startInfo));
         }
 
-        _ = new PROCESS_INFORMATION();
         var sessionId = !startInfo.ForceConsoleSession ? FindTargetSessionId(startInfo.TargetSessionId) : WTSGetActiveConsoleSessionId();
         
         SafeFileHandle? hUserTokenDup = null;
@@ -77,8 +76,8 @@ public class NativeProcess
             {
                 var nativeProcess = new NativeProcess(startInfo)
                 {
+                    _processHandle = new SafeFileHandle(procInfo.hProcess, true),
                     Id = procInfo.dwProcessId,
-                    ProcessHandle = new SafeFileHandle(procInfo.hProcess, true),
                     StandardOutput = new StreamReader(new FileStream(stdOutReadHandle, FileAccess.Read)),
                     StandardError = new StreamReader(new FileStream(stdErrReadHandle, FileAccess.Read))
                 };
@@ -225,12 +224,12 @@ public class NativeProcess
 
     public bool WaitForExit(uint millisecondsTimeout = uint.MaxValue)
     {
-        if (ProcessHandle == null || ProcessHandle.IsInvalid || ProcessHandle.IsClosed)
+        if (_processHandle == null || _processHandle.IsInvalid || _processHandle.IsClosed)
         {
             throw new InvalidOperationException("No process is associated with this NativeProcess object.");
         }
 
-        var result = WaitForSingleObject(ProcessHandle, millisecondsTimeout);
+        var result = WaitForSingleObject(_processHandle, millisecondsTimeout);
 
         return result == WAIT_EVENT.WAIT_OBJECT_0;
     }
@@ -239,6 +238,6 @@ public class NativeProcess
     {
         StandardOutput?.Dispose();
         StandardError?.Dispose();
-        ProcessHandle?.Close();
+        _processHandle?.Close();
     }
 }
