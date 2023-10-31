@@ -123,17 +123,17 @@ public class ControlHub : Hub<IControlClient>
         ExecuteActionForViewer(viewer => viewer.ScreenCapturer.TrackCursor = trackCursor);
     }
 
-    public void KillHost()
+    public void SendKillHost()
     {
         _shutdownService.ImmediateShutdown();
     }
 
-    public void RebootComputer(string message, int timeout, bool forceAppsClosed)
+    public void SendRebootComputer(string message, int timeout, bool forceAppsClosed)
     {
         _powerService.Reboot(message, (uint)timeout, forceAppsClosed);
     }
 
-    public void ShutdownComputer(string message, int timeout, bool forceAppsClosed)
+    public void SendShutdownComputer(string message, int timeout, bool forceAppsClosed)
     {
         _powerService.Shutdown(message, (uint)timeout, forceAppsClosed);
     }
@@ -150,22 +150,22 @@ public class ControlHub : Hub<IControlClient>
         }
     }
 
-    public async Task StartScreenRecording(string outputPath)
+    public async Task SendStartScreenRecording(string outputPath)
     {
         await _screenRecorderService.StartRecordingAsync(outputPath);
     }
 
-    public async Task StopScreenRecording()
+    public async Task SendStopScreenRecording()
     {
         await _screenRecorderService.StopRecordingAsync();
     }
 
-    public void SetMonitorState(MonitorState state)
+    public void SendMonitorState(MonitorState state)
     {
         _hardwareService.SetMonitorState(state);
     }
 
-    public void ExecuteScript(string script, string shell)
+    public void SendScript(string script, string shell)
     {
         _scriptService.Execute(shell, script);
     }
