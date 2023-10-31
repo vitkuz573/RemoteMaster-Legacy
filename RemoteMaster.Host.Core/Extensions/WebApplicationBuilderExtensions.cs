@@ -5,6 +5,8 @@
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Serilog;
+using Serilog.Events;
 
 namespace RemoteMaster.Host.Core.Extensions;
 
@@ -34,6 +36,17 @@ public static class WebApplicationBuilderExtensions
             {
                 options.ListenAnyIP(5076);
             }
+        });
+
+        builder.Host.UseSerilog((context, configuration) =>
+        {
+            configuration.Enrich.With(new IpEnricher());
+            configuration.MinimumLevel.Debug();
+            configuration.WriteTo.Console();
+            configuration.WriteTo.Seq("http://127.0.0.1:5341");
+            configuration.WriteTo.File(@"C:\ProgramData\RemoteMaster\Host\RemoteMaster_Host.log", rollingInterval: RollingInterval.Day);
+            configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Received hub invocation"));
+            configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Successfully switched to input desktop"));
         });
 
         return builder;

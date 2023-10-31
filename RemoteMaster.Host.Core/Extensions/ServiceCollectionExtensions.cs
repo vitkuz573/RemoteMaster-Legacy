@@ -14,19 +14,9 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddCoreServices(this IServiceCollection services)
     {
-        var serilogLogger = new LoggerConfiguration()
-            .MinimumLevel.Debug()
-            .WriteTo.Console()
-            .WriteTo.Seq("http://172.20.20.33:5341")
-            .WriteTo.File(@"C:\ProgramData\RemoteMaster\Host\RemoteMaster_Host.log", rollingInterval: RollingInterval.Day)
-            .Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Received hub invocation"))
-            .Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Successfully switched to input desktop"))
-            .CreateLogger();
-
         services.AddLogging(builder =>
         {
             builder.ClearProviders();
-            builder.AddSerilog(serilogLogger);
         });
 
         services.AddSingleton<ICertificateRequestService, CertificateRequestService>();
