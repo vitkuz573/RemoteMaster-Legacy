@@ -40,7 +40,7 @@ public static class WebApplicationBuilderExtensions
 
         builder.Host.UseSerilog((context, configuration) =>
         {
-            configuration.Enrich.With(new IpEnricher());
+            configuration.Enrich.With(new HostInfoEnricher());
             configuration.MinimumLevel.Debug();
             configuration.WriteTo.Console();
             configuration.WriteTo.Seq("http://127.0.0.1:5341");

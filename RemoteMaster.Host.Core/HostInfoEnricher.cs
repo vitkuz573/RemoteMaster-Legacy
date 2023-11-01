@@ -9,9 +9,10 @@ using Serilog.Events;
 
 namespace RemoteMaster.Host.Core;
 
-public class IpEnricher : ILogEventEnricher
+public class HostInfoEnricher : ILogEventEnricher
 {
-    private LogEventProperty _cachedProperty;
+    private LogEventProperty _cachedIpProperty;
+    private LogEventProperty _cachedHostProperty;
 
     public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
     {
@@ -25,15 +26,25 @@ public class IpEnricher : ILogEventEnricher
             throw new ArgumentNullException(nameof(propertyFactory));
         }
 
-        _cachedProperty ??= CreateProperty(propertyFactory);
-        logEvent.AddPropertyIfAbsent(_cachedProperty);
+        _cachedIpProperty ??= CreateIpProperty(propertyFactory);
+        _cachedHostProperty ??= CreateHostProperty(propertyFactory);
+
+        logEvent.AddPropertyIfAbsent(_cachedIpProperty);
+        logEvent.AddPropertyIfAbsent(_cachedHostProperty);
     }
 
-    private static LogEventProperty CreateProperty(ILogEventPropertyFactory propertyFactory)
+    private static LogEventProperty CreateIpProperty(ILogEventPropertyFactory propertyFactory)
     {
         var host = Dns.GetHostEntry(Dns.GetHostName());
         var ipAddress = host.AddressList.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork)?.ToString();
-        
+
         return propertyFactory.CreateProperty("HostIpAddress", ipAddress);
+    }
+
+    private static LogEventProperty CreateHostProperty(ILogEventPropertyFactory propertyFactory)
+    {
+        var hostName = Dns.GetHostName();
+
+        return propertyFactory.CreateProperty("HostName", hostName);
     }
 }
