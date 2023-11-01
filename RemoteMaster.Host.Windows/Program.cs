@@ -109,6 +109,8 @@ internal class Program
                 };
             });
 
+        builder.ConfigureSerilog();
+
         if (!serviceMode)
         {
             builder.ConfigureCoreUrls();

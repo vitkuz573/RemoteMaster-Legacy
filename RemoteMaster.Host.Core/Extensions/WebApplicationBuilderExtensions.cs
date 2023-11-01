@@ -6,7 +6,6 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Serilog;
-using Serilog.Events;
 
 namespace RemoteMaster.Host.Core.Extensions;
 
@@ -38,6 +37,16 @@ public static class WebApplicationBuilderExtensions
             }
         });
 
+        return builder;
+    }
+
+    public static void ConfigureSerilog(this WebApplicationBuilder builder)
+    {
+        if (builder == null)
+        {
+            throw new ArgumentNullException(nameof(builder));
+        }
+
         builder.Host.UseSerilog((context, configuration) =>
         {
             configuration.Enrich.With(new HostInfoEnricher());
@@ -48,7 +57,5 @@ public static class WebApplicationBuilderExtensions
             configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Received hub invocation"));
             configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Successfully switched to input desktop"));
         });
-
-        return builder;
     }
 }
