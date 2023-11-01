@@ -8,6 +8,7 @@ using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
+using Serilog;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
 using static Windows.Win32.PInvoke;
 
@@ -22,14 +23,12 @@ public class InputService : IInputService
     private readonly object _ctsLock = new();
     private readonly ConcurrentBag<INPUT> _inputPool = new();
     private readonly IDesktopService _desktopService;
-    private readonly ILogger<InputService> _logger;
 
     public bool InputEnabled { get; set; } = true;
 
-    public InputService(IDesktopService desktopService, ILogger<InputService> logger, int numWorkers = 4)
+    public InputService(IDesktopService desktopService, int numWorkers = 4)
     {
         _desktopService = desktopService;
-        _logger = logger;
         _operationQueue = new BlockingCollection<Action>();
         _cts = new CancellationTokenSource();
         _numWorkers = numWorkers;
@@ -70,7 +69,7 @@ public class InputService : IInputService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Exception occurred during operation processing");
+                Log.Error(ex, "Exception occurred during operation processing");
             }
         }
     }

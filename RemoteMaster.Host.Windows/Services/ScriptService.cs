@@ -4,21 +4,15 @@
 
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Models;
+using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
 public class ScriptService : IScriptService
 {
-    private readonly ILogger<ScriptService> _logger;
-
-    public ScriptService(ILogger<ScriptService> logger)
-    {
-        _logger = logger;
-    }
-
     public void Execute(string shell, string script)
     {
-        _logger.LogInformation("Executing script with shell: {Shell}", shell);
+        Log.Information("Executing script with shell: {Shell}", shell);
 
         var publicDirectory = @"C:\Users\Public";
         var fileName = $"{Guid.NewGuid()}";
@@ -33,21 +27,21 @@ public class ScriptService : IScriptService
         }
         else
         {
-            _logger.LogError("Unsupported shell encountered: {Shell}", shell);
+            Log.Error("Unsupported shell encountered: {Shell}", shell);
 
             throw new InvalidOperationException($"Unsupported shell: {shell}");
         }
 
         var tempFilePath = Path.Combine(publicDirectory, fileName);
 
-        _logger.LogInformation("Temporary file path: {TempFilePath}", tempFilePath);
+        Log.Information("Temporary file path: {TempFilePath}", tempFilePath);
         File.WriteAllText(tempFilePath, script);
 
         try
         {
             if (!File.Exists(tempFilePath))
             {
-                _logger.LogError("Temp file was not created: {TempFilePath}", tempFilePath);
+                Log.Error("Temp file was not created: {TempFilePath}", tempFilePath);
 
                 return;
             }

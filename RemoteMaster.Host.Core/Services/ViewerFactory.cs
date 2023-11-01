@@ -13,17 +13,15 @@ public class ViewerFactory : IViewerFactory
 {
     private readonly IScreenCapturerService _screenCapturerService;
     private readonly IHubContext<ControlHub, IControlClient> _hubContext;
-    private readonly ILogger<Viewer> _logger;
 
-    public ViewerFactory(IScreenCapturerService screenCapturerService, ILogger<Viewer> logger, IHubContext<ControlHub, IControlClient> hubContext)
+    public ViewerFactory(IScreenCapturerService screenCapturerService, IHubContext<ControlHub, IControlClient> hubContext)
     {
         _screenCapturerService = screenCapturerService;
         _hubContext = hubContext;
-        _logger = logger;
     }
 
     public IViewer Create(string connectionId)
     {
-        return new Viewer(_screenCapturerService, _logger, _hubContext, connectionId);
+        return new Viewer(_screenCapturerService, _hubContext, connectionId);
     }
 }

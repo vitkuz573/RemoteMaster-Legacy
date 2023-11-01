@@ -7,6 +7,7 @@ using System.DirectoryServices;
 using System.Security.Principal;
 using Microsoft.Win32;
 using RemoteMaster.Host.Core.Abstractions;
+using Serilog;
 using Windows.Win32.NetworkManagement.NetManagement;
 using Windows.Win32.Storage.FileSystem;
 using static Windows.Win32.PInvoke;
@@ -15,13 +16,6 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class DomainService : IDomainService
 {
-    private readonly ILogger<DomainService> _logger;
-
-    public DomainService(ILogger<DomainService> logger)
-    {
-        _logger = logger;
-    }
-
     public void JoinToDomain(string domain, string user, string password)
     {
         var result = NetJoinDomain(null, domain, null, user, password, NET_JOIN_DOMAIN_JOIN_OPTIONS.NETSETUP_JOIN_DOMAIN | NET_JOIN_DOMAIN_JOIN_OPTIONS.NETSETUP_ACCT_CREATE);
@@ -36,7 +30,7 @@ public class DomainService : IDomainService
     {
         var domainSid = GetDomainSid();
 
-        _logger.LogInformation("Domain SID: {Sid}", domainSid);
+        Log.Information("Domain SID: {Sid}", domainSid);
 
         var result = NetUnjoinDomain(null, user, password, NETSETUP_ACCT_DELETE);
         
@@ -72,7 +66,7 @@ public class DomainService : IDomainService
         }
     }
 
-    private void DeleteDomainProfiles(string domainSid)
+    private static void DeleteDomainProfiles(string domainSid)
     {
         const string profileListPath = @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList";
         using var registryKey = Registry.LocalMachine.OpenSubKey(profileListPath, true);
@@ -90,7 +84,7 @@ public class DomainService : IDomainService
 
                     if (!moveResult)
                     {
-                        _logger.LogError("Failed to schedule deletion of user profile directory {ProfileImagePath}.", profileImagePath);
+                        Log.Error("Failed to schedule deletion of user profile directory {ProfileImagePath}.", profileImagePath);
                     }
                 }
 
@@ -100,7 +94,7 @@ public class DomainService : IDomainService
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError("Failed to delete registry key {SubKeyName}. Error: {Message}", subKeyName, ex.Message);
+                    Log.Error("Failed to delete registry key {SubKeyName}. Error: {Message}", subKeyName, ex.Message);
                 }
             }
         }

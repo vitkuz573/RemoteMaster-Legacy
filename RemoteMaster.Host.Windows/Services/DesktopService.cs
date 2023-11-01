@@ -4,6 +4,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using RemoteMaster.Host.Windows.Abstractions;
+using Serilog;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.System.StationsAndDesktops;
@@ -13,14 +14,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class DesktopService : IDesktopService
 {
-    private readonly ILogger<DesktopService> _logger;
-
     private CloseDesktopSafeHandle? _lastInputDesktop;
-
-    public DesktopService(ILogger<DesktopService> logger)
-    {
-        _logger = logger;
-    }
 
     internal static CloseDesktopSafeHandle OpenInputDesktop() => OpenInputDesktop_SafeHandle(0, true, (DESKTOP_ACCESS_FLAGS)GENERIC_ACCESS_RIGHTS.GENERIC_ALL);
 
@@ -38,7 +32,7 @@ public class DesktopService : IDesktopService
             {
                 desktopName = null;
 
-                _logger.LogError("Failed to get user object information.");
+                Log.Error("Failed to get user object information.");
                 
                 return false;
             }
@@ -46,7 +40,7 @@ public class DesktopService : IDesktopService
             var charLength = (int)cbLengthNeeded / sizeof(char) - 1;
             desktopName = new string(pDesktopBytes, 0, charLength);
             
-            _logger.LogInformation("Retrieved desktop name: {DesktopName}", desktopName);
+            Log.Information("Retrieved desktop name: {DesktopName}", desktopName);
 
             return true;
         }
@@ -62,7 +56,7 @@ public class DesktopService : IDesktopService
 
             if (inputDesktop == null)
             {
-                _logger.LogWarning("Failed to open input desktop.");
+                Log.Warning("Failed to open input desktop.");
                 
                 return false;
             }
@@ -72,18 +66,18 @@ public class DesktopService : IDesktopService
 
             if (result)
             {
-                _logger.LogInformation("Successfully switched to input desktop.");
+                Log.Information("Successfully switched to input desktop.");
             }
             else
             {
-                _logger.LogWarning("Failed to switch to input desktop.");
+                Log.Warning("Failed to switch to input desktop.");
             }
 
             return result;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error encountered while attempting to switch to input desktop.");
+            Log.Error(ex, "Error encountered while attempting to switch to input desktop.");
 
             return false;
         }

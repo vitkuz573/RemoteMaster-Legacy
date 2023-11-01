@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Text;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
+using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
@@ -17,16 +18,14 @@ public class UpdaterService : IUpdaterService
 
     private readonly INetworkDriveService _networkDriveService;
     private readonly IServiceConfiguration _hostServiceConfig;
-    private readonly ILogger<UpdaterService> _logger;
 
-    public UpdaterService(INetworkDriveService networkDriveService, IServiceConfiguration hostServiceConfig, ILogger<UpdaterService> logger)
+    public UpdaterService(INetworkDriveService networkDriveService, IServiceConfiguration hostServiceConfig)
     {
         _scriptPath = Path.Combine(_baseFolderPath, "update.ps1");
         _updateFolderPath = Path.Combine(_baseFolderPath, "Update");
 
         _networkDriveService = networkDriveService;
         _hostServiceConfig = hostServiceConfig;
-        _logger = logger;
     }
 
     public void Download(string sharedFolder, string username, string password)
@@ -38,13 +37,13 @@ public class UpdaterService : IUpdaterService
             _networkDriveService.MapNetworkDrive(sharedFolder, username, password);
 
             DirectoryCopy(sourceFolder, _updateFolderPath, true, true);
-            _logger.LogInformation("Copied from {SourceFolder} to {UpdateFolderPath}", sourceFolder, _updateFolderPath);
+            Log.Information("Copied from {SourceFolder} to {UpdateFolderPath}", sourceFolder, _updateFolderPath);
 
             _networkDriveService.CancelNetworkDrive(sharedFolder);
         }
         catch (Exception ex)
         {
-            _logger.LogError("Error in Download method: {Message}", ex.Message);
+            Log.Error("Error in Download method: {Message}", ex.Message);
         }
     }
 
@@ -78,7 +77,7 @@ public class UpdaterService : IUpdaterService
             contentBuilder.AppendLine($"Remove-Item -Path \"{_scriptPath}\" -Force");
 
             File.WriteAllText(_scriptPath, contentBuilder.ToString());
-            _logger.LogInformation("Updater script created at: {ScriptPath}", _scriptPath);
+            Log.Information("Updater script created at: {ScriptPath}", _scriptPath);
 
             using var process = new Process
             {
@@ -96,12 +95,12 @@ public class UpdaterService : IUpdaterService
             var output = process.StandardOutput.ReadToEnd();
             process.WaitForExit();
 
-            _logger.LogInformation("Executed updater script: {ScriptPath}", _scriptPath);
-            _logger.LogInformation("{Output}", output);
+            Log.Information("Executed updater script: {ScriptPath}", _scriptPath);
+            Log.Information("{Output}", output);
         }
         catch (Exception ex)
         {
-            _logger.LogError("Error in Execute method: {Message}", ex.Message);
+            Log.Error("Error in Execute method: {Message}", ex.Message);
         }
     }
 

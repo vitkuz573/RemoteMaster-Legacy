@@ -7,6 +7,7 @@ using System.Drawing.Imaging;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Helpers.ScreenHelper;
 using RemoteMaster.Shared.Models;
+using Serilog;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
 using static Windows.Win32.PInvoke;
@@ -31,7 +32,7 @@ public class BitBltCapturer : ScreenCapturerService
 
     private readonly ICursorRenderService _cursorRenderer;
 
-    public BitBltCapturer(ICursorRenderService cursorRenderer, IDesktopService desktopService, ILogger<ScreenCapturerService> logger) : base(desktopService, logger)
+    public BitBltCapturer(ICursorRenderService cursorRenderer, IDesktopService desktopService) : base(desktopService)
     {
         _cursorRenderer = cursorRenderer;
         _cursorRenderer.RequestScreenBounds += () => CurrentScreenBounds;
@@ -64,7 +65,7 @@ public class BitBltCapturer : ScreenCapturerService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Capturer error in GetFrame.");
+            Log.Error(ex, "Capturer error in GetFrame.");
             return null;
         }
     }
@@ -90,7 +91,7 @@ public class BitBltCapturer : ScreenCapturerService
 
         if (result == 0)
         {
-            _logger.LogError("Failed to release the device context.");
+            Log.Error("Failed to release the device context.");
         }
 
         if (TrackCursor)

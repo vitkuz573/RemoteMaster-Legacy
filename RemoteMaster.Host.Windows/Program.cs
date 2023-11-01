@@ -13,6 +13,7 @@ using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Host.Windows.Services;
 using RemoteMaster.Shared.Models;
+using Serilog;
 
 namespace RemoteMaster.Host.Windows;
 
@@ -34,8 +35,6 @@ internal class Program
 
             return;
         }
-
-        ILogger<Program> logger = null;
 
         var options = new WebApplicationOptions
         {
@@ -90,11 +89,11 @@ internal class Program
                         var remoteIp = context.HttpContext.Connection.RemoteIpAddress;
                         var localIPv6Mapped = IPAddress.Parse("::ffff:127.0.0.1");
 
-                        logger.LogInformation("Incoming request from IP: {Ip}", remoteIp);
+                        Log.Information("Incoming request from IP: {Ip}", remoteIp);
 
                         if (remoteIp.Equals(IPAddress.Loopback) || remoteIp.Equals(IPAddress.IPv6Loopback) || remoteIp.Equals(localIPv6Mapped))
                         {
-                            logger.LogInformation("Localhost detected");
+                            Log.Information("Localhost detected");
 
                             var identity = new ClaimsIdentity(new[]
                             {
@@ -124,8 +123,6 @@ internal class Program
 
         var app = builder.Build();
 
-        logger = app.Services.GetRequiredService<ILogger<Program>>();
-
         if (install)
         {
             var configurationService = app.Services.GetRequiredService<IHostConfigurationService>();
@@ -140,13 +137,13 @@ internal class Program
             }
             catch (FileNotFoundException ex)
             {
-                logger.LogError(ex, "Configuration file not found.");
+                Log.Error(ex, "Configuration file not found.");
 
                 return;
             }
             catch (InvalidDataException ex)
             {
-                logger.LogError(ex, "Invalid configuration data.");
+                Log.Error(ex, "Invalid configuration data.");
 
                 return;
             }
@@ -155,17 +152,17 @@ internal class Program
             var ipv4Address = hostInfoService.GetIPv4Address();
             var macAddress = hostInfoService.GetMacAddress();
 
-            logger.LogInformation(new string('=', 40));
-            logger.LogInformation("INSTALLATION DETAILS:");
-            logger.LogInformation(new string('-', 40));
-            logger.LogInformation("Server: {Server}", configuration.Server);
-            logger.LogInformation("Group: {Group}", configuration.Group);
-            logger.LogInformation(new string('-', 40));
-            logger.LogInformation("HOST INFORMATION:");
-            logger.LogInformation("Host Name: {HostName}", hostName);
-            logger.LogInformation("IPv4 Address: {IPv4Address}", ipv4Address);
-            logger.LogInformation("MAC Address: {MacAddress}", macAddress);
-            logger.LogInformation(new string('=', 40));
+            Console.WriteLine(new string('=', 40));
+            Console.WriteLine("INSTALLATION DETAILS:");
+            Console.WriteLine(new string('-', 40));
+            Console.WriteLine($"Server: {configuration.Server}");
+            Console.WriteLine($"Group: {configuration.Group}");
+            Console.WriteLine(new string('-', 40));
+            Console.WriteLine("HOST INFORMATION:");
+            Console.WriteLine($"Host Name: {hostName}");
+            Console.WriteLine($"IPv4 Address: {ipv4Address}");
+            Console.WriteLine($"MAC Address: {macAddress}");
+            Console.WriteLine(new string('=', 40));
 
             await hostServiceManager.InstallOrUpdate(configuration, hostName, ipv4Address, macAddress);
 
@@ -186,13 +183,13 @@ internal class Program
             }
             catch (FileNotFoundException ex)
             {
-                logger.LogError(ex, "Configuration error.");
+                Log.Error(ex, "Configuration error.");
 
                 return;
             }
             catch (InvalidDataException ex)
             {
-                logger.LogError(ex, "Configuration Error.");
+                Log.Error(ex, "Configuration Error.");
 
                 return;
             }

@@ -6,6 +6,7 @@ using System.ServiceProcess;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Models;
+using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
@@ -15,21 +16,19 @@ public class HostServiceManager : IHostServiceManager
     private readonly IHostInstanceService _hostInstanceService;
     private readonly IServiceManager _serviceManager;
     private readonly IHostConfigurationService _configurationService;
-    private readonly ILogger<HostServiceManager> _logger;
 
     private readonly IServiceConfiguration _hostServiceConfig;
 
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Host";
 
-    public HostServiceManager(IHostLifecycleService hostLifecycleService, IHostInstanceService hostInstanceService, IServiceManager serviceManager, IHostConfigurationService configurationService, IServiceConfiguration hostServiceConfig, ILogger<HostServiceManager> logger)
+    public HostServiceManager(IHostLifecycleService hostLifecycleService, IHostInstanceService hostInstanceService, IServiceManager serviceManager, IHostConfigurationService configurationService, IServiceConfiguration hostServiceConfig)
     {
         _hostLifecycleService = hostLifecycleService;
         _hostInstanceService = hostInstanceService;
         _serviceManager = serviceManager;
         _configurationService = configurationService;
         _hostServiceConfig = hostServiceConfig;
-        _logger = logger;
     }
 
     public async Task InstallOrUpdate(HostConfiguration configuration, string hostName, string ipv4Address, string macAddress)
@@ -58,13 +57,13 @@ public class HostServiceManager : IHostServiceManager
 
             _serviceManager.StartService(_hostServiceConfig.Name);
 
-            _logger.LogInformation("{ServiceName} installed and started successfully.", _hostServiceConfig.Name);
+            Log.Information("{ServiceName} installed and started successfully.", _hostServiceConfig.Name);
 
             await _hostLifecycleService.RegisterAsync(configuration, hostName, ipv4Address, macAddress);
         }
         catch (Exception ex)
         {
-            _logger.LogError("An error occurred: {Message}", ex.Message);
+            Log.Error("An error occurred: {Message}", ex.Message);
         }
     }
 
@@ -77,11 +76,11 @@ public class HostServiceManager : IHostServiceManager
                 _serviceManager.StopService(_hostServiceConfig.Name);
                 _serviceManager.UninstallService(_hostServiceConfig.Name);
 
-                _logger.LogInformation("{ServiceName} Service uninstalled successfully.", _hostServiceConfig.Name);
+                Log.Information("{ServiceName} Service uninstalled successfully.", _hostServiceConfig.Name);
             }
             else
             {
-                _logger.LogInformation("{ServiceName} Service is not installed.", _hostServiceConfig.Name);
+                Log.Information("{ServiceName} Service is not installed.", _hostServiceConfig.Name);
             }
 
             if (_hostInstanceService.IsRunning())
@@ -95,7 +94,7 @@ public class HostServiceManager : IHostServiceManager
         }
         catch (Exception ex)
         {
-            _logger.LogError("An error occurred: {Message}", ex.Message);
+            Log.Error("An error occurred: {Message}", ex.Message);
         }
     }
 
@@ -150,15 +149,15 @@ public class HostServiceManager : IHostServiceManager
         try
         {
             File.WriteAllText(ipAddressFilePath, ipv4Address);
-            _logger.LogInformation("IP Address file created successfully.");
+            Log.Information("IP Address file created successfully.");
         }
         catch (Exception ex)
         {
-            _logger.LogError("Failed to create the IP Address file: {Message}", ex.Message);
+            Log.Error("Failed to create the IP Address file: {Message}", ex.Message);
         }
     }
 
-    private void DeleteFiles()
+    private static void DeleteFiles()
     {
         var directoryPath = GetDirectoryPath();
 
@@ -167,11 +166,11 @@ public class HostServiceManager : IHostServiceManager
             try
             {
                 Directory.Delete(directoryPath, true);
-                _logger.LogInformation("{AppName} files deleted successfully.", SubAppName);
+                Log.Information("{AppName} files deleted successfully.", SubAppName);
             }
             catch (Exception ex)
             {
-                _logger.LogError("Deleting {AppName} files failed: {Message}", SubAppName, ex.Message);
+                Log.Error("Deleting {AppName} files failed: {Message}", SubAppName, ex.Message);
             }
         }
     }

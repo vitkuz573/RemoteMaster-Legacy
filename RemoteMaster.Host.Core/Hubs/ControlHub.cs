@@ -4,10 +4,10 @@
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
+using Serilog;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
@@ -25,9 +25,8 @@ public class ControlHub : Hub<IControlClient>
     private readonly IUpdaterService _updaterService;
     private readonly IScreenCapturerService _screenCapturerService;
     private readonly IScreenRecorderService _screenRecorderService;
-    private readonly ILogger<ControlHub> _logger;
 
-    public ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IDomainService domainService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IUpdaterService updaterService, IScreenCapturerService screenCapturerService, IScreenRecorderService screenRecorderService, ILogger<ControlHub> logger)
+    public ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IDomainService domainService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IUpdaterService updaterService, IScreenCapturerService screenCapturerService, IScreenRecorderService screenRecorderService)
     {
         _appState = appState;
         _viewerFactory = viewerFactory;
@@ -40,7 +39,6 @@ public class ControlHub : Hub<IControlClient>
         _updaterService = updaterService;
         _screenCapturerService = screenCapturerService;
         _screenRecorderService = screenRecorderService;
-        _logger = logger;
     }
 
     public async Task ConnectAs(Intention intention)
@@ -64,7 +62,7 @@ public class ControlHub : Hub<IControlClient>
                 break;
 
             default:
-                _logger.LogError("Unknown intention: {Intention}", intention);
+                Log.Error("Unknown intention: {Intention}", intention);
                 break;
         }
     }
@@ -104,7 +102,7 @@ public class ControlHub : Hub<IControlClient>
         }
         else
         {
-            _logger.LogError("Failed to find a viewer for connection ID {connectionId}", Context.ConnectionId);
+            Log.Error("Failed to find a viewer for connection ID {connectionId}", Context.ConnectionId);
         }
     }
 
@@ -146,7 +144,7 @@ public class ControlHub : Hub<IControlClient>
         }
         else
         {
-            _logger.LogError("Failed to find a viewer for connection ID {connectionId}", Context.ConnectionId);
+            Log.Error("Failed to find a viewer for connection ID {connectionId}", Context.ConnectionId);
         }
     }
 

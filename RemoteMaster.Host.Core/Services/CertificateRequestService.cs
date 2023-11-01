@@ -5,20 +5,13 @@
 using System.Net;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
+using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
 public class CertificateRequestService : ICertificateRequestService
 {
-    private readonly ILogger<CertificateRequestService> _logger;
-
-    public CertificateRequestService(ILogger<CertificateRequestService> logger)
-    {
-        _logger = logger;
-    }
-
     public CertificateRequest GenerateCSR(string commonName, string organization, string locality, string state, string country, List<string> ipAddresses, out RSA rsaKeyPair)
     {
         if (ipAddresses == null)
@@ -26,17 +19,17 @@ public class CertificateRequestService : ICertificateRequestService
             throw new ArgumentNullException(nameof(ipAddresses));
         }
 
-        _logger.LogInformation("Starting CSR generation for subject: {CommonName}", commonName);
+        Log.Information("Starting CSR generation for subject: {CommonName}", commonName);
 
         rsaKeyPair = RSA.Create(2048);
 
-        _logger.LogDebug("RSA key pair generated successfully with key size {KeySize}.", rsaKeyPair.KeySize);
+        Log.Debug("RSA key pair generated successfully with key size {KeySize}.", rsaKeyPair.KeySize);
 
         var subjectName = $"CN={commonName}, O={organization}, L={locality}, ST={state}, C={country}";
         var subject = new X500DistinguishedName(subjectName);
         var csr = new CertificateRequest(subject, rsaKeyPair, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
-        _logger.LogDebug("CSR Subject: {CSRSubject}", csr.SubjectName.Name);
+        Log.Debug("CSR Subject: {CSRSubject}", csr.SubjectName.Name);
 
         var sanBuilder = new SubjectAlternativeNameBuilder();
 
@@ -48,7 +41,7 @@ public class CertificateRequestService : ICertificateRequestService
         var sanExtension = sanBuilder.Build(true);
         csr.CertificateExtensions.Add(sanExtension);
 
-        _logger.LogDebug("Added Subject Alternative Name extension with {SANCount} IP addresses.", ipAddresses.Count);
+        Log.Debug("Added Subject Alternative Name extension with {SANCount} IP addresses.", ipAddresses.Count);
 
         var enhancedKeyUsages = new OidCollection
         {
@@ -57,17 +50,17 @@ public class CertificateRequestService : ICertificateRequestService
 
         csr.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(enhancedKeyUsages, true));
 
-        _logger.LogDebug("Added Enhanced Key Usage extension with {OIDCount} OIDs.", enhancedKeyUsages.Count);
+        Log.Debug("Added Enhanced Key Usage extension with {OIDCount} OIDs.", enhancedKeyUsages.Count);
 
         foreach (var extension in csr.CertificateExtensions)
         {
             var asnData = new AsnEncodedData(extension.Oid, extension.RawData);
             var formattedData = asnData.Format(true);
 
-            _logger.LogDebug("CSR Extension: {ExtensionOid} - {ExtensionFriendlyName} - {ExtensionFormattedData}", extension.Oid?.Value ?? "Unknown", extension.Oid?.FriendlyName ?? "Unknown", formattedData);
+            Log.Debug("CSR Extension: {ExtensionOid} - {ExtensionFriendlyName} - {ExtensionFormattedData}", extension.Oid?.Value ?? "Unknown", extension.Oid?.FriendlyName ?? "Unknown", formattedData);
         }
 
-        _logger.LogInformation("CSR generated successfully for subject: {CommonName}.", commonName);
+        Log.Information("CSR generated successfully for subject: {CommonName}.", commonName);
 
         return csr;
     }

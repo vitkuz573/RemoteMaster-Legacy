@@ -6,20 +6,14 @@ using System.Diagnostics;
 using System.Management;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Models;
+using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
 public class HostInstanceService : IHostInstanceService
 {
-    private readonly ILogger<HostInstanceService> _logger;
-
     private static string CurrentExecutablePath => Environment.ProcessPath!;
     private const string InstanceArgument = "--user-instance";
-
-    public HostInstanceService(ILogger<HostInstanceService> logger)
-    {
-        _logger = logger;
-    }
 
     public bool IsRunning()
     {
@@ -34,7 +28,7 @@ public class HostInstanceService : IHostInstanceService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error starting new instance of the host");
+            Log.Error(ex, "Error starting new instance of the host");
         }
     }
 
@@ -52,7 +46,7 @@ public class HostInstanceService : IHostInstanceService
         }
         catch (Exception ex)
         {
-            _logger.LogInformation("{Message}", ex.Message);
+            Log.Information("{Message}", ex.Message);
         }
     }
 

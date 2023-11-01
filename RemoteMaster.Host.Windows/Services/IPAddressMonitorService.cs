@@ -5,6 +5,7 @@
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Models;
+using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
@@ -13,16 +14,14 @@ public class IPAddressMonitorService : IHostedService
     private readonly IHostConfigurationService _hostConfigurationService;
     private readonly IHostInfoService _hostInfoService;
     private readonly IHostServiceManager _hostServiceManager;
-    private readonly ILogger<IPAddressMonitorService> _logger;
 
     private readonly string _ipAddressFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "IPAddress.txt");
 
-    public IPAddressMonitorService(IHostConfigurationService hostConfigurationService, IHostInfoService hostInfoService, IHostServiceManager hostServiceManager, ILogger<IPAddressMonitorService> logger)
+    public IPAddressMonitorService(IHostConfigurationService hostConfigurationService, IHostInfoService hostInfoService, IHostServiceManager hostServiceManager)
     {
         _hostConfigurationService = hostConfigurationService;
         _hostInfoService = hostInfoService;
         _hostServiceManager = hostServiceManager;
-        _logger = logger;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -36,7 +35,7 @@ public class IPAddressMonitorService : IHostedService
         }
         catch (Exception ex) when (ex is FileNotFoundException || ex is InvalidDataException)
         {
-            _logger.LogError(ex, "Error loading configuration.");
+            Log.Error(ex, "Error loading configuration.");
 
             return;
         }
@@ -56,12 +55,12 @@ public class IPAddressMonitorService : IHostedService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error saving the current IP address.");
+                Log.Error(ex, "Error saving the current IP address.");
             }
         }
         else
         {
-            _logger.LogInformation("Current IP matches the saved IP. No action required.");
+            Log.Information("Current IP matches the saved IP. No action required.");
         }
     }
 
@@ -83,7 +82,7 @@ public class IPAddressMonitorService : IHostedService
         }
         catch (Exception ex)
         {
-            _logger.LogInformation("Error reading the saved IP address: {Message}", ex.Message);
+            Log.Information("Error reading the saved IP address: {Message}", ex.Message);
         }
 
         return string.Empty;

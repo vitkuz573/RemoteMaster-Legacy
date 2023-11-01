@@ -5,25 +5,23 @@
 using System.Drawing;
 using System.Reflection;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
+using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
 public class Viewer : IViewer
 {
     private readonly IHubContext<ControlHub, IControlClient> _hubContext;
-    private readonly ILogger<Viewer> _logger;
     private CancellationTokenSource _streamingCts;
 
-    public Viewer(IScreenCapturerService screenCapturer, ILogger<Viewer> logger, IHubContext<ControlHub, IControlClient> hubContext, string connectionId)
+    public Viewer(IScreenCapturerService screenCapturer, IHubContext<ControlHub, IControlClient> hubContext, string connectionId)
     {
         ScreenCapturer = screenCapturer;
         _hubContext = hubContext;
-        _logger = logger;
         ConnectionId = connectionId;
 
         _ = SendHostVersion();
@@ -44,7 +42,7 @@ public class Viewer : IViewer
 
         await SendScreenData(ScreenCapturer.GetDisplays(), bounds.Width, bounds.Height);
 
-        _logger.LogInformation("Starting screen stream for ID {connectionId}", ConnectionId);
+        Log.Information("Starting screen stream for ID {connectionId}", ConnectionId);
 
         try
         {
@@ -55,7 +53,7 @@ public class Viewer : IViewer
         }
         catch (Exception ex)
         {
-            _logger.LogError("An error occurred during streaming: {Message}", ex.Message);
+            Log.Error("An error occurred during streaming: {Message}", ex.Message);
         }
     }
 
@@ -76,7 +74,7 @@ public class Viewer : IViewer
 
     public void StopStreaming()
     {
-        _logger.LogInformation("Stopping screen stream for ID {connectionId}", ConnectionId);
+        Log.Information("Stopping screen stream for ID {connectionId}", ConnectionId);
 
         _streamingCts?.Cancel();
     }

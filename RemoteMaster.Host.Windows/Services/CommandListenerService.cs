@@ -5,6 +5,7 @@
 using Microsoft.AspNetCore.SignalR.Client;
 using Polly;
 using Polly.Retry;
+using Serilog;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
@@ -12,7 +13,6 @@ namespace RemoteMaster.Host.Windows.Services;
 public class CommandListenerService : IHostedService
 {
     private HubConnection _connection;
-    private readonly ILogger<CommandListenerService> _logger;
 
     private readonly AsyncRetryPolicy _retryPolicy = Policy
         .Handle<Exception>()
@@ -23,14 +23,9 @@ public class CommandListenerService : IHostedService
             TimeSpan.FromSeconds(10),
         });
 
-    public CommandListenerService(ILogger<CommandListenerService> logger)
-    {
-        _logger = logger;
-    }
-
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Starting listen service commands");
+        Log.Information("Starting listen service commands");
 
         try
         {
@@ -60,7 +55,7 @@ public class CommandListenerService : IHostedService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Connection error");
+            Log.Error(ex, "Connection error");
         }
     }
 

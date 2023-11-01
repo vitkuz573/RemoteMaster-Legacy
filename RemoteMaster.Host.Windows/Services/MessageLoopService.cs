@@ -4,6 +4,7 @@
 
 using System.Runtime.InteropServices;
 using RemoteMaster.Host.Core.Abstractions;
+using Serilog;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
 using static Windows.Win32.PInvoke;
@@ -17,13 +18,11 @@ public class MessageLoopService : IHostedService
 
     private HWND _hwnd;
     private readonly WNDPROC _wndProcDelegate;
-    private readonly ILogger<MessageLoopService> _logger;
-    private readonly IHostInstanceService _hostService;
+    private readonly IHostInstanceService _hostInstanceService;
 
-    public MessageLoopService(IHostInstanceService hostService, ILogger<MessageLoopService> logger)
+    public MessageLoopService(IHostInstanceService hostInstanceService)
     {
-        _hostService = hostService;
-        _logger = logger;
+        _hostInstanceService = hostInstanceService;
 
         _wndProcDelegate = WndProc;
     }
@@ -50,7 +49,7 @@ public class MessageLoopService : IHostedService
     {
         if (!TryRegisterClass(out _))
         {
-            _logger.LogError("Failed to register the window class.");
+            Log.Error("Failed to register the window class.");
 
             return;
         }
@@ -59,7 +58,7 @@ public class MessageLoopService : IHostedService
 
         if (_hwnd.IsNull)
         {
-            _logger.LogError("Failed to create hidden window.");
+            Log.Error("Failed to create hidden window.");
 
             return;
         }
@@ -96,11 +95,11 @@ public class MessageLoopService : IHostedService
     {
         if (!WTSRegisterSessionNotification(_hwnd, NOTIFY_FOR_ALL_SESSIONS))
         {
-            _logger.LogError("Failed to register session notifications.");
+            Log.Error("Failed to register session notifications.");
         }
         else
         {
-            _logger.LogInformation("Successfully registered for session notifications.");
+            Log.Information("Successfully registered for session notifications.");
         }
     }
 
@@ -131,7 +130,7 @@ public class MessageLoopService : IHostedService
     private void LogSessionChange(WPARAM wParam)
     {
         var sessionChangeReason = GetSessionChangeDescription(wParam);
-        _logger.LogInformation("Received session change notification. Reason: {Reason}", sessionChangeReason);
+        Log.Information("Received session change notification. Reason: {Reason}", sessionChangeReason);
     }
 
     private string GetSessionChangeDescription(WPARAM wParam)
@@ -153,13 +152,13 @@ public class MessageLoopService : IHostedService
 
     private async Task RestartHostAsync()
     {
-        _hostService.Stop();
+        _hostInstanceService.Stop();
 
-        while (_hostService.IsRunning())
+        while (_hostInstanceService.IsRunning())
         {
             await Task.Delay(RESTART_DELAY);
         }
 
-        _hostService.Start();
+        _hostInstanceService.Start();
     }
 }

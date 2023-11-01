@@ -9,6 +9,7 @@ using Microsoft.IO;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Models;
+using Serilog;
 using SkiaSharp;
 
 namespace RemoteMaster.Host.Windows.Services;
@@ -17,7 +18,6 @@ public abstract class ScreenCapturerService : IScreenCapturerService
 {
     private readonly RecyclableMemoryStreamManager _recycleManager = new();
     private readonly IDesktopService _desktopService;
-    protected readonly ILogger<ScreenCapturerService> _logger;
     private readonly object _screenBoundsLock = new();
     private readonly object _bitmapLock = new();
     private SKBitmap _skBitmap;
@@ -53,10 +53,9 @@ public abstract class ScreenCapturerService : IScreenCapturerService
 
     public event EventHandler<Rectangle>? ScreenChanged;
 
-    protected ScreenCapturerService(IDesktopService desktopService, ILogger<ScreenCapturerService> logger)
+    protected ScreenCapturerService(IDesktopService desktopService)
     {
         _desktopService = desktopService;
-        _logger = logger;
         Init();
     }
 
@@ -71,7 +70,7 @@ public abstract class ScreenCapturerService : IScreenCapturerService
                 if (!_desktopService.SwitchToInputDesktop())
                 {
                     var errCode = Marshal.GetLastWin32Error();
-                    _logger.LogError("Failed to switch to input desktop. Last Win32 error code: {errCode}", errCode);
+                    Log.Error("Failed to switch to input desktop. Last Win32 error code: {errCode}", errCode);
                 }
 
                 var originalScreen = SelectedScreen;
@@ -103,7 +102,7 @@ public abstract class ScreenCapturerService : IScreenCapturerService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while getting next frame.");
+                Log.Error(ex, "Error while getting next frame.");
 
                 return null;
             }

@@ -8,18 +8,17 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Models;
+using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
 public class HostLifecycleService : IHostLifecycleService
 {
     private readonly ICertificateRequestService _certificateRequestService;
-    private readonly ILogger<HostLifecycleService> _logger;
 
-    public HostLifecycleService(ICertificateRequestService certificateRequestService, ILogger<HostLifecycleService> logger)
+    public HostLifecycleService(ICertificateRequestService certificateRequestService)
     {
         _certificateRequestService = certificateRequestService;
-        _logger = logger;
     }
 
     public async Task RegisterAsync(HostConfiguration config, string hostName, string ipAddress, string macAddress)
@@ -33,7 +32,7 @@ public class HostLifecycleService : IHostLifecycleService
         {
             var connection = await ConnectToServerHub($"http://{config.Server}:5254");
 
-            _logger.LogInformation("Attempting to register host...");
+            Log.Information("Attempting to register host...");
 
             var ipAddresses = new List<string>
             {
@@ -45,29 +44,29 @@ public class HostLifecycleService : IHostLifecycleService
 
             connection.On<byte[]>("ReceiveCertificate", certificateBytes =>
             {
-                _logger.LogInformation("Received certificate from server.");
+                Log.Information("Received certificate from server.");
 
                 var pfxFilePath = @"C:\certificate.pfx";
                 var pfxPassword = "YourPfxPassword";
                 CreatePfxFile(certificateBytes, rsaKeyPair, pfxFilePath, pfxPassword);
 
-                _logger.LogInformation("PFX file created successfully.");
+                Log.Information("PFX file created successfully.");
             });
 
             if (await connection.InvokeAsync<bool>("RegisterHostAsync", hostName, ipAddress, macAddress, config.Group, csr.CreateSigningRequest()))
             {
-                _logger.LogInformation("Host registration successful.");
+                Log.Information("Host registration successful.");
             }
             else
             {
-                _logger.LogWarning("Host registration was not successful.");
+                Log.Warning("Host registration was not successful.");
             }
 
             rsaKeyPair.Dispose();
         }
         catch (Exception ex)
         {
-            _logger.LogError("Registering host failed: {Message}", ex.Message);
+            Log.Error("Registering host failed: {Message}", ex.Message);
         }
     }
 
@@ -82,20 +81,20 @@ public class HostLifecycleService : IHostLifecycleService
         {
             var connection = await ConnectToServerHub($"http://{config.Server}:5254");
 
-            _logger.LogInformation("Attempting to unregister host...");
+            Log.Information("Attempting to unregister host...");
 
             if (await connection.InvokeAsync<bool>("UnregisterHostAsync", hostName, config.Group))
             {
-                _logger.LogInformation("Host unregistration successful.");
+                Log.Information("Host unregistration successful.");
             }
             else
             {
-                _logger.LogWarning("Host unregistration was not successful.");
+                Log.Warning("Host unregistration was not successful.");
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unregistering host failed: {Message}", ex.Message);
+            Log.Error(ex, "Unregistering host failed: {Message}", ex.Message);
         }
     }
 
@@ -112,16 +111,16 @@ public class HostLifecycleService : IHostLifecycleService
 
             if (await connection.InvokeAsync<bool>("UpdateHostInformationAsync", hostname, config.Group, ipAddress))
             {
-                _logger.LogInformation("Host information updated successful.");
+                Log.Information("Host information updated successful.");
             }
             else
             {
-                _logger.LogWarning("Host information update was not successful.");
+                Log.Warning("Host information update was not successful.");
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError("Update host information failed: {Message}", ex.Message);
+            Log.Error("Update host information failed: {Message}", ex.Message);
         }
     }
 

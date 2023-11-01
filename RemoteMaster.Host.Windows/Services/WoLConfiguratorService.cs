@@ -6,19 +6,13 @@ using System.Diagnostics;
 using System.Management;
 using Microsoft.Win32;
 using RemoteMaster.Host.Core.Abstractions;
+using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
 public class WoLConfiguratorService : IWoLConfiguratorService
 {
-    private readonly ILogger<WoLConfiguratorService> _logger;
-
     private const int AllowToTurnOff = 0x18;
-
-    public WoLConfiguratorService(ILogger<WoLConfiguratorService> logger)
-    {
-        _logger = logger;
-    }
 
     public void Configure()
     {
@@ -32,7 +26,7 @@ public class WoLConfiguratorService : IWoLConfiguratorService
 
                 if (connectionId != null)
                 {
-                    _logger.LogInformation("Enabling WoL for {ConnectionId}...", connectionId);
+                    Log.Information("Enabling WoL for {ConnectionId}...", connectionId);
                     EnableWoLForAdapter(connectionId);
                 }
             }
@@ -41,11 +35,11 @@ public class WoLConfiguratorService : IWoLConfiguratorService
         }
         catch (Exception ex)
         {
-            _logger.LogError("Failed to enable WoL: {Message}", ex.Message);
+            Log.Error("Failed to enable WoL: {Message}", ex.Message);
         }
     }
 
-    private void EnableWoLForAdapter(string connectionId)
+    private static void EnableWoLForAdapter(string connectionId)
     {
         try
         {
@@ -54,11 +48,11 @@ public class WoLConfiguratorService : IWoLConfiguratorService
         }
         catch (Exception ex)
         {
-            _logger.LogError("Failed to enable WoL for {ConnectionId}: {Message}", connectionId, ex.Message);
+            Log.Error("Failed to enable WoL for {ConnectionId}: {Message}", connectionId, ex.Message);
         }
     }
 
-    private void ExecuteCommand(string command)
+    private static void ExecuteCommand(string command)
     {
         using var process = new Process
         {
@@ -82,16 +76,16 @@ public class WoLConfiguratorService : IWoLConfiguratorService
 
         if (!string.IsNullOrEmpty(output))
         {
-            _logger.LogInformation("{Output}", output);
+            Log.Information("{Output}", output);
         }
 
         if (!string.IsNullOrEmpty(error))
         {
-            _logger.LogError("Error: {Error}", error);
+            Log.Error("Error: {Error}", error);
         }
     }
 
-    private void DisablePowerManagementForAllAdapters()
+    private static void DisablePowerManagementForAllAdapters()
     {
         try
         {
@@ -100,7 +94,7 @@ public class WoLConfiguratorService : IWoLConfiguratorService
 
             if (key == null)
             {
-                _logger.LogError("Failed to open registry path: {Path}", registryPath);
+                Log.Error("Failed to open registry path: {Path}", registryPath);
                 return;
             }
 
@@ -118,21 +112,21 @@ public class WoLConfiguratorService : IWoLConfiguratorService
                     if (subKey.GetValue("PnPCapabilities") != null)
                     {
                         var currentValue = (int)subKey.GetValue("PnPCapabilities");
-                        _logger.LogInformation("Current PnPCapabilities for adapter {Adapter}: {Value}", subKeyName, currentValue);
+                        Log.Information("Current PnPCapabilities for adapter {Adapter}: {Value}", subKeyName, currentValue);
 
                         subKey.SetValue("PnPCapabilities", AllowToTurnOff); // или другое значение
-                        _logger.LogInformation("Set PnPCapabilities for adapter {Adapter} to {Value}", subKeyName, AllowToTurnOff);
+                        Log.Information("Set PnPCapabilities for adapter {Adapter} to {Value}", subKeyName, AllowToTurnOff);
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError("Failed to disable power management for adapter {Adapter}: {Message}", subKeyName, ex.Message);
+                    Log.Error("Failed to disable power management for adapter {Adapter}: {Message}", subKeyName, ex.Message);
                 }
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError("Failed to disable power management for network adapters: {Message}", ex.Message);
+            Log.Error("Failed to disable power management for network adapters: {Message}", ex.Message);
         }
     }
 }
