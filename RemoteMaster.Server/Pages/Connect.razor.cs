@@ -223,14 +223,14 @@ public partial class Connect : IDisposable
         await SafeInvokeAsync(() => _connection.InvokeAsync("ConnectAs", Intention.Connect));
     }
 
-    private async Task<(double, double)> GetRelativeMousePositionPercentAsync(MouseEventArgs e)
+    private async Task<PointD> GetRelativeMousePositionPercentAsync(MouseEventArgs e)
     {
         var imgElement = await JSRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", "screenImage");
         var imgPosition = await imgElement.InvokeAsync<DOMRect>("getBoundingClientRect");
         var percentX = (e.ClientX - imgPosition.Left) / imgPosition.Width;
         var percentY = (e.ClientY - imgPosition.Top) / imgPosition.Height;
 
-        return (percentX, percentY);
+        return new PointD(percentX, percentY);
     }
 
     private async Task OnMouseMove(MouseEventArgs e)
@@ -239,8 +239,8 @@ public partial class Connect : IDisposable
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendMouseCoordinates", new MouseMoveDto
         {
-            X = xyPercent.Item1,
-            Y = xyPercent.Item2
+            X = xyPercent.X,
+            Y = xyPercent.Y
         }));
     }
 
@@ -263,8 +263,8 @@ public partial class Connect : IDisposable
         {
             Button = e.Button,
             State = state,
-            X = xyPercent.Item1,
-            Y = xyPercent.Item2
+            X = xyPercent.X,
+            Y = xyPercent.Y
         }));
     }
 

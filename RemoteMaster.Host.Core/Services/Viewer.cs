@@ -93,8 +93,6 @@ public class Viewer : IViewer
 
     public void SetSelectedScreen(string displayName)
     {
-        Log.Information("[STEP 2] Invoke SendSelectedScreen with screen in Viewer: {Screen}", displayName);
-
         ScreenCapturer.SetSelectedScreen(displayName);
     }
 }
