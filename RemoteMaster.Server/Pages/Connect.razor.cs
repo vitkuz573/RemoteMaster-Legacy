@@ -152,15 +152,12 @@ public partial class Connect : IDisposable
         {
             var ipHostEntry = await Dns.GetHostEntryAsync(host);
 
-            if (!string.IsNullOrEmpty(ipHostEntry.HostName))
-            {
-                return ipHostEntry.HostName;
-            }
+            return ipHostEntry.HostName;
         }
         catch
-        { }
-
-        return host;
+        {
+            return host;
+        }
     }
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
