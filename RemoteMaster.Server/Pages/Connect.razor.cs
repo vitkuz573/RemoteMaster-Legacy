@@ -42,7 +42,7 @@ public partial class Connect : IDisposable
     private bool _cursorTracking;
     private int _imageQuality;
 
-    private IEnumerable<Display> _displays;
+    private List<Display> _displays;
 
     private string _newUri;
 
@@ -199,7 +199,7 @@ public partial class Connect : IDisposable
             .AddMessagePackProtocol()
             .Build();
 
-        _connection.On<IEnumerable<Display>>("ReceiveDisplays", (displays) => _displays = displays);
+        _connection.On<IEnumerable<Display>>("ReceiveDisplays", (displays) => _displays = displays.ToList());
         _connection.On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate);
         _connection.On<Version>("ReceiveHostVersion", version => _hostVersion = version.ToString());
 

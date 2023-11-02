@@ -136,6 +136,8 @@ public class BitBltCapturer : ScreenCapturerService
 
     public override void SetSelectedScreen(string displayName)
     {
+        Log.Information("[STEP 3] Invoke SendSelectedScreen with screen in BitBltCapturer: {Screen}", displayName);
+
         if (displayName == SelectedScreen)
         {
             return;
@@ -151,10 +153,14 @@ public class BitBltCapturer : ScreenCapturerService
         }
 
         RefreshCurrentScreenBounds();
+
+        return;
     }
 
     protected override void RefreshCurrentScreenBounds()
     {
+        Log.Information("[STEP 4] Invoke RefreshCurrentScreenBounds with screen in BitBltCapturer");
+
         if (SelectedScreen == VIRTUAL_SCREEN_NAME)
         {
             CurrentScreenBounds = VirtualScreenBounds;

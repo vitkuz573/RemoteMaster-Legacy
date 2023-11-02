@@ -96,6 +96,8 @@ public class ControlHub : Hub<IControlClient>
 
     public void SendSelectedScreen(string displayName)
     {
+        Log.Information("[STEP 1] Invoke SendSelectedScreen with screen in ControlHub: {Screen}", displayName);
+
         if (_appState.TryGetViewer(Context.ConnectionId, out var viewer))
         {
             viewer.SetSelectedScreen(displayName);
