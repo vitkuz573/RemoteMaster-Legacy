@@ -231,7 +231,7 @@ public partial class Connect : IDisposable
         return new PointD(percentX, percentY);
     }
 
-    private async Task ToggleMenu()
+    private void ToggleMenu()
     {
         _isMenuOpen = !_isMenuOpen;
     }
