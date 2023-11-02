@@ -166,13 +166,7 @@ public partial class Connect : IDisposable
         if (firstRender)
         {
             var displayHost = await TryGetDnsNameOrFallbackToIpAsync(Host);
-            await JSRuntime.InvokeVoidAsync("setTitle", $"RemoteMaster - {displayHost}");
-
-            if (!string.IsNullOrEmpty(_newUri))
-            {
-                await JSRuntime.InvokeVoidAsync("eval", $"history.replaceState(null, '', '{_newUri}');");
-            }
-
+            await JSRuntime.InvokeVoidAsync("setTitle", displayHost);
             await SetupEventListeners();
         }
 
