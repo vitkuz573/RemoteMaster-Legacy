@@ -106,17 +106,17 @@ public class ControlHub : Hub<IControlClient>
         }
     }
 
-    public void SetInputEnabled(bool inputEnabled)
+    public void SendToggleInput(bool inputEnabled)
     {
         _inputService.InputEnabled = inputEnabled;
     }
 
-    public void SetQuality(int quality)
+    public void SendImageQuality(int quality)
     {
         ExecuteActionForViewer(viewer => viewer.ScreenCapturer.Quality = quality);
     }
 
-    public void SetTrackCursor(bool trackCursor)
+    public void SendToggleCursorTracking(bool trackCursor)
     {
         ExecuteActionForViewer(viewer => viewer.ScreenCapturer.TrackCursor = trackCursor);
     }

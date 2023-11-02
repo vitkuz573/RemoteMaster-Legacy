@@ -5,6 +5,7 @@
 using System.Net;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
@@ -70,13 +71,13 @@ public partial class Connect : IDisposable
         var newUri = uri.ToString();
 
         _imageQuality = GetQueryParameter(queryParameters, "imageQuality", 25, out newUri);
-        await _connection.InvokeAsync("SetQuality", _imageQuality);
+        await _connection.InvokeAsync("SendImageQuality", _imageQuality);
 
         _cursorTracking = GetQueryParameter(queryParameters, "cursorTracking", false, out newUri);
-        await _connection.InvokeAsync("SetTrackCursor", _cursorTracking);
+        await _connection.InvokeAsync("SendToggleCursorTracking", _cursorTracking);
 
         _inputEnabled = GetQueryParameter(queryParameters, "inputEnabled", true, out newUri);
-        await _connection.InvokeAsync("SetInputEnabled", _inputEnabled);
+        await _connection.InvokeAsync("SendToggleInput", _inputEnabled);
 
         if (newUri != uri.ToString())
         {
@@ -129,7 +130,14 @@ public partial class Connect : IDisposable
         {
             if (_connection.State == HubConnectionState.Connected)
             {
-                await action();
+                try
+                {
+                    await action();
+                }
+                catch (HubException ex) when (ex.Message.Contains("Method does not exist"))
+                {
+                    await JSRuntime.InvokeVoidAsync("showAlert", "This function is not available in current host version");
+                }
             }
             else
             {
@@ -303,36 +311,36 @@ public partial class Connect : IDisposable
     {
         _imageQuality = quality;
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SetQuality", quality));
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendImageQuality", quality));
     }
 
     private async Task ToggleCursorTracking(bool value)
     {
         _cursorTracking = value;
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SetTrackCursor", value));
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendToggleCursorTracking", value));
     }
 
     private async Task ToggleInputEnabled(bool value)
     {
         _inputEnabled = value;
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SetInputEnabled", value));
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendToggleInput", value));
     }
 
     private async void KillHost()
     {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("KillHost"));
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendKillHost"));
     }
 
     private async void RebootComputer()
     {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("RebootComputer", string.Empty, 0, true));
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendRebootComputer", string.Empty, 0, true));
     }
 
     private async void ShutdownComputer()
     {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("ShutdownComputer", string.Empty, 0, true));
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendShutdownComputer", string.Empty, 0, true));
     }
 
     private async void SendCtrlAltDel()
