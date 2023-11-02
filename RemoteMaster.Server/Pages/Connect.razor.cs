@@ -69,25 +69,20 @@ public partial class Connect : IDisposable
         var queryParameters = QueryHelpers.ParseQuery(uri.Query);
         var newUri = uri.ToString();
 
-        _imageQuality = GetQueryParameter(queryParameters, "imageQuality", 25, out newUri);
-        await _connection.InvokeAsync("SendImageQuality", _imageQuality);
-
-        _cursorTracking = GetQueryParameter(queryParameters, "cursorTracking", false, out newUri);
-        await _connection.InvokeAsync("SendToggleCursorTracking", _cursorTracking);
-
-        _inputEnabled = GetQueryParameter(queryParameters, "inputEnabled", true, out newUri);
-        await _connection.InvokeAsync("SendToggleInput", _inputEnabled);
+        _imageQuality = GetQueryParameter(queryParameters, "imageQuality", 25, ref newUri);
+        _cursorTracking = GetQueryParameter(queryParameters, "cursorTracking", false, ref newUri);
+        _inputEnabled = GetQueryParameter(queryParameters, "inputEnabled", true, ref newUri);
 
         if (newUri != uri.ToString())
         {
-            _newUri = newUri;
+            NavigationManager.NavigateTo(newUri, true);
         }
+
+        await UpdateServerParameters();
     }
 
-    private T GetQueryParameter<T>(IDictionary<string, StringValues> queryParameters, string key, T defaultValue, out string updatedUri)
+    private static T GetQueryParameter<T>(IDictionary<string, StringValues> queryParameters, string key, T defaultValue, ref string updatedUri)
     {
-        updatedUri = NavigationManager.Uri;
-
         if (!queryParameters.TryGetValue(key, out var valueString) || !TryParse(valueString, out T value))
         {
             value = defaultValue;
@@ -121,6 +116,13 @@ public partial class Connect : IDisposable
         result = default;
 
         return false;
+    }
+
+    private async Task UpdateServerParameters()
+    {
+        await _connection.InvokeAsync("SendImageQuality", _imageQuality);
+        await _connection.InvokeAsync("SendToggleCursorTracking", _cursorTracking);
+        await _connection.InvokeAsync("SendToggleInput", _inputEnabled);
     }
 
     private async Task SafeInvokeAsync(Func<Task> action)
