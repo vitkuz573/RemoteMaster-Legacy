@@ -7,7 +7,6 @@ using System.Reflection;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
-using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
 using Serilog;
 
@@ -38,7 +37,7 @@ public class Viewer : IViewer
         _streamingCts = new CancellationTokenSource();
         var cancellationToken = _streamingCts.Token;
 
-        await SendScreenData(ScreenCapturer.GetDisplays());
+        await SendDisplays(ScreenCapturer.GetDisplays());
 
         Log.Information("Starting screen stream for ID {connectionId}", ConnectionId);
 
@@ -77,14 +76,9 @@ public class Viewer : IViewer
         _streamingCts?.Cancel();
     }
 
-    public async Task SendScreenData(IEnumerable<DisplayInfo> displays)
+    public async Task SendDisplays(IEnumerable<Display> displays)
     {
-        var dto = new ScreenDataDto
-        {
-            Displays = displays
-        };
-
-        await _hubContext.Clients.Client(ConnectionId).ReceiveScreenData(dto);
+        await _hubContext.Clients.Client(ConnectionId).ReceiveDisplays(displays);
     }
 
     public async Task SendScreenSize(int width, int height)

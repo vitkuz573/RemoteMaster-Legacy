@@ -42,7 +42,7 @@ public partial class Connect : IDisposable
     private bool _cursorTracking;
     private int _imageQuality;
 
-    private IEnumerable<DisplayInfo> _displays;
+    private IEnumerable<Display> _displays;
 
     private string _newUri;
 
@@ -173,11 +173,6 @@ public partial class Connect : IDisposable
         await base.OnAfterRenderAsync(firstRender);
     }
 
-    private void HandleScreenData(ScreenDataDto dto)
-    {
-        _displays = dto.Displays;
-    }
-
     private async Task HandleScreenUpdate(byte[] screenData)
     {
         _screenDataUrl = await JSRuntime.InvokeAsync<string>("createImageBlobUrl", screenData);
@@ -204,7 +199,7 @@ public partial class Connect : IDisposable
             .AddMessagePackProtocol()
             .Build();
 
-        _connection.On<ScreenDataDto>("ReceiveScreenData", HandleScreenData);
+        _connection.On<IEnumerable<Display>>("ReceiveDisplays", (displays) => _displays = displays);
         _connection.On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate);
         _connection.On<Version>("ReceiveHostVersion", version => _hostVersion = version.ToString());
 

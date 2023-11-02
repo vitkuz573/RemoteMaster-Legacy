@@ -111,7 +111,7 @@ public abstract class ScreenCapturerService : IScreenCapturerService
 
     protected abstract byte[]? GetFrame();
 
-    public abstract IEnumerable<DisplayInfo> GetDisplays();
+    public abstract IEnumerable<Display> GetDisplays();
 
     public abstract void SetSelectedScreen(string displayName);
 

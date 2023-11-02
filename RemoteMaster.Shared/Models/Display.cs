@@ -3,11 +3,14 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Drawing;
-using RemoteMaster.Shared.Models;
 
-namespace RemoteMaster.Shared.Dtos;
+namespace RemoteMaster.Shared.Models;
 
-public class ScreenDataDto
+public class Display
 {
-    public IEnumerable<DisplayInfo> Displays { get; init; } = Enumerable.Empty<DisplayInfo>();
+    public string Name { get; set; }
+
+    public bool IsPrimary { get; set; }
+
+    public Size Resolution { get; set; }
 }

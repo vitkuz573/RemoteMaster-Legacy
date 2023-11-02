@@ -112,9 +112,9 @@ public class BitBltCapturer : ScreenCapturerService
         return CaptureScreen(CurrentScreenBounds.Width, CurrentScreenBounds.Height, CurrentScreenBounds.Left, CurrentScreenBounds.Top);
     }
 
-    public override IEnumerable<DisplayInfo> GetDisplays()
+    public override IEnumerable<Display> GetDisplays()
     {
-        var screens = Screen.AllScreens.Select(screen => new DisplayInfo
+        var screens = Screen.AllScreens.Select(screen => new Display
         {
             Name = screen.DeviceName,
             IsPrimary = screen.Primary,
@@ -123,7 +123,7 @@ public class BitBltCapturer : ScreenCapturerService
 
         if (Screen.AllScreens.Length > 1)
         {
-            screens.Add(new DisplayInfo
+            screens.Add(new Display
             {
                 Name = VIRTUAL_SCREEN_NAME,
                 IsPrimary = false,
