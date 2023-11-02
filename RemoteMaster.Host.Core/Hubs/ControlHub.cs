@@ -46,7 +46,7 @@ public class ControlHub : Hub<IControlClient>
         switch (intention)
         {
             case Intention.GetThumbnail:
-                var thumbnail = _screenCapturerService.GetNextFrame(500, 300, true);
+                var thumbnail = _screenCapturerService.GetThumbnail(500, 300);
                 
                 if (thumbnail != null)
                 {
@@ -96,8 +96,6 @@ public class ControlHub : Hub<IControlClient>
 
     public void SendSelectedScreen(string displayName)
     {
-        Log.Information("[STEP 1] Invoke SendSelectedScreen with screen in ControlHub: {Screen}", displayName);
-
         if (_appState.TryGetViewer(Context.ConnectionId, out var viewer))
         {
             viewer.SetSelectedScreen(displayName);

@@ -21,9 +21,11 @@ public interface IScreenCapturerService : IDisposable
 
     string SelectedScreen { get; }
 
-    byte[]? GetNextFrame(int? maxWidth = null, int? maxHeight = null, bool isThumbnail = false);
+    byte[]? GetNextFrame();
 
     IEnumerable<Display> GetDisplays();
 
     void SetSelectedScreen(string displayName);
+
+    byte[]? GetThumbnail(int maxWidth, int maxHeight);
 }
