@@ -167,6 +167,12 @@ public partial class Connect : IDisposable
         {
             var displayHost = await TryGetDnsNameOrFallbackToIpAsync(Host);
             await JSRuntime.InvokeVoidAsync("setTitle", displayHost);
+
+            if (!string.IsNullOrEmpty(_newUri))
+            {
+                await JSRuntime.InvokeVoidAsync("eval", $"history.replaceState(null, '', '{_newUri}');");
+            }
+
             await SetupEventListeners();
         }
 
