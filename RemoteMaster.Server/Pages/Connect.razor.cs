@@ -246,6 +246,7 @@ public partial class Connect : IDisposable
         _imageQuality = quality;
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendImageQuality", quality));
+        await UpdateUrlParameter("imageQuality", quality.ToString());
     }
 
     private async Task ToggleCursorTracking(bool value)
@@ -253,6 +254,7 @@ public partial class Connect : IDisposable
         _cursorTracking = value;
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendToggleCursorTracking", value));
+        await UpdateUrlParameter("cursorTracking", value.ToString());
     }
 
     private async Task ToggleInputEnabled(bool value)
@@ -260,6 +262,25 @@ public partial class Connect : IDisposable
         _inputEnabled = value;
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendToggleInput", value));
+        await UpdateUrlParameter("inputEnabled", value.ToString());
+    }
+
+    private async Task UpdateUrlParameter(string key, string value)
+    {
+        var uri = new Uri(NavigationManager.Uri);
+        var queryParameters = QueryHelpers.ParseQuery(uri.Query);
+
+        if (queryParameters.ContainsKey(key))
+        {
+            queryParameters[key] = value;
+        }
+        else
+        {
+            queryParameters.Add(key, value);
+        }
+
+        var newUri = QueryHelpers.AddQueryString(uri.GetLeftPart(UriPartial.Path), queryParameters);
+        await JSRuntime.InvokeVoidAsync("history.replaceState", null, "", newUri);
     }
 
     private async void KillHost()
