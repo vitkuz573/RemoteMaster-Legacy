@@ -10,5 +10,5 @@ public class KeyboardKeyDto
 {
     public int Key { get; set; }
 
-    public ButtonAction State { get; set; }
+    public ButtonState State { get; set; }
 }

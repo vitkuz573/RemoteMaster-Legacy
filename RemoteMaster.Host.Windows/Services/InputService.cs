@@ -146,18 +146,18 @@ public class InputService : IInputService
             {
                 0 => dto.State switch
                 {
-                    ButtonAction.Down => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN,
-                    ButtonAction.Up => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP
+                    ButtonState.Down => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN,
+                    ButtonState.Up => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP
                 },
                 1 => dto.State switch
                 {
-                    ButtonAction.Down => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEDOWN,
-                    ButtonAction.Up => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEUP
+                    ButtonState.Down => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEDOWN,
+                    ButtonState.Up => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEUP
                 },
                 2 => dto.State switch
                 {
-                    ButtonAction.Down => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN,
-                    ButtonAction.Up => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP
+                    ButtonState.Down => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN,
+                    ButtonState.Up => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP
                 }
             };
 
@@ -212,7 +212,7 @@ public class InputService : IInputService
                     wVk = (VIRTUAL_KEY)data.Key,
                     wScan = 0,
                     time = 0,
-                    dwFlags = data.State == ButtonAction.Up ? KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP : 0,
+                    dwFlags = data.State == ButtonState.Up ? KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP : 0,
                     dwExtraInfo = (nuint)GetMessageExtraInfo().Value
                 };
 

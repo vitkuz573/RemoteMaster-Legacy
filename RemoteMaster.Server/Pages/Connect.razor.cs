@@ -243,16 +243,16 @@ public partial class Connect : IDisposable
 
     private async Task OnMouseUpDown(MouseEventArgs e)
     {
-        var state = e.Type == "mouseup" ? ButtonAction.Up : ButtonAction.Down;
+        var state = e.Type == "mouseup" ? ButtonState.Up : ButtonState.Down;
         await SendMouseInputAsync(e, state);
     }
 
     private async Task OnMouseOver(MouseEventArgs e)
     {
-        await SendMouseInputAsync(e, ButtonAction.Up);
+        await SendMouseInputAsync(e, ButtonState.Up);
     }
 
-    private async Task SendMouseInputAsync(MouseEventArgs e, ButtonAction state)
+    private async Task SendMouseInputAsync(MouseEventArgs e, ButtonState state)
     {
         var xyPercent = await GetRelativeMousePositionPercentAsync(e);
 
@@ -273,7 +273,7 @@ public partial class Connect : IDisposable
         }));
     }
 
-    private async Task SendKeyboardInput(int keyCode, ButtonAction state)
+    private async Task SendKeyboardInput(int keyCode, ButtonState state)
     {
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendKeyboardInput", new KeyboardKeyDto
         {
@@ -285,13 +285,13 @@ public partial class Connect : IDisposable
     [JSInvokable]
     public async Task OnKeyDown(int keyCode)
     {
-        await SendKeyboardInput(keyCode, ButtonAction.Down);
+        await SendKeyboardInput(keyCode, ButtonState.Down);
     }
 
     [JSInvokable]
     public async Task OnKeyUp(int keyCode)
     {
-        await SendKeyboardInput(keyCode, ButtonAction.Up);
+        await SendKeyboardInput(keyCode, ButtonState.Up);
     }
 
     private async Task ToggleMenu()

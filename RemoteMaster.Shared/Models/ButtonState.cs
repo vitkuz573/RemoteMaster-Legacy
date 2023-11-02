@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Shared.Models;
 
-public enum ButtonAction
+public enum ButtonState
 {
     Down,
     Up
