@@ -10,7 +10,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class ScriptService : IScriptService
 {
-    public void Execute(string shell, string script)
+    public async void Execute(string shell, string script)
     {
         Log.Information("Executing script with shell: {Shell}", shell);
 
@@ -58,13 +58,16 @@ public class ScriptService : IScriptService
                 ForceConsoleSession = true,
                 DesktopName = "default",
                 CreateNoWindow = true,
-                UseCurrentUserToken = false
+                UseCurrentUserToken = true,
+                InheritHandles = true
             };
 
             NativeProcess.Start(options);
         }
         finally
         {
+            await Task.Delay(5000);
+
             if (File.Exists(tempFilePath))
             {
                 File.Delete(tempFilePath);

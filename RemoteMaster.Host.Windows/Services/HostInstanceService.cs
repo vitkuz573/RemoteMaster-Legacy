@@ -50,7 +50,7 @@ public class HostInstanceService : IHostInstanceService
         }
     }
 
-    private static void StartNewInstance()
+    private static async void StartNewInstance()
     {
         var options = new NativeProcessStartInfo(CurrentExecutablePath, -1)
         {

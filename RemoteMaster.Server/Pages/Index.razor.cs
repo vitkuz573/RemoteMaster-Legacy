@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Net.NetworkInformation;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using Polly;
@@ -225,7 +226,14 @@ public partial class Index
             {
                 if (connection.State == HubConnectionState.Connected)
                 {
-                    await actionOnComputer(computer, connection);
+                    try
+                    {
+                        await actionOnComputer(computer, connection);
+                    }
+                    catch (HubException ex) when (ex.Message.Contains("Method does not exist"))
+                    {
+                        await JSRuntime.InvokeVoidAsync("showAlert", $"Host: {computer.Name}.\nThis function is not available in the current host version. Please update your host.");
+                    }
                 }
             });
         }
@@ -404,7 +412,7 @@ public partial class Index
                     return;
             }
 
-            await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("ExecuteScript", fileContent, shellType));
+            await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendScript", fileContent, shellType));
 
             var dialogParameters = new Dictionary<string, object>
             {
