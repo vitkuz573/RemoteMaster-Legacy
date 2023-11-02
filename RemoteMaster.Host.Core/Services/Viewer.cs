@@ -38,9 +38,7 @@ public class Viewer : IViewer
         _streamingCts = new CancellationTokenSource();
         var cancellationToken = _streamingCts.Token;
 
-        var bounds = ScreenCapturer.CurrentScreenBounds;
-
-        await SendScreenData(ScreenCapturer.GetDisplays(), bounds.Width, bounds.Height);
+        await SendScreenData(ScreenCapturer.GetDisplays());
 
         Log.Information("Starting screen stream for ID {connectionId}", ConnectionId);
 
@@ -79,12 +77,11 @@ public class Viewer : IViewer
         _streamingCts?.Cancel();
     }
 
-    public async Task SendScreenData(IEnumerable<DisplayInfo> displays, int screenWidth, int screenHeight)
+    public async Task SendScreenData(IEnumerable<DisplayInfo> displays)
     {
         var dto = new ScreenDataDto
         {
-            Displays = displays,
-            ScreenSize = new Size(screenWidth, screenHeight)
+            Displays = displays
         };
 
         await _hubContext.Clients.Client(ConnectionId).ReceiveScreenData(dto);
