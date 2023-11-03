@@ -2,12 +2,14 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Diagnostics;
 using System.Drawing;
 using FFMpegCore;
 using FFMpegCore.Enums;
 using FFMpegCore.Extensions.System.Drawing.Common;
 using FFMpegCore.Pipes;
 using RemoteMaster.Host.Core.Abstractions;
+using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
@@ -45,7 +47,7 @@ public class ScreenRecorderService : IScreenRecorderService
     {
         var videoFramesSource = new RawVideoPipeSource(GenerateFrames(cancellationToken))
         {
-            FrameRate = 30
+            FrameRate = 10
         };
 
         await FFMpegArguments
@@ -60,7 +62,15 @@ public class ScreenRecorderService : IScreenRecorderService
     {
         while (!cancellationToken.IsCancellationRequested)
         {
+            var stopwatch = new Stopwatch();
+
+            stopwatch.Start();
+
             var frameData = _screenCapturerService.GetNextFrame();
+
+            stopwatch.Stop();
+
+            Log.Information("Execution time: {ExecutionTime} ms", stopwatch.ElapsedMilliseconds);
 
             // Конвертировать frameData в Bitmap
             using var stream = new MemoryStream(frameData);
@@ -68,8 +78,6 @@ public class ScreenRecorderService : IScreenRecorderService
 
             // Обернуть Bitmap с помощью BitmapVideoFrameWrapper
             yield return new BitmapVideoFrameWrapper(bitmap);
-
-            Thread.Sleep((int)(1000.0 / 30));
         }
     }
 }

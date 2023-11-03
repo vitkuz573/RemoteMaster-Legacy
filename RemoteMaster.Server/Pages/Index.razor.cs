@@ -360,12 +360,12 @@ public partial class Index
                 var currentDate = DateTime.Now.ToString("yyyyMMdd_HHmmss");
                 var fileName = $@"C:\{requesterName}_{computer.IPAddress}_{currentDate}.mp4";
 
-                await connection.InvokeAsync("StartScreenRecording", fileName);
+                await connection.InvokeAsync("SendStartScreenRecording", fileName);
             });
         }
         else
         {
-            await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("StopScreenRecording"));
+            await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendStopScreenRecording"));
         }
     }
 
