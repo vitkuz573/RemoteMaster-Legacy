@@ -212,94 +212,87 @@ public partial class Index
         StateHasChanged();
     }
 
-    // private async Task Connect(RadzenSplitButtonItem item)
-    // {
-    //     if (item == null)
-    //     {
-    //         return;
-    //     }
-    // 
-    //     if (item.Value == "control")
-    //     {
-    //         await ExecuteOnAvailableComputers(async (computer, connection) => await OpenWindow($"/{computer.IPAddress}/connect?imageQuality=25&cursorTracking=false&inputEnabled=true"));
-    //     }
-    // 
-    //     if (item.Value == "view")
-    //     {
-    //         await ExecuteOnAvailableComputers(async (computer, connection) => await OpenWindow($"/{computer.IPAddress}/connect?imageQuality=25&cursorTracking=true&inputEnabled=false"));
-    //     }
-    // }
-    // 
-    // private async Task OpenShell(RadzenSplitButtonItem item)
-    // {
-    //     if (item == null)
-    //     {
-    //         return;
-    //     }
-    // 
-    //     await ExecuteOnAvailableComputers(async (computer, connection) =>
-    //     {
-    //         ProcessStartInfo startInfo;
-    // 
-    //         if (item.Value == "ssh")
-    //         {
-    //             var command = $"ssh user@{computer.IPAddress}";
-    //             startInfo = new ProcessStartInfo()
-    //             {
-    //                 FileName = "cmd.exe",
-    //                 Arguments = $"/C {command}",
-    //                 UseShellExecute = true,
-    //             };
-    //         }
-    //         else
-    //         {
-    //             var sParameter = item.Text.Contains("System") ? "-s" : "";
-    //             var command = @$"/C psexec \\{computer.IPAddress} {sParameter} -nobanner -accepteula {item.Value}";
-    //             startInfo = new ProcessStartInfo()
-    //             {
-    //                 FileName = "cmd.exe",
-    //                 Arguments = command,
-    //                 UseShellExecute = true,
-    //             };
-    //         }
-    // 
-    //         await Task.Run(() => Process.Start(startInfo));
-    //     });
-    // }
-
-    private async Task Shutdown()
+    private async Task Connect(string action)
     {
-        await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("ShutdownComputer", "", 0, true));
-    }
-
-    private async Task Reboot()
-    {
-        await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("RebootComputer", "", 0, true));
-    }
-
-    private void WakeUp()
-    {
-        foreach (var computer in _selectedComputers)
+        if (action == "control")
         {
-            WakeOnLanService.WakeUp(computer.MACAddress);
+            await ExecuteOnAvailableComputers(async (computer, connection) => await OpenWindow($"/{computer.IPAddress}/connect?imageQuality=25&cursorTracking=false&inputEnabled=true"));
+        }
+        else if (action == "view")
+        {
+            await ExecuteOnAvailableComputers(async (computer, connection) => await OpenWindow($"/{computer.IPAddress}/connect?imageQuality=25&cursorTracking=true&inputEnabled=false"));
         }
     }
 
-    // private async Task DomainMember(RadzenSplitButtonItem item)
-    // {
-    //     var domain = "it-ktk.local";
-    //     var username = "vitaly@it-ktk.local";
-    //     var password = "WaLL@8V1";
-    // 
-    //     if (item.Value == "join")
-    //     {
-    //         await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendJoinToDomain", domain, username, password));
-    //     }
-    //     else
-    //     {
-    //         await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendUnjoinFromDomain", username, password));
-    //     }
-    // }
+    private async Task OpenShell(string application, bool isSystem = false)
+    {    
+        await ExecuteOnAvailableComputers(async (computer, connection) =>
+        {
+            ProcessStartInfo startInfo;
+    
+            if (application == "ssh")
+            {
+                var command = $"ssh user@{computer.IPAddress}";
+
+                startInfo = new ProcessStartInfo()
+                {
+                    FileName = "cmd.exe",
+                    Arguments = $"/C {command}",
+                    UseShellExecute = true,
+                };
+            }
+            else
+            {
+                var sParameter = isSystem ? "-s" : "";
+                var command = @$"/C psexec \\{computer.IPAddress} {sParameter} -nobanner -accepteula {application}";
+                
+                startInfo = new ProcessStartInfo()
+                {
+                    FileName = "cmd.exe",
+                    Arguments = command,
+                    UseShellExecute = true,
+                };
+            }
+    
+            await Task.Run(() => Process.Start(startInfo));
+        });
+    }
+
+    private async Task Power(string action)
+    {
+        if (action == "power")
+        {
+            await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("ShutdownComputer", "", 0, true));
+        }
+        else if (action == "reboot")
+        {
+            await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("RebootComputer", "", 0, true));
+
+        }
+        else if (action == "wakeup")
+        {
+            foreach (var computer in _selectedComputers)
+            {
+                WakeOnLanService.WakeUp(computer.MACAddress);
+            }
+        }
+    }
+
+    private async Task DomainMember(bool isJoin)
+    {
+        var domain = "it-ktk.local";
+        var username = "vitaly@it-ktk.local";
+        var password = "WaLL@8V1";
+    
+        if (isJoin)
+        {
+            await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendJoinToDomain", domain, username, password));
+        }
+        else
+        {
+            await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendUnjoinFromDomain", username, password));
+        }
+    }
 
     private async Task Update()
     {
@@ -310,113 +303,82 @@ public partial class Index
         await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendUpdateHost", sharedFolder, username, password));
     }
 
-    // private async Task ScreenRecording(RadzenSplitButtonItem item)
-    // {
-    //     if (item == null)
-    //     {
-    //         return;
-    //     }
-    // 
-    //     if (item.Value == "start")
-    //     {
-    //         await ExecuteOnAvailableComputers(async (computer, connection) =>
-    //         {
-    //             var requesterName = Environment.MachineName;
-    //             var currentDate = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-    //             var fileName = $@"C:\{requesterName}_{computer.IPAddress}_{currentDate}.mp4";
-    // 
-    //             await connection.InvokeAsync("SendStartScreenRecording", fileName);
-    //         });
-    //     }
-    //     else
-    //     {
-    //         await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendStopScreenRecording"));
-    //     }
-    // }
-    // 
-    // private async Task SetMonitorState(RadzenSplitButtonItem item)
-    // {
-    //     if (item == null)
-    //     {
-    //         return;
-    //     }
-    // 
-    //     var state = item.Value switch
-    //     {
-    //         "on" => MonitorState.On,
-    //         "standby" => MonitorState.Standby,
-    //         "off" => MonitorState.Off
-    //     };
-    // 
-    //     await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SetMonitorState", state));
-    // }
-    // 
-    // private async Task ExecuteScript()
-    // {
-    //     var fileData = await JSRuntime.InvokeAsync<JsonElement>("selectFile");
-    // 
-    //     if (fileData.TryGetProperty("content", out var contentElement) && fileData.TryGetProperty("name", out var nameElement))
-    //     {
-    //         var fileContent = contentElement.GetString();
-    //         var fileName = nameElement.GetString();
-    // 
-    //         var extension = Path.GetExtension(fileName);
-    //         string shellType;
-    // 
-    //         switch (extension)
-    //         {
-    //             case ".ps1":
-    //                 shellType = "PowerShell";
-    //                 break;
-    //             case ".bat":
-    //             case ".cmd":
-    //                 shellType = "CMD";
-    //                 break;
-    //             default:
-    //                 Logger.LogError("Unknown script type.");
-    //                 return;
-    //         }
-    // 
-    //         await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendScript", fileContent, shellType));
-    // 
-    //         var dialogParameters = new Dictionary<string, object>
-    //         {
-    //             { "Results", _scriptResults }
-    //         };
-    // 
-    //         var dialogOptions = new DialogOptions
-    //         {
-    //             Draggable = true,
-    //             CssClass = "select-none"
-    //         };
-    // 
-    //         foreach (var result in _scriptResults)
-    //         {
-    //             Console.WriteLine(result.Value);
-    //         }
-    // 
-    //         await DialogService.OpenAsync<ScriptResults>("Script Results", dialogParameters, dialogOptions);
-    //     }
-    // }
-    // 
-    // private async Task ManagePSExecRules(RadzenSplitButtonItem item)
-    // {
-    //     if (item == null)
-    //     {
-    //         return;
-    //     }
-    // 
-    //     bool isEnabled;
-    // 
-    //     if (bool.TryParse(item.Value, out isEnabled))
-    //     {
-    //         await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SetPSExecRules", isEnabled));
-    //     }
-    //     else
-    //     {
-    //         Logger.LogError("Failed to convert the value: {Value}", item.Value);
-    //     }
-    // }
+    private async Task ScreenRecording(bool start)
+    {
+        if (start)
+        {
+            await ExecuteOnAvailableComputers(async (computer, connection) =>
+            {
+                var requesterName = Environment.MachineName;
+                var currentDate = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                var fileName = $@"C:\{requesterName}_{computer.IPAddress}_{currentDate}.mp4";
+    
+                await connection.InvokeAsync("SendStartScreenRecording", fileName);
+            });
+        }
+        else
+        {
+            await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendStopScreenRecording"));
+        }
+    }
+    
+    private async Task SetMonitorState(MonitorState state)
+    {
+        await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SetMonitorState", state));
+    }
+
+    private async Task ExecuteScript()
+    {
+        var fileData = await JSRuntime.InvokeAsync<JsonElement>("selectFile");
+    
+        if (fileData.TryGetProperty("content", out var contentElement) && fileData.TryGetProperty("name", out var nameElement))
+        {
+            var fileContent = contentElement.GetString();
+            var fileName = nameElement.GetString();
+    
+            var extension = Path.GetExtension(fileName);
+            string shellType;
+    
+            switch (extension)
+            {
+                case ".ps1":
+                    shellType = "PowerShell";
+                    break;
+                case ".bat":
+                case ".cmd":
+                    shellType = "CMD";
+                    break;
+                default:
+                    Logger.LogError("Unknown script type.");
+                    return;
+            }
+    
+            await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendScript", fileContent, shellType));
+    
+            var dialogParameters = new Dictionary<string, object>
+            {
+                { "Results", _scriptResults }
+            };
+    
+            // var dialogOptions = new DialogOptions
+            // {
+            //     Draggable = true,
+            //     CssClass = "select-none"
+            // };
+            
+            foreach (var result in _scriptResults)
+            {
+                Console.WriteLine(result.Value);
+            }
+            
+            // await DialogService.OpenAsync<ScriptResults>("Script Results", dialogParameters, dialogOptions);
+        }
+    }
+    
+    private async Task ManagePSExecRules(bool isEnabled)
+    {
+        await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SetPSExecRules", isEnabled));
+    }
 
     private static async Task<(Computer computer, bool isAvailable)> IsComputerAvailable(Computer computer)
     {
