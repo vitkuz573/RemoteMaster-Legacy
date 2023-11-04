@@ -1,8 +1,6 @@
 ﻿<AuthorizeView>
-    <RadzenMenu>
-        <RadzenMenuItem Text="@context.User.Identity?.Name">
-            <RadzenMenuItem Text="Profile" Click="Profile" />
-            <RadzenMenuItem Text="Logout" Click="Logout" />
-        </RadzenMenuItem>
-    </RadzenMenu>
+    <MudMenu Label="@context.User.Identity?.Name">
+        <MudMenuItem OnClick="Profile">Profile</MudMenuItem>
+        <MudMenuItem OnClick="Logout">Logout</MudMenuItem>
+    </MudMenu>
 </AuthorizeView>

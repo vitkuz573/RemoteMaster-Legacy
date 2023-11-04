@@ -23,7 +23,7 @@ public class NodesDataContext : DbContext
             .HasValue<Computer>("Computer");
 
         modelBuilder.Entity<Node>()
-            .HasMany(n => n.Children)
+            .HasMany(n => n.Nodes)
             .WithOne(c => c.Parent)
             .HasForeignKey(c => c.ParentId)
             .IsRequired(false);

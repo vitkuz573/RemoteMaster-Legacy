@@ -2,10 +2,9 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Radzen;
+using MudBlazor.Services;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Areas.Identity.Data;
 using RemoteMaster.Server.Data;
@@ -67,10 +66,7 @@ void ConfigureDatabaseContexts(WebApplicationBuilder builder)
 
 void ConfigureUIServices(WebApplicationBuilder builder)
 {
-    builder.Services.AddScoped<DialogService>();
-    builder.Services.AddScoped<NotificationService>();
-    builder.Services.AddScoped<TooltipService>();
-    builder.Services.AddScoped<ContextMenuService>();
+    builder.Services.AddMudServices();
     builder.Services.AddRazorPages();
     builder.Services.AddServerSideBlazor();
 }

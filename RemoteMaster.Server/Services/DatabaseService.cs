@@ -27,7 +27,7 @@ public class DatabaseService
             query = query.Where(predicate);
         }
 
-        return await query.Include(node => node.Children).ToListAsync();
+        return await query.Include(node => node.Nodes).ToListAsync();
     }
 
     public async Task<IList<T>> GetChildrenByParentIdAsync<T>(Guid parentId) where T : Node

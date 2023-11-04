@@ -34,8 +34,8 @@
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design">
       <TreatAsUsed>true</TreatAsUsed>
     </PackageReference>
+    <PackageReference Include="MudBlazor" />
     <PackageReference Include="Polly" />
-    <PackageReference Include="Radzen.Blazor" />
   </ItemGroup>
 
   <ItemGroup>

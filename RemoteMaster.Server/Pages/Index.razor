@@ -1,15 +1,12 @@
 ﻿@page "/"
-@using Radzen
 @using RemoteMaster.Server.Models
 @using RemoteMaster.Server.Components
 
 <div class="bg-blue-600 text-white py-2 font-semibold select-none flex justify-between items-center">
     <div class="ml-2">
-        <RadzenMenu>
-            <RadzenMenuItem Text="Service" Icon="assessment">
-                <RadzenMenuItem Text="Host Configuration Generator" Click="OpenHostConfigGenerator" Icon="attach_file" />
-            </RadzenMenuItem>
-        </RadzenMenu>
+        <MudMenu Label="Service">
+            <MudMenuItem OnClick="OpenHostConfigGenerator">Host Configuration Generator</MudMenuItem>
+        </MudMenu>
     </div>
 
     <div></div> <!-- Этот пустой div нужен для "выравнивания" flexbox -->
@@ -22,89 +19,22 @@
 <div class="flex h-screen overflow-x-hidden overflow-y-hidden select-none">
 
     <div class="bg-gray-100 p-4 overflow-y-auto">
-        <RadzenTree Data="_entries" Change="OnTreeChange" Expand="LoadComputers" Style="list-style-type: none;">
-            <RadzenTreeLevel Text="GetTextForNode" Template="NodeTemplate" />
-        </RadzenTree>
+        <MudTreeView Items="Nodes" Hover="true">
+            <ItemTemplate>
+                <MudTreeViewItem Items="@context.Nodes" Value="@context" Text="@context.Name" />
+            </ItemTemplate>
+        </MudTreeView>
+
     </div>
 
     <div class="flex-grow p-4 flex flex-col gap-4 bg-gray-300">
-        <!-- Область для кнопок -->
-
-        <RadzenTabs>
-            <Tabs>
-                <RadzenTabsItem Text="Main">
-                    <div class="border-gray-500 w-full flex">
-                        <RadzenSplitButton Text="Power" Disabled="@(!_anyComputerSelected)" Click="@(args => Power(args))" class="mr-2">
-                            <ChildContent>
-                                <RadzenSplitButtonItem Text="Shutdown" Value="shutdown" />
-                                <RadzenSplitButtonItem Text="Reboot" Value="reboot" />
-                                <RadzenSplitButtonItem Text="Wake Up" Value="wakeup" />
-                            </ChildContent>
-                        </RadzenSplitButton>
-
-                        <RadzenSplitButton Text="Connect" Disabled="@(!_anyComputerSelected)" Click="@(args => Connect(args))" class="mr-2">
-                            <ChildContent>
-                                <RadzenSplitButtonItem Text="Control" Value="control" />
-                                <RadzenSplitButtonItem Text="View" Value="view" />
-                            </ChildContent>
-                        </RadzenSplitButton>
-
-                        <RadzenSplitButton Text="Open Shell" Disabled="@(!_anyComputerSelected)" Click="@(args => OpenShell(args))" class="mr-2">
-                            <ChildContent>
-                                <RadzenSplitButtonItem Text="Command line" Value="cmd" />
-                                <RadzenSplitButtonItem Text="PowerShell" Value="powershell" />
-                                <RadzenSplitButtonItem Text="Command line (System)" Value="cmd" />
-                                <RadzenSplitButtonItem Text="PowerShell (System)" Value="powershell" />
-                                <RadzenSplitButtonItem Text="SSH" Value="ssh" />
-                            </ChildContent>
-                        </RadzenSplitButton>
-
-                        <RadzenButton Text="Execute Script" Disabled="@(!_anyComputerSelected)" Click="ExecuteScript" class="mr-2" />
-
-                        <RadzenButton Click="HandleRefreshClick" Text="Refresh" class="ml-auto" />
-                    </div>
-                </RadzenTabsItem>
-
-                <RadzenTabsItem Text="Service">
-                    <RadzenSplitButton Text="Set Monitor State" Disabled="@(!_anyComputerSelected)" Click="@(args => SetMonitorState(args))" class="mr-2">
-                        <ChildContent>
-                            <RadzenSplitButtonItem Text="On" Value="on" />
-                            <RadzenSplitButtonItem Text="Standby" Value="standby" />
-                            <RadzenSplitButtonItem Text="Off" Value="off" />
-                        </ChildContent>
-                    </RadzenSplitButton>
-
-                    <RadzenSplitButton Text="PSExec Rules" Disabled="@(!_anyComputerSelected)" Click="@(args => ManagePSExecRules(args))" class="mr-2">
-                        <ChildContent>
-                            <RadzenSplitButtonItem Text="Enable" Value="true" />
-                            <RadzenSplitButtonItem Text="Disable" Value="false" />
-                        </ChildContent>
-                    </RadzenSplitButton>
-
-                    <RadzenSplitButton Text="Screen Recording" Disabled="@(!_anyComputerSelected)" Click="@(args => ScreenRecording(args))" class="mr-2">
-                        <ChildContent>
-                            <RadzenSplitButtonItem Text="Start" Value="start" />
-                            <RadzenSplitButtonItem Text="Stop" Value="stop" />
-                        </ChildContent>
-                    </RadzenSplitButton>
-                    
-                    <RadzenSplitButton Text="Domain Member" Disabled="@(!_anyComputerSelected)" Click="@(args => DomainMember(args))" class="mr-2">
-                        <ChildContent>
-                            <RadzenSplitButtonItem Text="Join" Value="join" />
-                            <RadzenSplitButtonItem Text="Unjoin" Value="unjoin" />
-                        </ChildContent>
-                    </RadzenSplitButton>
-
-                    <RadzenButton Text="Update" Disabled="@(!_anyComputerSelected)" Click="Update" class="mr-2" />
-                </RadzenTabsItem>
-            </Tabs>
-        </RadzenTabs>
+        <!-- Область для табов -->
 
         <!-- Контент с карточками ПК -->
         <div class="flex flex-wrap gap-4 items-start overflow-y-auto">
             @if (_selectedNode is Folder selectedFolder)
             {
-                foreach (var child in selectedFolder.Children)
+                foreach (var child in selectedFolder.Nodes)
                 {
                     if (child is Computer computer)
                     {

@@ -69,7 +69,7 @@
                         <h3 class="text-gray-600">Change Quality</h3>
                     </div>
                     <div class="relative inline-flex mt-2">
-                        <RadzenSlider @bind-Value="_imageQuality" TValue="int" Min="0" Max="100" Change="ChangeQuality" />
+                        <MudSlider T="int" Min="0" Max="100" ValueChanged="ChangeQuality" />
                     </div>
                 </li>
 
@@ -81,7 +81,7 @@
                         <h3 class="text-gray-600">Cursor Tracking</h3>
                     </div>
                     <div class="relative inline-flex mt-2">
-                        <RadzenSwitch @bind-Value="@_cursorTracking" Change="ToggleCursorTracking" />
+                        <MudSwitch T="bool" CheckedChanged="ToggleCursorTracking" />
                     </div>
                 </li>
 
@@ -93,7 +93,7 @@
                         <h3 class="text-gray-600">Input Toggle</h3>
                     </div>
                     <div class="relative inline-flex mt-2">
-                        <RadzenSwitch @bind-Value="@_inputEnabled" Change="ToggleInputEnabled" />
+                        <MudSwitch T="bool" CheckedChanged="ToggleInputEnabled" />
                     </div>
                 </li>
 
