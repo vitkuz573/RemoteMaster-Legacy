@@ -5,7 +5,7 @@
 
 <div class="bg-blue-600 text-white py-2 font-semibold select-none flex justify-between items-center">
     <div class="ml-2">
-        <MudMenu Label="Service">
+        <MudMenu Label="Service" Dense="true">
             <MudMenuItem @onclick="OpenHostConfigGenerator">Host Configuration Generator</MudMenuItem>
         </MudMenu>
     </div>
@@ -34,7 +34,7 @@
                 <div class="border-gray-500 w-full flex">
                     <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled" Class="mr-2">
                         <MudButton Disabled="@(!_anyComputerSelected)">Power</MudButton>
-                        <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Disabled="@(!_anyComputerSelected)">
+                        <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Disabled="@(!_anyComputerSelected)" Dense="true">
                             <MudMenuItem OnClick='() => Power("shutdown")'>Shutdown</MudMenuItem>
                             <MudMenuItem OnClick='() => Power("reboot")'>Reboot</MudMenuItem>
                             <MudMenuItem OnClick='() => Power("wakeup")'>Wake Up</MudMenuItem>
@@ -43,7 +43,7 @@
 
                     <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled" Class="mr-2">
                         <MudButton Disabled="@(!_anyComputerSelected)">Connect</MudButton>
-                        <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Disabled="@(!_anyComputerSelected)">
+                        <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Disabled="@(!_anyComputerSelected)" Dense="true">
                             <MudMenuItem OnClick='() => Connect("control")'>Control</MudMenuItem>
                             <MudMenuItem OnClick='() => Connect("view")'>View</MudMenuItem>
                         </MudMenu>
@@ -51,7 +51,7 @@
 
                     <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled" Class="mr-2">
                         <MudButton Disabled="@(!_anyComputerSelected)">Open Shell</MudButton>
-                        <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Disabled="@(!_anyComputerSelected)">
+                        <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Disabled="@(!_anyComputerSelected)" Dense="true">
                             <MudMenuItem OnClick='() => OpenShell("cmd")'>Command Line</MudMenuItem>
                             <MudMenuItem OnClick='() => OpenShell("powershell")'>PowerShell</MudMenuItem>
                             <MudMenuItem OnClick='() => OpenShell("cmd", true)'>Command Line (System)</MudMenuItem>
@@ -69,7 +69,7 @@
             <MudTabPanel Text="Service">
                 <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled">
                     <MudButton Disabled="@(!_anyComputerSelected)">Set Monitor State</MudButton>
-                    <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Disabled="@(!_anyComputerSelected)">
+                    <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Disabled="@(!_anyComputerSelected)" Dense="true">
                         <MudMenuItem OnClick='() => SetMonitorState(MonitorState.On)'>On</MudMenuItem>
                         <MudMenuItem OnClick='() => SetMonitorState(MonitorState.Standby)'>Standby</MudMenuItem>
                         <MudMenuItem OnClick='() => SetMonitorState(MonitorState.Off)'>Off</MudMenuItem>
@@ -86,7 +86,7 @@
 
                 <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled">
                     <MudButton Disabled="@(!_anyComputerSelected)">Screen Recording</MudButton>
-                    <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Disabled="@(!_anyComputerSelected)">
+                    <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Disabled="@(!_anyComputerSelected)" Dense="true">
                         <MudMenuItem OnClick='() => ScreenRecording(true)'>Enable</MudMenuItem>
                         <MudMenuItem OnClick='() => ScreenRecording(false)'>Disable</MudMenuItem>
                     </MudMenu>
@@ -94,7 +94,7 @@
 
                 <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled">
                     <MudButton Disabled="@(!_anyComputerSelected)">Domain Member</MudButton>
-                    <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Disabled="@(!_anyComputerSelected)">
+                    <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Disabled="@(!_anyComputerSelected)" Dense="true">
                         <MudMenuItem OnClick='() => DomainMember(true)'>Join</MudMenuItem>
                         <MudMenuItem OnClick='() => DomainMember(false)'>Unjoin</MudMenuItem>
                     </MudMenu>

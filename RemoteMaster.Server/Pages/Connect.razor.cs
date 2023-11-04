@@ -46,6 +46,8 @@ public partial class Connect : IDisposable
 
     private string _newUri;
 
+    private string _selectedDisplay;
+
     private HubConnection _connection;
 
     private readonly AsyncRetryPolicy _retryPolicy = Policy
