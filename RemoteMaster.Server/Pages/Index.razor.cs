@@ -342,23 +342,17 @@ public partial class Index
     
             await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendScript", fileContent, shellType));
     
-            var dialogParameters = new Dictionary<string, object>
+            var dialogParameters = new DialogParameters
             {
                 { "Results", _scriptResults }
             };
-    
-            // var dialogOptions = new DialogOptions
-            // {
-            //     Draggable = true,
-            //     CssClass = "select-none"
-            // };
-            
+
             foreach (var result in _scriptResults)
             {
                 Console.WriteLine(result.Value);
             }
             
-            // await DialogService.OpenAsync<ScriptResults>("Script Results", dialogParameters, dialogOptions);
+            await DialogService.ShowAsync<ScriptResults>("Script Results", dialogParameters);
         }
     }
     
