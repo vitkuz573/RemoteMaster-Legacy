@@ -19,7 +19,7 @@
 <div class="flex h-screen overflow-x-hidden overflow-y-hidden select-none">
 
     <div class="bg-gray-100 p-4 overflow-y-auto">
-        <MudTreeView Items="Nodes" Hover="true">
+        <MudTreeView Items="Nodes" T="Node" SelectedValueChanged="OnNodeSelected" Hover="true">
             <ItemTemplate>
                 <MudTreeViewItem Items="@context.Nodes" Value="@context" Text="@context.Name" />
             </ItemTemplate>
@@ -29,6 +29,22 @@
 
     <div class="flex-grow p-4 flex flex-col gap-4 bg-gray-300">
         <!-- Область для табов -->
+
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+            <MudTabPanel Text="Main">
+                <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled">
+                    <MudButton Disabled="@(!_anyComputerSelected)">Power</MudButton>
+                    <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Disabled="@(!_anyComputerSelected)">
+                        <MudMenuItem OnClick="() => Shutdown()">Shutdown</MudMenuItem>
+                        <MudMenuItem OnClick="() => Reboot()">Reboot</MudMenuItem>
+                        <MudMenuItem OnClick="() => WakeUp()">Wake Up</MudMenuItem>
+                    </MudMenu>
+                </MudButtonGroup>
+            </MudTabPanel>
+            <MudTabPanel Text="Service">
+                <MudText>Content Two</MudText>
+            </MudTabPanel>
+        </MudTabs>
 
         <!-- Контент с карточками ПК -->
         <div class="flex flex-wrap gap-4 items-start overflow-y-auto">

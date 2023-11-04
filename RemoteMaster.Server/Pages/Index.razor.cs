@@ -95,34 +95,19 @@ public partial class Index
         return node is Folder ? await DatabaseService.GetChildrenByParentIdAsync<Node>(node.NodeId) : Enumerable.Empty<Node>();
     }
 
-    // private readonly RenderFragment<RadzenTreeItem> NodeTemplate = (context) => builder =>
-    // {
-    //     var icon = context.Value is Computer ? "desktop_windows" : "folder";
-    //     var name = context.Value is Computer computer ? computer.Name : (context.Value as Folder)?.Name;
-    // 
-    //     builder.OpenComponent<RadzenIcon>(0);
-    //     builder.AddAttribute(1, "Icon", icon);
-    //     builder.CloseComponent();
-    //     builder.AddContent(2, $" {name}");
-    // };
-
-    // private string GetTextForNode(object data) => data as string;
-
-    // private async Task OnTreeChange(TreeEventArgs args)
-    // {
-    //     _selectedComputers.Clear();
-    //     _anyComputerSelected = false;
-    // 
-    //     var node = args.Value as Node;
-    // 
-    //     if (node is Folder)
-    //     {
-    //         _selectedNode = node;
-    //         await UpdateComputersThumbnailsAsync(node.Children.OfType<Computer>());
-    //     }
-    // 
-    //     StateHasChanged();
-    // }
+    private async Task OnNodeSelected(Node node)
+    {
+        _selectedComputers.Clear();
+        _anyComputerSelected = false;
+    
+        if (node is Folder)
+        {
+            _selectedNode = node;
+            await UpdateComputersThumbnailsAsync(node.Nodes.OfType<Computer>());
+        }
+    
+        StateHasChanged();
+    }
 
     private async Task UpdateComputersThumbnailsAsync(IEnumerable<Computer> computers)
     {
@@ -281,31 +266,25 @@ public partial class Index
     //         await Task.Run(() => Process.Start(startInfo));
     //     });
     // }
-    // 
-    // private async Task Power(RadzenSplitButtonItem item)
-    // {
-    //     if (item == null)
-    //     {
-    //         return;
-    //     }
-    // 
-    //     if (item.Value == "shutdown")
-    //     {
-    //         await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("ShutdownComputer", "", 0, true));
-    //     }
-    //     else if (item.Value == "reboot")
-    //     {
-    //         await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("RebootComputer", "", 0, true));
-    //     }
-    //     else if (item.Value == "wakeup")
-    //     {
-    //         foreach (var computer in _selectedComputers)
-    //         {
-    //             WakeOnLanService.WakeUp(computer.MACAddress);
-    //         }
-    //     }
-    // }
-    // 
+
+    private async Task Shutdown()
+    {
+        await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("ShutdownComputer", "", 0, true));
+    }
+
+    private async Task Reboot()
+    {
+        await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("RebootComputer", "", 0, true));
+    }
+
+    private void WakeUp()
+    {
+        foreach (var computer in _selectedComputers)
+        {
+            WakeOnLanService.WakeUp(computer.MACAddress);
+        }
+    }
+
     // private async Task DomainMember(RadzenSplitButtonItem item)
     // {
     //     var domain = "it-ktk.local";
