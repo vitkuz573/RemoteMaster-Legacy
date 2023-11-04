@@ -22,6 +22,13 @@ namespace RemoteMaster.Server.Pages;
 
 public partial class Index
 {
+    private bool _isMenuOpen = false;
+
+    private void ToggleDrawer()
+    {
+        _isMenuOpen = !_isMenuOpen;
+    }
+
     private HashSet<Node> Nodes { get; set; } = new();
 
     private readonly Dictionary<Computer, string> _scriptResults = new();
