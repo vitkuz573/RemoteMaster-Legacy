@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
+using MudBlazor;
 using Polly;
 using Polly.Retry;
 using RemoteMaster.Server.Abstractions;
@@ -24,11 +25,13 @@ public partial class Index
     private HashSet<Node> Nodes { get; set; } = new();
 
     private readonly Dictionary<Computer, string> _scriptResults = new();
-    private readonly List<Node> _entries = new();
     private Node _selectedNode;
 
     private bool _anyComputerSelected = false;
     private readonly List<Computer> _selectedComputers = new();
+
+    [Inject]
+    private IDialogService DialogService { get; set; }
 
     [Inject]
     private DatabaseService DatabaseService { get; set; }
@@ -77,22 +80,6 @@ public partial class Index
 
         _anyComputerSelected = _selectedComputers.Any();
         StateHasChanged();
-    }
-
-
-    // private void LoadComputers(TreeExpandEventArgs args)
-    // {
-    //     var node = args.Value as Node;
-    // 
-    //     args.Children.Data = GetChildrenForNodeAsync(node).Result;
-    //     args.Children.Text = GetTextForNode;
-    //     args.Children.HasChildren = n => n is Folder && n is Node node && DatabaseService.HasChildrenAsync(node).Result;
-    //     args.Children.Template = NodeTemplate;
-    // }
-
-    private async Task<IEnumerable<Node>> GetChildrenForNodeAsync(Node node)
-    {
-        return node is Folder ? await DatabaseService.GetChildrenByParentIdAsync<Node>(node.NodeId) : Enumerable.Empty<Node>();
     }
 
     private async Task OnNodeSelected(Node node)
@@ -395,17 +382,13 @@ public partial class Index
         }
     }
 
-#pragma warning disable CA1822 // Пометьте члены как статические
     private async Task OpenHostConfigGenerator()
-#pragma warning restore CA1822 // Пометьте члены как статические
     {
-        // var dialogOptions = new DialogOptions
-        // {
-        //     Draggable = true,
-        //     CssClass = "select-none",
-        //     AutoFocusFirstElement = true
-        // };
-        // 
-        // await DialogService.OpenAsync<HostConfigurationGenerator>("Host Configuration Generator", null, dialogOptions);
+        var dialogOptions = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+        };
+        
+        await DialogService.ShowAsync<HostConfigurationGenerator>("Host Configuration Generator", dialogOptions);
     }
 }

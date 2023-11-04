@@ -1,9 +1,13 @@
-﻿<form method="post" action="api/HostConfiguration/generate" class="select-none">
-    <MudInputLabel style="display: block; margin-bottom: 10px;">Computer Group</MudInputLabel>
-    <MudInput @bind-Value="_group" required>Group</MudInput>
+﻿<MudDialog>
+    <DialogContent>
+        <form method="post" action="api/HostConfiguration/generate">
+            <MudInputLabel>Computer Group</MudInputLabel>
+            <MudTextField T="string" bind-Value="_group" required />
 
-    <div style="margin: 20px 0;">
-        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">Download Configuration</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="DownloadHost">Download Host</MudButton>
-    </div>
-</form>
+            <div style="margin: 20px 0;">
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">Download Configuration</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="DownloadHost">Download Host</MudButton>
+            </div>
+        </form>
+    </DialogContent>
+</MudDialog>
