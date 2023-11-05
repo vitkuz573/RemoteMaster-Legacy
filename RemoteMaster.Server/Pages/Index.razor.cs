@@ -313,7 +313,7 @@ public partial class Index
     
     private async Task SetMonitorState(MonitorState state)
     {
-        await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SetMonitorState", state));
+        await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendMonitorState", state));
     }
 
     private async Task ExecuteScript()
