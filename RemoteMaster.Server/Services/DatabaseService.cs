@@ -4,12 +4,13 @@
 
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class DatabaseService
+public class DatabaseService : IDatabaseService
 {
     private readonly NodesDataContext _context;
 

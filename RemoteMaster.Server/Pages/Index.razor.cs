@@ -15,7 +15,6 @@ using Polly.Retry;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Components;
 using RemoteMaster.Server.Models;
-using RemoteMaster.Server.Services;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Pages;
@@ -41,7 +40,7 @@ public partial class Index
     private IDialogService DialogService { get; set; }
 
     [Inject]
-    private DatabaseService DatabaseService { get; set; }
+    private IDatabaseService DatabaseService { get; set; }
 
     [Inject]
     private IWakeOnLanService WakeOnLanService { get; set; }
