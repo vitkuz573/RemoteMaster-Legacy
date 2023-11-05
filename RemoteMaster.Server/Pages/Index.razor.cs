@@ -47,6 +47,9 @@ public partial class Index
     private IWakeOnLanService WakeOnLanService { get; set; }
 
     [Inject]
+    private IComputerCommandService ComputerCommandService { get; set; }
+
+    [Inject]
     private IJSRuntime JSRuntime { get; set; }
 
     [Inject]
@@ -189,40 +192,17 @@ public partial class Index
         return computerConnectionDictionary;
     }
 
-    private async Task ExecuteOnComputers(Dictionary<Computer, HubConnection> computerConnectionDictionary, Func<Computer, HubConnection, Task> actionOnComputer)
-    {
-        foreach (var (computer, connection) in computerConnectionDictionary)
-        {
-            await _retryPolicy.ExecuteAsync(async () =>
-            {
-                if (connection.State == HubConnectionState.Connected)
-                {
-                    try
-                    {
-                        await actionOnComputer(computer, connection);
-                    }
-                    catch (HubException ex) when (ex.Message.Contains("Method does not exist"))
-                    {
-                        await JSRuntime.InvokeVoidAsync("showAlert", $"Host: {computer.Name}.\nThis function is not available in the current host version. Please update your host.");
-                    }
-                }
-            });
-        }
-
-        StateHasChanged();
-    }
-
     private async Task Connect(string action)
     {
         var computers = await GetAvailableComputers();
 
         if (action == "control")
         {
-            await ExecuteOnComputers(computers, async (computer, connection) => await OpenWindow($"/{computer.IPAddress}/connect?imageQuality=25&cursorTracking=false&inputEnabled=true"));
+            await ComputerCommandService.Execute(computers, async (computer, connection) => await OpenWindow($"/{computer.IPAddress}/connect?imageQuality=25&cursorTracking=false&inputEnabled=true"));
         }
         else if (action == "view")
         {
-            await ExecuteOnComputers(computers, async (computer, connection) => await OpenWindow($"/{computer.IPAddress}/connect?imageQuality=25&cursorTracking=true&inputEnabled=false"));
+            await ComputerCommandService.Execute(computers, async (computer, connection) => await OpenWindow($"/{computer.IPAddress}/connect?imageQuality=25&cursorTracking=true&inputEnabled=false"));
         }
     }
 
@@ -230,7 +210,7 @@ public partial class Index
     {
         var computers = await GetAvailableComputers();
 
-        await ExecuteOnComputers(computers, async (computer, connection) =>
+        await ComputerCommandService.Execute(computers, async (computer, connection) =>
         {
             ProcessStartInfo startInfo;
     
@@ -273,11 +253,11 @@ public partial class Index
 
         if (action == "power")
         {
-            await ExecuteOnComputers(computers, async (computer, connection) => await connection.InvokeAsync("ShutdownComputer", "", 0, true));
+            await ComputerCommandService.Execute(computers, async (computer, connection) => await connection.InvokeAsync("ShutdownComputer", "", 0, true));
         }
         else if (action == "reboot")
         {
-            await ExecuteOnComputers(computers, async (computer, connection) => await connection.InvokeAsync("RebootComputer", "", 0, true));
+            await ComputerCommandService.Execute(computers, async (computer, connection) => await connection.InvokeAsync("RebootComputer", "", 0, true));
 
         }
         else if (action == "wakeup")
@@ -299,11 +279,11 @@ public partial class Index
     
         if (isJoin)
         {
-            await ExecuteOnComputers(computers, async (computer, connection) => await connection.InvokeAsync("SendJoinToDomain", domain, username, password));
+            await ComputerCommandService.Execute(computers, async (computer, connection) => await connection.InvokeAsync("SendJoinToDomain", domain, username, password));
         }
         else
         {
-            await ExecuteOnComputers(computers, async (computer, connection) => await connection.InvokeAsync("SendUnjoinFromDomain", username, password));
+            await ComputerCommandService.Execute(computers, async (computer, connection) => await connection.InvokeAsync("SendUnjoinFromDomain", username, password));
         }
     }
 
@@ -315,7 +295,7 @@ public partial class Index
         var username = "support@it-ktk.local";
         var password = "bonesgamer123!!";
         
-        await ExecuteOnComputers(computers, async (computer, connection) => await connection.InvokeAsync("SendUpdateHost", sharedFolder, username, password));
+        await ComputerCommandService.Execute(computers, async (computer, connection) => await connection.InvokeAsync("SendUpdateHost", sharedFolder, username, password));
     }
 
     private async Task ScreenRecording(bool start)
@@ -324,7 +304,7 @@ public partial class Index
 
         if (start)
         {
-            await ExecuteOnComputers(computers, async (computer, connection) =>
+            await ComputerCommandService.Execute(computers, async (computer, connection) =>
             {
                 var requesterName = Environment.MachineName;
                 var currentDate = DateTime.Now.ToString("yyyyMMdd_HHmmss");
@@ -335,7 +315,7 @@ public partial class Index
         }
         else
         {
-            await ExecuteOnComputers(computers, async (computer, connection) => await connection.InvokeAsync("SendStopScreenRecording"));
+            await ComputerCommandService.Execute(computers, async (computer, connection) => await connection.InvokeAsync("SendStopScreenRecording"));
         }
     }
     
@@ -343,7 +323,7 @@ public partial class Index
     {
         var computers = await GetAvailableComputers();
 
-        await ExecuteOnComputers(computers, async (computer, connection) => await connection.InvokeAsync("SendMonitorState", state));
+        await ComputerCommandService.Execute(computers, async (computer, connection) => await connection.InvokeAsync("SendMonitorState", state));
     }
 
     private async Task ExecuteScript()
@@ -374,7 +354,7 @@ public partial class Index
                     return;
             }
     
-            await ExecuteOnComputers(computers, async (computer, connection) => await connection.InvokeAsync("SendScript", fileContent, shellType));
+            await ComputerCommandService.Execute(computers, async (computer, connection) => await connection.InvokeAsync("SendScript", fileContent, shellType));
     
             var dialogParameters = new DialogParameters
             {
@@ -394,7 +374,7 @@ public partial class Index
     {
         var computers = await GetAvailableComputers();
 
-        await ExecuteOnComputers(computers, async (computer, connection) => await connection.InvokeAsync("SetPSExecRules", isEnabled));
+        await ComputerCommandService.Execute(computers, async (computer, connection) => await connection.InvokeAsync("SetPSExecRules", isEnabled));
     }
 
     private static async Task<(Computer computer, bool isAvailable)> IsComputerAvailable(Computer computer)

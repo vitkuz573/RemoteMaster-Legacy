@@ -43,6 +43,7 @@ void ConfigureBusinessServices(WebApplicationBuilder builder)
 {
     builder.Services.AddTransient<IHostConfigurationService, HostConfigurationService>();
     builder.Services.AddScoped<DatabaseService>();
+    builder.Services.AddScoped<IComputerCommandService, ComputerCommandService>();
     builder.Services.AddSingleton<ICertificateService, CertificateService>();
     builder.Services.AddSingleton<IPacketSender, UdpPacketSender>();
     builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
