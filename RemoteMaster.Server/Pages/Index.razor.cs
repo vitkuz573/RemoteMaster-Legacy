@@ -283,7 +283,7 @@ public partial class Index
             { x => x.Hosts, computers }
         };
 
-        await DialogService.ShowAsync<UpdateDialog>(null, dialogParameters);
+        await DialogService.ShowAsync<UpdateDialog>("Update", dialogParameters);
     }
 
     private async Task ScreenRecording(bool start)
