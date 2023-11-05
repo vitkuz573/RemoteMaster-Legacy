@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Net.NetworkInformation;
-using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -41,9 +40,6 @@ public partial class Index
 
     [Inject]
     private IComputerCommandService ComputerCommandService { get; set; }
-
-    [Inject]
-    private IJSRuntime JSRuntime { get; set; }
 
     [Inject]
     private IHttpContextAccessor HttpContextAccessor { get; set; }
@@ -242,46 +238,12 @@ public partial class Index
 
     private async Task ExecuteScript()
     {
-        var computers = await GetAvailableComputers();
-
-        var fileData = await JSRuntime.InvokeAsync<JsonElement>("selectFile");
-    
-        if (fileData.TryGetProperty("content", out var contentElement) && fileData.TryGetProperty("name", out var nameElement))
+        var dialogParameters = new DialogParameters<ScriptExecutorDialog>
         {
-            var fileContent = contentElement.GetString();
-            var fileName = nameElement.GetString();
-    
-            var extension = Path.GetExtension(fileName);
-            string shellType;
-    
-            switch (extension)
-            {
-                case ".ps1":
-                    shellType = "PowerShell";
-                    break;
-                case ".bat":
-                case ".cmd":
-                    shellType = "CMD";
-                    break;
-                default:
-                    Logger.LogError("Unknown script type.");
-                    return;
-            }
-    
-            await ComputerCommandService.Execute(computers, async (computer, connection) => await connection.InvokeAsync("SendScript", fileContent, shellType));
-    
-            var dialogParameters = new DialogParameters<ScriptResults>
-            {
-                { x => x.Results, _scriptResults }
-            };
+            { x => x.Hosts, await GetAvailableComputers() }
+        };
 
-            foreach (var result in _scriptResults)
-            {
-                Console.WriteLine(result.Value);
-            }
-            
-            await DialogService.ShowAsync<ScriptResults>("Script Results", dialogParameters);
-        }
+        await DialogService.ShowAsync<ScriptExecutorDialog>("Script executor", dialogParameters);
     }
     
     private async Task ManagePSExecRules(bool isEnabled)

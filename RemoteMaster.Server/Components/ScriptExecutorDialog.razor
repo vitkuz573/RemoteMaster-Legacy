@@ -1,0 +1,29 @@
+﻿<MudDialog>
+    <DialogContent>
+        <MudExpansionPanels>
+            <MudExpansionPanel Text="Click to view affected hosts">
+                @foreach (var (computer, connection) in Hosts)
+                {
+                    <MudText>@computer.Name (@computer.IPAddress)</MudText>
+                }
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+        <MudTextField T="string" Label="Path" @bind-Value="_path" ReadOnly="true" />
+        <MudFileUpload T="IBrowserFile" OnFilesChanged="UploadFiles">
+            <ButtonTemplate>
+                <MudButton HtmlTag="label"
+                           Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.CloudUpload"
+                           for="@context">
+                    Upload Script
+                </MudButton>
+            </ButtonTemplate>
+        </MudFileUpload>
+        <MudTextField T="string" Label="Shell" @bind-Value="@_shell" ReadOnly="true" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="RunScript">Run Script</MudButton>
+    </DialogActions>
+</MudDialog>
