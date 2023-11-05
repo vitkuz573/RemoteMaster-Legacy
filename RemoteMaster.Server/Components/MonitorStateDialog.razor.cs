@@ -25,7 +25,7 @@ public partial class MonitorStateDialog
     [Inject]
     private IComputerCommandService ComputerCommandService { get; set; }
 
-    private MonitorState _selectedOption;
+    private MonitorState _monitorState;
 
     private void Cancel()
     {
@@ -34,7 +34,7 @@ public partial class MonitorStateDialog
 
     private async Task SetState()
     {
-        await ComputerCommandService.Execute(Hosts, async (computer, connection) => await connection.InvokeAsync("SendMonitorState", _selectedOption));
+        await ComputerCommandService.Execute(Hosts, async (computer, connection) => await connection.InvokeAsync("SendMonitorState", _monitorState));
 
         MudDialog.Close(DialogResult.Ok(true));
     }
