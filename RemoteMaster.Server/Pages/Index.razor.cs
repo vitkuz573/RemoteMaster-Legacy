@@ -29,7 +29,6 @@ public partial class Index
 
     private readonly Dictionary<Computer, string> _scriptResults = new();
 
-    private bool _anyComputerSelected = false;
     private readonly List<Computer> _selectedComputers = new();
 
     [Inject]
@@ -46,6 +45,8 @@ public partial class Index
 
     protected async override Task OnInitializedAsync()
     {
+        _selectedComputers.Clear();
+
         _nodes = (await DatabaseService.GetNodesAsync(f => f.Parent == null && f is Folder)).Cast<Node>().ToHashSet();
     }
 
@@ -60,14 +61,12 @@ public partial class Index
             _selectedComputers.Remove(computer);
         }
 
-        _anyComputerSelected = _selectedComputers.Any();
         StateHasChanged();
     }
 
     private async Task OnNodeSelected(Node node)
     {
         _selectedComputers.Clear();
-        _anyComputerSelected = false;
     
         if (node is Folder)
         {
