@@ -19,7 +19,7 @@ public class DatabaseService : IDatabaseService
         _context = context;
     }
 
-    public async Task<IList<Node>> GetNodesAsync(Expression<Func<Node, bool>> predicate = null)
+    public async Task<IList<Node>> GetNodesAsync(Expression<Func<Node, bool>>? predicate = null)
     {
         var query = _context.Nodes.AsQueryable();
 
