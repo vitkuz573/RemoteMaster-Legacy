@@ -42,13 +42,7 @@
                             </MudMenu>
                         </MudButtonGroup>
 
-                        <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled" Class="mr-2">
-                            <MudButton Disabled="@(!_anyComputerSelected)">Connect</MudButton>
-                            <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Disabled="@(!_anyComputerSelected)" Dense="true">
-                                <MudMenuItem OnClick='() => Connect("control")'>Control</MudMenuItem>
-                                <MudMenuItem OnClick='() => Connect("view")'>View</MudMenuItem>
-                            </MudMenu>
-                        </MudButtonGroup>
+                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Connect" Disabled="@(!_anyComputerSelected)" Class="mr-2">Connect</MudButton>
 
                         <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled" Class="mr-2">
                             <MudButton Disabled="@(!_anyComputerSelected)">Open Shell</MudButton>

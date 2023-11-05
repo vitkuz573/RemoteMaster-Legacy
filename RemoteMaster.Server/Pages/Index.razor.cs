@@ -139,11 +139,6 @@ public partial class Index
         }
     }
 
-    private async Task OpenWindow(string url)
-    {
-        await JSRuntime.InvokeVoidAsync("openNewWindow", url);
-    }
-
     private async Task<Dictionary<Computer, HubConnection>> GetAvailableComputers()
     {
         var tasks = _selectedComputers.Select(IsComputerAvailable).ToArray();
@@ -179,18 +174,14 @@ public partial class Index
         return computerConnectionDictionary;
     }
 
-    private async Task Connect(string action)
+    private async Task Connect()
     {
-        var computers = await GetAvailableComputers();
+        var dialogParameters = new DialogParameters<ConnectDialog>
+        {
+            { x => x.Hosts, await GetAvailableComputers() }
+        };
 
-        if (action == "control")
-        {
-            await ComputerCommandService.Execute(computers, async (computer, connection) => await OpenWindow($"/{computer.IPAddress}/connect?imageQuality=25&cursorTracking=false&inputEnabled=true"));
-        }
-        else if (action == "view")
-        {
-            await ComputerCommandService.Execute(computers, async (computer, connection) => await OpenWindow($"/{computer.IPAddress}/connect?imageQuality=25&cursorTracking=true&inputEnabled=false"));
-        }
+        await DialogService.ShowAsync<ConnectDialog>("Connect", dialogParameters);
     }
 
     private async Task OpenShell(string application, bool isSystem = false)
