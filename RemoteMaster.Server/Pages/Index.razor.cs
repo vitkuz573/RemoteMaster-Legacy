@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Net.NetworkInformation;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -127,11 +126,11 @@ public partial class Index
 
     private async Task<Dictionary<Computer, HubConnection>> GetAvailableComputers()
     {
-        var computerConnectionDictionary = new Dictionary<Computer, HubConnection>();
+        var computerConnections = new Dictionary<Computer, HubConnection>();
 
         var tasks = _selectedComputers.Select(async computer =>
         {
-            if (!await IsComputerAvailable(computer))
+            if (!await computer.IsAvailable())
             {
                 return;
             }
@@ -155,15 +154,15 @@ public partial class Index
 
             await connection.StartAsync();
 
-            lock (computerConnectionDictionary)
+            lock (computerConnections)
             {
-                computerConnectionDictionary.Add(computer, connection);
+                computerConnections.Add(computer, connection);
             }
         });
 
         await Task.WhenAll(tasks);
 
-        return computerConnectionDictionary;
+        return computerConnections;
     }
 
     private async Task Connect()
@@ -257,21 +256,6 @@ public partial class Index
         };
 
         await DialogService.ShowAsync<PsexecRulesDialog>("PSExec rules", dialogParameters);
-    }
-
-    private static async Task<bool> IsComputerAvailable(Computer computer)
-    {
-        try
-        {
-            using var ping = new Ping();
-            var reply = await ping.SendPingAsync(computer.IPAddress, 1000);
-
-            return reply.Status == IPStatus.Success;
-        }
-        catch
-        {
-            return false;
-        }
     }
 
     private async Task OpenHostConfigGenerator()
