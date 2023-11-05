@@ -278,11 +278,12 @@ public partial class Index
     {
         var computers = await GetAvailableComputers();
 
-        var sharedFolder = @"\\SERVER-DC02\Win\RemoteMaster";
-        var username = "support@it-ktk.local";
-        var password = "bonesgamer123!!";
-        
-        await ComputerCommandService.Execute(computers, async (computer, connection) => await connection.InvokeAsync("SendUpdateHost", sharedFolder, username, password));
+        var dialogParameters = new DialogParameters<UpdateDialog>
+        {
+            { x => x.Hosts, computers }
+        };
+
+        await DialogService.ShowAsync<UpdateDialog>(null, dialogParameters);
     }
 
     private async Task ScreenRecording(bool start)

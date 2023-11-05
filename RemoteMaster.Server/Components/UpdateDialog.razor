@@ -1,0 +1,25 @@
+﻿<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Computer" Class="mr-3 mb-n1" />
+            Update
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudExpansionPanels>
+            <MudExpansionPanel Text="Click to view affected hosts">
+                @foreach (var (computer, connection) in Hosts)
+                {
+                    <MudText>@computer.Name</MudText>
+                }
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+        <MudTextField Label="Path to Shared Folder" @bind-Value="SharedFolderPath" />
+        <MudTextField Label="Username" @bind-Value="Username" />
+        <MudTextField Label="Password" @bind-Value="Password" InputType="InputType.Password" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Confirm">OK</MudButton>
+    </DialogActions>
+</MudDialog>
