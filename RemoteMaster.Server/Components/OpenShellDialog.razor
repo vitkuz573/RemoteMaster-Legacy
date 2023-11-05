@@ -1,0 +1,32 @@
+﻿<MudDialog>
+    <DialogContent>
+        <MudContainer>
+            <MudExpansionPanels>
+                <MudExpansionPanel Text="Click to view affected hosts">
+                    @foreach (var (computer, connection) in Hosts)
+                    {
+                        <MudText>@computer.Name (@computer.IPAddress)</MudText>
+                    }
+                </MudExpansionPanel>
+            </MudExpansionPanels>
+            <MudGrid>
+                <MudItem xs="6">
+                    <MudRadioGroup @bind-SelectedOption="@_selectedShell">
+                        <MudRadio Option="@("cmd")">Command Line</MudRadio>
+                        <MudRadio Option="@("powershell")">PowerShell</MudRadio>
+                    </MudRadioGroup>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudRadioGroup @bind-SelectedOption="@_selectedUser">
+                        <MudRadio Option="@("current")">Current User</MudRadio>
+                        <MudRadio Option="@("system")">System</MudRadio>
+                    </MudRadioGroup>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Connect">Connect</MudButton>
+    </DialogActions>
+</MudDialog>

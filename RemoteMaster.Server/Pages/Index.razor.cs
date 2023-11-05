@@ -184,40 +184,14 @@ public partial class Index
         await DialogService.ShowAsync<ConnectDialog>("Connect", dialogParameters);
     }
 
-    private async Task OpenShell(string application, bool isSystem = false)
+    private async Task OpenShell()
     {
-        var computers = await GetAvailableComputers();
-
-        await ComputerCommandService.Execute(computers, async (computer, connection) =>
+        var dialogParameters = new DialogParameters<OpenShellDialog>
         {
-            ProcessStartInfo startInfo;
-    
-            if (application == "ssh")
-            {
-                var command = $"ssh user@{computer.IPAddress}";
+            { x => x.Hosts, await GetAvailableComputers() }
+        };
 
-                startInfo = new ProcessStartInfo()
-                {
-                    FileName = "cmd.exe",
-                    Arguments = $"/C {command}",
-                    UseShellExecute = true,
-                };
-            }
-            else
-            {
-                var sParameter = isSystem ? "-s" : "";
-                var command = @$"/C psexec \\{computer.IPAddress} {sParameter} -nobanner -accepteula {application}";
-                
-                startInfo = new ProcessStartInfo()
-                {
-                    FileName = "cmd.exe",
-                    Arguments = command,
-                    UseShellExecute = true,
-                };
-            }
-    
-            await Task.Run(() => Process.Start(startInfo));
-        });
+        await DialogService.ShowAsync<OpenShellDialog>("Connect to shell", dialogParameters);
     }
 
     private async Task Power(string action)
