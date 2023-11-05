@@ -25,9 +25,9 @@ public partial class Index
     }
 
     private HashSet<Node> _nodes;
+    private Node _selectedNode;
 
     private readonly Dictionary<Computer, string> _scriptResults = new();
-    private Node _selectedNode;
 
     private bool _anyComputerSelected = false;
     private readonly List<Computer> _selectedComputers = new();
@@ -37,9 +37,6 @@ public partial class Index
 
     [Inject]
     private IDatabaseService DatabaseService { get; set; }
-
-    [Inject]
-    private IComputerCommandService ComputerCommandService { get; set; }
 
     [Inject]
     private IHttpContextAccessor HttpContextAccessor { get; set; }
@@ -249,11 +246,14 @@ public partial class Index
         await DialogService.ShowAsync<ScriptExecutorDialog>("Script executor", dialogParameters);
     }
     
-    private async Task ManagePSExecRules(bool isEnabled)
+    private async Task ManagePSExecRules()
     {
-        var computers = await GetAvailableComputers();
+        var dialogParameters = new DialogParameters<PsexecRulesDialog>
+        {
+            { x => x.Hosts, await GetAvailableComputers() }
+        };
 
-        await ComputerCommandService.Execute(computers, async (computer, connection) => await connection.InvokeAsync("SetPSExecRules", isEnabled));
+        await DialogService.ShowAsync<PsexecRulesDialog>("PSExec rules", dialogParameters);
     }
 
     private static async Task<(Computer computer, bool isAvailable)> IsComputerAvailable(Computer computer)
