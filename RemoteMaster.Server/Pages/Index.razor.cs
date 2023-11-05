@@ -276,25 +276,16 @@ public partial class Index
         await DialogService.ShowAsync<UpdateDialog>("Update", dialogParameters);
     }
 
-    private async Task ScreenRecording(bool start)
+    private async Task ScreenRecorder()
     {
         var computers = await GetAvailableComputers();
 
-        if (start)
+        var dialogParameters = new DialogParameters<ScreenRecorderDialog>
         {
-            await ComputerCommandService.Execute(computers, async (computer, connection) =>
-            {
-                var requesterName = Environment.MachineName;
-                var currentDate = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-                var fileName = $@"C:\{requesterName}_{computer.IPAddress}_{currentDate}.mp4";
-    
-                await connection.InvokeAsync("SendStartScreenRecording", fileName);
-            });
-        }
-        else
-        {
-            await ComputerCommandService.Execute(computers, async (computer, connection) => await connection.InvokeAsync("SendStopScreenRecording"));
-        }
+            { x => x.Hosts, await GetAvailableComputers() }
+        };
+
+        await DialogService.ShowAsync<ScreenRecorderDialog>("Screen Recorder", dialogParameters);
     }
     
     private async Task SetMonitorState(MonitorState state)

@@ -84,14 +84,8 @@
                             <MudMenuItem OnClick='() => ManagePSExecRules(false)'>Disable</MudMenuItem>
                         </MudMenu>
                     </MudButtonGroup>
-
-                    <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled">
-                        <MudButton Disabled="@(!_anyComputerSelected)">Screen Recording</MudButton>
-                        <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Disabled="@(!_anyComputerSelected)" Dense="true">
-                            <MudMenuItem OnClick='() => ScreenRecording(true)'>Enable</MudMenuItem>
-                            <MudMenuItem OnClick='() => ScreenRecording(false)'>Disable</MudMenuItem>
-                        </MudMenu>
-                    </MudButtonGroup>
+                    
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ScreenRecorder" Disabled="@(!_anyComputerSelected)">Screen Recorder</MudButton>
 
                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="DomainMember" Disabled="@(!_anyComputerSelected)">Domain Management</MudButton>
 
