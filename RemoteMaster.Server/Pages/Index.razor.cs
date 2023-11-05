@@ -162,7 +162,7 @@ public partial class Index
             {
                 computerConnectionDictionary.Add(computer, connection);
             }
-        }).ToArray();
+        });
 
         await Task.WhenAll(tasks);
 
