@@ -154,12 +154,13 @@ public partial class Index
         await JSRuntime.InvokeVoidAsync("openNewWindow", url);
     }
 
-    private async Task ExecuteOnAvailableComputers(Func<Computer, HubConnection, Task> actionOnComputer)
+    private async Task<Dictionary<Computer, HubConnection>> GetAvailableComputers()
     {
         var tasks = _selectedComputers.Select(IsComputerAvailable).ToArray();
         var results = await Task.WhenAll(tasks);
 
         var availableComputers = results.Where(r => r.isAvailable);
+        var computerConnectionDictionary = new Dictionary<Computer, HubConnection>();
 
         foreach (var (computer, isAvailable) in availableComputers)
         {
@@ -182,6 +183,16 @@ public partial class Index
 
             await connection.StartAsync();
 
+            computerConnectionDictionary.Add(computer, connection);
+        }
+
+        return computerConnectionDictionary;
+    }
+
+    private async Task ExecuteOnComputers(Dictionary<Computer, HubConnection> computerConnectionDictionary, Func<Computer, HubConnection, Task> actionOnComputer)
+    {
+        foreach (var (computer, connection) in computerConnectionDictionary)
+        {
             await _retryPolicy.ExecuteAsync(async () =>
             {
                 if (connection.State == HubConnectionState.Connected)
@@ -203,19 +214,23 @@ public partial class Index
 
     private async Task Connect(string action)
     {
+        var computers = await GetAvailableComputers();
+
         if (action == "control")
         {
-            await ExecuteOnAvailableComputers(async (computer, connection) => await OpenWindow($"/{computer.IPAddress}/connect?imageQuality=25&cursorTracking=false&inputEnabled=true"));
+            await ExecuteOnComputers(computers, async (computer, connection) => await OpenWindow($"/{computer.IPAddress}/connect?imageQuality=25&cursorTracking=false&inputEnabled=true"));
         }
         else if (action == "view")
         {
-            await ExecuteOnAvailableComputers(async (computer, connection) => await OpenWindow($"/{computer.IPAddress}/connect?imageQuality=25&cursorTracking=true&inputEnabled=false"));
+            await ExecuteOnComputers(computers, async (computer, connection) => await OpenWindow($"/{computer.IPAddress}/connect?imageQuality=25&cursorTracking=true&inputEnabled=false"));
         }
     }
 
     private async Task OpenShell(string application, bool isSystem = false)
-    {    
-        await ExecuteOnAvailableComputers(async (computer, connection) =>
+    {
+        var computers = await GetAvailableComputers();
+
+        await ExecuteOnComputers(computers, async (computer, connection) =>
         {
             ProcessStartInfo startInfo;
     
@@ -249,13 +264,20 @@ public partial class Index
 
     private async Task Power(string action)
     {
+        var computers = new Dictionary<Computer, HubConnection>();
+
+        if (action == "power" || action == "reboot")
+        {
+            computers = await GetAvailableComputers();
+        }
+
         if (action == "power")
         {
-            await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("ShutdownComputer", "", 0, true));
+            await ExecuteOnComputers(computers, async (computer, connection) => await connection.InvokeAsync("ShutdownComputer", "", 0, true));
         }
         else if (action == "reboot")
         {
-            await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("RebootComputer", "", 0, true));
+            await ExecuteOnComputers(computers, async (computer, connection) => await connection.InvokeAsync("RebootComputer", "", 0, true));
 
         }
         else if (action == "wakeup")
@@ -269,34 +291,40 @@ public partial class Index
 
     private async Task DomainMember(bool isJoin)
     {
+        var computers = await GetAvailableComputers();
+
         var domain = "it-ktk.local";
         var username = "vitaly@it-ktk.local";
         var password = "WaLL@8V1";
     
         if (isJoin)
         {
-            await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendJoinToDomain", domain, username, password));
+            await ExecuteOnComputers(computers, async (computer, connection) => await connection.InvokeAsync("SendJoinToDomain", domain, username, password));
         }
         else
         {
-            await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendUnjoinFromDomain", username, password));
+            await ExecuteOnComputers(computers, async (computer, connection) => await connection.InvokeAsync("SendUnjoinFromDomain", username, password));
         }
     }
 
     private async Task Update()
     {
+        var computers = await GetAvailableComputers();
+
         var sharedFolder = @"\\SERVER-DC02\Win\RemoteMaster";
         var username = "support@it-ktk.local";
         var password = "bonesgamer123!!";
         
-        await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendUpdateHost", sharedFolder, username, password));
+        await ExecuteOnComputers(computers, async (computer, connection) => await connection.InvokeAsync("SendUpdateHost", sharedFolder, username, password));
     }
 
     private async Task ScreenRecording(bool start)
     {
+        var computers = await GetAvailableComputers();
+
         if (start)
         {
-            await ExecuteOnAvailableComputers(async (computer, connection) =>
+            await ExecuteOnComputers(computers, async (computer, connection) =>
             {
                 var requesterName = Environment.MachineName;
                 var currentDate = DateTime.Now.ToString("yyyyMMdd_HHmmss");
@@ -307,17 +335,21 @@ public partial class Index
         }
         else
         {
-            await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendStopScreenRecording"));
+            await ExecuteOnComputers(computers, async (computer, connection) => await connection.InvokeAsync("SendStopScreenRecording"));
         }
     }
     
     private async Task SetMonitorState(MonitorState state)
     {
-        await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendMonitorState", state));
+        var computers = await GetAvailableComputers();
+
+        await ExecuteOnComputers(computers, async (computer, connection) => await connection.InvokeAsync("SendMonitorState", state));
     }
 
     private async Task ExecuteScript()
     {
+        var computers = await GetAvailableComputers();
+
         var fileData = await JSRuntime.InvokeAsync<JsonElement>("selectFile");
     
         if (fileData.TryGetProperty("content", out var contentElement) && fileData.TryGetProperty("name", out var nameElement))
@@ -342,7 +374,7 @@ public partial class Index
                     return;
             }
     
-            await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SendScript", fileContent, shellType));
+            await ExecuteOnComputers(computers, async (computer, connection) => await connection.InvokeAsync("SendScript", fileContent, shellType));
     
             var dialogParameters = new DialogParameters
             {
@@ -360,7 +392,9 @@ public partial class Index
     
     private async Task ManagePSExecRules(bool isEnabled)
     {
-        await ExecuteOnAvailableComputers(async (computer, connection) => await connection.InvokeAsync("SetPSExecRules", isEnabled));
+        var computers = await GetAvailableComputers();
+
+        await ExecuteOnComputers(computers, async (computer, connection) => await connection.InvokeAsync("SetPSExecRules", isEnabled));
     }
 
     private static async Task<(Computer computer, bool isAvailable)> IsComputerAvailable(Computer computer)
