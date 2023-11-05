@@ -26,7 +26,7 @@ public partial class Index
         _isMenuOpen = !_isMenuOpen;
     }
 
-    private HashSet<Node> Nodes { get; set; } = new();
+    private HashSet<Node> _nodes;
 
     private readonly Dictionary<Computer, string> _scriptResults = new();
     private Node _selectedNode;
@@ -57,7 +57,7 @@ public partial class Index
 
     protected async override Task OnInitializedAsync()
     {
-        Nodes = (await DatabaseService.GetNodesAsync(f => f.Parent == null && f is Folder)).Cast<Node>().ToHashSet();
+        _nodes = (await DatabaseService.GetNodesAsync(f => f.Parent == null && f is Folder)).Cast<Node>().ToHashSet();
     }
 
     private void HandleComputerSelection(Computer computer, bool isSelected)
@@ -99,8 +99,7 @@ public partial class Index
     {
         Logger.LogInformation("UpdateComputerThumbnailAsync Called for {IPAddress}", computer.IPAddress);
 
-        var httpContext = HttpContextAccessor.HttpContext;
-        var accessToken = httpContext.Request.Cookies["accessToken"];
+        var accessToken = HttpContextAccessor.HttpContext?.Request.Cookies["accessToken"];
 
         var connection = new HubConnectionBuilder()
             .WithUrl($"https://{computer.IPAddress}:5076/hubs/control", options =>

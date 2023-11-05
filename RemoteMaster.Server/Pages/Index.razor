@@ -22,7 +22,7 @@
     <div class="flex h-screen overflow-x-hidden overflow-y-hidden select-none">
 
         <div class="bg-gray-100 p-4 overflow-y-auto">
-            <MudTreeView Items="Nodes" T="Node" SelectedValueChanged="OnNodeSelected" Hover="true">
+            <MudTreeView Items="@_nodes" T="Node" SelectedValueChanged="OnNodeSelected" Hover="true">
                 <ItemTemplate>
                     <MudTreeViewItem Items="@context.Nodes" Value="@context" Text="@context.Name" />
                 </ItemTemplate>
