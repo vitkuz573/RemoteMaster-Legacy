@@ -80,7 +80,7 @@
 
                     <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled">
                         <MudButton Disabled="@(!_anyComputerSelected)">PSExec Rules</MudButton>
-                        <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Disabled="@(!_anyComputerSelected)">
+                        <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Disabled="@(!_anyComputerSelected)" Dense="true">
                             <MudMenuItem OnClick='() => ManagePSExecRules(true)'>Enable</MudMenuItem>
                             <MudMenuItem OnClick='() => ManagePSExecRules(false)'>Disable</MudMenuItem>
                         </MudMenu>
