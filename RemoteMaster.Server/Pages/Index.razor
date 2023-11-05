@@ -15,7 +15,7 @@
             <MudText Typo="Typo.h6">Remote Master</MudText>
         </MudDrawerHeader>
         <MudNavMenu>
-            <MudNavLink Match="NavLinkMatch.All" OnClick="OpenHostConfigGenerator">Host Configuration Generator</MudNavLink>
+            <MudNavLink Match="NavLinkMatch.All" OnClick="OpenHostConfigGenerator" Icon="@Icons.Material.Filled.BuildCircle">Host Configuration Generator</MudNavLink>
         </MudNavMenu>
     </MudDrawer>
 
@@ -32,7 +32,7 @@
 
         <div class="flex-grow p-4 flex flex-col gap-4 bg-gray-300">
             <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
-                <MudTabPanel Text="Main">
+                <MudTabPanel Text="Main" Icon="@Icons.Material.Filled.Api">
                     <div class="border-gray-500 w-full flex">
                         <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled" Class="mr-2">
                             <MudButton Disabled="@(!_anyComputerSelected)">Power</MudButton>
@@ -68,7 +68,7 @@
                     </div>
                 </MudTabPanel>
 
-                <MudTabPanel Text="Service">
+                <MudTabPanel Text="Service" Icon="@Icons.Material.Filled.MiscellaneousServices">
                     <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled">
                         <MudButton Disabled="@(!_anyComputerSelected)">Set Monitor State</MudButton>
                         <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Disabled="@(!_anyComputerSelected)" Dense="true">
