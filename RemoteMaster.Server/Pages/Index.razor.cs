@@ -66,12 +66,7 @@ public partial class Index
 
     protected async override Task OnInitializedAsync()
     {
-        var rootFolders = (await DatabaseService.GetNodesAsync(f => f.Parent == null && f is Folder)).Cast<Folder>().ToHashSet();
-
-        foreach (var folder in rootFolders)
-        {
-            Nodes.Add(folder);
-        }
+        Nodes = (await DatabaseService.GetNodesAsync(f => f.Parent == null && f is Folder)).Cast<Node>().ToHashSet();
     }
 
     private void HandleComputerSelection(Computer computer, bool isSelected)
