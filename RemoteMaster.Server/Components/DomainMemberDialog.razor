@@ -1,0 +1,20 @@
+﻿<MudDialog>
+    <DialogContent>
+        <MudExpansionPanels>
+            <MudExpansionPanel Text="Click to view affected hosts">
+                @foreach (var (computer, connection) in Hosts)
+                {
+                    <MudText>@computer.Name (@computer.IPAddress)</MudText>
+                }
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+        <MudTextField Label="Domain" @bind-Value="@_domain" />
+        <MudTextField Label="Username" @bind-Value="@_username" />
+        <MudTextField Label="Password" @bind-Value="@_password" InputType="InputType.Password" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="JoinDomain">Join Domain</MudButton>
+        <MudButton Color="Color.Secondary" OnClick="LeaveDomain">Leave Domain</MudButton>
+    </DialogActions>
+</MudDialog>

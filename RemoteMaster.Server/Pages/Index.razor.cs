@@ -256,31 +256,21 @@ public partial class Index
         }
     }
 
-    private async Task DomainMember(bool isJoin)
+    private async Task DomainMember()
     {
-        var computers = await GetAvailableComputers();
+        var dialogParameters = new DialogParameters<DomainMemberDialog>
+        {
+            { x => x.Hosts, await GetAvailableComputers() }
+        };
 
-        var domain = "it-ktk.local";
-        var username = "vitaly@it-ktk.local";
-        var password = "WaLL@8V1";
-    
-        if (isJoin)
-        {
-            await ComputerCommandService.Execute(computers, async (computer, connection) => await connection.InvokeAsync("SendJoinToDomain", domain, username, password));
-        }
-        else
-        {
-            await ComputerCommandService.Execute(computers, async (computer, connection) => await connection.InvokeAsync("SendUnjoinFromDomain", username, password));
-        }
+        await DialogService.ShowAsync<DomainMemberDialog>("Domain Management", dialogParameters);
     }
 
     private async Task Update()
     {
-        var computers = await GetAvailableComputers();
-
         var dialogParameters = new DialogParameters<UpdateDialog>
         {
-            { x => x.Hosts, computers }
+            { x => x.Hosts, await GetAvailableComputers() }
         };
 
         await DialogService.ShowAsync<UpdateDialog>("Update", dialogParameters);
