@@ -229,11 +229,14 @@ public partial class Index
         await DialogService.ShowAsync<ScreenRecorderDialog>("Screen Recorder", dialogParameters);
     }
     
-    private async Task SetMonitorState(MonitorState state)
+    private async Task SetMonitorState()
     {
-        var computers = await GetAvailableComputers();
+        var dialogParameters = new DialogParameters<MonitorStateDialog>
+        {
+            { x => x.Hosts, await GetAvailableComputers() }
+        };
 
-        await ComputerCommandService.Execute(computers, async (computer, connection) => await connection.InvokeAsync("SendMonitorState", state));
+        await DialogService.ShowAsync<MonitorStateDialog>("Monitor State", dialogParameters);
     }
 
     private async Task ExecuteScript()

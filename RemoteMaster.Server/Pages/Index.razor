@@ -42,14 +42,7 @@
                 </MudTabPanel>
 
                 <MudTabPanel Text="Service" Icon="@Icons.Material.Filled.MiscellaneousServices">
-                    <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled">
-                        <MudButton Disabled="@(!_anyComputerSelected)">Set Monitor State</MudButton>
-                        <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Disabled="@(!_anyComputerSelected)" Dense="true">
-                            <MudMenuItem OnClick='() => SetMonitorState(MonitorState.On)'>On</MudMenuItem>
-                            <MudMenuItem OnClick='() => SetMonitorState(MonitorState.Standby)'>Standby</MudMenuItem>
-                            <MudMenuItem OnClick='() => SetMonitorState(MonitorState.Off)'>Off</MudMenuItem>
-                        </MudMenu>
-                    </MudButtonGroup>
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SetMonitorState" Disabled="@(!_anyComputerSelected)">Set Monitor State</MudButton>
 
                     <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled">
                         <MudButton Disabled="@(!_anyComputerSelected)">PSExec Rules</MudButton>

@@ -1,0 +1,23 @@
+﻿@using RemoteMaster.Shared.Models
+
+<MudDialog>
+    <DialogContent>
+        <MudExpansionPanels>
+            <MudExpansionPanel Text="Click to view affected hosts">
+                @foreach (var (computer, connection) in Hosts)
+                {
+                    <MudText>@computer.Name (@computer.IPAddress)</MudText>
+                }
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+        <MudRadioGroup T="MonitorState" @bind-SelectedOption="@_selectedOption">
+            <MudRadio Option="MonitorState.On">On</MudRadio>
+            <MudRadio Option="MonitorState.Standby">Standby</MudRadio>
+            <MudRadio Option="MonitorState.Off">Off</MudRadio>
+        </MudRadioGroup>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="SetState">Set State</MudButton>
+    </DialogActions>
+</MudDialog>
