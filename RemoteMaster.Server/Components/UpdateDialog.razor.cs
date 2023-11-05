@@ -21,13 +21,11 @@ public partial class UpdateDialog
     public Dictionary<Computer, HubConnection> Hosts { get; set; }
 
     [Inject]
-    private IComputerCommandService ComputerCommandService { get; set; } 
+    private IComputerCommandService ComputerCommandService { get; set; }
 
-    public string SharedFolderPath { get; set; }
-
-    public string Username { get; set; }
-
-    public string Password { get; set; }
+    private string _sharedFolderPath;
+    private string _username;
+    private string _password;
 
     private void Cancel()
     {
@@ -36,7 +34,7 @@ public partial class UpdateDialog
 
     private async Task Confirm()
     {
-        await ComputerCommandService.Execute(Hosts, async (computer, connection) => await connection.InvokeAsync("SendUpdateHost", SharedFolderPath, Username, Password));
+        await ComputerCommandService.Execute(Hosts, async (computer, connection) => await connection.InvokeAsync("SendUpdateHost", _sharedFolderPath, _username, _password));
 
         MudDialog.Close(DialogResult.Ok(true));
     }
