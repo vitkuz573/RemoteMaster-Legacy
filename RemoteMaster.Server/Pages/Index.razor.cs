@@ -130,14 +130,15 @@ public partial class Index
 
     private async Task<Dictionary<Computer, HubConnection>> GetAvailableComputers()
     {
-        var tasks = _selectedComputers.Select(IsComputerAvailable).ToArray();
-        var results = await Task.WhenAll(tasks);
-
-        var availableComputers = results.Where(r => r.isAvailable);
         var computerConnectionDictionary = new Dictionary<Computer, HubConnection>();
 
-        foreach (var (computer, isAvailable) in availableComputers)
+        var tasks = _selectedComputers.Select(async computer =>
         {
+            if (!await IsComputerAvailable(computer))
+            {
+                return;
+            }
+
             var accessToken = HttpContextAccessor.HttpContext?.Request.Cookies["accessToken"];
 
             var connection = new HubConnectionBuilder()
@@ -157,8 +158,13 @@ public partial class Index
 
             await connection.StartAsync();
 
-            computerConnectionDictionary.Add(computer, connection);
-        }
+            lock (computerConnectionDictionary)
+            {
+                computerConnectionDictionary.Add(computer, connection);
+            }
+        }).ToArray();
+
+        await Task.WhenAll(tasks);
 
         return computerConnectionDictionary;
     }
@@ -256,18 +262,18 @@ public partial class Index
         await DialogService.ShowAsync<PsexecRulesDialog>("PSExec rules", dialogParameters);
     }
 
-    private static async Task<(Computer computer, bool isAvailable)> IsComputerAvailable(Computer computer)
+    private static async Task<bool> IsComputerAvailable(Computer computer)
     {
         try
         {
             using var ping = new Ping();
             var reply = await ping.SendPingAsync(computer.IPAddress, 1000);
 
-            return (computer, reply.Status == IPStatus.Success);
+            return reply.Status == IPStatus.Success;
         }
         catch
         {
-            return (computer, false);
+            return false;
         }
     }
 
