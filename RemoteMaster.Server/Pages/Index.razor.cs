@@ -289,9 +289,9 @@ public partial class Index
     
             await ComputerCommandService.Execute(computers, async (computer, connection) => await connection.InvokeAsync("SendScript", fileContent, shellType));
     
-            var dialogParameters = new DialogParameters
+            var dialogParameters = new DialogParameters<ScriptResults>
             {
-                { "Results", _scriptResults }
+                { x => x.Results, _scriptResults }
             };
 
             foreach (var result in _scriptResults)
