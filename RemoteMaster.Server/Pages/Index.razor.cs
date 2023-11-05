@@ -45,8 +45,6 @@ public partial class Index
 
     protected async override Task OnInitializedAsync()
     {
-        _selectedComputers.Clear();
-
         _nodes = (await DatabaseService.GetNodesAsync(f => f.Parent == null && f is Folder)).Cast<Node>().ToHashSet();
     }
 
