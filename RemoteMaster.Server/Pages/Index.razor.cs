@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Diagnostics;
 using System.Net.NetworkInformation;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components;
