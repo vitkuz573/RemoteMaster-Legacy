@@ -12,7 +12,7 @@ namespace RemoteMaster.Server.Components;
 
 #pragma warning disable CA2227
 
-public partial class DomainMemberDialog
+public partial class DomainManagementDialog
 {
     [CascadingParameter]
     private MudDialogInstance MudDialog { get; set; }

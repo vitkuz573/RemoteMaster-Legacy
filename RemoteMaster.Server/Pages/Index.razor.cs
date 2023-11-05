@@ -258,12 +258,12 @@ public partial class Index
 
     private async Task DomainMember()
     {
-        var dialogParameters = new DialogParameters<DomainMemberDialog>
+        var dialogParameters = new DialogParameters<DomainManagementDialog>
         {
             { x => x.Hosts, await GetAvailableComputers() }
         };
 
-        await DialogService.ShowAsync<DomainMemberDialog>("Domain Management", dialogParameters);
+        await DialogService.ShowAsync<DomainManagementDialog>("Domain Management", dialogParameters);
     }
 
     private async Task Update()
