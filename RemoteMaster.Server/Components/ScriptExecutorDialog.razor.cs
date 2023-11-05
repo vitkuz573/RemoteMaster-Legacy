@@ -28,6 +28,7 @@ public partial class ScriptExecutorDialog
     [Inject]
     private IJSRuntime JSRuntime { get; set; }
 
+    private readonly Dictionary<Computer, string> _scriptResults = new();
     private string _path;
     private string _shell;
 
@@ -38,7 +39,16 @@ public partial class ScriptExecutorDialog
 
     private async Task RunScript()
     {
-        // await ComputerCommandService.Execute(Hosts, async (computer, connection) => await connection.InvokeAsync("SendScript", fileContent, shellType));
+        await ComputerCommandService.Execute(Hosts, async (computer, connection) => {
+            connection.On<string>("ReceiveScriptResult", async (result) =>
+            {
+                _scriptResults[computer] = result;
+
+                await InvokeAsync(StateHasChanged);
+            });
+
+            // await connection.InvokeAsync("SendScript", fileContent, shellType);
+        });
 
         MudDialog.Close(DialogResult.Ok(true));
     }

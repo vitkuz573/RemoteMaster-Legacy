@@ -6,17 +6,16 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
-using RemoteMaster.Server.Services;
 
 namespace RemoteMaster.Server.Hubs;
 
 public class ManagementHub : Hub
 {
     private readonly ICertificateService _certificateService;
-    private readonly DatabaseService _databaseService;
+    private readonly IDatabaseService _databaseService;
     private readonly ILogger<ManagementHub> _logger;
 
-    public ManagementHub(ICertificateService certificateService, DatabaseService databaseService, ILogger<ManagementHub> logger)
+    public ManagementHub(ICertificateService certificateService, IDatabaseService databaseService, ILogger<ManagementHub> logger)
     {
         _certificateService = certificateService;
         _databaseService = databaseService;

@@ -26,8 +26,6 @@ public partial class Index
     private HashSet<Node> _nodes;
     private Node _selectedNode;
 
-    private readonly Dictionary<Computer, string> _scriptResults = new();
-
     private readonly List<Computer> _selectedComputers = new();
 
     [Inject]
@@ -144,13 +142,6 @@ public partial class Index
                 })
                 .AddMessagePackProtocol()
                 .Build();
-
-            connection.On<string>("ReceiveScriptResult", async (result) =>
-            {
-                _scriptResults[computer] = result;
-
-                await InvokeAsync(StateHasChanged);
-            });
 
             await connection.StartAsync();
 
