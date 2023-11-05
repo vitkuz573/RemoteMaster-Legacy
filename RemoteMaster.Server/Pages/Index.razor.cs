@@ -40,9 +40,6 @@ public partial class Index
     private IDatabaseService DatabaseService { get; set; }
 
     [Inject]
-    private IWakeOnLanService WakeOnLanService { get; set; }
-
-    [Inject]
     private IComputerCommandService ComputerCommandService { get; set; }
 
     [Inject]
@@ -193,31 +190,15 @@ public partial class Index
         await DialogService.ShowAsync<OpenShellDialog>("Connect to shell", dialogParameters);
     }
 
-    private async Task Power(string action)
+    private async Task Power()
     {
-        var computers = new Dictionary<Computer, HubConnection>();
+        var dialogParameters = new DialogParameters<PowerDialog>
+        {
+            { x => x.AvailableHosts, await GetAvailableComputers() },
+            { x => x.Hosts, _selectedComputers }
+        };
 
-        if (action == "power" || action == "reboot")
-        {
-            computers = await GetAvailableComputers();
-        }
-
-        if (action == "power")
-        {
-            await ComputerCommandService.Execute(computers, async (computer, connection) => await connection.InvokeAsync("ShutdownComputer", "", 0, true));
-        }
-        else if (action == "reboot")
-        {
-            await ComputerCommandService.Execute(computers, async (computer, connection) => await connection.InvokeAsync("RebootComputer", "", 0, true));
-
-        }
-        else if (action == "wakeup")
-        {
-            foreach (var computer in _selectedComputers)
-            {
-                WakeOnLanService.WakeUp(computer.MACAddress);
-            }
-        }
+        await DialogService.ShowAsync<PowerDialog>("Power", dialogParameters);
     }
 
     private async Task DomainMember()
