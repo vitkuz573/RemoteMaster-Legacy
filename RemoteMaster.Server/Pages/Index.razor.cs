@@ -76,7 +76,7 @@ public partial class Index
 
     private async Task UpdateComputersThumbnailsAsync(IEnumerable<Computer> computers)
     {
-        var tasks = computers.Select(UpdateComputerThumbnailAsync).ToArray();
+        var tasks = computers.Select(UpdateComputerThumbnailAsync);
         await Task.WhenAll(tasks);
     }
 
@@ -235,7 +235,7 @@ public partial class Index
             { x => x.Hosts, await GetAvailableComputers() }
         };
 
-        await DialogService.ShowAsync<MonitorStateDialog>("Monitor State", dialogParameters);
+        await DialogService.ShowAsync<MonitorStateDialog>("Monitor state", dialogParameters);
     }
 
     private async Task ExecuteScript()
