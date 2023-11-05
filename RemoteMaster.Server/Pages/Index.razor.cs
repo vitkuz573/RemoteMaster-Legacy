@@ -10,8 +10,6 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using MudBlazor;
-using Polly;
-using Polly.Retry;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Components;
 using RemoteMaster.Server.Models;
@@ -56,15 +54,6 @@ public partial class Index
 
     [Inject]
     private ILogger<Index> Logger { get; set; }
-
-    private readonly AsyncRetryPolicy _retryPolicy = Policy
-        .Handle<Exception>()
-        .WaitAndRetryAsync(new[]
-        {
-            TimeSpan.FromSeconds(5),
-            TimeSpan.FromSeconds(7),
-            TimeSpan.FromSeconds(10),
-        });
 
     protected async override Task OnInitializedAsync()
     {
