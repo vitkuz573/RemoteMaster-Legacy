@@ -1,4 +1,4 @@
-﻿<MudDialog>
+﻿<MudDialog ContentStyle="width: 600px;">
     <DialogContent>
         <MudExpansionPanels>
             <MudExpansionPanel Text="Click to view affected hosts">
@@ -8,13 +8,8 @@
                 }
             </MudExpansionPanel>
         </MudExpansionPanels>
-        <MudTextField Label="Output File Name" @bind-Value="@_outputFileName" />
-        <MudTextField Label="Duration (in seconds)" @bind-Value="@_duration" />
-        <MudCheckBox Checked="@_transferAfterRecording" Label="Transfer after recording?" />
-        @if (_transferAfterRecording)
-        {
-            <MudTextField Label="Transfer Path" @bind-Value="@_transferPath" />
-        }
+        <MudTextField Label="Output File Name" @bind-Value="@_outputFileName" FullWidth />
+        <MudTextField InputType="InputType.Number" Label="Duration (in seconds)" @bind-Value="@_duration" FullWidth />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
