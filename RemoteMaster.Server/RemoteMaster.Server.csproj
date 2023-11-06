@@ -36,6 +36,7 @@
     </PackageReference>
     <PackageReference Include="MudBlazor" />
     <PackageReference Include="Polly" />
+    <PackageReference Include="System.DirectoryServices" />
   </ItemGroup>
 
   <ItemGroup>

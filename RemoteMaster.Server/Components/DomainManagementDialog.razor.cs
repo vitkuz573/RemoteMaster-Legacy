@@ -2,6 +2,8 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.DirectoryServices;
+using System.Runtime.InteropServices;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
@@ -29,6 +31,11 @@ public partial class DomainManagementDialog
     private string _domain;
     private string _username;
     private string _password;
+
+    protected override void OnInitialized()
+    {
+        _domain = GetDomainName();
+    }
 
     private void Cancel()
     {
@@ -62,6 +69,20 @@ public partial class DomainManagementDialog
             _isShowPassword = true;
             _passwordInputIcon = Icons.Material.Filled.Visibility;
             _passwordInput = InputType.Text;
+        }
+    }
+
+    private static string GetDomainName()
+    {
+        try
+        {
+            using var rootDSE = new DirectoryEntry("LDAP://RootDSE");
+
+            return (string)rootDSE.Properties["defaultNamingContext"].Value;
+        }
+        catch (COMException)
+        {
+            return string.Empty;
         }
     }
 }
