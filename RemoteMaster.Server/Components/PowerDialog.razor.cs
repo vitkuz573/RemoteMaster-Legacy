@@ -49,7 +49,7 @@ public partial class PowerDialog
         }
         else if (_selectedOption == "wakeup")
         {
-            foreach (var computer in AvailableHosts.Keys)
+            foreach (var computer in Hosts)
             {
                 WakeOnLanService.WakeUp(computer.MACAddress);
             }

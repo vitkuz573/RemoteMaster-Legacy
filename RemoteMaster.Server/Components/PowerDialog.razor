@@ -8,7 +8,7 @@
                 }
             </MudExpansionPanel>
         </MudExpansionPanels>
-        <MudRadioGroup @bind-SelectedOption="@_selectedOption">
+        <MudRadioGroup T="string" @bind-SelectedOption="@_selectedOption">
             <MudRadio Option="@("shutdown")">Shutdown</MudRadio>
             <MudRadio Option="@("reboot")">Reboot</MudRadio>
             <MudRadio Option="@("wakeup")">Wake Up</MudRadio>
