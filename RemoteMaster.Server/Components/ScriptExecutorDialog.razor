@@ -8,13 +8,13 @@
                 }
             </MudExpansionPanel>
         </MudExpansionPanels>
-        <MudTextField T="string" Label="Path" @bind-Value="_path" ReadOnly="true" />
+
         <MudFileUpload T="IBrowserFile" OnFilesChanged="UploadFiles">
             <ButtonTemplate>
                 <MudButton HtmlTag="label"
                            Variant="Variant.Filled"
                            Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.CloudUpload"
+                           StartIcon="@Icons.Material.Filled.FileUpload"
                            for="@context">
                     Upload Script
                 </MudButton>

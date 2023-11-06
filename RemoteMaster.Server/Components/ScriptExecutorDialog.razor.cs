@@ -5,7 +5,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.JSInterop;
 using MudBlazor;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
@@ -25,11 +24,8 @@ public partial class ScriptExecutorDialog
     [Inject]
     private IComputerCommandService ComputerCommandService { get; set; }
 
-    [Inject]
-    private IJSRuntime JSRuntime { get; set; }
-
     private readonly Dictionary<Computer, string> _scriptResults = new();
-    private string _path;
+    private string _content;
     private string _shell;
 
     private void Cancel()
@@ -47,21 +43,23 @@ public partial class ScriptExecutorDialog
                 await InvokeAsync(StateHasChanged);
             });
 
-            // await connection.InvokeAsync("SendScript", fileContent, shellType);
+            await connection.InvokeAsync("SendScript", _content, _shell);
         });
 
         MudDialog.Close(DialogResult.Ok(true));
     }
 
-    private void UploadFiles(InputFileChangeEventArgs e)
+    private async Task UploadFiles(InputFileChangeEventArgs e)
     {
-        _path = e.File.Name;
+        using var reader = new StreamReader(e.File.OpenReadStream());
+
+        _content = await reader.ReadToEndAsync();
 
         _shell = Path.GetExtension(e.File.Name) switch
         {
-            ".bat" => "cmd",
-            ".cmd" => "cmd",
-            ".ps1" => "powershell"
+            ".bat" => "CMD",
+            ".cmd" => "CMD",
+            ".ps1" => "PowerShell"
         };
     }
 }
