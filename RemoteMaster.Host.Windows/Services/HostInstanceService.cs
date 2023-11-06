@@ -3,8 +3,8 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
-using System.Management;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Windows.Extensions;
 using RemoteMaster.Host.Windows.Models;
 using Serilog;
 
@@ -15,10 +15,7 @@ public class HostInstanceService : IHostInstanceService
     private static string CurrentExecutablePath => Environment.ProcessPath!;
     private const string InstanceArgument = "--user-instance";
 
-    public bool IsRunning()
-    {
-        return FindHostProcesses().Any(IsUserInstance);
-    }
+    public bool IsRunning() => FindHostProcesses().Any(IsUserInstance);
 
     public void Start()
     {
@@ -72,18 +69,8 @@ public class HostInstanceService : IHostInstanceService
 
     private bool IsUserInstance(Process process)
     {
-        var commandLine = GetCommandLineOfProcess(process.Id);
+        var commandLine = process.GetCommandLine();
 
         return commandLine != null && commandLine.Contains(InstanceArgument);
-    }
-
-    private static string GetCommandLineOfProcess(int processId)
-    {
-        var query = $"SELECT CommandLine FROM Win32_Process WHERE ProcessId = {processId}";
-
-        using var searcher = new ManagementObjectSearcher(query);
-        using var objects = searcher.Get();
-
-        return objects.Cast<ManagementBaseObject>().SingleOrDefault()?["CommandLine"]?.ToString();
     }
 }
