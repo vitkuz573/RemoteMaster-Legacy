@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components;
 
@@ -24,7 +25,7 @@ public partial class OpenShellDialog
     [Inject]
     private IComputerCommandService ComputerCommandService { get; set; }
 
-    private string _selectedShell;
+    private Shell _selectedShell;
     private string _selectedUser;
 
     private void Cancel()
@@ -36,31 +37,21 @@ public partial class OpenShellDialog
     {
         await ComputerCommandService.Execute(Hosts, async (computer, connection) =>
         {
-            ProcessStartInfo startInfo;
-
-            if (_selectedShell == "ssh")
+            var sParameter = _selectedUser == "system" ? "-s" : "";
+            var command = _selectedShell switch
             {
-                var command = $"ssh user@{computer.IPAddress}";
+                Shell.SSH => $"ssh user@{computer.IPAddress}",
+                Shell.Cmd => @$"/C psexec \\{computer.IPAddress} {sParameter} -nobanner -accepteula cmd",
+                Shell.PowerShell => @$"/C psexec \\{computer.IPAddress} {sParameter} -nobanner -accepteula powershell",
+                _ => throw new InvalidOperationException($"Unknown shell: {_selectedShell}")
+            };
 
-                startInfo = new ProcessStartInfo()
-                {
-                    FileName = "cmd.exe",
-                    Arguments = $"/C {command}",
-                    UseShellExecute = true,
-                };
-            }
-            else
+            var startInfo = new ProcessStartInfo()
             {
-                var sParameter = _selectedUser == "system" ? "-s" : "";
-                var command = @$"/C psexec \\{computer.IPAddress} {sParameter} -nobanner -accepteula {_selectedShell}";
-
-                startInfo = new ProcessStartInfo()
-                {
-                    FileName = "cmd.exe",
-                    Arguments = command,
-                    UseShellExecute = true,
-                };
-            }
+                FileName = "cmd.exe",
+                Arguments = command,
+                UseShellExecute = true,
+            };
 
             await Task.Run(() => Process.Start(startInfo));
         });

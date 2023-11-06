@@ -1,4 +1,6 @@
-﻿<MudDialog>
+﻿@using RemoteMaster.Shared.Models
+
+<MudDialog>
     <DialogContent>
         <MudContainer>
             <MudExpansionPanels>
@@ -11,9 +13,11 @@
             </MudExpansionPanels>
             <MudGrid>
                 <MudItem xs="6">
-                    <MudRadioGroup @bind-SelectedOption="@_selectedShell">
-                        <MudRadio Option="@("cmd")">Command Line</MudRadio>
-                        <MudRadio Option="@("powershell")">PowerShell</MudRadio>
+                    <MudRadioGroup T="Shell" @bind-SelectedOption="@_selectedShell">
+                        @foreach (Shell shell in Enum.GetValues(typeof(Shell)))
+                        {
+                            <MudRadio Option="@shell">@shell.ToString()</MudRadio>
+                        }
                     </MudRadioGroup>
                 </MudItem>
                 <MudItem xs="6">
