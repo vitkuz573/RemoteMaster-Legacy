@@ -163,7 +163,7 @@ public class ControlHub : Hub<IControlClient>
         _hardwareService.SetMonitorState(state);
     }
 
-    public void SendScript(string script, string shell)
+    public void SendScript(string script, Shell shell)
     {
         _scriptService.Execute(shell, script);
     }

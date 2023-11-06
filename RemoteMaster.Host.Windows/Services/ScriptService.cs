@@ -4,24 +4,25 @@
 
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Models;
+using RemoteMaster.Shared.Models;
 using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
 public class ScriptService : IScriptService
 {
-    public async void Execute(string shell, string script)
+    public async void Execute(Shell shell, string script)
     {
         Log.Information("Executing script with shell: {Shell}", shell);
 
         var publicDirectory = @"C:\Users\Public";
         var fileName = $"{Guid.NewGuid()}";
 
-        if (shell == "CMD")
+        if (shell == Shell.Cmd)
         {
             fileName += ".bat";
         }
-        else if (shell == "PowerShell")
+        else if (shell == Shell.Cmd)
         {
             fileName += ".ps1";
         }
@@ -48,8 +49,8 @@ public class ScriptService : IScriptService
 
             var applicationToRun = shell switch
             {
-                "CMD" => $"cmd.exe /c \"{tempFilePath}\"",
-                "PowerShell" => $"powershell.exe -ExecutionPolicy Bypass -File \"{tempFilePath}\"",
+                Shell.Cmd => $"cmd.exe /c \"{tempFilePath}\"",
+                Shell.PowerShell => $"powershell.exe -ExecutionPolicy Bypass -File \"{tempFilePath}\"",
                 _ => "",
             };
 
