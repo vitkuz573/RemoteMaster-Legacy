@@ -11,39 +11,31 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class ScriptService : IScriptService
 {
-    public async void Execute(Shell shell, string script)
+    public async Task Execute(Shell shell, string script)
     {
         Log.Information("Executing script with shell: {Shell}", shell);
 
         var publicDirectory = @"C:\Users\Public";
-        var fileName = $"{Guid.NewGuid()}";
 
-        if (shell == Shell.Cmd)
+        var extension = shell switch
         {
-            fileName += ".bat";
-        }
-        else if (shell == Shell.PowerShell)
-        {
-            fileName += ".ps1";
-        }
-        else
-        {
-            Log.Error("Unsupported shell encountered: {Shell}", shell);
+            Shell.Cmd => ".bat",
+            Shell.PowerShell => ".ps1",
+            _ => throw new InvalidOperationException($"Unsupported shell: {shell}")
+        };
 
-            throw new InvalidOperationException($"Unsupported shell: {shell}");
-        }
-
+        var fileName = $"{Guid.NewGuid()}{extension}";
         var tempFilePath = Path.Combine(publicDirectory, fileName);
 
         Log.Information("Temporary file path: {TempFilePath}", tempFilePath);
-        File.WriteAllText(tempFilePath, script);
+        await File.WriteAllTextAsync(tempFilePath, script);
 
         try
         {
             if (!File.Exists(tempFilePath))
             {
                 Log.Error("Temp file was not created: {TempFilePath}", tempFilePath);
-
+                
                 return;
             }
 
@@ -64,6 +56,10 @@ public class ScriptService : IScriptService
             };
 
             NativeProcess.Start(options);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An error occurred while executing the script.");
         }
         finally
         {
