@@ -25,8 +25,6 @@ public partial class ScreenRecorderDialog
 
     private string _outputFileName;
     private uint _duration;
-    private bool _transferAfterRecording;
-    private string _transferPath;
 
     protected override void OnInitialized()
     {
