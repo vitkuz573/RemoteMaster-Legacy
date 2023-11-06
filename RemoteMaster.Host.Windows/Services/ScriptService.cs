@@ -22,7 +22,7 @@ public class ScriptService : IScriptService
         {
             fileName += ".bat";
         }
-        else if (shell == Shell.Cmd)
+        else if (shell == Shell.PowerShell)
         {
             fileName += ".ps1";
         }
