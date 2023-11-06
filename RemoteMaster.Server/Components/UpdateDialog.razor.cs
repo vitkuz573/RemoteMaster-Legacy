@@ -26,7 +26,7 @@ public partial class UpdateDialog
     private bool _isShowPassword;
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
-    private string _sharedFolderPath;
+    private string _folderPath;
     private string _username;
     private string _password;
 
@@ -37,7 +37,7 @@ public partial class UpdateDialog
 
     private async Task Confirm()
     {
-        await ComputerCommandService.Execute(Hosts, async (computer, connection) => await connection.InvokeAsync("SendUpdateHost", _sharedFolderPath, _username, _password));
+        await ComputerCommandService.Execute(Hosts, async (computer, connection) => await connection.InvokeAsync("SendUpdateHost", _folderPath, _username, _password));
 
         MudDialog.Close(DialogResult.Ok(true));
     }
