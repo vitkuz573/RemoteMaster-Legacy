@@ -77,12 +77,25 @@ public partial class DomainManagementDialog
         try
         {
             using var rootDSE = new DirectoryEntry("LDAP://RootDSE");
-
-            return (string)rootDSE.Properties["defaultNamingContext"].Value;
+            var ldapDomain = (string)rootDSE.Properties["defaultNamingContext"].Value;
+            
+            return ConvertLdapDomainToNormal(ldapDomain);
         }
         catch (COMException)
         {
             return string.Empty;
         }
+    }
+
+    private static string ConvertLdapDomainToNormal(string ldapDomain)
+    {
+        var parts = ldapDomain.Split(',');
+
+        for (var i = 0; i < parts.Length; i++)
+        {
+            parts[i] = parts[i].Replace("DC=", "");
+        }
+
+        return string.Join('.', parts);
     }
 }
