@@ -14,6 +14,7 @@ public partial class MainLayout
     {
         LayoutProperties = new LayoutProperties()
         {
+            DrawerWidthLeft = "250px",
             DrawerWidthRight = "300px"
         }
     };
