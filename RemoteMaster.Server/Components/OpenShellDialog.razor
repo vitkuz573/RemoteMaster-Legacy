@@ -17,7 +17,7 @@
                         @foreach (Shell shell in Enum.GetValues(typeof(Shell)))
                         {
                             <MudItem xs="12">
-                                <MudRadio Option="@shell" Dense="true">@shell.ToString()</MudRadio>
+                                <MudRadio Option="@shell" Dense="true">@shell</MudRadio>
                             </MudItem>
                         }
                     </MudRadioGroup>

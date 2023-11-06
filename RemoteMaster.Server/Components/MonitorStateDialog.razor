@@ -14,7 +14,7 @@
             @foreach (MonitorState monitorState in Enum.GetValues(typeof(MonitorState)))
             {
                 <MudItem xs="12">
-                    <MudRadio Option="@monitorState" Dense="true">@monitorState.ToString()</MudRadio>
+                    <MudRadio Option="@monitorState" Dense="true">@monitorState</MudRadio>
                 </MudItem>
             }
         </MudRadioGroup>
