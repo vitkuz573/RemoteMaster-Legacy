@@ -238,12 +238,12 @@ public partial class Connect : IDisposable
         _isMenuOpen = !_isMenuOpen;
     }
 
-    private async void OnChangeScreen(ChangeEventArgs e)
+    private async Task OnChangeScreen(ChangeEventArgs e)
     {
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendSelectedScreen", e.Value.ToString()));
     }
 
-    private async void ChangeQuality(int quality)
+    private async Task ChangeQuality(int quality)
     {
         _imageQuality = quality;
 
@@ -285,22 +285,22 @@ public partial class Connect : IDisposable
         await JSRuntime.InvokeVoidAsync("history.replaceState", null, "", newUri);
     }
 
-    private async void KillHost()
+    private async Task KillHost()
     {
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendKillHost"));
     }
 
-    private async void RebootComputer()
+    private async Task RebootComputer()
     {
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendRebootComputer", string.Empty, 0, true));
     }
 
-    private async void ShutdownComputer()
+    private async Task ShutdownComputer()
     {
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendShutdownComputer", string.Empty, 0, true));
     }
 
-    private async void SendCtrlAltDel()
+    private async Task SendCtrlAltDel()
     {
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendCommandToService", "CtrlAltDel"));
     }
