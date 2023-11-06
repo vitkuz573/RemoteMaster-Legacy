@@ -32,11 +32,6 @@ public partial class DomainManagementDialog
     private string _username;
     private string _password;
 
-    protected override void OnInitialized()
-    {
-        _domain = GetDomainName();
-    }
-
     private void Cancel()
     {
         MudDialog.Cancel();
@@ -72,19 +67,16 @@ public partial class DomainManagementDialog
         }
     }
 
-    private static string GetDomainName()
+    private void DomainDiscovery()
     {
         try
         {
             using var rootDSE = new DirectoryEntry("LDAP://RootDSE");
             var ldapDomain = (string)rootDSE.Properties["defaultNamingContext"].Value;
             
-            return ConvertLdapDomainToNormal(ldapDomain);
+            _domain = ConvertLdapDomainToNormal(ldapDomain);
         }
-        catch (COMException)
-        {
-            return string.Empty;
-        }
+        catch (COMException) { }
     }
 
     private static string ConvertLdapDomainToNormal(string ldapDomain)
