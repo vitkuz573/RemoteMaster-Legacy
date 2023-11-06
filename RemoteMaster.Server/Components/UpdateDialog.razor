@@ -8,9 +8,9 @@
                 }
             </MudExpansionPanel>
         </MudExpansionPanels>
-        <MudTextField Label="Path to Shared Folder" @bind-Value="@_sharedFolderPath" />
-        <MudTextField Label="Username" @bind-Value="@_username" />
-        <MudTextField Label="Password" @bind-Value="@_password" InputType="InputType.Password" />
+        <MudTextField T="string" Label="Path to Shared Folder" @bind-Value="@_sharedFolderPath" />
+        <MudTextField T="string" Label="Username" @bind-Value="@_username" />
+        <MudTextField T="string" Label="Password" @bind-Value="@_password" InputType="InputType.Password" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
