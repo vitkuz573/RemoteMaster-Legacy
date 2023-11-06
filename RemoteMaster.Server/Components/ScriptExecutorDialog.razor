@@ -1,4 +1,6 @@
-﻿<MudDialog>
+﻿@using RemoteMaster.Shared.Models
+
+<MudDialog>
     <DialogContent>
         <MudExpansionPanels>
             <MudExpansionPanel Text="Click to view affected hosts">
@@ -15,12 +17,13 @@
                            Variant="Variant.Filled"
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.FileUpload"
+                           FullWidth
                            for="@context">
                     Upload Script
                 </MudButton>
             </ButtonTemplate>
         </MudFileUpload>
-        <MudTextField T="string" Label="Shell" @bind-Value="@_shell" ReadOnly="true" />
+        <MudTextField T="Shell?" Label="Shell" @bind-Value="@_shell" ReadOnly="true" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>

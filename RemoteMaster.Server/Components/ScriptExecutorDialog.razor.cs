@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components;
 
@@ -26,7 +27,14 @@ public partial class ScriptExecutorDialog
 
     private readonly Dictionary<Computer, string> _scriptResults = new();
     private string _content;
-    private string _shell;
+    private Shell? _shell;
+
+    protected override void OnInitialized()
+    {
+        _shell = null;
+
+        base.OnInitialized();
+    }
 
     private void Cancel()
     {
@@ -57,9 +65,9 @@ public partial class ScriptExecutorDialog
 
         _shell = Path.GetExtension(e.File.Name) switch
         {
-            ".bat" => "CMD",
-            ".cmd" => "CMD",
-            ".ps1" => "PowerShell"
+            ".bat" => Shell.Cmd,
+            ".cmd" => Shell.Cmd,
+            ".ps1" => Shell.PowerShell
         };
     }
 }
