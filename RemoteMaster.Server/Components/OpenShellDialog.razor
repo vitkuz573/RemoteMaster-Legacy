@@ -16,14 +16,20 @@
                     <MudRadioGroup T="Shell" @bind-SelectedOption="@_selectedShell">
                         @foreach (Shell shell in Enum.GetValues(typeof(Shell)))
                         {
-                            <MudRadio Option="@shell">@shell.ToString()</MudRadio>
+                            <MudItem xs="12">
+                                <MudRadio Option="@shell" Dense="true">@shell.ToString()</MudRadio>
+                            </MudItem>
                         }
                     </MudRadioGroup>
                 </MudItem>
                 <MudItem xs="6">
                     <MudRadioGroup @bind-SelectedOption="@_selectedUser">
-                        <MudRadio Option="@("current")">Current User</MudRadio>
-                        <MudRadio Option="@("system")">System</MudRadio>
+                        <MudItem xs="12">
+                            <MudRadio Option="@("current")" Dense="true">Current User</MudRadio>
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudRadio Option="@("system")" Dense="true">System</MudRadio>
+                        </MudItem>
                     </MudRadioGroup>
                 </MudItem>
             </MudGrid>
