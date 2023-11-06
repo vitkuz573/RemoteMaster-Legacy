@@ -24,7 +24,7 @@ public partial class ScreenRecorderDialog
     private IComputerCommandService ComputerCommandService { get; set; }
 
     private string _outputFileName;
-    private string _duration;
+    private uint _duration;
     private bool _transferAfterRecording;
     private string _transferPath;
 

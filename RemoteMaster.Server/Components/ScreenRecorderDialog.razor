@@ -8,8 +8,8 @@
                 }
             </MudExpansionPanel>
         </MudExpansionPanels>
-        <MudTextField Label="Output File Name" @bind-Value="@_outputFileName" FullWidth />
-        <MudTextField InputType="InputType.Number" Label="Duration (in seconds)" @bind-Value="@_duration" FullWidth />
+        <MudTextField T="string" Label="Output File Name" @bind-Value="@_outputFileName" FullWidth />
+        <MudNumericField T="uint" HideSpinButtons="true" Label="Duration (in seconds)" @bind-Value="@_duration" FullWidth />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
