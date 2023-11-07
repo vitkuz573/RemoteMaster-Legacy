@@ -64,7 +64,9 @@ public class HostInstanceService : IHostInstanceService
 
     private static IEnumerable<Process> FindHostProcesses()
     {
-        return Process.GetProcessesByName(Path.GetFileNameWithoutExtension(CurrentExecutablePath));
+        var processName = Path.GetFileNameWithoutExtension(CurrentExecutablePath);
+
+        return Process.GetProcessesByName(processName);
     }
 
     private bool IsUserInstance(Process process)
