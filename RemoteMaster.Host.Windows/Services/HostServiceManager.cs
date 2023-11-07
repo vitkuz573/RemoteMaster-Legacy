@@ -83,7 +83,7 @@ public class HostServiceManager : IHostServiceManager
                 Log.Information("{ServiceName} Service is not installed.", _hostServiceConfig.Name);
             }
 
-            if (_hostInstanceService.IsRunning())
+            if (_hostInstanceService.IsRunning)
             {
                 _hostInstanceService.Stop();
             }

@@ -15,7 +15,7 @@ public class HostInstanceService : IHostInstanceService
     private static string CurrentExecutablePath => Environment.ProcessPath!;
     private const string InstanceArgument = "--user-instance";
 
-    public bool IsRunning() => FindHostProcesses().Any(IsUserInstance);
+    public bool IsRunning => FindHostProcesses().Any(IsUserInstance);
 
     public void Start()
     {

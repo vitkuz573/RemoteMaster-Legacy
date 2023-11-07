@@ -154,7 +154,7 @@ public class MessageLoopService : IHostedService
     {
         _hostInstanceService.Stop();
 
-        while (_hostInstanceService.IsRunning())
+        while (_hostInstanceService.IsRunning)
         {
             await Task.Delay(RESTART_DELAY);
         }

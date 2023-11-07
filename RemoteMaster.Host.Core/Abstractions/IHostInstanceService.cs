@@ -6,7 +6,7 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IHostInstanceService
 {
-    bool IsRunning();
+    bool IsRunning { get; }
 
     void Start();
 
