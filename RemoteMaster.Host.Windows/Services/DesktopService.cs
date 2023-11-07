@@ -33,13 +33,13 @@ public class DesktopService : IDesktopService
                 desktopName = null;
 
                 Log.Error("Failed to get user object information.");
-                
+
                 return false;
             }
 
             var charLength = (int)cbLengthNeeded / sizeof(char) - 1;
             desktopName = new string(pDesktopBytes, 0, charLength);
-            
+
             Log.Information("Retrieved desktop name: {DesktopName}", desktopName);
 
             return true;
@@ -57,7 +57,7 @@ public class DesktopService : IDesktopService
             if (inputDesktop == null)
             {
                 Log.Warning("Failed to open input desktop.");
-                
+
                 return false;
             }
 

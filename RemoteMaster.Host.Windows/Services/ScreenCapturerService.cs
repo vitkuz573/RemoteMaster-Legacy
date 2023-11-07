@@ -6,11 +6,11 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using Microsoft.IO;
-using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Models;
-using SkiaSharp;
 using Serilog;
+using SkiaSharp;
 
 namespace RemoteMaster.Host.Windows.Services;
 

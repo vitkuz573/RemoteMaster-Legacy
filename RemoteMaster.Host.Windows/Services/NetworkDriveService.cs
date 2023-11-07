@@ -33,12 +33,12 @@ public class NetworkDriveService : INetworkDriveService
                 if (result == WIN32_ERROR.ERROR_ALREADY_ASSIGNED)
                 {
                     Log.Warning("Network drive with remote path {RemotePath} is already assigned.", remotePath);
-                    
+
                     return;
                 }
 
                 Log.Error("Failed to map network drive with remote path {RemotePath}. Error code: {Result}", remotePath, (int)result);
-                
+
                 throw new Win32Exception((int)result);
             }
 
@@ -57,7 +57,7 @@ public class NetworkDriveService : INetworkDriveService
             if (result != WIN32_ERROR.NO_ERROR)
             {
                 Log.Error("Failed to cancel network drive with remote path {RemotePath}. Error code: {Result}", remotePath, (int)result);
-                
+
                 throw new Win32Exception((int)result);
             }
 

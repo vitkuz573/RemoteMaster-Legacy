@@ -35,7 +35,7 @@ public class ScriptService : IScriptService
             if (!File.Exists(tempFilePath))
             {
                 Log.Error("Temp file was not created: {TempFilePath}", tempFilePath);
-                
+
                 return;
             }
 

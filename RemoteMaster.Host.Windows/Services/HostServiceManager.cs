@@ -145,7 +145,7 @@ public class HostServiceManager : IHostServiceManager
         }
 
         var ipAddressFilePath = Path.Combine(targetDirectoryPath, "IPAddress.txt");
-        
+
         try
         {
             File.WriteAllText(ipAddressFilePath, ipv4Address);

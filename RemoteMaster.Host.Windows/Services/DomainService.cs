@@ -24,7 +24,7 @@ public class DomainService : IDomainService
     public void UnjoinFromDomain(string user, string password)
     {
         var result = NetUnjoinDomain(null, user, password, NETSETUP_ACCT_DELETE);
-        
+
         if (result != 0)
         {
             throw new Win32Exception((int)result, "Failed to unjoin from the domain.");

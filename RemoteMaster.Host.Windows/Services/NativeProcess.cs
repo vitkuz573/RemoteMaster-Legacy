@@ -39,7 +39,7 @@ public class NativeProcess
         }
 
         var sessionId = !startInfo.ForceConsoleSession ? FindTargetSessionId(startInfo.TargetSessionId) : WTSGetActiveConsoleSessionId();
-        
+
         SafeFileHandle? hUserTokenDup = null;
         SafeFileHandle? stdInReadHandle = null;
         SafeFileHandle? stdOutReadHandle = null;

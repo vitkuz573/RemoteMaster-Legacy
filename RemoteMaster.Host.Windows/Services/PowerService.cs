@@ -26,7 +26,7 @@ public unsafe class PowerService : IPowerService
         fixed (char* pMessage = message)
         {
             var result = InitiateSystemShutdown(null, pMessage, timeout, forceAppsClosed, true);
-            
+
             if (result == 0)
             {
                 Log.Error("Failed to initiate system reboot.");
@@ -46,7 +46,7 @@ public unsafe class PowerService : IPowerService
         fixed (char* pMessage = message)
         {
             var result = InitiateSystemShutdown(null, pMessage, timeout, forceAppsClosed, false);
-            
+
             if (result == 0)
             {
                 Log.Error("Failed to initiate system shutdown.");
