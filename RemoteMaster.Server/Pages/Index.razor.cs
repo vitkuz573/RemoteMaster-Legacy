@@ -27,7 +27,7 @@ public partial class Index
     private Node _selectedNode;
 
     private readonly List<Computer> _selectedComputers = new();
-
+    
     [Inject]
     public NavigationManager NavigationManager { get; set; }
 
