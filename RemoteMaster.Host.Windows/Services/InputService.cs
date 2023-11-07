@@ -18,7 +18,7 @@ public class InputService : IInputService
 {
     private bool _disposed = false;
     private readonly BlockingCollection<Action> _operationQueue;
-    private CancellationTokenSource _cts;
+    private readonly CancellationTokenSource _cts;
     private readonly int _numWorkers;
     private readonly object _ctsLock = new();
     private readonly ConcurrentBag<INPUT> _inputPool = new();
@@ -90,11 +90,7 @@ public class InputService : IInputService
     {
         lock (_ctsLock)
         {
-            if (_cts != null)
-            {
-                _cts.Cancel();
-                _cts = null;
-            }
+            _cts?.Cancel();
         }
     }
 
@@ -147,18 +143,21 @@ public class InputService : IInputService
                 0 => dto.State switch
                 {
                     ButtonState.Down => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN,
-                    ButtonState.Up => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP
+                    ButtonState.Up => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP,
+                    _ => throw new InvalidOperationException("Invalid button state")
                 },
                 1 => dto.State switch
                 {
                     ButtonState.Down => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEDOWN,
-                    ButtonState.Up => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEUP
+                    ButtonState.Up => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEUP,
+                    _ => throw new InvalidOperationException("Invalid button state")
                 },
                 2 => dto.State switch
                 {
                     ButtonState.Down => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN,
-                    ButtonState.Up => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP
-                }
+                    ButtonState.Up => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP,
+                    _ => throw new InvalidOperationException("Invalid button state")
+                },
             };
 
             var xyPercent = GetAbsolutePercentFromRelativePercent(dto.X, dto.Y, viewer.ScreenCapturer);
