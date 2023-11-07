@@ -10,21 +10,22 @@ namespace RemoteMaster.Host.Windows.Services;
 public class HostMonitorService : IHostedService
 {
     private readonly IHostInstanceService _hostInstanceService;
-    private Timer _timer;
+    private readonly Timer _timer;
 
     public HostMonitorService(IHostInstanceService hostInstanceService)
     {
         _hostInstanceService = hostInstanceService;
+        _timer = new Timer(MonitorHostInstance, null, Timeout.Infinite, 0);
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _timer = new Timer(MonitorHostInstance, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
+        _timer.Change(TimeSpan.Zero, TimeSpan.FromMinutes(1));
 
         return Task.CompletedTask;
     }
 
-    private void MonitorHostInstance(object state)
+    private void MonitorHostInstance(object? state)
     {
         if (!_hostInstanceService.IsRunning)
         {
@@ -35,9 +36,8 @@ public class HostMonitorService : IHostedService
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _timer?.Dispose();
+        _timer.Dispose();
 
         return Task.CompletedTask;
     }
 }
-
