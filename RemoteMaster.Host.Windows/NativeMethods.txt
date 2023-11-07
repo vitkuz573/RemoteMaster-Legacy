@@ -80,5 +80,3 @@ NetJoinDomain
 NetUnjoinDomain
 
 NETSETUP_ACCT_DELETE
-
-MoveFileEx
