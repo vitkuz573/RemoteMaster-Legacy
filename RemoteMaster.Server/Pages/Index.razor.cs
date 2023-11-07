@@ -29,6 +29,9 @@ public partial class Index
     private readonly List<Computer> _selectedComputers = new();
 
     [Inject]
+    public NavigationManager NavigationManager { get; set; }
+
+    [Inject]
     private IDialogService DialogService { get; set; }
 
     [Inject]
@@ -257,5 +260,10 @@ public partial class Index
         };
         
         await DialogService.ShowAsync<HostConfigurationGenerator>("Host Configuration Generator", dialogOptions);
+    }
+
+    private void Logout()
+    {
+        NavigationManager.NavigateTo("Identity/Account/Logout", true);
     }
 }
