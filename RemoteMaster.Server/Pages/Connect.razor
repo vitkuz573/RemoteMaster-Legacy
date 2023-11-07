@@ -1,9 +1,7 @@
 ﻿@page "/{Host}/connect"
-@using RemoteMaster.Server.Models;
-@using RemoteMaster.Shared.Models;
 
 <MudLayout Class="select-none">
-    <MudDrawer @bind-Open="@_isMenuOpen" Fixed="false" Anchor="Anchor.End" Elevation="0" Variant="@DrawerVariant.Persistent">
+    <MudDrawer @bind-Open="@_isMenuOpen" Anchor="Anchor.End" Elevation="1">
         <MudDrawerHeader>
             <MudText Typo="Typo.h6">Settings</MudText>
         </MudDrawerHeader>
@@ -44,34 +42,26 @@
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.History" OnClick="RebootComputer">Reboot Computer</MudNavLink>
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.PowerOff" OnClick="ShutdownComputer">Shutdown Computer</MudNavLink>
 
-            <MudNavLink Icon="@Icons.Material.Filled.Computer">Host Version: @(_hostVersion ?? "Not Available")</MudNavLink>
+            <MudNavLink Icon="@Icons.Material.Filled.Computer">Host Version: @(_hostVersion)</MudNavLink>
         </MudNavMenu>
     </MudDrawer>
-
-    <div class="relative h-screen w-screen overflow-hidden flex justify-center items-center">
-        <div class="absolute h-full w-full bg-gray-800 text-white p-6">
-            <div class="flex items-center justify-between">
-                <button @onclick="ToggleMenu" class="absolute right-6 top-1/2 transform px-3 py-2 rounded-lg bg-gray-500 hover:bg-gray-600 focus:outline-none opacity-50 @($"{(_isMenuOpen ? "translate-x-20" : "translate-x-0")}")">
-                    <span class="sr-only">Open Menu</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                    </svg>
-                </button>
-            </div>
-            <div class="h-full w-full overflow-y-auto">
-                <div class="h-full w-full">
-                    @if (!string.IsNullOrEmpty(_screenDataUrl))
-                    {
-                        <img id="screenImage" src="@_screenDataUrl" @oncontextmenu:preventDefault="true" @oncontextmenu="(MouseEventArgs e) => {}" draggable="false" class="object-contain mx-auto max-h-full max-w-full" onload="window.revokeUrl(this.src)" @onmousemove="OnMouseMove" @onmousedown="OnMouseUpDown" @onmouseup="OnMouseUpDown" @onmouseover="OnMouseOver" @onmousewheel="OnMouseWheel" />
-                    }
-                    else
-                    {
-                        <p class="text-white">@_statusMessage</p>
-                    }
-                </div>
-            </div>
+    
+    <div class="absolute h-full w-full bg-gray-800 text-white p-6">
+        <div class="flex items-center justify-between">
+            <button @onclick="ToggleMenu" class="absolute right-6 top-1/2 transform px-3 py-2 rounded-lg bg-gray-500 hover:bg-gray-600 focus:outline-none opacity-50">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </button>
         </div>
 
-
-        </div>
+        @if (!string.IsNullOrEmpty(_screenDataUrl))
+        {
+            <img id="screenImage" src="@_screenDataUrl" @oncontextmenu:preventDefault="true" @oncontextmenu="(MouseEventArgs e) => {}" draggable="false" class="object-contain mx-auto max-h-full max-w-full" onload="window.revokeUrl(this.src)" @onmousemove="OnMouseMove" @onmousedown="OnMouseUpDown" @onmouseup="OnMouseUpDown" @onmouseover="OnMouseOver" @onmousewheel="OnMouseWheel" />
+        }
+        else
+        {
+            <p>Establishing connection...</p>
+        }
+    </div>
 </MudLayout>

@@ -31,7 +31,6 @@ public partial class Connect : IDisposable
     [Inject]
     private IHttpContextAccessor HttpContextAccessor { get; set; }
 
-    private string _statusMessage = "Establishing connection...";
     private string? _screenDataUrl;
 
     private bool _isMenuOpen = false;
