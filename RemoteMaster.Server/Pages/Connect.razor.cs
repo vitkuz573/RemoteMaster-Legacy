@@ -238,9 +238,11 @@ public partial class Connect : IDisposable
         _isMenuOpen = !_isMenuOpen;
     }
 
-    private async Task OnChangeScreen(ChangeEventArgs e)
+    private async void OnChangeScreen(string display)
     {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendSelectedScreen", e.Value.ToString()));
+        _selectedDisplay = display;
+
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendSelectedScreen", display));
     }
 
     private async Task ChangeQuality(int quality)
