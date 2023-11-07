@@ -3,6 +3,7 @@
 <MudLayout Class="select-none">
     <MudDrawer @bind-Open="@_isMenuOpen" Anchor="Anchor.End" Elevation="1">
         <MudDrawerHeader>
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowBackIosNew" OnClick="ToggleMenu" Class="@( _isMenuOpen ? "drawer-button-open" : "drawer-button-closed")" />
             <MudText Typo="Typo.h6">Settings</MudText>
         </MudDrawerHeader>
         <MudNavMenu>
@@ -38,7 +39,7 @@
             </MudNavLink>
 
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.DeleteSweep" OnClick="KillHost">Kill Host</MudNavLink>
-            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.KeyboardControlKey" OnClick="SendCtrlAltDel">Send Ctrl+Alt+Del</MudNavLink>
+            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.ControlPoint" OnClick="SendCtrlAltDel">Send Ctrl+Alt+Del</MudNavLink>
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.History" OnClick="RebootComputer">Reboot Computer</MudNavLink>
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.PowerOff" OnClick="ShutdownComputer">Shutdown Computer</MudNavLink>
 
@@ -47,14 +48,6 @@
     </MudDrawer>
     
     <div class="absolute h-full w-full bg-gray-800 text-white p-6">
-        <div class="flex items-center justify-between">
-            <button @onclick="ToggleMenu" class="absolute right-6 top-1/2 transform px-3 py-2 rounded-lg bg-gray-500 hover:bg-gray-600 focus:outline-none opacity-50">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-            </button>
-        </div>
-
         @if (!string.IsNullOrEmpty(_screenDataUrl))
         {
             <img id="screenImage" src="@_screenDataUrl" @oncontextmenu:preventDefault="true" @oncontextmenu="(MouseEventArgs e) => {}" draggable="false" class="object-contain mx-auto max-h-full max-w-full" onload="window.revokeUrl(this.src)" @onmousemove="OnMouseMove" @onmousedown="OnMouseUpDown" @onmouseup="OnMouseUpDown" @onmouseover="OnMouseOver" @onmousewheel="OnMouseWheel" />
@@ -65,3 +58,27 @@
         }
     </div>
 </MudLayout>
+
+<style>
+    .drawer-button-closed, .drawer-button-closed:hover {
+        position: fixed;
+        top: 50%;
+        right: 0;
+        transform: translateY(-50%);
+        background-color: white;
+        border-radius: 50% 0 0 50%;
+        transition: right 0.3s ease;
+    }
+
+    .drawer-button-open, .drawer-button-open:hover {
+        position: fixed;
+        top: 50%;
+        right: 300px; /* width of the MudDrawer */
+        transform: translateY(-50%);
+        background-color: white;
+        border-radius: 50% 0 0 50%;
+        transition: right 0.3s ease;
+    }
+</style>
+
+
