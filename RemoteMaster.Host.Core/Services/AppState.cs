@@ -9,15 +9,15 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class AppState : IAppState
 {
-    public event EventHandler<IViewer> ViewerAdded;
+    public event EventHandler<IViewer>? ViewerAdded;
 
-    public event EventHandler<IViewer> ViewerRemoved;
+    public event EventHandler<IViewer>? ViewerRemoved;
 
     private readonly ConcurrentDictionary<string, IViewer> _viewers = new();
 
     public IReadOnlyDictionary<string, IViewer> Viewers => _viewers;
 
-    public bool TryGetViewer(string connectionId, out IViewer viewer)
+    public bool TryGetViewer(string connectionId, out IViewer? viewer)
     {
         return _viewers.TryGetValue(connectionId, out viewer);
     }
@@ -39,13 +39,13 @@ public class AppState : IAppState
         return result;
     }
 
-    public bool TryRemoveViewer(string connectionId, out IViewer viewer)
+    public bool TryRemoveViewer(string connectionId, out IViewer? viewer)
     {
         var result = _viewers.TryRemove(connectionId, out viewer);
 
         if (result)
         {
-            viewer.StopStreaming();
+            viewer?.StopStreaming();
         }
 
         return result;

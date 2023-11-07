@@ -111,10 +111,10 @@ public class WoLConfiguratorService : IWoLConfiguratorService
 
                     if (subKey.GetValue("PnPCapabilities") != null)
                     {
-                        var currentValue = (int)subKey.GetValue("PnPCapabilities");
+                        var currentValue = (int?)subKey.GetValue("PnPCapabilities");
                         Log.Information("Current PnPCapabilities for adapter {Adapter}: {Value}", subKeyName, currentValue);
 
-                        subKey.SetValue("PnPCapabilities", AllowToTurnOff); // или другое значение
+                        subKey.SetValue("PnPCapabilities", AllowToTurnOff);
                         Log.Information("Set PnPCapabilities for adapter {Adapter} to {Value}", subKeyName, AllowToTurnOff);
                     }
                 }

@@ -11,8 +11,8 @@ namespace RemoteMaster.Host.Core;
 
 public class HostInfoEnricher : ILogEventEnricher
 {
-    private LogEventProperty _cachedIpProperty;
-    private LogEventProperty _cachedHostProperty;
+    private LogEventProperty? _cachedIpProperty;
+    private LogEventProperty? _cachedHostProperty;
 
     public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
     {

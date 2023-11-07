@@ -12,7 +12,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class CommandListenerService : IHostedService
 {
-    private HubConnection _connection;
+    private HubConnection? _connection;
 
     private readonly AsyncRetryPolicy _retryPolicy = Policy
         .Handle<Exception>()
@@ -61,14 +61,17 @@ public class CommandListenerService : IHostedService
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-        await _connection.StopAsync();
+        if (_connection != null)
+        {
+            await _connection.StopAsync();
+        }
     }
 
     private async Task SafeInvokeAsync(Func<Task> action)
     {
         await _retryPolicy.ExecuteAsync(async () =>
         {
-            if (_connection.State == HubConnectionState.Connected)
+            if (_connection?.State == HubConnectionState.Connected)
             {
                 await action();
             }

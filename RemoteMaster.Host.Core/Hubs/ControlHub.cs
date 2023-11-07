@@ -98,7 +98,7 @@ public class ControlHub : Hub<IControlClient>
     {
         if (_appState.TryGetViewer(Context.ConnectionId, out var viewer))
         {
-            viewer.SetSelectedScreen(displayName);
+            viewer?.SetSelectedScreen(displayName);
         }
         else
         {
@@ -140,7 +140,10 @@ public class ControlHub : Hub<IControlClient>
     {
         if (_appState.TryGetViewer(Context.ConnectionId, out var viewer))
         {
-            action(viewer);
+            if (viewer != null)
+            {
+                action(viewer);
+            }
         }
         else
         {

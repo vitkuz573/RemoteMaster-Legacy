@@ -20,7 +20,7 @@ public abstract class ScreenCapturerService : IScreenCapturerService
     private readonly IDesktopService _desktopService;
     private readonly object _screenBoundsLock = new();
     private readonly object _bitmapLock = new();
-    private SKBitmap _skBitmap;
+    private SKBitmap? _skBitmap;
     private int _quality = 25;
 
     public bool TrackCursor { get; set; } = false;
@@ -80,6 +80,7 @@ public abstract class ScreenCapturerService : IScreenCapturerService
             catch (Exception ex)
             {
                 Log.Error(ex, "Error while getting next frame.");
+
                 return null;
             }
         }
@@ -182,6 +183,5 @@ public abstract class ScreenCapturerService : IScreenCapturerService
 
     public virtual void Dispose()
     {
-        //
     }
 }
