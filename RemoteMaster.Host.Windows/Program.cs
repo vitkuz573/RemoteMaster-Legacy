@@ -91,17 +91,20 @@ internal class Program
 
                         Log.Information("Incoming request from IP: {Ip}", remoteIp);
 
-                        if (remoteIp.Equals(IPAddress.Loopback) || remoteIp.Equals(IPAddress.IPv6Loopback) || remoteIp.Equals(localIPv6Mapped))
+                        if (remoteIp != null)
                         {
-                            Log.Information("Localhost detected");
-
-                            var identity = new ClaimsIdentity(new[]
+                            if (remoteIp.Equals(IPAddress.Loopback) || remoteIp.Equals(IPAddress.IPv6Loopback) || remoteIp.Equals(localIPv6Mapped))
                             {
-                                new Claim(ClaimTypes.Name, "localhost@localdomain"),
-                            }, "LocalAuth");
+                                Log.Information("Localhost detected");
 
-                            context.Principal = new ClaimsPrincipal(identity);
-                            context.Success();
+                                var identity = new ClaimsIdentity(new[]
+                                {
+                                    new Claim(ClaimTypes.Name, "localhost@localdomain"),
+                                }, "LocalAuth");
+
+                                context.Principal = new ClaimsPrincipal(identity);
+                                context.Success();
+                            }
                         }
 
                         return Task.CompletedTask;
