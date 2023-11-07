@@ -22,10 +22,11 @@ public class HostInstanceService : IHostInstanceService
         try
         {
             StartNewInstance();
+            Log.Information("Successfully started a new instance of the host.");
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error starting new instance of the host");
+            Log.Error(ex, "Error starting new instance of the host. Executable path: {Path}", CurrentExecutablePath);
         }
     }
 
@@ -38,12 +39,13 @@ public class HostInstanceService : IHostInstanceService
                 if (IsUserInstance(process))
                 {
                     process.Kill();
+                    Log.Information("Successfully stopped an instance of the host. Process ID: {ProcessId}", process.Id);
                 }
             }
         }
         catch (Exception ex)
         {
-            Log.Information("{Message}", ex.Message);
+            Log.Error(ex, "Error stopping instances of the host. Message: {Message}", ex.Message);
         }
     }
 
@@ -60,6 +62,7 @@ public class HostInstanceService : IHostInstanceService
         };
 
         NativeProcess.Start(options);
+        Log.Information("Started a new instance of the host with options: {Options}", options);
     }
 
     private static IEnumerable<Process> FindHostProcesses()
