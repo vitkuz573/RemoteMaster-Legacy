@@ -4,6 +4,7 @@
 
 using System.Drawing;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
@@ -15,13 +16,15 @@ namespace RemoteMaster.Host.Core.Services;
 public class Viewer : IViewer
 {
     private readonly IHubContext<ControlHub, IControlClient> _hubContext;
-    private CancellationTokenSource _streamingCts;
+    private readonly CancellationTokenSource _cts;
 
     public Viewer(IScreenCapturerService screenCapturer, IHubContext<ControlHub, IControlClient> hubContext, string connectionId)
     {
         ScreenCapturer = screenCapturer;
         _hubContext = hubContext;
         ConnectionId = connectionId;
+
+        _cts = new();
 
         _ = SendHostVersion();
 
@@ -34,8 +37,7 @@ public class Viewer : IViewer
 
     public async Task StartStreaming()
     {
-        _streamingCts = new CancellationTokenSource();
-        var cancellationToken = _streamingCts.Token;
+        var cancellationToken = _cts.Token;
 
         await SendDisplays(ScreenCapturer.GetDisplays());
 
@@ -54,7 +56,7 @@ public class Viewer : IViewer
         }
     }
 
-    private async IAsyncEnumerable<byte[]> StreamScreenDataAsync(CancellationToken cancellationToken)
+    private async IAsyncEnumerable<byte[]> StreamScreenDataAsync([EnumeratorCancellation] CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -65,7 +67,7 @@ public class Viewer : IViewer
                 yield return screenData;
             }
 
-            await Task.Delay(16); // Добавить задержку для управления частотой кадров
+            await Task.Delay(16);
         }
     }
 
@@ -73,7 +75,7 @@ public class Viewer : IViewer
     {
         Log.Information("Stopping screen stream for ID {connectionId}", ConnectionId);
 
-        _streamingCts?.Cancel();
+        _cts?.Cancel();
     }
 
     public async Task SendDisplays(IEnumerable<Display> displays)

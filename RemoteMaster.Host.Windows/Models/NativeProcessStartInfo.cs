@@ -8,17 +8,17 @@ public class NativeProcessStartInfo
 {
     public string FileName { get; init; }
 
-    public string Arguments { get; init; }
+    public string? Arguments { get; init; } = null;
 
     public int TargetSessionId { get; init; }
 
-    public bool ForceConsoleSession { get; init; }
+    public bool ForceConsoleSession { get; init; } = true;
 
-    public string DesktopName { get; init; }
+    public string DesktopName { get; init; } = "Default";
 
-    public bool CreateNoWindow { get; init; }
+    public bool CreateNoWindow { get; init; } = true;
 
-    public bool UseCurrentUserToken { get; init; }
+    public bool UseCurrentUserToken { get; init; } = false;
 
     public bool InheritHandles { get; init; } = false;
 
