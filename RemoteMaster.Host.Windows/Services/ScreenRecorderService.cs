@@ -2,14 +2,12 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Diagnostics;
 using System.Drawing;
 using FFMpegCore;
 using FFMpegCore.Enums;
 using FFMpegCore.Extensions.System.Drawing.Common;
 using FFMpegCore.Pipes;
 using RemoteMaster.Host.Core.Abstractions;
-using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
@@ -17,11 +15,12 @@ public class ScreenRecorderService : IScreenRecorderService
 {
     private readonly IScreenCapturerService _screenCapturerService;
     private CancellationTokenSource _cancellationTokenSource;
-    private Task _recordingTask;
+    private Task _recordingTask = Task.CompletedTask;
 
     public ScreenRecorderService(IScreenCapturerService screenCapturerService)
     {
         _screenCapturerService = screenCapturerService;
+        _cancellationTokenSource = new();
     }
 
     public Task StartRecordingAsync(string outputPath)
@@ -34,12 +33,12 @@ public class ScreenRecorderService : IScreenRecorderService
 
     public async Task StopRecordingAsync()
     {
-        if (_cancellationTokenSource != null)
+        if (_recordingTask != null)
         {
             _cancellationTokenSource.Cancel();
             await _recordingTask;
-            _cancellationTokenSource = null;
-            _recordingTask = null;
+            _cancellationTokenSource = new CancellationTokenSource();
+            _recordingTask = Task.CompletedTask;
         }
     }
 
@@ -62,21 +61,16 @@ public class ScreenRecorderService : IScreenRecorderService
     {
         while (!cancellationToken.IsCancellationRequested)
         {
-            var stopwatch = new Stopwatch();
-
-            stopwatch.Start();
-
             var frameData = _screenCapturerService.GetNextFrame();
 
-            stopwatch.Stop();
+            if (frameData == null)
+            {
+                continue;
+            }
 
-            Log.Information("Execution time: {ExecutionTime} ms", stopwatch.ElapsedMilliseconds);
-
-            // Конвертировать frameData в Bitmap
             using var stream = new MemoryStream(frameData);
             using var bitmap = new Bitmap(stream);
 
-            // Обернуть Bitmap с помощью BitmapVideoFrameWrapper
             yield return new BitmapVideoFrameWrapper(bitmap);
         }
     }
