@@ -17,6 +17,7 @@ namespace RemoteMaster.Host.Windows.Services;
 public class BitBltCapturer : ScreenCapturerService
 {
     private Bitmap _bitmap;
+    private readonly ICursorRenderService _cursorRenderService;
 
     public override Rectangle CurrentScreenBounds { get; protected set; } = Screen.PrimaryScreen?.Bounds ?? Rectangle.Empty;
 
@@ -25,8 +26,6 @@ public class BitBltCapturer : ScreenCapturerService
     public override string SelectedScreen { get; protected set; } = Screen.PrimaryScreen?.DeviceName ?? string.Empty;
 
     protected override bool HasMultipleScreens => Screen.AllScreens.Length > 1;
-
-    private readonly ICursorRenderService _cursorRenderService;
 
     public BitBltCapturer(ICursorRenderService cursorRenderService, IDesktopService desktopService) : base(desktopService)
     {
