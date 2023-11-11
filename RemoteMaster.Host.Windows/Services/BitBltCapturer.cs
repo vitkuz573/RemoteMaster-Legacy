@@ -30,12 +30,12 @@ public class BitBltCapturer : ScreenCapturerService
 
     protected override string VirtualScreenName => VIRTUAL_SCREEN_NAME;
 
-    private readonly ICursorRenderService _cursorRenderer;
+    private readonly ICursorRenderService _cursorRenderService;
 
-    public BitBltCapturer(ICursorRenderService cursorRenderer, IDesktopService desktopService) : base(desktopService)
+    public BitBltCapturer(ICursorRenderService cursorRenderService, IDesktopService desktopService) : base(desktopService)
     {
-        _cursorRenderer = cursorRenderer;
-        _cursorRenderer.RequestScreenBounds += () => CurrentScreenBounds;
+        _cursorRenderService = cursorRenderService;
+        _cursorRenderService.RequestScreenBounds += () => CurrentScreenBounds;
 
         _bitmap = new Bitmap(CurrentScreenBounds.Width, CurrentScreenBounds.Height, PixelFormat.Format32bppArgb);
     }
@@ -96,7 +96,7 @@ public class BitBltCapturer : ScreenCapturerService
 
         if (TrackCursor)
         {
-            _cursorRenderer.DrawCursor(memoryGraphics);
+            _cursorRenderService.DrawCursor(memoryGraphics);
         }
 
         return SaveBitmap(_bitmap);
@@ -166,7 +166,7 @@ public class BitBltCapturer : ScreenCapturerService
 
         RaiseScreenChangedEvent(CurrentScreenBounds);
 
-        _cursorRenderer.UpdateScreenBounds(CurrentScreenBounds);
+        _cursorRenderService.UpdateScreenBounds(CurrentScreenBounds);
     }
 
     public override void Dispose()
