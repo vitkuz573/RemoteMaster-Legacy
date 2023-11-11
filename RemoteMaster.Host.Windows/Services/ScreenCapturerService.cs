@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using Microsoft.IO;
 using RemoteMaster.Host.Core.Abstractions;
@@ -11,6 +10,7 @@ using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Models;
 using Serilog;
 using SkiaSharp;
+using SkiaSharp.Views.Desktop;
 
 namespace RemoteMaster.Host.Windows.Services;
 
@@ -21,8 +21,6 @@ public abstract class ScreenCapturerService : IScreenCapturerService
     private readonly RecyclableMemoryStreamManager _recycleManager = new();
     private readonly IDesktopService _desktopService;
     private readonly object _screenBoundsLock = new();
-    private readonly object _bitmapLock = new();
-    private SKBitmap? _skBitmap;
     private int _quality = 25;
 
     public bool TrackCursor { get; set; } = false;
@@ -154,25 +152,9 @@ public abstract class ScreenCapturerService : IScreenCapturerService
             throw new ArgumentNullException(nameof(bitmap));
         }
 
-        var info = new SKImageInfo(bitmap.Width, bitmap.Height, SKColorType.Bgra8888);
+        var skBitmap = bitmap.ToSKBitmap();
 
-        byte[] data;
-
-        var bitmapData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadOnly, bitmap.PixelFormat);
-
-        try
-        {
-            lock (_bitmapLock)
-            {
-                _skBitmap ??= new SKBitmap(info);
-                _skBitmap.InstallPixels(info, bitmapData.Scan0, bitmapData.Stride);
-                data = EncodeBitmap(_skBitmap);
-            }
-        }
-        finally
-        {
-            bitmap.UnlockBits(bitmapData);
-        }
+        var data = EncodeBitmap(skBitmap);
 
         return data;
     }
