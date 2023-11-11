@@ -44,7 +44,7 @@ public abstract class ScreenCapturerService : IScreenCapturerService
         {
             if (value < 0 || value > 100)
             {
-                throw new ArgumentException("Quality must be between 0 and 100");
+                throw new ArgumentOutOfRangeException(nameof(value), "Quality must be between 0 and 100");
             }
 
             _quality = value;
