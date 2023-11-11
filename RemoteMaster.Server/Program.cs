@@ -40,6 +40,7 @@ void ConfigureCoreServices(WebApplicationBuilder builder)
     {
         configuration.MinimumLevel.Debug();
         configuration.WriteTo.Console();
+        configuration.Filter.ByExcluding((logEvent) => logEvent.MessageTemplate.Text.Contains("Initializing Razor view compiler with compiled view"));
     });
 
     builder.Services.ConfigureApplicationCookie(options =>
