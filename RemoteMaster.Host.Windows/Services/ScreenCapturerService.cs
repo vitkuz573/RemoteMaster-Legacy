@@ -16,6 +16,8 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public abstract class ScreenCapturerService : IScreenCapturerService
 {
+    protected const string VIRTUAL_SCREEN = "VIRTUAL_SCREEN";
+
     private readonly RecyclableMemoryStreamManager _recycleManager = new();
     private readonly IDesktopService _desktopService;
     private readonly object _screenBoundsLock = new();
@@ -34,8 +36,6 @@ public abstract class ScreenCapturerService : IScreenCapturerService
     public abstract string SelectedScreen { get; protected set; }
 
     protected abstract bool HasMultipleScreens { get; }
-
-    protected abstract string VirtualScreen { get; }
 
     public int Quality
     {
@@ -56,10 +56,19 @@ public abstract class ScreenCapturerService : IScreenCapturerService
     protected ScreenCapturerService(IDesktopService desktopService)
     {
         _desktopService = desktopService;
+
         Init();
     }
 
     protected abstract void Init();
+
+    protected abstract byte[]? GetFrame();
+
+    public abstract IEnumerable<Display> GetDisplays();
+
+    public abstract void SetSelectedScreen(string displayName);
+
+    protected abstract void RefreshCurrentScreenBounds();
 
     public byte[]? GetNextFrame()
     {
@@ -86,12 +95,6 @@ public abstract class ScreenCapturerService : IScreenCapturerService
         }
     }
 
-    protected abstract byte[]? GetFrame();
-
-    public abstract IEnumerable<Display> GetDisplays();
-
-    public abstract void SetSelectedScreen(string displayName);
-
     public byte[]? GetThumbnail(int maxWidth, int maxHeight)
     {
         var originalScreen = SelectedScreen;
@@ -99,7 +102,7 @@ public abstract class ScreenCapturerService : IScreenCapturerService
         // If there are multiple screens, set to VirtualScreenName temporarily
         if (HasMultipleScreens)
         {
-            SetSelectedScreen(VirtualScreen);
+            SetSelectedScreen(VIRTUAL_SCREEN);
         }
 
         var frame = GetNextFrame();
@@ -121,8 +124,6 @@ public abstract class ScreenCapturerService : IScreenCapturerService
 
         return EncodeBitmap(thumbnail);
     }
-
-    protected abstract void RefreshCurrentScreenBounds();
 
     protected byte[] EncodeBitmap(SKBitmap bitmap)
     {

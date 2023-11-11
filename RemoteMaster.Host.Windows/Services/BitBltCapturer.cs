@@ -26,8 +26,6 @@ public class BitBltCapturer : ScreenCapturerService
 
     protected override bool HasMultipleScreens => Screen.AllScreens.Length > 1;
 
-    protected override string VirtualScreen => "VIRTUAL_SCREEN";
-
     private readonly ICursorRenderService _cursorRenderService;
 
     public BitBltCapturer(ICursorRenderService cursorRenderService, IDesktopService desktopService) : base(desktopService)
@@ -52,7 +50,7 @@ public class BitBltCapturer : ScreenCapturerService
     {
         try
         {
-            if (SelectedScreen == VirtualScreen)
+            if (SelectedScreen == VIRTUAL_SCREEN)
             {
                 return GetVirtualScreenFrame();
             }
@@ -123,7 +121,7 @@ public class BitBltCapturer : ScreenCapturerService
         {
             screens.Add(new Display
             {
-                Name = VirtualScreen,
+                Name = VIRTUAL_SCREEN,
                 IsPrimary = false,
                 Resolution = new Size(VirtualScreenBounds.Width, VirtualScreenBounds.Height),
             });
@@ -139,7 +137,7 @@ public class BitBltCapturer : ScreenCapturerService
             return;
         }
 
-        if (displayName == VirtualScreen || Screens.ContainsKey(displayName))
+        if (displayName == VIRTUAL_SCREEN || Screens.ContainsKey(displayName))
         {
             SelectedScreen = displayName;
         }
@@ -153,7 +151,7 @@ public class BitBltCapturer : ScreenCapturerService
 
     protected override void RefreshCurrentScreenBounds()
     {
-        if (SelectedScreen == VirtualScreen)
+        if (SelectedScreen == VIRTUAL_SCREEN)
         {
             CurrentScreenBounds = VirtualScreenBounds;
         }
