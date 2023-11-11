@@ -31,9 +31,9 @@ public partial class DomainManagementDialog
     private bool _isShowPassword;
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
-    private string _domain = string.Empty;
-    private string _username;
-    private string _password;
+    private string? _domain;
+    private string? _username;
+    private string? _password;
 
     private void Cancel()
     {
