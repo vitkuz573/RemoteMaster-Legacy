@@ -36,6 +36,7 @@
     </PackageReference>
     <PackageReference Include="MudBlazor" />
     <PackageReference Include="Polly" />
+    <PackageReference Include="Serilog.Sinks.Console" />
     <PackageReference Include="System.DirectoryServices" />
   </ItemGroup>
 

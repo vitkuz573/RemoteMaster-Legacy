@@ -112,6 +112,15 @@
           "Polly.Core": "8.1.0"
         }
       },
+      "Serilog.Sinks.Console": {
+        "type": "Direct",
+        "requested": "[5.0.0, )",
+        "resolved": "5.0.0",
+        "contentHash": "IZ6bn79k+3SRXOBpwSOClUHikSkp2toGPCZ0teUkscv4dpDg9E2R2xVsNkLmwddE4OpNVO3N0xiYsAH556vN8Q==",
+        "dependencies": {
+          "Serilog": "3.1.0"
+        }
+      },
       "System.DirectoryServices": {
         "type": "Direct",
         "requested": "[7.0.1, )",
@@ -1445,6 +1454,11 @@
         "type": "Transitive",
         "resolved": "4.3.0",
         "contentHash": "VB5cn/7OzUfzdnC8tqAIMQciVLiq2epm2NrAm1E9OjNRyG4lVhfR61SMcLizejzQP8R8Uf/0l5qOIbUEi+RdEg=="
+      },
+      "Serilog": {
+        "type": "Transitive",
+        "resolved": "3.1.0",
+        "contentHash": "UPJGG8Hz12obhtAELHb0q83j0YpO1vGCypUbH0P4wMZnrpcqmrSLhHkZ/4Ojc+iNVpLwZ/wPBVC3lwSzzoZ/MQ=="
       },
       "SQLitePCLRaw.bundle_e_sqlite3": {
         "type": "Transitive",
