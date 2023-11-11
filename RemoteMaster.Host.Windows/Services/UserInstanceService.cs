@@ -74,7 +74,7 @@ public class UserInstanceService : IUserInstanceService
         return Process.GetProcessesByName(processName);
     }
 
-    private static bool IsUserInstance(Process process)
+    private bool IsUserInstance(Process process)
     {
         var commandLine = process.GetCommandLine();
         
