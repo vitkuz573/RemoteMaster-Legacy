@@ -25,10 +25,13 @@ public partial class DomainManagementDialog
     [Inject]
     private IComputerCommandService ComputerCommandService { get; set; }
 
+    [Inject]
+    private ILogger<DomainManagementDialog> Logger { get; set; }
+
     private bool _isShowPassword;
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
-    private string _domain;
+    private string _domain = string.Empty;
     private string _username;
     private string _password;
 
@@ -72,22 +75,16 @@ public partial class DomainManagementDialog
         try
         {
             using var rootDSE = new DirectoryEntry("LDAP://RootDSE");
-            var ldapDomain = (string)rootDSE.Properties["defaultNamingContext"].Value;
+            var ldapDomain = (string)rootDSE.Properties["defaultNamingContext"].Value!;
             
-            _domain = ConvertLdapDomainToNormal(ldapDomain);
+            if (ldapDomain != null)
+            {
+                _domain = ldapDomain.Replace("DC=", "").Replace(',', '.');
+            }
         }
-        catch (COMException) { }
-    }
-
-    private static string ConvertLdapDomainToNormal(string ldapDomain)
-    {
-        var parts = ldapDomain.Split(',');
-
-        for (var i = 0; i < parts.Length; i++)
+        catch (COMException ex)
         {
-            parts[i] = parts[i].Replace("DC=", "");
+            Logger.LogError(ex, "Error during domain discovery.");
         }
-
-        return string.Join('.', parts);
     }
 }

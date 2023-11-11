@@ -12,9 +12,9 @@ public class HostMonitorService : IHostedService
     private readonly IUserInstanceService _userInstanceService;
     private readonly Timer _timer;
 
-    public HostMonitorService(IUserInstanceService hostInstanceService)
+    public HostMonitorService(IUserInstanceService userInstanceService)
     {
-        _userInstanceService = hostInstanceService;
+        _userInstanceService = userInstanceService;
         _timer = new Timer(MonitorHostInstance, null, Timeout.Infinite, 0);
     }
 

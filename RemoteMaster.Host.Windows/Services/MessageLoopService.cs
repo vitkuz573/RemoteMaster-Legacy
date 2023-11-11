@@ -20,9 +20,9 @@ public class MessageLoopService : IHostedService
     private readonly WNDPROC _wndProcDelegate;
     private readonly IUserInstanceService _userInstanceService;
 
-    public MessageLoopService(IUserInstanceService hostInstanceService)
+    public MessageLoopService(IUserInstanceService userInstanceService)
     {
-        _userInstanceService = hostInstanceService;
+        _userInstanceService = userInstanceService;
 
         _wndProcDelegate = WndProc;
     }
