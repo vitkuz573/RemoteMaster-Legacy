@@ -35,7 +35,7 @@ public abstract class ScreenCapturerService : IScreenCapturerService
 
     protected abstract bool HasMultipleScreens { get; }
 
-    protected abstract string VirtualScreenName { get; }
+    protected abstract string VirtualScreen { get; }
 
     public int Quality
     {
@@ -99,7 +99,7 @@ public abstract class ScreenCapturerService : IScreenCapturerService
         // If there are multiple screens, set to VirtualScreenName temporarily
         if (HasMultipleScreens)
         {
-            SetSelectedScreen(VirtualScreenName);
+            SetSelectedScreen(VirtualScreen);
         }
 
         var frame = GetNextFrame();
