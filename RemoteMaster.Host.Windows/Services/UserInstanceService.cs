@@ -13,7 +13,7 @@ namespace RemoteMaster.Host.Windows.Services;
 public class UserInstanceService : IUserInstanceService
 {
     private const string Argument = "--user-instance";
-    private static readonly string CurrentExecutablePath = Environment.ProcessPath!;
+    private readonly string CurrentExecutablePath = Environment.ProcessPath!;
 
     public bool IsRunning => FindHostProcesses().Any(IsUserInstance);
 
@@ -51,7 +51,7 @@ public class UserInstanceService : IUserInstanceService
         }
     }
 
-    private static void StartNewInstance()
+    private void StartNewInstance()
     {
         var options = new NativeProcessStartInfo(CurrentExecutablePath, -1)
         {
@@ -67,7 +67,7 @@ public class UserInstanceService : IUserInstanceService
         Log.Information("Started a new instance of the host with options: {Options}", options);
     }
 
-    private static IEnumerable<Process> FindHostProcesses()
+    private IEnumerable<Process> FindHostProcesses()
     {
         var processName = Path.GetFileNameWithoutExtension(CurrentExecutablePath);
         
