@@ -36,6 +36,8 @@
     </PackageReference>
     <PackageReference Include="MudBlazor" />
     <PackageReference Include="Polly" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Extensions.Logging" />
     <PackageReference Include="Serilog.Sinks.Console" />
     <PackageReference Include="System.DirectoryServices" />
   </ItemGroup>

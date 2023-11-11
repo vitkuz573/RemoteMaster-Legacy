@@ -11,6 +11,7 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Components;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
+using Serilog;
 
 namespace RemoteMaster.Server.Pages;
 
@@ -39,9 +40,6 @@ public partial class Index
 
     [Inject]
     private IHttpContextAccessor HttpContextAccessor { get; set; }
-
-    [Inject]
-    private ILogger<Index> Logger { get; set; }
 
     protected async override Task OnInitializedAsync()
     {
@@ -83,7 +81,7 @@ public partial class Index
 
     private async Task UpdateComputerThumbnailAsync(Computer computer)
     {
-        Logger.LogInformation("UpdateComputerThumbnailAsync Called for {IPAddress}", computer.IPAddress);
+        Log.Information("UpdateComputerThumbnailAsync Called for {IPAddress}", computer.IPAddress);
 
         var accessToken = HttpContextAccessor.HttpContext?.Request.Cookies["accessToken"];
 
@@ -108,12 +106,12 @@ public partial class Index
 
             await connection.StartAsync();
 
-            Logger.LogInformation("Calling ConnectAs with Intention.GetThumbnail for {IPAddress}", computer.IPAddress);
+            Log.Information("Calling ConnectAs with Intention.GetThumbnail for {IPAddress}", computer.IPAddress);
             await connection.InvokeAsync("ConnectAs", Intention.GetThumbnail);
         }
         catch (Exception ex)
         {
-            Logger.LogError("Exception in UpdateComputerThumbnailAsync for {IPAddress}: {Message}", computer.IPAddress, ex.Message);
+            Log.Error("Exception in UpdateComputerThumbnailAsync for {IPAddress}: {Message}", computer.IPAddress, ex.Message);
         }
     }
 

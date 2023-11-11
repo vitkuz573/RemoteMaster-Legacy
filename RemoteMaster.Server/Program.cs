@@ -12,6 +12,7 @@ using RemoteMaster.Server.Hubs;
 using RemoteMaster.Server.Middlewares;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,6 +31,17 @@ void ConfigureServices(WebApplicationBuilder builder)
 
 void ConfigureCoreServices(WebApplicationBuilder builder)
 {
+    builder.Services.AddLogging(builder =>
+    {
+        builder.ClearProviders();
+    });
+
+    builder.Host.UseSerilog((context, configuration) =>
+    {
+        configuration.MinimumLevel.Debug();
+        configuration.WriteTo.Console();
+    });
+
     builder.Services.ConfigureApplicationCookie(options =>
     {
         options.AccessDeniedPath = "/Identity/Account/Login";

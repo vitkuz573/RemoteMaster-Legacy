@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
+using Serilog;
 
 namespace RemoteMaster.Server.Components;
 
@@ -24,9 +25,6 @@ public partial class DomainManagementDialog
 
     [Inject]
     private IComputerCommandService ComputerCommandService { get; set; }
-
-    [Inject]
-    private ILogger<DomainManagementDialog> Logger { get; set; }
 
     private bool _isShowPassword;
     private InputType _passwordInput = InputType.Password;
@@ -84,7 +82,7 @@ public partial class DomainManagementDialog
         }
         catch (COMException ex)
         {
-            Logger.LogError(ex, "Error during domain discovery.");
+            Log.Error(ex, "Error during domain discovery.");
         }
     }
 }
