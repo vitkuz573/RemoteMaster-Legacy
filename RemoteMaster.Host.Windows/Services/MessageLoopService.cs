@@ -18,11 +18,11 @@ public class MessageLoopService : IHostedService
 
     private HWND _hwnd;
     private readonly WNDPROC _wndProcDelegate;
-    private readonly IHostInstanceService _hostInstanceService;
+    private readonly IUserInstanceService _userInstanceService;
 
-    public MessageLoopService(IHostInstanceService hostInstanceService)
+    public MessageLoopService(IUserInstanceService hostInstanceService)
     {
-        _hostInstanceService = hostInstanceService;
+        _userInstanceService = hostInstanceService;
 
         _wndProcDelegate = WndProc;
     }
@@ -152,13 +152,13 @@ public class MessageLoopService : IHostedService
 
     private async Task RestartHostAsync()
     {
-        _hostInstanceService.Stop();
+        _userInstanceService.Stop();
 
-        while (_hostInstanceService.IsRunning)
+        while (_userInstanceService.IsRunning)
         {
             await Task.Delay(RESTART_DELAY);
         }
 
-        _hostInstanceService.Start();
+        _userInstanceService.Start();
     }
 }

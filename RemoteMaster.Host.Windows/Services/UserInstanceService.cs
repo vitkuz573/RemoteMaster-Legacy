@@ -10,10 +10,10 @@ using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostInstanceService : IHostInstanceService
+public class UserInstanceService : IUserInstanceService
 {
-    private static string CurrentExecutablePath => Environment.ProcessPath!;
-    private const string InstanceArgument = "--user-instance";
+    private const string Argument = "--user-instance";
+    private static readonly string CurrentExecutablePath = Environment.ProcessPath!;
 
     public bool IsRunning => FindHostProcesses().Any(IsUserInstance);
 
@@ -32,20 +32,22 @@ public class HostInstanceService : IHostInstanceService
 
     public void Stop()
     {
-        try
+        foreach (var process in FindHostProcesses())
         {
-            foreach (var process in FindHostProcesses())
+            if (!IsUserInstance(process))
             {
-                if (IsUserInstance(process))
-                {
-                    process.Kill();
-                    Log.Information("Successfully stopped an instance of the host. Process ID: {ProcessId}", process.Id);
-                }
+                continue;
             }
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Error stopping instances of the host. Message: {Message}", ex.Message);
+
+            try
+            {
+                process.Kill();
+                Log.Information("Successfully stopped an instance of the host. Process ID: {ProcessId}", process.Id);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error stopping instances of the host. Message: {Message}", ex.Message);
+            }
         }
     }
 
@@ -53,7 +55,7 @@ public class HostInstanceService : IHostInstanceService
     {
         var options = new NativeProcessStartInfo(CurrentExecutablePath, -1)
         {
-            Arguments = InstanceArgument,
+            Arguments = Argument,
             ForceConsoleSession = true,
             DesktopName = "default",
             CreateNoWindow = false,
@@ -68,14 +70,14 @@ public class HostInstanceService : IHostInstanceService
     private static IEnumerable<Process> FindHostProcesses()
     {
         var processName = Path.GetFileNameWithoutExtension(CurrentExecutablePath);
-
+        
         return Process.GetProcessesByName(processName);
     }
 
-    private bool IsUserInstance(Process process)
+    private static bool IsUserInstance(Process process)
     {
         var commandLine = process.GetCommandLine();
-
-        return commandLine != null && commandLine.Contains(InstanceArgument);
+        
+        return commandLine != null && commandLine.Contains(Argument);
     }
 }

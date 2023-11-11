@@ -13,7 +13,7 @@ namespace RemoteMaster.Host.Windows.Services;
 public class HostServiceManager : IHostServiceManager
 {
     private readonly IHostLifecycleService _hostLifecycleService;
-    private readonly IHostInstanceService _hostInstanceService;
+    private readonly IUserInstanceService _userInstanceService;
     private readonly IServiceManager _serviceManager;
     private readonly IHostConfigurationService _configurationService;
 
@@ -22,10 +22,10 @@ public class HostServiceManager : IHostServiceManager
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Host";
 
-    public HostServiceManager(IHostLifecycleService hostLifecycleService, IHostInstanceService hostInstanceService, IServiceManager serviceManager, IHostConfigurationService configurationService, IServiceConfiguration hostServiceConfig)
+    public HostServiceManager(IHostLifecycleService hostLifecycleService, IUserInstanceService hostInstanceService, IServiceManager serviceManager, IHostConfigurationService configurationService, IServiceConfiguration hostServiceConfig)
     {
         _hostLifecycleService = hostLifecycleService;
-        _hostInstanceService = hostInstanceService;
+        _userInstanceService = hostInstanceService;
         _serviceManager = serviceManager;
         _configurationService = configurationService;
         _hostServiceConfig = hostServiceConfig;
@@ -83,9 +83,9 @@ public class HostServiceManager : IHostServiceManager
                 Log.Information("{ServiceName} Service is not installed.", _hostServiceConfig.Name);
             }
 
-            if (_hostInstanceService.IsRunning)
+            if (_userInstanceService.IsRunning)
             {
-                _hostInstanceService.Stop();
+                _userInstanceService.Stop();
             }
 
             DeleteFiles();

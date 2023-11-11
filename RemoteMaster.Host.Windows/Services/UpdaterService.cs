@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Text;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Host.Windows.Extensions;
 using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
@@ -36,8 +37,10 @@ public class UpdaterService : IUpdaterService
 
             _networkDriveService.MapNetworkDrive(sharedFolder, username, password);
 
-            DirectoryCopy(sourceFolder, _updateFolderPath, true, true);
-            Log.Information("Copied from {SourceFolder} to {UpdateFolderPath}", sourceFolder, _updateFolderPath);
+            var sourceDir = new DirectoryInfo(sourceFolder);
+            sourceDir.DeepCopy(_updateFolderPath, true);
+
+            Log.Information("Copied from {SourceFolder} to {DestinationFolder}", sourceFolder, _updateFolderPath);
 
             _networkDriveService.CancelNetworkDrive(sharedFolder);
         }
@@ -52,7 +55,7 @@ public class UpdaterService : IUpdaterService
         try
         {
             var contentBuilder = new StringBuilder();
-            contentBuilder.AppendLine("Stop-Service -Name \"" + _hostServiceConfig.Name + "\"");
+            contentBuilder.AppendLine($"Stop-Service -Name \"{_hostServiceConfig.Name}\"");
             contentBuilder.AppendLine("Get-Process -Name \"RemoteMaster.Host\" -ErrorAction SilentlyContinue | Stop-Process -Force");
             contentBuilder.AppendLine("$filesLocked = $true");
             contentBuilder.AppendLine("while ($filesLocked) {");
@@ -71,7 +74,7 @@ public class UpdaterService : IUpdaterService
             contentBuilder.AppendLine("}");
             contentBuilder.AppendLine("Copy-Item -Path \"$PSScriptRoot\\Update\\*.*\" -Destination $PSScriptRoot -Recurse -Force");
             contentBuilder.AppendLine("Start-Sleep -Seconds 2");
-            contentBuilder.AppendLine("Start-Service -Name \"" + _hostServiceConfig.Name + "\"");
+            contentBuilder.AppendLine($"Start-Service -Name \"{_hostServiceConfig.Name}\"");
             contentBuilder.AppendLine("Start-Sleep -Seconds 2");
             contentBuilder.AppendLine($"Remove-Item -Path \"{_updateFolderPath}\" -Recurse -Force");
             contentBuilder.AppendLine($"Remove-Item -Path \"{_scriptPath}\" -Force");
@@ -96,40 +99,10 @@ public class UpdaterService : IUpdaterService
             process.WaitForExit();
 
             Log.Information("Executed updater script: {ScriptPath}", _scriptPath);
-            Log.Information("{Output}", output);
         }
         catch (Exception ex)
         {
             Log.Error("Error in Execute method: {Message}", ex.Message);
-        }
-    }
-
-    private void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs = true, bool overwriteExisting = false)
-    {
-        var sourceDir = new DirectoryInfo(sourceDirName);
-
-        if (!Directory.Exists(destDirName))
-        {
-            Directory.CreateDirectory(destDirName);
-        }
-
-        foreach (var file in sourceDir.GetFiles())
-        {
-            var destPath = Path.Combine(destDirName, file.Name);
-
-            if (!File.Exists(destPath) || overwriteExisting)
-            {
-                file.CopyTo(destPath, true);
-            }
-        }
-
-        if (copySubDirs)
-        {
-            foreach (var subdir in sourceDir.GetDirectories())
-            {
-                var destSubDir = Path.Combine(destDirName, subdir.Name);
-                DirectoryCopy(subdir.FullName, destSubDir, true, overwriteExisting);
-            }
         }
     }
 }

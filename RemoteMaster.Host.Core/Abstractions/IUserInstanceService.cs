@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface IHostInstanceService
+public interface IUserInstanceService
 {
     bool IsRunning { get; }
 

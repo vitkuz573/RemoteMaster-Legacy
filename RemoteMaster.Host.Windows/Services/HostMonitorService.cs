@@ -9,12 +9,12 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class HostMonitorService : IHostedService
 {
-    private readonly IHostInstanceService _hostInstanceService;
+    private readonly IUserInstanceService _userInstanceService;
     private readonly Timer _timer;
 
-    public HostMonitorService(IHostInstanceService hostInstanceService)
+    public HostMonitorService(IUserInstanceService hostInstanceService)
     {
-        _hostInstanceService = hostInstanceService;
+        _userInstanceService = hostInstanceService;
         _timer = new Timer(MonitorHostInstance, null, Timeout.Infinite, 0);
     }
 
@@ -27,10 +27,10 @@ public class HostMonitorService : IHostedService
 
     private void MonitorHostInstance(object? state)
     {
-        if (!_hostInstanceService.IsRunning)
+        if (!_userInstanceService.IsRunning)
         {
             Log.Information("Host instance is not running. Starting it...");
-            _hostInstanceService.Start();
+            _userInstanceService.Start();
         }
     }
 
