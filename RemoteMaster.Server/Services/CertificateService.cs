@@ -7,27 +7,26 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
+using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
 public class CertificateService : ICertificateService
 {
     private readonly CertificateSettings _settings;
-    private readonly ILogger<CertificateService> _logger;
 
     private const int CertificateValidityYears = 1;
 
-    public CertificateService(IOptions<CertificateSettings> options, ILogger<CertificateService> logger)
+    public CertificateService(IOptions<CertificateSettings> options)
     {
         _settings = options?.Value ?? throw new ArgumentNullException(nameof(options));
-        _logger = logger;
     }
 
     public X509Certificate2 GenerateCertificateFromCSR(byte[] csrBytes)
     {
         if (csrBytes is null)
         {
-            _logger.LogError($"{nameof(csrBytes)} are null.");
+            Log.Error($"{nameof(csrBytes)} are null.");
             throw new ArgumentNullException(nameof(csrBytes));
         }
 
@@ -37,7 +36,7 @@ public class CertificateService : ICertificateService
 
         if (basicConstraints != null && basicConstraints.CertificateAuthority)
         {
-            _logger.LogError("CSR for CA certificates are not allowed.");
+            Log.Error("CSR for CA certificates are not allowed.");
             throw new InvalidOperationException("CSR for CA certificates are not allowed.");
         }
 
@@ -50,7 +49,7 @@ public class CertificateService : ICertificateService
 
         var certificate = csr.Create(subjectName, signatureGenerator, notBefore, notAfter, serialNumber);
 
-        _logger.LogInformation("Certificate generated successfully.");
+        Log.Information("Certificate generated successfully.");
 
         return certificate;
     }

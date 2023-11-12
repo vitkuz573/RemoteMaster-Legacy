@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using RemoteMaster.Server.Abstractions;
+using Serilog;
 
 namespace RemoteMaster.Server.Areas.Identity.Pages.Account;
 
@@ -15,13 +16,11 @@ public class LoginModel : PageModel
 {
     private readonly ITokenService _tokenService;
     private readonly SignInManager<IdentityUser> _signInManager;
-    private readonly ILogger<LoginModel> _logger;
 
-    public LoginModel(ITokenService tokenService, SignInManager<IdentityUser> signInManager, ILogger<LoginModel> logger)
+    public LoginModel(ITokenService tokenService, SignInManager<IdentityUser> signInManager)
     {
         _tokenService = tokenService;
         _signInManager = signInManager;
-        _logger = logger;
     }
 
     /// <summary>
@@ -119,7 +118,7 @@ public class LoginModel : PageModel
             
             if (result.Succeeded)
             {
-                _logger.LogInformation("User logged in.");
+                Log.Information("User logged in.");
 
                 var accessTokenString = _tokenService.GenerateAccessToken(Input.Email);
 
@@ -136,7 +135,7 @@ public class LoginModel : PageModel
 
                 if (!isSaved)
                 {
-                    _logger.LogError("Failed to save refresh token for user.");
+                    Log.Error("Failed to save refresh token for user.");
                 }
 
                 var refreshCookieOptions = new CookieOptions

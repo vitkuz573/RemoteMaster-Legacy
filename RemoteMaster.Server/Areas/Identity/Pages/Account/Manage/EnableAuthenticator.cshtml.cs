@@ -9,24 +9,20 @@ using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Serilog;
 
 namespace RemoteMaster.Server.Areas.Identity.Pages.Account.Manage;
 
 public class EnableAuthenticatorModel : PageModel
 {
     private readonly UserManager<IdentityUser> _userManager;
-    private readonly ILogger<EnableAuthenticatorModel> _logger;
     private readonly UrlEncoder _urlEncoder;
 
     private const string AuthenticatorUriFormat = "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&digits=6";
 
-    public EnableAuthenticatorModel(
-        UserManager<IdentityUser> userManager,
-        ILogger<EnableAuthenticatorModel> logger,
-        UrlEncoder urlEncoder)
+    public EnableAuthenticatorModel(UserManager<IdentityUser> userManager, UrlEncoder urlEncoder)
     {
         _userManager = userManager;
-        _logger = logger;
         _urlEncoder = urlEncoder;
     }
 
@@ -122,7 +118,7 @@ public class EnableAuthenticatorModel : PageModel
 
         await _userManager.SetTwoFactorEnabledAsync(user, true);
         var userId = await _userManager.GetUserIdAsync(user);
-        _logger.LogInformation("User with ID '{UserId}' has enabled 2FA with an authenticator app.", userId);
+        Log.Information("User with ID '{UserId}' has enabled 2FA with an authenticator app.", userId);
 
         StatusMessage = "Your authenticator app has been verified.";
 

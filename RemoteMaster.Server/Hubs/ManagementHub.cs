@@ -6,6 +6,7 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
+using Serilog;
 
 namespace RemoteMaster.Server.Hubs;
 
@@ -13,13 +14,11 @@ public class ManagementHub : Hub
 {
     private readonly ICertificateService _certificateService;
     private readonly IDatabaseService _databaseService;
-    private readonly ILogger<ManagementHub> _logger;
 
-    public ManagementHub(ICertificateService certificateService, IDatabaseService databaseService, ILogger<ManagementHub> logger)
+    public ManagementHub(ICertificateService certificateService, IDatabaseService databaseService)
     {
         _certificateService = certificateService;
         _databaseService = databaseService;
-        _logger = logger;
     }
 
     public async Task<bool> RegisterHostAsync(string hostName, string ipAddress, string macAddress, string group, byte[] csrBytes)
@@ -64,7 +63,7 @@ public class ManagementHub : Hub
 
         if (folder == null)
         {
-            _logger.LogWarning("Unregistration failed: Folder '{Group}' not found.", group);
+            Log.Warning("Unregistration failed: Folder '{Group}' not found.", group);
 
             return false;
         }
@@ -86,7 +85,7 @@ public class ManagementHub : Hub
             return true;
         }
 
-        _logger.LogWarning("Unregistration failed: Computer '{HostName}' not found in folder '{Group}'.", hostName, group);
+        Log.Warning("Unregistration failed: Computer '{HostName}' not found in folder '{Group}'.", hostName, group);
 
         return false;
     }
