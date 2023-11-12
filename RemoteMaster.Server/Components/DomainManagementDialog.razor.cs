@@ -24,6 +24,9 @@ public partial class DomainManagementDialog
     public Dictionary<Computer, HubConnection> Hosts { get; set; }
 
     [Inject]
+    private ISnackbar Snackbar { get; set; }
+
+    [Inject]
     private IComputerCommandService ComputerCommandService { get; set; }
 
     private bool _isShowPassword;
@@ -82,6 +85,8 @@ public partial class DomainManagementDialog
         }
         catch (COMException ex)
         {
+            Snackbar.Add("Error during domain discovery.", Severity.Error);
+
             Log.Error(ex, "Error during domain discovery.");
         }
     }
