@@ -139,13 +139,13 @@ public class MessageLoopService : IHostedService
         {
             WTS_CONSOLE_CONNECT => HandleSessionChange("A session was connected to the console terminal"),
             WTS_CONSOLE_DISCONNECT => HandleSessionChange("A session was disconnected from the console terminal"),
-            WTS_REMOTE_CONNECT => HandleSessionChange("A session was connected to the remote terminal"),
-            WTS_REMOTE_DISCONNECT => HandleSessionChange("A session was disconnected from the remote terminal"),
-            WTS_SESSION_LOGON => HandleSessionChange("A user has logged on to the session"),
-            WTS_SESSION_LOGOFF => HandleSessionChange("A user has logged off the session"),
-            WTS_SESSION_LOCK => HandleSessionChange("A session has been locked"),
-            WTS_SESSION_UNLOCK => HandleSessionChange("A session has been unlocked"),
-            WTS_SESSION_REMOTE_CONTROL => HandleSessionChange("A session has changed its remote controlled status"),
+            WTS_REMOTE_CONNECT => "A session was connected to the remote terminal",
+            WTS_REMOTE_DISCONNECT => "A session was disconnected from the remote terminal",
+            WTS_SESSION_LOGON => "A user has logged on to the session",
+            WTS_SESSION_LOGOFF => "A user has logged off the session",
+            WTS_SESSION_LOCK => "A session has been locked",
+            WTS_SESSION_UNLOCK => "A session has been unlocked",
+            WTS_SESSION_REMOTE_CONTROL => "A session has changed its remote controlled status",
             _ => "Unknown session change reason."
         };
     }
