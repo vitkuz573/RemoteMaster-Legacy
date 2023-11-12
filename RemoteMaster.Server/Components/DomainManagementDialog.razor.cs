@@ -71,7 +71,7 @@ public partial class DomainManagementDialog
         }
         catch (COMException ex)
         {
-            Snackbar.Add("Error during domain discovery.", Severity.Error);
+            Snackbar.Add($"Error during domain discovery: {ex.Message}", Severity.Error);
 
             Log.Error(ex, "Error during domain discovery.");
         }
