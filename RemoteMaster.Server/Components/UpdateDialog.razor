@@ -1,19 +1,13 @@
-﻿<MudDialog>
-    <DialogContent>
-        <MudExpansionPanels>
-            <MudExpansionPanel Text="Click to view affected hosts">
-                @foreach (var (computer, connection) in Hosts)
-                {
-                    <MudText>@computer.Name (@computer.IPAddress)</MudText>
-                }
-            </MudExpansionPanel>
-        </MudExpansionPanels>
+﻿@inherits CommonDialogBase
+
+<CommonDialog Hosts="@Hosts">
+    <Content>
         <MudTextField T="string" Label="Folder Path" @bind-Value="@_folderPath" />
         <MudTextField T="string" Label="Username" @bind-Value="@_username" />
         <MudTextField T="string" Label="Password" @bind-Value="@_password" InputType="@_passwordInput" Adornment="Adornment.End" AdornmentIcon="@_passwordInputIcon" OnAdornmentClick="TogglePasswordVisibility" AdornmentAriaLabel="Show Password" />
-    </DialogContent>
-    <DialogActions>
+    </Content>
+    <Actions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
         <MudButton Color="Color.Primary" OnClick="Confirm">OK</MudButton>
-    </DialogActions>
-</MudDialog>
+    </Actions>
+</CommonDialog>

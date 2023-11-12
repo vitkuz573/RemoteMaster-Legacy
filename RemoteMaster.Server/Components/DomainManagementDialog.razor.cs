@@ -8,21 +8,12 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Components;
 
-#pragma warning disable CA2227
-
 public partial class DomainManagementDialog
 {
-    [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; }
-
-    [Parameter]
-    public Dictionary<Computer, HubConnection> Hosts { get; set; }
-
     [Inject]
     private ISnackbar Snackbar { get; set; }
 
@@ -35,11 +26,6 @@ public partial class DomainManagementDialog
     private string? _domain;
     private string? _username;
     private string? _password;
-
-    private void Cancel()
-    {
-        MudDialog.Cancel();
-    }
 
     private async Task JoinDomain()
     {
