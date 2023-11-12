@@ -29,20 +29,26 @@ public class UpdaterService : IUpdaterService
         _hostServiceConfig = hostServiceConfig;
     }
 
-    public void Download(string sharedFolder, string username, string password)
+    public void Download(string sharedFolder, string username, string password, bool isLocalFolder)
     {
         try
         {
             var sourceFolder = Path.Combine(sharedFolder, "Host");
 
-            _networkDriveService.MapNetworkDrive(sharedFolder, username, password);
+            if (!isLocalFolder)
+            {
+                _networkDriveService.MapNetworkDrive(sharedFolder, username, password);
+            }
 
             var sourceDir = new DirectoryInfo(sourceFolder);
             sourceDir.DeepCopy(_updateFolderPath, true);
 
             Log.Information("Copied from {SourceFolder} to {DestinationFolder}", sourceFolder, _updateFolderPath);
 
-            _networkDriveService.CancelNetworkDrive(sharedFolder);
+            if (!isLocalFolder)
+            {
+                _networkDriveService.CancelNetworkDrive(sharedFolder);
+            }
         }
         catch (Exception ex)
         {

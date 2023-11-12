@@ -37,7 +37,9 @@ public partial class UpdateDialog
 
     private async Task Confirm()
     {
-        await ComputerCommandService.Execute(Hosts, async (computer, connection) => await connection.InvokeAsync("SendUpdateHost", _folderPath, _username, _password));
+        var isLocalFolder = !_folderPath.StartsWith("\\\\");
+
+        await ComputerCommandService.Execute(Hosts, async (computer, connection) => await connection.InvokeAsync("SendUpdateHost", _folderPath, _username, _password, isLocalFolder));
 
         MudDialog.Close(DialogResult.Ok(true));
     }
