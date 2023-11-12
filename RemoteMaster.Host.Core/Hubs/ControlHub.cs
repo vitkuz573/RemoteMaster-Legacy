@@ -186,9 +186,9 @@ public class ControlHub : Hub<IControlClient>
         await Clients.Group("serviceGroup").ReceiveCommand(command);
     }
 
-    public void SendUpdateHost(string sharedFolder, string username, string password, bool isLocalFolder)
+    public void SendUpdateHost(string folderPath, string username, string password, bool isLocalFolder)
     {
-        _updaterService.Download(sharedFolder, username, password, isLocalFolder);
+        _updaterService.Download(folderPath, username, password, isLocalFolder);
         _updaterService.Execute();
     }
 
