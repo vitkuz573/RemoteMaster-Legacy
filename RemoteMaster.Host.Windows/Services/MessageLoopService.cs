@@ -88,7 +88,7 @@ public class MessageLoopService : IHostedService
 
     private static unsafe HWND CreateHiddenWindow()
     {
-        return CreateWindowEx(0, CLASS_NAME, "", 0, 0, 0, 0, 0, HWND.HWND_MESSAGE, null, null, null);
+        return CreateWindowEx(0, CLASS_NAME, string.Empty, 0, 0, 0, 0, 0, HWND.HWND_MESSAGE, null, null, null);
     }
 
     private void RegisterForSessionNotifications()
@@ -137,8 +137,15 @@ public class MessageLoopService : IHostedService
     {
         return (ulong)wParam.Value switch
         {
-            WTS_CONSOLE_DISCONNECT => HandleSessionChange("A session was disconnected from the console terminal"),
             WTS_CONSOLE_CONNECT => HandleSessionChange("A session was connected to the console terminal"),
+            WTS_CONSOLE_DISCONNECT => HandleSessionChange("A session was disconnected from the console terminal"),
+            WTS_REMOTE_CONNECT => HandleSessionChange("A session was connected to the remote terminal"),
+            WTS_REMOTE_DISCONNECT => HandleSessionChange("A session was disconnected from the remote terminal"),
+            WTS_SESSION_LOGON => HandleSessionChange("A user has logged on to the session"),
+            WTS_SESSION_LOGOFF => HandleSessionChange("A user has logged off the session"),
+            WTS_SESSION_LOCK => HandleSessionChange("A session has been locked"),
+            WTS_SESSION_UNLOCK => HandleSessionChange("A session has been unlocked"),
+            WTS_SESSION_REMOTE_CONTROL => HandleSessionChange("A session has changed its remote controlled status"),
             _ => "Unknown session change reason."
         };
     }
