@@ -39,6 +39,14 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
+builder.Services.AddDbContext<NodesDataContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("NodesDataContextConnection")));
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(5254);
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
