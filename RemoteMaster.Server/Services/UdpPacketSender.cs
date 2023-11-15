@@ -12,10 +12,7 @@ public class UdpPacketSender : IPacketSender
 {
     public void Send(byte[] packet, IPEndPoint endPoint)
     {
-        if (packet == null)
-        {
-            throw new ArgumentNullException(nameof(packet));
-        }
+        ArgumentNullException.ThrowIfNull(packet);
 
         using var client = new UdpClient
         {

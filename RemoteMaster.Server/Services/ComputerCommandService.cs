@@ -32,10 +32,7 @@ public class ComputerCommandService : IComputerCommandService
 
     public async Task Execute(Dictionary<Computer, HubConnection> computers, Func<Computer, HubConnection, Task> actionOnComputer)
     {
-        if (computers == null)
-        {
-            throw new ArgumentNullException(nameof(computers));
-        }
+        ArgumentNullException.ThrowIfNull(computers);
 
         foreach (var (computer, connection) in computers)
         {

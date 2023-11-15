@@ -10,6 +10,7 @@
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client.Core" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" />
+    <PackageReference Include="Polly" />
     <PackageReference Include="Serilog" />
   </ItemGroup>
 

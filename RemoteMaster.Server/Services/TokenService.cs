@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Areas.Identity.Data;
+using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Services;
@@ -17,9 +17,9 @@ namespace RemoteMaster.Server.Services;
 public class TokenService : ITokenService
 {
     private readonly TokenServiceOptions _options;
-    private readonly IdentityDataContext _context;
+    private readonly ApplicationDbContext _context;
 
-    public TokenService(IOptions<TokenServiceOptions> options, IdentityDataContext context)
+    public TokenService(IOptions<TokenServiceOptions> options, ApplicationDbContext context)
     {
         _options = options?.Value;
         _context = context;
@@ -29,7 +29,7 @@ public class TokenService : ITokenService
     {
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.Name, email)
+            new(ClaimTypes.Name, email)
         };
 
         var privateKey = File.ReadAllText(_options.PrivateKeyPath);
