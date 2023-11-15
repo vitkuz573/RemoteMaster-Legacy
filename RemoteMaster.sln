@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Host.Core", "R
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Host.Windows", "RemoteMaster.Host.Windows\RemoteMaster.Host.Windows.csproj", "{997141CA-F785-485B-BAE7-1759A1AB091C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteMaster.Server", "RemoteMaster.Server\RemoteMaster.Server.csproj", "{356B00AF-FBFA-44D3-930E-1017C3E193B9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -93,6 +95,22 @@ Global
 		{997141CA-F785-485B-BAE7-1759A1AB091C}.Release|x64.Build.0 = Release|Any CPU
 		{997141CA-F785-485B-BAE7-1759A1AB091C}.Release|x86.ActiveCfg = Release|Any CPU
 		{997141CA-F785-485B-BAE7-1759A1AB091C}.Release|x86.Build.0 = Release|Any CPU
+		{356B00AF-FBFA-44D3-930E-1017C3E193B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{356B00AF-FBFA-44D3-930E-1017C3E193B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{356B00AF-FBFA-44D3-930E-1017C3E193B9}.Debug|arm64.ActiveCfg = Debug|Any CPU
+		{356B00AF-FBFA-44D3-930E-1017C3E193B9}.Debug|arm64.Build.0 = Debug|Any CPU
+		{356B00AF-FBFA-44D3-930E-1017C3E193B9}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{356B00AF-FBFA-44D3-930E-1017C3E193B9}.Debug|x64.Build.0 = Debug|Any CPU
+		{356B00AF-FBFA-44D3-930E-1017C3E193B9}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{356B00AF-FBFA-44D3-930E-1017C3E193B9}.Debug|x86.Build.0 = Debug|Any CPU
+		{356B00AF-FBFA-44D3-930E-1017C3E193B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{356B00AF-FBFA-44D3-930E-1017C3E193B9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{356B00AF-FBFA-44D3-930E-1017C3E193B9}.Release|arm64.ActiveCfg = Release|Any CPU
+		{356B00AF-FBFA-44D3-930E-1017C3E193B9}.Release|arm64.Build.0 = Release|Any CPU
+		{356B00AF-FBFA-44D3-930E-1017C3E193B9}.Release|x64.ActiveCfg = Release|Any CPU
+		{356B00AF-FBFA-44D3-930E-1017C3E193B9}.Release|x64.Build.0 = Release|Any CPU
+		{356B00AF-FBFA-44D3-930E-1017C3E193B9}.Release|x86.ActiveCfg = Release|Any CPU
+		{356B00AF-FBFA-44D3-930E-1017C3E193B9}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
