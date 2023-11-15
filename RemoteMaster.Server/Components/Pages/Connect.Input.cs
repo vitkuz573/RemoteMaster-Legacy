@@ -8,7 +8,7 @@ using Microsoft.JSInterop;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
 
-namespace RemoteMaster.Server.Pages;
+namespace RemoteMaster.Server.Components.Pages;
 
 public partial class Connect
 {

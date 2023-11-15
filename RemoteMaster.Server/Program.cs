@@ -5,6 +5,7 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using MudBlazor.Services;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Components;
 using RemoteMaster.Server.Components.Account;
@@ -51,6 +52,8 @@ builder.Services.AddSingleton<ISerializationService, JsonSerializerService>();
 builder.Services.AddTransient<ITokenService, TokenService>();
 builder.Services.Configure<TokenServiceOptions>(builder.Configuration.GetSection("Jwt"));
 builder.Services.Configure<CertificateSettings>(builder.Configuration.GetSection("CertificateSettings"));
+
+builder.Services.AddMudServices();
 
 builder.Services.AddDbContext<NodesDataContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("NodesDataContextConnection")));

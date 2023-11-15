@@ -15,9 +15,9 @@ using Polly.Retry;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 
-namespace RemoteMaster.Server.Pages;
+namespace RemoteMaster.Server.Components.Pages;
 
-public partial class Connect : IDisposable
+public partial class Connect
 {
     [Parameter]
     public string Host { get; set; }
