@@ -8,10 +8,10 @@ public class RegistrationRestrictionMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly bool _enableRegistration;
-    private static readonly List<string> RestrictedRoutes = new()
-    {
-        "/identity/account/register"
-    };
+    private static readonly List<string> RestrictedRoutes =
+    [
+        "/account/register"
+    ];
 
     public RegistrationRestrictionMiddleware(RequestDelegate next, bool enableRegistration)
     {
@@ -21,17 +21,14 @@ public class RegistrationRestrictionMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        if (context == null)
-        {
-            throw new ArgumentNullException(nameof(context));
-        }
+        ArgumentNullException.ThrowIfNull(context);
 
         var path = context.Request.Path.Value.ToLower();
         var isRestrictedRoute = RestrictedRoutes.Any(path.StartsWith);
 
         if (!_enableRegistration && isRestrictedRoute)
         {
-            context.Response.Redirect("/Identity/Account/AccessDenied");
+            context.Response.Redirect("/Account/AccessDenied");
 
             return;
         }
