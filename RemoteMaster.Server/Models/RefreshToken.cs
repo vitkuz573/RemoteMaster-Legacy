@@ -2,7 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using Microsoft.AspNetCore.Identity;
+using RemoteMaster.Server.Data;
 
 namespace RemoteMaster.Server.Models;
 
@@ -16,5 +16,5 @@ public class RefreshToken
 
     public string UserId { get; set; }
 
-    public virtual IdentityUser User { get; set; }
+    public virtual ApplicationUser User { get; set; }
 }
