@@ -3,6 +3,7 @@
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Identity
+@using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Server.Data
 
 @inject SignInManager<ApplicationUser> SignInManager
@@ -76,6 +77,9 @@
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
 
+    [Inject]
+    private ITokenService TokenService { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         if (HttpMethods.IsGet(HttpContext.Request.Method))
@@ -93,6 +97,33 @@
         if (result.Succeeded)
         {
             Logger.LogInformation("User logged in.");
+
+            var accessTokenString = TokenService.GenerateAccessToken(Input.Email);
+
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Expires = DateTime.UtcNow.AddHours(2)
+            };
+
+            HttpContext.Response.Cookies.Append("accessToken", accessTokenString, cookieOptions);
+
+            var refreshTokenString = TokenService.GenerateRefreshToken();
+            var isSaved = await TokenService.SaveRefreshToken(Input.Email, refreshTokenString);
+
+            if (!isSaved)
+            {
+                // log
+            }
+
+            var refreshCookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Expires = DateTime.UtcNow.AddDays(7)
+            };
+
+            HttpContext.Response.Cookies.Append("refreshToken", refreshTokenString, refreshCookieOptions);
+
             RedirectManager.RedirectTo(ReturnUrl);
         }
         else if (result.RequiresTwoFactor)

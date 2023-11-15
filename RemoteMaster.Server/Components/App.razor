@@ -17,6 +17,72 @@
     <Routes />
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script src="_framework/blazor.web.js"></script>
+
+    <script>
+        window.revokeUrl = URL.revokeObjectURL;
+
+        window.createObjectBlobUrl = function (data, type) {
+            return URL.createObjectURL(new Blob([data], { type: type }));
+        }
+
+        window.createImageBlobUrl = function (data) {
+            return window.createObjectBlobUrl(data, 'image/jpeg');
+        }
+
+        window.addKeyDownEventListener = (dotnetHelper) => {
+            window.onkeydown = (e) => {
+                dotnetHelper.invokeMethodAsync('OnKeyDown', e.keyCode);
+            };
+        };
+
+        window.addKeyUpEventListener = (dotnetHelper) => {
+            window.onkeyup = (e) => {
+                dotnetHelper.invokeMethodAsync('OnKeyUp', e.keyCode);
+            };
+        };
+
+        window.setTitle = (title) => document.title = title;
+
+        window.openNewWindow = function (url) {
+            return window.open(url, '_blank', 'toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes');
+        };
+
+        window.addEventListener("keydown", function (e) {
+            if (e.ctrlKey && e.which == 83) {
+                e.preventDefault();
+            }
+        });
+
+        window.selectFile = function () {
+            return new Promise((resolve, reject) => {
+                var input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.ps1, application/x-powershell, .bat, .cmd, application/x-bat, application/x-cmd';
+                input.onchange = function (e) {
+                    var file = e.target.files[0];
+                    var reader = new FileReader();
+                    reader.onload = function (event) {
+                        resolve({ content: event.target.result, name: file.name });
+                    };
+                    reader.onerror = function (error) {
+                        reject("Error reading file: " + error.toString());
+                    };
+                    reader.readAsText(file);
+                };
+                input.click();
+            });
+        };
+
+        window.addBeforeUnloadListener = (instance) => {
+            window.addEventListener("beforeunload", function (event) {
+                instance.invokeMethodAsync("OnBeforeUnload");
+            });
+        };
+
+        window.showAlert = function (message) {
+            alert(message);
+        };
+    </script>
 </body>
 
 </html>

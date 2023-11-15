@@ -1,5 +1,9 @@
 ﻿@page "/{Host}/connect"
 
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
 <MudLayout Class="select-none">
     <MudDrawer @bind-Open="@_isMenuOpen" Anchor="Anchor.End" Elevation="1">
         <MudDrawerHeader>
