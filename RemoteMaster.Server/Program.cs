@@ -5,9 +5,12 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Components;
 using RemoteMaster.Server.Components.Account;
 using RemoteMaster.Server.Data;
+using RemoteMaster.Server.Models;
+using RemoteMaster.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +41,16 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
     .AddDefaultTokenProviders();
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+builder.Services.AddTransient<IHostConfigurationService, HostConfigurationService>();
+builder.Services.AddScoped<IDatabaseService, DatabaseService>();
+builder.Services.AddScoped<IComputerCommandService, ComputerCommandService>();
+builder.Services.AddSingleton<ICertificateService, CertificateService>();
+builder.Services.AddSingleton<IPacketSender, UdpPacketSender>();
+builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
+builder.Services.AddSingleton<ISerializationService, JsonSerializerService>();
+builder.Services.AddTransient<ITokenService, TokenService>();
+builder.Services.Configure<TokenServiceOptions>(builder.Configuration.GetSection("Jwt"));
+builder.Services.Configure<CertificateSettings>(builder.Configuration.GetSection("CertificateSettings"));
 
 builder.Services.AddDbContext<NodesDataContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("NodesDataContextConnection")));

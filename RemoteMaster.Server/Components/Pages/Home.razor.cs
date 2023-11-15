@@ -3,19 +3,16 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.JSInterop;
 using MudBlazor;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Components;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 using Serilog;
 
-namespace RemoteMaster.Server.Pages;
+namespace RemoteMaster.Server.Components.Pages;
 
-public partial class Index
+public partial class Home
 {
     private bool _isMenuOpen = false;
 
@@ -27,8 +24,8 @@ public partial class Index
     private HashSet<Node> _nodes;
     private Node _selectedNode;
 
-    private readonly List<Computer> _selectedComputers = new();
-    
+    private readonly List<Computer> _selectedComputers = [];
+
     [Inject]
     public NavigationManager NavigationManager { get; set; }
 
@@ -63,13 +60,13 @@ public partial class Index
     private async Task OnNodeSelected(Node node)
     {
         _selectedComputers.Clear();
-    
+
         if (node is Folder)
         {
             _selectedNode = node;
             await UpdateComputersThumbnailsAsync(node.Nodes.OfType<Computer>());
         }
-    
+
         StateHasChanged();
     }
 
@@ -219,7 +216,7 @@ public partial class Index
 
         await DialogService.ShowAsync<ScreenRecorderDialog>("Screen Recorder", dialogParameters);
     }
-    
+
     private async Task SetMonitorState()
     {
         var dialogParameters = new DialogParameters<MonitorStateDialog>
@@ -239,7 +236,7 @@ public partial class Index
 
         await DialogService.ShowAsync<ScriptExecutorDialog>("Script executor", dialogParameters);
     }
-    
+
     private async Task ManagePSExecRules()
     {
         var dialogParameters = new DialogParameters<PsexecRulesDialog>
@@ -256,7 +253,7 @@ public partial class Index
         {
             CloseOnEscapeKey = true,
         };
-        
+
         await DialogService.ShowAsync<HostConfigurationGenerator>("Host Configuration Generator", dialogOptions);
     }
 

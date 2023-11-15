@@ -183,6 +183,7 @@ public partial class Connect : IDisposable
     private async Task HandleScreenUpdate(byte[] screenData)
     {
         _screenDataUrl = await JSRuntime.InvokeAsync<string>("createImageBlobUrl", screenData);
+
         await InvokeAsync(StateHasChanged);
     }
 

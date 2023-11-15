@@ -3,7 +3,7 @@
 <MudLayout Class="select-none">
     <MudDrawer @bind-Open="@_isMenuOpen" Anchor="Anchor.End" Elevation="1">
         <MudDrawerHeader>
-            <MudIconButton Icon="@Icons.Material.Filled.ArrowBackIosNew" OnClick="ToggleMenu" Class="@( _isMenuOpen ? "drawer-button-open" : "drawer-button-closed")" />
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowBackIosNew" OnClick="ToggleMenu" Class="@(_isMenuOpen ? "drawer-button-open" : "drawer-button-closed")" />
             <MudText Typo="Typo.h6">Settings</MudText>
         </MudDrawerHeader>
         <MudNavMenu>
