@@ -1,5 +1,6 @@
-﻿module.exports = {
-    content: ['./**/*.cshtml', './**/*.razor'],
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+    content: ['./Components/*.razor', './Components/**/*.razor'],
     darkMode: 'class',
     theme: {
         extend: {
@@ -11,5 +12,5 @@
     variants: {
         extend: {},
     },
-    plugins: [],
+    plugins: []
 }

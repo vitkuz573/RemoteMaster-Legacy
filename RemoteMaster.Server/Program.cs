@@ -10,6 +10,7 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Components;
 using RemoteMaster.Server.Components.Account;
 using RemoteMaster.Server.Data;
+using RemoteMaster.Server.Hubs;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
 
@@ -87,5 +88,7 @@ app.MapRazorComponents<App>()
 
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
+
+app.MapHub<ManagementHub>("/hubs/management");
 
 app.Run();
