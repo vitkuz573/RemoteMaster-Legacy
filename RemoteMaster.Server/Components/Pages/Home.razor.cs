@@ -2,7 +2,9 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
 using RemoteMaster.Server.Abstractions;
@@ -37,6 +39,9 @@ public partial class Home
 
     [Inject]
     private IHttpContextAccessor HttpContextAccessor { get; set; }
+
+    [Inject]
+    private IAntiforgery Antiforgery { get; set; }
 
     protected async override Task OnInitializedAsync()
     {
@@ -257,8 +262,21 @@ public partial class Home
         await DialogService.ShowAsync<HostConfigurationGenerator>("Host Configuration Generator", dialogOptions);
     }
 
-    private void Logout()
+    private async Task Logout()
     {
-        NavigationManager.NavigateTo("Identity/Account/Logout", true);
+        var context = HttpContextAccessor.HttpContext;
+        try
+        {
+            await Antiforgery.ValidateRequestAsync(context);
+        }
+        catch (AntiforgeryValidationException)
+        {
+            // Обработка ошибки валидации маркера против подделки
+            return;
+        }
+
+        using var httpClient = new HttpClient();
+        httpClient.BaseAddress = new Uri("http://localhost:5254");
+        await httpClient.PostAsync("Account/Logout", null);
     }
 }
