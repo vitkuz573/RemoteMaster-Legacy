@@ -14,16 +14,9 @@ using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class TokenService : ITokenService
+public class TokenService(IOptions<TokenServiceOptions> options, ApplicationDbContext context) : ITokenService
 {
-    private readonly TokenServiceOptions _options;
-    private readonly ApplicationDbContext _context;
-
-    public TokenService(IOptions<TokenServiceOptions> options, ApplicationDbContext context)
-    {
-        _options = options?.Value;
-        _context = context;
-    }
+    private readonly TokenServiceOptions _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
 
     public string GenerateAccessToken(string email)
     {
@@ -66,7 +59,7 @@ public class TokenService : ITokenService
 
     public async Task<bool> SaveRefreshToken(string email, string refreshToken)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email);
 
         if (user == null)
         {
@@ -80,31 +73,31 @@ public class TokenService : ITokenService
             ExpiryDate = DateTime.UtcNow.AddDays(7)
         };
 
-        _context.RefreshTokens.Add(token);
+        context.RefreshTokens.Add(token);
 
-        return await _context.SaveChangesAsync() > 0;
+        return await context.SaveChangesAsync() > 0;
     }
 
     public async Task<string> RefreshAccessToken(string refreshToken)
     {
-        var storedToken = await _context.RefreshTokens.Include(t => t.User).FirstOrDefaultAsync(t => t.Token == refreshToken && t.ExpiryDate > DateTime.UtcNow) ?? throw new Exception("Invalid refresh token or token has expired.");
-        _context.RefreshTokens.Remove(storedToken);
-        await _context.SaveChangesAsync();
+        var storedToken = await context.RefreshTokens.Include(t => t.User).FirstOrDefaultAsync(t => t.Token == refreshToken && t.ExpiryDate > DateTime.UtcNow) ?? throw new Exception("Invalid refresh token or token has expired.");
+        context.RefreshTokens.Remove(storedToken);
+        await context.SaveChangesAsync();
 
         return GenerateAccessToken(storedToken.User.Email);
     }
 
     public async Task<bool> RevokeRefreshToken(string refreshToken)
     {
-        var storedToken = await _context.RefreshTokens.FirstOrDefaultAsync(t => t.Token == refreshToken);
+        var storedToken = await context.RefreshTokens.FirstOrDefaultAsync(t => t.Token == refreshToken);
 
         if (storedToken == null)
         {
             return false;
         }
 
-        _context.RefreshTokens.Remove(storedToken);
+        context.RefreshTokens.Remove(storedToken);
 
-        return await _context.SaveChangesAsync() > 0;
+        return await context.SaveChangesAsync() > 0;
     }
 }

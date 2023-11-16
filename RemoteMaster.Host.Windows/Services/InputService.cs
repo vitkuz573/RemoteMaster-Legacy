@@ -21,7 +21,7 @@ public class InputService : IInputService
     private readonly CancellationTokenSource _cts;
     private readonly int _numWorkers;
     private readonly object _ctsLock = new();
-    private readonly ConcurrentBag<INPUT> _inputPool = new();
+    private readonly ConcurrentBag<INPUT> _inputPool = [];
     private readonly IDesktopService _desktopService;
 
     public bool InputEnabled { get; set; } = true;
@@ -29,7 +29,7 @@ public class InputService : IInputService
     public InputService(IDesktopService desktopService, int numWorkers = 4)
     {
         _desktopService = desktopService;
-        _operationQueue = new BlockingCollection<Action>();
+        _operationQueue = [];
         _cts = new CancellationTokenSource();
         _numWorkers = numWorkers;
         StartWorkerThreads();

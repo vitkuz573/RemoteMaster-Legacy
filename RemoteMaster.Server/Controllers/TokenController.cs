@@ -10,26 +10,16 @@ namespace RemoteMaster.Server.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class TokenController : ControllerBase
+public class TokenController(ITokenService tokenService) : ControllerBase
 {
-    private readonly ITokenService _tokenService;
-
-    public TokenController(ITokenService tokenService)
-    {
-        _tokenService = tokenService;
-    }
-
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
     {
-        if (request == null)
-        {
-            throw new ArgumentNullException(nameof(request));
-        }
+        ArgumentNullException.ThrowIfNull(request);
 
         try
         {
-            var newAccessToken = await _tokenService.RefreshAccessToken(request.RefreshToken);
+            var newAccessToken = await tokenService.RefreshAccessToken(request.RefreshToken);
 
             var cookieOptions = new CookieOptions
             {

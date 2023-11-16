@@ -4,6 +4,7 @@
 
 using System.DirectoryServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
@@ -57,6 +58,7 @@ public partial class DomainManagementDialog
         }
     }
 
+    [SupportedOSPlatform("windows")]
     private void DomainDiscovery()
     {
         try

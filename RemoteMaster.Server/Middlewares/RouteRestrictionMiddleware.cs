@@ -4,10 +4,8 @@
 
 namespace RemoteMaster.Server.Middlewares;
 
-public class RouteRestrictionMiddleware
+public class RouteRestrictionMiddleware(RequestDelegate next)
 {
-    private readonly RequestDelegate _next;
-
     private static readonly List<string> RestrictedRoutes =
     [
         "/account/manage/personaldata",
@@ -22,11 +20,6 @@ public class RouteRestrictionMiddleware
         "/account/manage",
         "/account/register"
     ];
-
-    public RouteRestrictionMiddleware(RequestDelegate next)
-    {
-        _next = next;
-    }
 
     public async Task InvokeAsync(HttpContext context)
     {
@@ -50,6 +43,6 @@ public class RouteRestrictionMiddleware
             return;
         }
 
-        await _next(context);
+        await next(context);
     }
 }

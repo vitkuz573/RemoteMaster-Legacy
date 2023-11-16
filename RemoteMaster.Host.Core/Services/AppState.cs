@@ -24,10 +24,7 @@ public class AppState : IAppState
 
     public bool TryAddViewer(IViewer viewer)
     {
-        if (viewer == null)
-        {
-            throw new ArgumentNullException(nameof(viewer));
-        }
+        ArgumentNullException.ThrowIfNull(viewer);
 
         var result = _viewers.TryAdd(viewer.ConnectionId, viewer);
 

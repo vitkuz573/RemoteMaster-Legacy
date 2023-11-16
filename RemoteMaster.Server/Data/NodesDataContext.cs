@@ -8,10 +8,8 @@ using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Data;
 
-public class NodesDataContext : DbContext
+public class NodesDataContext(DbContextOptions<NodesDataContext> options) : DbContext(options)
 {
-    public NodesDataContext(DbContextOptions<NodesDataContext> options) : base(options) { }
-
     public DbSet<Node> Nodes { get; set; }
 
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "ModelBuilder will not be null.")]

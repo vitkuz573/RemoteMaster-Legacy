@@ -25,7 +25,7 @@ public abstract class ScreenCapturerService : IScreenCapturerService
 
     public bool TrackCursor { get; set; } = false;
 
-    public virtual Dictionary<string, int> Screens { get; } = new();
+    public virtual Dictionary<string, int> Screens { get; } = [];
 
     public abstract Rectangle CurrentScreenBounds { get; protected set; }
 
@@ -122,10 +122,7 @@ public abstract class ScreenCapturerService : IScreenCapturerService
 
     protected byte[] EncodeBitmap(SKBitmap bitmap)
     {
-        if (bitmap == null)
-        {
-            throw new ArgumentNullException(nameof(bitmap));
-        }
+        ArgumentNullException.ThrowIfNull(bitmap);
 
         using var ms = _recycleManager.GetStream();
 
@@ -144,10 +141,7 @@ public abstract class ScreenCapturerService : IScreenCapturerService
 
     protected byte[] SaveBitmap(Bitmap bitmap)
     {
-        if (bitmap == null)
-        {
-            throw new ArgumentNullException(nameof(bitmap));
-        }
+        ArgumentNullException.ThrowIfNull(bitmap);
 
         var skBitmap = bitmap.ToSKBitmap();
 

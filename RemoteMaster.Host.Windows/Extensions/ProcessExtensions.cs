@@ -11,10 +11,7 @@ public static class ProcessExtensions
 {
     public static string GetCommandLine(this Process process)
     {
-        if (process == null)
-        {
-            throw new ArgumentNullException(nameof(process));
-        }
+        ArgumentNullException.ThrowIfNull(process);
 
         var query = $"SELECT CommandLine FROM Win32_Process WHERE ProcessId = {process.Id}";
 

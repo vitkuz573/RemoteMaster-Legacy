@@ -67,7 +67,7 @@ public class UserInstanceService : IUserInstanceService
         Log.Information("Started a new instance of the host with options: {Options}", options);
     }
 
-    private IEnumerable<Process> FindHostProcesses()
+    private Process[] FindHostProcesses()
     {
         var processName = Path.GetFileNameWithoutExtension(CurrentExecutablePath);
         

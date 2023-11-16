@@ -43,7 +43,7 @@ public partial class Connect
 
     private List<Display> _displays;
 
-    private string _newUri;
+    private readonly string _newUri;
 
     private string _selectedDisplay;
 
@@ -82,7 +82,7 @@ public partial class Connect
         await UpdateServerParameters();
     }
 
-    private static T GetQueryParameter<T>(IDictionary<string, StringValues> queryParameters, string key, T defaultValue, ref string updatedUri)
+    private static T GetQueryParameter<T>(Dictionary<string, StringValues> queryParameters, string key, T defaultValue, ref string updatedUri)
     {
         if (!queryParameters.TryGetValue(key, out var valueString) || !TryParse(valueString, out T value))
         {

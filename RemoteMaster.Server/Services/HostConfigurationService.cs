@@ -11,18 +11,12 @@ namespace RemoteMaster.Server.Services;
 /// <summary>
 /// Service responsible for generating host configuration files.
 /// </summary>
-public class HostConfigurationService : IHostConfigurationService
+/// <remarks>
+/// Initializes a new instance of the <see cref="HostConfigurationService"/> class.
+/// </remarks>
+/// <param name="serializationService">The serialization service instance.</param>
+public class HostConfigurationService(ISerializationService serializationService) : IHostConfigurationService
 {
-    private readonly ISerializationService _serializationService;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="HostConfigurationService"/> class.
-    /// </summary>
-    /// <param name="serializationService">The serialization service instance.</param>
-    public HostConfigurationService(ISerializationService serializationService)
-    {
-        _serializationService = serializationService;
-    }
 
     /// <summary>
     /// Generates a configuration file for the host based on the given configuration model.
@@ -31,7 +25,7 @@ public class HostConfigurationService : IHostConfigurationService
     /// <returns>A memory stream containing the configuration file.</returns>
     public async Task<MemoryStream> GenerateConfigFileAsync(HostConfiguration config)
     {
-        var jsonBytes = _serializationService.SerializeToJsonBytes(config);
+        var jsonBytes = serializationService.SerializeToJsonBytes(config);
 
         return await WriteToMemoryStreamAsync(jsonBytes);
     }

@@ -14,11 +14,11 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class NativeProcess
+public class NativeProcess(NativeProcessStartInfo startInfo)
 {
     private SafeFileHandle? _processHandle;
 
-    public NativeProcessStartInfo StartInfo { get; private set; }
+    public NativeProcessStartInfo StartInfo { get; private set; } = startInfo;
 
     public uint? Id { get; private set; }
 
@@ -26,17 +26,9 @@ public class NativeProcess
 
     public StreamReader? StandardError { get; private set; }
 
-    public NativeProcess(NativeProcessStartInfo startInfo)
-    {
-        StartInfo = startInfo;
-    }
-
     public static NativeProcess? Start(NativeProcessStartInfo startInfo)
     {
-        if (startInfo == null)
-        {
-            throw new ArgumentNullException(nameof(startInfo));
-        }
+        ArgumentNullException.ThrowIfNull(startInfo);
 
         var sessionId = !startInfo.ForceConsoleSession ? FindTargetSessionId(startInfo.TargetSessionId) : WTSGetActiveConsoleSessionId();
 

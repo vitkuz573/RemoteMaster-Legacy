@@ -10,32 +10,23 @@ using Serilog;
 
 namespace RemoteMaster.Server.Hubs;
 
-public class ManagementHub : Hub
+public class ManagementHub(ICertificateService certificateService, IDatabaseService databaseService) : Hub
 {
-    private readonly ICertificateService _certificateService;
-    private readonly IDatabaseService _databaseService;
-
-    public ManagementHub(ICertificateService certificateService, IDatabaseService databaseService)
-    {
-        _certificateService = certificateService;
-        _databaseService = databaseService;
-    }
-
     public async Task<bool> RegisterHostAsync(string hostName, string ipAddress, string macAddress, string group, byte[] csrBytes)
     {
-        var certificate = _certificateService.GenerateCertificateFromCSR(csrBytes);
+        var certificate = certificateService.GenerateCertificateFromCSR(csrBytes);
 
         await Clients.Caller.SendAsync("ReceiveCertificate", certificate.Export(X509ContentType.Pfx));
 
-        var folder = (await _databaseService.GetNodesAsync(f => f.Name == group && f is Folder)).OfType<Folder>().FirstOrDefault();
+        var folder = (await databaseService.GetNodesAsync(f => f.Name == group && f is Folder)).OfType<Folder>().FirstOrDefault();
 
         if (folder == null)
         {
             folder = new Folder(group);
-            await _databaseService.AddNodeAsync(folder);
+            await databaseService.AddNodeAsync(folder);
         }
 
-        var existingComputer = (await _databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId)).FirstOrDefault(c => c.Name == hostName);
+        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId)).FirstOrDefault(c => c.Name == hostName);
 
         if (existingComputer != null)
         {
@@ -51,7 +42,7 @@ public class ManagementHub : Hub
                 Parent = folder
             };
 
-            await _databaseService.AddNodeAsync(computer);
+            await databaseService.AddNodeAsync(computer);
         }
 
         return true;
@@ -59,7 +50,7 @@ public class ManagementHub : Hub
 
     public async Task<bool> UnregisterHostAsync(string hostName, string group)
     {
-        var folder = (await _databaseService.GetNodesAsync(f => f.Name == group && f is Folder)).OfType<Folder>().FirstOrDefault();
+        var folder = (await databaseService.GetNodesAsync(f => f.Name == group && f is Folder)).OfType<Folder>().FirstOrDefault();
 
         if (folder == null)
         {
@@ -68,18 +59,18 @@ public class ManagementHub : Hub
             return false;
         }
 
-        var existingComputer = (await _databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId))
+        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId))
                                .FirstOrDefault(c => c.Name == hostName);
 
         if (existingComputer != null)
         {
-            await _databaseService.RemoveNodeAsync(existingComputer);
+            await databaseService.RemoveNodeAsync(existingComputer);
 
-            var remainingComputers = await _databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId);
+            var remainingComputers = await databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId);
 
             if (!remainingComputers.Any())
             {
-                await _databaseService.RemoveNodeAsync(folder);
+                await databaseService.RemoveNodeAsync(folder);
             }
 
             return true;
@@ -92,19 +83,19 @@ public class ManagementHub : Hub
 
     public async Task<bool> UpdateHostInformationAsync(string hostName, string group, string ipAddress)
     {
-        var folder = (await _databaseService.GetNodesAsync(f => f.Name == group && f is Folder)).OfType<Folder>().FirstOrDefault();
+        var folder = (await databaseService.GetNodesAsync(f => f.Name == group && f is Folder)).OfType<Folder>().FirstOrDefault();
 
         if (folder == null)
         {
             return false;
         }
 
-        var computer = (await _databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId))
+        var computer = (await databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId))
                        .FirstOrDefault(c => c.Name == hostName);
 
         if (computer != null)
         {
-            await _databaseService.UpdateComputerAsync(computer, ipAddress);
+            await databaseService.UpdateComputerAsync(computer, ipAddress);
 
             return true;
         }

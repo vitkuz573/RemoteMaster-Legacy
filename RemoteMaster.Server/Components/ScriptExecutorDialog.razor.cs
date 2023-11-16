@@ -25,7 +25,7 @@ public partial class ScriptExecutorDialog
     [Inject]
     private IComputerCommandService ComputerCommandService { get; set; }
 
-    private readonly Dictionary<Computer, string> _scriptResults = new();
+    private readonly Dictionary<Computer, string> _scriptResults = [];
     private string _content;
     private Shell? _shell;
 

@@ -18,5 +18,5 @@ public abstract class Node
     public Node Parent { get; set; }
 
     [InverseProperty(nameof(Parent))]
-    public HashSet<Node> Nodes { get; } = new HashSet<Node>();
+    public HashSet<Node> Nodes { get; } = [];
 }

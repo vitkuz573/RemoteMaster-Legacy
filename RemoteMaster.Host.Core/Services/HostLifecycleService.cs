@@ -11,21 +11,11 @@ using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostLifecycleService : IHostLifecycleService
+public class HostLifecycleService(ICertificateRequestService certificateRequestService) : IHostLifecycleService
 {
-    private readonly ICertificateRequestService _certificateRequestService;
-
-    public HostLifecycleService(ICertificateRequestService certificateRequestService)
-    {
-        _certificateRequestService = certificateRequestService;
-    }
-
     public async Task RegisterAsync(HostConfiguration config, string hostName, string ipAddress, string macAddress)
     {
-        if (config == null)
-        {
-            throw new ArgumentNullException(nameof(config));
-        }
+        ArgumentNullException.ThrowIfNull(config);
 
         try
         {
@@ -39,7 +29,7 @@ public class HostLifecycleService : IHostLifecycleService
             };
 
             RSA rsaKeyPair;
-            var csr = _certificateRequestService.GenerateCSR(hostName, "RemoteMaster", "Kurgan", "Kurgan Oblast", "RU", ipAddresses, out rsaKeyPair);
+            var csr = certificateRequestService.GenerateCSR(hostName, "RemoteMaster", "Kurgan", "Kurgan Oblast", "RU", ipAddresses, out rsaKeyPair);
 
             connection.On<byte[]>("ReceiveCertificate", certificateBytes =>
             {
@@ -71,10 +61,7 @@ public class HostLifecycleService : IHostLifecycleService
 
     public async Task UnregisterAsync(HostConfiguration config, string hostName)
     {
-        if (config == null)
-        {
-            throw new ArgumentNullException(nameof(config));
-        }
+        ArgumentNullException.ThrowIfNull(config);
 
         try
         {
@@ -99,10 +86,7 @@ public class HostLifecycleService : IHostLifecycleService
 
     public async Task UpdateHostInformationAsync(HostConfiguration config, string hostname, string ipAddress)
     {
-        if (config == null)
-        {
-            throw new ArgumentNullException(nameof(config));
-        }
+        ArgumentNullException.ThrowIfNull(config);
 
         try
         {

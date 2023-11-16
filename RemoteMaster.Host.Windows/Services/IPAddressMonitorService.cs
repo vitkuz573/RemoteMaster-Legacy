@@ -9,20 +9,9 @@ using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class IPAddressMonitorService : IHostedService
+public class IPAddressMonitorService(IHostConfigurationService hostConfigurationService, IHostInfoService hostInfoService, IHostServiceManager hostServiceManager) : IHostedService
 {
-    private readonly IHostConfigurationService _hostConfigurationService;
-    private readonly IHostInfoService _hostInfoService;
-    private readonly IHostServiceManager _hostServiceManager;
-
     private readonly string _ipAddressFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "IPAddress.txt");
-
-    public IPAddressMonitorService(IHostConfigurationService hostConfigurationService, IHostInfoService hostInfoService, IHostServiceManager hostServiceManager)
-    {
-        _hostConfigurationService = hostConfigurationService;
-        _hostInfoService = hostInfoService;
-        _hostServiceManager = hostServiceManager;
-    }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -30,8 +19,8 @@ public class IPAddressMonitorService : IHostedService
 
         try
         {
-            var configPath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, _hostConfigurationService.ConfigurationFileName);
-            configuration = await _hostConfigurationService.LoadConfigurationAsync(configPath);
+            var configPath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, hostConfigurationService.ConfigurationFileName);
+            configuration = await hostConfigurationService.LoadConfigurationAsync(configPath);
         }
         catch (Exception ex) when (ex is FileNotFoundException || ex is InvalidDataException)
         {
@@ -41,13 +30,13 @@ public class IPAddressMonitorService : IHostedService
         }
 
         var savedIPAddress = await ReadSavedIPAddress();
-        var currentIPAddress = _hostInfoService.GetIPv4Address();
+        var currentIPAddress = hostInfoService.GetIPv4Address();
 
         if (string.IsNullOrEmpty(savedIPAddress) || savedIPAddress != currentIPAddress)
         {
-            var hostname = _hostInfoService.GetHostName();
+            var hostname = hostInfoService.GetHostName();
 
-            await _hostServiceManager.UpdateHostInformation(configuration, hostname, currentIPAddress);
+            await hostServiceManager.UpdateHostInformation(configuration, hostname, currentIPAddress);
 
             try
             {

@@ -9,19 +9,12 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public unsafe class PowerService : IPowerService
+public unsafe class PowerService(ITokenPrivilegeService tokenPrivilegeService) : IPowerService
 {
-    private readonly ITokenPrivilegeService _tokenPrivilegeService;
-
-    public PowerService(ITokenPrivilegeService tokenPrivilegeService)
-    {
-        _tokenPrivilegeService = tokenPrivilegeService;
-    }
-
     public void Reboot(string message, uint timeout = 0, bool forceAppsClosed = true)
     {
         Log.Information("Attempting to reboot the system with message: {Message}, timeout: {Timeout}, forceAppsClosed: {ForceAppsClosed}", message, timeout, forceAppsClosed);
-        _tokenPrivilegeService.AdjustPrivilege(SE_SHUTDOWN_NAME);
+        tokenPrivilegeService.AdjustPrivilege(SE_SHUTDOWN_NAME);
 
         fixed (char* pMessage = message)
         {
@@ -41,7 +34,7 @@ public unsafe class PowerService : IPowerService
     public void Shutdown(string message, uint timeout = 0, bool forceAppsClosed = true)
     {
         Log.Information("Attempting to shutdown the system with message: {Message}, timeout: {Timeout}, forceAppsClosed: {ForceAppsClosed}", message, timeout, forceAppsClosed);
-        _tokenPrivilegeService.AdjustPrivilege(SE_SHUTDOWN_NAME);
+        tokenPrivilegeService.AdjustPrivilege(SE_SHUTDOWN_NAME);
 
         fixed (char* pMessage = message)
         {

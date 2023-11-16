@@ -12,10 +12,7 @@ public class TokenPrivilegeService : ITokenPrivilegeService
 {
     public unsafe bool AdjustPrivilege(string privilegeName)
     {
-        if (string.IsNullOrEmpty(privilegeName))
-        {
-            throw new ArgumentNullException(nameof(privilegeName));
-        }
+        ArgumentException.ThrowIfNullOrEmpty(nameof(privilegeName));
 
         using var hProcess = GetCurrentProcess_SafeHandle();
 

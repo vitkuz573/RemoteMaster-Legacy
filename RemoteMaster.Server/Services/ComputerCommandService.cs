@@ -12,7 +12,7 @@ using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class ComputerCommandService : IComputerCommandService
+public class ComputerCommandService(IJSRuntime jsRuntime) : IComputerCommandService
 {
     private static readonly AsyncRetryPolicy _retryPolicy = Policy
         .Handle<Exception>()
@@ -22,13 +22,6 @@ public class ComputerCommandService : IComputerCommandService
             TimeSpan.FromSeconds(7),
             TimeSpan.FromSeconds(10),
         });
-
-    private readonly IJSRuntime _jsRuntime;
-
-    public ComputerCommandService(IJSRuntime jsRuntime)
-    {
-        _jsRuntime = jsRuntime;
-    }
 
     public async Task Execute(Dictionary<Computer, HubConnection> computers, Func<Computer, HubConnection, Task> actionOnComputer)
     {
@@ -46,7 +39,7 @@ public class ComputerCommandService : IComputerCommandService
                     }
                     catch (HubException ex) when (ex.Message.Contains("Method does not exist"))
                     {
-                        await _jsRuntime.InvokeVoidAsync("showAlert", $"Host: {computer.Name}.\nThis function is not available in the current host version. Please update your host.");
+                        await jsRuntime.InvokeVoidAsync("showAlert", $"Host: {computer.Name}.\nThis function is not available in the current host version. Please update your host.");
                     }
                 }
             });

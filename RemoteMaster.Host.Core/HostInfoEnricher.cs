@@ -16,15 +16,8 @@ public class HostInfoEnricher : ILogEventEnricher
 
     public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
     {
-        if (logEvent == null)
-        {
-            throw new ArgumentNullException(nameof(logEvent));
-        }
-
-        if (propertyFactory == null)
-        {
-            throw new ArgumentNullException(nameof(propertyFactory));
-        }
+        ArgumentNullException.ThrowIfNull(logEvent);
+        ArgumentNullException.ThrowIfNull(propertyFactory);
 
         _cachedIpProperty ??= CreateIpProperty(propertyFactory);
         _cachedHostProperty ??= CreateHostProperty(propertyFactory);

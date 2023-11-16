@@ -11,17 +11,10 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class ScreenRecorderService : IScreenRecorderService
+public class ScreenRecorderService(IScreenCapturerService screenCapturerService) : IScreenRecorderService
 {
-    private readonly IScreenCapturerService _screenCapturerService;
-    private CancellationTokenSource _cancellationTokenSource;
+    private CancellationTokenSource _cancellationTokenSource = new();
     private Task _recordingTask = Task.CompletedTask;
-
-    public ScreenRecorderService(IScreenCapturerService screenCapturerService)
-    {
-        _screenCapturerService = screenCapturerService;
-        _cancellationTokenSource = new();
-    }
 
     public Task StartRecordingAsync(string outputPath)
     {
@@ -61,7 +54,7 @@ public class ScreenRecorderService : IScreenRecorderService
     {
         while (!cancellationToken.IsCancellationRequested)
         {
-            var frameData = _screenCapturerService.GetNextFrame();
+            var frameData = screenCapturerService.GetNextFrame();
 
             if (frameData == null)
             {

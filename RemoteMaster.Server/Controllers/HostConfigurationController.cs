@@ -15,15 +15,8 @@ namespace RemoteMaster.Server.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
-public class HostConfigurationController : ControllerBase
+public class HostConfigurationController(IHostConfigurationService hostConfigurationService) : ControllerBase
 {
-    private readonly IHostConfigurationService _hostConfigurationService;
-
-    public HostConfigurationController(IHostConfigurationService hostConfigurationService)
-    {
-        _hostConfigurationService = hostConfigurationService;
-    }
-
     [HttpPost("generate")]
     public async Task<IActionResult> GenerateConfig([FromForm] HostConfiguration config)
     {
@@ -41,7 +34,7 @@ public class HostConfigurationController : ControllerBase
 
         byte[] configFileBytes;
 
-        using (var memoryStream = await _hostConfigurationService.GenerateConfigFileAsync(config))
+        using (var memoryStream = await hostConfigurationService.GenerateConfigFileAsync(config))
         {
             configFileBytes = memoryStream.ToArray();
         }

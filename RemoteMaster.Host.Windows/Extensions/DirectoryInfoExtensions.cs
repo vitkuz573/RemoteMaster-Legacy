@@ -8,10 +8,7 @@ public static class DirectoryInfoExtensions
 {
     public static void DeepCopy(this DirectoryInfo directory, string destinationDir, bool overwriteExisting = false)
     {
-        if (directory == null)
-        {
-            throw new ArgumentNullException(nameof(directory));
-        }
+        ArgumentNullException.ThrowIfNull(directory);
 
         foreach (var dir in Directory.GetDirectories(directory.FullName, "*", SearchOption.AllDirectories))
         {

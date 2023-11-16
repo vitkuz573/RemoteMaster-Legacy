@@ -10,10 +10,7 @@ public static class NetworkInterfaceExtensions
 {
     public static string GetMacAddress(this NetworkInterface networkInterface)
     {
-        if (networkInterface == null)
-        {
-            throw new ArgumentNullException(nameof(networkInterface));
-        }
+        ArgumentNullException.ThrowIfNull(networkInterface);
 
         return BitConverter.ToString(networkInterface.GetPhysicalAddress().GetAddressBytes());
     }

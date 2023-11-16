@@ -8,19 +8,12 @@ using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class ShutdownService : IShutdownService
+public class ShutdownService(IHostApplicationLifetime appLifetime) : IShutdownService
 {
-    private readonly IHostApplicationLifetime _appLifetime;
-
-    public ShutdownService(IHostApplicationLifetime appLifetime)
-    {
-        _appLifetime = appLifetime;
-    }
-
     public void SafeShutdown()
     {
         Log.Information("Initiating safe shutdown...");
-        _appLifetime.StopApplication();
+        appLifetime.StopApplication();
     }
 
     public void ImmediateShutdown(int exitCode = 0)

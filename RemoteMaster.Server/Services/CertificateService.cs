@@ -11,24 +11,15 @@ using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class CertificateService : ICertificateService
+public class CertificateService(IOptions<CertificateSettings> options) : ICertificateService
 {
-    private readonly CertificateSettings _settings;
+    private readonly CertificateSettings _settings = options?.Value ?? throw new ArgumentNullException(nameof(options));
 
     private const int CertificateValidityYears = 1;
 
-    public CertificateService(IOptions<CertificateSettings> options)
-    {
-        _settings = options?.Value ?? throw new ArgumentNullException(nameof(options));
-    }
-
     public X509Certificate2 GenerateCertificateFromCSR(byte[] csrBytes)
     {
-        if (csrBytes is null)
-        {
-            Log.Error($"{nameof(csrBytes)} are null.");
-            throw new ArgumentNullException(nameof(csrBytes));
-        }
+        ArgumentNullException.ThrowIfNull(csrBytes);
 
         var csr = CertificateRequest.LoadSigningRequest(csrBytes, HashAlgorithmName.SHA256, CertificateRequestLoadOptions.UnsafeLoadCertificateExtensions);
 

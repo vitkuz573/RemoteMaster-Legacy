@@ -11,10 +11,7 @@ public static class MagicPacketCreator
 
     public static byte[] Create(string macAddress)
     {
-        if (string.IsNullOrEmpty(macAddress))
-        {
-            throw new ArgumentNullException(nameof(macAddress));
-        }
+        ArgumentException.ThrowIfNullOrEmpty(macAddress);
 
         if (macAddress.Length != MacAddressLength)
         {

@@ -10,26 +10,10 @@ using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostServiceManager : IHostServiceManager
+public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUserInstanceService userInstanceService, IServiceManager serviceManager, IHostConfigurationService configurationService, IServiceConfiguration hostServiceConfig) : IHostServiceManager
 {
-    private readonly IHostLifecycleService _hostLifecycleService;
-    private readonly IUserInstanceService _userInstanceService;
-    private readonly IServiceManager _serviceManager;
-    private readonly IHostConfigurationService _configurationService;
-
-    private readonly IServiceConfiguration _hostServiceConfig;
-
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Host";
-
-    public HostServiceManager(IHostLifecycleService hostLifecycleService, IUserInstanceService userInstanceService, IServiceManager serviceManager, IHostConfigurationService configurationService, IServiceConfiguration hostServiceConfig)
-    {
-        _hostLifecycleService = hostLifecycleService;
-        _userInstanceService = userInstanceService;
-        _serviceManager = serviceManager;
-        _configurationService = configurationService;
-        _hostServiceConfig = hostServiceConfig;
-    }
 
     public async Task InstallOrUpdate(HostConfiguration configuration, string hostName, string ipv4Address, string macAddress)
     {
@@ -37,13 +21,13 @@ public class HostServiceManager : IHostServiceManager
         {
             var directoryPath = GetDirectoryPath();
 
-            if (_serviceManager.IsServiceInstalled(_hostServiceConfig.Name))
+            if (serviceManager.IsServiceInstalled(hostServiceConfig.Name))
             {
-                using var serviceController = new ServiceController(_hostServiceConfig.Name);
+                using var serviceController = new ServiceController(hostServiceConfig.Name);
 
                 if (serviceController.Status != ServiceControllerStatus.Stopped)
                 {
-                    _serviceManager.StopService(_hostServiceConfig.Name);
+                    serviceManager.StopService(hostServiceConfig.Name);
                 }
 
                 CopyToTargetPath(directoryPath, ipv4Address);
@@ -52,14 +36,14 @@ public class HostServiceManager : IHostServiceManager
             {
                 CopyToTargetPath(directoryPath, ipv4Address);
                 var hostPath = Path.Combine(directoryPath, $"{MainAppName}.{SubAppName}.exe");
-                _serviceManager.InstallService(_hostServiceConfig, $"{hostPath} --service-mode");
+                serviceManager.InstallService(hostServiceConfig, $"{hostPath} --service-mode");
             }
 
-            _serviceManager.StartService(_hostServiceConfig.Name);
+            serviceManager.StartService(hostServiceConfig.Name);
 
-            Log.Information("{ServiceName} installed and started successfully.", _hostServiceConfig.Name);
+            Log.Information("{ServiceName} installed and started successfully.", hostServiceConfig.Name);
 
-            await _hostLifecycleService.RegisterAsync(configuration, hostName, ipv4Address, macAddress);
+            await hostLifecycleService.RegisterAsync(configuration, hostName, ipv4Address, macAddress);
         }
         catch (Exception ex)
         {
@@ -71,26 +55,26 @@ public class HostServiceManager : IHostServiceManager
     {
         try
         {
-            if (_serviceManager.IsServiceInstalled(_hostServiceConfig.Name))
+            if (serviceManager.IsServiceInstalled(hostServiceConfig.Name))
             {
-                _serviceManager.StopService(_hostServiceConfig.Name);
-                _serviceManager.UninstallService(_hostServiceConfig.Name);
+                serviceManager.StopService(hostServiceConfig.Name);
+                serviceManager.UninstallService(hostServiceConfig.Name);
 
-                Log.Information("{ServiceName} Service uninstalled successfully.", _hostServiceConfig.Name);
+                Log.Information("{ServiceName} Service uninstalled successfully.", hostServiceConfig.Name);
             }
             else
             {
-                Log.Information("{ServiceName} Service is not installed.", _hostServiceConfig.Name);
+                Log.Information("{ServiceName} Service is not installed.", hostServiceConfig.Name);
             }
 
-            if (_userInstanceService.IsRunning)
+            if (userInstanceService.IsRunning)
             {
-                _userInstanceService.Stop();
+                userInstanceService.Stop();
             }
 
             DeleteFiles();
 
-            await _hostLifecycleService.UnregisterAsync(configuration, hostName);
+            await hostLifecycleService.UnregisterAsync(configuration, hostName);
         }
         catch (Exception ex)
         {
@@ -100,7 +84,7 @@ public class HostServiceManager : IHostServiceManager
 
     public async Task UpdateHostInformation(HostConfiguration configuration, string hostname, string ipAddress)
     {
-        await _hostLifecycleService.UpdateHostInformationAsync(configuration, hostname, ipAddress);
+        await hostLifecycleService.UpdateHostInformationAsync(configuration, hostname, ipAddress);
     }
 
     private static string GetDirectoryPath()
@@ -128,7 +112,7 @@ public class HostServiceManager : IHostServiceManager
             throw new InvalidOperationException($"Failed to copy the executable to {targetExecutablePath}. Details: {ex.Message}", ex);
         }
 
-        var configName = _configurationService.ConfigurationFileName;
+        var configName = configurationService.ConfigurationFileName;
         var sourceConfigPath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, configName);
         var targetConfigPath = Path.Combine(targetDirectoryPath, configName);
 

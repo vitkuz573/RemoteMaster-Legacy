@@ -10,18 +10,11 @@ using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class DatabaseService : IDatabaseService
+public class DatabaseService(NodesDataContext context) : IDatabaseService
 {
-    private readonly NodesDataContext _context;
-
-    public DatabaseService(NodesDataContext context)
-    {
-        _context = context;
-    }
-
     public async Task<IList<Node>> GetNodesAsync(Expression<Func<Node, bool>>? predicate = null)
     {
-        var query = _context.Nodes.AsQueryable();
+        var query = context.Nodes.AsQueryable();
 
         if (predicate != null)
         {
@@ -33,19 +26,19 @@ public class DatabaseService : IDatabaseService
 
     public async Task<IList<T>> GetChildrenByParentIdAsync<T>(Guid parentId) where T : Node
     {
-        return await _context.Nodes.OfType<T>().Where(node => node.ParentId == parentId).ToListAsync();
+        return await context.Nodes.OfType<T>().Where(node => node.ParentId == parentId).ToListAsync();
     }
 
     public async Task AddNodeAsync(Node node)
     {
-        await _context.Nodes.AddAsync(node);
-        await _context.SaveChangesAsync();
+        await context.Nodes.AddAsync(node);
+        await context.SaveChangesAsync();
     }
 
     public async Task RemoveNodeAsync(Node node)
     {
-        _context.Nodes.Remove(node);
-        await _context.SaveChangesAsync();
+        context.Nodes.Remove(node);
+        await context.SaveChangesAsync();
     }
 
     public async Task UpdateComputerAsync(Computer computer, string ipAddress)
@@ -53,14 +46,14 @@ public class DatabaseService : IDatabaseService
         if (computer != null)
         {
             computer.IPAddress = ipAddress;
-            _context.Nodes.Update(computer);
+            context.Nodes.Update(computer);
         }
 
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
     }
 
     public async Task<bool> HasChildrenAsync(Node node)
     {
-        return await _context.Nodes.AnyAsync(n => n.ParentId == node.NodeId);
+        return await context.Nodes.AnyAsync(n => n.ParentId == node.NodeId);
     }
 }

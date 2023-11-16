@@ -13,10 +13,7 @@ public static class WebApplicationBuilderExtensions
 {
     public static WebApplicationBuilder ConfigureCoreUrls(this WebApplicationBuilder builder)
     {
-        if (builder == null)
-        {
-            throw new ArgumentNullException(nameof(builder));
-        }
+        ArgumentNullException.ThrowIfNull(builder);
 
         builder.WebHost.ConfigureKestrel(options =>
         {
@@ -42,10 +39,7 @@ public static class WebApplicationBuilderExtensions
 
     public static void ConfigureSerilog(this WebApplicationBuilder builder)
     {
-        if (builder == null)
-        {
-            throw new ArgumentNullException(nameof(builder));
-        }
+        ArgumentNullException.ThrowIfNull(builder);
 
         builder.Host.UseSerilog((context, configuration) =>
         {

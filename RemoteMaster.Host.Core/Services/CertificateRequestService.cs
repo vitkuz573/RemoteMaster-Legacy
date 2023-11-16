@@ -14,10 +14,7 @@ public class CertificateRequestService : ICertificateRequestService
 {
     public CertificateRequest GenerateCSR(string commonName, string organization, string locality, string state, string country, List<string> ipAddresses, out RSA rsaKeyPair)
     {
-        if (ipAddresses == null)
-        {
-            throw new ArgumentNullException(nameof(ipAddresses));
-        }
+        ArgumentNullException.ThrowIfNull(ipAddresses);
 
         Log.Information("Starting CSR generation for subject: {CommonName}", commonName);
 
