@@ -43,6 +43,16 @@ public partial class Home
     [Inject]
     private IAntiforgery Antiforgery { get; set; }
 
+    private bool _isDarkMode = false;
+
+    private readonly MudTheme _theme = new()
+    {
+        LayoutProperties = new LayoutProperties()
+        {
+            DrawerWidthLeft = "250px"
+        }
+    };
+
     protected async override Task OnInitializedAsync()
     {
         _nodes = (await DatabaseService.GetNodesAsync(f => f.Parent == null && f is Folder)).Cast<Node>().ToHashSet();

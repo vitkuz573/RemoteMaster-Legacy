@@ -1,7 +1,8 @@
 ﻿@page "/"
+@rendermode InteractiveServer
 @using RemoteMaster.Server.Models
 
-<MudThemeProvider />
+<MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme" />
 <MudDialogProvider />
 <MudSnackbarProvider />
 

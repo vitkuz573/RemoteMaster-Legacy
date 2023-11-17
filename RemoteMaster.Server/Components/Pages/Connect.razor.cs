@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
 using Microsoft.JSInterop;
+using MudBlazor;
 using Polly;
 using Polly.Retry;
 using RemoteMaster.Server.Models;
@@ -57,6 +58,16 @@ public partial class Connect
             TimeSpan.FromSeconds(7),
             TimeSpan.FromSeconds(10),
         });
+
+    private bool _isDarkMode = false;
+
+    private readonly MudTheme _theme = new()
+    {
+        LayoutProperties = new LayoutProperties()
+        {
+            DrawerWidthRight = "300px"
+        }
+    };
 
     protected async override Task OnInitializedAsync()
     {
