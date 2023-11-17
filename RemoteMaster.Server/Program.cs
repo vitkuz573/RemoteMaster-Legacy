@@ -56,6 +56,8 @@ builder.Services.Configure<CertificateSettings>(builder.Configuration.GetSection
 
 builder.Services.AddMudServices();
 
+builder.Services.AddControllers();
+
 builder.Services.AddDbContext<NodesDataContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("NodesDataContextConnection")));
 
@@ -88,6 +90,8 @@ app.MapRazorComponents<App>()
 
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
+
+app.MapControllers();
 
 app.MapHub<ManagementHub>("/hubs/management");
 
