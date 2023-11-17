@@ -6,7 +6,6 @@ using System.Diagnostics;
 using System.Text;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
-using RemoteMaster.Host.Windows.Extensions;
 using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
@@ -40,8 +39,7 @@ public class UpdaterService : IUpdaterService
                 _networkDriveService.MapNetworkDrive(folderPath, username, password);
             }
 
-            var sourceDir = new DirectoryInfo(sourceFolderPath);
-            sourceDir.DeepCopy(_updateFolderPath, true);
+            DirectoryCopy(sourceFolderPath, _updateFolderPath, true, true);
 
             Log.Information("Copied from {SourceFolder} to {DestinationFolder}", sourceFolderPath, _updateFolderPath);
 
@@ -109,6 +107,35 @@ public class UpdaterService : IUpdaterService
         catch (Exception ex)
         {
             Log.Error("Error in Execute method: {Message}", ex.Message);
+        }
+    }
+
+    private static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs = true, bool overwriteExisting = false)
+    {
+        var sourceDir = new DirectoryInfo(sourceDirName);
+
+        if (!Directory.Exists(destDirName))
+        {
+            Directory.CreateDirectory(destDirName);
+        }
+
+        foreach (var file in sourceDir.GetFiles())
+        {
+            var destPath = Path.Combine(destDirName, file.Name);
+
+            if (!File.Exists(destPath) || overwriteExisting)
+            {
+                file.CopyTo(destPath, true);
+            }
+        }
+
+        if (copySubDirs)
+        {
+            foreach (var subdir in sourceDir.GetDirectories())
+            {
+                var destSubDir = Path.Combine(destDirName, subdir.Name);
+                DirectoryCopy(subdir.FullName, destSubDir, true, overwriteExisting);
+            }
         }
     }
 }

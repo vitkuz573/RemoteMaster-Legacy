@@ -41,7 +41,7 @@ internal class Program
             ContentRootPath = AppContext.BaseDirectory,
         };
 
-        var builder = WebApplication.CreateBuilder(options);
+        var builder = WebApplication.CreateSlimBuilder(options);
         builder.Host.UseWindowsService();
 
         builder.Services.AddCoreServices();
