@@ -16,7 +16,6 @@ public class RouteRestrictionMiddleware(RequestDelegate next)
     [
         "/account/login",
         "/account/logout",
-        "/account/accessdenied",
         "/account/manage",
         "/account/register"
     ];
@@ -38,7 +37,7 @@ public class RouteRestrictionMiddleware(RequestDelegate next)
 
         if (path.StartsWith("/account") && !isAllowedRoute)
         {
-            context.Response.Redirect("/Account/AccessDenied");
+            context.Response.Redirect("/");
 
             return;
         }

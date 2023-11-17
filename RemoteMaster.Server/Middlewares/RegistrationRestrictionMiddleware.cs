@@ -20,7 +20,7 @@ public class RegistrationRestrictionMiddleware(RequestDelegate next, bool enable
 
         if (!enableRegistration && isRestrictedRoute)
         {
-            context.Response.Redirect("/Account/AccessDenied");
+            context.Response.Redirect("/");
 
             return;
         }

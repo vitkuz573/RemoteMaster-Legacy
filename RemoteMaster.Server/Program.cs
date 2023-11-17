@@ -11,6 +11,7 @@ using RemoteMaster.Server.Components;
 using RemoteMaster.Server.Components.Account;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Hubs;
+using RemoteMaster.Server.Middlewares;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
 
@@ -81,6 +82,11 @@ else
 }
 
 // app.UseHttpsRedirection();
+
+var isRegisterAllowed = builder.Configuration.GetValue<bool>("RegisterAllowed"); 
+
+app.UseMiddleware<RegistrationRestrictionMiddleware>(isRegisterAllowed);
+app.UseMiddleware<RouteRestrictionMiddleware>();
 
 app.UseStaticFiles();
 app.UseAntiforgery();
