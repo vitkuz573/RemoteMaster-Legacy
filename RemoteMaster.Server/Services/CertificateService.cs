@@ -15,7 +15,7 @@ public class CertificateService(IOptions<CertificateSettings> options) : ICertif
 {
     private readonly CertificateSettings _settings = options?.Value ?? throw new ArgumentNullException(nameof(options));
 
-    private const int CertificateValidityYears = 1;
+    private readonly DateTimeOffset CertificateValidity = DateTimeOffset.UtcNow.AddYears(1);
 
     public X509Certificate2 GenerateCertificateFromCSR(byte[] csrBytes)
     {
@@ -35,7 +35,7 @@ public class CertificateService(IOptions<CertificateSettings> options) : ICertif
         var subjectName = caCertificate.SubjectName;
         var signatureGenerator = X509SignatureGenerator.CreateForRSA(caCertificate.GetRSAPrivateKey(), RSASignaturePadding.Pkcs1);
         var notBefore = DateTimeOffset.UtcNow;
-        var notAfter = DateTimeOffset.UtcNow.AddYears(CertificateValidityYears);
+        var notAfter = CertificateValidity;
         var serialNumber = GenerateSerialNumber();
 
         var certificate = csr.Create(subjectName, signatureGenerator, notBefore, notAfter, serialNumber);
