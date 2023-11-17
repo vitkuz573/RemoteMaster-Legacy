@@ -42,7 +42,7 @@ public class CertificateRequestService : ICertificateRequestService
 
         var enhancedKeyUsages = new OidCollection
         {
-            new Oid("1.3.6.1.5.5.7.3.1")
+            Oid.FromFriendlyName("Server Authentication", OidGroup.EnhancedKeyUsage)
         };
 
         csr.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(enhancedKeyUsages, true));
