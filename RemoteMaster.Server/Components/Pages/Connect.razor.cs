@@ -18,6 +18,8 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Pages;
 
+// TODO: Вернуть MudLayout в Connect.razor.cs после исправления в репозитории MudBlazor https://github.com/MudBlazor/MudBlazor/issues/7763
+
 public partial class Connect
 {
     [Parameter]
