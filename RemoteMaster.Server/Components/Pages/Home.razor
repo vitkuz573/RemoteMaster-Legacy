@@ -1,6 +1,8 @@
 ﻿@page "/"
 @rendermode InteractiveServer
 @using RemoteMaster.Server.Models
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
 
 <MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme" />
 <MudDialogProvider />
