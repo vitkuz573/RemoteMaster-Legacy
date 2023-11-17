@@ -38,7 +38,7 @@ public partial class PowerDialog
 
     private async Task Confirm()
     {
-        if (_selectedOption == "power")
+        if (_selectedOption == "shutdown")
         {
             await ComputerCommandService.Execute(AvailableHosts, async (computer, connection) => await connection.InvokeAsync("SendShutdownComputer", "", 0, true));
         }
