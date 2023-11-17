@@ -15,7 +15,7 @@ using RemoteMaster.Server.Middlewares;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateSlimBuilder();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
