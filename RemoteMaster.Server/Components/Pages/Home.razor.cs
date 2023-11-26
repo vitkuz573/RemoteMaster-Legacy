@@ -2,11 +2,12 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
-using MudBlazor;
+using Microsoft.FluentUI.AspNetCore.Components;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Components.Dialogs;
+using RemoteMaster.Server.Components.Panels;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 using Serilog;
@@ -15,46 +16,110 @@ namespace RemoteMaster.Server.Components.Pages;
 
 public partial class Home
 {
-    private bool _isMenuOpen = false;
-
-    private void ToggleDrawer()
-    {
-        _isMenuOpen = !_isMenuOpen;
-    }
-
-    private HashSet<Node> _nodes;
-    private Node _selectedNode;
-
-    private readonly List<Computer> _selectedComputers = [];
+    [Inject]
+    private IDialogService DialogService { get; set; } = default!;
 
     [Inject]
-    public NavigationManager NavigationManager { get; set; }
-
-    [Inject]
-    private IDialogService DialogService { get; set; }
+    private IHttpContextAccessor HttpContextAccessor { get; set; } = default!;
 
     [Inject]
     private IDatabaseService DatabaseService { get; set; }
 
     [Inject]
-    private IHttpContextAccessor HttpContextAccessor { get; set; }
+    private ILogger<Home> Logger { get; set; } = default!;
 
-    [Inject]
-    private IAntiforgery Antiforgery { get; set; }
+    private readonly List<Computer> _selectedComputers;
+    private HashSet<Node> _nodes;
+    private FluentTreeItem? _currentSelected;
 
-    private bool _isDarkMode = false;
-
-    private readonly MudTheme _theme = new()
+    public Home()
     {
-        LayoutProperties = new LayoutProperties()
-        {
-            DrawerWidthLeft = "250px"
-        }
-    };
+        _nodes = [];
+        _selectedComputers = [];
+    }
 
     protected async override Task OnInitializedAsync()
     {
         _nodes = (await DatabaseService.GetNodesAsync(f => f.Parent == null && f is Folder)).Cast<Node>().ToHashSet();
+
+        await base.OnInitializedAsync();
+    }
+
+    private async Task Power()
+    {
+        var hosts = await GetComputers(false);
+
+        await DialogService.ShowDialogAsync<PowerDialog>(hosts, new DialogParameters()
+        {
+            Title = $"Power",
+            TrapFocus = false,
+            PreventDismissOnOverlayClick = true,
+            PreventScroll = true
+        });
+    }
+
+    private async Task Connect()
+    {
+        var hosts = await GetComputers();
+
+        if (hosts.Count > 0)
+        {
+            await DialogService.ShowDialogAsync<ConnectDialog>(hosts, new DialogParameters
+            {
+                Title = $"Connect",
+                TrapFocus = false,
+                PreventDismissOnOverlayClick = true,
+                PreventScroll = true
+            });
+        }
+    }
+
+    private async Task ConnectToShell()
+    {
+        var hosts = await GetComputers();
+
+        if (hosts.Count > 0)
+        {
+            await DialogService.ShowDialogAsync<ShellDialog>(hosts, new DialogParameters
+            {
+                Title = $"Connect to shell",
+                TrapFocus = false,
+                PreventDismissOnOverlayClick = true,
+                PreventScroll = true
+            });
+        }
+    }
+
+    private async Task ExecuteScript()
+    {
+        var hosts = await GetComputers();
+
+        if (hosts.Count > 0)
+        {
+            await DialogService.ShowDialogAsync<ScriptDialog>(hosts, new DialogParameters
+            {
+                Title = $"Execute script",
+                TrapFocus = false,
+                PreventDismissOnOverlayClick = true,
+                PreventScroll = true
+            });
+        }
+    }
+
+    private async Task OpenHomePanelAsync()
+    {
+        var parameters = new DialogParameters
+        {
+            Title = "RemoteMaster",
+            Alignment = HorizontalAlignment.Left,
+            Modal = true,
+            TrapFocus = false,
+            Width = "350px",
+            PrimaryAction = null,
+            SecondaryAction = null
+        };
+
+        await DialogService.ShowPanelAsync<HomePanel>(parameters);
     }
 
     private void HandleComputerSelection(Computer computer, bool isSelected)
@@ -71,17 +136,52 @@ public partial class Home
         StateHasChanged();
     }
 
-    private async Task OnNodeSelected(Node node)
+    private async Task<Dictionary<Computer, HubConnection?>> GetComputers(bool onlyAvailable = true)
     {
-        _selectedComputers.Clear();
+        var computerConnections = new Dictionary<Computer, HubConnection?>();
 
-        if (node is Folder)
+        var tasks = _selectedComputers.Select(async computer =>
         {
-            _selectedNode = node;
-            await UpdateComputersThumbnailsAsync(node.Nodes.OfType<Computer>());
-        }
+            var isAvailable = await computer.IsAvailable();
 
-        StateHasChanged();
+            if (!isAvailable && onlyAvailable)
+            {
+                return;
+            }
+
+            var accessToken = HttpContextAccessor.HttpContext?.Request.Cookies["accessToken"];
+
+            HubConnection? connection = null;
+
+            if (isAvailable)
+            {
+                try
+                {
+                    connection = new HubConnectionBuilder()
+                        .WithUrl($"https://{computer.IPAddress}:5076/hubs/control", options =>
+                        {
+                            options.Headers.Add("Authorization", $"Bearer {accessToken}");
+                        })
+                        .AddMessagePackProtocol()
+                        .Build();
+
+                    await connection.StartAsync();
+                }
+                catch
+                {
+                    connection = null;
+                }
+            }
+
+            lock (computerConnections)
+            {
+                computerConnections.Add(computer, connection);
+            }
+        });
+
+        await Task.WhenAll(tasks);
+
+        return computerConnections;
     }
 
     private async Task UpdateComputersThumbnailsAsync(IEnumerable<Computer> computers)
@@ -126,166 +226,15 @@ public partial class Home
         }
     }
 
-    private async Task HandleRefreshClick()
+    private async Task OnNodeSelected(FluentTreeItem item)
     {
-        if (_selectedNode is Folder selectedFolder)
+        _selectedComputers.Clear();
+
+        _currentSelected = item;
+
+        if (_nodes.FirstOrDefault(x => x.Name == _currentSelected?.Text) is Folder folder)
         {
-            await UpdateComputersThumbnailsAsync(selectedFolder.Nodes.OfType<Computer>());
+            await UpdateComputersThumbnailsAsync(folder.Nodes.OfType<Computer>());
         }
-    }
-
-    private async Task<Dictionary<Computer, HubConnection>> GetAvailableComputers()
-    {
-        var computerConnections = new Dictionary<Computer, HubConnection>();
-
-        var tasks = _selectedComputers.Select(async computer =>
-        {
-            if (!await computer.IsAvailable())
-            {
-                return;
-            }
-
-            var accessToken = HttpContextAccessor.HttpContext?.Request.Cookies["accessToken"];
-
-            var connection = new HubConnectionBuilder()
-                .WithUrl($"https://{computer.IPAddress}:5076/hubs/control", options =>
-                {
-                    options.Headers.Add("Authorization", $"Bearer {accessToken}");
-                })
-                .AddMessagePackProtocol()
-                .Build();
-
-            await connection.StartAsync();
-
-            lock (computerConnections)
-            {
-                computerConnections.Add(computer, connection);
-            }
-        });
-
-        await Task.WhenAll(tasks);
-
-        return computerConnections;
-    }
-
-    private async Task Connect()
-    {
-        var dialogParameters = new DialogParameters<ConnectDialog>
-        {
-            { x => x.Hosts, await GetAvailableComputers() }
-        };
-
-        await DialogService.ShowAsync<ConnectDialog>("Connect", dialogParameters);
-    }
-
-    private async Task OpenShell()
-    {
-        var dialogParameters = new DialogParameters<OpenShellDialog>
-        {
-            { x => x.Hosts, await GetAvailableComputers() }
-        };
-
-        await DialogService.ShowAsync<OpenShellDialog>("Connect to shell", dialogParameters);
-    }
-
-    private async Task Power()
-    {
-        var dialogParameters = new DialogParameters<PowerDialog>
-        {
-            { x => x.AvailableHosts, await GetAvailableComputers() },
-            { x => x.Hosts, _selectedComputers }
-        };
-
-        await DialogService.ShowAsync<PowerDialog>("Power", dialogParameters);
-    }
-
-    private async Task DomainMember()
-    {
-        var dialogParameters = new DialogParameters<DomainManagementDialog>
-        {
-            { x => x.Hosts, await GetAvailableComputers() }
-        };
-
-        await DialogService.ShowAsync<DomainManagementDialog>("Domain Management", dialogParameters);
-    }
-
-    private async Task Update()
-    {
-        var dialogParameters = new DialogParameters<UpdateDialog>
-        {
-            { x => x.Hosts, await GetAvailableComputers() }
-        };
-
-        await DialogService.ShowAsync<UpdateDialog>("Update", dialogParameters);
-    }
-
-    private async Task ScreenRecorder()
-    {
-        var computers = await GetAvailableComputers();
-
-        var dialogParameters = new DialogParameters<ScreenRecorderDialog>
-        {
-            { x => x.Hosts, await GetAvailableComputers() }
-        };
-
-        await DialogService.ShowAsync<ScreenRecorderDialog>("Screen Recorder", dialogParameters);
-    }
-
-    private async Task SetMonitorState()
-    {
-        var dialogParameters = new DialogParameters<MonitorStateDialog>
-        {
-            { x => x.Hosts, await GetAvailableComputers() }
-        };
-
-        await DialogService.ShowAsync<MonitorStateDialog>("Monitor state", dialogParameters);
-    }
-
-    private async Task ExecuteScript()
-    {
-        var dialogParameters = new DialogParameters<ScriptExecutorDialog>
-        {
-            { x => x.Hosts, await GetAvailableComputers() }
-        };
-
-        await DialogService.ShowAsync<ScriptExecutorDialog>("Script executor", dialogParameters);
-    }
-
-    private async Task ManagePSExecRules()
-    {
-        var dialogParameters = new DialogParameters<PsexecRulesDialog>
-        {
-            { x => x.Hosts, await GetAvailableComputers() }
-        };
-
-        await DialogService.ShowAsync<PsexecRulesDialog>("PSExec rules", dialogParameters);
-    }
-
-    private async Task OpenHostConfigGenerator()
-    {
-        var dialogOptions = new DialogOptions
-        {
-            CloseOnEscapeKey = true,
-        };
-
-        await DialogService.ShowAsync<HostConfigurationGenerator>("Host Configuration Generator", dialogOptions);
-    }
-
-    private async Task Logout()
-    {
-        var context = HttpContextAccessor.HttpContext;
-        try
-        {
-            await Antiforgery.ValidateRequestAsync(context);
-        }
-        catch (AntiforgeryValidationException)
-        {
-            // Обработка ошибки валидации маркера против подделки
-            return;
-        }
-
-        using var httpClient = new HttpClient();
-        httpClient.BaseAddress = new Uri("http://localhost:5254");
-        await httpClient.PostAsync("Account/Logout", null);
     }
 }

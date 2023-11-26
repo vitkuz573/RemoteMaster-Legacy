@@ -1,0 +1,30 @@
+﻿@implements IDialogContentComponent
+@using RemoteMaster.Shared.Models
+
+<FluentDialogBody>
+    <FluentNavMenu Width="300">
+        <FluentSelect TOption="Display" Items="@Content.Displays" Appearance="Appearance.Stealth" OptionText="@(i => i.Name)" OptionValue="@(i => i.Name)" OptionSelected="@(i => i.IsPrimary)" />
+
+        <FluentNavLink Icon="@(new Icons.Regular.Size24.Image())">
+            <FluentSlider TValue="int" Min="0" Max="100" Step="1" @bind-Value="@Content.ImageQuality" />
+        </FluentNavLink>
+
+        <div style="display: flex; flex-direction: column;">
+            <FluentNavLink Icon="@(new Icons.Regular.Size24.Cursor())">
+                <FluentSwitch Label="Cursor Tracking" @bind-Value="@Content.CursorTracking" />
+            </FluentNavLink>
+
+            <FluentNavLink Icon="@(new Icons.Regular.Size24.Keyboard())">
+                <FluentSwitch Label="Input Toggle" @bind-Value="@Content.InputEnabled" />
+            </FluentNavLink>
+        </div>
+
+        <FluentNavLink Icon="@(new Icons.Regular.Size24.Delete())">Kill Host</FluentNavLink>
+        <FluentNavLink Icon="@(new Icons.Regular.Size24.ControlButton())">Send Ctrl+Alt+Del</FluentNavLink>
+        <FluentNavLink Icon="@(new Icons.Regular.Size24.ArrowSyncCircle())">Reboot Computer</FluentNavLink>
+        <FluentNavLink Icon="@(new Icons.Regular.Size24.Power())">Shutdown Computer</FluentNavLink>
+
+        <FluentNavLink Icon="@(new Icons.Regular.Size24.Notepad())">Host Version: @(Content.Version)</FluentNavLink>
+
+    </FluentNavMenu>
+</FluentDialogBody>

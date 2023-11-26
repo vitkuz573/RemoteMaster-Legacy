@@ -10,7 +10,7 @@ using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class DatabaseService(NodesDataContext context) : IDatabaseService
+public class DatabaseService(NodesDbContext context) : IDatabaseService
 {
     public async Task<IList<Node>> GetNodesAsync(Expression<Func<Node, bool>>? predicate = null)
     {

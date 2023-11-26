@@ -1,0 +1,36 @@
+﻿@implements IDialogContentComponent
+
+@* Header *@
+<FluentDialogHeader ShowDismiss="true">
+    <FluentStack VerticalAlignment="VerticalAlignment.Center">
+        <FluentIcon Value="@(new Icons.Regular.Size24.Power())" />
+        <FluentLabel Typo="Typography.PaneHeader">
+            @Dialog.Instance.Parameters.Title
+        </FluentLabel>
+    </FluentStack>
+</FluentDialogHeader>
+
+@* Footer *@
+<FluentDialogFooter>
+    <FluentButton Appearance="Appearance.Accent" OnClick="@Confirm">Confirm</FluentButton>
+</FluentDialogFooter>
+
+@* Body *@
+<FluentDialogBody>
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="10">
+        <FluentAccordion Style="width: 100%;">
+            <FluentAccordionItem Heading="Click to view affected hosts">
+                @foreach (var (computer, connection) in Content)
+                {
+                    <FluentLabel>@computer.Name (@computer.IPAddress)</FluentLabel>
+                }
+            </FluentAccordionItem>
+        </FluentAccordion>
+
+        <FluentRadioGroup TValue="string" @bind-Value="@_selectedOption" Required="true" Orientation="Orientation.Vertical">
+            <FluentRadio Value="@("shutdown")">Shutdown</FluentRadio>
+            <FluentRadio Value="@("reboot")">Reboot</FluentRadio>
+            <FluentRadio Value="@("wakeup")">Wake Up</FluentRadio>
+        </FluentRadioGroup>
+    </FluentStack>
+</FluentDialogBody>

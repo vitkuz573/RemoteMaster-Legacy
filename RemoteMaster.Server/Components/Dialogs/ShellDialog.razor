@@ -1,0 +1,45 @@
+﻿@implements IDialogContentComponent
+@using RemoteMaster.Shared.Models
+
+@* Header *@
+<FluentDialogHeader ShowDismiss="true">
+    <FluentStack VerticalAlignment="VerticalAlignment.Center">
+        <FluentIcon Value="@(new Icons.Regular.Size24.Connector())" />
+        <FluentLabel Typo="Typography.PaneHeader">
+            @Dialog.Instance.Parameters.Title
+        </FluentLabel>
+    </FluentStack>
+</FluentDialogHeader>
+
+@* Footer *@
+<FluentDialogFooter>
+    <FluentButton Appearance="Appearance.Accent" OnClick="@Connect">Connect</FluentButton>
+</FluentDialogFooter>
+
+@* Body *@
+<FluentDialogBody>
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="10">
+        <FluentAccordion Style="width: 100%;">
+            <FluentAccordionItem Heading="Click to view affected hosts">
+                @foreach (var (computer, connection) in Content)
+                {
+                    <FluentLabel>@computer.Name (@computer.IPAddress)</FluentLabel>
+                }
+            </FluentAccordionItem>
+        </FluentAccordion>
+
+        <FluentStack Orientation="Orientation.Horizontal" Width="100%">
+            <FluentRadioGroup TValue="Shell" Required="true" Orientation="Orientation.Vertical" Label="Shell option:">
+                @foreach (Shell shell in Enum.GetValues(typeof(Shell)))
+                {
+                    <FluentRadio Value="@shell">@shell</FluentRadio>
+                }
+            </FluentRadioGroup>
+
+            <FluentRadioGroup TValue="string" Required="true" Orientation="Orientation.Vertical" Label="User option:">
+                <FluentRadio Value="@("currentUser")">Current user</FluentRadio>
+                <FluentRadio Value="@("system")">System</FluentRadio>
+            </FluentRadioGroup>
+        </FluentStack>
+    </FluentStack>
+</FluentDialogBody>

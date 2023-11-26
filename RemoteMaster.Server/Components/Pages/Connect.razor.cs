@@ -9,67 +9,50 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
+using Microsoft.FluentUI.AspNetCore.Components;
 using Microsoft.JSInterop;
-using MudBlazor;
 using Polly;
 using Polly.Retry;
+using RemoteMaster.Server.Components.Panels;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Pages;
 
-// TODO: Вернуть MudLayout в Connect.razor.cs после исправления в репозитории MudBlazor https://github.com/MudBlazor/MudBlazor/issues/7763
-
-public partial class Connect
+public partial class Connect : IDisposable
 {
     [Parameter]
-    public string Host { get; set; }
+    public string Host { get; set; } = default!;
 
     [Inject]
-    private NavigationManager NavigationManager { get; set; }
+    private IDialogService DialogService { get; set; } = default!;
 
     [Inject]
-    private IJSRuntime JSRuntime { get; set; }
+    private IHttpContextAccessor HttpContextAccessor { get; set; } = default!;
 
     [Inject]
-    private IHttpContextAccessor HttpContextAccessor { get; set; }
+    private NavigationManager NavigationManager { get; set; } = default!;
+
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = default!;
 
     private string? _screenDataUrl;
-
-    private bool _isMenuOpen = false;
-
+    private readonly string _newUri;
+    private HubConnection _connection;
+    private List<Display> _displays;
     private string _hostVersion;
-
     private bool _inputEnabled;
     private bool _cursorTracking;
     private int _imageQuality;
-
-    private List<Display> _displays;
-
-    private readonly string _newUri;
-
-    private string _selectedDisplay;
-
-    private HubConnection _connection;
 
     private readonly AsyncRetryPolicy _retryPolicy = Policy
         .Handle<Exception>()
         .WaitAndRetryAsync(new[]
         {
-            TimeSpan.FromSeconds(5),
-            TimeSpan.FromSeconds(7),
-            TimeSpan.FromSeconds(10),
+                TimeSpan.FromSeconds(5),
+                TimeSpan.FromSeconds(7),
+                TimeSpan.FromSeconds(10),
         });
-
-    private bool _isDarkMode = false;
-
-    private readonly MudTheme _theme = new()
-    {
-        LayoutProperties = new LayoutProperties()
-        {
-            DrawerWidthRight = "300px"
-        }
-    };
 
     protected async override Task OnInitializedAsync()
     {
@@ -127,7 +110,7 @@ public partial class Connect
             }
         }
 
-        result = default;
+        result = default!;
 
         return false;
     }
@@ -218,7 +201,7 @@ public partial class Connect
                 options.Headers.Add("Authorization", $"Bearer {accessToken}");
             })
             .AddMessagePackProtocol()
-            .Build();
+        .Build();
 
         _connection.On<IEnumerable<Display>>("ReceiveDisplays", (displays) => _displays = displays.ToList());
         _connection.On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate);
@@ -246,78 +229,28 @@ public partial class Connect
         return new PointD(percentX, percentY);
     }
 
-    private void ToggleMenu()
+    private async Task OpenConnectPanelAsync()
     {
-        _isMenuOpen = !_isMenuOpen;
-    }
-
-    private async void OnChangeScreen(string display)
-    {
-        _selectedDisplay = display;
-
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendSelectedScreen", display));
-    }
-
-    private async Task ChangeQuality(int quality)
-    {
-        _imageQuality = quality;
-
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendImageQuality", quality));
-        await UpdateUrlParameter("imageQuality", quality.ToString());
-    }
-
-    private async Task ToggleCursorTracking(bool value)
-    {
-        _cursorTracking = value;
-
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendToggleCursorTracking", value));
-        await UpdateUrlParameter("cursorTracking", value.ToString());
-    }
-
-    private async Task ToggleInputEnabled(bool value)
-    {
-        _inputEnabled = value;
-
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendToggleInput", value));
-        await UpdateUrlParameter("inputEnabled", value.ToString());
-    }
-
-    private async Task UpdateUrlParameter(string key, string value)
-    {
-        var uri = new Uri(NavigationManager.Uri);
-        var queryParameters = QueryHelpers.ParseQuery(uri.Query);
-
-        if (queryParameters.ContainsKey(key))
+        var parameters = new DialogParameters
         {
-            queryParameters[key] = value;
-        }
-        else
+            Title = "Connect",
+            Alignment = HorizontalAlignment.Right,
+            Modal = true,
+            TrapFocus = false,
+            Width = "350px",
+            PrimaryAction = null,
+            SecondaryAction = null
+        };
+
+        var connectData = new ConnectData
         {
-            queryParameters.Add(key, value);
-        }
+            Version = "host_version_placeholder"
+        };
 
-        var newUri = QueryHelpers.AddQueryString(uri.GetLeftPart(UriPartial.Path), queryParameters);
-        await JSRuntime.InvokeVoidAsync("history.replaceState", null, "", newUri);
-    }
+        connectData.Displays.Add(new Display { Name = "Display 1", Resolution = new System.Drawing.Size(45, 56), IsPrimary = true });
+        connectData.Displays.Add(new Display { Name = "Display 2", Resolution = new System.Drawing.Size(45, 56), IsPrimary = false });
 
-    private async Task KillHost()
-    {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendKillHost"));
-    }
-
-    private async Task RebootComputer()
-    {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendRebootComputer", string.Empty, 0, true));
-    }
-
-    private async Task ShutdownComputer()
-    {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendShutdownComputer", string.Empty, 0, true));
-    }
-
-    private async Task SendCtrlAltDel()
-    {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendCommandToService", "CtrlAltDel"));
+        await DialogService.ShowPanelAsync<ConnectPanel>(connectData, parameters);
     }
 
     [JSInvokable]

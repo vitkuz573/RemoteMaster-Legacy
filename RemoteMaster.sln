@@ -15,7 +15,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Host.Core", "R
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Host.Windows", "RemoteMaster.Host.Windows\RemoteMaster.Host.Windows.csproj", "{997141CA-F785-485B-BAE7-1759A1AB091C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Server", "RemoteMaster.Server\RemoteMaster.Server.csproj", "{356B00AF-FBFA-44D3-930E-1017C3E193B9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Server.OLD", "RemoteMaster.Server.OLD\RemoteMaster.Server.OLD.csproj", "{356B00AF-FBFA-44D3-930E-1017C3E193B9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Server", "RemoteMaster.Server\RemoteMaster.Server.csproj", "{92690E0C-F346-43C3-BC70-6174BBC7E011}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -93,6 +95,22 @@ Global
 		{356B00AF-FBFA-44D3-930E-1017C3E193B9}.Release|x64.Build.0 = Release|Any CPU
 		{356B00AF-FBFA-44D3-930E-1017C3E193B9}.Release|x86.ActiveCfg = Release|Any CPU
 		{356B00AF-FBFA-44D3-930E-1017C3E193B9}.Release|x86.Build.0 = Release|Any CPU
+		{92690E0C-F346-43C3-BC70-6174BBC7E011}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92690E0C-F346-43C3-BC70-6174BBC7E011}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92690E0C-F346-43C3-BC70-6174BBC7E011}.Debug|arm64.ActiveCfg = Debug|Any CPU
+		{92690E0C-F346-43C3-BC70-6174BBC7E011}.Debug|arm64.Build.0 = Debug|Any CPU
+		{92690E0C-F346-43C3-BC70-6174BBC7E011}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{92690E0C-F346-43C3-BC70-6174BBC7E011}.Debug|x64.Build.0 = Debug|Any CPU
+		{92690E0C-F346-43C3-BC70-6174BBC7E011}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{92690E0C-F346-43C3-BC70-6174BBC7E011}.Debug|x86.Build.0 = Debug|Any CPU
+		{92690E0C-F346-43C3-BC70-6174BBC7E011}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92690E0C-F346-43C3-BC70-6174BBC7E011}.Release|Any CPU.Build.0 = Release|Any CPU
+		{92690E0C-F346-43C3-BC70-6174BBC7E011}.Release|arm64.ActiveCfg = Release|Any CPU
+		{92690E0C-F346-43C3-BC70-6174BBC7E011}.Release|arm64.Build.0 = Release|Any CPU
+		{92690E0C-F346-43C3-BC70-6174BBC7E011}.Release|x64.ActiveCfg = Release|Any CPU
+		{92690E0C-F346-43C3-BC70-6174BBC7E011}.Release|x64.Build.0 = Release|Any CPU
+		{92690E0C-F346-43C3-BC70-6174BBC7E011}.Release|x86.ActiveCfg = Release|Any CPU
+		{92690E0C-F346-43C3-BC70-6174BBC7E011}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -5,21 +5,22 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using MudBlazor.Services;
+using Microsoft.FluentUI.AspNetCore.Components;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Components;
 using RemoteMaster.Server.Components.Account;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Hubs;
-using RemoteMaster.Server.Middlewares;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
 
-var builder = WebApplication.CreateSlimBuilder();
+var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddFluentUIComponents();
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
@@ -38,11 +39,15 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
+builder.Services.AddDbContext<NodesDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
+builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 builder.Services.AddTransient<IHostConfigurationService, HostConfigurationService>();
 builder.Services.AddScoped<IDatabaseService, DatabaseService>();
@@ -55,17 +60,14 @@ builder.Services.AddTransient<ITokenService, TokenService>();
 builder.Services.Configure<TokenServiceOptions>(builder.Configuration.GetSection("Jwt"));
 builder.Services.Configure<CertificateSettings>(builder.Configuration.GetSection("CertificateSettings"));
 
-builder.Services.AddMudServices();
-
 builder.Services.AddControllers();
-
-builder.Services.AddDbContext<NodesDataContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("NodesDataContextConnection")));
 
 builder.WebHost.ConfigureKestrel(options =>
 {
     options.ListenAnyIP(5254);
 });
+
+builder.Services.AddLogging();
 
 var app = builder.Build();
 
@@ -78,15 +80,10 @@ else
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    // app.UseHsts();
+    app.UseHsts();
 }
 
-// app.UseHttpsRedirection();
-
-var isRegisterAllowed = builder.Configuration.GetValue<bool>("RegisterAllowed"); 
-
-app.UseMiddleware<RegistrationRestrictionMiddleware>(isRegisterAllowed);
-app.UseMiddleware<RouteRestrictionMiddleware>();
+app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseAntiforgery();

@@ -1,0 +1,22 @@
+﻿@implements IDialogContentComponent
+
+@* Header *@
+<FluentDialogHeader ShowDismiss="true">
+    <FluentStack VerticalAlignment="VerticalAlignment.Center">
+        <FluentIcon Value="@(new Icons.Regular.Size24.Settings())" />
+        <FluentLabel Typo="Typography.PaneHeader">
+            @Dialog.Instance.Parameters.Title
+        </FluentLabel>
+    </FluentStack>
+</FluentDialogHeader>
+
+@* Footer *@
+<FluentDialogFooter>
+    <FluentButton Appearance="Appearance.Accent" OnClick="@GenerateConfiguration">Generate Configuration</FluentButton>
+    <FluentButton Appearance="Appearance.Neutral" OnClick="@DownloadHost">Download Host</FluentButton>
+</FluentDialogFooter>
+
+@* Body *@
+<FluentDialogBody>
+    <FluentTextField @bind-Value="@Content.Group" Size="100">Group:</FluentTextField>
+</FluentDialogBody>

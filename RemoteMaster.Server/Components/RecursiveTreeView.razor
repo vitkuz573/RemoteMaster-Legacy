@@ -1,0 +1,11 @@
+﻿@using RemoteMaster.Server.Models
+
+<FluentTreeItem Text="@Node.Name">
+    @if (Node is Folder folder)
+    {
+        @foreach (var child in folder.Nodes)
+        {
+            <RecursiveTreeView Node="child" />
+        }
+    }
+</FluentTreeItem>
