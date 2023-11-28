@@ -26,7 +26,7 @@
 <div>
     <form @formname="reset-authenticator" @onsubmit="OnSubmitAsync" method="post">
         <AntiforgeryToken />
-        <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Filled">Reset authenticator key</FluentButton>
+        <button class="btn btn-danger" type="submit">Reset authenticator key</button>
     </form>
 </div>
 

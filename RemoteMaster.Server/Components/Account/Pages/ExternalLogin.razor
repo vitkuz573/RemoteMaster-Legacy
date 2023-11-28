@@ -29,17 +29,20 @@
     logging in.
 </div>
 
-<FluentGrid>
-    <FluentGridItem xs="8" sm="4">
+<div class="row">
+    <div class="col-md-4">
         <EditForm Model="Input" OnValidSubmit="OnValidSubmitAsync" FormName="confirmation" method="post">
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" role="alert" />
-            <FluentTextField Name="Input.Email" @bind-Value="Input.Email" AutoComplete="email" Placeholder="Please enter your email." Label="Email" Style="width: 100%;"/>
-            <ValidationMessage For="() => Input.Email" />
-            <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent" Style="width: 100%;">Register</FluentButton>
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.Email" class="form-control" autocomplete="email" placeholder="Please enter your email." />
+                <label for="email" class="form-label">Email</label>
+                <ValidationMessage For="() => Input.Email" />
+            </div>
+            <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
         </EditForm>
-    </FluentGridItem>
-</FluentGrid>
+    </div>
+</div>
 
 @code {
     public const string LoginCallbackAction = "LoginCallback";

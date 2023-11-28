@@ -1,48 +1,25 @@
 ﻿@page "/"
-@using RemoteMaster.Server.Models
+@rendermode InteractiveServer
 
-<PageTitle>RemoteMaster</PageTitle>
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
 
-<FluentLayout>
-    <FluentHeader>
-        <FluentButton OnClick="OpenHomePanelAsync" IconStart="@(new Icons.Regular.Size24.PanelLeftExpand())" />
-    </FluentHeader>
+<PageTitle>RemoteMaster Server - Home</PageTitle>
 
-    <FluentStack Orientation="Orientation.Horizontal" Width="99%" HorizontalGap="30">
-        <FluentTreeView OnSelectedChange="OnNodeSelected" Style="width: 250px">
-            @foreach (var node in _nodes)
-            {
-                <RecursiveTreeView Node="node" />
-            }
-        </FluentTreeView>
-
-        <FluentStack Orientation="Orientation.Vertical" Width="100%" VerticalGap="20">
-            <FluentTabs ActiveTabId="tab-main">
-                <FluentTab Id="tab-main" Label="Main">
-                    <FluentButton Appearance="Appearance.Accent" Disabled=@(_selectedComputers.Count == 0) OnClick="@Power">Power</FluentButton>
-                    <FluentButton Appearance="Appearance.Accent" Disabled=@(_selectedComputers.Count == 0) OnClick="@Connect">Connect</FluentButton>
-                    <FluentButton Appearance="Appearance.Accent" Disabled=@(_selectedComputers.Count == 0) OnClick="@ConnectToShell">Connect to shell</FluentButton>
-                    <FluentButton Appearance="Appearance.Accent" Disabled=@(_selectedComputers.Count == 0) OnClick="@ExecuteScript">Execute script</FluentButton>
-                </FluentTab>
-                <FluentTab Id="tab-service" Label="Service">
-                    Tab two content. This is for testing.
-                </FluentTab>
-            </FluentTabs>
-
-            @if (_currentSelected != null && _nodes.FirstOrDefault(x => x.Name == _currentSelected?.Text) is Folder folder)
-            {
-                <FluentGrid Spacing="1" Justify="JustifyContent.FlexStart">
-                    @foreach (var child in folder.Nodes)
-                    {
-                        if (child is Computer computer)
-                        {
-                            <div style="width: 16.666667%">
-                                <ComputerCard @key="computer" Computer="computer" IsSelectedChanged="@(isSelected => HandleComputerSelection(computer, isSelected))" />
-                            </div>
-                        }
-                    }
-                </FluentGrid>
-            }
-        </FluentStack>
-    </FluentStack>
-</FluentLayout>
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@DrawerToggle" />
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/vitkuz573/RemoteMaster" Target="_blank" />
+    </MudAppBar>
+    <MudDrawer @bind-Open="@_drawerOpen" Elevation="1" Variant="@DrawerVariant.Responsive">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6">RemoteMaster</MudText>
+        </MudDrawerHeader>
+        <MudNavMenu>
+            <MudNavLink Match="NavLinkMatch.All" OnClick="OpenHostConfigurator">Host Configurator</MudNavLink>
+            <MudNavLink Match="NavLinkMatch.All" OnClick="Logout">Logout</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
+</MudLayout>
