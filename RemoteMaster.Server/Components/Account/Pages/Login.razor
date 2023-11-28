@@ -3,12 +3,14 @@
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Identity
+@using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Server.Data
 
 @inject SignInManager<ApplicationUser> SignInManager
 @inject ILogger<Login> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
+@inject ITokenService TokenService
 
 <PageTitle>Log in</PageTitle>
 
@@ -93,6 +95,17 @@
         if (result.Succeeded)
         {
             Logger.LogInformation("User logged in.");
+
+            var accessTokenString = TokenService.GenerateAccessToken(Input.Email);
+
+            var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Expires = DateTime.UtcNow.AddHours(2)
+                };
+
+            HttpContext.Response.Cookies.Append("accessToken", accessTokenString, cookieOptions);
+
             RedirectManager.RedirectTo(ReturnUrl);
         }
         else if (result.RequiresTwoFactor)
