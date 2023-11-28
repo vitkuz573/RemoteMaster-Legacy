@@ -1,5 +1,6 @@
 ﻿@page "/"
 @rendermode InteractiveServer
+@using RemoteMaster.Server.Models
 
 <MudThemeProvider />
 <MudDialogProvider />
@@ -22,4 +23,12 @@
             <MudNavLink Match="NavLinkMatch.All" OnClick="Logout">Logout</MudNavLink>
         </MudNavMenu>
     </MudDrawer>
+
+    <MudMainContent>
+        <MudTreeView Items="@_nodes" T="Node" SelectedValueChanged="OnNodeSelected" Hover="true">
+            <ItemTemplate>
+                <MudTreeViewItem Items="@context.Nodes" Value="@context" Text="@context.Name" />
+            </ItemTemplate>
+        </MudTreeView>
+    </MudMainContent>
 </MudLayout>
