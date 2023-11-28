@@ -11,10 +11,11 @@ using RemoteMaster.Server.Components;
 using RemoteMaster.Server.Components.Account;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Hubs;
+using RemoteMaster.Server.Middlewares;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateSlimBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -55,7 +56,7 @@ builder.Services.AddSingleton<ISerializationService, JsonSerializerService>();
 builder.Services.AddTransient<ITokenService, TokenService>();
 builder.Services.Configure<TokenServiceOptions>(builder.Configuration.GetSection("Jwt"));
 builder.Services.Configure<CertificateSettings>(builder.Configuration.GetSection("CertificateSettings"));
-
+builder.Services.AddControllers();
 builder.Services.AddMudServices();
 
 var app = builder.Build();
@@ -77,6 +78,11 @@ else
 
 // app.UseHttpsRedirection();
 
+var isRegisterAllowed = builder.Configuration.GetValue<bool>("RegisterAllowed");
+
+app.UseMiddleware<RegistrationRestrictionMiddleware>(isRegisterAllowed);
+app.UseMiddleware<RouteRestrictionMiddleware>();
+
 app.UseStaticFiles();
 app.UseAntiforgery();
 
@@ -86,6 +92,7 @@ app.MapRazorComponents<App>()
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
 
+app.MapControllers();
 app.MapHub<ManagementHub>("/hubs/management");
 
 app.Run();
