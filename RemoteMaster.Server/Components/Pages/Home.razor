@@ -30,5 +30,20 @@
                 <MudTreeViewItem Items="@context.Nodes" Value="@context" Text="@context.Name" />
             </ItemTemplate>
         </MudTreeView>
+
+        <div>
+            @if (_selectedNode is Folder selectedFolder)
+            {
+                foreach (var child in _selectedNode.Nodes)
+                {
+                    if (child is Computer computer)
+                    {
+                        <div class="w-1/6">
+                            <ComputerCard @key="computer" Computer="computer" IsSelectedChanged="@(isSelected => HandleComputerSelection(computer, isSelected))" />
+                        </div>
+                    }
+                }
+            }
+        </div>
     </MudMainContent>
 </MudLayout>

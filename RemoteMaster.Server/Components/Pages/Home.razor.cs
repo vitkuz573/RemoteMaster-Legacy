@@ -100,4 +100,18 @@ public partial class Home
             Log.Error("Exception in UpdateComputerThumbnailAsync for {IPAddress}: {Message}", computer.IPAddress, ex.Message);
         }
     }
+
+    private void HandleComputerSelection(Computer computer, bool isSelected)
+    {
+        if (isSelected)
+        {
+            _selectedComputers.Add(computer);
+        }
+        else
+        {
+            _selectedComputers.Remove(computer);
+        }
+
+        StateHasChanged();
+    }
 }
