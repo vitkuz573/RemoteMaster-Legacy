@@ -6,9 +6,13 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
+using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Components;
 using RemoteMaster.Server.Components.Account;
 using RemoteMaster.Server.Data;
+using RemoteMaster.Server.Hubs;
+using RemoteMaster.Server.Models;
+using RemoteMaster.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,8 +33,10 @@ builder.Services.AddAuthentication(options =>
     .AddIdentityCookies();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+
+builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
+builder.Services.AddDbContext<NodesDbContext>(options => options.UseSqlServer(connectionString));
+
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
@@ -39,10 +45,23 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
     .AddDefaultTokenProviders();
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+builder.Services.AddTransient<IHostConfigurationService, HostConfigurationService>();
+builder.Services.AddScoped<IDatabaseService, DatabaseService>();
+builder.Services.AddScoped<IComputerCommandService, ComputerCommandService>();
+builder.Services.AddSingleton<ICertificateService, CertificateService>();
+builder.Services.AddSingleton<IPacketSender, UdpPacketSender>();
+builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
+builder.Services.AddSingleton<ISerializationService, JsonSerializerService>();
+builder.Services.AddTransient<ITokenService, TokenService>();
+builder.Services.Configure<TokenServiceOptions>(builder.Configuration.GetSection("Jwt"));
+builder.Services.Configure<CertificateSettings>(builder.Configuration.GetSection("CertificateSettings"));
 
 builder.Services.AddMudServices();
 
 var app = builder.Build();
+
+app.Urls.Clear();
+app.Urls.Add("http://0.0.0.0:5254");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -56,7 +75,7 @@ else
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseAntiforgery();
@@ -66,5 +85,7 @@ app.MapRazorComponents<App>()
 
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
+
+app.MapHub<ManagementHub>("/hubs/management");
 
 app.Run();

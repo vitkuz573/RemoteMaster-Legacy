@@ -15,10 +15,10 @@ namespace RemoteMaster.Server.Components.Pages;
 public partial class Home
 {
     [Inject]
-    private IHttpContextAccessor HttpContextAccessor { get; set; }
+    private IHttpContextAccessor HttpContextAccessor { get; set; } = default!;
 
     private bool _drawerOpen = false;
-    private Node _selectedNode;
+    private Node? _selectedNode = null;
     private readonly HashSet<Node> _nodes = [];
     private readonly List<Computer> _selectedComputers = [];
 
