@@ -57,7 +57,7 @@
                     {
                         if (child is Computer computer)
                         {
-                            <div class="w-1/6">
+                            <div class="card">
                                 <ComputerCard @key="computer" Computer="computer" IsSelectedChanged="@(isSelected => HandleComputerSelection(computer, isSelected))" />
                             </div>
                         }
@@ -97,7 +97,13 @@
     }
 
     .cards {
-        flex: 1;
+        display: flex;
+        flex-wrap: wrap;
         padding-top: 20px;
+    }
+
+    .card {
+        flex: 0 0 16.666667%;
+        max-width: 16.666667%;
     }
 </style>
