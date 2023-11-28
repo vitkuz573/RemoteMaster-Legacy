@@ -4,6 +4,7 @@
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
+using MudBlazor;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
@@ -15,6 +16,9 @@ namespace RemoteMaster.Server.Components.Pages;
 
 public partial class Home
 {
+    [Inject]
+    private IDialogService DialogService { get; set; }
+
     [Inject]
     private IDatabaseService DatabaseService { get; set; } = default!;
 
@@ -113,5 +117,140 @@ public partial class Home
         }
 
         StateHasChanged();
+    }
+
+    private async Task Power()
+    {
+        var dialogParameters = new DialogParameters<PowerDialog>
+        {
+            { x => x.AvailableHosts, await GetAvailableComputers() },
+            { x => x.Hosts, _selectedComputers }
+        };
+
+        await DialogService.ShowAsync<PowerDialog>("Power", dialogParameters);
+    }
+
+    private async Task Connect()
+    {
+        var dialogParameters = new DialogParameters<ConnectDialog>
+        {
+            { x => x.Hosts, await GetAvailableComputers() }
+        };
+
+        await DialogService.ShowAsync<ConnectDialog>("Connect", dialogParameters);
+    }
+
+    private async Task OpenShell()
+    {
+        var dialogParameters = new DialogParameters<OpenShellDialog>
+        {
+            { x => x.Hosts, await GetAvailableComputers() }
+        };
+
+        await DialogService.ShowAsync<OpenShellDialog>("Connect to shell", dialogParameters);
+    }
+
+    private async Task ExecuteScript()
+    {
+        var dialogParameters = new DialogParameters<ScriptExecutorDialog>
+        {
+            { x => x.Hosts, await GetAvailableComputers() }
+        };
+
+        await DialogService.ShowAsync<ScriptExecutorDialog>("Script executor", dialogParameters);
+    }
+
+    private async Task HandleRefreshClick()
+    {
+        if (_selectedNode is Folder selectedFolder)
+        {
+            await UpdateComputersThumbnailsAsync(selectedFolder.Nodes.OfType<Computer>());
+        }
+    }
+
+    private async Task SetMonitorState()
+    {
+        var dialogParameters = new DialogParameters<MonitorStateDialog>
+        {
+            { x => x.Hosts, await GetAvailableComputers() }
+        };
+
+        await DialogService.ShowAsync<MonitorStateDialog>("Monitor state", dialogParameters);
+    }
+
+    private async Task ManagePSExecRules()
+    {
+        var dialogParameters = new DialogParameters<PsexecRulesDialog>
+        {
+            { x => x.Hosts, await GetAvailableComputers() }
+        };
+
+        await DialogService.ShowAsync<PsexecRulesDialog>("PSExec rules", dialogParameters);
+    }
+
+    private async Task ScreenRecorder()
+    {
+        var computers = await GetAvailableComputers();
+
+        var dialogParameters = new DialogParameters<ScreenRecorderDialog>
+        {
+            { x => x.Hosts, await GetAvailableComputers() }
+        };
+
+        await DialogService.ShowAsync<ScreenRecorderDialog>("Screen Recorder", dialogParameters);
+    }
+
+    private async Task DomainMember()
+    {
+        var dialogParameters = new DialogParameters<DomainManagementDialog>
+        {
+            { x => x.Hosts, await GetAvailableComputers() }
+        };
+
+        await DialogService.ShowAsync<DomainManagementDialog>("Domain Management", dialogParameters);
+    }
+
+    private async Task Update()
+    {
+        var dialogParameters = new DialogParameters<UpdateDialog>
+        {
+            { x => x.Hosts, await GetAvailableComputers() }
+        };
+
+        await DialogService.ShowAsync<UpdateDialog>("Update", dialogParameters);
+    }
+
+    private async Task<Dictionary<Computer, HubConnection>> GetAvailableComputers()
+    {
+        var computerConnections = new Dictionary<Computer, HubConnection>();
+
+        var tasks = _selectedComputers.Select(async computer =>
+        {
+            if (!await computer.IsAvailable())
+            {
+                return;
+            }
+
+            var accessToken = HttpContextAccessor.HttpContext?.Request.Cookies["accessToken"];
+
+            var connection = new HubConnectionBuilder()
+                .WithUrl($"https://{computer.IPAddress}:5076/hubs/control", options =>
+                {
+                    options.Headers.Add("Authorization", $"Bearer {accessToken}");
+                })
+                .AddMessagePackProtocol()
+                .Build();
+
+            await connection.StartAsync();
+
+            lock (computerConnections)
+            {
+                computerConnections.Add(computer, connection);
+            }
+        });
+
+        await Task.WhenAll(tasks);
+
+        return computerConnections;
     }
 }

@@ -1,0 +1,12 @@
+﻿<MudDialog>
+    <DialogContent>
+        <form method="post" action="api/HostConfiguration/generate">
+            <MudTextField T="string" Label="Group" @bind-Value="@_group" Required />
+
+            <div style="margin: 20px 0;">
+                <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary">Download Configuration</MudButton>
+                <MudButton Color="Color.Secondary" OnClick="DownloadHost">Download Host</MudButton>
+            </div>
+        </form>
+    </DialogContent>
+</MudDialog>

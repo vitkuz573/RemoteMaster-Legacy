@@ -1,0 +1,42 @@
+﻿@using RemoteMaster.Shared.Models
+
+<MudDialog>
+    <DialogContent>
+        <MudContainer>
+            <MudExpansionPanels>
+                <MudExpansionPanel Text="Click to view affected hosts">
+                    @foreach (var (computer, connection) in Hosts)
+                    {
+                        <MudText>@computer.Name (@computer.IPAddress)</MudText>
+                    }
+                </MudExpansionPanel>
+            </MudExpansionPanels>
+            <MudGrid>
+                <MudItem xs="6">
+                    <MudRadioGroup T="Shell" @bind-SelectedOption="@_selectedShell">
+                        @foreach (Shell shell in Enum.GetValues(typeof(Shell)))
+                        {
+                            <MudItem xs="12">
+                                <MudRadio Option="@shell" Dense="true">@shell</MudRadio>
+                            </MudItem>
+                        }
+                    </MudRadioGroup>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudRadioGroup @bind-SelectedOption="@_selectedUser">
+                        <MudItem xs="12">
+                            <MudRadio Option="@("current")" Dense="true">Current User</MudRadio>
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudRadio Option="@("system")" Dense="true">System</MudRadio>
+                        </MudItem>
+                    </MudRadioGroup>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Connect">Connect</MudButton>
+    </DialogActions>
+</MudDialog>
