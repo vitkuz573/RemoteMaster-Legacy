@@ -4,6 +4,7 @@
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
+using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 using Serilog;
@@ -15,12 +16,20 @@ namespace RemoteMaster.Server.Components.Pages;
 public partial class Home
 {
     [Inject]
+    private IDatabaseService DatabaseService { get; set; } = default!;
+
+    [Inject]
     private IHttpContextAccessor HttpContextAccessor { get; set; } = default!;
 
     private bool _drawerOpen = false;
     private Node? _selectedNode = null;
-    private readonly HashSet<Node> _nodes = [];
+    private HashSet<Node> _nodes;
     private readonly List<Computer> _selectedComputers = [];
+
+    protected async override Task OnInitializedAsync()
+    {
+        _nodes = (await DatabaseService.GetNodesAsync(f => f.Parent == null && f is Folder)).Cast<Node>().ToHashSet();
+    }
 
     private void DrawerToggle()
     {
