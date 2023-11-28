@@ -42,13 +42,13 @@
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.PowerOff" OnClick="ShutdownComputer">Shutdown Computer</MudNavLink>
 
             <MudNavLink Match="NavLinkMatch.All">
-                <MudText>Host Version: 1.0.0</MudText>
+                <MudText>Host Version: @_hostVersion</MudText>
             </MudNavLink>
         </MudNavMenu>
     </MudDrawer>
 
     <MudMainContent>
-        <MudImage Src="https://placehold.co/500x300?text=screen%20image%20placeholder" Class="screenImage" draggable="false" />
+        <MudImage Src="@_screenDataUrl" Class="screenImage" draggable="false" />
     </MudMainContent>
 </MudLayout>
 
