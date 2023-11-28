@@ -24,44 +24,80 @@
         </MudNavMenu>
     </MudDrawer>
 
-    <MudMainContent>
-        <MudTreeView Items="@_nodes" T="Node" SelectedValueChanged="OnNodeSelected" Hover="true">
+    <MudMainContent Class="container">
+        <MudTreeView Items="@_nodes" T="Node" SelectedValueChanged="OnNodeSelected" Hover="true" Class="column tree-view">
             <ItemTemplate>
                 <MudTreeViewItem Items="@context.Nodes" Value="@context" Text="@context.Name" />
             </ItemTemplate>
         </MudTreeView>
 
-        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6 flex">
-            <MudTabPanel Text="Main" Icon="@Icons.Material.Filled.Api">
-                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Power" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Power</MudButton>
-                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Connect" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Connect</MudButton>
-                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenShell" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Open Shell</MudButton>
-                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ExecuteScript" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Execute Script</MudButton>
-                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="HandleRefreshClick" Class="ml-auto">Refresh</MudButton>
-            </MudTabPanel>
+        <div class="column row">
+            <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6 flex tabs">
+                <MudTabPanel Text="Main" Icon="@Icons.Material.Filled.Api">
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Power" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Power</MudButton>
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Connect" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Connect</MudButton>
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenShell" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Open Shell</MudButton>
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ExecuteScript" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Execute Script</MudButton>
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="HandleRefreshClick" Class="ml-auto">Refresh</MudButton>
+                </MudTabPanel>
 
-            <MudTabPanel Text="Service" Icon="@Icons.Material.Filled.MiscellaneousServices">
-                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SetMonitorState" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Set Monitor State</MudButton>
-                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ManagePSExecRules" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">PSExec Rules</MudButton>
-                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ScreenRecorder" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Screen Recorder</MudButton>
-                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="DomainMember" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Domain Management</MudButton>
-                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Update" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Update</MudButton>
-            </MudTabPanel>
-        </MudTabs>
+                <MudTabPanel Text="Service" Icon="@Icons.Material.Filled.MiscellaneousServices">
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SetMonitorState" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Set Monitor State</MudButton>
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ManagePSExecRules" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">PSExec Rules</MudButton>
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ScreenRecorder" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Screen Recorder</MudButton>
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="DomainMember" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Domain Management</MudButton>
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Update" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Update</MudButton>
+                </MudTabPanel>
+            </MudTabs>
 
-        <div>
-            @if (_selectedNode is Folder selectedFolder)
-            {
-                foreach (var child in _selectedNode.Nodes)
+            <div class="cards">
+                @if (_selectedNode is Folder selectedFolder)
                 {
-                    if (child is Computer computer)
+                    foreach (var child in _selectedNode.Nodes)
                     {
-                        <div class="w-1/6">
-                            <ComputerCard @key="computer" Computer="computer" IsSelectedChanged="@(isSelected => HandleComputerSelection(computer, isSelected))" />
-                        </div>
+                        if (child is Computer computer)
+                        {
+                            <div class="w-1/6">
+                                <ComputerCard @key="computer" Computer="computer" IsSelectedChanged="@(isSelected => HandleComputerSelection(computer, isSelected))" />
+                            </div>
+                        }
                     }
                 }
-            }
+            </div>
         </div>
     </MudMainContent>
 </MudLayout>
+
+<style>
+    .container {
+        display: flex;
+        margin: 10px;
+    }
+
+    .column {
+        flex: 1;
+    }
+
+    .row {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .tree-view {
+        flex: 0.3;
+        margin: 0 10px 0 0;
+    }
+
+    .tabs-content {
+        flex: 1;
+    }
+
+    .tabs {
+        flex: 0.2;
+    }
+
+    .cards {
+        flex: 1;
+        padding-top: 20px;
+    }
+</style>
