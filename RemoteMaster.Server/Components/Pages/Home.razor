@@ -9,7 +9,7 @@
 <PageTitle>RemoteMaster Server - Home</PageTitle>
 
 <MudLayout Class="select-none">
-    <MudAppBar Elevation="1">
+    <MudAppBar>
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@DrawerToggle" />
         <MudSpacer />
         <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/vitkuz573/RemoteMaster" Target="_blank" />
@@ -26,7 +26,7 @@
 
     <MudMainContent>
         <div class="flex h-screen">
-            <div class="p-4">
+            <div>
                 <MudTreeView Items="@_nodes" T="Node" SelectedValueChanged="OnNodeSelected" Hover="true" Class="pa-6 flex">
                     <ItemTemplate>
                         <MudTreeViewItem Items="@context.Nodes" Value="@context" Text="@context.Name" />
