@@ -23,11 +23,11 @@ public partial class ConnectDialog : CommonDialogBase
     {
         if (_selectedOption == "control")
         {
-            await ComputerCommandService.Execute(Hosts, async (computer, connection) => await OpenWindow($"/{computer.IPAddress}/connect?imageQuality=25&cursorTracking=false&inputEnabled=true"));
+            await ComputerCommandService.Execute(Hosts, async (computer, connection) => await OpenWindow($"/{computer.IPAddress}/connection?imageQuality=25&cursorTracking=false&inputEnabled=true"));
         }
         else if (_selectedOption == "view")
         {
-            await ComputerCommandService.Execute(Hosts, async (computer, connection) => await OpenWindow($"/{computer.IPAddress}/connect?imageQuality=25&cursorTracking=true&inputEnabled=false"));
+            await ComputerCommandService.Execute(Hosts, async (computer, connection) => await OpenWindow($"/{computer.IPAddress}/connection?imageQuality=25&cursorTracking=true&inputEnabled=false"));
         }
 
         MudDialog.Close(DialogResult.Ok(true));
