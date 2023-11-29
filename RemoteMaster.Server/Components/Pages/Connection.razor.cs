@@ -236,7 +236,7 @@ public partial class Connection : IDisposable
         }
 
         var newUri = QueryHelpers.AddQueryString(uri.GetLeftPart(UriPartial.Path), queryParameters);
-        await JSRuntime.InvokeVoidAsync("history.replaceState", null, "", newUri);
+        await JSRuntime.InvokeVoidAsync("history.replaceState", null, string.Empty, newUri);
     }
 
     private async Task ToggleInputEnabled(bool value)
