@@ -14,12 +14,12 @@ public partial class Connection
 {
     private async Task OnMouseMove(MouseEventArgs e)
     {
-        var xyPercent = await GetRelativeMousePositionPercentAsync(e);
+        var (x, y) = await GetRelativeMousePositionPercentAsync(e);
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendMouseCoordinates", new MouseMoveDto
         {
-            X = xyPercent.X,
-            Y = xyPercent.Y
+            X = x,
+            Y = y
         }));
     }
 
@@ -36,14 +36,14 @@ public partial class Connection
 
     private async Task SendMouseInputAsync(MouseEventArgs e, ButtonState state)
     {
-        var xyPercent = await GetRelativeMousePositionPercentAsync(e);
+        var (x, y) = await GetRelativeMousePositionPercentAsync(e);
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendMouseButton", new MouseClickDto
         {
             Button = e.Button,
             State = state,
-            X = xyPercent.X,
-            Y = xyPercent.Y
+            X = x,
+            Y = y
         }));
     }
 

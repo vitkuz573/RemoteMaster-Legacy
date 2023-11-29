@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
 using RemoteMaster.Shared.Models;
 using MudBlazor;
+using PointD = (double, double);
 
 namespace RemoteMaster.Server.Components.Pages;
 

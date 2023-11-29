@@ -5,6 +5,7 @@
     "tailwindcss": "^3.3.5"
   },
   "scripts": {
-    "build:css": "postcss wwwroot/main.css -o wwwroot/compiled.css"
+    "build:css": "postcss wwwroot/main.css -o wwwroot/compiled.css",
+    "watch:css": "postcss wwwroot/main.css -o wwwroot/compiled.css --watch"
   }
 }

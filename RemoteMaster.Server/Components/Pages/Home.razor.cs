@@ -40,9 +40,14 @@ public partial class Home
         _drawerOpen = !_drawerOpen;
     }
 
-    private void OpenHostConfigurator()
+    private async Task OpenHostConfigurator()
     {
+        var dialogOptions = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+        };
 
+        await DialogService.ShowAsync<HostConfigurationGenerator>("Host Configuration Generator", dialogOptions);
     }
 
     private void Logout()
