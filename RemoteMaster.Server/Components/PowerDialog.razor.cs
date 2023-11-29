@@ -18,10 +18,7 @@ public partial class PowerDialog
     private MudDialogInstance MudDialog { get; set; }
 
     [Parameter]
-    public Dictionary<Computer, HubConnection> AvailableHosts { get; set; }
-
-    [Parameter]
-    public List<Computer> Hosts { get; set; }
+    public Dictionary<Computer, HubConnection?> Hosts { get; set; }
 
     [Inject]
     private IComputerCommandService ComputerCommandService { get; set; }
@@ -40,16 +37,16 @@ public partial class PowerDialog
     {
         if (_selectedOption == "shutdown")
         {
-            await ComputerCommandService.Execute(AvailableHosts, async (computer, connection) => await connection.InvokeAsync("SendShutdownComputer", "", 0, true));
+            await ComputerCommandService.Execute(Hosts, async (computer, connection) => await connection.InvokeAsync("SendShutdownComputer", "", 0, true));
         }
         else if (_selectedOption == "reboot")
         {
-            await ComputerCommandService.Execute(AvailableHosts, async (computer, connection) => await connection.InvokeAsync("SendRebootComputer", "", 0, true));
+            await ComputerCommandService.Execute(Hosts, async (computer, connection) => await connection.InvokeAsync("SendRebootComputer", "", 0, true));
 
         }
         else if (_selectedOption == "wakeup")
         {
-            foreach (var computer in Hosts)
+            foreach (var (computer, connection) in Hosts)
             {
                 WakeOnLanService.WakeUp(computer.MACAddress);
             }

@@ -23,7 +23,7 @@ public class ComputerCommandService(IJSRuntime jsRuntime) : IComputerCommandServ
             TimeSpan.FromSeconds(10),
         });
 
-    public async Task Execute(Dictionary<Computer, HubConnection> computers, Func<Computer, HubConnection, Task> actionOnComputer)
+    public async Task Execute(Dictionary<Computer, HubConnection?> computers, Func<Computer, HubConnection, Task> actionOnComputer)
     {
         ArgumentNullException.ThrowIfNull(computers);
 
@@ -31,7 +31,7 @@ public class ComputerCommandService(IJSRuntime jsRuntime) : IComputerCommandServ
         {
             await _retryPolicy.ExecuteAsync(async () =>
             {
-                if (connection.State == HubConnectionState.Connected)
+                if (connection?.State == HubConnectionState.Connected)
                 {
                     try
                     {

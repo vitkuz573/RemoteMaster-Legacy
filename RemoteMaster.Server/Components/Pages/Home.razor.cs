@@ -128,8 +128,7 @@ public partial class Home
     {
         var dialogParameters = new DialogParameters<PowerDialog>
         {
-            { x => x.AvailableHosts, await GetAvailableComputers() },
-            { x => x.Hosts, _selectedComputers }
+            { x => x.Hosts, await GetComputers(false) }
         };
 
         await DialogService.ShowAsync<PowerDialog>("Power", dialogParameters);
@@ -139,7 +138,7 @@ public partial class Home
     {
         var dialogParameters = new DialogParameters<ConnectDialog>
         {
-            { x => x.Hosts, await GetAvailableComputers() }
+            { x => x.Hosts, await GetComputers() }
         };
 
         await DialogService.ShowAsync<ConnectDialog>("Connect", dialogParameters);
@@ -149,7 +148,7 @@ public partial class Home
     {
         var dialogParameters = new DialogParameters<OpenShellDialog>
         {
-            { x => x.Hosts, await GetAvailableComputers() }
+            { x => x.Hosts, await GetComputers() }
         };
 
         await DialogService.ShowAsync<OpenShellDialog>("Connect to shell", dialogParameters);
@@ -159,7 +158,7 @@ public partial class Home
     {
         var dialogParameters = new DialogParameters<ScriptExecutorDialog>
         {
-            { x => x.Hosts, await GetAvailableComputers() }
+            { x => x.Hosts, await GetComputers() }
         };
 
         await DialogService.ShowAsync<ScriptExecutorDialog>("Script executor", dialogParameters);
@@ -177,7 +176,7 @@ public partial class Home
     {
         var dialogParameters = new DialogParameters<MonitorStateDialog>
         {
-            { x => x.Hosts, await GetAvailableComputers() }
+            { x => x.Hosts, await GetComputers() }
         };
 
         await DialogService.ShowAsync<MonitorStateDialog>("Monitor state", dialogParameters);
@@ -187,7 +186,7 @@ public partial class Home
     {
         var dialogParameters = new DialogParameters<PsexecRulesDialog>
         {
-            { x => x.Hosts, await GetAvailableComputers() }
+            { x => x.Hosts, await GetComputers() }
         };
 
         await DialogService.ShowAsync<PsexecRulesDialog>("PSExec rules", dialogParameters);
@@ -195,11 +194,9 @@ public partial class Home
 
     private async Task ScreenRecorder()
     {
-        var computers = await GetAvailableComputers();
-
         var dialogParameters = new DialogParameters<ScreenRecorderDialog>
         {
-            { x => x.Hosts, await GetAvailableComputers() }
+            { x => x.Hosts, await GetComputers() }
         };
 
         await DialogService.ShowAsync<ScreenRecorderDialog>("Screen Recorder", dialogParameters);
@@ -209,7 +206,7 @@ public partial class Home
     {
         var dialogParameters = new DialogParameters<DomainManagementDialog>
         {
-            { x => x.Hosts, await GetAvailableComputers() }
+            { x => x.Hosts, await GetComputers() }
         };
 
         await DialogService.ShowAsync<DomainManagementDialog>("Domain Management", dialogParameters);
@@ -219,34 +216,41 @@ public partial class Home
     {
         var dialogParameters = new DialogParameters<UpdateDialog>
         {
-            { x => x.Hosts, await GetAvailableComputers() }
+            { x => x.Hosts, await GetComputers() }
         };
 
         await DialogService.ShowAsync<UpdateDialog>("Update", dialogParameters);
     }
 
-    private async Task<Dictionary<Computer, HubConnection>> GetAvailableComputers()
+    private async Task<Dictionary<Computer, HubConnection?>> GetComputers(bool onlyAvailable = true)
     {
-        var computerConnections = new Dictionary<Computer, HubConnection>();
+        var computerConnections = new Dictionary<Computer, HubConnection?>();
 
         var tasks = _selectedComputers.Select(async computer =>
         {
-            if (!await computer.IsAvailable())
+            var isAvailable = await computer.IsAvailable();
+
+            if (!isAvailable && onlyAvailable)
             {
                 return;
             }
 
-            var accessToken = HttpContextAccessor.HttpContext?.Request.Cookies["accessToken"];
+            HubConnection? connection = null;
 
-            var connection = new HubConnectionBuilder()
-                .WithUrl($"https://{computer.IPAddress}:5076/hubs/control", options =>
-                {
-                    options.Headers.Add("Authorization", $"Bearer {accessToken}");
-                })
-                .AddMessagePackProtocol()
-                .Build();
+            if (isAvailable)
+            {
+                var accessToken = HttpContextAccessor.HttpContext?.Request.Cookies["accessToken"];
 
-            await connection.StartAsync();
+                connection = new HubConnectionBuilder()
+                    .WithUrl($"https://{computer.IPAddress}:5076/hubs/control", options =>
+                    {
+                        options.Headers.Add("Authorization", $"Bearer {accessToken}");
+                    })
+                    .AddMessagePackProtocol()
+                    .Build();
+
+                await connection.StartAsync();
+            }
 
             lock (computerConnections)
             {

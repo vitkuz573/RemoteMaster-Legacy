@@ -17,7 +17,7 @@ public class CommonDialogBase : ComponentBase
     protected MudDialogInstance MudDialog { get; set; }
 
     [Parameter]
-    public Dictionary<Computer, HubConnection> Hosts { get; set; }
+    public Dictionary<Computer, HubConnection?> Hosts { get; set; }
 
     [Parameter]
     public RenderFragment Content { get; set; }

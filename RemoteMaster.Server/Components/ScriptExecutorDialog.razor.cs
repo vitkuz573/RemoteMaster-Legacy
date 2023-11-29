@@ -20,7 +20,7 @@ public partial class ScriptExecutorDialog
     private MudDialogInstance MudDialog { get; set; }
 
     [Parameter]
-    public Dictionary<Computer, HubConnection> Hosts { get; set; }
+    public Dictionary<Computer, HubConnection?> Hosts { get; set; }
 
     [Inject]
     private IComputerCommandService ComputerCommandService { get; set; }

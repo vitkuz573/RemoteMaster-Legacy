@@ -9,5 +9,5 @@ namespace RemoteMaster.Server.Abstractions;
 
 public interface IComputerCommandService
 {
-    Task Execute(Dictionary<Computer, HubConnection> computers, Func<Computer, HubConnection, Task> actionOnComputer);
+    Task Execute(Dictionary<Computer, HubConnection?> computers, Func<Computer, HubConnection, Task> actionOnComputer);
 }
