@@ -16,7 +16,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Pages;
 
-public partial class Connection
+public partial class Connection : IDisposable
 {
     [Parameter]
     public string Host { get; set; } = default!;
@@ -207,5 +207,16 @@ public partial class Connection
         _screenDataUrl = await JSRuntime.InvokeAsync<string>("createImageBlobUrl", screenData);
 
         await InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public void OnBeforeUnload()
+    {
+        Dispose();
+    }
+
+    public void Dispose()
+    {
+        _connection?.DisposeAsync();
     }
 }
