@@ -13,6 +13,7 @@ using RemoteMaster.Server.Models;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
 using RemoteMaster.Shared.Models;
+using MudBlazor;
 
 namespace RemoteMaster.Server.Components.Pages;
 
@@ -38,6 +39,7 @@ public partial class Connection : IDisposable
     private int _imageQuality;
     private string _hostVersion;
     private List<Display> _displays;
+    private string _selectedDisplay;
 
     private readonly AsyncRetryPolicy _retryPolicy = Policy
         .Handle<Exception>()
@@ -47,6 +49,16 @@ public partial class Connection : IDisposable
                 TimeSpan.FromSeconds(7),
                 TimeSpan.FromSeconds(10),
         });
+
+    private bool _isDarkMode = false;
+
+    private readonly MudTheme _theme = new()
+    {
+        LayoutProperties = new LayoutProperties()
+        {
+            DrawerWidthRight = "300px"
+        }
+    };
 
     protected async override Task OnInitializedAsync()
     {
@@ -104,7 +116,7 @@ public partial class Connection : IDisposable
             }
         }
 
-        result = default;
+        result = default!;
 
         return false;
     }
@@ -207,6 +219,55 @@ public partial class Connection : IDisposable
         _screenDataUrl = await JSRuntime.InvokeAsync<string>("createImageBlobUrl", screenData);
 
         await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task UpdateUrlParameter(string key, string value)
+    {
+        var uri = new Uri(NavigationManager.Uri);
+        var queryParameters = QueryHelpers.ParseQuery(uri.Query);
+
+        if (queryParameters.ContainsKey(key))
+        {
+            queryParameters[key] = value;
+        }
+        else
+        {
+            queryParameters.Add(key, value);
+        }
+
+        var newUri = QueryHelpers.AddQueryString(uri.GetLeftPart(UriPartial.Path), queryParameters);
+        await JSRuntime.InvokeVoidAsync("history.replaceState", null, "", newUri);
+    }
+
+    private async Task ToggleInputEnabled(bool value)
+    {
+        _inputEnabled = value;
+
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendToggleInput", value));
+        await UpdateUrlParameter("inputEnabled", value.ToString());
+    }
+
+    private async Task ToggleCursorTracking(bool value)
+    {
+        _cursorTracking = value;
+
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendToggleCursorTracking", value));
+        await UpdateUrlParameter("cursorTracking", value.ToString());
+    }
+
+    private async Task ChangeQuality(int quality)
+    {
+        _imageQuality = quality;
+
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendImageQuality", quality));
+        await UpdateUrlParameter("imageQuality", quality.ToString());
+    }
+
+    private async void OnChangeScreen(string display)
+    {
+        _selectedDisplay = display;
+
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendSelectedScreen", display));
     }
 
     [JSInvokable]
