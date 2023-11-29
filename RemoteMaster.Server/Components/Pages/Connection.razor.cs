@@ -26,7 +26,7 @@ public partial class Connection : IDisposable
     private NavigationManager NavigationManager { get; set; } = default!;
 
     [Inject]
-    private IHttpContextAccessor HttpContextAccessor { get; set; } = default;
+    private IHttpContextAccessor HttpContextAccessor { get; set; } = default!;
 
     [Inject]
     private IJSRuntime JSRuntime { get; set; } = default!;
