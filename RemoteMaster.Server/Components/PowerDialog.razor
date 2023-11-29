@@ -2,7 +2,7 @@
     <DialogContent>
         <MudExpansionPanels>
             <MudExpansionPanel Text="Click to view affected hosts">
-                @foreach (var (computer, connection) in AvailableHosts)
+                @foreach (var (computer, connection) in Hosts)
                 {
                     <MudText>@computer.Name (@computer.IPAddress)</MudText>
                 }
