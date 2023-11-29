@@ -17,7 +17,7 @@ namespace RemoteMaster.Server.Components.Pages;
 public partial class Home
 {
     [Inject]
-    private IDialogService DialogService { get; set; }
+    private IDialogService DialogService { get; set; } = default!;
 
     [Inject]
     private IDatabaseService DatabaseService { get; set; } = default!;
@@ -27,7 +27,7 @@ public partial class Home
 
     private bool _drawerOpen = false;
     private Node? _selectedNode = null;
-    private HashSet<Node> _nodes;
+    private HashSet<Node>? _nodes;
     private readonly List<Computer> _selectedComputers = [];
 
     protected async override Task OnInitializedAsync()
