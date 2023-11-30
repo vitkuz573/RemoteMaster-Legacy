@@ -14,19 +14,19 @@ namespace RemoteMaster.Server.Components;
 public class CommonDialogBase : ComponentBase
 {
     [CascadingParameter]
-    protected MudDialogInstance MudDialog { get; set; }
+    protected MudDialogInstance MudDialog { get; set; } = default!;
 
     [Parameter]
-    public Dictionary<Computer, HubConnection?> Hosts { get; set; }
+    public Dictionary<Computer, HubConnection?> Hosts { get; set; } = default!;
 
     [Parameter]
-    public string ContentStyle { get; set; }
+    public string ContentStyle { get; set; } = default!;
 
     [Parameter]
-    public RenderFragment Content { get; set; }
+    public RenderFragment Content { get; set; } = default!;
 
     [Parameter]
-    public RenderFragment Actions { get; set; }
+    public RenderFragment Actions { get; set; } = default!;
 
     protected void Cancel()
     {
