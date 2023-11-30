@@ -13,13 +13,13 @@ public partial class ComputerCard
     [Parameter]
     public Computer Computer { get; set; } = default!;
 
+    [Parameter]
+    public bool IsSelected { get; set; }
+
     [Inject]
     public IJSRuntime JSRuntime { get; set; } = default!;
 
     private string ThumbnailPath => Computer.Thumbnail != null ? $"data:image/png;base64,{Convert.ToBase64String(Computer.Thumbnail)}" : "/img/notconnected.png";
-
-    [Parameter]
-    public bool IsSelected { get; set; }
 
     [Parameter]
     public EventCallback<bool> IsSelectedChanged { get; set; }
