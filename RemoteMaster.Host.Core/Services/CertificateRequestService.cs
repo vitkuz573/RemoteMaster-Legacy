@@ -12,17 +12,16 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class CertificateRequestService : ICertificateRequestService
 {
-    public CertificateRequest GenerateCSR(string commonName, string organization, string locality, string state, string country, List<string> ipAddresses, out RSA rsaKeyPair)
+    public CertificateRequest GenerateCSR(string subjectName, List<string> ipAddresses, out RSA rsaKeyPair)
     {
         ArgumentNullException.ThrowIfNull(ipAddresses);
 
-        Log.Information("Starting CSR generation for subject: {CommonName}", commonName);
+        Log.Information("Starting CSR generation for subject: {SubjectName}", subjectName);
 
         rsaKeyPair = RSA.Create(2048);
 
         Log.Debug("RSA key pair generated successfully with key size {KeySize}.", rsaKeyPair.KeySize);
 
-        var subjectName = $"CN={commonName}, O={organization}, L={locality}, ST={state}, C={country}";
         var subject = new X500DistinguishedName(subjectName);
         var csr = new CertificateRequest(subject, rsaKeyPair, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
@@ -57,7 +56,7 @@ public class CertificateRequestService : ICertificateRequestService
             Log.Debug("CSR Extension: {ExtensionOid} - {ExtensionFriendlyName} - {ExtensionFormattedData}", extension.Oid?.Value ?? "Unknown", extension.Oid?.FriendlyName ?? "Unknown", formattedData);
         }
 
-        Log.Information("CSR generated successfully for subject: {CommonName}.", commonName);
+        Log.Information("CSR generated successfully for subject: {SubjectName}.", subjectName);
 
         return csr;
     }

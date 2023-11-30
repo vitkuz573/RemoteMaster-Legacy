@@ -2,10 +2,9 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-namespace RemoteMaster.Shared.Models;
+namespace RemoteMaster.Host.Core.Abstractions;
 
-public enum ButtonState
+public interface ISubjectNameService
 {
-    Down,
-    Up
+    string GetName(string commonName);
 }
