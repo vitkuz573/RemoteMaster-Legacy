@@ -4,13 +4,6 @@
             <img src="@ThumbnailPath" alt="Thumbnail" class="max-h-32 object-cover object-center" draggable="false" />
         </div>
 
-        <div class="flex space-x-2">
-            <div>
-                <MudCheckBox T="bool" Checked="@IsSelected" CheckedChanged="HandleCheckboxChange" />
-            </div>
-            <div>
-                <MudText Typo="Typo.subtitle1">@Computer.Name</MudText>
-            </div>
-        </div>
+        <MudCheckBox T="bool" Checked="@IsSelected" CheckedChanged="HandleCheckboxChange" Label="@Computer.Name" />
     </div>
 </div>
