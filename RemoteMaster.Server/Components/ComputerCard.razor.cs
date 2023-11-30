@@ -11,10 +11,10 @@ namespace RemoteMaster.Server.Components;
 public partial class ComputerCard
 {
     [Parameter]
-    public Computer Computer { get; set; }
+    public Computer Computer { get; set; } = default!;
 
     [Inject]
-    public IJSRuntime JSRuntime { get; set; }
+    public IJSRuntime JSRuntime { get; set; } = default!;
 
     private string ThumbnailPath => Computer.Thumbnail != null ? $"data:image/png;base64,{Convert.ToBase64String(Computer.Thumbnail)}" : "/img/notconnected.png";
 

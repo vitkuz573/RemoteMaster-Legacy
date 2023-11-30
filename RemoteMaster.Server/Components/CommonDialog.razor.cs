@@ -20,6 +20,9 @@ public class CommonDialogBase : ComponentBase
     public Dictionary<Computer, HubConnection?> Hosts { get; set; }
 
     [Parameter]
+    public string ContentStyle { get; set; }
+
+    [Parameter]
     public RenderFragment Content { get; set; }
 
     [Parameter]
