@@ -13,5 +13,5 @@ namespace RemoteMaster.Server.Services;
 
 public class BrandingService : IBrandingService
 {
-    public string ApplicationName => "RemoteMaster Test";
+    public string ApplicationName => "RemoteMaster Server";
 }

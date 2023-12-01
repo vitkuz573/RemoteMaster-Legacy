@@ -6,7 +6,7 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<PageTitle>RemoteMaster Server - Home</PageTitle>
+<PageTitle>@BrandingService.ApplicationName - Home</PageTitle>
 
 <MudLayout Class="select-none">
     <MudAppBar>
@@ -16,7 +16,7 @@
     </MudAppBar>
     <MudDrawer @bind-Open="@_drawerOpen" Variant="@DrawerVariant.Responsive">
         <MudDrawerHeader>
-            <MudText Typo="Typo.h6">RemoteMaster</MudText>
+            <MudText Typo="Typo.h6">@BrandingService.ApplicationName</MudText>
         </MudDrawerHeader>
         <MudNavMenu>
             <MudNavLink Match="NavLinkMatch.All" OnClick="OpenHostConfigurator">Host Configurator</MudNavLink>

@@ -17,6 +17,9 @@ namespace RemoteMaster.Server.Components.Pages;
 public partial class Home
 {
     [Inject]
+    private IBrandingService BrandingService { get; set; } = default!;
+
+    [Inject]
     private IDialogService DialogService { get; set; } = default!;
 
     [Inject]
