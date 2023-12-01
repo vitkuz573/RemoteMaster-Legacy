@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Collections.Frozen;
 using System.Security.Cryptography.X509Certificates;
 using RemoteMaster.Host.Core.Abstractions;
 
@@ -17,16 +16,7 @@ public class SubjectNameService : ISubjectNameService
 
     public X500DistinguishedName GetDistinguishedName(string commonName)
     {
-        var dn = new Dictionary<string, string>
-        {
-            { "CN", commonName },
-            { "O", _organization },
-            { "L", _locality },
-            { "ST", _state },
-            { "C", _country }
-        }.ToFrozenDictionary();
-
-        var dnString = string.Join(", ", dn);
+        var dnString = $"CN={commonName}, O={_organization}, L={_locality}, ST={_state}, C={_country}";
 
         return new X500DistinguishedName(dnString);
     }

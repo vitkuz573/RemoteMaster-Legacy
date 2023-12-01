@@ -45,7 +45,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
 
             var signingRequest = csr.CreateSigningRequest();
 
-            if (await connection.InvokeAsync<bool>("RegisterHostAsync", hostName, ipAddress, macAddress, config.Group, signingRequest))
+            if (await connection.InvokeAsync<bool>("RegisterHostAsync", hostName, ipAddress, macAddress, config, signingRequest))
             {
                 Log.Information("Host registration successful.");
             }
@@ -72,7 +72,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
 
             Log.Information("Attempting to unregister host...");
 
-            if (await connection.InvokeAsync<bool>("UnregisterHostAsync", hostName, config.Group))
+            if (await connection.InvokeAsync<bool>("UnregisterHostAsync", hostName, config))
             {
                 Log.Information("Host unregistration successful.");
             }
