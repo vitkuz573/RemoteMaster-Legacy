@@ -9,5 +9,5 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface ICertificateRequestService
 {
-    CertificateRequest GenerateCSR(string subjectName, List<string> ipAddresses, out RSA rsaKeyPair);
+    CertificateRequest GenerateCSR(X500DistinguishedName subjectName, List<string> ipAddresses, out RSA rsaKeyPair);
 }

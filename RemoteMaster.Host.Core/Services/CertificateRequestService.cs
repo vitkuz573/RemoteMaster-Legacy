@@ -12,7 +12,7 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class CertificateRequestService : ICertificateRequestService
 {
-    public CertificateRequest GenerateCSR(string subjectName, List<string> ipAddresses, out RSA rsaKeyPair)
+    public CertificateRequest GenerateCSR(X500DistinguishedName subjectName, List<string> ipAddresses, out RSA rsaKeyPair)
     {
         ArgumentNullException.ThrowIfNull(ipAddresses);
 
@@ -22,8 +22,7 @@ public class CertificateRequestService : ICertificateRequestService
 
         Log.Debug("RSA key pair generated successfully with key size {KeySize}.", rsaKeyPair.KeySize);
 
-        var subject = new X500DistinguishedName(subjectName);
-        var csr = new CertificateRequest(subject, rsaKeyPair, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        var csr = new CertificateRequest(subjectName, rsaKeyPair, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
         Log.Debug("CSR Subject: {CSRSubject}", csr.SubjectName.Name);
 
