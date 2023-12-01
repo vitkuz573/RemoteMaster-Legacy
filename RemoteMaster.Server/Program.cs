@@ -49,6 +49,7 @@ builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSe
 builder.Services.AddTransient<IHostConfigurationService, HostConfigurationService>();
 builder.Services.AddScoped<IDatabaseService, DatabaseService>();
 builder.Services.AddScoped<IComputerCommandService, ComputerCommandService>();
+builder.Services.AddSingleton<IBrandingService, BrandingService>();
 builder.Services.AddSingleton<ICertificateService, CertificateService>();
 builder.Services.AddSingleton<IPacketSender, UdpPacketSender>();
 builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();

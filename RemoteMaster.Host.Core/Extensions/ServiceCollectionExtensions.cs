@@ -18,7 +18,6 @@ public static class ServiceCollectionExtensions
             builder.ClearProviders();
         });
 
-        services.AddSingleton<IBrandingService, BrandingService>();
         services.AddSingleton<ISubjectService, SubjectService>();
         services.AddSingleton<ICertificateRequestService, CertificateRequestService>();
         services.AddSingleton<IHostLifecycleService, HostLifecycleService>();
