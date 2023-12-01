@@ -7,7 +7,6 @@ using System.Runtime.InteropServices;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Dtos;
-using RemoteMaster.Shared.Models;
 using Serilog;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
 using static Windows.Win32.PInvoke;
@@ -20,8 +19,8 @@ public class InputService : IInputService
     private readonly BlockingCollection<Action> _operationQueue;
     private readonly CancellationTokenSource _cts;
     private readonly int _numWorkers;
-    private readonly object _ctsLock = new();
-    private readonly ConcurrentBag<INPUT> _inputPool = [];
+    private readonly object _ctsLock;
+    private readonly ConcurrentBag<INPUT> _inputPool;
     private readonly IDesktopService _desktopService;
 
     public bool InputEnabled { get; set; } = true;
@@ -30,8 +29,11 @@ public class InputService : IInputService
     {
         _desktopService = desktopService;
         _operationQueue = [];
-        _cts = new CancellationTokenSource();
+        _inputPool = [];
+        _cts = new();
+        _ctsLock = new();
         _numWorkers = numWorkers;
+
         StartWorkerThreads();
     }
 
@@ -140,24 +142,21 @@ public class InputService : IInputService
         {
             var mouseEvent = dto.Button switch
             {
-                0 => dto.State switch
+                0 => dto.Pressed switch
                 {
-                    ButtonState.Down => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN,
-                    ButtonState.Up => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP,
-                    _ => throw new InvalidOperationException("Invalid button state")
+                    true => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN,
+                    false => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP,
                 },
-                1 => dto.State switch
+                1 => dto.Pressed switch
                 {
-                    ButtonState.Down => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEDOWN,
-                    ButtonState.Up => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEUP,
-                    _ => throw new InvalidOperationException("Invalid button state")
+                    true => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEDOWN,
+                    false => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEUP,
                 },
-                2 => dto.State switch
+                2 => dto.Pressed switch
                 {
-                    ButtonState.Down => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN,
-                    ButtonState.Up => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP,
-                    _ => throw new InvalidOperationException("Invalid button state")
-                },
+                    true => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN,
+                    false => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP,
+                }
             };
 
             var xyPercent = GetAbsolutePercentFromRelativePercent(dto.X, dto.Y, viewer.ScreenCapturer);
@@ -208,10 +207,10 @@ public class InputService : IInputService
             {
                 input.Anonymous.ki = new KEYBDINPUT
                 {
-                    wVk = (VIRTUAL_KEY)data.Key,
+                    wVk = (VIRTUAL_KEY)data.KeyCode,
                     wScan = 0,
                     time = 0,
-                    dwFlags = data.State == ButtonState.Up ? KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP : 0,
+                    dwFlags = data.Pressed == false ? KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP : 0,
                     dwExtraInfo = (nuint)GetMessageExtraInfo().Value
                 };
 

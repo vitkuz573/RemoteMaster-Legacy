@@ -11,7 +11,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostLifecycleService(ICertificateRequestService certificateRequestService) : IHostLifecycleService
+public class HostLifecycleService(ICertificateRequestService certificateRequestService, ISubjectNameService subjectInfoService) : IHostLifecycleService
 {
     public async Task RegisterAsync(HostConfiguration config, string hostName, string ipAddress, string macAddress)
     {
@@ -29,7 +29,8 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
             };
 
             RSA rsaKeyPair;
-            var csr = certificateRequestService.GenerateCSR(hostName, "RemoteMaster", "Kurgan", "Kurgan Oblast", "RU", ipAddresses, out rsaKeyPair);
+            var subjectName = subjectInfoService.GetDistinguishedName(hostName);
+            var csr = certificateRequestService.GenerateCSR(subjectName, ipAddresses, out rsaKeyPair);
 
             connection.On<byte[]>("ReceiveCertificate", certificateBytes =>
             {
@@ -42,7 +43,9 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
                 Log.Information("PFX file created successfully.");
             });
 
-            if (await connection.InvokeAsync<bool>("RegisterHostAsync", hostName, ipAddress, macAddress, config.Group, csr.CreateSigningRequest()))
+            var signingRequest = csr.CreateSigningRequest();
+
+            if (await connection.InvokeAsync<bool>("RegisterHostAsync", hostName, ipAddress, macAddress, config.Group, signingRequest))
             {
                 Log.Information("Host registration successful.");
             }

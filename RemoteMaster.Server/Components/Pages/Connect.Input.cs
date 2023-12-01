@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using RemoteMaster.Shared.Dtos;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Pages;
 
@@ -25,23 +24,24 @@ public partial class Connection
 
     private async Task OnMouseUpDown(MouseEventArgs e)
     {
-        var state = e.Type == "mouseup" ? ButtonState.Up : ButtonState.Down;
-        await SendMouseInputAsync(e, state);
+        var pressed = e.Type != "mouseup";
+
+        await SendMouseInputAsync(e, pressed);
     }
 
     private async Task OnMouseOver(MouseEventArgs e)
     {
-        await SendMouseInputAsync(e, ButtonState.Up);
+        await SendMouseInputAsync(e, false);
     }
 
-    private async Task SendMouseInputAsync(MouseEventArgs e, ButtonState state)
+    private async Task SendMouseInputAsync(MouseEventArgs e, bool pressed)
     {
         var (x, y) = await GetRelativeMousePositionPercentAsync(e);
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendMouseButton", new MouseClickDto
         {
             Button = e.Button,
-            State = state,
+            Pressed = pressed,
             X = x,
             Y = y
         }));
@@ -55,24 +55,24 @@ public partial class Connection
         }));
     }
 
-    private async Task SendKeyboardInput(int keyCode, ButtonState state)
+    private async Task SendKeyboardInput(int keyCode, bool pressed)
     {
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendKeyboardInput", new KeyboardKeyDto
         {
-            Key = keyCode,
-            State = state
+            KeyCode = keyCode,
+            Pressed = pressed
         }));
     }
 
     [JSInvokable]
     public async Task OnKeyDown(int keyCode)
     {
-        await SendKeyboardInput(keyCode, ButtonState.Down);
+        await SendKeyboardInput(keyCode, true);
     }
 
     [JSInvokable]
     public async Task OnKeyUp(int keyCode)
     {
-        await SendKeyboardInput(keyCode, ButtonState.Up);
+        await SendKeyboardInput(keyCode, false);
     }
 }

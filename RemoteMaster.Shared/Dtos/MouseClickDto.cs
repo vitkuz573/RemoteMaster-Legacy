@@ -10,7 +10,7 @@ public class MouseClickDto
 {
     public long Button { get; set; }
 
-    public ButtonState State { get; set; }
+    public bool Pressed { get; set; }
 
     public double X { get; set; }
 
