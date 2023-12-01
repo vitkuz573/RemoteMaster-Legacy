@@ -95,7 +95,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         {
             var connection = await ConnectToServerHub($"http://{config.Server}:5254");
 
-            if (await connection.InvokeAsync<bool>("UpdateHostInformationAsync", hostname, config.Group, ipAddress))
+            if (await connection.InvokeAsync<bool>("UpdateHostInformationAsync", config, hostname, ipAddress))
             {
                 Log.Information("Host information updated successful.");
             }

@@ -86,9 +86,9 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         return false;
     }
 
-    public async Task<bool> UpdateHostInformationAsync(string hostName, string group, string ipAddress)
+    public async Task<bool> UpdateHostInformationAsync(HostConfiguration config, string hostName, string ipAddress)
     {
-        var folder = (await databaseService.GetNodesAsync(f => f.Name == group && f is Folder)).OfType<Folder>().FirstOrDefault();
+        var folder = (await databaseService.GetNodesAsync(f => f.Name == config.Group && f is Folder)).OfType<Folder>().FirstOrDefault();
 
         if (folder == null)
         {
