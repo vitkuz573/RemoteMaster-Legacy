@@ -11,7 +11,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostLifecycleService(ICertificateRequestService certificateRequestService, ISubjectNameService subjectInfoService) : IHostLifecycleService
+public class HostLifecycleService(ICertificateRequestService certificateRequestService, ISubjectService subjectService) : IHostLifecycleService
 {
     public async Task RegisterAsync(HostConfiguration config, string hostName, string ipAddress, string macAddress)
     {
@@ -29,7 +29,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
             };
 
             RSA rsaKeyPair;
-            var subjectName = subjectInfoService.GetDistinguishedName(hostName);
+            var subjectName = subjectService.GetDistinguishedName(hostName);
             var csr = certificateRequestService.GenerateCSR(subjectName, ipAddresses, out rsaKeyPair);
 
             connection.On<byte[]>("ReceiveCertificate", certificateBytes =>

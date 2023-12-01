@@ -6,7 +6,7 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface ISubjectNameService
+public interface ISubjectService
 {
     X500DistinguishedName GetDistinguishedName(string commonName);
 }

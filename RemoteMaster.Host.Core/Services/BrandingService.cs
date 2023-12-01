@@ -8,4 +8,5 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class BrandingService : IBrandingService
 {
+    public string ApplicationName => "RemoteMaster Test";
 }

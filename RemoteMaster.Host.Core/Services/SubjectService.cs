@@ -7,7 +7,7 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class SubjectNameService : ISubjectNameService
+public class SubjectService : ISubjectService
 {
     private readonly string _organization = "RemoteMaster";
     private readonly string _locality = "Kurgan";

@@ -19,7 +19,7 @@ public static class ServiceCollectionExtensions
         });
 
         services.AddSingleton<IBrandingService, BrandingService>();
-        services.AddSingleton<ISubjectNameService, SubjectNameService>();
+        services.AddSingleton<ISubjectService, SubjectService>();
         services.AddSingleton<ICertificateRequestService, CertificateRequestService>();
         services.AddSingleton<IHostLifecycleService, HostLifecycleService>();
         services.AddSingleton<IHostConfigurationService, HostConfigurationService>();

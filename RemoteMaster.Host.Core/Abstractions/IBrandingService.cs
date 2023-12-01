@@ -6,4 +6,5 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IBrandingService
 {
+    string ApplicationName { get; }
 }
