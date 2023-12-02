@@ -8,13 +8,13 @@ namespace RemoteMaster.Host.Windows.Models;
 
 public class HostServiceConfiguration : IServiceConfiguration
 {
-    public string Name { get; } = "RCHost";
+    public string Name => "RCHost";
 
-    public string DisplayName { get; } = "Remote Control Host";
+    public string DisplayName => "Remote Control Host";
 
     public string? Description => "Provides remote control and management capabilities for authorized clients. This service allows remote access to system functionalities and resources.";
 
-    public string StartType { get; } = "auto";
+    public string StartType => "auto";
 
-    public IEnumerable<string>? Dependencies { get; } = null;
+    public IEnumerable<string>? Dependencies => null;
 }
