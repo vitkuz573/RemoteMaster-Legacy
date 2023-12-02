@@ -7,4 +7,10 @@ namespace RemoteMaster.Server.Abstractions;
 public interface IBrandingService
 {
     string ApplicationName { get; }
+
+    string ApplicationLogo { get; }
+
+    string ApplicationLogoWidth { get; }
+
+    string ApplicationLogoHeight { get; }
 }

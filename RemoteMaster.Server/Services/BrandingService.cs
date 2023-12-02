@@ -14,4 +14,10 @@ namespace RemoteMaster.Server.Services;
 public class BrandingService : IBrandingService
 {
     public string ApplicationName => "RemoteMaster Server";
+
+    public string ApplicationLogo => "/img/logo.jpg";
+
+    public string ApplicationLogoWidth => "100";
+
+    public string ApplicationLogoHeight => "auto";
 }
