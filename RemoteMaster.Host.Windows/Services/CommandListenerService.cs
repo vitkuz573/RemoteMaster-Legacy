@@ -5,14 +5,14 @@
 using Microsoft.AspNetCore.SignalR.Client;
 using Polly;
 using Polly.Retry;
+using Serilog;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
 public class CommandListenerService : IHostedService
 {
-    private HubConnection _connection;
-    private readonly ILogger<CommandListenerService> _logger;
+    private HubConnection? _connection;
 
     private readonly AsyncRetryPolicy _retryPolicy = Policy
         .Handle<Exception>()
@@ -23,19 +23,14 @@ public class CommandListenerService : IHostedService
             TimeSpan.FromSeconds(10),
         });
 
-    public CommandListenerService(ILogger<CommandListenerService> logger)
-    {
-        _logger = logger;
-    }
-
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Starting listen service commands");
+        Log.Information("Starting listen service commands");
 
         try
         {
             _connection = new HubConnectionBuilder()
-                .WithUrl("http://127.0.0.1:5076/hubs/control")
+                .WithUrl("https://127.0.0.1:5076/hubs/control")
                 .Build();
 
             _connection.On<string>("ReceiveCommand", command =>
@@ -60,20 +55,23 @@ public class CommandListenerService : IHostedService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Connection error");
+            Log.Error(ex, "Connection error");
         }
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-        await _connection.StopAsync();
+        if (_connection != null)
+        {
+            await _connection.StopAsync();
+        }
     }
 
     private async Task SafeInvokeAsync(Func<Task> action)
     {
         await _retryPolicy.ExecuteAsync(async () =>
         {
-            if (_connection.State == HubConnectionState.Connected)
+            if (_connection?.State == HubConnectionState.Connected)
             {
                 await action();
             }

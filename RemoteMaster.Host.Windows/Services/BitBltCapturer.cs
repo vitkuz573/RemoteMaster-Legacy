@@ -7,6 +7,7 @@ using System.Drawing.Imaging;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Helpers.ScreenHelper;
 using RemoteMaster.Shared.Models;
+using Serilog;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
 using static Windows.Win32.PInvoke;
@@ -15,9 +16,8 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class BitBltCapturer : ScreenCapturerService
 {
-    private const string VIRTUAL_SCREEN_NAME = "VIRTUAL_SCREEN";
-
     private Bitmap _bitmap;
+    private readonly ICursorRenderService _cursorRenderService;
 
     public override Rectangle CurrentScreenBounds { get; protected set; } = Screen.PrimaryScreen?.Bounds ?? Rectangle.Empty;
 
@@ -27,14 +27,10 @@ public class BitBltCapturer : ScreenCapturerService
 
     protected override bool HasMultipleScreens => Screen.AllScreens.Length > 1;
 
-    protected override string VirtualScreenName => VIRTUAL_SCREEN_NAME;
-
-    private readonly ICursorRenderService _cursorRenderer;
-
-    public BitBltCapturer(ICursorRenderService cursorRenderer, IDesktopService desktopService, ILogger<ScreenCapturerService> logger) : base(desktopService, logger)
+    public BitBltCapturer(ICursorRenderService cursorRenderService, IDesktopService desktopService) : base(desktopService)
     {
-        _cursorRenderer = cursorRenderer;
-        _cursorRenderer.RequestScreenBounds += () => CurrentScreenBounds;
+        _cursorRenderService = cursorRenderService;
+        _cursorRenderService.RequestScreenBounds += () => CurrentScreenBounds;
 
         _bitmap = new Bitmap(CurrentScreenBounds.Width, CurrentScreenBounds.Height, PixelFormat.Format32bppArgb);
     }
@@ -53,7 +49,7 @@ public class BitBltCapturer : ScreenCapturerService
     {
         try
         {
-            if (SelectedScreen == VIRTUAL_SCREEN_NAME)
+            if (SelectedScreen == VIRTUAL_SCREEN)
             {
                 return GetVirtualScreenFrame();
             }
@@ -64,7 +60,7 @@ public class BitBltCapturer : ScreenCapturerService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Capturer error in GetFrame.");
+            Log.Error(ex, "Capturer error in GetFrame.");
             return null;
         }
     }
@@ -90,12 +86,12 @@ public class BitBltCapturer : ScreenCapturerService
 
         if (result == 0)
         {
-            _logger.LogError("Failed to release the device context.");
+            Log.Error("Failed to release the device context.");
         }
 
         if (TrackCursor)
         {
-            _cursorRenderer.DrawCursor(memoryGraphics);
+            _cursorRenderService.DrawCursor(memoryGraphics);
         }
 
         return SaveBitmap(_bitmap);
@@ -111,9 +107,9 @@ public class BitBltCapturer : ScreenCapturerService
         return CaptureScreen(CurrentScreenBounds.Width, CurrentScreenBounds.Height, CurrentScreenBounds.Left, CurrentScreenBounds.Top);
     }
 
-    public override IEnumerable<DisplayInfo> GetDisplays()
+    public override IEnumerable<Display> GetDisplays()
     {
-        var screens = Screen.AllScreens.Select(screen => new DisplayInfo
+        var screens = Screen.AllScreens.Select(screen => new Display
         {
             Name = screen.DeviceName,
             IsPrimary = screen.Primary,
@@ -122,9 +118,9 @@ public class BitBltCapturer : ScreenCapturerService
 
         if (Screen.AllScreens.Length > 1)
         {
-            screens.Add(new DisplayInfo
+            screens.Add(new Display
             {
-                Name = VIRTUAL_SCREEN_NAME,
+                Name = VIRTUAL_SCREEN,
                 IsPrimary = false,
                 Resolution = new Size(VirtualScreenBounds.Width, VirtualScreenBounds.Height),
             });
@@ -140,7 +136,7 @@ public class BitBltCapturer : ScreenCapturerService
             return;
         }
 
-        if (displayName == VIRTUAL_SCREEN_NAME || Screens.ContainsKey(displayName))
+        if (displayName == VIRTUAL_SCREEN || Screens.ContainsKey(displayName))
         {
             SelectedScreen = displayName;
         }
@@ -154,7 +150,7 @@ public class BitBltCapturer : ScreenCapturerService
 
     protected override void RefreshCurrentScreenBounds()
     {
-        if (SelectedScreen == VIRTUAL_SCREEN_NAME)
+        if (SelectedScreen == VIRTUAL_SCREEN)
         {
             CurrentScreenBounds = VirtualScreenBounds;
         }
@@ -165,7 +161,7 @@ public class BitBltCapturer : ScreenCapturerService
 
         RaiseScreenChangedEvent(CurrentScreenBounds);
 
-        _cursorRenderer.UpdateScreenBounds(CurrentScreenBounds);
+        _cursorRenderService.UpdateScreenBounds(CurrentScreenBounds);
     }
 
     public override void Dispose()

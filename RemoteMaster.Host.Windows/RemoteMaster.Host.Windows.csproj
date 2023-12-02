@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-	<TargetFramework>net7.0-windows</TargetFramework>
+	<TargetFramework>net8.0-windows</TargetFramework>
 	<AssemblyName>RemoteMaster.Host</AssemblyName>
 	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	<ApplicationManifest>app.manifest</ApplicationManifest>
@@ -52,7 +52,9 @@
     <PackageReference Include="Microsoft.Windows.SDK.Win32Metadata" />
     <PackageReference Include="Polly" />
     <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="SkiaSharp.Views.Desktop.Common" />
     <PackageReference Include="System.CommandLine.DragonFruit" />
+    <PackageReference Include="System.DirectoryServices" />
     <PackageReference Include="System.Drawing.Common">
       <TreatAsUsed>true</TreatAsUsed>
     </PackageReference>

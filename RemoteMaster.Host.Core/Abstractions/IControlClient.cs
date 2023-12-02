@@ -3,7 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Drawing;
-using RemoteMaster.Shared.Dtos;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
@@ -13,7 +13,7 @@ public interface IControlClient
 
     Task ReceiveScreenUpdate(byte[] screenUpdate);
 
-    Task ReceiveScreenData(ScreenDataDto screenData);
+    Task ReceiveDisplays(IEnumerable<Display> displays);
 
     Task ReceiveScreenSize(Size size);
 

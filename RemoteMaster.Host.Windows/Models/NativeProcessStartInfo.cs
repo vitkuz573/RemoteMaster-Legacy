@@ -4,25 +4,21 @@
 
 namespace RemoteMaster.Host.Windows.Models;
 
-public class NativeProcessStartInfo
+public class NativeProcessStartInfo(string applicationName, int targetSessionId)
 {
-    public string ApplicationName { get; set; }
+    public string FileName { get; init; } = applicationName;
 
-    public string Arguments { get; set; }
+    public string? Arguments { get; init; } = null;
 
-    public int TargetSessionId { get; set; }
+    public int TargetSessionId { get; init; } = targetSessionId;
 
-    public bool ForceConsoleSession { get; set; }
+    public bool ForceConsoleSession { get; init; } = true;
 
-    public string DesktopName { get; set; }
+    public string DesktopName { get; init; } = "Default";
 
-    public bool CreateNoWindow { get; set; }
+    public bool CreateNoWindow { get; init; } = true;
 
-    public bool UseCurrentUserToken { get; set; }
+    public bool UseCurrentUserToken { get; init; } = false;
 
-    public NativeProcessStartInfo(string applicationName, int targetSessionId)
-    {
-        ApplicationName = applicationName;
-        TargetSessionId = targetSessionId;
-    }
+    public bool InheritHandles { get; init; } = false;
 }

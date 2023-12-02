@@ -3,42 +3,41 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Host.Core.Abstractions;
+using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
 public class HostMonitorService : IHostedService
 {
-    private readonly IHostInstanceService _hostService;
-    private readonly ILogger<HostMonitorService> _logger;
-    private Timer _timer;
+    private readonly IUserInstanceService _userInstanceService;
+    private readonly Timer _timer;
 
-    public HostMonitorService(IHostInstanceService hostService, ILogger<HostMonitorService> logger)
+    public HostMonitorService(IUserInstanceService userInstanceService)
     {
-        _hostService = hostService;
-        _logger = logger;
+        _userInstanceService = userInstanceService;
+        _timer = new Timer(MonitorHostInstance, null, Timeout.Infinite, 0);
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _timer = new Timer(MonitorHostInstance, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
+        _timer.Change(TimeSpan.Zero, TimeSpan.FromMinutes(1));
 
         return Task.CompletedTask;
     }
 
-    private void MonitorHostInstance(object state)
+    private void MonitorHostInstance(object? state)
     {
-        if (!_hostService.IsRunning())
+        if (!_userInstanceService.IsRunning)
         {
-            _logger.LogInformation("Host instance is not running. Starting it...");
-            _hostService.Start();
+            Log.Information("Host instance is not running. Starting it...");
+            _userInstanceService.Start();
         }
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _timer?.Dispose();
+        _timer.Dispose();
 
         return Task.CompletedTask;
     }
 }
-

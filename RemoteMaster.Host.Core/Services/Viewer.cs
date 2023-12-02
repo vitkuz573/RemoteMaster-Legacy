@@ -4,27 +4,27 @@
 
 using System.Drawing;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
-using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
+using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
 public class Viewer : IViewer
 {
     private readonly IHubContext<ControlHub, IControlClient> _hubContext;
-    private readonly ILogger<Viewer> _logger;
-    private CancellationTokenSource _streamingCts;
+    private readonly CancellationTokenSource _cts;
 
-    public Viewer(IScreenCapturerService screenCapturer, ILogger<Viewer> logger, IHubContext<ControlHub, IControlClient> hubContext, string connectionId)
+    public Viewer(IScreenCapturerService screenCapturer, IHubContext<ControlHub, IControlClient> hubContext, string connectionId)
     {
         ScreenCapturer = screenCapturer;
         _hubContext = hubContext;
-        _logger = logger;
         ConnectionId = connectionId;
+
+        _cts = new();
 
         _ = SendHostVersion();
 
@@ -37,14 +37,11 @@ public class Viewer : IViewer
 
     public async Task StartStreaming()
     {
-        _streamingCts = new CancellationTokenSource();
-        var cancellationToken = _streamingCts.Token;
+        var cancellationToken = _cts.Token;
 
-        var bounds = ScreenCapturer.CurrentScreenBounds;
+        await SendDisplays(ScreenCapturer.GetDisplays());
 
-        await SendScreenData(ScreenCapturer.GetDisplays(), bounds.Width, bounds.Height);
-
-        _logger.LogInformation("Starting screen stream for ID {connectionId}", ConnectionId);
+        Log.Information("Starting screen stream for ID {connectionId}", ConnectionId);
 
         try
         {
@@ -55,11 +52,11 @@ public class Viewer : IViewer
         }
         catch (Exception ex)
         {
-            _logger.LogError("An error occurred during streaming: {Message}", ex.Message);
+            Log.Error("An error occurred during streaming: {Message}", ex.Message);
         }
     }
 
-    private async IAsyncEnumerable<byte[]> StreamScreenDataAsync(CancellationToken cancellationToken)
+    private async IAsyncEnumerable<byte[]> StreamScreenDataAsync([EnumeratorCancellation] CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -70,26 +67,20 @@ public class Viewer : IViewer
                 yield return screenData;
             }
 
-            await Task.Delay(16); // Добавить задержку для управления частотой кадров
+            await Task.Delay(16);
         }
     }
 
     public void StopStreaming()
     {
-        _logger.LogInformation("Stopping screen stream for ID {connectionId}", ConnectionId);
+        Log.Information("Stopping screen stream for ID {connectionId}", ConnectionId);
 
-        _streamingCts?.Cancel();
+        _cts?.Cancel();
     }
 
-    public async Task SendScreenData(IEnumerable<DisplayInfo> displays, int screenWidth, int screenHeight)
+    public async Task SendDisplays(IEnumerable<Display> displays)
     {
-        var dto = new ScreenDataDto
-        {
-            Displays = displays,
-            ScreenSize = new Size(screenWidth, screenHeight)
-        };
-
-        await _hubContext.Clients.Client(ConnectionId).ReceiveScreenData(dto);
+        await _hubContext.Clients.Client(ConnectionId).ReceiveDisplays(displays);
     }
 
     public async Task SendScreenSize(int width, int height)

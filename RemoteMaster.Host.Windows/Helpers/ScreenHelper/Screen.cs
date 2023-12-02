@@ -58,7 +58,7 @@ public partial class Screen
 
             _deviceName = new string(info.szDevice.ToString());
 
-            if (hdc == null)
+            if (hdc == default)
             {
                 screenDC = PInvoke.CreateDCW(_deviceName, null, null, null);
             }

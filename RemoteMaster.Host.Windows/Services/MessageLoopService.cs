@@ -4,6 +4,7 @@
 
 using System.Runtime.InteropServices;
 using RemoteMaster.Host.Core.Abstractions;
+using Serilog;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
 using static Windows.Win32.PInvoke;
@@ -17,13 +18,11 @@ public class MessageLoopService : IHostedService
 
     private HWND _hwnd;
     private readonly WNDPROC _wndProcDelegate;
-    private readonly ILogger<MessageLoopService> _logger;
-    private readonly IHostInstanceService _hostService;
+    private readonly IUserInstanceService _userInstanceService;
 
-    public MessageLoopService(IHostInstanceService hostService, ILogger<MessageLoopService> logger)
+    public MessageLoopService(IUserInstanceService userInstanceService)
     {
-        _hostService = hostService;
-        _logger = logger;
+        _userInstanceService = userInstanceService;
 
         _wndProcDelegate = WndProc;
     }
@@ -50,7 +49,7 @@ public class MessageLoopService : IHostedService
     {
         if (!TryRegisterClass(out _))
         {
-            _logger.LogError("Failed to register the window class.");
+            Log.Error("Failed to register the window class.");
 
             return;
         }
@@ -59,7 +58,7 @@ public class MessageLoopService : IHostedService
 
         if (_hwnd.IsNull)
         {
-            _logger.LogError("Failed to create hidden window.");
+            Log.Error("Failed to create hidden window.");
 
             return;
         }
@@ -89,18 +88,18 @@ public class MessageLoopService : IHostedService
 
     private static unsafe HWND CreateHiddenWindow()
     {
-        return CreateWindowEx(0, CLASS_NAME, "", 0, 0, 0, 0, 0, HWND.HWND_MESSAGE, null, null, null);
+        return CreateWindowEx(0, CLASS_NAME, string.Empty, 0, 0, 0, 0, 0, HWND.HWND_MESSAGE, null, null, null);
     }
 
     private void RegisterForSessionNotifications()
     {
         if (!WTSRegisterSessionNotification(_hwnd, NOTIFY_FOR_ALL_SESSIONS))
         {
-            _logger.LogError("Failed to register session notifications.");
+            Log.Error("Failed to register session notifications.");
         }
         else
         {
-            _logger.LogInformation("Successfully registered for session notifications.");
+            Log.Information("Successfully registered for session notifications.");
         }
     }
 
@@ -131,15 +130,22 @@ public class MessageLoopService : IHostedService
     private void LogSessionChange(WPARAM wParam)
     {
         var sessionChangeReason = GetSessionChangeDescription(wParam);
-        _logger.LogInformation("Received session change notification. Reason: {Reason}", sessionChangeReason);
+        Log.Information("Received session change notification. Reason: {Reason}", sessionChangeReason);
     }
 
     private string GetSessionChangeDescription(WPARAM wParam)
     {
         return (ulong)wParam.Value switch
         {
-            WTS_CONSOLE_DISCONNECT => HandleSessionChange("A session was disconnected from the console terminal"),
             WTS_CONSOLE_CONNECT => HandleSessionChange("A session was connected to the console terminal"),
+            WTS_CONSOLE_DISCONNECT => HandleSessionChange("A session was disconnected from the console terminal"),
+            WTS_REMOTE_CONNECT => "A session was connected to the remote terminal",
+            WTS_REMOTE_DISCONNECT => "A session was disconnected from the remote terminal",
+            WTS_SESSION_LOGON => "A user has logged on to the session",
+            WTS_SESSION_LOGOFF => "A user has logged off the session",
+            WTS_SESSION_LOCK => "A session has been locked",
+            WTS_SESSION_UNLOCK => "A session has been unlocked",
+            WTS_SESSION_REMOTE_CONTROL => "A session has changed its remote controlled status",
             _ => "Unknown session change reason."
         };
     }
@@ -153,13 +159,13 @@ public class MessageLoopService : IHostedService
 
     private async Task RestartHostAsync()
     {
-        _hostService.Stop();
+        _userInstanceService.Stop();
 
-        while (_hostService.IsRunning())
+        while (_userInstanceService.IsRunning)
         {
             await Task.Delay(RESTART_DELAY);
         }
 
-        _hostService.Start();
+        _userInstanceService.Start();
     }
 }

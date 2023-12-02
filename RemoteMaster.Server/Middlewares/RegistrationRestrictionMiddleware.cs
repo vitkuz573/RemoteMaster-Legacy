@@ -4,38 +4,27 @@
 
 namespace RemoteMaster.Server.Middlewares;
 
-public class RegistrationRestrictionMiddleware
+public class RegistrationRestrictionMiddleware(RequestDelegate next, bool enableRegistration)
 {
-    private readonly RequestDelegate _next;
-    private readonly bool _enableRegistration;
-    private static readonly List<string> RestrictedRoutes = new()
-    {
-        "/identity/account/register"
-    };
-
-    public RegistrationRestrictionMiddleware(RequestDelegate next, bool enableRegistration)
-    {
-        _next = next;
-        _enableRegistration = enableRegistration;
-    }
+    private static readonly List<string> RestrictedRoutes =
+    [
+        "/account/register"
+    ];
 
     public async Task InvokeAsync(HttpContext context)
     {
-        if (context == null)
-        {
-            throw new ArgumentNullException(nameof(context));
-        }
+        ArgumentNullException.ThrowIfNull(context);
 
         var path = context.Request.Path.Value.ToLower();
         var isRestrictedRoute = RestrictedRoutes.Any(path.StartsWith);
 
-        if (!_enableRegistration && isRestrictedRoute)
+        if (!enableRegistration && isRestrictedRoute)
         {
-            context.Response.Redirect("/Identity/Account/AccessDenied");
+            context.Response.Redirect("/");
 
             return;
         }
 
-        await _next(context);
+        await next(context);
     }
 }

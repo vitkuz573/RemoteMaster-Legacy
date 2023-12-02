@@ -69,7 +69,7 @@ if ($packagesToRemove.Count -gt 0) {
         # Formatting XML for better readability
         $settings = New-Object System.Xml.XmlWriterSettings
         $settings.Indent = $true
-        $settings.IndentChars = "    "
+        $settings.IndentChars = "  "
         $settings.NewLineChars = "`r`n"
         $settings.NewLineHandling = [System.Xml.NewLineHandling]::Replace
         $memoryStream = New-Object System.IO.MemoryStream
@@ -80,7 +80,9 @@ if ($packagesToRemove.Count -gt 0) {
         $memoryStream.Position = 0
 
         $formattedXml = New-Object System.IO.StreamReader -ArgumentList $memoryStream
-        Set-Content -Path $packagePropsPath -Value $formattedXml.ReadToEnd()
+        $formattedXmlContent = $formattedXml.ReadToEnd().TrimEnd()
+
+        Set-Content -Path $packagePropsPath -Value $formattedXmlContent
 
         Write-Host "Removed the specified packages. Directory.Packages.props has been updated." -ForegroundColor Green
     } else {

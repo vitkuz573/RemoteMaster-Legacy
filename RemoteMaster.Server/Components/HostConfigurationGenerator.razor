@@ -1,11 +1,12 @@
-﻿@using Radzen
+﻿<MudDialog>
+    <DialogContent>
+        <form method="post" action="api/HostConfiguration/generate">
+            <MudTextField T="string" Label="Group" @bind-Value="@_group" Required />
 
-<form method="post" action="api/HostConfiguration/generate" class="select-none">
-    <RadzenLabel Text="Computer Group:" style="display: block; margin-bottom: 10px;"></RadzenLabel>
-    <RadzenTextBox @bind-Value="_group" Width="100%" Name="Group" required></RadzenTextBox>
-
-    <div style="margin: 20px 0;">
-        <RadzenButton ButtonType=ButtonType.Submit Text="Download Configuration"></RadzenButton>
-        <RadzenButton Text="Download Host" Click="DownloadHost" />
-    </div>
-</form>
+            <div style="margin: 20px 0;">
+                <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary">Download Configuration</MudButton>
+                <MudButton Color="Color.Secondary" OnClick="DownloadHost">Download Host</MudButton>
+            </div>
+        </form>
+    </DialogContent>
+</MudDialog>

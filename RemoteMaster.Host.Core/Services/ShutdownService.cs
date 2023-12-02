@@ -3,31 +3,22 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
+using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class ShutdownService : IShutdownService
+public class ShutdownService(IHostApplicationLifetime appLifetime) : IShutdownService
 {
-    private readonly IHostApplicationLifetime _appLifetime;
-    private readonly ILogger<ShutdownService> _logger;
-
-    public ShutdownService(IHostApplicationLifetime appLifetime, ILogger<ShutdownService> logger)
-    {
-        _appLifetime = appLifetime;
-        _logger = logger;
-    }
-
     public void SafeShutdown()
     {
-        _logger.LogInformation("Initiating safe shutdown...");
-        _appLifetime.StopApplication();
+        Log.Information("Initiating safe shutdown...");
+        appLifetime.StopApplication();
     }
 
     public void ImmediateShutdown(int exitCode = 0)
     {
-        _logger.LogInformation("Initiating immediate shutdown with exit code {ExitCode}...", exitCode);
+        Log.Information("Initiating immediate shutdown with exit code {ExitCode}...", exitCode);
         Environment.Exit(exitCode);
     }
 }

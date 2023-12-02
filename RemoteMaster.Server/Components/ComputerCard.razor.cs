@@ -4,7 +4,6 @@
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using Radzen;
 using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Components;
@@ -12,18 +11,15 @@ namespace RemoteMaster.Server.Components;
 public partial class ComputerCard
 {
     [Parameter]
-    public Computer Computer { get; set; }
-
-    [Inject]
-    public IJSRuntime JSRuntime { get; set; }
-
-    [Inject]
-    public ContextMenuService ContextMenuService { get; set; }
-
-    private string ThumbnailPath => Computer.Thumbnail != null ? $"data:image/png;base64,{Convert.ToBase64String(Computer.Thumbnail)}" : "/img/notconnected.png";
+    public Computer Computer { get; set; } = default!;
 
     [Parameter]
     public bool IsSelected { get; set; }
+
+    [Inject]
+    public IJSRuntime JSRuntime { get; set; } = default!;
+
+    private string ThumbnailPath => Computer.Thumbnail != null ? $"data:image/png;base64,{Convert.ToBase64String(Computer.Thumbnail)}" : "/img/notconnected.png";
 
     [Parameter]
     public EventCallback<bool> IsSelectedChanged { get; set; }

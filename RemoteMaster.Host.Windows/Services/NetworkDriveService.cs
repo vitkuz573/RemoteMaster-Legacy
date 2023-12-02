@@ -4,6 +4,7 @@
 
 using System.ComponentModel;
 using RemoteMaster.Host.Windows.Abstractions;
+using Serilog;
 using Windows.Win32.Foundation;
 using Windows.Win32.NetworkManagement.WNet;
 using static Windows.Win32.PInvoke;
@@ -12,16 +13,9 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class NetworkDriveService : INetworkDriveService
 {
-    private readonly ILogger<NetworkDriveService> _logger;
-
-    public NetworkDriveService(ILogger<NetworkDriveService> logger)
-    {
-        _logger = logger;
-    }
-
     public unsafe void MapNetworkDrive(string remotePath, string username, string password)
     {
-        _logger.LogInformation("Attempting to map network drive with remote path: {RemotePath}", remotePath);
+        Log.Information("Attempting to map network drive with remote path: {RemotePath}", remotePath);
 
         var netResource = new NETRESOURCEW
         {
@@ -38,23 +32,23 @@ public class NetworkDriveService : INetworkDriveService
             {
                 if (result == WIN32_ERROR.ERROR_ALREADY_ASSIGNED)
                 {
-                    _logger.LogWarning("Network drive with remote path {RemotePath} is already assigned.", remotePath);
-                    
+                    Log.Warning("Network drive with remote path {RemotePath} is already assigned.", remotePath);
+
                     return;
                 }
 
-                _logger.LogError("Failed to map network drive with remote path {RemotePath}. Error code: {Result}", remotePath, (int)result);
-                
+                Log.Error("Failed to map network drive with remote path {RemotePath}. Error code: {Result}", remotePath, (int)result);
+
                 throw new Win32Exception((int)result);
             }
 
-            _logger.LogInformation("Successfully mapped network drive with remote path: {RemotePath}", remotePath);
+            Log.Information("Successfully mapped network drive with remote path: {RemotePath}", remotePath);
         }
     }
 
     public unsafe void CancelNetworkDrive(string remotePath)
     {
-        _logger.LogInformation("Attempting to cancel network drive with remote path: {RemotePath}", remotePath);
+        Log.Information("Attempting to cancel network drive with remote path: {RemotePath}", remotePath);
 
         fixed (char* pRemotePath = remotePath)
         {
@@ -62,12 +56,12 @@ public class NetworkDriveService : INetworkDriveService
 
             if (result != WIN32_ERROR.NO_ERROR)
             {
-                _logger.LogError("Failed to cancel network drive with remote path {RemotePath}. Error code: {Result}", remotePath, (int)result);
-                
+                Log.Error("Failed to cancel network drive with remote path {RemotePath}. Error code: {Result}", remotePath, (int)result);
+
                 throw new Win32Exception((int)result);
             }
 
-            _logger.LogInformation("Successfully canceled network drive with remote path: {RemotePath}", remotePath);
+            Log.Information("Successfully canceled network drive with remote path: {RemotePath}", remotePath);
         }
     }
 }

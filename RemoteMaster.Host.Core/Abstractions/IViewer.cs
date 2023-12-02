@@ -16,7 +16,7 @@ public interface IViewer
 
     void StopStreaming();
 
-    Task SendScreenData(IEnumerable<DisplayInfo> displays, int screenWidth, int screenHeight);
+    Task SendDisplays(IEnumerable<Display> displays);
 
     Task SendScreenSize(int width, int height);
 

@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using Microsoft.Win32.SafeHandles;
 using RemoteMaster.Host.Windows.Abstractions;
 using Windows.Win32.Security;
 using static Windows.Win32.PInvoke;
@@ -13,10 +12,7 @@ public class TokenPrivilegeService : ITokenPrivilegeService
 {
     public unsafe bool AdjustPrivilege(string privilegeName)
     {
-        if (string.IsNullOrEmpty(privilegeName))
-        {
-            throw new ArgumentNullException(nameof(privilegeName));
-        }
+        ArgumentException.ThrowIfNullOrEmpty(nameof(privilegeName));
 
         using var hProcess = GetCurrentProcess_SafeHandle();
 
@@ -32,28 +28,26 @@ public class TokenPrivilegeService : ITokenPrivilegeService
             }
         };
 
-        SafeFileHandle hToken = null;
-
         try
         {
-            var tokenOpened = OpenProcessToken(hProcess, TOKEN_ACCESS_MASK.TOKEN_ADJUST_PRIVILEGES | TOKEN_ACCESS_MASK.TOKEN_QUERY, out hToken);
-            hToken ??= new SafeFileHandle(nint.Zero, false);
-
-            if (!tokenOpened)
+            if (!OpenProcessToken(hProcess, TOKEN_ACCESS_MASK.TOKEN_ADJUST_PRIVILEGES | TOKEN_ACCESS_MASK.TOKEN_QUERY, out var hToken))
             {
                 return false;
             }
 
-            if (!LookupPrivilegeValue(null, privilegeName, out tkp.Privileges._0.Luid))
+            using (hToken)
             {
-                return false;
-            }
+                if (!LookupPrivilegeValue(null, privilegeName, out tkp.Privileges._0.Luid))
+                {
+                    return false;
+                }
 
-            return AdjustTokenPrivileges(hToken, false, tkp, 0, null, null);
+                return AdjustTokenPrivileges(hToken, false, tkp, 0, null, null);
+            }
         }
-        finally
+        catch
         {
-            hToken?.Dispose();
+            return false;
         }
     }
 }

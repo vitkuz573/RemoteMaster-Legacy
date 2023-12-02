@@ -23,7 +23,7 @@ public interface IScreenCapturerService : IDisposable
 
     byte[]? GetNextFrame();
 
-    IEnumerable<DisplayInfo> GetDisplays();
+    IEnumerable<Display> GetDisplays();
 
     void SetSelectedScreen(string displayName);
 

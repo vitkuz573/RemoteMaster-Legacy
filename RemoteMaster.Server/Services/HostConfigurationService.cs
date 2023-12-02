@@ -4,27 +4,19 @@
 
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Models;
+using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
 /// <summary>
 /// Service responsible for generating host configuration files.
 /// </summary>
-public class HostConfigurationService : IHostConfigurationService
+/// <remarks>
+/// Initializes a new instance of the <see cref="HostConfigurationService"/> class.
+/// </remarks>
+/// <param name="serializationService">The serialization service instance.</param>
+public class HostConfigurationService(ISerializationService serializationService) : IHostConfigurationService
 {
-    private readonly ISerializationService _serializationService;
-    private readonly ILogger<HostConfigurationService> _logger;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="HostConfigurationService"/> class.
-    /// </summary>
-    /// <param name="logger">The logger instance.</param>
-    /// <param name="serializationService">The serialization service instance.</param>
-    public HostConfigurationService(ISerializationService serializationService, ILogger<HostConfigurationService> logger)
-    {
-        _serializationService = serializationService;
-        _logger = logger;
-    }
 
     /// <summary>
     /// Generates a configuration file for the host based on the given configuration model.
@@ -33,7 +25,7 @@ public class HostConfigurationService : IHostConfigurationService
     /// <returns>A memory stream containing the configuration file.</returns>
     public async Task<MemoryStream> GenerateConfigFileAsync(HostConfiguration config)
     {
-        var jsonBytes = _serializationService.SerializeToJsonBytes(config);
+        var jsonBytes = serializationService.SerializeToJsonBytes(config);
 
         return await WriteToMemoryStreamAsync(jsonBytes);
     }
@@ -43,18 +35,18 @@ public class HostConfigurationService : IHostConfigurationService
     /// </summary>
     /// <param name="bytes">The bytes to write.</param>
     /// <returns>A memory stream containing the written bytes.</returns>
-    private async Task<MemoryStream> WriteToMemoryStreamAsync(byte[] bytes)
+    private static async Task<MemoryStream> WriteToMemoryStreamAsync(byte[] bytes)
     {
         var memoryStream = new MemoryStream();
 
         try
         {
             await memoryStream.WriteAsync(bytes);
-            _logger.LogInformation("Successfully generated config file.");
+            Log.Information("Successfully generated config file.");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An error occurred while writing to the memory stream.");
+            Log.Error(ex, "An error occurred while writing to the memory stream.");
             throw;
         }
 

@@ -4,36 +4,25 @@
 
 namespace RemoteMaster.Server.Middlewares;
 
-public class RouteRestrictionMiddleware
+public class RouteRestrictionMiddleware(RequestDelegate next)
 {
-    private readonly RequestDelegate _next;
+    private static readonly List<string> RestrictedRoutes =
+    [
+        "/account/manage/personaldata",
+        "/account/manage/deletepersonaldata"
+    ];
 
-    private static readonly List<string> RestrictedRoutes = new()
-    {
-        "/identity/account/manage/personaldata",
-        "/identity/account/manage/deletepersonaldata"
-    };
-
-    private static readonly List<string> AllowedRoutes = new()
-    {
-        "/identity/account/login",
-        "/identity/account/logout",
-        "/identity/account/accessdenied",
-        "/identity/account/manage",
-        "/identity/account/register"
-    };
-
-    public RouteRestrictionMiddleware(RequestDelegate next)
-    {
-        _next = next;
-    }
+    private static readonly List<string> AllowedRoutes =
+    [
+        "/account/login",
+        "/account/logout",
+        "/account/manage",
+        "/account/register"
+    ];
 
     public async Task InvokeAsync(HttpContext context)
     {
-        if (context == null)
-        {
-            throw new ArgumentNullException(nameof(context));
-        }
+        ArgumentNullException.ThrowIfNull(context);
 
         var path = context.Request.Path.Value.ToLower();
 
@@ -46,13 +35,13 @@ public class RouteRestrictionMiddleware
 
         var isAllowedRoute = AllowedRoutes.Any(path.StartsWith);
 
-        if (path.StartsWith("/identity/account") && !isAllowedRoute)
+        if (path.StartsWith("/account") && !isAllowedRoute)
         {
-            context.Response.Redirect("/Identity/Account/AccessDenied");
+            context.Response.Redirect("/");
 
             return;
         }
 
-        await _next(context);
+        await next(context);
     }
 }

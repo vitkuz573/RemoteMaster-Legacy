@@ -11,16 +11,10 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class ScreenRecorderService : IScreenRecorderService
+public class ScreenRecorderService(IScreenCapturerService screenCapturerService) : IScreenRecorderService
 {
-    private readonly IScreenCapturerService _screenCapturerService;
-    private CancellationTokenSource _cancellationTokenSource;
-    private Task _recordingTask;
-
-    public ScreenRecorderService(IScreenCapturerService screenCapturerService)
-    {
-        _screenCapturerService = screenCapturerService;
-    }
+    private CancellationTokenSource _cancellationTokenSource = new();
+    private Task _recordingTask = Task.CompletedTask;
 
     public Task StartRecordingAsync(string outputPath)
     {
@@ -32,12 +26,12 @@ public class ScreenRecorderService : IScreenRecorderService
 
     public async Task StopRecordingAsync()
     {
-        if (_cancellationTokenSource != null)
+        if (_recordingTask != null)
         {
             _cancellationTokenSource.Cancel();
             await _recordingTask;
-            _cancellationTokenSource = null;
-            _recordingTask = null;
+            _cancellationTokenSource = new CancellationTokenSource();
+            _recordingTask = Task.CompletedTask;
         }
     }
 
@@ -45,7 +39,7 @@ public class ScreenRecorderService : IScreenRecorderService
     {
         var videoFramesSource = new RawVideoPipeSource(GenerateFrames(cancellationToken))
         {
-            FrameRate = 30
+            FrameRate = 10
         };
 
         await FFMpegArguments
@@ -60,16 +54,17 @@ public class ScreenRecorderService : IScreenRecorderService
     {
         while (!cancellationToken.IsCancellationRequested)
         {
-            var frameData = _screenCapturerService.GetNextFrame();
+            var frameData = screenCapturerService.GetNextFrame();
 
-            // Конвертировать frameData в Bitmap
+            if (frameData == null)
+            {
+                continue;
+            }
+
             using var stream = new MemoryStream(frameData);
             using var bitmap = new Bitmap(stream);
 
-            // Обернуть Bitmap с помощью BitmapVideoFrameWrapper
             yield return new BitmapVideoFrameWrapper(bitmap);
-
-            Thread.Sleep((int)(1000.0 / 30));
         }
     }
 }

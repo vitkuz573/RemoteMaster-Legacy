@@ -8,19 +8,13 @@ using RemoteMaster.Server.Helpers;
 
 namespace RemoteMaster.Server.Services;
 
-public class WakeOnLanService : IWakeOnLanService
+public class WakeOnLanService(IPacketSender packetSender) : IWakeOnLanService
 {
-    private readonly IPacketSender _packetSender;
     private const int DefaultPort = 9;
-
-    public WakeOnLanService(IPacketSender packetSender)
-    {
-        _packetSender = packetSender;
-    }
 
     public void WakeUp(string macAddress)
     {
         var packet = MagicPacketCreator.Create(macAddress);
-        _packetSender.Send(packet, new IPEndPoint(IPAddress.Broadcast, DefaultPort));
+        packetSender.Send(packet, new IPEndPoint(IPAddress.Broadcast, DefaultPort));
     }
 }

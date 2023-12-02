@@ -13,7 +13,7 @@ public class HostConfigurationService : IHostConfigurationService
     public async Task<HostConfiguration> LoadConfigurationAsync()
     {
         var config = await TryReadAndDeserializeFileAsync(ConfigurationFileName);
-        
+
         if (config != null)
         {
             return config;
@@ -22,12 +22,24 @@ public class HostConfigurationService : IHostConfigurationService
         throw new InvalidDataException($"Error reading, parsing, or validating the configuration file '{ConfigurationFileName}'.");
     }
 
+    public async Task<HostConfiguration> LoadConfigurationAsync(string filePath)
+    {
+        var config = await TryReadAndDeserializeFileAsync(filePath);
+
+        if (config != null)
+        {
+            return config;
+        }
+
+        throw new InvalidDataException($"Error reading, parsing, or validating the configuration file '{filePath}'.");
+    }
+
     public string ConfigurationFileName => $"{AppDomain.CurrentDomain.FriendlyName}.json";
 
     private static async Task<HostConfiguration?> TryReadAndDeserializeFileAsync(string fileName)
     {
         var json = await ReadFileAsync(fileName);
-        
+
         if (json is not null && TryDeserializeJson(json, out var config) && IsValidConfig(config))
         {
             return config;
@@ -51,12 +63,11 @@ public class HostConfigurationService : IHostConfigurationService
         try
         {
             config = JsonSerializer.Deserialize<HostConfiguration>(json);
-            
+
             return true;
         }
-        catch (JsonException ex)
+        catch (JsonException)
         {
-            // You might want to log the exception here.
             config = null;
 
             return false;

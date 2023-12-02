@@ -2,12 +2,13 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
-using Radzen;
+using MudBlazor.Services;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Areas.Identity.Data;
+using RemoteMaster.Server.Components;
+using RemoteMaster.Server.Components.Account;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Hubs;
 using RemoteMaster.Server.Middlewares;
@@ -16,96 +17,83 @@ using RemoteMaster.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Setup services
-ConfigureServices(builder);
+// Add services to the container.
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
 
-// Setup application
-var app = ConfigureApplication(builder);
+builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddScoped<IdentityUserAccessor>();
+builder.Services.AddScoped<IdentityRedirectManager>();
+builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultScheme = IdentityConstants.ApplicationScheme;
+        options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+    })
+    .AddIdentityCookies();
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
+builder.Services.AddDbContext<NodesDbContext>(options => options.UseSqlServer(connectionString));
+
+builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
+builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddSignInManager()
+    .AddDefaultTokenProviders();
+
+builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+builder.Services.AddTransient<IHostConfigurationService, HostConfigurationService>();
+builder.Services.AddScoped<IDatabaseService, DatabaseService>();
+builder.Services.AddScoped<IComputerCommandService, ComputerCommandService>();
+builder.Services.AddSingleton<IBrandingService, BrandingService>();
+builder.Services.AddSingleton<ICertificateService, CertificateService>();
+builder.Services.AddSingleton<IPacketSender, UdpPacketSender>();
+builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
+builder.Services.AddSingleton<ISerializationService, JsonSerializerService>();
+builder.Services.AddTransient<ITokenService, TokenService>();
+builder.Services.Configure<TokenServiceOptions>(builder.Configuration.GetSection("Jwt"));
+builder.Services.Configure<CertificateSettings>(builder.Configuration.GetSection("CertificateSettings"));
+builder.Services.AddControllers();
+builder.Services.AddMudServices();
+
+var app = builder.Build();
+
+app.Urls.Clear();
+app.Urls.Add("http://0.0.0.0:5254");
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseMigrationsEndPoint();
+}
+else
+{
+    app.UseExceptionHandler("/Error", createScopeForErrors: true);
+    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    app.UseHsts();
+}
+
+// app.UseHttpsRedirection();
+
+var isRegisterAllowed = builder.Configuration.GetValue<bool>("RegisterAllowed");
+
+app.UseMiddleware<RegistrationRestrictionMiddleware>(isRegisterAllowed);
+app.UseMiddleware<RouteRestrictionMiddleware>();
+
+app.UseStaticFiles();
+app.UseAntiforgery();
+
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode();
+
+// Add additional endpoints required by the Identity /Account Razor components.
+app.MapAdditionalIdentityEndpoints();
+
+app.MapControllers();
+app.MapHub<ManagementHub>("/hubs/management");
 
 app.Run();
-
-void ConfigureServices(WebApplicationBuilder builder)
-{
-    // Core services
-    builder.Services.ConfigureApplicationCookie(options =>
-    {
-        options.AccessDeniedPath = "/Identity/Account/Login";
-        options.LoginPath = "/Identity/Account/Login";
-    });
-
-    builder.Services.AddHttpClient("DefaultClient", client =>
-    {
-        client.BaseAddress = new Uri("http://127.0.0.1:5254");
-    });
-
-    // Business services
-    builder.Services.AddTransient<IHostConfigurationService, HostConfigurationService>();
-    builder.Services.AddScoped<DatabaseService>();
-    builder.Services.AddSingleton<IPacketSender, UdpPacketSender>();
-    builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
-    builder.Services.AddSingleton<ISerializationService, JsonSerializerService>();
-    builder.Services.AddTransient<ITokenService, TokenService>();
-    builder.Services.Configure<TokenServiceOptions>(builder.Configuration.GetSection("Jwt"));
-
-    // Hub services
-    builder.Services.AddTransient<IHubConnectionBuilder>(s => new HubConnectionBuilder());
-
-    // Database contexts
-    builder.Services.AddDbContext<NodesDataContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("NodesDataContextConnection")));
-    builder.Services.AddDbContext<IdentityDataContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("IdentityDataContextConnection")));
-    builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false).AddEntityFrameworkStores<IdentityDataContext>();
-
-    // UI services
-    builder.Services.AddScoped<DialogService>();
-    builder.Services.AddScoped<NotificationService>();
-    builder.Services.AddScoped<TooltipService>();
-    builder.Services.AddScoped<ContextMenuService>();
-
-    // Blazor services
-    builder.Services.AddRazorPages();
-    builder.Services.AddServerSideBlazor();
-}
-
-WebApplication ConfigureApplication(WebApplicationBuilder builder)
-{
-    var app = builder.Build();
-
-    // Perform database migrations
-    using (var scope = app.Services.CreateScope())
-    {
-        var dbContext = scope.ServiceProvider.GetRequiredService<NodesDataContext>();
-        dbContext.Database.Migrate();
-
-        var identityContext = scope.ServiceProvider.GetRequiredService<IdentityDataContext>();
-        identityContext.Database.Migrate();
-    }
-
-    app.Urls.Clear();
-    app.Urls.Add("http://0.0.0.0:5254");
-
-    // Configure the HTTP request pipeline
-    if (!app.Environment.IsDevelopment())
-    {
-        app.UseExceptionHandler("/Error");
-        app.UseHsts();
-    }
-
-    var enableRegistration = builder.Configuration.GetValue<bool>("EnableRegistration");
-
-    app.UseMiddleware<RegistrationRestrictionMiddleware>(enableRegistration);
-    app.UseMiddleware<RouteRestrictionMiddleware>();
-
-    app.UseStaticFiles();
-    app.UseRouting();
-
-    app.UseAuthentication();
-    app.UseAuthorization();
-
-    // Routes
-    app.MapControllers();
-    app.MapBlazorHub();
-    app.MapHub<ManagementHub>("/hubs/management");
-    app.MapFallbackToPage("/_Host");
-
-    return app;
-}

@@ -13,6 +13,7 @@ using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Host.Windows.Services;
 using RemoteMaster.Shared.Models;
+using Serilog;
 
 namespace RemoteMaster.Host.Windows;
 
@@ -30,23 +31,21 @@ internal class Program
     {
         if (new[] { serviceMode, userInstance, install, uninstall }.Count(val => val) > 1)
         {
-            Console.WriteLine("Arguments --install, --uninstall, --service-mode and --user-instance are mutually exclusive. Please specify only one.");
+            Console.Error.WriteLine("Arguments --install, --uninstall, --service-mode and --user-instance are mutually exclusive. Please specify only one.");
 
             return;
         }
-
-        ILogger<Program> logger = null;
 
         var options = new WebApplicationOptions
         {
             ContentRootPath = AppContext.BaseDirectory,
         };
 
-        var builder = WebApplication.CreateBuilder(options);
+        var builder = WebApplication.CreateSlimBuilder(options);
         builder.Host.UseWindowsService();
 
         builder.Services.AddCoreServices();
-        builder.Services.AddSingleton<IHostInstanceService, HostInstanceService>();
+        builder.Services.AddSingleton<IUserInstanceService, UserInstanceService>();
         builder.Services.AddSingleton<IHostServiceManager, HostServiceManager>();
         builder.Services.AddSingleton<IServiceManager, ServiceManager>();
         builder.Services.AddSingleton<IServiceConfiguration, HostServiceConfiguration>();
@@ -60,6 +59,8 @@ internal class Program
         builder.Services.AddSingleton<ITokenPrivilegeService, TokenPrivilegeService>();
         builder.Services.AddSingleton<IDesktopService, DesktopService>();
         builder.Services.AddSingleton<INetworkDriveService, NetworkDriveService>();
+        builder.Services.AddSingleton<IDomainService, DomainService>();
+        builder.Services.AddSingleton<IScriptService, ScriptService>();
 
         var publicKeyPath = @"C:\RemoteMaster\Security\public_key.pem";
         var publicKey = File.ReadAllText(publicKeyPath);
@@ -88,25 +89,30 @@ internal class Program
                         var remoteIp = context.HttpContext.Connection.RemoteIpAddress;
                         var localIPv6Mapped = IPAddress.Parse("::ffff:127.0.0.1");
 
-                        logger.LogInformation("Incoming request from IP: {Ip}", remoteIp);
+                        Log.Information("Incoming request from IP: {Ip}", remoteIp);
 
-                        if (remoteIp.Equals(IPAddress.Loopback) || remoteIp.Equals(IPAddress.IPv6Loopback) || remoteIp.Equals(localIPv6Mapped))
+                        if (remoteIp != null)
                         {
-                            logger.LogInformation("Localhost detected");
-
-                            var identity = new ClaimsIdentity(new[]
+                            if (remoteIp.Equals(IPAddress.Loopback) || remoteIp.Equals(IPAddress.IPv6Loopback) || remoteIp.Equals(localIPv6Mapped))
                             {
-                                new Claim(ClaimTypes.Name, "localhost@localdomain"),
-                            }, "LocalAuth");
+                                Log.Information("Localhost detected");
 
-                            context.Principal = new ClaimsPrincipal(identity);
-                            context.Success();
+                                var identity = new ClaimsIdentity(new[]
+                                {
+                                    new Claim(ClaimTypes.Name, "localhost@localdomain"),
+                                }, "LocalAuth");
+
+                                context.Principal = new ClaimsPrincipal(identity);
+                                context.Success();
+                            }
                         }
 
                         return Task.CompletedTask;
                     }
                 };
             });
+
+        builder.ConfigureSerilog();
 
         if (!serviceMode)
         {
@@ -117,11 +123,10 @@ internal class Program
             builder.Services.AddHostedService<MessageLoopService>();
             builder.Services.AddHostedService<HostMonitorService>();
             builder.Services.AddHostedService<CommandListenerService>();
+            builder.Services.AddHostedService<IPAddressMonitorService>();
         }
 
         var app = builder.Build();
-
-        logger = app.Services.GetRequiredService<ILogger<Program>>();
 
         if (install)
         {
@@ -137,13 +142,13 @@ internal class Program
             }
             catch (FileNotFoundException ex)
             {
-                Console.WriteLine($"Configuration file not found: {ex.Message}");
+                Log.Error(ex, "Configuration file not found.");
 
                 return;
             }
             catch (InvalidDataException ex)
             {
-                Console.WriteLine($"Invalid configuration data: {ex.Message}");
+                Log.Error(ex, "Invalid configuration data.");
 
                 return;
             }
@@ -183,13 +188,13 @@ internal class Program
             }
             catch (FileNotFoundException ex)
             {
-                Console.WriteLine($"[ERROR] Configuration error: {ex.Message}");
+                Log.Error(ex, "Configuration error.");
 
                 return;
             }
             catch (InvalidDataException ex)
             {
-                Console.WriteLine($"[ERROR] Configuration Error: {ex.Message}");
+                Log.Error(ex, "Configuration Error.");
 
                 return;
             }

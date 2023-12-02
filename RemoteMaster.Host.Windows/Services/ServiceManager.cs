@@ -14,10 +14,7 @@ public class ServiceManager : IServiceManager
 
     public void InstallService(IServiceConfiguration serviceConfig, string executablePath)
     {
-        if (serviceConfig == null)
-        {
-            throw new ArgumentNullException(nameof(serviceConfig));
-        }
+        ArgumentNullException.ThrowIfNull(serviceConfig);
 
         ExecuteServiceCommand($"create {serviceConfig.Name} DisplayName= \"{serviceConfig.DisplayName}\" binPath= \"{executablePath}\" start= {serviceConfig.StartType}");
 

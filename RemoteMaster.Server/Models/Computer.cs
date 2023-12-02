@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Net.NetworkInformation;
 
 namespace RemoteMaster.Server.Models;
 
@@ -24,4 +25,19 @@ public class Computer : Node
 
     [NotMapped]
     public byte[]? Thumbnail { get; set; }
+
+    public async Task<bool> IsAvailable()
+    {
+        try
+        {
+            using var ping = new Ping();
+            var reply = await ping.SendPingAsync(IPAddress, 1000);
+
+            return reply.Status == IPStatus.Success;
+        }
+        catch
+        {
+            return false;
+        }
+    }
 }

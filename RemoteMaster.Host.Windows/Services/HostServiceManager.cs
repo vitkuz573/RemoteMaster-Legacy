@@ -2,36 +2,18 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Reflection;
 using System.ServiceProcess;
-using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Models;
+using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostServiceManager : IHostServiceManager
+public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUserInstanceService userInstanceService, IServiceManager serviceManager, IHostConfigurationService configurationService, IServiceConfiguration hostServiceConfig) : IHostServiceManager
 {
-    private readonly IHostLifecycleService _hostLifecycleService;
-    private readonly IHostInstanceService _hostInstanceService;
-    private readonly IServiceManager _serviceManager;
-    private readonly IHostConfigurationService _configurationService;
-    private readonly ILogger<HostServiceManager> _logger;
-
-    private readonly IServiceConfiguration _hostServiceConfig;
-
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Host";
-
-    public HostServiceManager(IHostLifecycleService hostLifecycleService, IHostInstanceService hostInstanceService, IServiceManager serviceManager, IHostConfigurationService configurationService, IServiceConfiguration hostServiceConfig, ILogger<HostServiceManager> logger)
-    {
-        _hostLifecycleService = hostLifecycleService;
-        _hostInstanceService = hostInstanceService;
-        _serviceManager = serviceManager;
-        _configurationService = configurationService;
-        _hostServiceConfig = hostServiceConfig;
-        _logger = logger;
-    }
 
     public async Task InstallOrUpdate(HostConfiguration configuration, string hostName, string ipv4Address, string macAddress)
     {
@@ -39,33 +21,33 @@ public class HostServiceManager : IHostServiceManager
         {
             var directoryPath = GetDirectoryPath();
 
-            if (_serviceManager.IsServiceInstalled(_hostServiceConfig.Name))
+            if (serviceManager.IsServiceInstalled(hostServiceConfig.Name))
             {
-                using var serviceController = new ServiceController(_hostServiceConfig.Name);
+                using var serviceController = new ServiceController(hostServiceConfig.Name);
 
                 if (serviceController.Status != ServiceControllerStatus.Stopped)
                 {
-                    _serviceManager.StopService(_hostServiceConfig.Name);
+                    serviceManager.StopService(hostServiceConfig.Name);
                 }
 
-                CopyToTargetPath(directoryPath);
+                CopyToTargetPath(directoryPath, ipv4Address);
             }
             else
             {
-                CopyToTargetPath(directoryPath);
+                CopyToTargetPath(directoryPath, ipv4Address);
                 var hostPath = Path.Combine(directoryPath, $"{MainAppName}.{SubAppName}.exe");
-                _serviceManager.InstallService(_hostServiceConfig, $"{hostPath} --service-mode");
+                serviceManager.InstallService(hostServiceConfig, $"{hostPath} --service-mode");
             }
 
-            _serviceManager.StartService(_hostServiceConfig.Name);
+            serviceManager.StartService(hostServiceConfig.Name);
 
-            _logger.LogInformation("{ServiceName} installed and started successfully.", _hostServiceConfig.Name);
+            Log.Information("{ServiceName} installed and started successfully.", hostServiceConfig.Name);
 
-            await _hostLifecycleService.RegisterAsync(configuration, hostName, ipv4Address, macAddress);
+            await hostLifecycleService.RegisterAsync(configuration, hostName, ipv4Address, macAddress);
         }
         catch (Exception ex)
         {
-            _logger.LogError("An error occurred: {Message}", ex.Message);
+            Log.Error("An error occurred: {Message}", ex.Message);
         }
     }
 
@@ -73,31 +55,36 @@ public class HostServiceManager : IHostServiceManager
     {
         try
         {
-            if (_serviceManager.IsServiceInstalled(_hostServiceConfig.Name))
+            if (serviceManager.IsServiceInstalled(hostServiceConfig.Name))
             {
-                _serviceManager.StopService(_hostServiceConfig.Name);
-                _serviceManager.UninstallService(_hostServiceConfig.Name);
+                serviceManager.StopService(hostServiceConfig.Name);
+                serviceManager.UninstallService(hostServiceConfig.Name);
 
-                _logger.LogInformation("{ServiceName} Service uninstalled successfully.", _hostServiceConfig.Name);
+                Log.Information("{ServiceName} Service uninstalled successfully.", hostServiceConfig.Name);
             }
             else
             {
-                _logger.LogInformation("{ServiceName} Service is not installed.", _hostServiceConfig.Name);
+                Log.Information("{ServiceName} Service is not installed.", hostServiceConfig.Name);
             }
 
-            if (_hostInstanceService.IsRunning())
+            if (userInstanceService.IsRunning)
             {
-                _hostInstanceService.Stop();
+                userInstanceService.Stop();
             }
 
             DeleteFiles();
 
-            await _hostLifecycleService.UnregisterAsync(configuration, hostName);
+            await hostLifecycleService.UnregisterAsync(configuration, hostName);
         }
         catch (Exception ex)
         {
-            _logger.LogError("An error occurred: {Message}", ex.Message);
+            Log.Error("An error occurred: {Message}", ex.Message);
         }
+    }
+
+    public async Task UpdateHostInformation(HostConfiguration configuration, string hostname, string ipAddress)
+    {
+        await hostLifecycleService.UpdateHostInformationAsync(configuration, hostname, ipAddress);
     }
 
     private static string GetDirectoryPath()
@@ -107,7 +94,7 @@ public class HostServiceManager : IHostServiceManager
         return Path.Combine(programFilesPath, MainAppName, SubAppName);
     }
 
-    private void CopyToTargetPath(string targetDirectoryPath)
+    private void CopyToTargetPath(string targetDirectoryPath, string ipv4Address)
     {
         if (!Directory.Exists(targetDirectoryPath))
         {
@@ -125,8 +112,8 @@ public class HostServiceManager : IHostServiceManager
             throw new InvalidOperationException($"Failed to copy the executable to {targetExecutablePath}. Details: {ex.Message}", ex);
         }
 
-        var configName = _configurationService.ConfigurationFileName;
-        var sourceConfigPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, configName);
+        var configName = configurationService.ConfigurationFileName;
+        var sourceConfigPath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, configName);
         var targetConfigPath = Path.Combine(targetDirectoryPath, configName);
 
         if (File.Exists(sourceConfigPath))
@@ -140,9 +127,21 @@ public class HostServiceManager : IHostServiceManager
                 throw new InvalidOperationException($"Failed to copy the configuration file to {targetConfigPath}.", ex);
             }
         }
+
+        var ipAddressFilePath = Path.Combine(targetDirectoryPath, "IPAddress.txt");
+
+        try
+        {
+            File.WriteAllText(ipAddressFilePath, ipv4Address);
+            Log.Information("IP Address file created successfully.");
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Failed to create the IP Address file: {Message}", ex.Message);
+        }
     }
 
-    private void DeleteFiles()
+    private static void DeleteFiles()
     {
         var directoryPath = GetDirectoryPath();
 
@@ -151,11 +150,11 @@ public class HostServiceManager : IHostServiceManager
             try
             {
                 Directory.Delete(directoryPath, true);
-                _logger.LogInformation("{AppName} files deleted successfully.", SubAppName);
+                Log.Information("{AppName} files deleted successfully.", SubAppName);
             }
             catch (Exception ex)
             {
-                _logger.LogError("Deleting {AppName} files failed: {Message}", SubAppName, ex.Message);
+                Log.Error("Deleting {AppName} files failed: {Message}", SubAppName, ex.Message);
             }
         }
     }

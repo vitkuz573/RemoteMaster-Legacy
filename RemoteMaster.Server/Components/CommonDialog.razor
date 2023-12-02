@@ -1,0 +1,18 @@
+﻿@inherits CommonDialogBase
+
+<MudDialog ContentStyle="@ContentStyle">
+    <DialogContent>
+        <MudExpansionPanels>
+            <MudExpansionPanel Text="Click to view affected hosts">
+                @foreach (var (computer, connection) in Hosts)
+                {
+                    <MudText>@computer.Name (@computer.IPAddress)</MudText>
+                }
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+        @Content
+    </DialogContent>
+    <DialogActions>
+        @Actions
+    </DialogActions>
+</MudDialog>

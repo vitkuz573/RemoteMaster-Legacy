@@ -1,0 +1,94 @@
+﻿@page "/{Host}/connection"
+@rendermode InteractiveServer
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+
+<MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudDrawer @bind-Open="@_drawerOpen" Anchor="Anchor.End" Elevation="1">
+    <MudDrawerHeader>
+        <MudIconButton Icon="@Icons.Material.Filled.ArrowBackIosNew" OnClick="DrawerToggle" Class="@(_drawerOpen ? "drawer-button-open" : "drawer-button-closed")" />
+        <MudText Typo="Typo.h6">Settings</MudText>
+    </MudDrawerHeader>
+    <MudNavMenu>
+        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.DisplaySettings">
+            <MudSelect Value="@_selectedDisplay" ValueChanged="OnChangeScreen" Label="Display" T="string" Dense="true">
+                @if (_displays != null)
+                {
+                    for (int i = 0; i < _displays.Count; i++)
+                    {
+                        var resolution = $"{_displays[i].Resolution.Width} x {_displays[i].Resolution.Height}";
+                        var displayName = _displays[i].Name == "VIRTUAL_SCREEN"
+                        ? $"Virtual Screen ({resolution})"
+                        : $"Screen {i + 1} ({resolution})";
+
+                        <MudSelectItem Value="_displays[i].Name">@displayName</MudSelectItem>
+                    }
+                }
+            </MudSelect>
+        </MudNavLink>
+
+        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.HighQuality">
+            <MudText>Image Quality</MudText>
+            <MudSlider T="int" Value="@_imageQuality" Min="0" Max="100" ValueChanged="ChangeQuality" />
+        </MudNavLink>
+
+        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.ControlPoint">
+            <MudText>Cursor Tracking</MudText>
+            <MudSwitch T="bool" Checked="_cursorTracking" CheckedChanged="ToggleCursorTracking" />
+        </MudNavLink>
+
+        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Keyboard">
+            <MudText>Input Toggle</MudText>
+            <MudSwitch T="bool" Checked="_inputEnabled" CheckedChanged="ToggleInputEnabled" />
+        </MudNavLink>
+
+        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.DeleteSweep" OnClick="KillHost">Kill Host</MudNavLink>
+        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.ControlPoint" OnClick="SendCtrlAltDel">Send Ctrl+Alt+Del</MudNavLink>
+        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.History" OnClick="RebootComputer">Reboot Computer</MudNavLink>
+        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.PowerOff" OnClick="ShutdownComputer">Shutdown Computer</MudNavLink>
+
+        <MudNavLink Icon="@Icons.Material.Filled.Computer">Host Version: @(_hostVersion)</MudNavLink>
+    </MudNavMenu>
+</MudDrawer>
+
+<div class="absolute h-full w-full bg-gray-800 text-white p-4">
+    @if (!string.IsNullOrEmpty(_screenDataUrl))
+    {
+        <img id="screenImage" src="@_screenDataUrl" @oncontextmenu:preventDefault="true" @oncontextmenu="(MouseEventArgs e) => {}" draggable="false" class="object-contain mx-auto max-h-full max-w-full" onload="window.revokeUrl(this.src)" @onmousemove="OnMouseMove" @onmousedown="OnMouseUpDown" @onmouseup="OnMouseUpDown" @onmouseover="OnMouseOver" @onmousewheel="OnMouseWheel" />
+    }
+    else
+    {
+        <p>Establishing connection...</p>
+    }
+</div>
+
+<style>
+    body {
+        overflow-x: hidden;
+    }
+
+    .drawer-button-closed, .drawer-button-closed:hover {
+        position: fixed;
+        top: 50%;
+        right: 0;
+        transform: translateY(-50%);
+        background-color: white;
+        border-radius: 50% 0 0 50%;
+        transition: right 0.3s ease;
+    }
+
+    .drawer-button-open, .drawer-button-open:hover {
+        position: fixed;
+        top: 50%;
+        right: 300px; /* width of the MudDrawer */
+        transform: translateY(-50%);
+        background-color: white;
+        border-radius: 50% 0 0 50%;
+        transition: right 0.3s ease;
+    }
+</style>
+
+

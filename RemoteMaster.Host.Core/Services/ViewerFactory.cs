@@ -3,27 +3,15 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class ViewerFactory : IViewerFactory
+public class ViewerFactory(IScreenCapturerService screenCapturerService, IHubContext<ControlHub, IControlClient> hubContext) : IViewerFactory
 {
-    private readonly IScreenCapturerService _screenCapturerService;
-    private readonly IHubContext<ControlHub, IControlClient> _hubContext;
-    private readonly ILogger<Viewer> _logger;
-
-    public ViewerFactory(IScreenCapturerService screenCapturerService, ILogger<Viewer> logger, IHubContext<ControlHub, IControlClient> hubContext)
-    {
-        _screenCapturerService = screenCapturerService;
-        _hubContext = hubContext;
-        _logger = logger;
-    }
-
     public IViewer Create(string connectionId)
     {
-        return new Viewer(_screenCapturerService, _logger, _hubContext, connectionId);
+        return new Viewer(screenCapturerService, hubContext, connectionId);
     }
 }

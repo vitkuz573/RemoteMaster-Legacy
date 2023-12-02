@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Services;
-using Serilog;
 
 namespace RemoteMaster.Host.Core.Extensions;
 
@@ -14,19 +13,13 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddCoreServices(this IServiceCollection services)
     {
-        var serilogLogger = new LoggerConfiguration()
-            .MinimumLevel.Debug()
-            .WriteTo.Console()
-            .WriteTo.File(@"C:\ProgramData\RemoteMaster\Host\RemoteMaster_Host.log", rollingInterval: RollingInterval.Day)
-            .Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Received hub invocation"))
-            .CreateLogger();
-
         services.AddLogging(builder =>
         {
             builder.ClearProviders();
-            builder.AddSerilog(serilogLogger);
         });
 
+        services.AddSingleton<ISubjectService, SubjectService>();
+        services.AddSingleton<ICertificateRequestService, CertificateRequestService>();
         services.AddSingleton<IHostLifecycleService, HostLifecycleService>();
         services.AddSingleton<IHostConfigurationService, HostConfigurationService>();
         services.AddSingleton<IHostInfoService, HostInfoService>();

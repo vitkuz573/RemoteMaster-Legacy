@@ -26,10 +26,7 @@ public class CursorRenderService : ICursorRenderService
 
     public void DrawCursor(Graphics g)
     {
-        if (g == null)
-        {
-            throw new ArgumentNullException(nameof(g));
-        }
+        ArgumentNullException.ThrowIfNull(g);
 
         var cursorInfo = GetCursorInformation();
 

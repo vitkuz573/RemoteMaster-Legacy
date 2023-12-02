@@ -8,7 +8,7 @@ namespace RemoteMaster.Shared.Dtos;
 
 public class KeyboardKeyDto
 {
-    public int Key { get; set; }
+    public int KeyCode { get; set; }
 
-    public ButtonAction State { get; set; }
+    public bool Pressed { get; set; }
 }

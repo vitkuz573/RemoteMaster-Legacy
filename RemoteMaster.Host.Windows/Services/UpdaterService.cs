@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Text;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
+using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
@@ -17,34 +18,39 @@ public class UpdaterService : IUpdaterService
 
     private readonly INetworkDriveService _networkDriveService;
     private readonly IServiceConfiguration _hostServiceConfig;
-    private readonly ILogger<UpdaterService> _logger;
 
-    public UpdaterService(INetworkDriveService networkDriveService, IServiceConfiguration hostServiceConfig, ILogger<UpdaterService> logger)
+    public UpdaterService(INetworkDriveService networkDriveService, IServiceConfiguration hostServiceConfig)
     {
         _scriptPath = Path.Combine(_baseFolderPath, "update.ps1");
         _updateFolderPath = Path.Combine(_baseFolderPath, "Update");
 
         _networkDriveService = networkDriveService;
         _hostServiceConfig = hostServiceConfig;
-        _logger = logger;
     }
 
-    public void Download(string sharedFolder, string username, string password)
+    public void Download(string folderPath, string username, string password, bool isLocalFolder)
     {
         try
         {
-            var sourceFolder = Path.Combine(sharedFolder, "Host");
+            var sourceFolderPath = Path.Combine(folderPath, "Host");
 
-            _networkDriveService.MapNetworkDrive(sharedFolder, username, password);
+            if (!isLocalFolder)
+            {
+                _networkDriveService.MapNetworkDrive(folderPath, username, password);
+            }
 
-            DirectoryCopy(sourceFolder, _updateFolderPath, true, true);
-            _logger.LogInformation("Copied from {SourceFolder} to {UpdateFolderPath}", sourceFolder, _updateFolderPath);
+            DirectoryCopy(sourceFolderPath, _updateFolderPath, true, true);
 
-            _networkDriveService.CancelNetworkDrive(sharedFolder);
+            Log.Information("Copied from {SourceFolder} to {DestinationFolder}", sourceFolderPath, _updateFolderPath);
+
+            if (!isLocalFolder)
+            {
+                _networkDriveService.CancelNetworkDrive(folderPath);
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogError("Error in Download method: {Message}", ex.Message);
+            Log.Error("Error in Download method: {Message}", ex.Message);
         }
     }
 
@@ -53,7 +59,7 @@ public class UpdaterService : IUpdaterService
         try
         {
             var contentBuilder = new StringBuilder();
-            contentBuilder.AppendLine("Stop-Service -Name \"" + _hostServiceConfig.Name + "\"");
+            contentBuilder.AppendLine($"Stop-Service -Name \"{_hostServiceConfig.Name}\"");
             contentBuilder.AppendLine("Get-Process -Name \"RemoteMaster.Host\" -ErrorAction SilentlyContinue | Stop-Process -Force");
             contentBuilder.AppendLine("$filesLocked = $true");
             contentBuilder.AppendLine("while ($filesLocked) {");
@@ -72,13 +78,13 @@ public class UpdaterService : IUpdaterService
             contentBuilder.AppendLine("}");
             contentBuilder.AppendLine("Copy-Item -Path \"$PSScriptRoot\\Update\\*.*\" -Destination $PSScriptRoot -Recurse -Force");
             contentBuilder.AppendLine("Start-Sleep -Seconds 2");
-            contentBuilder.AppendLine("Start-Service -Name \"" + _hostServiceConfig.Name + "\"");
+            contentBuilder.AppendLine($"Start-Service -Name \"{_hostServiceConfig.Name}\"");
             contentBuilder.AppendLine("Start-Sleep -Seconds 2");
             contentBuilder.AppendLine($"Remove-Item -Path \"{_updateFolderPath}\" -Recurse -Force");
             contentBuilder.AppendLine($"Remove-Item -Path \"{_scriptPath}\" -Force");
 
             File.WriteAllText(_scriptPath, contentBuilder.ToString());
-            _logger.LogInformation("Updater script created at: {ScriptPath}", _scriptPath);
+            Log.Information("Updater script created at: {ScriptPath}", _scriptPath);
 
             using var process = new Process
             {
@@ -96,16 +102,15 @@ public class UpdaterService : IUpdaterService
             var output = process.StandardOutput.ReadToEnd();
             process.WaitForExit();
 
-            _logger.LogInformation("Executed updater script: {ScriptPath}", _scriptPath);
-            _logger.LogInformation("{Output}", output);
+            Log.Information("Executed updater script: {ScriptPath}", _scriptPath);
         }
         catch (Exception ex)
         {
-            _logger.LogError("Error in Execute method: {Message}", ex.Message);
+            Log.Error("Error in Execute method: {Message}", ex.Message);
         }
     }
 
-    private void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs = true, bool overwriteExisting = false)
+    private static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs = true, bool overwriteExisting = false)
     {
         var sourceDir = new DirectoryInfo(sourceDirName);
 
