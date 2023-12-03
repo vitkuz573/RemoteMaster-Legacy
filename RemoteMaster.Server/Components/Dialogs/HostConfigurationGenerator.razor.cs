@@ -4,7 +4,7 @@
 
 using Microsoft.AspNetCore.Components;
 
-namespace RemoteMaster.Server.Components;
+namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class HostConfigurationGenerator
 {

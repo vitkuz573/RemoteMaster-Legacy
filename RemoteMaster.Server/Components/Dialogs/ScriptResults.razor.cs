@@ -6,7 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Models;
 
-namespace RemoteMaster.Server.Components;
+namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class ScriptResults
 {

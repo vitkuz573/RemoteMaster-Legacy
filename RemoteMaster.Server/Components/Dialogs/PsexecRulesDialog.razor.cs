@@ -9,7 +9,7 @@ using MudBlazor;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
 
-namespace RemoteMaster.Server.Components;
+namespace RemoteMaster.Server.Components.Dialogs;
 
 #pragma warning disable CA2227
 

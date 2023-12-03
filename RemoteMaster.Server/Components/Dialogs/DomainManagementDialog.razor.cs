@@ -11,7 +11,7 @@ using MudBlazor;
 using RemoteMaster.Server.Abstractions;
 using Serilog;
 
-namespace RemoteMaster.Server.Components;
+namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class DomainManagementDialog
 {

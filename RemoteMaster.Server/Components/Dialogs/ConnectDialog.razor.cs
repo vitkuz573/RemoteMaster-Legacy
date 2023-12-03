@@ -7,7 +7,7 @@ using Microsoft.JSInterop;
 using MudBlazor;
 using RemoteMaster.Server.Abstractions;
 
-namespace RemoteMaster.Server.Components;
+namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class ConnectDialog : CommonDialogBase
 {

@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
 using RemoteMaster.Server.Models;
 
-namespace RemoteMaster.Server.Components;
+namespace RemoteMaster.Server.Components.Dialogs;
 
 #pragma warning disable CA2227
 
