@@ -28,9 +28,8 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
                 ipAddress
             };
 
-            RSA rsaKeyPair;
             var subjectName = subjectService.GetDistinguishedName(hostName);
-            var csr = certificateRequestService.GenerateCSR(subjectName, ipAddresses, out rsaKeyPair);
+            var csr = certificateRequestService.GenerateCSR(subjectName, ipAddresses, out var rsaKeyPair);
 
             connection.On<byte[]>("ReceiveCertificate", certificateBytes =>
             {
