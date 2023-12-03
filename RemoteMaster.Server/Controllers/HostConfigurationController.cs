@@ -15,7 +15,7 @@ namespace RemoteMaster.Server.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
-public class HostConfigurationController(IHostConfigurationService hostConfigurationService) : ControllerBase
+public class HostConfigurationController(IHostConfigurationService hostConfigurationService, IConfiguration configuration) : ControllerBase
 {
     [HttpPost("generate")]
     public async Task<IActionResult> GenerateConfig([FromForm] HostConfiguration config)
@@ -52,16 +52,23 @@ public class HostConfigurationController(IHostConfigurationService hostConfigura
     [HttpGet("download-host")]
     public IActionResult DownloadHost()
     {
-        var networkPath = @"\\SERVER-DC02\Win\RemoteMaster\Host\RemoteMaster.Host.exe";
+        byte[] fileBytes = [];
 
-        var fileBytes = System.IO.File.ReadAllBytes(networkPath);
+        var executablesRoot = configuration.GetValue<string>("ExecutablesRoot");
 
-        var contentDisposition = new ContentDispositionHeaderValue("attachment")
+        if (executablesRoot != null)
         {
-            FileName = "RemoteMaster.Host.exe"
-        };
+            var path = Path.Combine(executablesRoot, "Host", "RemoteMaster.Host.exe");
 
-        Response.Headers[HeaderNames.ContentDisposition] = contentDisposition.ToString();
+            fileBytes = System.IO.File.ReadAllBytes(path);
+
+            var contentDisposition = new ContentDispositionHeaderValue("attachment")
+            {
+                FileName = "RemoteMaster.Host.exe"
+            };
+
+            Response.Headers[HeaderNames.ContentDisposition] = contentDisposition.ToString();
+        }
 
         return File(fileBytes, "application/octet-stream");
     }
