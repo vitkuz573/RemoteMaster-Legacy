@@ -14,9 +14,10 @@ public class CertificateRequestService : ICertificateRequestService
 {
     public CertificateRequest GenerateCSR(X500DistinguishedName subjectName, List<string> ipAddresses, out RSA rsaKeyPair)
     {
+        ArgumentNullException.ThrowIfNull(subjectName);
         ArgumentNullException.ThrowIfNull(ipAddresses);
 
-        Log.Information("Starting CSR generation for subject: {SubjectName}", subjectName);
+        Log.Information("Starting CSR generation for subject: {SubjectName}", subjectName.Name);
 
         rsaKeyPair = RSA.Create(2048);
 
@@ -55,7 +56,7 @@ public class CertificateRequestService : ICertificateRequestService
             Log.Debug("CSR Extension: {ExtensionOid} - {ExtensionFriendlyName} - {ExtensionFormattedData}", extension.Oid?.Value ?? "Unknown", extension.Oid?.FriendlyName ?? "Unknown", formattedData);
         }
 
-        Log.Information("CSR generated successfully for subject: {SubjectName}.", subjectName);
+        Log.Information("CSR generated successfully for subject: {SubjectName}.", subjectName.Name);
 
         return csr;
     }
