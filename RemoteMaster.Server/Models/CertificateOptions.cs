@@ -4,11 +4,9 @@
 
 namespace RemoteMaster.Server.Models;
 
-public class TokenServiceOptions
+public class CertificateOptions
 {
-    public string PrivateKeyPath { get; set; }
+    public string PfxPath { get; set; }
 
-    public string Issuer { get; set; }
-
-    public string Audience { get; set; }
+    public string PfxPassword { get; set; }
 }

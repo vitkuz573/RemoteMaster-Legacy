@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace RemoteMaster.Host.Core.Models;
 
-public class Subject
+public class SubjectOptions
 {
     [JsonPropertyName("organization")]
     public string Organization { get; set; }

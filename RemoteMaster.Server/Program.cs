@@ -55,8 +55,8 @@ builder.Services.AddSingleton<IPacketSender, UdpPacketSender>();
 builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
 builder.Services.AddSingleton<ISerializationService, JsonSerializerService>();
 builder.Services.AddTransient<ITokenService, TokenService>();
-builder.Services.Configure<TokenServiceOptions>(builder.Configuration.GetSection("Jwt"));
-builder.Services.Configure<CertificateSettings>(builder.Configuration.GetSection("CertificateSettings"));
+builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
+builder.Services.Configure<CertificateOptions>(builder.Configuration.GetSection("CertificateSettings"));
 builder.Services.AddControllers();
 builder.Services.AddMudServices();
 

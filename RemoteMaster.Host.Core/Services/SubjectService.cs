@@ -9,9 +9,9 @@ using RemoteMaster.Host.Core.Models;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class SubjectService(IOptions<Subject> options) : ISubjectService
+public class SubjectService(IOptions<SubjectOptions> options) : ISubjectService
 {
-    private readonly Subject _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+    private readonly SubjectOptions _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
 
     public X500DistinguishedName GetDistinguishedName(string commonName)
     {

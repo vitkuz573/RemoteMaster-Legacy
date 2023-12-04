@@ -13,9 +13,9 @@ using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class TokenService(IOptions<TokenServiceOptions> options, ApplicationDbContext context) : ITokenService
+public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext context) : ITokenService
 {
-    private readonly TokenServiceOptions _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+    private readonly JwtOptions _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
 
     public string GenerateAccessToken(string email)
     {

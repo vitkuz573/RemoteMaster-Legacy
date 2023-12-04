@@ -11,9 +11,9 @@ using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class CertificateService(IOptions<CertificateSettings> options) : ICertificateService
+public class CertificateService(IOptions<CertificateOptions> options) : ICertificateService
 {
-    private readonly CertificateSettings _settings = options?.Value ?? throw new ArgumentNullException(nameof(options));
+    private readonly CertificateOptions _settings = options?.Value ?? throw new ArgumentNullException(nameof(options));
 
     private readonly DateTimeOffset CertificateValidity = DateTimeOffset.UtcNow.AddYears(1);
 

@@ -4,9 +4,11 @@
 
 namespace RemoteMaster.Server.Models;
 
-public class CertificateSettings
+public class JwtOptions
 {
-    public string PfxPath { get; set; }
+    public string PrivateKeyPath { get; set; }
 
-    public string PfxPassword { get; set; }
+    public string Issuer { get; set; }
+
+    public string Audience { get; set; }
 }

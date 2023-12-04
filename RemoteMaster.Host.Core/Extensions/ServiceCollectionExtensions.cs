@@ -34,7 +34,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IAppState, AppState>();
         services.AddSingleton<IShutdownService, ShutdownService>();
         services.AddTransient<IViewerFactory, ViewerFactory>();
-        services.Configure<Subject>(configuration.GetSection("subject"));
+        services.Configure<SubjectOptions>(configuration.GetSection("subject"));
 
         services.AddSignalR().AddMessagePackProtocol();
 
