@@ -32,7 +32,6 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IViewerFactory, ViewerFactory>();
         services.Configure<Subject>(configuration.GetSection("subject"));
 
-
         services.AddSignalR().AddMessagePackProtocol();
 
         return services;
