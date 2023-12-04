@@ -17,6 +17,6 @@ public class Subject
     [JsonPropertyName("state")]
     public string State { get; set; }
 
-    [JsonPropertyName("Country")]
+    [JsonPropertyName("сountry")]
     public string Country { get; set; }
 }
