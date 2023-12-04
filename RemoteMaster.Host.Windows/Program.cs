@@ -44,7 +44,7 @@ internal class Program
         var builder = WebApplication.CreateSlimBuilder(options);
         builder.Host.UseWindowsService();
 
-        builder.Services.AddCoreServices(builder.Configuration);
+        builder.Services.AddCoreServices();
         builder.Services.AddSingleton<IUserInstanceService, UserInstanceService>();
         builder.Services.AddSingleton<IHostServiceManager, HostServiceManager>();
         builder.Services.AddSingleton<IServiceManager, ServiceManager>();

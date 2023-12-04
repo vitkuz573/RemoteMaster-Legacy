@@ -13,9 +13,13 @@ namespace RemoteMaster.Host.Core.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddCoreServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddCoreServices(this IServiceCollection services)
     {
-        ArgumentNullException.ThrowIfNull(configuration);
+        var builder = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("RemoteMaster.Host.json");
+
+        var configuration = builder.Build();
 
         services.AddLogging(builder =>
         {
