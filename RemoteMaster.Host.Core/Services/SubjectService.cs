@@ -3,20 +3,19 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.Extensions.Options;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Models;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class SubjectService : ISubjectService
+public class SubjectService(IOptions<Subject> options) : ISubjectService
 {
-    private readonly string _organization = "RemoteMaster";
-    private readonly string _locality = "Kurgan";
-    private readonly string _state = "Kurgan Oblast";
-    private readonly string _country = "RU";
+    private readonly Subject _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
 
     public X500DistinguishedName GetDistinguishedName(string commonName)
     {
-        var dnString = $"CN={commonName}, O={_organization}, L={_locality}, ST={_state}, C={_country}";
+        var dnString = $"CN={commonName}, O={_options.Organization}, L={_options.Locality}, ST={_options.State}, C={_options.Country}";
 
         return new X500DistinguishedName(dnString);
     }
