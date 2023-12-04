@@ -24,7 +24,7 @@ public class CertificateRequestService : ICertificateRequestService
 
         var csr = new CertificateRequest(subjectName, rsaKeyPair, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
-        Log.Debug("CSR Subject: {CSRSubject}", csr.SubjectName.Name);
+        Log.Debug("CSR Subject: {SubjectName}", csr.SubjectName.Name);
 
         var sanBuilder = new SubjectAlternativeNameBuilder();
 
