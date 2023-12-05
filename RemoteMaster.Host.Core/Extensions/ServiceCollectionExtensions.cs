@@ -16,7 +16,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddCoreServices(this IServiceCollection services)
     {
         var builder = new ConfigurationBuilder()
-            .SetBasePath(Path.GetDirectoryName(Environment.ProcessPath))
+            .SetBasePath(Path.GetDirectoryName(Environment.ProcessPath)!)
             .AddJsonFile("RemoteMaster.Host.json");
 
         var configuration = builder.Build();
