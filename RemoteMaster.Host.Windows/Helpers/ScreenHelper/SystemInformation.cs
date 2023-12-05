@@ -7,10 +7,8 @@
 
 using System.Drawing;
 using Windows.Win32;
-using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
 using static Windows.Win32.UI.WindowsAndMessaging.SYSTEM_METRICS_INDEX;
-using static Windows.Win32.UI.WindowsAndMessaging.SYSTEM_PARAMETERS_INFO_ACTION;
 
 namespace RemoteMaster.Host.Windows.Helpers.ScreenHelper;
 
@@ -20,16 +18,6 @@ public static class SystemInformation
     private static bool s_multiMonitorSupport;
 
     public static Size PrimaryMonitorSize => GetSize(SM_CXSCREEN, SM_CYSCREEN);
-
-    public static unsafe Rectangle WorkingArea
-    {
-        get
-        {
-            var rect = default(RECT);
-            PInvoke.SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
-            return rect;
-        }
-    }
 
     internal static bool MultiMonitorSupport
     {

@@ -18,13 +18,9 @@ CreateDC
 DeleteDC
 EnumDisplayMonitors
 GetDC
-GetDeviceCaps
 GetMonitorInfo
 MONITORINFOEXW
 MONITORINFOF_PRIMARY
-MonitorFromPoint
-MonitorFromRect
-MonitorFromWindow
 ReleaseDC
 
 // Input Management
@@ -34,7 +30,6 @@ GetMessage
 GetMessageExtraInfo
 GetSystemMetrics
 SendInput
-SystemParametersInfo
 TranslateMessage
 
 // Desktop and User Session Management
