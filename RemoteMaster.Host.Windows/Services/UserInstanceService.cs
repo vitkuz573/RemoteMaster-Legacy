@@ -70,14 +70,14 @@ public class UserInstanceService : IUserInstanceService
     private Process[] FindHostProcesses()
     {
         var processName = Path.GetFileNameWithoutExtension(CurrentExecutablePath);
-        
+
         return Process.GetProcessesByName(processName);
     }
 
     private bool IsUserInstance(Process process)
     {
         var commandLine = process.GetCommandLine();
-        
+
         return commandLine != null && commandLine.Contains(Argument);
     }
 }
