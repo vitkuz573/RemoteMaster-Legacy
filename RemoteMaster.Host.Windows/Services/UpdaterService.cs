@@ -52,7 +52,7 @@ public class UpdaterService : IUpdaterService
             {
                 var contentBuilder = new StringBuilder();
                 contentBuilder.AppendLine($"Stop-Service -Name \"{_hostServiceConfig.Name}\"");
-                contentBuilder.AppendLine("Get-Process -Name \"RemoteMaster.Host\" -ErrorAction SilentlyContinue | Stop-Process -Force");
+                contentBuilder.AppendLine($"Get-Process -Id \"{Environment.ProcessId}\" -ErrorAction SilentlyContinue | Stop-Process -Force");
                 contentBuilder.AppendLine("$filesLocked = $true");
                 contentBuilder.AppendLine("while ($filesLocked) {");
                 contentBuilder.AppendLine("    Start-Sleep -Seconds 2");
