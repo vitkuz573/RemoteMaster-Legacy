@@ -161,8 +161,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     public void SendUpdateHost(string folderPath, string username, string password, bool isLocalFolder)
     {
-        updaterService.Download(folderPath, username, password, isLocalFolder);
-        updaterService.Execute();
+        updaterService.Execute(folderPath, username, password, isLocalFolder);
     }
 
     public void SendJoinToDomain(string domain, string user, string password)
