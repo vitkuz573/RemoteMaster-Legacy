@@ -99,7 +99,7 @@ public class UpdaterService : IUpdaterService
         }
         catch (Exception ex)
         {
-            Log.Error("Error while update host: {Message}", ex.Message);
+            Log.Error("Error while updating host: {Message}", ex.Message);
         }
     }
 
