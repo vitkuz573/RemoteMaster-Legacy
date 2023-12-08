@@ -8,7 +8,7 @@ namespace RemoteMaster.Server.Services;
 
 public class BrandingService : IBrandingService
 {
-    public string ApplicationName => "RemoteMaster хуй";
+    public string ApplicationName => "RemoteMaster Server";
 
     public string ApplicationLogo => "/img/logo.png";
 
