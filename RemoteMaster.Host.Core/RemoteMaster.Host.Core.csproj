@@ -8,14 +8,6 @@
     <DebugType>none</DebugType>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-  </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\RemoteMaster.Shared\RemoteMaster.Shared.csproj" />
   </ItemGroup>
