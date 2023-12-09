@@ -17,7 +17,7 @@ public class CertificateService(IOptions<CertificateOptions> options) : ICertifi
 
     private readonly DateTimeOffset CertificateValidity = DateTimeOffset.UtcNow.AddYears(1);
 
-    public X509Certificate2 GenerateCertificateFromCSR(byte[] csrBytes)
+    public X509Certificate2 IssueCertificate(byte[] csrBytes)
     {
         ArgumentNullException.ThrowIfNull(csrBytes);
 

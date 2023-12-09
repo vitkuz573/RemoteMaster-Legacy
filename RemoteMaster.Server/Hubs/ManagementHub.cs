@@ -11,21 +11,21 @@ using Serilog;
 
 namespace RemoteMaster.Server.Hubs;
 
-public class ManagementHub(ICertificateService certificateService, IDatabaseService databaseService) : Hub
+public class ManagementHub(ICertificateService certificateService, IDatabaseService databaseService) : Hub<IManagementClient>
 {
-    public async Task<bool> RegisterHostAsync(string hostName, string ipAddress, string macAddress, HostConfiguration config, byte[] csrBytes)
+    public async Task<bool> RegisterHostAsync(string hostName, string ipAddress, string macAddress, HostConfiguration hostConfiguration, byte[] csrBytes)
     {
-        ArgumentNullException.ThrowIfNull(config);
+        ArgumentNullException.ThrowIfNull(hostConfiguration);
 
-        var certificate = certificateService.GenerateCertificateFromCSR(csrBytes);
+        var certificate = certificateService.IssueCertificate(csrBytes);
 
-        await Clients.Caller.SendAsync("ReceiveCertificate", certificate.Export(X509ContentType.Pfx));
+        await Clients.Caller.ReceiveCertificate(certificate.Export(X509ContentType.Pfx));
 
-        var folder = (await databaseService.GetNodesAsync(f => f.Name == config.Group && f is Folder)).OfType<Folder>().FirstOrDefault();
+        var folder = (await databaseService.GetNodesAsync(f => f.Name == hostConfiguration.Group && f is Folder)).OfType<Folder>().FirstOrDefault();
 
         if (folder == null)
         {
-            folder = new Folder(config.Group);
+            folder = new Folder(hostConfiguration.Group);
             await databaseService.AddNodeAsync(folder);
         }
 
@@ -51,15 +51,15 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         return true;
     }
 
-    public async Task<bool> UnregisterHostAsync(string hostName, HostConfiguration config)
+    public async Task<bool> UnregisterHostAsync(string hostName, HostConfiguration hostConfiguration)
     {
-        ArgumentNullException.ThrowIfNull(config);
+        ArgumentNullException.ThrowIfNull(hostConfiguration);
 
-        var folder = (await databaseService.GetNodesAsync(f => f.Name == config.Group && f is Folder)).OfType<Folder>().FirstOrDefault();
+        var folder = (await databaseService.GetNodesAsync(f => f.Name == hostConfiguration.Group && f is Folder)).OfType<Folder>().FirstOrDefault();
 
         if (folder == null)
         {
-            Log.Warning("Unregistration failed: Folder '{Group}' not found.", config.Group);
+            Log.Warning("Unregistration failed: Folder '{Group}' not found.", hostConfiguration.Group);
 
             return false;
         }
@@ -81,14 +81,14 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             return true;
         }
 
-        Log.Warning("Unregistration failed: Computer '{HostName}' not found in folder '{Group}'.", hostName, config.Group);
+        Log.Warning("Unregistration failed: Computer '{HostName}' not found in folder '{Group}'.", hostName, hostConfiguration.Group);
 
         return false;
     }
 
-    public async Task<bool> UpdateHostInformationAsync(HostConfiguration config, string hostName, string ipAddress)
+    public async Task<bool> UpdateHostInformationAsync(HostConfiguration hostConfiguration, string hostName, string ipAddress)
     {
-        var folder = (await databaseService.GetNodesAsync(f => f.Name == config.Group && f is Folder)).OfType<Folder>().FirstOrDefault();
+        var folder = (await databaseService.GetNodesAsync(f => f.Name == hostConfiguration.Group && f is Folder)).OfType<Folder>().FirstOrDefault();
 
         if (folder == null)
         {

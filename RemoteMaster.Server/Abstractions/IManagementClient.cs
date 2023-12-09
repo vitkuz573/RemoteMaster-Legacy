@@ -2,11 +2,9 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Security.Cryptography.X509Certificates;
-
 namespace RemoteMaster.Server.Abstractions;
 
-public interface ICertificateService
+public interface IManagementClient
 {
-    X509Certificate2 IssueCertificate(byte[] csrBytes);
+    Task ReceiveCertificate(byte[] certificate);
 }
