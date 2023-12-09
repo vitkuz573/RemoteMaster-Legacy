@@ -6,6 +6,9 @@ using System.Net;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Extensions;
@@ -130,7 +133,7 @@ internal class Program
 
         if (install)
         {
-            var configurationService = app.Services.GetRequiredService<IHostConfigurationService>();
+            var hostConfigurationService = app.Services.GetRequiredService<IHostConfigurationService>();
             var hostInfoService = app.Services.GetRequiredService<IHostInfoService>();
             var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
 
@@ -138,7 +141,7 @@ internal class Program
 
             try
             {
-                configuration = await configurationService.LoadConfigurationAsync();
+                configuration = await hostConfigurationService.LoadConfigurationAsync();
             }
             catch (FileNotFoundException ex)
             {

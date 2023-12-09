@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Runtime.InteropServices;
+using Microsoft.Extensions.Hosting;
 using RemoteMaster.Host.Core.Abstractions;
 using Serilog;
 using Windows.Win32.Foundation;
