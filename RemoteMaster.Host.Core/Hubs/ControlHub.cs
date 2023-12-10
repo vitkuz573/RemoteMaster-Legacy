@@ -86,7 +86,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     public void SendImageQuality(int quality)
     {
-        ExecuteActionForViewer(viewer => viewer.ScreenCapturer.Quality = quality);
+        ExecuteActionForViewer(viewer => viewer.ScreenCapturer.ImageQuality = quality);
     }
 
     public void SendToggleCursorTracking(bool trackCursor)

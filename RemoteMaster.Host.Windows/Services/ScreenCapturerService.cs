@@ -21,9 +21,10 @@ public abstract class ScreenCapturerService : IScreenCapturerService
     private readonly RecyclableMemoryStreamManager _recycleManager = new();
     private readonly IDesktopService _desktopService;
     private readonly object _screenBoundsLock = new();
-    private int _quality = 25;
 
     public bool TrackCursor { get; set; } = false;
+
+    public int ImageQuality { get; set; } = 25;
 
     public virtual Dictionary<string, int> Screens { get; } = [];
 
@@ -34,20 +35,6 @@ public abstract class ScreenCapturerService : IScreenCapturerService
     public abstract string SelectedScreen { get; protected set; }
 
     protected abstract bool HasMultipleScreens { get; }
-
-    public int Quality
-    {
-        get => _quality;
-        set
-        {
-            if (value < 0 || value > 100)
-            {
-                throw new ArgumentOutOfRangeException(nameof(value), "Quality must be between 0 and 100");
-            }
-
-            _quality = value;
-        }
-    }
 
     public event EventHandler<Rectangle>? ScreenChanged;
 
@@ -128,7 +115,7 @@ public abstract class ScreenCapturerService : IScreenCapturerService
 
         var encoderOptions = new SKJpegEncoderOptions
         {
-            Quality = Quality,
+            Quality = ImageQuality,
             Downsample = SKJpegEncoderDownsample.Downsample420
         };
 
@@ -141,13 +128,9 @@ public abstract class ScreenCapturerService : IScreenCapturerService
 
     protected byte[] SaveBitmap(Bitmap bitmap)
     {
-        ArgumentNullException.ThrowIfNull(bitmap);
-
         var skBitmap = bitmap.ToSKBitmap();
 
-        var data = EncodeBitmap(skBitmap);
-
-        return data;
+        return EncodeBitmap(skBitmap);
     }
 
     protected void RaiseScreenChangedEvent(Rectangle currentScreenBounds)

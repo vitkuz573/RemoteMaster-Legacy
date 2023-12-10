@@ -11,7 +11,7 @@ public interface IScreenCapturerService : IDisposable
 {
     bool TrackCursor { get; set; }
 
-    int Quality { get; set; }
+    int ImageQuality { get; set; }
 
     event EventHandler<Rectangle> ScreenChanged;
 
