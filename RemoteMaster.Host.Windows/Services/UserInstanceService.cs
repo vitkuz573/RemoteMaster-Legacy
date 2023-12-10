@@ -58,7 +58,7 @@ public class UserInstanceService : IUserInstanceService
             Arguments = Argument,
             ForceConsoleSession = true,
             DesktopName = "default",
-            CreateNoWindow = false,
+            CreateNoWindow = true,
             UseCurrentUserToken = false,
             InheritHandles = false
         };
