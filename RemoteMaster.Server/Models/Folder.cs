@@ -6,14 +6,6 @@ namespace RemoteMaster.Server.Models;
 
 public class Folder : Node
 {
-    public Folder()
-    {
-    }
-
-    public Folder(string name)
-    {
-        Name = name;
-    }
 }
 
 

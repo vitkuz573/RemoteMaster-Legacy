@@ -25,7 +25,11 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
 
         if (folder == null)
         {
-            folder = new Folder(hostConfiguration.Group);
+            folder = new Folder
+            {
+                Name = hostConfiguration.Group
+            };
+
             await databaseService.AddNodeAsync(folder);
         }
 
