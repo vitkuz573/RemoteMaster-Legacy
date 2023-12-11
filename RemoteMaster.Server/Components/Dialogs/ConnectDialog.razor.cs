@@ -12,10 +12,10 @@ namespace RemoteMaster.Server.Components.Dialogs;
 public partial class ConnectDialog : CommonDialogBase
 {
     [Inject]
-    private IComputerCommandService ComputerCommandService { get; set; }
+    private IComputerCommandService ComputerCommandService { get; set; } = default!;
 
     [Inject]
-    private IJSRuntime JSRuntime { get; set; }
+    private IJSRuntime JSRuntime { get; set; } = default!;
 
     protected string _selectedOption;
 
