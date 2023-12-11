@@ -18,7 +18,7 @@ using PointD = (double, double);
 
 namespace RemoteMaster.Server.Components.Pages;
 
-public partial class Connection : IDisposable
+public partial class Access : IDisposable
 {
     [Parameter]
     public string Host { get; set; } = default!;
