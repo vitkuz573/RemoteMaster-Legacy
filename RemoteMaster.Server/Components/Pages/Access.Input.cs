@@ -9,7 +9,7 @@ using RemoteMaster.Shared.Dtos;
 
 namespace RemoteMaster.Server.Components.Pages;
 
-public partial class Connection
+public partial class Access
 {
     private async Task OnMouseMove(MouseEventArgs e)
     {
