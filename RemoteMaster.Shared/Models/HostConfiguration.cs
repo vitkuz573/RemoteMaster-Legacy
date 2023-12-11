@@ -12,5 +12,5 @@ public class HostConfiguration
     public string? Server { get; set; }
 
     [JsonPropertyName("group")]
-    public string? Group { get; set; }
+    public required string Group { get; set; }
 }
