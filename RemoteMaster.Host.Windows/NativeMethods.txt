@@ -68,14 +68,10 @@ WNetCancelConnection2W
 
 // Miscellaneous
 CreatePipe
-
 WaitForSingleObject
-
 NetJoinDomain
 NetUnjoinDomain
-
 NETSETUP_ACCT_DELETE
-
 WTS_REMOTE_CONNECT
 WTS_REMOTE_DISCONNECT
 WTS_SESSION_LOGON
