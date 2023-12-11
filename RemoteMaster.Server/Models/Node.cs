@@ -10,12 +10,12 @@ public abstract class Node
 {
     public Guid NodeId { get; set; }
 
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
     public Guid? ParentId { get; set; }
 
     [ForeignKey(nameof(ParentId))]
-    public Node Parent { get; set; }
+    public Node? Parent { get; set; }
 
     [InverseProperty(nameof(Parent))]
     public HashSet<Node> Nodes { get; } = [];
