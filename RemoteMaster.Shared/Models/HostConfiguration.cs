@@ -14,6 +14,9 @@ public class HostConfiguration
     [JsonPropertyName("group")]
     public string Group { get; set; }
 
+    [JsonPropertyName("installation_mode")]
+    public string InstallationMode { get; set; }
+
     [JsonPropertyName("subject")]
     public SubjectOptions Subject { get; } = new();
 }

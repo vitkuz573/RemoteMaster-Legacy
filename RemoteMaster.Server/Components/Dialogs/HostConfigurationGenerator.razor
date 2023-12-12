@@ -15,8 +15,19 @@
                         <MudTextField Label="State" @bind-Value="_model.Subject.State" For="@(() => _model.Subject.State)" />
                         <MudTextField Label="Country" @bind-Value="_model.Subject.Country" For="@(() => _model.Subject.Country)" />
                     </MudExpansionPanel>
-                </MudExpansionPanels>
 
+                    <!-- Installation Mode Section -->
+                    <MudExpansionPanel Text="Installation Parameters">
+                        <MudSelect T="string" Label="Select Installation Mode" @bind-Value="_model.InstallationMode" Dense="true">
+                            <MudSelectItem Value=@("Automatic")>
+                                <MudText>Automatic Server Registration</MudText>
+                            </MudSelectItem>
+                            <MudSelectItem Value=@("Manual")>
+                                <MudText>Manual Server Addition</MudText>
+                            </MudSelectItem>
+                        </MudSelect>
+                    </MudExpansionPanel>
+                </MudExpansionPanels>
             </MudCardContent>
 
             <MudCardActions>
