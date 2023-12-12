@@ -5,8 +5,8 @@
             <MudCardContent>
                 <MudExpansionPanels>
                     <MudExpansionPanel Text="Main Parameters">
-                        <MudTextField Label="Server" HelperText="Current server IP" @bind-Value="_model.Server" For="@(() => _model.Server)" ReadOnly="true" />
-                        <MudTextField Label="Group" HelperText="Max. 8 characters" @bind-Value="_model.Group" For="@(() => _model.Group)" />
+                        <MudTextField Label="Server" @bind-Value="_model.Server" For="@(() => _model.Server)" ReadOnly="true" />
+                        <MudTextField Label="Group" @bind-Value="_model.Group" For="@(() => _model.Group)" />
                     </MudExpansionPanel>
 
                     <MudExpansionPanel Text="Subject Parameters">
@@ -16,7 +16,6 @@
                         <MudTextField Label="Country" @bind-Value="_model.Subject.Country" For="@(() => _model.Subject.Country)" />
                     </MudExpansionPanel>
 
-                    <!-- Installation Mode Section -->
                     <MudExpansionPanel Text="Installation Parameters">
                         <MudSelect T="string" Label="Select Installation Mode" @bind-Value="_model.InstallationMode" Dense="true">
                             <MudSelectItem Value=@("Automatic")>
