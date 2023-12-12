@@ -3,8 +3,20 @@
         <EditForm Model="@_model" OnValidSubmit="OnValidSubmit">
             <DataAnnotationsValidator />
             <MudCardContent>
-                <MudTextField Label="Server" HelperText="Current server IP" @bind-Value="_model.Server" For="@(() => _model.Server)" ReadOnly="true" />
-                <MudTextField Label="Group" HelperText="Max. 8 characters" @bind-Value="_model.Group" For="@(() => _model.Group)" />
+                <MudExpansionPanels>
+                    <MudExpansionPanel Text="Main Parameters">
+                        <MudTextField Label="Server" HelperText="Current server IP" @bind-Value="_model.Server" For="@(() => _model.Server)" ReadOnly="true" />
+                        <MudTextField Label="Group" HelperText="Max. 8 characters" @bind-Value="_model.Group" For="@(() => _model.Group)" />
+                    </MudExpansionPanel>
+
+                    <MudExpansionPanel Text="Subject Parameters">
+                        <MudTextField Label="Organization" @bind-Value="_model.Subject.Organization" For="@(() => _model.Subject.Organization)" />
+                        <MudTextField Label="Locality" @bind-Value="_model.Subject.Locality" For="@(() => _model.Subject.Locality)" />
+                        <MudTextField Label="State" @bind-Value="_model.Subject.State" For="@(() => _model.Subject.State)" />
+                        <MudTextField Label="Country" @bind-Value="_model.Subject.Country" For="@(() => _model.Subject.Country)" />
+                    </MudExpansionPanel>
+                </MudExpansionPanels>
+
             </MudCardContent>
 
             <MudCardActions>

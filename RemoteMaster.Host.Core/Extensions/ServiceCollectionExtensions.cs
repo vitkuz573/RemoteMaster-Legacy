@@ -6,8 +6,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Core.Services;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Extensions;
 

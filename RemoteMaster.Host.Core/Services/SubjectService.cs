@@ -5,7 +5,7 @@
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Options;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Core.Models;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Services;
 
