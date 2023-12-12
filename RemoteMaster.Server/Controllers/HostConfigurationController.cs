@@ -18,7 +18,7 @@ namespace RemoteMaster.Server.Controllers;
 public class HostConfigurationController(IHostConfigurationService hostConfigurationService, IConfiguration configuration) : ControllerBase
 {
     [HttpPost("generate")]
-    public async Task<IActionResult> GenerateConfig([FromForm] HostConfiguration config)
+    public async Task<IActionResult> GenerateConfig([FromBody] HostConfiguration config)
     {
         if (!ModelState.IsValid)
         {
