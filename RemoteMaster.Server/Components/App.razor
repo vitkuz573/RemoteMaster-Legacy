@@ -85,7 +85,7 @@
 
         window.generateAndDownloadFile = function (requestData) {
             // Генерируем содержимое файла на основе requestData
-            var fileContent = JSON.stringify(requestData); // Пример для JSON файла
+            var fileContent = JSON.stringify(requestData, null, 2); // 2 - количество пробелов в отступе
 
             // Создаем Blob объект с данными файла
             var blob = new Blob([fileContent], { type: 'application/json' });
