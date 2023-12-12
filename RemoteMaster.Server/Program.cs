@@ -59,7 +59,6 @@ builder.Services.AddSingleton<ISerializationService, JsonSerializerService>();
 builder.Services.AddTransient<ITokenService, TokenService>();
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
 builder.Services.Configure<CertificateOptions>(builder.Configuration.GetSection("CertificateSettings"));
-builder.Services.AddControllers();
 builder.Services.AddMudServices();
 
 var app = builder.Build();
@@ -95,7 +94,6 @@ app.MapRazorComponents<App>()
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
 
-app.MapControllers();
 app.MapHub<ManagementHub>("/hubs/management");
 
 app.Run();

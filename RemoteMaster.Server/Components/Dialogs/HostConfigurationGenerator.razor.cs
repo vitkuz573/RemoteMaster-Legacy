@@ -28,7 +28,7 @@ public partial class HostConfigurationGenerator
 
     private async Task OnValidSubmit(EditContext context)
     {
-        await JSRuntime.InvokeVoidAsync("downloadFile", "http://127.0.0.1:5254/api/HostConfiguration/generate", _model);
+        await JSRuntime.InvokeVoidAsync("generateAndDownloadFile", _model);
 
         StateHasChanged();
     }
