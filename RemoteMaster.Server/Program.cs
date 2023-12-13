@@ -75,7 +75,7 @@ builder.Host.UseSerilog((context, configuration) =>
     configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Initializing component"));
     configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Rendering component"));
     configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Disposing component"));
-    configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("The JS interop call with callback id"));
+    configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("JS interop"));
     configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Received hub invocation"));
     configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("DbCommand"));
 });
