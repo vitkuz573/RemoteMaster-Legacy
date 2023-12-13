@@ -35,6 +35,19 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
             {
                 Log.Information("Received certificate from server.");
 
+                try
+                {
+                    var certificate = new X509Certificate2(certificateBytes);
+
+                    // Log the serial number and subject name of the certificate
+                    Log.Information("Certificate Serial Number: {SerialNumber}", certificate.SerialNumber);
+                    Log.Information("Certificate Subject Name: {SubjectName}", certificate.Subject);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("An error occurred while processing the certificate: {ErrorMessage}", ex.Message);
+                }
+
                 var pfxFilePath = @"C:\certificate.pfx";
                 var pfxPassword = "YourPfxPassword";
                 CreatePfxFile(certificateBytes, rsaKeyPair, pfxFilePath, pfxPassword);

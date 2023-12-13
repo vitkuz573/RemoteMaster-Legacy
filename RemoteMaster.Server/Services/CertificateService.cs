@@ -15,32 +15,41 @@ public class CertificateService(IOptions<CertificateOptions> options) : ICertifi
 {
     private readonly CertificateOptions _settings = options?.Value ?? throw new ArgumentNullException(nameof(options));
 
-    private readonly DateTimeOffset CertificateValidity = DateTimeOffset.UtcNow.AddYears(1);
-
     public X509Certificate2 IssueCertificate(byte[] csrBytes)
     {
         ArgumentNullException.ThrowIfNull(csrBytes);
 
+        Log.Information("Starting to process CSR for certificate issuance.");
+
         var csr = CertificateRequest.LoadSigningRequest(csrBytes, HashAlgorithmName.SHA256, CertificateRequestLoadOptions.UnsafeLoadCertificateExtensions);
 
-        var basicConstraints = csr.CertificateExtensions.OfType<X509BasicConstraintsExtension>().FirstOrDefault();
+        Log.Information("CSR loaded successfully.");
 
+        // Check for CA constraints
+        var basicConstraints = csr.CertificateExtensions.OfType<X509BasicConstraintsExtension>().FirstOrDefault();
         if (basicConstraints != null && basicConstraints.CertificateAuthority)
         {
             Log.Error("CSR for CA certificates are not allowed.");
             throw new InvalidOperationException("CSR for CA certificates are not allowed.");
         }
 
+        // Load CA certificate
         using var caCertificate = new X509Certificate2(_settings.PfxPath, _settings.PfxPassword);
+        Log.Information("CA certificate loaded successfully.");
+
+        // Prepare for signing
         var subjectName = caCertificate.SubjectName;
         var signatureGenerator = X509SignatureGenerator.CreateForRSA(caCertificate.GetRSAPrivateKey(), RSASignaturePadding.Pkcs1);
         var notBefore = DateTimeOffset.UtcNow;
-        var notAfter = CertificateValidity;
+        var notAfter = DateTimeOffset.UtcNow.AddYears(1);
         var serialNumber = GenerateSerialNumber();
 
+        Log.Information("Generating new certificate with Serial Number: {SerialNumber}", BitConverter.ToString(serialNumber));
+
+        // Create the new certificate
         var certificate = csr.Create(subjectName, signatureGenerator, notBefore, notAfter, serialNumber);
 
-        Log.Information("Certificate generated successfully.");
+        Log.Information("New certificate generated successfully.");
 
         return certificate;
     }

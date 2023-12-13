@@ -14,8 +14,14 @@ using RemoteMaster.Server.Hubs;
 using RemoteMaster.Server.Middlewares;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddLogging(builder =>
+{
+    builder.ClearProviders();
+});
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -60,6 +66,13 @@ builder.Services.AddTransient<ITokenService, TokenService>();
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
 builder.Services.Configure<CertificateOptions>(builder.Configuration.GetSection("CertificateSettings"));
 builder.Services.AddMudServices();
+
+builder.Host.UseSerilog((context, configuration) =>
+{
+    configuration.MinimumLevel.Debug();
+    configuration.WriteTo.Console();
+    configuration.WriteTo.File(@"C:\ProgramData\RemoteMaster\Server\RemoteMaster_Server.log", rollingInterval: RollingInterval.Day);
+});
 
 var app = builder.Build();
 
