@@ -8,12 +8,12 @@ using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostMonitorService : IHostedService
+public class HostProcessMonitorService : IHostedService
 {
     private readonly IUserInstanceService _userInstanceService;
     private readonly Timer _timer;
 
-    public HostMonitorService(IUserInstanceService userInstanceService)
+    public HostProcessMonitorService(IUserInstanceService userInstanceService)
     {
         _userInstanceService = userInstanceService;
         _timer = new Timer(MonitorHostInstance, null, Timeout.Infinite, 0);

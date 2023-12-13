@@ -111,4 +111,28 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
 
         return false;
     }
+
+    public async Task<bool> IsHostRegisteredAsync(string hostName)
+    {
+        if (string.IsNullOrWhiteSpace(hostName))
+        {
+            throw new ArgumentNullException(nameof(hostName));
+        }
+
+        try
+        {
+            var nodes = await databaseService.GetNodesAsync(n => n is Computer && ((Computer)n).Name == hostName);
+            var computers = nodes.OfType<Computer>();
+
+            var isRegistered = computers.Any();
+
+            return isRegistered;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error while checking registration of the host '{HostName}'.", hostName);
+
+            return false;
+        }
+    }
 }

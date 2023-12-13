@@ -12,6 +12,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Extensions;
+using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Host.Windows.Services;
@@ -124,9 +125,10 @@ internal class Program
         else
         {
             builder.Services.AddHostedService<MessageLoopService>();
-            builder.Services.AddHostedService<HostMonitorService>();
+            builder.Services.AddHostedService<HostProcessMonitorService>();
             builder.Services.AddHostedService<CommandListenerService>();
             builder.Services.AddHostedService<IPAddressMonitorService>();
+            builder.Services.AddHostedService<HostRegistrationMonitorService>();
         }
 
         var app = builder.Build();

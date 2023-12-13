@@ -122,6 +122,37 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         }
     }
 
+    public async Task<bool> IsHostRegisteredAsync(HostConfiguration config, string hostName)
+    {
+        ArgumentNullException.ThrowIfNull(config);
+
+        try
+        {
+            var connection = await ConnectToServerHub($"http://{config.Server}:5254");
+
+            Log.Information("Checking if host is registered...");
+
+            var isRegistered = await connection.InvokeAsync<bool>("IsHostRegisteredAsync", hostName);
+
+            if (isRegistered)
+            {
+                Log.Information("Host is registered.");
+            }
+            else
+            {
+                Log.Warning("Host is not registered.");
+            }
+
+            return isRegistered;
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Error checking host registration status: {Message}", ex.Message);
+
+            return false;
+        }
+    }
+
     private static async Task<HubConnection> ConnectToServerHub(string serverUrl)
     {
         var hubConnection = new HubConnectionBuilder()
