@@ -61,6 +61,14 @@ public partial class Access : IDisposable
         }
     };
 
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await SetupEventListeners();
+        }
+    }
+
     protected async override Task OnInitializedAsync()
     {
         await InitializeHostConnectionAsync();
@@ -220,6 +228,12 @@ public partial class Access : IDisposable
         _screenDataUrl = await JSRuntime.InvokeAsync<string>("createImageBlobUrl", screenData);
 
         await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task SetupEventListeners()
+    {
+        await JSRuntime.InvokeVoidAsync("addKeyDownEventListener", DotNetObjectReference.Create(this));
+        await JSRuntime.InvokeVoidAsync("addKeyUpEventListener", DotNetObjectReference.Create(this));
     }
 
     private async Task UpdateUrlParameter(string key, string value)
