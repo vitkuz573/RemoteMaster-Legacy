@@ -17,13 +17,9 @@
                     </MudExpansionPanel>
 
                     <MudExpansionPanel Text="Installation Parameters">
-                        <MudSelect T="string" Label="Select Installation Mode" @bind-Value="_model.InstallationMode" Dense="true">
-                            <MudSelectItem Value=@("Automatic")>
-                                <MudText>Automatic Server Registration</MudText>
-                            </MudSelectItem>
-                            <MudSelectItem Value=@("Manual")>
-                                <MudText>Manual Server Addition</MudText>
-                            </MudSelectItem>
+                        <MudSelect T="string" Label="Host Registration Mode" @bind-Value="_model.InstallationMode" Dense="true">
+                            <MudSelectItem Value=@("Automatic") />
+                            <MudSelectItem Value=@("Manual") />
                         </MudSelect>
                     </MudExpansionPanel>
                 </MudExpansionPanels>
