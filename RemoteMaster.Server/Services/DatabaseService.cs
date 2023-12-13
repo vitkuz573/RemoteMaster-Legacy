@@ -41,11 +41,12 @@ public class DatabaseService(NodesDbContext context) : IDatabaseService
         await context.SaveChangesAsync();
     }
 
-    public async Task UpdateComputerAsync(Computer computer, string ipAddress)
+    public async Task UpdateComputerAsync(Computer computer, string ipAddress, string hostName)
     {
         if (computer != null)
         {
             computer.IPAddress = ipAddress;
+            computer.Name = hostName;
             context.Nodes.Update(computer);
         }
 

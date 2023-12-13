@@ -17,7 +17,7 @@ public interface IDatabaseService
 
     Task RemoveNodeAsync(Node node);
 
-    Task UpdateComputerAsync(Computer computer, string ipAddress);
+    Task UpdateComputerAsync(Computer computer, string ipAddress, string hostName);
 
     Task<bool> HasChildrenAsync(Node node);
 }

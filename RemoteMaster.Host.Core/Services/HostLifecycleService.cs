@@ -99,7 +99,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         }
     }
 
-    public async Task UpdateHostInformationAsync(HostConfiguration config, string hostname, string ipAddress)
+    public async Task UpdateHostInformationAsync(HostConfiguration config, string hostname, string ipAddress, string macAddress)
     {
         ArgumentNullException.ThrowIfNull(config);
 
@@ -107,7 +107,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         {
             var connection = await ConnectToServerHub($"http://{config.Server}:5254");
 
-            if (await connection.InvokeAsync<bool>("UpdateHostInformationAsync", config, hostname, ipAddress))
+            if (await connection.InvokeAsync<bool>("UpdateHostInformationAsync", config, hostname, ipAddress, macAddress))
             {
                 Log.Information("Host information updated successful.");
             }

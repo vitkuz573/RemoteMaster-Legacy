@@ -3,7 +3,9 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.ServiceProcess;
+using System.Text.Json;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Models;
 using Serilog;
@@ -15,7 +17,7 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Host";
 
-    public async Task InstallOrUpdate(HostConfiguration configuration, string hostName, string ipv4Address, string macAddress)
+    public async Task InstallOrUpdate(HostConfiguration configuration, string hostName, string ipAddress, string macAddress)
     {
         try
         {
@@ -30,11 +32,11 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
                     serviceManager.StopService(hostServiceConfig.Name);
                 }
 
-                CopyToTargetPath(directoryPath, ipv4Address);
+                CopyToTargetPath(directoryPath, ipAddress, hostName);
             }
             else
             {
-                CopyToTargetPath(directoryPath, ipv4Address);
+                CopyToTargetPath(directoryPath, ipAddress, hostName);
                 var hostPath = Path.Combine(directoryPath, $"{MainAppName}.{SubAppName}.exe");
                 serviceManager.InstallService(hostServiceConfig, $"{hostPath} --service-mode");
             }
@@ -43,7 +45,7 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
 
             Log.Information("{ServiceName} installed and started successfully.", hostServiceConfig.Name);
 
-            await hostLifecycleService.RegisterAsync(configuration, hostName, ipv4Address, macAddress);
+            await hostLifecycleService.RegisterAsync(configuration, hostName, ipAddress, macAddress);
         }
         catch (Exception ex)
         {
@@ -82,9 +84,9 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
         }
     }
 
-    public async Task UpdateHostInformation(HostConfiguration configuration, string hostname, string ipAddress)
+    public async Task UpdateHostInformation(HostConfiguration configuration, string hostname, string ipAddress, string macAddress)
     {
-        await hostLifecycleService.UpdateHostInformationAsync(configuration, hostname, ipAddress);
+        await hostLifecycleService.UpdateHostInformationAsync(configuration, hostname, ipAddress, macAddress);
     }
 
     private static string GetDirectoryPath()
@@ -94,7 +96,7 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
         return Path.Combine(programFilesPath, MainAppName, SubAppName);
     }
 
-    private void CopyToTargetPath(string targetDirectoryPath, string ipv4Address)
+    private void CopyToTargetPath(string targetDirectoryPath, string ipAddress, string hostName)
     {
         if (!Directory.Exists(targetDirectoryPath))
         {
@@ -128,16 +130,23 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
             }
         }
 
-        var ipAddressFilePath = Path.Combine(targetDirectoryPath, "IPAddress.txt");
+        var hostInfoFilePath = Path.Combine(targetDirectoryPath, "HostInfo.json");
 
         try
         {
-            File.WriteAllText(ipAddressFilePath, ipv4Address);
-            Log.Information("IP Address file created successfully.");
+            var hostInfo = new HostInfo
+            {
+                IPAddress = ipAddress,
+                HostName = hostName
+            };
+
+            var json = JsonSerializer.Serialize(hostInfo);
+            File.WriteAllText(hostInfoFilePath, json);
+            Log.Information("Host information file created successfully.");
         }
         catch (Exception ex)
         {
-            Log.Error("Failed to create the IP Address file: {Message}", ex.Message);
+            Log.Error("Failed to create the host information file: {Message}", ex.Message);
         }
     }
 

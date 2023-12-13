@@ -12,7 +12,7 @@ public interface IHostLifecycleService
 
     Task UnregisterAsync(HostConfiguration config, string hostName);
 
-    Task UpdateHostInformationAsync(HostConfiguration config, string hostname, string ipAddress);
+    Task UpdateHostInformationAsync(HostConfiguration config, string hostname, string ipAddress, string macAddress);
 
     Task<bool> IsHostRegisteredAsync(HostConfiguration config, string hostName);
 }

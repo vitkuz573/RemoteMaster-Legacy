@@ -90,7 +90,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         return false;
     }
 
-    public async Task<bool> UpdateHostInformationAsync(HostConfiguration hostConfiguration, string hostName, string ipAddress)
+    public async Task<bool> UpdateHostInformationAsync(HostConfiguration hostConfiguration, string hostName, string ipAddress, string macAddress)
     {
         var folder = (await databaseService.GetNodesAsync(f => f.Name == hostConfiguration.Group && f is Folder)).OfType<Folder>().FirstOrDefault();
 
@@ -100,11 +100,11 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         }
 
         var computer = (await databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId))
-                       .FirstOrDefault(c => c.Name == hostName);
+                       .FirstOrDefault(c => c.MACAddress == macAddress);
 
         if (computer != null)
         {
-            await databaseService.UpdateComputerAsync(computer, ipAddress);
+            await databaseService.UpdateComputerAsync(computer, ipAddress, hostName);
 
             return true;
         }
