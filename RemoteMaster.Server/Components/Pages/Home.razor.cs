@@ -44,7 +44,7 @@ public partial class Home
         _drawerOpen = !_drawerOpen;
     }
 
-    private async Task OpenHostConfigurator()
+    private async Task OpenHostConfigurationGenerator()
     {
         var dialogOptions = new DialogOptions
         {
