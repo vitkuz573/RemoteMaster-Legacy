@@ -89,8 +89,10 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         return false;
     }
 
-    public async Task<bool> UpdateHostInformationAsync(HostConfiguration hostConfiguration, string hostName, string ipAddress, string macAddress)
+    public async Task<bool> UpdateHostInformationAsync(HostConfiguration hostConfiguration)
     {
+        ArgumentNullException.ThrowIfNull(hostConfiguration);
+
         var folder = (await databaseService.GetNodesAsync(f => f.Name == hostConfiguration.Group && f is Folder)).OfType<Folder>().FirstOrDefault();
 
         if (folder == null)
@@ -99,11 +101,11 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         }
 
         var computer = (await databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId))
-                       .FirstOrDefault(c => c.MACAddress == macAddress);
+                       .FirstOrDefault(c => c.MACAddress == hostConfiguration.Host.MACAddress);
 
         if (computer != null)
         {
-            await databaseService.UpdateComputerAsync(computer, ipAddress, hostName);
+            await databaseService.UpdateComputerAsync(computer, hostConfiguration.Host.IPAddress, hostConfiguration.Host.Name);
 
             return true;
         }
@@ -111,16 +113,18 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         return false;
     }
 
-    public async Task<bool> IsHostRegisteredAsync(string hostName)
+    public async Task<bool> IsHostRegisteredAsync(HostConfiguration hostConfiguration)
     {
-        if (string.IsNullOrWhiteSpace(hostName))
+        ArgumentNullException.ThrowIfNull(hostConfiguration);
+
+        if (string.IsNullOrWhiteSpace(hostConfiguration.Host.Name))
         {
-            throw new ArgumentNullException(nameof(hostName));
+            throw new ArgumentNullException(nameof(hostConfiguration.Host.Name));
         }
 
         try
         {
-            var nodes = await databaseService.GetNodesAsync(n => n is Computer && ((Computer)n).Name == hostName);
+            var nodes = await databaseService.GetNodesAsync(n => n is Computer && ((Computer)n).Name == hostConfiguration.Host.Name);
             var computers = nodes.OfType<Computer>();
 
             var isRegistered = computers.Any();
@@ -129,7 +133,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error while checking registration of the host '{HostName}'.", hostName);
+            Log.Error(ex, "Error while checking registration of the host '{HostName}'.", hostConfiguration.Host.Name);
 
             return false;
         }

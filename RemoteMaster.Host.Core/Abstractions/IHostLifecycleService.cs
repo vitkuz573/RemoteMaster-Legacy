@@ -14,5 +14,5 @@ public interface IHostLifecycleService
 
     Task UpdateHostInformationAsync(HostConfiguration hostConfiguration);
 
-    Task<bool> IsHostRegisteredAsync(HostConfiguration hostConfiguration, string hostName);
+    Task<bool> IsHostRegisteredAsync(HostConfiguration hostConfiguration);
 }

@@ -31,11 +31,8 @@ public class HostRegistrationMonitorService(IHostLifecycleService hostLifecycleS
             var configPath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, hostConfigurationService.ConfigurationFileName);
 
             var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(configPath);
-            var hostName = hostInfoService.GetHostName();
-            var ipAddress = hostInfoService.GetIPv4Address();
-            var macAddress = hostInfoService.GetMacAddress();
 
-            if (!await hostLifecycleService.IsHostRegisteredAsync(hostConfiguration, hostName))
+            if (!await hostLifecycleService.IsHostRegisteredAsync(hostConfiguration))
             {
                 Log.Warning("Host is not registered. Performing necessary actions...");
 
