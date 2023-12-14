@@ -5,7 +5,6 @@
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 using Serilog;
 
@@ -13,7 +12,7 @@ namespace RemoteMaster.Server.Hubs;
 
 public class ManagementHub(ICertificateService certificateService, IDatabaseService databaseService) : Hub<IManagementClient>
 {
-    public async Task<bool> RegisterHostAsync(string hostName, string ipAddress, string macAddress, HostConfiguration hostConfiguration, byte[] csrBytes)
+    public async Task<bool> RegisterHostAsync(HostConfiguration hostConfiguration, byte[] csrBytes)
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
@@ -33,19 +32,19 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             await databaseService.AddNodeAsync(folder);
         }
 
-        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId)).FirstOrDefault(c => c.Name == hostName);
+        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId)).FirstOrDefault(c => c.Name == hostConfiguration.Host.Name);
 
         if (existingComputer != null)
         {
-            existingComputer.IPAddress = ipAddress;
+            existingComputer.IPAddress = hostConfiguration.Host.IPAddress;
         }
         else
         {
             var computer = new Computer
             {
-                Name = hostName,
-                IPAddress = ipAddress,
-                MACAddress = macAddress,
+                Name = hostConfiguration.Host.Name,
+                IPAddress = hostConfiguration.Host.IPAddress,
+                MACAddress = hostConfiguration.Host.MACAddress,
                 Parent = folder
             };
 

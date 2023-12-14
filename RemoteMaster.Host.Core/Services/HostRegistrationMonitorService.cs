@@ -39,7 +39,7 @@ public class HostRegistrationMonitorService(IHostLifecycleService hostLifecycleS
             {
                 Log.Warning("Host is not registered. Performing necessary actions...");
 
-                await hostLifecycleService.RegisterAsync(hostConfiguration, hostName, ipAddress, macAddress);
+                await hostLifecycleService.RegisterAsync(hostConfiguration);
             }
         }
         catch (Exception ex)

@@ -13,22 +13,22 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class HostLifecycleService(ICertificateRequestService certificateRequestService, ISubjectService subjectService) : IHostLifecycleService
 {
-    public async Task RegisterAsync(HostConfiguration config, string hostName, string ipAddress, string macAddress)
+    public async Task RegisterAsync(HostConfiguration hostConfiguration)
     {
-        ArgumentNullException.ThrowIfNull(config);
+        ArgumentNullException.ThrowIfNull(hostConfiguration);
 
         try
         {
-            var connection = await ConnectToServerHub($"http://{config.Server}:5254");
+            var connection = await ConnectToServerHub($"http://{hostConfiguration.Server}:5254");
 
             Log.Information("Attempting to register host...");
 
             var ipAddresses = new List<string>
             {
-                ipAddress
+                hostConfiguration.Host.IPAddress
             };
 
-            var subjectName = subjectService.GetDistinguishedName(hostName);
+            var subjectName = subjectService.GetDistinguishedName(hostConfiguration.Host.Name);
             var csr = certificateRequestService.GenerateCSR(subjectName, ipAddresses, out var rsaKeyPair);
 
             connection.On<byte[]>("ReceiveCertificate", certificateBytes =>
@@ -57,7 +57,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
 
             var signingRequest = csr.CreateSigningRequest();
 
-            if (await connection.InvokeAsync<bool>("RegisterHostAsync", hostName, ipAddress, macAddress, config, signingRequest))
+            if (await connection.InvokeAsync<bool>("RegisterHostAsync", hostConfiguration, signingRequest))
             {
                 Log.Information("Host registration successful.");
             }
@@ -70,7 +70,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         }
         catch (Exception ex)
         {
-            Log.Error("Registering host failed: {Message}", ex.Message);
+            Log.Error(ex, "Registering host failed: {Message}", ex.Message);
         }
     }
 

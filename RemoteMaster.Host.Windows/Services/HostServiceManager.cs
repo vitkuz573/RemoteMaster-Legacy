@@ -16,7 +16,7 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Host";
 
-    public async Task InstallOrUpdate(HostConfiguration configuration, string hostName, string ipAddress, string macAddress)
+    public async Task InstallOrUpdate(HostConfiguration hostConfiguration, string hostName, string ipAddress, string macAddress)
     {
         try
         {
@@ -40,11 +40,13 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
                 serviceManager.InstallService(hostServiceConfig, $"{hostPath} --service-mode");
             }
 
+            var updatedHostConfiguration = await UpdateConfigurationAsync(Path.Combine(directoryPath, configurationService.ConfigurationFileName), hostName, ipAddress, macAddress);
+
             serviceManager.StartService(hostServiceConfig.Name);
 
             Log.Information("{ServiceName} installed and started successfully.", hostServiceConfig.Name);
 
-            await hostLifecycleService.RegisterAsync(configuration, hostName, ipAddress, macAddress);
+            await hostLifecycleService.RegisterAsync(updatedHostConfiguration);
         }
         catch (Exception ex)
         {
@@ -52,7 +54,7 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
         }
     }
 
-    public async Task Uninstall(HostConfiguration configuration, string hostName)
+    public async Task Uninstall(HostConfiguration hostConfiguration, string hostName)
     {
         try
         {
@@ -75,7 +77,7 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
 
             DeleteFiles();
 
-            await hostLifecycleService.UnregisterAsync(configuration, hostName);
+            await hostLifecycleService.UnregisterAsync(hostConfiguration, hostName);
         }
         catch (Exception ex)
         {
@@ -83,9 +85,9 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
         }
     }
 
-    public async Task UpdateHostInformation(HostConfiguration configuration, string hostname, string ipAddress, string macAddress)
+    public async Task UpdateHostInformation(HostConfiguration hostConfiguration, string hostname, string ipAddress, string macAddress)
     {
-        await hostLifecycleService.UpdateHostInformationAsync(configuration, hostname, ipAddress, macAddress);
+        await hostLifecycleService.UpdateHostInformationAsync(hostConfiguration, hostname, ipAddress, macAddress);
     }
 
     private static string GetDirectoryPath()
@@ -160,5 +162,20 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
                 Log.Error("Deleting {AppName} files failed: {Message}", SubAppName, ex.Message);
             }
         }
+    }
+
+    private async Task<HostConfiguration> UpdateConfigurationAsync(string filePath, string hostName, string ipAddress, string macAddress)
+    {
+        var json = await File.ReadAllTextAsync(filePath);
+        var config = JsonSerializer.Deserialize<HostConfiguration>(json, jsonOptions);
+
+        config.Host ??= new Computer
+        {
+            Name = hostName,
+            IPAddress = ipAddress,
+            MACAddress = macAddress
+        };
+
+        return config;
     }
 }
