@@ -3,10 +3,8 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Timers;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Shared.Models;
 using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
