@@ -5,7 +5,6 @@
 using System.ServiceProcess;
 using System.Text.Json;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Models;
 using Serilog;
@@ -32,11 +31,11 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
                     serviceManager.StopService(hostServiceConfig.Name);
                 }
 
-                CopyToTargetPath(directoryPath, ipAddress, hostName);
+                CopyToTargetPath(directoryPath, hostName, ipAddress, macAddress);
             }
             else
             {
-                CopyToTargetPath(directoryPath, ipAddress, hostName);
+                CopyToTargetPath(directoryPath, hostName, ipAddress, macAddress);
                 var hostPath = Path.Combine(directoryPath, $"{MainAppName}.{SubAppName}.exe");
                 serviceManager.InstallService(hostServiceConfig, $"{hostPath} --service-mode");
             }
@@ -96,7 +95,7 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
         return Path.Combine(programFilesPath, MainAppName, SubAppName);
     }
 
-    private void CopyToTargetPath(string targetDirectoryPath, string ipAddress, string hostName)
+    private void CopyToTargetPath(string targetDirectoryPath, string hostName, string ipAddress, string macAddress)
     {
         if (!Directory.Exists(targetDirectoryPath))
         {
@@ -122,31 +121,26 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
         {
             try
             {
-                File.Copy(sourceConfigPath, targetConfigPath, true);
+                var config = JsonSerializer.Deserialize<HostConfiguration>(File.ReadAllText(sourceConfigPath));
+        
+                if (config != null)
+                {
+                    config.Host = new Computer
+                    {
+                        Name = hostName,
+                        IPAddress = ipAddress,
+                        MACAddress = macAddress
+                    };
+        
+                    var json = JsonSerializer.Serialize(config);
+        
+                    File.WriteAllText(targetConfigPath, json);
+                }
             }
             catch (Exception ex)
             {
                 throw new InvalidOperationException($"Failed to copy the configuration file to {targetConfigPath}.", ex);
             }
-        }
-
-        var hostInfoFilePath = Path.Combine(targetDirectoryPath, "HostInfo.json");
-
-        try
-        {
-            var hostInfo = new HostInfo
-            {
-                IPAddress = ipAddress,
-                HostName = hostName
-            };
-
-            var json = JsonSerializer.Serialize(hostInfo);
-            File.WriteAllText(hostInfoFilePath, json);
-            Log.Information("Host information file created successfully.");
-        }
-        catch (Exception ex)
-        {
-            Log.Error("Failed to create the host information file: {Message}", ex.Message);
         }
     }
 

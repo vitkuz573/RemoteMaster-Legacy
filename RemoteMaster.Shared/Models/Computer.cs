@@ -4,15 +4,19 @@
 
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Net.NetworkInformation;
+using System.Text.Json.Serialization;
 
-namespace RemoteMaster.Server.Models;
+namespace RemoteMaster.Shared.Models;
 
 public class Computer : Node
 {
+    [JsonPropertyName("ipAddress")]
     public required string IPAddress { get; set; }
 
+    [JsonPropertyName("macAddress")]
     public required string MACAddress { get; set; }
 
+    [JsonIgnore]
     [NotMapped]
     public byte[]? Thumbnail { get; set; }
 

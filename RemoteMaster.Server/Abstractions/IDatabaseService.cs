@@ -4,6 +4,7 @@
 
 using System.Linq.Expressions;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Abstractions;
 

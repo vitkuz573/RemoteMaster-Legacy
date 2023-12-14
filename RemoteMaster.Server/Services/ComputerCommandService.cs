@@ -9,6 +9,7 @@ using Polly;
 using Polly.Retry;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
 

@@ -4,6 +4,7 @@
 
 using Microsoft.AspNetCore.SignalR.Client;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Abstractions;
 

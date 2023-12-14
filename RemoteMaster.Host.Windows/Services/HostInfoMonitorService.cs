@@ -5,7 +5,6 @@
 using System.Text.Json;
 using Microsoft.Extensions.Hosting;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Models;
 using Serilog;
@@ -14,7 +13,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class HostInfoMonitorService(IHostConfigurationService hostConfigurationService, IHostInfoService hostInfoService, IHostServiceManager hostServiceManager) : IHostedService
 {
-    private readonly string _hostInfoFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "HostInfo.json");
+    private readonly string _configPath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, hostConfigurationService.ConfigurationFileName);
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -22,8 +21,7 @@ public class HostInfoMonitorService(IHostConfigurationService hostConfigurationS
 
         try
         {
-            var configPath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, hostConfigurationService.ConfigurationFileName);
-            configuration = await hostConfigurationService.LoadConfigurationAsync(configPath);
+            configuration = await hostConfigurationService.LoadConfigurationAsync(_configPath);
         }
         catch (Exception ex) when (ex is FileNotFoundException || ex is InvalidDataException)
         {
@@ -32,12 +30,10 @@ public class HostInfoMonitorService(IHostConfigurationService hostConfigurationS
             return;
         }
 
-        var currentHostInfo = await ReadHostInfo();
-
         var newIPAddress = hostInfoService.GetIPv4Address();
         var newHostName = hostInfoService.GetHostName();
 
-        if (currentHostInfo.IPAddress != newIPAddress || currentHostInfo.HostName != newHostName)
+        if (configuration.Host?.IPAddress != newIPAddress || configuration.Host?.Name != newHostName)
         {
             var macAddress = hostInfoService.GetMacAddress();
 
@@ -45,18 +41,19 @@ public class HostInfoMonitorService(IHostConfigurationService hostConfigurationS
 
             try
             {
-                var hostInfo = new HostInfo
+                configuration.Host = new Computer
                 {
+                    Name = newHostName,
                     IPAddress = newIPAddress,
-                    HostName = newHostName
+                    MACAddress = macAddress
                 };
 
-                var json = JsonSerializer.Serialize(hostInfo);
-                await File.WriteAllTextAsync(_hostInfoFilePath, json);
+                var json = JsonSerializer.Serialize(configuration);
+                await File.WriteAllTextAsync(_configPath, json);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Error saving host information.");
+                Log.Error(ex, "Error saving updated configuration.");
             }
         }
         else
@@ -68,24 +65,5 @@ public class HostInfoMonitorService(IHostConfigurationService hostConfigurationS
     public Task StopAsync(CancellationToken cancellationToken)
     {
         return Task.CompletedTask;
-    }
-
-    private async Task<HostInfo> ReadHostInfo()
-    {
-        try
-        {
-            if (File.Exists(_hostInfoFilePath))
-            {
-                var json = await File.ReadAllTextAsync(_hostInfoFilePath);
-
-                return JsonSerializer.Deserialize<HostInfo>(json) ?? new HostInfo();
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Information("Error reading the saved host information: {Message}", ex.Message);
-        }
-
-        return new HostInfo();
     }
 }

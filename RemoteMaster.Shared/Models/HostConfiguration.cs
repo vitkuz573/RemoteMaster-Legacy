@@ -18,5 +18,8 @@ public class HostConfiguration
     public string InstallationMode { get; set; }
 
     [JsonPropertyName("subject")]
-    public SubjectOptions Subject { get; } = new();
+    public SubjectOptions Subject { get; set; }
+
+    [JsonPropertyName("host")]
+    public Computer? Host { get; set; }
 }
