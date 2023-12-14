@@ -85,9 +85,9 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
         }
     }
 
-    public async Task UpdateHostInformation(HostConfiguration hostConfiguration, string hostname, string ipAddress, string macAddress)
+    public async Task UpdateHostInformation(HostConfiguration hostConfiguration)
     {
-        await hostLifecycleService.UpdateHostInformationAsync(hostConfiguration, hostname, ipAddress, macAddress);
+        await hostLifecycleService.UpdateHostInformationAsync(hostConfiguration);
     }
 
     private static string GetDirectoryPath()

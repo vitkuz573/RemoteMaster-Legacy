@@ -35,21 +35,15 @@ public class HostInfoMonitorService(IHostConfigurationService hostConfigurationS
 
         if (hostConfiguration.Host?.IPAddress != newIPAddress || hostConfiguration.Host?.Name != newHostName)
         {
-            var macAddress = hostInfoService.GetMacAddress();
-
-            await hostServiceManager.UpdateHostInformation(hostConfiguration, newHostName, newIPAddress, macAddress);
-
             try
             {
-                hostConfiguration.Host = new Computer
-                {
-                    Name = newHostName,
-                    IPAddress = newIPAddress,
-                    MACAddress = macAddress
-                };
+                hostConfiguration.Host.Name = newHostName;
+                hostConfiguration.Host.IPAddress = newIPAddress;
 
                 var json = JsonSerializer.Serialize(hostConfiguration, jsonOptions);
                 await File.WriteAllTextAsync(_configPath, json);
+
+                await hostServiceManager.UpdateHostInformation(hostConfiguration);
             }
             catch (Exception ex)
             {
