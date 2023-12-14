@@ -1,5 +1,7 @@
 ﻿@page "/"
 @rendermode InteractiveServer
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
 @using RemoteMaster.Shared.Models
 
 <MudThemeProvider />
