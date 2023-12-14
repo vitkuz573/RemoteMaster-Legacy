@@ -24,6 +24,7 @@ public partial class HostConfigurationGenerator
     protected async override Task OnInitializedAsync()
     {
         _model.Server = GetLocalIPAddress();
+        _model.Subject = new();
     }
 
     private async Task OnValidSubmit(EditContext context)
