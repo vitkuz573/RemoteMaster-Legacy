@@ -2,39 +2,32 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Text;
+using System.Text.Json;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-/// <summary>
-/// Service responsible for generating host configuration files.
-/// </summary>
-/// <remarks>
-/// Initializes a new instance of the <see cref="HostConfigurationService"/> class.
-/// </remarks>
-/// <param name="serializationService">The serialization service instance.</param>
-public class HostConfigurationService(ISerializationService serializationService) : IHostConfigurationService
+public class HostConfigurationService(JsonSerializerOptions jsonOptions) : IHostConfigurationService
 {
-
-    /// <summary>
-    /// Generates a configuration file for the host based on the given configuration model.
-    /// </summary>
-    /// <param name="config">The configuration model.</param>
-    /// <returns>A memory stream containing the configuration file.</returns>
     public async Task<MemoryStream> GenerateConfigFileAsync(HostConfiguration config)
     {
-        var jsonBytes = serializationService.SerializeToJsonBytes(config);
+        try
+        {
+            var json = JsonSerializer.Serialize(config, jsonOptions);
+            var jsonBytes = Encoding.UTF8.GetBytes(json);
 
-        return await WriteToMemoryStreamAsync(jsonBytes);
+            return await WriteToMemoryStreamAsync(jsonBytes);
+        }
+        catch (JsonException ex)
+        {
+            Log.Error(ex, "Error during JSON serialization.");
+            throw new ApplicationException("Error during JSON serialization.", ex);
+        }
     }
 
-    /// <summary>
-    /// Writes the given bytes to a memory stream.
-    /// </summary>
-    /// <param name="bytes">The bytes to write.</param>
-    /// <returns>A memory stream containing the written bytes.</returns>
     private static async Task<MemoryStream> WriteToMemoryStreamAsync(byte[] bytes)
     {
         var memoryStream = new MemoryStream();

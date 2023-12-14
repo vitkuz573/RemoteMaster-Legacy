@@ -2,6 +2,8 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Text.Json.Serialization;
+using System.Text.Json;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -61,10 +63,18 @@ builder.Services.AddSingleton<IBrandingService, BrandingService>();
 builder.Services.AddSingleton<ICertificateService, CertificateService>();
 builder.Services.AddSingleton<IPacketSender, UdpPacketSender>();
 builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
-builder.Services.AddSingleton<ISerializationService, JsonSerializerService>();
+
+builder.Services.AddSingleton(new JsonSerializerOptions
+{
+    WriteIndented = true,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+});
+
 builder.Services.AddTransient<ITokenService, TokenService>();
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
 builder.Services.Configure<CertificateOptions>(builder.Configuration.GetSection("CertificateSettings"));
+
 builder.Services.AddMudServices();
 
 builder.Host.UseSerilog((context, configuration) =>
