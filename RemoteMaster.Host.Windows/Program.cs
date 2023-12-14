@@ -145,15 +145,9 @@ internal class Program
             {
                 configuration = await hostConfigurationService.LoadConfigurationAsync();
             }
-            catch (FileNotFoundException ex)
+            catch (Exception ex) when (ex is FileNotFoundException || ex is InvalidDataException)
             {
                 Log.Error(ex, "Configuration file not found.");
-
-                return;
-            }
-            catch (InvalidDataException ex)
-            {
-                Log.Error(ex, "Invalid configuration data.");
 
                 return;
             }
