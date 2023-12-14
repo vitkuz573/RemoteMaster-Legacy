@@ -11,7 +11,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUserInstanceService userInstanceService, IServiceManager serviceManager, IHostConfigurationService configurationService, IServiceConfiguration hostServiceConfig) : IHostServiceManager
+public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUserInstanceService userInstanceService, IServiceManager serviceManager, IHostConfigurationService configurationService, IServiceConfiguration hostServiceConfig, JsonSerializerOptions jsonOptions) : IHostServiceManager
 {
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Host";
@@ -121,18 +121,18 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
         {
             try
             {
-                var config = JsonSerializer.Deserialize<HostConfiguration>(File.ReadAllText(sourceConfigPath));
+                var hostConfiguration = JsonSerializer.Deserialize<HostConfiguration>(File.ReadAllText(sourceConfigPath));
         
-                if (config != null)
+                if (hostConfiguration != null)
                 {
-                    config.Host = new Computer
+                    hostConfiguration.Host = new Computer
                     {
                         Name = hostName,
                         IPAddress = ipAddress,
                         MACAddress = macAddress
                     };
         
-                    var json = JsonSerializer.Serialize(config);
+                    var json = JsonSerializer.Serialize(hostConfiguration, jsonOptions);
         
                     File.WriteAllText(targetConfigPath, json);
                 }

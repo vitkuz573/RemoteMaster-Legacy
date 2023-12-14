@@ -11,17 +11,17 @@ using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostInfoMonitorService(IHostConfigurationService hostConfigurationService, IHostInfoService hostInfoService, IHostServiceManager hostServiceManager) : IHostedService
+public class HostInfoMonitorService(IHostConfigurationService hostConfigurationService, IHostInfoService hostInfoService, IHostServiceManager hostServiceManager, JsonSerializerOptions jsonOptions) : IHostedService
 {
     private readonly string _configPath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, hostConfigurationService.ConfigurationFileName);
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        HostConfiguration configuration;
+        HostConfiguration hostConfiguration;
 
         try
         {
-            configuration = await hostConfigurationService.LoadConfigurationAsync(_configPath);
+            hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(_configPath);
         }
         catch (Exception ex) when (ex is FileNotFoundException || ex is InvalidDataException)
         {
@@ -33,22 +33,22 @@ public class HostInfoMonitorService(IHostConfigurationService hostConfigurationS
         var newIPAddress = hostInfoService.GetIPv4Address();
         var newHostName = hostInfoService.GetHostName();
 
-        if (configuration.Host?.IPAddress != newIPAddress || configuration.Host?.Name != newHostName)
+        if (hostConfiguration.Host?.IPAddress != newIPAddress || hostConfiguration.Host?.Name != newHostName)
         {
             var macAddress = hostInfoService.GetMacAddress();
 
-            await hostServiceManager.UpdateHostInformation(configuration, newHostName, newIPAddress, macAddress);
+            await hostServiceManager.UpdateHostInformation(hostConfiguration, newHostName, newIPAddress, macAddress);
 
             try
             {
-                configuration.Host = new Computer
+                hostConfiguration.Host = new Computer
                 {
                     Name = newHostName,
                     IPAddress = newIPAddress,
                     MACAddress = macAddress
                 };
 
-                var json = JsonSerializer.Serialize(configuration);
+                var json = JsonSerializer.Serialize(hostConfiguration, jsonOptions);
                 await File.WriteAllTextAsync(_configPath, json);
             }
             catch (Exception ex)

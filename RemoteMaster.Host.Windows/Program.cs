@@ -5,6 +5,8 @@
 using System.Net;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -65,6 +67,12 @@ internal class Program
         builder.Services.AddSingleton<INetworkDriveService, NetworkDriveService>();
         builder.Services.AddSingleton<IDomainService, DomainService>();
         builder.Services.AddSingleton<IScriptService, ScriptService>();
+        builder.Services.AddSingleton(new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
 
         var publicKeyPath = @"C:\RemoteMaster\Security\public_key.pem";
         var publicKey = File.ReadAllText(publicKeyPath);
