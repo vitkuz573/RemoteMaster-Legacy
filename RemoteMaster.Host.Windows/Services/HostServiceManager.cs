@@ -54,7 +54,7 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
         }
     }
 
-    public async Task Uninstall(HostConfiguration hostConfiguration, string hostName)
+    public async Task Uninstall(HostConfiguration hostConfiguration)
     {
         try
         {
@@ -77,7 +77,7 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
 
             DeleteFiles();
 
-            await hostLifecycleService.UnregisterAsync(hostConfiguration, hostName);
+            await hostLifecycleService.UnregisterAsync(hostConfiguration);
         }
         catch (Exception ex)
         {

@@ -74,17 +74,17 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         }
     }
 
-    public async Task UnregisterAsync(HostConfiguration config, string hostName)
+    public async Task UnregisterAsync(HostConfiguration hostConfiguration)
     {
-        ArgumentNullException.ThrowIfNull(config);
+        ArgumentNullException.ThrowIfNull(hostConfiguration);
 
         try
         {
-            var connection = await ConnectToServerHub($"http://{config.Server}:5254");
+            var connection = await ConnectToServerHub($"http://{hostConfiguration.Server}:5254");
 
             Log.Information("Attempting to unregister host...");
 
-            if (await connection.InvokeAsync<bool>("UnregisterHostAsync", hostName, config))
+            if (await connection.InvokeAsync<bool>("UnregisterHostAsync", hostConfiguration))
             {
                 Log.Information("Host unregistration successful.");
             }
@@ -99,15 +99,15 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         }
     }
 
-    public async Task UpdateHostInformationAsync(HostConfiguration config, string hostname, string ipAddress, string macAddress)
+    public async Task UpdateHostInformationAsync(HostConfiguration hostConfiguration, string hostname, string ipAddress, string macAddress)
     {
-        ArgumentNullException.ThrowIfNull(config);
+        ArgumentNullException.ThrowIfNull(hostConfiguration);
 
         try
         {
-            var connection = await ConnectToServerHub($"http://{config.Server}:5254");
+            var connection = await ConnectToServerHub($"http://{hostConfiguration.Server}:5254");
 
-            if (await connection.InvokeAsync<bool>("UpdateHostInformationAsync", config, hostname, ipAddress, macAddress))
+            if (await connection.InvokeAsync<bool>("UpdateHostInformationAsync", hostConfiguration, hostname, ipAddress, macAddress))
             {
                 Log.Information("Host information updated successful.");
             }

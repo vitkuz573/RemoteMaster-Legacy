@@ -10,7 +10,7 @@ public interface IHostLifecycleService
 {
     Task RegisterAsync(HostConfiguration hostConfiguration);
 
-    Task UnregisterAsync(HostConfiguration hostConfiguration, string hostName);
+    Task UnregisterAsync(HostConfiguration hostConfiguration);
 
     Task UpdateHostInformationAsync(HostConfiguration hostConfiguration, string hostname, string ipAddress, string macAddress);
 

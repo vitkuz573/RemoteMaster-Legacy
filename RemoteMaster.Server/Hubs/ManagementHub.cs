@@ -54,7 +54,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         return true;
     }
 
-    public async Task<bool> UnregisterHostAsync(string hostName, HostConfiguration hostConfiguration)
+    public async Task<bool> UnregisterHostAsync(HostConfiguration hostConfiguration)
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
@@ -68,7 +68,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         }
 
         var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId))
-                               .FirstOrDefault(c => c.Name == hostName);
+                               .FirstOrDefault(c => c.Name == hostConfiguration.Host.Name);
 
         if (existingComputer != null)
         {
@@ -84,7 +84,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             return true;
         }
 
-        Log.Warning("Unregistration failed: Computer '{HostName}' not found in folder '{Group}'.", hostName, hostConfiguration.Group);
+        Log.Warning("Unregistration failed: Computer '{HostName}' not found in folder '{Group}'.", hostConfiguration.Host.Name, hostConfiguration.Group);
 
         return false;
     }

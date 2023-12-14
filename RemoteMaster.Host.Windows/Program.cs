@@ -191,24 +191,18 @@ internal class Program
 
             try
             {
-                configuration = await hostConfigurationService.LoadConfigurationAsync();
+                var configurationPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", hostConfigurationService.ConfigurationFileName);
+
+                configuration = await hostConfigurationService.LoadConfigurationAsync(configurationPath);
             }
-            catch (FileNotFoundException ex)
+            catch (Exception ex) when (ex is FileNotFoundException || ex is InvalidDataException)
             {
                 Log.Error(ex, "Configuration error.");
 
                 return;
             }
-            catch (InvalidDataException ex)
-            {
-                Log.Error(ex, "Configuration Error.");
 
-                return;
-            }
-
-            var hostName = hostInfoService.GetHostName();
-
-            await hostServiceManager.Uninstall(configuration, hostName);
+            await hostServiceManager.Uninstall(configuration);
 
             return;
         }
