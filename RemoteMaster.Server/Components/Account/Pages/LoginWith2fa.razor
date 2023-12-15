@@ -2,11 +2,14 @@
 
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Identity
+@using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Server.Data
 
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 @inject IdentityRedirectManager RedirectManager
+@inject ITokenService TokenService
+@inject IHttpContextAccessor HttpContextAccessor
 @inject ILogger<LoginWith2fa> Logger
 
 <PageTitle>Two-factor authentication</PageTitle>
@@ -73,6 +76,16 @@
         if (result.Succeeded)
         {
             Logger.LogInformation("User with ID '{UserId}' logged in with 2fa.", userId);
+
+            var accessTokenString = TokenService.GenerateAccessToken(user.Email);
+            var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Expires = DateTime.UtcNow.AddHours(2)
+                };
+
+            HttpContextAccessor.HttpContext.Response.Cookies.Append("accessToken", accessTokenString, cookieOptions);
+
             RedirectManager.RedirectTo(ReturnUrl);
         }
         else if (result.IsLockedOut)
