@@ -29,10 +29,14 @@ public class DatabaseService(NodesDbContext context) : IDatabaseService
         return await context.Nodes.OfType<T>().Where(node => node.ParentId == parentId).ToListAsync();
     }
 
-    public async Task AddNodeAsync(Node node)
+    public async Task<Guid> AddNodeAsync(Node node)
     {
+        ArgumentNullException.ThrowIfNull(node);
+
         await context.Nodes.AddAsync(node);
         await context.SaveChangesAsync();
+
+        return node.NodeId;
     }
 
     public async Task RemoveNodeAsync(Node node)
@@ -47,6 +51,7 @@ public class DatabaseService(NodesDbContext context) : IDatabaseService
         {
             computer.IPAddress = ipAddress;
             computer.Name = hostName;
+
             context.Nodes.Update(computer);
         }
 

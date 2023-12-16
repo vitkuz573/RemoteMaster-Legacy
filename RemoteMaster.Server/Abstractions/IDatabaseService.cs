@@ -14,7 +14,7 @@ public interface IDatabaseService
 
     Task<IList<T>> GetChildrenByParentIdAsync<T>(Guid parentId) where T : Node;
 
-    Task AddNodeAsync(Node node);
+    Task<Guid> AddNodeAsync(Node node);
 
     Task RemoveNodeAsync(Node node);
 
