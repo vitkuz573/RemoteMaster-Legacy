@@ -12,7 +12,7 @@ using RemoteMaster.Server.Data;
 namespace RemoteMaster.Server.Data.Migrations
 {
     [DbContext(typeof(NodesDbContext))]
-    [Migration("20231128160552_InitialCreate")]
+    [Migration("20231216070531_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -25,7 +25,7 @@ namespace RemoteMaster.Server.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("RemoteMaster.Server.Models.Node", b =>
+            modelBuilder.Entity("RemoteMaster.Shared.Models.Node", b =>
                 {
                     b.Property<Guid>("NodeId")
                         .ValueGeneratedOnAdd()
@@ -33,7 +33,8 @@ namespace RemoteMaster.Server.Data.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasAnnotation("Relational:JsonPropertyName", "name");
 
                     b.Property<string>("NodeType")
                         .IsRequired()
@@ -54,38 +55,40 @@ namespace RemoteMaster.Server.Data.Migrations
                     b.UseTphMappingStrategy();
                 });
 
-            modelBuilder.Entity("RemoteMaster.Server.Models.Computer", b =>
+            modelBuilder.Entity("RemoteMaster.Shared.Models.Computer", b =>
                 {
-                    b.HasBaseType("RemoteMaster.Server.Models.Node");
+                    b.HasBaseType("RemoteMaster.Shared.Models.Node");
 
                     b.Property<string>("IPAddress")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasAnnotation("Relational:JsonPropertyName", "ipAddress");
 
                     b.Property<string>("MACAddress")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasAnnotation("Relational:JsonPropertyName", "macAddress");
 
                     b.HasDiscriminator().HasValue("Computer");
                 });
 
-            modelBuilder.Entity("RemoteMaster.Server.Models.Folder", b =>
+            modelBuilder.Entity("RemoteMaster.Shared.Models.Folder", b =>
                 {
-                    b.HasBaseType("RemoteMaster.Server.Models.Node");
+                    b.HasBaseType("RemoteMaster.Shared.Models.Node");
 
                     b.HasDiscriminator().HasValue("Folder");
                 });
 
-            modelBuilder.Entity("RemoteMaster.Server.Models.Node", b =>
+            modelBuilder.Entity("RemoteMaster.Shared.Models.Node", b =>
                 {
-                    b.HasOne("RemoteMaster.Server.Models.Node", "Parent")
+                    b.HasOne("RemoteMaster.Shared.Models.Node", "Parent")
                         .WithMany("Nodes")
                         .HasForeignKey("ParentId");
 
                     b.Navigation("Parent");
                 });
 
-            modelBuilder.Entity("RemoteMaster.Server.Models.Node", b =>
+            modelBuilder.Entity("RemoteMaster.Shared.Models.Node", b =>
                 {
                     b.Navigation("Nodes");
                 });
