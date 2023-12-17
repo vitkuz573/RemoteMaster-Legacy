@@ -171,7 +171,19 @@ public partial class Access : IDisposable
             .AddMessagePackProtocol()
         .Build();
 
-        _connection.On<IEnumerable<Display>>("ReceiveDisplays", (displays) => _displays = displays.ToList());
+        _connection.On<IEnumerable<Display>>("ReceiveDisplays", (displays) =>
+        {
+            _displays = displays.ToList();
+            var primaryDisplay = _displays.FirstOrDefault(d => d.IsPrimary);
+            
+            if (primaryDisplay != null)
+            {
+                _selectedDisplay = primaryDisplay.Name;
+            }
+
+            InvokeAsync(StateHasChanged);
+        });
+
         _connection.On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate);
         _connection.On<Version>("ReceiveHostVersion", version => _hostVersion = version.ToString());
 
