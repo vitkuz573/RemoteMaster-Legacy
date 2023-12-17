@@ -119,7 +119,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
 
         if (string.IsNullOrWhiteSpace(hostConfiguration.Host.Name))
         {
-            throw new ArgumentNullException(nameof(hostConfiguration.Host.Name));
+            throw new ArgumentNullException(hostConfiguration.Host.Name);
         }
 
         try
