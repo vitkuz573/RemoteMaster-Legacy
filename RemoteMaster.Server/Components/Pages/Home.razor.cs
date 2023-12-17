@@ -36,7 +36,7 @@ public partial class Home
 
     protected async override Task OnInitializedAsync()
     {
-        _nodes = (await DatabaseService.GetNodesAsync(f => f.Parent == null && f is Folder)).Cast<Node>().ToHashSet();
+        _nodes = (await DatabaseService.GetNodesAsync(f => f.Parent == null && f is Group)).Cast<Node>().ToHashSet();
     }
 
     private void DrawerToggle()
@@ -63,7 +63,7 @@ public partial class Home
     {
         _selectedComputers.Clear();
 
-        if (node is Folder)
+        if (node is Group)
         {
             _selectedNode = node;
             await UpdateComputersThumbnailsAsync(node.Nodes.OfType<Computer>());
@@ -170,7 +170,7 @@ public partial class Home
 
     private async Task HandleRefreshClick()
     {
-        if (_selectedNode is Folder selectedFolder)
+        if (_selectedNode is Group selectedFolder)
         {
             await UpdateComputersThumbnailsAsync(selectedFolder.Nodes.OfType<Computer>());
         }

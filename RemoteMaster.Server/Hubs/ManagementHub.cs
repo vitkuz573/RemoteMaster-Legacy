@@ -20,11 +20,11 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
 
         await Clients.Caller.ReceiveCertificate(certificate.Export(X509ContentType.Pfx));
 
-        var folder = (await databaseService.GetNodesAsync(f => f.Name == hostConfiguration.Group && f is Folder)).OfType<Folder>().FirstOrDefault();
+        var folder = (await databaseService.GetNodesAsync(f => f.Name == hostConfiguration.Group && f is Group)).OfType<Group>().FirstOrDefault();
 
         if (folder == null)
         {
-            folder = new Folder
+            folder = new Group
             {
                 Name = hostConfiguration.Group
             };
@@ -58,7 +58,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
-        var folder = (await databaseService.GetNodesAsync(f => f.Name == hostConfiguration.Group && f is Folder)).OfType<Folder>().FirstOrDefault();
+        var folder = (await databaseService.GetNodesAsync(f => f.Name == hostConfiguration.Group && f is Group)).OfType<Group>().FirstOrDefault();
 
         if (folder == null)
         {
@@ -93,7 +93,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
-        var folder = (await databaseService.GetNodesAsync(f => f.Name == hostConfiguration.Group && f is Folder)).OfType<Folder>().FirstOrDefault();
+        var folder = (await databaseService.GetNodesAsync(f => f.Name == hostConfiguration.Group && f is Group)).OfType<Group>().FirstOrDefault();
 
         if (folder == null)
         {

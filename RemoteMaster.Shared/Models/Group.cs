@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Shared.Models;
 
-public class Folder : Node
+public class Group : Node
 {
 }
 

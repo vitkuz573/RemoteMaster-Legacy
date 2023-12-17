@@ -18,7 +18,7 @@ public class NodesDbContext(DbContextOptions<NodesDbContext> options) : DbContex
     {
         modelBuilder.Entity<Node>()
             .HasDiscriminator<string>("NodeType")
-            .HasValue<Folder>("Folder")
+            .HasValue<Group>("Folder")
             .HasValue<Computer>("Computer");
 
         modelBuilder.Entity<Node>()

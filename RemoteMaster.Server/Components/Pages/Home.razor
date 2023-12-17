@@ -58,7 +58,7 @@
                 </MudTabs>
 
                 <div class="flex flex-wrap gap-4">
-                    @if (_selectedNode is Folder selectedFolder)
+                    @if (_selectedNode is Group selectedFolder)
                     {
                         foreach (var child in _selectedNode.Nodes)
                         {
