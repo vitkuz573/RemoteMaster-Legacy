@@ -7,5 +7,5 @@ namespace RemoteMaster.Shared.Models;
 public enum Intention
 {
     GetThumbnail,
-    Connect
+    Access
 }

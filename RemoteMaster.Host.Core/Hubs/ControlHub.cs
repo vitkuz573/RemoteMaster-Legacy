@@ -29,7 +29,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
                 Context.Abort();
                 break;
 
-            case Intention.Connect:
+            case Intention.Access:
                 var viewer = viewerFactory.Create(Context.ConnectionId);
                 appState.TryAddViewer(viewer);
                 break;

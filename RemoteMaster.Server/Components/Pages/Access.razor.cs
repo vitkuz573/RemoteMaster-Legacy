@@ -215,12 +215,12 @@ public partial class Access : IDisposable
         {
             await Task.Delay(TimeSpan.FromSeconds(5));
             await _connection.StartAsync();
-            await SafeInvokeAsync(() => _connection.InvokeAsync("ConnectAs", Intention.Connect));
+            await SafeInvokeAsync(() => _connection.InvokeAsync("ConnectAs", Intention.Access));
         };
 
         await _connection.StartAsync();
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("ConnectAs", Intention.Connect));
+        await SafeInvokeAsync(() => _connection.InvokeAsync("ConnectAs", Intention.Access));
     }
 
     private async Task HandleScreenUpdate(byte[] screenData)
