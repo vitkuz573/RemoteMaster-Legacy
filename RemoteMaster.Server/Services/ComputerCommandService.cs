@@ -8,7 +8,6 @@ using Microsoft.JSInterop;
 using Polly;
 using Polly.Retry;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
@@ -24,11 +23,11 @@ public class ComputerCommandService(IJSRuntime jsRuntime) : IComputerCommandServ
             TimeSpan.FromSeconds(10),
         });
 
-    public async Task Execute(Dictionary<Computer, HubConnection?> computers, Func<Computer, HubConnection, Task> actionOnComputer)
+    public async Task Execute(Dictionary<Computer, HubConnection?> hosts, Func<Computer, HubConnection, Task> action)
     {
-        ArgumentNullException.ThrowIfNull(computers);
+        ArgumentNullException.ThrowIfNull(hosts);
 
-        foreach (var (computer, connection) in computers)
+        foreach (var (computer, connection) in hosts)
         {
             await _retryPolicy.ExecuteAsync(async () =>
             {
@@ -36,7 +35,7 @@ public class ComputerCommandService(IJSRuntime jsRuntime) : IComputerCommandServ
                 {
                     try
                     {
-                        await actionOnComputer(computer, connection);
+                        await action(computer, connection);
                     }
                     catch (HubException ex) when (ex.Message.Contains("Method does not exist"))
                     {
