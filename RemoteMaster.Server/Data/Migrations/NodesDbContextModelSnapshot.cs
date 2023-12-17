@@ -69,7 +69,7 @@ namespace RemoteMaster.Server.Data.Migrations
                     b.HasDiscriminator().HasValue("Computer");
                 });
 
-            modelBuilder.Entity("RemoteMaster.Shared.Models.Folder", b =>
+            modelBuilder.Entity("RemoteMaster.Shared.Models.Group", b =>
                 {
                     b.HasBaseType("RemoteMaster.Shared.Models.Node");
 

@@ -12,7 +12,7 @@ using RemoteMaster.Server.Data;
 namespace RemoteMaster.Server.Data.Migrations
 {
     [DbContext(typeof(NodesDbContext))]
-    [Migration("20231216070531_InitialCreate")]
+    [Migration("20231217110056_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -72,7 +72,7 @@ namespace RemoteMaster.Server.Data.Migrations
                     b.HasDiscriminator().HasValue("Computer");
                 });
 
-            modelBuilder.Entity("RemoteMaster.Shared.Models.Folder", b =>
+            modelBuilder.Entity("RemoteMaster.Shared.Models.Group", b =>
                 {
                     b.HasBaseType("RemoteMaster.Shared.Models.Node");
 
