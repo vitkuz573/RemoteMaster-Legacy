@@ -4,6 +4,7 @@
 
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Text;
 using Microsoft.Win32.SafeHandles;
 using RemoteMaster.Host.Windows.Models;
 using Serilog;
@@ -90,12 +91,15 @@ public class NativeProcess
 
             if (stdOutReadHandle != null && stdErrReadHandle != null)
             {
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+                var cp866 = Encoding.GetEncoding(866);
+
                 var nativeProcess = new NativeProcess(startInfo)
                 {
                     _processHandle = new SafeFileHandle(procInfo.hProcess, true),
                     Id = procInfo.dwProcessId,
-                    StandardOutput = new StreamReader(new FileStream(stdOutReadHandle, FileAccess.Read)),
-                    StandardError = new StreamReader(new FileStream(stdErrReadHandle, FileAccess.Read))
+                    StandardOutput = new StreamReader(new FileStream(stdOutReadHandle, FileAccess.Read), Encoding.UTF8),
+                    StandardError = new StreamReader(new FileStream(stdErrReadHandle, FileAccess.Read), cp866)
                 };
 
                 Log.Information("NativeProcess started successfully with ID: {ProcessId}", procInfo.dwProcessId);
