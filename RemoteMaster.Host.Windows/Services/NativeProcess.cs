@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 using RemoteMaster.Host.Windows.Models;
+using Serilog;
 using Windows.Win32.Foundation;
 using Windows.Win32.Security;
 using Windows.Win32.System.RemoteDesktop;
@@ -14,11 +15,13 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class NativeProcess(NativeProcessStartInfo startInfo)
+#pragma warning disable CA2000
+
+public class NativeProcess
 {
     private SafeFileHandle? _processHandle;
 
-    public NativeProcessStartInfo StartInfo { get; private set; } = startInfo;
+    public NativeProcessStartInfo StartInfo { get; private set; }
 
     public uint? Id { get; private set; }
 
@@ -26,11 +29,19 @@ public class NativeProcess(NativeProcessStartInfo startInfo)
 
     public StreamReader? StandardError { get; private set; }
 
+    public NativeProcess(NativeProcessStartInfo startInfo)
+    {
+        Log.Information("Initializing NativeProcess with StartInfo: {@StartInfo}", startInfo);
+        StartInfo = startInfo ?? throw new ArgumentNullException(nameof(startInfo));
+    }
+
     public static NativeProcess? Start(NativeProcessStartInfo startInfo)
     {
         ArgumentNullException.ThrowIfNull(startInfo);
 
+        Log.Information("Starting NativeProcess with StartInfo: {@StartInfo}", startInfo);
         var sessionId = !startInfo.ForceConsoleSession ? FindTargetSessionId(startInfo.TargetSessionId) : WTSGetActiveConsoleSessionId();
+        Log.Debug("Session ID determined: {SessionId}", sessionId);
 
         SafeFileHandle? hUserTokenDup = null;
         SafeFileHandle? stdInReadHandle = null;
@@ -42,25 +53,38 @@ public class NativeProcess(NativeProcessStartInfo startInfo)
             if (!startInfo.UseCurrentUserToken || !TryGetUserToken(sessionId, out hUserTokenDup))
             {
                 var winlogonPid = GetWinlogonPidForSession(sessionId);
+                Log.Debug("Winlogon PID for session {SessionId}: {WinlogonPid}", sessionId, winlogonPid);
+
                 using var hProcess = OpenProcess_SafeHandle(PROCESS_ACCESS_RIGHTS.PROCESS_ALL_ACCESS, false, winlogonPid);
+                Log.Debug("Process handle opened: {ProcessHandle}", hProcess);
 
                 if (!hProcess.IsInvalid && !hProcess.IsClosed && OpenProcessToken(hProcess, TOKEN_ACCESS_MASK.TOKEN_DUPLICATE, out var hPToken))
                 {
                     using (hPToken)
                     {
                         DuplicateTokenEx(hPToken, TOKEN_ACCESS_MASK.TOKEN_ALL_ACCESS, null, SECURITY_IMPERSONATION_LEVEL.SecurityIdentification, TOKEN_TYPE.TokenPrimary, out hUserTokenDup);
+                        Log.Debug("User token duplicated: {UserTokenDup}", hUserTokenDup);
                     }
+                }
+                else
+                {
+                    Log.Error("Failed to open or duplicate user token for session {SessionId}", sessionId);
+                    return null;
                 }
             }
 
             PROCESS_INFORMATION procInfo;
-
             if (hUserTokenDup != null)
             {
-                TryCreateInteractiveProcess(startInfo, hUserTokenDup, out procInfo);
+                if (!TryCreateInteractiveProcess(startInfo, hUserTokenDup, out procInfo, out stdOutReadHandle, out stdErrReadHandle))
+                {
+                    Log.Error("Failed to create interactive process.");
+                    return null;
+                }
             }
             else
             {
+                Log.Error("User token duplication failed.");
                 throw new InvalidOperationException("Failed to get or duplicate user token.");
             }
 
@@ -74,33 +98,49 @@ public class NativeProcess(NativeProcessStartInfo startInfo)
                     StandardError = new StreamReader(new FileStream(stdErrReadHandle, FileAccess.Read))
                 };
 
+                Log.Information("NativeProcess started successfully with ID: {ProcessId}", procInfo.dwProcessId);
                 return nativeProcess;
             }
-
-            return null;
+            else
+            {
+                Log.Error("Failed to create standard output and error read handles.");
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An error occurred while starting NativeProcess.");
+            throw;
         }
         finally
         {
             hUserTokenDup?.Dispose();
             stdInReadHandle?.Dispose();
+            stdOutReadHandle?.Dispose();
+            stdErrReadHandle?.Dispose();
+            Log.Information("Resources disposed in NativeProcess.Start method.");
         }
     }
 
     private static uint GetWinlogonPidForSession(uint sessionId)
     {
+        Log.Information("Retrieving Winlogon PID for session {SessionId}", sessionId);
         foreach (var process in Process.GetProcessesByName("winlogon"))
         {
             if ((uint)process.SessionId == sessionId)
             {
+                Log.Information("Found Winlogon PID: {WinlogonPid} for session {SessionId}", process.Id, sessionId);
                 return (uint)process.Id;
             }
         }
 
+        Log.Error("No Winlogon process found for session {SessionId}", sessionId);
         throw new Exception("No winlogon process found for the given session id.");
     }
 
     private static uint FindTargetSessionId(int targetSessionId)
     {
+        Log.Information("Finding target session ID: {TargetSessionId}", targetSessionId);
         var activeSessions = GetActiveSessions();
         uint lastSessionId = 0;
         var targetSessionFound = false;
@@ -116,36 +156,49 @@ public class NativeProcess(NativeProcessStartInfo startInfo)
             }
         }
 
-        return targetSessionFound ? (uint)targetSessionId : lastSessionId;
+        uint foundSessionId = targetSessionFound ? (uint)targetSessionId : lastSessionId;
+        Log.Information("Target session ID found: {FoundSessionId}", foundSessionId);
+        return foundSessionId;
     }
 
-    private static unsafe bool TryCreateInteractiveProcess(NativeProcessStartInfo startInfo, SafeHandle hUserTokenDup, out PROCESS_INFORMATION procInfo)
+    private static unsafe bool TryCreateInteractiveProcess(NativeProcessStartInfo startInfo, SafeHandle hUserTokenDup, out PROCESS_INFORMATION procInfo, out SafeFileHandle stdOutReadHandle, out SafeFileHandle stdErrReadHandle)
     {
-#pragma warning disable CA2000
+        Log.Information("Attempting to create interactive process with StartInfo: {@StartInfo}", startInfo);
+
+        procInfo = default;
+        stdOutReadHandle = null;
+        stdErrReadHandle = null;
+        SafeFileHandle stdOutWriteHandle = null;
+        SafeFileHandle stdErrWriteHandle = null;
+
         if (!CreatePipe(out var stdInReadHandle, out var stdInWriteHandle, null, 0))
         {
-            throw new Exception("Failed to create pipe for standard input.");
+            Log.Error("Failed to create pipe for standard input.");
+            return false;
         }
 
-        if (!CreatePipe(out var stdOutReadHandle, out var stdOutWriteHandle, null, 0))
+        if (!CreatePipe(out stdOutReadHandle, out stdOutWriteHandle, null, 0))
         {
-            throw new Exception("Failed to create pipe for standard output.");
+            Log.Error("Failed to create pipe for standard output.");
+            return false;
         }
 
-        if (!CreatePipe(out var stdErrReadHandle, out var stdErrWriteHandle, null, 0))
+        if (!CreatePipe(out stdErrReadHandle, out stdErrWriteHandle, null, 0))
         {
-            throw new Exception("Failed to create pipe for standard error");
+            Log.Error("Failed to create pipe for standard error.");
+            return false;
         }
-#pragma warning restore CA2000
 
         if (!SetHandleInformation(stdOutWriteHandle, (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT, HANDLE_FLAGS.HANDLE_FLAG_INHERIT))
         {
-            throw new Exception("Failed to set inheritance attribute for the hStdOutput handle.");
+            Log.Error("Failed to set inheritance attribute for the hStdOutput handle.");
+            return false;
         }
 
         if (!SetHandleInformation(stdErrWriteHandle, (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT, HANDLE_FLAGS.HANDLE_FLAG_INHERIT))
         {
-            throw new Exception("Failed to set inheritance attribute for the hStdError handle.");
+            Log.Error("Failed to set inheritance attribute for the hStdError handle.");
+            return false;
         }
 
         fixed (char* pDesktopName = $@"winsta0\{startInfo.DesktopName}")
@@ -170,7 +223,16 @@ public class NativeProcess(NativeProcessStartInfo startInfo)
             fullCommand += char.MinValue;
 
             var commandSpan = new Span<char>(fullCommand.ToCharArray());
-            var result = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, null, null, startInfo.InheritHandles, dwCreationFlags, null, null, startupInfo, out procInfo);
+            bool result = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, null, null, startInfo.InheritHandles, dwCreationFlags, null, null, startupInfo, out procInfo);
+
+            if (result)
+            {
+                Log.Information("Interactive process created successfully. Process ID: {ProcessId}", procInfo.dwProcessId);
+            }
+            else
+            {
+                Log.Error("Failed to create interactive process.");
+            }
 
             stdInWriteHandle.Close();
 
@@ -180,15 +242,26 @@ public class NativeProcess(NativeProcessStartInfo startInfo)
 
     private static bool TryGetUserToken(uint sessionId, out SafeFileHandle hUserToken)
     {
+        Log.Information("Attempting to get user token for session {SessionId}", sessionId);
         var userTokenHandle = default(HANDLE);
         var success = WTSQueryUserToken(sessionId, ref userTokenHandle);
         hUserToken = new SafeFileHandle(userTokenHandle, true);
+
+        if (success)
+        {
+            Log.Information("User token retrieved successfully for session {SessionId}", sessionId);
+        }
+        else
+        {
+            Log.Error("Failed to get user token for session {SessionId}", sessionId);
+        }
 
         return success;
     }
 
     internal static unsafe List<WTS_SESSION_INFOW> GetActiveSessions()
     {
+        Log.Information("Retrieving active sessions.");
         var sessions = new List<WTS_SESSION_INFOW>();
 
         if (WTSEnumerateSessions(HANDLE.Null, 0, 1, out var ppSessionInfo, out var count))
