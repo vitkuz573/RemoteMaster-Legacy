@@ -89,6 +89,21 @@ builder.Host.UseSerilog((context, configuration) =>
     configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("JS interop"));
     configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Received hub invocation"));
     configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("DbCommand"));
+    configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("DbConnection"));
+    configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Received confirmation"));
+    configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Handling event"));
+    configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Invoking instance method"));
+    configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Completing batch"));
+    configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Circuit"));
+    configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("entry for"));
+    configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("connection to database"));
+    configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Sending render batch"));
+    configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Update root components"));
+    configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("started tracking"));
+    configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Invocation of"));
+    configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("data reader"));
+    configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("execution expression"));
+    configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("endpoint"));
 });
 
 var app = builder.Build();

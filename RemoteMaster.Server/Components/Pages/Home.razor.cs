@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Components.Dialogs;
-using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 using Serilog;
 
@@ -33,6 +32,16 @@ public partial class Home
     private Node? _selectedNode = null;
     private HashSet<Node>? _nodes;
     private readonly List<Computer> _selectedComputers = [];
+
+    private bool _isDarkMode = true;
+
+    private readonly MudTheme _theme = new()
+    {
+        LayoutProperties = new LayoutProperties()
+        {
+            DrawerWidthLeft = "250px"
+        }
+    };
 
     protected async override Task OnInitializedAsync()
     {
