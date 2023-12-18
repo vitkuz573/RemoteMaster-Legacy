@@ -55,7 +55,15 @@ public class ScriptService : IScriptService
                 InheritHandles = true
             };
 
-            NativeProcess.Start(options);
+            var process = NativeProcess.Start(options);
+
+            var error = process.StandardError.ReadLine();
+            var output = process.StandardOutput.ReadLine();
+
+            process.WaitForExit();
+
+            Log.Information("Error: {Error}", error);
+            Log.Information("Output: {Output}", output);
         }
         catch (Exception ex)
         {

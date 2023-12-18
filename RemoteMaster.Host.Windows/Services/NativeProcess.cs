@@ -112,14 +112,6 @@ public class NativeProcess
             Log.Error(ex, "An error occurred while starting NativeProcess.");
             throw;
         }
-        finally
-        {
-            hUserTokenDup?.Dispose();
-            stdInReadHandle?.Dispose();
-            stdOutReadHandle?.Dispose();
-            stdErrReadHandle?.Dispose();
-            Log.Information("Resources disposed in NativeProcess.Start method.");
-        }
     }
 
     private static uint GetWinlogonPidForSession(uint sessionId)
@@ -156,7 +148,7 @@ public class NativeProcess
             }
         }
 
-        uint foundSessionId = targetSessionFound ? (uint)targetSessionId : lastSessionId;
+        var foundSessionId = targetSessionFound ? (uint)targetSessionId : lastSessionId;
         Log.Information("Target session ID found: {FoundSessionId}", foundSessionId);
         return foundSessionId;
     }
