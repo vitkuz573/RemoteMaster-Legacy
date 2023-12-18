@@ -53,7 +53,7 @@ public partial class Access : IDisposable
                 TimeSpan.FromSeconds(10),
         });
 
-    private bool _isDarkMode = false;
+    private bool _isDarkMode = true;
 
     private readonly MudTheme _theme = new()
     {
