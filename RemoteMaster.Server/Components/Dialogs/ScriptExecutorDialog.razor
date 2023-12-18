@@ -11,6 +11,8 @@
             </MudExpansionPanel>
         </MudExpansionPanels>
 
+        <MudTextField T="string" Label="Manual Script" @bind-Value="_manualScriptContent" Multiline="true" Lines="4" Placeholder="Enter your script here..." />
+
         <MudFileUpload T="IBrowserFile" OnFilesChanged="UploadFiles">
             <ButtonTemplate>
                 <MudButton HtmlTag="label" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FileUpload" FullWidth for="@context">
@@ -18,7 +20,17 @@
                 </MudButton>
             </ButtonTemplate>
         </MudFileUpload>
-        <MudTextField T="Shell?" Label="Shell" @bind-Value="@_shell" ReadOnly="true" />
+
+        <MudSelect T="Shell?" Label="Select Shell" @bind-Value="_shell">
+             @if (Enum.GetValues(typeof(Shell)).Cast<Shell?>().Any())
+            {
+                foreach (var shellType in Enum.GetValues(typeof(Shell)).Cast<Shell?>())
+                {
+                    <MudSelectItem Value="@shellType" Text="@shellType.ToString()" />
+                }
+            }
+        </MudSelect>
+
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>

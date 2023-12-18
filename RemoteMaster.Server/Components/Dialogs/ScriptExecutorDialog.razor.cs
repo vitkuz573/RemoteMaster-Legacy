@@ -7,12 +7,11 @@ using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 
-namespace RemoteMaster.Server.Components.Dialogs;
-
 #pragma warning disable CA2227
+
+namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class ScriptExecutorDialog
 {
@@ -25,16 +24,10 @@ public partial class ScriptExecutorDialog
     [Inject]
     private IComputerCommandService ComputerCommandService { get; set; }
 
-    private readonly Dictionary<Computer, string> _scriptResults = [];
+    private Dictionary<Computer, string> _scriptResults = new();
     private string _content;
+    private string _manualScriptContent;
     private Shell? _shell;
-
-    protected override void OnInitialized()
-    {
-        _shell = null;
-
-        base.OnInitialized();
-    }
 
     private void Cancel()
     {
@@ -43,6 +36,8 @@ public partial class ScriptExecutorDialog
 
     private async Task RunScript()
     {
+        var scriptToRun = string.IsNullOrEmpty(_content) ? _manualScriptContent : _content;
+
         await ComputerCommandService.Execute(Hosts, async (computer, connection) => {
             connection.On<string>("ReceiveScriptResult", async (result) =>
             {
@@ -51,7 +46,7 @@ public partial class ScriptExecutorDialog
                 await InvokeAsync(StateHasChanged);
             });
 
-            await connection.InvokeAsync("SendScript", _content, _shell);
+            await connection.InvokeAsync("SendScript", scriptToRun, _shell);
         });
 
         MudDialog.Close(DialogResult.Ok(true));
@@ -67,7 +62,8 @@ public partial class ScriptExecutorDialog
         {
             ".bat" => Shell.Cmd,
             ".cmd" => Shell.Cmd,
-            ".ps1" => Shell.PowerShell
+            ".ps1" => Shell.PowerShell,
+            _ => _shell
         };
     }
 }
