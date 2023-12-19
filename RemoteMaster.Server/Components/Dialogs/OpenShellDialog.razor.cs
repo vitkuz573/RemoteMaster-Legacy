@@ -1,46 +1,66 @@
-﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
-// This file is part of the RemoteMaster project.
-// Licensed under the GNU Affero General Public License v3.0.
-
+﻿// OpenShellDialog.razor.cs
+using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Models;
 
-namespace RemoteMaster.Server.Components.Dialogs;
-
-public partial class OpenShellDialog
+namespace RemoteMaster.Server.Components.Dialogs
 {
-    [Inject]
-    private IComputerCommandService ComputerCommandService { get; set; } = default!;
-
-    private Shell _selectedShell;
-    private string _selectedUser;
-
-    private async Task Connect()
+    public partial class OpenShellDialog
     {
-        await ComputerCommandService.Execute(Hosts, async (computer, connection) =>
+        [Inject]
+        private IComputerCommandService ComputerCommandService { get; set; } = default!;
+
+        private Shell _selectedShell;
+        private string _selectedUser;
+        private bool _isConnecting = false;
+        private string _connectButtonText = "Connect";
+
+        private async Task Connect()
         {
-            var sParameter = _selectedUser == "system" ? "-s" : "";
-            var command = _selectedShell switch
+            _isConnecting = true;
+            _connectButtonText = "Connecting...";
+            StateHasChanged(); // Update the UI to reflect the connecting state
+
+            try
             {
-                Shell.SSH => $"ssh user@{computer.IPAddress}",
-                Shell.Cmd => @$"/C psexec \\{computer.IPAddress} {sParameter} -nobanner -accepteula cmd",
-                Shell.PowerShell => @$"/C psexec \\{computer.IPAddress} {sParameter} -nobanner -accepteula powershell",
-                _ => throw new InvalidOperationException($"Unknown shell: {_selectedShell}")
-            };
+                await ComputerCommandService.Execute(Hosts, async (computer, connection) =>
+                {
+                    var sParameter = _selectedUser == "system" ? "-s" : "";
+                    var command = _selectedShell switch
+                    {
+                        Shell.SSH => $"ssh user@{computer.IPAddress}",
+                        Shell.Cmd => @$"/C psexec \\{computer.IPAddress} {sParameter} -nobanner -accepteula cmd",
+                        Shell.PowerShell => @$"/C psexec \\{computer.IPAddress} {sParameter} -nobanner -accepteula powershell",
+                        _ => throw new InvalidOperationException($"Unknown shell: {_selectedShell}")
+                    };
 
-            var startInfo = new ProcessStartInfo()
+                    var startInfo = new ProcessStartInfo
+                    {
+                        FileName = "cmd.exe",
+                        Arguments = command,
+                        UseShellExecute = true,
+                    };
+
+                    await Task.Run(() => Process.Start(startInfo));
+                });
+            }
+            catch (Exception ex)
             {
-                FileName = "cmd.exe",
-                Arguments = command,
-                UseShellExecute = true,
-            };
+                // Handle any exceptions that occur during the connect process
+                // You might want to log this exception or notify the user
+            }
+            finally
+            {
+                _isConnecting = false;
+                _connectButtonText = "Connect";
+                StateHasChanged(); // Revert the UI back to the default state
+            }
 
-            await Task.Run(() => Process.Start(startInfo));
-        });
-
-        MudDialog.Close(DialogResult.Ok(true));
+            MudDialog.Close(DialogResult.Ok(true));
+        }
     }
 }

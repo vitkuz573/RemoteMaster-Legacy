@@ -1,26 +1,28 @@
 ﻿@inherits CommonDialogBase
 @using RemoteMaster.Shared.Models
 
-<CommonDialog Hosts="@Hosts">
+<CommonDialog Hosts="@Hosts" ContentStyle="width: 500px;">
     <Content>
         <MudGrid>
-            <MudItem xs="6">
-                <MudRadioGroup T="Shell" @bind-SelectedOption="@_selectedShell">
+            <MudItem xs="12" md="6">
+                <MudText Typo="Typo.h6">Select Shell:</MudText>
+                <MudRadioGroup T="Shell" @bind-Value="@_selectedShell">
                     @foreach (Shell shell in Enum.GetValues(typeof(Shell)))
                     {
                         <MudItem xs="12">
-                            <MudRadio Option="@shell" Dense="true">@shell</MudRadio>
+                            <MudRadio T="Shell" Value="@shell" Dense="true">@shell.ToString()</MudRadio>
                         </MudItem>
                     }
                 </MudRadioGroup>
             </MudItem>
-            <MudItem xs="6">
-                <MudRadioGroup @bind-SelectedOption="@_selectedUser">
+            <MudItem xs="12" md="6">
+                <MudText Typo="Typo.h6">User Context:</MudText>
+                <MudRadioGroup T="string" @bind-Value="@_selectedUser">
                     <MudItem xs="12">
-                        <MudRadio Option="@("current")" Dense="true">Current User</MudRadio>
+                        <MudRadio T="string" Value="@("CurrentUser")" Dense="true">Current User</MudRadio>
                     </MudItem>
                     <MudItem xs="12">
-                        <MudRadio Option="@("system")" Dense="true">System</MudRadio>
+                        <MudRadio T="string" Value="@("System")" Dense="true">System</MudRadio>
                     </MudItem>
                 </MudRadioGroup>
             </MudItem>
@@ -28,6 +30,8 @@
     </Content>
     <Actions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="Connect">Connect</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Connect" Disabled="@_isConnecting">
+            @_connectButtonText
+        </MudButton>
     </Actions>
 </CommonDialog>
