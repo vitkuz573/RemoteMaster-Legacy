@@ -62,20 +62,38 @@
                     <MudExpansionPanels>
                         <MudExpansionPanel Text="Available computers" IsInitiallyExpanded="true">
                             <div class="flex flex-wrap gap-4">
-                                @foreach (var computer in _availableComputers)
+                                @if (_availableComputers.Any())
                                 {
-                                    <div class="w-1/6">
-                                        <ComputerCard @key="computer" Computer="computer" IsSelectedChanged="@(isSelected => HandleComputerSelection(computer, isSelected))" />
+                                    foreach (var computer in _availableComputers)
+                                    {
+                                        <div class="w-1/6">
+                                            <ComputerCard @key="computer" Computer="computer" IsSelectedChanged="@(isSelected => HandleComputerSelection(computer, isSelected))" />
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="w-full text-center p-4">
+                                        <MudText Typo="Typo.body1">No available computers to display.</MudText>
                                     </div>
                                 }
                             </div>
                         </MudExpansionPanel>
                         <MudExpansionPanel Text="Unavailable computers">
                             <div class="flex flex-wrap gap-4">
-                                @foreach (var computer in _unavailableComputers)
+                                @if (_unavailableComputers.Any())
                                 {
-                                    <div class="w-1/6">
-                                        <ComputerCard @key="computer" Computer="computer" IsSelectedChanged="@(isSelected => HandleComputerSelection(computer, isSelected))" />
+                                    foreach (var computer in _unavailableComputers)
+                                    {
+                                        <div class="w-1/6">
+                                            <ComputerCard @key="computer" Computer="computer" IsSelectedChanged="@(isSelected => HandleComputerSelection(computer, isSelected))" />
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="w-full text-center p-4">
+                                        <MudText Typo="Typo.body1">No unavailable computers to display.</MudText>
                                     </div>
                                 }
                             </div>
