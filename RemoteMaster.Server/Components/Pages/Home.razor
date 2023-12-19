@@ -60,7 +60,7 @@
 
                 <div class="flex flex-col gap-4">
                     <MudExpansionPanels>
-                        <MudExpansionPanel Text="Available computers" IsInitiallyExpanded="true">
+                        <MudExpansionPanel Text="@($"Available computers ({_availableComputers.Count})")" IsInitiallyExpanded="true">
                             <div class="flex flex-wrap gap-4">
                                 @if (_availableComputers.Any())
                                 {
@@ -79,7 +79,7 @@
                                 }
                             </div>
                         </MudExpansionPanel>
-                        <MudExpansionPanel Text="Unavailable computers">
+                        <MudExpansionPanel Text="@($"Unavailable computers ({_unavailableComputers.Count})")">
                             <div class="flex flex-wrap gap-4">
                                 @if (_unavailableComputers.Any())
                                 {
