@@ -13,12 +13,13 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class HostLifecycleService(ICertificateRequestService certificateRequestService, ISubjectService subjectService) : IHostLifecycleService
 {
+    private volatile bool _isRegistrationInvoked = false;
+
     public async Task RegisterAsync(HostConfiguration hostConfiguration)
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
         var tcs = new TaskCompletionSource<bool>();
-        
         RSA rsaKeyPair = null;
 
         try
@@ -38,6 +39,8 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
             {
                 try
                 {
+                    SpinWait.SpinUntil(() => _isRegistrationInvoked);
+
                     if (certificateBytes == null || certificateBytes.Length == 0)
                     {
                         throw new Exception("Certificate bytes are null or empty.");
@@ -62,12 +65,13 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
             });
 
             Log.Information("Attempting to register host...");
-            
+
             if (await connection.InvokeAsync<bool>("RegisterHostAsync", hostConfiguration, signingRequest))
             {
+                _isRegistrationInvoked = true;
                 Log.Information("Host registration invoked successfully. Waiting for the certificate...");
                 var isCertificateReceived = await tcs.Task;
-                
+
                 if (!isCertificateReceived)
                 {
                     throw new InvalidOperationException("Certificate processing failed.");
