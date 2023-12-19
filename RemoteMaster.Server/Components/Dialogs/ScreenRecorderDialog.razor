@@ -1,19 +1,13 @@
-﻿<MudDialog ContentStyle="width: 600px;">
-    <DialogContent>
-        <MudExpansionPanels>
-            <MudExpansionPanel Text="Click to view affected hosts">
-                @foreach (var (computer, connection) in Hosts)
-                {
-                    <MudText>@computer.Name (@computer.IPAddress)</MudText>
-                }
-            </MudExpansionPanel>
-        </MudExpansionPanels>
+﻿@inherits CommonDialogBase
+
+<CommonDialog Hosts="@Hosts" ContentStyle="width: 600px;">
+    <Content>
         <MudTextField T="string" Label="Output File Name" @bind-Value="@_outputFileName" FullWidth />
-        <MudNumericField T="uint" HideSpinButtons="true" Label="Duration (in seconds)" @bind-Value="@_duration" FullWidth />
-    </DialogContent>
-    <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="StartRecording">Start Recording</MudButton>
-        <MudButton Color="Color.Secondary" OnClick="StopRecording">Stop Recording</MudButton>
-    </DialogActions>
-</MudDialog>
+         <MudNumericField T="uint" HideSpinButtons="true" Label="Duration (in seconds)" @bind-Value="@_duration" FullWidth />
+    </Content>
+    <Actions>
+         <MudButton OnClick="Cancel">Cancel</MudButton>
+         <MudButton Color="Color.Primary" OnClick="StartRecording">Start Recording</MudButton>
+         <MudButton Color="Color.Secondary" OnClick="StopRecording">Stop Recording</MudButton>
+    </Actions>
+</CommonDialog>
