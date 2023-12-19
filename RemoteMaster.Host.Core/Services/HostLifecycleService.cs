@@ -17,11 +17,13 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
+        var tcs = new TaskCompletionSource<bool>();
+        
+        RSA rsaKeyPair = null;
+
         try
         {
             var connection = await ConnectToServerHub($"http://{hostConfiguration.Server}:5254");
-
-            Log.Information("Attempting to register host...");
 
             var ipAddresses = new List<string>
             {
@@ -29,48 +31,62 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
             };
 
             var subjectName = subjectService.GetDistinguishedName(hostConfiguration.Host.Name);
-            var csr = certificateRequestService.GenerateCSR(subjectName, ipAddresses, out var rsaKeyPair);
+            var csr = certificateRequestService.GenerateCSR(subjectName, ipAddresses, out rsaKeyPair);
+            var signingRequest = csr.CreateSigningRequest();
 
             connection.On<byte[]>("ReceiveCertificate", certificateBytes =>
             {
-                Log.Information("Received certificate from server.");
-
                 try
                 {
-                    var certificate = new X509Certificate2(certificateBytes);
+                    if (certificateBytes == null || certificateBytes.Length == 0)
+                    {
+                        throw new Exception("Certificate bytes are null or empty.");
+                    }
 
-                    // Log the serial number and subject name of the certificate
+                    var certificate = new X509Certificate2(certificateBytes);
                     Log.Information("Certificate Serial Number: {SerialNumber}", certificate.SerialNumber);
                     Log.Information("Certificate Subject Name: {SubjectName}", certificate.Subject);
+
+                    var pfxFilePath = @"C:\certificate.pfx";
+                    var pfxPassword = "YourPfxPassword";
+                    CreatePfxFile(certificateBytes, rsaKeyPair, pfxFilePath, pfxPassword);
+
+                    Log.Information("PFX file created successfully.");
+                    tcs.SetResult(true);
                 }
                 catch (Exception ex)
                 {
                     Log.Error("An error occurred while processing the certificate: {ErrorMessage}", ex.Message);
+                    tcs.SetResult(false);
                 }
-
-                var pfxFilePath = @"C:\certificate.pfx";
-                var pfxPassword = "YourPfxPassword";
-                CreatePfxFile(certificateBytes, rsaKeyPair, pfxFilePath, pfxPassword);
-
-                Log.Information("PFX file created successfully.");
             });
 
-            var signingRequest = csr.CreateSigningRequest();
-
+            Log.Information("Attempting to register host...");
+            
             if (await connection.InvokeAsync<bool>("RegisterHostAsync", hostConfiguration, signingRequest))
             {
-                Log.Information("Host registration successful.");
+                Log.Information("Host registration invoked successfully. Waiting for the certificate...");
+                var isCertificateReceived = await tcs.Task;
+                
+                if (!isCertificateReceived)
+                {
+                    throw new InvalidOperationException("Certificate processing failed.");
+                }
+
+                Log.Information("Host registration successful with certificate received.");
             }
             else
             {
                 Log.Warning("Host registration was not successful.");
             }
-
-            rsaKeyPair.Dispose();
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Registering host failed: {Message}", ex.Message);
+            Log.Error("Registering host failed: {Message}", ex.Message);
+        }
+        finally
+        {
+            rsaKeyPair?.Dispose();
         }
     }
 
