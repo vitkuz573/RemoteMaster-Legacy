@@ -173,6 +173,11 @@ public partial class Home
 
     private async Task Connect()
     {
+        if (_selectedComputers.All(computer => !_availableComputers.Contains(computer)))
+        {
+            return;
+        }
+
         var dialogParameters = new DialogParameters<ConnectDialog>
         {
             { x => x.Hosts, await GetComputers() }
@@ -183,6 +188,11 @@ public partial class Home
 
     private async Task OpenShell()
     {
+        if (_selectedComputers.All(computer => !_availableComputers.Contains(computer)))
+        {
+            return;
+        }
+
         var dialogParameters = new DialogParameters<OpenShellDialog>
         {
             { x => x.Hosts, await GetComputers() }
@@ -193,6 +203,11 @@ public partial class Home
 
     private async Task ExecuteScript()
     {
+        if (_selectedComputers.All(computer => !_availableComputers.Contains(computer)))
+        {
+            return;
+        }
+
         var dialogParameters = new DialogParameters<ScriptExecutorDialog>
         {
             { x => x.Hosts, await GetComputers() }
@@ -211,6 +226,11 @@ public partial class Home
 
     private async Task SetMonitorState()
     {
+        if (_selectedComputers.All(computer => !_availableComputers.Contains(computer)))
+        {
+            return;
+        }
+
         var dialogParameters = new DialogParameters<MonitorStateDialog>
         {
             { x => x.Hosts, await GetComputers() }
@@ -221,6 +241,11 @@ public partial class Home
 
     private async Task ManagePSExecRules()
     {
+        if (_selectedComputers.All(computer => !_availableComputers.Contains(computer)))
+        {
+            return;
+        }
+
         var dialogParameters = new DialogParameters<PsexecRulesDialog>
         {
             { x => x.Hosts, await GetComputers() }
@@ -231,6 +256,11 @@ public partial class Home
 
     private async Task ScreenRecorder()
     {
+        if (_selectedComputers.All(computer => !_availableComputers.Contains(computer)))
+        {
+            return;
+        }
+
         var dialogParameters = new DialogParameters<ScreenRecorderDialog>
         {
             { x => x.Hosts, await GetComputers() }
@@ -241,6 +271,11 @@ public partial class Home
 
     private async Task DomainMember()
     {
+        if (_selectedComputers.All(computer => !_availableComputers.Contains(computer)))
+        {
+            return;
+        }
+
         var dialogParameters = new DialogParameters<DomainManagementDialog>
         {
             { x => x.Hosts, await GetComputers() }
@@ -251,6 +286,11 @@ public partial class Home
 
     private async Task Update()
     {
+        if (_selectedComputers.All(computer => !_availableComputers.Contains(computer)))
+        {
+            return;
+        }
+
         var dialogParameters = new DialogParameters<UpdateDialog>
         {
             { x => x.Hosts, await GetComputers() }
