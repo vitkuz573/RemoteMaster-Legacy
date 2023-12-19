@@ -1,7 +1,13 @@
 version: 2
+registries:
+  winsdk:
+    type: nuget-feed
+    url: "https://pkgs.dev.azure.com/azure-public/winsdk/_packaging/CI/nuget/v3/index.json"
 updates:
   - package-ecosystem: "nuget"
     directory: "/"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 10
+    registries:
+      - "winsdk"
