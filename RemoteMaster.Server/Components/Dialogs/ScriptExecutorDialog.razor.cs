@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -19,12 +20,12 @@ public partial class ScriptExecutorDialog
     private MudDialogInstance MudDialog { get; set; }
 
     [Parameter]
-    public Dictionary<Computer, HubConnection?> Hosts { get; set; }
+    public ConcurrentDictionary<Computer, HubConnection?> Hosts { get; set; }
 
     [Inject]
     private IComputerCommandService ComputerCommandService { get; set; }
 
-    private Dictionary<Computer, string> _scriptResults = new();
+    private Dictionary<Computer, string> _scriptResults = [];
     private string _content;
     private string _manualScriptContent;
     private Shell? _shell;

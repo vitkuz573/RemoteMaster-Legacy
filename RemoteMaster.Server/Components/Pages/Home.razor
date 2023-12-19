@@ -45,6 +45,7 @@
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Connect" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Connect</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenShell" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Open Shell</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ExecuteScript" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Execute Script</MudButton>
+                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="CheckSelectedComputersStatus">Recheck</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="HandleRefreshClick" Class="ml-auto">Refresh</MudButton>
                     </MudTabPanel>
 
@@ -57,19 +58,29 @@
                     </MudTabPanel>
                 </MudTabs>
 
-                <div class="flex flex-wrap gap-4">
-                    @if (_selectedNode is Group selectedFolder)
-                    {
-                        foreach (var child in _selectedNode.Nodes)
-                        {
-                            if (child is Computer computer)
-                            {
-                                <div class="w-1/6">
-                                    <ComputerCard @key="computer" Computer="computer" IsSelectedChanged="@(isSelected => HandleComputerSelection(computer, isSelected))" />
-                                </div>
-                            }
-                        }
-                    }
+                <div class="flex flex-col gap-4">
+                    <MudExpansionPanels>
+                        <MudExpansionPanel Text="Available computers" IsInitiallyExpanded="true">
+                            <div class="flex flex-wrap gap-4">
+                                @foreach (var computer in _availableComputers)
+                                {
+                                    <div class="w-1/6">
+                                        <ComputerCard @key="computer" Computer="computer" IsSelectedChanged="@(isSelected => HandleComputerSelection(computer, isSelected))" />
+                                    </div>
+                                }
+                            </div>
+                        </MudExpansionPanel>
+                        <MudExpansionPanel Text="Unavailable computers">
+                            <div class="flex flex-wrap gap-4">
+                                @foreach (var computer in _unavailableComputers)
+                                {
+                                    <div class="w-1/6">
+                                        <ComputerCard @key="computer" Computer="computer" IsSelectedChanged="@(isSelected => HandleComputerSelection(computer, isSelected))" />
+                                    </div>
+                                }
+                            </div>
+                        </MudExpansionPanel>
+                    </MudExpansionPanels>
                 </div>
             </div>
         </div>

@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Collections.Concurrent;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
@@ -23,7 +24,7 @@ public class ComputerCommandService(IJSRuntime jsRuntime) : IComputerCommandServ
             TimeSpan.FromSeconds(10),
         });
 
-    public async Task Execute(Dictionary<Computer, HubConnection?> hosts, Func<Computer, HubConnection, Task> action)
+    public async Task Execute(ConcurrentDictionary<Computer, HubConnection?> hosts, Func<Computer, HubConnection, Task> action)
     {
         ArgumentNullException.ThrowIfNull(hosts);
 

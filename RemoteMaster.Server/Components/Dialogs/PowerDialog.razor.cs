@@ -2,11 +2,11 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Dialogs;
@@ -19,7 +19,7 @@ public partial class PowerDialog
     private MudDialogInstance MudDialog { get; set; }
 
     [Parameter]
-    public Dictionary<Computer, HubConnection?> Hosts { get; set; }
+    public ConcurrentDictionary<Computer, HubConnection?> Hosts { get; set; }
 
     [Inject]
     private IComputerCommandService ComputerCommandService { get; set; }

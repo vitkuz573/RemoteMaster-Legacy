@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
@@ -31,7 +32,9 @@ public partial class Home
     private bool _drawerOpen = false;
     private Node? _selectedNode = null;
     private HashSet<Node>? _nodes;
-    private readonly List<Computer> _selectedComputers = [];
+    private List<Computer> _selectedComputers = [];
+    private List<Computer> _availableComputers = [];
+    private List<Computer> _unavailableComputers = [];
 
     private bool _isDarkMode = true;
 
@@ -46,6 +49,20 @@ public partial class Home
     protected async override Task OnInitializedAsync()
     {
         _nodes = (await DatabaseService.GetNodesAsync(f => f.Parent == null && f is Group)).Cast<Node>().ToHashSet();
+    }
+
+    private async Task LoadAndGroupComputersAsync(Node node)
+    {
+        if (node is Group group)
+        {
+            var computers = group.Nodes.OfType<Computer>();
+            var tasks = computers.Select(async computer => (computer, await computer.IsAvailable()));
+
+            var results = await Task.WhenAll(tasks);
+
+            _availableComputers = results.Where(r => r.Item2).Select(r => r.computer).ToList();
+            _unavailableComputers = results.Where(r => !r.Item2).Select(r => r.computer).ToList();
+        }
     }
 
     private void DrawerToggle()
@@ -71,11 +88,15 @@ public partial class Home
     private async Task OnNodeSelected(Node node)
     {
         _selectedComputers.Clear();
+        _selectedNode = node;
 
-        if (node is Group)
+        if (node is Group group)
         {
-            _selectedNode = node;
-            await UpdateComputersThumbnailsAsync(node.Nodes.OfType<Computer>());
+            // Загрузка и группировка компьютеров
+            await LoadAndGroupComputersAsync(node);
+
+            // Обновление миниатюр
+            await UpdateComputersThumbnailsAsync(group.Nodes.OfType<Computer>());
         }
 
         StateHasChanged();
@@ -127,7 +148,10 @@ public partial class Home
     {
         if (isSelected)
         {
-            _selectedComputers.Add(computer);
+            if (!_selectedComputers.Contains(computer))
+            {
+                _selectedComputers.Add(computer);
+            }
         }
         else
         {
@@ -235,9 +259,9 @@ public partial class Home
         await DialogService.ShowAsync<UpdateDialog>("Update", dialogParameters);
     }
 
-    private async Task<Dictionary<Computer, HubConnection?>> GetComputers(bool onlyAvailable = true)
+    private async Task<ConcurrentDictionary<Computer, HubConnection?>> GetComputers(bool onlyAvailable = true)
     {
-        var computerConnections = new Dictionary<Computer, HubConnection?>();
+        var computerConnections = new ConcurrentDictionary<Computer, HubConnection?>();
 
         var tasks = _selectedComputers.Select(async computer =>
         {
@@ -265,14 +289,44 @@ public partial class Home
                 await connection.StartAsync();
             }
 
-            lock (computerConnections)
-            {
-                computerConnections.Add(computer, connection);
-            }
+            computerConnections.AddOrUpdate(computer, connection, (key, existingConn) => connection);
         });
 
         await Task.WhenAll(tasks);
 
         return computerConnections;
+    }
+
+    private async Task CheckSelectedComputersStatus()
+    {
+        var tempAvailable = _availableComputers.ToList();
+        var tempUnavailable = _unavailableComputers.ToList();
+
+        foreach (var computer in _selectedComputers.ToList())
+        {
+            var isAvailable = await computer.IsAvailable();
+
+            if (isAvailable)
+            {
+                if (tempUnavailable.Remove(computer))
+                {
+                    tempAvailable.Add(computer);
+                }
+            }
+            else
+            {
+                if (tempAvailable.Remove(computer))
+                {
+                    tempUnavailable.Add(computer);
+                }
+            }
+        }
+
+        _availableComputers = tempAvailable;
+        _unavailableComputers = tempUnavailable;
+
+        _selectedComputers = _selectedComputers.Where(computer => _availableComputers.Contains(computer) || _unavailableComputers.Contains(computer)).ToList();
+
+        StateHasChanged();
     }
 }
