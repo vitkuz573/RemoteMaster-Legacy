@@ -75,6 +75,7 @@ builder.Services.AddSingleton(new JsonSerializerOptions
 builder.Services.AddTransient<ITokenService, TokenService>();
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
 builder.Services.Configure<CertificateOptions>(builder.Configuration.GetSection("CertificateSettings"));
+builder.Services.Configure<ApplicationSettings>(builder.Configuration);
 
 builder.Services.AddMudServices();
 

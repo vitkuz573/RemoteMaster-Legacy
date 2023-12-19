@@ -4,8 +4,10 @@
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.Options;
 using MudBlazor;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
@@ -14,12 +16,20 @@ public partial class UpdateDialog
     [Inject]
     private IComputerCommandService ComputerCommandService { get; set; } = default!;
 
+    [Inject]
+    private IOptions<ApplicationSettings> ApplicationSettings { get; set; } = default!;
+
     private bool _isShowPassword;
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
     private string _folderPath;
     private string _username;
     private string _password;
+
+    protected override void OnInitialized()
+    {
+        _folderPath = ApplicationSettings.Value.ExecutablesRoot;
+    }
 
     private async Task Confirm()
     {
