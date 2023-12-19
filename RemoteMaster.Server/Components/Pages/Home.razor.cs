@@ -329,4 +329,9 @@ public partial class Home
 
         StateHasChanged();
     }
+
+    private void ToggleTheme()
+    {
+        _isDarkMode = !_isDarkMode;
+    }
 }
