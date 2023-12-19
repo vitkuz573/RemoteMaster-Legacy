@@ -88,13 +88,12 @@ public partial class Home
     private async Task OnNodeSelected(Node node)
     {
         _selectedComputers.Clear();
+        _selectedNode = node;
 
-        if (node is Group)
+        if (node is Group group)
         {
-            _selectedNode = node;
-
             await LoadAndGroupComputersAsync(node);
-            await UpdateComputersThumbnailsAsync(node.Nodes.OfType<Computer>());
+            await UpdateComputersThumbnailsAsync(group.Nodes.OfType<Computer>());
         }
 
         StateHasChanged();
