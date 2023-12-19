@@ -1,26 +1,20 @@
-﻿@using RemoteMaster.Shared.Models
+﻿@inherits CommonDialogBase
+@using RemoteMaster.Shared.Models
 
-<MudDialog>
-    <DialogContent>
-        <MudExpansionPanels>
-            <MudExpansionPanel Text="Click to view affected hosts">
-                @foreach (var (computer, connection) in Hosts)
-                {
-                    <MudText>@computer.Name (@computer.IPAddress)</MudText>
-                }
-            </MudExpansionPanel>
-        </MudExpansionPanels>
+<CommonDialog Hosts="@Hosts">
+    <Content>
         <MudRadioGroup T="MonitorState" @bind-SelectedOption="@_monitorState">
             @foreach (MonitorState monitorState in Enum.GetValues(typeof(MonitorState)))
             {
                 <MudItem xs="12">
                     <MudRadio Option="@monitorState" Dense="true">@monitorState</MudRadio>
-                </MudItem>
+                    </MudItem>
             }
         </MudRadioGroup>
-    </DialogContent>
-    <DialogActions>
+    </Content>
+
+    <Actions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
         <MudButton Color="Color.Primary" OnClick="SetState">Set State</MudButton>
-    </DialogActions>
-</MudDialog>
+    </Actions>
+</CommonDialog>
