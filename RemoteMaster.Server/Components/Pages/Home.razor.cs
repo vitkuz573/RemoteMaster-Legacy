@@ -92,10 +92,7 @@ public partial class Home
 
         if (node is Group group)
         {
-            // Загрузка и группировка компьютеров
             await LoadAndGroupComputersAsync(node);
-
-            // Обновление миниатюр
             await UpdateComputersThumbnailsAsync(group.Nodes.OfType<Computer>());
         }
 
