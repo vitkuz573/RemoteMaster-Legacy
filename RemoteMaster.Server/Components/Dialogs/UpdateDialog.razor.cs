@@ -12,7 +12,7 @@ namespace RemoteMaster.Server.Components.Dialogs;
 public partial class UpdateDialog
 {
     [Inject]
-    private IComputerCommandService ComputerCommandService { get; set; }
+    private IComputerCommandService ComputerCommandService { get; set; } = default!;
 
     private bool _isShowPassword;
     private InputType _passwordInput = InputType.Password;

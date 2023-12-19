@@ -1,27 +1,19 @@
-﻿@using RemoteMaster.Shared.Models
+﻿@inherits CommonDialogBase
+@using RemoteMaster.Shared.Models
 
-<MudDialog>
-    <DialogContent>
-        <MudExpansionPanels>
-            <MudExpansionPanel Text="Click to view affected hosts">
-                @foreach (var (computer, connection) in Hosts)
-                {
-                    <MudText>@computer.Name (@computer.IPAddress)</MudText>
-                }
-            </MudExpansionPanel>
-        </MudExpansionPanels>
-
+<CommonDialog Hosts="@Hosts" ContentStyle="width: 600px;">
+    <Content>
         <MudTextField T="string" Label="Manual Script" @bind-Value="_manualScriptContent" Multiline="true" Lines="4" Placeholder="Enter your script here..." />
 
         <MudFileUpload T="IBrowserFile" OnFilesChanged="UploadFiles">
             <ButtonTemplate>
                 <MudButton HtmlTag="label" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FileUpload" FullWidth for="@context">
-                    Upload Script
-                </MudButton>
-            </ButtonTemplate>
-        </MudFileUpload>
+                     Upload Script
+                 </MudButton>
+             </ButtonTemplate>
+         </MudFileUpload>
 
-        <MudSelect T="Shell?" Label="Select Shell" @bind-Value="_shell">
+         <MudSelect T="Shell?" Label="Select Shell" @bind-Value="_shell">
              @if (Enum.GetValues(typeof(Shell)).Cast<Shell?>().Any())
             {
                 foreach (var shellType in Enum.GetValues(typeof(Shell)).Cast<Shell?>())
@@ -30,10 +22,9 @@
                 }
             }
         </MudSelect>
-
-    </DialogContent>
-    <DialogActions>
+    </Content>
+    <Actions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
         <MudButton Color="Color.Primary" OnClick="RunScript">Run Script</MudButton>
-    </DialogActions>
-</MudDialog>
+    </Actions>
+</CommonDialog>
