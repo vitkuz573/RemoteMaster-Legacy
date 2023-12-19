@@ -6,6 +6,6 @@ namespace RemoteMaster.Shared.Models;
 
 public enum Intention
 {
-    GetThumbnail,
-    Access
+    ReceiveThumbnail,
+    ManageDevice
 }

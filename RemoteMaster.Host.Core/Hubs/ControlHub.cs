@@ -18,7 +18,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     {
         switch (intention)
         {
-            case Intention.GetThumbnail:
+            case Intention.ReceiveThumbnail:
                 var thumbnail = screenCapturerService.GetThumbnail(500, 300);
 
                 if (thumbnail != null)
@@ -29,7 +29,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
                 Context.Abort();
                 break;
 
-            case Intention.Access:
+            case Intention.ManageDevice:
                 var viewer = viewerFactory.Create(Context.ConnectionId);
                 appState.TryAddViewer(viewer);
                 break;
