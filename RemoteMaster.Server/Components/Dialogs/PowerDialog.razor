@@ -1,21 +1,15 @@
-﻿<MudDialog ContentStyle="width: 500px;">
-    <DialogContent>
-        <MudExpansionPanels>
-            <MudExpansionPanel Text="Click to view affected hosts">
-                @foreach (var (computer, connection) in Hosts)
-                {
-                    <MudText>@computer.Name (@computer.IPAddress)</MudText>
-                }
-            </MudExpansionPanel>
-        </MudExpansionPanels>
+﻿@inherits CommonDialogBase
+
+<CommonDialog Hosts="@Hosts" ContentStyle="width: 500px;">
+    <Content>
         <MudRadioGroup T="string" @bind-SelectedOption="@_selectedOption">
             <MudRadio Option="@("shutdown")">Shutdown</MudRadio>
             <MudRadio Option="@("reboot")">Reboot</MudRadio>
             <MudRadio Option="@("wakeup")">Wake Up</MudRadio>
         </MudRadioGroup>
-    </DialogContent>
-    <DialogActions>
+    </Content>
+    <Actions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
         <MudButton Color="Color.Primary" OnClick="Confirm">Confirm</MudButton>
-    </DialogActions>
-</MudDialog>
+    </Actions>
+</CommonDialog>
