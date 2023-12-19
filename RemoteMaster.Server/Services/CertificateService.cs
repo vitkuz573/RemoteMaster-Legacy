@@ -55,15 +55,29 @@ public class CertificateService(IOptions<CertificateOptions> options) : ICertifi
         return certificate;
     }
 
-    private static byte[] GenerateSerialNumber()
+    public static byte[] GenerateSerialNumber()
     {
-        var serialNumberBytes = new byte[16];
+        var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var uuid = Guid.NewGuid().ToByteArray();
+        var randomBytes = new byte[16];
 
         using (var rng = RandomNumberGenerator.Create())
         {
-            rng.GetBytes(serialNumberBytes);
+            rng.GetBytes(randomBytes);
         }
 
-        return serialNumberBytes;
+        var combinedBytes = new byte[8 + uuid.Length + randomBytes.Length];
+        Array.Copy(BitConverter.GetBytes(timestamp), 0, combinedBytes, 0, 8);
+        Array.Copy(uuid, 0, combinedBytes, 8, uuid.Length);
+        Array.Copy(randomBytes, 0, combinedBytes, 8 + uuid.Length, randomBytes.Length);
+
+        if (SHA3_256.IsSupported)
+        {
+            return SHA3_256.HashData(combinedBytes);
+        }
+        else
+        {
+            return SHA256.HashData(combinedBytes);
+        }
     }
 }
