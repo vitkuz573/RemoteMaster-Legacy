@@ -57,7 +57,7 @@ public class ScriptService : IScriptService
 
             var process = NativeProcess.Start(options);
 
-            var readErrorTask = process.StandardError.ReadLineAsync();
+            var readErrorTask = process.StandardError.ReadToEndAsync();
             var readOutputTask = process.StandardOutput.ReadLineAsync();
 
             await Task.WhenAll(readErrorTask, readOutputTask);

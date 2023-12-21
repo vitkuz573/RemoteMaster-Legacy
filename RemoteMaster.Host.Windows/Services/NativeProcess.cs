@@ -224,6 +224,9 @@ public class NativeProcess
             if (result)
             {
                 Log.Information("Interactive process created successfully. Process ID: {ProcessId}", procInfo.dwProcessId);
+
+                stdOutWriteHandle.Close();
+                stdErrWriteHandle.Close();
             }
             else
             {
