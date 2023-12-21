@@ -98,7 +98,7 @@ public class NativeProcess
                 {
                     _processHandle = new SafeFileHandle(procInfo.hProcess, true),
                     Id = procInfo.dwProcessId,
-                    StandardOutput = new StreamReader(new FileStream(stdOutReadHandle, FileAccess.Read), Encoding.UTF8),
+                    StandardOutput = new StreamReader(new FileStream(stdOutReadHandle, FileAccess.Read), cp866),
                     StandardError = new StreamReader(new FileStream(stdErrReadHandle, FileAccess.Read), cp866)
                 };
 

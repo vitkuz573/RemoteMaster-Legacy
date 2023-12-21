@@ -21,7 +21,6 @@ public partial class ScriptExecutorDialog
     private string _manualScriptContent;
     private Shell? _shell;
     private readonly Dictionary<string, StringBuilder> _resultsPerComputer = [];
-    private readonly Dictionary<string, Action<string>> _scriptResultHandlers = [];
     private readonly HashSet<HubConnection> _subscribedConnections = [];
 
     private async Task RunScript()
