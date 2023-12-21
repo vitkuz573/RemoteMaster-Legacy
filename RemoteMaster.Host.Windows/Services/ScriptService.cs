@@ -2,14 +2,16 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Hubs;
 using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Shared.Models;
 using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class ScriptService : IScriptService
+public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) : IScriptService
 {
     public async Task Execute(Shell shell, string script)
     {
@@ -28,7 +30,9 @@ public class ScriptService : IScriptService
         var tempFilePath = Path.Combine(publicDirectory, fileName);
 
         Log.Information("Temporary file path: {TempFilePath}", tempFilePath);
-        await File.WriteAllTextAsync(tempFilePath, script);
+
+        var scriptContent = shell == Shell.Cmd ? "@echo off\r\n" + script : script;
+        await File.WriteAllTextAsync(tempFilePath, scriptContent);
 
         try
         {
@@ -69,6 +73,8 @@ public class ScriptService : IScriptService
 
             Log.Information("Error: {Error}", error);
             Log.Information("Output: {Output}", output);
+
+            await hubContext.Clients.All.ReceiveScriptResult(output);
         }
         catch (Exception ex)
         {
