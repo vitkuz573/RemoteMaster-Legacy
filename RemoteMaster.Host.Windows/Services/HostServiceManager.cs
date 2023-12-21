@@ -149,17 +149,38 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
     private static void DeleteFiles()
     {
         var directoryPath = GetDirectoryPath();
+        const int maxRetries = 5;
+        var delayOnRetry = 2000;
 
         if (directoryPath != null && Directory.Exists(directoryPath))
         {
-            try
+            for (var i = 0; i < maxRetries; ++i)
             {
-                Directory.Delete(directoryPath, true);
-                Log.Information("{AppName} files deleted successfully.", SubAppName);
-            }
-            catch (Exception ex)
-            {
-                Log.Error("Deleting {AppName} files failed: {Message}", SubAppName, ex.Message);
+                try
+                {
+                    Directory.Delete(directoryPath, true);
+                    Log.Information("{AppName} files deleted successfully.", SubAppName);
+                    break;
+                }
+                catch (IOException ex)
+                {
+                    if (i < maxRetries - 1)
+                    {
+                        Log.Warning("Attempt {Attempt}: Deleting {AppName} files failed, retrying in {Delay}ms: {Message}", i + 1, SubAppName, delayOnRetry, ex.Message);
+                        Thread.Sleep(delayOnRetry);
+
+                        delayOnRetry *= 2;
+                    }
+                    else
+                    {
+                        Log.Error("Final attempt: Deleting {AppName} files failed: {Message}", SubAppName, ex.Message);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("Unexpected error occurred while deleting {AppName} files: {Message}", SubAppName, ex.Message);
+                    break;
+                }
             }
         }
     }
