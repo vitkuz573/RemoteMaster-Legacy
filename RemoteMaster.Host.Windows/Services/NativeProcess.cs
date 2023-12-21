@@ -44,13 +44,12 @@ public class NativeProcess
         var sessionId = !startInfo.ForceConsoleSession ? FindTargetSessionId(startInfo.TargetSessionId) : WTSGetActiveConsoleSessionId();
         Log.Debug("Session ID determined: {SessionId}", sessionId);
 
-        SafeFileHandle? hUserTokenDup = null;
         SafeFileHandle? stdOutReadHandle;
         SafeFileHandle? stdErrReadHandle;
 
         try
         {
-            if (!startInfo.UseCurrentUserToken || !TryGetUserToken(sessionId, out hUserTokenDup))
+            if (!startInfo.UseCurrentUserToken || !TryGetUserToken(sessionId, out var hUserTokenDup))
             {
                 var winlogonPid = GetWinlogonPidForSession(sessionId);
                 Log.Debug("Winlogon PID for session {SessionId}: {WinlogonPid}", sessionId, winlogonPid);
@@ -172,8 +171,6 @@ public class NativeProcess
         procInfo = default;
         stdOutReadHandle = null;
         stdErrReadHandle = null;
-        SafeFileHandle? stdOutWriteHandle = null;
-        SafeFileHandle? stdErrWriteHandle = null;
 
         if (!CreatePipe(out var stdInReadHandle, out var stdInWriteHandle, null, 0))
         {
@@ -182,14 +179,14 @@ public class NativeProcess
             return false;
         }
 
-        if (!CreatePipe(out stdOutReadHandle, out stdOutWriteHandle, null, 0))
+        if (!CreatePipe(out stdOutReadHandle, out var stdOutWriteHandle, null, 0))
         {
             Log.Error("Failed to create pipe for standard output.");
             
             return false;
         }
 
-        if (!CreatePipe(out stdErrReadHandle, out stdErrWriteHandle, null, 0))
+        if (!CreatePipe(out stdErrReadHandle, out var stdErrWriteHandle, null, 0))
         {
             Log.Error("Failed to create pipe for standard error.");
             
@@ -238,6 +235,7 @@ public class NativeProcess
             {
                 Log.Information("Interactive process created successfully. Process ID: {ProcessId}", procInfo.dwProcessId);
 
+                stdInWriteHandle.Close();
                 stdOutWriteHandle.Close();
                 stdErrWriteHandle.Close();
             }
@@ -245,8 +243,6 @@ public class NativeProcess
             {
                 Log.Error("Failed to create interactive process.");
             }
-
-            stdInWriteHandle.Close();
 
             return result;
         }
