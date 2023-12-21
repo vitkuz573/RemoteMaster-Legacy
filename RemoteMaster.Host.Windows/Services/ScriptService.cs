@@ -57,8 +57,13 @@ public class ScriptService : IScriptService
 
             var process = NativeProcess.Start(options);
 
-            var error = process.StandardError.ReadLine();
-            var output = process.StandardOutput.ReadLine();
+            var readErrorTask = process.StandardError.ReadLineAsync();
+            var readOutputTask = process.StandardOutput.ReadLineAsync();
+
+            await Task.WhenAll(readErrorTask, readOutputTask);
+
+            var error = await readErrorTask;
+            var output = await readOutputTask;
 
             process.WaitForExit();
 
