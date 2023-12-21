@@ -3,7 +3,7 @@
 
 <CommonDialog Hosts="@Hosts" ContentStyle="width: 600px;">
     <Content>
-        <MudTextField T="string" Label="Manual Script" @bind-Value="_manualScriptContent" Lines="4" Placeholder="Enter your script here..." />
+        <MudTextField T="string" Label="Script" @bind-Value="_content" Lines="4" Placeholder="Enter or upload your script here..." />
 
         <MudFileUpload T="IBrowserFile" OnFilesChanged="UploadFiles">
             <ButtonTemplate>

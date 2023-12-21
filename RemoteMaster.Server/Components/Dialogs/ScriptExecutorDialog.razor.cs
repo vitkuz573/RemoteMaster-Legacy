@@ -18,15 +18,12 @@ public partial class ScriptExecutorDialog
 
     private string _scriptResults;
     private string _content;
-    private string _manualScriptContent;
     private Shell? _shell;
     private readonly Dictionary<string, StringBuilder> _resultsPerComputer = [];
     private readonly HashSet<HubConnection> _subscribedConnections = [];
 
     private async Task RunScript()
     {
-        var scriptToRun = string.IsNullOrEmpty(_content) ? _manualScriptContent : _content;
-
         foreach (var (computer, connection) in Hosts)
         {
             if (connection != null && !_subscribedConnections.Contains(connection))
@@ -49,7 +46,7 @@ public partial class ScriptExecutorDialog
 
             if (connection != null)
             {
-                await connection.InvokeAsync("SendScript", scriptToRun, _shell);
+                await connection.InvokeAsync("SendScript", _content, _shell);
             }
         }
     }
@@ -57,7 +54,6 @@ public partial class ScriptExecutorDialog
     private async Task UploadFiles(InputFileChangeEventArgs e)
     {
         using var reader = new StreamReader(e.File.OpenReadStream());
-
         _content = await reader.ReadToEndAsync();
 
         _shell = Path.GetExtension(e.File.Name) switch
