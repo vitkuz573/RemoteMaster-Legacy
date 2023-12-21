@@ -37,12 +37,12 @@
 
         <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.ControlPoint">
             <MudText>Cursor Tracking</MudText>
-            <MudSwitch T="bool" Checked="_cursorTracking" CheckedChanged="ToggleCursorTracking" />
+            <MudSwitch T="bool" Value="_cursorTracking" ValueChanged="ToggleCursorTracking" />
         </MudNavLink>
 
         <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Keyboard">
             <MudText>Input Toggle</MudText>
-            <MudSwitch T="bool" Checked="_inputEnabled" CheckedChanged="ToggleInputEnabled" />
+            <MudSwitch T="bool" Value="_inputEnabled" ValueChanged="ToggleInputEnabled" />
         </MudNavLink>
 
         <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.DeleteSweep" OnClick="KillHost">Kill Host</MudNavLink>
