@@ -2,10 +2,10 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Text;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.SignalR.Client;
-using MudBlazor;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Models;
 
@@ -14,12 +14,13 @@ namespace RemoteMaster.Server.Components.Dialogs;
 public partial class ScriptExecutorDialog
 {
     [Inject]
-    private IComputerCommandService ComputerCommandService { get; set; }
+    private IComputerCommandService ComputerCommandService { get; set; } = default!;
 
-    private Dictionary<Computer, string> _scriptResults = [];
+    private string _scriptResults;
     private string _content;
     private string _manualScriptContent;
     private Shell? _shell;
+    private readonly Dictionary<string, StringBuilder> _resultsPerComputer = [];
 
     private async Task RunScript()
     {
@@ -28,15 +29,20 @@ public partial class ScriptExecutorDialog
         await ComputerCommandService.Execute(Hosts, async (computer, connection) => {
             connection.On<string>("ReceiveScriptResult", async (result) =>
             {
-                _scriptResults[computer] = result;
+                if (!_resultsPerComputer.TryGetValue(computer.IPAddress, out var stringBuilder))
+                {
+                    stringBuilder = new StringBuilder();
+                    _resultsPerComputer[computer.IPAddress] = stringBuilder;
+                }
 
+                stringBuilder.Append(result);
+
+                _scriptResults = string.Join("\n", _resultsPerComputer.Values.Select(sb => sb.ToString()));
                 await InvokeAsync(StateHasChanged);
             });
 
             await connection.InvokeAsync("SendScript", scriptToRun, _shell);
         });
-
-        MudDialog.Close(DialogResult.Ok(true));
     }
 
     private async Task UploadFiles(InputFileChangeEventArgs e)

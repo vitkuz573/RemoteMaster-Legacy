@@ -3,7 +3,7 @@
 
 <CommonDialog Hosts="@Hosts" ContentStyle="width: 600px;">
     <Content>
-        <MudTextField T="string" Label="Manual Script" @bind-Value="_manualScriptContent" Multiline="true" Lines="4" Placeholder="Enter your script here..." />
+        <MudTextField T="string" Label="Manual Script" @bind-Value="_manualScriptContent" Lines="4" Placeholder="Enter your script here..." />
 
         <MudFileUpload T="IBrowserFile" OnFilesChanged="UploadFiles">
             <ButtonTemplate>
@@ -22,6 +22,8 @@
                 }
             }
         </MudSelect>
+
+        <MudTextField T="string" Label="Results" @bind-Value="_scriptResults" Lines="4" ReadOnly="true" />
     </Content>
     <Actions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
