@@ -21,28 +21,38 @@ public partial class ScriptExecutorDialog
     private string _manualScriptContent;
     private Shell? _shell;
     private readonly Dictionary<string, StringBuilder> _resultsPerComputer = [];
+    private readonly Dictionary<string, Action<string>> _scriptResultHandlers = [];
+    private readonly HashSet<HubConnection> _subscribedConnections = [];
 
     private async Task RunScript()
     {
         var scriptToRun = string.IsNullOrEmpty(_content) ? _manualScriptContent : _content;
 
-        await ComputerCommandService.Execute(Hosts, async (computer, connection) => {
-            connection.On<string>("ReceiveScriptResult", async (result) =>
+        foreach (var (computer, connection) in Hosts)
+        {
+            if (connection != null && !_subscribedConnections.Contains(connection))
             {
-                if (!_resultsPerComputer.TryGetValue(computer.IPAddress, out var stringBuilder))
+                connection.On<string>("ReceiveScriptResult", (result) =>
                 {
-                    stringBuilder = new StringBuilder();
-                    _resultsPerComputer[computer.IPAddress] = stringBuilder;
-                }
+                    if (!_resultsPerComputer.TryGetValue(computer.IPAddress, out var stringBuilder))
+                    {
+                        stringBuilder = new StringBuilder();
+                        _resultsPerComputer[computer.IPAddress] = stringBuilder;
+                    }
 
-                stringBuilder.Append(result);
+                    stringBuilder.Append(result);
+                    _scriptResults = string.Join("\n", _resultsPerComputer.Values.Select(sb => sb.ToString()));
+                    InvokeAsync(StateHasChanged);
+                });
 
-                _scriptResults = string.Join("\n", _resultsPerComputer.Values.Select(sb => sb.ToString()));
-                await InvokeAsync(StateHasChanged);
-            });
+                _subscribedConnections.Add(connection);
+            }
 
-            await connection.InvokeAsync("SendScript", scriptToRun, _shell);
-        });
+            if (connection != null)
+            {
+                await connection.InvokeAsync("SendScript", scriptToRun, _shell);
+            }
+        }
     }
 
     private async Task UploadFiles(InputFileChangeEventArgs e)
