@@ -6,5 +6,5 @@ namespace RemoteMaster.Server.Abstractions;
 
 public interface IWakeOnLanService
 {
-    void WakeUp(string macAddress);
+    void WakeUp(string macAddress, int port = 9);
 }

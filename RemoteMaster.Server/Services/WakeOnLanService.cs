@@ -10,11 +10,9 @@ namespace RemoteMaster.Server.Services;
 
 public class WakeOnLanService(IPacketSender packetSender) : IWakeOnLanService
 {
-    private const int DefaultPort = 9;
-
-    public void WakeUp(string macAddress)
+    public void WakeUp(string macAddress, int port = 9)
     {
         var packet = MagicPacketCreator.Create(macAddress);
-        packetSender.Send(packet, new IPEndPoint(IPAddress.Broadcast, DefaultPort));
+        packetSender.Send(packet, new IPEndPoint(IPAddress.Broadcast, port));
     }
 }
