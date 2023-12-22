@@ -17,7 +17,7 @@ public interface IControlClient
 
     Task ReceiveScreenSize(Size size);
 
-    Task ReceiveScriptResult(string result);
+    Task ReceiveScriptResult(ScriptResult result);
 
     Task ReceiveCommand(string command);
 

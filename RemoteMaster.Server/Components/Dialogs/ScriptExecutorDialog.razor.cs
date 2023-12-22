@@ -28,9 +28,9 @@ public partial class ScriptExecutorDialog
         {
             if (connection != null && !_subscribedConnections.Contains(connection))
             {
-                connection.On<string>("ReceiveScriptResult", result =>
+                connection.On<ScriptResult>("ReceiveScriptResult", scriptResult =>
                 {
-                    UpdateResultsForComputer(computer.IPAddress, result);
+                    UpdateResultsForComputer(computer.IPAddress, scriptResult);
                     InvokeAsync(StateHasChanged);
                 });
 
@@ -44,7 +44,7 @@ public partial class ScriptExecutorDialog
         }
     }
 
-    private void UpdateResultsForComputer(string ipAddress, string result)
+    private void UpdateResultsForComputer(string ipAddress, ScriptResult scriptResult)
     {
         if (!_resultsPerComputer.TryGetValue(ipAddress, out var stringBuilder))
         {
@@ -52,7 +52,8 @@ public partial class ScriptExecutorDialog
             _resultsPerComputer[ipAddress] = stringBuilder;
         }
 
-        stringBuilder.AppendLine(result);
+        var messagePrefix = scriptResult.Type == "error" ? "[Error] " : "[Output] ";
+        stringBuilder.AppendLine(messagePrefix + scriptResult.Message);
     }
 
     private async Task UploadFiles(InputFileChangeEventArgs e)

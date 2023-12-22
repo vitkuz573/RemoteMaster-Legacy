@@ -74,7 +74,23 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
             Log.Information("Error: {Error}", error);
             Log.Information("Output: {Output}", output);
 
-            await hubContext.Clients.All.ReceiveScriptResult(output);
+            if (!string.IsNullOrEmpty(error))
+            {
+                await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult
+                {
+                    Message = error,
+                    Type = "error"
+                });
+            }
+
+            if (!string.IsNullOrEmpty(output))
+            {
+                await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult
+                {
+                    Message = output,
+                    Type = "output"
+                });
+            }
         }
         catch (Exception ex)
         {
