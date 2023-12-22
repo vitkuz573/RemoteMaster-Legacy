@@ -16,7 +16,6 @@ public partial class ScriptExecutorDialog
     [Inject]
     private IComputerCommandService ComputerCommandService { get; set; } = default!;
 
-    private string _scriptResults;
     private string _content;
     private Shell? _shell;
     private bool _asSystem;
@@ -29,16 +28,9 @@ public partial class ScriptExecutorDialog
         {
             if (connection != null && !_subscribedConnections.Contains(connection))
             {
-                connection.On<string>("ReceiveScriptResult", (result) =>
+                connection.On<string>("ReceiveScriptResult", result =>
                 {
-                    if (!_resultsPerComputer.TryGetValue(computer.IPAddress, out var stringBuilder))
-                    {
-                        stringBuilder = new StringBuilder();
-                        _resultsPerComputer[computer.IPAddress] = stringBuilder;
-                    }
-
-                    stringBuilder.Append(result);
-                    _scriptResults = string.Join("\n", _resultsPerComputer.Values.Select(sb => sb.ToString()));
+                    UpdateResultsForComputer(computer.IPAddress, result);
                     InvokeAsync(StateHasChanged);
                 });
 
@@ -50,6 +42,17 @@ public partial class ScriptExecutorDialog
                 await connection.InvokeAsync("SendScript", _content, _shell, _asSystem);
             }
         }
+    }
+
+    private void UpdateResultsForComputer(string ipAddress, string result)
+    {
+        if (!_resultsPerComputer.TryGetValue(ipAddress, out var stringBuilder))
+        {
+            stringBuilder = new StringBuilder();
+            _resultsPerComputer[ipAddress] = stringBuilder;
+        }
+
+        stringBuilder.AppendLine(result);
     }
 
     private async Task UploadFiles(InputFileChangeEventArgs e)
@@ -68,7 +71,6 @@ public partial class ScriptExecutorDialog
 
     private void CleanResults()
     {
-        _scriptResults = string.Empty;
         _resultsPerComputer.Clear();
     }
 }

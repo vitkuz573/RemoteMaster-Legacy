@@ -3,31 +3,43 @@
 
 <CommonDialog Hosts="@Hosts" ContentStyle="width: 600px;">
     <Content>
-        <MudTextField T="string" Label="Script" @bind-Value="_content" Lines="4" Placeholder="Enter or upload your script here..." />
+        <MudGrid>
+            <MudItem xs="6">
+                <MudTextField T="string" Label="Script" @bind-Value="_content" Lines="4" Placeholder="Enter or upload your script here..." />
 
-        <MudFileUpload T="IBrowserFile" OnFilesChanged="UploadFiles">
-            <ButtonTemplate>
-                <MudButton HtmlTag="label" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FileUpload" FullWidth for="@context">
-                     Upload Script
-                 </MudButton>
-             </ButtonTemplate>
-         </MudFileUpload>
+                <MudFileUpload T="IBrowserFile" OnFilesChanged="UploadFiles">
+                    <ButtonTemplate>
+                        <MudButton HtmlTag="label" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FileUpload" FullWidth for="@context">
+                             Upload Script
+                         </MudButton>
+                     </ButtonTemplate>
+                 </MudFileUpload>
 
-         <MudSelect T="Shell?" Label="Select Shell" @bind-Value="_shell" Dense="true">
-             @if (Enum.GetValues(typeof(Shell)).Cast<Shell?>().Any())
-            {
-                foreach (var shellType in Enum.GetValues(typeof(Shell)).Cast<Shell?>())
-                {
-                    <MudSelectItem Value="@shellType" Text="@shellType.ToString()" />
-                }
-            }
-        </MudSelect>
+                 <MudSelect T="Shell?" Label="Select Shell" @bind-Value="_shell" Dense="true">
+                     @foreach (var shellType in Enum.GetValues(typeof(Shell)).Cast<Shell?>())
+                    {
+                        <MudSelectItem Value="@shellType" Text="@shellType.ToString()" />
+                    }
+                </MudSelect>
 
-        <MudCheckBox T="bool" @bind-Value="_asSystem" Label="As System" />
+                <MudCheckBox T="bool" @bind-Value="_asSystem" Label="As System" />
 
-        <MudButton OnClick="CleanResults" Variant="Variant.Filled">Clear results</MudButton>
-
-        <MudTextField T="string" Label="Results" @bind-Value="_scriptResults" Lines="4" ReadOnly="true" />
+                <MudButton OnClick="CleanResults" Variant="Variant.Filled">Clear results</MudButton>
+            </MudItem>
+            <MudItem xs="6">
+                <MudList>
+                    @foreach (var (ipAddress, results) in _resultsPerComputer)
+                    {
+                        <MudExpansionPanel Text="@($"Results for {ipAddress}")" IsInitiallyExpanded="true">
+                            @foreach (var line in results.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.None))
+                            {
+                                <div>@line</div>
+                            }
+                        </MudExpansionPanel>
+                    }
+                </MudList>
+            </MudItem>
+        </MudGrid>
     </Content>
     <Actions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
