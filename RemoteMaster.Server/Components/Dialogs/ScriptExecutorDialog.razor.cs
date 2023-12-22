@@ -57,8 +57,7 @@ public partial class ScriptExecutorDialog
             _resultsPerComputer[computer] = stringBuilder;
         }
 
-        var messagePrefix = scriptResult.Type == ScriptResult.MessageType.Error ? "[Error] " : "[Output] ";
-        stringBuilder.AppendLine(messagePrefix + scriptResult.Message);
+        stringBuilder.AppendLine($"[{scriptResult.Type}] {scriptResult.Message}");
     }
 
     private async Task UploadFiles(InputFileChangeEventArgs e)
