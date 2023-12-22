@@ -229,7 +229,7 @@ public class NativeProcess
             fullCommand += char.MinValue;
 
             var commandSpan = new Span<char>(fullCommand.ToCharArray());
-            bool result = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, null, null, startInfo.InheritHandles, dwCreationFlags, null, null, startupInfo, out procInfo);
+            var result = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, null, null, startInfo.InheritHandles, dwCreationFlags, null, null, startupInfo, out procInfo);
 
             if (result)
             {
