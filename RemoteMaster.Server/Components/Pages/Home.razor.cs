@@ -69,11 +69,13 @@ public partial class Home
         foreach (var computer in computers)
         {
             var isAvailable = await computer.IsAvailable();
+
             if (!isAvailable)
             {
                 _availableComputers.Remove(computer);
                 _unavailableComputers.Add(computer);
             }
+
             await InvokeAsync(StateHasChanged); // Update UI for each computer
         }
     }
