@@ -24,7 +24,7 @@ public partial class ScriptExecutorDialog
     private string _content;
     private Shell? _shell;
     private bool _asSystem;
-    private readonly Dictionary<string, StringBuilder> _resultsPerComputer = [];
+    private readonly Dictionary<Computer, StringBuilder> _resultsPerComputer = [];
     private readonly HashSet<HubConnection> _subscribedConnections = [];
 
     private async Task RunScript()
@@ -35,7 +35,7 @@ public partial class ScriptExecutorDialog
             {
                 connection.On<ScriptResult>("ReceiveScriptResult", scriptResult =>
                 {
-                    UpdateResultsForComputer(computer.IPAddress, scriptResult);
+                    UpdateResultsForComputer(computer, scriptResult);
                     InvokeAsync(StateHasChanged);
                 });
 
@@ -49,12 +49,12 @@ public partial class ScriptExecutorDialog
         }
     }
 
-    private void UpdateResultsForComputer(string ipAddress, ScriptResult scriptResult)
+    private void UpdateResultsForComputer(Computer computer, ScriptResult scriptResult)
     {
-        if (!_resultsPerComputer.TryGetValue(ipAddress, out var stringBuilder))
+        if (!_resultsPerComputer.TryGetValue(computer, out var stringBuilder))
         {
             stringBuilder = new StringBuilder();
-            _resultsPerComputer[ipAddress] = stringBuilder;
+            _resultsPerComputer[computer] = stringBuilder;
         }
 
         var messagePrefix = scriptResult.Type == ScriptResult.MessageType.Error ? "[Error] " : "[Output] ";
@@ -86,9 +86,9 @@ public partial class ScriptExecutorDialog
 
         using (var archive = new ZipArchive(zipMemoryStream, ZipArchiveMode.Create, true))
         {
-            foreach (var (ipAddress, results) in _resultsPerComputer)
+            foreach (var (computer, results) in _resultsPerComputer)
             {
-                var fileName = $"results_{ipAddress}.txt";
+                var fileName = $"results_{computer.Name}_{computer.IPAddress}.txt";
                 var fileContent = results.ToString();
 
                 var zipEntry = archive.CreateEntry(fileName, CompressionLevel.Fastest);

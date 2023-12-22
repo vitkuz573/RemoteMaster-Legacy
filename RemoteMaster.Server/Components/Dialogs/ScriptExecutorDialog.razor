@@ -34,9 +34,9 @@
             </MudItem>
             <MudItem xs="6">
                 <MudList>
-                    @foreach (var (ipAddress, results) in _resultsPerComputer)
+                    @foreach (var (computer, results) in _resultsPerComputer)
                     {
-                        <MudExpansionPanel Text="@($"Results for {ipAddress}")">
+                        <MudExpansionPanel Text="@($"Results for {computer.Name} ({computer.IPAddress})")">
                             @foreach (var line in results.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.None))
                             {
                                 <div>@line</div>
