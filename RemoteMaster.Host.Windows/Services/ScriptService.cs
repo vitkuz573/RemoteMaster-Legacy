@@ -61,33 +61,12 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
 
             var process = NativeProcess.Start(options);
 
-            var readErrorTask = process.StandardError.ReadToEndAsync();
-            var readOutputTask = process.StandardOutput.ReadToEndAsync();
-
-            await Task.WhenAll(readErrorTask, readOutputTask);
-
-            var error = await readErrorTask;
-            var output = await readOutputTask;
+            var readErrorTask = ReadStreamAsync(process.StandardError, hubContext, ScriptResult.MessageType.Error);
+            var readOutputTask = ReadStreamAsync(process.StandardOutput, hubContext, ScriptResult.MessageType.Output);
 
             process.WaitForExit();
 
-            if (!string.IsNullOrEmpty(error))
-            {
-                await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult
-                {
-                    Message = error,
-                    Type = ScriptResult.MessageType.Error
-                });
-            }
-
-            if (!string.IsNullOrEmpty(output))
-            {
-                await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult
-                {
-                    Message = output,
-                    Type = ScriptResult.MessageType.Output
-                });
-            }
+            await Task.WhenAll(readErrorTask, readOutputTask);
         }
         catch (Exception ex)
         {
@@ -101,6 +80,20 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
             {
                 File.Delete(tempFilePath);
             }
+        }
+    }
+
+    private static async Task ReadStreamAsync(StreamReader streamReader, IHubContext<ControlHub, IControlClient> hubContext, ScriptResult.MessageType messageType)
+    {
+        string line;
+
+        while ((line = await streamReader.ReadLineAsync()) != null)
+        {
+            await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult
+            {
+                Message = line,
+                Type = messageType
+            });
         }
     }
 }
