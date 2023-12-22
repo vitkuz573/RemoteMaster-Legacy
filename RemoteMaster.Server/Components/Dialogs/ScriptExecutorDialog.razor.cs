@@ -65,4 +65,10 @@ public partial class ScriptExecutorDialog
             _ => _shell
         };
     }
+
+    private void CleanResults()
+    {
+        _scriptResults = string.Empty;
+        _resultsPerComputer.Clear();
+    }
 }
