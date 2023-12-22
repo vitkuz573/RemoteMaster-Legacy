@@ -71,9 +71,6 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
 
             process.WaitForExit();
 
-            Log.Information("Error: {Error}", error);
-            Log.Information("Output: {Output}", output);
-
             if (!string.IsNullOrEmpty(error))
             {
                 await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult
