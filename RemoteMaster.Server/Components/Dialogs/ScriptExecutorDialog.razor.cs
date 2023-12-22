@@ -2,10 +2,12 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Compression;
 using System.Text;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.JSInterop;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Models;
 
@@ -15,6 +17,9 @@ public partial class ScriptExecutorDialog
 {
     [Inject]
     private IComputerCommandService ComputerCommandService { get; set; } = default!;
+
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = default!;
 
     private string _content;
     private Shell? _shell;
@@ -73,5 +78,29 @@ public partial class ScriptExecutorDialog
     private void CleanResults()
     {
         _resultsPerComputer.Clear();
+    }
+
+    private async Task ExportResults()
+    {
+        var zipMemoryStream = new MemoryStream();
+
+        using (var archive = new ZipArchive(zipMemoryStream, ZipArchiveMode.Create, true))
+        {
+            foreach (var (ipAddress, results) in _resultsPerComputer)
+            {
+                var fileName = $"results_{ipAddress}.txt";
+                var fileContent = results.ToString();
+
+                var zipEntry = archive.CreateEntry(fileName, CompressionLevel.Fastest);
+                using var entryStream = zipEntry.Open();
+                using var streamWriter = new StreamWriter(entryStream);
+                await streamWriter.WriteAsync(fileContent);
+            }
+        }
+
+        zipMemoryStream.Position = 0;
+        var base64Zip = Convert.ToBase64String(zipMemoryStream.ToArray());
+
+        await JSRuntime.InvokeVoidAsync("generateAndDownloadResults", base64Zip, "RemoteMaster_Results.zip");
     }
 }
