@@ -13,7 +13,7 @@
              </ButtonTemplate>
          </MudFileUpload>
 
-         <MudSelect T="Shell?" Label="Select Shell" @bind-Value="_shell">
+         <MudSelect T="Shell?" Label="Select Shell" @bind-Value="_shell" Dense="true">
              @if (Enum.GetValues(typeof(Shell)).Cast<Shell?>().Any())
             {
                 foreach (var shellType in Enum.GetValues(typeof(Shell)).Cast<Shell?>())

@@ -32,7 +32,6 @@ namespace RemoteMaster.Server.Components.Dialogs
                     var sParameter = _selectedUser == "system" ? "-s" : "";
                     var command = _selectedShell switch
                     {
-                        Shell.SSH => $"ssh user@{computer.IPAddress}",
                         Shell.Cmd => @$"/C psexec \\{computer.IPAddress} {sParameter} -nobanner -accepteula cmd",
                         Shell.PowerShell => @$"/C psexec \\{computer.IPAddress} {sParameter} -nobanner -accepteula powershell",
                         _ => throw new InvalidOperationException($"Unknown shell: {_selectedShell}")

@@ -6,7 +6,6 @@ namespace RemoteMaster.Shared.Models;
 
 public enum Shell
 {
-    SSH,
     Cmd,
     PowerShell
 }
