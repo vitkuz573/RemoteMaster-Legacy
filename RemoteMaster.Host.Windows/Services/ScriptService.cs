@@ -79,7 +79,7 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
                 await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult
                 {
                     Message = error,
-                    Type = "error"
+                    Type = ScriptResult.MessageType.Error
                 });
             }
 
@@ -88,7 +88,7 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
                 await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult
                 {
                     Message = output,
-                    Type = "output"
+                    Type = ScriptResult.MessageType.Output
                 });
             }
         }

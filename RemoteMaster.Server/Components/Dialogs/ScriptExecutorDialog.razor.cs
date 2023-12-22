@@ -52,7 +52,7 @@ public partial class ScriptExecutorDialog
             _resultsPerComputer[ipAddress] = stringBuilder;
         }
 
-        var messagePrefix = scriptResult.Type == "error" ? "[Error] " : "[Output] ";
+        var messagePrefix = scriptResult.Type == ScriptResult.MessageType.Error ? "[Error] " : "[Output] ";
         stringBuilder.AppendLine(messagePrefix + scriptResult.Message);
     }
 

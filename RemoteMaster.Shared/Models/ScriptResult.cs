@@ -8,5 +8,11 @@ public class ScriptResult
 {
     public string Message { get; set; }
 
-    public string Type { get; set; }
+    public MessageType Type { get; set; }
+
+    public enum MessageType
+    {
+        Output,
+        Error
+    }
 }
