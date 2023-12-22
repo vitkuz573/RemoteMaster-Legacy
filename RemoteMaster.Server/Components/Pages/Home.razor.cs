@@ -51,7 +51,7 @@ public partial class Home
         _nodes = (await DatabaseService.GetNodesAsync(f => f.Parent == null && f is Group)).Cast<Node>().ToHashSet();
     }
 
-    private async Task LoadAndGroupComputersAsync(Node node)
+    private void LoadAndGroupComputers(Node node)
     {
         if (node is Group group)
         {
@@ -107,7 +107,7 @@ public partial class Home
 
         if (node is Group group)
         {
-            await LoadAndGroupComputersAsync(node);
+            LoadAndGroupComputers(node);
             await UpdateComputersThumbnailsAsync(group.Nodes.OfType<Computer>());
         }
 
