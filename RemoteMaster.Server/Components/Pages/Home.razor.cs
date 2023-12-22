@@ -55,13 +55,26 @@ public partial class Home
     {
         if (node is Group group)
         {
-            var computers = group.Nodes.OfType<Computer>();
-            var tasks = computers.Select(async computer => (computer, await computer.IsAvailable()));
+            var computers = group.Nodes.OfType<Computer>().ToList();
+            _availableComputers = computers; // Initially, assume all computers are available
+            _unavailableComputers.Clear();
 
-            var results = await Task.WhenAll(tasks);
+            // Update availability in the background
+            _ = UpdateComputerAvailabilityAsync(computers);
+        }
+    }
 
-            _availableComputers = results.Where(r => r.Item2).Select(r => r.computer).ToList();
-            _unavailableComputers = results.Where(r => !r.Item2).Select(r => r.computer).ToList();
+    private async Task UpdateComputerAvailabilityAsync(List<Computer> computers)
+    {
+        foreach (var computer in computers)
+        {
+            var isAvailable = await computer.IsAvailable();
+            if (!isAvailable)
+            {
+                _availableComputers.Remove(computer);
+                _unavailableComputers.Add(computer);
+            }
+            await InvokeAsync(StateHasChanged); // Update UI for each computer
         }
     }
 
