@@ -33,10 +33,10 @@ public partial class ScriptExecutorDialog
         {
             if (connection != null && !_subscribedConnections.Contains(connection))
             {
-                connection.On<ScriptResult>("ReceiveScriptResult", scriptResult =>
+                connection.On<ScriptResult>("ReceiveScriptResult", async scriptResult =>
                 {
                     UpdateResultsForComputer(computer, scriptResult);
-                    InvokeAsync(StateHasChanged);
+                    await InvokeAsync(StateHasChanged);
                 });
 
                 _subscribedConnections.Add(connection);
