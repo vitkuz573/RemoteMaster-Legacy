@@ -23,6 +23,8 @@
             }
         </MudSelect>
 
+        <MudCheckBox T="bool" @bind-Value="_asSystem" Label="As System" />
+
         <MudTextField T="string" Label="Results" @bind-Value="_scriptResults" Lines="4" ReadOnly="true" />
     </Content>
     <Actions>

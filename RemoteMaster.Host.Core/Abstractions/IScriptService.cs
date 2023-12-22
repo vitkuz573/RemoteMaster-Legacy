@@ -8,5 +8,5 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IScriptService
 {
-    Task Execute(Shell shell, string script);
+    Task Execute(Shell shell, string script, bool asSystem);
 }

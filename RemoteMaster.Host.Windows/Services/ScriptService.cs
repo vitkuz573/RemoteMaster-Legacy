@@ -13,7 +13,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) : IScriptService
 {
-    public async Task Execute(Shell shell, string script)
+    public async Task Execute(Shell shell, string script, bool asSystem)
     {
         Log.Information("Executing script with shell: {Shell}", shell);
 
@@ -55,7 +55,7 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
                 ForceConsoleSession = true,
                 DesktopName = "default",
                 CreateNoWindow = true,
-                UseCurrentUserToken = true,
+                UseCurrentUserToken = !asSystem,
                 InheritHandles = true
             };
 

@@ -19,6 +19,7 @@ public partial class ScriptExecutorDialog
     private string _scriptResults;
     private string _content;
     private Shell? _shell;
+    private bool _asSystem;
     private readonly Dictionary<string, StringBuilder> _resultsPerComputer = [];
     private readonly HashSet<HubConnection> _subscribedConnections = [];
 
@@ -46,7 +47,7 @@ public partial class ScriptExecutorDialog
 
             if (connection != null)
             {
-                await connection.InvokeAsync("SendScript", _content, _shell);
+                await connection.InvokeAsync("SendScript", _content, _shell, _asSystem);
             }
         }
     }

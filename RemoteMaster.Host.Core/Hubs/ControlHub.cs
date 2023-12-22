@@ -139,9 +139,9 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         hardwareService.SetMonitorState(state);
     }
 
-    public void SendScript(string script, Shell shell)
+    public void SendScript(string script, Shell shell, bool asSystem)
     {
-        scriptService.Execute(shell, script);
+        scriptService.Execute(shell, script, asSystem);
     }
 
     public async Task JoinGroup(string groupName)
