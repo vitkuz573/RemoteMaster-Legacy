@@ -1,0 +1,20 @@
+﻿@inherits CommonDialogBase
+
+<CommonDialog Hosts="@Hosts" ContentStyle="width: 600px;">
+    <Content>
+        <MudTextField @bind-Value="@_currentPath" Label="Path" AdornmentIcon="@Icons.Material.Filled.Folder" Class="mb-2" />
+        <MudList Dense>
+            @foreach (var file in Files)
+            {
+                <MudListItem @onclick="@(() => DownloadFile(file))" Class="my-1">
+                    <MudIcon Icon="@Icons.Material.Filled.InsertDriveFile" Class="mr-2" />
+                    @file
+                </MudListItem>
+            }
+        </MudList>
+    </Content>
+    <Actions>
+        <MudButton OnClick="Refresh">Refresh</MudButton>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+    </Actions>
+</CommonDialog>

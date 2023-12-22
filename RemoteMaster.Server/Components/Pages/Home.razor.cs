@@ -296,6 +296,21 @@ public partial class Home
         await DialogService.ShowAsync<DomainManagementDialog>("Domain Management", dialogParameters);
     }
 
+    private async Task FileManager()
+    {
+        if (_selectedComputers.All(computer => !_availableComputers.Contains(computer)))
+        {
+            return;
+        }
+
+        var dialogParameters = new DialogParameters<FileManager>
+        {
+            { x => x.Hosts, await GetComputers() }
+        };
+
+        await DialogService.ShowAsync<FileManager>("File Manager", dialogParameters);
+    }
+
     private async Task Update()
     {
         if (_selectedComputers.All(computer => !_availableComputers.Contains(computer)))

@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Dtos;
@@ -12,7 +13,7 @@ using Serilog;
 namespace RemoteMaster.Host.Core.Hubs;
 
 [Authorize]
-public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IDomainService domainService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IUpdaterService updaterService, IScreenCapturerService screenCapturerService, IScreenRecorderService screenRecorderService) : Hub<IControlClient>
+public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IDomainService domainService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IUpdaterService updaterService, IScreenCapturerService screenCapturerService, IScreenRecorderService screenRecorderService, IFileManagerService fileManagerService) : Hub<IControlClient>
 {
     public async Task ConnectAs(Intention intention)
     {
@@ -172,5 +173,25 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     public void SendUnjoinFromDomain(string user, string password)
     {
         domainService.UnjoinFromDomain(user, password);
+    }
+
+    public async Task GetFiles(string path)
+    {
+        var files = await fileManagerService.GetFilesAsync(path);
+        await Clients.Caller.ReceiveFiles(files.Select(f => f.Name).ToList());
+    }
+
+    public async Task UploadFile(string path, IBrowserFile file)
+    {
+        await fileManagerService.UploadFileAsync(path, file);
+    }
+
+    public async Task DownloadFile(string path)
+    {
+        var stream = fileManagerService.DownloadFile(path);
+        var memoryStream = new MemoryStream();
+        await stream.CopyToAsync(memoryStream);
+        var bytes = memoryStream.ToArray();
+        await Clients.Caller.ReceiveFile(bytes, Path.GetFileName(path));
     }
 }

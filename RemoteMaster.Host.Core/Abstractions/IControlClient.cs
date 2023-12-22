@@ -22,4 +22,8 @@ public interface IControlClient
     Task ReceiveCommand(string command);
 
     Task ReceiveHostVersion(Version version);
+
+    Task ReceiveFiles(List<string> files);
+
+    Task ReceiveFile(byte[] content, string fileName);
 }
