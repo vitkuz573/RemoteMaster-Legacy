@@ -1,0 +1,5 @@
+exclude:
+  files:
+    - "**/.editorconfig"
+    - "**/.git/config"
+    - "**/*.razor"
