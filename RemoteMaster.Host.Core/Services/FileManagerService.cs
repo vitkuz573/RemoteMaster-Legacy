@@ -53,6 +53,16 @@ public class FileManagerService : IFileManagerService
         var items = new List<FileSystemItem>();
         var directoryInfo = new DirectoryInfo(path);
 
+        if (directoryInfo.Parent != null)
+        {
+            items.Add(new FileSystemItem
+            {
+                Name = "..",
+                Type = FileSystemItem.FileSystemItemType.Directory,
+                Size = 0
+            });
+        }
+
         var enumerationOptions = new EnumerationOptions
         {
             IgnoreInaccessible = true,

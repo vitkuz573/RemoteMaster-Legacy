@@ -13,12 +13,6 @@
         <MudButton OnClick="@NavigateToPath" Color="Color.Primary" Variant="Variant.Filled">Navigate</MudButton>
 
         <MudTable Items="@_fileSystemItems" Dense="true" Hover="true" Striped="true" Class="mt-2">
-            <ToolBarContent>
-                <div class="mud-table-pagination">
-                    <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward" OnClick="@NavigateUp" Disabled="@(IsRootDirectory)" Size="Size.Small" Color="Color.Primary" />
-                </div>
-            </ToolBarContent>
-
             <HeaderContent>
                 <MudTh>Name</MudTh>
                 <MudTh>Type</MudTh>

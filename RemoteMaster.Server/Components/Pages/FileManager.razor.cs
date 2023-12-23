@@ -130,11 +130,11 @@ public partial class FileManager : IDisposable
 
     private async Task NavigateUp()
     {
-        var directoryInfo = new DirectoryInfo(_currentPath);
+        var parentDir = Directory.GetParent(_currentPath);
 
-        if (directoryInfo.Parent != null)
+        if (parentDir != null)
         {
-            _currentPath = directoryInfo.Parent.FullName;
+            _currentPath = parentDir.FullName;
             await FetchFilesAndDirectories();
         }
     }
@@ -147,7 +147,11 @@ public partial class FileManager : IDisposable
 
     private async Task HandleClick(FileSystemItem item)
     {
-        if (item.Type == FileSystemItem.FileSystemItemType.Directory)
+        if (item.Name == "..")
+        {
+            await NavigateUp();
+        }
+        else if (item.Type == FileSystemItem.FileSystemItemType.Directory)
         {
             await ChangeDirectory(item.Name);
         }
