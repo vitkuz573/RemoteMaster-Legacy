@@ -42,10 +42,19 @@ public partial class FileManager : IDisposable
     {
     };
 
-    protected async override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
         await InitializeHostConnectionAsync();
+        await FetchFiles();
+    }
 
+    private async Task NavigateToPath()
+    {
+        await FetchFiles();
+    }
+
+    private async Task FetchFiles()
+    {
         await SafeInvokeAsync(() => _connection.InvokeAsync("GetFiles", _currentPath));
     }
 
