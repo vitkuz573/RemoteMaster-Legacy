@@ -13,14 +13,12 @@
             <MudTh>Process ID</MudTh>
             <MudTh>Name</MudTh>
             <MudTh>Memory Usage</MudTh>
-            <MudTh>CPU Usage (%)</MudTh>
             <MudTh>Actions</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Process ID">@context.Id</MudTd>
             <MudTd DataLabel="Name">@context.Name</MudTd>
             <MudTd DataLabel="Memory Usage">@FormatSize(context.MemoryUsage)</MudTd>
-            <MudTd DataLabel="CPU Usage">@context.CpuUsage</MudTd>
             <MudTd>
                 <MudButton OnClick="@(() => KillProcess(context.Id))" Color="Color.Error">Kill</MudButton>
             </MudTd>
