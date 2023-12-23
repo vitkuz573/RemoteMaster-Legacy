@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -80,6 +81,11 @@ public partial class FileManager : IDisposable
             await InvokeAsync(StateHasChanged);
         });
 
+        _connection.On<byte[], string>("ReceiveFile", async (file, path) =>
+        {
+            await JSRuntime.InvokeVoidAsync("saveAsFile", Path.GetFileName(path), Convert.ToBase64String(file));
+        });
+
         _connection.Closed += async (error) =>
         {
             await Task.Delay(TimeSpan.FromSeconds(5));
@@ -111,37 +117,9 @@ public partial class FileManager : IDisposable
         });
     }
 
-    private async Task<T> SafeInvokeAsyncWithResult<T>(Func<Task<T>> func)
-    {
-        return await _retryPolicy.ExecuteAsync(async () =>
-        {
-            if (_connection.State == HubConnectionState.Connected)
-            {
-                try
-                {
-                    return await func();
-                }
-                catch (HubException ex) when (ex.Message.Contains("Method does not exist"))
-                {
-                    await JSRuntime.InvokeVoidAsync("showAlert", "This function is not available in the current host version. Please update your host.");
-                    return default;
-                }
-            }
-            else
-            {
-                throw new InvalidOperationException("Connection is not active");
-            }
-        });
-    }
-
     private async Task DownloadFile(string fileName)
     {
-        var fileBytes = await SafeInvokeAsyncWithResult(() => _connection.InvokeAsync<byte[]>("DownloadFile", $"{_currentPath}/{fileName}"));
-        
-        if (fileBytes != null)
-        {
-            await JSRuntime.InvokeVoidAsync("saveAsFile", fileName, Convert.ToBase64String(fileBytes));
-        }
+        await SafeInvokeAsync(() => _connection.InvokeAsync("DownloadFile", $"{_currentPath}/{fileName}"));
     }
 
     private async Task ChangeDirectory(string directory)
@@ -161,7 +139,7 @@ public partial class FileManager : IDisposable
         }
     }
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Пометьте члены как статические", Justification = "<Ожидание>")]
+    [SuppressMessage("Performance", "CA1822:Пометьте члены как статические", Justification = "<Ожидание>")]
     private string GetIcon(FileSystemItem.FileSystemItemType type)
     {
         return type == FileSystemItem.FileSystemItemType.Directory ? Icons.Material.Filled.Folder : Icons.Material.Filled.InsertDriveFile;
@@ -179,7 +157,7 @@ public partial class FileManager : IDisposable
         }
     }
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Пометьте члены как статические", Justification = "<Ожидание>")]
+    [SuppressMessage("Performance", "CA1822:Пометьте члены как статические", Justification = "<Ожидание>")]
     private string FormatSize(long size)
     {
         return size.ToString();

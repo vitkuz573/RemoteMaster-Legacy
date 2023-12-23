@@ -136,13 +136,18 @@
         }
 
         window.saveAsFile = function (filename, bytesBase64) {
-            var link = document.createElement('a');
-            link.href = "data:application/octet-stream;base64," + bytesBase64;
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
+            var blob = b64toBlob(bytesBase64, 'application/octet-stream');
+            var url = window.URL.createObjectURL(blob);
+
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+
+            window.URL.revokeObjectURL(url);
+        };
     </script>
 </body>
 
