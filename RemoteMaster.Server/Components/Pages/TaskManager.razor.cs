@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -10,6 +11,7 @@ using MudBlazor;
 using Polly;
 using Polly.Retry;
 using RemoteMaster.Shared.Models;
+using static MudBlazor.CategoryTypes;
 
 namespace RemoteMaster.Server.Components.Pages;
 
@@ -25,6 +27,7 @@ public partial class TaskManager : IDisposable
     private IJSRuntime JSRuntime { get; set; } = default!;
 
     private HubConnection _connection;
+    private string _searchQuery = string.Empty;
     private List<ProcessInfo> _processes = [];
 
     private readonly AsyncRetryPolicy _retryPolicy = Policy
@@ -123,6 +126,29 @@ public partial class TaskManager : IDisposable
         }
 
         return $"{len:0.##} {sizes[order]}";
+    }
+
+    private bool FilterFunc1(ProcessInfo processInfo) => FilterFunc(processInfo, _searchQuery);
+
+    [SuppressMessage("Performance", "CA1822:Пометьте члены как статические", Justification = "<Ожидание>")]
+    private bool FilterFunc(ProcessInfo processInfo, string searchQuery)
+    {
+        if (string.IsNullOrWhiteSpace(searchQuery))
+        {
+            return true;
+        }
+
+        if (int.TryParse(searchQuery, out var pid) && processInfo.Id == pid)
+        {
+            return true;
+        }
+
+        if (processInfo.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return false;
     }
 
     [JSInvokable]

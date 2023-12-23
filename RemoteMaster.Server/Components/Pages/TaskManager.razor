@@ -9,7 +9,12 @@
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudTable Items="@_processes" Dense="true" Hover="true">
+    <MudTable Items="@_processes" Dense="true" Hover="true" Filter="new Func<ProcessInfo, bool>(FilterFunc1)">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Task Manager</MudText>
+            <MudSpacer />
+            <MudTextField @bind-Value="_searchQuery" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        </ToolBarContent>
         <HeaderContent>
             <MudTh>
                 <MudTableSortLabel SortBy="new Func<ProcessInfo, object>(x => x.Id)">
