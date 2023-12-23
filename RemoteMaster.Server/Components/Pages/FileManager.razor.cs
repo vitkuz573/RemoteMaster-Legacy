@@ -159,10 +159,19 @@ public partial class FileManager : IDisposable
         }
     }
 
-    [SuppressMessage("Performance", "CA1822:Пометьте члены как статические", Justification = "<Ожидание>")]
     private string FormatSize(long size)
     {
-        return size.ToString();
+        string[] sizes = ["B", "KB", "MB", "GB", "TB"];
+        double len = size;
+        var order = 0;
+
+        while (len >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            len /= 1024;
+        }
+
+        return $"{len:0.##} {sizes[order]}";
     }
 
     [JSInvokable]
