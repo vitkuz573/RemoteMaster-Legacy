@@ -53,7 +53,13 @@ public class FileManagerService : IFileManagerService
         var items = new List<FileSystemItem>();
         var directoryInfo = new DirectoryInfo(path);
 
-        foreach (var file in directoryInfo.GetFiles())
+        var enumerationOptions = new EnumerationOptions
+        {
+            IgnoreInaccessible = true,
+            AttributesToSkip = FileAttributes.Hidden | FileAttributes.System
+        };
+
+        foreach (var file in directoryInfo.GetFiles("*", enumerationOptions))
         {
             items.Add(new FileSystemItem
             {
@@ -63,7 +69,7 @@ public class FileManagerService : IFileManagerService
             });
         }
 
-        foreach (var directory in directoryInfo.GetDirectories())
+        foreach (var directory in directoryInfo.GetDirectories("*", enumerationOptions))
         {
             items.Add(new FileSystemItem
             {
