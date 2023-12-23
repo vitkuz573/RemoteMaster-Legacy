@@ -15,4 +15,6 @@ public interface IFileManagerService
     Task UploadFileAsync(string path, IBrowserFile file);
 
     Stream DownloadFile(string path);
+
+    Task<(FileInfo[], DirectoryInfo[])> GetFilesAndDirectoriesAsync(string path);
 }

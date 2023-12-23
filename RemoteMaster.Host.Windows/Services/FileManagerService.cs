@@ -46,4 +46,13 @@ public class FileManagerService : IFileManagerService
 
         return memoryStream;
     }
+
+    public async Task<(FileInfo[], DirectoryInfo[])> GetFilesAndDirectoriesAsync(string path)
+    {
+        var directory = new DirectoryInfo(path);
+        var files = directory.GetFiles();
+        var directories = directory.GetDirectories();
+
+        return (files, directories);
+    }
 }

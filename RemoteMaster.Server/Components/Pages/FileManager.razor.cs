@@ -23,6 +23,7 @@ public partial class FileManager : IDisposable
     [Inject]
     private IJSRuntime JSRuntime { get; set; } = default!;
 
+    private List<string> _directories = [];
     private HubConnection _connection;
     private string _currentPath = @"C:\";
     private List<string> _files = [];
@@ -45,17 +46,17 @@ public partial class FileManager : IDisposable
     protected override async Task OnInitializedAsync()
     {
         await InitializeHostConnectionAsync();
-        await FetchFiles();
+        await FetchFilesAndDirectories();
     }
 
     private async Task NavigateToPath()
     {
-        await FetchFiles();
+        await FetchFilesAndDirectories();
     }
 
-    private async Task FetchFiles()
+    private async Task FetchFilesAndDirectories()
     {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("GetFiles", _currentPath));
+        await SafeInvokeAsync(() => _connection.InvokeAsync("GetFilesAndDirectories", _currentPath));
     }
 
     private async Task InitializeHostConnectionAsync()
@@ -71,10 +72,11 @@ public partial class FileManager : IDisposable
             .AddMessagePackProtocol()
         .Build();
 
-        _connection.On<List<string>>("ReceiveFiles", async (files) =>
+        _connection.On<List<string>, List<string>>("ReceiveFilesAndDirectories", (files, directories) =>
         {
             _files = files;
-            await InvokeAsync(StateHasChanged);
+            _directories = directories;
+            InvokeAsync(StateHasChanged);
         });
 
         _connection.Closed += async (error) =>
@@ -111,6 +113,12 @@ public partial class FileManager : IDisposable
     private async Task DownloadFile(string fileName)
     {
         await SafeInvokeAsync(() => _connection.InvokeAsync("DownloadFile", $"{_currentPath}/{fileName}"));
+    }
+
+    private async Task ChangeDirectory(string directory)
+    {
+        _currentPath = Path.Combine(_currentPath, directory);
+        await FetchFilesAndDirectories();
     }
 
     [JSInvokable]

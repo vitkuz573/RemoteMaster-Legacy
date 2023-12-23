@@ -26,4 +26,6 @@ public interface IControlClient
     Task ReceiveFiles(List<string> files);
 
     Task ReceiveFile(byte[] content, string fileName);
+
+    Task ReceiveFilesAndDirectories(List<string> fileNames, List<string> directoryNames);
 }
