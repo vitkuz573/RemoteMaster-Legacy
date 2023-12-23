@@ -5,7 +5,7 @@
 using Microsoft.AspNetCore.Components.Forms;
 using RemoteMaster.Host.Core.Abstractions;
 
-namespace RemoteMaster.Host.Windows.Services;
+namespace RemoteMaster.Host.Core.Services;
 
 public class FileManagerService : IFileManagerService
 {

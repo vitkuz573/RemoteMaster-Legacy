@@ -5,8 +5,8 @@
 using System.Net;
 using System.Security.Claims;
 using System.Security.Cryptography;
-using System.Text.Json.Serialization;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -51,7 +51,6 @@ internal class Program
         builder.Host.UseWindowsService();
 
         builder.Services.AddCoreServices();
-        builder.Services.AddSingleton<IFileManagerService, FileManagerService>();
         builder.Services.AddSingleton<IUserInstanceService, UserInstanceService>();
         builder.Services.AddSingleton<IHostServiceManager, HostServiceManager>();
         builder.Services.AddSingleton<IServiceManager, ServiceManager>();

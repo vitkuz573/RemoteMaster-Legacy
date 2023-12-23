@@ -26,6 +26,7 @@ public static class ServiceCollectionExtensions
             builder.ClearProviders();
         });
 
+        services.AddSingleton<IFileManagerService, FileManagerService>();
         services.AddSingleton<ISubjectService, SubjectService>();
         services.AddSingleton<ICertificateRequestService, CertificateRequestService>();
         services.AddSingleton<IHostLifecycleService, HostLifecycleService>();
