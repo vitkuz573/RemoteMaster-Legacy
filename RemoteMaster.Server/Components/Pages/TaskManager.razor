@@ -9,7 +9,7 @@
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudTable Items="@_processes" Dense="true">
+    <MudTable Items="@_processes" Dense="true" Hover="true">
         <HeaderContent>
             <MudTh>
                 <MudTableSortLabel SortBy="new Func<ProcessInfo, object>(x => x.Id)">
