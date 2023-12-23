@@ -14,4 +14,6 @@ public interface IFileManagerService
     Stream DownloadFile(string path);
 
     Task<List<FileSystemItem>> GetFilesAndDirectoriesAsync(string path);
+
+    Task<List<string>> GetAvailableDrivesAsync();
 }

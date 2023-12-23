@@ -195,6 +195,12 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         await Clients.Caller.ReceiveFilesAndDirectories(items);
     }
 
+    public async Task GetAvailableDrives()
+    {
+        var drives = await fileManagerService.GetAvailableDrivesAsync();
+        await Clients.Caller.ReceiveAvailableDrives(drives);
+    }
+
     public async Task GetRunningProcesses()
     {
         var processes = taskManagerService.GetRunningProcesses();

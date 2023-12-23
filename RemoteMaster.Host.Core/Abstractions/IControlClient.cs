@@ -28,4 +28,6 @@ public interface IControlClient
     Task ReceiveFilesAndDirectories(List<FileSystemItem> fileSystemItems);
 
     Task ReceiveRunningProcesses(List<ProcessInfo> processes);
+
+    Task ReceiveAvailableDrives(List<string> availableDrives);
 }

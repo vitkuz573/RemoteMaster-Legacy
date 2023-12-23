@@ -77,4 +77,14 @@ public class FileManagerService : IFileManagerService
 
         return items;
     }
+
+    public Task<List<string>> GetAvailableDrivesAsync()
+    {
+        var drives = DriveInfo.GetDrives()
+            .Where(d => d.IsReady)
+            .Select(d => d.Name)
+            .ToList();
+
+        return Task.FromResult(drives);
+    }
 }
