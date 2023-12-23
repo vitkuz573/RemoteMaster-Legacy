@@ -9,20 +9,26 @@
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudSelect T="string" Label="Select Drive" ValueChanged="OnDriveSelected">
-        @foreach (var drive in _availableDrives)
-        {
-            <MudSelectItem Value="@drive" />
-        }
-    </MudSelect>
-
-    <MudTextField @bind-Value="@_currentPath" Label="Path" AdornmentIcon="@Icons.Material.Filled.Folder" Class="mb-2" />
-    <MudButton OnClick="@NavigateToPath" Color="Color.Primary" Variant="Variant.Filled">Navigate</MudButton>
-
     <MudTable Items="@_fileSystemItems" Dense="true" Hover="true" Filter="new Func<FileSystemItem, bool>(FilterFunc1)">
         <ToolBarContent>
             <MudText Typo="Typo.h6">File Manager</MudText>
+
             <MudSpacer />
+
+            <MudSelect T="string" Label="Select Drive" ValueChanged="OnDriveSelected">
+                @foreach (var drive in _availableDrives)
+                {
+                    <MudSelectItem Value="@drive" />
+                }
+            </MudSelect>
+
+            <MudSpacer />
+
+            <MudTextField @bind-Value="@_currentPath" Label="Path" AdornmentIcon="@Icons.Material.Filled.Folder" Class="mb-2" />
+            <MudButton OnClick="@NavigateToPath" Color="Color.Primary" Variant="Variant.Filled">Navigate</MudButton>
+            
+            <MudSpacer />
+            
             <MudTextField @bind-Value="_searchQuery" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
         </ToolBarContent>
         <HeaderContent>
