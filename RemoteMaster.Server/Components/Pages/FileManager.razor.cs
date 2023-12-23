@@ -26,8 +26,10 @@ public partial class FileManager : IDisposable
     private IJSRuntime JSRuntime { get; set; } = default!;
 
     private HubConnection _connection;
-    private string _currentPath = @"C:\";
+    private string _currentPath = string.Empty;
     private List<FileSystemItem> _fileSystemItems = [];
+    private List<string> _availableDrives = [];
+    private string _selectedDrive;
 
     private readonly AsyncRetryPolicy _retryPolicy = Policy
         .Handle<Exception>()
@@ -47,7 +49,19 @@ public partial class FileManager : IDisposable
     protected async override Task OnInitializedAsync()
     {
         await InitializeHostConnectionAsync();
-        await FetchFilesAndDirectories();
+        await FetchAvailableDrives();
+
+        if (_availableDrives.Count != 0)
+        {
+            _selectedDrive = _availableDrives.First();
+            _currentPath = _selectedDrive;
+            await FetchFilesAndDirectories();
+        }
+    }
+
+    private async Task FetchAvailableDrives()
+    {
+        await SafeInvokeAsync(() => _connection.InvokeAsync("GetAvailableDrives"));
     }
 
     private async Task NavigateToPath()
@@ -82,6 +96,11 @@ public partial class FileManager : IDisposable
         _connection.On<byte[], string>("ReceiveFile", async (file, path) =>
         {
             await JSRuntime.InvokeVoidAsync("saveAsFile", Path.GetFileName(path), Convert.ToBase64String(file));
+        });
+        
+        _connection.On<List<string>>("ReceiveAvailableDrives", (drives) =>
+        {
+            _availableDrives = drives;
         });
 
         _connection.Closed += async (error) =>
@@ -172,6 +191,13 @@ public partial class FileManager : IDisposable
         }
 
         return $"{len:0.##} {sizes[order]}";
+    }
+
+    private async Task OnDriveSelected(string selectedDrive)
+    {
+        _selectedDrive = selectedDrive;
+        _currentPath = _selectedDrive;
+        await FetchFilesAndDirectories();
     }
 
     [JSInvokable]
