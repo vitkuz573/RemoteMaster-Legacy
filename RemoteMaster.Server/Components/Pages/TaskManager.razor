@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @attribute [Authorize]
 @using Microsoft.AspNetCore.Authorization
+@using RemoteMaster.Shared.Models
 
 <MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme" />
 <MudDialogProvider />
@@ -10,9 +11,21 @@
 <MudLayout>
     <MudTable Items="@_processes" Dense="true">
         <HeaderContent>
-            <MudTh>Process ID</MudTh>
-            <MudTh>Name</MudTh>
-            <MudTh>Memory Usage</MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<ProcessInfo, object>(x => x.Id)">
+                    Process ID
+                </MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<ProcessInfo, object>(x => x.Name)">
+                    Name
+                </MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<ProcessInfo, object>(x => x.MemoryUsage)">
+                    Memory Usage
+                </MudTableSortLabel>
+            </MudTh>
             <MudTh>Actions</MudTh>
         </HeaderContent>
         <RowTemplate>

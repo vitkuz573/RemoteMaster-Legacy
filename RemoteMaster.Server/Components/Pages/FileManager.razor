@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @attribute [Authorize]
 @using Microsoft.AspNetCore.Authorization
+@using RemoteMaster.Shared.Models
 
 <MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme" />
 <MudDialogProvider />
@@ -20,9 +21,21 @@
 
     <MudTable Items="@_fileSystemItems" Dense="true" Class="mt-2">
         <HeaderContent>
-            <MudTh>Name</MudTh>
-            <MudTh>Type</MudTh>
-            <MudTh>Size</MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<FileSystemItem, object>(x => x.Name)">
+                    Name
+                </MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<FileSystemItem, object>(x => x.Type)">
+                    Type
+                </MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<FileSystemItem, object>(x => x.Size)">
+                    Size
+                </MudTableSortLabel>
+            </MudTh>
         </HeaderContent>
         <RowTemplate Context="context">
             <MudTd DataLabel="Item">
