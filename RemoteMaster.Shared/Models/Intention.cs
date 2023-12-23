@@ -14,11 +14,6 @@ public enum Intention
     /// <summary>
     /// Used for general management and control operations on the remote device.
     /// </summary>
-    ManageDevice,
-
-    /// <summary>
-    /// Used to handle file operations such as viewing, editing, and transferring files on the remote device.
-    /// </summary>
-    ManageFiles
+    ManageDevice
 }
 
