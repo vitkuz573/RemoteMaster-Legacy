@@ -74,11 +74,11 @@ public partial class FileManager : IDisposable
             .AddMessagePackProtocol()
         .Build();
 
-        _connection.On<List<string>, List<string>>("ReceiveFilesAndDirectories", (files, directories) =>
+        _connection.On<List<string>, List<string>>("ReceiveFilesAndDirectories", async (files, directories) =>
         {
             _files = files;
             _directories = directories;
-            InvokeAsync(StateHasChanged);
+            await InvokeAsync(StateHasChanged);
         });
 
         _connection.Closed += async (error) =>
