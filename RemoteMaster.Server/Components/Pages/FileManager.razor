@@ -8,33 +8,31 @@
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudMainContent>
-        <MudSelect T="string" Label="Select Drive" ValueChanged="OnDriveSelected">
-            @foreach (var drive in _availableDrives)
-            {
-                <MudSelectItem Value="@drive" />
-            }
-        </MudSelect>
+    <MudSelect T="string" Label="Select Drive" ValueChanged="OnDriveSelected">
+        @foreach (var drive in _availableDrives)
+        {
+            <MudSelectItem Value="@drive" />
+        }
+    </MudSelect>
 
-        <MudTextField @bind-Value="@_currentPath" Label="Path" AdornmentIcon="@Icons.Material.Filled.Folder" Class="mb-2" />
-        <MudButton OnClick="@NavigateToPath" Color="Color.Primary" Variant="Variant.Filled">Navigate</MudButton>
+    <MudTextField @bind-Value="@_currentPath" Label="Path" AdornmentIcon="@Icons.Material.Filled.Folder" Class="mb-2" />
+    <MudButton OnClick="@NavigateToPath" Color="Color.Primary" Variant="Variant.Filled">Navigate</MudButton>
 
-        <MudTable Items="@_fileSystemItems" Dense="true" Class="mt-2">
-            <HeaderContent>
-                <MudTh>Name</MudTh>
-                <MudTh>Type</MudTh>
-                <MudTh>Size</MudTh>
-            </HeaderContent>
-            <RowTemplate Context="context">
-                <MudTd DataLabel="Item">
-                    <MudButton OnClick="@(() => HandleClick(context))" Class="text-left p-0" Style="text-transform: none;">
-                        <MudIcon Icon="@GetIcon(context.Type)" Class="mr-2" />
-                        @context.Name
-                    </MudButton>
-                </MudTd>
-                <MudTd DataLabel="Type">@context.Type</MudTd>
-                <MudTd DataLabel="Size">@FormatSize(context.Size)</MudTd>
-            </RowTemplate>
-        </MudTable>
-    </MudMainContent>
+    <MudTable Items="@_fileSystemItems" Dense="true" Class="mt-2">
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh>Type</MudTh>
+            <MudTh>Size</MudTh>
+        </HeaderContent>
+        <RowTemplate Context="context">
+            <MudTd DataLabel="Item">
+                <MudButton OnClick="@(() => HandleClick(context))" Class="text-left p-0" Style="text-transform: none;">
+                    <MudIcon Icon="@GetIcon(context.Type)" Class="mr-2" />
+                    @context.Name
+                </MudButton>
+            </MudTd>
+            <MudTd DataLabel="Type">@context.Type</MudTd>
+            <MudTd DataLabel="Size">@FormatSize(context.Size)</MudTd>
+        </RowTemplate>
+    </MudTable>
 </MudLayout>
