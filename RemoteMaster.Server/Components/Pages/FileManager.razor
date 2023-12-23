@@ -11,13 +11,25 @@
     <MudMainContent>
         <MudTextField @bind-Value="@_currentPath" Label="Path" AdornmentIcon="@Icons.Material.Filled.Folder" Class="mb-2" />
         <MudButton OnClick="@NavigateToPath" Color="Color.Primary" Variant="Variant.Filled">Navigate</MudButton>
-        <MudTable Items="@_fileSystemItems">
+
+        <MudTable Items="@_fileSystemItems" Dense="true" Hover="true" Striped="true" Class="mt-2">
             <HeaderContent>
                 <MudTh>Name</MudTh>
                 <MudTh>Type</MudTh>
                 <MudTh>Size</MudTh>
             </HeaderContent>
-                <RowTemplate>
+            <RowTemplate Context="context">
+                @if (!IsRootDirectory && context == _fileSystemItems.First())
+                {
+                    <MudTd ColSpan="3">
+                        <MudButton OnClick="@NavigateUp" Class="text-left p-0">
+                            <MudIcon Icon="@Icons.Material.Filled.ArrowUpward" Class="mr-2" />
+                            Up
+                        </MudButton>
+                    </MudTd>
+                }
+                else
+                {
                     <MudTd DataLabel="Item">
                         <MudButton OnClick="@(() => HandleClick(context))" Class="text-left p-0">
                             <MudIcon Icon="@GetIcon(context.Type)" Class="mr-2" />
@@ -25,8 +37,9 @@
                         </MudButton>
                     </MudTd>
                     <MudTd DataLabel="Type">@context.Type</MudTd>
-                        <MudTd DataLabel="Size">@FormatSize(context.Size)</MudTd>
-                </RowTemplate>
-            </MudTable>
+                    <MudTd DataLabel="Size">@FormatSize(context.Size)</MudTd>
+                }
+            </RowTemplate>
+        </MudTable>
     </MudMainContent>
 </MudLayout>
