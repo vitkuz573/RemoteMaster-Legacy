@@ -15,7 +15,7 @@
 
             <MudSpacer />
 
-            <MudSelect T="string" Label="Select Drive" ValueChanged="OnDriveSelected">
+            <MudSelect T="string" Label="Select Drive" ValueChanged="OnDriveSelected" Class="w-2">
                 @foreach (var drive in _availableDrives)
                 {
                     <MudSelectItem Value="@drive" />
@@ -24,8 +24,8 @@
 
             <MudSpacer />
 
-            <MudTextField @bind-Value="@_currentPath" Label="Path" AdornmentIcon="@Icons.Material.Filled.Folder" Class="mb-2" />
-            <MudButton OnClick="@NavigateToPath" Color="Color.Primary" Variant="Variant.Filled">Navigate</MudButton>
+            <MudTextField @bind-Value="@_currentPath" Label="Path" AdornmentIcon="@Icons.Material.Filled.Folder" />
+            <MudButton OnClick="@NavigateToPath" Color="Color.Primary" Variant="Variant.Filled" Class="mt-4 ms-2">Navigate</MudButton>
             
             <MudSpacer />
             
