@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
 using Serilog;
@@ -13,7 +14,7 @@ using Serilog;
 namespace RemoteMaster.Host.Core.Hubs;
 
 [Authorize]
-public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IDomainService domainService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IUpdaterService updaterService, IScreenCapturerService screenCapturerService, IScreenRecorderService screenRecorderService, IFileManagerService fileManagerService) : Hub<IControlClient>
+public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IDomainService domainService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IUpdaterService updaterService, IScreenCapturerService screenCapturerService, IScreenRecorderService screenRecorderService, IFileManagerService fileManagerService, ITaskManagerService taskManagerService) : Hub<IControlClient>
 {
     public async Task ConnectAs(Intention intention)
     {
@@ -201,5 +202,22 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         var fileNames = files.Select(f => f.Name).ToList();
         var directoryNames = directories.Select(d => d.Name).ToList();
         await Clients.Caller.ReceiveFilesAndDirectories(fileNames, directoryNames);
+    }
+
+    public async Task GetRunningProcesses()
+    {
+        var processes = taskManagerService.GetRunningProcesses();
+        await Clients.Caller.ReceiveRunningProcesses(processes);
+    }
+
+    public async Task KillProcess(int processId)
+    {
+        taskManagerService.KillProcess(processId);
+        await GetRunningProcesses();
+    }
+
+    public void StartProcess(string processPath)
+    {
+        taskManagerService.StartProcess(processPath);
     }
 }

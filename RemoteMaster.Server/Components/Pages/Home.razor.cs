@@ -207,6 +207,14 @@ public partial class Home
         await JSRuntime.InvokeVoidAsync("openNewWindow", url);
     }
 
+    private async Task TaskManager()
+    {
+        foreach (var computer in _selectedComputers)
+        {
+            await OpenWindow($"/{computer.IPAddress}/taskmanager");
+        }
+    }
+
     private async Task FileManager()
     {
         foreach (var computer in _selectedComputers)

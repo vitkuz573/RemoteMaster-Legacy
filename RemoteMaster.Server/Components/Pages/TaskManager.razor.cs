@@ -9,10 +9,11 @@ using Microsoft.JSInterop;
 using MudBlazor;
 using Polly;
 using Polly.Retry;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Pages;
 
-public partial class FileManager : IDisposable
+public partial class TaskManager : IDisposable
 {
     [Parameter]
     public string Host { get; set; } = default!;
@@ -23,10 +24,8 @@ public partial class FileManager : IDisposable
     [Inject]
     private IJSRuntime JSRuntime { get; set; } = default!;
 
-    private List<string> _directories = [];
     private HubConnection _connection;
-    private string _currentPath = @"C:\";
-    private List<string> _files = [];
+    private List<ProcessInfo> _processes = [];
 
     private readonly AsyncRetryPolicy _retryPolicy = Policy
         .Handle<Exception>()
@@ -43,22 +42,10 @@ public partial class FileManager : IDisposable
     {
     };
 
-    private bool IsRootDirectory => new DirectoryInfo(_currentPath).Parent == null;
-
     protected async override Task OnInitializedAsync()
     {
         await InitializeHostConnectionAsync();
-        await FetchFilesAndDirectories();
-    }
-
-    private async Task NavigateToPath()
-    {
-        await FetchFilesAndDirectories();
-    }
-
-    private async Task FetchFilesAndDirectories()
-    {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("GetFilesAndDirectories", _currentPath));
+        await SafeInvokeAsync(() => _connection.InvokeAsync("GetRunningProcesses"));
     }
 
     private async Task InitializeHostConnectionAsync()
@@ -74,10 +61,9 @@ public partial class FileManager : IDisposable
             .AddMessagePackProtocol()
         .Build();
 
-        _connection.On<List<string>, List<string>>("ReceiveFilesAndDirectories", async (files, directories) =>
+        _connection.On<IEnumerable<ProcessInfo>>("ReceiveRunningProcesses", async (processes) =>
         {
-            _files = files;
-            _directories = directories;
+            _processes = processes.ToList();
             await InvokeAsync(StateHasChanged);
         });
 
@@ -133,33 +119,6 @@ public partial class FileManager : IDisposable
                 throw new InvalidOperationException("Connection is not active");
             }
         });
-    }
-
-    private async Task DownloadFile(string fileName)
-    {
-        var fileBytes = await SafeInvokeAsyncWithResult(() => _connection.InvokeAsync<byte[]>("DownloadFile", $"{_currentPath}/{fileName}"));
-        
-        if (fileBytes != null)
-        {
-            await JSRuntime.InvokeVoidAsync("saveAsFile", fileName, Convert.ToBase64String(fileBytes));
-        }
-    }
-
-    private async Task ChangeDirectory(string directory)
-    {
-        _currentPath = Path.Combine(_currentPath, directory);
-        await FetchFilesAndDirectories();
-    }
-
-    private async Task NavigateUp()
-    {
-        var directoryInfo = new DirectoryInfo(_currentPath);
-
-        if (directoryInfo.Parent != null)
-        {
-            _currentPath = directoryInfo.Parent.FullName;
-            await FetchFilesAndDirectories();
-        }
     }
 
     [JSInvokable]

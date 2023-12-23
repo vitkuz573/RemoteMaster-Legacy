@@ -1,0 +1,22 @@
+﻿@page "/{Host}/taskmanager"
+@rendermode InteractiveServer
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+
+<MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudMainContent>
+        <MudList Dense="true">
+            @foreach (var process in _processes)
+            {
+                <MudListItem Class="my-1">
+                    <MudIcon Icon="@Icons.Material.Filled.Task" Class="mr-2" />
+                    [@process.Id] @process.Name
+                </MudListItem>
+            }
+        </MudList>
+    </MudMainContent>
+</MudLayout>

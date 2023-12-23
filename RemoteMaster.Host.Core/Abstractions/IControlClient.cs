@@ -28,4 +28,6 @@ public interface IControlClient
     Task ReceiveFile(byte[] content, string fileName);
 
     Task ReceiveFilesAndDirectories(List<string> fileNames, List<string> directoryNames);
+
+    Task ReceiveRunningProcesses(List<ProcessInfo> processes);
 }
