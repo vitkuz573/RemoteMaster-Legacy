@@ -27,7 +27,7 @@
             </HeaderContent>
             <RowTemplate Context="context">
                 <MudTd DataLabel="Item">
-                    <MudButton OnClick="@(() => HandleClick(context))" Class="text-left p-0">
+                    <MudButton OnClick="@(() => HandleClick(context))" Class="text-left p-0" Style="text-transform: none;">
                         <MudIcon Icon="@GetIcon(context.Type)" Class="mr-2" />
                         @context.Name
                     </MudButton>
