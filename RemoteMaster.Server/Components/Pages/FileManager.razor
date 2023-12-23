@@ -13,6 +13,9 @@
         <MudTextField @bind-Value="@_currentPath" Label="Path" AdornmentIcon="@Icons.Material.Filled.Folder" Class="mb-2" />
         <MudButton OnClick="@NavigateToPath" Color="Color.Primary" Variant="Variant.Filled">Navigate</MudButton>
         <MudList Dense="true">
+            <MudListItem @onclick="@NavigateUp" Disabled="@IsRootDirectory" Class="my-1">
+                <MudIcon Icon="@Icons.Material.Filled.ArrowUpward" Class="mr-2" />
+            </MudListItem>
             @foreach (var directory in _directories)
             {
                 <MudListItem @onclick="@(() => ChangeDirectory(directory))" Class="my-1">

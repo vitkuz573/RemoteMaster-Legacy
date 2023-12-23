@@ -43,7 +43,9 @@ public partial class FileManager : IDisposable
     {
     };
 
-    protected override async Task OnInitializedAsync()
+    private bool IsRootDirectory => new DirectoryInfo(_currentPath).Parent == null;
+
+    protected async override Task OnInitializedAsync()
     {
         await InitializeHostConnectionAsync();
         await FetchFilesAndDirectories();
@@ -119,6 +121,17 @@ public partial class FileManager : IDisposable
     {
         _currentPath = Path.Combine(_currentPath, directory);
         await FetchFilesAndDirectories();
+    }
+
+    private async Task NavigateUp()
+    {
+        var directoryInfo = new DirectoryInfo(_currentPath);
+
+        if (directoryInfo.Parent != null)
+        {
+            _currentPath = directoryInfo.Parent.FullName;
+            await FetchFilesAndDirectories();
+        }
     }
 
     [JSInvokable]
