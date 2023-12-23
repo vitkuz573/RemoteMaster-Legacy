@@ -10,7 +10,7 @@
 <MudLayout>
     <MudMainContent>
         <MudTextField @bind-Value="@_currentPath" Label="Path" AdornmentIcon="@Icons.Material.Filled.Folder" Class="mb-2" />
-        <MudList Dense>
+        <MudList Dense="true">
             @foreach (var file in _files)
             {
                 <MudListItem @onclick="@(() => DownloadFile(file))" Class="my-1">

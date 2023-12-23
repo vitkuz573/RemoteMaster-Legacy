@@ -12,7 +12,7 @@ using Polly.Retry;
 
 namespace RemoteMaster.Server.Components.Pages;
 
-public partial class FileManager
+public partial class FileManager : IDisposable
 {
     [Parameter]
     public string Host { get; set; } = default!;
@@ -46,13 +46,7 @@ public partial class FileManager
     {
         await InitializeHostConnectionAsync();
 
-        _connection.On<List<string>>("ReceiveFiles", (files) =>
-        {
-            _files = files;
-            StateHasChanged();
-        });
-
-        await _connection.InvokeAsync("GetFiles", _currentPath);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("GetFiles", _currentPath));
     }
 
     private async Task InitializeHostConnectionAsync()
@@ -67,6 +61,12 @@ public partial class FileManager
             })
             .AddMessagePackProtocol()
         .Build();
+
+        _connection.On<List<string>>("ReceiveFiles", async (files) =>
+        {
+            _files = files;
+            await InvokeAsync(StateHasChanged);
+        });
 
         _connection.Closed += async (error) =>
         {
@@ -101,6 +101,17 @@ public partial class FileManager
 
     private async Task DownloadFile(string fileName)
     {
-        await _connection.InvokeAsync("DownloadFile", $"{_currentPath}/{fileName}");
+        await SafeInvokeAsync(() => _connection.InvokeAsync("DownloadFile", $"{_currentPath}/{fileName}"));
+    }
+
+    [JSInvokable]
+    public void OnBeforeUnload()
+    {
+        Dispose();
+    }
+
+    public void Dispose()
+    {
+        _connection?.DisposeAsync();
     }
 }
