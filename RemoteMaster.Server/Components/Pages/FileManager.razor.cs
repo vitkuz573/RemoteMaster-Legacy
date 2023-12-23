@@ -26,6 +26,7 @@ public partial class FileManager : IDisposable
     private IJSRuntime JSRuntime { get; set; } = default!;
 
     private HubConnection _connection;
+    private string _searchQuery = string.Empty;
     private string _currentPath = string.Empty;
     private List<FileSystemItem> _fileSystemItems = [];
     private List<string> _availableDrives = [];
@@ -198,6 +199,24 @@ public partial class FileManager : IDisposable
         _selectedDrive = selectedDrive;
         _currentPath = _selectedDrive;
         await FetchFilesAndDirectories();
+    }
+
+    private bool FilterFunc1(FileSystemItem fileSystemItem) => FilterFunc(fileSystemItem, _searchQuery);
+
+    [SuppressMessage("Performance", "CA1822:Пометьте члены как статические", Justification = "<Ожидание>")]
+    private bool FilterFunc(FileSystemItem fileSystemItem, string searchQuery)
+    {
+        if (string.IsNullOrWhiteSpace(searchQuery))
+        {
+            return true;
+        }
+
+        if (fileSystemItem.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return false;
     }
 
     [JSInvokable]
