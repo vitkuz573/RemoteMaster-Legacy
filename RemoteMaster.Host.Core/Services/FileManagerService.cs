@@ -4,6 +4,7 @@
 
 using Microsoft.AspNetCore.Components.Forms;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Services;
 
@@ -47,12 +48,31 @@ public class FileManagerService : IFileManagerService
         return memoryStream;
     }
 
-    public async Task<(FileInfo[], DirectoryInfo[])> GetFilesAndDirectoriesAsync(string path)
+    public async Task<List<FileSystemItem>> GetFilesAndDirectoriesAsync(string path)
     {
-        var directory = new DirectoryInfo(path);
-        var files = directory.GetFiles();
-        var directories = directory.GetDirectories();
+        var items = new List<FileSystemItem>();
+        var directoryInfo = new DirectoryInfo(path);
 
-        return (files, directories);
+        foreach (var file in directoryInfo.GetFiles())
+        {
+            items.Add(new FileSystemItem
+            {
+                Name = file.Name,
+                Type = FileSystemItem.FileSystemItemType.File,
+                Size = file.Length
+            });
+        }
+
+        foreach (var directory in directoryInfo.GetDirectories())
+        {
+            items.Add(new FileSystemItem
+            {
+                Name = directory.Name,
+                Type = FileSystemItem.FileSystemItemType.Directory,
+                Size = 0
+            });
+        }
+
+        return items;
     }
 }

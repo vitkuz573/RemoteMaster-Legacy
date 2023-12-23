@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
 using Serilog;
@@ -198,10 +197,8 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     public async Task GetFilesAndDirectories(string path)
     {
-        var (files, directories) = await fileManagerService.GetFilesAndDirectoriesAsync(path);
-        var fileNames = files.Select(f => f.Name).ToList();
-        var directoryNames = directories.Select(d => d.Name).ToList();
-        await Clients.Caller.ReceiveFilesAndDirectories(fileNames, directoryNames);
+        var items = await fileManagerService.GetFilesAndDirectoriesAsync(path);
+        await Clients.Caller.ReceiveFilesAndDirectories(items);
     }
 
     public async Task GetRunningProcesses()

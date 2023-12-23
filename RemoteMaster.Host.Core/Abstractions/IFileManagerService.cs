@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Components.Forms;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
@@ -16,5 +17,5 @@ public interface IFileManagerService
 
     Stream DownloadFile(string path);
 
-    Task<(FileInfo[], DirectoryInfo[])> GetFilesAndDirectoriesAsync(string path);
+    Task<List<FileSystemItem>> GetFilesAndDirectoriesAsync(string path);
 }

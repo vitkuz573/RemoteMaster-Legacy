@@ -9,6 +9,7 @@ using Microsoft.JSInterop;
 using MudBlazor;
 using Polly;
 using Polly.Retry;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Pages;
 
@@ -23,10 +24,9 @@ public partial class FileManager : IDisposable
     [Inject]
     private IJSRuntime JSRuntime { get; set; } = default!;
 
-    private List<string> _directories = [];
     private HubConnection _connection;
     private string _currentPath = @"C:\";
-    private List<string> _files = [];
+    private List<FileSystemItem> _fileSystemItems = [];
 
     private readonly AsyncRetryPolicy _retryPolicy = Policy
         .Handle<Exception>()
@@ -74,10 +74,9 @@ public partial class FileManager : IDisposable
             .AddMessagePackProtocol()
         .Build();
 
-        _connection.On<List<string>, List<string>>("ReceiveFilesAndDirectories", async (files, directories) =>
+        _connection.On<List<FileSystemItem>>("ReceiveFilesAndDirectories", async (fileSystemItems) =>
         {
-            _files = files;
-            _directories = directories;
+            _fileSystemItems = fileSystemItems;
             await InvokeAsync(StateHasChanged);
         });
 
@@ -160,6 +159,30 @@ public partial class FileManager : IDisposable
             _currentPath = directoryInfo.Parent.FullName;
             await FetchFilesAndDirectories();
         }
+    }
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Пометьте члены как статические", Justification = "<Ожидание>")]
+    private string GetIcon(FileSystemItem.FileSystemItemType type)
+    {
+        return type == FileSystemItem.FileSystemItemType.Directory ? Icons.Material.Filled.Folder : Icons.Material.Filled.InsertDriveFile;
+    }
+
+    private async Task HandleClick(FileSystemItem item)
+    {
+        if (item.Type == FileSystemItem.FileSystemItemType.Directory)
+        {
+            await ChangeDirectory(item.Name);
+        }
+        else
+        {
+            await DownloadFile(item.Name);
+        }
+    }
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Пометьте члены как статические", Justification = "<Ожидание>")]
+    private string FormatSize(long size)
+    {
+        return size.ToString();
     }
 
     [JSInvokable]
