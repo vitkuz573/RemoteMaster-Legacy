@@ -9,14 +9,23 @@
 
 <MudLayout>
     <MudMainContent>
-        <MudList Dense="true">
-            @foreach (var process in _processes)
-            {
-                <MudListItem Class="my-1">
-                    <MudIcon Icon="@Icons.Material.Filled.Task" Class="mr-2" />
-                    [@process.Id] @process.Name
-                </MudListItem>
-            }
-        </MudList>
-    </MudMainContent>
-</MudLayout>
+        <MudTable Items="@_processes" Dense="true" Hover="true" Striped="true">
+            <HeaderContent>
+                <MudTh>Process ID</MudTh>
+                <MudTh>Name</MudTh>
+                <MudTh>Memory Usage</MudTh>
+                <MudTh>CPU Usage (%)</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Process ID">@context.Id</MudTd>
+                    <MudTd DataLabel="Name">@context.Name</MudTd>
+                    <MudTd DataLabel="Memory Usage">@context.MemoryUsage</MudTd>
+                    <MudTd DataLabel="CPU Usage">@context.CpuUsage</MudTd>
+                    <MudTd>
+                        <MudButton OnClick="@(() => KillProcess(context.Id))" Color="Color.Error">Kill</MudButton>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudMainContent>
+    </MudLayout>

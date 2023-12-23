@@ -45,6 +45,11 @@ public partial class TaskManager : IDisposable
     protected async override Task OnInitializedAsync()
     {
         await InitializeHostConnectionAsync();
+        await FetchProcesses();
+    }
+
+    private async Task FetchProcesses()
+    {
         await SafeInvokeAsync(() => _connection.InvokeAsync("GetRunningProcesses"));
     }
 
@@ -119,6 +124,13 @@ public partial class TaskManager : IDisposable
                 throw new InvalidOperationException("Connection is not active");
             }
         });
+    }
+
+    private async Task KillProcess(int processId)
+    {
+        await SafeInvokeAsync(() => _connection.InvokeAsync("KillProcess", processId));
+        await FetchProcesses();
+        await InvokeAsync(StateHasChanged);
     }
 
     [JSInvokable]
