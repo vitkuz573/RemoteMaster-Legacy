@@ -9,10 +9,6 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IFileManagerService
 {
-    Task<FileInfo[]> GetFilesAsync(string path);
-
-    Task<DirectoryInfo[]> GetDirectoriesAsync(string path);
-
     Task UploadFileAsync(string path, IBrowserFile file);
 
     Stream DownloadFile(string path);

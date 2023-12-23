@@ -44,8 +44,6 @@ public partial class FileManager : IDisposable
     {
     };
 
-    private bool IsRootDirectory => new DirectoryInfo(_currentPath).Parent == null;
-
     protected async override Task OnInitializedAsync()
     {
         await InitializeHostConnectionAsync();

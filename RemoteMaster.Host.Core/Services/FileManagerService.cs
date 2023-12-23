@@ -10,20 +10,6 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class FileManagerService : IFileManagerService
 {
-    public Task<FileInfo[]> GetFilesAsync(string path)
-    {
-        var directory = new DirectoryInfo(path);
-
-        return Task.FromResult(directory.GetFiles());
-    }
-
-    public Task<DirectoryInfo[]> GetDirectoriesAsync(string path)
-    {
-        var directory = new DirectoryInfo(path);
-
-        return Task.FromResult(directory.GetDirectories());
-    }
-
     public async Task UploadFileAsync(string path, IBrowserFile file)
     {
         ArgumentNullException.ThrowIfNull(file);

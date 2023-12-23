@@ -23,8 +23,6 @@ public interface IControlClient
 
     Task ReceiveHostVersion(Version version);
 
-    Task ReceiveFiles(List<string> files);
-
     Task ReceiveFile(byte[] content, string fileName);
 
     Task ReceiveFilesAndDirectories(List<FileSystemItem> fileSystemItems);

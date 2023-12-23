@@ -175,12 +175,6 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         domainService.UnjoinFromDomain(user, password);
     }
 
-    public async Task GetFiles(string path)
-    {
-        var files = await fileManagerService.GetFilesAsync(path);
-        await Clients.Caller.ReceiveFiles(files.Select(f => f.Name).ToList());
-    }
-
     public async Task UploadFile(string path, IBrowserFile file)
     {
         await fileManagerService.UploadFileAsync(path, file);
