@@ -13,33 +13,27 @@
         <MudButton OnClick="@NavigateToPath" Color="Color.Primary" Variant="Variant.Filled">Navigate</MudButton>
 
         <MudTable Items="@_fileSystemItems" Dense="true" Hover="true" Striped="true" Class="mt-2">
+            <ToolBarContent>
+                <div class="mud-table-pagination">
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward" OnClick="@NavigateUp" Disabled="@(IsRootDirectory)" Size="Size.Small" Color="Color.Primary" />
+                </div>
+            </ToolBarContent>
+
             <HeaderContent>
                 <MudTh>Name</MudTh>
                 <MudTh>Type</MudTh>
                 <MudTh>Size</MudTh>
             </HeaderContent>
             <RowTemplate Context="context">
-                @if (!IsRootDirectory && context == _fileSystemItems.First())
-                {
-                    <MudTd ColSpan="3">
-                        <MudButton OnClick="@NavigateUp" Class="text-left p-0">
-                            <MudIcon Icon="@Icons.Material.Filled.ArrowUpward" Class="mr-2" />
-                            Up
-                        </MudButton>
-                    </MudTd>
-                }
-                else
-                {
-                    <MudTd DataLabel="Item">
-                        <MudButton OnClick="@(() => HandleClick(context))" Class="text-left p-0">
-                            <MudIcon Icon="@GetIcon(context.Type)" Class="mr-2" />
-                            @context.Name
-                        </MudButton>
-                    </MudTd>
-                    <MudTd DataLabel="Type">@context.Type</MudTd>
+                <MudTd DataLabel="Item">
+                    <MudButton OnClick="@(() => HandleClick(context))" Class="text-left p-0">
+                        <MudIcon Icon="@GetIcon(context.Type)" Class="mr-2" />
+                        @context.Name
+                    </MudButton>
+                </MudTd>
+                <MudTd DataLabel="Type">@context.Type</MudTd>
                     <MudTd DataLabel="Size">@FormatSize(context.Size)</MudTd>
-                }
-            </RowTemplate>
-        </MudTable>
-    </MudMainContent>
-</MudLayout>
+                </RowTemplate>
+            </MudTable>
+        </MudMainContent>
+    </MudLayout>
