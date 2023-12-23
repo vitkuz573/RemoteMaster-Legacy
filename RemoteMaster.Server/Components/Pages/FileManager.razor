@@ -1,10 +1,17 @@
-﻿@inherits CommonDialogBase
+﻿@page "/{Host}/filemanager"
+@rendermode InteractiveServer
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
 
-<CommonDialog Hosts="@Hosts" ContentStyle="width: 600px;">
-    <Content>
+<MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudMainContent>
         <MudTextField @bind-Value="@_currentPath" Label="Path" AdornmentIcon="@Icons.Material.Filled.Folder" Class="mb-2" />
         <MudList Dense>
-            @foreach (var file in Files)
+            @foreach (var file in _files)
             {
                 <MudListItem @onclick="@(() => DownloadFile(file))" Class="my-1">
                     <MudIcon Icon="@Icons.Material.Filled.InsertDriveFile" Class="mr-2" />
@@ -12,9 +19,5 @@
                 </MudListItem>
             }
         </MudList>
-    </Content>
-    <Actions>
-        <MudButton OnClick="Refresh">Refresh</MudButton>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-    </Actions>
-</CommonDialog>
+    </MudMainContent>
+</MudLayout>

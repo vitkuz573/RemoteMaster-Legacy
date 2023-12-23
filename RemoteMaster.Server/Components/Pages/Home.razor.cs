@@ -5,6 +5,7 @@
 using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.JSInterop;
 using MudBlazor;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Components.Dialogs;
@@ -28,6 +29,9 @@ public partial class Home
 
     [Inject]
     private IHttpContextAccessor HttpContextAccessor { get; set; } = default!;
+
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = default!;
 
     private bool _drawerOpen = false;
     private Node? _selectedNode = null;
@@ -198,6 +202,19 @@ public partial class Home
         await DialogService.ShowAsync<ConnectDialog>("Connect", dialogParameters);
     }
 
+    protected async Task OpenWindow(string url)
+    {
+        await JSRuntime.InvokeVoidAsync("openNewWindow", url);
+    }
+
+    private async Task FileManager()
+    {
+        foreach (var computer in _selectedComputers)
+        {
+            await OpenWindow($"/{computer.IPAddress}/filemanager");
+        }
+    }
+
     private async Task OpenShell()
     {
         if (_selectedComputers.All(computer => !_availableComputers.Contains(computer)))
@@ -294,21 +311,6 @@ public partial class Home
         };
 
         await DialogService.ShowAsync<DomainManagementDialog>("Domain Management", dialogParameters);
-    }
-
-    private async Task FileManager()
-    {
-        if (_selectedComputers.All(computer => !_availableComputers.Contains(computer)))
-        {
-            return;
-        }
-
-        var dialogParameters = new DialogParameters<FileManager>
-        {
-            { x => x.Hosts, await GetComputers() }
-        };
-
-        await DialogService.ShowAsync<FileManager>("File Manager", dialogParameters);
     }
 
     private async Task Update()
