@@ -27,13 +27,13 @@
                 @if (_resultsPerComputer.Any())
                 {
                     <div class="space-x-2">
-                        <MudButton OnClick="CleanResults" Variant="Variant.Filled">Clear results</MudButton>
-                        <MudButton OnClick="ExportResults" Variant="Variant.Filled">Export Results</MudButton>
+                        <MudButton OnClick="CleanResults" Variant="Variant.Filled" Color="Color.Error">Clear results</MudButton>
+                        <MudButton OnClick="ExportResults" Variant="Variant.Filled" Color="Color.Surface">Export Results</MudButton>
                     </div>
                 }
             </MudItem>
             <MudItem xs="6">
-                <MudList Class="max-h-72 overflow-y-auto">
+                <MudExpansionPanels Class="max-h-72 overflow-y-auto" MultiExpansion="true">
                     @foreach (var (computer, results) in _resultsPerComputer)
                     {
                         <MudExpansionPanel Text="@($"Results for {computer.Name} ({computer.IPAddress})")">
@@ -43,7 +43,7 @@
                             }
                         </MudExpansionPanel>
                     }
-                </MudList>
+                </MudExpansionPanels>
             </MudItem>
         </MudGrid>
     </Content>
