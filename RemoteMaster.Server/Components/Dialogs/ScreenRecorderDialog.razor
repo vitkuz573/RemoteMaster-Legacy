@@ -2,7 +2,7 @@
 
 <CommonDialog Hosts="@Hosts" ContentStyle="width: 600px;">
     <Content>
-        <MudTextField T="string" Label="Output File Name" @bind-Value="@_outputFileName" FullWidth />
+        <MudTextField T="string" Label="Output Path" @bind-Value="@_outputPath" FullWidth />
          <MudNumericField T="uint" HideSpinButtons="true" Label="Duration (in seconds)" @bind-Value="@_durationInSeconds" FullWidth />
     </Content>
     <Actions>
