@@ -19,7 +19,7 @@ public class DesktopServiceTests
     public void GetCurrentDesktop_ShouldReturnTrue_IfDesktopNameIsRetrieved()
     {
         // Act
-        var result = _desktopService.GetCurrentDesktop(out string? desktopName);
+        var result = _desktopService.GetCurrentDesktop(out var desktopName);
 
         // Assert
         Assert.True(result, "GetCurrentDesktop should return true when desktop name is successfully retrieved.");
