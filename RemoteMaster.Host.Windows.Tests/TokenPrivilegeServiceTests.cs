@@ -9,7 +9,12 @@ namespace RemoteMaster.Host.Windows.Tests;
 
 public class TokenPrivilegeServiceTests
 {
-    private readonly TokenPrivilegeService _service = new();
+    private readonly TokenPrivilegeService _tokenPrivilegeService;
+
+    public TokenPrivilegeServiceTests()
+    {
+        _tokenPrivilegeService = new();
+    }
 
     [Fact]
     public void AdjustPrivilege_WithValidPrivilege_ShouldReturnTrue_IfRunAsAdmin()
@@ -25,7 +30,7 @@ public class TokenPrivilegeServiceTests
         }
 
         // Act
-        var result = _service.AdjustPrivilege(privilegeName);
+        var result = _tokenPrivilegeService.AdjustPrivilege(privilegeName);
 
         // Assert
         Assert.True(result, $"AdjustPrivilege should return true when attempting to adjust '{privilegeName}'.");
@@ -38,7 +43,7 @@ public class TokenPrivilegeServiceTests
         var privilegeName = "InvalidPrivilege";
 
         // Act
-        var result = _service.AdjustPrivilege(privilegeName);
+        var result = _tokenPrivilegeService.AdjustPrivilege(privilegeName);
 
         // Assert
         Assert.False(result, "AdjustPrivilege should return false when an invalid privilege name is provided.");
@@ -51,7 +56,7 @@ public class TokenPrivilegeServiceTests
         var privilegeName = "";
 
         // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() => _service.AdjustPrivilege(privilegeName));
+        var exception = Assert.Throws<ArgumentException>(() => _tokenPrivilegeService.AdjustPrivilege(privilegeName));
         Assert.Equal("privilegeName", exception.ParamName);
     }
 
