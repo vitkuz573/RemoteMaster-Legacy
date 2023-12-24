@@ -256,7 +256,7 @@ public partial class Home
             { x => x.Hosts, await GetComputers() }
         };
 
-        await DialogService.ShowAsync<ScriptExecutorDialog>("Script executor", dialogParameters, dialogOptions);
+        await DialogService.ShowAsync<ScriptExecutorDialog>("Script Executor", dialogParameters, dialogOptions);
     }
 
     private async Task HandleRefreshClick()

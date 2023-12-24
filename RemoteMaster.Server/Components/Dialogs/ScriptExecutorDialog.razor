@@ -33,7 +33,7 @@
                 }
             </MudItem>
             <MudItem xs="6">
-                <MudList>
+                <MudList Class="max-h-72 overflow-y-auto">
                     @foreach (var (computer, results) in _resultsPerComputer)
                     {
                         <MudExpansionPanel Text="@($"Results for {computer.Name} ({computer.IPAddress})")">
