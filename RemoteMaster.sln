@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Host.Windows",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Server", "RemoteMaster.Server\RemoteMaster.Server.csproj", "{E9BCA6BD-8BC4-45C1-A638-56561BDDB612}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteMaster.Host.Windows.Tests", "RemoteMaster.Host.Windows.Tests\RemoteMaster.Host.Windows.Tests.csproj", "{77DAA792-71EC-4D28-859C-AF6574D47A75}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -93,6 +95,22 @@ Global
 		{E9BCA6BD-8BC4-45C1-A638-56561BDDB612}.Release|x64.Build.0 = Release|Any CPU
 		{E9BCA6BD-8BC4-45C1-A638-56561BDDB612}.Release|x86.ActiveCfg = Release|Any CPU
 		{E9BCA6BD-8BC4-45C1-A638-56561BDDB612}.Release|x86.Build.0 = Release|Any CPU
+		{77DAA792-71EC-4D28-859C-AF6574D47A75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77DAA792-71EC-4D28-859C-AF6574D47A75}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77DAA792-71EC-4D28-859C-AF6574D47A75}.Debug|arm64.ActiveCfg = Debug|Any CPU
+		{77DAA792-71EC-4D28-859C-AF6574D47A75}.Debug|arm64.Build.0 = Debug|Any CPU
+		{77DAA792-71EC-4D28-859C-AF6574D47A75}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{77DAA792-71EC-4D28-859C-AF6574D47A75}.Debug|x64.Build.0 = Debug|Any CPU
+		{77DAA792-71EC-4D28-859C-AF6574D47A75}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{77DAA792-71EC-4D28-859C-AF6574D47A75}.Debug|x86.Build.0 = Debug|Any CPU
+		{77DAA792-71EC-4D28-859C-AF6574D47A75}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77DAA792-71EC-4D28-859C-AF6574D47A75}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77DAA792-71EC-4D28-859C-AF6574D47A75}.Release|arm64.ActiveCfg = Release|Any CPU
+		{77DAA792-71EC-4D28-859C-AF6574D47A75}.Release|arm64.Build.0 = Release|Any CPU
+		{77DAA792-71EC-4D28-859C-AF6574D47A75}.Release|x64.ActiveCfg = Release|Any CPU
+		{77DAA792-71EC-4D28-859C-AF6574D47A75}.Release|x64.Build.0 = Release|Any CPU
+		{77DAA792-71EC-4D28-859C-AF6574D47A75}.Release|x86.ActiveCfg = Release|Any CPU
+		{77DAA792-71EC-4D28-859C-AF6574D47A75}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
