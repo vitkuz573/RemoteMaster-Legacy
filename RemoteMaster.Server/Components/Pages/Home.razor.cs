@@ -245,12 +245,18 @@ public partial class Home
             return;
         }
 
+        var dialogOptions = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraExtraLarge,
+            FullWidth = true
+        };
+
         var dialogParameters = new DialogParameters<ScriptExecutorDialog>
         {
             { x => x.Hosts, await GetComputers() }
         };
 
-        await DialogService.ShowAsync<ScriptExecutorDialog>("Script executor", dialogParameters);
+        await DialogService.ShowAsync<ScriptExecutorDialog>("Script executor", dialogParameters, dialogOptions);
     }
 
     private async Task HandleRefreshClick()

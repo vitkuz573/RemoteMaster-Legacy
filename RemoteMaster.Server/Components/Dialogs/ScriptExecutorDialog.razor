@@ -1,10 +1,10 @@
 ﻿@inherits CommonDialogBase
 @using RemoteMaster.Shared.Models
 
-<CommonDialog Hosts="@Hosts" ContentStyle="width: 600px;">
+<CommonDialog Hosts="@Hosts">
     <Content>
         <MudGrid>
-            <MudItem xs="6">
+            <MudItem xs="4">
                 <MudTextField T="string" Label="Script" @bind-Value="_content" Lines="4" Placeholder="Enter or upload your script here..." />
 
                 <MudFileUpload T="IBrowserFile" OnFilesChanged="UploadFiles">
@@ -26,7 +26,7 @@
 
                 @if (_resultsPerComputer.Any())
                 {
-                    <div class="space-y-2">
+                    <div class="space-x-2">
                         <MudButton OnClick="CleanResults" Variant="Variant.Filled">Clear results</MudButton>
                         <MudButton OnClick="ExportResults" Variant="Variant.Filled">Export Results</MudButton>
                     </div>
