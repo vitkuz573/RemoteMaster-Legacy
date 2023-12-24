@@ -57,7 +57,7 @@ public partial class ScriptExecutorDialog
             _resultsPerComputer[computer] = stringBuilder;
         }
 
-        stringBuilder.AppendLine($"[{scriptResult.Type}] {scriptResult.Message}");
+        stringBuilder.AppendLine(scriptResult.Message);
     }
 
     private async Task UploadFiles(InputFileChangeEventArgs e)
