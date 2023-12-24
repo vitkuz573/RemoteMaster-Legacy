@@ -18,25 +18,36 @@ public class HostInfoServiceTests
     [Fact]
     public void GetHostName_ShouldReturnNonEmptyString()
     {
+        // Arrange
+
+        // Act
         var result = _hostInfoService.GetHostName();
+
+        // Assert
         Assert.False(string.IsNullOrWhiteSpace(result));
     }
 
-    // Этот тест может завершиться неудачей в среде без сети
     [Fact]
     public void GetIPv4Address_ShouldReturnValidAddress()
     {
+        // Arrange
+
+        // Act
         var result = _hostInfoService.GetIPv4Address();
+
+        // Assert
         Assert.False(string.IsNullOrWhiteSpace(result));
-        // Дополнительно можно проверить, соответствует ли результат формату IPv4-адреса
     }
 
-    // Этот тест может завершиться неудачей на машинах без сетевых интерфейсов
     [Fact]
     public void GetMacAddress_ShouldReturnValidMac()
     {
+        // Arrange
+
+        // Act
         var result = _hostInfoService.GetMacAddress();
+
+        // Assert
         Assert.False(string.IsNullOrWhiteSpace(result));
-        // Можно добавить проверку формата MAC-адреса
     }
 }
