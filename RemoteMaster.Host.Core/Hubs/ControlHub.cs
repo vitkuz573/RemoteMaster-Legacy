@@ -125,9 +125,9 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         }
     }
 
-    public async Task SendStartScreenRecording(string outputPath)
+    public async Task SendStartScreenRecording(string outputPath, int durationInSeconds)
     {
-        await screenRecorderService.StartRecordingAsync(outputPath);
+        await screenRecorderService.StartRecordingAsync(outputPath, durationInSeconds);
     }
 
     public async Task SendStopScreenRecording()

@@ -16,10 +16,15 @@ public class ScreenRecorderService(IScreenCapturerService screenCapturerService)
     private CancellationTokenSource _cancellationTokenSource = new();
     private Task _recordingTask = Task.CompletedTask;
 
-    public Task StartRecordingAsync(string outputPath)
+    public Task StartRecordingAsync(string outputPath, int durationInSeconds)
     {
         _cancellationTokenSource = new CancellationTokenSource();
         _recordingTask = RecordVideo(outputPath, _cancellationTokenSource.Token);
+
+        if (durationInSeconds > 0)
+        {
+            StopRecordingAfterDelay(durationInSeconds);
+        }
 
         return Task.CompletedTask;
     }
@@ -66,5 +71,11 @@ public class ScreenRecorderService(IScreenCapturerService screenCapturerService)
 
             yield return new BitmapVideoFrameWrapper(bitmap);
         }
+    }
+
+    private async void StopRecordingAfterDelay(int durationInSeconds)
+    {
+        await Task.Delay(TimeSpan.FromSeconds(durationInSeconds));
+        await StopRecordingAsync();
     }
 }

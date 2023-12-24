@@ -14,28 +14,35 @@ public partial class ScreenRecorderDialog
     [Inject]
     private IComputerCommandService ComputerCommandService { get; set; } = default!;
 
-    private string _outputFileName;
-    private uint _duration;
+    private string _outputPath;
+    private uint _durationInSeconds;
 
     protected override void OnInitialized()
     {
         var requesterName = Environment.MachineName;
         var currentDate = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        _outputFileName = $@"C:\{requesterName}_{currentDate}.mp4";
+        _outputPath = $@"C:\{requesterName}_{currentDate}.mp4";
+        _durationInSeconds = 0;
 
         base.OnInitialized();
     }
 
     private async Task StartRecording()
     {
-        await ComputerCommandService.Execute(Hosts, async (computer, connection) => await connection.InvokeAsync("SendStartScreenRecording", _outputFileName));
+        await ComputerCommandService.Execute(Hosts, async (computer, connection) =>
+        {
+            await connection.InvokeAsync("SendStartScreenRecording", _outputPath, _durationInSeconds);
+        });
 
         MudDialog.Close(DialogResult.Ok(true));
     }
 
     private async Task StopRecording()
     {
-        await ComputerCommandService.Execute(Hosts, async (computer, connection) => await connection.InvokeAsync("SendStopScreenRecording"));
+        await ComputerCommandService.Execute(Hosts, async (computer, connection) =>
+        {
+            await connection.InvokeAsync("SendStopScreenRecording");
+        });
 
         MudDialog.Close(DialogResult.Ok(true));
     }

@@ -3,7 +3,7 @@
 <CommonDialog Hosts="@Hosts" ContentStyle="width: 600px;">
     <Content>
         <MudTextField T="string" Label="Output File Name" @bind-Value="@_outputFileName" FullWidth />
-         <MudNumericField T="uint" HideSpinButtons="true" Label="Duration (in seconds)" @bind-Value="@_duration" FullWidth />
+         <MudNumericField T="uint" HideSpinButtons="true" Label="Duration (in seconds)" @bind-Value="@_durationInSeconds" FullWidth />
     </Content>
     <Actions>
          <MudButton OnClick="Cancel">Cancel</MudButton>
