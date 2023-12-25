@@ -63,6 +63,7 @@
                     <MudTabPanel Text="Tools" Icon="@Icons.Material.Filled.MiscellaneousServices">
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="TaskManager" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Task Manager</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="FileManager" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">File Manager</MudButton>
+                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="FileUpload" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Upload File</MudButton>
                     </MudTabPanel>
                 </MudTabs>
 

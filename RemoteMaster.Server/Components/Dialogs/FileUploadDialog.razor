@@ -1,0 +1,13 @@
+﻿@inherits CommonDialogBase
+
+<CommonDialog Hosts="@Hosts">
+    <Content>
+        <InputFile OnChange="@OnInputFileChange" />
+        <MudTextField @bind-Value="@_destinationPath" Label="Destination Path" />
+    </Content>
+
+    <Actions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Upload">Upload</MudButton>
+    </Actions>
+</CommonDialog>
