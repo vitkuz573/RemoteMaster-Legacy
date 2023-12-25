@@ -2,12 +2,27 @@
 
 <CommonDialog Hosts="@Hosts">
     <Content>
-        <InputFile OnChange="@OnInputFileChange" />
-        <MudTextField @bind-Value="@_destinationPath" Label="Destination Path" />
+        <MudStack Style="width: 100%">
+            <MudFileUpload T="IReadOnlyList<IBrowserFile>" AppendMultipleFiles OnFilesChanged="OnInputFileChanged" Hidden="@false" InputClass="absolute mud-width-full mud-height-full overflow-hidden z-20" InputStyle="opacity:0" @ondragenter="@SetDragClass" @ondragleave="@ClearDragClass" @ondragend="@ClearDragClass">
+                 <ButtonTemplate>
+                     <MudPaper Height="300px" Outlined="true" Class="@_dragClass">
+                         <MudText Typo="Typo.h6">
+                             Drag and drop files here or click
+                         </MudText>
+                         @foreach (var file in _files)
+                        {
+                            <MudChip Color="Color.Dark" Text="@file.Name" />
+                        }
+                    </MudPaper>
+                </ButtonTemplate>
+            </MudFileUpload>
+
+            <MudTextField @bind-Value="@_destinationPath" Label="Destination Path" />
+        </MudStack>
     </Content>
 
     <Actions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="Upload">Upload</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Upload" Disabled="@(!_files.Any())">Upload</MudButton>
     </Actions>
 </CommonDialog>

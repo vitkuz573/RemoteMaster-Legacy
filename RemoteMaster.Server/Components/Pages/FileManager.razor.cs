@@ -34,7 +34,6 @@ public partial class FileManager : IDisposable
     private List<string> _availableDrives = [];
     private string _selectedDrive;
     private IBrowserFile _selectedFile;
-    private string _destinationPath;
 
     private readonly AsyncRetryPolicy _retryPolicy = Policy
         .Handle<Exception>()
@@ -74,13 +73,13 @@ public partial class FileManager : IDisposable
         if (_selectedFile != null)
         {
             var data = new byte[_selectedFile.Size];
-            await _selectedFile.OpenReadStream().ReadAsync(data);
+            await _selectedFile.OpenReadStream(_selectedFile.Size).ReadAsync(data);
 
             var fileDto = new FileUploadDto
             {
                 Name = _selectedFile.Name,
                 Data = data,
-                DestinationPath = _destinationPath
+                DestinationPath = _currentPath
             };
 
             await _connection.InvokeAsync("UploadFile", fileDto);

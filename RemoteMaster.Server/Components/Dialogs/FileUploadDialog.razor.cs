@@ -16,34 +16,51 @@ public partial class FileUploadDialog
     [Inject]
     private IComputerCommandService ComputerCommandService { get; set; } = default!;
 
-    private IBrowserFile _selectedFile;
+    private const string DefaultDragClass = "relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full z-10";
+    private string _dragClass = DefaultDragClass;
+    private List<IBrowserFile> _files = [];
     private string _destinationPath;
+
+    private async Task Clear()
+    {
+        _files.Clear();
+        ClearDragClass();
+        await Task.Delay(100);
+    }
+
+    private void OnInputFileChanged(InputFileChangeEventArgs e)
+    {
+        ClearDragClass();
+        
+        _files = [.. e.GetMultipleFiles()];
+    }
 
     private async Task Upload()
     {
         FileUploadDto fileDto = null;
 
-        if (_selectedFile != null)
+        if (_files != null)
         {
-            var data = new byte[_selectedFile.Size];
-            await _selectedFile.OpenReadStream().ReadAsync(data);
-
-            fileDto = new FileUploadDto
+            foreach (var file in _files)
             {
-                Name = _selectedFile.Name,
-                Data = data,
-                DestinationPath = _destinationPath
-            };
+                var data = new byte[file.Size];
+                await file.OpenReadStream(file.Size).ReadAsync(data);
 
+                fileDto = new FileUploadDto
+                {
+                    Name = file.Name,
+                    Data = data,
+                    DestinationPath = _destinationPath
+                };
+
+                await ComputerCommandService.Execute(Hosts, async (computer, connection) => await connection.InvokeAsync("UploadFile", fileDto));
+            }
         }
-
-        await ComputerCommandService.Execute(Hosts, async (computer, connection) => await connection.InvokeAsync("UploadFile", fileDto));
 
         MudDialog.Close(DialogResult.Ok(true));
     }
 
-    private void OnInputFileChange(InputFileChangeEventArgs e)
-    {
-        _selectedFile = e.File;
-    }
+    private void SetDragClass() => _dragClass = $"{DefaultDragClass} mud-border-primary";
+
+    private void ClearDragClass() => _dragClass = DefaultDragClass;
 }
