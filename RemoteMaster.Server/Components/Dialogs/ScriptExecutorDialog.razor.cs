@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Dialogs;
@@ -24,7 +25,7 @@ public partial class ScriptExecutorDialog
     private string _content;
     private Shell? _shell;
     private bool _asSystem;
-    private readonly Dictionary<Computer, StringBuilder> _resultsPerComputer = [];
+    private readonly Dictionary<Computer, ComputerResults> _resultsPerComputer = [];
     private readonly HashSet<HubConnection> _subscribedConnections = [];
 
     private async Task RunScript()
@@ -51,13 +52,20 @@ public partial class ScriptExecutorDialog
 
     private void UpdateResultsForComputer(Computer computer, ScriptResult scriptResult)
     {
-        if (!_resultsPerComputer.TryGetValue(computer, out var stringBuilder))
+        if (!_resultsPerComputer.TryGetValue(computer, out var results))
         {
-            stringBuilder = new StringBuilder();
-            _resultsPerComputer[computer] = stringBuilder;
+            results = new ComputerResults();
+            _resultsPerComputer[computer] = results;
         }
 
-        stringBuilder.AppendLine(scriptResult.Message);
+        if (scriptResult.Meta == "pid")
+        {
+            results.LastPID = int.Parse(scriptResult.Message);
+        }
+        else
+        {
+            results.Messages.AppendLine(scriptResult.Message);
+        }
     }
 
     private async Task UploadFiles(InputFileChangeEventArgs e)

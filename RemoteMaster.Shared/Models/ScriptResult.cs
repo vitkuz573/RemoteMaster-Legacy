@@ -10,9 +10,12 @@ public class ScriptResult
 
     public MessageType Type { get; set; }
 
+    public string? Meta { get; set; }
+
     public enum MessageType
     {
         Output,
-        Error
+        Error,
+        Service
     }
 }
