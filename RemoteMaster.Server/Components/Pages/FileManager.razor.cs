@@ -4,12 +4,14 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using MudBlazor;
 using Polly;
 using Polly.Retry;
+using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Pages;
@@ -31,6 +33,7 @@ public partial class FileManager : IDisposable
     private List<FileSystemItem> _fileSystemItems = [];
     private List<string> _availableDrives = [];
     private string _selectedDrive;
+    private IBrowserFile selectedFile;
 
     private readonly AsyncRetryPolicy _retryPolicy = Policy
         .Handle<Exception>()
@@ -57,6 +60,29 @@ public partial class FileManager : IDisposable
             _selectedDrive = _availableDrives.First();
             _currentPath = _selectedDrive;
             await FetchFilesAndDirectories();
+        }
+    }
+
+    private void OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        selectedFile = e.File;
+    }
+
+    private async Task UploadFile()
+    {
+        if (selectedFile != null)
+        {
+            var data = new byte[selectedFile.Size];
+
+            await selectedFile.OpenReadStream().ReadAsync(data);
+
+            var fileDto = new FileUploadDto()
+            {
+                Name = selectedFile.Name,
+                Data = data
+            };
+
+            await _connection.InvokeAsync("UploadFile", @"C:\Users\vitaly\Desktop", fileDto);
         }
     }
 

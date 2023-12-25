@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using Microsoft.AspNetCore.Components.Forms;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Models;
 
@@ -10,14 +9,13 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class FileManagerService : IFileManagerService
 {
-    public async Task UploadFileAsync(string path, IBrowserFile file)
+    public async Task UploadFileAsync(string path, string fileName, byte[] fileData)
     {
-        ArgumentNullException.ThrowIfNull(file);
+        ArgumentNullException.ThrowIfNull(fileData);
+        ArgumentNullException.ThrowIfNull(fileName);
 
-        var filePath = Path.Combine(path, file.Name);
-        using var stream = file.OpenReadStream();
-        using var fileStream = new FileStream(filePath, FileMode.Create);
-        await stream.CopyToAsync(fileStream);
+        var filePath = Path.Combine(path, fileName);
+        await File.WriteAllBytesAsync(filePath, fileData);
     }
 
     public Stream DownloadFile(string path)

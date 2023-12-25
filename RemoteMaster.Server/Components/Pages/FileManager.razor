@@ -15,6 +15,11 @@
 
             <MudSpacer />
 
+            <InputFile OnChange="@OnInputFileChange" />
+            <MudButton OnClick="@UploadFile" Color="Color.Primary" Variant="Variant.Filled">Upload</MudButton>
+
+            <MudSpacer />
+
             <MudSelect T="string" Label="Select Drive" ValueChanged="OnDriveSelected" Class="w-2">
                 @foreach (var drive in _availableDrives)
                 {
