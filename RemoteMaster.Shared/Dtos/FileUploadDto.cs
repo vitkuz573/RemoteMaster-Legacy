@@ -9,4 +9,6 @@ public class FileUploadDto
     public string Name { get; set; }
 
     public byte[] Data { get; set; }
+
+    public string DestinationPath { get; set; }
 }

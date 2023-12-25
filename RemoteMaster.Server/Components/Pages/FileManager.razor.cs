@@ -33,7 +33,8 @@ public partial class FileManager : IDisposable
     private List<FileSystemItem> _fileSystemItems = [];
     private List<string> _availableDrives = [];
     private string _selectedDrive;
-    private IBrowserFile selectedFile;
+    private IBrowserFile _selectedFile;
+    private string _destinationPath;
 
     private readonly AsyncRetryPolicy _retryPolicy = Policy
         .Handle<Exception>()
@@ -65,24 +66,24 @@ public partial class FileManager : IDisposable
 
     private void OnInputFileChange(InputFileChangeEventArgs e)
     {
-        selectedFile = e.File;
+        _selectedFile = e.File;
     }
 
     private async Task UploadFile()
     {
-        if (selectedFile != null)
+        if (_selectedFile != null)
         {
-            var data = new byte[selectedFile.Size];
+            var data = new byte[_selectedFile.Size];
+            await _selectedFile.OpenReadStream().ReadAsync(data);
 
-            await selectedFile.OpenReadStream().ReadAsync(data);
-
-            var fileDto = new FileUploadDto()
+            var fileDto = new FileUploadDto
             {
-                Name = selectedFile.Name,
-                Data = data
+                Name = _selectedFile.Name,
+                Data = data,
+                DestinationPath = _destinationPath
             };
 
-            await _connection.InvokeAsync("UploadFile", @"C:\Users\vitaly\Desktop", fileDto);
+            await _connection.InvokeAsync("UploadFile", fileDto);
         }
     }
 
