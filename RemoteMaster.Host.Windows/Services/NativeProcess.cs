@@ -93,14 +93,14 @@ public class NativeProcess
             if (stdOutReadHandle != null && stdErrReadHandle != null)
             {
                 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-                var cp866 = Encoding.GetEncoding(866);
+                var consoleEncoding = Encoding.GetEncoding((int)GetConsoleOutputCP());
 
                 var nativeProcess = new NativeProcess(startInfo)
                 {
                     _processHandle = new SafeFileHandle(procInfo.hProcess, true),
                     Id = procInfo.dwProcessId,
-                    StandardOutput = new StreamReader(new FileStream(stdOutReadHandle, FileAccess.Read), cp866),
-                    StandardError = new StreamReader(new FileStream(stdErrReadHandle, FileAccess.Read), cp866)
+                    StandardOutput = new StreamReader(new FileStream(stdOutReadHandle, FileAccess.Read), consoleEncoding),
+                    StandardError = new StreamReader(new FileStream(stdErrReadHandle, FileAccess.Read), consoleEncoding)
                 };
 
                 Log.Information("NativeProcess started successfully with ID: {ProcessId}", procInfo.dwProcessId);
