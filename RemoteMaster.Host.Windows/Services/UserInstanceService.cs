@@ -59,8 +59,7 @@ public class UserInstanceService : IUserInstanceService
             ForceConsoleSession = true,
             DesktopName = "default",
             CreateNoWindow = true,
-            UseCurrentUserToken = false,
-            InheritHandles = false
+            UseCurrentUserToken = false
         };
 
         using var process = new NativeProcess(options);

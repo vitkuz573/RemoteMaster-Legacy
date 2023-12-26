@@ -64,7 +64,8 @@ public partial class ScriptService(IHubContext<ControlHub, IControlClient> hubCo
                 DesktopName = "default",
                 CreateNoWindow = true,
                 UseCurrentUserToken = !asSystem,
-                InheritHandles = true
+                RedirectStandardInput = true,
+                RedirectStandardError = true
             };
 
             using var process = new NativeProcess(options);

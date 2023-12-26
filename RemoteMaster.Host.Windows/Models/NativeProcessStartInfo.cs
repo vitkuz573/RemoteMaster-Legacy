@@ -20,5 +20,9 @@ public class NativeProcessStartInfo(string applicationName, int targetSessionId)
 
     public bool UseCurrentUserToken { get; init; } = false;
 
-    public bool InheritHandles { get; init; } = false;
+    public bool RedirectStandardInput { get; init; }
+    
+    public bool RedirectStandardOutput { get; init; }
+
+    public bool RedirectStandardError { get; init; }
 }

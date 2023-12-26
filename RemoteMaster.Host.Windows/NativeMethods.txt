@@ -10,7 +10,6 @@ LookupPrivilegeValue
 OpenProcess
 OpenProcessToken
 SE_SHUTDOWN_NAME
-SetHandleInformation
 
 // Display and Monitor Management
 BitBlt
@@ -81,3 +80,5 @@ WTS_SESSION_UNLOCK
 WTS_SESSION_REMOTE_CONTROL
 
 GetConsoleOutputCP
+DuplicateHandle
+GetStdHandle

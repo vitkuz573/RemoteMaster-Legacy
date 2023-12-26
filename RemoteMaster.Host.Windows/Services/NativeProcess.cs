@@ -2,13 +2,16 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Win32.SafeHandles;
 using RemoteMaster.Host.Windows.Models;
+using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Security;
+using Windows.Win32.System.Console;
 using Windows.Win32.System.RemoteDesktop;
 using Windows.Win32.System.Threading;
 using static Windows.Win32.PInvoke;
@@ -110,36 +113,41 @@ public class NativeProcess(NativeProcessStartInfo startInfo) : IDisposable
 
         startupInfo.cb = (uint)Marshal.SizeOf<STARTUPINFOW>();
 
-        if (!CreatePipe(out parentInputPipeHandle, out childInputPipeHandle, null, 0))
-        {            
-            return false;
-        }
+        if (startInfo.RedirectStandardInput || startInfo.RedirectStandardOutput || startInfo.RedirectStandardError)
+        {
+            if (startInfo.RedirectStandardInput)
+            {
+                CreatePipe(out parentInputPipeHandle, out childInputPipeHandle, true);
+            }
+            else
+            {
+                childInputPipeHandle = GetStdHandle_SafeHandle(STD_HANDLE.STD_INPUT_HANDLE);
+            }
 
-        if (!CreatePipe(out parentOutputPipeHandle, out childOutputPipeHandle, null, 0))
-        {            
-            return false;
-        }
+            if (startInfo.RedirectStandardOutput)
+            {
+                CreatePipe(out parentOutputPipeHandle, out childOutputPipeHandle, false);
+            }
+            else
+            {
+                childOutputPipeHandle = GetStdHandle_SafeHandle(STD_HANDLE.STD_OUTPUT_HANDLE);
+            }
 
-        if (!CreatePipe(out parentErrorPipeHandle, out childErrorPipeHandle, null, 0))
-        {            
-            return false;
-        }
+            if (startInfo.RedirectStandardError)
+            {
+                CreatePipe(out parentErrorPipeHandle, out childErrorPipeHandle, false);
+            }
+            else
+            {
+                childErrorPipeHandle = GetStdHandle_SafeHandle(STD_HANDLE.STD_ERROR_HANDLE);
+            }
 
-        if (!SetHandleInformation(childOutputPipeHandle, (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT, HANDLE_FLAGS.HANDLE_FLAG_INHERIT))
-        {            
-            return false;
-        }
+            startupInfo.hStdInput = (HANDLE)childInputPipeHandle.DangerousGetHandle();
+            startupInfo.hStdOutput = (HANDLE)childOutputPipeHandle.DangerousGetHandle();
+            startupInfo.hStdError = (HANDLE)childErrorPipeHandle.DangerousGetHandle();
 
-        if (!SetHandleInformation(childErrorPipeHandle, (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT, HANDLE_FLAGS.HANDLE_FLAG_INHERIT))
-        {            
-            return false;
+            startupInfo.dwFlags = STARTUPINFOW_FLAGS.STARTF_USESTDHANDLES;
         }
-
-        startupInfo.hStdInput = (HANDLE)childInputPipeHandle.DangerousGetHandle();
-        startupInfo.hStdOutput = (HANDLE)childOutputPipeHandle.DangerousGetHandle();
-        startupInfo.hStdError = (HANDLE)childErrorPipeHandle.DangerousGetHandle();
-        
-        startupInfo.dwFlags = STARTUPINFOW_FLAGS.STARTF_USESTDHANDLES;
 
         fixed (char* pDesktopName = $@"winsta0\{startInfo.DesktopName}")
         {
@@ -156,7 +164,7 @@ public class NativeProcess(NativeProcessStartInfo startInfo) : IDisposable
         fullCommand += char.MinValue;
 
         var commandSpan = new Span<char>(fullCommand.ToCharArray());
-        var result = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, securityAttributes, securityAttributes, startInfo.InheritHandles, dwCreationFlags, null, null, startupInfo, out processInformation);
+        var result = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, securityAttributes, securityAttributes, true, dwCreationFlags, null, null, startupInfo, out processInformation);
 
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         var consoleEncoding = Encoding.GetEncoding((int)GetConsoleOutputCP());
@@ -171,6 +179,49 @@ public class NativeProcess(NativeProcessStartInfo startInfo) : IDisposable
         childErrorPipeHandle.Close();
 
         return result;
+    }
+
+    private static void CreatePipeWithSecurityAttributes(out SafeFileHandle hReadPipe, out SafeFileHandle hWritePipe, ref SECURITY_ATTRIBUTES lpPipeAttributes, uint nSize)
+    {
+        var ret = PInvoke.CreatePipe(out hReadPipe, out hWritePipe, lpPipeAttributes, nSize);
+        
+        if (!ret || hReadPipe.IsInvalid || hWritePipe.IsInvalid)
+        {
+            throw new Win32Exception();
+        }
+    }
+
+    private static void CreatePipe(out SafeFileHandle parentHandle, out SafeFileHandle childHandle, bool parentInputs)
+    {
+        SECURITY_ATTRIBUTES securityAttributesParent = default;
+        securityAttributesParent.bInheritHandle = true;
+
+        SafeFileHandle? hTmp = null;
+        try
+        {
+            if (parentInputs)
+            {
+                CreatePipeWithSecurityAttributes(out childHandle, out hTmp, ref securityAttributesParent, 0);
+            }
+            else
+            {
+                CreatePipeWithSecurityAttributes(out hTmp, out childHandle, ref securityAttributesParent, 0);
+            }
+
+            var currentProcHandle = GetCurrentProcess_SafeHandle();
+            
+            if (!DuplicateHandle(currentProcHandle, hTmp, currentProcHandle, out parentHandle, 0, false, DUPLICATE_HANDLE_OPTIONS.DUPLICATE_SAME_ACCESS))
+            {
+                throw new Win32Exception();
+            }
+        }
+        finally
+        {
+            if (hTmp != null && !hTmp.IsInvalid)
+            {
+                hTmp.Dispose();
+            }
+        }
     }
 
     private static bool TryGetUserToken(uint sessionId, out SafeFileHandle hUserToken)
