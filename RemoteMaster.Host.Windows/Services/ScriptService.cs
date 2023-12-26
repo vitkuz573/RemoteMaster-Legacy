@@ -67,7 +67,7 @@ public partial class ScriptService(IHubContext<ControlHub, IControlClient> hubCo
                 InheritHandles = true
             };
 
-            var process = new NativeProcess(options);
+            using var process = new NativeProcess(options);
             process.Start();
 
             await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult

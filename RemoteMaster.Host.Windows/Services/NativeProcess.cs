@@ -18,7 +18,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 #pragma warning disable CA2000
 
-public class NativeProcess
+public class NativeProcess : IDisposable
 {
     private SafeFileHandle? _processHandle;
     private StreamReader? _standardOutput;
@@ -284,10 +284,10 @@ public class NativeProcess
         return result == WAIT_EVENT.WAIT_OBJECT_0;
     }
 
-    public void Close()
+    public void Dispose()
     {
-        StandardOutput?.Dispose();
-        StandardError?.Dispose();
+        _standardOutput?.Dispose();
+        _standardError?.Dispose();
         _processHandle?.Close();
     }
 }

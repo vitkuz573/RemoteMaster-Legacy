@@ -63,7 +63,7 @@ public class UserInstanceService : IUserInstanceService
             InheritHandles = false
         };
 
-        var process = new NativeProcess(options);
+        using var process = new NativeProcess(options);
         process.Start();
         Log.Information("Started a new instance of the host with options: {Options}", options);
     }
