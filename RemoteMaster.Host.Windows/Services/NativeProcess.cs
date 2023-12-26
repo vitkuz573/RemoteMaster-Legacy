@@ -168,6 +168,9 @@ public class NativeProcess
     {
         Log.Information("Attempting to create interactive process with StartInfo: {@StartInfo}", startInfo);
 
+        STARTUPINFOW startupInfo = default;
+        startupInfo.cb = (uint)Marshal.SizeOf<STARTUPINFOW>();
+
         procInfo = default;
         stdOutReadHandle = null;
         stdErrReadHandle = null;
@@ -209,43 +212,40 @@ public class NativeProcess
 
         fixed (char* pDesktopName = $@"winsta0\{startInfo.DesktopName}")
         {
-            var startupInfo = new STARTUPINFOW
-            {
-                cb = (uint)Marshal.SizeOf<STARTUPINFOW>(),
-                lpDesktop = pDesktopName,
-                hStdInput = (HANDLE)stdInReadHandle.DangerousGetHandle(),
-                hStdOutput = (HANDLE)stdOutWriteHandle.DangerousGetHandle(),
-                hStdError = (HANDLE)stdErrWriteHandle.DangerousGetHandle(),
-                dwFlags = STARTUPINFOW_FLAGS.STARTF_USESTDHANDLES
-            };
-
-            var dwCreationFlags = PROCESS_CREATION_FLAGS.NORMAL_PRIORITY_CLASS | PROCESS_CREATION_FLAGS.CREATE_UNICODE_ENVIRONMENT;
-
-            dwCreationFlags |= startInfo.CreateNoWindow
-                ? PROCESS_CREATION_FLAGS.CREATE_NO_WINDOW
-                : PROCESS_CREATION_FLAGS.CREATE_NEW_CONSOLE;
-
-            var fullCommand = $"{startInfo.FileName} {startInfo.Arguments ?? string.Empty}";
-            fullCommand += char.MinValue;
-
-            var commandSpan = new Span<char>(fullCommand.ToCharArray());
-            var result = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, null, null, startInfo.InheritHandles, dwCreationFlags, null, null, startupInfo, out procInfo);
-
-            if (result)
-            {
-                Log.Information("Interactive process created successfully. Process ID: {ProcessId}", procInfo.dwProcessId);
-
-                stdInWriteHandle.Close();
-                stdOutWriteHandle.Close();
-                stdErrWriteHandle.Close();
-            }
-            else
-            {
-                Log.Error("Failed to create interactive process.");
-            }
-
-            return result;
+            startupInfo.lpDesktop = pDesktopName;
         }
+
+        startupInfo.hStdInput = (HANDLE)stdInReadHandle.DangerousGetHandle();
+        startupInfo.hStdOutput = (HANDLE)stdOutWriteHandle.DangerousGetHandle();
+        startupInfo.hStdError = (HANDLE)stdErrWriteHandle.DangerousGetHandle();
+        startupInfo.dwFlags = STARTUPINFOW_FLAGS.STARTF_USESTDHANDLES;
+
+        var dwCreationFlags = PROCESS_CREATION_FLAGS.NORMAL_PRIORITY_CLASS | PROCESS_CREATION_FLAGS.CREATE_UNICODE_ENVIRONMENT;
+
+        dwCreationFlags |= startInfo.CreateNoWindow
+            ? PROCESS_CREATION_FLAGS.CREATE_NO_WINDOW
+            : PROCESS_CREATION_FLAGS.CREATE_NEW_CONSOLE;
+
+        var fullCommand = $"{startInfo.FileName} {startInfo.Arguments ?? string.Empty}";
+        fullCommand += char.MinValue;
+
+        var commandSpan = new Span<char>(fullCommand.ToCharArray());
+        var result = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, null, null, startInfo.InheritHandles, dwCreationFlags, null, null, startupInfo, out procInfo);
+
+        if (result)
+        {
+            Log.Information("Interactive process created successfully. Process ID: {ProcessId}", procInfo.dwProcessId);
+
+            stdInWriteHandle.Close();
+            stdOutWriteHandle.Close();
+            stdErrWriteHandle.Close();
+        }
+        else
+        {
+            Log.Error("Failed to create interactive process.");
+        }
+
+        return result;
     }
 
     private static bool TryGetUserToken(uint sessionId, out SafeFileHandle hUserToken)
