@@ -23,6 +23,7 @@ namespace RemoteMaster.Host.Windows.Services;
 public class NativeProcess(NativeProcessStartInfo startInfo) : IDisposable
 {
     private SafeFileHandle? _processHandle;
+    private StreamWriter? _standardInput;
     private StreamReader? _standardOutput;
     private StreamReader? _standardError;
     private uint? _processId;
@@ -30,6 +31,8 @@ public class NativeProcess(NativeProcessStartInfo startInfo) : IDisposable
     public NativeProcessStartInfo StartInfo => startInfo;
 
     public uint? Id => _processId;
+
+    public StreamWriter? StandartInput => _standardInput;
 
     public StreamReader? StandardOutput => _standardOutput;
 
@@ -111,74 +114,111 @@ public class NativeProcess(NativeProcessStartInfo startInfo) : IDisposable
         SafeFileHandle? parentErrorPipeHandle = null;
         SafeFileHandle? childErrorPipeHandle = null;
 
-        startupInfo.cb = (uint)Marshal.SizeOf<STARTUPINFOW>();
-
-        if (startInfo.RedirectStandardInput || startInfo.RedirectStandardOutput || startInfo.RedirectStandardError)
+        try
         {
-            if (startInfo.RedirectStandardInput)
+            startupInfo.cb = (uint)Marshal.SizeOf<STARTUPINFOW>();
+
+            if (startInfo.RedirectStandardInput || startInfo.RedirectStandardOutput || startInfo.RedirectStandardError)
             {
-                CreatePipe(out parentInputPipeHandle, out childInputPipeHandle, true);
-            }
-            else
-            {
-                childInputPipeHandle = GetStdHandle_SafeHandle(STD_HANDLE.STD_INPUT_HANDLE);
+                if (startInfo.RedirectStandardInput)
+                {
+                    CreatePipe(out parentInputPipeHandle, out childInputPipeHandle, true);
+                }
+                else
+                {
+                    childInputPipeHandle = GetStdHandle_SafeHandle(STD_HANDLE.STD_INPUT_HANDLE);
+                }
+
+                if (startInfo.RedirectStandardOutput)
+                {
+                    CreatePipe(out parentOutputPipeHandle, out childOutputPipeHandle, false);
+                }
+                else
+                {
+                    childOutputPipeHandle = GetStdHandle_SafeHandle(STD_HANDLE.STD_OUTPUT_HANDLE);
+                }
+
+                if (startInfo.RedirectStandardError)
+                {
+                    CreatePipe(out parentErrorPipeHandle, out childErrorPipeHandle, false);
+                }
+                else
+                {
+                    childErrorPipeHandle = GetStdHandle_SafeHandle(STD_HANDLE.STD_ERROR_HANDLE);
+                }
+
+                startupInfo.hStdInput = (HANDLE)childInputPipeHandle.DangerousGetHandle();
+                startupInfo.hStdOutput = (HANDLE)childOutputPipeHandle.DangerousGetHandle();
+                startupInfo.hStdError = (HANDLE)childErrorPipeHandle.DangerousGetHandle();
+
+                startupInfo.dwFlags = STARTUPINFOW_FLAGS.STARTF_USESTDHANDLES;
             }
 
-            if (startInfo.RedirectStandardOutput)
+            fixed (char* pDesktopName = $@"winsta0\{startInfo.DesktopName}")
             {
-                CreatePipe(out parentOutputPipeHandle, out childOutputPipeHandle, false);
-            }
-            else
-            {
-                childOutputPipeHandle = GetStdHandle_SafeHandle(STD_HANDLE.STD_OUTPUT_HANDLE);
+                startupInfo.lpDesktop = pDesktopName;
             }
 
-            if (startInfo.RedirectStandardError)
-            {
-                CreatePipe(out parentErrorPipeHandle, out childErrorPipeHandle, false);
-            }
-            else
-            {
-                childErrorPipeHandle = GetStdHandle_SafeHandle(STD_HANDLE.STD_ERROR_HANDLE);
-            }
+            var dwCreationFlags = PROCESS_CREATION_FLAGS.NORMAL_PRIORITY_CLASS | PROCESS_CREATION_FLAGS.CREATE_UNICODE_ENVIRONMENT;
 
-            startupInfo.hStdInput = (HANDLE)childInputPipeHandle.DangerousGetHandle();
-            startupInfo.hStdOutput = (HANDLE)childOutputPipeHandle.DangerousGetHandle();
-            startupInfo.hStdError = (HANDLE)childErrorPipeHandle.DangerousGetHandle();
+            dwCreationFlags |= startInfo.CreateNoWindow
+                ? PROCESS_CREATION_FLAGS.CREATE_NO_WINDOW
+                : PROCESS_CREATION_FLAGS.CREATE_NEW_CONSOLE;
 
-            startupInfo.dwFlags = STARTUPINFOW_FLAGS.STARTF_USESTDHANDLES;
+            var fullCommand = $"{startInfo.FileName} {startInfo.Arguments ?? string.Empty}";
+            fullCommand += char.MinValue;
+
+            var commandSpan = new Span<char>(fullCommand.ToCharArray());
+
+            bool retVal;
+            var errorCode = 0;
+
+            retVal = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, securityAttributes, securityAttributes, true, dwCreationFlags, null, null, startupInfo, out processInformation);
         }
-
-        fixed (char* pDesktopName = $@"winsta0\{startInfo.DesktopName}")
+        catch
         {
-            startupInfo.lpDesktop = pDesktopName;
+            parentInputPipeHandle?.Dispose();
+            parentOutputPipeHandle?.Dispose();
+            parentErrorPipeHandle?.Dispose();
+            throw;
         }
-
-        var dwCreationFlags = PROCESS_CREATION_FLAGS.NORMAL_PRIORITY_CLASS | PROCESS_CREATION_FLAGS.CREATE_UNICODE_ENVIRONMENT;
-
-        dwCreationFlags |= startInfo.CreateNoWindow
-            ? PROCESS_CREATION_FLAGS.CREATE_NO_WINDOW
-            : PROCESS_CREATION_FLAGS.CREATE_NEW_CONSOLE;
-
-        var fullCommand = $"{startInfo.FileName} {startInfo.Arguments ?? string.Empty}";
-        fullCommand += char.MinValue;
-
-        var commandSpan = new Span<char>(fullCommand.ToCharArray());
-        var result = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, securityAttributes, securityAttributes, true, dwCreationFlags, null, null, startupInfo, out processInformation);
+        finally
+        {
+            childInputPipeHandle?.Dispose();
+            childOutputPipeHandle?.Dispose();
+            childErrorPipeHandle?.Dispose();
+        }
 
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-        var consoleEncoding = Encoding.GetEncoding((int)GetConsoleOutputCP());
 
-        _standardOutput = new StreamReader(new FileStream(parentOutputPipeHandle!, FileAccess.Read, 4096, false), consoleEncoding, true, 4096);
-        _standardError = new StreamReader(new FileStream(parentErrorPipeHandle!, FileAccess.Read, 4096, false), consoleEncoding, true, 4096);
+        if (startInfo.RedirectStandardInput)
+        {
+            var enc = Encoding.GetEncoding((int)GetConsoleCP());
+
+            _standardInput = new StreamWriter(new FileStream(parentInputPipeHandle!, FileAccess.Write, 4096, false), enc, 4096)
+            {
+                AutoFlush = true
+            };
+        }
+        
+        if (startInfo.RedirectStandardOutput)
+        {
+            var enc = Encoding.GetEncoding((int)GetConsoleOutputCP());
+
+            _standardOutput = new StreamReader(new FileStream(parentOutputPipeHandle!, FileAccess.Read, 4096, false), enc, true, 4096);
+        }
+
+        if (startInfo.RedirectStandardError)
+        {
+            var enc = Encoding.GetEncoding((int)GetConsoleOutputCP());
+
+            _standardError = new StreamReader(new FileStream(parentErrorPipeHandle!, FileAccess.Read, 4096, false), enc, true, 4096);
+        }
+
         _processHandle = new SafeFileHandle(processInformation.hProcess, true);
         _processId = processInformation.dwProcessId;
 
-        childInputPipeHandle.Close();
-        childOutputPipeHandle.Close();
-        childErrorPipeHandle.Close();
-
-        return result;
+        return true;
     }
 
     private static void CreatePipeWithSecurityAttributes(out SafeFileHandle hReadPipe, out SafeFileHandle hWritePipe, ref SECURITY_ATTRIBUTES lpPipeAttributes, uint nSize)
