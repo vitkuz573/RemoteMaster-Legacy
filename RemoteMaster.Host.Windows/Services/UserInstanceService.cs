@@ -54,10 +54,9 @@ public class UserInstanceService : IUserInstanceService
     private void StartNewInstance()
     {
         using var process = new NativeProcess();
-        process.StartInfo = new NativeProcessStartInfo(CurrentExecutablePath)
+        process.StartInfo = new NativeProcessStartInfo(CurrentExecutablePath, Argument)
         {
             TargetSessionId = -1,
-            Arguments = Argument,
             ForceConsoleSession = true,
             DesktopName = "Default",
             CreateNoWindow = true,
