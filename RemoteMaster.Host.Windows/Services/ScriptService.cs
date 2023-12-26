@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
@@ -66,7 +67,8 @@ public partial class ScriptService(IHubContext<ControlHub, IControlClient> hubCo
                 InheritHandles = true
             };
 
-            var process = NativeProcess.Start(options);
+            var process = new NativeProcess(options);
+            process.Start();
 
             await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult
             {

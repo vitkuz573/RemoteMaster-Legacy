@@ -21,14 +21,17 @@ namespace RemoteMaster.Host.Windows.Services;
 public class NativeProcess
 {
     private SafeFileHandle? _processHandle;
+    private StreamReader? _standardOutput;
+    private StreamReader? _standardError;
+    private uint? _processId;
 
     public NativeProcessStartInfo StartInfo { get; private set; }
 
-    public uint? Id { get; private set; }
+    public uint? Id => _processId;
 
-    public StreamReader? StandardOutput { get; private set; }
+    public StreamReader? StandardOutput => _standardOutput;
 
-    public StreamReader? StandardError { get; private set; }
+    public StreamReader? StandardError => _standardError;
 
     public NativeProcess(NativeProcessStartInfo startInfo)
     {
@@ -36,20 +39,19 @@ public class NativeProcess
         StartInfo = startInfo ?? throw new ArgumentNullException(nameof(startInfo));
     }
 
-    public static NativeProcess? Start(NativeProcessStartInfo startInfo)
+    public void Start()
     {
-        ArgumentNullException.ThrowIfNull(startInfo);
+        ArgumentNullException.ThrowIfNull(StartInfo);
 
-        Log.Information("Starting NativeProcess with StartInfo: {@StartInfo}", startInfo);
-        var sessionId = !startInfo.ForceConsoleSession ? FindTargetSessionId(startInfo.TargetSessionId) : WTSGetActiveConsoleSessionId();
+        Log.Information("Starting NativeProcess with StartInfo: {@StartInfo}", StartInfo);
+        var sessionId = !StartInfo.ForceConsoleSession ? FindTargetSessionId(StartInfo.TargetSessionId) : WTSGetActiveConsoleSessionId();
         Log.Debug("Session ID determined: {SessionId}", sessionId);
 
-        SafeFileHandle? stdOutReadHandle;
-        SafeFileHandle? stdErrReadHandle;
+        SafeFileHandle? hUserTokenDup = null;
 
         try
         {
-            if (!startInfo.UseCurrentUserToken || !TryGetUserToken(sessionId, out var hUserTokenDup))
+            if (!StartInfo.UseCurrentUserToken || !TryGetUserToken(sessionId, out hUserTokenDup))
             {
                 var winlogonPid = GetWinlogonPidForSession(sessionId);
                 Log.Debug("Winlogon PID for session {SessionId}: {WinlogonPid}", sessionId, winlogonPid);
@@ -68,50 +70,20 @@ public class NativeProcess
                 else
                 {
                     Log.Error("Failed to open or duplicate user token for session {SessionId}", sessionId);
-                    
-                    return null;
                 }
             }
-
-            PROCESS_INFORMATION procInfo;
             
             if (hUserTokenDup != null)
             {
-                if (!TryCreateInteractiveProcess(startInfo, hUserTokenDup, out procInfo, out stdOutReadHandle, out stdErrReadHandle))
+                if (!TryCreateInteractiveProcess(StartInfo, hUserTokenDup))
                 {
                     Log.Error("Failed to create interactive process.");
-                    
-                    return null;
                 }
             }
             else
             {
                 Log.Error("User token duplication failed.");
                 throw new InvalidOperationException("Failed to get or duplicate user token.");
-            }
-
-            if (stdOutReadHandle != null && stdErrReadHandle != null)
-            {
-                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-                var consoleEncoding = Encoding.GetEncoding((int)GetConsoleOutputCP());
-
-                var nativeProcess = new NativeProcess(startInfo)
-                {
-                    _processHandle = new SafeFileHandle(procInfo.hProcess, true),
-                    Id = procInfo.dwProcessId,
-                    StandardOutput = new StreamReader(new FileStream(stdOutReadHandle, FileAccess.Read), consoleEncoding),
-                    StandardError = new StreamReader(new FileStream(stdErrReadHandle, FileAccess.Read), consoleEncoding)
-                };
-
-                Log.Information("NativeProcess started successfully with ID: {ProcessId}", procInfo.dwProcessId);
-                
-                return nativeProcess;
-            }
-            else
-            {
-                Log.Error("Failed to create standard output and error read handles.");
-                
-                return null;
             }
         }
         catch (Exception ex)
@@ -164,16 +136,14 @@ public class NativeProcess
         return foundSessionId;
     }
 
-    private static unsafe bool TryCreateInteractiveProcess(NativeProcessStartInfo startInfo, SafeHandle hUserTokenDup, out PROCESS_INFORMATION procInfo, out SafeFileHandle? stdOutReadHandle, out SafeFileHandle? stdErrReadHandle)
+    private unsafe bool TryCreateInteractiveProcess(NativeProcessStartInfo startInfo, SafeHandle hUserTokenDup)
     {
         Log.Information("Attempting to create interactive process with StartInfo: {@StartInfo}", startInfo);
 
         STARTUPINFOW startupInfo = default;
         startupInfo.cb = (uint)Marshal.SizeOf<STARTUPINFOW>();
 
-        procInfo = default;
-        stdOutReadHandle = null;
-        stdErrReadHandle = null;
+        PROCESS_INFORMATION processInformation = default;
 
         if (!CreatePipe(out var stdInReadHandle, out var stdInWriteHandle, null, 0))
         {
@@ -182,14 +152,14 @@ public class NativeProcess
             return false;
         }
 
-        if (!CreatePipe(out stdOutReadHandle, out var stdOutWriteHandle, null, 0))
+        if (!CreatePipe(out var stdOutReadHandle, out var stdOutWriteHandle, null, 0))
         {
             Log.Error("Failed to create pipe for standard output.");
             
             return false;
         }
 
-        if (!CreatePipe(out stdErrReadHandle, out var stdErrWriteHandle, null, 0))
+        if (!CreatePipe(out var stdErrReadHandle, out var stdErrWriteHandle, null, 0))
         {
             Log.Error("Failed to create pipe for standard error.");
             
@@ -230,11 +200,19 @@ public class NativeProcess
         fullCommand += char.MinValue;
 
         var commandSpan = new Span<char>(fullCommand.ToCharArray());
-        var result = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, null, null, startInfo.InheritHandles, dwCreationFlags, null, null, startupInfo, out procInfo);
+        var result = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, null, null, startInfo.InheritHandles, dwCreationFlags, null, null, startupInfo, out processInformation);
 
         if (result)
         {
-            Log.Information("Interactive process created successfully. Process ID: {ProcessId}", procInfo.dwProcessId);
+            Log.Information("Interactive process created successfully. Process ID: {ProcessId}", processInformation.dwProcessId);
+
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            var consoleEncoding = Encoding.GetEncoding((int)GetConsoleOutputCP());
+
+            _standardOutput = new StreamReader(new FileStream(stdOutReadHandle, FileAccess.Read), consoleEncoding);
+            _standardError = new StreamReader(new FileStream(stdErrReadHandle, FileAccess.Read), consoleEncoding);
+            _processHandle = new SafeFileHandle(processInformation.hProcess, true);
+            _processId = processInformation.dwProcessId;
 
             stdInWriteHandle.Close();
             stdOutWriteHandle.Close();
