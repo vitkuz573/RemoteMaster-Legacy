@@ -41,8 +41,6 @@ public class NativeProcess
 
     public void Start()
     {
-        ArgumentNullException.ThrowIfNull(StartInfo);
-
         Log.Information("Starting NativeProcess with StartInfo: {@StartInfo}", StartInfo);
         var sessionId = !StartInfo.ForceConsoleSession ? FindTargetSessionId(StartInfo.TargetSessionId) : WTSGetActiveConsoleSessionId();
         Log.Debug("Session ID determined: {SessionId}", sessionId);
