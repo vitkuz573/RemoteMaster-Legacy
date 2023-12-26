@@ -64,7 +64,7 @@ public partial class ScriptService(IHubContext<ControlHub, IControlClient> hubCo
                 DesktopName = "default",
                 CreateNoWindow = true,
                 UseCurrentUserToken = !asSystem,
-                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
                 RedirectStandardError = true
             };
 
