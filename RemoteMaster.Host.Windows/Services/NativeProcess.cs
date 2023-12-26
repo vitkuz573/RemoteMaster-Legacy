@@ -16,9 +16,9 @@ using Windows.Win32.System.RemoteDesktop;
 using Windows.Win32.System.Threading;
 using static Windows.Win32.PInvoke;
 
-namespace RemoteMaster.Host.Windows.Services;
-
 #pragma warning disable CA2000
+
+namespace RemoteMaster.Host.Windows.Services;
 
 public class NativeProcess(NativeProcessStartInfo startInfo) : IDisposable
 {
@@ -104,8 +104,9 @@ public class NativeProcess(NativeProcessStartInfo startInfo) : IDisposable
     private unsafe bool TryCreateInteractiveProcess(NativeProcessStartInfo startInfo, SafeHandle hUserTokenDup)
     {
         STARTUPINFOW startupInfo = default;
-        PROCESS_INFORMATION processInformation = default;
+        PROCESS_INFORMATION processInfo = default;
         SECURITY_ATTRIBUTES securityAttributes = default;
+        var procSH = new SafeProcessHandle();
 
         SafeFileHandle? parentInputPipeHandle = null;
         SafeFileHandle? childInputPipeHandle = null;
@@ -173,13 +174,29 @@ public class NativeProcess(NativeProcessStartInfo startInfo) : IDisposable
             bool retVal;
             var errorCode = 0;
 
-            retVal = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, securityAttributes, securityAttributes, true, dwCreationFlags, null, null, startupInfo, out processInformation);
+            retVal = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, securityAttributes, securityAttributes, true, dwCreationFlags, null, null, startupInfo, out processInfo);
+
+            if (!retVal)
+            {
+                errorCode = Marshal.GetLastWin32Error();
+            }
+
+            if (processInfo.hProcess != nint.Zero && processInfo.hProcess != new nint(-1))
+            {
+                Marshal.InitHandle(procSH, processInfo.hProcess);
+            }
+
+            if (processInfo.hThread != nint.Zero && processInfo.hThread != new nint(-1))
+            {
+                CloseHandle(processInfo.hThread);
+            }
         }
         catch
         {
             parentInputPipeHandle?.Dispose();
             parentOutputPipeHandle?.Dispose();
             parentErrorPipeHandle?.Dispose();
+            procSH.Dispose();
             throw;
         }
         finally
@@ -215,8 +232,15 @@ public class NativeProcess(NativeProcessStartInfo startInfo) : IDisposable
             _standardError = new StreamReader(new FileStream(parentErrorPipeHandle!, FileAccess.Read, 4096, false), enc, true, 4096);
         }
 
-        _processHandle = new SafeFileHandle(processInformation.hProcess, true);
-        _processId = processInformation.dwProcessId;
+        if (procSH.IsInvalid)
+        {
+            procSH.Dispose();
+
+            return false;
+        }
+
+        _processHandle = new SafeFileHandle(processInfo.hProcess, true);
+        _processId = processInfo.dwProcessId;
 
         return true;
     }
@@ -237,6 +261,7 @@ public class NativeProcess(NativeProcessStartInfo startInfo) : IDisposable
         securityAttributesParent.bInheritHandle = true;
 
         SafeFileHandle? hTmp = null;
+
         try
         {
             if (parentInputs)
@@ -248,7 +273,7 @@ public class NativeProcess(NativeProcessStartInfo startInfo) : IDisposable
                 CreatePipeWithSecurityAttributes(out hTmp, out childHandle, ref securityAttributesParent, 0);
             }
 
-            var currentProcHandle = GetCurrentProcess_SafeHandle();
+            using var currentProcHandle = GetCurrentProcess_SafeHandle();
             
             if (!DuplicateHandle(currentProcHandle, hTmp, currentProcHandle, out parentHandle, 0, false, DUPLICATE_HANDLE_OPTIONS.DUPLICATE_SAME_ACCESS))
             {
