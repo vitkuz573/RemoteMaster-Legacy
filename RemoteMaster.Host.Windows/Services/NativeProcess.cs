@@ -98,9 +98,10 @@ public class NativeProcess(NativeProcessStartInfo startInfo) : IDisposable
     private unsafe bool TryCreateInteractiveProcess(NativeProcessStartInfo startInfo, SafeHandle hUserTokenDup)
     {
         STARTUPINFOW startupInfo = default;
-        startupInfo.cb = (uint)Marshal.SizeOf<STARTUPINFOW>();
-
         PROCESS_INFORMATION processInformation = default;
+        SECURITY_ATTRIBUTES securityAttributes = default;
+
+        startupInfo.cb = (uint)Marshal.SizeOf<STARTUPINFOW>();
 
         if (!CreatePipe(out var stdInReadHandle, out var stdInWriteHandle, null, 0))
         {            
@@ -147,7 +148,7 @@ public class NativeProcess(NativeProcessStartInfo startInfo) : IDisposable
         fullCommand += char.MinValue;
 
         var commandSpan = new Span<char>(fullCommand.ToCharArray());
-        var result = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, null, null, startInfo.InheritHandles, dwCreationFlags, null, null, startupInfo, out processInformation);
+        var result = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, securityAttributes, securityAttributes, startInfo.InheritHandles, dwCreationFlags, null, null, startupInfo, out processInformation);
 
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         var consoleEncoding = Encoding.GetEncoding((int)GetConsoleOutputCP());
