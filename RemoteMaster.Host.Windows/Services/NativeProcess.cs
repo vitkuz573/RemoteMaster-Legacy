@@ -24,7 +24,7 @@ public class NativeProcess(NativeProcessStartInfo startInfo) : IDisposable
     private StreamReader? _standardError;
     private uint? _processId;
 
-    public NativeProcessStartInfo StartInfo { get; } = startInfo;
+    public NativeProcessStartInfo StartInfo => startInfo;
 
     public uint? Id => _processId;
 
@@ -128,15 +128,16 @@ public class NativeProcess(NativeProcessStartInfo startInfo) : IDisposable
             return false;
         }
 
+        startupInfo.hStdInput = (HANDLE)stdInReadHandle.DangerousGetHandle();
+        startupInfo.hStdOutput = (HANDLE)stdOutWriteHandle.DangerousGetHandle();
+        startupInfo.hStdError = (HANDLE)stdErrWriteHandle.DangerousGetHandle();
+        
+        startupInfo.dwFlags = STARTUPINFOW_FLAGS.STARTF_USESTDHANDLES;
+
         fixed (char* pDesktopName = $@"winsta0\{startInfo.DesktopName}")
         {
             startupInfo.lpDesktop = pDesktopName;
         }
-
-        startupInfo.hStdInput = (HANDLE)stdInReadHandle.DangerousGetHandle();
-        startupInfo.hStdOutput = (HANDLE)stdOutWriteHandle.DangerousGetHandle();
-        startupInfo.hStdError = (HANDLE)stdErrWriteHandle.DangerousGetHandle();
-        startupInfo.dwFlags = STARTUPINFOW_FLAGS.STARTF_USESTDHANDLES;
 
         var dwCreationFlags = PROCESS_CREATION_FLAGS.NORMAL_PRIORITY_CLASS | PROCESS_CREATION_FLAGS.CREATE_UNICODE_ENVIRONMENT;
 
