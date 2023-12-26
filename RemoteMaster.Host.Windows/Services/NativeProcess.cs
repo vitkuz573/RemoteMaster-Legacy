@@ -101,36 +101,43 @@ public class NativeProcess(NativeProcessStartInfo startInfo) : IDisposable
         PROCESS_INFORMATION processInformation = default;
         SECURITY_ATTRIBUTES securityAttributes = default;
 
+        SafeFileHandle? parentInputPipeHandle = null;
+        SafeFileHandle? childInputPipeHandle = null;
+        SafeFileHandle? parentOutputPipeHandle = null;
+        SafeFileHandle? childOutputPipeHandle = null;
+        SafeFileHandle? parentErrorPipeHandle = null;
+        SafeFileHandle? childErrorPipeHandle = null;
+
         startupInfo.cb = (uint)Marshal.SizeOf<STARTUPINFOW>();
 
-        if (!CreatePipe(out var stdInReadHandle, out var stdInWriteHandle, null, 0))
+        if (!CreatePipe(out parentInputPipeHandle, out childInputPipeHandle, null, 0))
         {            
             return false;
         }
 
-        if (!CreatePipe(out var stdOutReadHandle, out var stdOutWriteHandle, null, 0))
+        if (!CreatePipe(out parentOutputPipeHandle, out childOutputPipeHandle, null, 0))
         {            
             return false;
         }
 
-        if (!CreatePipe(out var stdErrReadHandle, out var stdErrWriteHandle, null, 0))
+        if (!CreatePipe(out parentErrorPipeHandle, out childErrorPipeHandle, null, 0))
         {            
             return false;
         }
 
-        if (!SetHandleInformation(stdOutWriteHandle, (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT, HANDLE_FLAGS.HANDLE_FLAG_INHERIT))
+        if (!SetHandleInformation(childOutputPipeHandle, (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT, HANDLE_FLAGS.HANDLE_FLAG_INHERIT))
         {            
             return false;
         }
 
-        if (!SetHandleInformation(stdErrWriteHandle, (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT, HANDLE_FLAGS.HANDLE_FLAG_INHERIT))
+        if (!SetHandleInformation(childErrorPipeHandle, (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT, HANDLE_FLAGS.HANDLE_FLAG_INHERIT))
         {            
             return false;
         }
 
-        startupInfo.hStdInput = (HANDLE)stdInReadHandle.DangerousGetHandle();
-        startupInfo.hStdOutput = (HANDLE)stdOutWriteHandle.DangerousGetHandle();
-        startupInfo.hStdError = (HANDLE)stdErrWriteHandle.DangerousGetHandle();
+        startupInfo.hStdInput = (HANDLE)childInputPipeHandle.DangerousGetHandle();
+        startupInfo.hStdOutput = (HANDLE)childOutputPipeHandle.DangerousGetHandle();
+        startupInfo.hStdError = (HANDLE)childErrorPipeHandle.DangerousGetHandle();
         
         startupInfo.dwFlags = STARTUPINFOW_FLAGS.STARTF_USESTDHANDLES;
 
@@ -154,14 +161,14 @@ public class NativeProcess(NativeProcessStartInfo startInfo) : IDisposable
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         var consoleEncoding = Encoding.GetEncoding((int)GetConsoleOutputCP());
 
-        _standardOutput = new StreamReader(new FileStream(stdOutReadHandle, FileAccess.Read), consoleEncoding);
-        _standardError = new StreamReader(new FileStream(stdErrReadHandle, FileAccess.Read), consoleEncoding);
+        _standardOutput = new StreamReader(new FileStream(parentOutputPipeHandle!, FileAccess.Read, 4096, false), consoleEncoding, true, 4096);
+        _standardError = new StreamReader(new FileStream(parentErrorPipeHandle!, FileAccess.Read, 4096, false), consoleEncoding, true, 4096);
         _processHandle = new SafeFileHandle(processInformation.hProcess, true);
         _processId = processInformation.dwProcessId;
 
-        stdInWriteHandle.Close();
-        stdOutWriteHandle.Close();
-        stdErrWriteHandle.Close();
+        childInputPipeHandle.Close();
+        childOutputPipeHandle.Close();
+        childErrorPipeHandle.Close();
 
         return result;
     }
