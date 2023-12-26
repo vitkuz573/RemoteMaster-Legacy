@@ -25,7 +25,7 @@ public class NativeProcess : IDisposable
     private static readonly object _createProcessLock = new();
 
     private NativeProcessStartInfo? _startInfo;
-    private SafeFileHandle? _processHandle;
+    private SafeProcessHandle? _processHandle;
     private StreamWriter? _standardInput;
     private StreamReader? _standardOutput;
     private StreamReader? _standardError;
@@ -262,7 +262,7 @@ public class NativeProcess : IDisposable
             return false;
         }
 
-        _processHandle = new SafeFileHandle(processInfo.hProcess, true);
+        _processHandle = new SafeProcessHandle(processInfo.hProcess, true);
         _processId = processInfo.dwProcessId;
 
         return true;
