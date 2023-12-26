@@ -2,6 +2,8 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Text;
+
 namespace RemoteMaster.Host.Windows.Models;
 
 public class NativeProcessStartInfo(string applicationName, int targetSessionId)
@@ -25,4 +27,10 @@ public class NativeProcessStartInfo(string applicationName, int targetSessionId)
     public bool RedirectStandardOutput { get; init; }
 
     public bool RedirectStandardError { get; init; }
+
+    public Encoding? StandardInputEncoding { get; init; }
+
+    public Encoding? StandardOutputEncoding { get; init; }
+
+    public Encoding? StandardErrorEncoding { get; init; }
 }

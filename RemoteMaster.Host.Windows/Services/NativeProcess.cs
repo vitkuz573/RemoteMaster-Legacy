@@ -210,7 +210,7 @@ public class NativeProcess(NativeProcessStartInfo startInfo) : IDisposable
 
         if (startInfo.RedirectStandardInput)
         {
-            var enc = Encoding.GetEncoding((int)GetConsoleCP());
+            var enc = startInfo.StandardInputEncoding ?? Encoding.GetEncoding((int)GetConsoleCP());
 
             _standardInput = new StreamWriter(new FileStream(parentInputPipeHandle!, FileAccess.Write, 4096, false), enc, 4096)
             {
@@ -220,14 +220,14 @@ public class NativeProcess(NativeProcessStartInfo startInfo) : IDisposable
         
         if (startInfo.RedirectStandardOutput)
         {
-            var enc = Encoding.GetEncoding((int)GetConsoleOutputCP());
+            var enc = startInfo.StandardOutputEncoding ?? Encoding.GetEncoding((int)GetConsoleOutputCP());
 
             _standardOutput = new StreamReader(new FileStream(parentOutputPipeHandle!, FileAccess.Read, 4096, false), enc, true, 4096);
         }
 
         if (startInfo.RedirectStandardError)
         {
-            var enc = Encoding.GetEncoding((int)GetConsoleOutputCP());
+            var enc = startInfo.StandardErrorEncoding ?? Encoding.GetEncoding((int)GetConsoleOutputCP());
 
             _standardError = new StreamReader(new FileStream(parentErrorPipeHandle!, FileAccess.Read, 4096, false), enc, true, 4096);
         }
