@@ -53,18 +53,19 @@ public class UserInstanceService : IUserInstanceService
 
     private void StartNewInstance()
     {
-        var options = new NativeProcessStartInfo(CurrentExecutablePath, -1)
+        using var process = new NativeProcess();
+        process.StartInfo = new NativeProcessStartInfo(CurrentExecutablePath)
         {
+            TargetSessionId = -1,
             Arguments = Argument,
             ForceConsoleSession = true,
-            DesktopName = "default",
+            DesktopName = "Default",
             CreateNoWindow = true,
             UseCurrentUserToken = false
         };
 
-        using var process = new NativeProcess(options);
         process.Start();
-        Log.Information("Started a new instance of the host with options: {Options}", options);
+        Log.Information("Started a new instance of the host with options: {@Options}", process.StartInfo);
     }
 
     private Process[] FindHostProcesses()

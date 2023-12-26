@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
@@ -58,17 +57,19 @@ public partial class ScriptService(IHubContext<ControlHub, IControlClient> hubCo
                 _ => "",
             };
 
-            var options = new NativeProcessStartInfo(applicationToRun, -1)
+            using var process = new NativeProcess();
+
+            process.StartInfo = new NativeProcessStartInfo(applicationToRun)
             {
+                TargetSessionId = -1,
                 ForceConsoleSession = true,
-                DesktopName = "default",
+                DesktopName = "Default",
                 CreateNoWindow = true,
                 UseCurrentUserToken = !asSystem,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true
             };
 
-            using var process = new NativeProcess(options);
             process.Start();
 
             await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult

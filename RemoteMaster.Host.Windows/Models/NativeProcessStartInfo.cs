@@ -2,35 +2,64 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace RemoteMaster.Host.Windows.Models;
 
-public class NativeProcessStartInfo(string applicationName, int targetSessionId)
+public class NativeProcessStartInfo
 {
-    public string FileName { get; init; } = applicationName;
+    private string? _fileName;
+    private string? _arguments;
 
-    public string? Arguments { get; init; } = null;
+    public NativeProcessStartInfo()
+    {
+    }
 
-    public int TargetSessionId { get; init; } = targetSessionId;
+    public NativeProcessStartInfo(string fileName)
+    {
+        _fileName = fileName;
+    }
 
-    public bool ForceConsoleSession { get; init; } = true;
+    public NativeProcessStartInfo(string fileName, string arguments)
+    {
+        _fileName = fileName;
+        _arguments = arguments;
+    }
 
-    public string DesktopName { get; init; } = "Default";
+    [AllowNull]
+    public string FileName
+    {
+        get => _fileName ?? string.Empty;
+        set => _fileName = value;
+    }
 
-    public bool CreateNoWindow { get; init; } = true;
+    [AllowNull]
+    public string Arguments
+    {
+        get => _arguments ?? string.Empty;
+        set => _arguments = value;
+    }
 
-    public bool UseCurrentUserToken { get; init; } = false;
+    public int TargetSessionId { get; set; }
 
-    public bool RedirectStandardInput { get; init; }
+    public bool ForceConsoleSession { get; set; } = true;
+
+    public string DesktopName { get; set; } = "Default";
+
+    public bool CreateNoWindow { get; set; } = true;
+
+    public bool UseCurrentUserToken { get; set; } = false;
+
+    public bool RedirectStandardInput { get; set; }
     
-    public bool RedirectStandardOutput { get; init; }
+    public bool RedirectStandardOutput { get; set; }
 
-    public bool RedirectStandardError { get; init; }
+    public bool RedirectStandardError { get; set; }
 
-    public Encoding? StandardInputEncoding { get; init; }
+    public Encoding? StandardInputEncoding { get; set; }
 
-    public Encoding? StandardOutputEncoding { get; init; }
+    public Encoding? StandardOutputEncoding { get; set; }
 
-    public Encoding? StandardErrorEncoding { get; init; }
+    public Encoding? StandardErrorEncoding { get; set; }
 }

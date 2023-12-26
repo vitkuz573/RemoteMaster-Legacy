@@ -20,15 +20,35 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class NativeProcess(NativeProcessStartInfo startInfo) : IDisposable
+public class NativeProcess : IDisposable
 {
+    private static readonly object _createProcessLock = new();
+
+    private NativeProcessStartInfo? _startInfo;
     private SafeFileHandle? _processHandle;
     private StreamWriter? _standardInput;
     private StreamReader? _standardOutput;
     private StreamReader? _standardError;
     private uint? _processId;
 
-    public NativeProcessStartInfo StartInfo => startInfo;
+    public NativeProcessStartInfo StartInfo
+    {
+        get
+        {
+            if (_startInfo == null)
+            {
+                _startInfo = new NativeProcessStartInfo();
+            }
+
+            return _startInfo;
+        }
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+
+            _startInfo = value;
+        }
+    }
 
     public uint? Id => _processId;
 
@@ -60,7 +80,7 @@ public class NativeProcess(NativeProcessStartInfo startInfo) : IDisposable
 
         if (hUserTokenDup != null)
         {
-            TryCreateInteractiveProcess(StartInfo, hUserTokenDup);
+            StartWithCreateProcess(StartInfo, hUserTokenDup);
         }
         else
         {
@@ -101,7 +121,7 @@ public class NativeProcess(NativeProcessStartInfo startInfo) : IDisposable
         return targetSessionFound ? (uint)targetSessionId : lastSessionId;
     }
 
-    private unsafe bool TryCreateInteractiveProcess(NativeProcessStartInfo startInfo, SafeHandle hUserTokenDup)
+    private unsafe bool StartWithCreateProcess(NativeProcessStartInfo startInfo, SafeHandle hUserTokenDup)
     {
         STARTUPINFOW startupInfo = default;
         PROCESS_INFORMATION processInfo = default;
@@ -115,95 +135,98 @@ public class NativeProcess(NativeProcessStartInfo startInfo) : IDisposable
         SafeFileHandle? parentErrorPipeHandle = null;
         SafeFileHandle? childErrorPipeHandle = null;
 
-        try
+        lock (_createProcessLock)
         {
-            startupInfo.cb = (uint)Marshal.SizeOf<STARTUPINFOW>();
-
-            if (startInfo.RedirectStandardInput || startInfo.RedirectStandardOutput || startInfo.RedirectStandardError)
+            try
             {
-                if (startInfo.RedirectStandardInput)
+                startupInfo.cb = (uint)Marshal.SizeOf<STARTUPINFOW>();
+
+                if (startInfo.RedirectStandardInput || startInfo.RedirectStandardOutput || startInfo.RedirectStandardError)
                 {
-                    CreatePipe(out parentInputPipeHandle, out childInputPipeHandle, true);
-                }
-                else
-                {
-                    childInputPipeHandle = GetStdHandle_SafeHandle(STD_HANDLE.STD_INPUT_HANDLE);
+                    if (startInfo.RedirectStandardInput)
+                    {
+                        CreatePipe(out parentInputPipeHandle, out childInputPipeHandle, true);
+                    }
+                    else
+                    {
+                        childInputPipeHandle = GetStdHandle_SafeHandle(STD_HANDLE.STD_INPUT_HANDLE);
+                    }
+
+                    if (startInfo.RedirectStandardOutput)
+                    {
+                        CreatePipe(out parentOutputPipeHandle, out childOutputPipeHandle, false);
+                    }
+                    else
+                    {
+                        childOutputPipeHandle = GetStdHandle_SafeHandle(STD_HANDLE.STD_OUTPUT_HANDLE);
+                    }
+
+                    if (startInfo.RedirectStandardError)
+                    {
+                        CreatePipe(out parentErrorPipeHandle, out childErrorPipeHandle, false);
+                    }
+                    else
+                    {
+                        childErrorPipeHandle = GetStdHandle_SafeHandle(STD_HANDLE.STD_ERROR_HANDLE);
+                    }
+
+                    startupInfo.hStdInput = (HANDLE)childInputPipeHandle.DangerousGetHandle();
+                    startupInfo.hStdOutput = (HANDLE)childOutputPipeHandle.DangerousGetHandle();
+                    startupInfo.hStdError = (HANDLE)childErrorPipeHandle.DangerousGetHandle();
+
+                    startupInfo.dwFlags = STARTUPINFOW_FLAGS.STARTF_USESTDHANDLES;
                 }
 
-                if (startInfo.RedirectStandardOutput)
+                fixed (char* pDesktopName = $@"winsta0\{startInfo.DesktopName}")
                 {
-                    CreatePipe(out parentOutputPipeHandle, out childOutputPipeHandle, false);
-                }
-                else
-                {
-                    childOutputPipeHandle = GetStdHandle_SafeHandle(STD_HANDLE.STD_OUTPUT_HANDLE);
+                    startupInfo.lpDesktop = pDesktopName;
                 }
 
-                if (startInfo.RedirectStandardError)
+                var dwCreationFlags = PROCESS_CREATION_FLAGS.NORMAL_PRIORITY_CLASS | PROCESS_CREATION_FLAGS.CREATE_UNICODE_ENVIRONMENT;
+
+                dwCreationFlags |= startInfo.CreateNoWindow
+                    ? PROCESS_CREATION_FLAGS.CREATE_NO_WINDOW
+                    : PROCESS_CREATION_FLAGS.CREATE_NEW_CONSOLE;
+
+                var fullCommand = $"{startInfo.FileName} {startInfo.Arguments ?? string.Empty}";
+                fullCommand += char.MinValue;
+
+                var commandSpan = new Span<char>(fullCommand.ToCharArray());
+
+                bool retVal;
+                var errorCode = 0;
+
+                retVal = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, securityAttributes, securityAttributes, true, dwCreationFlags, null, null, startupInfo, out processInfo);
+
+                if (!retVal)
                 {
-                    CreatePipe(out parentErrorPipeHandle, out childErrorPipeHandle, false);
-                }
-                else
-                {
-                    childErrorPipeHandle = GetStdHandle_SafeHandle(STD_HANDLE.STD_ERROR_HANDLE);
+                    errorCode = Marshal.GetLastWin32Error();
                 }
 
-                startupInfo.hStdInput = (HANDLE)childInputPipeHandle.DangerousGetHandle();
-                startupInfo.hStdOutput = (HANDLE)childOutputPipeHandle.DangerousGetHandle();
-                startupInfo.hStdError = (HANDLE)childErrorPipeHandle.DangerousGetHandle();
+                if (processInfo.hProcess != nint.Zero && processInfo.hProcess != new nint(-1))
+                {
+                    Marshal.InitHandle(procSH, processInfo.hProcess);
+                }
 
-                startupInfo.dwFlags = STARTUPINFOW_FLAGS.STARTF_USESTDHANDLES;
+                if (processInfo.hThread != nint.Zero && processInfo.hThread != new nint(-1))
+                {
+                    CloseHandle(processInfo.hThread);
+                }
             }
-
-            fixed (char* pDesktopName = $@"winsta0\{startInfo.DesktopName}")
+            catch
             {
-                startupInfo.lpDesktop = pDesktopName;
+                parentInputPipeHandle?.Dispose();
+                parentOutputPipeHandle?.Dispose();
+                parentErrorPipeHandle?.Dispose();
+                procSH.Dispose();
+                throw;
             }
-
-            var dwCreationFlags = PROCESS_CREATION_FLAGS.NORMAL_PRIORITY_CLASS | PROCESS_CREATION_FLAGS.CREATE_UNICODE_ENVIRONMENT;
-
-            dwCreationFlags |= startInfo.CreateNoWindow
-                ? PROCESS_CREATION_FLAGS.CREATE_NO_WINDOW
-                : PROCESS_CREATION_FLAGS.CREATE_NEW_CONSOLE;
-
-            var fullCommand = $"{startInfo.FileName} {startInfo.Arguments ?? string.Empty}";
-            fullCommand += char.MinValue;
-
-            var commandSpan = new Span<char>(fullCommand.ToCharArray());
-
-            bool retVal;
-            var errorCode = 0;
-
-            retVal = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, securityAttributes, securityAttributes, true, dwCreationFlags, null, null, startupInfo, out processInfo);
-
-            if (!retVal)
+            finally
             {
-                errorCode = Marshal.GetLastWin32Error();
+                childInputPipeHandle?.Dispose();
+                childOutputPipeHandle?.Dispose();
+                childErrorPipeHandle?.Dispose();
             }
-
-            if (processInfo.hProcess != nint.Zero && processInfo.hProcess != new nint(-1))
-            {
-                Marshal.InitHandle(procSH, processInfo.hProcess);
-            }
-
-            if (processInfo.hThread != nint.Zero && processInfo.hThread != new nint(-1))
-            {
-                CloseHandle(processInfo.hThread);
-            }
-        }
-        catch
-        {
-            parentInputPipeHandle?.Dispose();
-            parentOutputPipeHandle?.Dispose();
-            parentErrorPipeHandle?.Dispose();
-            procSH.Dispose();
-            throw;
-        }
-        finally
-        {
-            childInputPipeHandle?.Dispose();
-            childOutputPipeHandle?.Dispose();
-            childErrorPipeHandle?.Dispose();
         }
 
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
