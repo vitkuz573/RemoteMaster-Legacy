@@ -29,7 +29,9 @@ public class NativeProcess : IDisposable
     private StreamWriter? _standardInput;
     private StreamReader? _standardOutput;
     private StreamReader? _standardError;
-    private uint? _processId;
+
+    private bool _haveProcessId;
+    private int _processId;
 
     public NativeProcessStartInfo StartInfo
     {
@@ -50,7 +52,7 @@ public class NativeProcess : IDisposable
         }
     }
 
-    public uint? Id => _processId;
+    public int Id => _processId;
 
     public StreamWriter? StandartInput => _standardInput;
 
@@ -263,9 +265,15 @@ public class NativeProcess : IDisposable
         }
 
         _processHandle = new SafeProcessHandle(processInfo.hProcess, true);
-        _processId = processInfo.dwProcessId;
+        SetProcessId((int)processInfo.dwProcessId);
 
         return true;
+    }
+
+    private void SetProcessId(int processId)
+    {
+        _processId = processId;
+        _haveProcessId = true;
     }
 
     private static void CreatePipeWithSecurityAttributes(out SafeFileHandle hReadPipe, out SafeFileHandle hWritePipe, ref SECURITY_ATTRIBUTES lpPipeAttributes, uint nSize)
