@@ -184,11 +184,19 @@ public class NativeProcess : IDisposable
                     startupInfo.lpDesktop = pDesktopName;
                 }
 
-                var dwCreationFlags = PROCESS_CREATION_FLAGS.NORMAL_PRIORITY_CLASS | PROCESS_CREATION_FLAGS.CREATE_UNICODE_ENVIRONMENT;
+                PROCESS_CREATION_FLAGS dwCreationFlags = 0;
 
                 dwCreationFlags |= startInfo.CreateNoWindow
                     ? PROCESS_CREATION_FLAGS.CREATE_NO_WINDOW
                     : PROCESS_CREATION_FLAGS.CREATE_NEW_CONSOLE;
+
+                string? environmentBlock = null;
+
+                if (startInfo._environmentVariables != null)
+                {
+                    dwCreationFlags |= PROCESS_CREATION_FLAGS.CREATE_UNICODE_ENVIRONMENT;
+                    environmentBlock = GetEnvironmentVariablesBlock(startInfo._environmentVariables!);
+                }
 
                 var fullCommand = $"{startInfo.FileName} {startInfo.Arguments ?? string.Empty}";
                 fullCommand += char.MinValue;
@@ -198,7 +206,10 @@ public class NativeProcess : IDisposable
                 bool retVal;
                 var errorCode = 0;
 
-                retVal = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, securityAttributes, securityAttributes, true, dwCreationFlags, null, null, startupInfo, out processInfo);
+                fixed(char* pEnvironmentBlock = environmentBlock)
+                {
+                    retVal = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, securityAttributes, securityAttributes, true, dwCreationFlags, pEnvironmentBlock, null, startupInfo, out processInfo);
+                }
 
                 if (!retVal)
                 {
@@ -318,6 +329,22 @@ public class NativeProcess : IDisposable
                 hTmp.Dispose();
             }
         }
+    }
+
+    private static string GetEnvironmentVariablesBlock(IDictionary<string, string> sd)
+    {
+        var keys = new string[sd.Count];
+        sd.Keys.CopyTo(keys, 0);
+        Array.Sort(keys, StringComparer.OrdinalIgnoreCase);
+
+        var result = new StringBuilder(8 * keys.Length);
+
+        foreach (var key in keys)
+        {
+            result.Append(key).Append('=').Append(sd[key]).Append('\0');
+        }
+
+        return result.ToString();
     }
 
     private static bool TryGetUserToken(uint sessionId, out SafeFileHandle hUserToken)
