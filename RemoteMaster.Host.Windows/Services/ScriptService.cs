@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
@@ -13,7 +12,7 @@ using static RemoteMaster.Shared.Models.ScriptResult;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public partial class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) : IScriptService
+public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) : IScriptService
 {
     public async Task Execute(Shell shell, string script, bool asSystem)
     {
@@ -32,11 +31,6 @@ public partial class ScriptService(IHubContext<ControlHub, IControlClient> hubCo
         var tempFilePath = Path.Combine(publicDirectory, fileName);
 
         Log.Information("Temporary file path: {TempFilePath}", tempFilePath);
-
-        if (shell == Shell.Cmd)
-        {
-            script = ConvertCmdTimeoutToPowershellSleep(script);
-        }
 
         var scriptContent = shell == Shell.Cmd ? "@echo off\r\n" + script : script;
         await File.WriteAllTextAsync(tempFilePath, scriptContent);
@@ -114,14 +108,4 @@ public partial class ScriptService(IHubContext<ControlHub, IControlClient> hubCo
             });
         }
     }
-
-    private static string ConvertCmdTimeoutToPowershellSleep(string script)
-    {
-        var timeoutRegex = TimeoutRegex();
-
-        return timeoutRegex.Replace(script, "powershell Start-Sleep -Seconds $1");
-    }
-
-    [GeneratedRegex(@"timeout\s+/?T?\s*(\d+)", RegexOptions.IgnoreCase)]
-    private static partial Regex TimeoutRegex();
 }
