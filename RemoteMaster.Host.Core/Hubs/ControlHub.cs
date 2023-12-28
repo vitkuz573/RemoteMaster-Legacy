@@ -160,9 +160,9 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         await Clients.Group("serviceGroup").ReceiveCommand(command);
     }
 
-    public void SendUpdateHost(string folderPath, string username, string password, bool isLocalFolder)
+    public void SendUpdateHost(string folderPath, string username, string password)
     {
-        updaterService.Execute(folderPath, username, password, isLocalFolder);
+        updaterService.Execute(folderPath, username, password);
     }
 
     public void SendJoinToDomain(string domain, string user, string password)

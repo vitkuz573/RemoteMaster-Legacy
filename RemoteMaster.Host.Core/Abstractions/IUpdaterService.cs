@@ -6,5 +6,5 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IUpdaterService
 {
-    void Execute(string folderPath, string username, string password, bool isLocalFolder);
+    void Execute(string folderPath, string username, string password);
 }

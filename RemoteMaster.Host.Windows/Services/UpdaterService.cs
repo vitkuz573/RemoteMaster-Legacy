@@ -28,13 +28,16 @@ public class UpdaterService : IUpdaterService
         _hostServiceConfig = hostServiceConfig;
     }
 
-    public void Execute(string folderPath, string username, string password, bool isLocalFolder)
+    public void Execute(string folderPath, string username, string password)
     {
+        ArgumentNullException.ThrowIfNull(folderPath);
+
         try
         {
             var sourceFolderPath = Path.Combine(folderPath, "Host");
+            var isNetworkPath = folderPath.StartsWith("\\\\");
 
-            if (!isLocalFolder)
+            if (isNetworkPath)
             {
                 _networkDriveService.MapNetworkDrive(folderPath, username, password);
             }
@@ -43,7 +46,7 @@ public class UpdaterService : IUpdaterService
 
             Log.Information("Copied from {SourceFolder} to {DestinationFolder}", sourceFolderPath, _updateFolderPath);
 
-            if (!isLocalFolder)
+            if (isNetworkPath)
             {
                 _networkDriveService.CancelNetworkDrive(folderPath);
             }
