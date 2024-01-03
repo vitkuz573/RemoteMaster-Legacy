@@ -12,27 +12,65 @@ function Read-Csproj {
     )
 
     # Enhanced CSS for HTML Report
-	$css = @"
+    $css = @"
 <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    h1 { color: #333366; overflow-wrap: anywhere; }
-    h2 { color: #666699; }
-    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-    th, td { border: 1px solid #999; padding: 8px; text-align: left; }
-    th { background-color: #f2f2f2; }
-    td { 
-        max-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    td:hover {
-        overflow: visible;
-        white-space: normal;
-        word-break: break-word;
-    }
-    .source { font-size: 0.85em; color: #707070; }
+	body { font-family: Arial, sans-serif; margin: 20px; }
+	h1 { color: #333366; overflow-wrap: anywhere; }
+	h2 { color: #666699; }
+	table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+	th, td { border: 1px solid #999; padding: 8px; text-align: left; }
+	th { background-color: #f2f2f2; }
+	td { 
+		max-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	td:hover {
+		overflow: visible;
+		white-space: normal;
+		word-break: break-word;
+	}
+	.source { font-size: 0.85em; color: #707070; }
+	.tooltip {
+		position: relative;
+		display: inline-block;
+	}
+	.tooltip .tooltiptext {
+		visibility: hidden;
+		width: 120px;
+		background-color: black;
+		color: #fff;
+		text-align: center;
+		border-radius: 6px;
+		padding: 5px 0;
+		position: absolute;
+		z-index: 1;
+		bottom: 150%;
+		left: 50%;
+		margin-left: -60px;
+	}
+	.tooltip:hover .tooltiptext {
+		visibility: visible;
+	}
 </style>
+"@
+
+    # JavaScript for tooltips
+    $js = @"
+<script>
+	document.addEventListener('DOMContentLoaded', (event) => {
+		document.querySelectorAll('.tooltip').forEach(elem => {
+			elem.addEventListener('mouseover', function(event) {
+				var variableName = event.target.getAttribute('data-variable');
+				var variableValue = properties[variableName];
+				if (variableValue) {
+					event.target.querySelector('.tooltiptext').textContent = variableValue;
+				}
+			});
+		});
+	});
+</script>
 "@
 
     # Find Directory.Build.props in the solution directory or above
@@ -96,65 +134,82 @@ function Read-Csproj {
         }
     }
 
-	# Analyzing ItemGroup (for PackageReferences, etc.)
-	$packageReferences = @()
-	foreach ($group in $csprojContent.Project.ItemGroup) {
-		foreach ($item in $group.GetEnumerator()) {
-			if ($item.Name -eq "PackageReference") {
-				$versionSource = ""
-				$version = $dirPackages[$item.Include]
-				if ($version) {
-					$versionSource = " (from Directory.Packages.props)"
-				} else {
-					$version = $item.Version
-					if ($version) {
-						$versionSource = " (from .csproj)"
-					} else {
-						$versionSource = " (Not specified)"
-					}
-				}
-				$packageReferences += [PSCustomObject]@{
-					"Package" = $item.Include
-					"Version" = $version + $versionSource
-				}
-			}
-		}
+    # Analyzing ItemGroup (for PackageReferences, etc.)
+    $packageReferences = @()
+    foreach ($group in $csprojContent.Project.ItemGroup) {
+        foreach ($item in $group.GetEnumerator()) {
+            if ($item.Name -eq "PackageReference") {
+                $versionSource = ""
+                $version = $dirPackages[$item.Include]
+                if ($version) {
+                    $versionSource = " (from Directory.Packages.props)"
+                } else {
+                    $version = $item.Version
+                    if ($version) {
+                        $versionSource = " (from .csproj)"
+                    } else {
+                        $versionSource = " (Not specified)"
+                    }
+                }
+                $packageReferences += [PSCustomObject]@{
+                    "Package" = $item.Include
+                    "Version" = $version + $versionSource
+                }
+            }
+        }
+    }
+
+	# Convert $csprojProperties to JSON for JavaScript
+	$propertiesForJs = @{}
+	foreach ($propName in $csprojProperties.Keys) {
+		$valueAndSource = $csprojProperties[$propName] -split ' \(', 2
+		$propertiesForJs[$propName] = $valueAndSource[0]
 	}
+	$propertiesJson = $propertiesForJs | ConvertTo-Json -Compress
+	$jsProperties = "<script>`nvar properties = $propertiesJson;`n</script>"
 
     # Generate HTML Report
-	$htmlContent = "<html><head><title>CSProj Analysis</title>$css</head><body>"
-	$htmlContent += "<h2>Analysis of .csproj File: <span style='overflow-wrap: anywhere;'>$Path</span></h2>"
+    $htmlContent = "<html><head><title>CSProj Analysis</title>$css</head><body>"
+    $htmlContent += $jsProperties  # Insert the JavaScript properties object
+    $htmlContent += "<h2>Analysis of .csproj File: <span style='overflow-wrap: anywhere;'>$Path</span></h2>"
 
-    # Properties Section
-    $htmlContent += "<h2>Properties</h2>"
-    $htmlContent += "<table><tr><th>Property</th><th>Value</th><th>Source</th></tr>"
-    foreach ($propName in $csprojProperties.Keys) {
-        $valueAndSource = $csprojProperties[$propName] -split ' \(', 2
-        $htmlContent += "<tr><td>$propName</td><td>$($valueAndSource[0])</td><td class='source'>($($valueAndSource[1])</td></tr>"
-    }
-    $htmlContent += "</table>"
-
-	# Package References Section
-	$htmlContent += "<h2>Package References</h2>"
-	$htmlContent += "<table><tr><th>Package</th><th>Version</th><th>Source</th><th>NuGet Link</th></tr>"
-	foreach ($packageRef in $packageReferences) {
-		$versionAndSource = $packageRef.Version -split ' \(', 2
-		$nugetUrl = "https://www.nuget.org/packages/$($packageRef.Package)/$($versionAndSource[0])"
-		$htmlContent += "<tr><td>$($packageRef.Package)</td><td>$($versionAndSource[0])</td><td class='source'>($($versionAndSource[1])</td><td><a href='$nugetUrl'>NuGet Page</a></td></tr>"
+	# Properties Section
+	$htmlContent += "<h2>Properties</h2>"
+	$htmlContent += "<table><tr><th>Property</th><th>Value</th><th>Source</th></tr>"
+	foreach ($propName in $csprojProperties.Keys) {
+		$valueAndSource = $csprojProperties[$propName] -split ' \(', 2
+		if ($propName -ne "NoWarn") {
+			$displayValue = $valueAndSource[0] -replace "\`$\((.*?)\)", "<span class='tooltip' data-variable='`$1'><span class='tooltiptext'></span>`$(`$1)</span>"
+		} else {
+			$displayValue = $valueAndSource[0]
+		}
+		$htmlContent += "<tr><td>$propName</td><td>$displayValue</td><td class='source'>($($valueAndSource[1])</td></tr>"
 	}
 	$htmlContent += "</table>"
 
-	# Closing HTML Tags
-	$htmlContent += "</body></html>"
+    # Package References Section
+    $htmlContent += "<h2>Package References</h2>"
+    $htmlContent += "<table><tr><th>Package</th><th>Version</th><th>Source</th><th>NuGet Link</th></tr>"
+    foreach ($packageRef in $packageReferences) {
+        $versionAndSource = $packageRef.Version -split ' \(', 2
+        $nugetUrl = "https://www.nuget.org/packages/$($packageRef.Package)/$($versionAndSource[0])"
+        $htmlContent += "<tr><td>$($packageRef.Package)</td><td>$($versionAndSource[0])</td><td class='source'>($($versionAndSource[1])</td><td><a href='$nugetUrl'>NuGet Page</a></td></tr>"
+    }
+    $htmlContent += "</table>"
 
-	# Save HTML Report
-	$htmlFilePath = "$Path-analysis.html"
-	$htmlContent | Out-File $htmlFilePath
+    $htmlContent += $js  # Insert the JavaScript for tooltips
 
-	# Optional: Open HTML report in a browser
-	Start-Process "chrome.exe" $htmlFilePath
+    # Closing HTML Tags
+    $htmlContent += "</body></html>"
 
-	return $htmlFilePath
+    # Save HTML Report
+    $htmlFilePath = "$Path-analysis.html"
+    $htmlContent | Out-File $htmlFilePath
+
+    # Optional: Open HTML report in a browser
+    Start-Process "chrome.exe" $htmlFilePath
+
+    return $htmlFilePath
 }
 
 # Modifies a .csproj file based on provided modifications
