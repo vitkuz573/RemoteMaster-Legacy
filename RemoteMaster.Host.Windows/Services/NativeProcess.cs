@@ -37,10 +37,7 @@ public class NativeProcess : IDisposable
     {
         get
         {
-            if (_startInfo == null)
-            {
-                _startInfo = new NativeProcessStartInfo();
-            }
+            _startInfo ??= new NativeProcessStartInfo();
 
             return _startInfo;
         }
