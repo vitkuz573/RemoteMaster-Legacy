@@ -21,7 +21,7 @@ public class TokenPrivilegeService : ITokenPrivilegeService
             PrivilegeCount = 1,
             Privileges =
             {
-                _0 =
+                e0 =
                 {
                     Attributes = TOKEN_PRIVILEGES_ATTRIBUTES.SE_PRIVILEGE_ENABLED
                 }
@@ -37,12 +37,12 @@ public class TokenPrivilegeService : ITokenPrivilegeService
 
             using (hToken)
             {
-                if (!LookupPrivilegeValue(null, privilegeName, out tkp.Privileges._0.Luid))
+                if (!LookupPrivilegeValue(null, privilegeName, out tkp.Privileges.e0.Luid))
                 {
                     return false;
                 }
 
-                return AdjustTokenPrivileges(hToken, false, tkp, 0, null, null);
+                return AdjustTokenPrivileges(hToken, false, &tkp, 0, null, null);
             }
         }
         catch
