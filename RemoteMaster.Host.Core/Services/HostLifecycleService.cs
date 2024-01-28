@@ -50,7 +50,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
                     Log.Information("Certificate Serial Number: {SerialNumber}", certificate.SerialNumber);
                     Log.Information("Certificate Subject Name: {SubjectName}", certificate.Subject);
 
-                    var pfxFilePath = @"C:\certificate.pfx";
+                    var pfxFilePath = @"C:\ProgramData\RemoteMaster\Security\certificate.pfx";
                     var pfxPassword = "YourPfxPassword";
                     CreatePfxFile(certificateBytes, rsaKeyPair, pfxFilePath, pfxPassword);
 
