@@ -1,5 +1,5 @@
 $caName = "RemoteMaster Internal CA"
-$destDirectory = "InternalCA"
+$destDirectory = "C:\ProgramData\RemoteMaster\Security\InternalCA"
 $opensslPath = "C:\Program Files\OpenSSL-Win64\bin\openssl.exe"
 
 # Ensure destination directory exists

@@ -74,11 +74,11 @@ internal class Program
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         });
 
-        var publicKeyPath = @"C:\RemoteMaster\Security\public_key.pem";
+        var publicKeyPath = @"C:\ProgramData\RemoteMaster\Security\public_key.pem";
         var publicKey = File.ReadAllText(publicKeyPath);
 
-        using var ecdsa = ECDsa.Create();
-        ecdsa.ImportFromPem(publicKey.ToCharArray());
+        using var rsa = RSA.Create();
+        rsa.ImportFromPem(publicKey.ToCharArray());
 
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
@@ -91,7 +91,7 @@ internal class Program
                     ValidateLifetime = true,
                     ValidIssuer = "RemoteMaster Server",
                     ValidAudience = "RMServiceAPI",
-                    IssuerSigningKey = new ECDsaSecurityKey(ecdsa)
+                    IssuerSigningKey = new RsaSecurityKey(rsa)
                 };
 
                 options.Events = new JwtBearerEvents
