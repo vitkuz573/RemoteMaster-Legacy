@@ -138,4 +138,31 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             return false;
         }
     }
+
+    public async Task<string> GetPublicKey()
+    {
+        try
+        {
+            var publicKeyPath = @"C:\ProgramData\RemoteMaster\Security\public_key.pem";
+            
+            if (File.Exists(publicKeyPath))
+            {
+                var publicKey = await File.ReadAllTextAsync(publicKeyPath);
+                
+                return publicKey;
+            }
+            else
+            {
+                Log.Warning("Public key file not found at '{Path}'", publicKeyPath);
+                
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error while reading public key file.");
+
+            return null;
+        }
+    }
 }

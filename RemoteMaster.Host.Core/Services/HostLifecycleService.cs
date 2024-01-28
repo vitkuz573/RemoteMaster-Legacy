@@ -77,6 +77,16 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
                     throw new InvalidOperationException("Certificate processing failed.");
                 }
 
+                var publicKey = await connection.InvokeAsync<string>("GetPublicKey");
+
+                if (string.IsNullOrEmpty(publicKey))
+                {
+                    throw new InvalidOperationException("Failed to obtain JWT public key.");
+                }
+
+                var publicKeyPath = @"C:\ProgramData\RemoteMaster\Security\public_key.pem";
+                SavePublicKey(publicKey, publicKeyPath);
+
                 Log.Information("Host registration successful with certificate received.");
             }
             else
@@ -190,5 +200,18 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         var pfxBytes = certificate.CopyWithPrivateKey(rsaKeyPair).Export(X509ContentType.Pfx, password);
 
         File.WriteAllBytes(outputPfxPath, pfxBytes);
+    }
+
+    private static void SavePublicKey(string publicKey, string filePath)
+    {
+        try
+        {
+            File.WriteAllText(filePath, publicKey);
+            Log.Information("Public key saved successfully at {Path}", filePath);
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Failed to save public key: {ErrorMessage}", ex.Message);
+        }
     }
 }
