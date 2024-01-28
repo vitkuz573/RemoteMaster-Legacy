@@ -35,7 +35,15 @@
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Process ID">@context.Id</MudTd>
-            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="Name">
+                    <div style="display: flex; align-items: center;">
+                        @if (context.Icon != null)
+                    {
+                        <img src="@($"data:image/png;base64,{Convert.ToBase64String(context.Icon)}")" alt="Icon" style="height: 20px; width: 20px; margin-right: 10px;" />
+                    }
+                    <span>@context.Name</span>
+                </div>
+            </MudTd>
             <MudTd DataLabel="Memory Usage">@FormatSize(context.MemoryUsage)</MudTd>
             <MudTd>
                 <MudButton OnClick="@(() => KillProcess(context.Id))" Color="Color.Error">Kill</MudButton>
