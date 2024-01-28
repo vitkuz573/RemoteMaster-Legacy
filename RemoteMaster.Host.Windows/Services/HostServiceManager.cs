@@ -149,11 +149,16 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
     private static void DeleteFiles()
     {
         var directoryPath = GetDirectoryPath();
-        const int maxRetries = 5;
+        const int maxRetries = 100;
         var delayOnRetry = 2000;
 
         if (directoryPath != null && Directory.Exists(directoryPath))
         {
+            foreach (var file in Directory.EnumerateFiles(directoryPath))
+            {
+                WaitForFile(file, maxRetries, delayOnRetry);
+            }
+
             for (var i = 0; i < maxRetries; ++i)
             {
                 try
@@ -181,6 +186,23 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
                     Log.Error("Unexpected error occurred while deleting {AppName} files: {Message}", SubAppName, ex.Message);
                     break;
                 }
+            }
+        }
+    }
+
+    private static void WaitForFile(string filepath, int maxRetries, int delayOnRetry)
+    {
+        for (var i = 0; i < maxRetries; i++)
+        {
+            try
+            {
+                using var stream = File.Open(filepath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+                stream.Close();
+                break;
+            }
+            catch (IOException)
+            {
+                Thread.Sleep(delayOnRetry);
             }
         }
     }
