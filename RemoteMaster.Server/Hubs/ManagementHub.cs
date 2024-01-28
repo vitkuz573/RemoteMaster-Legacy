@@ -143,7 +143,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
     {
         try
         {
-            var publicKeyPath = @"C:\ProgramData\RemoteMaster\Security\public_key.pem";
+            var publicKeyPath = @"C:\ProgramData\RemoteMaster\Security\JWT\public_key.pem";
             
             if (File.Exists(publicKeyPath))
             {

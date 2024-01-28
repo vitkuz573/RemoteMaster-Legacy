@@ -75,54 +75,60 @@ internal class Program
         });
 
         var publicKeyPath = @"C:\ProgramData\RemoteMaster\Security\public_key.pem";
-        var publicKey = File.ReadAllText(publicKeyPath);
 
-        using var rsa = RSA.Create();
-        rsa.ImportFromPem(publicKey.ToCharArray());
+        if (File.Exists(publicKeyPath))
+        {
+            var publicKey = File.ReadAllText(publicKeyPath);
 
-        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
+#pragma warning disable CA2000
+            var rsa = RSA.Create();
+#pragma warning restore CA2000
+            rsa.ImportFromPem(publicKey.ToCharArray());
+
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
                 {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidateLifetime = true,
-                    ValidIssuer = "RemoteMaster Server",
-                    ValidAudience = "RMServiceAPI",
-                    IssuerSigningKey = new RsaSecurityKey(rsa)
-                };
-
-                options.Events = new JwtBearerEvents
-                {
-                    OnMessageReceived = context =>
+                    options.TokenValidationParameters = new TokenValidationParameters
                     {
-                        var remoteIp = context.HttpContext.Connection.RemoteIpAddress;
-                        var localIPv6Mapped = IPAddress.Parse("::ffff:127.0.0.1");
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidateLifetime = true,
+                        ValidIssuer = "RemoteMaster Server",
+                        ValidAudience = "RMServiceAPI",
+                        IssuerSigningKey = new RsaSecurityKey(rsa)
+                    };
 
-                        Log.Information("Incoming request from IP: {Ip}", remoteIp);
-
-                        if (remoteIp != null)
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
                         {
-                            if (remoteIp.Equals(IPAddress.Loopback) || remoteIp.Equals(IPAddress.IPv6Loopback) || remoteIp.Equals(localIPv6Mapped))
+                            var remoteIp = context.HttpContext.Connection.RemoteIpAddress;
+                            var localIPv6Mapped = IPAddress.Parse("::ffff:127.0.0.1");
+
+                            Log.Information("Incoming request from IP: {Ip}", remoteIp);
+
+                            if (remoteIp != null)
                             {
-                                Log.Information("Localhost detected");
-
-                                var identity = new ClaimsIdentity(new[]
+                                if (remoteIp.Equals(IPAddress.Loopback) || remoteIp.Equals(IPAddress.IPv6Loopback) || remoteIp.Equals(localIPv6Mapped))
                                 {
-                                    new Claim(ClaimTypes.Name, "localhost@localdomain"),
-                                }, "LocalAuth");
+                                    Log.Information("Localhost detected");
 
-                                context.Principal = new ClaimsPrincipal(identity);
-                                context.Success();
+                                    var identity = new ClaimsIdentity(new[]
+                                    {
+                                        new Claim(ClaimTypes.Name, "localhost@localdomain"),
+                                    }, "LocalAuth");
+
+                                    context.Principal = new ClaimsPrincipal(identity);
+                                    context.Success();
+                                }
                             }
-                        }
 
-                        return Task.CompletedTask;
-                    }
-                };
-            });
+                            return Task.CompletedTask;
+                        }
+                    };
+                });
+        }
 
         builder.ConfigureSerilog();
 

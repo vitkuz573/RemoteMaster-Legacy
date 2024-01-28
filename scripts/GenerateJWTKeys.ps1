@@ -1,5 +1,5 @@
 $OPENSSL_PATH = "C:\Program Files\OpenSSL-Win64\bin\openssl.exe"
-$destDirectory = "C:\ProgramData\RemoteMaster\Security"
+$destDirectory = "C:\ProgramData\RemoteMaster\Security\JWT"
 
 # Create a directory for the keys if it doesn't exist
 if (-not (Test-Path $destDirectory)) {
