@@ -1,6 +1,6 @@
 $subjectName = "RemoteMaster Development"
 $caName = "RemoteMaster Internal CA"
-$caDirectory = "InternalCA"
+$caDirectory = "C:\ProgramData\RemoteMaster\Security\InternalCA"
 $codeSignCertDirectory = "CodeSignCert"
 $opensslPath = "C:\Program Files\OpenSSL-Win64\bin\openssl.exe"
 
