@@ -82,4 +82,38 @@ public class HostConfigurationService : IHostConfigurationService
             _ => false
         };
     }
+
+    public async Task SaveConfigurationAsync(HostConfiguration config)
+    {
+        if (config == null)
+        {
+            throw new ArgumentNullException(nameof(config));
+        }
+
+        var json = SerializeToJson(config);
+        await WriteFileAsync(ConfigurationFileName, json);
+    }
+
+    public async Task SaveConfigurationAsync(HostConfiguration config, string filePath)
+    {
+        ArgumentNullException.ThrowIfNull(config);
+
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            throw new ArgumentException("File path cannot be null or whitespace.", nameof(filePath));
+        }
+
+        var json = SerializeToJson(config);
+        await WriteFileAsync(filePath, json);
+    }
+
+    private static string SerializeToJson(HostConfiguration config)
+    {
+        return JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
+    }
+
+    private static async Task WriteFileAsync(string fileName, string json)
+    {
+        await File.WriteAllTextAsync(fileName, json);
+    }
 }
