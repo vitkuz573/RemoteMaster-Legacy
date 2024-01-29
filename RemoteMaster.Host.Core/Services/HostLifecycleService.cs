@@ -35,6 +35,14 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
             var csr = certificateRequestService.GenerateCSR(subjectName, ipAddresses, out rsaKeyPair);
             var signingRequest = csr.CreateSigningRequest();
 
+            var securityDirectory = Path.GetDirectoryName(@"C:\ProgramData\RemoteMaster\Security");
+
+            if (!Directory.Exists(securityDirectory))
+            {
+                Directory.CreateDirectory(securityDirectory);
+                Log.Information("Security directory created at {DirectoryPath}", securityDirectory);
+            }
+
             connection.On<byte[]>("ReceiveCertificate", certificateBytes =>
             {
                 try
