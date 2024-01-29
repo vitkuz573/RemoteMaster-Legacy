@@ -40,8 +40,7 @@ public class HostInfoMonitorService(IHostConfigurationService hostConfigurationS
                 hostConfiguration.Host.Name = newHostName;
                 hostConfiguration.Host.IPAddress = newIPAddress;
 
-                var json = JsonSerializer.Serialize(hostConfiguration, jsonOptions);
-                await File.WriteAllTextAsync(_configPath, json);
+                await hostConfigurationService.SaveConfigurationAsync(hostConfiguration, _configPath);
 
                 await hostServiceManager.UpdateHostInformation(hostConfiguration);
             }
