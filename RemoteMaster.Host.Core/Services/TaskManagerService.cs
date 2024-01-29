@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -12,12 +13,14 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class TaskManagerService : ITaskManagerService
 {
+    private static readonly ConcurrentDictionary<string, byte[]> _iconCache = new();
+
     public List<ProcessInfo> GetRunningProcesses()
     {
         var processes = Process.GetProcesses();
         var processList = new List<ProcessInfo>();
 
-        foreach (var process in processes)
+        Parallel.ForEach(processes, (process) =>
         {
             try
             {
@@ -38,25 +41,38 @@ public class TaskManagerService : ITaskManagerService
             {
                 // Логирование или обработка исключений, если не удается получить доступ к каким-либо данным процесса.
             }
-        }
+        });
 
         return processList;
     }
 
     private static byte[] GetProcessIcon(Process process)
     {
-        try
-        {
-            using var icon = Icon.ExtractAssociatedIcon(process.MainModule.FileName);
-            using var ms = new MemoryStream();
-            icon.ToBitmap().Save(ms, ImageFormat.Png);
+        var filePath = process.MainModule.FileName;
 
-            return ms.ToArray();
-        }
-        catch
+        if (!_iconCache.TryGetValue(filePath, out var icon))
         {
-            return null; // В случае ошибки возвращается null или можно вернуть стандартную иконку
+            try
+            {
+                using var processIcon = Icon.ExtractAssociatedIcon(filePath);
+                
+                if (processIcon != null)
+                {
+                    using var ms = new MemoryStream();
+                    processIcon.ToBitmap().Save(ms, ImageFormat.Png);
+                    icon = ms.ToArray();
+                    _iconCache[filePath] = icon;
+                }
+            }
+            catch
+            {
+                // В случае ошибки возвращается null или стандартная иконка
+                // Пример: return GetDefaultIcon();
+                return null;
+            }
         }
+
+        return icon;
     }
 
     public void KillProcess(int processId)
