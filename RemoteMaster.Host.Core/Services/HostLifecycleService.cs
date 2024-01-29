@@ -58,7 +58,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
                     Log.Information("Certificate Serial Number: {SerialNumber}", certificate.SerialNumber);
                     Log.Information("Certificate Subject Name: {SubjectName}", certificate.Subject);
 
-                    var pfxFilePath = @"C:\ProgramData\RemoteMaster\Security\certificate.pfx";
+                    var pfxFilePath = Path.Combine(securityDirectory, "certificate.pfx");
                     var pfxPassword = "YourPfxPassword";
                     CreatePfxFile(certificateBytes, rsaKeyPair, pfxFilePath, pfxPassword);
 
@@ -92,7 +92,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
                     throw new InvalidOperationException("Failed to obtain JWT public key.");
                 }
 
-                var publicKeyPath = @"C:\ProgramData\RemoteMaster\Security\public_key.pem";
+                var publicKeyPath = Path.Combine(securityDirectory, "public_key.pem");
                 SavePublicKey(publicKey, publicKeyPath);
 
                 Log.Information("Host registration successful with certificate received.");
