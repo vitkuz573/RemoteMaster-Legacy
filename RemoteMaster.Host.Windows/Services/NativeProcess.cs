@@ -203,7 +203,7 @@ public class NativeProcess : IDisposable
                 bool retVal;
                 var errorCode = 0;
 
-                fixed(char* pEnvironmentBlock = environmentBlock)
+                fixed (char* pEnvironmentBlock = environmentBlock)
                 {
                     retVal = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, securityAttributes, securityAttributes, true, dwCreationFlags, pEnvironmentBlock, null, startupInfo, out processInfo);
                 }
