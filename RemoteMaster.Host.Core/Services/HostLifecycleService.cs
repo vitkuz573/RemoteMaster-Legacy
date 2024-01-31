@@ -18,14 +18,11 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
     public async Task RegisterAsync(HostConfiguration hostConfiguration)
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
-
-        var tcs = new TaskCompletionSource<bool>();
         RSA? rsaKeyPair = null;
 
         try
         {
             var connection = await ConnectToServerHub($"http://{hostConfiguration.Server}:5254");
-
             var ipAddresses = new List<string>
             {
                 hostConfiguration.Host.IPAddress
@@ -35,73 +32,13 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
             var csr = certificateRequestService.GenerateCSR(subjectName, ipAddresses, out rsaKeyPair);
             var signingRequest = csr.CreateSigningRequest();
 
-            var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-            var securityDirectory = Path.Combine(programData, "RemoteMaster", "Security");
+            var securityDirectory = EnsureSecurityDirectoryExists();
 
-            if (!Directory.Exists(securityDirectory))
-            {
-                Directory.CreateDirectory(securityDirectory);
-                Log.Information("Security directory created at {DirectoryPath}", securityDirectory);
-            }
-
-            connection.On<byte[]>("ReceiveCertificate", certificateBytes =>
-            {
-                try
-                {
-                    SpinWait.SpinUntil(() => _isRegistrationInvoked);
-
-                    if (certificateBytes == null || certificateBytes.Length == 0)
-                    {
-                        throw new Exception("Certificate bytes are null or empty.");
-                    }
-
-                    var certificate = new X509Certificate2(certificateBytes);
-                    Log.Information("Certificate Serial Number: {SerialNumber}", certificate.SerialNumber);
-                    Log.Information("Certificate Subject Name: {SubjectName}", certificate.Subject);
-
-                    var pfxFilePath = Path.Combine(securityDirectory, "certificate.pfx");
-                    var pfxPassword = "YourPfxPassword";
-                    CreatePfxFile(certificateBytes, rsaKeyPair, pfxFilePath, pfxPassword);
-
-                    Log.Information("PFX file created successfully.");
-                    tcs.SetResult(true);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error("An error occurred while processing the certificate: {ErrorMessage}", ex.Message);
-                    tcs.SetResult(false);
-                }
-            });
+            var tcs = new TaskCompletionSource<bool>();
+            connection.On<byte[]>("ReceiveCertificate", certificateBytes => ProcessCertificate(certificateBytes, rsaKeyPair, securityDirectory, tcs));
 
             Log.Information("Attempting to register host...");
-
-            if (await connection.InvokeAsync<bool>("RegisterHostAsync", hostConfiguration, signingRequest))
-            {
-                _isRegistrationInvoked = true;
-                Log.Information("Host registration invoked successfully. Waiting for the certificate...");
-                var isCertificateReceived = await tcs.Task;
-
-                if (!isCertificateReceived)
-                {
-                    throw new InvalidOperationException("Certificate processing failed.");
-                }
-
-                var publicKey = await connection.InvokeAsync<string>("GetPublicKey");
-
-                if (string.IsNullOrEmpty(publicKey))
-                {
-                    throw new InvalidOperationException("Failed to obtain JWT public key.");
-                }
-
-                var publicKeyPath = Path.Combine(securityDirectory, "public_key.pem");
-                SavePublicKey(publicKey, publicKeyPath);
-
-                Log.Information("Host registration successful with certificate received.");
-            }
-            else
-            {
-                Log.Warning("Host registration was not successful.");
-            }
+            await InvokeHostRegistration(connection, hostConfiguration, signingRequest, tcs, securityDirectory);
         }
         catch (Exception ex)
         {
@@ -199,8 +136,80 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
             .Build();
 
         await hubConnection.StartAsync();
-
         return hubConnection;
+    }
+
+    private static string EnsureSecurityDirectoryExists()
+    {
+        var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        var securityDirectory = Path.Combine(programData, "RemoteMaster", "Security");
+
+        if (!Directory.Exists(securityDirectory))
+        {
+            Directory.CreateDirectory(securityDirectory);
+            Log.Debug("Security directory created at {DirectoryPath}", securityDirectory);
+        }
+
+        return securityDirectory;
+    }
+
+    private void ProcessCertificate(byte[] certificateBytes, RSA rsaKeyPair, string securityDirectory, TaskCompletionSource<bool> tcs)
+    {
+        try
+        {
+            SpinWait.SpinUntil(() => _isRegistrationInvoked);
+
+            if (certificateBytes == null || certificateBytes.Length == 0)
+            {
+                throw new Exception("Certificate bytes are null or empty.");
+            }
+
+            using var certificate = new X509Certificate2(certificateBytes);
+            Log.Information("Certificate received with Serial Number: {SerialNumber}", certificate.SerialNumber);
+
+            var pfxFilePath = Path.Combine(securityDirectory, "certificate.pfx");
+            var pfxPassword = "YourPfxPassword";
+            CreatePfxFile(certificateBytes, rsaKeyPair, pfxFilePath, pfxPassword);
+
+            Log.Information("PFX file created successfully.");
+            tcs.SetResult(true);
+        }
+        catch (Exception ex)
+        {
+            Log.Error("An error occurred while processing the certificate: {ErrorMessage}", ex.Message);
+            tcs.SetResult(false);
+        }
+    }
+
+    private async Task InvokeHostRegistration(HubConnection connection, HostConfiguration hostConfiguration, byte[] signingRequest, TaskCompletionSource<bool> tcs, string securityDirectory)
+    {
+        if (await connection.InvokeAsync<bool>("RegisterHostAsync", hostConfiguration, signingRequest))
+        {
+            _isRegistrationInvoked = true;
+            Log.Information("Host registration invoked successfully. Waiting for the certificate...");
+            var isCertificateReceived = await tcs.Task;
+
+            if (!isCertificateReceived)
+            {
+                throw new InvalidOperationException("Certificate processing failed.");
+            }
+
+            var publicKey = await connection.InvokeAsync<string>("GetPublicKey");
+            
+            if (string.IsNullOrEmpty(publicKey))
+            {
+                throw new InvalidOperationException("Failed to obtain JWT public key.");
+            }
+
+            var publicKeyPath = Path.Combine(securityDirectory, "public_key.pem");
+            SavePublicKey(publicKey, publicKeyPath);
+
+            Log.Information("Host registration successful with certificate received.");
+        }
+        else
+        {
+            Log.Warning("Host registration was not successful.");
+        }
     }
 
     private static void CreatePfxFile(byte[] certificateBytes, RSA rsaKeyPair, string outputPfxPath, string password)

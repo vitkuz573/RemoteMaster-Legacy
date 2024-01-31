@@ -21,23 +21,15 @@ public class CertificateRequestService : ICertificateRequestService
 
         rsaKeyPair = RSA.Create(2048);
 
-        Log.Debug("RSA key pair generated successfully with key size {KeySize}.", rsaKeyPair.KeySize);
-
         var csr = new CertificateRequest(subjectName, rsaKeyPair, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-
-        Log.Debug("CSR Subject: {SubjectName}", csr.SubjectName.Name);
-
         var sanBuilder = new SubjectAlternativeNameBuilder();
-
+        
         foreach (var ipAddress in ipAddresses)
         {
             sanBuilder.AddIpAddress(IPAddress.Parse(ipAddress));
         }
 
-        var sanExtension = sanBuilder.Build(true);
-        csr.CertificateExtensions.Add(sanExtension);
-
-        Log.Debug("Added Subject Alternative Name extension with {SANCount} IP addresses.", ipAddresses.Count);
+        csr.CertificateExtensions.Add(sanBuilder.Build(true));
 
         var enhancedKeyUsages = new OidCollection
         {
@@ -46,17 +38,7 @@ public class CertificateRequestService : ICertificateRequestService
 
         csr.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(enhancedKeyUsages, true));
 
-        Log.Debug("Added Enhanced Key Usage extension with {OIDCount} OIDs.", enhancedKeyUsages.Count);
-
-        foreach (var extension in csr.CertificateExtensions)
-        {
-            var asnData = new AsnEncodedData(extension.Oid, extension.RawData);
-            var formattedData = asnData.Format(true);
-
-            Log.Debug("CSR Extension: {ExtensionOid} - {ExtensionFriendlyName} - {ExtensionFormattedData}", extension.Oid?.Value ?? "Unknown", extension.Oid?.FriendlyName ?? "Unknown", formattedData);
-        }
-
-        Log.Information("CSR generated successfully for subject: {SubjectName}.", subjectName.Name);
+        Log.Debug("CSR with {SANCount} SAN entries and {OIDCount} OIDs generated for subject: {SubjectName}.", ipAddresses.Count, enhancedKeyUsages.Count, subjectName.Name);
 
         return csr;
     }
