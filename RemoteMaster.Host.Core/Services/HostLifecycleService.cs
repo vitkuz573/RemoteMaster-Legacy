@@ -20,7 +20,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
         var tcs = new TaskCompletionSource<bool>();
-        RSA rsaKeyPair = null;
+        RSA? rsaKeyPair = null;
 
         try
         {
@@ -35,7 +35,8 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
             var csr = certificateRequestService.GenerateCSR(subjectName, ipAddresses, out rsaKeyPair);
             var signingRequest = csr.CreateSigningRequest();
 
-            var securityDirectory = Path.GetDirectoryName(@"C:\ProgramData\RemoteMaster\Security");
+            var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+            var securityDirectory = Path.Combine(programData, "RemoteMaster", "Security");
 
             if (!Directory.Exists(securityDirectory))
             {
