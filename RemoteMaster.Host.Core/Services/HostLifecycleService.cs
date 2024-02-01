@@ -42,7 +42,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         }
         catch (Exception ex)
         {
-            Log.Error("Registering host failed: {Message}", ex.Message);
+            Log.Error("Registering host failed: {Message}.", ex.Message);
         }
         finally
         {
@@ -71,7 +71,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Unregistering host failed: {Message}", ex.Message);
+            Log.Error(ex, "Unregistering host failed: {Message}.", ex.Message);
         }
     }
 
@@ -94,7 +94,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         }
         catch (Exception ex)
         {
-            Log.Error("Update host information failed: {Message}", ex.Message);
+            Log.Error("Update host information failed: {Message}.", ex.Message);
         }
     }
 
@@ -136,6 +136,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
             .Build();
 
         await hubConnection.StartAsync();
+
         return hubConnection;
     }
 
@@ -147,7 +148,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         if (!Directory.Exists(securityDirectory))
         {
             Directory.CreateDirectory(securityDirectory);
-            Log.Debug("Security directory created at {DirectoryPath}", securityDirectory);
+            Log.Debug("Security directory created at {DirectoryPath}.", securityDirectory);
         }
 
         return securityDirectory;
@@ -165,18 +166,18 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
             }
 
             using var certificate = new X509Certificate2(certificateBytes);
-            Log.Information("Certificate received with Serial Number: {SerialNumber}", certificate.SerialNumber);
+            Log.Information("Certificate received with Serial Number: {SerialNumber}.", certificate.SerialNumber);
 
             var pfxFilePath = Path.Combine(securityDirectory, "certificate.pfx");
             var pfxPassword = "YourPfxPassword";
             CreatePfxFile(certificateBytes, rsaKeyPair, pfxFilePath, pfxPassword);
 
-            Log.Information("PFX file created successfully.");
+            Log.Information("PFX file saved successfully at {Path}.", pfxFilePath);
             tcs.SetResult(true);
         }
         catch (Exception ex)
         {
-            Log.Error("An error occurred while processing the certificate: {ErrorMessage}", ex.Message);
+            Log.Error("An error occurred while processing the certificate: {ErrorMessage}.", ex.Message);
             tcs.SetResult(false);
         }
     }
@@ -225,11 +226,11 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         try
         {
             File.WriteAllText(filePath, publicKey);
-            Log.Information("Public key saved successfully at {Path}", filePath);
+            Log.Information("Public key saved successfully at {Path}.", filePath);
         }
         catch (Exception ex)
         {
-            Log.Error("Failed to save public key: {ErrorMessage}", ex.Message);
+            Log.Error("Failed to save public key: {ErrorMessage}.", ex.Message);
         }
     }
 }

@@ -17,7 +17,7 @@ public class CertificateRequestService : ICertificateRequestService
         ArgumentNullException.ThrowIfNull(subjectName);
         ArgumentNullException.ThrowIfNull(ipAddresses);
 
-        Log.Information("Starting CSR generation for subject: {SubjectName}", subjectName.Name);
+        Log.Information("Starting CSR generation.");
 
         rsaKeyPair = RSA.Create(2048);
 
