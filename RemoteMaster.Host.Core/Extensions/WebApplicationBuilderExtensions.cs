@@ -28,10 +28,8 @@ public static class WebApplicationBuilderExtensions
                     listenOptions.UseHttps(httpsCertificate);
                 });
             }
-            else
-            {
-                options.ListenAnyIP(5076);
-            }
+
+            options.ListenAnyIP(5077);
         });
 
         return builder;
