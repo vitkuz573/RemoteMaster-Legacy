@@ -18,11 +18,11 @@ public static class WebApplicationBuilderExtensions
         builder.WebHost.ConfigureKestrel(options =>
         {
             var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-            var cert = Path.Combine(programData, "RemoteMaster", "Security", "certificate.pfx");
+            var certificatePath = Path.Combine(programData, "RemoteMaster", "Security", "certificate.pfx");
 
-            if (File.Exists(cert))
+            if (File.Exists(certificatePath))
             {
-                var httpsCertificate = new X509Certificate2(cert, "YourPfxPassword");
+                var httpsCertificate = new X509Certificate2(certificatePath, "YourPfxPassword");
 
                 options.ListenAnyIP(5001, listenOptions =>
                 {
