@@ -107,7 +107,7 @@ public partial class FileManager : IDisposable
         var accessToken = httpContext.Request.Cookies["accessToken"];
 
         _connection = new HubConnectionBuilder()
-            .WithUrl($"https://{Host}:5076/hubs/control", options =>
+            .WithUrl($"https://{Host}:5001/hubs/control", options =>
             {
                 options.Headers.Add("Authorization", $"Bearer {accessToken}");
             })

@@ -131,7 +131,7 @@ public partial class Home
         var accessToken = HttpContextAccessor.HttpContext?.Request.Cookies["accessToken"];
 
         var connection = new HubConnectionBuilder()
-            .WithUrl($"https://{computer.IPAddress}:5076/hubs/control", options =>
+            .WithUrl($"https://{computer.IPAddress}:5001/hubs/control", options =>
             {
                 options.Headers.Add("Authorization", $"Bearer {accessToken}");
             })
@@ -377,7 +377,7 @@ public partial class Home
                 var accessToken = HttpContextAccessor.HttpContext?.Request.Cookies["accessToken"];
 
                 connection = new HubConnectionBuilder()
-                    .WithUrl($"https://{computer.IPAddress}:5076/hubs/control", options =>
+                    .WithUrl($"https://{computer.IPAddress}:5001/hubs/control", options =>
                     {
                         options.Headers.Add("Authorization", $"Bearer {accessToken}");
                     })

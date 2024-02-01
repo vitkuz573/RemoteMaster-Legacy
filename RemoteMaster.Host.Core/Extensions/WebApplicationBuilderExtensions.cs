@@ -23,13 +23,13 @@ public static class WebApplicationBuilderExtensions
             {
                 var httpsCertificate = new X509Certificate2(cert, "YourPfxPassword");
 
-                options.ListenAnyIP(5076, listenOptions =>
+                options.ListenAnyIP(5001, listenOptions =>
                 {
                     listenOptions.UseHttps(httpsCertificate);
                 });
             }
 
-            options.ListenAnyIP(5077);
+            options.ListenAnyIP(5000);
         });
 
         return builder;

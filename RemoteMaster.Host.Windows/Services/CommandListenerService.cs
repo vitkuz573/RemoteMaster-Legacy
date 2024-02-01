@@ -31,7 +31,7 @@ public class CommandListenerService : IHostedService
         try
         {
             _connection = new HubConnectionBuilder()
-                .WithUrl("http://127.0.0.1:5077/hubs/control")
+                .WithUrl("http://127.0.0.1:5000/hubs/control")
                 .Build();
 
             _connection.On<string>("ReceiveCommand", command =>
