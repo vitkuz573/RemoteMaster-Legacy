@@ -17,7 +17,8 @@ public static class WebApplicationBuilderExtensions
 
         builder.WebHost.ConfigureKestrel(options =>
         {
-            var cert = @"C:\ProgramData\RemoteMaster\Security\certificate.pfx";
+            var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+            var cert = Path.Combine(programData, "Security", "certificate.pfx");
 
             if (File.Exists(cert))
             {
