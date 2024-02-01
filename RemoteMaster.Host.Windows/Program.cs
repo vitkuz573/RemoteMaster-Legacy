@@ -67,6 +67,7 @@ internal class Program
         builder.Services.AddSingleton<INetworkDriveService, NetworkDriveService>();
         builder.Services.AddSingleton<IDomainService, DomainService>();
         builder.Services.AddSingleton<IScriptService, ScriptService>();
+        builder.Services.AddSingleton<ISecureAttentionSequenceService, SecureAttentionSequenceService>();
         builder.Services.AddSingleton(new JsonSerializerOptions
         {
             WriteIndented = true,
@@ -211,6 +212,13 @@ internal class Program
             await hostServiceManager.Uninstall(configuration);
 
             return;
+        }
+
+        var secureAttentionSequenceService = app.Services.GetRequiredService<ISecureAttentionSequenceService>();
+
+        if (!secureAttentionSequenceService.IsEnabled)
+        {
+            secureAttentionSequenceService.Enable();
         }
 
         if (!app.Environment.IsDevelopment())
