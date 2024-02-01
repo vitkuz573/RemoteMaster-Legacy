@@ -198,7 +198,8 @@ internal class Program
 
             try
             {
-                var configurationPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", hostConfigurationService.ConfigurationFileName);
+                var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+                var configurationPath = Path.Combine(programFiles, "RemoteMaster", "Host", hostConfigurationService.ConfigurationFileName);
 
                 configuration = await hostConfigurationService.LoadConfigurationAsync(configurationPath);
             }
