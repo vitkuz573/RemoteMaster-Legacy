@@ -2,13 +2,13 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using RemoteMaster.Host.Windows.Models;
+
 namespace RemoteMaster.Host.Windows.Abstractions;
 
 public interface ISecureAttentionSequenceService
 {
-    bool IsEnabled { get; }
+    SoftwareSasOption CurrentOption { get; }
 
-    void Enable();
-
-    void Disable();
+    void SetSasOption(SoftwareSasOption option);
 }

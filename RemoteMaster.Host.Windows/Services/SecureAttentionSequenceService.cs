@@ -4,6 +4,7 @@
 
 using Microsoft.Win32;
 using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Host.Windows.Models;
 
 namespace RemoteMaster.Host.Windows.Services;
 
@@ -12,32 +13,33 @@ public class SecureAttentionSequenceService : ISecureAttentionSequenceService
     private const string RegistryKeyPath = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System";
     private const string SasValueName = "SoftwareSASGeneration";
 
-    public bool IsEnabled
+    public SoftwareSasOption CurrentOption
     {
         get
         {
             using var key = Registry.LocalMachine.OpenSubKey(RegistryKeyPath, false);
-            
+
             if (key == null)
             {
-                return false;
+                return SoftwareSasOption.None;
             }
 
             var value = key.GetValue(SasValueName);
 
-            return value != null && value is int intValue && intValue == 3;
+            if (value is int intValue && Enum.IsDefined(typeof(SoftwareSasOption), intValue))
+            {
+                return (SoftwareSasOption)intValue;
+            }
+            else
+            {
+                return SoftwareSasOption.None;
+            }
         }
     }
 
-    public void Disable()
+    public void SetSasOption(SoftwareSasOption option)
     {
-        using var key = Registry.LocalMachine.CreateSubKey(RegistryKeyPath, true) ?? throw new InvalidOperationException("Cannot access registry to disable SAS.");
-        key.SetValue(SasValueName, 0, RegistryValueKind.DWord);
-    }
-
-    public void Enable()
-    {
-        using var key = Registry.LocalMachine.CreateSubKey(RegistryKeyPath, true) ?? throw new InvalidOperationException("Cannot access registry to enable SAS.");
-        key.SetValue(SasValueName, 3, RegistryValueKind.DWord);
+        using var key = Registry.LocalMachine.CreateSubKey(RegistryKeyPath, true) ?? throw new InvalidOperationException("Cannot access registry to change SAS setting.");
+        key.SetValue(SasValueName, (int)option, RegistryValueKind.DWord);
     }
 }
