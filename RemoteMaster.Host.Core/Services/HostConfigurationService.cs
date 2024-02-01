@@ -85,10 +85,7 @@ public class HostConfigurationService : IHostConfigurationService
 
     public async Task SaveConfigurationAsync(HostConfiguration config)
     {
-        if (config == null)
-        {
-            throw new ArgumentNullException(nameof(config));
-        }
+        ArgumentNullException.ThrowIfNull(config);
 
         var json = SerializeToJson(config);
         await WriteFileAsync(ConfigurationFileName, json);

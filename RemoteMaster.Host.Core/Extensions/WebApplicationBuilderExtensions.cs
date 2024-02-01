@@ -40,13 +40,16 @@ public static class WebApplicationBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
+        var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        var fileLog = Path.Combine(programData, "RemoteMaster", "Host", "RemoteMaster_Host.log");
+
         builder.Host.UseSerilog((context, configuration) =>
         {
             configuration.Enrich.With(new HostInfoEnricher());
             configuration.MinimumLevel.Debug();
             configuration.WriteTo.Console();
             configuration.WriteTo.Seq("http://172.20.20.33:5341");
-            configuration.WriteTo.File(@"C:\ProgramData\RemoteMaster\Host\RemoteMaster_Host.log", rollingInterval: RollingInterval.Day);
+            configuration.WriteTo.File(fileLog, rollingInterval: RollingInterval.Day);
             configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Received hub invocation"));
             configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Successfully switched to input desktop"));
         });
