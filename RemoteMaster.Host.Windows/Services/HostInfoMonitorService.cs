@@ -31,24 +31,6 @@ public class HostInfoMonitorService(IHostConfigurationService hostConfigurationS
             return;
         }
 
-        try
-        {
-            var connection = await ConnectToServerHub($"http://{hostConfiguration.Server}:5254");
-            var newGroup = await connection.InvokeAsync<string>("GetNewGroupIfChangeRequested", hostConfiguration.Host.MACAddress);
-
-            if (!string.IsNullOrEmpty(newGroup))
-            {
-                hostConfiguration.Group = newGroup;
-                await hostConfigurationService.SaveConfigurationAsync(hostConfiguration, _configPath);
-                Log.Information("Group for this device was updated based on the group change request.");
-                await connection.InvokeAsync("AcknowledgeGroupChange", hostConfiguration.Host.MACAddress);
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Error processing group change requests.");
-        }
-
         var newIPAddress = hostInfoService.GetIPv4Address();
         var newMACAddress = hostInfoService.GetMacAddress();
         var newHostName = hostInfoService.GetHostName();
@@ -73,6 +55,24 @@ public class HostInfoMonitorService(IHostConfigurationService hostConfigurationS
         else
         {
             Log.Information("Current host information matches the saved values. No action required.");
+        }
+
+        try
+        {
+            var connection = await ConnectToServerHub($"http://{hostConfiguration.Server}:5254");
+            var newGroup = await connection.InvokeAsync<string>("GetNewGroupIfChangeRequested", hostConfiguration.Host.MACAddress);
+
+            if (!string.IsNullOrEmpty(newGroup))
+            {
+                hostConfiguration.Group = newGroup;
+                await hostConfigurationService.SaveConfigurationAsync(hostConfiguration, _configPath);
+                Log.Information("Group for this device was updated based on the group change request.");
+                await connection.InvokeAsync("AcknowledgeGroupChange", hostConfiguration.Host.MACAddress);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error processing group change requests.");
         }
     }
 
