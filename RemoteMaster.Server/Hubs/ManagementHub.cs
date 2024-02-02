@@ -146,17 +146,17 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         {
             var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
             var publicKeyPath = Path.Combine(programData, "RemoteMaster", "Security", "JWT", "public_key.pem");
-            
+
             if (File.Exists(publicKeyPath))
             {
                 var publicKey = await File.ReadAllTextAsync(publicKeyPath);
-                
+
                 return publicKey;
             }
             else
             {
                 Log.Warning("Public key file not found at '{Path}'", publicKeyPath);
-                
+
                 return null;
             }
         }
@@ -207,7 +207,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             var changeRequests = JsonSerializer.Deserialize<List<GroupChangeRequest>>(json) ?? [];
 
             var requestToRemove = changeRequests.FirstOrDefault(r => r.MACAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
-            
+
             if (requestToRemove != null)
             {
                 changeRequests.Remove(requestToRemove);

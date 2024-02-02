@@ -65,7 +65,7 @@ public partial class DomainManagementDialog
         {
             using var rootDSE = new DirectoryEntry("LDAP://RootDSE");
             var ldapDomain = (string)rootDSE.Properties["defaultNamingContext"].Value!;
-            
+
             if (ldapDomain != null)
             {
                 _domain = ldapDomain.Replace("DC=", "").Replace(',', '.');

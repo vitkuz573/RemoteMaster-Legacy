@@ -31,7 +31,7 @@ public partial class FileUploadDialog
     private void OnInputFileChanged(InputFileChangeEventArgs e)
     {
         ClearDragClass();
-        
+
         _files = [.. e.GetMultipleFiles()];
     }
 

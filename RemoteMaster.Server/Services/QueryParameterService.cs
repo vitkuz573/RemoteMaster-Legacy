@@ -29,7 +29,7 @@ public class QueryParameterService(NavigationManager navigationManager) : IQuery
         try
         {
             result = (T)Convert.ChangeType(stringValue.ToString(), typeof(T));
-           
+
             return true;
         }
         catch

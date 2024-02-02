@@ -1,7 +1,8 @@
-﻿// OpenShellDialog.razor.cs
-using System;
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+// This file is part of the RemoteMaster project.
+// Licensed under the GNU Affero General Public License v3.0.
+
 using System.Diagnostics;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using RemoteMaster.Server.Abstractions;

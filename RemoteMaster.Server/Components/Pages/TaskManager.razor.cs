@@ -11,7 +11,6 @@ using MudBlazor;
 using Polly;
 using Polly.Retry;
 using RemoteMaster.Shared.Models;
-using static MudBlazor.CategoryTypes;
 
 namespace RemoteMaster.Server.Components.Pages;
 

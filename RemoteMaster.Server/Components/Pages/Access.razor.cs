@@ -175,7 +175,7 @@ public partial class Access : IDisposable
         {
             _displays = displays.ToList();
             var primaryDisplay = _displays.FirstOrDefault(d => d.IsPrimary);
-            
+
             if (primaryDisplay != null)
             {
                 _selectedDisplay = primaryDisplay.Name;

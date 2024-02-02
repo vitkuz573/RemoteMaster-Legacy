@@ -27,7 +27,7 @@ public class CertificateService(IOptions<CertificateOptions> options) : ICertifi
 
         // Check for CA constraints
         var basicConstraints = csr.CertificateExtensions.OfType<X509BasicConstraintsExtension>().FirstOrDefault();
-        
+
         if (basicConstraints != null && basicConstraints.CertificateAuthority)
         {
             Log.Error("CSR for CA certificates are not allowed.");

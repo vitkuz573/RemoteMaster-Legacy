@@ -124,7 +124,7 @@ public partial class FileManager : IDisposable
         {
             await JSRuntime.InvokeVoidAsync("saveAsFile", Path.GetFileName(path), Convert.ToBase64String(file));
         });
-        
+
         _connection.On<List<string>>("ReceiveAvailableDrives", (drives) =>
         {
             _availableDrives = drives;
