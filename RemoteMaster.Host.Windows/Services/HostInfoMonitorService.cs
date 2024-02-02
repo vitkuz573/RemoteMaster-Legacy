@@ -31,14 +31,16 @@ public class HostInfoMonitorService(IHostConfigurationService hostConfigurationS
         }
 
         var newIPAddress = hostInfoService.GetIPv4Address();
+        var newMACAddress = hostInfoService.GetMacAddress();
         var newHostName = hostInfoService.GetHostName();
 
-        if (hostConfiguration.Host?.IPAddress != newIPAddress || hostConfiguration.Host?.Name != newHostName)
+        if (hostConfiguration.Host?.IPAddress != newIPAddress || hostConfiguration.Host?.MACAddress != newMACAddress || hostConfiguration.Host?.Name != newHostName)
         {
             try
             {
                 hostConfiguration.Host.Name = newHostName;
                 hostConfiguration.Host.IPAddress = newIPAddress;
+                hostConfiguration.Host.MACAddress = newMACAddress;
 
                 await hostConfigurationService.SaveConfigurationAsync(hostConfiguration, _configPath);
 
