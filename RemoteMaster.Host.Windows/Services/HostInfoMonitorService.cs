@@ -34,25 +34,14 @@ public class HostInfoMonitorService(IHostConfigurationService hostConfigurationS
         try
         {
             var connection = await ConnectToServerHub($"http://{hostConfiguration.Server}:5254");
-            var groupChangeRequestsJson = await connection.InvokeAsync<string>("GetGroupChangeRequests");
+            var newGroup = await connection.InvokeAsync<string>("GetNewGroupIfChangeRequested", hostConfiguration.Host.MACAddress);
 
-            if (!string.IsNullOrEmpty(groupChangeRequestsJson))
+            if (!string.IsNullOrEmpty(newGroup))
             {
-                var groupChangeRequests = JsonSerializer.Deserialize<List<GroupChangeRequest>>(groupChangeRequestsJson);
-
-                if (groupChangeRequests != null)
-                {
-                    var requestForThisDevice = groupChangeRequests.FirstOrDefault(request => request.MACAddress.Equals(hostConfiguration.Host.MACAddress, StringComparison.OrdinalIgnoreCase));
-
-                    if (requestForThisDevice != null)
-                    {
-                        hostConfiguration.Group = requestForThisDevice.NewGroup;
-                        await hostConfigurationService.SaveConfigurationAsync(hostConfiguration, _configPath);
-
-                        Log.Information("Group for this device was updated based on the group change request.");
-                        await connection.InvokeAsync("RemoveGroupChangeRequest", hostConfiguration.Host.MACAddress);
-                    }
-                }
+                hostConfiguration.Group = newGroup;
+                await hostConfigurationService.SaveConfigurationAsync(hostConfiguration, _configPath);
+                Log.Information("Group for this device was updated based on the group change request.");
+                await connection.InvokeAsync("AcknowledgeGroupChange", hostConfiguration.Host.MACAddress);
             }
         }
         catch (Exception ex)

@@ -168,35 +168,28 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         }
     }
 
-    public async Task<string> GetGroupChangeRequests()
+    public async Task<string> GetNewGroupIfChangeRequested(string macAddress)
     {
-        try
+        var groupChangeRequestsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "RemoteMaster", "Server", "GroupChangeRequests.json");
+
+        if (File.Exists(groupChangeRequestsPath))
         {
-            var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-            var groupChangeRequestsPath = Path.Combine(programData, "RemoteMaster", "Server", "GroupChangeRequests.json");
+            var json = await File.ReadAllTextAsync(groupChangeRequestsPath);
+            var changeRequests = JsonSerializer.Deserialize<List<GroupChangeRequest>>(json) ?? [];
+            var request = changeRequests.FirstOrDefault(r => r.MACAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
 
-            if (File.Exists(groupChangeRequestsPath))
+            if (request != null)
             {
-                var groupChangeRequestsJson = await File.ReadAllTextAsync(groupChangeRequestsPath);
-
-                return groupChangeRequestsJson;
-            }
-            else
-            {
-                Log.Warning("Group change requests file not found at '{Path}'", groupChangeRequestsPath);
-
-                return null;
+                return request.NewGroup;
             }
         }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Error while reading group change requests file.");
 
-            return null;
-        }
+        Log.Information("No group change request found for MAC address {MACAddress}.", macAddress);
+
+        return null;
     }
 
-    public async Task RemoveGroupChangeRequest(string macAddress)
+    public async Task AcknowledgeGroupChange(string macAddress)
     {
         var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
         var groupChangeRequestsPath = Path.Combine(programData, "RemoteMaster", "Server", "GroupChangeRequests.json");
@@ -211,11 +204,19 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             if (requestToRemove != null)
             {
                 changeRequests.Remove(requestToRemove);
-                json = JsonSerializer.Serialize(changeRequests, new JsonSerializerOptions { WriteIndented = true });
-                await File.WriteAllTextAsync(groupChangeRequestsPath, json);
+                var updatedJson = JsonSerializer.Serialize(changeRequests, new JsonSerializerOptions { WriteIndented = true });
+                await File.WriteAllTextAsync(groupChangeRequestsPath, updatedJson);
 
-                Log.Information("Group change request for MAC address {MACAddress} has been removed.", macAddress);
+                Log.Information("Acknowledged and removed group change request for MAC address {MACAddress}.", macAddress);
             }
+            else
+            {
+                Log.Information("No group change request found for MAC address {MACAddress} to acknowledge.", macAddress);
+            }
+        }
+        else
+        {
+            Log.Warning("Group change requests file not found at '{Path}'. Unable to acknowledge change request.", groupChangeRequestsPath);
         }
     }
 }
