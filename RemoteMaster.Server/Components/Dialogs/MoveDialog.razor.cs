@@ -16,7 +16,6 @@ public partial class MoveDialog
     [Inject]
     private IDatabaseService DatabaseService { get; set; } = default!;
 
-    private readonly List<Computer> _unavailableHosts = [];
     private string _currentGroupName = string.Empty;
     private List<Group> _groups = [];
     private Guid _selectedGroupId;
@@ -47,6 +46,7 @@ public partial class MoveDialog
             if (targetGroup != null)
             {
                 var nodeIds = Hosts.Select(host => host.Key.NodeId);
+                var unavailableHosts = new List<Computer>();
 
                 foreach (var host in Hosts)
                 {
@@ -56,13 +56,13 @@ public partial class MoveDialog
                     }
                     else
                     {
-                        _unavailableHosts.Add(host.Key);
+                        unavailableHosts.Add(host.Key);
                     }
                 }
 
-                if (_unavailableHosts.Count != 0)
+                if (unavailableHosts.Count != 0)
                 {
-                    await AppendGroupChangeRequests(_unavailableHosts, targetGroup);
+                    await AppendGroupChangeRequests(unavailableHosts, targetGroup);
                 }
 
                 await DatabaseService.MoveNodesAsync(nodeIds, _selectedGroupId);
