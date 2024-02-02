@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Cryptography.X509Certificates;
+using System.Text.Json;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Models;
@@ -143,7 +144,8 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
     {
         try
         {
-            var publicKeyPath = @"C:\ProgramData\RemoteMaster\Security\JWT\public_key.pem";
+            var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+            var publicKeyPath = Path.Combine(programData, "RemoteMaster", "Security", "JWT", "public_key.pem");
             
             if (File.Exists(publicKeyPath))
             {
@@ -163,6 +165,57 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             Log.Error(ex, "Error while reading public key file.");
 
             return null;
+        }
+    }
+
+    public async Task<string> GetGroupChangeRequests()
+    {
+        try
+        {
+            var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+            var groupChangeRequestsPath = Path.Combine(programData, "RemoteMaster", "Server", "GroupChangeRequests.json");
+
+            if (File.Exists(groupChangeRequestsPath))
+            {
+                var groupChangeRequestsJson = await File.ReadAllTextAsync(groupChangeRequestsPath);
+
+                return groupChangeRequestsJson;
+            }
+            else
+            {
+                Log.Warning("Group change requests file not found at '{Path}'", groupChangeRequestsPath);
+
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error while reading group change requests file.");
+
+            return null;
+        }
+    }
+
+    public async Task RemoveGroupChangeRequest(string macAddress)
+    {
+        var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        var groupChangeRequestsPath = Path.Combine(programData, "RemoteMaster", "Server", "GroupChangeRequests.json");
+
+        if (File.Exists(groupChangeRequestsPath))
+        {
+            var json = await File.ReadAllTextAsync(groupChangeRequestsPath);
+            var changeRequests = JsonSerializer.Deserialize<List<GroupChangeRequest>>(json) ?? [];
+
+            var requestToRemove = changeRequests.FirstOrDefault(r => r.MACAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
+            
+            if (requestToRemove != null)
+            {
+                changeRequests.Remove(requestToRemove);
+                json = JsonSerializer.Serialize(changeRequests, new JsonSerializerOptions { WriteIndented = true });
+                await File.WriteAllTextAsync(groupChangeRequestsPath, json);
+
+                Log.Information("Group change request for MAC address {MACAddress} has been removed.", macAddress);
+            }
         }
     }
 }

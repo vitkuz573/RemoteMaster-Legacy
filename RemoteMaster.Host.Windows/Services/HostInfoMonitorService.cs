@@ -2,6 +2,8 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Text.Json;
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Hosting;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
@@ -27,6 +29,35 @@ public class HostInfoMonitorService(IHostConfigurationService hostConfigurationS
             Log.Error(ex, "Error loading configuration.");
 
             return;
+        }
+
+        try
+        {
+            var connection = await ConnectToServerHub($"http://{hostConfiguration.Server}:5254");
+            var groupChangeRequestsJson = await connection.InvokeAsync<string>("GetGroupChangeRequests");
+
+            if (!string.IsNullOrEmpty(groupChangeRequestsJson))
+            {
+                var groupChangeRequests = JsonSerializer.Deserialize<List<GroupChangeRequest>>(groupChangeRequestsJson);
+                
+                if (groupChangeRequests != null)
+                {
+                    var requestForThisDevice = groupChangeRequests.FirstOrDefault(request => request.MACAddress.Equals(hostConfiguration.Host.MACAddress, StringComparison.OrdinalIgnoreCase));
+
+                    if (requestForThisDevice != null)
+                    {
+                        hostConfiguration.Group = requestForThisDevice.NewGroup;
+                        await hostConfigurationService.SaveConfigurationAsync(hostConfiguration, _configPath);
+
+                        Log.Information("Group for this device was updated based on the group change request.");
+                        await connection.InvokeAsync("RemoveGroupChangeRequest", hostConfiguration.Host.MACAddress);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error processing group change requests.");
         }
 
         var newIPAddress = hostInfoService.GetIPv4Address();
@@ -59,5 +90,16 @@ public class HostInfoMonitorService(IHostConfigurationService hostConfigurationS
     public Task StopAsync(CancellationToken cancellationToken)
     {
         return Task.CompletedTask;
+    }
+
+    private static async Task<HubConnection> ConnectToServerHub(string serverUrl)
+    {
+        var hubConnection = new HubConnectionBuilder()
+            .WithUrl($"{serverUrl}/hubs/management")
+            .Build();
+
+        await hubConnection.StartAsync();
+
+        return hubConnection;
     }
 }
