@@ -34,7 +34,7 @@
     <MudMainContent>
         <div class="flex h-screen">
             <div>
-                <MudTreeView Items="@_nodes" T="Node" SelectedValueChanged="OnNodeSelected" Hover="true" Class="pa-6 flex">
+                <MudTreeView Items="@_nodes" T="Node" SelectedValueChanged="OnNodeSelected" Hover="true" Class="pa-6">
                     <ItemTemplate>
                         <MudTreeViewItem Items="@context.Nodes" Value="@context" Text="@context.Name" />
                     </ItemTemplate>
