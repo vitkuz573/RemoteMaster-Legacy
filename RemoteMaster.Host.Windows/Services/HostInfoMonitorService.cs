@@ -39,7 +39,7 @@ public class HostInfoMonitorService(IHostConfigurationService hostConfigurationS
             if (!string.IsNullOrEmpty(groupChangeRequestsJson))
             {
                 var groupChangeRequests = JsonSerializer.Deserialize<List<GroupChangeRequest>>(groupChangeRequestsJson);
-                
+
                 if (groupChangeRequests != null)
                 {
                     var requestForThisDevice = groupChangeRequests.FirstOrDefault(request => request.MACAddress.Equals(hostConfiguration.Host.MACAddress, StringComparison.OrdinalIgnoreCase));

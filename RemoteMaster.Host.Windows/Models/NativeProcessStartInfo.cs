@@ -83,7 +83,7 @@ public class NativeProcessStartInfo
 
                 var e = envVars.GetEnumerator();
                 Debug.Assert(e is not IDisposable, "Environment.GetEnvironmentVariables should not be IDisposable.");
-                
+
                 while (e.MoveNext())
                 {
                     var entry = e.Entry;
@@ -98,7 +98,7 @@ public class NativeProcessStartInfo
     public bool UseCurrentUserToken { get; set; } = false;
 
     public bool RedirectStandardInput { get; set; }
-    
+
     public bool RedirectStandardOutput { get; set; }
 
     public bool RedirectStandardError { get; set; }

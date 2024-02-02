@@ -88,11 +88,11 @@ public class NativeProcess : IDisposable
     }
 
     private static uint GetWinlogonPidForSession(uint sessionId)
-    {        
+    {
         foreach (var process in Process.GetProcessesByName("winlogon"))
         {
             if ((uint)process.SessionId == sessionId)
-            {                
+            {
                 return (uint)process.Id;
             }
         }
@@ -101,7 +101,7 @@ public class NativeProcess : IDisposable
     }
 
     private static uint FindTargetSessionId(int targetSessionId)
-    {        
+    {
         var activeSessions = GetActiveSessions();
         uint lastSessionId = 0;
         var targetSessionFound = false;
@@ -250,7 +250,7 @@ public class NativeProcess : IDisposable
                 AutoFlush = true
             };
         }
-        
+
         if (startInfo.RedirectStandardOutput)
         {
             var enc = startInfo.StandardOutputEncoding ?? Encoding.GetEncoding((int)GetConsoleOutputCP());
@@ -287,7 +287,7 @@ public class NativeProcess : IDisposable
     private static void CreatePipeWithSecurityAttributes(out SafeFileHandle hReadPipe, out SafeFileHandle hWritePipe, ref SECURITY_ATTRIBUTES lpPipeAttributes, uint nSize)
     {
         var ret = PInvoke.CreatePipe(out hReadPipe, out hWritePipe, lpPipeAttributes, nSize);
-        
+
         if (!ret || hReadPipe.IsInvalid || hWritePipe.IsInvalid)
         {
             throw new Win32Exception();
@@ -313,7 +313,7 @@ public class NativeProcess : IDisposable
             }
 
             using var currentProcHandle = GetCurrentProcess_SafeHandle();
-            
+
             if (!DuplicateHandle(currentProcHandle, hTmp, currentProcHandle, out parentHandle, 0, false, DUPLICATE_HANDLE_OPTIONS.DUPLICATE_SAME_ACCESS))
             {
                 throw new Win32Exception();
@@ -345,7 +345,7 @@ public class NativeProcess : IDisposable
     }
 
     private static bool TryGetUserToken(uint sessionId, out SafeFileHandle hUserToken)
-    {        
+    {
         var userTokenHandle = default(HANDLE);
         var success = WTSQueryUserToken(sessionId, ref userTokenHandle);
         hUserToken = new SafeFileHandle(userTokenHandle, true);

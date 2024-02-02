@@ -124,7 +124,7 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
             try
             {
                 var hostConfiguration = JsonSerializer.Deserialize<HostConfiguration>(File.ReadAllText(sourceConfigPath));
-        
+
                 if (hostConfiguration != null)
                 {
                     hostConfiguration.Host = new Computer
@@ -133,9 +133,9 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
                         IPAddress = ipAddress,
                         MACAddress = macAddress
                     };
-        
+
                     var json = JsonSerializer.Serialize(hostConfiguration, jsonOptions);
-        
+
                     File.WriteAllText(targetConfigPath, json);
                 }
             }
