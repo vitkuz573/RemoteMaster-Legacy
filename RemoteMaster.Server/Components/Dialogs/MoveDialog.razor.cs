@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
@@ -15,6 +16,7 @@ public partial class MoveDialog
     [Inject]
     private IDatabaseService DatabaseService { get; set; } = default!;
 
+    private readonly List<Computer> _unavailableHosts = [];
     private string _currentGroupName = string.Empty;
     private List<Group> _groups = [];
     private Guid _selectedGroupId;
@@ -52,6 +54,15 @@ public partial class MoveDialog
                     {
                         await host.Value.InvokeAsync("ChangeGroup", targetGroup);
                     }
+                    else
+                    {
+                        _unavailableHosts.Add(host.Key);
+                    }
+                }
+
+                if (_unavailableHosts.Count != 0)
+                {
+                    await AppendGroupChangeRequests(_unavailableHosts, targetGroup);
                 }
 
                 await DatabaseService.MoveNodesAsync(nodeIds, _selectedGroupId);
@@ -59,5 +70,47 @@ public partial class MoveDialog
 
             MudDialog.Close(DialogResult.Ok(true));
         }
+    }
+
+    private static async Task AppendGroupChangeRequests(List<Computer> unavailableHosts, string targetGroup)
+    {
+        var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        var groupChangeRequestsPath = Path.Combine(programData, "RemoteMaster", "Server", "GroupChangeRequests.json");
+
+        var directoryPath = Path.GetDirectoryName(groupChangeRequestsPath);
+
+        if (!Directory.Exists(directoryPath))
+        {
+            Directory.CreateDirectory(directoryPath);
+        }
+
+        List<GroupChangeRequest> changeRequests;
+
+        if (File.Exists(groupChangeRequestsPath))
+        {
+            var existingJson = await File.ReadAllTextAsync(groupChangeRequestsPath);
+            changeRequests = JsonSerializer.Deserialize<List<GroupChangeRequest>>(existingJson) ?? [];
+        }
+        else
+        {
+            changeRequests = [];
+        }
+
+        foreach (var host in unavailableHosts)
+        {
+            var existingRequest = changeRequests.FirstOrDefault(r => r.MACAddress == host.MACAddress);
+
+            if (existingRequest != null)
+            {
+                existingRequest.NewGroup = targetGroup;
+            }
+            else
+            {
+                changeRequests.Add(new GroupChangeRequest(host.MACAddress, targetGroup));
+            }
+        }
+
+        var json = JsonSerializer.Serialize(changeRequests, new JsonSerializerOptions { WriteIndented = true });
+        await File.WriteAllTextAsync(groupChangeRequestsPath, json);
     }
 }
