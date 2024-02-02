@@ -14,5 +14,7 @@ public interface IHostConfigurationService
 
     Task<HostConfiguration> LoadConfigurationAsync(string filePath);
 
+    Task SaveConfigurationAsync(HostConfiguration config);
+
     Task SaveConfigurationAsync(HostConfiguration config, string filePath);
 }

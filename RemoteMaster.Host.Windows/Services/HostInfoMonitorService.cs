@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Text.Json;
 using Microsoft.Extensions.Hosting;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
@@ -11,7 +10,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostInfoMonitorService(IHostConfigurationService hostConfigurationService, IHostInfoService hostInfoService, IHostServiceManager hostServiceManager, JsonSerializerOptions jsonOptions) : IHostedService
+public class HostInfoMonitorService(IHostConfigurationService hostConfigurationService, IHostInfoService hostInfoService, IHostServiceManager hostServiceManager) : IHostedService
 {
     private readonly string _configPath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, hostConfigurationService.ConfigurationFileName);
 
@@ -38,9 +37,9 @@ public class HostInfoMonitorService(IHostConfigurationService hostConfigurationS
         {
             try
             {
-                hostConfiguration.Host.Name = newHostName;
                 hostConfiguration.Host.IPAddress = newIPAddress;
                 hostConfiguration.Host.MACAddress = newMACAddress;
+                hostConfiguration.Host.Name = newHostName;
 
                 await hostConfigurationService.SaveConfigurationAsync(hostConfiguration, _configPath);
 
@@ -53,7 +52,7 @@ public class HostInfoMonitorService(IHostConfigurationService hostConfigurationS
         }
         else
         {
-            Log.Information("Current IP and hostname match the saved values. No action required.");
+            Log.Information("Current host information matches the saved values. No action required.");
         }
     }
 

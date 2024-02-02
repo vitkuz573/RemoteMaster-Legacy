@@ -10,19 +10,24 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class HostConfigurationService : IHostConfigurationService
 {
+    public string ConfigurationFileName => $"{AppDomain.CurrentDomain.FriendlyName}.json";
+
     public async Task<HostConfiguration> LoadConfigurationAsync()
     {
-        var config = await TryReadAndDeserializeFileAsync(ConfigurationFileName);
-
-        if (config != null)
-        {
-            return config;
-        }
-
-        throw new InvalidDataException($"Error reading, parsing, or validating the configuration file '{ConfigurationFileName}'.");
+        return await LoadConfigurationInternalAsync(ConfigurationFileName);
     }
 
     public async Task<HostConfiguration> LoadConfigurationAsync(string filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            throw new ArgumentException("File path cannot be null or whitespace.", nameof(filePath));
+        }
+
+        return await LoadConfigurationInternalAsync(filePath);
+    }
+
+    private static async Task<HostConfiguration> LoadConfigurationInternalAsync(string filePath)
     {
         var config = await TryReadAndDeserializeFileAsync(filePath);
 
@@ -33,8 +38,6 @@ public class HostConfigurationService : IHostConfigurationService
 
         throw new InvalidDataException($"Error reading, parsing, or validating the configuration file '{filePath}'.");
     }
-
-    public string ConfigurationFileName => $"{AppDomain.CurrentDomain.FriendlyName}.json";
 
     private static async Task<HostConfiguration?> TryReadAndDeserializeFileAsync(string fileName)
     {
