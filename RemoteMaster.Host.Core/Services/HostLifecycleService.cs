@@ -106,18 +106,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         {
             var connection = await ConnectToServerHub($"http://{hostConfiguration.Server}:5254");
 
-            Log.Information("Checking if host is registered...");
-
             var isRegistered = await connection.InvokeAsync<bool>("IsHostRegisteredAsync", hostConfiguration);
-
-            if (isRegistered)
-            {
-                Log.Information("Host is registered.");
-            }
-            else
-            {
-                Log.Warning("Host is not registered.");
-            }
 
             return isRegistered;
         }
