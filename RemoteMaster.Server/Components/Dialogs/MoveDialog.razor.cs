@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Models;
@@ -39,10 +40,24 @@ public partial class MoveDialog
     {
         if (_selectedGroupId != Guid.Empty)
         {
-            var nodeIds = Hosts.Select(host => host.Key.NodeId);
-            await DatabaseService.MoveNodesAsync(nodeIds, _selectedGroupId);
-        }
+            var targetGroup = _groups.FirstOrDefault(g => g.NodeId == _selectedGroupId)?.Name;
 
-        MudDialog.Close(DialogResult.Ok(true));
+            if (targetGroup != null)
+            {
+                var nodeIds = Hosts.Select(host => host.Key.NodeId);
+
+                foreach (var host in Hosts)
+                {
+                    if (host.Value != null)
+                    {
+                        await host.Value.InvokeAsync("ChangeGroup", targetGroup);
+                    }
+                }
+
+                await DatabaseService.MoveNodesAsync(nodeIds, _selectedGroupId);
+            }
+
+            MudDialog.Close(DialogResult.Ok(true));
+        }
     }
 }

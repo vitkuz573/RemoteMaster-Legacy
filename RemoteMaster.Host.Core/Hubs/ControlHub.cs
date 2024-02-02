@@ -13,7 +13,7 @@ using Serilog;
 namespace RemoteMaster.Host.Core.Hubs;
 
 [Authorize]
-public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IDomainService domainService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IUpdaterService updaterService, IScreenCapturerService screenCapturerService, IScreenRecorderService screenRecorderService, IFileManagerService fileManagerService, ITaskManagerService taskManagerService) : Hub<IControlClient>
+public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IDomainService domainService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IUpdaterService updaterService, IScreenCapturerService screenCapturerService, IScreenRecorderService screenRecorderService, IFileManagerService fileManagerService, ITaskManagerService taskManagerService, IHostConfigurationService hostConfigurationService) : Hub<IControlClient>
 {
     public async Task ConnectAs(Intention intention)
     {
@@ -218,5 +218,18 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     public void StartProcess(string processPath)
     {
         taskManagerService.StartProcess(processPath);
+    }
+
+    public async Task ChangeGroup(string newGroupName)
+    {
+        var config = await hostConfigurationService.LoadConfigurationAsync();
+
+        config.Group = newGroupName;
+
+        var configPath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, hostConfigurationService.ConfigurationFileName);
+
+        await hostConfigurationService.SaveConfigurationAsync(config, configPath);
+
+        await Clients.Caller.ReceiveGroupChaged(newGroupName);
     }
 }
