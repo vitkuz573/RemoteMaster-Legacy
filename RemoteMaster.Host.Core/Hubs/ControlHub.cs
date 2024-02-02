@@ -222,11 +222,11 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     public async Task ChangeGroup(string newGroupName)
     {
-        var config = await hostConfigurationService.LoadConfigurationAsync();
+        var configPath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, hostConfigurationService.ConfigurationFileName);
+
+        var config = await hostConfigurationService.LoadConfigurationAsync(configPath);
 
         config.Group = newGroupName;
-
-        var configPath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, hostConfigurationService.ConfigurationFileName);
 
         await hostConfigurationService.SaveConfigurationAsync(config, configPath);
 
