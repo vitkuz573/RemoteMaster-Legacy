@@ -55,7 +55,7 @@ public class TaskManagerService : ITaskManagerService
             try
             {
                 using var processIcon = Icon.ExtractAssociatedIcon(filePath);
-                
+
                 if (processIcon != null)
                 {
                     using var ms = new MemoryStream();

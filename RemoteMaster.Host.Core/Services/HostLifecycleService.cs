@@ -196,7 +196,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
             }
 
             var publicKey = await connection.InvokeAsync<string>("GetPublicKey");
-            
+
             if (string.IsNullOrEmpty(publicKey))
             {
                 throw new InvalidOperationException("Failed to obtain JWT public key.");

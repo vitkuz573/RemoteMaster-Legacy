@@ -23,7 +23,7 @@ public class CertificateRequestService : ICertificateRequestService
 
         var csr = new CertificateRequest(subjectName, rsaKeyPair, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
         var sanBuilder = new SubjectAlternativeNameBuilder();
-        
+
         foreach (var ipAddress in ipAddresses)
         {
             sanBuilder.AddIpAddress(IPAddress.Parse(ipAddress));
