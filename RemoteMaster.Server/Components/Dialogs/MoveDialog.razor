@@ -1,0 +1,23 @@
+﻿@inherits CommonDialogBase
+
+<CommonDialog Hosts="@Hosts" ContentStyle="width: 500px;">
+    <Content>
+        @if (!string.IsNullOrWhiteSpace(_currentGroupName))
+        {
+            <MudText Typo="Typo.body1">Current group: @_currentGroupName</MudText>
+        }
+
+        <MudSelect Label="Select target folder" @bind-Value="_selectedGroupId">
+            @foreach (var group in _groups)
+            {
+                <MudSelectItem Value="@group.NodeId">
+                    @group.Name
+                </MudSelectItem>
+            }
+        </MudSelect>
+    </Content>
+    <Actions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Move">Move</MudButton>
+    </Actions>
+</CommonDialog>

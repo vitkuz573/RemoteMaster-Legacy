@@ -62,4 +62,16 @@ public class DatabaseService(NodesDbContext context) : IDatabaseService
     {
         return await context.Nodes.AnyAsync(n => n.ParentId == node.NodeId);
     }
+
+    public async Task MoveNodesAsync(IEnumerable<Guid> nodeIds, Guid newParentId)
+    {
+        var nodes = await context.Nodes.Where(node => nodeIds.Contains(node.NodeId)).ToListAsync();
+
+        foreach (var node in nodes)
+        {
+            node.ParentId = newParentId;
+        }
+
+        await context.SaveChangesAsync();
+    }
 }

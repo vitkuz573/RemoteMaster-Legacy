@@ -357,6 +357,16 @@ public partial class Home
         await DialogService.ShowAsync<FileUploadDialog>("File Upload", dialogParameters);
     }
 
+    private async Task Move()
+    {
+        var dialogParameters = new DialogParameters<MoveDialog>
+        {
+            { x => x.Hosts, await GetComputers(false) }
+        };
+
+        await DialogService.ShowAsync<MoveDialog>("Move", dialogParameters);
+    }
+
     private async Task<ConcurrentDictionary<Computer, HubConnection?>> GetComputers(bool onlyAvailable = true)
     {
         var computerConnections = new ConcurrentDictionary<Computer, HubConnection?>();

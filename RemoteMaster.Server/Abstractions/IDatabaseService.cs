@@ -21,4 +21,6 @@ public interface IDatabaseService
     Task UpdateComputerAsync(Computer computer, string ipAddress, string hostName);
 
     Task<bool> HasChildrenAsync(Node node);
+
+    Task MoveNodesAsync(IEnumerable<Guid> nodeIds, Guid newParentId);
 }

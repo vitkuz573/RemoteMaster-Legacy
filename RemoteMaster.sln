@@ -17,7 +17,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Host.Windows",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Server", "RemoteMaster.Server\RemoteMaster.Server.csproj", "{E9BCA6BD-8BC4-45C1-A638-56561BDDB612}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteMaster.Host.Windows.Tests", "RemoteMaster.Host.Windows.Tests\RemoteMaster.Host.Windows.Tests.csproj", "{8359020A-9A74-42E0-B386-9A9FAB019A81}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Host.Windows.Tests", "RemoteMaster.Host.Windows.Tests\RemoteMaster.Host.Windows.Tests.csproj", "{8359020A-9A74-42E0-B386-9A9FAB019A81}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

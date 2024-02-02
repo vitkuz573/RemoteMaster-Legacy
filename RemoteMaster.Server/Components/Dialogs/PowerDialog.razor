@@ -2,10 +2,10 @@
 
 <CommonDialog Hosts="@Hosts" ContentStyle="width: 500px;">
     <Content>
-        <MudRadioGroup T="string" @bind-SelectedOption="@_selectedOption">
-            <MudRadio Option="@("shutdown")">Shutdown</MudRadio>
-            <MudRadio Option="@("reboot")">Reboot</MudRadio>
-            <MudRadio Option="@("wakeup")">Wake Up</MudRadio>
+        <MudRadioGroup T="string" @bind-Value="@_selectedOption">
+            <MudRadio Value="@("shutdown")">Shutdown</MudRadio>
+            <MudRadio Value="@("reboot")">Reboot</MudRadio>
+            <MudRadio Value="@("wakeup")">Wake Up</MudRadio>
         </MudRadioGroup>
     </Content>
     <Actions>
