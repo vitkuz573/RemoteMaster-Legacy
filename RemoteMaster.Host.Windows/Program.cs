@@ -217,9 +217,9 @@ internal class Program
 
         var secureAttentionSequenceService = app.Services.GetRequiredService<ISecureAttentionSequenceService>();
 
-        if (secureAttentionSequenceService.CurrentOption == SoftwareSasOption.None)
+        if (secureAttentionSequenceService.SasOption == SoftwareSasOption.None)
         {
-            secureAttentionSequenceService.SetSasOption(SoftwareSasOption.ServicesAndEaseOfAccessApplications);
+            secureAttentionSequenceService.SasOption = SoftwareSasOption.ServicesAndEaseOfAccessApplications;
         }
 
         if (!app.Environment.IsDevelopment())

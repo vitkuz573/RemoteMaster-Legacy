@@ -8,7 +8,5 @@ namespace RemoteMaster.Host.Windows.Abstractions;
 
 public interface ISecureAttentionSequenceService
 {
-    SoftwareSasOption CurrentOption { get; }
-
-    void SetSasOption(SoftwareSasOption option);
+    SoftwareSasOption SasOption { get; set; }
 }

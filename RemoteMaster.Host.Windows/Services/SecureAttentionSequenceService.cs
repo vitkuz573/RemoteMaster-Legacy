@@ -13,7 +13,7 @@ public class SecureAttentionSequenceService : ISecureAttentionSequenceService
     private const string RegistryKeyPath = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System";
     private const string SasValueName = "SoftwareSASGeneration";
 
-    public SoftwareSasOption CurrentOption
+    public SoftwareSasOption SasOption
     {
         get
         {
@@ -35,11 +35,10 @@ public class SecureAttentionSequenceService : ISecureAttentionSequenceService
                 return SoftwareSasOption.None;
             }
         }
-    }
-
-    public void SetSasOption(SoftwareSasOption option)
-    {
-        using var key = Registry.LocalMachine.CreateSubKey(RegistryKeyPath, true) ?? throw new InvalidOperationException("Cannot access registry to change SAS setting.");
-        key.SetValue(SasValueName, (int)option, RegistryValueKind.DWord);
+        set
+        {
+            using var key = Registry.LocalMachine.CreateSubKey(RegistryKeyPath, true) ?? throw new InvalidOperationException("Cannot access registry to change SAS setting.");
+            key.SetValue(SasValueName, (int)value, RegistryValueKind.DWord);
+        }
     }
 }
