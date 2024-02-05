@@ -15,13 +15,7 @@ public partial class HostConfigurationGenerator
 {
     private readonly HostConfiguration _model = new();
 
-    [Inject]
-    public NavigationManager NavigationManager { get; set; } = default!;
-
-    [Inject]
-    public IJSRuntime JSRuntime { get; set; } = default!;
-
-    protected async override Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         _model.Server = GetLocalIPAddress();
         _model.Subject = new();

@@ -2,20 +2,15 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
-using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Dtos;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class FileUploadDialog
 {
-    [Inject]
-    private IComputerCommandService ComputerCommandService { get; set; } = default!;
-
     private const string DefaultDragClass = "relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full z-10";
     private string _dragClass = DefaultDragClass;
     private List<IBrowserFile> _files = [];

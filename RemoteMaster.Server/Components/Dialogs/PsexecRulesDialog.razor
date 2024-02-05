@@ -1,10 +1,12 @@
-﻿@inherits CommonDialogBase
+﻿@using RemoteMaster.Server.Abstractions
+@inherits CommonDialogBase
+@inject IComputerCommandService ComputerCommandService
 
 <CommonDialog Hosts="@Hosts">
     <Content>
-        <MudRadioGroup T="bool" @bind-SelectedOption="@_selectedOption">
-            <MudRadio Option="true">Enable</MudRadio>
-            <MudRadio Option="false">Disable</MudRadio>
+        <MudRadioGroup T="bool" @bind-Value="@_selectedOption">
+            <MudRadio Value="true">Enable</MudRadio>
+            <MudRadio Value="false">Disable</MudRadio>
         </MudRadioGroup>
     </Content>
     <Actions>

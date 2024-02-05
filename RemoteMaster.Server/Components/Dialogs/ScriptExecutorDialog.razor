@@ -1,5 +1,8 @@
 ﻿@inherits CommonDialogBase
+@using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Shared.Models
+@inject IComputerCommandService ComputerCommandService
+@inject IJSRuntime JSRuntime
 
 <CommonDialog Hosts="@Hosts">
     <Content>

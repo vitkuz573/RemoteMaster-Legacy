@@ -3,19 +3,14 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Text.Json;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
-using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class MoveDialog
 {
-    [Inject]
-    private IDatabaseService DatabaseService { get; set; } = default!;
-
     private string _currentGroupName = string.Empty;
     private List<Group> _groups = [];
     private Guid _selectedGroupId;

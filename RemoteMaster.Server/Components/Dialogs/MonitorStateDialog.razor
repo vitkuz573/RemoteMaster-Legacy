@@ -1,13 +1,15 @@
 ﻿@inherits CommonDialogBase
+@using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Shared.Models
+@inject IComputerCommandService ComputerCommandService
 
 <CommonDialog Hosts="@Hosts">
     <Content>
-        <MudRadioGroup T="MonitorState" @bind-SelectedOption="@_monitorState">
+        <MudRadioGroup T="MonitorState" @bind-Value="@_monitorState">
             @foreach (MonitorState monitorState in Enum.GetValues(typeof(MonitorState)))
             {
                 <MudItem xs="12">
-                    <MudRadio Option="@monitorState" Dense="true">@monitorState</MudRadio>
+                    <MudRadio Value="@monitorState" Dense="true">@monitorState</MudRadio>
                     </MudItem>
             }
         </MudRadioGroup>

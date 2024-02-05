@@ -2,18 +2,13 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
-using RemoteMaster.Server.Abstractions;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class ScreenRecorderDialog
 {
-    [Inject]
-    private IComputerCommandService ComputerCommandService { get; set; } = default!;
-
     private string _outputPath;
     private uint _durationInSeconds;
 
@@ -23,8 +18,6 @@ public partial class ScreenRecorderDialog
         var currentDate = DateTime.Now.ToString("yyyyMMdd_HHmmss");
         _outputPath = $@"C:\{requesterName}_{currentDate}.mp4";
         _durationInSeconds = 0;
-
-        base.OnInitialized();
     }
 
     private async Task StartRecording()

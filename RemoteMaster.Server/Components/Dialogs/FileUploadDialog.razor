@@ -1,4 +1,6 @@
-﻿@inherits CommonDialogBase
+﻿@using RemoteMaster.Server.Abstractions
+@inherits CommonDialogBase
+@inject IComputerCommandService ComputerCommandService
 
 <CommonDialog Hosts="@Hosts">
     <Content>

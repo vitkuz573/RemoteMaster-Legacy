@@ -1,4 +1,7 @@
-﻿<MudDialog>
+﻿@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<MudDialog>
     <DialogContent>
         <EditForm Model="@_model" OnValidSubmit="OnValidSubmit">
             <DataAnnotationsValidator />

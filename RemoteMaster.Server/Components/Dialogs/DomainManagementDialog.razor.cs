@@ -5,22 +5,14 @@
 using System.DirectoryServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
-using RemoteMaster.Server.Abstractions;
 using Serilog;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class DomainManagementDialog
 {
-    [Inject]
-    private ISnackbar Snackbar { get; set; }
-
-    [Inject]
-    private IComputerCommandService ComputerCommandService { get; set; }
-
     private bool _isShowPassword;
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;

@@ -2,20 +2,15 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using MudBlazor;
-using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class MonitorStateDialog
 {
-    [Inject]
-    private IComputerCommandService ComputerCommandService { get; set; } = default!;
-
     private MonitorState _monitorState;
 
     private async Task SetState()

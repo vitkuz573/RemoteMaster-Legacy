@@ -1,4 +1,6 @@
-﻿@inherits CommonDialogBase
+﻿@using RemoteMaster.Server.Abstractions
+@inherits CommonDialogBase
+@inject IDatabaseService DatabaseService
 
 <CommonDialog Hosts="@Hosts" ContentStyle="width: 500px;">
     <Content>

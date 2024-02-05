@@ -1,5 +1,7 @@
 ﻿@inherits CommonDialogBase
+@using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Shared.Models
+@inject IComputerCommandService ComputerCommandService
 
 <CommonDialog Hosts="@Hosts" ContentStyle="width: 500px;">
     <Content>

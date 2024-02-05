@@ -3,11 +3,9 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.IO.Compression;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
-using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 
@@ -15,12 +13,6 @@ namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class ScriptExecutorDialog
 {
-    [Inject]
-    private IComputerCommandService ComputerCommandService { get; set; } = default!;
-
-    [Inject]
-    private IJSRuntime JSRuntime { get; set; } = default!;
-
     private string _content;
     private Shell? _shell;
     private bool _asSystem;

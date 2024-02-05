@@ -1,4 +1,9 @@
-﻿@inherits CommonDialogBase
+﻿@using Microsoft.Extensions.Options
+@using RemoteMaster.Server.Abstractions
+@using RemoteMaster.Server.Models
+@inherits CommonDialogBase
+@inject IComputerCommandService ComputerCommandService
+@inject IOptions<ApplicationSettings> ApplicationSettings
 
 <CommonDialog Hosts="@Hosts" ContentStyle="width: 600px;">
     <Content>

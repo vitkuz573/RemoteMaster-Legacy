@@ -1,4 +1,7 @@
-﻿@inherits CommonDialogBase
+﻿@using RemoteMaster.Server.Abstractions
+@inherits CommonDialogBase
+@inject IComputerCommandService ComputerCommandService
+@inject IWakeOnLanService WakeOnLanService
 
 <CommonDialog Hosts="@Hosts" ContentStyle="width: 500px;">
     <Content>
