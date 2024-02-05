@@ -192,7 +192,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     public async Task GetFilesAndDirectories(string path)
     {
-        var items = await fileManagerService.GetFilesAndDirectoriesAsync(path);
+        var items = fileManagerService.GetFilesAndDirectories(path);
         await Clients.Caller.ReceiveFilesAndDirectories(items);
     }
 

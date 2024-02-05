@@ -73,8 +73,8 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
                 Meta = "pid"
             });
 
-            var readErrorTask = ReadStreamAsync(process.StandardError, hubContext, MessageType.Error);
-            var readOutputTask = ReadStreamAsync(process.StandardOutput, hubContext, MessageType.Output);
+            var readErrorTask = ReadStreamAsync(process.StandardError!, hubContext, MessageType.Error);
+            var readOutputTask = ReadStreamAsync(process.StandardOutput!, hubContext, MessageType.Output);
 
             process.WaitForExit();
 
@@ -97,7 +97,7 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
 
     private static async Task ReadStreamAsync(StreamReader streamReader, IHubContext<ControlHub, IControlClient> hubContext, MessageType messageType)
     {
-        string line;
+        string? line;
 
         while ((line = await streamReader.ReadLineAsync()) != null)
         {

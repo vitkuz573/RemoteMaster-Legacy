@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Text.Json;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Hosting;
 using RemoteMaster.Host.Core.Abstractions;
@@ -27,7 +26,12 @@ public class HostInfoMonitorService(IHostConfigurationService hostConfigurationS
         catch (Exception ex) when (ex is FileNotFoundException || ex is InvalidDataException)
         {
             Log.Error(ex, "Error loading configuration.");
+            return;
+        }
 
+        if (hostConfiguration.Host == null)
+        {
+            Log.Error("Host configuration is missing host details.");
             return;
         }
 
@@ -35,7 +39,7 @@ public class HostInfoMonitorService(IHostConfigurationService hostConfigurationS
         var newMACAddress = hostInfoService.GetMacAddress();
         var newHostName = hostInfoService.GetHostName();
 
-        if (hostConfiguration.Host?.IPAddress != newIPAddress || hostConfiguration.Host?.MACAddress != newMACAddress || hostConfiguration.Host?.Name != newHostName)
+        if (hostConfiguration.Host.IPAddress != newIPAddress || hostConfiguration.Host.MACAddress != newMACAddress || hostConfiguration.Host.Name != newHostName)
         {
             try
             {
@@ -60,6 +64,7 @@ public class HostInfoMonitorService(IHostConfigurationService hostConfigurationS
         try
         {
             var connection = await ConnectToServerHub($"http://{hostConfiguration.Server}:5254");
+
             var newGroup = await connection.InvokeAsync<string>("GetNewGroupIfChangeRequested", hostConfiguration.Host.MACAddress);
 
             if (!string.IsNullOrEmpty(newGroup))

@@ -15,7 +15,7 @@ public class RegistrationRestrictionMiddleware(RequestDelegate next, bool enable
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        var path = context.Request.Path.Value.ToLower();
+        var path = context.Request.Path.Value?.ToLower() ?? string.Empty;
         var isRestrictedRoute = RestrictedRoutes.Any(path.StartsWith);
 
         if (!enableRegistration && isRestrictedRoute)

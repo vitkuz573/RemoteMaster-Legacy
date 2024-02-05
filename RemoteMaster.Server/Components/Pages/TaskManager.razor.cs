@@ -19,7 +19,7 @@ public partial class TaskManager : IDisposable
     [Parameter]
     public string Host { get; set; } = default!;
 
-    private HubConnection _connection;
+    private HubConnection _connection = null!;
     private string _searchQuery = string.Empty;
     private List<ProcessInfo> _processes = [];
 
@@ -51,8 +51,13 @@ public partial class TaskManager : IDisposable
 
     private async Task InitializeHostConnectionAsync()
     {
-        var httpContext = HttpContextAccessor.HttpContext;
+        var httpContext = HttpContextAccessor.HttpContext ?? throw new InvalidOperationException("HttpContext is not available.");
         var accessToken = httpContext.Request.Cookies["accessToken"];
+
+        if (string.IsNullOrEmpty(accessToken))
+        {
+            throw new InvalidOperationException("Access token is not available.");
+        }
 
         _connection = new HubConnectionBuilder()
             .WithUrl($"https://{Host}:5001/hubs/control", options =>

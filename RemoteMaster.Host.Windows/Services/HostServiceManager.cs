@@ -210,15 +210,18 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
     private async Task<HostConfiguration> UpdateConfigurationAsync(string filePath, string hostName, string ipAddress, string macAddress)
     {
         var json = await File.ReadAllTextAsync(filePath);
-        var config = JsonSerializer.Deserialize<HostConfiguration>(json, jsonOptions);
+        var hostConfiguration = JsonSerializer.Deserialize<HostConfiguration>(json, jsonOptions) ?? new HostConfiguration();
 
-        config.Host ??= new Computer
+        hostConfiguration.Host ??= new Computer
         {
             Name = hostName,
             IPAddress = ipAddress,
             MACAddress = macAddress
         };
 
-        return config;
+        var updatedJson = JsonSerializer.Serialize(hostConfiguration, jsonOptions);
+        await File.WriteAllTextAsync(filePath, updatedJson);
+
+        return hostConfiguration;
     }
 }

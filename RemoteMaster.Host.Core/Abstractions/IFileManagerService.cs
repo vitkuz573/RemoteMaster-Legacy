@@ -12,7 +12,7 @@ public interface IFileManagerService
 
     Stream DownloadFile(string path);
 
-    Task<List<FileSystemItem>> GetFilesAndDirectoriesAsync(string path);
+    List<FileSystemItem> GetFilesAndDirectories(string path);
 
     Task<List<string>> GetAvailableDrivesAsync();
 }

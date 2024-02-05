@@ -24,7 +24,7 @@ public class RouteRestrictionMiddleware(RequestDelegate next)
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        var path = context.Request.Path.Value.ToLower();
+        var path = context.Request.Path.Value?.ToLower() ?? string.Empty;
 
         if (RestrictedRoutes.Contains(path))
         {

@@ -32,7 +32,7 @@ public class FileManagerService : IFileManagerService
         return memoryStream;
     }
 
-    public async Task<List<FileSystemItem>> GetFilesAndDirectoriesAsync(string path)
+    public List<FileSystemItem> GetFilesAndDirectories(string path)
     {
         var items = new List<FileSystemItem>();
         var directoryInfo = new DirectoryInfo(path);

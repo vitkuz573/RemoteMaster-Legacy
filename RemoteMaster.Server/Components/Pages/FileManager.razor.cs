@@ -21,13 +21,13 @@ public partial class FileManager : IDisposable
     [Parameter]
     public string Host { get; set; } = default!;
 
-    private HubConnection _connection;
+    private HubConnection _connection = null!;
     private string _searchQuery = string.Empty;
     private string _currentPath = string.Empty;
     private List<FileSystemItem> _fileSystemItems = [];
     private List<string> _availableDrives = [];
-    private string _selectedDrive;
-    private IBrowserFile _selectedFile;
+    private string _selectedDrive = string.Empty;
+    private IBrowserFile? _selectedFile;
 
     private readonly AsyncRetryPolicy _retryPolicy = Policy
         .Handle<Exception>()
@@ -97,8 +97,13 @@ public partial class FileManager : IDisposable
 
     private async Task InitializeHostConnectionAsync()
     {
-        var httpContext = HttpContextAccessor.HttpContext;
+        var httpContext = HttpContextAccessor.HttpContext ?? throw new InvalidOperationException("HttpContext is not available.");
         var accessToken = httpContext.Request.Cookies["accessToken"];
+
+        if (string.IsNullOrEmpty(accessToken))
+        {
+            throw new InvalidOperationException("Access token is not available.");
+        }
 
         _connection = new HubConnectionBuilder()
             .WithUrl($"https://{Host}:5001/hubs/control", options =>
