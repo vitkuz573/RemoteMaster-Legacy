@@ -21,12 +21,6 @@ public partial class FileManager : IDisposable
     [Parameter]
     public string Host { get; set; } = default!;
 
-    [Inject]
-    private IHttpContextAccessor HttpContextAccessor { get; set; } = default!;
-
-    [Inject]
-    private IJSRuntime JSRuntime { get; set; } = default!;
-
     private HubConnection _connection;
     private string _searchQuery = string.Empty;
     private string _currentPath = string.Empty;

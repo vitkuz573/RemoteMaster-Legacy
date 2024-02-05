@@ -2,7 +2,13 @@
 @rendermode InteractiveServer
 @attribute [Authorize]
 @using Microsoft.AspNetCore.Authorization
+@using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Shared.Models
+@inject IBrandingService BrandingService
+@inject IDialogService DialogService
+@inject IDatabaseService DatabaseService
+@inject IHttpContextAccessor HttpContextAccessor
+@inject IJSRuntime JSRuntime
 
 <MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme" />
 <MudDialogProvider />

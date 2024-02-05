@@ -10,7 +10,6 @@ using Microsoft.JSInterop;
 using MudBlazor;
 using Polly;
 using Polly.Retry;
-using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 using PointD = (double, double);
@@ -21,18 +20,6 @@ public partial class Access : IDisposable
 {
     [Parameter]
     public string Host { get; set; } = default!;
-
-    [Inject]
-    private NavigationManager NavigationManager { get; set; } = default!;
-
-    [Inject]
-    private IQueryParameterService QueryParameterService { get; set; } = default!;
-
-    [Inject]
-    private IHttpContextAccessor HttpContextAccessor { get; set; } = default!;
-
-    [Inject]
-    private IJSRuntime JSRuntime { get; set; } = default!;
 
     private string? _screenDataUrl;
     private bool _drawerOpen = false;

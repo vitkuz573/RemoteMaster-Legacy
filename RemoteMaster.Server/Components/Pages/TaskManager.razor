@@ -3,6 +3,8 @@
 @attribute [Authorize]
 @using Microsoft.AspNetCore.Authorization
 @using RemoteMaster.Shared.Models
+@inject IHttpContextAccessor HttpContextAccessor
+@inject IJSRuntime JSRuntime
 
 <MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme" />
 <MudDialogProvider />

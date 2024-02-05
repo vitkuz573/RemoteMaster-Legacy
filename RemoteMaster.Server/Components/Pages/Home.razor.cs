@@ -3,11 +3,9 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Collections.Concurrent;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using MudBlazor;
-using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Components.Dialogs;
 using RemoteMaster.Shared.Models;
 using Serilog;
@@ -18,21 +16,6 @@ namespace RemoteMaster.Server.Components.Pages;
 
 public partial class Home
 {
-    [Inject]
-    private IBrandingService BrandingService { get; set; } = default!;
-
-    [Inject]
-    private IDialogService DialogService { get; set; } = default!;
-
-    [Inject]
-    private IDatabaseService DatabaseService { get; set; } = default!;
-
-    [Inject]
-    private IHttpContextAccessor HttpContextAccessor { get; set; } = default!;
-
-    [Inject]
-    private IJSRuntime JSRuntime { get; set; } = default!;
-
     private bool _drawerOpen = false;
     private Node? _selectedNode = null;
     private HashSet<Node>? _nodes;
