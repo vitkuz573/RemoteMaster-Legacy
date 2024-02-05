@@ -229,6 +229,6 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
         await hostConfigurationService.SaveConfigurationAsync(config, configPath);
 
-        await Clients.Caller.ReceiveGroupChaged(newGroupName);
+        await Clients.Caller.ReceiveGroupChanged(newGroupName);
     }
 }

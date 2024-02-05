@@ -31,5 +31,5 @@ public interface IControlClient
 
     Task ReceiveAvailableDrives(List<string> availableDrives);
 
-    Task ReceiveGroupChaged(string groupName);
+    Task ReceiveGroupChanged(string groupName);
 }
