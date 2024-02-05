@@ -17,6 +17,11 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
+        if (hostConfiguration.Host == null)
+        {
+            throw new ArgumentException("Host configuration must have a non-null Host property.", nameof(hostConfiguration));
+        }
+
         var certificate = certificateService.IssueCertificate(csrBytes);
 
         await Clients.Caller.ReceiveCertificate(certificate.Export(X509ContentType.Pfx));
@@ -59,6 +64,11 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
+        if (hostConfiguration.Host == null)
+        {
+            throw new ArgumentException("Host configuration must have a non-null Host property.", nameof(hostConfiguration));
+        }
+
         var folder = (await databaseService.GetNodesAsync(f => f.Name == hostConfiguration.Group && f is Group)).OfType<Group>().FirstOrDefault();
 
         if (folder == null)
@@ -68,8 +78,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             return false;
         }
 
-        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId))
-                               .FirstOrDefault(c => c.Name == hostConfiguration.Host.Name);
+        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId)).FirstOrDefault(c => c.Name == hostConfiguration.Host.Name);
 
         if (existingComputer != null)
         {
@@ -94,6 +103,11 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
+        if (hostConfiguration.Host == null)
+        {
+            throw new ArgumentException("Host configuration must have a non-null Host property.", nameof(hostConfiguration));
+        }
+
         var folder = (await databaseService.GetNodesAsync(f => f.Name == hostConfiguration.Group && f is Group)).OfType<Group>().FirstOrDefault();
 
         if (folder == null)
@@ -101,8 +115,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             return false;
         }
 
-        var computer = (await databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId))
-                       .FirstOrDefault(c => c.MACAddress == hostConfiguration.Host.MACAddress);
+        var computer = (await databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId)).FirstOrDefault(c => c.MACAddress == hostConfiguration.Host.MACAddress);
 
         if (computer != null)
         {
@@ -117,6 +130,11 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
     public async Task<bool> IsHostRegisteredAsync(HostConfiguration hostConfiguration)
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
+
+        if (hostConfiguration.Host == null)
+        {
+            throw new ArgumentException("Host configuration must have a non-null Host property.", nameof(hostConfiguration));
+        }
 
         if (string.IsNullOrWhiteSpace(hostConfiguration.Host.Name))
         {
@@ -140,7 +158,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         }
     }
 
-    public async Task<string> GetPublicKey()
+    public async Task<string?> GetPublicKey()
     {
         try
         {
@@ -168,9 +186,10 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         }
     }
 
-    public async Task<string> GetNewGroupIfChangeRequested(string macAddress)
+    public async Task<string?> GetNewGroupIfChangeRequested(string macAddress)
     {
-        var groupChangeRequestsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "RemoteMaster", "Server", "GroupChangeRequests.json");
+        var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        var groupChangeRequestsPath = Path.Combine(programData, "RemoteMaster", "Server", "GroupChangeRequests.json");
 
         if (File.Exists(groupChangeRequestsPath))
         {

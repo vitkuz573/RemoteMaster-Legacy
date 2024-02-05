@@ -14,7 +14,7 @@ public partial class FileUploadDialog
     private const string DefaultDragClass = "relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full z-10";
     private string _dragClass = DefaultDragClass;
     private List<IBrowserFile> _files = [];
-    private string _destinationPath;
+    private string _destinationPath = string.Empty;
 
     private async Task Clear()
     {
@@ -32,7 +32,7 @@ public partial class FileUploadDialog
 
     private async Task Upload()
     {
-        FileUploadDto fileDto = null;
+        FileUploadDto? fileDto = null;
 
         if (_files != null)
         {

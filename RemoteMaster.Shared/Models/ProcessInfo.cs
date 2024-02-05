@@ -12,9 +12,7 @@ public class ProcessInfo
 
     public long MemoryUsage { get; set; }
 
-    public double CpuUsage { get; set; }
-
     public string ProcessPath { get; set; }
 
-    public byte[] Icon { get; set; }
+    public byte[]? Icon { get; set; }
 }

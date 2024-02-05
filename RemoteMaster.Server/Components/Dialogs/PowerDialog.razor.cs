@@ -11,6 +11,11 @@ public partial class PowerDialog
 {
     private string _selectedOption;
 
+    public PowerDialog()
+    {
+        _selectedOption = "shutdown";
+    }
+
     private async Task Confirm()
     {
         if (_selectedOption == "shutdown")

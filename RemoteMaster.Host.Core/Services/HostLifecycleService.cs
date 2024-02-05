@@ -18,6 +18,12 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
     public async Task RegisterAsync(HostConfiguration hostConfiguration)
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
+
+        if (hostConfiguration.Host == null)
+        {
+            throw new ArgumentException("Host configuration must have a non-null Host property.", nameof(hostConfiguration));
+        }
+
         RSA? rsaKeyPair = null;
 
         try

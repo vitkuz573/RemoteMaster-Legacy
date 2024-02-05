@@ -9,9 +9,9 @@ using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostRegistrationMonitorService(IHostLifecycleService hostLifecycleService, IHostConfigurationService hostConfigurationService, IHostInfoService hostInfoService) : IHostedService
+public class HostRegistrationMonitorService(IHostLifecycleService hostLifecycleService, IHostConfigurationService hostConfigurationService) : IHostedService
 {
-    private System.Timers.Timer _timer;
+    private System.Timers.Timer? _timer;
 
     public Task StartAsync(CancellationToken cancellationToken)
     {

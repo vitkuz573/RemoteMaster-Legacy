@@ -12,12 +12,13 @@ public partial class ScreenRecorderDialog
     private string _outputPath;
     private uint _durationInSeconds;
 
-    protected override void OnInitialized()
+    public ScreenRecorderDialog()
     {
         var requesterName = Environment.MachineName;
         var currentDate = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        _outputPath = $@"C:\{requesterName}_{currentDate}.mp4";
+
         _durationInSeconds = 0;
+        _outputPath = $@"C:\{requesterName}_{currentDate}.mp4";
     }
 
     private async Task StartRecording()

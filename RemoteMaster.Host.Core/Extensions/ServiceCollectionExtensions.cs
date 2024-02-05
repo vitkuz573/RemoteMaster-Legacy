@@ -27,7 +27,6 @@ public static class ServiceCollectionExtensions
         });
 
         services.AddSingleton<IFileManagerService, FileManagerService>();
-        services.AddSingleton<ITaskManagerService, TaskManagerService>();
         services.AddSingleton<ISubjectService, SubjectService>();
         services.AddSingleton<ICertificateRequestService, CertificateRequestService>();
         services.AddSingleton<IHostLifecycleService, HostLifecycleService>();

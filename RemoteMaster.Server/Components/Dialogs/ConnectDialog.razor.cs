@@ -11,6 +11,11 @@ public partial class ConnectDialog : CommonDialogBase
 {
     protected string _selectedOption;
 
+    public ConnectDialog()
+    {
+        _selectedOption = "control";
+    }
+
     protected async Task Connect()
     {
         if (_selectedOption == "control")

@@ -12,9 +12,17 @@ public partial class UpdateDialog
     private bool _isShowPassword;
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+
     private string _folderPath;
     private string _username;
     private string _password;
+
+    public UpdateDialog()
+    {
+        _folderPath = string.Empty;
+        _username = string.Empty;
+        _password = string.Empty;
+    }
 
     protected override void OnInitialized()
     {

@@ -15,17 +15,24 @@ public partial class OpenShellDialog
     private bool _isConnecting = false;
     private string _connectButtonText = "Connect";
 
+    public OpenShellDialog()
+    {
+        _selectedShell = Shell.Cmd;
+        _selectedUser = "CurrentUser";
+    }
+
     private async Task Connect()
     {
         _isConnecting = true;
         _connectButtonText = "Connecting...";
-        StateHasChanged(); // Update the UI to reflect the connecting state
+
+        StateHasChanged();
 
         try
         {
             await ComputerCommandService.Execute(Hosts, async (computer, connection) =>
             {
-                var sParameter = _selectedUser == "system" ? "-s" : "";
+                var sParameter = _selectedUser == "System" ? "-s" : "";
                 var command = _selectedShell switch
                 {
                     Shell.Cmd => @$"/C psexec \\{computer.IPAddress} {sParameter} -nobanner -accepteula cmd",
@@ -43,16 +50,14 @@ public partial class OpenShellDialog
                 await Task.Run(() => Process.Start(startInfo));
             });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            // Handle any exceptions that occur during the connect process
-            // You might want to log this exception or notify the user
         }
         finally
         {
             _isConnecting = false;
             _connectButtonText = "Connect";
-            StateHasChanged(); // Revert the UI back to the default state
+            StateHasChanged();
         }
 
         MudDialog.Close(DialogResult.Ok(true));

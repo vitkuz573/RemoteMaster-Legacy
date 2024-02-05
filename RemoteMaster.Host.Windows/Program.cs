@@ -67,6 +67,7 @@ internal class Program
         builder.Services.AddSingleton<INetworkDriveService, NetworkDriveService>();
         builder.Services.AddSingleton<IDomainService, DomainService>();
         builder.Services.AddSingleton<IScriptService, ScriptService>();
+        builder.Services.AddSingleton<ITaskManagerService, TaskManagerService>();
         builder.Services.AddSingleton<ISecureAttentionSequenceService, SecureAttentionSequenceService>();
         builder.Services.AddSingleton(new JsonSerializerOptions
         {

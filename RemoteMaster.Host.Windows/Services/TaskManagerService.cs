@@ -9,7 +9,7 @@ using System.Drawing.Imaging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Models;
 
-namespace RemoteMaster.Host.Core.Services;
+namespace RemoteMaster.Host.Windows.Services;
 
 public class TaskManagerService : ITaskManagerService
 {
@@ -24,31 +24,32 @@ public class TaskManagerService : ITaskManagerService
         {
             try
             {
-                var cpuUsage = GetCpuUsage(process);
-                var icon = GetProcessIcon(process);
+                var processPath = process.MainModule?.FileName ?? "N/A";
+                var icon = GetProcessIcon(processPath);
 
                 processList.Add(new ProcessInfo
                 {
                     Id = process.Id,
                     Name = process.ProcessName,
                     MemoryUsage = process.WorkingSet64,
-                    CpuUsage = cpuUsage,
-                    ProcessPath = process.MainModule.FileName,
+                    ProcessPath = processPath,
                     Icon = icon
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                // Логирование или обработка исключений, если не удается получить доступ к каким-либо данным процесса.
             }
         });
 
         return processList;
     }
 
-    private static byte[] GetProcessIcon(Process process)
+    private static byte[]? GetProcessIcon(string filePath)
     {
-        var filePath = process.MainModule.FileName;
+        if (string.IsNullOrEmpty(filePath))
+        {
+            return null;
+        }
 
         if (!_iconCache.TryGetValue(filePath, out var icon))
         {
@@ -61,13 +62,11 @@ public class TaskManagerService : ITaskManagerService
                     using var ms = new MemoryStream();
                     processIcon.ToBitmap().Save(ms, ImageFormat.Png);
                     icon = ms.ToArray();
-                    _iconCache[filePath] = icon;
+                    _iconCache.TryAdd(filePath, icon);
                 }
             }
             catch
             {
-                // В случае ошибки возвращается null или стандартная иконка
-                // Пример: return GetDefaultIcon();
                 return null;
             }
         }
@@ -84,10 +83,5 @@ public class TaskManagerService : ITaskManagerService
     public void StartProcess(string processPath)
     {
         Process.Start(processPath);
-    }
-
-    private static double GetCpuUsage(Process process)
-    {
-        return 0.0;
     }
 }

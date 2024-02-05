@@ -70,14 +70,14 @@ public partial class MoveDialog
     private static async Task AppendGroupChangeRequests(List<Computer> unavailableHosts, string targetGroup)
     {
         var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var groupChangeRequestsPath = Path.Combine(programData, "RemoteMaster", "Server", "GroupChangeRequests.json");
+        var applicationData = Path.Combine(programData, "RemoteMaster", "Server");
 
-        var directoryPath = Path.GetDirectoryName(groupChangeRequestsPath);
-
-        if (!Directory.Exists(directoryPath))
+        if (!Directory.Exists(applicationData))
         {
-            Directory.CreateDirectory(directoryPath);
+            Directory.CreateDirectory(applicationData);
         }
+
+        var groupChangeRequestsPath = Path.Combine(applicationData, "GroupChangeRequests.json");
 
         List<GroupChangeRequest> changeRequests;
 

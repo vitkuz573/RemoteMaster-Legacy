@@ -16,8 +16,15 @@ public partial class ScriptExecutorDialog
     private string _content;
     private Shell? _shell;
     private bool _asSystem;
-    private readonly Dictionary<Computer, ComputerResults> _resultsPerComputer = [];
-    private readonly HashSet<HubConnection> _subscribedConnections = [];
+    private readonly Dictionary<Computer, ComputerResults> _resultsPerComputer;
+    private readonly HashSet<HubConnection> _subscribedConnections;
+
+    public ScriptExecutorDialog()
+    {
+        _content = string.Empty;
+        _resultsPerComputer = [];
+        _subscribedConnections = [];
+    }
 
     private async Task RunScript()
     {
