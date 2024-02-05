@@ -23,13 +23,13 @@ public partial class Access : IDisposable
 
     private string? _screenDataUrl;
     private bool _drawerOpen = false;
-    private HubConnection _connection;
+    private HubConnection _connection = null!;
     private bool _inputEnabled;
     private bool _cursorTracking;
     private int _imageQuality;
-    private string _hostVersion;
-    private List<Display> _displays;
-    private string _selectedDisplay;
+    private string _hostVersion = string.Empty;
+    private List<Display> _displays = [];
+    private string _selectedDisplay = string.Empty;
 
     private readonly AsyncRetryPolicy _retryPolicy = Policy
         .Handle<Exception>()
@@ -147,8 +147,13 @@ public partial class Access : IDisposable
 
     private async Task InitializeHostConnectionAsync()
     {
-        var httpContext = HttpContextAccessor.HttpContext;
+        var httpContext = HttpContextAccessor.HttpContext ?? throw new InvalidOperationException("HttpContext is not available.");
         var accessToken = httpContext.Request.Cookies["accessToken"];
+        
+        if (string.IsNullOrEmpty(accessToken))
+        {
+            throw new InvalidOperationException("Access token is not available.");
+        }
 
         _connection = new HubConnectionBuilder()
             .WithUrl($"https://{Host}:5001/hubs/control", options =>
@@ -156,11 +161,12 @@ public partial class Access : IDisposable
                 options.Headers.Add("Authorization", $"Bearer {accessToken}");
             })
             .AddMessagePackProtocol()
-        .Build();
+            .Build();
 
         _connection.On<IEnumerable<Display>>("ReceiveDisplays", (displays) =>
         {
             _displays = displays.ToList();
+
             var primaryDisplay = _displays.FirstOrDefault(d => d.IsPrimary);
 
             if (primaryDisplay != null)
