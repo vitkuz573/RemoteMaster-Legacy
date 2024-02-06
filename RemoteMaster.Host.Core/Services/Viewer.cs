@@ -90,7 +90,9 @@ public class Viewer : IViewer
 
     public async Task SendHostVersion()
     {
-        await _hubContext.Clients.Clients(ConnectionId).ReceiveHostVersion(Assembly.GetExecutingAssembly().GetName().Version ?? new Version());
+        var version = Assembly.GetExecutingAssembly().GetName().Version ?? new Version();
+
+        await _hubContext.Clients.Clients(ConnectionId).ReceiveHostVersion(version);
     }
 
     public void SetSelectedScreen(string displayName)

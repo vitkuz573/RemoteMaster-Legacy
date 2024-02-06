@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Polly;
 using Polly.Retry;
@@ -32,9 +33,10 @@ public class CommandListenerService : IHostedService
         {
             _connection = new HubConnectionBuilder()
                 .WithUrl("http://127.0.0.1:5000/hubs/control")
+                .AddMessagePackProtocol()
                 .Build();
 
-            _connection.On<string>("ReceiveCommand", command =>
+            _connection.On<string>("ReceiveCommand", (command) =>
             {
                 if (command == "CtrlAltDel")
                 {
