@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Hosting;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Models;
@@ -10,7 +9,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostInfoMonitorService(IHostConfigurationService hostConfigurationService, IHostInfoService hostInfoService, IHostLifecycleService hostLifecycleService) : IHostedService
+public class HostInfoMonitorService(IServerHubService serverHubService, IHostConfigurationService hostConfigurationService, IHostInfoService hostInfoService, IHostLifecycleService hostLifecycleService) : IHostedService
 {
     private readonly string _configPath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, hostConfigurationService.ConfigurationFileName);
 
@@ -66,16 +65,16 @@ public class HostInfoMonitorService(IHostConfigurationService hostConfigurationS
 
         try
         {
-            var connection = await ConnectToServerHub($"http://{hostConfiguration.Server}:5254");
+            await serverHubService.ConnectAsync(hostConfiguration.Server);
 
-            var newGroup = await connection.InvokeAsync<string>("GetNewGroupIfChangeRequested", hostConfiguration.Host.MACAddress);
+            var newGroup = await serverHubService.GetNewGroupIfChangeRequested(hostConfiguration.Host.MACAddress);
 
             if (!string.IsNullOrEmpty(newGroup))
             {
                 hostConfiguration.Group = newGroup;
                 await hostConfigurationService.SaveConfigurationAsync(hostConfiguration, _configPath);
                 Log.Information("Group for this device was updated based on the group change request.");
-                await connection.InvokeAsync("AcknowledgeGroupChange", hostConfiguration.Host.MACAddress);
+                await serverHubService.AcknowledgeGroupChange(hostConfiguration.Host.MACAddress);
             }
         }
         catch (Exception ex)
@@ -87,16 +86,5 @@ public class HostInfoMonitorService(IHostConfigurationService hostConfigurationS
     public Task StopAsync(CancellationToken cancellationToken)
     {
         return Task.CompletedTask;
-    }
-
-    private static async Task<HubConnection> ConnectToServerHub(string serverUrl)
-    {
-        var hubConnection = new HubConnectionBuilder()
-            .WithUrl($"{serverUrl}/hubs/management")
-            .Build();
-
-        await hubConnection.StartAsync();
-
-        return hubConnection;
     }
 }

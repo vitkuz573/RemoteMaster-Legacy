@@ -4,14 +4,13 @@
 
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using Microsoft.AspNetCore.SignalR.Client;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Models;
 using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostLifecycleService(ICertificateRequestService certificateRequestService, ISubjectService subjectService) : IHostLifecycleService
+public class HostLifecycleService(IServerHubService serverHubService, ICertificateRequestService certificateRequestService, ISubjectService subjectService) : IHostLifecycleService
 {
     private volatile bool _isRegistrationInvoked = false;
 
@@ -28,7 +27,8 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
 
         try
         {
-            var connection = await ConnectToServerHub($"http://{hostConfiguration.Server}:5254");
+            await serverHubService.ConnectAsync(hostConfiguration.Server);
+
             var ipAddresses = new List<string>
             {
                 hostConfiguration.Host.IPAddress
@@ -41,10 +41,10 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
             var securityDirectory = EnsureSecurityDirectoryExists();
 
             var tcs = new TaskCompletionSource<bool>();
-            connection.On<byte[]>("ReceiveCertificate", certificateBytes => ProcessCertificate(certificateBytes, rsaKeyPair, securityDirectory, tcs));
+            serverHubService.OnReceiveCertificate(certificateBytes => ProcessCertificate(certificateBytes, rsaKeyPair, securityDirectory, tcs));
 
             Log.Information("Attempting to register host...");
-            await InvokeHostRegistration(connection, hostConfiguration, signingRequest, tcs, securityDirectory);
+            await InvokeHostRegistration(hostConfiguration, signingRequest, tcs, securityDirectory);
         }
         catch (Exception ex)
         {
@@ -62,11 +62,11 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
 
         try
         {
-            var connection = await ConnectToServerHub($"http://{hostConfiguration.Server}:5254");
+            await serverHubService.ConnectAsync(hostConfiguration.Server);
 
             Log.Information("Attempting to unregister host...");
 
-            if (await connection.InvokeAsync<bool>("UnregisterHostAsync", hostConfiguration))
+            if (await serverHubService.UnregisterHostAsync(hostConfiguration))
             {
                 Log.Information("Host unregistration successful.");
             }
@@ -87,9 +87,9 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
 
         try
         {
-            var connection = await ConnectToServerHub($"http://{hostConfiguration.Server}:5254");
+            await serverHubService.ConnectAsync(hostConfiguration.Server);
 
-            if (await connection.InvokeAsync<bool>("UpdateHostInformationAsync", hostConfiguration))
+            if (await serverHubService.UpdateHostInformationAsync(hostConfiguration))
             {
                 Log.Information("Host information updated successful.");
             }
@@ -110,9 +110,9 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
 
         try
         {
-            var connection = await ConnectToServerHub($"http://{hostConfiguration.Server}:5254");
+            await serverHubService.ConnectAsync(hostConfiguration.Server);
 
-            var isRegistered = await connection.InvokeAsync<bool>("IsHostRegisteredAsync", hostConfiguration);
+            var isRegistered = await serverHubService.IsHostRegisteredAsync(hostConfiguration);
 
             return isRegistered;
         }
@@ -122,17 +122,6 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
 
             return false;
         }
-    }
-
-    private static async Task<HubConnection> ConnectToServerHub(string serverUrl)
-    {
-        var hubConnection = new HubConnectionBuilder()
-            .WithUrl($"{serverUrl}/hubs/management")
-            .Build();
-
-        await hubConnection.StartAsync();
-
-        return hubConnection;
     }
 
     private static string EnsureSecurityDirectoryExists()
@@ -177,9 +166,9 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         }
     }
 
-    private async Task InvokeHostRegistration(HubConnection connection, HostConfiguration hostConfiguration, byte[] signingRequest, TaskCompletionSource<bool> tcs, string securityDirectory)
+    private async Task InvokeHostRegistration(HostConfiguration hostConfiguration, byte[] signingRequest, TaskCompletionSource<bool> tcs, string securityDirectory)
     {
-        if (await connection.InvokeAsync<bool>("RegisterHostAsync", hostConfiguration, signingRequest))
+        if (await serverHubService.RegisterHostAsync(hostConfiguration, signingRequest))
         {
             _isRegistrationInvoked = true;
             Log.Information("Host registration invoked successfully. Waiting for the certificate...");
@@ -190,7 +179,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
                 throw new InvalidOperationException("Certificate processing failed.");
             }
 
-            var publicKey = await connection.InvokeAsync<string>("GetPublicKey");
+            var publicKey = await serverHubService.GetPublicKey();
 
             if (string.IsNullOrEmpty(publicKey))
             {

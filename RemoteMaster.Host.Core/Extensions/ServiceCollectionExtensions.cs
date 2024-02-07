@@ -34,6 +34,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IHostInfoService, HostInfoService>();
         services.AddSingleton<IAppState, AppState>();
         services.AddSingleton<IShutdownService, ShutdownService>();
+        services.AddSingleton<IServerHubService, ServerHubService>();
         services.AddTransient<IViewerFactory, ViewerFactory>();
         services.Configure<SubjectOptions>(configuration.GetSection("subject"));
 
