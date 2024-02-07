@@ -38,11 +38,11 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             await databaseService.AddNodeAsync(folder);
         }
 
-        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId)).FirstOrDefault(c => c.Name == hostConfiguration.Host.Name);
+        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId)).FirstOrDefault(c => c.MACAddress == hostConfiguration.Host.MACAddress);
 
         if (existingComputer != null)
         {
-            existingComputer.IPAddress = hostConfiguration.Host.IPAddress;
+            await databaseService.UpdateComputerAsync(existingComputer, hostConfiguration.Host.IPAddress, hostConfiguration.Host.Name);
         }
         else
         {
@@ -64,9 +64,9 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
-        if (hostConfiguration.Host == null)
+        if (hostConfiguration.Host == null || string.IsNullOrWhiteSpace(hostConfiguration.Host.MACAddress))
         {
-            throw new ArgumentException("Host configuration must have a non-null Host property.", nameof(hostConfiguration));
+            throw new ArgumentException("Host configuration must have a non-null Host property with a valid MAC address.", nameof(hostConfiguration));
         }
 
         var folder = (await databaseService.GetNodesAsync(f => f.Name == hostConfiguration.Group && f is Group)).OfType<Group>().FirstOrDefault();
@@ -74,11 +74,11 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         if (folder == null)
         {
             Log.Warning("Unregistration failed: Folder '{Group}' not found.", hostConfiguration.Group);
-
+            
             return false;
         }
 
-        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId)).FirstOrDefault(c => c.Name == hostConfiguration.Host.Name);
+        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId)).FirstOrDefault(c => c.MACAddress == hostConfiguration.Host.MACAddress);
 
         if (existingComputer != null)
         {
@@ -93,10 +93,12 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
 
             return true;
         }
-
-        Log.Warning("Unregistration failed: Computer '{HostName}' not found in folder '{Group}'.", hostConfiguration.Host.Name, hostConfiguration.Group);
-
-        return false;
+        else
+        {
+            Log.Warning("Unregistration failed: Computer with MAC address '{MACAddress}' not found in folder '{Group}'.", hostConfiguration.Host.MACAddress, hostConfiguration.Group);
+            
+            return false;
+        }
     }
 
     public async Task<bool> UpdateHostInformationAsync(HostConfiguration hostConfiguration)
@@ -136,14 +138,14 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             throw new ArgumentException("Host configuration must have a non-null Host property.", nameof(hostConfiguration));
         }
 
-        if (string.IsNullOrWhiteSpace(hostConfiguration.Host.Name))
+        if (string.IsNullOrWhiteSpace(hostConfiguration.Host.MACAddress))
         {
-            throw new ArgumentNullException(hostConfiguration.Host.Name);
+            throw new ArgumentNullException(hostConfiguration.Host.MACAddress);
         }
 
         try
         {
-            var nodes = await databaseService.GetNodesAsync(n => n is Computer && ((Computer)n).Name == hostConfiguration.Host.Name);
+            var nodes = await databaseService.GetNodesAsync(n => n is Computer && ((Computer)n).MACAddress == hostConfiguration.Host.MACAddress);
             var computers = nodes.OfType<Computer>();
 
             var isRegistered = computers.Any();
