@@ -16,9 +16,9 @@ using Windows.Win32.System.RemoteDesktop;
 using Windows.Win32.System.Threading;
 using static Windows.Win32.PInvoke;
 
-#pragma warning disable CA2000
-
 namespace RemoteMaster.Host.Windows.Services;
+
+#pragma warning disable CA2000
 
 public class NativeProcess : IDisposable
 {
@@ -63,27 +63,37 @@ public class NativeProcess : IDisposable
 
         SafeFileHandle? hUserTokenDup = null;
 
-        if (!StartInfo.UseCurrentUserToken || !TryGetUserToken(sessionId, out hUserTokenDup))
+        try
         {
-            var winlogonPid = GetWinlogonPidForSession(sessionId);
-            using var hProcess = OpenProcess_SafeHandle(PROCESS_ACCESS_RIGHTS.PROCESS_ALL_ACCESS, false, winlogonPid);
-
-            if (!hProcess.IsInvalid && !hProcess.IsClosed && OpenProcessToken(hProcess, TOKEN_ACCESS_MASK.TOKEN_DUPLICATE, out var hPToken))
+            if (!StartInfo.UseCurrentUserToken || !TryGetUserToken(sessionId, out hUserTokenDup))
             {
-                using (hPToken)
+                var winlogonPid = GetWinlogonPidForSession(sessionId);
+                using var hProcess = OpenProcess_SafeHandle(PROCESS_ACCESS_RIGHTS.PROCESS_ALL_ACCESS, false, winlogonPid);
+
+                if (!hProcess.IsInvalid && !hProcess.IsClosed)
                 {
-                    DuplicateTokenEx(hPToken, TOKEN_ACCESS_MASK.TOKEN_ALL_ACCESS, null, SECURITY_IMPERSONATION_LEVEL.SecurityIdentification, TOKEN_TYPE.TokenPrimary, out hUserTokenDup);
+                    if (OpenProcessToken(hProcess, TOKEN_ACCESS_MASK.TOKEN_DUPLICATE, out var hPToken))
+                    {
+                        using (hPToken)
+                        {
+                            DuplicateTokenEx(hPToken, TOKEN_ACCESS_MASK.TOKEN_ALL_ACCESS, null, SECURITY_IMPERSONATION_LEVEL.SecurityIdentification, TOKEN_TYPE.TokenPrimary, out hUserTokenDup);
+                        }
+                    }
                 }
             }
-        }
 
-        if (hUserTokenDup != null)
-        {
-            StartWithCreateProcess(StartInfo, hUserTokenDup);
+            if (hUserTokenDup != null)
+            {
+                StartWithCreateProcess(StartInfo, hUserTokenDup);
+            }
+            else
+            {
+                throw new InvalidOperationException("Failed to get or duplicate user token.");
+            }
         }
-        else
+        finally
         {
-            throw new InvalidOperationException("Failed to get or duplicate user token.");
+            hUserTokenDup?.Dispose();
         }
     }
 
