@@ -331,10 +331,7 @@ public class NativeProcess : IDisposable
         }
         finally
         {
-            if (hTmp != null && !hTmp.IsInvalid)
-            {
-                hTmp.Dispose();
-            }
+            hTmp?.Dispose();
         }
     }
 
