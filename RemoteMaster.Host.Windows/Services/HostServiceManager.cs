@@ -85,11 +85,6 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
         }
     }
 
-    public async Task UpdateHostInformation(HostConfiguration hostConfiguration)
-    {
-        await hostLifecycleService.UpdateHostInformationAsync(hostConfiguration);
-    }
-
     private static string GetDirectoryPath()
     {
         var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);

@@ -5,13 +5,12 @@
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Hosting;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Models;
 using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostInfoMonitorService(IHostConfigurationService hostConfigurationService, IHostInfoService hostInfoService, IHostServiceManager hostServiceManager, IHostLifecycleService hostLifecycleService) : IHostedService
+public class HostInfoMonitorService(IHostConfigurationService hostConfigurationService, IHostInfoService hostInfoService, IHostLifecycleService hostLifecycleService) : IHostedService
 {
     private readonly string _configPath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, hostConfigurationService.ConfigurationFileName);
 
@@ -49,7 +48,7 @@ public class HostInfoMonitorService(IHostConfigurationService hostConfigurationS
 
                 await hostConfigurationService.SaveConfigurationAsync(hostConfiguration, _configPath);
  
-                await hostServiceManager.UpdateHostInformation(hostConfiguration);
+                await hostLifecycleService.UpdateHostInformationAsync(hostConfiguration);
 
                 // TODO: Запросить новый сертификат (исправить возможный костыль)
                 await hostLifecycleService.UnregisterAsync(hostConfiguration);
