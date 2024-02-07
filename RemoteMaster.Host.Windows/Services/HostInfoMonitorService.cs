@@ -11,7 +11,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostInfoMonitorService(IHostConfigurationService hostConfigurationService, IHostInfoService hostInfoService, IHostServiceManager hostServiceManager) : IHostedService
+public class HostInfoMonitorService(IHostConfigurationService hostConfigurationService, IHostInfoService hostInfoService, IHostServiceManager hostServiceManager, IHostLifecycleService hostLifecycleService) : IHostedService
 {
     private readonly string _configPath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, hostConfigurationService.ConfigurationFileName);
 
@@ -48,8 +48,12 @@ public class HostInfoMonitorService(IHostConfigurationService hostConfigurationS
                 hostConfiguration.Host.Name = newHostName;
 
                 await hostConfigurationService.SaveConfigurationAsync(hostConfiguration, _configPath);
-
+ 
                 await hostServiceManager.UpdateHostInformation(hostConfiguration);
+
+                // TODO: Запросить новый сертификат (исправить возможный костыль)
+                await hostLifecycleService.UnregisterAsync(hostConfiguration);
+                await hostLifecycleService.RegisterAsync(hostConfiguration);
             }
             catch (Exception ex)
             {
