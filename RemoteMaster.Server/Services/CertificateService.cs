@@ -48,7 +48,8 @@ public class CertificateService(IOptions<CertificateOptions> options) : ICertifi
             throw new InvalidOperationException("CA certificate does not have an accessible RSA private key.");
         }
 
-        var signatureGenerator = X509SignatureGenerator.CreateForRSA(rsaPrivateKey, RSASignaturePadding.Pkcs1); var notBefore = DateTimeOffset.UtcNow;
+        var signatureGenerator = X509SignatureGenerator.CreateForRSA(rsaPrivateKey, RSASignaturePadding.Pkcs1);
+        var notBefore = DateTimeOffset.UtcNow;
         var notAfter = DateTimeOffset.UtcNow.AddYears(1);
         var serialNumber = GenerateSerialNumber();
 
@@ -62,7 +63,7 @@ public class CertificateService(IOptions<CertificateOptions> options) : ICertifi
         return certificate;
     }
 
-    public static byte[] GenerateSerialNumber()
+    private static byte[] GenerateSerialNumber()
     {
         var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var uuid = Guid.NewGuid().ToByteArray();
