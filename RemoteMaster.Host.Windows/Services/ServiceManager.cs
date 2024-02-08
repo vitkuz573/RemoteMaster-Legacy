@@ -23,51 +23,56 @@ public class ServiceManager : IServiceManager
             ExecuteServiceCommand($"description {serviceConfig.Name} \"{serviceConfig.Description}\"");
         }
 
-        if (serviceConfig.Dependencies != null && serviceConfig.Dependencies.Any())
+        if (serviceConfig.Dependencies == null || !serviceConfig.Dependencies.Any())
         {
-            var dependenciesStr = string.Join("/", serviceConfig.Dependencies);
-            ExecuteServiceCommand($"config {serviceConfig.Name} depend= {dependenciesStr}");
+            return;
         }
+
+        var dependenciesStr = string.Join("/", serviceConfig.Dependencies);
+        ExecuteServiceCommand($"config {serviceConfig.Name} depend= {dependenciesStr}");
     }
 
     public void StartService(string serviceName)
     {
         using var serviceController = new ServiceController(serviceName);
 
-        if (serviceController.Status != ServiceControllerStatus.Running)
+        if (serviceController.Status == ServiceControllerStatus.Running)
         {
-            serviceController.Start();
-            serviceController.WaitForStatus(ServiceControllerStatus.Running);
+            return;
         }
+
+        serviceController.Start();
+        serviceController.WaitForStatus(ServiceControllerStatus.Running);
     }
 
     public void StopService(string serviceName)
     {
         using var serviceController = new ServiceController(serviceName);
 
-        if (serviceController.Status != ServiceControllerStatus.Stopped)
+        if (serviceController.Status == ServiceControllerStatus.Stopped)
         {
-            serviceController.Stop();
-            serviceController.WaitForStatus(ServiceControllerStatus.Stopped);
+            return;
         }
+
+        serviceController.Stop();
+        serviceController.WaitForStatus(ServiceControllerStatus.Stopped);
     }
 
     public void UninstallService(string serviceName) => ExecuteServiceCommand($"delete {serviceName}");
 
     private static void ExecuteServiceCommand(string arguments)
     {
-        using var process = new Process
+        using var process = new Process();
+
+        process.StartInfo = new ProcessStartInfo
         {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = "sc",
-                Arguments = arguments,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                Verb = "runas"
-            }
+            FileName = "sc",
+            Arguments = arguments,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            Verb = "runas"
         };
 
         process.Start();
