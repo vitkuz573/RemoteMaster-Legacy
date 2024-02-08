@@ -120,19 +120,21 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
             {
                 var hostConfiguration = JsonSerializer.Deserialize<HostConfiguration>(File.ReadAllText(sourceConfigPath));
 
-                if (hostConfiguration != null)
+                if (hostConfiguration == null)
                 {
-                    hostConfiguration.Host = new Computer
-                    {
-                        Name = hostName,
-                        IPAddress = ipAddress,
-                        MACAddress = macAddress
-                    };
-
-                    var json = JsonSerializer.Serialize(hostConfiguration, jsonOptions);
-
-                    File.WriteAllText(targetConfigPath, json);
+                    return;
                 }
+
+                hostConfiguration.Host = new Computer
+                {
+                    Name = hostName,
+                    IPAddress = ipAddress,
+                    MACAddress = macAddress
+                };
+
+                var json = JsonSerializer.Serialize(hostConfiguration, jsonOptions);
+
+                File.WriteAllText(targetConfigPath, json);
             }
             catch (Exception ex)
             {
@@ -147,40 +149,42 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
         const int maxRetries = 100;
         var delayOnRetry = 2000;
 
-        if (directoryPath != null && Directory.Exists(directoryPath))
+        if (!Directory.Exists(directoryPath))
         {
-            foreach (var file in Directory.EnumerateFiles(directoryPath))
+            return;
+        }
+
+        foreach (var file in Directory.EnumerateFiles(directoryPath))
+        {
+            WaitForFile(file, maxRetries, delayOnRetry);
+        }
+
+        for (var i = 0; i < maxRetries; ++i)
+        {
+            try
             {
-                WaitForFile(file, maxRetries, delayOnRetry);
+                Directory.Delete(directoryPath, true);
+                Log.Information("{AppName} files deleted successfully.", SubAppName);
+                break;
             }
-
-            for (var i = 0; i < maxRetries; ++i)
+            catch (IOException ex)
             {
-                try
+                if (i < maxRetries - 1)
                 {
-                    Directory.Delete(directoryPath, true);
-                    Log.Information("{AppName} files deleted successfully.", SubAppName);
-                    break;
-                }
-                catch (IOException ex)
-                {
-                    if (i < maxRetries - 1)
-                    {
-                        Log.Warning("Attempt {Attempt}: Deleting {AppName} files failed, retrying in {Delay}ms: {Message}", i + 1, SubAppName, delayOnRetry, ex.Message);
-                        Thread.Sleep(delayOnRetry);
+                    Log.Warning("Attempt {Attempt}: Deleting {AppName} files failed, retrying in {Delay}ms: {Message}", i + 1, SubAppName, delayOnRetry, ex.Message);
+                    Thread.Sleep(delayOnRetry);
 
-                        delayOnRetry *= 2;
-                    }
-                    else
-                    {
-                        Log.Error("Final attempt: Deleting {AppName} files failed: {Message}", SubAppName, ex.Message);
-                    }
+                    delayOnRetry *= 2;
                 }
-                catch (Exception ex)
+                else
                 {
-                    Log.Error("Unexpected error occurred while deleting {AppName} files: {Message}", SubAppName, ex.Message);
-                    break;
+                    Log.Error("Final attempt: Deleting {AppName} files failed: {Message}", SubAppName, ex.Message);
                 }
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Unexpected error occurred while deleting {AppName} files: {Message}", SubAppName, ex.Message);
+                break;
             }
         }
     }
