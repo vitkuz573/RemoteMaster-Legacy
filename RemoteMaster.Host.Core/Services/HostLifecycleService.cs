@@ -179,7 +179,7 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
                 throw new InvalidOperationException("Certificate processing failed.");
             }
 
-            var publicKey = await serverHubService.GetPublicKey();
+            var publicKey = await serverHubService.GetPublicKeyAsync();
 
             if (string.IsNullOrEmpty(publicKey))
             {
