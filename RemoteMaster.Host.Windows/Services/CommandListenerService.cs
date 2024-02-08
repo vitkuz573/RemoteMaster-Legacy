@@ -45,16 +45,16 @@ public class CommandListenerService : IHostedService
                 }
             });
 
-            _connection.Closed += async (error) =>
+            _connection.Closed += async _ =>
             {
-                await Task.Delay(TimeSpan.FromSeconds(5));
-                await _connection.StartAsync();
-                await SafeInvokeAsync(async () => await _connection.InvokeAsync("JoinGroup", "serviceGroup"));
+                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+                await _connection.StartAsync(cancellationToken);
+                await SafeInvokeAsync(async () => await _connection.InvokeAsync("JoinGroup", "serviceGroup", cancellationToken: cancellationToken));
             };
 
-            await _connection.StartAsync();
+            await _connection.StartAsync(cancellationToken);
 
-            await _connection.InvokeAsync("JoinGroup", "serviceGroup");
+            await _connection.InvokeAsync("JoinGroup", "serviceGroup", cancellationToken: cancellationToken);
         }
         catch (Exception ex)
         {
@@ -66,7 +66,7 @@ public class CommandListenerService : IHostedService
     {
         if (_connection != null)
         {
-            await _connection.StopAsync();
+            await _connection.StopAsync(cancellationToken);
         }
     }
 
