@@ -16,7 +16,7 @@ public class DesktopService : IDesktopService
 {
     private CloseDesktopSafeHandle? _lastInputDesktop;
 
-    internal static CloseDesktopSafeHandle OpenInputDesktop() => OpenInputDesktop_SafeHandle(0, true, (DESKTOP_ACCESS_FLAGS)GENERIC_ACCESS_RIGHTS.GENERIC_ALL);
+    private static CloseDesktopSafeHandle OpenInputDesktop() => OpenInputDesktop_SafeHandle(0, true, (DESKTOP_ACCESS_FLAGS)GENERIC_ACCESS_RIGHTS.GENERIC_ALL);
 
     public unsafe bool GetCurrentDesktop([NotNullWhen(true)] out string? desktopName)
     {
@@ -53,13 +53,6 @@ public class DesktopService : IDesktopService
             _lastInputDesktop?.Close();
 
             using var inputDesktop = OpenInputDesktop();
-
-            if (inputDesktop == null)
-            {
-                Log.Warning("Failed to open input desktop.");
-
-                return false;
-            }
 
             var result = SetThreadDesktop(inputDesktop) && SwitchDesktop(inputDesktop);
             _lastInputDesktop = inputDesktop;
