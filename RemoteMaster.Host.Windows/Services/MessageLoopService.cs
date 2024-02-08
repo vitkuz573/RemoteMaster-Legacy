@@ -14,8 +14,8 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class MessageLoopService : IHostedService
 {
-    private const string CLASS_NAME = "HiddenWindowClass";
-    private const int RESTART_DELAY = 50;
+    private const string ClassName = "HiddenWindowClass";
+    private const int RestartDelay = 50;
 
     private HWND _hwnd;
     private readonly WNDPROC _wndProcDelegate;
@@ -34,7 +34,7 @@ public class MessageLoopService : IHostedService
         {
             InitializeWindow();
             StartMessageLoop();
-        });
+        }, cancellationToken);
 
         return Task.CompletedTask;
     }
@@ -48,7 +48,7 @@ public class MessageLoopService : IHostedService
 
     private void InitializeWindow()
     {
-        if (!TryRegisterClass(out _))
+        if (!TryRegisterClass())
         {
             Log.Error("Failed to register the window class.");
 
@@ -67,8 +67,10 @@ public class MessageLoopService : IHostedService
         RegisterForSessionNotifications();
     }
 
-    private bool TryRegisterClass(out ushort classAtom)
+    private bool TryRegisterClass()
     {
+        ushort classAtom;
+
         var wc = new WNDCLASSEXW
         {
             cbSize = (uint)Marshal.SizeOf<WNDCLASSEXW>(),
@@ -77,7 +79,7 @@ public class MessageLoopService : IHostedService
 
         unsafe
         {
-            fixed (char* pClassName = CLASS_NAME)
+            fixed (char* pClassName = ClassName)
             {
                 wc.lpszClassName = pClassName;
                 classAtom = RegisterClassEx(in wc);
@@ -89,7 +91,7 @@ public class MessageLoopService : IHostedService
 
     private static unsafe HWND CreateHiddenWindow()
     {
-        return CreateWindowEx(0, CLASS_NAME, string.Empty, 0, 0, 0, 0, 0, HWND.HWND_MESSAGE, null, null, null);
+        return CreateWindowEx(0, ClassName, string.Empty, 0, 0, 0, 0, 0, HWND.HWND_MESSAGE, null, null, null);
     }
 
     private void RegisterForSessionNotifications()
@@ -106,15 +108,14 @@ public class MessageLoopService : IHostedService
 
     private void StartMessageLoop()
     {
-        MSG msg;
-
-        unsafe
+        while (GetMessage(out var msg, _hwnd, 0, 0))
         {
-            while (GetMessage(out msg, _hwnd, 0, 0))
+            unsafe
             {
                 TranslateMessage(&msg);
-                DispatchMessage(in msg);
             }
+
+            DispatchMessage(in msg);
         }
     }
 
@@ -136,7 +137,7 @@ public class MessageLoopService : IHostedService
 
     private string GetSessionChangeDescription(WPARAM wParam)
     {
-        return (ulong)wParam.Value switch
+        return wParam.Value switch
         {
             WTS_CONSOLE_CONNECT => HandleSessionChange("A session was connected to the console terminal"),
             WTS_CONSOLE_DISCONNECT => HandleSessionChange("A session was disconnected from the console terminal"),
@@ -164,7 +165,7 @@ public class MessageLoopService : IHostedService
 
         while (_userInstanceService.IsRunning)
         {
-            await Task.Delay(RESTART_DELAY);
+            await Task.Delay(RestartDelay);
         }
 
         _userInstanceService.Start();
