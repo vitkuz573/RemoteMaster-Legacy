@@ -13,9 +13,9 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class InputService : IInputService
+public sealed class InputService : IInputService
 {
-    private bool _disposed = false;
+    private bool _disposed;
     private readonly BlockingCollection<Action> _operationQueue;
     private readonly CancellationTokenSource _cts;
     private readonly int _numWorkers;
@@ -76,7 +76,7 @@ public class InputService : IInputService
         }
     }
 
-    public void EnqueueOperation(Action operation)
+    private void EnqueueOperation(Action operation)
     {
         if (InputEnabled)
         {
@@ -92,7 +92,7 @@ public class InputService : IInputService
     {
         lock (_ctsLock)
         {
-            _cts?.Cancel();
+            _cts.Cancel();
         }
     }
 
@@ -119,7 +119,7 @@ public class InputService : IInputService
             var normalizedX = xyPercent.Item1 * 65535D;
             var normalizedY = xyPercent.Item2 * 65535D;
 
-            PrepareAndSendInput(INPUT_TYPE.INPUT_MOUSE, dto, (input, data) =>
+            PrepareAndSendInput(INPUT_TYPE.INPUT_MOUSE, dto, (input, _) =>
             {
                 input.Anonymous.mi = new MOUSEINPUT
                 {
@@ -164,7 +164,7 @@ public class InputService : IInputService
             var normalizedX = xyPercent.Item1 * 65535D;
             var normalizedY = xyPercent.Item2 * 65535D;
 
-            PrepareAndSendInput(INPUT_TYPE.INPUT_MOUSE, dto, (input, data) =>
+            PrepareAndSendInput(INPUT_TYPE.INPUT_MOUSE, dto, (input, _) =>
             {
                 input.Anonymous.mi = new MOUSEINPUT
                 {
@@ -240,7 +240,7 @@ public class InputService : IInputService
         GC.SuppressFinalize(this);
     }
 
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         if (_disposed)
         {
@@ -249,8 +249,12 @@ public class InputService : IInputService
 
         if (disposing)
         {
-            _operationQueue?.Dispose();
-            _cts?.Dispose();
+            _operationQueue.Dispose();
+
+            lock (_ctsLock)
+            {
+                _cts.Dispose();
+            }
         }
 
         _disposed = true;
