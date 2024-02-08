@@ -18,7 +18,7 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
     {
         Log.Information("Executing script with shell: {Shell}", shell);
 
-        var publicDirectory = @"C:\Users\Public";
+        const string publicDirectory = @"C:\Users\Public";
 
         var extension = shell switch
         {
@@ -48,7 +48,7 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
             {
                 Shell.Cmd => $"cmd.exe /c \"{tempFilePath}\"",
                 Shell.PowerShell => $"powershell.exe -ExecutionPolicy Bypass -File \"{tempFilePath}\"",
-                _ => "",
+                _ => throw new ArgumentOutOfRangeException(nameof(shell), shell, null)
             };
 
             using var process = new NativeProcess();
@@ -95,11 +95,9 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
         }
     }
 
-    private static async Task ReadStreamAsync(StreamReader streamReader, IHubContext<ControlHub, IControlClient> hubContext, MessageType messageType)
+    private static async Task ReadStreamAsync(TextReader streamReader, IHubContext<ControlHub, IControlClient> hubContext, MessageType messageType)
     {
-        string? line;
-
-        while ((line = await streamReader.ReadLineAsync()) != null)
+        while (await streamReader.ReadLineAsync() is { } line)
         {
             await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult
             {
