@@ -35,7 +35,7 @@ public class UpdaterService : IUpdaterService
         try
         {
             var sourceFolderPath = Path.Combine(folderPath, "Host");
-            var isNetworkPath = folderPath.StartsWith("\\\\");
+            var isNetworkPath = folderPath.StartsWith(@"\\");
 
             if (isNetworkPath)
             {
@@ -51,54 +51,53 @@ public class UpdaterService : IUpdaterService
                 _networkDriveService.CancelNetworkDrive(folderPath);
             }
 
-            if (isDownloaded)
+            if (!isDownloaded)
             {
-                var contentBuilder = new StringBuilder();
-                contentBuilder.AppendLine($"Stop-Service -Name \"{_hostServiceConfig.Name}\"");
-                contentBuilder.AppendLine($"Get-Process -Id \"{Environment.ProcessId}\" -ErrorAction SilentlyContinue | Stop-Process -Force");
-                contentBuilder.AppendLine("$filesLocked = $true");
-                contentBuilder.AppendLine("while ($filesLocked) {");
-                contentBuilder.AppendLine("    Start-Sleep -Seconds 2");
-                contentBuilder.AppendLine("    $filesLocked = $false");
-                contentBuilder.AppendLine("    Get-ChildItem \"$PSScriptRoot\\Update\" -Recurse | Where-Object { !$_.PSIsContainer } | ForEach-Object {");
-                contentBuilder.AppendLine("        try {");
-                contentBuilder.AppendLine("            $stream = [System.IO.File]::Open($_.FullName, 'Open', 'Write', 'None')");
-                contentBuilder.AppendLine("            $stream.Close()");
-                contentBuilder.AppendLine("        } catch [UnauthorizedAccessException] {");
-                contentBuilder.AppendLine("            Write-Host \"Access denied for file: $($_.FullName). Update for this file is skipped.\" -ForegroundColor Red");
-                contentBuilder.AppendLine("        } catch {");
-                contentBuilder.AppendLine("            $filesLocked = $true");
-                contentBuilder.AppendLine("        }");
-                contentBuilder.AppendLine("    }");
-                contentBuilder.AppendLine("}");
-                contentBuilder.AppendLine("Copy-Item -Path \"$PSScriptRoot\\Update\\*.*\" -Destination $PSScriptRoot -Recurse -Force");
-                contentBuilder.AppendLine("Start-Sleep -Seconds 2");
-                contentBuilder.AppendLine($"Start-Service -Name \"{_hostServiceConfig.Name}\"");
-                contentBuilder.AppendLine("Start-Sleep -Seconds 2");
-                contentBuilder.AppendLine($"Remove-Item -Path \"{_updateFolderPath}\" -Recurse -Force");
-                contentBuilder.AppendLine($"Remove-Item -Path \"{_scriptPath}\" -Force");
-
-                File.WriteAllText(_scriptPath, contentBuilder.ToString());
-                Log.Information("Updater script created at: {ScriptPath}", _scriptPath);
-
-                using var process = new Process
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = "powershell",
-                        Arguments = $"-ExecutionPolicy Bypass -NoProfile -File \"{_scriptPath}\"",
-                        RedirectStandardOutput = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true,
-                    }
-                };
-
-                process.Start();
-                var output = process.StandardOutput.ReadToEnd();
-                process.WaitForExit();
-
-                Log.Information("Executed updater script: {ScriptPath}", _scriptPath);
+                return;
             }
+
+            var contentBuilder = new StringBuilder();
+            contentBuilder.AppendLine($"Stop-Service -Name \"{_hostServiceConfig.Name}\"");
+            contentBuilder.AppendLine($"Get-Process -Id \"{Environment.ProcessId}\" -ErrorAction SilentlyContinue | Stop-Process -Force");
+            contentBuilder.AppendLine("$filesLocked = $true");
+            contentBuilder.AppendLine("while ($filesLocked) {");
+            contentBuilder.AppendLine("    Start-Sleep -Seconds 2");
+            contentBuilder.AppendLine("    $filesLocked = $false");
+            contentBuilder.AppendLine("    Get-ChildItem \"$PSScriptRoot\\Update\" -Recurse | Where-Object { !$_.PSIsContainer } | ForEach-Object {");
+            contentBuilder.AppendLine("        try {");
+            contentBuilder.AppendLine("            $stream = [System.IO.File]::Open($_.FullName, 'Open', 'Write', 'None')");
+            contentBuilder.AppendLine("            $stream.Close()");
+            contentBuilder.AppendLine("        } catch [UnauthorizedAccessException] {");
+            contentBuilder.AppendLine("            Write-Host \"Access denied for file: $($_.FullName). Update for this file is skipped.\" -ForegroundColor Red");
+            contentBuilder.AppendLine("        } catch {");
+            contentBuilder.AppendLine("            $filesLocked = $true");
+            contentBuilder.AppendLine("        }");
+            contentBuilder.AppendLine("    }");
+            contentBuilder.AppendLine("}");
+            contentBuilder.AppendLine("Copy-Item -Path \"$PSScriptRoot\\Update\\*.*\" -Destination $PSScriptRoot -Recurse -Force");
+            contentBuilder.AppendLine("Start-Sleep -Seconds 2");
+            contentBuilder.AppendLine($"Start-Service -Name \"{_hostServiceConfig.Name}\"");
+            contentBuilder.AppendLine("Start-Sleep -Seconds 2");
+            contentBuilder.AppendLine($"Remove-Item -Path \"{_updateFolderPath}\" -Recurse -Force");
+            contentBuilder.AppendLine($"Remove-Item -Path \"{_scriptPath}\" -Force");
+
+            File.WriteAllText(_scriptPath, contentBuilder.ToString());
+            Log.Information("Updater script created at: {ScriptPath}", _scriptPath);
+
+            using var process = new Process();
+
+            process.StartInfo = new ProcessStartInfo
+            {
+                FileName = "powershell",
+                Arguments = $"-ExecutionPolicy Bypass -NoProfile -File \"{_scriptPath}\"",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+
+            process.Start();
+            process.WaitForExit();
+
+            Log.Information("Executed updater script: {ScriptPath}", _scriptPath);
         }
         catch (Exception ex)
         {
@@ -119,29 +118,33 @@ public class UpdaterService : IUpdaterService
         {
             var destPath = Path.Combine(destDirName, file.Name);
 
-            if (!File.Exists(destPath) || overwriteExisting)
+            if (File.Exists(destPath) && !overwriteExisting)
             {
-                try
-                {
-                    file.CopyTo(destPath, true);
-                }
-                catch (Exception)
-                {
-                    return false;
-                }
+                continue;
+            }
+
+            try
+            {
+                file.CopyTo(destPath, true);
+            }
+            catch (Exception)
+            {
+                return false;
             }
         }
 
-        if (copySubDirs)
+        if (!copySubDirs)
         {
-            foreach (var subdir in sourceDir.GetDirectories())
-            {
-                var destSubDir = Path.Combine(destDirName, subdir.Name);
+            return true;
+        }
 
-                if (!DirectoryCopy(subdir.FullName, destSubDir, true, overwriteExisting))
-                {
-                    return false;
-                }
+        foreach (var subdir in sourceDir.GetDirectories())
+        {
+            var destSubDir = Path.Combine(destDirName, subdir.Name);
+
+            if (!DirectoryCopy(subdir.FullName, destSubDir, true, overwriteExisting))
+            {
+                return false;
             }
         }
 
