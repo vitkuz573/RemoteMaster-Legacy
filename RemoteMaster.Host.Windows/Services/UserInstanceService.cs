@@ -13,7 +13,7 @@ namespace RemoteMaster.Host.Windows.Services;
 public class UserInstanceService : IUserInstanceService
 {
     private const string Argument = "--user-instance";
-    private readonly string CurrentExecutablePath = Environment.ProcessPath!;
+    private readonly string _currentExecutablePath = Environment.ProcessPath!;
 
     public bool IsRunning => FindHostProcesses().Any(IsUserInstance);
 
@@ -26,7 +26,7 @@ public class UserInstanceService : IUserInstanceService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error starting new instance of the host. Executable path: {Path}", CurrentExecutablePath);
+            Log.Error(ex, "Error starting new instance of the host. Executable path: {Path}", _currentExecutablePath);
         }
     }
 
@@ -54,7 +54,8 @@ public class UserInstanceService : IUserInstanceService
     private void StartNewInstance()
     {
         using var process = new NativeProcess();
-        process.StartInfo = new NativeProcessStartInfo(CurrentExecutablePath, Argument)
+
+        process.StartInfo = new NativeProcessStartInfo(_currentExecutablePath, Argument)
         {
             TargetSessionId = -1,
             ForceConsoleSession = true,
@@ -64,20 +65,21 @@ public class UserInstanceService : IUserInstanceService
         };
 
         process.Start();
+
         Log.Information("Started a new instance of the host with options: {@Options}", process.StartInfo);
     }
 
     private Process[] FindHostProcesses()
     {
-        var processName = Path.GetFileNameWithoutExtension(CurrentExecutablePath);
+        var processName = Path.GetFileNameWithoutExtension(_currentExecutablePath);
 
         return Process.GetProcessesByName(processName);
     }
 
-    private bool IsUserInstance(Process process)
+    private static bool IsUserInstance(Process process)
     {
         var commandLine = process.GetCommandLine();
 
-        return commandLine != null && commandLine.Contains(Argument);
+        return commandLine.Contains(Argument);
     }
 }
