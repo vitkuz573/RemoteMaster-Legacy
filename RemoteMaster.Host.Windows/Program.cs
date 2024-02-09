@@ -18,7 +18,6 @@ using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Host.Windows.Services;
-using RemoteMaster.Shared.Models;
 using Serilog;
 
 namespace RemoteMaster.Host.Windows;
@@ -156,28 +155,7 @@ internal class Program
 
         if (install)
         {
-            var hostConfigurationService = app.Services.GetRequiredService<IHostConfigurationService>();
             var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
-
-            HostConfiguration hostConfiguration;
-
-            try
-            {
-                hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
-            }
-            catch (Exception ex) when (ex is FileNotFoundException or InvalidDataException)
-            {
-                Log.Error(ex, "Configuration file not found.");
-
-                return;
-            }
-
-            Console.WriteLine(new string('=', 40));
-            Console.WriteLine("INSTALLATION DETAILS:");
-            Console.WriteLine(new string('-', 40));
-            Console.WriteLine($"Server: {hostConfiguration.Server}");
-            Console.WriteLine($"Group: {hostConfiguration.Group}");
-            Console.WriteLine(new string('=', 40));
 
             await hostServiceManager.Install();
 
@@ -186,26 +164,9 @@ internal class Program
 
         if (uninstall)
         {
-            var hostConfigurationService = app.Services.GetRequiredService<IHostConfigurationService>();
             var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
 
-            HostConfiguration hostConfiguration;
-
-            try
-            {
-                var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-                var configurationPath = Path.Combine(programFiles, "RemoteMaster", "Host", hostConfigurationService.ConfigurationFileName);
-
-                hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(configurationPath);
-            }
-            catch (Exception ex) when (ex is FileNotFoundException or InvalidDataException)
-            {
-                Log.Error(ex, "Configuration error.");
-
-                return;
-            }
-
-            await hostServiceManager.Uninstall(hostConfiguration);
+            await hostServiceManager.Uninstall();
 
             return;
         }

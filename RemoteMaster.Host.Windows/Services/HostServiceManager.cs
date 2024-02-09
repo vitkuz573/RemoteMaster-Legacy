@@ -11,7 +11,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHostInfoService hostInfoService, IUserInstanceService userInstanceService, IServiceManager serviceManager, IHostConfigurationService configurationService, IServiceConfiguration hostServiceConfig, JsonSerializerOptions jsonOptions) : IHostServiceManager
+public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHostInfoService hostInfoService, IHostConfigurationService hostConfigurationService, IUserInstanceService userInstanceService, IServiceManager serviceManager, IHostConfigurationService configurationService, IServiceConfiguration hostServiceConfig, JsonSerializerOptions jsonOptions) : IHostServiceManager
 {
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Host";
@@ -60,10 +60,26 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
         }
     }
 
-    public async Task Uninstall(HostConfiguration hostConfiguration)
+    public async Task Uninstall()
     {
         try
         {
+            HostConfiguration hostConfiguration;
+
+            try
+            {
+                var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+                var configurationPath = Path.Combine(programFiles, "RemoteMaster", "Host", hostConfigurationService.ConfigurationFileName);
+
+                hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(configurationPath);
+            }
+            catch (Exception ex) when (ex is FileNotFoundException or InvalidDataException)
+            {
+                Log.Error(ex, "Configuration error.");
+
+                return;
+            }
+
             if (serviceManager.IsServiceInstalled(hostServiceConfig.Name))
             {
                 serviceManager.StopService(hostServiceConfig.Name);
