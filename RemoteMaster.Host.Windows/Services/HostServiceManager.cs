@@ -24,7 +24,21 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
             var ipAddress = hostInformationService.GetIPv4Address();
             var macAddress = hostInformationService.GetMacAddress();
 
-            Log.Information("Starting installation. Host information: HostName = {HostName}, IP Address = {IPAddress}, MAC Address = {MacAddress}", hostName, ipAddress, macAddress);
+            try
+            {
+                var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
+
+                Log.Information("Starting installation...");
+                Log.Information("{MainAppName} Server: {Server}, Group: {Group}", MainAppName, hostConfiguration.Server, hostConfiguration.Group);
+            }
+            catch (Exception ex) when (ex is FileNotFoundException or InvalidDataException)
+            {
+                Log.Error(ex, "Configuration error.");
+
+                return;
+            }
+
+            Log.Information("Host Name: {HostName}, IP Address: {IPAddress}, MAC Address: {MacAddress}", hostName, ipAddress, macAddress);
 
             var directoryPath = GetDirectoryPath();
 
@@ -136,32 +150,34 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
         var sourceConfigPath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, configName);
         var targetConfigPath = Path.Combine(targetDirectoryPath, configName);
 
-        if (File.Exists(sourceConfigPath))
+        if (!File.Exists(sourceConfigPath))
         {
-            try
+            return;
+        }
+
+        try
+        {
+            var hostConfiguration = JsonSerializer.Deserialize<HostConfiguration>(File.ReadAllText(sourceConfigPath));
+
+            if (hostConfiguration == null)
             {
-                var hostConfiguration = JsonSerializer.Deserialize<HostConfiguration>(File.ReadAllText(sourceConfigPath));
-
-                if (hostConfiguration == null)
-                {
-                    return;
-                }
-
-                hostConfiguration.Host = new Computer
-                {
-                    Name = hostName,
-                    IpAddress = ipAddress,
-                    MacAddress = macAddress
-                };
-
-                var json = JsonSerializer.Serialize(hostConfiguration, jsonOptions);
-
-                File.WriteAllText(targetConfigPath, json);
+                return;
             }
-            catch (Exception ex)
+
+            hostConfiguration.Host = new Computer
             {
-                throw new InvalidOperationException($"Failed to copy the configuration file to {targetConfigPath}.", ex);
-            }
+                Name = hostName,
+                IpAddress = ipAddress,
+                MacAddress = macAddress
+            };
+
+            var json = JsonSerializer.Serialize(hostConfiguration, jsonOptions);
+
+            File.WriteAllText(targetConfigPath, json);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Failed to copy the configuration file to {targetConfigPath}.", ex);
         }
     }
 
