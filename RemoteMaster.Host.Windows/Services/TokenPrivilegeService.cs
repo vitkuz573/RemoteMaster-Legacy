@@ -10,7 +10,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class TokenPrivilegeService : ITokenPrivilegeService
 {
-    public unsafe bool AdjustPrivilege(string privilegeName)
+    public bool AdjustPrivilege(string privilegeName)
     {
         ArgumentException.ThrowIfNullOrEmpty(privilegeName);
 
@@ -42,7 +42,10 @@ public class TokenPrivilegeService : ITokenPrivilegeService
                     return false;
                 }
 
-                return AdjustTokenPrivileges(hToken, false, &tkp, 0, null, null);
+                unsafe
+                {
+                    return AdjustTokenPrivileges(hToken, false, &tkp, 0, null, null);
+                }
             }
         }
         catch
