@@ -24,9 +24,7 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
         {
             Log.Information("Starting installation...");
 
-            var hostName = hostInformationService.GetHostName();
-            var ipAddress = hostInformationService.GetIPv4Address();
-            var macAddress = hostInformationService.GetMacAddress();
+            var hostInformation = hostInformationService.GetHostInformation();
 
             try
             {
@@ -41,7 +39,7 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
                 return;
             }
 
-            Log.Information("Host Name: {HostName}, IP Address: {IPAddress}, MAC Address: {MacAddress}", hostName, ipAddress, macAddress);
+            Log.Information("Host Name: {HostName}, IP Address: {IPAddress}, MAC Address: {MacAddress}", hostInformation.Name, hostInformation.IpAddress, hostInformation.MacAddress);
 
             if (serviceManager.IsServiceInstalled(hostServiceConfig.Name))
             {
@@ -61,7 +59,7 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
                 serviceManager.InstallService(hostServiceConfig, $"{hostPath} --service-mode");
             }
 
-            var updatedHostConfiguration = await UpdateConfigurationAsync(hostName, ipAddress, macAddress);
+            var updatedHostConfiguration = await UpdateConfigurationAsync(hostInformation.Name, hostInformation.IpAddress, hostInformation.MacAddress);
 
             serviceManager.StartService(hostServiceConfig.Name);
 

@@ -21,7 +21,7 @@ public class HostInfoMonitorService(IServerHubService serverHubService, IHostCon
         {
             hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(_configPath);
         }
-        catch (Exception ex) when (ex is FileNotFoundException || ex is InvalidDataException)
+        catch (Exception ex) when (ex is FileNotFoundException or InvalidDataException)
         {
             Log.Error(ex, "Error loading configuration.");
             return;
@@ -33,17 +33,15 @@ public class HostInfoMonitorService(IServerHubService serverHubService, IHostCon
             return;
         }
 
-        var newIpAddress = hostInformationService.GetIPv4Address();
-        var newMacAddress = hostInformationService.GetMacAddress();
-        var newHostName = hostInformationService.GetHostName();
+        var hostInformation = hostInformationService.GetHostInformation();
 
-        if (hostConfiguration.Host.IpAddress != newIpAddress || hostConfiguration.Host.MacAddress != newMacAddress || hostConfiguration.Host.Name != newHostName)
+        if (!hostConfiguration.Host.Equals(hostInformation))
         {
             try
             {
-                hostConfiguration.Host.IpAddress = newIpAddress;
-                hostConfiguration.Host.MacAddress = newMacAddress;
-                hostConfiguration.Host.Name = newHostName;
+                hostConfiguration.Host.IpAddress = hostInformation.IpAddress;
+                hostConfiguration.Host.MacAddress = hostInformation.MacAddress;
+                hostConfiguration.Host.Name = hostInformation.Name;
 
                 await hostConfigurationService.SaveConfigurationAsync(hostConfiguration, _configPath);
  

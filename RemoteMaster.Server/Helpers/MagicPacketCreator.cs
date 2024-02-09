@@ -1,29 +1,25 @@
-// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
-// This file is part of the RemoteMaster project.
-// Licensed under the GNU Affero General Public License v3.0.
-
 namespace RemoteMaster.Server.Helpers;
 
 public static class MagicPacketCreator
 {
-    private const int MacAddressLength = 17;
     private const int MacAddressByteLength = 6;
 
     public static byte[] Create(string macAddress)
     {
         ArgumentException.ThrowIfNullOrEmpty(macAddress);
 
-        if (macAddress.Length != MacAddressLength)
+        var cleanMac = RemoveNonHexCharacters(macAddress);
+
+        if (cleanMac.Length != MacAddressByteLength * 2)
         {
-            throw new ArgumentException("Invalid MAC address length. Expected 17 characters.");
+            throw new ArgumentException($"Invalid MAC address length. Expected 12 hex characters, got {cleanMac.Length}.");
         }
 
-        var normalizedMac = NormalizeMacAddress(macAddress);
-        var macBytes = Convert.FromHexString(normalizedMac.Replace(":", ""));
+        var macBytes = Convert.FromHexString(cleanMac);
 
         if (macBytes.Length != MacAddressByteLength)
         {
-            throw new ArgumentException("Invalid MAC address. Expected 6 segments.");
+            throw new ArgumentException("Invalid MAC address. Expected 6 bytes after conversion.");
         }
 
         var packet = new byte[17 * MacAddressByteLength];
@@ -41,8 +37,8 @@ public static class MagicPacketCreator
         return packet;
     }
 
-    private static string NormalizeMacAddress(string macAddress)
+    private static string RemoveNonHexCharacters(string input)
     {
-        return macAddress.ToUpper().Replace('-', ':');
+        return string.Concat(input.Where(c => c is >= '0' and <= '9' or >= 'A' and <= 'F' or >= 'a' and <= 'f'));
     }
 }

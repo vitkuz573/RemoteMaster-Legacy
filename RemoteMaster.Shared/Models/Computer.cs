@@ -8,7 +8,7 @@ using System.Text.Json.Serialization;
 
 namespace RemoteMaster.Shared.Models;
 
-public class Computer : Node
+public class Computer : Node, IEquatable<Computer>
 {
     [JsonPropertyName("ipAddress")]
     public required string IpAddress { get; set; }
@@ -34,4 +34,18 @@ public class Computer : Node
             return false;
         }
     }
+
+    public bool Equals(Computer? other)
+    {
+        if (other == null)
+        {
+            return false;
+        }
+
+        return IpAddress == other.IpAddress && MacAddress == other.MacAddress && Name == other.Name;
+    }
+
+    public override bool Equals(object? obj) => Equals(obj as Computer);
+
+    public override int GetHashCode() => HashCode.Combine(IpAddress, MacAddress, Name);
 }
