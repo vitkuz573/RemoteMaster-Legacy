@@ -49,10 +49,20 @@ public class DatabaseService(NodesDbContext context) : IDatabaseService
     {
         ArgumentNullException.ThrowIfNull(computer);
 
-        computer.IpAddress = ipAddress;
-        computer.Name = hostName;
+        var trackedComputer = context.Nodes.Local
+            .OfType<Computer>()
+            .FirstOrDefault(c => c.NodeId == computer.NodeId);
 
-        context.Nodes.Update(computer);
+        if (trackedComputer == null)
+        {
+            context.Nodes.Attach(computer);
+        }
+
+        context.Entry(computer).Property("IpAddress").CurrentValue = ipAddress;
+        context.Entry(computer).Property("Name").CurrentValue = hostName;
+
+        context.Entry(computer).Property("IpAddress").IsModified = true;
+        context.Entry(computer).Property("Name").IsModified = true;
 
         await context.SaveChangesAsync();
     }

@@ -39,15 +39,11 @@ public class HostInfoMonitorService(IServerHubService serverHubService, IHostCon
         {
             try
             {
-                hostConfiguration.Host.IpAddress = hostInformation.IpAddress;
-                hostConfiguration.Host.MacAddress = hostInformation.MacAddress;
-                hostConfiguration.Host.Name = hostInformation.Name;
+                hostConfiguration.Host = hostInformation;
 
                 await hostConfigurationService.SaveConfigurationAsync(hostConfiguration, _configPath);
  
                 await hostLifecycleService.UpdateHostInformationAsync(hostConfiguration);
-
-                // TODO: Запросить новый сертификат (исправить возможный костыль)
                 await hostLifecycleService.UnregisterAsync(hostConfiguration);
                 await hostLifecycleService.RegisterAsync(hostConfiguration);
             }
