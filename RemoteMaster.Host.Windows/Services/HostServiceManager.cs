@@ -20,6 +20,8 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
     {
         try
         {
+            Log.Information("Starting installation...");
+
             var hostName = hostInformationService.GetHostName();
             var ipAddress = hostInformationService.GetIPv4Address();
             var macAddress = hostInformationService.GetMacAddress();
@@ -28,7 +30,6 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
             {
                 var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
 
-                Log.Information("Starting installation...");
                 Log.Information("{MainAppName} Server: {Server}, Group: {Group}", MainAppName, hostConfiguration.Server, hostConfiguration.Group);
             }
             catch (Exception ex) when (ex is FileNotFoundException or InvalidDataException)
