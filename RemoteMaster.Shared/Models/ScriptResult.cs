@@ -6,11 +6,11 @@ namespace RemoteMaster.Shared.Models;
 
 public class ScriptResult
 {
-    public string Message { get; set; }
+    public string Message { get; init; }
 
     public MessageType Type { get; set; }
 
-    public string? Meta { get; set; }
+    public string? Meta { get; init; }
 
     public enum MessageType
     {

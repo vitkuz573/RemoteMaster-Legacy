@@ -6,13 +6,13 @@ namespace RemoteMaster.Shared.Models;
 
 public class ProcessInfo
 {
-    public int Id { get; set; }
+    public int Id { get; init; }
 
-    public string Name { get; set; }
+    public string Name { get; init; }
 
-    public long MemoryUsage { get; set; }
+    public long MemoryUsage { get; init; }
 
     public string ProcessPath { get; set; }
 
-    public byte[]? Icon { get; set; }
+    public byte[]? Icon { get; init; }
 }

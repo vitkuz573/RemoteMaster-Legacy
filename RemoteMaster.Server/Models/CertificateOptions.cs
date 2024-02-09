@@ -6,7 +6,7 @@ namespace RemoteMaster.Server.Models;
 
 public class CertificateOptions
 {
-    public string PfxPath { get; set; }
+    public string PfxPath { get; init; }
 
-    public string PfxPassword { get; set; }
+    public string PfxPassword { get; init; }
 }

@@ -93,7 +93,7 @@ public partial class MoveDialog
 
         foreach (var host in unavailableHosts)
         {
-            var existingRequest = changeRequests.FirstOrDefault(r => r.MACAddress == host.MACAddress);
+            var existingRequest = changeRequests.FirstOrDefault(r => r.MacAddress == host.MacAddress);
 
             if (existingRequest != null)
             {
@@ -101,7 +101,7 @@ public partial class MoveDialog
             }
             else
             {
-                changeRequests.Add(new GroupChangeRequest(host.MACAddress, targetGroup));
+                changeRequests.Add(new GroupChangeRequest(host.MacAddress, targetGroup));
             }
         }
 

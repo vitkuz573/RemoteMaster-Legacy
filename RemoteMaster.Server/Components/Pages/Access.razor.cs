@@ -118,7 +118,7 @@ public partial class Access : IDisposable
     private async Task<PointD> GetRelativeMousePositionPercentAsync(MouseEventArgs e)
     {
         var imgElement = await JSRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", "screenImage");
-        var imgPosition = await imgElement.InvokeAsync<DOMRect>("getBoundingClientRect");
+        var imgPosition = await imgElement.InvokeAsync<DomRect>("getBoundingClientRect");
         var percentX = (e.ClientX - imgPosition.Left) / imgPosition.Width;
         var percentY = (e.ClientY - imgPosition.Top) / imgPosition.Height;
 

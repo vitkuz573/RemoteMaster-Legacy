@@ -33,16 +33,16 @@ public class HostInfoMonitorService(IServerHubService serverHubService, IHostCon
             return;
         }
 
-        var newIPAddress = hostInfoService.GetIPv4Address();
-        var newMACAddress = hostInfoService.GetMacAddress();
+        var newIpAddress = hostInfoService.GetIPv4Address();
+        var newMacAddress = hostInfoService.GetMacAddress();
         var newHostName = hostInfoService.GetHostName();
 
-        if (hostConfiguration.Host.IPAddress != newIPAddress || hostConfiguration.Host.MACAddress != newMACAddress || hostConfiguration.Host.Name != newHostName)
+        if (hostConfiguration.Host.IpAddress != newIpAddress || hostConfiguration.Host.MacAddress != newMacAddress || hostConfiguration.Host.Name != newHostName)
         {
             try
             {
-                hostConfiguration.Host.IPAddress = newIPAddress;
-                hostConfiguration.Host.MACAddress = newMACAddress;
+                hostConfiguration.Host.IpAddress = newIpAddress;
+                hostConfiguration.Host.MacAddress = newMacAddress;
                 hostConfiguration.Host.Name = newHostName;
 
                 await hostConfigurationService.SaveConfigurationAsync(hostConfiguration, _configPath);
@@ -67,14 +67,14 @@ public class HostInfoMonitorService(IServerHubService serverHubService, IHostCon
         {
             await serverHubService.ConnectAsync(hostConfiguration.Server);
 
-            var newGroup = await serverHubService.GetNewGroupIfChangeRequested(hostConfiguration.Host.MACAddress);
+            var newGroup = await serverHubService.GetNewGroupIfChangeRequested(hostConfiguration.Host.MacAddress);
 
             if (!string.IsNullOrEmpty(newGroup))
             {
                 hostConfiguration.Group = newGroup;
                 await hostConfigurationService.SaveConfigurationAsync(hostConfiguration, _configPath);
                 Log.Information("Group for this device was updated based on the group change request.");
-                await serverHubService.AcknowledgeGroupChange(hostConfiguration.Host.MACAddress);
+                await serverHubService.AcknowledgeGroupChange(hostConfiguration.Host.MacAddress);
             }
         }
         catch (Exception ex)

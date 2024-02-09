@@ -6,11 +6,11 @@ namespace RemoteMaster.Shared.Dtos;
 
 public class MouseClickDto
 {
-    public long Button { get; set; }
+    public long Button { get; init; }
 
-    public bool Pressed { get; set; }
+    public bool Pressed { get; init; }
 
-    public double X { get; set; }
+    public double X { get; init; }
 
-    public double Y { get; set; }
+    public double Y { get; init; }
 }

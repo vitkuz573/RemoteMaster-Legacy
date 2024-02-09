@@ -31,7 +31,7 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
             var ipAddresses = new List<string>
             {
-                hostConfiguration.Host.IPAddress
+                hostConfiguration.Host.IpAddress
             };
 
             var subjectName = subjectService.GetDistinguishedName(hostConfiguration.Host.Name);

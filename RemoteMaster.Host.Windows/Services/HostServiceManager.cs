@@ -128,8 +128,8 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
                 hostConfiguration.Host = new Computer
                 {
                     Name = hostName,
-                    IPAddress = ipAddress,
-                    MACAddress = macAddress
+                    IpAddress = ipAddress,
+                    MacAddress = macAddress
                 };
 
                 var json = JsonSerializer.Serialize(hostConfiguration, jsonOptions);
@@ -214,8 +214,8 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
         hostConfiguration.Host ??= new Computer
         {
             Name = hostName,
-            IPAddress = ipAddress,
-            MACAddress = macAddress
+            IpAddress = ipAddress,
+            MacAddress = macAddress
         };
 
         var updatedJson = JsonSerializer.Serialize(hostConfiguration, jsonOptions);

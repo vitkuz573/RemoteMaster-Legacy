@@ -8,7 +8,7 @@ namespace RemoteMaster.Server.Models;
 
 public class ComputerResults
 {
-    public StringBuilder Messages { get; set; } = new();
+    public StringBuilder Messages { get; } = new();
 
-    public int? LastPID { get; set; }
+    public int? LastPid { get; set; }
 }

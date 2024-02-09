@@ -6,7 +6,7 @@ namespace RemoteMaster.Shared.Models;
 
 public class GroupChangeRequest(string macAddress, string newGroup)
 {
-    public string MACAddress { get; set; } = macAddress;
+    public string MacAddress { get; } = macAddress;
 
     public string NewGroup { get; set; } = newGroup;
 }

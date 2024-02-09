@@ -20,9 +20,9 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddLogging(builder =>
+builder.Services.AddLogging(loggingBuilder =>
 {
-    builder.ClearProviders();
+    loggingBuilder.ClearProviders();
 });
 
 // Add services to the container.
@@ -56,7 +56,6 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
 builder.Services.AddHttpClient();
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
-builder.Services.AddTransient<IHostConfigurationService, HostConfigurationService>();
 builder.Services.AddScoped<IQueryParameterService, QueryParameterService>();
 builder.Services.AddScoped<IDatabaseService, DatabaseService>();
 builder.Services.AddScoped<IComputerCommandService, ComputerCommandService>();
@@ -79,7 +78,7 @@ builder.Services.Configure<ApplicationSettings>(builder.Configuration);
 
 builder.Services.AddMudServices();
 
-builder.Host.UseSerilog((context, configuration) =>
+builder.Host.UseSerilog((_, configuration) =>
 {
     configuration.MinimumLevel.Debug();
     configuration.WriteTo.Console();

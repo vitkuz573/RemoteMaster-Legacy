@@ -6,7 +6,7 @@
             <MudExpansionPanel Text="Click to view affected hosts" Class="mb-5">
                 @foreach (var (computer, connection) in Hosts)
                 {
-                    <MudText>@computer.Name (@computer.IPAddress)</MudText>
+                    <MudText>@computer.Name (@computer.IpAddress)</MudText>
                 }
             </MudExpansionPanel>
         </MudExpansionPanels>

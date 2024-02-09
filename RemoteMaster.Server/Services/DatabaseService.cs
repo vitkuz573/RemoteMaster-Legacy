@@ -49,7 +49,7 @@ public class DatabaseService(NodesDbContext context) : IDatabaseService
     {
         if (computer != null)
         {
-            computer.IPAddress = ipAddress;
+            computer.IpAddress = ipAddress;
             computer.Name = hostName;
 
             context.Nodes.Update(computer);

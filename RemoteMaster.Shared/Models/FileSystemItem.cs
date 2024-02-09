@@ -6,11 +6,11 @@ namespace RemoteMaster.Shared.Models;
 
 public class FileSystemItem
 {
-    public string Name { get; set; }
+    public string Name { get; init; }
 
-    public FileSystemItemType Type { get; set; }
+    public FileSystemItemType Type { get; init; }
 
-    public long Size { get; set; }
+    public long Size { get; init; }
 
     public enum FileSystemItemType
     {

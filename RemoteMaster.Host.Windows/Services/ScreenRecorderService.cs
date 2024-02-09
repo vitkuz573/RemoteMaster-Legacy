@@ -31,13 +31,11 @@ public class ScreenRecorderService(IScreenCapturerService screenCapturerService)
 
     public async Task StopRecordingAsync()
     {
-        if (_recordingTask != null)
-        {
-            _cancellationTokenSource.Cancel();
-            await _recordingTask;
-            _cancellationTokenSource = new CancellationTokenSource();
-            _recordingTask = Task.CompletedTask;
-        }
+        await _cancellationTokenSource.CancelAsync();
+        await _recordingTask;
+
+        _cancellationTokenSource = new CancellationTokenSource();
+        _recordingTask = Task.CompletedTask;
     }
 
     private async Task RecordVideo(string outputPath, CancellationToken cancellationToken)

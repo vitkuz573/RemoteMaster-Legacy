@@ -109,12 +109,12 @@ public partial class Home
 
     private async Task UpdateComputerThumbnailAsync(Computer computer)
     {
-        Log.Information("UpdateComputerThumbnailAsync Called for {IPAddress}", computer.IPAddress);
+        Log.Information("UpdateComputerThumbnailAsync Called for {IPAddress}", computer.IpAddress);
 
         var accessToken = HttpContextAccessor.HttpContext?.Request.Cookies["accessToken"];
 
         var connection = new HubConnectionBuilder()
-            .WithUrl($"https://{computer.IPAddress}:5001/hubs/control", options =>
+            .WithUrl($"https://{computer.IpAddress}:5001/hubs/control", options =>
             {
                 options.Headers.Add("Authorization", $"Bearer {accessToken}");
             })
@@ -134,12 +134,12 @@ public partial class Home
 
             await connection.StartAsync();
 
-            Log.Information("Calling ConnectAs with Intention.GetThumbnail for {IPAddress}", computer.IPAddress);
+            Log.Information("Calling ConnectAs with Intention.GetThumbnail for {IPAddress}", computer.IpAddress);
             await connection.InvokeAsync("ConnectAs", Intention.ReceiveThumbnail);
         }
         catch (Exception ex)
         {
-            Log.Error("Exception in UpdateComputerThumbnailAsync for {IPAddress}: {Message}", computer.IPAddress, ex.Message);
+            Log.Error("Exception in UpdateComputerThumbnailAsync for {IPAddress}: {Message}", computer.IpAddress, ex.Message);
         }
     }
 
@@ -194,7 +194,7 @@ public partial class Home
     {
         foreach (var computer in _selectedComputers)
         {
-            await OpenWindow($"/{computer.IPAddress}/taskmanager");
+            await OpenWindow($"/{computer.IpAddress}/taskmanager");
         }
     }
 
@@ -202,7 +202,7 @@ public partial class Home
     {
         foreach (var computer in _selectedComputers)
         {
-            await OpenWindow($"/{computer.IPAddress}/filemanager");
+            await OpenWindow($"/{computer.IpAddress}/filemanager");
         }
     }
 
@@ -370,7 +370,7 @@ public partial class Home
                 var accessToken = HttpContextAccessor.HttpContext?.Request.Cookies["accessToken"];
 
                 connection = new HubConnectionBuilder()
-                    .WithUrl($"https://{computer.IPAddress}:5001/hubs/control", options =>
+                    .WithUrl($"https://{computer.IpAddress}:5001/hubs/control", options =>
                     {
                         options.Headers.Add("Authorization", $"Bearer {accessToken}");
                     })

@@ -10,7 +10,7 @@ namespace RemoteMaster.Shared.Models;
 public abstract class Node
 {
     [JsonIgnore]
-    public Guid NodeId { get; set; }
+    public Guid NodeId { get; init; }
 
     [JsonPropertyName("name")]
     public required string Name { get; set; }
@@ -20,7 +20,7 @@ public abstract class Node
 
     [JsonIgnore]
     [ForeignKey(nameof(ParentId))]
-    public Node? Parent { get; set; }
+    public Node? Parent { get; init; }
 
     [JsonIgnore]
     [InverseProperty(nameof(Parent))]

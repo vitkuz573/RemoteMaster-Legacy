@@ -31,7 +31,7 @@ public partial class PowerDialog
         {
             foreach (var (computer, connection) in Hosts)
             {
-                WakeOnLanService.WakeUp(computer.MACAddress);
+                WakeOnLanService.WakeUp(computer.MacAddress);
             }
         }
 

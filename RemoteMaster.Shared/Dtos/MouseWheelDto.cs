@@ -6,5 +6,5 @@ namespace RemoteMaster.Shared.Dtos;
 
 public class MouseWheelDto
 {
-    public int DeltaY { get; set; }
+    public int DeltaY { get; init; }
 }

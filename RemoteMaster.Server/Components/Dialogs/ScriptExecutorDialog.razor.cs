@@ -58,7 +58,7 @@ public partial class ScriptExecutorDialog
 
         if (scriptResult.Meta == "pid")
         {
-            results.LastPID = int.Parse(scriptResult.Message);
+            results.LastPid = int.Parse(scriptResult.Message);
         }
         else
         {
@@ -93,7 +93,7 @@ public partial class ScriptExecutorDialog
         {
             foreach (var (computer, results) in _resultsPerComputer)
             {
-                var fileName = $"results_{computer.Name}_{computer.IPAddress}.txt";
+                var fileName = $"results_{computer.Name}_{computer.IpAddress}.txt";
                 var fileContent = results.ToString();
 
                 var zipEntry = archive.CreateEntry(fileName, CompressionLevel.Fastest);

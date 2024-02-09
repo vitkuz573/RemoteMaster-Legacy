@@ -33,7 +33,7 @@ public class ServerHubService : IServerHubService
 
     public void OnReceiveCertificate(Action<byte[]> onReceiveCertificate)
     {
-        _hubConnection.On<byte[]>("ReceiveCertificate", certificateBytes => onReceiveCertificate(certificateBytes));
+        _hubConnection.On<byte[]>("ReceiveCertificate", onReceiveCertificate);
     }
 
     public async Task<bool> RegisterHostAsync(HostConfiguration hostConfiguration, byte[] signingRequest)

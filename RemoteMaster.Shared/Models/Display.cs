@@ -8,9 +8,9 @@ namespace RemoteMaster.Shared.Models;
 
 public class Display
 {
-    public required string Name { get; set; }
+    public required string Name { get; init; }
 
-    public required bool IsPrimary { get; set; }
+    public required bool IsPrimary { get; init; }
 
-    public required Size Resolution { get; set; }
+    public required Size Resolution { get; init; }
 }

@@ -38,19 +38,19 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             await databaseService.AddNodeAsync(folder);
         }
 
-        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId)).FirstOrDefault(c => c.MACAddress == hostConfiguration.Host.MACAddress);
+        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId)).FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
 
         if (existingComputer != null)
         {
-            await databaseService.UpdateComputerAsync(existingComputer, hostConfiguration.Host.IPAddress, hostConfiguration.Host.Name);
+            await databaseService.UpdateComputerAsync(existingComputer, hostConfiguration.Host.IpAddress, hostConfiguration.Host.Name);
         }
         else
         {
             var computer = new Computer
             {
                 Name = hostConfiguration.Host.Name,
-                IPAddress = hostConfiguration.Host.IPAddress,
-                MACAddress = hostConfiguration.Host.MACAddress,
+                IpAddress = hostConfiguration.Host.IpAddress,
+                MacAddress = hostConfiguration.Host.MacAddress,
                 Parent = folder
             };
 
@@ -64,7 +64,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
-        if (hostConfiguration.Host == null || string.IsNullOrWhiteSpace(hostConfiguration.Host.MACAddress))
+        if (hostConfiguration.Host == null || string.IsNullOrWhiteSpace(hostConfiguration.Host.MacAddress))
         {
             throw new ArgumentException("Host configuration must have a non-null Host property with a valid MAC address.", nameof(hostConfiguration));
         }
@@ -78,7 +78,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             return false;
         }
 
-        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId)).FirstOrDefault(c => c.MACAddress == hostConfiguration.Host.MACAddress);
+        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId)).FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
 
         if (existingComputer != null)
         {
@@ -95,7 +95,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         }
         else
         {
-            Log.Warning("Unregistration failed: Computer with MAC address '{MACAddress}' not found in folder '{Group}'.", hostConfiguration.Host.MACAddress, hostConfiguration.Group);
+            Log.Warning("Unregistration failed: Computer with MAC address '{MACAddress}' not found in folder '{Group}'.", hostConfiguration.Host.MacAddress, hostConfiguration.Group);
             
             return false;
         }
@@ -117,11 +117,11 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             return false;
         }
 
-        var computer = (await databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId)).FirstOrDefault(c => c.MACAddress == hostConfiguration.Host.MACAddress);
+        var computer = (await databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId)).FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
 
         if (computer != null)
         {
-            await databaseService.UpdateComputerAsync(computer, hostConfiguration.Host.IPAddress, hostConfiguration.Host.Name);
+            await databaseService.UpdateComputerAsync(computer, hostConfiguration.Host.IpAddress, hostConfiguration.Host.Name);
 
             return true;
         }
@@ -138,14 +138,14 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             throw new ArgumentException("Host configuration must have a non-null Host property.", nameof(hostConfiguration));
         }
 
-        if (string.IsNullOrWhiteSpace(hostConfiguration.Host.MACAddress))
+        if (string.IsNullOrWhiteSpace(hostConfiguration.Host.MacAddress))
         {
-            throw new ArgumentNullException(hostConfiguration.Host.MACAddress);
+            throw new ArgumentNullException(hostConfiguration.Host.MacAddress);
         }
 
         try
         {
-            var nodes = await databaseService.GetNodesAsync(n => n is Computer && ((Computer)n).MACAddress == hostConfiguration.Host.MACAddress);
+            var nodes = await databaseService.GetNodesAsync(n => n is Computer && ((Computer)n).MacAddress == hostConfiguration.Host.MacAddress);
             var computers = nodes.OfType<Computer>();
 
             var isRegistered = computers.Any();
@@ -197,7 +197,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         {
             var json = await File.ReadAllTextAsync(groupChangeRequestsPath);
             var changeRequests = JsonSerializer.Deserialize<List<GroupChangeRequest>>(json) ?? [];
-            var request = changeRequests.FirstOrDefault(r => r.MACAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
+            var request = changeRequests.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
 
             if (request != null)
             {
@@ -220,7 +220,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             var json = await File.ReadAllTextAsync(groupChangeRequestsPath);
             var changeRequests = JsonSerializer.Deserialize<List<GroupChangeRequest>>(json) ?? [];
 
-            var requestToRemove = changeRequests.FirstOrDefault(r => r.MACAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
+            var requestToRemove = changeRequests.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
 
             if (requestToRemove != null)
             {

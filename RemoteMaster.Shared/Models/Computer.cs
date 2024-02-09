@@ -11,10 +11,10 @@ namespace RemoteMaster.Shared.Models;
 public class Computer : Node
 {
     [JsonPropertyName("ipAddress")]
-    public required string IPAddress { get; set; }
+    public required string IpAddress { get; set; }
 
     [JsonPropertyName("macAddress")]
-    public required string MACAddress { get; set; }
+    public required string MacAddress { get; set; }
 
     [JsonIgnore]
     [NotMapped]
@@ -25,7 +25,7 @@ public class Computer : Node
         try
         {
             using var ping = new Ping();
-            var reply = await ping.SendPingAsync(IPAddress, 1000);
+            var reply = await ping.SendPingAsync(IpAddress, 1000);
 
             return reply.Status == IPStatus.Success;
         }

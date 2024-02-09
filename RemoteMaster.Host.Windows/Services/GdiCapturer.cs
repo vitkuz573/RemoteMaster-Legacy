@@ -49,14 +49,7 @@ public class GdiCapturer : ScreenCapturerService
     {
         try
         {
-            if (SelectedScreen == VIRTUAL_SCREEN)
-            {
-                return GetVirtualScreenFrame();
-            }
-            else
-            {
-                return GetSingleScreenFrame();
-            }
+            return SelectedScreen == VIRTUAL_SCREEN ? GetVirtualScreenFrame() : GetSingleScreenFrame();
         }
         catch (Exception ex)
         {
@@ -65,7 +58,7 @@ public class GdiCapturer : ScreenCapturerService
         }
     }
 
-    private byte[]? CaptureScreen(int width, int height, int left, int top)
+    private byte[] CaptureScreen(int width, int height, int left, int top)
     {
         if (_bitmap.Width != width || _bitmap.Height != height)
         {
@@ -97,12 +90,12 @@ public class GdiCapturer : ScreenCapturerService
         return SaveBitmap(_bitmap);
     }
 
-    private byte[]? GetVirtualScreenFrame()
+    private byte[] GetVirtualScreenFrame()
     {
         return CaptureScreen(VirtualScreenBounds.Width, VirtualScreenBounds.Height, VirtualScreenBounds.Left, VirtualScreenBounds.Top);
     }
 
-    private byte[]? GetSingleScreenFrame()
+    private byte[] GetSingleScreenFrame()
     {
         return CaptureScreen(CurrentScreenBounds.Width, CurrentScreenBounds.Height, CurrentScreenBounds.Left, CurrentScreenBounds.Top);
     }
@@ -150,14 +143,7 @@ public class GdiCapturer : ScreenCapturerService
 
     protected override void RefreshCurrentScreenBounds()
     {
-        if (SelectedScreen == VIRTUAL_SCREEN)
-        {
-            CurrentScreenBounds = VirtualScreenBounds;
-        }
-        else
-        {
-            CurrentScreenBounds = Screen.AllScreens[Screens[SelectedScreen]].Bounds;
-        }
+        CurrentScreenBounds = SelectedScreen == VIRTUAL_SCREEN ? VirtualScreenBounds : Screen.AllScreens[Screens[SelectedScreen]].Bounds;
 
         RaiseScreenChangedEvent(CurrentScreenBounds);
 
@@ -167,6 +153,6 @@ public class GdiCapturer : ScreenCapturerService
     public override void Dispose()
     {
         base.Dispose();
-        _bitmap?.Dispose();
+        _bitmap.Dispose();
     }
 }

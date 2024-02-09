@@ -6,6 +6,6 @@ namespace RemoteMaster.Server.Models;
 
 public class ApplicationSettings
 {
-    public string ExecutablesRoot { get; set; }
+    public string ExecutablesRoot { get; init; }
 }
 

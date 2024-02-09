@@ -4,13 +4,13 @@
 
 namespace RemoteMaster.Server.Models;
 
-public class DOMRect
+public class DomRect
 {
-    public double Left { get; set; }
+    public double Left { get; init; }
 
-    public double Top { get; set; }
+    public double Top { get; init; }
 
-    public double Width { get; set; }
+    public double Width { get; init; }
 
-    public double Height { get; set; }
+    public double Height { get; init; }
 }

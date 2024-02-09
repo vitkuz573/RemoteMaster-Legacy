@@ -35,8 +35,8 @@ public partial class OpenShellDialog
                 var sParameter = _selectedUser == "System" ? "-s" : "";
                 var command = _selectedShell switch
                 {
-                    Shell.Cmd => @$"/C psexec \\{computer.IPAddress} {sParameter} -nobanner -accepteula cmd",
-                    Shell.PowerShell => @$"/C psexec \\{computer.IPAddress} {sParameter} -nobanner -accepteula powershell",
+                    Shell.Cmd => @$"/C psexec \\{computer.IpAddress} {sParameter} -nobanner -accepteula cmd",
+                    Shell.PowerShell => @$"/C psexec \\{computer.IpAddress} {sParameter} -nobanner -accepteula powershell",
                     _ => throw new InvalidOperationException($"Unknown shell: {_selectedShell}")
                 };
 
