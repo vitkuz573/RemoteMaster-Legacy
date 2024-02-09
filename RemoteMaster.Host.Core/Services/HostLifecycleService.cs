@@ -12,7 +12,7 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class HostLifecycleService(IServerHubService serverHubService, ICertificateRequestService certificateRequestService, ISubjectService subjectService) : IHostLifecycleService
 {
-    private volatile bool _isRegistrationInvoked = false;
+    private volatile bool _isRegistrationInvoked;
 
     public async Task RegisterAsync(HostConfiguration hostConfiguration)
     {
@@ -129,11 +129,13 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
         var securityDirectory = Path.Combine(programData, "RemoteMaster", "Security");
 
-        if (!Directory.Exists(securityDirectory))
+        if (Directory.Exists(securityDirectory))
         {
-            Directory.CreateDirectory(securityDirectory);
-            Log.Debug("Security directory created at {DirectoryPath}.", securityDirectory);
+            return securityDirectory;
         }
+
+        Directory.CreateDirectory(securityDirectory);
+        Log.Debug("Security directory created at {DirectoryPath}.", securityDirectory);
 
         return securityDirectory;
     }
@@ -153,7 +155,7 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
             Log.Information("Certificate received with Serial Number: {SerialNumber}.", certificate.SerialNumber);
 
             var pfxFilePath = Path.Combine(securityDirectory, "certificate.pfx");
-            var pfxPassword = "YourPfxPassword";
+            const string pfxPassword = "YourPfxPassword";
             CreatePfxFile(certificateBytes, rsaKeyPair, pfxFilePath, pfxPassword);
 
             Log.Information("PFX file saved successfully at {Path}.", pfxFilePath);
