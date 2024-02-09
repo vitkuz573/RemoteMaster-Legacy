@@ -35,7 +35,7 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
             };
 
             var subjectName = subjectService.GetDistinguishedName(hostConfiguration.Host.Name);
-            var csr = certificateRequestService.GenerateCSR(subjectName, ipAddresses, out rsaKeyPair);
+            var csr = certificateRequestService.GenerateSigningRequest(subjectName, ipAddresses, out rsaKeyPair);
             var signingRequest = csr.CreateSigningRequest();
 
             var securityDirectory = EnsureSecurityDirectoryExists();

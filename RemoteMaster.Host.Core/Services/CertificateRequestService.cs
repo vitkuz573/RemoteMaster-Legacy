@@ -12,7 +12,7 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class CertificateRequestService : ICertificateRequestService
 {
-    public CertificateRequest GenerateCSR(X500DistinguishedName subjectName, List<string> ipAddresses, out RSA rsaKeyPair)
+    public CertificateRequest GenerateSigningRequest(X500DistinguishedName subjectName, List<string> ipAddresses, out RSA rsaKeyPair)
     {
         ArgumentNullException.ThrowIfNull(subjectName);
         ArgumentNullException.ThrowIfNull(ipAddresses);

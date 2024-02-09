@@ -11,7 +11,7 @@ namespace RemoteMaster.Host.Core.Extensions;
 
 public static class WebApplicationBuilderExtensions
 {
-    public static WebApplicationBuilder ConfigureCoreUrls(this WebApplicationBuilder builder)
+    public static void ConfigureCoreUrls(this WebApplicationBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
@@ -32,8 +32,6 @@ public static class WebApplicationBuilderExtensions
 
             options.ListenAnyIP(5000);
         });
-
-        return builder;
     }
 
     public static void ConfigureSerilog(this WebApplicationBuilder builder)
@@ -43,7 +41,7 @@ public static class WebApplicationBuilderExtensions
         var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
         var fileLog = Path.Combine(programData, "RemoteMaster", "Host", "RemoteMaster_Host.log");
 
-        builder.Host.UseSerilog((context, configuration) =>
+        builder.Host.UseSerilog((_, configuration) =>
         {
             configuration.Enrich.With(new HostInfoEnricher());
             configuration.MinimumLevel.Debug();

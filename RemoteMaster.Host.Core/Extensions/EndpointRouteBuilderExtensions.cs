@@ -10,10 +10,8 @@ namespace RemoteMaster.Host.Core.Extensions;
 
 public static class EndpointRouteBuilderExtensions
 {
-    public static IEndpointRouteBuilder MapCoreHubs(this IEndpointRouteBuilder endpoints)
+    public static void MapCoreHubs(this IEndpointRouteBuilder endpoints)
     {
         endpoints.MapHub<ControlHub>("/hubs/control");
-
-        return endpoints;
     }
 }

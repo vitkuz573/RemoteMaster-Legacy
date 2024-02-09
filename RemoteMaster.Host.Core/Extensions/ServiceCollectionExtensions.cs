@@ -13,7 +13,7 @@ namespace RemoteMaster.Host.Core.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddCoreServices(this IServiceCollection services)
+    public static void AddCoreServices(this IServiceCollection services)
     {
         var builder = new ConfigurationBuilder()
             .SetBasePath(Path.GetDirectoryName(Environment.ProcessPath)!)
@@ -21,9 +21,9 @@ public static class ServiceCollectionExtensions
 
         var configuration = builder.Build();
 
-        services.AddLogging(builder =>
+        services.AddLogging(loggingBuilder =>
         {
-            builder.ClearProviders();
+            loggingBuilder.ClearProviders();
         });
 
         services.AddSingleton<IFileManagerService, FileManagerService>();
@@ -39,7 +39,5 @@ public static class ServiceCollectionExtensions
         services.Configure<SubjectOptions>(configuration.GetSection("subject"));
 
         services.AddSignalR().AddMessagePackProtocol();
-
-        return services;
     }
 }
