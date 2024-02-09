@@ -79,13 +79,6 @@ public class CertificateService(IOptions<CertificateOptions> options) : ICertifi
         Array.Copy(uuid, 0, combinedBytes, 8, uuid.Length);
         Array.Copy(randomBytes, 0, combinedBytes, 8 + uuid.Length, randomBytes.Length);
 
-        if (SHA3_256.IsSupported)
-        {
-            return SHA3_256.HashData(combinedBytes);
-        }
-        else
-        {
-            return SHA256.HashData(combinedBytes);
-        }
+        return SHA3_256.IsSupported ? SHA3_256.HashData(combinedBytes) : SHA256.HashData(combinedBytes);
     }
 }

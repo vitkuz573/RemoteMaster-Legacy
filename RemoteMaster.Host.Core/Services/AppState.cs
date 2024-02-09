@@ -36,9 +36,9 @@ public class AppState : IAppState
         return result;
     }
 
-    public bool TryRemoveViewer(string connectionId, out IViewer? viewer)
+    public bool TryRemoveViewer(string connectionId)
     {
-        var result = _viewers.TryRemove(connectionId, out viewer);
+        var result = _viewers.TryRemove(connectionId, out var viewer);
 
         if (result)
         {

@@ -16,5 +16,5 @@ public interface IAppState
 
     bool TryAddViewer(IViewer viewer);
 
-    bool TryRemoveViewer(string connectionId, out IViewer? viewer);
+    bool TryRemoveViewer(string connectionId);
 }

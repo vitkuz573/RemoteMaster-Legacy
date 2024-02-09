@@ -86,14 +86,6 @@ public class HostConfigurationService : IHostConfigurationService
         };
     }
 
-    public async Task SaveConfigurationAsync(HostConfiguration config)
-    {
-        ArgumentNullException.ThrowIfNull(config);
-
-        var json = SerializeToJson(config);
-        await WriteFileAsync(ConfigurationFileName, json);
-    }
-
     public async Task SaveConfigurationAsync(HostConfiguration config, string filePath)
     {
         ArgumentNullException.ThrowIfNull(config);

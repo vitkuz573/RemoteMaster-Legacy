@@ -42,7 +42,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     public async override Task OnDisconnectedAsync(Exception? exception)
     {
-        appState.TryRemoveViewer(Context.ConnectionId, out var _);
+        appState.TryRemoveViewer(Context.ConnectionId);
 
         await base.OnDisconnectedAsync(exception);
     }
