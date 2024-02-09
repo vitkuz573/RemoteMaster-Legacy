@@ -37,7 +37,7 @@ internal class Program
     {
         if (new[] { serviceMode, userInstance, install, uninstall }.Count(val => val) > 1)
         {
-            Console.Error.WriteLine("Arguments --install, --uninstall, --service-mode and --user-instance are mutually exclusive. Please specify only one.");
+            await Console.Error.WriteLineAsync("Arguments --install, --uninstall, --service-mode and --user-instance are mutually exclusive. Please specify only one.");
 
             return;
         }
@@ -76,11 +76,12 @@ internal class Program
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         });
 
-        var publicKeyPath = @"C:\ProgramData\RemoteMaster\Security\public_key.pem";
+        var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        var publicKeyPath = Path.Combine(programData, "RemoteMaster", "Security", "public_key.pem");
 
         if (File.Exists(publicKeyPath))
         {
-            var publicKey = File.ReadAllText(publicKeyPath);
+            var publicKey = await File.ReadAllTextAsync(publicKeyPath);
 
 #pragma warning disable CA2000
             var rsa = RSA.Create();
@@ -88,9 +89,9 @@ internal class Program
             rsa.ImportFromPem(publicKey.ToCharArray());
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(options =>
+                .AddJwtBearer(jwtBearerOptions =>
                 {
-                    options.TokenValidationParameters = new TokenValidationParameters
+                    jwtBearerOptions.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuer = true,
                         ValidateAudience = true,
@@ -101,7 +102,7 @@ internal class Program
                         IssuerSigningKey = new RsaSecurityKey(rsa)
                     };
 
-                    options.Events = new JwtBearerEvents
+                    jwtBearerOptions.Events = new JwtBearerEvents
                     {
                         OnMessageReceived = context =>
                         {
@@ -110,21 +111,25 @@ internal class Program
 
                             Log.Information("Incoming request from IP: {Ip}", remoteIp);
 
-                            if (remoteIp != null)
+                            if (remoteIp == null)
                             {
-                                if (remoteIp.Equals(IPAddress.Loopback) || remoteIp.Equals(IPAddress.IPv6Loopback) || remoteIp.Equals(localIPv6Mapped))
-                                {
-                                    Log.Information("Localhost detected");
-
-                                    var identity = new ClaimsIdentity(new[]
-                                    {
-                                        new Claim(ClaimTypes.Name, "localhost@localdomain"),
-                                    }, "LocalAuth");
-
-                                    context.Principal = new ClaimsPrincipal(identity);
-                                    context.Success();
-                                }
+                                return Task.CompletedTask;
                             }
+
+                            if (!remoteIp.Equals(IPAddress.Loopback) && !remoteIp.Equals(IPAddress.IPv6Loopback) && !remoteIp.Equals(localIPv6Mapped))
+                            {
+                                return Task.CompletedTask;
+                            }
+
+                            Log.Information("Localhost detected");
+
+                            var identity = new ClaimsIdentity(new[]
+                            {
+                                new Claim(ClaimTypes.Name, "localhost@localdomain"),
+                            }, "LocalAuth");
+
+                            context.Principal = new ClaimsPrincipal(identity);
+                            context.Success();
 
                             return Task.CompletedTask;
                         }
@@ -155,13 +160,13 @@ internal class Program
             var hostInfoService = app.Services.GetRequiredService<IHostInfoService>();
             var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
 
-            HostConfiguration configuration;
+            HostConfiguration hostConfiguration;
 
             try
             {
-                configuration = await hostConfigurationService.LoadConfigurationAsync();
+                hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
             }
-            catch (Exception ex) when (ex is FileNotFoundException || ex is InvalidDataException)
+            catch (Exception ex) when (ex is FileNotFoundException or InvalidDataException)
             {
                 Log.Error(ex, "Configuration file not found.");
 
@@ -175,8 +180,8 @@ internal class Program
             Console.WriteLine(new string('=', 40));
             Console.WriteLine("INSTALLATION DETAILS:");
             Console.WriteLine(new string('-', 40));
-            Console.WriteLine($"Server: {configuration.Server}");
-            Console.WriteLine($"Group: {configuration.Group}");
+            Console.WriteLine($"Server: {hostConfiguration.Server}");
+            Console.WriteLine($"Group: {hostConfiguration.Group}");
             Console.WriteLine(new string('-', 40));
             Console.WriteLine("HOST INFORMATION:");
             Console.WriteLine($"Host Name: {hostName}");
@@ -184,7 +189,7 @@ internal class Program
             Console.WriteLine($"MAC Address: {macAddress}");
             Console.WriteLine(new string('=', 40));
 
-            await hostServiceManager.InstallOrUpdate(configuration, hostName, ipv4Address, macAddress);
+            await hostServiceManager.InstallOrUpdate(hostName, ipv4Address, macAddress);
 
             return;
         }
@@ -192,26 +197,25 @@ internal class Program
         if (uninstall)
         {
             var hostConfigurationService = app.Services.GetRequiredService<IHostConfigurationService>();
-            var hostInfoService = app.Services.GetRequiredService<IHostInfoService>();
             var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
 
-            HostConfiguration configuration;
+            HostConfiguration hostConfiguration;
 
             try
             {
                 var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
                 var configurationPath = Path.Combine(programFiles, "RemoteMaster", "Host", hostConfigurationService.ConfigurationFileName);
 
-                configuration = await hostConfigurationService.LoadConfigurationAsync(configurationPath);
+                hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(configurationPath);
             }
-            catch (Exception ex) when (ex is FileNotFoundException || ex is InvalidDataException)
+            catch (Exception ex) when (ex is FileNotFoundException or InvalidDataException)
             {
                 Log.Error(ex, "Configuration error.");
 
                 return;
             }
 
-            await hostServiceManager.Uninstall(configuration);
+            await hostServiceManager.Uninstall(hostConfiguration);
 
             return;
         }
@@ -231,6 +235,7 @@ internal class Program
         app.UseAuthentication();
         app.UseAuthorization();
         app.MapCoreHubs();
-        app.Run();
+
+        await app.RunAsync();
     }
 }

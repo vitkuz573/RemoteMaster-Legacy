@@ -16,7 +16,7 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IUse
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Host";
 
-    public async Task InstallOrUpdate(HostConfiguration hostConfiguration, string hostName, string ipAddress, string macAddress)
+    public async Task InstallOrUpdate(string hostName, string ipAddress, string macAddress)
     {
         try
         {
