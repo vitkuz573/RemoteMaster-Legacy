@@ -9,25 +9,30 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public unsafe class PowerService(ITokenPrivilegeService tokenPrivilegeService) : IPowerService
+public class PowerService(ITokenPrivilegeService tokenPrivilegeService) : IPowerService
 {
     public void Reboot(string message, uint timeout = 0, bool forceAppsClosed = true)
     {
         Log.Information("Attempting to reboot the system with message: {Message}, timeout: {Timeout}, forceAppsClosed: {ForceAppsClosed}", message, timeout, forceAppsClosed);
         tokenPrivilegeService.AdjustPrivilege(SE_SHUTDOWN_NAME);
 
-        fixed (char* pMessage = message)
-        {
-            var result = InitiateSystemShutdown(null, pMessage, timeout, forceAppsClosed, true);
+        bool result;
 
-            if (result == 0)
+        unsafe
+        {
+            fixed (char* pMessage = message)
             {
-                Log.Error("Failed to initiate system reboot.");
+                result = InitiateSystemShutdown(null, pMessage, timeout, forceAppsClosed, true);
             }
-            else
-            {
-                Log.Information("System reboot initiated successfully.");
-            }
+        }
+
+        if (!result)
+        {
+            Log.Error("Failed to initiate system reboot.");
+        }
+        else
+        {
+            Log.Information("System reboot initiated successfully.");
         }
     }
 
@@ -36,18 +41,23 @@ public unsafe class PowerService(ITokenPrivilegeService tokenPrivilegeService) :
         Log.Information("Attempting to shutdown the system with message: {Message}, timeout: {Timeout}, forceAppsClosed: {ForceAppsClosed}", message, timeout, forceAppsClosed);
         tokenPrivilegeService.AdjustPrivilege(SE_SHUTDOWN_NAME);
 
-        fixed (char* pMessage = message)
-        {
-            var result = InitiateSystemShutdown(null, pMessage, timeout, forceAppsClosed, false);
+        bool result;
 
-            if (result == 0)
+        unsafe
+        {
+            fixed (char* pMessage = message)
             {
-                Log.Error("Failed to initiate system shutdown.");
+                result = InitiateSystemShutdown(null, pMessage, timeout, forceAppsClosed, false);
             }
-            else
-            {
-                Log.Information("System shutdown initiated successfully.");
-            }
+        }
+
+        if (!result)
+        {
+            Log.Error("Failed to initiate system shutdown.");
+        }
+        else
+        {
+            Log.Information("System shutdown initiated successfully.");
         }
     }
 }
