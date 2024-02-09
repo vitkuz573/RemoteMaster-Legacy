@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Timers;
 using Microsoft.Extensions.Hosting;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Models;
@@ -11,9 +12,20 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class HostInfoMonitorService(IServerHubService serverHubService, IHostConfigurationService hostConfigurationService, IHostInformationService hostInformationService, IHostLifecycleService hostLifecycleService) : IHostedService
 {
+    private System.Timers.Timer? _timer;
+
     private readonly string _configPath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, hostConfigurationService.ConfigurationFileName);
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    public Task StartAsync(CancellationToken cancellationToken)
+    {
+        _timer = new System.Timers.Timer(60000);
+        _timer.Elapsed += CheckHostInformation;
+        _timer.Start();
+
+        return Task.CompletedTask;
+    }
+
+    private async void CheckHostInformation(object? sender, ElapsedEventArgs e)
     {
         HostConfiguration hostConfiguration;
 
@@ -42,7 +54,7 @@ public class HostInfoMonitorService(IServerHubService serverHubService, IHostCon
                 hostConfiguration.Host = hostInformation;
 
                 await hostConfigurationService.SaveConfigurationAsync(hostConfiguration, _configPath);
- 
+
                 await hostLifecycleService.UpdateHostInformationAsync(hostConfiguration);
                 await hostLifecycleService.UnregisterAsync(hostConfiguration);
                 await hostLifecycleService.RegisterAsync(hostConfiguration);
@@ -63,13 +75,15 @@ public class HostInfoMonitorService(IServerHubService serverHubService, IHostCon
 
             var newGroup = await serverHubService.GetNewGroupIfChangeRequested(hostConfiguration.Host.MacAddress);
 
-            if (!string.IsNullOrEmpty(newGroup))
+            if (string.IsNullOrEmpty(newGroup))
             {
-                hostConfiguration.Group = newGroup;
-                await hostConfigurationService.SaveConfigurationAsync(hostConfiguration, _configPath);
-                Log.Information("Group for this device was updated based on the group change request.");
-                await serverHubService.AcknowledgeGroupChange(hostConfiguration.Host.MacAddress);
+                return;
             }
+
+            hostConfiguration.Group = newGroup;
+            await hostConfigurationService.SaveConfigurationAsync(hostConfiguration, _configPath);
+            Log.Information("Group for this device was updated based on the group change request.");
+            await serverHubService.AcknowledgeGroupChange(hostConfiguration.Host.MacAddress);
         }
         catch (Exception ex)
         {
@@ -79,6 +93,9 @@ public class HostInfoMonitorService(IServerHubService serverHubService, IHostCon
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
+        _timer?.Stop();
+        _timer?.Dispose();
+
         return Task.CompletedTask;
     }
 }
