@@ -31,7 +31,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ICertificateRequestService, CertificateRequestService>();
         services.AddSingleton<IHostLifecycleService, HostLifecycleService>();
         services.AddSingleton<IHostConfigurationService, HostConfigurationService>();
-        services.AddSingleton<IHostInfoService, HostInfoService>();
+        services.AddSingleton<IHostInformationService, HostInformationService>();
         services.AddSingleton<IAppState, AppState>();
         services.AddSingleton<IShutdownService, ShutdownService>();
         services.AddSingleton<IServerHubService, ServerHubService>();

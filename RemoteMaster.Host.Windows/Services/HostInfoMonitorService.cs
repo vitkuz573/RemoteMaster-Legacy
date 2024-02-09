@@ -9,7 +9,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostInfoMonitorService(IServerHubService serverHubService, IHostConfigurationService hostConfigurationService, IHostInfoService hostInfoService, IHostLifecycleService hostLifecycleService) : IHostedService
+public class HostInfoMonitorService(IServerHubService serverHubService, IHostConfigurationService hostConfigurationService, IHostInformationService hostInformationService, IHostLifecycleService hostLifecycleService) : IHostedService
 {
     private readonly string _configPath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, hostConfigurationService.ConfigurationFileName);
 
@@ -33,9 +33,9 @@ public class HostInfoMonitorService(IServerHubService serverHubService, IHostCon
             return;
         }
 
-        var newIpAddress = hostInfoService.GetIPv4Address();
-        var newMacAddress = hostInfoService.GetMacAddress();
-        var newHostName = hostInfoService.GetHostName();
+        var newIpAddress = hostInformationService.GetIPv4Address();
+        var newMacAddress = hostInformationService.GetMacAddress();
+        var newHostName = hostInformationService.GetHostName();
 
         if (hostConfiguration.Host.IpAddress != newIpAddress || hostConfiguration.Host.MacAddress != newMacAddress || hostConfiguration.Host.Name != newHostName)
         {

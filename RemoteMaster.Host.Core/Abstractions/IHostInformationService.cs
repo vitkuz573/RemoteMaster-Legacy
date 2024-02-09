@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface IHostInfoService
+public interface IHostInformationService
 {
     string GetHostName();
 

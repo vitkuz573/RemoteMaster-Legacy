@@ -11,7 +11,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHostInfoService hostInfoService, IHostConfigurationService hostConfigurationService, IUserInstanceService userInstanceService, IServiceManager serviceManager, IHostConfigurationService configurationService, IServiceConfiguration hostServiceConfig, JsonSerializerOptions jsonOptions) : IHostServiceManager
+public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHostInformationService hostInformationService, IHostConfigurationService hostConfigurationService, IUserInstanceService userInstanceService, IServiceManager serviceManager, IHostConfigurationService configurationService, IServiceConfiguration hostServiceConfig, JsonSerializerOptions jsonOptions) : IHostServiceManager
 {
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Host";
@@ -20,9 +20,9 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
     {
         try
         {
-            var hostName = hostInfoService.GetHostName();
-            var ipAddress = hostInfoService.GetIPv4Address();
-            var macAddress = hostInfoService.GetMacAddress();
+            var hostName = hostInformationService.GetHostName();
+            var ipAddress = hostInformationService.GetIPv4Address();
+            var macAddress = hostInformationService.GetMacAddress();
 
             Log.Information("Starting installation. Host information: HostName = {HostName}, IP Address = {IPAddress}, MAC Address = {MacAddress}", hostName, ipAddress, macAddress);
 
