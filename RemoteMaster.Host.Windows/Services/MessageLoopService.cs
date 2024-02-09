@@ -69,8 +69,6 @@ public class MessageLoopService : IHostedService
 
     private bool TryRegisterClass()
     {
-        ushort classAtom;
-
         var wc = new WNDCLASSEXW
         {
             cbSize = (uint)Marshal.SizeOf<WNDCLASSEXW>(),
@@ -82,9 +80,10 @@ public class MessageLoopService : IHostedService
             fixed (char* pClassName = ClassName)
             {
                 wc.lpszClassName = pClassName;
-                classAtom = RegisterClassEx(in wc);
             }
         }
+
+        var classAtom = RegisterClassEx(in wc);
 
         return classAtom != 0;
     }
