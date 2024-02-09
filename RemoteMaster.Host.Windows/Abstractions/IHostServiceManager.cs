@@ -8,7 +8,7 @@ namespace RemoteMaster.Host.Windows.Abstractions;
 
 public interface IHostServiceManager
 {
-    Task InstallOrUpdate(string hostName, string ipv4Address, string macAddress);
+    Task Install();
 
     Task Uninstall(HostConfiguration hostConfiguration);
 }
