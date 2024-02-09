@@ -61,7 +61,7 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
                 serviceManager.InstallService(hostServiceConfig, $"{hostPath} --service-mode");
             }
 
-            var updatedHostConfiguration = await UpdateConfigurationAsync(Path.Combine(_applicationDirectory, configurationService.ConfigurationFileName), hostName, ipAddress, macAddress);
+            var updatedHostConfiguration = await UpdateConfigurationAsync(hostName, ipAddress, macAddress);
 
             serviceManager.StartService(hostServiceConfig.Name);
 
@@ -212,9 +212,10 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
         }
     }
 
-    private async Task<HostConfiguration> UpdateConfigurationAsync(string filePath, string hostName, string ipAddress, string macAddress)
+    private async Task<HostConfiguration> UpdateConfigurationAsync(string hostName, string ipAddress, string macAddress)
     {
-        var json = await File.ReadAllTextAsync(filePath);
+        var configurationFilePath = Path.Combine(_applicationDirectory, configurationService.ConfigurationFileName);
+        var json = await File.ReadAllTextAsync(configurationFilePath);
         var hostConfiguration = JsonSerializer.Deserialize<HostConfiguration>(json, jsonOptions) ?? new HostConfiguration();
 
         hostConfiguration.Host ??= new Computer
@@ -224,8 +225,7 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
             MacAddress = macAddress
         };
 
-        var updatedJson = JsonSerializer.Serialize(hostConfiguration, jsonOptions);
-        await File.WriteAllTextAsync(filePath, updatedJson);
+        await hostConfigurationService.SaveConfigurationAsync(hostConfiguration, configurationFilePath);
 
         return hostConfiguration;
     }
