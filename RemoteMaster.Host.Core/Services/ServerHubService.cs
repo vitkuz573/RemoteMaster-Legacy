@@ -10,7 +10,7 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class ServerHubService : IServerHubService
 {
-    private HubConnection _hubConnection;
+    private HubConnection _hubConnection = null!;
 
     public async Task ConnectAsync(string serverIp)
     {

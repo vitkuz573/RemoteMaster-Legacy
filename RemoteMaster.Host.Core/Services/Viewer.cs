@@ -28,7 +28,7 @@ public class Viewer : IViewer
 
         _ = SendHostVersion();
 
-        ScreenCapturer.ScreenChanged += async (sender, bounds) => await SendScreenSize(bounds.Width, bounds.Height);
+        ScreenCapturer.ScreenChanged += async (_, bounds) => await SendScreenSize(bounds.Width, bounds.Height);
     }
 
     public IScreenCapturerService ScreenCapturer { get; }
@@ -67,7 +67,7 @@ public class Viewer : IViewer
                 yield return screenData;
             }
 
-            await Task.Delay(16);
+            await Task.Delay(16, cancellationToken);
         }
     }
 
@@ -75,7 +75,7 @@ public class Viewer : IViewer
     {
         Log.Information("Stopping screen stream for ID {connectionId}", ConnectionId);
 
-        _cts?.Cancel();
+        _cts.Cancel();
     }
 
     public async Task SendDisplays(IEnumerable<Display> displays)
@@ -88,7 +88,7 @@ public class Viewer : IViewer
         await _hubContext.Clients.Client(ConnectionId).ReceiveScreenSize(new Size(width, height));
     }
 
-    public async Task SendHostVersion()
+    private async Task SendHostVersion()
     {
         var version = Assembly.GetExecutingAssembly().GetName().Version ?? new Version();
 

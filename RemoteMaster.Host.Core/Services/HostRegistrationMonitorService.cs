@@ -30,12 +30,14 @@ public class HostRegistrationMonitorService(IHostLifecycleService hostLifecycleS
 
             var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(configPath);
 
-            if (!await hostLifecycleService.IsHostRegisteredAsync(hostConfiguration))
+            if (await hostLifecycleService.IsHostRegisteredAsync(hostConfiguration))
             {
-                Log.Warning("Host is not registered. Performing necessary actions...");
-
-                await hostLifecycleService.RegisterAsync(hostConfiguration);
+                return;
             }
+
+            Log.Warning("Host is not registered. Performing necessary actions...");
+
+            await hostLifecycleService.RegisterAsync(hostConfiguration);
         }
         catch (Exception ex)
         {

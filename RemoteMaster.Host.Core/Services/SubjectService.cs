@@ -11,7 +11,7 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class SubjectService(IOptions<SubjectOptions> options) : ISubjectService
 {
-    private readonly SubjectOptions _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+    private readonly SubjectOptions _options = options.Value ?? throw new ArgumentNullException(nameof(options));
 
     public X500DistinguishedName GetDistinguishedName(string commonName)
     {
