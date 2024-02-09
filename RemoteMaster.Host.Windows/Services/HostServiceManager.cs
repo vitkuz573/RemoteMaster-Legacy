@@ -51,11 +51,11 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
                     serviceManager.StopService(hostServiceConfig.Name);
                 }
 
-                CopyToTargetPath(directoryPath, hostName, ipAddress, macAddress);
+                CopyToTargetPath(directoryPath);
             }
             else
             {
-                CopyToTargetPath(directoryPath, hostName, ipAddress, macAddress);
+                CopyToTargetPath(directoryPath);
                 var hostPath = Path.Combine(directoryPath, $"{MainAppName}.{SubAppName}.exe");
                 serviceManager.InstallService(hostServiceConfig, $"{hostPath} --service-mode");
             }
@@ -128,7 +128,7 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
         return Path.Combine(programFilesPath, MainAppName, SubAppName);
     }
 
-    private void CopyToTargetPath(string targetDirectoryPath, string hostName, string ipAddress, string macAddress)
+    private void CopyToTargetPath(string targetDirectoryPath)
     {
         if (!Directory.Exists(targetDirectoryPath))
         {
@@ -150,34 +150,9 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
         var sourceConfigPath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, configName);
         var targetConfigPath = Path.Combine(targetDirectoryPath, configName);
 
-        if (!File.Exists(sourceConfigPath))
+        if (File.Exists(sourceConfigPath))
         {
-            return;
-        }
-
-        try
-        {
-            var hostConfiguration = JsonSerializer.Deserialize<HostConfiguration>(File.ReadAllText(sourceConfigPath));
-
-            if (hostConfiguration == null)
-            {
-                return;
-            }
-
-            hostConfiguration.Host = new Computer
-            {
-                Name = hostName,
-                IpAddress = ipAddress,
-                MacAddress = macAddress
-            };
-
-            var json = JsonSerializer.Serialize(hostConfiguration, jsonOptions);
-
-            File.WriteAllText(targetConfigPath, json);
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException($"Failed to copy the configuration file to {targetConfigPath}.", ex);
+            File.Copy(sourceConfigPath, targetConfigPath, true);
         }
     }
 
