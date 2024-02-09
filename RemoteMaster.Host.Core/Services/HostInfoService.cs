@@ -10,7 +10,7 @@ using RemoteMaster.Host.Core.Extensions;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public partial class HostInfoService : IHostInfoService
+public class HostInfoService : IHostInfoService
 {
     public string GetHostName() => Dns.GetHostName();
 

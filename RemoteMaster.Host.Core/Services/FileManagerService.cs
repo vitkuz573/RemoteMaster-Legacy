@@ -53,25 +53,19 @@ public class FileManagerService : IFileManagerService
             AttributesToSkip = FileAttributes.Hidden | FileAttributes.System
         };
 
-        foreach (var file in directoryInfo.GetFiles("*", enumerationOptions))
+        items.AddRange(directoryInfo.GetFiles("*", enumerationOptions).Select(file => new FileSystemItem
         {
-            items.Add(new FileSystemItem
-            {
-                Name = file.Name,
-                Type = FileSystemItem.FileSystemItemType.File,
-                Size = file.Length
-            });
-        }
+            Name = file.Name,
+            Type = FileSystemItem.FileSystemItemType.File,
+            Size = file.Length
+        }));
 
-        foreach (var directory in directoryInfo.GetDirectories("*", enumerationOptions))
+        items.AddRange(directoryInfo.GetDirectories("*", enumerationOptions).Select(directory => new FileSystemItem
         {
-            items.Add(new FileSystemItem
-            {
-                Name = directory.Name,
-                Type = FileSystemItem.FileSystemItemType.Directory,
-                Size = 0
-            });
-        }
+            Name = directory.Name,
+            Type = FileSystemItem.FileSystemItemType.Directory,
+            Size = 0
+        }));
 
         return items;
     }
