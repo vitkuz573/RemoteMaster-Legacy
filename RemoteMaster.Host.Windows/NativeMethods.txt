@@ -32,7 +32,6 @@ SendInput
 TranslateMessage
 
 // Desktop and User Session Management
-GetUserObjectInformation
 NOTIFY_FOR_ALL_SESSIONS
 OpenInputDesktop
 SendSAS

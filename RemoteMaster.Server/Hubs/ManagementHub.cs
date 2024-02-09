@@ -127,7 +127,6 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         await databaseService.UpdateComputerAsync(computer, hostConfiguration.Host.IpAddress, hostConfiguration.Host.Name);
 
         return true;
-
     }
 
     public async Task<bool> IsHostRegisteredAsync(HostConfiguration hostConfiguration)
