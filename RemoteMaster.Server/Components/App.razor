@@ -63,12 +63,12 @@
                 input.accept = '.ps1, application/x-powershell, .bat, .cmd, application/x-bat, application/x-cmd';
                 input.onchange = function (e) {
                     var file = e.target.files[0];
-                    var reader = new FileReader();
+                    const reader = new FileReader();
                     reader.onload = function (event) {
                         resolve({ content: event.target.result, name: file.name });
                     };
                     reader.onerror = function (error) {
-                        reject("Error reading file: " + error.toString());
+                        reject(`Error reading file: ${error.toString()}`);
                     };
                     reader.readAsText(file);
                 };
@@ -77,7 +77,7 @@
         };
 
         window.addBeforeUnloadListener = (instance) => {
-            window.addEventListener("beforeunload", function (event) {
+            window.addEventListener("beforeunload", function () {
                 instance.invokeMethodAsync("OnBeforeUnload");
             });
         };
@@ -87,12 +87,12 @@
         };
 
         window.generateAndDownloadFile = function (requestData) {
-            var fileContent = JSON.stringify(requestData, null, 2);
+            const fileContent = JSON.stringify(requestData, null, 2);
 
-            var blob = new Blob([fileContent], { type: 'application/json' });
-            var url = window.URL.createObjectURL(blob);
+            const blob = new Blob([fileContent], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
 
-            var a = document.createElement('a');
+            const a = document.createElement('a');
             a.href = url;
             a.download = 'RemoteMaster.Host.json';
             document.body.appendChild(a);
@@ -103,10 +103,10 @@
         };
 
         window.generateAndDownloadResults = function (base64Data, fileName) {
-            var blob = b64toBlob(base64Data, 'application/zip');
-            var url = window.URL.createObjectURL(blob);
+            const blob = b64toBlob(base64Data, 'application/zip');
+            const url = window.URL.createObjectURL(blob);
 
-            var a = document.createElement('a');
+            const a = document.createElement('a');
             a.href = url;
             a.download = fileName;
             document.body.appendChild(a);
@@ -136,10 +136,10 @@
         }
 
         window.saveAsFile = function (filename, bytesBase64) {
-            var blob = b64toBlob(bytesBase64, 'application/octet-stream');
-            var url = window.URL.createObjectURL(blob);
+            const blob = b64toBlob(bytesBase64, 'application/octet-stream');
+            const url = window.URL.createObjectURL(blob);
 
-            var a = document.createElement('a');
+            const a = document.createElement('a');
             a.href = url;
             a.download = filename;
             document.body.appendChild(a);
