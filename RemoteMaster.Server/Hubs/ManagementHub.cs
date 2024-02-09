@@ -119,14 +119,15 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
 
         var computer = (await databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId)).FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
 
-        if (computer != null)
+        if (computer == null)
         {
-            await databaseService.UpdateComputerAsync(computer, hostConfiguration.Host.IpAddress, hostConfiguration.Host.Name);
-
-            return true;
+            return false;
         }
 
-        return false;
+        await databaseService.UpdateComputerAsync(computer, hostConfiguration.Host.IpAddress, hostConfiguration.Host.Name);
+
+        return true;
+
     }
 
     public async Task<bool> IsHostRegisteredAsync(HostConfiguration hostConfiguration)

@@ -14,7 +14,7 @@ public partial class PsexecRulesDialog
 
     private async Task Ok()
     {
-        await ComputerCommandService.Execute(Hosts, async (computer, connection) => await connection.InvokeAsync("SetPSExecRules", _selectedOption));
+        await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("SetPSExecRules", _selectedOption));
 
         MudDialog.Close(DialogResult.Ok(true));
     }

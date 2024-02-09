@@ -34,22 +34,19 @@ public partial class FileUploadDialog
     {
         FileUploadDto? fileDto = null;
 
-        if (_files != null)
+        foreach (var file in _files)
         {
-            foreach (var file in _files)
+            var data = new byte[file.Size];
+            await file.OpenReadStream(file.Size).ReadAsync(data);
+
+            fileDto = new FileUploadDto
             {
-                var data = new byte[file.Size];
-                await file.OpenReadStream(file.Size).ReadAsync(data);
+                Name = file.Name,
+                Data = data,
+                DestinationPath = _destinationPath
+            };
 
-                fileDto = new FileUploadDto
-                {
-                    Name = file.Name,
-                    Data = data,
-                    DestinationPath = _destinationPath
-                };
-
-                await ComputerCommandService.Execute(Hosts, async (computer, connection) => await connection.InvokeAsync("UploadFile", fileDto));
-            }
+            await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("UploadFile", fileDto));
         }
 
         MudDialog.Close(DialogResult.Ok(true));

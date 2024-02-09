@@ -9,29 +9,26 @@ namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class PowerDialog
 {
-    private string _selectedOption;
-
-    public PowerDialog()
-    {
-        _selectedOption = "shutdown";
-    }
+    private string _selectedOption = "shutdown";
 
     private async Task Confirm()
     {
-        if (_selectedOption == "shutdown")
+        switch (_selectedOption)
         {
-            await ComputerCommandService.Execute(Hosts, async (computer, connection) => await connection.InvokeAsync("SendShutdownComputer", "", 0, true));
-        }
-        else if (_selectedOption == "reboot")
-        {
-            await ComputerCommandService.Execute(Hosts, async (computer, connection) => await connection.InvokeAsync("SendRebootComputer", "", 0, true));
-
-        }
-        else if (_selectedOption == "wakeup")
-        {
-            foreach (var (computer, connection) in Hosts)
+            case "shutdown":
+                await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("SendShutdownComputer", "", 0, true));
+                break;
+            case "reboot":
+                await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("SendRebootComputer", "", 0, true));
+                break;
+            case "wakeup":
             {
-                WakeOnLanService.WakeUp(computer.MacAddress);
+                foreach (var (computer, _) in Hosts)
+                {
+                    WakeOnLanService.WakeUp(computer.MacAddress);
+                }
+
+                break;
             }
         }
 

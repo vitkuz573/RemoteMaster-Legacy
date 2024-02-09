@@ -22,7 +22,7 @@ public partial class Access : IDisposable
     public string Host { get; set; } = default!;
 
     private string? _screenDataUrl;
-    private bool _drawerOpen = false;
+    private bool _drawerOpen;
     private HubConnection _connection = null!;
     private bool _inputEnabled;
     private bool _cursorTracking;
@@ -105,7 +105,7 @@ public partial class Access : IDisposable
                 }
                 catch (HubException ex) when (ex.Message.Contains("Method does not exist"))
                 {
-                    await JSRuntime.InvokeVoidAsync("showAlert", "This function is not available in the current host version. Please update your host.");
+                    await JsRuntime.InvokeVoidAsync("showAlert", "This function is not available in the current host version. Please update your host.");
                 }
             }
             else
@@ -117,7 +117,7 @@ public partial class Access : IDisposable
 
     private async Task<PointD> GetRelativeMousePositionPercentAsync(MouseEventArgs e)
     {
-        var imgElement = await JSRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", "screenImage");
+        var imgElement = await JsRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", "screenImage");
         var imgPosition = await imgElement.InvokeAsync<DomRect>("getBoundingClientRect");
         var percentX = (e.ClientX - imgPosition.Left) / imgPosition.Width;
         var percentY = (e.ClientY - imgPosition.Top) / imgPosition.Height;
@@ -180,7 +180,7 @@ public partial class Access : IDisposable
         _connection.On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate);
         _connection.On<Version>("ReceiveHostVersion", version => _hostVersion = version.ToString());
 
-        _connection.Closed += async (error) =>
+        _connection.Closed += async (_) =>
         {
             await Task.Delay(TimeSpan.FromSeconds(5));
             await _connection.StartAsync();
@@ -194,15 +194,15 @@ public partial class Access : IDisposable
 
     private async Task HandleScreenUpdate(byte[] screenData)
     {
-        _screenDataUrl = await JSRuntime.InvokeAsync<string>("createImageBlobUrl", screenData);
+        _screenDataUrl = await JsRuntime.InvokeAsync<string>("createImageBlobUrl", screenData);
 
         await InvokeAsync(StateHasChanged);
     }
 
     private async Task SetupEventListeners()
     {
-        await JSRuntime.InvokeVoidAsync("addKeyDownEventListener", DotNetObjectReference.Create(this));
-        await JSRuntime.InvokeVoidAsync("addKeyUpEventListener", DotNetObjectReference.Create(this));
+        await JsRuntime.InvokeVoidAsync("addKeyDownEventListener", DotNetObjectReference.Create(this));
+        await JsRuntime.InvokeVoidAsync("addKeyUpEventListener", DotNetObjectReference.Create(this));
     }
 
     private async Task ToggleInputEnabled(bool value)
@@ -244,6 +244,6 @@ public partial class Access : IDisposable
 
     public void Dispose()
     {
-        _connection?.DisposeAsync();
+        _connection.DisposeAsync();
     }
 }

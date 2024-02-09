@@ -13,7 +13,7 @@ namespace RemoteMaster.Server.Services;
 
 public class CertificateService(IOptions<CertificateOptions> options) : ICertificateService
 {
-    private readonly CertificateOptions _settings = options?.Value ?? throw new ArgumentNullException(nameof(options));
+    private readonly CertificateOptions _settings = options.Value ?? throw new ArgumentNullException(nameof(options));
 
     public X509Certificate2 IssueCertificate(byte[] csrBytes)
     {
@@ -28,7 +28,7 @@ public class CertificateService(IOptions<CertificateOptions> options) : ICertifi
         // Check for CA constraints
         var basicConstraints = csr.CertificateExtensions.OfType<X509BasicConstraintsExtension>().FirstOrDefault();
 
-        if (basicConstraints != null && basicConstraints.CertificateAuthority)
+        if (basicConstraints is { CertificateAuthority: true })
         {
             Log.Error("CSR for CA certificates are not allowed.");
             throw new InvalidOperationException("CSR for CA certificates are not allowed.");

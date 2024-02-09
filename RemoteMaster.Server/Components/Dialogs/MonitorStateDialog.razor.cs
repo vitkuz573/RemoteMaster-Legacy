@@ -15,7 +15,7 @@ public partial class MonitorStateDialog
 
     private async Task SetState()
     {
-        await ComputerCommandService.Execute(Hosts, async (computer, connection) => await connection.InvokeAsync("SendMonitorState", _monitorState));
+        await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("SendMonitorState", _monitorState));
 
         MudDialog.Close(DialogResult.Ok(true));
     }

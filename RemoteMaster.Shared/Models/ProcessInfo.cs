@@ -12,7 +12,5 @@ public class ProcessInfo
 
     public long MemoryUsage { get; init; }
 
-    public string ProcessPath { get; set; }
-
     public byte[]? Icon { get; init; }
 }

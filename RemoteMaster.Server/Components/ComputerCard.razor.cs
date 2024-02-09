@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components;
@@ -15,9 +14,6 @@ public partial class ComputerCard
 
     [Parameter]
     public bool IsSelected { get; set; }
-
-    [Inject]
-    public IJSRuntime JSRuntime { get; set; } = default!;
 
     private string ThumbnailPath => Computer.Thumbnail != null ? $"data:image/png;base64,{Convert.ToBase64String(Computer.Thumbnail)}" : "/img/notconnected.png";
 

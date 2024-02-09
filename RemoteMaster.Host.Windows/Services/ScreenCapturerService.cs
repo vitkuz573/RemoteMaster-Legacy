@@ -16,7 +16,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public abstract class ScreenCapturerService : IScreenCapturerService
 {
-    protected const string VIRTUAL_SCREEN = "VIRTUAL_SCREEN";
+    protected const string VirtualScreen = "VIRTUAL_SCREEN";
 
     private readonly RecyclableMemoryStreamManager _recycleManager = new();
     private readonly IDesktopService _desktopService;
@@ -26,7 +26,7 @@ public abstract class ScreenCapturerService : IScreenCapturerService
 
     public int ImageQuality { get; set; } = 25;
 
-    public virtual Dictionary<string, int> Screens { get; } = [];
+    protected Dictionary<string, int> Screens { get; } = [];
 
     public abstract Rectangle CurrentScreenBounds { get; protected set; }
 
@@ -84,7 +84,7 @@ public abstract class ScreenCapturerService : IScreenCapturerService
         // If there are multiple screens, set to VirtualScreenName temporarily
         if (HasMultipleScreens)
         {
-            SetSelectedScreen(VIRTUAL_SCREEN);
+            SetSelectedScreen(VirtualScreen);
         }
 
         var frame = GetNextFrame();
@@ -107,7 +107,7 @@ public abstract class ScreenCapturerService : IScreenCapturerService
         return EncodeBitmap(thumbnail);
     }
 
-    protected byte[] EncodeBitmap(SKBitmap bitmap)
+    private byte[] EncodeBitmap(SKBitmap bitmap)
     {
         ArgumentNullException.ThrowIfNull(bitmap);
 

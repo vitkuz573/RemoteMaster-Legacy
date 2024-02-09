@@ -16,8 +16,8 @@ namespace RemoteMaster.Server.Components.Pages;
 
 public partial class Home
 {
-    private bool _drawerOpen = false;
-    private Node? _selectedNode = null;
+    private bool _drawerOpen;
+    private Node? _selectedNode;
     private HashSet<Node>? _nodes;
     private List<Computer> _selectedComputers = [];
     private List<Computer> _availableComputers = [];
@@ -35,20 +35,22 @@ public partial class Home
 
     protected async override Task OnInitializedAsync()
     {
-        _nodes = (await DatabaseService.GetNodesAsync(f => f.Parent == null && f is Group)).Cast<Node>().ToHashSet();
+        _nodes = (await DatabaseService.GetNodesAsync(f => f.Parent == null && f is Group)).ToHashSet();
     }
 
     private void LoadAndGroupComputers(Node node)
     {
-        if (node is Group group)
+        if (node is not Group group)
         {
-            var computers = group.Nodes.OfType<Computer>().ToList();
-            _availableComputers = computers; // Initially, assume all computers are available
-            _unavailableComputers.Clear();
-
-            // Update availability in the background
-            _ = UpdateComputerAvailabilityAsync(computers);
+            return;
         }
+
+        var computers = group.Nodes.OfType<Computer>().ToList();
+        _availableComputers = computers; // Initially, assume all computers are available
+        _unavailableComputers.Clear();
+
+        // Update availability in the background
+        _ = UpdateComputerAvailabilityAsync(computers);
     }
 
     private async Task UpdateComputerAvailabilityAsync(List<Computer> computers)
@@ -87,7 +89,7 @@ public partial class Home
 
     }
 
-    private async Task OnNodeSelected(Node node)
+    private async Task OnNodeSelected(Node? node)
     {
         _selectedComputers.Clear();
         _selectedNode = node;
@@ -125,7 +127,7 @@ public partial class Home
         {
             connection.On<byte[]>("ReceiveThumbnail", async (thumbnailBytes) =>
             {
-                if (thumbnailBytes?.Length > 0)
+                if (thumbnailBytes.Length > 0)
                 {
                     computer.Thumbnail = thumbnailBytes;
                     await InvokeAsync(StateHasChanged);
@@ -185,9 +187,9 @@ public partial class Home
         await DialogService.ShowAsync<ConnectDialog>("Connect", dialogParameters);
     }
 
-    protected async Task OpenWindow(string url)
+    private async Task OpenWindow(string url)
     {
-        await JSRuntime.InvokeVoidAsync("openNewWindow", url);
+        await JsRuntime.InvokeVoidAsync("openNewWindow", url);
     }
 
     private async Task TaskManager()
@@ -265,7 +267,7 @@ public partial class Home
         await DialogService.ShowAsync<MonitorStateDialog>("Monitor state", dialogParameters);
     }
 
-    private async Task ManagePSExecRules()
+    private async Task ManagePsExecRules()
     {
         if (_selectedComputers.All(computer => !_availableComputers.Contains(computer)))
         {
@@ -380,7 +382,7 @@ public partial class Home
                 await connection.StartAsync();
             }
 
-            computerConnections.AddOrUpdate(computer, connection, (key, existingConn) => connection);
+            computerConnections.AddOrUpdate(computer, connection, (_, _) => connection);
         });
 
         await Task.WhenAll(tasks);

@@ -18,7 +18,7 @@ public class DatabaseService(NodesDbContext context) : IDatabaseService
 
         if (predicate != null)
         {
-            query = query.Where(predicate);
+            query = query.Where(predicate!);
         }
 
         return await query.Include(node => node.Nodes).ToListAsync();
@@ -47,13 +47,12 @@ public class DatabaseService(NodesDbContext context) : IDatabaseService
 
     public async Task UpdateComputerAsync(Computer computer, string ipAddress, string hostName)
     {
-        if (computer != null)
-        {
-            computer.IpAddress = ipAddress;
-            computer.Name = hostName;
+        ArgumentNullException.ThrowIfNull(computer);
 
-            context.Nodes.Update(computer);
-        }
+        computer.IpAddress = ipAddress;
+        computer.Name = hostName;
+
+        context.Nodes.Update(computer);
 
         await context.SaveChangesAsync();
     }

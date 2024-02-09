@@ -14,7 +14,7 @@ namespace RemoteMaster.Server.Services;
 
 public class TokenService(IOptions<JwtOptions> options) : ITokenService
 {
-    private readonly JwtOptions _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+    private readonly JwtOptions _options = options.Value ?? throw new ArgumentNullException(nameof(options));
 
     public string GenerateAccessToken(string email)
     {

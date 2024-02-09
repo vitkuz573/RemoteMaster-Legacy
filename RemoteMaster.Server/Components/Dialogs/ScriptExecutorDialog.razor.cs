@@ -13,18 +13,11 @@ namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class ScriptExecutorDialog
 {
-    private string _content;
+    private string _content = string.Empty;
     private Shell? _shell;
     private bool _asSystem;
-    private readonly Dictionary<Computer, ComputerResults> _resultsPerComputer;
-    private readonly HashSet<HubConnection> _subscribedConnections;
-
-    public ScriptExecutorDialog()
-    {
-        _content = string.Empty;
-        _resultsPerComputer = [];
-        _subscribedConnections = [];
-    }
+    private readonly Dictionary<Computer, ComputerResults> _resultsPerComputer = [];
+    private readonly HashSet<HubConnection> _subscribedConnections = [];
 
     private async Task RunScript()
     {
@@ -97,8 +90,8 @@ public partial class ScriptExecutorDialog
                 var fileContent = results.ToString();
 
                 var zipEntry = archive.CreateEntry(fileName, CompressionLevel.Fastest);
-                using var entryStream = zipEntry.Open();
-                using var streamWriter = new StreamWriter(entryStream);
+                await using var entryStream = zipEntry.Open();
+                await using var streamWriter = new StreamWriter(entryStream);
                 await streamWriter.WriteAsync(fileContent);
             }
         }

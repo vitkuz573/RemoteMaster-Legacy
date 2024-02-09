@@ -28,11 +28,13 @@ public class HostProcessMonitorService : IHostedService
 
     private void MonitorHostInstance(object? state)
     {
-        if (!_userInstanceService.IsRunning)
+        if (_userInstanceService.IsRunning)
         {
-            Log.Information("Host instance is not running. Starting it...");
-            _userInstanceService.Start();
+            return;
         }
+
+        Log.Information("Host instance is not running. Starting it...");
+        _userInstanceService.Start();
     }
 
     public Task StopAsync(CancellationToken cancellationToken)

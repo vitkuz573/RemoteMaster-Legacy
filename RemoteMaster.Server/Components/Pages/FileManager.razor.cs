@@ -40,9 +40,7 @@ public partial class FileManager : IDisposable
 
     private bool _isDarkMode = true;
 
-    private readonly MudTheme _theme = new()
-    {
-    };
+    private readonly MudTheme _theme = new();
 
     protected async override Task OnInitializedAsync()
     {
@@ -121,7 +119,7 @@ public partial class FileManager : IDisposable
 
         _connection.On<byte[], string>("ReceiveFile", async (file, path) =>
         {
-            await JSRuntime.InvokeVoidAsync("saveAsFile", Path.GetFileName(path), Convert.ToBase64String(file));
+            await JsRuntime.InvokeVoidAsync("saveAsFile", Path.GetFileName(path), Convert.ToBase64String(file));
         });
 
         _connection.On<List<string>>("ReceiveAvailableDrives", (drives) =>
@@ -129,7 +127,7 @@ public partial class FileManager : IDisposable
             _availableDrives = drives;
         });
 
-        _connection.Closed += async (error) =>
+        _connection.Closed += async (_) =>
         {
             await Task.Delay(TimeSpan.FromSeconds(5));
             await _connection.StartAsync();
@@ -150,7 +148,7 @@ public partial class FileManager : IDisposable
                 }
                 catch (HubException ex) when (ex.Message.Contains("Method does not exist"))
                 {
-                    await JSRuntime.InvokeVoidAsync("showAlert", "This function is not available in the current host version. Please update your host.");
+                    await JsRuntime.InvokeVoidAsync("showAlert", "This function is not available in the current host version. Please update your host.");
                 }
             }
             else
@@ -252,6 +250,6 @@ public partial class FileManager : IDisposable
 
     public void Dispose()
     {
-        _connection?.DisposeAsync();
+        _connection.DisposeAsync();
     }
 }

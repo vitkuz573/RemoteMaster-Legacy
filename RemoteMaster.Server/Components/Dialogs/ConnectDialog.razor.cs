@@ -9,22 +9,18 @@ namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class ConnectDialog : CommonDialogBase
 {
-    protected string _selectedOption;
-
-    public ConnectDialog()
-    {
-        _selectedOption = "control";
-    }
+    private string _selectedOption = "control";
 
     protected async Task Connect()
     {
-        if (_selectedOption == "control")
+        switch (_selectedOption)
         {
-            await ComputerCommandService.Execute(Hosts, async (computer, connection) => await OpenWindow($"/{computer.IpAddress}/access?imageQuality=25&cursorTracking=false&inputEnabled=true"));
-        }
-        else if (_selectedOption == "view")
-        {
-            await ComputerCommandService.Execute(Hosts, async (computer, connection) => await OpenWindow($"/{computer.IpAddress}/access?imageQuality=25&cursorTracking=true&inputEnabled=false"));
+            case "control":
+                await ComputerCommandService.Execute(Hosts, async (computer, _) => await OpenWindow($"/{computer.IpAddress}/access?imageQuality=25&cursorTracking=false&inputEnabled=true"));
+                break;
+            case "view":
+                await ComputerCommandService.Execute(Hosts, async (computer, _) => await OpenWindow($"/{computer.IpAddress}/access?imageQuality=25&cursorTracking=true&inputEnabled=false"));
+                break;
         }
 
         MudDialog.Close(DialogResult.Ok(true));

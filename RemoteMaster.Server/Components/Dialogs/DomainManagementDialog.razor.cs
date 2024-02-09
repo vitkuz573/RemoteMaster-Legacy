@@ -22,14 +22,14 @@ public partial class DomainManagementDialog
 
     private async Task JoinDomain()
     {
-        await ComputerCommandService.Execute(Hosts, async (computer, connection) => await connection.InvokeAsync("SendJoinToDomain", _domain, _username, _password));
+        await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("SendJoinToDomain", _domain, _username, _password));
 
         MudDialog.Close(DialogResult.Ok(true));
     }
 
     private async Task LeaveDomain()
     {
-        await ComputerCommandService.Execute(Hosts, async (computer, connection) => await connection.InvokeAsync("SendUnjoinFromDomain", _username, _password));
+        await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("SendUnjoinFromDomain", _username, _password));
 
         MudDialog.Close(DialogResult.Ok(true));
     }
@@ -55,13 +55,10 @@ public partial class DomainManagementDialog
     {
         try
         {
-            using var rootDSE = new DirectoryEntry("LDAP://RootDSE");
-            var ldapDomain = (string)rootDSE.Properties["defaultNamingContext"].Value!;
+            using var rootDse = new DirectoryEntry("LDAP://RootDSE");
+            var ldapDomain = (string)rootDse.Properties["defaultNamingContext"].Value!;
 
-            if (ldapDomain != null)
-            {
-                _domain = ldapDomain.Replace("DC=", "").Replace(',', '.');
-            }
+            _domain = ldapDomain.Replace("DC=", "").Replace(',', '.');
         }
         catch (COMException ex)
         {

@@ -14,10 +14,8 @@ public class UdpPacketSender : IPacketSender
     {
         ArgumentNullException.ThrowIfNull(packet);
 
-        using var client = new UdpClient
-        {
-            EnableBroadcast = true
-        };
+        using var client = new UdpClient();
+        client.EnableBroadcast = true;
 
         client.Send(packet, packet.Length, endPoint);
     }

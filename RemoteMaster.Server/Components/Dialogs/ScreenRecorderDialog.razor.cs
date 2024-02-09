@@ -23,7 +23,7 @@ public partial class ScreenRecorderDialog
 
     private async Task StartRecording()
     {
-        await ComputerCommandService.Execute(Hosts, async (computer, connection) =>
+        await ComputerCommandService.Execute(Hosts, async (_, connection) =>
         {
             await connection.InvokeAsync("SendStartScreenRecording", _outputPath, _durationInSeconds);
         });
@@ -33,7 +33,7 @@ public partial class ScreenRecorderDialog
 
     private async Task StopRecording()
     {
-        await ComputerCommandService.Execute(Hosts, async (computer, connection) =>
+        await ComputerCommandService.Execute(Hosts, async (_, connection) =>
         {
             await connection.InvokeAsync("SendStopScreenRecording");
         });

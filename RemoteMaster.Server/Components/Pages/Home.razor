@@ -8,7 +8,7 @@
 @inject IDialogService DialogService
 @inject IDatabaseService DatabaseService
 @inject IHttpContextAccessor HttpContextAccessor
-@inject IJSRuntime JSRuntime
+@inject IJSRuntime JsRuntime
 
 <MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme" />
 <MudDialogProvider />
@@ -28,7 +28,7 @@
     <MudDrawer @bind-Open="@_drawerOpen" Variant="@DrawerVariant.Responsive">
         <MudDrawerHeader>
             <MudText Typo="Typo.h6">
-                <img src="@BrandingService.ApplicationLogo" width="@BrandingService.ApplicationLogoWidth" height="@BrandingService.ApplicationLogoHeight" />
+                <img src="@BrandingService.ApplicationLogo" width="@BrandingService.ApplicationLogoWidth" height="@BrandingService.ApplicationLogoHeight" alt="@BrandingService.ApplicationName" />
             </MudText>
         </MudDrawerHeader>
         <MudNavMenu>
@@ -60,7 +60,7 @@
 
                     <MudTabPanel Text="Service" Icon="@Icons.Material.Filled.Key">
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SetMonitorState" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Set Monitor State</MudButton>
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ManagePSExecRules" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">PSExec Rules</MudButton>
+                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ManagePsExecRules" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">PSExec Rules</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ScreenRecorder" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Screen Recorder</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="DomainMember" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Domain Management</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Update" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Update</MudButton>

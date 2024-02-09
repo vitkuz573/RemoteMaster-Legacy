@@ -4,7 +4,6 @@
 
 using System.Net;
 using System.Net.Sockets;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using RemoteMaster.Shared.Models;
@@ -17,7 +16,7 @@ public partial class HostConfigurationGenerator
 
     protected override void OnInitialized()
     {
-        _model.Server = GetLocalIPAddress();
+        _model.Server = GetLocalIpAddress();
         _model.Subject = new();
     }
 
@@ -33,7 +32,7 @@ public partial class HostConfigurationGenerator
         NavigationManager.NavigateTo("api/HostConfiguration/download-host", true);
     }
 
-    private static string GetLocalIPAddress()
+    private static string GetLocalIpAddress()
     {
         var host = Dns.GetHostEntry(Dns.GetHostName());
 

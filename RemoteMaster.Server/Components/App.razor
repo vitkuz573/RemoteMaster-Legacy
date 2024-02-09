@@ -51,13 +51,13 @@
         };
 
         window.addEventListener("keydown", function (e) {
-            if (e.ctrlKey && e.which == 83) {
+            if (e.ctrlKey && e.which === 83) {
                 e.preventDefault();
             }
         });
 
         window.selectFile = function () {
-            return new Promise((resolve, reject) => {
+            return new window.Promise((resolve, reject) => {
                 var input = document.createElement('input');
                 input.type = 'file';
                 input.accept = '.ps1, application/x-powershell, .bat, .cmd, application/x-bat, application/x-cmd';

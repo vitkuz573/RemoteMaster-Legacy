@@ -6,7 +6,7 @@ namespace RemoteMaster.Server.Abstractions;
 
 public interface IQueryParameterService
 {
-    T GetParameter<T>(string key, T defaultValue);
+    T? GetParameter<T>(string key, T? defaultValue);
 
     void UpdateParameter(string key, object value);
 }

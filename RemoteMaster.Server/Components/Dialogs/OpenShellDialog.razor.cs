@@ -10,16 +10,10 @@ namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class OpenShellDialog
 {
-    private Shell _selectedShell;
-    private string _selectedUser;
-    private bool _isConnecting = false;
+    private Shell _selectedShell = Shell.Cmd;
+    private string _selectedUser = "CurrentUser";
+    private bool _isConnecting;
     private string _connectButtonText = "Connect";
-
-    public OpenShellDialog()
-    {
-        _selectedShell = Shell.Cmd;
-        _selectedUser = "CurrentUser";
-    }
 
     private async Task Connect()
     {
@@ -30,7 +24,7 @@ public partial class OpenShellDialog
 
         try
         {
-            await ComputerCommandService.Execute(Hosts, async (computer, connection) =>
+            await ComputerCommandService.Execute(Hosts, async (computer, _) =>
             {
                 var sParameter = _selectedUser == "System" ? "-s" : "";
                 var command = _selectedShell switch
@@ -52,6 +46,7 @@ public partial class OpenShellDialog
         }
         catch (Exception)
         {
+            // ignored
         }
         finally
         {

@@ -6,7 +6,7 @@
 @inject NavigationManager NavigationManager
 @inject IQueryParameterService QueryParameterService
 @inject IHttpContextAccessor HttpContextAccessor
-@inject IJSRuntime JSRuntime
+@inject IJSRuntime JsRuntime
 
 <MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme" />
 <MudDialogProvider />
@@ -20,17 +20,14 @@
     <MudNavMenu>
         <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.DisplaySettings">
             <MudSelect Value="@_selectedDisplay" ValueChanged="OnChangeScreen" Label="Display" T="string" Dense="true">
-                @if (_displays != null)
+                @for (var i = 0; i < _displays.Count; i++)
                 {
-                    for (int i = 0; i < _displays.Count; i++)
-                    {
-                        var resolution = $"{_displays[i].Resolution.Width} x {_displays[i].Resolution.Height}";
-                        var displayName = _displays[i].Name == "VIRTUAL_SCREEN"
+                    var resolution = $"{_displays[i].Resolution.Width} x {_displays[i].Resolution.Height}";
+                    var displayName = _displays[i].Name == "VIRTUAL_SCREEN"
                         ? $"Virtual Screen ({resolution})"
                         : $"Screen {i + 1} ({resolution})";
 
-                        <MudSelectItem Value="_displays[i].Name">@displayName</MudSelectItem>
-                    }
+                    <MudSelectItem Value="_displays[i].Name">@displayName</MudSelectItem>
                 }
             </MudSelect>
         </MudNavLink>
@@ -62,7 +59,7 @@
 <div class="absolute h-full w-full bg-gray-800 text-white p-4">
     @if (!string.IsNullOrEmpty(_screenDataUrl))
     {
-        <img id="screenImage" src="@_screenDataUrl" @oncontextmenu:preventDefault="true" @oncontextmenu="(MouseEventArgs e) => {}" draggable="false" class="object-contain mx-auto max-h-full max-w-full" onload="window.revokeUrl(this.src)" @onmousemove="OnMouseMove" @onmousedown="OnMouseUpDown" @onmouseup="OnMouseUpDown" @onmouseover="OnMouseOver" @onmousewheel="OnMouseWheel" />
+        <img id="screenImage" src="@_screenDataUrl" @oncontextmenu:preventDefault="true" @oncontextmenu="_ => {}" draggable="false" class="object-contain mx-auto max-h-full max-w-full" onload="window.revokeUrl(this.src)" @onmousemove="OnMouseMove" @onmousedown="OnMouseUpDown" @onmouseup="OnMouseUpDown" @onmouseover="OnMouseOver" @onmousewheel="OnMouseWheel" alt="" />
     }
     else
     {

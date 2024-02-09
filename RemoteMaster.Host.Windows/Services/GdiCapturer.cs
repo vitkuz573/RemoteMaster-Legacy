@@ -49,7 +49,7 @@ public class GdiCapturer : ScreenCapturerService
     {
         try
         {
-            return SelectedScreen == VIRTUAL_SCREEN ? GetVirtualScreenFrame() : GetSingleScreenFrame();
+            return SelectedScreen == VirtualScreen ? GetVirtualScreenFrame() : GetSingleScreenFrame();
         }
         catch (Exception ex)
         {
@@ -113,7 +113,7 @@ public class GdiCapturer : ScreenCapturerService
         {
             screens.Add(new Display
             {
-                Name = VIRTUAL_SCREEN,
+                Name = VirtualScreen,
                 IsPrimary = false,
                 Resolution = new Size(VirtualScreenBounds.Width, VirtualScreenBounds.Height),
             });
@@ -129,7 +129,7 @@ public class GdiCapturer : ScreenCapturerService
             return;
         }
 
-        if (displayName == VIRTUAL_SCREEN || Screens.ContainsKey(displayName))
+        if (displayName == VirtualScreen || Screens.ContainsKey(displayName))
         {
             SelectedScreen = displayName;
         }
@@ -143,7 +143,7 @@ public class GdiCapturer : ScreenCapturerService
 
     protected override void RefreshCurrentScreenBounds()
     {
-        CurrentScreenBounds = SelectedScreen == VIRTUAL_SCREEN ? VirtualScreenBounds : Screen.AllScreens[Screens[SelectedScreen]].Bounds;
+        CurrentScreenBounds = SelectedScreen == VirtualScreen ? VirtualScreenBounds : Screen.AllScreens[Screens[SelectedScreen]].Bounds;
 
         RaiseScreenChangedEvent(CurrentScreenBounds);
 

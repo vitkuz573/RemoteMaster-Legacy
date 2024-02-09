@@ -11,12 +11,12 @@ namespace RemoteMaster.Server.Services;
 
 public class QueryParameterService(NavigationManager navigationManager) : IQueryParameterService
 {
-    public T GetParameter<T>(string key, T defaultValue)
+    public T? GetParameter<T>(string key, T? defaultValue)
     {
         var uri = new Uri(navigationManager.Uri);
         var queryParameters = QueryHelpers.ParseQuery(uri.Query);
 
-        if (queryParameters.TryGetValue(key, out var valueString) && TryConvertValue(valueString, out T value))
+        if (queryParameters.TryGetValue(key, out var valueString) && TryConvertValue(valueString, out T? value))
         {
             return value;
         }
@@ -24,7 +24,7 @@ public class QueryParameterService(NavigationManager navigationManager) : IQuery
         return defaultValue;
     }
 
-    private static bool TryConvertValue<T>(StringValues stringValue, out T result)
+    private static bool TryConvertValue<T>(StringValues stringValue, out T? result)
     {
         try
         {
