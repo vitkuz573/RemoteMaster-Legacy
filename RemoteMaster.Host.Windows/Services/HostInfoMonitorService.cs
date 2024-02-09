@@ -54,16 +54,16 @@ public class HostInfoMonitorService(IServerHubService serverHubService, IHostCon
                 hostConfiguration.Host = hostInformation;
 
                 await hostConfigurationService.SaveConfigurationAsync(hostConfiguration, _configPath);
+
+                await hostLifecycleService.UpdateHostInformationAsync(hostConfiguration);
+                await hostLifecycleService.UnregisterAsync(hostConfiguration);
+                await hostLifecycleService.RegisterAsync(hostConfiguration);
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "Error saving updated configuration.");
             }
         }
-
-        await hostLifecycleService.UpdateHostInformationAsync(hostConfiguration);
-        await hostLifecycleService.UnregisterAsync(hostConfiguration);
-        await hostLifecycleService.RegisterAsync(hostConfiguration);
 
         try
         {
