@@ -16,6 +16,8 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Host";
 
+    private readonly string _applicationDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), MainAppName, SubAppName);
+
     public async Task Install()
     {
         try
@@ -41,8 +43,6 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
 
             Log.Information("Host Name: {HostName}, IP Address: {IPAddress}, MAC Address: {MacAddress}", hostName, ipAddress, macAddress);
 
-            var directoryPath = GetDirectoryPath();
-
             if (serviceManager.IsServiceInstalled(hostServiceConfig.Name))
             {
                 using var serviceController = new ServiceController(hostServiceConfig.Name);
@@ -52,16 +52,16 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
                     serviceManager.StopService(hostServiceConfig.Name);
                 }
 
-                CopyToTargetPath(directoryPath);
+                CopyToTargetPath(_applicationDirectory);
             }
             else
             {
-                CopyToTargetPath(directoryPath);
-                var hostPath = Path.Combine(directoryPath, $"{MainAppName}.{SubAppName}.exe");
+                CopyToTargetPath(_applicationDirectory);
+                var hostPath = Path.Combine(_applicationDirectory, $"{MainAppName}.{SubAppName}.exe");
                 serviceManager.InstallService(hostServiceConfig, $"{hostPath} --service-mode");
             }
 
-            var updatedHostConfiguration = await UpdateConfigurationAsync(Path.Combine(directoryPath, configurationService.ConfigurationFileName), hostName, ipAddress, macAddress);
+            var updatedHostConfiguration = await UpdateConfigurationAsync(Path.Combine(_applicationDirectory, configurationService.ConfigurationFileName), hostName, ipAddress, macAddress);
 
             serviceManager.StartService(hostServiceConfig.Name);
 
@@ -122,13 +122,6 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
         }
     }
 
-    private static string GetDirectoryPath()
-    {
-        var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-
-        return Path.Combine(programFilesPath, MainAppName, SubAppName);
-    }
-
     private void CopyToTargetPath(string targetDirectoryPath)
     {
         if (!Directory.Exists(targetDirectoryPath))
@@ -157,18 +150,17 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
         }
     }
 
-    private static void DeleteFiles()
+    private void DeleteFiles()
     {
-        var directoryPath = GetDirectoryPath();
         const int maxRetries = 100;
         var delayOnRetry = 2000;
 
-        if (!Directory.Exists(directoryPath))
+        if (!Directory.Exists(_applicationDirectory))
         {
             return;
         }
 
-        foreach (var file in Directory.EnumerateFiles(directoryPath))
+        foreach (var file in Directory.EnumerateFiles(_applicationDirectory))
         {
             WaitForFile(file, maxRetries, delayOnRetry);
         }
@@ -177,7 +169,7 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
         {
             try
             {
-                Directory.Delete(directoryPath, true);
+                Directory.Delete(_applicationDirectory, true);
                 Log.Information("{AppName} files deleted successfully.", SubAppName);
                 break;
             }
