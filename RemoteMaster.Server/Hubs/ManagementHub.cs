@@ -201,7 +201,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
 
             if (request != null)
             {
-                return request.NewGroup;
+                return request.NewOrganizationalUnit;
             }
         }
 

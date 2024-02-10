@@ -4,9 +4,9 @@
 
 namespace RemoteMaster.Shared.Models;
 
-public class OrganizationalUnitChangeRequest(string macAddress, string newGroup)
+public class OrganizationalUnitChangeRequest(string macAddress, string newOrganizationalUnit)
 {
     public string MacAddress { get; } = macAddress;
 
-    public string NewGroup { get; set; } = newGroup;
+    public string NewOrganizationalUnit { get; set; } = newOrganizationalUnit;
 }

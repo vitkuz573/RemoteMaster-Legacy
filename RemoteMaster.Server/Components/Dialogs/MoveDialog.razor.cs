@@ -97,7 +97,7 @@ public partial class MoveDialog
 
             if (existingRequest != null)
             {
-                existingRequest.NewGroup = targetGroup;
+                existingRequest.NewOrganizationalUnit = targetGroup;
             }
             else
             {
