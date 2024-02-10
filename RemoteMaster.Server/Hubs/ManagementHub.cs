@@ -26,19 +26,19 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
 
         await Clients.Caller.ReceiveCertificate(certificate.Export(X509ContentType.Pfx));
 
-        var folder = (await databaseService.GetNodesAsync(f => f.Name == hostConfiguration.Subject.OrganizationalUnit && f is Group)).OfType<Group>().FirstOrDefault();
+        var group = (await databaseService.GetNodesAsync(g => g.Name == hostConfiguration.Subject.OrganizationalUnit && g is Group)).OfType<Group>().FirstOrDefault();
 
-        if (folder == null)
+        if (group == null)
         {
-            folder = new Group
+            group = new Group
             {
                 Name = hostConfiguration.Subject.OrganizationalUnit
             };
 
-            await databaseService.AddNodeAsync(folder);
+            await databaseService.AddNodeAsync(group);
         }
 
-        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId)).FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
+        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(group.NodeId)).FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
 
         if (existingComputer != null)
         {
@@ -51,7 +51,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
                 Name = hostConfiguration.Host.Name,
                 IpAddress = hostConfiguration.Host.IpAddress,
                 MacAddress = hostConfiguration.Host.MacAddress,
-                Parent = folder
+                Parent = group
             };
 
             await databaseService.AddNodeAsync(computer);
@@ -69,33 +69,33 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             throw new ArgumentException("Host configuration must have a non-null Host property with a valid MAC address.", nameof(hostConfiguration));
         }
 
-        var folder = (await databaseService.GetNodesAsync(f => f.Name == hostConfiguration.Subject.OrganizationalUnit && f is Group)).OfType<Group>().FirstOrDefault();
+        var group = (await databaseService.GetNodesAsync(g => g.Name == hostConfiguration.Subject.OrganizationalUnit && g is Group)).OfType<Group>().FirstOrDefault();
 
-        if (folder == null)
+        if (group == null)
         {
-            Log.Warning("Unregistration failed: Folder '{Group}' not found.", hostConfiguration.Subject.OrganizationalUnit);
+            Log.Warning("Unregistration failed: Group '{Group}' not found.", hostConfiguration.Subject.OrganizationalUnit);
             
             return false;
         }
 
-        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId)).FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
+        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(group.NodeId)).FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
 
         if (existingComputer != null)
         {
             await databaseService.RemoveNodeAsync(existingComputer);
 
-            var remainingComputers = await databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId);
+            var remainingComputers = await databaseService.GetChildrenByParentIdAsync<Computer>(group.NodeId);
 
             if (!remainingComputers.Any())
             {
-                await databaseService.RemoveNodeAsync(folder);
+                await databaseService.RemoveNodeAsync(group);
             }
 
             return true;
         }
         else
         {
-            Log.Warning("Unregistration failed: Computer with MAC address '{MACAddress}' not found in folder '{Group}'.", hostConfiguration.Host.MacAddress, hostConfiguration.Subject.OrganizationalUnit);
+            Log.Warning("Unregistration failed: Computer with MAC address '{MACAddress}' not found in group '{Group}'.", hostConfiguration.Host.MacAddress, hostConfiguration.Subject.OrganizationalUnit);
             
             return false;
         }
@@ -110,14 +110,14 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             throw new ArgumentException("Host configuration must have a non-null Host property.", nameof(hostConfiguration));
         }
 
-        var folder = (await databaseService.GetNodesAsync(f => f.Name == hostConfiguration.Subject.OrganizationalUnit && f is Group)).OfType<Group>().FirstOrDefault();
+        var group = (await databaseService.GetNodesAsync(g => g.Name == hostConfiguration.Subject.OrganizationalUnit && g is Group)).OfType<Group>().FirstOrDefault();
 
-        if (folder == null)
+        if (group == null)
         {
             return false;
         }
 
-        var computer = (await databaseService.GetChildrenByParentIdAsync<Computer>(folder.NodeId)).FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
+        var computer = (await databaseService.GetChildrenByParentIdAsync<Computer>(group.NodeId)).FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
 
         if (computer == null)
         {
