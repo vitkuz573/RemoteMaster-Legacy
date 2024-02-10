@@ -219,14 +219,14 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         taskManagerService.StartProcess(processPath);
     }
 
-    public async Task ChangeGroup(string newGroupName)
+    public async Task ChangeGroup(string newOrganizationalUnit)
     {
         var config = await hostConfigurationService.LoadConfigurationAsync(false);
 
-        config.Group = newGroupName;
+        config.Subject.OrganizationalUnit = newOrganizationalUnit;
 
         await hostConfigurationService.SaveConfigurationAsync(config);
 
-        await Clients.Caller.ReceiveGroupChanged(newGroupName);
+        await Clients.Caller.ReceiveOrganizationalUnitChanged(newOrganizationalUnit);
     }
 }

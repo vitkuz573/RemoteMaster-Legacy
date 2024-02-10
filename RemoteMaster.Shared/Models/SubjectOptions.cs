@@ -11,6 +11,9 @@ public class SubjectOptions
     [JsonPropertyName("organization")]
     public string Organization { get; set; }
 
+    [JsonPropertyName("organizationalUnit")]
+    public string OrganizationalUnit { get; set; }
+
     [JsonPropertyName("locality")]
     public string Locality { get; set; }
 

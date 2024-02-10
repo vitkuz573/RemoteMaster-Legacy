@@ -26,13 +26,13 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
 
         await Clients.Caller.ReceiveCertificate(certificate.Export(X509ContentType.Pfx));
 
-        var folder = (await databaseService.GetNodesAsync(f => f.Name == hostConfiguration.Group && f is Group)).OfType<Group>().FirstOrDefault();
+        var folder = (await databaseService.GetNodesAsync(f => f.Name == hostConfiguration.Subject.OrganizationalUnit && f is Group)).OfType<Group>().FirstOrDefault();
 
         if (folder == null)
         {
             folder = new Group
             {
-                Name = hostConfiguration.Group
+                Name = hostConfiguration.Subject.OrganizationalUnit
             };
 
             await databaseService.AddNodeAsync(folder);
@@ -69,11 +69,11 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             throw new ArgumentException("Host configuration must have a non-null Host property with a valid MAC address.", nameof(hostConfiguration));
         }
 
-        var folder = (await databaseService.GetNodesAsync(f => f.Name == hostConfiguration.Group && f is Group)).OfType<Group>().FirstOrDefault();
+        var folder = (await databaseService.GetNodesAsync(f => f.Name == hostConfiguration.Subject.OrganizationalUnit && f is Group)).OfType<Group>().FirstOrDefault();
 
         if (folder == null)
         {
-            Log.Warning("Unregistration failed: Folder '{Group}' not found.", hostConfiguration.Group);
+            Log.Warning("Unregistration failed: Folder '{Group}' not found.", hostConfiguration.Subject.OrganizationalUnit);
             
             return false;
         }
@@ -95,7 +95,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         }
         else
         {
-            Log.Warning("Unregistration failed: Computer with MAC address '{MACAddress}' not found in folder '{Group}'.", hostConfiguration.Host.MacAddress, hostConfiguration.Group);
+            Log.Warning("Unregistration failed: Computer with MAC address '{MACAddress}' not found in folder '{Group}'.", hostConfiguration.Host.MacAddress, hostConfiguration.Subject.OrganizationalUnit);
             
             return false;
         }
@@ -110,7 +110,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             throw new ArgumentException("Host configuration must have a non-null Host property.", nameof(hostConfiguration));
         }
 
-        var folder = (await databaseService.GetNodesAsync(f => f.Name == hostConfiguration.Group && f is Group)).OfType<Group>().FirstOrDefault();
+        var folder = (await databaseService.GetNodesAsync(f => f.Name == hostConfiguration.Subject.OrganizationalUnit && f is Group)).OfType<Group>().FirstOrDefault();
 
         if (folder == null)
         {

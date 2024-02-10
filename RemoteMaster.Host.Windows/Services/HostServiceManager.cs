@@ -23,8 +23,9 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
             var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
 
             Log.Information("Starting installation...");
-            Log.Information("{MainAppName} Server: {Server}, Group: {Group}", MainAppName, hostConfiguration.Server, hostConfiguration.Group);
+            Log.Information("{MainAppName} Server: {Server}", MainAppName, hostConfiguration.Server);
             Log.Information("Host Name: {HostName}, IP Address: {IPAddress}, MAC Address: {MacAddress}", hostInformation.Name, hostInformation.IpAddress, hostInformation.MacAddress);
+            Log.Information("Distinguished Name: CN={CommonName}, O={Organization}, OU={OrganizationalUnit}, L={Locality}, ST={State}, C={Country}", hostInformation.Name, hostConfiguration.Subject.Organization, hostConfiguration.Subject.OrganizationalUnit, hostConfiguration.Subject.Locality, hostConfiguration.Subject.State, hostConfiguration.Subject.Country);
 
             if (serviceManager.IsInstalled(hostServiceConfig.Name))
             {

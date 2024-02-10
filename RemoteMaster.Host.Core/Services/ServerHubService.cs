@@ -21,14 +21,14 @@ public class ServerHubService : IServerHubService
         await _hubConnection.StartAsync();
     }
 
-    public async Task<string> GetNewGroupIfChangeRequested(string macAddress)
+    public async Task<string> GetNewOrganizationalUnitIfChangeRequested(string macAddress)
     {
-        return await _hubConnection.InvokeAsync<string>("GetNewGroupIfChangeRequested", macAddress);
+        return await _hubConnection.InvokeAsync<string>("GetNewOrganizationalUnitIfChangeRequested", macAddress);
     }
 
-    public async Task AcknowledgeGroupChange(string macAddress)
+    public async Task AcknowledgeOrganizationalUnitChange(string macAddress)
     {
-        await _hubConnection.InvokeAsync("AcknowledgeGroupChange", macAddress);
+        await _hubConnection.InvokeAsync("AcknowledgeOrganizationalUnitChange", macAddress);
     }
 
     public void OnReceiveCertificate(Action<byte[]> onReceiveCertificate)

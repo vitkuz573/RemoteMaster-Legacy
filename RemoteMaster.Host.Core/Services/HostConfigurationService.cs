@@ -24,7 +24,7 @@ public class HostConfigurationService : IHostConfigurationService
         var hostConfigurationJson = await File.ReadAllTextAsync(configFilePath);
         var hostConfiguration = JsonSerializer.Deserialize<HostConfiguration>(hostConfigurationJson);
 
-        if (hostConfiguration is { Server: not null } && hostConfiguration.Server != "" && hostConfiguration.Group != "")
+        if (hostConfiguration is { Server: not null } && hostConfiguration.Server != "")
         {
             return hostConfiguration;
         }

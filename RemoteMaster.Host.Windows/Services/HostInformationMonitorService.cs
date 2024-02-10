@@ -67,21 +67,21 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
         {
             await serverHubService.ConnectAsync(hostConfiguration.Server);
 
-            var newGroup = await serverHubService.GetNewGroupIfChangeRequested(hostConfiguration.Host.MacAddress);
+            var newOrganizationalUnit = await serverHubService.GetNewOrganizationalUnitIfChangeRequested(hostConfiguration.Host.MacAddress);
 
-            if (string.IsNullOrEmpty(newGroup))
+            if (string.IsNullOrEmpty(newOrganizationalUnit))
             {
                 return;
             }
 
-            hostConfiguration.Group = newGroup;
+            hostConfiguration.Subject.OrganizationalUnit = newOrganizationalUnit;
             await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
-            Log.Information("Group for this device was updated based on the group change request.");
-            await serverHubService.AcknowledgeGroupChange(hostConfiguration.Host.MacAddress);
+            Log.Information("Organizational unit for this device was updated based on the organizational unit change request.");
+            await serverHubService.AcknowledgeOrganizationalUnitChange(hostConfiguration.Host.MacAddress);
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error processing group change requests.");
+            Log.Error(ex, "Error processing organizational unit change requests.");
         }
     }
 

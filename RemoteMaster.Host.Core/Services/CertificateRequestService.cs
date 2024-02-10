@@ -38,7 +38,7 @@ public class CertificateRequestService : ICertificateRequestService
 
         csr.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(enhancedKeyUsages, true));
 
-        Log.Debug("CSR with {SANCount} SAN entries and {OIDCount} OIDs generated for subject: {SubjectName}.", ipAddresses.Count, enhancedKeyUsages.Count, subjectName.Name);
+        Log.Debug("CSR with {SANCount} SAN entries and {OIDCount} OIDs generated.", ipAddresses.Count, enhancedKeyUsages.Count);
 
         return csr;
     }
