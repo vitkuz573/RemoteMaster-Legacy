@@ -15,7 +15,7 @@ public partial class ComputerCard
     [Parameter]
     public bool IsSelected { get; set; }
 
-    private string ThumbnailPath => Computer.Thumbnail != null ? $"data:image/png;base64,{Convert.ToBase64String(Computer.Thumbnail)}" : "/img/notconnected.png";
+    private string ThumbnailUri => Computer.Thumbnail != null ? $"data:image/png;base64,{Convert.ToBase64String(Computer.Thumbnail)}" : "/img/notconnected.png";
 
     [Parameter]
     public EventCallback<bool> IsSelectedChanged { get; set; }
