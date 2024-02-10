@@ -25,7 +25,7 @@ public class HostConfigurationService : IHostConfigurationService
         var hostConfigurationJson = await File.ReadAllTextAsync(configFilePath);
         var hostConfiguration = JsonSerializer.Deserialize<HostConfiguration>(hostConfigurationJson);
 
-        ValidateConfiguration(hostConfiguration, isInternal); // Передаем isInternal в метод валидации
+        ValidateConfiguration(hostConfiguration, isInternal);
 
         return hostConfiguration ?? throw new InvalidDataException($"Invalid configuration in file '{configFilePath}'.");
     }
@@ -39,7 +39,7 @@ public class HostConfigurationService : IHostConfigurationService
 
         if (string.IsNullOrWhiteSpace(config.Server))
         {
-            throw new ValidationException("Server URL must not be empty.");
+            throw new ValidationException("Server IP must not be empty.");
         }
 
         if (config.Subject == null || string.IsNullOrWhiteSpace(config.Subject.Organization) || string.IsNullOrWhiteSpace(config.Subject.OrganizationalUnit) || string.IsNullOrWhiteSpace(config.Subject.Locality) || string.IsNullOrWhiteSpace(config.Subject.State) || string.IsNullOrWhiteSpace(config.Subject.Country))
@@ -47,9 +47,12 @@ public class HostConfigurationService : IHostConfigurationService
             throw new ValidationException("Subject options must be fully specified.");
         }
 
-        if (!isInternal && (config.Host == null || string.IsNullOrWhiteSpace(config.Host.IpAddress) || string.IsNullOrWhiteSpace(config.Host.MacAddress)))
+        switch (isInternal)
         {
-            throw new ValidationException("For external configurations, Host must have a valid IP and MAC address.");
+            case true when config.Host != null:
+                throw new ValidationException("For internal configurations, Host must be null.");
+            case false when (config.Host == null || string.IsNullOrWhiteSpace(config.Host.IpAddress) || string.IsNullOrWhiteSpace(config.Host.MacAddress)):
+                throw new ValidationException("For external configurations, Host must have a valid IP and MAC address.");
         }
     }
 
