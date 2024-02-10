@@ -14,7 +14,12 @@ public class PowerService(ITokenPrivilegeService tokenPrivilegeService) : IPower
     public void Reboot(string message, uint timeout = 0, bool forceAppsClosed = true)
     {
         Log.Information("Attempting to reboot the system with message: {Message}, timeout: {Timeout}, forceAppsClosed: {ForceAppsClosed}", message, timeout, forceAppsClosed);
-        tokenPrivilegeService.AdjustPrivilege(SE_SHUTDOWN_NAME);
+
+        if (!tokenPrivilegeService.AdjustPrivilege(SE_SHUTDOWN_NAME))
+        {
+            Log.Error("Failed to adjust privileges for system reboot.");
+            return;
+        }
 
         bool result;
 
@@ -39,7 +44,12 @@ public class PowerService(ITokenPrivilegeService tokenPrivilegeService) : IPower
     public void Shutdown(string message, uint timeout = 0, bool forceAppsClosed = true)
     {
         Log.Information("Attempting to shutdown the system with message: {Message}, timeout: {Timeout}, forceAppsClosed: {ForceAppsClosed}", message, timeout, forceAppsClosed);
-        tokenPrivilegeService.AdjustPrivilege(SE_SHUTDOWN_NAME);
+
+        if (!tokenPrivilegeService.AdjustPrivilege(SE_SHUTDOWN_NAME))
+        {
+            Log.Error("Failed to adjust privileges for system shutdown.");
+            return;
+        }
 
         bool result;
 
@@ -61,3 +71,4 @@ public class PowerService(ITokenPrivilegeService tokenPrivilegeService) : IPower
         }
     }
 }
+
