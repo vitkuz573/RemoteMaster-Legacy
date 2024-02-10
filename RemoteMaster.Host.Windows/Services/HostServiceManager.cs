@@ -4,7 +4,6 @@
 
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
-using RemoteMaster.Shared.Models;
 using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
@@ -59,19 +58,8 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
     {
         try
         {
-            HostConfiguration hostConfiguration;
-
-            try
-            {
-                var configurationFilePath = Path.Combine(_applicationDirectory, configurationService.ConfigurationFileName);
-                hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(configurationFilePath);
-            }
-            catch (Exception ex) when (ex is FileNotFoundException or InvalidDataException)
-            {
-                Log.Error(ex, "Configuration error.");
-
-                return;
-            }
+            var configurationFilePath = Path.Combine(_applicationDirectory, configurationService.ConfigurationFileName);
+            var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(configurationFilePath);
 
             if (serviceManager.IsInstalled(hostServiceConfig.Name))
             {
