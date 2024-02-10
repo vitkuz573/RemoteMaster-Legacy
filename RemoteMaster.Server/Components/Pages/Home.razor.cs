@@ -35,21 +35,20 @@ public partial class Home
 
     protected async override Task OnInitializedAsync()
     {
-        _nodes = (await DatabaseService.GetNodesAsync(f => f.Parent == null && f is OrganizationalUnit)).ToHashSet();
+        _nodes = (await DatabaseService.GetNodesAsync(ou => ou.Parent == null && ou is OrganizationalUnit)).ToHashSet();
     }
 
-    private void LoadAndGroupComputers(Node node)
+    private void LoadNodes(Node node)
     {
-        if (node is not OrganizationalUnit group)
+        if (node is not OrganizationalUnit organizationalUnit)
         {
             return;
         }
 
-        var computers = group.Nodes.OfType<Computer>().ToList();
-        _availableComputers = computers; // Initially, assume all computers are available
+        var computers = organizationalUnit.Nodes.OfType<Computer>().ToList();
+        _availableComputers = computers;
         _unavailableComputers.Clear();
 
-        // Update availability in the background
         _ = UpdateComputerAvailabilityAsync(computers);
     }
 
@@ -94,10 +93,10 @@ public partial class Home
         _selectedComputers.Clear();
         _selectedNode = node;
 
-        if (node is OrganizationalUnit group)
+        if (node is OrganizationalUnit organizationalUnit)
         {
-            LoadAndGroupComputers(node);
-            await UpdateComputersThumbnailsAsync(group.Nodes.OfType<Computer>());
+            LoadNodes(node);
+            await UpdateComputersThumbnailsAsync(organizationalUnit.Nodes.OfType<Computer>());
         }
 
         StateHasChanged();
@@ -246,9 +245,9 @@ public partial class Home
 
     private async Task HandleRefreshClick()
     {
-        if (_selectedNode is OrganizationalUnit selectedFolder)
+        if (_selectedNode is OrganizationalUnit selectedOrganizationalUnit)
         {
-            await UpdateComputersThumbnailsAsync(selectedFolder.Nodes.OfType<Computer>());
+            await UpdateComputersThumbnailsAsync(selectedOrganizationalUnit.Nodes.OfType<Computer>());
         }
     }
 
