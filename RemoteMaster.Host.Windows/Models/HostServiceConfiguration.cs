@@ -11,13 +11,16 @@ public class HostServiceConfiguration : IServiceConfiguration
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Host";
 
-    private readonly string _hostPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), MainAppName, SubAppName, $"{MainAppName}.{SubAppName}.exe");
-
     public string Name => "RCHost";
 
     public string DisplayName => "RemoteMaster Control Service";
 
-    public string BinPath => $"{_hostPath} --service-mode";
+    public string BinPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), MainAppName, SubAppName, $"{MainAppName}.{SubAppName}.exe");
+
+    public IDictionary<string, string?> Arguments { get; } = new Dictionary<string, string?>
+    {
+        {"--service-mode", null}
+    };
 
     public string Description => "RemoteMaster Control Service enables advanced remote management and control functionalities for authorized clients. It provides seamless access to system controls, resource management, and real-time support capabilities, ensuring efficient and secure remote operations.";
 

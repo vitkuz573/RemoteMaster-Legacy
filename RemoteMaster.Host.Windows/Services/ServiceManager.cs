@@ -16,7 +16,9 @@ public class ServiceManager : IServiceManager
     {
         ArgumentNullException.ThrowIfNull(serviceConfig);
 
-        ExecuteServiceCommand($"create {serviceConfig.Name} DisplayName= \"{serviceConfig.DisplayName}\" binPath= \"{serviceConfig.BinPath}\" start= {serviceConfig.StartType}");
+        var binPath = $"{serviceConfig.BinPath} {string.Join(" ", serviceConfig.Arguments.Select(kv => kv.Value == null ? $"{kv.Key}" : $"{kv.Key}={kv.Value}"))}";
+
+        ExecuteServiceCommand($"create {serviceConfig.Name} DisplayName= \"{serviceConfig.DisplayName}\" binPath= \"{binPath}\" start= {serviceConfig.StartType}");
 
         if (!string.IsNullOrWhiteSpace(serviceConfig.Description))
         {

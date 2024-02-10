@@ -12,6 +12,8 @@ public interface IServiceConfiguration
 
     string BinPath { get; }
 
+    IDictionary<string, string?> Arguments { get; }
+
     string? Description { get; }
 
     string StartType { get; }
