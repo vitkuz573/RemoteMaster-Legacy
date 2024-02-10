@@ -41,10 +41,10 @@ public class HostConfigurationService : IHostConfigurationService
             WriteIndented = true
         };
 
-        var json = JsonSerializer.Serialize(hostConfiguration, jsonSerializerOptions);
+        var hostConfigurationJson = JsonSerializer.Serialize(hostConfiguration, jsonSerializerOptions);
         var configFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", _configurationFileName);
 
-        await File.WriteAllTextAsync(configFilePath, json);
+        await File.WriteAllTextAsync(configFilePath, hostConfigurationJson);
     }
 }
 
