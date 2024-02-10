@@ -10,7 +10,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostInfoMonitorService(IServerHubService serverHubService, IHostConfigurationService hostConfigurationService, IHostInformationService hostInformationService, IHostLifecycleService hostLifecycleService) : IHostedService
+public class HostInformationMonitorService(IServerHubService serverHubService, IHostConfigurationService hostConfigurationService, IHostInformationService hostInformationService, IHostLifecycleService hostLifecycleService) : IHostedService
 {
     private System.Timers.Timer? _timer;
 
