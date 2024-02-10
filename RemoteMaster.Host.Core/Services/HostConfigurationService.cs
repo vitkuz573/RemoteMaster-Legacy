@@ -21,12 +21,12 @@ public class HostConfigurationService : IHostConfigurationService
             throw new InvalidDataException($"Error reading, parsing, or validating the configuration file '{configFilePath}'.");
         }
 
-        var json = await File.ReadAllTextAsync(configFilePath);
-        var config = JsonSerializer.Deserialize<HostConfiguration>(json);
+        var hostConfigurationJson = await File.ReadAllTextAsync(configFilePath);
+        var hostConfiguration = JsonSerializer.Deserialize<HostConfiguration>(hostConfigurationJson);
 
-        if (config is { Server: not null } && config.Server != "" && config.Group != "")
+        if (hostConfiguration is { Server: not null } && hostConfiguration.Server != "" && hostConfiguration.Group != "")
         {
-            return config;
+            return hostConfiguration;
         }
 
         throw new InvalidDataException($"Error reading, parsing, or validating the configuration file '{configFilePath}'.");
