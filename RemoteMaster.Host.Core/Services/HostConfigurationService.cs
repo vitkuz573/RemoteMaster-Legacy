@@ -10,21 +10,23 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class HostConfigurationService : IHostConfigurationService
 {
-    public string ConfigurationFileName => $"{AppDomain.CurrentDomain.FriendlyName}.json";
+    private readonly string _configurationFileName = $"{AppDomain.CurrentDomain.FriendlyName}.json";
 
     public async Task<HostConfiguration> LoadConfigurationAsync()
     {
-        return await LoadConfigurationInternalAsync(ConfigurationFileName);
+        return await LoadConfigurationInternalAsync(_configurationFileName);
     }
 
-    public async Task<HostConfiguration> LoadConfigurationAsync(string filePath)
+    public async Task<HostConfiguration> LoadConfigurationAsync(string configDirectory)
     {
-        if (string.IsNullOrWhiteSpace(filePath))
+        if (string.IsNullOrWhiteSpace(configDirectory))
         {
-            throw new ArgumentException("File path cannot be null or whitespace.", nameof(filePath));
+            throw new ArgumentException("File path cannot be null or whitespace.", nameof(configDirectory));
         }
 
-        return await LoadConfigurationInternalAsync(filePath);
+        var configFilePath = Path.Combine(configDirectory, _configurationFileName);
+
+        return await LoadConfigurationInternalAsync(configFilePath);
     }
 
     private static async Task<HostConfiguration> LoadConfigurationInternalAsync(string filePath)
@@ -86,17 +88,19 @@ public class HostConfigurationService : IHostConfigurationService
         };
     }
 
-    public async Task SaveConfigurationAsync(HostConfiguration config, string filePath)
+    public async Task SaveConfigurationAsync(HostConfiguration config, string configDirectory)
     {
         ArgumentNullException.ThrowIfNull(config);
 
-        if (string.IsNullOrWhiteSpace(filePath))
+        if (string.IsNullOrWhiteSpace(configDirectory))
         {
-            throw new ArgumentException("File path cannot be null or whitespace.", nameof(filePath));
+            throw new ArgumentException("File path cannot be null or whitespace.", nameof(configDirectory));
         }
 
         var json = SerializeToJson(config);
-        await WriteFileAsync(filePath, json);
+        var configFilePath = Path.Combine(configDirectory, _configurationFileName);
+
+        await WriteFileAsync(configFilePath, json);
     }
 
     private static string SerializeToJson(HostConfiguration config)

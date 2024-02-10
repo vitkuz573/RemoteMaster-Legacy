@@ -8,11 +8,9 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IHostConfigurationService
 {
-    string ConfigurationFileName { get; }
-
     Task<HostConfiguration> LoadConfigurationAsync();
 
-    Task<HostConfiguration> LoadConfigurationAsync(string filePath);
+    Task<HostConfiguration> LoadConfigurationAsync(string configDirectory);
 
-    Task SaveConfigurationAsync(HostConfiguration config, string filePath);
+    Task SaveConfigurationAsync(HostConfiguration config, string configDirectory);
 }

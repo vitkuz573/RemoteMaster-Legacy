@@ -221,13 +221,13 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     public async Task ChangeGroup(string newGroupName)
     {
-        var configPath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, hostConfigurationService.ConfigurationFileName);
+        var configDirectoryPath = Path.GetDirectoryName(Environment.ProcessPath)!;
 
-        var config = await hostConfigurationService.LoadConfigurationAsync(configPath);
+        var config = await hostConfigurationService.LoadConfigurationAsync(configDirectoryPath);
 
         config.Group = newGroupName;
 
-        await hostConfigurationService.SaveConfigurationAsync(config, configPath);
+        await hostConfigurationService.SaveConfigurationAsync(config, configDirectoryPath);
 
         await Clients.Caller.ReceiveGroupChanged(newGroupName);
     }

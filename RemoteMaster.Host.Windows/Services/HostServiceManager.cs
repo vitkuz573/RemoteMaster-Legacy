@@ -8,7 +8,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHostInformationService hostInformationService, IHostConfigurationService hostConfigurationService, IUserInstanceService userInstanceService, IServiceManager serviceManager, IHostConfigurationService configurationService, IServiceConfiguration hostServiceConfig) : IHostServiceManager
+public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHostInformationService hostInformationService, IHostConfigurationService hostConfigurationService, IUserInstanceService userInstanceService, IServiceManager serviceManager, IServiceConfiguration hostServiceConfig) : IHostServiceManager
 {
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Host";
@@ -39,8 +39,7 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
 
             hostConfiguration.Host = hostInformation;
 
-            var configurationFilePath = Path.Combine(_applicationDirectory, configurationService.ConfigurationFileName);
-            await hostConfigurationService.SaveConfigurationAsync(hostConfiguration, configurationFilePath);
+            await hostConfigurationService.SaveConfigurationAsync(hostConfiguration, _applicationDirectory);
             
             serviceManager.Start(hostServiceConfig.Name);
 
@@ -58,8 +57,7 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
     {
         try
         {
-            var configurationFilePath = Path.Combine(_applicationDirectory, configurationService.ConfigurationFileName);
-            var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(configurationFilePath);
+            var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(_applicationDirectory);
 
             if (serviceManager.IsInstalled(hostServiceConfig.Name))
             {
@@ -88,7 +86,7 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
         }
     }
 
-    private void CopyToTargetPath(string targetDirectoryPath)
+    private static void CopyToTargetPath(string targetDirectoryPath)
     {
         if (!Directory.Exists(targetDirectoryPath))
         {
@@ -106,13 +104,11 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
             throw new InvalidOperationException($"Failed to copy the executable to {targetExecutablePath}. Details: {ex.Message}", ex);
         }
 
-        var configName = configurationService.ConfigurationFileName;
-        var sourceConfigPath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, configName);
-        var targetConfigPath = Path.Combine(targetDirectoryPath, configName);
+        var sourceDirectoryPath = Path.GetDirectoryName(Environment.ProcessPath)!;
 
-        if (File.Exists(sourceConfigPath))
+        if (File.Exists(sourceDirectoryPath))
         {
-            File.Copy(sourceConfigPath, targetConfigPath, true);
+            File.Copy(sourceDirectoryPath, targetDirectoryPath, true);
         }
     }
 
