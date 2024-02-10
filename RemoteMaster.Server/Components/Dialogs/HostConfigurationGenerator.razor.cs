@@ -22,7 +22,7 @@ public partial class HostConfigurationGenerator
 
     private async Task OnValidSubmit(EditContext context)
     {
-        await JSRuntime.InvokeVoidAsync("generateAndDownloadFile", _model);
+        await JsRuntime.InvokeVoidAsync("generateAndDownloadFile", _model);
 
         StateHasChanged();
     }
