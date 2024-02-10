@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.ServiceProcess;
 using System.Text.Json;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
@@ -43,13 +42,7 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
 
             if (serviceManager.IsInstalled(hostServiceConfig.Name))
             {
-                using var serviceController = new ServiceController(hostServiceConfig.Name);
-
-                if (serviceController.Status != ServiceControllerStatus.Stopped)
-                {
-                    serviceManager.Stop(hostServiceConfig.Name);
-                }
-
+                serviceManager.Stop(hostServiceConfig.Name);
                 CopyToTargetPath(_applicationDirectory);
             }
             else
