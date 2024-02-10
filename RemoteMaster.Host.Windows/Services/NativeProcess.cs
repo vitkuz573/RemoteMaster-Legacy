@@ -120,17 +120,19 @@ public class NativeProcess : IDisposable
         {
             lastSessionId = session.SessionId;
 
-            if (session.SessionId == targetSessionId)
+            if (session.SessionId != targetSessionId)
             {
-                targetSessionFound = true;
-                break;
+                continue;
             }
+
+            targetSessionFound = true;
+            break;
         }
 
         return targetSessionFound ? (uint)targetSessionId : lastSessionId;
     }
 
-    private unsafe bool StartWithCreateProcess(NativeProcessStartInfo startInfo, SafeHandle hUserTokenDup)
+    private bool StartWithCreateProcess(NativeProcessStartInfo startInfo, SafeHandle hUserTokenDup)
     {
         STARTUPINFOW startupInfo = default;
         PROCESS_INFORMATION processInfo = default;
@@ -186,9 +188,12 @@ public class NativeProcess : IDisposable
                     startupInfo.dwFlags = STARTUPINFOW_FLAGS.STARTF_USESTDHANDLES;
                 }
 
-                fixed (char* pDesktopName = $@"winsta0\{startInfo.DesktopName}")
+                unsafe
                 {
-                    startupInfo.lpDesktop = pDesktopName;
+                    fixed (char* pDesktopName = $@"winsta0\{startInfo.DesktopName}")
+                    {
+                        startupInfo.lpDesktop = pDesktopName;
+                    }
                 }
 
                 PROCESS_CREATION_FLAGS dwCreationFlags = 0;
@@ -213,9 +218,12 @@ public class NativeProcess : IDisposable
                 bool retVal;
                 var errorCode = 0;
 
-                fixed (char* pEnvironmentBlock = environmentBlock)
+                unsafe
                 {
-                    retVal = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, securityAttributes, securityAttributes, true, dwCreationFlags, pEnvironmentBlock, null, startupInfo, out processInfo);
+                    fixed (char* pEnvironmentBlock = environmentBlock)
+                    {
+                        retVal = CreateProcessAsUser(hUserTokenDup, null, ref commandSpan, securityAttributes, securityAttributes, true, dwCreationFlags, pEnvironmentBlock, null, startupInfo, out processInfo);
+                    }
                 }
 
                 if (!retVal)
