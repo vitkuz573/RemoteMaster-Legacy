@@ -20,23 +20,11 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
     {
         try
         {
-            Log.Information("Starting installation...");
-
             var hostInformation = hostInformationService.GetHostInformation();
+            var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
 
-            try
-            {
-                var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
-
-                Log.Information("{MainAppName} Server: {Server}, Group: {Group}", MainAppName, hostConfiguration.Server, hostConfiguration.Group);
-            }
-            catch (Exception ex) when (ex is FileNotFoundException or InvalidDataException)
-            {
-                Log.Error(ex, "Configuration error.");
-
-                return;
-            }
-
+            Log.Information("Starting installation...");
+            Log.Information("{MainAppName} Server: {Server}, Group: {Group}", MainAppName, hostConfiguration.Server, hostConfiguration.Group);
             Log.Information("Host Name: {HostName}, IP Address: {IPAddress}, MAC Address: {MacAddress}", hostInformation.Name, hostInformation.IpAddress, hostInformation.MacAddress);
 
             if (serviceManager.IsInstalled(hostServiceConfig.Name))
@@ -50,13 +38,16 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
                 serviceManager.Create(hostServiceConfig);
             }
 
-            var updatedHostConfiguration = await UpdateConfigurationAsync(hostInformation.Name, hostInformation.IpAddress, hostInformation.MacAddress);
+            hostConfiguration.Host = hostInformation;
 
+            var configurationFilePath = Path.Combine(_applicationDirectory, configurationService.ConfigurationFileName);
+            await hostConfigurationService.SaveConfigurationAsync(hostConfiguration, configurationFilePath);
+            
             serviceManager.Start(hostServiceConfig.Name);
 
             Log.Information("{ServiceName} installed and started successfully.", hostServiceConfig.Name);
 
-            await hostLifecycleService.RegisterAsync(updatedHostConfiguration);
+            await hostLifecycleService.RegisterAsync(hostConfiguration);
         }
         catch (Exception ex)
         {
@@ -72,10 +63,8 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
 
             try
             {
-                var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-                var configurationPath = Path.Combine(programFiles, "RemoteMaster", "Host", hostConfigurationService.ConfigurationFileName);
-
-                hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(configurationPath);
+                var configurationFilePath = Path.Combine(_applicationDirectory, configurationService.ConfigurationFileName);
+                hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(configurationFilePath);
             }
             catch (Exception ex) when (ex is FileNotFoundException or InvalidDataException)
             {
@@ -199,23 +188,5 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
                 Thread.Sleep(delayOnRetry);
             }
         }
-    }
-
-    private async Task<HostConfiguration> UpdateConfigurationAsync(string hostName, string ipAddress, string macAddress)
-    {
-        var configurationFilePath = Path.Combine(_applicationDirectory, configurationService.ConfigurationFileName);
-
-        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(configurationFilePath);
-
-        hostConfiguration.Host ??= new Computer
-        {
-            Name = hostName,
-            IpAddress = ipAddress,
-            MacAddress = macAddress
-        };
-
-        await hostConfigurationService.SaveConfigurationAsync(hostConfiguration, configurationFilePath);
-
-        return hostConfiguration;
     }
 }
