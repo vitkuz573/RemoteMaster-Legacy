@@ -14,26 +14,16 @@ public class HostConfigurationService : IHostConfigurationService
 
     public async Task<HostConfiguration> LoadConfigurationAsync(bool isInternal = true)
     {
-        if (isInternal)
-        {
-            return await LoadConfigurationInternalAsync(_configurationFileName);
-        }
-        
-        var configFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", _configurationFileName);
+        var configFilePath = isInternal ? _configurationFileName : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", _configurationFileName);
 
-        return await LoadConfigurationInternalAsync(configFilePath);
-    }
-
-    private static async Task<HostConfiguration> LoadConfigurationInternalAsync(string filePath)
-    {
-        var config = await TryReadAndDeserializeFileAsync(filePath);
+        var config = await TryReadAndDeserializeFileAsync(configFilePath);
 
         if (config != null)
         {
             return config;
         }
 
-        throw new InvalidDataException($"Error reading, parsing, or validating the configuration file '{filePath}'.");
+        throw new InvalidDataException($"Error reading, parsing, or validating the configuration file '{configFilePath}'.");
     }
 
     public async Task SaveConfigurationAsync(HostConfiguration config)
