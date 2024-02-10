@@ -5,6 +5,7 @@
 using System.Text.Json;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace RemoteMaster.Host.Core.Services;
 
@@ -18,18 +19,38 @@ public class HostConfigurationService : IHostConfigurationService
 
         if (!File.Exists(configFilePath))
         {
-            throw new InvalidDataException($"Error reading, parsing, or validating the configuration file '{configFilePath}'.");
+            throw new InvalidDataException($"Configuration file '{configFilePath}' does not exist.");
         }
 
         var hostConfigurationJson = await File.ReadAllTextAsync(configFilePath);
         var hostConfiguration = JsonSerializer.Deserialize<HostConfiguration>(hostConfigurationJson);
 
-        if (hostConfiguration is { Server: not null } && hostConfiguration.Server != "")
+        ValidateConfiguration(hostConfiguration, isInternal); // Передаем isInternal в метод валидации
+
+        return hostConfiguration ?? throw new InvalidDataException($"Invalid configuration in file '{configFilePath}'.");
+    }
+
+    private static void ValidateConfiguration(HostConfiguration? config, bool isInternal)
+    {
+        if (config == null)
         {
-            return hostConfiguration;
+            throw new InvalidDataException("Configuration is null.");
         }
 
-        throw new InvalidDataException($"Error reading, parsing, or validating the configuration file '{configFilePath}'.");
+        if (string.IsNullOrWhiteSpace(config.Server))
+        {
+            throw new ValidationException("Server URL must not be empty.");
+        }
+
+        if (config.Subject == null || string.IsNullOrWhiteSpace(config.Subject.Organization) || string.IsNullOrWhiteSpace(config.Subject.OrganizationalUnit) || string.IsNullOrWhiteSpace(config.Subject.Locality) || string.IsNullOrWhiteSpace(config.Subject.State) || string.IsNullOrWhiteSpace(config.Subject.Country))
+        {
+            throw new ValidationException("Subject options must be fully specified.");
+        }
+
+        if (!isInternal && (config.Host == null || string.IsNullOrWhiteSpace(config.Host.IpAddress) || string.IsNullOrWhiteSpace(config.Host.MacAddress)))
+        {
+            throw new ValidationException("For external configurations, Host must have a valid IP and MAC address.");
+        }
     }
 
     public async Task SaveConfigurationAsync(HostConfiguration hostConfiguration)
@@ -47,4 +68,3 @@ public class HostConfigurationService : IHostConfigurationService
         await File.WriteAllTextAsync(configFilePath, hostConfigurationJson);
     }
 }
-
