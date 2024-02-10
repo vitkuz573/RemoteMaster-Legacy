@@ -12,12 +12,12 @@ namespace RemoteMaster.Server.Components.Dialogs;
 public partial class MoveDialog
 {
     private string _currentGroupName = string.Empty;
-    private List<Group> _groups = [];
+    private List<OrganizationalUnit> _groups = [];
     private Guid _selectedGroupId;
 
     protected async override Task OnInitializedAsync()
     {
-        _groups = (await DatabaseService.GetNodesAsync(node => node is Group)).OfType<Group>().ToList();
+        _groups = (await DatabaseService.GetNodesAsync(node => node is OrganizationalUnit)).OfType<OrganizationalUnit>().ToList();
 
         if (!Hosts.IsEmpty)
         {

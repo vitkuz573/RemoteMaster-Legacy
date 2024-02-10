@@ -18,9 +18,9 @@ namespace RemoteMaster.Server.Data.Migrations
                     NodeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ParentId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    NodeType = table.Column<string>(type: "nvarchar(8)", maxLength: 8, nullable: false),
-                    IPAddress = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    MACAddress = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    NodeType = table.Column<string>(type: "nvarchar(21)", maxLength: 21, nullable: false),
+                    IpAddress = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    MacAddress = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {

@@ -35,12 +35,12 @@ public partial class Home
 
     protected async override Task OnInitializedAsync()
     {
-        _nodes = (await DatabaseService.GetNodesAsync(f => f.Parent == null && f is Group)).ToHashSet();
+        _nodes = (await DatabaseService.GetNodesAsync(f => f.Parent == null && f is OrganizationalUnit)).ToHashSet();
     }
 
     private void LoadAndGroupComputers(Node node)
     {
-        if (node is not Group group)
+        if (node is not OrganizationalUnit group)
         {
             return;
         }
@@ -94,7 +94,7 @@ public partial class Home
         _selectedComputers.Clear();
         _selectedNode = node;
 
-        if (node is Group group)
+        if (node is OrganizationalUnit group)
         {
             LoadAndGroupComputers(node);
             await UpdateComputersThumbnailsAsync(group.Nodes.OfType<Computer>());
@@ -246,7 +246,7 @@ public partial class Home
 
     private async Task HandleRefreshClick()
     {
-        if (_selectedNode is Group selectedFolder)
+        if (_selectedNode is OrganizationalUnit selectedFolder)
         {
             await UpdateComputersThumbnailsAsync(selectedFolder.Nodes.OfType<Computer>());
         }

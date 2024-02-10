@@ -26,19 +26,19 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
 
         await Clients.Caller.ReceiveCertificate(certificate.Export(X509ContentType.Pfx));
 
-        var group = (await databaseService.GetNodesAsync(g => g.Name == hostConfiguration.Subject.OrganizationalUnit && g is Group)).OfType<Group>().FirstOrDefault();
+        var organizationalUnit = (await databaseService.GetNodesAsync(ou => ou.Name == hostConfiguration.Subject.OrganizationalUnit && ou is OrganizationalUnit)).OfType<OrganizationalUnit>().FirstOrDefault();
 
-        if (group == null)
+        if (organizationalUnit == null)
         {
-            group = new Group
+            organizationalUnit = new OrganizationalUnit
             {
                 Name = hostConfiguration.Subject.OrganizationalUnit
             };
 
-            await databaseService.AddNodeAsync(group);
+            await databaseService.AddNodeAsync(organizationalUnit);
         }
 
-        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(group.NodeId)).FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
+        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(organizationalUnit.NodeId)).FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
 
         if (existingComputer != null)
         {
@@ -51,7 +51,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
                 Name = hostConfiguration.Host.Name,
                 IpAddress = hostConfiguration.Host.IpAddress,
                 MacAddress = hostConfiguration.Host.MacAddress,
-                Parent = group
+                Parent = organizationalUnit
             };
 
             await databaseService.AddNodeAsync(computer);
@@ -69,33 +69,33 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             throw new ArgumentException("Host configuration must have a non-null Host property with a valid MAC address.", nameof(hostConfiguration));
         }
 
-        var group = (await databaseService.GetNodesAsync(g => g.Name == hostConfiguration.Subject.OrganizationalUnit && g is Group)).OfType<Group>().FirstOrDefault();
+        var organizationalUnit = (await databaseService.GetNodesAsync(ou => ou.Name == hostConfiguration.Subject.OrganizationalUnit && ou is OrganizationalUnit)).OfType<OrganizationalUnit>().FirstOrDefault();
 
-        if (group == null)
+        if (organizationalUnit == null)
         {
-            Log.Warning("Unregistration failed: Group '{Group}' not found.", hostConfiguration.Subject.OrganizationalUnit);
+            Log.Warning("Unregistration failed: OrganizationalUnit '{OrganizationalUnit}' not found.", hostConfiguration.Subject.OrganizationalUnit);
             
             return false;
         }
 
-        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(group.NodeId)).FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
+        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(organizationalUnit.NodeId)).FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
 
         if (existingComputer != null)
         {
             await databaseService.RemoveNodeAsync(existingComputer);
 
-            var remainingComputers = await databaseService.GetChildrenByParentIdAsync<Computer>(group.NodeId);
+            var remainingComputers = await databaseService.GetChildrenByParentIdAsync<Computer>(organizationalUnit.NodeId);
 
             if (!remainingComputers.Any())
             {
-                await databaseService.RemoveNodeAsync(group);
+                await databaseService.RemoveNodeAsync(organizationalUnit);
             }
 
             return true;
         }
         else
         {
-            Log.Warning("Unregistration failed: Computer with MAC address '{MACAddress}' not found in group '{Group}'.", hostConfiguration.Host.MacAddress, hostConfiguration.Subject.OrganizationalUnit);
+            Log.Warning("Unregistration failed: Computer with MAC address '{MACAddress}' not found in organizational unit '{OrganizationalUnit}'.", hostConfiguration.Host.MacAddress, hostConfiguration.Subject.OrganizationalUnit);
             
             return false;
         }
@@ -110,14 +110,14 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             throw new ArgumentException("Host configuration must have a non-null Host property.", nameof(hostConfiguration));
         }
 
-        var group = (await databaseService.GetNodesAsync(g => g.Name == hostConfiguration.Subject.OrganizationalUnit && g is Group)).OfType<Group>().FirstOrDefault();
+        var organizationalUnit = (await databaseService.GetNodesAsync(ou => ou.Name == hostConfiguration.Subject.OrganizationalUnit && ou is OrganizationalUnit)).OfType<OrganizationalUnit>().FirstOrDefault();
 
-        if (group == null)
+        if (organizationalUnit == null)
         {
             return false;
         }
 
-        var computer = (await databaseService.GetChildrenByParentIdAsync<Computer>(group.NodeId)).FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
+        var computer = (await databaseService.GetChildrenByParentIdAsync<Computer>(organizationalUnit.NodeId)).FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
 
         if (computer == null)
         {
@@ -191,11 +191,11 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
     public async Task<string?> GetNewOrganizationalUnitIfChangeRequested(string macAddress)
     {
         var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var groupChangeRequestsPath = Path.Combine(programData, "RemoteMaster", "Server", "OrganizationalUnitChangeRequests.json");
+        var ouChangeRequestsFilePath = Path.Combine(programData, "RemoteMaster", "Server", "OrganizationalUnitChangeRequests.json");
 
-        if (File.Exists(groupChangeRequestsPath))
+        if (File.Exists(ouChangeRequestsFilePath))
         {
-            var json = await File.ReadAllTextAsync(groupChangeRequestsPath);
+            var json = await File.ReadAllTextAsync(ouChangeRequestsFilePath);
             var changeRequests = JsonSerializer.Deserialize<List<OrganizationalUnitChangeRequest>>(json) ?? [];
             var request = changeRequests.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
 
@@ -213,11 +213,11 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
     public async Task AcknowledgeOrganizationalUnitChange(string macAddress)
     {
         var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var organizationalUnitChangeRequestsPath = Path.Combine(programData, "RemoteMaster", "Server", "OrganizationalUnitChangeRequests.json");
+        var ouChangeRequestsFilePath = Path.Combine(programData, "RemoteMaster", "Server", "OrganizationalUnitChangeRequests.json");
 
-        if (File.Exists(organizationalUnitChangeRequestsPath))
+        if (File.Exists(ouChangeRequestsFilePath))
         {
-            var json = await File.ReadAllTextAsync(organizationalUnitChangeRequestsPath);
+            var json = await File.ReadAllTextAsync(ouChangeRequestsFilePath);
             var changeRequests = JsonSerializer.Deserialize<List<OrganizationalUnitChangeRequest>>(json) ?? [];
 
             var requestToRemove = changeRequests.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
@@ -225,8 +225,8 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             if (requestToRemove != null)
             {
                 changeRequests.Remove(requestToRemove);
-                var updatedJson = JsonSerializer.Serialize(changeRequests, new JsonSerializerOptions { WriteIndented = true });
-                await File.WriteAllTextAsync(organizationalUnitChangeRequestsPath, updatedJson);
+                var updatedJson = JsonSerializer.Serialize(changeRequests);
+                await File.WriteAllTextAsync(ouChangeRequestsFilePath, updatedJson);
 
                 Log.Information("Acknowledged and removed organizational unit change request for MAC address {MACAddress}.", macAddress);
             }
@@ -237,7 +237,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         }
         else
         {
-            Log.Warning("Organizational unit change requests file not found at '{Path}'. Unable to acknowledge change request.", organizationalUnitChangeRequestsPath);
+            Log.Warning("Organizational unit change requests file not found at '{Path}'. Unable to acknowledge change request.", ouChangeRequestsFilePath);
         }
     }
 }

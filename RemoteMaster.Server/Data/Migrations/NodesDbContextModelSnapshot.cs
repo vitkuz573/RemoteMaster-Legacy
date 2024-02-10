@@ -17,7 +17,7 @@ namespace RemoteMaster.Server.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.0")
+                .HasAnnotation("ProductVersion", "8.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -35,8 +35,8 @@ namespace RemoteMaster.Server.Data.Migrations
 
                     b.Property<string>("NodeType")
                         .IsRequired()
-                        .HasMaxLength(8)
-                        .HasColumnType("nvarchar(8)");
+                        .HasMaxLength(21)
+                        .HasColumnType("nvarchar(21)");
 
                     b.Property<Guid?>("ParentId")
                         .HasColumnType("uniqueidentifier");
@@ -56,12 +56,12 @@ namespace RemoteMaster.Server.Data.Migrations
                 {
                     b.HasBaseType("RemoteMaster.Shared.Models.Node");
 
-                    b.Property<string>("IPAddress")
+                    b.Property<string>("IpAddress")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasAnnotation("Relational:JsonPropertyName", "ipAddress");
 
-                    b.Property<string>("MACAddress")
+                    b.Property<string>("MacAddress")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasAnnotation("Relational:JsonPropertyName", "macAddress");
@@ -69,11 +69,11 @@ namespace RemoteMaster.Server.Data.Migrations
                     b.HasDiscriminator().HasValue("Computer");
                 });
 
-            modelBuilder.Entity("RemoteMaster.Shared.Models.Group", b =>
+            modelBuilder.Entity("RemoteMaster.Shared.Models.OrganizationalUnit", b =>
                 {
                     b.HasBaseType("RemoteMaster.Shared.Models.Node");
 
-                    b.HasDiscriminator().HasValue("Folder");
+                    b.HasDiscriminator().HasValue("OrganizationalUnit");
                 });
 
             modelBuilder.Entity("RemoteMaster.Shared.Models.Node", b =>

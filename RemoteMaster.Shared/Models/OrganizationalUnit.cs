@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Shared.Models;
 
-public class Group : Node
+public class OrganizationalUnit : Node
 {
 }
 
