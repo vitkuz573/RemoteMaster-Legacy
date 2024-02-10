@@ -10,5 +10,5 @@ public interface IHostConfigurationService
 {
     Task<HostConfiguration> LoadConfigurationAsync(bool isInternal = true);
 
-    Task SaveConfigurationAsync(HostConfiguration config);
+    Task SaveConfigurationAsync(HostConfiguration hostConfiguration);
 }

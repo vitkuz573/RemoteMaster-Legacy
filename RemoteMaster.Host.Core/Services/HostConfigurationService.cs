@@ -32,16 +32,16 @@ public class HostConfigurationService : IHostConfigurationService
         throw new InvalidDataException($"Error reading, parsing, or validating the configuration file '{configFilePath}'.");
     }
 
-    public async Task SaveConfigurationAsync(HostConfiguration config)
+    public async Task SaveConfigurationAsync(HostConfiguration hostConfiguration)
     {
-        ArgumentNullException.ThrowIfNull(config);
+        ArgumentNullException.ThrowIfNull(hostConfiguration);
 
         var jsonSerializerOptions = new JsonSerializerOptions
         {
             WriteIndented = true
         };
 
-        var json = JsonSerializer.Serialize(config, jsonSerializerOptions);
+        var json = JsonSerializer.Serialize(hostConfiguration, jsonSerializerOptions);
         var configFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", _configurationFileName);
 
         await File.WriteAllTextAsync(configFilePath, json);
