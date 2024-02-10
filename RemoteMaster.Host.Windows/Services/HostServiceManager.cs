@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Text.Json;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Models;
@@ -10,7 +9,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHostInformationService hostInformationService, IHostConfigurationService hostConfigurationService, IUserInstanceService userInstanceService, IServiceManager serviceManager, IHostConfigurationService configurationService, IServiceConfiguration hostServiceConfig, JsonSerializerOptions jsonOptions) : IHostServiceManager
+public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHostInformationService hostInformationService, IHostConfigurationService hostConfigurationService, IUserInstanceService userInstanceService, IServiceManager serviceManager, IHostConfigurationService configurationService, IServiceConfiguration hostServiceConfig) : IHostServiceManager
 {
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Host";
@@ -205,8 +204,8 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
     private async Task<HostConfiguration> UpdateConfigurationAsync(string hostName, string ipAddress, string macAddress)
     {
         var configurationFilePath = Path.Combine(_applicationDirectory, configurationService.ConfigurationFileName);
-        var json = await File.ReadAllTextAsync(configurationFilePath);
-        var hostConfiguration = JsonSerializer.Deserialize<HostConfiguration>(json, jsonOptions) ?? new HostConfiguration();
+
+        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(configurationFilePath);
 
         hostConfiguration.Host ??= new Computer
         {
