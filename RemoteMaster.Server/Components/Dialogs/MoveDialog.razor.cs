@@ -79,12 +79,12 @@ public partial class MoveDialog
 
         var groupChangeRequestsPath = Path.Combine(applicationData, "GroupChangeRequests.json");
 
-        List<GroupChangeRequest> changeRequests;
+        List<OrganizationalUnitChangeRequest> changeRequests;
 
         if (File.Exists(groupChangeRequestsPath))
         {
             var existingJson = await File.ReadAllTextAsync(groupChangeRequestsPath);
-            changeRequests = JsonSerializer.Deserialize<List<GroupChangeRequest>>(existingJson) ?? [];
+            changeRequests = JsonSerializer.Deserialize<List<OrganizationalUnitChangeRequest>>(existingJson) ?? [];
         }
         else
         {
@@ -101,7 +101,7 @@ public partial class MoveDialog
             }
             else
             {
-                changeRequests.Add(new GroupChangeRequest(host.MacAddress, targetGroup));
+                changeRequests.Add(new OrganizationalUnitChangeRequest(host.MacAddress, targetGroup));
             }
         }
 

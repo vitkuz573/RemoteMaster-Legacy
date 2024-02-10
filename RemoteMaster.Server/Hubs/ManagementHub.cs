@@ -188,15 +188,15 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         }
     }
 
-    public async Task<string?> GetNewGroupIfChangeRequested(string macAddress)
+    public async Task<string?> GetNewOrganizationalUnitIfChangeRequested(string macAddress)
     {
         var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var groupChangeRequestsPath = Path.Combine(programData, "RemoteMaster", "Server", "GroupChangeRequests.json");
+        var groupChangeRequestsPath = Path.Combine(programData, "RemoteMaster", "Server", "OrganizationalUnitChangeRequests.json");
 
         if (File.Exists(groupChangeRequestsPath))
         {
             var json = await File.ReadAllTextAsync(groupChangeRequestsPath);
-            var changeRequests = JsonSerializer.Deserialize<List<GroupChangeRequest>>(json) ?? [];
+            var changeRequests = JsonSerializer.Deserialize<List<OrganizationalUnitChangeRequest>>(json) ?? [];
             var request = changeRequests.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
 
             if (request != null)
@@ -205,20 +205,20 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             }
         }
 
-        Log.Information("No group change request found for MAC address {MACAddress}.", macAddress);
+        Log.Information("No organizational unit change request found for MAC address {MACAddress}.", macAddress);
 
         return null;
     }
 
-    public async Task AcknowledgeGroupChange(string macAddress)
+    public async Task AcknowledgeOrganizationalUnitChange(string macAddress)
     {
         var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var groupChangeRequestsPath = Path.Combine(programData, "RemoteMaster", "Server", "GroupChangeRequests.json");
+        var organizationalUnitChangeRequestsPath = Path.Combine(programData, "RemoteMaster", "Server", "OrganizationalUnitChangeRequests.json");
 
-        if (File.Exists(groupChangeRequestsPath))
+        if (File.Exists(organizationalUnitChangeRequestsPath))
         {
-            var json = await File.ReadAllTextAsync(groupChangeRequestsPath);
-            var changeRequests = JsonSerializer.Deserialize<List<GroupChangeRequest>>(json) ?? [];
+            var json = await File.ReadAllTextAsync(organizationalUnitChangeRequestsPath);
+            var changeRequests = JsonSerializer.Deserialize<List<OrganizationalUnitChangeRequest>>(json) ?? [];
 
             var requestToRemove = changeRequests.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
 
@@ -226,18 +226,18 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             {
                 changeRequests.Remove(requestToRemove);
                 var updatedJson = JsonSerializer.Serialize(changeRequests, new JsonSerializerOptions { WriteIndented = true });
-                await File.WriteAllTextAsync(groupChangeRequestsPath, updatedJson);
+                await File.WriteAllTextAsync(organizationalUnitChangeRequestsPath, updatedJson);
 
-                Log.Information("Acknowledged and removed group change request for MAC address {MACAddress}.", macAddress);
+                Log.Information("Acknowledged and removed organizational unit change request for MAC address {MACAddress}.", macAddress);
             }
             else
             {
-                Log.Information("No group change request found for MAC address {MACAddress} to acknowledge.", macAddress);
+                Log.Information("No organizational unit change request found for MAC address {MACAddress} to acknowledge.", macAddress);
             }
         }
         else
         {
-            Log.Warning("Group change requests file not found at '{Path}'. Unable to acknowledge change request.", groupChangeRequestsPath);
+            Log.Warning("Organizational unit change requests file not found at '{Path}'. Unable to acknowledge change request.", organizationalUnitChangeRequestsPath);
         }
     }
 }
