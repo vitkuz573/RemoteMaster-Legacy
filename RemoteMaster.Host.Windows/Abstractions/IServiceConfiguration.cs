@@ -10,6 +10,8 @@ public interface IServiceConfiguration
 
     string DisplayName { get; }
 
+    string BinPath { get; }
+
     string? Description { get; }
 
     string StartType { get; }

@@ -10,13 +10,13 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class ServiceManager : IServiceManager
 {
-    public bool IsServiceInstalled(string serviceName) => ServiceController.GetServices().Any(service => service.ServiceName == serviceName);
+    public bool IsInstalled(string serviceName) => ServiceController.GetServices().Any(service => service.ServiceName == serviceName);
 
-    public void InstallService(IServiceConfiguration serviceConfig, string executablePath)
+    public void Create(IServiceConfiguration serviceConfig)
     {
         ArgumentNullException.ThrowIfNull(serviceConfig);
 
-        ExecuteServiceCommand($"create {serviceConfig.Name} DisplayName= \"{serviceConfig.DisplayName}\" binPath= \"{executablePath}\" start= {serviceConfig.StartType}");
+        ExecuteServiceCommand($"create {serviceConfig.Name} DisplayName= \"{serviceConfig.DisplayName}\" binPath= \"{serviceConfig.BinPath}\" start= {serviceConfig.StartType}");
 
         if (!string.IsNullOrWhiteSpace(serviceConfig.Description))
         {
@@ -32,7 +32,7 @@ public class ServiceManager : IServiceManager
         ExecuteServiceCommand($"config {serviceConfig.Name} depend= {dependenciesStr}");
     }
 
-    public void StartService(string serviceName)
+    public void Start(string serviceName)
     {
         using var serviceController = new ServiceController(serviceName);
 
@@ -45,7 +45,7 @@ public class ServiceManager : IServiceManager
         serviceController.WaitForStatus(ServiceControllerStatus.Running);
     }
 
-    public void StopService(string serviceName)
+    public void Stop(string serviceName)
     {
         using var serviceController = new ServiceController(serviceName);
 
@@ -58,7 +58,7 @@ public class ServiceManager : IServiceManager
         serviceController.WaitForStatus(ServiceControllerStatus.Stopped);
     }
 
-    public void UninstallService(string serviceName) => ExecuteServiceCommand($"delete {serviceName}");
+    public void Delete(string serviceName) => ExecuteServiceCommand($"delete {serviceName}");
 
     private static void ExecuteServiceCommand(string arguments)
     {

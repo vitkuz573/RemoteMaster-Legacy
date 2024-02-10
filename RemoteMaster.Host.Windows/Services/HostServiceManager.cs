@@ -41,13 +41,13 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
 
             Log.Information("Host Name: {HostName}, IP Address: {IPAddress}, MAC Address: {MacAddress}", hostInformation.Name, hostInformation.IpAddress, hostInformation.MacAddress);
 
-            if (serviceManager.IsServiceInstalled(hostServiceConfig.Name))
+            if (serviceManager.IsInstalled(hostServiceConfig.Name))
             {
                 using var serviceController = new ServiceController(hostServiceConfig.Name);
 
                 if (serviceController.Status != ServiceControllerStatus.Stopped)
                 {
-                    serviceManager.StopService(hostServiceConfig.Name);
+                    serviceManager.Stop(hostServiceConfig.Name);
                 }
 
                 CopyToTargetPath(_applicationDirectory);
@@ -55,13 +55,12 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
             else
             {
                 CopyToTargetPath(_applicationDirectory);
-                var hostPath = Path.Combine(_applicationDirectory, $"{MainAppName}.{SubAppName}.exe");
-                serviceManager.InstallService(hostServiceConfig, $"{hostPath} --service-mode");
+                serviceManager.Create(hostServiceConfig);
             }
 
             var updatedHostConfiguration = await UpdateConfigurationAsync(hostInformation.Name, hostInformation.IpAddress, hostInformation.MacAddress);
 
-            serviceManager.StartService(hostServiceConfig.Name);
+            serviceManager.Start(hostServiceConfig.Name);
 
             Log.Information("{ServiceName} installed and started successfully.", hostServiceConfig.Name);
 
@@ -93,10 +92,10 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
                 return;
             }
 
-            if (serviceManager.IsServiceInstalled(hostServiceConfig.Name))
+            if (serviceManager.IsInstalled(hostServiceConfig.Name))
             {
-                serviceManager.StopService(hostServiceConfig.Name);
-                serviceManager.UninstallService(hostServiceConfig.Name);
+                serviceManager.Stop(hostServiceConfig.Name);
+                serviceManager.Delete(hostServiceConfig.Name);
 
                 Log.Information("{ServiceName} Service uninstalled successfully.", hostServiceConfig.Name);
             }
