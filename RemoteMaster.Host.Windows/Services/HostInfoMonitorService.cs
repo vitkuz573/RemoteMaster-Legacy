@@ -14,8 +14,6 @@ public class HostInfoMonitorService(IServerHubService serverHubService, IHostCon
 {
     private System.Timers.Timer? _timer;
 
-    private readonly string _configDirectoryPath = Path.GetDirectoryName(Environment.ProcessPath)!;
-
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _timer = new System.Timers.Timer(60000);
@@ -31,7 +29,7 @@ public class HostInfoMonitorService(IServerHubService serverHubService, IHostCon
 
         try
         {
-            hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(_configDirectoryPath);
+            hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
         }
         catch (Exception ex) when (ex is FileNotFoundException or InvalidDataException)
         {
@@ -53,7 +51,7 @@ public class HostInfoMonitorService(IServerHubService serverHubService, IHostCon
             {
                 hostConfiguration.Host = hostInformation;
 
-                await hostConfigurationService.SaveConfigurationAsync(hostConfiguration, _configDirectoryPath);
+                await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
 
                 await hostLifecycleService.UpdateHostInformationAsync(hostConfiguration);
                 await hostLifecycleService.UnregisterAsync(hostConfiguration);
@@ -77,7 +75,7 @@ public class HostInfoMonitorService(IServerHubService serverHubService, IHostCon
             }
 
             hostConfiguration.Group = newGroup;
-            await hostConfigurationService.SaveConfigurationAsync(hostConfiguration, _configDirectoryPath);
+            await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
             Log.Information("Group for this device was updated based on the group change request.");
             await serverHubService.AcknowledgeGroupChange(hostConfiguration.Host.MacAddress);
         }

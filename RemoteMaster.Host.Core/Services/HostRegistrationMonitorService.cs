@@ -26,9 +26,7 @@ public class HostRegistrationMonitorService(IHostLifecycleService hostLifecycleS
     {
         try
         {
-            var configDirectoryPath = Path.GetDirectoryName(Environment.ProcessPath)!;
-
-            var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(configDirectoryPath);
+            var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
 
             if (await hostLifecycleService.IsHostRegisteredAsync(hostConfiguration))
             {

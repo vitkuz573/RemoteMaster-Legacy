@@ -12,19 +12,14 @@ public class HostConfigurationService : IHostConfigurationService
 {
     private readonly string _configurationFileName = $"{AppDomain.CurrentDomain.FriendlyName}.json";
 
-    public async Task<HostConfiguration> LoadConfigurationAsync()
+    public async Task<HostConfiguration> LoadConfigurationAsync(bool isInternal = true)
     {
-        return await LoadConfigurationInternalAsync(_configurationFileName);
-    }
-
-    public async Task<HostConfiguration> LoadConfigurationAsync(string configDirectory)
-    {
-        if (string.IsNullOrWhiteSpace(configDirectory))
+        if (isInternal)
         {
-            throw new ArgumentException("File path cannot be null or whitespace.", nameof(configDirectory));
+            return await LoadConfigurationInternalAsync(_configurationFileName);
         }
-
-        var configFilePath = Path.Combine(configDirectory, _configurationFileName);
+        
+        var configFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", _configurationFileName);
 
         return await LoadConfigurationInternalAsync(configFilePath);
     }
@@ -39,6 +34,16 @@ public class HostConfigurationService : IHostConfigurationService
         }
 
         throw new InvalidDataException($"Error reading, parsing, or validating the configuration file '{filePath}'.");
+    }
+
+    public async Task SaveConfigurationAsync(HostConfiguration config)
+    {
+        ArgumentNullException.ThrowIfNull(config);
+
+        var json = SerializeToJson(config);
+        var configFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", _configurationFileName);
+
+        await WriteFileAsync(configFilePath, json);
     }
 
     private static async Task<HostConfiguration?> TryReadAndDeserializeFileAsync(string fileName)
@@ -86,21 +91,6 @@ public class HostConfigurationService : IHostConfigurationService
             { Server: not null and not "", Group: not null and not "" } => true,
             _ => false
         };
-    }
-
-    public async Task SaveConfigurationAsync(HostConfiguration config, string configDirectory)
-    {
-        ArgumentNullException.ThrowIfNull(config);
-
-        if (string.IsNullOrWhiteSpace(configDirectory))
-        {
-            throw new ArgumentException("File path cannot be null or whitespace.", nameof(configDirectory));
-        }
-
-        var json = SerializeToJson(config);
-        var configFilePath = Path.Combine(configDirectory, _configurationFileName);
-
-        await WriteFileAsync(configFilePath, json);
     }
 
     private static string SerializeToJson(HostConfiguration config)

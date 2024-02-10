@@ -39,7 +39,7 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
 
             hostConfiguration.Host = hostInformation;
 
-            await hostConfigurationService.SaveConfigurationAsync(hostConfiguration, _applicationDirectory);
+            await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
             
             serviceManager.Start(hostServiceConfig.Name);
 
@@ -57,7 +57,7 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
     {
         try
         {
-            var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(_applicationDirectory);
+            var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
 
             if (serviceManager.IsInstalled(hostServiceConfig.Name))
             {
