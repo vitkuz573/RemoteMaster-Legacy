@@ -16,9 +16,15 @@ public class HostConfigurationService : IHostConfigurationService
     {
         var configFilePath = isInternal ? _configurationFileName : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", _configurationFileName);
 
-        var config = await TryReadAndDeserializeFileAsync(configFilePath);
+        if (!File.Exists(configFilePath))
+        {
+            throw new InvalidDataException($"Error reading, parsing, or validating the configuration file '{configFilePath}'.");
+        }
 
-        if (config != null)
+        var json = await File.ReadAllTextAsync(configFilePath);
+        var config = JsonSerializer.Deserialize<HostConfiguration>(json);
+
+        if (config is { Server: not null } && config.Server != "" && config.Group != "")
         {
             return config;
         }
@@ -30,66 +36,15 @@ public class HostConfigurationService : IHostConfigurationService
     {
         ArgumentNullException.ThrowIfNull(config);
 
-        var json = SerializeToJson(config);
+        var jsonSerializerOptions = new JsonSerializerOptions
+        {
+            WriteIndented = true
+        };
+
+        var json = JsonSerializer.Serialize(config, jsonSerializerOptions);
         var configFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", _configurationFileName);
 
-        await WriteFileAsync(configFilePath, json);
-    }
-
-    private static async Task<HostConfiguration?> TryReadAndDeserializeFileAsync(string fileName)
-    {
-        var json = await ReadFileAsync(fileName);
-
-        if (json is not null && TryDeserializeJson(json, out var config) && IsValidConfig(config))
-        {
-            return config;
-        }
-
-        return null;
-    }
-
-    private static async Task<string?> ReadFileAsync(string fileName)
-    {
-        if (File.Exists(fileName))
-        {
-            return await File.ReadAllTextAsync(fileName);
-        }
-
-        return null;
-    }
-
-    private static bool TryDeserializeJson(string json, out HostConfiguration? config)
-    {
-        try
-        {
-            config = JsonSerializer.Deserialize<HostConfiguration>(json);
-
-            return true;
-        }
-        catch (JsonException)
-        {
-            config = null;
-
-            return false;
-        }
-    }
-
-    private static bool IsValidConfig(HostConfiguration? config)
-    {
-        return config switch
-        {
-            { Server: not null and not "", Group: not null and not "" } => true,
-            _ => false
-        };
-    }
-
-    private static string SerializeToJson(HostConfiguration config)
-    {
-        return JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
-    }
-
-    private static async Task WriteFileAsync(string fileName, string json)
-    {
-        await File.WriteAllTextAsync(fileName, json);
+        await File.WriteAllTextAsync(configFilePath, json);
     }
 }
+
