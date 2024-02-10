@@ -180,8 +180,7 @@ public partial class FileManager : IDisposable
         }
     }
 
-    [SuppressMessage("Performance", "CA1822:Пометьте члены как статические", Justification = "<Ожидание>")]
-    private string GetIcon(FileSystemItem.FileSystemItemType type)
+    private static string GetIcon(FileSystemItem.FileSystemItemType type)
     {
         return type == FileSystemItem.FileSystemItemType.Directory ? Icons.Material.Filled.Folder : Icons.Material.Filled.InsertDriveFile;
     }
