@@ -64,7 +64,7 @@ public partial class Home
                 _unavailableComputers.Add(computer);
             }
 
-            await InvokeAsync(StateHasChanged); // Update UI for each computer
+            await InvokeAsync(StateHasChanged);
         }
     }
 

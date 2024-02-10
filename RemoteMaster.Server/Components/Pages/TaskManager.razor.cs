@@ -34,9 +34,7 @@ public partial class TaskManager : IDisposable
 
     private bool _isDarkMode = true;
 
-    private readonly MudTheme _theme = new()
-    {
-    };
+    private readonly MudTheme _theme = new();
 
     protected async override Task OnInitializedAsync()
     {
@@ -73,7 +71,7 @@ public partial class TaskManager : IDisposable
             await InvokeAsync(StateHasChanged);
         });
 
-        _connection.Closed += async (error) =>
+        _connection.Closed += async (_) =>
         {
             await Task.Delay(TimeSpan.FromSeconds(5));
             await _connection.StartAsync();
@@ -157,6 +155,6 @@ public partial class TaskManager : IDisposable
 
     public void Dispose()
     {
-        _connection?.DisposeAsync();
+        _connection.DisposeAsync();
     }
 }
