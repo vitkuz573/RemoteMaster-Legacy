@@ -30,6 +30,4 @@ public interface IControlClient
     Task ReceiveRunningProcesses(List<ProcessInfo> processes);
 
     Task ReceiveAvailableDrives(List<string> availableDrives);
-
-    Task ReceiveOrganizationalUnitChanged(string groupName);
 }
