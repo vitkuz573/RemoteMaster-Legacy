@@ -6,14 +6,14 @@
     <Content>
         @if (!string.IsNullOrWhiteSpace(_currentOrganizationalUnitName))
         {
-            <MudText Typo="Typo.body1">Current group: @_currentOrganizationalUnitName</MudText>
+            <MudText Typo="Typo.body1">Current OU: @_currentOrganizationalUnitName</MudText>
         }
 
-        <MudSelect Label="Select target folder" @bind-Value="_selectedOrganizationalUnitId">
-            @foreach (var group in _organizationalUnits)
+        <MudSelect Label="Select target OU" @bind-Value="_selectedOrganizationalUnitId">
+            @foreach (var organizationalUnit in _organizationalUnits)
             {
-                <MudSelectItem Value="@group.NodeId">
-                    @group.Name
+                <MudSelectItem Value="@organizationalUnit.NodeId">
+                    @organizationalUnit.Name
                 </MudSelectItem>
             }
         </MudSelect>
