@@ -15,7 +15,7 @@ namespace RemoteMaster.Server.Services;
 
 public class ComputerCommandService(IJSRuntime jsRuntime) : IComputerCommandService
 {
-    private static readonly AsyncRetryPolicy RetryPolicy = Policy
+    private readonly AsyncRetryPolicy _retryPolicy = Policy
         .Handle<Exception>()
         .WaitAndRetryAsync(new[]
         {
@@ -30,7 +30,7 @@ public class ComputerCommandService(IJSRuntime jsRuntime) : IComputerCommandServ
 
         foreach (var (computer, connection) in hosts)
         {
-            await RetryPolicy.ExecuteAsync(async () =>
+            await _retryPolicy.ExecuteAsync(async () =>
             {
                 if (connection?.State == HubConnectionState.Connected)
                 {
