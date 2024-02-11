@@ -9,7 +9,7 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class PsExecService : IPsExecService
+public class PsExecService(IHostConfigurationService hostConfigurationService) : IPsExecService
 {
     private readonly Dictionary<string, string> _ruleGroupNames = new()
     {
@@ -17,20 +17,16 @@ public class PsExecService : IPsExecService
         { "ru-RU", "Удаленное управление службой" }
     };
 
-    public void Enable()
+    public async Task AllowAsync()
     {
+        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
+
         ExecuteCommand("winrm qc -force");
-        ExecuteCommand(@"netsh AdvFirewall firewall add rule name=PSExec dir=In action=allow protocol=TCP localport=RPC profile=domain,private program=""%WinDir%\system32\services.exe"" service=any");
+        ExecuteCommand($@"netsh AdvFirewall firewall add rule name=PSExec dir=In action=allow protocol=TCP localport=RPC profile=domain,private program=""%WinDir%\system32\services.exe"" service=any remoteip={hostConfiguration.Server}");
         var localizedRuleGroupName = GetLocalizedRuleGroupName();
         ExecuteCommand($@"netsh AdvFirewall firewall set rule group=""{localizedRuleGroupName}"" new enable=yes");
 
         Log.Information("PsExec and WinRM configurations have been enabled.");
-    }
-
-    public void Disable()
-    {
-        ExecuteCommand("netsh AdvFirewall firewall delete rule name=PSExec");
-        Log.Information("PsExec rule has been disabled.");
     }
 
     private static void ExecuteCommand(string command)
