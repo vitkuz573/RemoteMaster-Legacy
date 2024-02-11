@@ -32,7 +32,7 @@ public partial class FileUploadDialog
 
     private async Task Upload()
     {
-        FileUploadDto? fileDto = null;
+        FileUploadDto? fileDto;
 
         foreach (var file in _files)
         {

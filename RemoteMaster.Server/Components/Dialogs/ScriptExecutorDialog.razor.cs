@@ -99,6 +99,6 @@ public partial class ScriptExecutorDialog
         zipMemoryStream.Position = 0;
         var base64Zip = Convert.ToBase64String(zipMemoryStream.ToArray());
 
-        await JSRuntime.InvokeVoidAsync("generateAndDownloadResults", base64Zip, "RemoteMaster_Results.zip");
+        await JsRuntime.InvokeVoidAsync("generateAndDownloadResults", base64Zip, "RemoteMaster_Results.zip");
     }
 }

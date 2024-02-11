@@ -18,7 +18,7 @@ public class DatabaseService(NodesDbContext context) : IDatabaseService
 
         if (predicate != null)
         {
-            query = query.Where(predicate!);
+            query = query.Where(predicate);
         }
 
         return await query.Include(node => node.Nodes).ToListAsync();

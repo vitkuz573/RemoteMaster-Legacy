@@ -92,7 +92,7 @@ public partial class TaskManager : IDisposable
                 }
                 catch (HubException ex) when (ex.Message.Contains("Method does not exist"))
                 {
-                    await JSRuntime.InvokeVoidAsync("showAlert", "This function is not available in the current host version. Please update your host.");
+                    await JsRuntime.InvokeVoidAsync("showAlert", "This function is not available in the current host version. Please update your host.");
                 }
             }
             else
