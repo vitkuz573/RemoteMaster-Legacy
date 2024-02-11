@@ -273,12 +273,12 @@ public partial class Home
             return;
         }
 
-        var dialogParameters = new DialogParameters<PsexecRulesDialog>
+        var dialogParameters = new DialogParameters<PsExecRulesDialog>
         {
             { x => x.Hosts, await GetComputers() }
         };
 
-        await DialogService.ShowAsync<PsexecRulesDialog>("PSExec rules", dialogParameters);
+        await DialogService.ShowAsync<PsExecRulesDialog>("PSExec rules", dialogParameters);
     }
 
     private async Task ScreenRecorder()

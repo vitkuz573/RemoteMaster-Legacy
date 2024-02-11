@@ -7,13 +7,13 @@ using MudBlazor;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
-public partial class PsexecRulesDialog
+public partial class PsExecRulesDialog
 {
     private bool _selectedOption;
 
     private async Task Ok()
     {
-        await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("SetPSExecRules", _selectedOption));
+        await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("SetPsExecRules", _selectedOption));
 
         MudDialog.Close(DialogResult.Ok(true));
     }

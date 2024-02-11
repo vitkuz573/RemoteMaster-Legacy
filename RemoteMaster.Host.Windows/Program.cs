@@ -68,6 +68,7 @@ internal class Program
         builder.Services.AddSingleton<IScriptService, ScriptService>();
         builder.Services.AddSingleton<ITaskManagerService, TaskManagerService>();
         builder.Services.AddSingleton<ISecureAttentionSequenceService, SecureAttentionSequenceService>();
+        builder.Services.AddSingleton<IPsExecService, PsExecService>();
         builder.Services.AddSingleton(new JsonSerializerOptions
         {
             WriteIndented = true,
