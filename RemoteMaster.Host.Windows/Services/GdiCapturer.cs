@@ -21,7 +21,7 @@ public class GdiCapturer : ScreenCapturerService
 
     public override Rectangle CurrentScreenBounds { get; protected set; } = Screen.PrimaryScreen?.Bounds ?? Rectangle.Empty;
 
-    public override Rectangle VirtualScreenBounds { get; protected set; } = SystemInformation.VirtualScreen;
+    public override Rectangle VirtualScreenBounds { get; } = SystemInformation.VirtualScreen;
 
     public override string SelectedScreen { get; protected set; } = Screen.PrimaryScreen?.DeviceName ?? string.Empty;
 

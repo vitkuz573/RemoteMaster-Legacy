@@ -30,7 +30,7 @@ public abstract class ScreenCapturerService : IScreenCapturerService
 
     public abstract Rectangle CurrentScreenBounds { get; protected set; }
 
-    public abstract Rectangle VirtualScreenBounds { get; protected set; }
+    public abstract Rectangle VirtualScreenBounds { get; }
 
     public abstract string SelectedScreen { get; protected set; }
 

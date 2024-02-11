@@ -35,7 +35,7 @@ public class CursorRenderService : ICursorRenderService
             return;
         }
 
-        var currentScreenBounds = _cachedScreenBounds ?? RequestScreenBounds?.Invoke() ?? Rectangle.Empty;
+        var currentScreenBounds = _cachedScreenBounds ?? RequestScreenBounds.Invoke();
 
         var relativeX = cursorInfo.ptScreenPos.X - currentScreenBounds.Left;
         var relativeY = cursorInfo.ptScreenPos.Y - currentScreenBounds.Top;

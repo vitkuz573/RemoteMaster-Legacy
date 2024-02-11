@@ -18,17 +18,19 @@ public class WoLConfiguratorService : IWoLConfiguratorService
     {
         try
         {
-            using var searcher = new ManagementObjectSearcher(@"SELECT * FROM Win32_NetworkAdapter WHERE NetEnabled = TRUE");
+            using var searcher = new ManagementObjectSearcher("SELECT * FROM Win32_NetworkAdapter WHERE NetEnabled = TRUE");
 
             foreach (var networkAdapter in searcher.Get().Cast<ManagementObject>())
             {
                 var connectionId = (string)networkAdapter["NetConnectionID"];
 
-                if (connectionId != null)
+                if (connectionId == null)
                 {
-                    Log.Information("Enabling WoL for {ConnectionId}...", connectionId);
-                    EnableWoLForAdapter(connectionId);
+                    continue;
                 }
+
+                Log.Information("Enabling WoL for {ConnectionId}...", connectionId);
+                EnableWoLForAdapter(connectionId);
             }
 
             DisablePowerManagementForAllAdapters();
@@ -54,17 +56,16 @@ public class WoLConfiguratorService : IWoLConfiguratorService
 
     private static void ExecuteCommand(string command)
     {
-        using var process = new Process
+        using var process = new Process();
+
+        process.StartInfo = new ProcessStartInfo
         {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = "cmd.exe",
-                Arguments = $"/c {command}",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            }
+            FileName = "cmd.exe",
+            Arguments = $"/c {command}",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
         };
 
         process.Start();
@@ -89,7 +90,7 @@ public class WoLConfiguratorService : IWoLConfiguratorService
     {
         try
         {
-            var registryPath = @"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002bE10318}";
+            const string registryPath = @"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}";
             using var key = Registry.LocalMachine.OpenSubKey(registryPath, true);
 
             if (key == null)
@@ -104,19 +105,16 @@ public class WoLConfiguratorService : IWoLConfiguratorService
                 {
                     using var subKey = key.OpenSubKey(subKeyName, true);
 
-                    if (subKey == null)
+                    if (subKey?.GetValue("PnPCapabilities") == null)
                     {
                         continue;
                     }
 
-                    if (subKey.GetValue("PnPCapabilities") != null)
-                    {
-                        var currentValue = (int?)subKey.GetValue("PnPCapabilities");
-                        Log.Information("Current PnPCapabilities for adapter {Adapter}: {Value}", subKeyName, currentValue);
+                    var currentValue = (int?)subKey.GetValue("PnPCapabilities");
+                    Log.Information("Current PnPCapabilities for adapter {Adapter}: {Value}", subKeyName, currentValue);
 
-                        subKey.SetValue("PnPCapabilities", AllowToTurnOff);
-                        Log.Information("Set PnPCapabilities for adapter {Adapter} to {Value}", subKeyName, AllowToTurnOff);
-                    }
+                    subKey.SetValue("PnPCapabilities", AllowToTurnOff);
+                    Log.Information("Set PnPCapabilities for adapter {Adapter} to {Value}", subKeyName, AllowToTurnOff);
                 }
                 catch (Exception ex)
                 {
