@@ -4,13 +4,13 @@
 
 <CommonDialog Hosts="@Hosts" ContentStyle="width: 500px;">
     <Content>
-        @if (!string.IsNullOrWhiteSpace(_currentGroupName))
+        @if (!string.IsNullOrWhiteSpace(_currentOrganizationalUnitName))
         {
-            <MudText Typo="Typo.body1">Current group: @_currentGroupName</MudText>
+            <MudText Typo="Typo.body1">Current group: @_currentOrganizationalUnitName</MudText>
         }
 
-        <MudSelect Label="Select target folder" @bind-Value="_selectedGroupId">
-            @foreach (var group in _groups)
+        <MudSelect Label="Select target folder" @bind-Value="_selectedOrganizationalUnitId">
+            @foreach (var group in _organizationalUnits)
             {
                 <MudSelectItem Value="@group.NodeId">
                     @group.Name
