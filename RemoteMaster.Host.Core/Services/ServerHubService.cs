@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.Extensions.DependencyInjection;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Models;
 
@@ -17,7 +16,6 @@ public class ServerHubService : IServerHubService
     {
         _hubConnection = new HubConnectionBuilder()
             .WithUrl($"http://{serverIp}:5254/hubs/management")
-            .AddMessagePackProtocol()
             .Build();
 
         await _hubConnection.StartAsync();

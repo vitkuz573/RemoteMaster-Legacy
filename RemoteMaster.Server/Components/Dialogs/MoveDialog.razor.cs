@@ -77,13 +77,13 @@ public partial class MoveDialog
             Directory.CreateDirectory(applicationData);
         }
 
-        var ouChangeRequestsPath = Path.Combine(applicationData, "OrganizationalUnitChangeRequests.json");
+        var ouChangeRequestsFilePath = Path.Combine(applicationData, "OrganizationalUnitChangeRequests.json");
 
         List<OrganizationalUnitChangeRequest> changeRequests;
 
-        if (File.Exists(ouChangeRequestsPath))
+        if (File.Exists(ouChangeRequestsFilePath))
         {
-            var existingJson = await File.ReadAllTextAsync(ouChangeRequestsPath);
+            var existingJson = await File.ReadAllTextAsync(ouChangeRequestsFilePath);
             changeRequests = JsonSerializer.Deserialize<List<OrganizationalUnitChangeRequest>>(existingJson) ?? [];
         }
         else
@@ -106,6 +106,6 @@ public partial class MoveDialog
         }
 
         var json = JsonSerializer.Serialize(changeRequests, new JsonSerializerOptions { WriteIndented = true });
-        await File.WriteAllTextAsync(ouChangeRequestsPath, json);
+        await File.WriteAllTextAsync(ouChangeRequestsFilePath, json);
     }
 }
