@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -109,7 +108,7 @@ public partial class TaskManager : IDisposable
         await InvokeAsync(StateHasChanged);
     }
 
-    private string FormatSize(long size)
+    private static string FormatSize(long size)
     {
         string[] sizes = ["B", "KB", "MB", "GB", "TB"];
         double len = size;
@@ -126,8 +125,7 @@ public partial class TaskManager : IDisposable
 
     private bool FilterFunc1(ProcessInfo processInfo) => FilterFunc(processInfo, _searchQuery);
 
-    [SuppressMessage("Performance", "CA1822:Пометьте члены как статические", Justification = "<Ожидание>")]
-    private bool FilterFunc(ProcessInfo processInfo, string searchQuery)
+    private static bool FilterFunc(ProcessInfo processInfo, string searchQuery)
     {
         if (string.IsNullOrWhiteSpace(searchQuery))
         {
@@ -139,12 +137,7 @@ public partial class TaskManager : IDisposable
             return true;
         }
 
-        if (processInfo.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
-        return false;
+        return processInfo.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase);
     }
 
     [JSInvokable]

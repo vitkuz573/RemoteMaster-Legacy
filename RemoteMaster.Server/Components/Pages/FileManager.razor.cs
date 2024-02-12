@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.SignalR;
@@ -201,7 +200,7 @@ public partial class FileManager : IDisposable
         }
     }
 
-    private string FormatSize(long size)
+    private static string FormatSize(long size)
     {
         string[] sizes = ["B", "KB", "MB", "GB", "TB"];
         double len = size;
@@ -225,20 +224,9 @@ public partial class FileManager : IDisposable
 
     private bool FilterFunc1(FileSystemItem fileSystemItem) => FilterFunc(fileSystemItem, _searchQuery);
 
-    [SuppressMessage("Performance", "CA1822:Пометьте члены как статические", Justification = "<Ожидание>")]
-    private bool FilterFunc(FileSystemItem fileSystemItem, string searchQuery)
+    private static bool FilterFunc(FileSystemItem fileSystemItem, string searchQuery)
     {
-        if (string.IsNullOrWhiteSpace(searchQuery))
-        {
-            return true;
-        }
-
-        if (fileSystemItem.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
-        return false;
+        return string.IsNullOrWhiteSpace(searchQuery) || fileSystemItem.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase);
     }
 
     [JSInvokable]
