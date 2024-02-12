@@ -296,7 +296,7 @@ public partial class Home
         await DialogService.ShowAsync<ScreenRecorderDialog>("Screen Recorder", dialogParameters);
     }
 
-    private async Task DomainMember()
+    private async Task DomainManagement()
     {
         if (_selectedComputers.All(computer => !_availableComputers.Contains(computer)))
         {

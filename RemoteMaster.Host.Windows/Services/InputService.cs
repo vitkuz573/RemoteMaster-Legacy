@@ -201,6 +201,13 @@ public sealed class InputService : IInputService
 
     public void SendKeyboardInput(KeyboardKeyDto dto)
     {
+        ArgumentNullException.ThrowIfNull(dto);
+
+        if (dto.KeyCode is (int)VIRTUAL_KEY.VK_LWIN or (int)VIRTUAL_KEY.VK_RWIN)
+        {
+            return;
+        }
+
         EnqueueOperation(() =>
         {
             PrepareAndSendInput(INPUT_TYPE.INPUT_KEYBOARD, dto, (input, data) =>
