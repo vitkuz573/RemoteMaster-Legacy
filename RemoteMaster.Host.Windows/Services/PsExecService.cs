@@ -22,11 +22,21 @@ public class PsExecService(IHostConfigurationService hostConfigurationService) :
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
 
         ExecuteCommand("winrm qc -force");
+
+        DeleteExistingRules("PSExec");
+
         ExecuteCommand($"""netsh AdvFirewall firewall add rule name=PSExec dir=In action=allow protocol=TCP localport=RPC profile=domain,private program="%WinDir%\system32\services.exe" service=any remoteip={hostConfiguration.Server}""");
+
         var localizedRuleGroupName = GetLocalizedRuleGroupName();
         ExecuteCommand($"""netsh AdvFirewall firewall set rule group="{localizedRuleGroupName}" new enable=yes""");
 
         Log.Information("PsExec and WinRM configurations have been enabled.");
+    }
+
+    private static void DeleteExistingRules(string ruleName)
+    {
+        ExecuteCommand($"netsh AdvFirewall firewall delete rule name={ruleName}");
+        Log.Information($"Deleted existing firewall rules named: {ruleName}");
     }
 
     private static void ExecuteCommand(string command)
@@ -58,7 +68,7 @@ public class PsExecService(IHostConfigurationService hostConfigurationService) :
     private string GetLocalizedRuleGroupName()
     {
         var currentCulture = CultureInfo.CurrentCulture.Name;
-        
+
         return _ruleGroupNames.TryGetValue(currentCulture, out var localizedGroupName) ? localizedGroupName : _ruleGroupNames["en-US"];
     }
 }
