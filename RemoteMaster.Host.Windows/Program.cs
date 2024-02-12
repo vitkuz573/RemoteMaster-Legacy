@@ -69,6 +69,7 @@ internal class Program
         builder.Services.AddSingleton<ITaskManagerService, TaskManagerService>();
         builder.Services.AddSingleton<ISecureAttentionSequenceService, SecureAttentionSequenceService>();
         builder.Services.AddSingleton<IPsExecService, PsExecService>();
+        builder.Services.AddSingleton<IFirewallSettingService, FirewallSettingService>();
         builder.Services.AddSingleton(new JsonSerializerOptions
         {
             WriteIndented = true,
@@ -178,6 +179,12 @@ internal class Program
         {
             secureAttentionSequenceService.SasOption = SoftwareSasOption.ServicesAndEaseOfAccessApplications;
         }
+
+        var firewallSettingService = app.Services.GetRequiredService<IFirewallSettingService>();
+
+        var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+        var applicationPath = Path.Combine(programFiles, "RemoteMaster", "Host", "RemoteMaster.Host.exe");
+        firewallSettingService.Execute("Remote Master Host", applicationPath);
 
         if (!app.Environment.IsDevelopment())
         {
