@@ -8,7 +8,7 @@ using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Models;
 using Serilog;
 
-namespace RemoteMaster.Host.Windows.Services;
+namespace RemoteMaster.Host.Core.Services;
 
 public class HostInformationMonitorService(IServerHubService serverHubService, IHostConfigurationService hostConfigurationService, IHostInformationService hostInformationService, IHostLifecycleService hostLifecycleService) : IHostedService
 {
@@ -78,6 +78,9 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
             await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
             Log.Information("Organizational unit for this device was updated based on the organizational unit change request.");
             await serverHubService.AcknowledgeOrganizationalUnitChange(hostConfiguration.Host.MacAddress);
+
+            await hostLifecycleService.UnregisterAsync(hostConfiguration);
+            await hostLifecycleService.RegisterAsync(hostConfiguration);
         }
         catch (Exception ex)
         {
