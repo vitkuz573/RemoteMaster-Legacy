@@ -8,5 +8,5 @@ public interface IPsExecService
 {
     Task EnableAsync();
 
-    void Disable();
+    Task DisableAsync();
 }

@@ -20,36 +20,27 @@ public class PsExecService(IHostConfigurationService hostConfigurationService) :
     public async Task EnableAsync()
     {
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
-
-        ExecuteCommand("winrm qc -force");
-
-        DeleteExistingRules("PSExec");
-
-        ExecuteCommand($"""netsh AdvFirewall firewall add rule name=PSExec dir=In action=allow protocol=TCP localport=RPC profile=domain,private program="%WinDir%\system32\services.exe" service=any remoteip={hostConfiguration.Server}""");
-
+        
+        await ExecuteCommandAsync("winrm qc -force");
+        await ExecuteCommandAsync($"""netsh AdvFirewall firewall add rule name=PSExec dir=In action=allow protocol=TCP localport=RPC profile=domain,private program="%WinDir%\\system32\\services.exe" service=any remoteip={hostConfiguration.Server}""");
+        
         var localizedRuleGroupName = GetLocalizedRuleGroupName();
-        ExecuteCommand($"""netsh AdvFirewall firewall set rule group="{localizedRuleGroupName}" new enable=yes""");
-
+        await ExecuteCommandAsync($"""netsh AdvFirewall firewall set rule group="{localizedRuleGroupName}" new enable=yes""");
+        
         Log.Information("PsExec and WinRM configurations have been enabled.");
     }
 
-    public void Disable()
+    public async Task DisableAsync()
     {
-        DeleteExistingRules("PSExec");
-
+        await ExecuteCommandAsync($"netsh AdvFirewall firewall delete rule name=PSExec");
+        
         var localizedRuleGroupName = GetLocalizedRuleGroupName();
-        ExecuteCommand($"""netsh AdvFirewall firewall set rule group="{localizedRuleGroupName}" new enable=no""");
-
+        await ExecuteCommandAsync($"""netsh AdvFirewall firewall set rule group="{localizedRuleGroupName}" new enable=no""");
+        
         Log.Information("PsExec and WinRM configurations have been disabled.");
     }
 
-    private static void DeleteExistingRules(string ruleName)
-    {
-        ExecuteCommand($"netsh AdvFirewall firewall delete rule name={ruleName}");
-        Log.Information($"Deleted existing firewall rules named: {ruleName}");
-    }
-
-    private static void ExecuteCommand(string command)
+    private static async Task ExecuteCommandAsync(string command)
     {
         try
         {
@@ -64,9 +55,9 @@ public class PsExecService(IHostConfigurationService hostConfigurationService) :
             process.StartInfo = processStartInfo;
             process.Start();
 
-            var result = process.StandardOutput.ReadToEnd();
-            process.WaitForExit();
+            var result = await process.StandardOutput.ReadToEndAsync();
 
+            await process.WaitForExitAsync();
             Log.Information($"Executed command: {command}\nResult: {result}");
         }
         catch (Exception ex)
