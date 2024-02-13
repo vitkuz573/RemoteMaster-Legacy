@@ -173,8 +173,6 @@ public partial class Access : IDisposable
             {
                 _selectedDisplay = primaryDisplay.Name;
             }
-
-            InvokeAsync(StateHasChanged);
         });
 
         _connection.On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate);
