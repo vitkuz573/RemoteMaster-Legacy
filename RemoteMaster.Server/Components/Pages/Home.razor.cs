@@ -58,13 +58,13 @@ public partial class Home
         {
             var isAvailable = await computer.IsAvailable();
 
-            if (!isAvailable)
+            if (isAvailable)
             {
-                _availableComputers.Remove(computer);
-                _unavailableComputers.Add(computer);
+                continue;
             }
 
-            await InvokeAsync(StateHasChanged);
+            _availableComputers.Remove(computer);
+            _unavailableComputers.Add(computer);
         }
     }
 
@@ -98,8 +98,6 @@ public partial class Home
             LoadNodes(node);
             await UpdateComputersThumbnailsAsync(organizationalUnit.Nodes.OfType<Computer>());
         }
-
-        StateHasChanged();
     }
 
     private async Task UpdateComputersThumbnailsAsync(IEnumerable<Computer> computers)
@@ -124,12 +122,11 @@ public partial class Home
 
         try
         {
-            connection.On<byte[]>("ReceiveThumbnail", async (thumbnailBytes) =>
+            connection.On<byte[]>("ReceiveThumbnail",  (thumbnailBytes) =>
             {
                 if (thumbnailBytes.Length > 0)
                 {
                     computer.Thumbnail = thumbnailBytes;
-                    await InvokeAsync(StateHasChanged);
                 }
             });
 
@@ -157,8 +154,6 @@ public partial class Home
         {
             _selectedComputers.Remove(computer);
         }
-
-        StateHasChanged();
     }
 
     private async Task Power()
@@ -418,8 +413,6 @@ public partial class Home
         _unavailableComputers = tempUnavailable;
 
         _selectedComputers = _selectedComputers.Where(computer => _availableComputers.Contains(computer) || _unavailableComputers.Contains(computer)).ToList();
-
-        StateHasChanged();
     }
 
     private void ToggleTheme()
