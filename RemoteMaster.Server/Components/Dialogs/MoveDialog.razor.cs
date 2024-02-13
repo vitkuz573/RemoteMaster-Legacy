@@ -36,9 +36,9 @@ public partial class MoveDialog
     {
         if (_selectedOrganizationalUnitId != Guid.Empty)
         {
-            var targetOrganizationalUnit = _organizationalUnits.FirstOrDefault(ou => ou.NodeId == _selectedOrganizationalUnitId)?.Name;
+            var targetOrganizationalUnitsPath = await DatabaseService.GetFullPathForOrganizationalUnitAsync(_selectedOrganizationalUnitId);
 
-            if (targetOrganizationalUnit != null)
+            if (targetOrganizationalUnitsPath.Length > 0)
             {
                 var nodeIds = Hosts.Select(host => host.Key.NodeId);
                 var unavailableHosts = new List<Computer>();
@@ -47,7 +47,7 @@ public partial class MoveDialog
                 {
                     if (host.Value != null)
                     {
-                        await host.Value.InvokeAsync("ChangeOrganizationalUnit", targetOrganizationalUnit);
+                        await host.Value.InvokeAsync("ChangeOrganizationalUnit", targetOrganizationalUnitsPath);
                     }
                     else
                     {
@@ -57,7 +57,7 @@ public partial class MoveDialog
 
                 if (unavailableHosts.Count != 0)
                 {
-                    await AppendOrganizationalUnitChangeRequests(unavailableHosts, targetOrganizationalUnit);
+                    await AppendOrganizationalUnitChangeRequests(unavailableHosts, targetOrganizationalUnitsPath);
                 }
 
                 await DatabaseService.MoveNodesAsync(nodeIds, _selectedOrganizationalUnitId);
@@ -67,7 +67,7 @@ public partial class MoveDialog
         }
     }
 
-    private static async Task AppendOrganizationalUnitChangeRequests(List<Computer> unavailableHosts, string targetOrganizationalUnit)
+    private static async Task AppendOrganizationalUnitChangeRequests(List<Computer> unavailableHosts, string[] targetOrganizationalUnits)
     {
         var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
         var applicationData = Path.Combine(programData, "RemoteMaster", "Server");
@@ -97,11 +97,11 @@ public partial class MoveDialog
 
             if (existingRequest != null)
             {
-                existingRequest.NewOrganizationalUnit = targetOrganizationalUnit;
+                existingRequest.NewOrganizationalUnit = targetOrganizationalUnits;
             }
             else
             {
-                changeRequests.Add(new OrganizationalUnitChangeRequest(host.MacAddress, targetOrganizationalUnit));
+                changeRequests.Add(new OrganizationalUnitChangeRequest(host.MacAddress, targetOrganizationalUnits));
             }
         }
 

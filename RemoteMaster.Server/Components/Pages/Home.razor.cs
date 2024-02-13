@@ -35,7 +35,19 @@ public partial class Home
 
     protected async override Task OnInitializedAsync()
     {
-        _nodes = (await DatabaseService.GetNodesAsync(ou => ou.Parent == null && ou is OrganizationalUnit)).ToHashSet();
+        _nodes = new HashSet<Node>(await LoadOrganizationalUnitsWithChildren());
+    }
+
+    private async Task<IEnumerable<Node>> LoadOrganizationalUnitsWithChildren(Guid? parentId = null)
+    {
+        var units = await DatabaseService.GetNodesAsync(node => node.ParentId == parentId);
+
+        foreach (var unit in units.OfType<OrganizationalUnit>())
+        {
+            unit.Nodes = [..await LoadOrganizationalUnitsWithChildren(unit.NodeId)];
+        }
+
+        return units;
     }
 
     private void LoadNodes(Node node)

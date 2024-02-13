@@ -12,7 +12,7 @@ public class SubjectOptions
     public string Organization { get; set; }
 
     [JsonPropertyName("organizationalUnit")]
-    public string OrganizationalUnit { get; set; }
+    public string[] OrganizationalUnit { get; set; }
 
     [JsonPropertyName("locality")]
     public string Locality { get; set; }

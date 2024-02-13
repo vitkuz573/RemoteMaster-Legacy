@@ -24,5 +24,7 @@ public abstract class Node
 
     [JsonIgnore]
     [InverseProperty(nameof(Parent))]
-    public HashSet<Node> Nodes { get; } = [];
+#pragma warning disable CA2227
+    public HashSet<Node> Nodes { get; set; }
+#pragma warning restore CA2227
 }

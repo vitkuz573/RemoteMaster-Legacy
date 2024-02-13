@@ -67,14 +67,14 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
         {
             await serverHubService.ConnectAsync(hostConfiguration.Server);
 
-            var newOrganizationalUnit = await serverHubService.GetNewOrganizationalUnitIfChangeRequested(hostConfiguration.Host.MacAddress);
+            var newOrganizationalUnits = await serverHubService.GetNewOrganizationalUnitIfChangeRequested(hostConfiguration.Host.MacAddress);
 
-            if (string.IsNullOrEmpty(newOrganizationalUnit))
+            if (newOrganizationalUnits.Length == 0)
             {
                 return;
             }
 
-            hostConfiguration.Subject.OrganizationalUnit = newOrganizationalUnit;
+            hostConfiguration.Subject.OrganizationalUnit = newOrganizationalUnits;
             await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
             Log.Information("Organizational unit for this device was updated based on the organizational unit change request.");
             await serverHubService.AcknowledgeOrganizationalUnitChange(hostConfiguration.Host.MacAddress);

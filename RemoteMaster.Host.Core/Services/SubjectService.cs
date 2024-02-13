@@ -15,7 +15,8 @@ public class SubjectService(IOptions<SubjectOptions> options) : ISubjectService
 
     public X500DistinguishedName GetDistinguishedName(string commonName)
     {
-        var dnString = $"CN={commonName}, O={_options.Organization}, OU={_options.OrganizationalUnit}, L={_options.Locality}, ST={_options.State}, C={_options.Country}";
+        var ous = string.Join(", ", _options.OrganizationalUnit.Select(ou => $"OU={ou}"));
+        var dnString = $"CN={commonName}, O={_options.Organization}, {ous}, L={_options.Locality}, ST={_options.State}, C={_options.Country}";
 
         return new X500DistinguishedName(dnString);
     }

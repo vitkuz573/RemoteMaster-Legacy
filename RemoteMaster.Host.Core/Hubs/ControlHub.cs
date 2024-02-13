@@ -219,11 +219,11 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         taskManagerService.StartProcess(processPath);
     }
 
-    public async Task ChangeOrganizationalUnit(string newOrganizationalUnit)
+    public async Task ChangeOrganizationalUnit(string[] newOrganizationalUnits)
     {
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
 
-        hostConfiguration.Subject.OrganizationalUnit = newOrganizationalUnit;
+        hostConfiguration.Subject.OrganizationalUnit = newOrganizationalUnits;
 
         await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
 

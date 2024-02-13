@@ -4,6 +4,7 @@
 
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using Polly;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Shared.Models;
@@ -77,5 +78,27 @@ public class DatabaseService(NodesDbContext context) : IDatabaseService
         }
 
         await context.SaveChangesAsync();
+    }
+
+    public async Task<string[]> GetFullPathForOrganizationalUnitAsync(Guid ouId)
+    {
+        var path = new List<string>();
+        var currentOu = await context.Nodes.OfType<OrganizationalUnit>().FirstOrDefaultAsync(ou => ou.NodeId == ouId);
+
+        while (currentOu != null)
+        {
+            path.Insert(0, currentOu.Name);
+
+            if (currentOu.ParentId.HasValue)
+            {
+                currentOu = await context.Nodes.OfType<OrganizationalUnit>().FirstOrDefaultAsync(ou => ou.NodeId == currentOu.ParentId.Value);
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        return [.. path];
     }
 }

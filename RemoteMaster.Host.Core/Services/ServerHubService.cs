@@ -21,9 +21,9 @@ public class ServerHubService : IServerHubService
         await _hubConnection.StartAsync();
     }
 
-    public async Task<string> GetNewOrganizationalUnitIfChangeRequested(string macAddress)
+    public async Task<string[]> GetNewOrganizationalUnitIfChangeRequested(string macAddress)
     {
-        return await _hubConnection.InvokeAsync<string>("GetNewOrganizationalUnitIfChangeRequested", macAddress);
+        return await _hubConnection.InvokeAsync<string[]>("GetNewOrganizationalUnitIfChangeRequested", macAddress);
     }
 
     public async Task AcknowledgeOrganizationalUnitChange(string macAddress)
@@ -33,7 +33,7 @@ public class ServerHubService : IServerHubService
 
     public void OnReceiveCertificate(Action<byte[]> onReceiveCertificate)
     {
-        _hubConnection.On<byte[]>("ReceiveCertificate", onReceiveCertificate);
+        _hubConnection.On("ReceiveCertificate", onReceiveCertificate);
     }
 
     public async Task<bool> RegisterHostAsync(HostConfiguration hostConfiguration, byte[] signingRequest)

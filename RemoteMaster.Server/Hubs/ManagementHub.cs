@@ -16,6 +16,8 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
     public async Task<bool> RegisterHostAsync(HostConfiguration hostConfiguration, byte[] csrBytes)
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
+        ArgumentNullException.ThrowIfNull(hostConfiguration.Subject);
+        ArgumentNullException.ThrowIfNull(hostConfiguration.Subject.OrganizationalUnit);
 
         if (hostConfiguration.Host == null)
         {
@@ -23,22 +25,32 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         }
 
         var certificate = certificateService.IssueCertificate(csrBytes);
-
         await Clients.Caller.ReceiveCertificate(certificate.Export(X509ContentType.Pfx));
 
-        var organizationalUnit = (await databaseService.GetNodesAsync(ou => ou.Name == hostConfiguration.Subject.OrganizationalUnit && ou is OrganizationalUnit)).OfType<OrganizationalUnit>().FirstOrDefault();
+        OrganizationalUnit? parentOu = null;
 
-        if (organizationalUnit == null)
+        foreach (var ouName in hostConfiguration.Subject.OrganizationalUnit)
         {
-            organizationalUnit = new OrganizationalUnit
-            {
-                Name = hostConfiguration.Subject.OrganizationalUnit
-            };
+            var ou = (await databaseService.GetNodesAsync(n => n.Name == ouName && n is OrganizationalUnit && n.Parent == parentOu))
+                     .OfType<OrganizationalUnit>()
+                     .FirstOrDefault();
 
-            await databaseService.AddNodeAsync(organizationalUnit);
+            if (ou == null)
+            {
+                ou = new OrganizationalUnit { Name = ouName, Parent = parentOu };
+                await databaseService.AddNodeAsync(ou);
+            }
+
+            parentOu = ou;
         }
 
-        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(organizationalUnit.NodeId)).FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
+        if (parentOu == null)
+        {
+            throw new InvalidOperationException("Failed to resolve or create organizational unit for registration.");
+        }
+
+        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(parentOu.NodeId))
+                               .FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
 
         if (existingComputer != null)
         {
@@ -51,7 +63,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
                 Name = hostConfiguration.Host.Name,
                 IpAddress = hostConfiguration.Host.IpAddress,
                 MacAddress = hostConfiguration.Host.MacAddress,
-                Parent = organizationalUnit
+                Parent = parentOu
             };
 
             await databaseService.AddNodeAsync(computer);
@@ -69,36 +81,60 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             throw new ArgumentException("Host configuration must have a non-null Host property with a valid MAC address.", nameof(hostConfiguration));
         }
 
-        var organizationalUnit = (await databaseService.GetNodesAsync(ou => ou.Name == hostConfiguration.Subject.OrganizationalUnit && ou is OrganizationalUnit)).OfType<OrganizationalUnit>().FirstOrDefault();
+        OrganizationalUnit? lastOu = null;
 
-        if (organizationalUnit == null)
+        foreach (var ouName in hostConfiguration.Subject.OrganizationalUnit)
         {
-            Log.Warning("Unregistration failed: OrganizationalUnit '{OrganizationalUnit}' not found.", hostConfiguration.Subject.OrganizationalUnit);
+            var ous = await databaseService.GetNodesAsync(n => n.Name == ouName && n is OrganizationalUnit && (lastOu == null || n.ParentId == lastOu.NodeId));
+            var ou = ous.OfType<OrganizationalUnit>().FirstOrDefault();
+            
+            if (ou != null)
+            {
+                lastOu = ou;
+            }
+            else
+            {
+                Log.Warning("Unregistration failed: OrganizationalUnit '{OUName}' not found.", ouName);
+                return false;
+            }
+        }
+
+        if (lastOu == null)
+        {
+            Log.Warning("Unregistration failed: Specified OrganizationalUnit hierarchy not found.");
             
             return false;
         }
 
-        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(organizationalUnit.NodeId)).FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
-
+        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(lastOu.NodeId)).FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
+        
         if (existingComputer != null)
         {
             await databaseService.RemoveNodeAsync(existingComputer);
 
-            var remainingComputers = await databaseService.GetChildrenByParentIdAsync<Computer>(organizationalUnit.NodeId);
+            var currentOu = lastOu;
 
-            if (!remainingComputers.Any())
+            while (currentOu != null)
             {
-                await databaseService.RemoveNodeAsync(organizationalUnit);
+                var children = await databaseService.GetChildrenByParentIdAsync<Node>(currentOu.NodeId);
+                
+                if (!children.Any())
+                {
+                    var parentOu = currentOu.Parent;
+                    await databaseService.RemoveNodeAsync(currentOu);
+                    currentOu = parentOu as OrganizationalUnit;
+                }
+                else
+                {
+                    break;
+                }
             }
 
             return true;
         }
-        else
-        {
-            Log.Warning("Unregistration failed: Computer with MAC address '{MACAddress}' not found in organizational unit '{OrganizationalUnit}'.", hostConfiguration.Host.MacAddress, hostConfiguration.Subject.OrganizationalUnit);
-            
-            return false;
-        }
+
+        Log.Warning("Unregistration failed: Computer with MAC address '{MACAddress}' not found in the last organizational unit.", hostConfiguration.Host.MacAddress);
+        return false;
     }
 
     public async Task<bool> UpdateHostInformationAsync(HostConfiguration hostConfiguration)
@@ -110,17 +146,36 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             throw new ArgumentException("Host configuration must have a non-null Host property.", nameof(hostConfiguration));
         }
 
-        var organizationalUnit = (await databaseService.GetNodesAsync(ou => ou.Name == hostConfiguration.Subject.OrganizationalUnit && ou is OrganizationalUnit)).OfType<OrganizationalUnit>().FirstOrDefault();
+        OrganizationalUnit? lastOu = null;
 
-        if (organizationalUnit == null)
+        foreach (var ouName in hostConfiguration.Subject.OrganizationalUnit)
         {
+            var ous = await databaseService.GetNodesAsync(n => n.Name == ouName && n is OrganizationalUnit && (lastOu == null || n.ParentId == lastOu.NodeId));
+            var ou = ous.OfType<OrganizationalUnit>().FirstOrDefault();
+
+            if (ou != null)
+            {
+                lastOu = ou;
+            }
+            else
+            {
+                Log.Warning("Update failed: OrganizationalUnit '{OUName}' not found.", ouName);
+                return false;
+            }
+        }
+
+        if (lastOu == null)
+        {
+            Log.Warning("Update failed: Specified OrganizationalUnit hierarchy not found.");
             return false;
         }
 
-        var computer = (await databaseService.GetChildrenByParentIdAsync<Computer>(organizationalUnit.NodeId)).FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
+        var computer = (await databaseService.GetChildrenByParentIdAsync<Computer>(lastOu.NodeId))
+            .FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
 
         if (computer == null)
         {
+            Log.Warning("Update failed: Computer with MAC address '{MACAddress}' not found in the last organizational unit.", hostConfiguration.Host.MacAddress);
             return false;
         }
 
@@ -188,7 +243,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         }
     }
 
-    public async Task<string?> GetNewOrganizationalUnitIfChangeRequested(string macAddress)
+    public async Task<string[]> GetNewOrganizationalUnitIfChangeRequested(string macAddress)
     {
         var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
         var ouChangeRequestsFilePath = Path.Combine(programData, "RemoteMaster", "Server", "OrganizationalUnitChangeRequests.json");
@@ -207,7 +262,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
 
         Log.Information("No organizational unit change request found for MAC address {MACAddress}.", macAddress);
 
-        return null;
+        return [];
     }
 
     public async Task AcknowledgeOrganizationalUnitChange(string macAddress)

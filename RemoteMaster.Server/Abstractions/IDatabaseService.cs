@@ -20,4 +20,6 @@ public interface IDatabaseService
     Task UpdateComputerAsync(Computer computer, string ipAddress, string hostName);
 
     Task MoveNodesAsync(IEnumerable<Guid> nodeIds, Guid newParentId);
+
+    Task<string[]> GetFullPathForOrganizationalUnitAsync(Guid ouId);
 }

@@ -10,7 +10,7 @@ public interface IServerHubService
 {
     Task ConnectAsync(string serverIp);
 
-    Task<string> GetNewOrganizationalUnitIfChangeRequested(string macAddress);
+    Task<string[]> GetNewOrganizationalUnitIfChangeRequested(string macAddress);
 
     Task AcknowledgeOrganizationalUnitChange(string macAddress);
 
