@@ -233,14 +233,11 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     public async Task SetPsExecRules(bool enable)
     {
+        await psExecService.DisableAsync();
+
         if (enable)
         {
-            await psExecService.DisableAsync();
             await psExecService.EnableAsync();
-        }
-        else
-        {
-            await psExecService.DisableAsync();
         }
     }
 }
