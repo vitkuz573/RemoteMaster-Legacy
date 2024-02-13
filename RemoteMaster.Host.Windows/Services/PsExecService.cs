@@ -20,23 +20,23 @@ public class PsExecService(IHostConfigurationService hostConfigurationService) :
     public async Task EnableAsync()
     {
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
-        
+
         await ExecuteCommandAsync("winrm qc -force");
-        await ExecuteCommandAsync($"""netsh AdvFirewall firewall add rule name=PSExec dir=In action=allow protocol=TCP localport=RPC profile=domain,private program="%WinDir%\\system32\\services.exe" service=any remoteip={hostConfiguration.Server}""");
-        
+        await ExecuteCommandAsync($"\"netsh AdvFirewall firewall add rule name=PSExec dir=In action=allow protocol=TCP localport=RPC profile=domain,private program=\"%WinDir%\\system32\\services.exe\" service=any remoteip={hostConfiguration.Server}\"");
+
         var localizedRuleGroupName = GetLocalizedRuleGroupName();
-        await ExecuteCommandAsync($"""netsh AdvFirewall firewall set rule group="{localizedRuleGroupName}" new enable=yes""");
-        
+        await ExecuteCommandAsync($"\"netsh AdvFirewall firewall set rule group=\"{localizedRuleGroupName}\" new enable=yes\"");
+
         Log.Information("PsExec and WinRM configurations have been enabled.");
     }
 
     public async Task DisableAsync()
     {
-        await ExecuteCommandAsync($"netsh AdvFirewall firewall delete rule name=PSExec");
-        
+        await ExecuteCommandAsync("netsh AdvFirewall firewall delete rule name=PSExec");
+
         var localizedRuleGroupName = GetLocalizedRuleGroupName();
-        await ExecuteCommandAsync($"""netsh AdvFirewall firewall set rule group="{localizedRuleGroupName}" new enable=no""");
-        
+        await ExecuteCommandAsync($"\"netsh AdvFirewall firewall set rule group=\"{localizedRuleGroupName}\" new enable=no\"");
+
         Log.Information("PsExec and WinRM configurations have been disabled.");
     }
 
@@ -56,8 +56,8 @@ public class PsExecService(IHostConfigurationService hostConfigurationService) :
             process.Start();
 
             var result = await process.StandardOutput.ReadToEndAsync();
-
             await process.WaitForExitAsync();
+
             Log.Information($"Executed command: {command}\nResult: {result}");
         }
         catch (Exception ex)
