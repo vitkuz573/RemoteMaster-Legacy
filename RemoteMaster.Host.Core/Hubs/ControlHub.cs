@@ -235,7 +235,11 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     {
         if (enable)
         {
-            await psExecService.AllowAsync();
+            await psExecService.EnableAsync();
+        }
+        else
+        {
+            psExecService.Disable();
         }
     }
 }

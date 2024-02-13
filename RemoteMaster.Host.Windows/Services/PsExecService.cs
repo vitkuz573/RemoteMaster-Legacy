@@ -17,7 +17,7 @@ public class PsExecService(IHostConfigurationService hostConfigurationService) :
         { "ru-RU", "Удаленное управление службой" }
     };
 
-    public async Task AllowAsync()
+    public async Task EnableAsync()
     {
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
 
@@ -31,6 +31,16 @@ public class PsExecService(IHostConfigurationService hostConfigurationService) :
         ExecuteCommand($"""netsh AdvFirewall firewall set rule group="{localizedRuleGroupName}" new enable=yes""");
 
         Log.Information("PsExec and WinRM configurations have been enabled.");
+    }
+
+    public void Disable()
+    {
+        DeleteExistingRules("PSExec");
+
+        var localizedRuleGroupName = GetLocalizedRuleGroupName();
+        ExecuteCommand($"""netsh AdvFirewall firewall set rule group="{localizedRuleGroupName}" new enable=no""");
+
+        Log.Information("PsExec and WinRM configurations have been disabled.");
     }
 
     private static void DeleteExistingRules(string ruleName)

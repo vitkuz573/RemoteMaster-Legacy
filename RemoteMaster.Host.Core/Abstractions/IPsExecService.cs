@@ -6,5 +6,7 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IPsExecService
 {
-    Task AllowAsync();
+    Task EnableAsync();
+
+    void Disable();
 }
