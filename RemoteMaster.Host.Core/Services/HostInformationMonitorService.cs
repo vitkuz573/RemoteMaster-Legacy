@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Security.Cryptography.X509Certificates;
 using System.Timers;
 using Microsoft.Extensions.Hosting;
 using RemoteMaster.Host.Core.Abstractions;
@@ -86,6 +87,33 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
         {
             Log.Error(ex, "Error processing organizational unit change requests.");
         }
+
+        var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        var certificatePath = Path.Combine(programData, "RemoteMaster", "certificate.pfx");
+
+        if (!CertificateHasExpired(certificatePath))
+        {
+            return;
+        }
+
+        try
+        {
+            await hostLifecycleService.UnregisterAsync(hostConfiguration);
+            await hostLifecycleService.RegisterAsync(hostConfiguration);
+
+            Log.Information("Certificate renewed.");
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error renewing certificate.");
+        }
+    }
+
+    private static bool CertificateHasExpired(string certificatePath)
+    {
+        using var certificate = new X509Certificate2(certificatePath);
+
+        return DateTime.Now > certificate.NotAfter;
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
