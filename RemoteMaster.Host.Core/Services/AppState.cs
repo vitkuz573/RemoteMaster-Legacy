@@ -30,7 +30,7 @@ public class AppState : IAppState
 
         if (result)
         {
-            viewer.StartStreaming();
+            ViewerAdded?.Invoke(this, viewer);
         }
 
         return result;
@@ -42,7 +42,7 @@ public class AppState : IAppState
 
         if (result)
         {
-            viewer?.StopStreaming();
+            ViewerRemoved?.Invoke(this, viewer);
         }
 
         return result;

@@ -18,11 +18,29 @@ public class Viewer : IViewer
     private readonly IHubContext<ControlHub, IControlClient> _hubContext;
     private readonly CancellationTokenSource _cts;
 
-    public Viewer(IScreenCapturerService screenCapturer, IHubContext<ControlHub, IControlClient> hubContext, string connectionId)
+    public Viewer(IAppState appState, IScreenCapturerService screenCapturer, IHubContext<ControlHub, IControlClient> hubContext, string connectionId)
     {
+        ArgumentNullException.ThrowIfNull(appState);
+
         ScreenCapturer = screenCapturer;
         _hubContext = hubContext;
         ConnectionId = connectionId;
+
+        appState.ViewerAdded += (_, e) =>
+        {
+            if (e.ConnectionId == ConnectionId)
+            {
+                StartStreaming();
+            }
+        };
+
+        appState.ViewerRemoved += (_, e) =>
+        {
+            if (e.ConnectionId == ConnectionId)
+            {
+                StopStreaming();
+            }
+        };
 
         _cts = new();
 
