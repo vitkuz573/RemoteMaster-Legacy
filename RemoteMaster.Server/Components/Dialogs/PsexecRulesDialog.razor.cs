@@ -4,17 +4,54 @@
 
 using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
+using RemoteMaster.Server.Models;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class PsExecRulesDialog
 {
     private bool _selectedOption;
+    private readonly Dictionary<Computer, ComputerResults> _resultsPerComputer = [];
+    private readonly HashSet<HubConnection> _subscribedConnections = [];
 
     private async Task Ok()
     {
-        await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("SetPsExecRules", _selectedOption));
+        foreach (var (computer, connection) in Hosts)
+        {
+            if (connection != null && !_subscribedConnections.Contains(connection))
+            {
+                connection.On<ScriptResult>("ReceiveScriptResult", async scriptResult =>
+                {
+                    UpdateResultsForComputer(computer, scriptResult);
+                    await InvokeAsync(StateHasChanged);
+                });
 
-        MudDialog.Close(DialogResult.Ok(true));
+                _subscribedConnections.Add(connection);
+            }
+
+            if (connection != null)
+            {
+                await connection.InvokeAsync("SetPsExecRules", _selectedOption);
+            }
+        }
+    }
+
+    private void UpdateResultsForComputer(Computer computer, ScriptResult scriptResult)
+    {
+        if (!_resultsPerComputer.TryGetValue(computer, out var results))
+        {
+            results = new ComputerResults();
+            _resultsPerComputer[computer] = results;
+        }
+
+        if (scriptResult.Meta == "pid")
+        {
+            results.LastPid = int.Parse(scriptResult.Message);
+        }
+        else
+        {
+            results.Messages.AppendLine(scriptResult.Message);
+        }
     }
 }

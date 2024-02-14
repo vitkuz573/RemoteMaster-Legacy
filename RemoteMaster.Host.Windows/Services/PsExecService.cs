@@ -2,14 +2,19 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using Serilog;
 using System.Diagnostics;
+using Serilog;
 using System.Globalization;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Windows.Models;
+using Microsoft.AspNetCore.SignalR;
+using RemoteMaster.Host.Core.Hubs;
+using RemoteMaster.Shared.Models;
+using static RemoteMaster.Shared.Models.ScriptResult;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class PsExecService(IHostConfigurationService hostConfigurationService) : IPsExecService
+public class PsExecService(IHostConfigurationService hostConfigurationService, IHubContext<ControlHub, IControlClient> hubContext) : IPsExecService
 {
     private readonly Dictionary<string, string> _ruleGroupNames = new()
     {
@@ -40,25 +45,34 @@ public class PsExecService(IHostConfigurationService hostConfigurationService) :
         Log.Information("PsExec and WinRM configurations have been disabled.");
     }
 
-    private static async Task ExecuteCommandAsync(string command)
+    private async Task ExecuteCommandAsync(string command)
     {
         try
         {
             var processStartInfo = new ProcessStartInfo("cmd.exe", $"/c {command}")
             {
+                CreateNoWindow = true,
                 RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
+                RedirectStandardError = true
             };
 
             using var process = new Process();
             process.StartInfo = processStartInfo;
             process.Start();
 
-            var result = await process.StandardOutput.ReadToEndAsync();
+            await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult
+            {
+                Message = process.Id.ToString(),
+                Type = MessageType.Service,
+                Meta = "pid"
+            });
+
+            var readErrorTask = ReadStreamAsync(process.StandardError, hubContext, MessageType.Error);
+            var readOutputTask = ReadStreamAsync(process.StandardOutput, hubContext, MessageType.Output);
+
             await process.WaitForExitAsync();
 
-            Log.Information($"Executed command: {command}\nResult: {result}");
+            await Task.WhenAll(readErrorTask, readOutputTask);
         }
         catch (Exception ex)
         {
@@ -71,5 +85,17 @@ public class PsExecService(IHostConfigurationService hostConfigurationService) :
         var currentCulture = CultureInfo.CurrentCulture.Name;
 
         return _ruleGroupNames.TryGetValue(currentCulture, out var localizedGroupName) ? localizedGroupName : _ruleGroupNames["en-US"];
+    }
+
+    private static async Task ReadStreamAsync(TextReader streamReader, IHubContext<ControlHub, IControlClient> hubContext, MessageType messageType)
+    {
+        while (await streamReader.ReadLineAsync() is { } line)
+        {
+            await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult
+            {
+                Message = line,
+                Type = messageType
+            });
+        }
     }
 }
