@@ -133,23 +133,21 @@ public class Viewer : IViewer
 
     protected virtual void Dispose(bool disposing)
     {
-        if (!_disposed)
+        if (_disposed)
         {
-            if (disposing)
-            {
-                // Освобождаем управляемые ресурсы
-                _cts.Cancel();
-                _cts.Dispose();
-
-                // Отписываемся от событий
-                _appState.ViewerAdded -= AppState_ViewerAdded;
-                _appState.ViewerRemoved -= AppState_ViewerRemoved;
-            }
-
-            // Освобождение неуправляемых ресурсов (если есть)
-
-            _disposed = true;
+            return;
         }
+
+        if (disposing)
+        {
+            _cts.Cancel();
+            _cts.Dispose();
+
+            _appState.ViewerAdded -= AppState_ViewerAdded;
+            _appState.ViewerRemoved -= AppState_ViewerRemoved;
+        }
+
+        _disposed = true;
     }
 
     ~Viewer()
