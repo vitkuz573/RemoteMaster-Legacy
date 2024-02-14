@@ -30,8 +30,6 @@ public class PsExecService(IHostConfigurationService hostConfigurationService, I
 
         var localizedRuleGroupName = GetLocalizedRuleGroupName();
         await ExecuteCommandAsync($"\"netsh AdvFirewall firewall set rule group=\"{localizedRuleGroupName}\" new enable=yes\"");
-
-        Log.Information("PsExec and WinRM configurations have been enabled.");
     }
 
     public async Task DisableAsync()
@@ -40,8 +38,6 @@ public class PsExecService(IHostConfigurationService hostConfigurationService, I
 
         var localizedRuleGroupName = GetLocalizedRuleGroupName();
         await ExecuteCommandAsync($"\"netsh AdvFirewall firewall set rule group=\"{localizedRuleGroupName}\" new enable=no\"");
-
-        Log.Information("PsExec and WinRM configurations have been disabled.");
     }
 
     private async Task ExecuteCommandAsync(string command)
