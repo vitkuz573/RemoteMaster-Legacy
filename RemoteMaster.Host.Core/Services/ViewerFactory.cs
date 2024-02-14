@@ -8,10 +8,10 @@ using RemoteMaster.Host.Core.Hubs;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class ViewerFactory(IAppState appState, IScreenCapturerService screenCapturerService, IHubContext<ControlHub, IControlClient> hubContext) : IViewerFactory
+public class ViewerFactory(IAppState appState, IHubContext<ControlHub, IControlClient> hubContext, IScreenCapturerService screenCapturerService) : IViewerFactory
 {
     public IViewer Create(string connectionId)
     {
-        return new Viewer(appState, screenCapturerService, hubContext, connectionId);
+        return new Viewer(appState, hubContext, screenCapturerService, connectionId);
     }
 }

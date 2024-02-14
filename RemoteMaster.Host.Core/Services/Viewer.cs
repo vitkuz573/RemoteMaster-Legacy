@@ -20,14 +20,14 @@ public class Viewer : IViewer
     private readonly CancellationTokenSource _cts;
     private bool _disposed;
 
-    public Viewer(IAppState appState, IScreenCapturerService screenCapturer, IHubContext<ControlHub, IControlClient> hubContext, string connectionId)
+    public Viewer(IAppState appState, IHubContext<ControlHub, IControlClient> hubContext, IScreenCapturerService screenCapturer, string connectionId)
     {
         ArgumentNullException.ThrowIfNull(appState);
 
         _appState = appState;
-        ScreenCapturer = screenCapturer;
         _hubContext = hubContext;
-        ConnectionId = connectionId;
+
+        ScreenCapturer = screenCapturer;
         ConnectionId = connectionId;
 
         _appState.ViewerAdded += AppState_ViewerAdded;
