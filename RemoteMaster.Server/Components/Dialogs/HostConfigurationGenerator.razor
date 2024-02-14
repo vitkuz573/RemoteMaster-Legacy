@@ -17,9 +17,9 @@
                         <MudTextField Label="Locality" @bind-Value="_model.Subject.Locality" For="@(() => _model.Subject.Locality)"/>
                         <MudTextField Label="State" @bind-Value="_model.Subject.State" For="@(() => _model.Subject.State)"/>
                         <MudSelect T="string" Label="Country" @bind-Value="_model.Subject.Country" Dense="true">
-                            @foreach (var countryCode in _countryCodes)
+                            @foreach (var countryCode in _countries)
                             {
-                                <MudSelectItem T="string" Value="@countryCode">@countryCode</MudSelectItem>
+                                <MudSelectItem T="string" Value="@countryCode.Value">@countryCode.Key</MudSelectItem>
                             }
                         </MudSelect>
                     </MudExpansionPanel>
