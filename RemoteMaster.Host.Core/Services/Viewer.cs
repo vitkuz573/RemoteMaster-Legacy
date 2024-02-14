@@ -59,7 +59,7 @@ public class Viewer : IViewer
 
     public string ConnectionId { get; }
 
-    public async Task StartStreaming()
+    private async Task StartStreaming()
     {
         var cancellationToken = _cts.Token;
 
@@ -95,7 +95,7 @@ public class Viewer : IViewer
         }
     }
 
-    public void StopStreaming()
+    private void StopStreaming()
     {
         Log.Information("Stopping screen stream for ID {connectionId}", ConnectionId);
 

@@ -12,10 +12,6 @@ public interface IViewer : IDisposable
 
     string ConnectionId { get; }
 
-    Task StartStreaming();
-
-    void StopStreaming();
-
     Task SendDisplays(IEnumerable<Display> displays);
 
     Task SendScreenSize(int width, int height);
