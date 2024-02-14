@@ -11,4 +11,6 @@ public class ComputerResults
     public StringBuilder Messages { get; } = new();
 
     public int? LastPid { get; set; }
+
+    public override string ToString() => Messages.ToString();
 }
