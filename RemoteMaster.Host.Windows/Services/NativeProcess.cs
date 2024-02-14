@@ -368,28 +368,30 @@ public class NativeProcess : IDisposable
         return success;
     }
 
-    internal static unsafe List<WTS_SESSION_INFOW> GetActiveSessions()
+    private static unsafe List<WTS_SESSION_INFOW> GetActiveSessions()
     {
         var sessions = new List<WTS_SESSION_INFOW>();
 
-        if (WTSEnumerateSessions(HANDLE.Null, 0, 1, out var ppSessionInfo, out var count))
+        if (!WTSEnumerateSessions(HANDLE.Null, 0, 1, out var ppSessionInfo, out var count))
         {
-            try
-            {
-                for (var i = 0; i < count; i++)
-                {
-                    var session = ppSessionInfo[i];
+            return sessions;
+        }
 
-                    if (session.State == WTS_CONNECTSTATE_CLASS.WTSActive)
-                    {
-                        sessions.Add(session);
-                    }
+        try
+        {
+            for (var i = 0; i < count; i++)
+            {
+                var session = ppSessionInfo[i];
+
+                if (session.State == WTS_CONNECTSTATE_CLASS.WTSActive)
+                {
+                    sessions.Add(session);
                 }
             }
-            finally
-            {
-                WTSFreeMemory(ppSessionInfo);
-            }
+        }
+        finally
+        {
+            WTSFreeMemory(ppSessionInfo);
         }
 
         return sessions;

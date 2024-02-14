@@ -54,6 +54,7 @@ public class GdiCapturer : ScreenCapturerService
         catch (Exception ex)
         {
             Log.Error(ex, "Capturer error in GetFrame.");
+
             return null;
         }
     }
