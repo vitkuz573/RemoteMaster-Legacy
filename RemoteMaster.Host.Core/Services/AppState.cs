@@ -38,11 +38,22 @@ public class AppState : IAppState
 
     public bool TryRemoveViewer(string connectionId)
     {
+#pragma warning disable CA2000
         var result = _viewers.TryRemove(connectionId, out var viewer);
+#pragma warning restore CA2000
 
-        if (result)
+        if (!result)
+        {
+            return result;
+        }
+
+        try
         {
             ViewerRemoved?.Invoke(this, viewer);
+        }
+        finally
+        {
+            viewer?.Dispose();
         }
 
         return result;

@@ -6,7 +6,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface IViewer
+public interface IViewer : IDisposable
 {
     IScreenCapturerService ScreenCapturer { get; }
 

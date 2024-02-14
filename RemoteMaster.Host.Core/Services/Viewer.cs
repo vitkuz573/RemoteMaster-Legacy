@@ -15,38 +15,44 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class Viewer : IViewer
 {
+    private readonly IAppState _appState;
     private readonly IHubContext<ControlHub, IControlClient> _hubContext;
     private readonly CancellationTokenSource _cts;
+    private bool _disposed;
 
     public Viewer(IAppState appState, IScreenCapturerService screenCapturer, IHubContext<ControlHub, IControlClient> hubContext, string connectionId)
     {
         ArgumentNullException.ThrowIfNull(appState);
 
+        _appState = appState;
         ScreenCapturer = screenCapturer;
         _hubContext = hubContext;
         ConnectionId = connectionId;
 
-        appState.ViewerAdded += (_, e) =>
-        {
-            if (e.ConnectionId == ConnectionId)
-            {
-                StartStreaming();
-            }
-        };
-
-        appState.ViewerRemoved += (_, e) =>
-        {
-            if (e.ConnectionId == ConnectionId)
-            {
-                StopStreaming();
-            }
-        };
+        _appState.ViewerAdded += AppState_ViewerAdded;
+        _appState.ViewerRemoved += AppState_ViewerRemoved;
 
         _cts = new();
 
         _ = SendHostVersion();
 
         ScreenCapturer.ScreenChanged += async (_, bounds) => await SendScreenSize(bounds.Width, bounds.Height);
+    }
+
+    private async void AppState_ViewerAdded(object? sender, IViewer e)
+    {
+        if (e.ConnectionId == ConnectionId)
+        {
+            await StartStreaming();
+        }
+    }
+
+    private void AppState_ViewerRemoved(object? sender, IViewer e)
+    {
+        if (e.ConnectionId == ConnectionId)
+        {
+            StopStreaming();
+        }
     }
 
     public IScreenCapturerService ScreenCapturer { get; }
@@ -116,5 +122,37 @@ public class Viewer : IViewer
     public void SetSelectedScreen(string displayName)
     {
         ScreenCapturer.SetSelectedScreen(displayName);
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposed)
+        {
+            if (disposing)
+            {
+                // Освобождаем управляемые ресурсы
+                _cts.Cancel();
+                _cts.Dispose();
+
+                // Отписываемся от событий
+                _appState.ViewerAdded -= AppState_ViewerAdded;
+                _appState.ViewerRemoved -= AppState_ViewerRemoved;
+            }
+
+            // Освобождение неуправляемых ресурсов (если есть)
+
+            _disposed = true;
+        }
+    }
+
+    ~Viewer()
+    {
+        Dispose(false);
     }
 }
