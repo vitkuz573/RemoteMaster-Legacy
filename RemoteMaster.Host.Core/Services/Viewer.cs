@@ -28,6 +28,7 @@ public class Viewer : IViewer
         ScreenCapturer = screenCapturer;
         _hubContext = hubContext;
         ConnectionId = connectionId;
+        ConnectionId = connectionId;
 
         _appState.ViewerAdded += AppState_ViewerAdded;
         _appState.ViewerRemoved += AppState_ViewerRemoved;
@@ -102,12 +103,12 @@ public class Viewer : IViewer
         _cts.Cancel();
     }
 
-    public async Task SendDisplays(IEnumerable<Display> displays)
+    private async Task SendDisplays(IEnumerable<Display> displays)
     {
         await _hubContext.Clients.Client(ConnectionId).ReceiveDisplays(displays);
     }
 
-    public async Task SendScreenSize(int width, int height)
+    private async Task SendScreenSize(int width, int height)
     {
         await _hubContext.Clients.Client(ConnectionId).ReceiveScreenSize(new Size(width, height));
     }
