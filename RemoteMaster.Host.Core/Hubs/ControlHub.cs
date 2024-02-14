@@ -71,7 +71,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     {
         if (appState.TryGetViewer(Context.ConnectionId, out var viewer))
         {
-            viewer?.SetSelectedScreen(displayName);
+            viewer.ScreenCapturer.SetSelectedScreen(displayName);
         }
         else
         {

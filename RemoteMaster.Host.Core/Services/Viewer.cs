@@ -120,11 +120,6 @@ public class Viewer : IViewer
         await _hubContext.Clients.Clients(ConnectionId).ReceiveHostVersion(version);
     }
 
-    public void SetSelectedScreen(string displayName)
-    {
-        ScreenCapturer.SetSelectedScreen(displayName);
-    }
-
     public void Dispose()
     {
         Dispose(true);

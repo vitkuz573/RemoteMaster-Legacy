@@ -9,6 +9,4 @@ public interface IViewer : IDisposable
     IScreenCapturerService ScreenCapturer { get; }
 
     string ConnectionId { get; }
-
-    void SetSelectedScreen(string displayName);
 }
