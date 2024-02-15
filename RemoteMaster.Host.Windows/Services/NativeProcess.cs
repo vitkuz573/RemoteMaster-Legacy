@@ -59,7 +59,9 @@ public class NativeProcess : IDisposable
 
     public void Start()
     {
-        var sessionId = !StartInfo.ForceConsoleSession ? FindTargetSessionId(StartInfo.TargetSessionId) : WTSGetActiveConsoleSessionId();
+        var sessionId = StartInfo is { TargetSessionId: not null, ForceConsoleSession: false }
+            ? FindTargetSessionId(StartInfo.TargetSessionId.Value)
+            : WTSGetActiveConsoleSessionId();
 
         SafeFileHandle? hUserTokenDup = null;
 

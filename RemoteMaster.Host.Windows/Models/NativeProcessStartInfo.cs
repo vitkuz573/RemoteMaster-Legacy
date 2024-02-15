@@ -45,7 +45,7 @@ public class NativeProcessStartInfo
         set => _arguments = value;
     }
 
-    public int TargetSessionId { get; set; }
+    public int? TargetSessionId { get; set; }
 
     public bool ForceConsoleSession { get; set; } = true;
 
