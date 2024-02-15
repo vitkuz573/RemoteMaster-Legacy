@@ -25,7 +25,18 @@ public class ServiceManager : IServiceManager
             ExecuteServiceCommand($"description {serviceConfig.Name} \"{serviceConfig.Description}\"");
         }
 
-        var failureActions = $"failure \"{serviceConfig.Name}\" reset= {serviceConfig.ResetPeriod} actions= restart/60000/restart/60000/restart/60000";
+        var failureActions = $"failure \"{serviceConfig.Name}\" reset= {serviceConfig.ResetPeriod} " +
+                             $"actions= {serviceConfig.FirstFailureAction}/{serviceConfig.SecondFailureAction}/{serviceConfig.SubsequentFailuresAction}";
+
+        if (!string.IsNullOrEmpty(serviceConfig.RebootMessage))
+        {
+            failureActions += $" reboot=\"{serviceConfig.RebootMessage}\"";
+        }
+
+        if (!string.IsNullOrEmpty(serviceConfig.RestartCommand))
+        {
+            failureActions += $" command=\"{serviceConfig.RestartCommand}\"";
+        }
 
         if (!string.IsNullOrEmpty(serviceConfig.RebootMessage))
         {
