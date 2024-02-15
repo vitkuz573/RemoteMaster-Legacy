@@ -36,7 +36,7 @@ internal class Program
     {
         if (new[] { serviceMode, userInstance, install, uninstall }.Count(val => val) > 1)
         {
-            await Console.Error.WriteLineAsync("Arguments --install, --uninstall, --service-mode and --user-instance are mutually exclusive. Please specify only one.");
+            await Console.Error.WriteLineAsync("Please specify only one argument: --install, --uninstall, --launch-mode service, or --launch-mode user. These arguments are mutually exclusive.");
 
             return;
         }

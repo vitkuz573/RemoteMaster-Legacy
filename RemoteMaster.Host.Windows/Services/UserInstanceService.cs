@@ -4,6 +4,7 @@
 
 using System.Diagnostics;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Windows.Extensions;
 using RemoteMaster.Host.Windows.Models;
 using Serilog;
@@ -12,7 +13,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class UserInstanceService : IUserInstanceService
 {
-    private const string Argument = "--user-instance";
+    private readonly LaunchMode _launchMode = LaunchMode.User;
     private readonly string _currentExecutablePath = Environment.ProcessPath!;
 
     public bool IsRunning => FindHostProcesses().Any(IsUserInstance);
@@ -53,9 +54,10 @@ public class UserInstanceService : IUserInstanceService
 
     private void StartNewInstance()
     {
+        var launchArgument = $"--launch-mode {_launchMode.ToString().ToLower()}";
         using var process = new NativeProcess();
 
-        process.StartInfo = new NativeProcessStartInfo(_currentExecutablePath, Argument)
+        process.StartInfo = new NativeProcessStartInfo(_currentExecutablePath, launchArgument)
         {
             ForceConsoleSession = true,
             DesktopName = "Default",
@@ -75,10 +77,11 @@ public class UserInstanceService : IUserInstanceService
         return Process.GetProcessesByName(processName);
     }
 
-    private static bool IsUserInstance(Process process)
+    private bool IsUserInstance(Process process)
     {
         var commandLine = process.GetCommandLine();
+        var expectedArgument = $"--launch-mode {_launchMode.ToString().ToLower()}";
 
-        return commandLine.Contains(Argument);
+        return commandLine.Contains(expectedArgument);
     }
 }
