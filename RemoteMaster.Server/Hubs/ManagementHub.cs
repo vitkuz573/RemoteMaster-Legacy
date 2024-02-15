@@ -37,7 +37,12 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
 
             if (ou == null)
             {
-                ou = new OrganizationalUnit { Name = ouName, Parent = parentOu };
+                ou = new OrganizationalUnit
+                {
+                    Name = ouName,
+                    Parent = parentOu
+                };
+
                 await databaseService.AddNodeAsync(ou);
             }
 
@@ -95,6 +100,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             else
             {
                 Log.Warning("Unregistration failed: OrganizationalUnit '{OUName}' not found.", ouName);
+                
                 return false;
             }
         }
@@ -134,6 +140,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         }
 
         Log.Warning("Unregistration failed: Computer with MAC address '{MACAddress}' not found in the last organizational unit.", hostConfiguration.Host.MacAddress);
+        
         return false;
     }
 
@@ -160,6 +167,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             else
             {
                 Log.Warning("Update failed: OrganizationalUnit '{OUName}' not found.", ouName);
+                
                 return false;
             }
         }
@@ -167,6 +175,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         if (lastOu == null)
         {
             Log.Warning("Update failed: Specified OrganizationalUnit hierarchy not found.");
+            
             return false;
         }
 
@@ -176,6 +185,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         if (computer == null)
         {
             Log.Warning("Update failed: Computer with MAC address '{MACAddress}' not found in the last organizational unit.", hostConfiguration.Host.MacAddress);
+            
             return false;
         }
 

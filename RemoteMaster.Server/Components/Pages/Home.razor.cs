@@ -70,13 +70,13 @@ public partial class Home
         {
             var isAvailable = await computer.IsAvailable();
 
-            if (isAvailable)
+            if (!isAvailable)
             {
-                continue;
+                _availableComputers.Remove(computer);
+                _unavailableComputers.Add(computer);
             }
 
-            _availableComputers.Remove(computer);
-            _unavailableComputers.Add(computer);
+            await InvokeAsync(StateHasChanged);
         }
     }
 
@@ -134,11 +134,12 @@ public partial class Home
 
         try
         {
-            connection.On<byte[]>("ReceiveThumbnail",  (thumbnailBytes) =>
+            connection.On<byte[]>("ReceiveThumbnail",  async (thumbnailBytes) =>
             {
                 if (thumbnailBytes.Length > 0)
                 {
                     computer.Thumbnail = thumbnailBytes;
+                    await InvokeAsync(StateHasChanged);
                 }
             });
 
