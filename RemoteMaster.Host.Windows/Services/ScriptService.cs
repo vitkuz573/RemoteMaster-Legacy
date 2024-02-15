@@ -55,7 +55,6 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
 
             process.StartInfo = new NativeProcessStartInfo(applicationToRun)
             {
-                TargetSessionId = -1,
                 ForceConsoleSession = true,
                 DesktopName = "Default",
                 CreateNoWindow = true,
