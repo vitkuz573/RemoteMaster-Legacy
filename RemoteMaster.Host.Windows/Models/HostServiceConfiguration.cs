@@ -27,4 +27,16 @@ public class HostServiceConfiguration : IServiceConfiguration
     public string StartType => "auto";
 
     public IEnumerable<string>? Dependencies => null;
+
+    public int ResetPeriod => 86400;
+
+    public string FirstFailureAction => "restart/60000";
+
+    public string SecondFailureAction => "restart/60000";
+
+    public string SubsequentFailuresAction => "restart/60000";
+
+    public string? RebootMessage => null;
+
+    public string? RestartCommand => null;
 }

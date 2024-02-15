@@ -19,4 +19,16 @@ public interface IServiceConfiguration
     string StartType { get; }
 
     IEnumerable<string>? Dependencies { get; }
+
+    int ResetPeriod { get; }
+
+    string FirstFailureAction { get; }
+
+    string SecondFailureAction { get; }
+
+    string SubsequentFailuresAction { get; }
+
+    string? RebootMessage { get; }
+
+    string? RestartCommand { get; }
 }
