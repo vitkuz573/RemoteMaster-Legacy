@@ -6,6 +6,9 @@ namespace RemoteMaster.Host.Core.Models;
 
 public enum LaunchMode
 {
+    Default,
     Service,
-    User
+    User,
+    Install,
+    Uninstall
 }

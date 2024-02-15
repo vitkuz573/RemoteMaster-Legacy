@@ -14,6 +14,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Extensions;
+using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Models;
@@ -27,20 +28,10 @@ internal class Program
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="serviceMode">Runs the program in service mode, allowing it to operate in the background for continuous service availability.</param>
-    /// <param name="userInstance">Launches the program as an instance for the current user.</param>
-    /// <param name="install">Performs a silent installation of the program without interactive prompts.</param>
-    /// <param name="uninstall">Executes a silent uninstallation of the program without interactive prompts.</param>
+    /// <param name="launchMode">Runs the program in specified mode.</param>
     /// <returns></returns>
-    private static async Task Main(bool serviceMode = false, bool userInstance = false, bool install = false, bool uninstall = false)
+    private static async Task Main(LaunchMode launchMode = LaunchMode.Default)
     {
-        if (new[] { serviceMode, userInstance, install, uninstall }.Count(val => val) > 1)
-        {
-            await Console.Error.WriteLineAsync("Please specify only one argument: --install, --uninstall, --launch-mode service, or --launch-mode user. These arguments are mutually exclusive.");
-
-            return;
-        }
-
         var options = new WebApplicationOptions
         {
             ContentRootPath = AppContext.BaseDirectory,
@@ -140,7 +131,7 @@ internal class Program
 
         builder.ConfigureSerilog();
 
-        if (!serviceMode)
+        if (launchMode != LaunchMode.Service)
         {
             builder.ConfigureCoreUrls();
         }
@@ -155,7 +146,7 @@ internal class Program
 
         var app = builder.Build();
 
-        if (install)
+        if (launchMode == LaunchMode.Install)
         {
             var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
 
@@ -164,7 +155,7 @@ internal class Program
             return;
         }
 
-        if (uninstall)
+        if (launchMode == LaunchMode.Uninstall)
         {
             var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
 
