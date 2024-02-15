@@ -13,6 +13,7 @@ namespace RemoteMaster.Server.Components.Dialogs;
 public partial class HostConfigurationGenerator
 {
     private readonly HostConfiguration _model = new();
+    private string organizationalUnitInput;
     private readonly Dictionary<string, string> _countries = [];
 
     protected override void OnInitialized()
@@ -271,6 +272,8 @@ public partial class HostConfigurationGenerator
 
     private async Task OnValidSubmit(EditContext context)
     {
+        _model.Subject.OrganizationalUnit = organizationalUnitInput.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+
         await JsRuntime.InvokeVoidAsync("generateAndDownloadFile", _model);
 
         StateHasChanged();
