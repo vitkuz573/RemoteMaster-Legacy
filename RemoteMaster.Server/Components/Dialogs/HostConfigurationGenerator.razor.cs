@@ -272,7 +272,7 @@ public partial class HostConfigurationGenerator
 
     private async Task OnValidSubmit(EditContext context)
     {
-        _model.Subject.OrganizationalUnit = organizationalUnitInput.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+        _model.Subject.OrganizationalUnit = organizationalUnitInput.Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
 
         await JsRuntime.InvokeVoidAsync("generateAndDownloadFile", _model);
 
