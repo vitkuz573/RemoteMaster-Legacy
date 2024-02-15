@@ -19,26 +19,16 @@ public class CertificateService(IOptions<CertificateOptions> options) : ICertifi
     {
         ArgumentNullException.ThrowIfNull(csrBytes);
 
-        Log.Information("Starting to process CSR for certificate issuance.");
-
         var csr = CertificateRequest.LoadSigningRequest(csrBytes, HashAlgorithmName.SHA256, CertificateRequestLoadOptions.UnsafeLoadCertificateExtensions);
 
-        Log.Information("CSR loaded successfully.");
-
-        // Check for CA constraints
         var basicConstraints = csr.CertificateExtensions.OfType<X509BasicConstraintsExtension>().FirstOrDefault();
 
         if (basicConstraints is { CertificateAuthority: true })
         {
             Log.Error("CSR for CA certificates are not allowed.");
-            throw new InvalidOperationException("CSR for CA certificates are not allowed.");
         }
 
-        // Load CA certificate
         using var caCertificate = new X509Certificate2(_settings.PfxPath, _settings.PfxPassword);
-        Log.Information("CA certificate loaded successfully.");
-
-        // Prepare for signing
         var subjectName = caCertificate.SubjectName;
         var rsaPrivateKey = caCertificate.GetRSAPrivateKey();
 
@@ -53,12 +43,7 @@ public class CertificateService(IOptions<CertificateOptions> options) : ICertifi
         var notAfter = DateTimeOffset.UtcNow.AddYears(1);
         var serialNumber = GenerateSerialNumber();
 
-        Log.Information("Generating new certificate with Serial Number: {SerialNumber}", BitConverter.ToString(serialNumber));
-
-        // Create the new certificate
         var certificate = csr.Create(subjectName, signatureGenerator, notBefore, notAfter, serialNumber);
-
-        Log.Information("New certificate generated successfully.");
 
         return certificate;
     }
