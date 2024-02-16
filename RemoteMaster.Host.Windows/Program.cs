@@ -146,22 +146,22 @@ internal class Program
 
         var app = builder.Build();
 
-        if (launchMode == LaunchMode.Install)
+        switch (launchMode)
         {
-            var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
+            case LaunchMode.Install:
+            {
+                var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
+                await hostServiceManager.Install();
 
-            await hostServiceManager.Install();
+                return;
+            }
+            case LaunchMode.Uninstall:
+            {
+                var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
+                await hostServiceManager.Uninstall();
 
-            return;
-        }
-
-        if (launchMode == LaunchMode.Uninstall)
-        {
-            var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
-
-            await hostServiceManager.Uninstall();
-
-            return;
+                return;
+            }
         }
 
         var secureAttentionSequenceService = app.Services.GetRequiredService<ISecureAttentionSequenceService>();
