@@ -19,6 +19,11 @@
     </MudAppBar>
 
     <MudDrawer @bind-Open="@_drawerOpen" Anchor="Anchor.End" Variant="@DrawerVariant.Responsive">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6">
+                Settings
+            </MudText>
+        </MudDrawerHeader>
         <MudNavMenu>
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.DisplaySettings">
                 <MudSelect Value="@_selectedDisplay" ValueChanged="OnChangeScreen" Label="Display" T="string" Dense="true">
