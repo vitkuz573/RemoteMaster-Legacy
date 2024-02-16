@@ -57,7 +57,7 @@
         </MudNavMenu>
     </MudDrawer>
     
-    <div class="absolute h-full w-full bg-gray-800 text-white p-4 flex h-screen">
+    <div class="w-full bg-gray-800 text-white p-4 flex h-screen">
         @if (!string.IsNullOrEmpty(_screenDataUrl))
         {
             <img id="screenImage" src="@_screenDataUrl" @oncontextmenu:preventDefault="true" @oncontextmenu="_ => { }" draggable="false" class="object-contain mx-auto max-h-full max-w-full" onload="window.revokeUrl(this.src)" @onmousemove="OnMouseMove" @onmousedown="OnMouseUpDown" @onmouseup="OnMouseUpDown" @onmouseover="OnMouseOver" @onmousewheel="OnMouseWheel" alt=""/>
