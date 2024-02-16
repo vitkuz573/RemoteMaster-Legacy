@@ -281,12 +281,18 @@ public partial class Home
             return;
         }
 
+        var dialogOptions = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraExtraLarge,
+            FullWidth = true
+        };
+
         var dialogParameters = new DialogParameters<PsExecRulesDialog>
         {
             { x => x.Hosts, await GetComputers() }
         };
 
-        await DialogService.ShowAsync<PsExecRulesDialog>("PSExec rules", dialogParameters);
+        await DialogService.ShowAsync<PsExecRulesDialog>("PSExec rules", dialogParameters, dialogOptions);
     }
 
     private async Task ScreenRecorder()

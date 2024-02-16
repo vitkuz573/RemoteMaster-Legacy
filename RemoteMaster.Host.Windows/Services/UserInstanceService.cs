@@ -54,7 +54,7 @@ public class UserInstanceService : IUserInstanceService
 
     private void StartNewInstance()
     {
-        var launchArgument = $"--launch-mode {_launchMode.ToString().ToLower()}";
+        var launchArgument = $"--launch-mode={_launchMode.ToString().ToLower()}";
         using var process = new NativeProcess();
 
         process.StartInfo = new NativeProcessStartInfo(_currentExecutablePath, launchArgument)
@@ -80,7 +80,7 @@ public class UserInstanceService : IUserInstanceService
     private bool IsUserInstance(Process process)
     {
         var commandLine = process.GetCommandLine();
-        var expectedArgument = $"--launch-mode {_launchMode.ToString().ToLower()}";
+        var expectedArgument = $"--launch-mode={_launchMode.ToString().ToLower()}";
 
         return commandLine.Contains(expectedArgument);
     }
