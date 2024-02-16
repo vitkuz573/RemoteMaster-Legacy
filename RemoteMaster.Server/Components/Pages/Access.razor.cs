@@ -53,7 +53,7 @@ public partial class Access : IDisposable
     protected async override Task OnAfterRenderAsync(bool firstRender)
     {
         await JsRuntime.InvokeVoidAsync("setTitle", Host);
-        await JsRuntime.InvokeVoidAsync("preventEnterKeyWhenDrawerClosed", _drawerOpen);
+        await JsRuntime.InvokeVoidAsync("preventDefaultForKeydownWhenDrawerClosed", _drawerOpen);
 
         if (firstRender)
         {
