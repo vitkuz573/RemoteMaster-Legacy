@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using RemoteMaster.Host.Core.Abstractions;
@@ -111,15 +112,20 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         try
         {
             await serverHubService.ConnectAsync(hostConfiguration.Server);
-
             var isRegistered = await serverHubService.IsHostRegisteredAsync(hostConfiguration);
-
+            
             return isRegistered;
+        }
+        catch (HttpRequestException ex) when (ex.InnerException is SocketException { SocketErrorCode: SocketError.NetworkUnreachable })
+        {
+            Log.Warning("Network is unreachable. Assuming host is still registered based on previous state.");
+            
+            return true;
         }
         catch (Exception ex)
         {
             Log.Error("Error checking host registration status: {Message}", ex.Message);
-
+            
             return false;
         }
     }
