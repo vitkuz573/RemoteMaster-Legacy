@@ -13,7 +13,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class UserInstanceService : IUserInstanceService
 {
-    private readonly LaunchMode _launchMode = LaunchMode.User;
+    private readonly string _argument = $"--launch-mode={LaunchMode.User.ToString().ToLower()}";
     private readonly string _currentExecutablePath = Environment.ProcessPath!;
 
     public bool IsRunning => FindHostProcesses().Any(IsUserInstance);
@@ -54,10 +54,9 @@ public class UserInstanceService : IUserInstanceService
 
     private void StartNewInstance()
     {
-        var launchArgument = $"--launch-mode={_launchMode.ToString().ToLower()}";
         using var process = new NativeProcess();
 
-        process.StartInfo = new NativeProcessStartInfo(_currentExecutablePath, launchArgument)
+        process.StartInfo = new NativeProcessStartInfo(_currentExecutablePath, _argument)
         {
             ForceConsoleSession = true,
             DesktopName = "Default",
@@ -80,8 +79,7 @@ public class UserInstanceService : IUserInstanceService
     private bool IsUserInstance(Process process)
     {
         var commandLine = process.GetCommandLine();
-        var expectedArgument = $"--launch-mode={_launchMode.ToString().ToLower()}";
 
-        return commandLine.Contains(expectedArgument);
+        return commandLine.Contains(_argument);
     }
 }
