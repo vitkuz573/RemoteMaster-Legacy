@@ -46,7 +46,7 @@ public class HostInformationService : IHostInformationService
                                        .Any(address => address.Address.ToString() == ipv4Address));
 
         return targetInterface == null
-            ? throw new InvalidOperationException("MAC address not found. Network might be disabled.")
+            ? throw new InvalidOperationException("MAC address not found. Network might be disabled")
             : targetInterface.GetPhysicalAddress().ToString();
     }
 }
