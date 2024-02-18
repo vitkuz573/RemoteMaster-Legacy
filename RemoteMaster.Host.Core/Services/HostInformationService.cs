@@ -15,8 +15,9 @@ public class HostInformationService : IHostInformationService
     public Computer GetHostInformation()
     {
         var hostName = Dns.GetHostName();
-        var ipv4Address = GetIPv4Address(hostName);
-        var macAddress = GetMacAddress(ipv4Address);
+        var preferredInterface = GetPreferredNetworkInterface();
+        var ipv4Address = GetIPv4Address(preferredInterface);
+        var macAddress = FormatMacAddress(GetMacAddress(preferredInterface));
 
         return new Computer
         {
@@ -26,27 +27,50 @@ public class HostInformationService : IHostInformationService
         };
     }
 
-    private static string GetIPv4Address(string hostName)
+    private static NetworkInterface GetPreferredNetworkInterface()
     {
-        var ipv4Address = Dns.GetHostAddresses(hostName).FirstOrDefault(a => a.AddressFamily == AddressFamily.InterNetwork && !IPAddress.IsLoopback(a));
+        var interfaces = NetworkInterface.GetAllNetworkInterfaces()
+            .Where(nic => nic.OperationalStatus == OperationalStatus.Up)
+            .Where(nic => nic.NetworkInterfaceType is NetworkInterfaceType.Wireless80211 or NetworkInterfaceType.Ethernet)
+            .Where(nic => !IsVpnAdapter(nic))
+            .Where(nic => nic.GetIPProperties().UnicastAddresses.Any(ua => ua.Address.AddressFamily == AddressFamily.InterNetwork && !ua.Address.ToString().StartsWith("169.254")))
+            .Select(nic => new
+            {
+                Interface = nic,
+                Priority = nic.NetworkInterfaceType == NetworkInterfaceType.Ethernet ? 1 : 2
+            }).MinBy(nic => nic.Priority)?.Interface;
 
-        if (ipv4Address == null || IPAddress.IsLoopback(ipv4Address))
-        {
-            throw new InvalidOperationException("Valid IPv4 address not found. Network might be disabled.");
-        }
-
-        return ipv4Address.ToString();
+        return interfaces ?? throw new InvalidOperationException("Active network interface not found. Network might be disabled or not properly configured.");
     }
 
-    private static string GetMacAddress(string ipv4Address)
+    private static bool IsVpnAdapter(NetworkInterface nic)
     {
-        var targetInterface = NetworkInterface.GetAllNetworkInterfaces()
-            .FirstOrDefault(nic => nic.OperationalStatus == OperationalStatus.Up &&
-                                   nic.GetIPProperties().UnicastAddresses
-                                       .Any(address => address.Address.ToString() == ipv4Address));
+        var descriptionLower = nic.Description.ToLower();
 
-        return targetInterface == null
-            ? throw new InvalidOperationException("MAC address not found. Network might be disabled")
-            : targetInterface.GetPhysicalAddress().ToString();
+        return descriptionLower.Contains("vpn") ||
+               descriptionLower.Contains("virtual") ||
+               descriptionLower.Contains("pseudo") ||
+               descriptionLower.Contains("tap-windows") ||
+               descriptionLower.Contains("tap");
+    }
+
+    private static string GetIPv4Address(NetworkInterface networkInterface)
+    {
+        var ipv4Address = networkInterface.GetIPProperties().UnicastAddresses
+            .FirstOrDefault(ua => ua.Address.AddressFamily == AddressFamily.InterNetwork);
+
+        return ipv4Address == null
+            ? throw new InvalidOperationException("Valid IPv4 address not found for the selected interface.")
+            : ipv4Address.Address.ToString();
+    }
+
+    private static string GetMacAddress(NetworkInterface networkInterface)
+    {
+        return networkInterface.GetPhysicalAddress().ToString();
+    }
+
+    private static string FormatMacAddress(string rawMacAddress)
+    {
+        return string.Join(":", Enumerable.Range(0, rawMacAddress.Length / 2).Select(i => rawMacAddress.Substring(i * 2, 2)));
     }
 }
