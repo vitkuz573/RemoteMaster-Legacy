@@ -68,7 +68,7 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
         }
         catch (InvalidOperationException ex)
         {
-            Log.Warning("Network is not available. Unable to update host information at this time. Message: {Message}", ex.Message);
+            Log.Warning("{Message}. Unable to update host information at this time.", ex.Message);
             
             return;
         }
