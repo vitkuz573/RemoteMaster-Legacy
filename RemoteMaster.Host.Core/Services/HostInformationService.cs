@@ -17,7 +17,7 @@ public class HostInformationService : IHostInformationService
         var hostName = Dns.GetHostName();
         var preferredInterface = GetPreferredNetworkInterface();
         var ipv4Address = GetIPv4Address(preferredInterface);
-        var macAddress = FormatMacAddress(GetMacAddress(preferredInterface));
+        var macAddress = GetMacAddress(preferredInterface);
 
         return new Computer
         {
@@ -67,10 +67,5 @@ public class HostInformationService : IHostInformationService
     private static string GetMacAddress(NetworkInterface networkInterface)
     {
         return networkInterface.GetPhysicalAddress().ToString();
-    }
-
-    private static string FormatMacAddress(string rawMacAddress)
-    {
-        return string.Join(":", Enumerable.Range(0, rawMacAddress.Length / 2).Select(i => rawMacAddress.Substring(i * 2, 2)));
     }
 }
