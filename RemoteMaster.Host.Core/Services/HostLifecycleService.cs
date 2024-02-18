@@ -126,7 +126,7 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         {
             Log.Error("Error checking host registration status: {Message}", ex.Message);
             
-            return false;
+            return true;
         }
     }
 

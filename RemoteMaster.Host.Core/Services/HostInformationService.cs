@@ -28,19 +28,25 @@ public class HostInformationService : IHostInformationService
 
     private static string GetIPv4Address(string hostName)
     {
-        var ipv4Address = Dns.GetHostAddresses(hostName).FirstOrDefault(a => a.AddressFamily == AddressFamily.InterNetwork);
+        var ipv4Address = Dns.GetHostAddresses(hostName).FirstOrDefault(a => a.AddressFamily == AddressFamily.InterNetwork && !IPAddress.IsLoopback(a));
 
-        return ipv4Address?.ToString() ?? throw new InvalidOperationException("IPv4 address not found");
+        if (ipv4Address == null || IPAddress.IsLoopback(ipv4Address))
+        {
+            throw new InvalidOperationException("Valid IPv4 address not found. Network might be disabled.");
+        }
+
+        return ipv4Address.ToString();
     }
 
     private static string GetMacAddress(string ipv4Address)
     {
         var targetInterface = NetworkInterface.GetAllNetworkInterfaces()
-                                  .FirstOrDefault(nic => nic.GetIPProperties()
-                                      .UnicastAddresses
-                                      .Any(address => address.Address.ToString() == ipv4Address)) 
-                              ?? throw new InvalidOperationException("MAC address not found");
+            .FirstOrDefault(nic => nic.OperationalStatus == OperationalStatus.Up &&
+                                   nic.GetIPProperties().UnicastAddresses
+                                       .Any(address => address.Address.ToString() == ipv4Address));
 
-        return targetInterface.GetPhysicalAddress().ToString();
+        return targetInterface == null
+            ? throw new InvalidOperationException("MAC address not found. Network might be disabled.")
+            : targetInterface.GetPhysicalAddress().ToString();
     }
 }

@@ -44,24 +44,33 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
             return;
         }
 
-        var hostInformation = hostInformationService.GetHostInformation();
-
-        if (!hostConfiguration.Host.Equals(hostInformation))
+        try
         {
-            try
-            {
-                hostConfiguration.Host = hostInformation;
+            var hostInformation = hostInformationService.GetHostInformation();
 
-                await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
-
-                await hostLifecycleService.UpdateHostInformationAsync(hostConfiguration);
-                await hostLifecycleService.UnregisterAsync(hostConfiguration);
-                await hostLifecycleService.RegisterAsync(hostConfiguration);
-            }
-            catch (Exception ex)
+            if (!hostConfiguration.Host.Equals(hostInformation))
             {
-                Log.Error(ex, "Error saving updated configuration.");
+                try
+                {
+                    hostConfiguration.Host = hostInformation;
+
+                    await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
+                    
+                    await hostLifecycleService.UpdateHostInformationAsync(hostConfiguration);
+                    await hostLifecycleService.UnregisterAsync(hostConfiguration);
+                    await hostLifecycleService.RegisterAsync(hostConfiguration);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Error saving updated configuration.");
+                }
             }
+        }
+        catch (InvalidOperationException ex)
+        {
+            Log.Warning(ex, "Network is not available. Unable to update host information at this time.");
+            
+            return;
         }
 
         try
