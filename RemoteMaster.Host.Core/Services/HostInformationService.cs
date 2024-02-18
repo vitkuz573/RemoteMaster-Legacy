@@ -40,7 +40,7 @@ public class HostInformationService : IHostInformationService
                 Priority = nic.NetworkInterfaceType == NetworkInterfaceType.Ethernet ? 1 : 2
             }).MinBy(nic => nic.Priority)?.Interface;
 
-        return interfaces ?? throw new InvalidOperationException("Active network interface not found. Network might be disabled or not properly configured.");
+        return interfaces ?? throw new InvalidOperationException("Active network interface not found. Network might be disabled or not properly configured");
     }
 
     private static bool IsVpnAdapter(NetworkInterface nic)
