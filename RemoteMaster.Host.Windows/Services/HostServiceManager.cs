@@ -14,6 +14,7 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
     private const string SubAppName = "Host";
 
     private readonly string _applicationDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), MainAppName, SubAppName);
+    private readonly string _updaterDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), MainAppName, "Updater");
 
     public async Task Install()
     {
@@ -28,6 +29,7 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
             Log.Information("Distinguished Name: CN={CommonName}, O={Organization}, OU={OrganizationalUnit}, L={Locality}, ST={State}, C={Country}", hostInformation.Name, hostConfiguration.Subject.Organization, hostConfiguration.Subject.OrganizationalUnit, hostConfiguration.Subject.Locality, hostConfiguration.Subject.State, hostConfiguration.Subject.Country);
 
             var hostService = serviceConfigurationFactory.GetServiceConfiguration("RCHost");
+            var updaterService = serviceConfigurationFactory.GetServiceConfiguration("RCUpdater");
 
             if (hostService.IsInstalled)
             {
@@ -40,6 +42,17 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
                 hostService.Create();
             }
 
+            if (updaterService.IsInstalled)
+            {
+                updaterService.Stop();
+                CopyToTargetPath(_updaterDirectory);
+            }
+            else
+            {
+                CopyToTargetPath(_updaterDirectory);
+                updaterService.Create();
+            }
+
             hostConfiguration.Host = hostInformation;
 
             await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
@@ -47,6 +60,7 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
             hostService.Start();
 
             Log.Information("{ServiceName} installed and started successfully.", hostService.Name);
+            Log.Information("{ServiceName} installed successfully.", updaterService.Name);
 
             await hostLifecycleService.RegisterAsync(hostConfiguration);
         }
@@ -63,6 +77,7 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
             var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
 
             var hostService = serviceConfigurationFactory.GetServiceConfiguration("RCHost");
+            var updaterService = serviceConfigurationFactory.GetServiceConfiguration("RCUpdater");
 
             if (hostService.IsInstalled)
             {
@@ -74,6 +89,18 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
             else
             {
                 Log.Information("{ServiceName} Service is not installed.", hostService.Name);
+            }
+
+            if (updaterService.IsInstalled)
+            {
+                updaterService.Stop();
+                updaterService.Delete();
+
+                Log.Information("{ServiceName} Service uninstalled successfully.", updaterService.Name);
+            }
+            else
+            {
+                Log.Information("{ServiceName} Service is not installed.", updaterService.Name);
             }
 
             if (userInstanceService.IsRunning)
