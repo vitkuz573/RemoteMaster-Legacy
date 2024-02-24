@@ -17,6 +17,7 @@ using RemoteMaster.Host.Core.Extensions;
 using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Host.Windows.Hubs;
 using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Host.Windows.Services;
 using Serilog;
@@ -184,7 +185,16 @@ internal class Program
 
         app.UseAuthentication();
         app.UseAuthorization();
-        app.MapCoreHubs();
+
+        switch (launchMode)
+        {
+            case LaunchMode.User:
+                app.MapCoreHubs();
+                break;
+            case LaunchMode.Updater:
+                app.MapHub<UpdaterHub>("/hubs/updater");
+                break;
+        }
 
         await app.RunAsync();
     }

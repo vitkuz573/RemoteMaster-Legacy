@@ -17,15 +17,15 @@ public class UpdaterService : IUpdaterService
     private readonly string _updateFolderPath;
 
     private readonly INetworkDriveService _networkDriveService;
-    private readonly AbstractService _hostAbstractServiceConfig;
+    private readonly IServiceConfigurationFactory _serviceConfigurationFactory;
 
-    public UpdaterService(INetworkDriveService networkDriveService, AbstractService hostAbstractServiceConfig)
+    public UpdaterService(INetworkDriveService networkDriveService, IServiceConfigurationFactory serviceConfigurationFactory)
     {
         _scriptPath = Path.Combine(_baseFolderPath, "update.ps1");
         _updateFolderPath = Path.Combine(_baseFolderPath, "Update");
 
         _networkDriveService = networkDriveService;
-        _hostAbstractServiceConfig = hostAbstractServiceConfig;
+        _serviceConfigurationFactory = serviceConfigurationFactory;
     }
 
     public void Execute(string folderPath, string username, string password)
@@ -56,8 +56,10 @@ public class UpdaterService : IUpdaterService
                 return;
             }
 
+            var hostService = _serviceConfigurationFactory.GetServiceConfiguration("RCHost");
+
             var contentBuilder = new StringBuilder();
-            contentBuilder.AppendLine($"Stop-Service -Name \"{_hostAbstractServiceConfig.Name}\"");
+            contentBuilder.AppendLine($"Stop-Service -Name \"{hostService.Name}\"");
             contentBuilder.AppendLine($"Get-Process -Id \"{Environment.ProcessId}\" -ErrorAction SilentlyContinue | Stop-Process -Force");
             contentBuilder.AppendLine("$filesLocked = $true");
             contentBuilder.AppendLine("while ($filesLocked) {");
@@ -76,7 +78,7 @@ public class UpdaterService : IUpdaterService
             contentBuilder.AppendLine("}");
             contentBuilder.AppendLine("Copy-Item -Path \"$PSScriptRoot\\Update\\*.*\" -Destination $PSScriptRoot -Recurse -Force");
             contentBuilder.AppendLine("Start-Sleep -Seconds 2");
-            contentBuilder.AppendLine($"Start-Service -Name \"{_hostAbstractServiceConfig.Name}\"");
+            contentBuilder.AppendLine($"Start-Service -Name \"{hostService.Name}\"");
             contentBuilder.AppendLine("Start-Sleep -Seconds 2");
             contentBuilder.AppendLine($"Remove-Item -Path \"{_updateFolderPath}\" -Recurse -Force");
             contentBuilder.AppendLine($"Remove-Item -Path \"{_scriptPath}\" -Force");
