@@ -6,5 +6,5 @@ namespace RemoteMaster.Host.Windows.Abstractions;
 
 public interface IServiceConfigurationFactory
 {
-    IServiceConfiguration GetServiceConfiguration(string serviceName);
+    AbstractService GetServiceConfiguration(string serviceName);
 }

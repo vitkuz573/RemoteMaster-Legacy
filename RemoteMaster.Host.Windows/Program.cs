@@ -44,8 +44,6 @@ internal class Program
         builder.Services.AddTransient<IServiceConfigurationFactory, ServiceConfigurationFactory>();
         builder.Services.AddSingleton<IUserInstanceService, UserInstanceService>();
         builder.Services.AddSingleton<IHostServiceManager, HostServiceManager>();
-        builder.Services.AddSingleton<IServiceManager, ServiceManager>();
-        builder.Services.AddSingleton<IServiceConfiguration, HostServiceConfiguration>();
         builder.Services.AddSingleton<IScreenCapturerService, GdiCapturer>();
         builder.Services.AddSingleton<IScreenRecorderService, ScreenRecorderService>();
         builder.Services.AddSingleton<ICursorRenderService, CursorRenderService>();

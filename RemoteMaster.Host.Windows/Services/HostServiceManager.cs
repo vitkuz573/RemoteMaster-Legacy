@@ -8,7 +8,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHostInformationService hostInformationService, IHostConfigurationService hostConfigurationService, IUserInstanceService userInstanceService, IServiceManager serviceManager, IServiceConfigurationFactory serviceConfigurationFactory) : IHostServiceManager
+public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHostInformationService hostInformationService, IHostConfigurationService hostConfigurationService, IUserInstanceService userInstanceService, IServiceConfigurationFactory serviceConfigurationFactory) : IHostServiceManager
 {
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Host";
@@ -27,26 +27,26 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
             Log.Information("Host Name: {HostName}, IP Address: {IPAddress}, MAC Address: {MacAddress}", hostInformation.Name, hostInformation.IpAddress, hostInformation.MacAddress);
             Log.Information("Distinguished Name: CN={CommonName}, O={Organization}, OU={OrganizationalUnit}, L={Locality}, ST={State}, C={Country}", hostInformation.Name, hostConfiguration.Subject.Organization, hostConfiguration.Subject.OrganizationalUnit, hostConfiguration.Subject.Locality, hostConfiguration.Subject.State, hostConfiguration.Subject.Country);
 
-            var hostServiceConfiguration = serviceConfigurationFactory.GetServiceConfiguration("RCHost");
+            var hostService = serviceConfigurationFactory.GetServiceConfiguration("RCHost");
 
-            if (serviceManager.IsInstalled(hostServiceConfiguration.Name))
+            if (hostService.IsInstalled)
             {
-                serviceManager.Stop(hostServiceConfiguration.Name);
+                hostService.Stop();
                 CopyToTargetPath(_applicationDirectory);
             }
             else
             {
                 CopyToTargetPath(_applicationDirectory);
-                serviceManager.Create(hostServiceConfiguration);
+                hostService.Create();
             }
 
             hostConfiguration.Host = hostInformation;
 
             await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
             
-            serviceManager.Start(hostServiceConfiguration.Name);
+            hostService.Start();
 
-            Log.Information("{ServiceName} installed and started successfully.", hostServiceConfiguration.Name);
+            Log.Information("{ServiceName} installed and started successfully.", hostService.Name);
 
             await hostLifecycleService.RegisterAsync(hostConfiguration);
         }
@@ -62,18 +62,18 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
         {
             var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
 
-            var hostServiceConfiguration = serviceConfigurationFactory.GetServiceConfiguration("RCHost");
+            var hostService = serviceConfigurationFactory.GetServiceConfiguration("RCHost");
 
-            if (serviceManager.IsInstalled(hostServiceConfiguration.Name))
+            if (hostService.IsInstalled)
             {
-                serviceManager.Stop(hostServiceConfiguration.Name);
-                serviceManager.Delete(hostServiceConfiguration.Name);
+                hostService.Stop();
+                hostService.Delete();
 
-                Log.Information("{ServiceName} Service uninstalled successfully.", hostServiceConfiguration.Name);
+                Log.Information("{ServiceName} Service uninstalled successfully.", hostService.Name);
             }
             else
             {
-                Log.Information("{ServiceName} Service is not installed.", hostServiceConfiguration.Name);
+                Log.Information("{ServiceName} Service is not installed.", hostService.Name);
             }
 
             if (userInstanceService.IsRunning)

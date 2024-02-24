@@ -9,12 +9,12 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class ServiceConfigurationFactory : IServiceConfigurationFactory
 {
-    public IServiceConfiguration GetServiceConfiguration(string serviceName)
+    public AbstractService GetServiceConfiguration(string serviceName)
     {
         return serviceName switch
         {
-            "RCHost" => new HostServiceConfiguration(),
-            "RCUpdater" => new UpdaterServiceConfiguration(),
+            "RCHost" => new HostAbstractService(),
+            "RCUpdater" => new UpdaterAbstractService(),
             _ => throw new ArgumentException($"Service configuration for '{serviceName}' is not defined.")
         };
     }
