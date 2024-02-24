@@ -108,7 +108,8 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
                 userInstanceService.Stop();
             }
 
-            DeleteFiles();
+            DeleteFiles(_applicationDirectory);
+            DeleteFiles(_updaterDirectory);
 
             await hostLifecycleService.UnregisterAsync(hostConfiguration);
         }
@@ -144,48 +145,27 @@ public class HostServiceManager(IHostLifecycleService hostLifecycleService, IHos
         }
     }
 
-    private void DeleteFiles()
+    private static void DeleteFiles(string directoryPath)
     {
-        const int maxRetries = 100;
-        var delayOnRetry = 2000;
-
-        if (!Directory.Exists(_applicationDirectory))
+        if (!Directory.Exists(directoryPath))
         {
+            Log.Information("Directory {DirectoryPath} does not exist, no files to delete.", directoryPath);
             return;
         }
 
-        foreach (var file in Directory.EnumerateFiles(_applicationDirectory))
+        foreach (var file in Directory.EnumerateFiles(directoryPath))
         {
-            WaitForFile(file, maxRetries, delayOnRetry);
+            WaitForFile(file, 100, 2000);
         }
 
-        for (var i = 0; i < maxRetries; ++i)
+        try
         {
-            try
-            {
-                Directory.Delete(_applicationDirectory, true);
-                Log.Information("{AppName} files deleted successfully.", SubAppName);
-                break;
-            }
-            catch (IOException ex)
-            {
-                if (i < maxRetries - 1)
-                {
-                    Log.Warning("Attempt {Attempt}: Deleting {AppName} files failed, retrying in {Delay}ms: {Message}", i + 1, SubAppName, delayOnRetry, ex.Message);
-                    Thread.Sleep(delayOnRetry);
-
-                    delayOnRetry *= 2;
-                }
-                else
-                {
-                    Log.Error("Final attempt: Deleting {AppName} files failed: {Message}", SubAppName, ex.Message);
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error("Unexpected error occurred while deleting {AppName} files: {Message}", SubAppName, ex.Message);
-                break;
-            }
+            Directory.Delete(directoryPath, recursive: true);
+            Log.Information("{DirectoryPath} has been successfully deleted.", directoryPath);
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Failed to delete directory {DirectoryPath}: {Message}", directoryPath, ex.Message);
         }
     }
 
