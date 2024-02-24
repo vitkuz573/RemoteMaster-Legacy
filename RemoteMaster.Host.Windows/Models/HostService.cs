@@ -25,17 +25,17 @@ public class HostService : AbstractService
 
     protected override string Description => "RemoteMaster Control Service enables advanced remote management and control functionalities for authorized clients. It provides seamless access to system controls, resource management, and real-time support capabilities, ensuring efficient and secure remote operations.";
 
-    protected override string StartType => "auto";
+    protected override ServiceStartType StartType => ServiceStartType.Auto;
 
     protected override IEnumerable<string>? Dependencies => null;
 
     protected override int ResetPeriod => 86400;
 
-    protected override string FirstFailureAction => "restart/60000";
+    protected override FailureAction FirstFailureAction => FailureAction.Create(ServiceFailureActionType.Restart, 60000);
 
-    protected override string SecondFailureAction => "restart/60000";
+    protected override FailureAction SecondFailureAction => FailureAction.Create(ServiceFailureActionType.Restart, 60000);
 
-    protected override string SubsequentFailuresAction => "restart/60000";
+    protected override FailureAction SubsequentFailuresAction => FailureAction.Create(ServiceFailureActionType.Restart, 60000);
 
     protected override string? RebootMessage => null;
 

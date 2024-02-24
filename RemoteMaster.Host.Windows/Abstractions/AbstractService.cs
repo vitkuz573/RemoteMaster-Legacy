@@ -19,17 +19,17 @@ public abstract class AbstractService
 
     protected abstract string? Description { get; }
 
-    protected abstract string StartType { get; }
+    protected abstract ServiceStartType StartType { get; }
 
     protected abstract IEnumerable<string>? Dependencies { get; }
 
     protected abstract int ResetPeriod { get; }
 
-    protected abstract string FirstFailureAction { get; }
+    protected abstract FailureAction FirstFailureAction { get; }
 
-    protected abstract string SecondFailureAction { get; }
+    protected abstract FailureAction SecondFailureAction { get; }
 
-    protected abstract string SubsequentFailuresAction { get; }
+    protected abstract FailureAction SubsequentFailuresAction { get; }
 
     protected abstract string? RebootMessage { get; }
 
@@ -127,5 +127,56 @@ public abstract class AbstractService
 
         process.Start();
         process.WaitForExit();
+    }
+
+
+    public enum ServiceStartType
+    {
+        Boot,
+        System,
+        Auto,
+        Demand,
+        Disabled,
+        DelayedAuto
+    }
+
+    public class FailureAction
+    {
+        private ServiceFailureActionType ActionType { get; }
+
+        private int Delay { get; }
+
+        private FailureAction(ServiceFailureActionType actionType, int delay = 0)
+        {
+            ActionType = actionType;
+            Delay = delay;
+        }
+
+        public static FailureAction Create(ServiceFailureActionType actionType, int delay = 0)
+        {
+            return new FailureAction(actionType, delay);
+        }
+
+        public static FailureAction None => new(ServiceFailureActionType.None);
+
+        public override string ToString()
+        {
+            return ActionType switch
+            {
+                ServiceFailureActionType.Restart => $"restart/{Delay}",
+                ServiceFailureActionType.Reboot => $"reboot/{Delay}",
+                ServiceFailureActionType.RunCommand => $"run/{Delay}",
+                ServiceFailureActionType.None => "none",
+                _ => "none"
+            };
+        }
+    }
+
+    public enum ServiceFailureActionType
+    {
+        None,
+        Restart,
+        Reboot,
+        RunCommand
     }
 }
