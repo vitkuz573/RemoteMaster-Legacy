@@ -41,6 +41,7 @@ internal class Program
         builder.Host.UseWindowsService();
 
         builder.Services.AddCoreServices();
+        builder.Services.AddTransient<IServiceConfigurationFactory, ServiceConfigurationFactory>();
         builder.Services.AddSingleton<IUserInstanceService, UserInstanceService>();
         builder.Services.AddSingleton<IHostServiceManager, HostServiceManager>();
         builder.Services.AddSingleton<IServiceManager, ServiceManager>();
