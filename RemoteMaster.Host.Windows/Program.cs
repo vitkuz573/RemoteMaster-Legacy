@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
@@ -132,7 +133,7 @@ internal class Program
 
         builder.ConfigureSerilog();
 
-        if (launchMode != LaunchMode.Service)
+        if (launchMode is LaunchMode.User)
         {
             builder.ConfigureCoreUrls();
         }
@@ -143,6 +144,14 @@ internal class Program
             builder.Services.AddHostedService<CommandListenerService>();
             builder.Services.AddHostedService<HostInformationMonitorService>();
             builder.Services.AddHostedService<HostRegistrationMonitorService>();
+        }
+
+        if (launchMode == LaunchMode.Updater)
+        {
+            builder.WebHost.ConfigureKestrel(options =>
+            {
+                options.ListenAnyIP(5200);
+            });
         }
 
         var app = builder.Build();

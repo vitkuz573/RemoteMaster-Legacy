@@ -334,7 +334,7 @@ public partial class Home
 
         var dialogParameters = new DialogParameters<UpdateDialog>
         {
-            { x => x.Hosts, await GetComputers() }
+            { x => x.Hosts, await GetComputersForUpdate() }
         };
 
         await DialogService.ShowAsync<UpdateDialog>("Update", dialogParameters);
@@ -363,6 +363,44 @@ public partial class Home
         };
 
         await DialogService.ShowAsync<MoveDialog>("Move", dialogParameters);
+    }
+
+    private async Task<ConcurrentDictionary<Computer, HubConnection?>> GetComputersForUpdate(bool onlyAvailable = true)
+    {
+        var computerConnections = new ConcurrentDictionary<Computer, HubConnection?>();
+
+        var tasks = _selectedComputers.Select(async computer =>
+        {
+            var isAvailable = await computer.IsAvailable();
+
+            if (!isAvailable && onlyAvailable)
+            {
+                return;
+            }
+
+            HubConnection? connection = null;
+
+            if (isAvailable)
+            {
+                var accessToken = HttpContextAccessor.HttpContext?.Request.Cookies["accessToken"];
+
+                connection = new HubConnectionBuilder()
+                    .WithUrl($"http://{computer.IpAddress}:5200/hubs/updater", options =>
+                    {
+                        options.Headers.Add("Authorization", $"Bearer {accessToken}");
+                    })
+                    .AddMessagePackProtocol()
+                    .Build();
+
+                await connection.StartAsync();
+            }
+
+            computerConnections.AddOrUpdate(computer, connection, (_, _) => connection);
+        });
+
+        await Task.WhenAll(tasks);
+
+        return computerConnections;
     }
 
     private async Task<ConcurrentDictionary<Computer, HubConnection?>> GetComputers(bool onlyAvailable = true)
