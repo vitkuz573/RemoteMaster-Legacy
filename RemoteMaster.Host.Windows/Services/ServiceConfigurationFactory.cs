@@ -13,8 +13,8 @@ public class ServiceConfigurationFactory : IServiceConfigurationFactory
     {
         return serviceName switch
         {
-            "RCHost" => new HostAbstractService(),
-            "RCUpdater" => new UpdaterAbstractService(),
+            "RCHost" => new HostService(),
+            "RCUpdater" => new Models.UpdaterService(),
             _ => throw new ArgumentException($"Service configuration for '{serviceName}' is not defined.")
         };
     }

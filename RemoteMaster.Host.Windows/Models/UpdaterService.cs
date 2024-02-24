@@ -6,7 +6,7 @@ using RemoteMaster.Host.Windows.Abstractions;
 
 namespace RemoteMaster.Host.Windows.Models;
 
-public class UpdaterAbstractService : AbstractService
+public class UpdaterService : AbstractService
 {
     private const string MainAppName = "RemoteMaster";
     private const string SubAppName = "Updater";

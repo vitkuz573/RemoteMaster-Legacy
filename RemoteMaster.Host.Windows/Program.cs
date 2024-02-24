@@ -20,6 +20,7 @@ using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Host.Windows.Services;
 using Serilog;
+using UpdaterService = RemoteMaster.Host.Windows.Services.UpdaterService;
 
 namespace RemoteMaster.Host.Windows;
 
