@@ -7,14 +7,14 @@ using RemoteMaster.Host.Windows.Models;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class ServiceConfigurationFactory : IServiceConfigurationFactory
+public class ServiceFactory : IServiceFactory
 {
-    public AbstractService GetServiceConfiguration(string serviceName)
+    public AbstractService GetService(string serviceName)
     {
         return serviceName switch
         {
             "RCHost" => new HostService(),
-            "RCUpdater" => new Models.UpdaterService(),
+            "RCUpdater" => new UpdaterService(),
             _ => throw new ArgumentException($"Service configuration for '{serviceName}' is not defined.")
         };
     }

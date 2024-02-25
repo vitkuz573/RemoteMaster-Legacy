@@ -10,7 +10,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class UpdateService(INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IServiceConfigurationFactory serviceConfigurationFactory) : IUpdateService
+public class UpdateService(INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IServiceFactory serviceFactory) : IUpdateService
 {
     private static readonly string BaseFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
     
@@ -45,7 +45,7 @@ public class UpdateService(INetworkDriveService networkDriveService, IUserInstan
                 return;
             }
 
-            var hostService = serviceConfigurationFactory.GetServiceConfiguration("RCHost");
+            var hostService = serviceFactory.GetService("RCHost");
 
             hostService.Stop();
 

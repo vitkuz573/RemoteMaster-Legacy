@@ -8,7 +8,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostUninstaller(IHostConfigurationService hostConfigurationService, IServiceConfigurationFactory serviceConfigurationFactory, IUserInstanceService userInstanceService, IHostLifecycleService hostLifecycleService) : IHostUninstaller
+public class HostUninstaller(IHostConfigurationService hostConfigurationService, IServiceFactory serviceFactory, IUserInstanceService userInstanceService, IHostLifecycleService hostLifecycleService) : IHostUninstaller
 {
     private readonly string _applicationDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
     private readonly string _updaterDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Updater");
@@ -19,8 +19,8 @@ public class HostUninstaller(IHostConfigurationService hostConfigurationService,
         {
             var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
 
-            var hostService = serviceConfigurationFactory.GetServiceConfiguration("RCHost");
-            var updaterService = serviceConfigurationFactory.GetServiceConfiguration("RCUpdater");
+            var hostService = serviceFactory.GetService("RCHost");
+            var updaterService = serviceFactory.GetService("RCUpdater");
 
             if (hostService.IsInstalled)
             {

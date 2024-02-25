@@ -8,7 +8,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostInstaller(IHostInformationService hostInformationService, IHostConfigurationService hostConfigurationService, IServiceConfigurationFactory serviceConfigurationFactory, IHostLifecycleService hostLifecycleService) : IHostInstaller
+public class HostInstaller(IHostInformationService hostInformationService, IHostConfigurationService hostConfigurationService, IServiceFactory serviceFactory, IHostLifecycleService hostLifecycleService) : IHostInstaller
 {
     private readonly string _applicationDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
     private readonly string _updaterDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Updater");
@@ -25,8 +25,8 @@ public class HostInstaller(IHostInformationService hostInformationService, IHost
             Log.Information("Host Name: {HostName}, IP Address: {IPAddress}, MAC Address: {MacAddress}", hostInformation.Name, hostInformation.IpAddress, hostInformation.MacAddress);
             Log.Information("Distinguished Name: CN={CommonName}, O={Organization}, OU={OrganizationalUnit}, L={Locality}, ST={State}, C={Country}", hostInformation.Name, hostConfiguration.Subject.Organization, hostConfiguration.Subject.OrganizationalUnit, hostConfiguration.Subject.Locality, hostConfiguration.Subject.State, hostConfiguration.Subject.Country);
 
-            var hostService = serviceConfigurationFactory.GetServiceConfiguration("RCHost");
-            var updaterService = serviceConfigurationFactory.GetServiceConfiguration("RCUpdater");
+            var hostService = serviceFactory.GetService("RCHost");
+            var updaterService = serviceFactory.GetService("RCUpdater");
 
             if (hostService.IsInstalled)
             {
