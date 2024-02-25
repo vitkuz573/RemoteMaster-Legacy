@@ -9,7 +9,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class ServiceFactory : IServiceFactory
 {
-    private readonly Dictionary<string, AbstractService> _serviceInstances = new();
+    private readonly Dictionary<string, AbstractService> _serviceInstances = [];
 
     public ServiceFactory()
     {
