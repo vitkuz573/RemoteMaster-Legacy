@@ -13,13 +13,18 @@ namespace RemoteMaster.Host.Core.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static void AddCoreServices(this IServiceCollection services)
+    public static void AddCoreServices(this IServiceCollection services, bool buildConfiguration = true)
     {
-        var builder = new ConfigurationBuilder()
-            .SetBasePath(Path.GetDirectoryName(Environment.ProcessPath)!)
-            .AddJsonFile("RemoteMaster.Host.json");
+        if (buildConfiguration)
+        {
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(Path.GetDirectoryName(Environment.ProcessPath)!)
+                .AddJsonFile("RemoteMaster.Host.json");
 
-        var configuration = builder.Build();
+            var configuration = builder.Build();
+
+            services.Configure<SubjectOptions>(configuration.GetSection("subject"));
+        }
 
         services.AddLogging(loggingBuilder =>
         {
@@ -36,7 +41,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IShutdownService, ShutdownService>();
         services.AddSingleton<IServerHubService, ServerHubService>();
         services.AddTransient<IViewerFactory, ViewerFactory>();
-        services.Configure<SubjectOptions>(configuration.GetSection("subject"));
 
         services.AddSignalR().AddMessagePackProtocol();
     }
