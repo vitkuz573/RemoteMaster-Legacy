@@ -10,25 +10,12 @@ using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class UpdateService : IUpdateService
+public class UpdateService(INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IServiceConfigurationFactory serviceConfigurationFactory) : IUpdateService
 {
-    private readonly string _baseFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
-    private readonly string _scriptPath;
-    private readonly string _updateFolderPath;
-
-    private readonly INetworkDriveService _networkDriveService;
-    private readonly IUserInstanceService _userInstanceService;
-    private readonly IServiceConfigurationFactory _serviceConfigurationFactory;
-
-    public UpdateService(INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IServiceConfigurationFactory serviceConfigurationFactory)
-    {
-        _scriptPath = Path.Combine(_baseFolderPath, "update.ps1");
-        _updateFolderPath = Path.Combine(_baseFolderPath, "Update");
-
-        _networkDriveService = networkDriveService;
-        _userInstanceService = userInstanceService;
-        _serviceConfigurationFactory = serviceConfigurationFactory;
-    }
+    private static readonly string BaseFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
+    
+    private readonly string _scriptPath = Path.Combine(BaseFolderPath, "update.ps1");
+    private readonly string _updateFolderPath = Path.Combine(BaseFolderPath, "Update");
 
     public void Execute(string folderPath, string username, string password)
     {
@@ -41,7 +28,7 @@ public class UpdateService : IUpdateService
 
             if (isNetworkPath)
             {
-                _networkDriveService.MapNetworkDrive(folderPath, username, password);
+                networkDriveService.MapNetworkDrive(folderPath, username, password);
             }
 
             var isDownloaded = DirectoryCopy(sourceFolderPath, _updateFolderPath, true, true);
@@ -50,7 +37,7 @@ public class UpdateService : IUpdateService
 
             if (isNetworkPath)
             {
-                _networkDriveService.CancelNetworkDrive(folderPath);
+                networkDriveService.CancelNetworkDrive(folderPath);
             }
 
             if (!isDownloaded)
@@ -58,11 +45,11 @@ public class UpdateService : IUpdateService
                 return;
             }
 
-            var hostService = _serviceConfigurationFactory.GetServiceConfiguration("RCHost");
+            var hostService = serviceConfigurationFactory.GetServiceConfiguration("RCHost");
 
             hostService.Stop();
 
-            _userInstanceService.Stop();
+            userInstanceService.Stop();
 
             var contentBuilder = new StringBuilder();
             contentBuilder.AppendLine("$filesLocked = $true");
