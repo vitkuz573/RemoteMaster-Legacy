@@ -133,24 +133,25 @@ internal class Program
 
         builder.ConfigureSerilog();
 
-        if (launchMode is LaunchMode.User)
+        switch (launchMode)
         {
-            builder.ConfigureCoreUrls();
-        }
-        else
-        {
-            builder.Services.AddHostedService<MessageLoopService>();
-            builder.Services.AddHostedService<HostProcessMonitorService>();
-            builder.Services.AddHostedService<CommandListenerService>();
-            builder.Services.AddHostedService<HostInformationMonitorService>();
-            builder.Services.AddHostedService<HostRegistrationMonitorService>();
+            case LaunchMode.User:
+                builder.ConfigureCoreUrls();
+                builder.Services.AddHostedService<HostRegistrationMonitorService>();
+                break;
+            case LaunchMode.Service:
+                builder.Services.AddHostedService<MessageLoopService>();
+                builder.Services.AddHostedService<HostProcessMonitorService>();
+                builder.Services.AddHostedService<CommandListenerService>();
+                builder.Services.AddHostedService<HostInformationMonitorService>();
+                break;
         }
 
         if (launchMode == LaunchMode.Updater)
         {
-            builder.WebHost.ConfigureKestrel(options =>
+            builder.WebHost.ConfigureKestrel(kestrelServerOptions =>
             {
-                options.ListenAnyIP(5200);
+                kestrelServerOptions.ListenAnyIP(5200);
             });
         }
 
