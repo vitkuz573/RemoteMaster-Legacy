@@ -130,7 +130,7 @@ public abstract class AbstractService
     }
 
 
-    public enum ServiceStartType
+    protected enum ServiceStartType
     {
         Boot,
         System,
@@ -140,7 +140,7 @@ public abstract class AbstractService
         DelayedAuto
     }
 
-    public class FailureAction
+    protected class FailureAction
     {
         private ServiceFailureActionType ActionType { get; }
 
@@ -172,7 +172,7 @@ public abstract class AbstractService
         }
     }
 
-    public enum ServiceFailureActionType
+    protected enum ServiceFailureActionType
     {
         None,
         Restart,
