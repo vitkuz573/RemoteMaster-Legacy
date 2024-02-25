@@ -9,7 +9,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class ServiceFactory : IServiceFactory
 {
-    private readonly Dictionary<string, Func<AbstractService>> _serviceCreators = [];
+    private readonly Dictionary<string, AbstractService> _serviceInstances = new();
 
     public ServiceFactory()
     {
@@ -25,16 +25,16 @@ public class ServiceFactory : IServiceFactory
         {
             if (Activator.CreateInstance(type) is AbstractService serviceInstance)
             {
-                _serviceCreators[serviceInstance.Name] = () => (AbstractService)Activator.CreateInstance(type);
+                _serviceInstances[serviceInstance.Name] = serviceInstance;
             }
         }
     }
 
     public AbstractService GetService(string serviceName)
     {
-        if (_serviceCreators.TryGetValue(serviceName, out var constructor))
+        if (_serviceInstances.TryGetValue(serviceName, out var serviceInstance))
         {
-            return constructor();
+            return serviceInstance;
         }
 
         throw new ArgumentException($"Service for '{serviceName}' is not defined.");
