@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface IUpdaterService
+public interface IUpdateService
 {
     void Execute(string folderPath, string username, string password);
 }

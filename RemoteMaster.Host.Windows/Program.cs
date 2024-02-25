@@ -22,7 +22,6 @@ using RemoteMaster.Host.Windows.Hubs;
 using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Host.Windows.Services;
 using Serilog;
-using UpdaterService = RemoteMaster.Host.Windows.Services.UpdaterService;
 
 namespace RemoteMaster.Host.Windows;
 
@@ -46,14 +45,15 @@ internal class Program
         builder.Services.AddCoreServices();
         builder.Services.AddTransient<IServiceConfigurationFactory, ServiceConfigurationFactory>();
         builder.Services.AddSingleton<IUserInstanceService, UserInstanceService>();
-        builder.Services.AddSingleton<IHostServiceManager, HostServiceManager>();
+        builder.Services.AddSingleton<IHostInstaller, HostInstaller>();
+        builder.Services.AddSingleton<IHostUninstaller, HostUninstaller>();
         builder.Services.AddSingleton<IScreenCapturerService, GdiCapturer>();
         builder.Services.AddSingleton<IScreenRecorderService, ScreenRecorderService>();
         builder.Services.AddSingleton<ICursorRenderService, CursorRenderService>();
         builder.Services.AddSingleton<IInputService, InputService>();
         builder.Services.AddSingleton<IPowerService, PowerService>();
         builder.Services.AddSingleton<IHardwareService, HardwareService>();
-        builder.Services.AddSingleton<IUpdaterService, UpdaterService>();
+        builder.Services.AddSingleton<IUpdateService, UpdateService>();
         builder.Services.AddSingleton<ITokenPrivilegeService, TokenPrivilegeService>();
         builder.Services.AddSingleton<IDesktopService, DesktopService>();
         builder.Services.AddSingleton<INetworkDriveService, NetworkDriveService>();
@@ -161,15 +161,15 @@ internal class Program
         {
             case LaunchMode.Install:
             {
-                var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
-                await hostServiceManager.Install();
+                var hostInstallerService = app.Services.GetRequiredService<IHostInstaller>();
+                await hostInstallerService.InstallAsync();
 
                 return;
             }
             case LaunchMode.Uninstall:
             {
-                var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
-                await hostServiceManager.Uninstall();
+                var hostUninstallerService = app.Services.GetRequiredService<IHostUninstaller>();
+                await hostUninstallerService.UninstallAsync();
 
                 return;
             }

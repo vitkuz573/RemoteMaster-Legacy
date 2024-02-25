@@ -10,7 +10,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class UpdaterService : IUpdaterService
+public class UpdateService : IUpdateService
 {
     private readonly string _baseFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
     private readonly string _scriptPath;
@@ -20,7 +20,7 @@ public class UpdaterService : IUpdaterService
     private readonly IUserInstanceService _userInstanceService;
     private readonly IServiceConfigurationFactory _serviceConfigurationFactory;
 
-    public UpdaterService(INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IServiceConfigurationFactory serviceConfigurationFactory)
+    public UpdateService(INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IServiceConfigurationFactory serviceConfigurationFactory)
     {
         _scriptPath = Path.Combine(_baseFolderPath, "update.ps1");
         _updateFolderPath = Path.Combine(_baseFolderPath, "Update");

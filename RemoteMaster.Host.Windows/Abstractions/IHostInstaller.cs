@@ -4,9 +4,7 @@
 
 namespace RemoteMaster.Host.Windows.Abstractions;
 
-public interface IHostServiceManager
+public interface IHostInstaller
 {
-    Task Install();
-
-    Task Uninstall();
+    Task InstallAsync();
 }
