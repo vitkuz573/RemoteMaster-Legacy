@@ -15,7 +15,7 @@ public class ServiceFactory : IServiceFactory
         {
             "RCHost" => new HostService(),
             "RCUpdater" => new UpdaterService(),
-            _ => throw new ArgumentException($"Service configuration for '{serviceName}' is not defined.")
+            _ => throw new ArgumentException($"Service for '{serviceName}' is not defined.")
         };
     }
 }
