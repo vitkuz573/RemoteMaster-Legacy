@@ -53,7 +53,7 @@ internal class Program
         builder.Services.AddSingleton<IInputService, InputService>();
         builder.Services.AddSingleton<IPowerService, PowerService>();
         builder.Services.AddSingleton<IHardwareService, HardwareService>();
-        builder.Services.AddSingleton<IUpdateService, UpdateService>();
+        builder.Services.AddSingleton<IHostUpdater, HostUpdater>();
         builder.Services.AddSingleton<ITokenPrivilegeService, TokenPrivilegeService>();
         builder.Services.AddSingleton<IDesktopService, DesktopService>();
         builder.Services.AddSingleton<INetworkDriveService, NetworkDriveService>();

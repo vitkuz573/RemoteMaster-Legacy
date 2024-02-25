@@ -10,14 +10,14 @@ using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class UpdateService(INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IServiceFactory serviceFactory) : IUpdateService
+public class HostUpdater(INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IServiceFactory serviceFactory) : IHostUpdater
 {
     private static readonly string BaseFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
     
     private readonly string _scriptPath = Path.Combine(BaseFolderPath, "update.ps1");
     private readonly string _updateFolderPath = Path.Combine(BaseFolderPath, "Update");
 
-    public void Execute(string folderPath, string username, string password)
+    public void Update(string folderPath, string username, string password)
     {
         ArgumentNullException.ThrowIfNull(folderPath);
 

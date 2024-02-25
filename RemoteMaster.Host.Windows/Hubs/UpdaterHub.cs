@@ -7,10 +7,10 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Windows.Hubs;
 
-public class UpdaterHub(IUpdateService updateService) : Hub<IUpdaterClient>
+public class UpdaterHub(IHostUpdater hostUpdater) : Hub<IUpdaterClient>
 {
     public void SendUpdate(string folderPath, string username, string password)
     {
-        updateService.Execute(folderPath, username, password);
+        hostUpdater.Update(folderPath, username, password);
     }
 }
