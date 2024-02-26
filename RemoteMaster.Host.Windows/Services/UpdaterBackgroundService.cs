@@ -10,8 +10,6 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class UpdaterBackgroundService(UpdateParameters updateParameters, IHostApplicationLifetime appLifetime, IHostUpdater hostUpdater) : IHostedService
 {
-    private readonly UpdateParameters _updateParameters = updateParameters;
-
     public Task StartAsync(CancellationToken cancellationToken)
     {
         appLifetime.ApplicationStarted.Register(() =>
@@ -31,7 +29,7 @@ public class UpdaterBackgroundService(UpdateParameters updateParameters, IHostAp
     {
         Thread.Sleep(3000);
 
-        await hostUpdater.UpdateAsync(_updateParameters.FolderPath, updateParameters.Username, updateParameters.Password);
+        await hostUpdater.UpdateAsync(updateParameters.FolderPath, updateParameters.Username, updateParameters.Password);
 
         Environment.Exit(0);
     }
