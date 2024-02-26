@@ -4,11 +4,11 @@
 
 namespace RemoteMaster.Host.Windows.Models;
 
-public class UpdateParameters
+public class UpdateParameters(string folderPath)
 {
-    public string FolderPath { get; set; }
+    public string FolderPath { get; } = folderPath;
 
-    public string? Username { get; set; }
+    public string? Username { get; init; }
 
-    public string? Password { get; set; }
+    public string? Password { get; init; }
 }

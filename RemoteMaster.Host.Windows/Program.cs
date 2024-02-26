@@ -73,9 +73,8 @@ internal class Program
 
         if (launchMode is LaunchMode.Updater)
         {
-            var updateParameters = new UpdateParameters
+            var updateParameters = new UpdateParameters(folderPath)
             {
-                FolderPath = folderPath,
                 Username = username,
                 Password = password
             };
