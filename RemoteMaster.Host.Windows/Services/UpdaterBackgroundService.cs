@@ -29,8 +29,10 @@ public class UpdaterBackgroundService(UpdateParameters updateParameters, IHostAp
 
     private async Task UpdateAsync()
     {
+        Thread.Sleep(3000);
+
         await hostUpdater.UpdateAsync(_updateParameters.FolderPath, updateParameters.Username, updateParameters.Password);
 
-        appLifetime.StopApplication();
+        Environment.Exit(0);
     }
 }
