@@ -105,8 +105,8 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
                 Meta = "pid"
             });
 
-            var readErrorTask = ReadStreamAsync(process.StandardError, hubContext, MessageType.Error);
-            var readOutputTask = ReadStreamAsync(process.StandardOutput, hubContext, MessageType.Output);
+            var readErrorTask = ReadStreamAsync(process.StandardError, MessageType.Error);
+            var readOutputTask = ReadStreamAsync(process.StandardOutput, MessageType.Output);
 
             await process.WaitForExitAsync();
 
@@ -168,7 +168,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         return true;
     }
 
-    private static async Task ReadStreamAsync(TextReader streamReader, IHubContext<ControlHub, IControlClient> hubContext, MessageType messageType)
+    private async Task ReadStreamAsync(TextReader streamReader, MessageType messageType)
     {
         while (await streamReader.ReadLineAsync() is { } line)
         {
