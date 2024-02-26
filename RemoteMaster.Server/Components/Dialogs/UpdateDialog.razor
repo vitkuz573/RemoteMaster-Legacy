@@ -1,15 +1,31 @@
 ﻿@using Microsoft.Extensions.Options
-@using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Server.Models
 @inherits CommonDialogBase
-@inject IComputerCommandService ComputerCommandService
 @inject IOptions<ApplicationSettings> ApplicationSettings
 
-<CommonDialog Hosts="@Hosts" ContentStyle="width: 600px;">
+<CommonDialog Hosts="@Hosts">
     <Content>
-        <MudTextField T="string" Label="Folder Path" @bind-Value="@_folderPath" />
-        <MudTextField T="string" Label="Username" @bind-Value="@_username" />
-        <MudTextField T="string" Label="Password" @bind-Value="@_password" InputType="@_passwordInput" Adornment="Adornment.End" AdornmentIcon="@_passwordInputIcon" OnAdornmentClick="TogglePasswordVisibility" AdornmentAriaLabel="Show Password" />
+        <MudGrid>
+            <MudItem xs="4">
+                <MudTextField T="string" Label="Folder Path" @bind-Value="@_folderPath" />
+                <MudTextField T="string" Label="Username" @bind-Value="@_username" />
+                <MudTextField T="string" Label="Password" @bind-Value="@_password" InputType="@_passwordInput" Adornment="Adornment.End" AdornmentIcon="@_passwordInputIcon" OnAdornmentClick="TogglePasswordVisibility" AdornmentAriaLabel="Show Password" />
+            </MudItem>
+            
+            <MudItem xs="6">
+                <MudExpansionPanels Class="max-h-[340px] overflow-y-auto" MultiExpansion="true">
+                    @foreach (var (computer, results) in _resultsPerComputer)
+                    {
+                        <MudExpansionPanel Text="@($"Results for {computer.Name} ({computer.IpAddress}) - PID: {results.LastPid}")">
+                            @foreach (var line in results.Messages.ToString().Split([Environment.NewLine], StringSplitOptions.None))
+                            {
+                                <div>@line</div>
+                            }
+                        </MudExpansionPanel>
+                    }
+                </MudExpansionPanels>
+            </MudItem>
+        </MudGrid>
     </Content>
     <Actions>
         <MudButton OnClick="Cancel">Cancel</MudButton>

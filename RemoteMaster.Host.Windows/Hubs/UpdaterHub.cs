@@ -9,8 +9,8 @@ namespace RemoteMaster.Host.Windows.Hubs;
 
 public class UpdaterHub(IHostUpdater hostUpdater) : Hub<IUpdaterClient>
 {
-    public void SendUpdate(string folderPath, string username, string password)
+    public async Task SendUpdate(string folderPath, string username, string password)
     {
-        hostUpdater.Update(folderPath, username, password);
+        await hostUpdater.UpdateAsync(folderPath, username, password);
     }
 }

@@ -4,20 +4,24 @@
 
 using System.Diagnostics;
 using System.Text;
+using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Host.Windows.Hubs;
+using RemoteMaster.Shared.Models;
 using Serilog;
+using static RemoteMaster.Shared.Models.ScriptResult;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostUpdater(INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IServiceFactory serviceFactory) : IHostUpdater
+public class HostUpdater(INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IServiceFactory serviceFactory, IHubContext<UpdaterHub, IUpdaterClient> hubContext) : IHostUpdater
 {
     private static readonly string BaseFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
     
     private readonly string _scriptPath = Path.Combine(BaseFolderPath, "update.ps1");
     private readonly string _updateFolderPath = Path.Combine(BaseFolderPath, "Update");
 
-    public void Update(string folderPath, string username, string password)
+    public async Task UpdateAsync(string folderPath, string username, string password)
     {
         ArgumentNullException.ThrowIfNull(folderPath);
 
@@ -53,37 +57,60 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             var contentBuilder = new StringBuilder();
             contentBuilder.AppendLine("$filesLocked = $true");
+            contentBuilder.AppendLine("Write-Host 'Checking if files are locked'");
+            contentBuilder.AppendLine("$filesLocked = $true");
             contentBuilder.AppendLine("while ($filesLocked) {");
+            contentBuilder.AppendLine("    Write-Host 'Waiting for files to be unlocked'");
             contentBuilder.AppendLine("    Start-Sleep -Seconds 2");
             contentBuilder.AppendLine("    $filesLocked = $false");
             contentBuilder.AppendLine("    Get-ChildItem \"$PSScriptRoot\\Update\" -Recurse | Where-Object { !$_.PSIsContainer } | ForEach-Object {");
             contentBuilder.AppendLine("        try {");
+            contentBuilder.AppendLine("            Write-Host \"Attempting to open file: $($_.FullName)\"");
             contentBuilder.AppendLine("            $stream = [System.IO.File]::Open($_.FullName, 'Open', 'Write', 'None')");
             contentBuilder.AppendLine("            $stream.Close()");
+            contentBuilder.AppendLine("            Write-Host \"Successfully opened and closed file: $($_.FullName)\" -ForegroundColor Green");
             contentBuilder.AppendLine("        } catch [UnauthorizedAccessException] {");
             contentBuilder.AppendLine("            Write-Host \"Access denied for file: $($_.FullName). Update for this file is skipped.\" -ForegroundColor Red");
             contentBuilder.AppendLine("        } catch {");
+            contentBuilder.AppendLine("            Write-Host \"Encountered an error with file: $($_.FullName). Retrying...\" -ForegroundColor Yellow");
             contentBuilder.AppendLine("            $filesLocked = $true");
             contentBuilder.AppendLine("        }");
             contentBuilder.AppendLine("    }");
+            contentBuilder.AppendLine("    if (-not $filesLocked) {");
+            contentBuilder.AppendLine("        Write-Host 'All files are unlocked, proceeding with copy operation' -ForegroundColor Green");
+            contentBuilder.AppendLine("    }");
             contentBuilder.AppendLine("}");
+            contentBuilder.AppendLine("Write-Host 'Starting copy operation'");
             contentBuilder.AppendLine("Copy-Item -Path \"$PSScriptRoot\\Update\\*.*\" -Destination $PSScriptRoot -Recurse -Force");
+            contentBuilder.AppendLine("Write-Host 'Copy operation completed successfully' -ForegroundColor Green");
 
-            File.WriteAllText(_scriptPath, contentBuilder.ToString());
+            await File.WriteAllTextAsync(_scriptPath, contentBuilder.ToString());
             Log.Information("Updater script created at: {ScriptPath}", _scriptPath);
 
-            using var process = new Process();
-
-            process.StartInfo = new ProcessStartInfo
+            var processStartInfo = new ProcessStartInfo("powershell.exe", $"-ExecutionPolicy Bypass -NoProfile -File \"{_scriptPath}\"")
             {
-                FileName = "powershell",
-                Arguments = $"-ExecutionPolicy Bypass -NoProfile -File \"{_scriptPath}\"",
-                UseShellExecute = false,
                 CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
             };
 
+            using var process = new Process();
+            process.StartInfo = processStartInfo;
             process.Start();
-            process.WaitForExit();
+
+            await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult
+            {
+                Message = process.Id.ToString(),
+                Type = MessageType.Service,
+                Meta = "pid"
+            });
+
+            var readErrorTask = ReadStreamAsync(process.StandardError, hubContext, MessageType.Error);
+            var readOutputTask = ReadStreamAsync(process.StandardOutput, hubContext, MessageType.Output);
+
+            await process.WaitForExitAsync();
+
+            await Task.WhenAll(readErrorTask, readOutputTask);
 
             hostService.Start();
 
@@ -139,5 +166,17 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         }
 
         return true;
+    }
+
+    private static async Task ReadStreamAsync(TextReader streamReader, IHubContext<UpdaterHub, IUpdaterClient> hubContext, MessageType messageType)
+    {
+        while (await streamReader.ReadLineAsync() is { } line)
+        {
+            await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult
+            {
+                Message = line,
+                Type = messageType
+            });
+        }
     }
 }

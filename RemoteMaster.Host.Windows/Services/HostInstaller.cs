@@ -55,9 +55,10 @@ public class HostInstaller(IHostInformationService hostInformationService, IHost
             await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
 
             hostService.Start();
+            updaterService.Start();
 
             Log.Information("{ServiceName} installed and started successfully.", hostService.Name);
-            Log.Information("{ServiceName} installed successfully.", updaterService.Name);
+            Log.Information("{ServiceName} installed and started successfully.", updaterService.Name);
 
             await hostLifecycleService.RegisterAsync(hostConfiguration);
         }

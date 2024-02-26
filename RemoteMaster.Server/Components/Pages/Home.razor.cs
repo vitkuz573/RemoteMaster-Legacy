@@ -332,12 +332,18 @@ public partial class Home
             return;
         }
 
+        var dialogOptions = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraExtraLarge,
+            FullWidth = true
+        };
+
         var dialogParameters = new DialogParameters<UpdateDialog>
         {
             { x => x.Hosts, await GetComputersForUpdate() }
         };
 
-        await DialogService.ShowAsync<UpdateDialog>("Update", dialogParameters);
+        await DialogService.ShowAsync<UpdateDialog>("Update", dialogParameters, dialogOptions);
     }
 
     private async Task FileUpload()

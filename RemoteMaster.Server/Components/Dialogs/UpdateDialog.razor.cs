@@ -4,6 +4,8 @@
 
 using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
+using RemoteMaster.Server.Models;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
@@ -17,6 +19,9 @@ public partial class UpdateDialog
     private string _username = string.Empty;
     private string _password = string.Empty;
 
+    private readonly Dictionary<Computer, ComputerResults> _resultsPerComputer = [];
+    private readonly HashSet<HubConnection> _subscribedConnections = [];
+
     protected override void OnInitialized()
     {
         _folderPath = ApplicationSettings.Value.ExecutablesRoot;
@@ -24,9 +29,42 @@ public partial class UpdateDialog
 
     private async Task Confirm()
     {
-        await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("SendUpdate", _folderPath, _username, _password));
+        foreach (var (computer, connection) in Hosts)
+        {
+            if (connection != null && !_subscribedConnections.Contains(connection))
+            {
+                connection.On<ScriptResult>("ReceiveScriptResult", async scriptResult =>
+                {
+                    UpdateResultsForComputer(computer, scriptResult);
+                    await InvokeAsync(StateHasChanged);
+                });
 
-        MudDialog.Close(DialogResult.Ok(true));
+                _subscribedConnections.Add(connection);
+            }
+
+            if (connection != null)
+            {
+                await connection.InvokeAsync("SendUpdate", _folderPath, _username, _password);
+            }
+        }
+    }
+
+    private void UpdateResultsForComputer(Computer computer, ScriptResult scriptResult)
+    {
+        if (!_resultsPerComputer.TryGetValue(computer, out var results))
+        {
+            results = new ComputerResults();
+            _resultsPerComputer[computer] = results;
+        }
+
+        if (scriptResult.Meta == "pid")
+        {
+            results.LastPid = int.Parse(scriptResult.Message);
+        }
+        else
+        {
+            results.Messages.AppendLine(scriptResult.Message);
+        }
     }
 
     private void TogglePasswordVisibility()

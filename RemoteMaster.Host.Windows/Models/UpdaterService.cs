@@ -25,7 +25,7 @@ public class UpdaterService : AbstractService
 
     protected override string Description => "RemoteMaster Update Service is designed for manual initiation from the managing host to check for software updates, download, and install them, ensuring the system remains up-to-date with all security patches and improvements.";
 
-    protected override ServiceStartType StartType => ServiceStartType.Demand;
+    protected override ServiceStartType StartType => ServiceStartType.Auto;
 
     protected override IEnumerable<string>? Dependencies => null;
 
