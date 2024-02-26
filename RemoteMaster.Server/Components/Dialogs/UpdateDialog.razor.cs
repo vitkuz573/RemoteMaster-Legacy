@@ -38,9 +38,9 @@ public partial class UpdateDialog
                 .AddMessagePackProtocol()
                 .Build();
 
-            Thread.Sleep(3000);
-
             await updaterHubConnection.StartAsync();
+
+            Thread.Sleep(3000);
 
             if (_subscribedConnections.Contains(connection))
             {
