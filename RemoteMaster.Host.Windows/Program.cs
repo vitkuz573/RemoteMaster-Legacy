@@ -18,7 +18,6 @@ using RemoteMaster.Host.Core.Extensions;
 using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Host.Windows.Abstractions;
-using RemoteMaster.Host.Windows.Hubs;
 using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Host.Windows.Services;
 using Serilog;
@@ -32,7 +31,7 @@ internal class Program
     /// </summary>
     /// <param name="launchMode">Runs the program in specified mode.</param>
     /// <returns></returns>
-    private static async Task Main(LaunchMode launchMode = LaunchMode.Default)
+    private static async Task Main(LaunchMode launchMode = LaunchMode.Default, string folderPath = "", string? username = null, string? password = null)
     {
         var options = new WebApplicationOptions
         {
@@ -45,6 +44,7 @@ internal class Program
         builder.Services.AddCoreServices(launchMode is not LaunchMode.Updater);
         builder.Services.AddTransient<IServiceFactory, ServiceFactory>();
         builder.Services.AddSingleton<IUserInstanceService, UserInstanceService>();
+        builder.Services.AddSingleton<IUpdaterInstanceService, UpdaterInstanceService>();
         builder.Services.AddSingleton<IHostInstaller, HostInstaller>();
         builder.Services.AddSingleton<IHostUninstaller, HostUninstaller>();
         builder.Services.AddSingleton<IScreenCapturerService, GdiCapturer>();
@@ -117,10 +117,10 @@ internal class Program
 
                             Log.Information("Localhost detected");
 
-                            var identity = new ClaimsIdentity(new[]
-                            {
+                            var identity = new ClaimsIdentity(
+                            [
                                 new Claim(ClaimTypes.Name, "localhost@localdomain"),
-                            }, "LocalAuth");
+                            ], "LocalAuth");
 
                             context.Principal = new ClaimsPrincipal(identity);
                             context.Success();
@@ -145,14 +145,6 @@ internal class Program
                 builder.Services.AddHostedService<CommandListenerService>();
                 builder.Services.AddHostedService<HostInformationMonitorService>();
                 break;
-        }
-
-        if (launchMode == LaunchMode.Updater)
-        {
-            builder.WebHost.ConfigureKestrel(kestrelServerOptions =>
-            {
-                kestrelServerOptions.ListenAnyIP(5200);
-            });
         }
 
         var app = builder.Build();
@@ -188,24 +180,28 @@ internal class Program
         var applicationPath = Path.Combine(programFiles, "RemoteMaster", "Host", "RemoteMaster.Host.exe");
         firewallSettingService.Execute("Remote Master Host", applicationPath);
 
-        if (!app.Environment.IsDevelopment())
+        if (launchMode is LaunchMode.Updater)
         {
-            app.UseExceptionHandler("/Error");
+            var hostUpdater = app.Services.GetRequiredService<IHostUpdater>();  
+
+            await hostUpdater.UpdateAsync(folderPath, username, password);
         }
-
-        app.UseAuthentication();
-        app.UseAuthorization();
-
-        switch (launchMode)
+        else
         {
-            case LaunchMode.User:
+            if (!app.Environment.IsDevelopment())
+            {
+                app.UseExceptionHandler("/Error");
+            }
+
+            app.UseAuthentication();
+            app.UseAuthorization();
+
+            if (launchMode == LaunchMode.User)
+            {
                 app.MapCoreHubs();
-                break;
-            case LaunchMode.Updater:
-                app.MapHub<UpdaterHub>("/hubs/updater");
-                break;
-        }
+            }
 
-        await app.RunAsync();
+            await app.RunAsync();
+        }
     }
 }

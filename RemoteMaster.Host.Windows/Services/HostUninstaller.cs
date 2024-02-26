@@ -11,7 +11,6 @@ namespace RemoteMaster.Host.Windows.Services;
 public class HostUninstaller(IHostConfigurationService hostConfigurationService, IServiceFactory serviceFactory, IUserInstanceService userInstanceService, IHostLifecycleService hostLifecycleService) : IHostUninstaller
 {
     private readonly string _applicationDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
-    private readonly string _updaterDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Updater");
 
     public async Task UninstallAsync()
     {
@@ -20,7 +19,6 @@ public class HostUninstaller(IHostConfigurationService hostConfigurationService,
             var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
 
             var hostService = serviceFactory.GetService("RCHost");
-            var updaterService = serviceFactory.GetService("RCUpdater");
 
             if (hostService.IsInstalled)
             {
@@ -34,25 +32,12 @@ public class HostUninstaller(IHostConfigurationService hostConfigurationService,
                 Log.Information("{ServiceName} Service is not installed.", hostService.Name);
             }
 
-            if (updaterService.IsInstalled)
-            {
-                updaterService.Stop();
-                updaterService.Delete();
-
-                Log.Information("{ServiceName} Service uninstalled successfully.", updaterService.Name);
-            }
-            else
-            {
-                Log.Information("{ServiceName} Service is not installed.", updaterService.Name);
-            }
-
             if (userInstanceService.IsRunning)
             {
                 userInstanceService.Stop();
             }
 
             DeleteFiles(_applicationDirectory);
-            DeleteFiles(_updaterDirectory);
 
             await hostLifecycleService.UnregisterAsync(hostConfiguration);
         }

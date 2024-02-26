@@ -12,7 +12,7 @@ using Serilog;
 namespace RemoteMaster.Host.Core.Hubs;
 
 [Authorize]
-public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IDomainService domainService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturerService, IScreenRecorderService screenRecorderService, IFileManagerService fileManagerService, ITaskManagerService taskManagerService, IHostConfigurationService hostConfigurationService, IPsExecService psExecService, IHostLifecycleService hostLifecycleService) : Hub<IControlClient>
+public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IDomainService domainService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturerService, IScreenRecorderService screenRecorderService, IFileManagerService fileManagerService, ITaskManagerService taskManagerService, IHostConfigurationService hostConfigurationService, IPsExecService psExecService, IHostLifecycleService hostLifecycleService, IUpdaterInstanceService updaterInstanceService) : Hub<IControlClient>
 {
     public async Task ConnectAs(Intention intention)
     {
@@ -234,5 +234,10 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         {
             await psExecService.EnableAsync();
         }
+    }
+
+    public void SendUpdate(string folderPath, string? username, string? password)
+    {
+        updaterInstanceService.Start(folderPath, username, password);
     }
 }

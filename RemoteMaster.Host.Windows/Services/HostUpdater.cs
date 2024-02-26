@@ -6,22 +6,22 @@ using System.Diagnostics;
 using System.Text;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Hubs;
 using RemoteMaster.Host.Windows.Abstractions;
-using RemoteMaster.Host.Windows.Hubs;
 using RemoteMaster.Shared.Models;
 using Serilog;
 using static RemoteMaster.Shared.Models.ScriptResult;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostUpdater(INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IServiceFactory serviceFactory, IHubContext<UpdaterHub, IUpdaterClient> hubContext) : IHostUpdater
+public class HostUpdater(INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IServiceFactory serviceFactory, IHubContext<ControlHub, IControlClient> hubContext) : IHostUpdater
 {
     private static readonly string BaseFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
     
     private readonly string _scriptPath = Path.Combine(BaseFolderPath, "update.ps1");
     private readonly string _updateFolderPath = Path.Combine(BaseFolderPath, "Update");
 
-    public async Task UpdateAsync(string folderPath, string username, string password)
+    public async Task UpdateAsync(string folderPath, string? username, string? password)
     {
         ArgumentNullException.ThrowIfNull(folderPath);
 
@@ -168,7 +168,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         return true;
     }
 
-    private static async Task ReadStreamAsync(TextReader streamReader, IHubContext<UpdaterHub, IUpdaterClient> hubContext, MessageType messageType)
+    private static async Task ReadStreamAsync(TextReader streamReader, IHubContext<ControlHub, IControlClient> hubContext, MessageType messageType)
     {
         while (await streamReader.ReadLineAsync() is { } line)
         {

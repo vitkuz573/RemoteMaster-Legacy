@@ -11,7 +11,6 @@ namespace RemoteMaster.Host.Windows.Services;
 public class HostInstaller(IHostInformationService hostInformationService, IHostConfigurationService hostConfigurationService, IServiceFactory serviceFactory, IHostLifecycleService hostLifecycleService) : IHostInstaller
 {
     private readonly string _applicationDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
-    private readonly string _updaterDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Updater");
 
     public async Task InstallAsync()
     {
@@ -26,7 +25,6 @@ public class HostInstaller(IHostInformationService hostInformationService, IHost
             Log.Information("Distinguished Name: CN={CommonName}, O={Organization}, OU={OrganizationalUnit}, L={Locality}, ST={State}, C={Country}", hostInformation.Name, hostConfiguration.Subject.Organization, hostConfiguration.Subject.OrganizationalUnit, hostConfiguration.Subject.Locality, hostConfiguration.Subject.State, hostConfiguration.Subject.Country);
 
             var hostService = serviceFactory.GetService("RCHost");
-            var updaterService = serviceFactory.GetService("RCUpdater");
 
             if (hostService.IsInstalled)
             {
@@ -39,26 +37,13 @@ public class HostInstaller(IHostInformationService hostInformationService, IHost
                 hostService.Create();
             }
 
-            if (updaterService.IsInstalled)
-            {
-                updaterService.Stop();
-                CopyToTargetPath(_updaterDirectory);
-            }
-            else
-            {
-                CopyToTargetPath(_updaterDirectory);
-                updaterService.Create();
-            }
-
             hostConfiguration.Host = hostInformation;
 
             await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
 
             hostService.Start();
-            updaterService.Start();
 
             Log.Information("{ServiceName} installed and started successfully.", hostService.Name);
-            Log.Information("{ServiceName} installed and started successfully.", updaterService.Name);
 
             await hostLifecycleService.RegisterAsync(hostConfiguration);
         }
