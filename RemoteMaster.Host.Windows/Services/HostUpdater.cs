@@ -14,7 +14,7 @@ using static RemoteMaster.Shared.Models.ScriptResult;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostUpdater(INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IServiceFactory serviceFactory, IHubContext<ControlHub, IControlClient> hubContext) : IHostUpdater
+public class HostUpdater(INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IServiceFactory serviceFactory, IHubContext<UpdaterHub, IUpdaterClient> hubContext) : IHostUpdater
 {
     private static readonly string BaseFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
     

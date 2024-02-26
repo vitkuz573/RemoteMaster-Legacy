@@ -31,21 +31,29 @@ public partial class UpdateDialog
     {
         foreach (var (computer, connection) in Hosts)
         {
-            if (connection != null && !_subscribedConnections.Contains(connection))
-            {
-                connection.On<ScriptResult>("ReceiveScriptResult", async scriptResult =>
-                {
-                    UpdateResultsForComputer(computer, scriptResult);
-                    await InvokeAsync(StateHasChanged);
-                });
+            await connection.InvokeAsync("SendStartUpdater", _folderPath, _username, _password);
 
-                _subscribedConnections.Add(connection);
+            var updaterHubConnection = new HubConnectionBuilder()
+                .WithUrl($"http://{computer.IpAddress}:5200/hubs/updater")
+                .AddMessagePackProtocol()
+                .Build();
+
+            Thread.Sleep(3000);
+
+            await updaterHubConnection.StartAsync();
+
+            if (_subscribedConnections.Contains(connection))
+            {
+                continue;
             }
 
-            if (connection != null)
+            updaterHubConnection.On<ScriptResult>("ReceiveScriptResult", async scriptResult =>
             {
-                await connection.InvokeAsync("SendUpdate", _folderPath, _username, _password);
-            }
+                UpdateResultsForComputer(computer, scriptResult);
+                await InvokeAsync(StateHasChanged);
+            });
+
+            _subscribedConnections.Add(connection);
         }
     }
 

@@ -15,6 +15,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Extensions;
+using RemoteMaster.Host.Core.Hubs;
 using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Host.Windows.Abstractions;
@@ -69,6 +70,19 @@ internal class Program
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         });
+
+        if (launchMode is LaunchMode.Updater)
+        {
+            var updateParameters = new UpdateParameters
+            {
+                FolderPath = folderPath,
+                Username = username,
+                Password = password
+            };
+
+            builder.Services.AddSingleton(updateParameters);
+            builder.Services.AddHostedService<UpdaterBackgroundService>();
+        }
 
         var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
         var publicKeyPath = Path.Combine(programData, "RemoteMaster", "Security", "public_key.pem");
@@ -145,6 +159,14 @@ internal class Program
                 builder.Services.AddHostedService<CommandListenerService>();
                 builder.Services.AddHostedService<HostInformationMonitorService>();
                 break;
+            case LaunchMode.Updater:
+            {
+                builder.WebHost.ConfigureKestrel(options =>
+                {
+                    options.ListenAnyIP(5200);
+                });
+                break;
+            }
         }
 
         var app = builder.Build();
@@ -180,28 +202,24 @@ internal class Program
         var applicationPath = Path.Combine(programFiles, "RemoteMaster", "Host", "RemoteMaster.Host.exe");
         firewallSettingService.Execute("Remote Master Host", applicationPath);
 
-        if (launchMode is LaunchMode.Updater)
+        if (!app.Environment.IsDevelopment())
         {
-            var hostUpdater = app.Services.GetRequiredService<IHostUpdater>();  
-
-            await hostUpdater.UpdateAsync(folderPath, username, password);
+            app.UseExceptionHandler("/Error");
         }
-        else
+
+        app.UseAuthentication();
+        app.UseAuthorization();
+
+        switch (launchMode)
         {
-            if (!app.Environment.IsDevelopment())
-            {
-                app.UseExceptionHandler("/Error");
-            }
-
-            app.UseAuthentication();
-            app.UseAuthorization();
-
-            if (launchMode == LaunchMode.User)
-            {
+            case LaunchMode.User:
                 app.MapCoreHubs();
-            }
-
-            await app.RunAsync();
+                break;
+            case LaunchMode.Updater:
+                app.MapHub<UpdaterHub>("/hubs/updater");
+                break;
         }
+
+        await app.RunAsync();
     }
 }

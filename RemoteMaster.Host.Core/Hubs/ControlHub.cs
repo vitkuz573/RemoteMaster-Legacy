@@ -236,7 +236,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         }
     }
 
-    public void SendUpdate(string folderPath, string? username, string? password)
+    public void SendStartUpdater(string folderPath, string? username, string? password)
     {
         updaterInstanceService.Start(folderPath, username, password);
     }
