@@ -2,21 +2,26 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Diagnostics;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Windows.Models;
 using Serilog;
 using System.Text;
+using Microsoft.AspNetCore.SignalR;
+using RemoteMaster.Host.Core.Hubs;
+using RemoteMaster.Shared.Models;
+using static RemoteMaster.Shared.Models.ScriptResult;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class UpdaterInstanceService : IUpdaterInstanceService
+public class UpdaterInstanceService(IHubContext<ControlHub, IControlClient> hubContext) : IUpdaterInstanceService
 {
     private readonly string _argument = $"--launch-mode={LaunchMode.Updater.ToString().ToLower()}";
     private readonly string _sourcePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "RemoteMaster.Host.exe");
     private readonly string _executablePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "Updater", "RemoteMaster.Host.exe");
 
-    public void Start(string folderPath, string? username, string? password)
+    public async Task Start(string folderPath, string? username, string? password)
     {
         ArgumentNullException.ThrowIfNull(folderPath);
 
@@ -24,7 +29,7 @@ public class UpdaterInstanceService : IUpdaterInstanceService
 
         try
         {
-            StartNewInstance(additionalArguments);
+            await StartNewInstance(additionalArguments);
             Log.Information("Successfully started a new instance of the host.");
         }
         catch (Exception ex)
@@ -57,7 +62,7 @@ public class UpdaterInstanceService : IUpdaterInstanceService
         return arguments.ToString();
     }
 
-    private void StartNewInstance(string additionalArguments)
+    private async Task StartNewInstance(string additionalArguments)
     {
         try
         {
@@ -73,17 +78,30 @@ public class UpdaterInstanceService : IUpdaterInstanceService
             File.Copy(_sourcePath, _executablePath, true);
             Log.Information("Successfully copied the executable.");
 
-            using var process = new NativeProcess();
+            using var process = new Process();
 
-            process.StartInfo = new NativeProcessStartInfo(_executablePath, additionalArguments)
+            process.StartInfo = new ProcessStartInfo(_executablePath, additionalArguments)
             {
-                ForceConsoleSession = true,
-                DesktopName = "Default",
                 CreateNoWindow = true,
-                UseCurrentUserToken = false
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
             };
 
             process.Start();
+
+            await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult
+            {
+                Message = process.Id.ToString(),
+                Type = MessageType.Service,
+                Meta = "pid"
+            });
+
+            var readErrorTask = ReadStreamAsync(process.StandardError, MessageType.Error);
+            var readOutputTask = ReadStreamAsync(process.StandardOutput, MessageType.Output);
+
+            await process.WaitForExitAsync();
+
+            await Task.WhenAll(readErrorTask, readOutputTask);
 
             Log.Information("Started a new instance of the host with options: {@Options}", process.StartInfo);
         }
@@ -94,6 +112,18 @@ public class UpdaterInstanceService : IUpdaterInstanceService
         catch (Exception ex)
         {
             Log.Error(ex, "Error starting new instance of the host. Executable path: {Path}", _executablePath);
+        }
+    }
+
+    private async Task ReadStreamAsync(TextReader streamReader, ScriptResult.MessageType messageType)
+    {
+        while (await streamReader.ReadLineAsync() is { } line)
+        {
+            await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult
+            {
+                Message = line,
+                Type = messageType
+            });
         }
     }
 }

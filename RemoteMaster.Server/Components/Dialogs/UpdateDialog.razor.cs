@@ -37,16 +37,9 @@ public partial class UpdateDialog
             {
                 await connection.InvokeAsync("SendStartUpdater", _folderPath, _username, _password);
 
-                var updaterHubConnection = new HubConnectionBuilder()
-                    .WithUrl($"http://{computer.IpAddress}:5200/hubs/updater")
-                    .AddMessagePackProtocol()
-                    .Build();
-
-                await updaterHubConnection.StartAsync();
-
                 if (!_subscribedConnections.Contains(connection))
                 {
-                    updaterHubConnection.On<ScriptResult>("ReceiveScriptResult", async scriptResult =>
+                    connection.On<ScriptResult>("ReceiveScriptResult", async scriptResult =>
                     {
                         UpdateResultsForComputer(computer, scriptResult);
                         await InvokeAsync(StateHasChanged);

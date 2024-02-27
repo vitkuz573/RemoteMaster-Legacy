@@ -9,19 +9,16 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Extensions;
-using RemoteMaster.Host.Core.Hubs;
 using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Host.Windows.Services;
-using Serilog;
 
 namespace RemoteMaster.Host.Windows;
 
@@ -71,18 +68,6 @@ internal class Program
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         });
 
-        if (launchMode is LaunchMode.Updater)
-        {
-            var updateParameters = new UpdateParameters(folderPath)
-            {
-                Username = username,
-                Password = password
-            };
-
-            builder.Services.AddSingleton(updateParameters);
-            builder.Services.AddHostedService<UpdaterBackgroundService>();
-        }
-
         var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
         var publicKeyPath = Path.Combine(programData, "RemoteMaster", "Security", "public_key.pem");
 
@@ -116,8 +101,6 @@ internal class Program
                             var remoteIp = context.HttpContext.Connection.RemoteIpAddress;
                             var localIPv6Mapped = IPAddress.Parse("::ffff:127.0.0.1");
 
-                            Log.Information("Incoming request from IP: {Ip}", remoteIp);
-
                             if (remoteIp == null)
                             {
                                 return Task.CompletedTask;
@@ -127,8 +110,6 @@ internal class Program
                             {
                                 return Task.CompletedTask;
                             }
-
-                            Log.Information("Localhost detected");
 
                             var identity = new ClaimsIdentity(
                             [
@@ -158,14 +139,6 @@ internal class Program
                 builder.Services.AddHostedService<CommandListenerService>();
                 builder.Services.AddHostedService<HostInformationMonitorService>();
                 break;
-            case LaunchMode.Updater:
-            {
-                builder.WebHost.ConfigureKestrel(options =>
-                {
-                    options.ListenAnyIP(5200);
-                });
-                break;
-            }
         }
 
         var app = builder.Build();
@@ -209,16 +182,20 @@ internal class Program
         app.UseAuthentication();
         app.UseAuthorization();
 
-        switch (launchMode)
+        if (launchMode == LaunchMode.User)
         {
-            case LaunchMode.User:
-                app.MapCoreHubs();
-                break;
-            case LaunchMode.Updater:
-                app.MapHub<UpdaterHub>("/hubs/updater");
-                break;
+            app.MapCoreHubs();
         }
 
-        await app.RunAsync();
+        if (launchMode is LaunchMode.Updater)
+        {
+            var hostUpdater = app.Services.GetRequiredService<IHostUpdater>();
+
+            await hostUpdater.UpdateAsync(folderPath, username, password);
+        }
+        else
+        {
+            await app.RunAsync();
+        }
     }
 }

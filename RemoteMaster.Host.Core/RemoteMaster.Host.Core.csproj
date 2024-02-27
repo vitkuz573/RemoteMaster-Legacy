@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <VersionPrefix>1.110.</VersionPrefix>
+    <VersionPrefix>1.120.</VersionPrefix>
     <VersionSuffix>0</VersionSuffix>
     <Version>$(VersionPrefix)$(VersionSuffix)</Version>
     <AssemblyVersion>$(Version)</AssemblyVersion>

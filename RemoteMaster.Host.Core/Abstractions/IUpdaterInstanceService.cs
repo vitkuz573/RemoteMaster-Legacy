@@ -6,5 +6,5 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IUpdaterInstanceService
 {
-    void Start(string folderPath, string? username, string? password);
+    Task Start(string folderPath, string? username, string? password);
 }

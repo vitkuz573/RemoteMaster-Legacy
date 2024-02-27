@@ -4,17 +4,13 @@
 
 using System.Diagnostics;
 using System.Text;
-using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Core.Hubs;
 using RemoteMaster.Host.Windows.Abstractions;
-using RemoteMaster.Shared.Models;
 using Serilog;
-using static RemoteMaster.Shared.Models.ScriptResult;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostUpdater(INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IServiceFactory serviceFactory, IHubContext<UpdaterHub, IUpdaterClient> hubContext) : IHostUpdater
+public class HostUpdater(INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IServiceFactory serviceFactory) : IHostUpdater
 {
     private static readonly string BaseFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
     
@@ -24,6 +20,10 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
     public async Task UpdateAsync(string folderPath, string? username, string? password)
     {
         ArgumentNullException.ThrowIfNull(folderPath);
+
+        Console.WriteLine("kek");
+        Console.WriteLine("kek1");
+        Console.WriteLine("kek2");
 
         try
         {
@@ -98,19 +98,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             process.StartInfo = processStartInfo;
             process.Start();
 
-            await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult
-            {
-                Message = process.Id.ToString(),
-                Type = MessageType.Service,
-                Meta = "pid"
-            });
-
-            var readErrorTask = ReadStreamAsync(process.StandardError, MessageType.Error);
-            var readOutputTask = ReadStreamAsync(process.StandardOutput, MessageType.Output);
-
             await process.WaitForExitAsync();
-
-            await Task.WhenAll(readErrorTask, readOutputTask);
 
             hostService.Start();
 
@@ -166,17 +154,5 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         }
 
         return true;
-    }
-
-    private async Task ReadStreamAsync(TextReader streamReader, MessageType messageType)
-    {
-        while (await streamReader.ReadLineAsync() is { } line)
-        {
-            await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult
-            {
-                Message = line,
-                Type = messageType
-            });
-        }
     }
 }
