@@ -29,32 +29,37 @@ public partial class UpdateDialog
 
     private async Task Confirm()
     {
+        var updateTasks = new List<Task>();
+
         foreach (var (computer, connection) in Hosts)
         {
-            await connection.InvokeAsync("SendStartUpdater", _folderPath, _username, _password);
-
-            var updaterHubConnection = new HubConnectionBuilder()
-                .WithUrl($"http://{computer.IpAddress}:5200/hubs/updater")
-                .AddMessagePackProtocol()
-                .Build();
-
-            await updaterHubConnection.StartAsync();
-
-            Thread.Sleep(3000);
-
-            if (_subscribedConnections.Contains(connection))
+            var updateTask = Task.Run(async () =>
             {
-                continue;
-            }
+                await connection.InvokeAsync("SendStartUpdater", _folderPath, _username, _password);
 
-            updaterHubConnection.On<ScriptResult>("ReceiveScriptResult", async scriptResult =>
-            {
-                UpdateResultsForComputer(computer, scriptResult);
-                await InvokeAsync(StateHasChanged);
+                var updaterHubConnection = new HubConnectionBuilder()
+                    .WithUrl($"http://{computer.IpAddress}:5200/hubs/updater")
+                    .AddMessagePackProtocol()
+                    .Build();
+
+                await updaterHubConnection.StartAsync();
+
+                if (!_subscribedConnections.Contains(connection))
+                {
+                    updaterHubConnection.On<ScriptResult>("ReceiveScriptResult", async scriptResult =>
+                    {
+                        UpdateResultsForComputer(computer, scriptResult);
+                        await InvokeAsync(StateHasChanged);
+                    });
+
+                    _subscribedConnections.Add(connection);
+                }
             });
 
-            _subscribedConnections.Add(connection);
+            updateTasks.Add(updateTask);
         }
+
+        await Task.WhenAll(updateTasks);
     }
 
     private void UpdateResultsForComputer(Computer computer, ScriptResult scriptResult)
