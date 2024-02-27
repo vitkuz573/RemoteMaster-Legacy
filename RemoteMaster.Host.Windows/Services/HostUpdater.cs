@@ -107,9 +107,30 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
         if (!allServicesRunning)
         {
-            Log.Error("Failed to start all services after {Attempts} attempts.", attempts);
+            Log.Error("Failed to start all services after {Attempts} attempts. Initiating emergency recovery...", attempts);
 
-            // AttemptEmergencyRecovery();
+            AttemptEmergencyRecovery();
+        }
+    }
+
+    private void AttemptEmergencyRecovery()
+    {
+        try
+        {
+            var sourceExePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "Updater", "RemoteMaster.Host.exe");
+            var destinationExePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "RemoteMaster.Host.exe");
+
+            File.Copy(sourceExePath, destinationExePath, true);
+
+            Log.Information("Emergency recovery completed successfully. Attempting to restart services...");
+
+            var hostService = serviceFactory.GetService("RCHost");
+
+            hostService.Start();
+        }
+        catch (Exception ex)
+        {
+            Log.Error($"Emergency recovery failed: {ex.Message}");
         }
     }
 
