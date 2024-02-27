@@ -83,7 +83,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         }
     }
 
-    private static async Task EnsureServicesRunning(IEnumerable<IRunnable> services, int delayInSeconds, int attempts)
+    private async Task EnsureServicesRunning(IEnumerable<IRunnable> services, int delayInSeconds, int attempts)
     {
         var allServicesRunning = false;
 
