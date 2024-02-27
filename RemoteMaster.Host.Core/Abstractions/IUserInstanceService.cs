@@ -4,7 +4,6 @@
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface IUserInstanceService : IStoppableService
+public interface IUserInstanceService : IRunnable
 {
-    void Start();
 }

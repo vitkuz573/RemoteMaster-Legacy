@@ -4,11 +4,11 @@
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface IStoppableService
+public interface IRunnable
 {
+    void Start();
+
     void Stop();
 
     bool IsRunning { get; }
-
-    string Name { get; }
 }
