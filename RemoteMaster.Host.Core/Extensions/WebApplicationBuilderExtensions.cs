@@ -44,7 +44,11 @@ public static class WebApplicationBuilderExtensions
         builder.Host.UseSerilog((_, configuration) =>
         {
             configuration.Enrich.With(new HostInfoEnricher());
+#if DEBUG
             configuration.MinimumLevel.Debug();
+#else
+            configuration.MinimumLevel.Information();
+#endif
             configuration.WriteTo.Console();
             configuration.WriteTo.Seq("http://172.20.20.33:5341");
             configuration.WriteTo.File(fileLog, rollingInterval: RollingInterval.Day);
