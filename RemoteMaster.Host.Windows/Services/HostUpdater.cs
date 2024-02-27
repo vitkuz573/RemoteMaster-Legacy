@@ -21,10 +21,6 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
     {
         ArgumentNullException.ThrowIfNull(folderPath);
 
-        Console.WriteLine("kek");
-        Console.WriteLine("kek1");
-        Console.WriteLine("kek2");
-
         try
         {
             var sourceFolderPath = Path.Combine(folderPath, "Host");
@@ -53,7 +49,11 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             hostService.Stop();
 
+            Console.WriteLine($"{hostService.Name} sucessfully stopped. Starting update...");
+
             userInstanceService.Stop();
+
+            Console.Write("suka");
 
             var contentBuilder = new StringBuilder();
             contentBuilder.AppendLine("$filesLocked = $true");
