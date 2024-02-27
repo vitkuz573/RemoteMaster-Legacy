@@ -54,42 +54,14 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             userInstanceService.Stop();
 
             var contentBuilder = new StringBuilder();
-            contentBuilder.AppendLine("$filesLocked = $true");
-            contentBuilder.AppendLine("Write-Host 'Checking if files are locked'");
-            contentBuilder.AppendLine("$filesLocked = $true");
-            contentBuilder.AppendLine("while ($filesLocked) {");
-            contentBuilder.AppendLine("    Write-Host 'Waiting for files to be unlocked'");
-            contentBuilder.AppendLine("    Start-Sleep -Seconds 2");
-            contentBuilder.AppendLine("    $filesLocked = $false");
-            contentBuilder.AppendLine("    Get-ChildItem \"$PSScriptRoot\\Update\" -Recurse | Where-Object { !$_.PSIsContainer } | ForEach-Object {");
-            contentBuilder.AppendLine("        try {");
-            contentBuilder.AppendLine("            Write-Host \"Attempting to open file: $($_.FullName)\"");
-            contentBuilder.AppendLine("            $stream = [System.IO.File]::Open($_.FullName, 'Open', 'Write', 'None')");
-            contentBuilder.AppendLine("            $stream.Close()");
-            contentBuilder.AppendLine("            Write-Host \"Successfully opened and closed file: $($_.FullName)\" -ForegroundColor Green");
-            contentBuilder.AppendLine("        } catch [UnauthorizedAccessException] {");
-            contentBuilder.AppendLine("            Write-Host \"Access denied for file: $($_.FullName). Update for this file is skipped.\" -ForegroundColor Red");
-            contentBuilder.AppendLine("        } catch {");
-            contentBuilder.AppendLine("            Write-Host \"Encountered an error with file: $($_.FullName). Retrying...\" -ForegroundColor Yellow");
-            contentBuilder.AppendLine("            $filesLocked = $true");
-            contentBuilder.AppendLine("        }");
-            contentBuilder.AppendLine("    }");
-            contentBuilder.AppendLine("    if (-not $filesLocked) {");
-            contentBuilder.AppendLine("        Write-Host 'All files are unlocked, proceeding with copy operation' -ForegroundColor Green");
-            contentBuilder.AppendLine("    }");
-            contentBuilder.AppendLine("}");
-            contentBuilder.AppendLine("Write-Host 'Starting copy operation'");
             contentBuilder.AppendLine("Copy-Item -Path \"$PSScriptRoot\\Update\\*.*\" -Destination $PSScriptRoot -Recurse -Force");
-            contentBuilder.AppendLine("Write-Host 'Copy operation completed successfully' -ForegroundColor Green");
 
             await File.WriteAllTextAsync(_scriptPath, contentBuilder.ToString());
             Log.Information("Updater script created at: {ScriptPath}", _scriptPath);
 
             var processStartInfo = new ProcessStartInfo("powershell.exe", $"-ExecutionPolicy Bypass -NoProfile -File \"{_scriptPath}\"")
             {
-                CreateNoWindow = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true
+                CreateNoWindow = true
             };
 
             using var process = new Process();
@@ -100,8 +72,8 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             hostService.Start();
 
-            var servicesToStop = new List<IRunnable> { hostService, userInstanceService };
-            await EnsureServicesStopped(servicesToStop, 5, 5);
+            var servicesToStart = new IRunnable[] { hostService, userInstanceService };
+            await EnsureServicesRunning(servicesToStart, 5, 5);
 
             Log.Information("Executed updater script: {ScriptPath}", _scriptPath);
         }
@@ -111,22 +83,33 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         }
     }
 
-    private static async Task EnsureServicesStopped(IEnumerable<IRunnable> services, int delayInSeconds, int attempts)
+    private static async Task EnsureServicesRunning(IEnumerable<IRunnable> services, int delayInSeconds, int attempts)
     {
+        var allServicesRunning = false;
+
         for (var attempt = 1; attempt <= attempts; attempt++)
         {
-            Log.Information($"Attempt {attempt}: Checking if services are stopped...");
+            Log.Information($"Attempt {attempt}: Checking if services are running...");
             await Task.Delay(TimeSpan.FromSeconds(delayInSeconds));
 
-            var allStopped = services.All(service => !service.IsRunning);
+            allServicesRunning = services.All(service => service.IsRunning);
 
-            if (!allStopped)
+            if (!allServicesRunning)
             {
-                continue;
+                Log.Warning("Not all services are running. Waiting and retrying...");
             }
+            else
+            {
+                Log.Information("All services have been successfully started.");
+                break;
+            }
+        }
 
-            Log.Information("All services have been successfully stopped.");
-            break;
+        if (!allServicesRunning)
+        {
+            Log.Error("Failed to start all services after {Attempts} attempts.", attempts);
+
+            // AttemptEmergencyRecovery();
         }
     }
 
