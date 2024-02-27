@@ -100,11 +100,45 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             hostService.Start();
 
+            var servicesToStop = new List<IStoppableService> { hostService, userInstanceService };
+            await EnsureServicesStopped(servicesToStop, 5, 5);
+
             Log.Information("Executed updater script: {ScriptPath}", _scriptPath);
         }
         catch (Exception ex)
         {
             Log.Error("Error while updating host: {Message}", ex.Message);
+        }
+    }
+
+    private static async Task EnsureServicesStopped(IEnumerable<IStoppableService> services, int delayInSeconds, int attempts)
+    {
+        for (var attempt = 1; attempt <= attempts; attempt++)
+        {
+            Log.Information($"Attempt {attempt}: Checking if services are stopped...");
+            await Task.Delay(TimeSpan.FromSeconds(delayInSeconds));
+
+            var allStopped = true;
+
+            foreach (var service in services)
+            {
+                if (!service.IsRunning)
+                {
+                    continue;
+                }
+
+                Log.Warning($"Service {service.Name} is still running.");
+                allStopped = false;
+                break;
+            }
+
+            if (!allStopped)
+            {
+                continue;
+            }
+
+            Log.Information("All services have been successfully stopped.");
+            break;
         }
     }
 

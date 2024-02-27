@@ -4,10 +4,11 @@
 
 using System.Diagnostics;
 using System.ServiceProcess;
+using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Windows.Abstractions;
 
-public abstract class AbstractService
+public abstract class AbstractService : IStoppableService
 {
     public abstract string Name { get; }
 
@@ -36,6 +37,28 @@ public abstract class AbstractService
     protected abstract string? RestartCommand { get; }
 
     public bool IsInstalled => ServiceController.GetServices().Any(service => service.ServiceName == Name);
+
+    public bool IsRunning
+    {
+        get
+        {
+            if (!IsInstalled)
+            {
+                return false;
+            }
+
+            try
+            {
+                using var serviceController = new ServiceController(Name);
+
+                return serviceController.Status == ServiceControllerStatus.Running;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+    }
 
     public void Create()
     {

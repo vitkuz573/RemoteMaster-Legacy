@@ -4,7 +4,11 @@
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface IUserInstanceService : IStoppableService
+public interface IStoppableService
 {
-    void Start();
+    void Stop();
+
+    bool IsRunning { get; }
+
+    string Name { get; }
 }

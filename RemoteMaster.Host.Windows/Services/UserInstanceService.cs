@@ -16,6 +16,8 @@ public class UserInstanceService : IUserInstanceService
     private readonly string _argument = $"--launch-mode={LaunchMode.User.ToString().ToLower()}";
     private readonly string _currentExecutablePath = Environment.ProcessPath!;
 
+    public string Name => "UserInstance";
+
     public bool IsRunning => FindHostProcesses().Any(IsUserInstance);
 
     public void Start()
