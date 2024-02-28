@@ -131,14 +131,19 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
     {
         try
         {
+            var hostService = serviceFactory.GetService("RCHost");
+
+            if (hostService.IsRunning)
+            {
+                hostService.Stop();
+            }
+
             var sourceExePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "Updater", "RemoteMaster.Host.exe");
             var destinationExePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "RemoteMaster.Host.exe");
 
             File.Copy(sourceExePath, destinationExePath, true);
 
             Log.Information("Emergency recovery completed successfully. Attempting to restart services...");
-
-            var hostService = serviceFactory.GetService("RCHost");
 
             hostService.Start();
         }
