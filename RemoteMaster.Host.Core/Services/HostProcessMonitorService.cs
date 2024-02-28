@@ -6,7 +6,7 @@ using Microsoft.Extensions.Hosting;
 using RemoteMaster.Host.Core.Abstractions;
 using Serilog;
 
-namespace RemoteMaster.Host.Windows.Services;
+namespace RemoteMaster.Host.Core.Services;
 
 public class HostProcessMonitorService : IHostedService
 {
