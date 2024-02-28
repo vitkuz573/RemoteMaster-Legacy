@@ -131,13 +131,13 @@ internal class Program
         {
             case LaunchMode.User:
                 builder.ConfigureCoreUrls();
-                builder.Services.AddHostedService<HostRegistrationMonitorService>();
                 break;
             case LaunchMode.Service:
                 builder.Services.AddHostedService<MessageLoopService>();
-                builder.Services.AddHostedService<HostProcessMonitorService>();
                 builder.Services.AddHostedService<CommandListenerService>();
+                builder.Services.AddHostedService<HostProcessMonitorService>();
                 builder.Services.AddHostedService<HostInformationMonitorService>();
+                builder.Services.AddHostedService<HostRegistrationMonitorService>();
                 break;
         }
 
@@ -182,7 +182,7 @@ internal class Program
         app.UseAuthentication();
         app.UseAuthorization();
 
-        if (launchMode == LaunchMode.User)
+        if (launchMode is LaunchMode.User)
         {
             app.MapCoreHubs();
         }

@@ -3,14 +3,13 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
-using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Core.Models;
-using RemoteMaster.Host.Windows.Models;
-using Serilog;
 using System.Text;
 using Microsoft.AspNetCore.SignalR;
+using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
+using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Shared.Models;
+using Serilog;
 using static RemoteMaster.Shared.Models.ScriptResult;
 
 namespace RemoteMaster.Host.Windows.Services;

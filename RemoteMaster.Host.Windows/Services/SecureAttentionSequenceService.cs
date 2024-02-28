@@ -19,21 +19,14 @@ public class SecureAttentionSequenceService : ISecureAttentionSequenceService
         {
             using var key = Registry.LocalMachine.OpenSubKey(RegistryKeyPath, false);
 
-            if (key == null)
-            {
-                return SoftwareSasOption.None;
-            }
-
-            var value = key.GetValue(SasValueName);
+            var value = key?.GetValue(SasValueName);
 
             if (value is int intValue && Enum.IsDefined(typeof(SoftwareSasOption), intValue))
             {
                 return (SoftwareSasOption)intValue;
             }
-            else
-            {
-                return SoftwareSasOption.None;
-            }
+
+            return SoftwareSasOption.None;
         }
         set
         {
