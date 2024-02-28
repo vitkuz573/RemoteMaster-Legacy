@@ -8,6 +8,7 @@ public enum LaunchMode
 {
     Default,
     Service,
+    Updater,
     User,
     Install,
     Uninstall

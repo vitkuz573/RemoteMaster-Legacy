@@ -19,7 +19,6 @@ using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Host.Windows.Services;
-using Serilog;
 
 namespace RemoteMaster.Host.Windows;
 
@@ -30,7 +29,7 @@ internal class Program
     /// </summary>
     /// <param name="launchMode">Runs the program in specified mode.</param>
     /// <returns></returns>
-    private static async Task Main(LaunchMode launchMode = LaunchMode.Default)
+    private static async Task Main(LaunchMode launchMode = LaunchMode.Default, string folderPath = "", string? username = null, string? password = null)
     {
         var options = new WebApplicationOptions
         {
@@ -40,18 +39,19 @@ internal class Program
         var builder = WebApplication.CreateSlimBuilder(options);
         builder.Host.UseWindowsService();
 
-        builder.Services.AddCoreServices();
+        builder.Services.AddCoreServices(launchMode is not LaunchMode.Updater);
+        builder.Services.AddTransient<IServiceFactory, ServiceFactory>();
         builder.Services.AddSingleton<IUserInstanceService, UserInstanceService>();
-        builder.Services.AddSingleton<IHostServiceManager, HostServiceManager>();
-        builder.Services.AddSingleton<IServiceManager, ServiceManager>();
-        builder.Services.AddSingleton<IServiceConfiguration, HostServiceConfiguration>();
+        builder.Services.AddSingleton<IUpdaterInstanceService, UpdaterInstanceService>();
+        builder.Services.AddSingleton<IHostInstaller, HostInstaller>();
+        builder.Services.AddSingleton<IHostUninstaller, HostUninstaller>();
         builder.Services.AddSingleton<IScreenCapturerService, GdiCapturer>();
         builder.Services.AddSingleton<IScreenRecorderService, ScreenRecorderService>();
         builder.Services.AddSingleton<ICursorRenderService, CursorRenderService>();
         builder.Services.AddSingleton<IInputService, InputService>();
         builder.Services.AddSingleton<IPowerService, PowerService>();
         builder.Services.AddSingleton<IHardwareService, HardwareService>();
-        builder.Services.AddSingleton<IUpdaterService, UpdaterService>();
+        builder.Services.AddSingleton<IHostUpdater, HostUpdater>();
         builder.Services.AddSingleton<ITokenPrivilegeService, TokenPrivilegeService>();
         builder.Services.AddSingleton<IDesktopService, DesktopService>();
         builder.Services.AddSingleton<INetworkDriveService, NetworkDriveService>();
@@ -101,8 +101,6 @@ internal class Program
                             var remoteIp = context.HttpContext.Connection.RemoteIpAddress;
                             var localIPv6Mapped = IPAddress.Parse("::ffff:127.0.0.1");
 
-                            Log.Information("Incoming request from IP: {Ip}", remoteIp);
-
                             if (remoteIp == null)
                             {
                                 return Task.CompletedTask;
@@ -113,12 +111,10 @@ internal class Program
                                 return Task.CompletedTask;
                             }
 
-                            Log.Information("Localhost detected");
-
-                            var identity = new ClaimsIdentity(new[]
-                            {
+                            var identity = new ClaimsIdentity(
+                            [
                                 new Claim(ClaimTypes.Name, "localhost@localdomain"),
-                            }, "LocalAuth");
+                            ], "LocalAuth");
 
                             context.Principal = new ClaimsPrincipal(identity);
                             context.Success();
@@ -131,17 +127,18 @@ internal class Program
 
         builder.ConfigureSerilog();
 
-        if (launchMode != LaunchMode.Service)
+        switch (launchMode)
         {
-            builder.ConfigureCoreUrls();
-        }
-        else
-        {
-            builder.Services.AddHostedService<MessageLoopService>();
-            builder.Services.AddHostedService<HostProcessMonitorService>();
-            builder.Services.AddHostedService<CommandListenerService>();
-            builder.Services.AddHostedService<HostInformationMonitorService>();
-            builder.Services.AddHostedService<HostRegistrationMonitorService>();
+            case LaunchMode.User:
+                builder.ConfigureCoreUrls();
+                builder.Services.AddHostedService<HostRegistrationMonitorService>();
+                break;
+            case LaunchMode.Service:
+                builder.Services.AddHostedService<MessageLoopService>();
+                builder.Services.AddHostedService<HostProcessMonitorService>();
+                builder.Services.AddHostedService<CommandListenerService>();
+                builder.Services.AddHostedService<HostInformationMonitorService>();
+                break;
         }
 
         var app = builder.Build();
@@ -150,15 +147,15 @@ internal class Program
         {
             case LaunchMode.Install:
             {
-                var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
-                await hostServiceManager.Install();
+                var hostInstallerService = app.Services.GetRequiredService<IHostInstaller>();
+                await hostInstallerService.InstallAsync();
 
                 return;
             }
             case LaunchMode.Uninstall:
             {
-                var hostServiceManager = app.Services.GetRequiredService<IHostServiceManager>();
-                await hostServiceManager.Uninstall();
+                var hostUninstallerService = app.Services.GetRequiredService<IHostUninstaller>();
+                await hostUninstallerService.UninstallAsync();
 
                 return;
             }
@@ -184,8 +181,21 @@ internal class Program
 
         app.UseAuthentication();
         app.UseAuthorization();
-        app.MapCoreHubs();
 
-        await app.RunAsync();
+        if (launchMode == LaunchMode.User)
+        {
+            app.MapCoreHubs();
+        }
+
+        if (launchMode is LaunchMode.Updater)
+        {
+            var hostUpdater = app.Services.GetRequiredService<IHostUpdater>();
+
+            await hostUpdater.UpdateAsync(folderPath, username, password);
+        }
+        else
+        {
+            await app.RunAsync();
+        }
     }
 }

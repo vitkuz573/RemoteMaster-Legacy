@@ -12,7 +12,7 @@ using Serilog;
 namespace RemoteMaster.Host.Core.Hubs;
 
 [Authorize]
-public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IDomainService domainService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IUpdaterService updaterService, IScreenCapturerService screenCapturerService, IScreenRecorderService screenRecorderService, IFileManagerService fileManagerService, ITaskManagerService taskManagerService, IHostConfigurationService hostConfigurationService, IPsExecService psExecService, IHostLifecycleService hostLifecycleService) : Hub<IControlClient>
+public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IDomainService domainService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturerService, IScreenRecorderService screenRecorderService, IFileManagerService fileManagerService, ITaskManagerService taskManagerService, IHostConfigurationService hostConfigurationService, IPsExecService psExecService, IHostLifecycleService hostLifecycleService, IUpdaterInstanceService updaterInstanceService) : Hub<IControlClient>
 {
     public async Task ConnectAs(Intention intention)
     {
@@ -159,11 +159,6 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         await Clients.Group("serviceGroup").ReceiveCommand(command);
     }
 
-    public void SendUpdateHost(string folderPath, string username, string password)
-    {
-        updaterService.Execute(folderPath, username, password);
-    }
-
     public void SendJoinToDomain(string domain, string user, string password)
     {
         domainService.JoinToDomain(domain, user, password);
@@ -239,5 +234,10 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         {
             await psExecService.EnableAsync();
         }
+    }
+
+    public void SendStartUpdater(string folderPath, string? username, string? password)
+    {
+        updaterInstanceService.Start(folderPath, username, password);
     }
 }

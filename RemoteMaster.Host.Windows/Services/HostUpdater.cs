@@ -10,25 +10,14 @@ using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class UpdaterService : IUpdaterService
+public class HostUpdater(INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IServiceFactory serviceFactory) : IHostUpdater
 {
-    private readonly string _baseFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
-    private readonly string _scriptPath;
-    private readonly string _updateFolderPath;
+    private static readonly string BaseFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
+    
+    private readonly string _scriptPath = Path.Combine(BaseFolderPath, "update.ps1");
+    private readonly string _updateFolderPath = Path.Combine(BaseFolderPath, "Update");
 
-    private readonly INetworkDriveService _networkDriveService;
-    private readonly IServiceConfiguration _hostServiceConfig;
-
-    public UpdaterService(INetworkDriveService networkDriveService, IServiceConfiguration hostServiceConfig)
-    {
-        _scriptPath = Path.Combine(_baseFolderPath, "update.ps1");
-        _updateFolderPath = Path.Combine(_baseFolderPath, "Update");
-
-        _networkDriveService = networkDriveService;
-        _hostServiceConfig = hostServiceConfig;
-    }
-
-    public void Execute(string folderPath, string username, string password)
+    public async Task UpdateAsync(string folderPath, string? username, string? password)
     {
         ArgumentNullException.ThrowIfNull(folderPath);
 
@@ -39,7 +28,7 @@ public class UpdaterService : IUpdaterService
 
             if (isNetworkPath)
             {
-                _networkDriveService.MapNetworkDrive(folderPath, username, password);
+                networkDriveService.MapNetworkDrive(folderPath, username, password);
             }
 
             var isDownloaded = DirectoryCopy(sourceFolderPath, _updateFolderPath, true, true);
@@ -48,7 +37,7 @@ public class UpdaterService : IUpdaterService
 
             if (isNetworkPath)
             {
-                _networkDriveService.CancelNetworkDrive(folderPath);
+                networkDriveService.CancelNetworkDrive(folderPath);
             }
 
             if (!isDownloaded)
@@ -56,14 +45,20 @@ public class UpdaterService : IUpdaterService
                 return;
             }
 
+            var hostService = serviceFactory.GetService("RCHost");
+
+            hostService.Stop();
+
+            Console.WriteLine($"{hostService.Name} sucessfully stopped. Starting update...");
+
+            userInstanceService.Stop();
+
             var contentBuilder = new StringBuilder();
-            contentBuilder.AppendLine($"Stop-Service -Name \"{_hostServiceConfig.Name}\"");
-            contentBuilder.AppendLine($"Get-Process -Id \"{Environment.ProcessId}\" -ErrorAction SilentlyContinue | Stop-Process -Force");
             contentBuilder.AppendLine("$filesLocked = $true");
             contentBuilder.AppendLine("while ($filesLocked) {");
             contentBuilder.AppendLine("    Start-Sleep -Seconds 2");
             contentBuilder.AppendLine("    $filesLocked = $false");
-            contentBuilder.AppendLine("    Get-ChildItem \"$PSScriptRoot\\Update\" -Recurse | Where-Object { !$_.PSIsContainer } | ForEach-Object {");
+            contentBuilder.AppendLine("    Get-ChildItem $PSScriptRoot | Where-Object { !$_.PSIsContainer } | ForEach-Object {");
             contentBuilder.AppendLine("        try {");
             contentBuilder.AppendLine("            $stream = [System.IO.File]::Open($_.FullName, 'Open', 'Write', 'None')");
             contentBuilder.AppendLine("            $stream.Close()");
@@ -75,33 +70,86 @@ public class UpdaterService : IUpdaterService
             contentBuilder.AppendLine("    }");
             contentBuilder.AppendLine("}");
             contentBuilder.AppendLine("Copy-Item -Path \"$PSScriptRoot\\Update\\*.*\" -Destination $PSScriptRoot -Recurse -Force");
-            contentBuilder.AppendLine("Start-Sleep -Seconds 2");
-            contentBuilder.AppendLine($"Start-Service -Name \"{_hostServiceConfig.Name}\"");
-            contentBuilder.AppendLine("Start-Sleep -Seconds 2");
-            contentBuilder.AppendLine($"Remove-Item -Path \"{_updateFolderPath}\" -Recurse -Force");
-            contentBuilder.AppendLine($"Remove-Item -Path \"{_scriptPath}\" -Force");
-
-            File.WriteAllText(_scriptPath, contentBuilder.ToString());
+            await File.WriteAllTextAsync(_scriptPath, contentBuilder.ToString());
             Log.Information("Updater script created at: {ScriptPath}", _scriptPath);
 
-            using var process = new Process();
-
-            process.StartInfo = new ProcessStartInfo
+            var processStartInfo = new ProcessStartInfo("powershell.exe", $"-ExecutionPolicy Bypass -NoProfile -File \"{_scriptPath}\"")
             {
-                FileName = "powershell",
-                Arguments = $"-ExecutionPolicy Bypass -NoProfile -File \"{_scriptPath}\"",
-                UseShellExecute = false,
-                CreateNoWindow = true,
+                CreateNoWindow = true
             };
 
+            using var process = new Process();
+            process.StartInfo = processStartInfo;
             process.Start();
-            process.WaitForExit();
+
+            await process.WaitForExitAsync();
+
+            hostService.Start();
+
+            var servicesToStart = new IRunnable[] { hostService, userInstanceService };
+            await EnsureServicesRunning(servicesToStart, 5, 5);
 
             Log.Information("Executed updater script: {ScriptPath}", _scriptPath);
         }
         catch (Exception ex)
         {
             Log.Error("Error while updating host: {Message}", ex.Message);
+        }
+    }
+
+    private async Task EnsureServicesRunning(IEnumerable<IRunnable> services, int delayInSeconds, int attempts)
+    {
+        var allServicesRunning = false;
+
+        for (var attempt = 1; attempt <= attempts; attempt++)
+        {
+            Log.Information($"Attempt {attempt}: Checking if services are running...");
+            await Task.Delay(TimeSpan.FromSeconds(delayInSeconds));
+
+            allServicesRunning = services.All(service => service.IsRunning);
+
+            if (!allServicesRunning)
+            {
+                Log.Warning("Not all services are running. Waiting and retrying...");
+            }
+            else
+            {
+                Log.Information("All services have been successfully started.");
+                break;
+            }
+        }
+
+        if (!allServicesRunning)
+        {
+            Log.Error("Failed to start all services after {Attempts} attempts. Initiating emergency recovery...", attempts);
+
+            AttemptEmergencyRecovery();
+        }
+    }
+
+    private void AttemptEmergencyRecovery()
+    {
+        try
+        {
+            var hostService = serviceFactory.GetService("RCHost");
+
+            if (hostService.IsRunning)
+            {
+                hostService.Stop();
+            }
+
+            var sourceExePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "Updater", "RemoteMaster.Host.exe");
+            var destinationExePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "RemoteMaster.Host.exe");
+
+            File.Copy(sourceExePath, destinationExePath, true);
+
+            Log.Information("Emergency recovery completed successfully. Attempting to restart services...");
+
+            hostService.Start();
+        }
+        catch (Exception ex)
+        {
+            Log.Error($"Emergency recovery failed: {ex.Message}");
         }
     }
 

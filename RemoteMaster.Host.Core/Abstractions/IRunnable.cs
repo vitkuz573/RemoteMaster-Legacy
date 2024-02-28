@@ -4,7 +4,11 @@
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface IUpdaterService
+public interface IRunnable
 {
-    void Execute(string folderPath, string username, string password);
+    void Start();
+
+    void Stop();
+
+    bool IsRunning { get; }
 }

@@ -2,11 +2,9 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-namespace RemoteMaster.Host.Windows.Abstractions;
+namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface IHostServiceManager
+public interface IHostUpdater
 {
-    Task Install();
-
-    Task Uninstall();
+    Task UpdateAsync(string folderPath, string? username, string? password);
 }

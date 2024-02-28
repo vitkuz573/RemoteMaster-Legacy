@@ -4,6 +4,7 @@
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface IUserInstanceService : IRunnable
+public interface IUpdaterInstanceService
 {
+    Task Start(string folderPath, string? username, string? password);
 }
