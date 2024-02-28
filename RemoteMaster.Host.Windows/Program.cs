@@ -268,10 +268,10 @@ internal class Program
         Console.WriteLine("  --folder-path=PATH\tSpecifies the folder path for the update operation. Required for update mode.");
         Console.WriteLine("  --username=USERNAME\tSpecifies the username for authentication. Optional.");
         Console.WriteLine("  --password=PASSWORD\tSpecifies the password for authentication. Optional.");
-        Console.WriteLine();
+        Console.WriteLine(); 
         Console.WriteLine("Examples:");
-        Console.WriteLine("  RemoteMaster.Host.Windows --launch-mode=Service");
-        Console.WriteLine("  RemoteMaster.Host.Windows --launch-mode=Updater --folder-path=\"C:\\UpdateFolder\"");
-        Console.WriteLine("  RemoteMaster.Host.Windows --help");
+        Console.WriteLine("  RemoteMaster.Host --launch-mode=Service");
+        Console.WriteLine("  RemoteMaster.Host --launch-mode=Updater --folder-path=\"C:\\UpdateFolder\"");
+        Console.WriteLine("  RemoteMaster.Host --help");
     }
 }
