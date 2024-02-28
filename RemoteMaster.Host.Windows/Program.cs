@@ -27,63 +27,63 @@ internal class Program
     private static async Task Main(string[] args)
     {
         var launchMode = LaunchMode.Default;
+        var launchModeSpecified = false;
+        var helpRequested = args.Contains("--help");
+
+        foreach (var arg in args)
+        {
+            if (!arg.StartsWith("--launch-mode="))
+            {
+                continue;
+            }
+
+            var modeString = arg["--launch-mode=".Length..];
+            launchModeSpecified = Enum.TryParse(modeString, true, out launchMode) && Enum.IsDefined(typeof(LaunchMode), launchMode);
+
+            if (launchModeSpecified)
+            {
+                continue;
+            }
+
+            Console.WriteLine($"Error: '{modeString}' is not a valid launch mode.");
+            PrintHelp();
+            return;
+        }
+
+        if (helpRequested || !launchModeSpecified)
+        {
+            PrintHelp();
+            return;
+        }
+
         var folderPath = string.Empty;
         string? username = null;
         string? password = null;
 
-        var helpRequested = args.Contains("--help");
-        var launchModeSpecified = false;
-
-        foreach (var arg in args)
+        if (launchMode == LaunchMode.Updater)
         {
-            if (arg.StartsWith("--launch-mode="))
+            foreach (var arg in args)
             {
-                var modeString = arg["--launch-mode=".Length..];
-                launchModeSpecified = Enum.TryParse(modeString, true, out launchMode) && Enum.IsDefined(typeof(LaunchMode), launchMode);
-
-                if (launchModeSpecified)
+                if (arg.StartsWith("--folder-path="))
                 {
-                    continue;
+                    folderPath = arg["--folder-path=".Length..];
                 }
+                else if (arg.StartsWith("--username="))
+                {
+                    username = arg["--username=".Length..];
+                }
+                else if (arg.StartsWith("--password="))
+                {
+                    password = arg["--password=".Length..];
+                }
+            }
 
-                Console.WriteLine($"Error: '{modeString}' is not a valid launch mode.");
-                PrintHelp();
+            if (string.IsNullOrEmpty(folderPath))
+            {
+                Console.WriteLine("Error: The --folder-path option must be specified for the updater mode (--launch-mode=update).");
                 return;
             }
-            else if (arg.StartsWith("--folder-path="))
-            {
-                folderPath = arg["--folder-path=".Length..];
-            }
-            else if (arg.StartsWith("--username="))
-            {
-                username = arg["--username=".Length..];
-            }
-            else if (arg.StartsWith("--password="))
-            {
-                password = arg["--password=".Length..];
-            }
         }
-
-        if (helpRequested)
-        {
-            PrintHelp();
-            return;
-        }
-
-        if (!launchModeSpecified)
-        {
-            Console.WriteLine("Error: The --launch-mode option is required.");
-            PrintHelp();
-            return;
-        }
-
-        if (launchMode == LaunchMode.Updater && string.IsNullOrEmpty(folderPath))
-        {
-            Console.WriteLine("Error: The --folder-path option must be specified for the update mode (--launch-mode=update).");
-            return;
-        }
-
-        Console.WriteLine($"Launched in mode: {launchMode}. FolderPath: {folderPath}, Username: {username}, Password: {password}.");
 
         var options = new WebApplicationOptions
         {
