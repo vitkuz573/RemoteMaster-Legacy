@@ -54,8 +54,22 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             userInstanceService.Stop();
 
             var contentBuilder = new StringBuilder();
+            contentBuilder.AppendLine("$filesLocked = $true");
+            contentBuilder.AppendLine("while ($filesLocked) {");
+            contentBuilder.AppendLine("    Start-Sleep -Seconds 2");
+            contentBuilder.AppendLine("    $filesLocked = $false");
+            contentBuilder.AppendLine("    Get-ChildItem $PSScriptRoot | Where-Object { !$_.PSIsContainer } | ForEach-Object {");
+            contentBuilder.AppendLine("        try {");
+            contentBuilder.AppendLine("            $stream = [System.IO.File]::Open($_.FullName, 'Open', 'Write', 'None')");
+            contentBuilder.AppendLine("            $stream.Close()");
+            contentBuilder.AppendLine("        } catch [UnauthorizedAccessException] {");
+            contentBuilder.AppendLine("            Write-Host \"Access denied for file: $($_.FullName). Update for this file is skipped.\" -ForegroundColor Red");
+            contentBuilder.AppendLine("        } catch {");
+            contentBuilder.AppendLine("            $filesLocked = $true");
+            contentBuilder.AppendLine("        }");
+            contentBuilder.AppendLine("    }");
+            contentBuilder.AppendLine("}");
             contentBuilder.AppendLine("Copy-Item -Path \"$PSScriptRoot\\Update\\*.*\" -Destination $PSScriptRoot -Recurse -Force");
-
             await File.WriteAllTextAsync(_scriptPath, contentBuilder.ToString());
             Log.Information("Updater script created at: {ScriptPath}", _scriptPath);
 
