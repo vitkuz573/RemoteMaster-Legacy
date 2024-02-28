@@ -42,7 +42,6 @@
     <PackageReference Include="Polly" />
     <PackageReference Include="SkiaSharp" />
     <PackageReference Include="SkiaSharp.Views.Desktop.Common" />
-    <PackageReference Include="System.CommandLine.DragonFruit" />
     <PackageReference Include="System.Drawing.Common">
       <TreatAsUsed>true</TreatAsUsed>
     </PackageReference>

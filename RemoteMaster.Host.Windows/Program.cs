@@ -24,13 +24,67 @@ namespace RemoteMaster.Host.Windows;
 
 internal class Program
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="launchMode">Runs the program in specified mode.</param>
-    /// <returns></returns>
-    private static async Task Main(LaunchMode launchMode = LaunchMode.Default, string folderPath = "", string? username = null, string? password = null)
+    private static async Task Main(string[] args)
     {
+        var launchMode = LaunchMode.Default;
+        var folderPath = string.Empty;
+        string? username = null;
+        string? password = null;
+
+        var helpRequested = args.Contains("--help");
+        var launchModeSpecified = false;
+
+        foreach (var arg in args)
+        {
+            if (arg.StartsWith("--launch-mode="))
+            {
+                var modeString = arg["--launch-mode=".Length..];
+                launchModeSpecified = Enum.TryParse(modeString, true, out launchMode) && Enum.IsDefined(typeof(LaunchMode), launchMode);
+
+                if (launchModeSpecified)
+                {
+                    continue;
+                }
+
+                Console.WriteLine($"Error: '{modeString}' is not a valid launch mode.");
+                PrintHelp();
+                return;
+            }
+            else if (arg.StartsWith("--folder-path="))
+            {
+                folderPath = arg["--folder-path=".Length..];
+            }
+            else if (arg.StartsWith("--username="))
+            {
+                username = arg["--username=".Length..];
+            }
+            else if (arg.StartsWith("--password="))
+            {
+                password = arg["--password=".Length..];
+            }
+        }
+
+        if (helpRequested)
+        {
+            PrintHelp();
+            return;
+        }
+
+        if (!launchModeSpecified)
+        {
+            Console.WriteLine("Error: The --launch-mode option is required.");
+            PrintHelp();
+            return;
+        }
+
+        if (launchMode == LaunchMode.Updater && string.IsNullOrEmpty(folderPath))
+        {
+            Console.WriteLine("Error: The --folder-path option must be specified for the update mode (--launch-mode=update).");
+            return;
+        }
+
+        Console.WriteLine($"Launched in mode: {launchMode}. FolderPath: {folderPath}, Username: {username}, Password: {password}.");
+
         var options = new WebApplicationOptions
         {
             ContentRootPath = AppContext.BaseDirectory,
@@ -197,5 +251,28 @@ internal class Program
         {
             await app.RunAsync();
         }
+    }
+
+    private static void PrintHelp()
+    {
+        Console.WriteLine("Usage: RemoteMaster.Host [OPTIONS]");
+        Console.WriteLine();
+        Console.WriteLine("Options:");
+        Console.WriteLine("  --help\t\tDisplays this help message and exits.");
+        Console.WriteLine("  --launch-mode=MODE\tSpecifies the launch mode of the program. Available modes:");
+        Console.WriteLine("\t\t\tDefault - Default mode of operation.");
+        Console.WriteLine("\t\t\tUser - Runs the program in user mode.");
+        Console.WriteLine("\t\t\tService - Runs the program as a service.");
+        Console.WriteLine("\t\t\tInstall - Installs the necessary components for the program.");
+        Console.WriteLine("\t\t\tUninstall - Removes the program and its components.");
+        Console.WriteLine("\t\t\tUpdater - Updates the program to the latest version.");
+        Console.WriteLine("  --folder-path=PATH\tSpecifies the folder path for the update operation. Required for update mode.");
+        Console.WriteLine("  --username=USERNAME\tSpecifies the username for authentication. Optional.");
+        Console.WriteLine("  --password=PASSWORD\tSpecifies the password for authentication. Optional.");
+        Console.WriteLine();
+        Console.WriteLine("Examples:");
+        Console.WriteLine("  RemoteMaster.Host.Windows --launch-mode=Service");
+        Console.WriteLine("  RemoteMaster.Host.Windows --launch-mode=Updater --folder-path=\"C:\\UpdateFolder\"");
+        Console.WriteLine("  RemoteMaster.Host.Windows --help");
     }
 }
