@@ -260,7 +260,6 @@ internal class Program
         Console.WriteLine("Options:");
         Console.WriteLine("  --help\t\tDisplays this help message and exits.");
         Console.WriteLine("  --launch-mode=MODE\tSpecifies the launch mode of the program. Available modes:");
-        Console.WriteLine("\t\t\tDefault - Default mode of operation.");
         Console.WriteLine("\t\t\tUser - Runs the program in user mode.");
         Console.WriteLine("\t\t\tService - Runs the program as a service.");
         Console.WriteLine("\t\t\tInstall - Installs the necessary components for the program.");
