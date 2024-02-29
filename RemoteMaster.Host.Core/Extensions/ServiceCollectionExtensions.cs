@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Shared.Models;
 
@@ -13,9 +14,9 @@ namespace RemoteMaster.Host.Core.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static void AddCoreServices(this IServiceCollection services, bool buildConfiguration = true)
+    public static void AddCoreServices(this IServiceCollection services, LaunchMode launchMode)
     {
-        if (buildConfiguration)
+        if (launchMode is not LaunchMode.Updater)
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Path.GetDirectoryName(Environment.ProcessPath)!)
