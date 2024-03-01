@@ -86,14 +86,7 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
         var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
         var certificatePath = Path.Combine(programData, "RemoteMaster", "Security", "certificate.pfx");
 
-        if (!CertificateHasExpired(certificatePath))
-        {
-            return hasChanges;
-        }
-
-        hasChanges = true;
-
-        return hasChanges;
+        return CertificateHasExpired(certificatePath) || hasChanges;
     }
 
     private static bool CertificateHasExpired(string certificatePath)
