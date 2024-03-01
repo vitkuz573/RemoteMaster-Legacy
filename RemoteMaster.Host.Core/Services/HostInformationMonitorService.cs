@@ -91,16 +91,7 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
             return hasChanges;
         }
 
-        try
-        {
-            hasChanges = true;
-
-            Log.Information("Certificate renewed.");
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Error renewing certificate.");
-        }
+        hasChanges = true;
 
         return hasChanges;
     }
