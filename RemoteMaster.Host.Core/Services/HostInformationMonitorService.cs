@@ -9,7 +9,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostInformationMonitorService(IServerHubService serverHubService, IHostConfigurationService hostConfigurationService, IHostInformationService hostInformationService, IHostLifecycleService hostLifecycleService) : IHostInformationMonitorService
+public class HostInformationMonitorService(IServerHubService serverHubService, IHostConfigurationService hostConfigurationService, IHostInformationService hostInformationService) : IHostInformationMonitorService
 {
     public async Task<bool> UpdateHostConfigurationAsync()
     {
@@ -86,19 +86,20 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
         var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
         var certificatePath = Path.Combine(programData, "RemoteMaster", "Security", "certificate.pfx");
 
-        if (CertificateHasExpired(certificatePath))
+        if (!CertificateHasExpired(certificatePath))
         {
-            try
-            {
-                await hostLifecycleService.UnregisterAsync(hostConfiguration);
-                await hostLifecycleService.RegisterAsync(hostConfiguration);
+            return hasChanges;
+        }
 
-                Log.Information("Certificate renewed.");
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Error renewing certificate.");
-            }
+        try
+        {
+            hasChanges = true;
+
+            Log.Information("Certificate renewed.");
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error renewing certificate.");
         }
 
         return hasChanges;
