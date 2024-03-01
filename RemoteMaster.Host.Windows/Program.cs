@@ -145,7 +145,6 @@ internal class Program
                 builder.Services.AddHostedService<MessageLoopService>();
                 builder.Services.AddHostedService<CommandListenerService>();
                 builder.Services.AddHostedService<HostProcessMonitorService>();
-                builder.Services.AddHostedService<HostInformationMonitorService>();
                 builder.Services.AddHostedService<HostRegistrationMonitorService>();
                 break;
         }

@@ -32,6 +32,7 @@ public static class ServiceCollectionExtensions
             loggingBuilder.ClearProviders();
         });
 
+        services.AddSingleton<IHostInformationMonitorService, HostInformationMonitorService>();
         services.AddSingleton<IFileManagerService, FileManagerService>();
         services.AddSingleton<ISubjectService, SubjectService>();
         services.AddSingleton<ICertificateRequestService, CertificateRequestService>();

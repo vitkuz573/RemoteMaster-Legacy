@@ -3,28 +3,15 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Cryptography.X509Certificates;
-using System.Timers;
-using Microsoft.Extensions.Hosting;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Models;
 using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostInformationMonitorService(IServerHubService serverHubService, IHostConfigurationService hostConfigurationService, IHostInformationService hostInformationService, IHostLifecycleService hostLifecycleService) : IHostedService
+public class HostInformationMonitorService(IServerHubService serverHubService, IHostConfigurationService hostConfigurationService, IHostInformationService hostInformationService, IHostLifecycleService hostLifecycleService) : IHostInformationMonitorService
 {
-    private System.Timers.Timer? _timer;
-
-    public Task StartAsync(CancellationToken cancellationToken)
-    {
-        _timer = new System.Timers.Timer(60000);
-        _timer.Elapsed += CheckHostInformation;
-        _timer.Start();
-
-        return Task.CompletedTask;
-    }
-
-    private async void CheckHostInformation(object? sender, ElapsedEventArgs e)
+    public async Task UpdateHostConfigurationAsync()
     {
         HostConfiguration hostConfiguration;
 
@@ -55,10 +42,6 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
                     hostConfiguration.Host = hostInformation;
 
                     await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
-                    
-                    await hostLifecycleService.UpdateHostInformationAsync(hostConfiguration);
-                    await hostLifecycleService.UnregisterAsync(hostConfiguration);
-                    await hostLifecycleService.RegisterAsync(hostConfiguration);
                 }
                 catch (Exception ex)
                 {
@@ -123,13 +106,5 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
         using var certificate = new X509Certificate2(certificatePath);
 
         return DateTime.Now > certificate.NotAfter;
-    }
-
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        _timer?.Stop();
-        _timer?.Dispose();
-
-        return Task.CompletedTask;
     }
 }

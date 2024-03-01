@@ -9,7 +9,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostRegistrationMonitorService(IHostLifecycleService hostLifecycleService, IHostConfigurationService hostConfigurationService) : IHostedService
+public class HostRegistrationMonitorService(IHostLifecycleService hostLifecycleService, IHostConfigurationService hostConfigurationService, IHostInformationMonitorService hostInformationMonitorService) : IHostedService
 {
     private System.Timers.Timer? _timer;
 
@@ -26,10 +26,16 @@ public class HostRegistrationMonitorService(IHostLifecycleService hostLifecycleS
     {
         try
         {
+            await hostInformationMonitorService.UpdateHostConfigurationAsync();
+
             var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
 
             if (await hostLifecycleService.IsHostRegisteredAsync(hostConfiguration))
             {
+                await hostLifecycleService.UpdateHostInformationAsync(hostConfiguration);
+                await hostLifecycleService.UnregisterAsync(hostConfiguration);
+                await hostLifecycleService.RegisterAsync(hostConfiguration);
+
                 return;
             }
 
