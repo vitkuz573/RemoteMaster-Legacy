@@ -74,6 +74,7 @@
 
                     <MudTabPanel Text="Management" Icon="@Icons.Material.Filled.Settings">
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Move" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Move</MudButton>
+                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Remove" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Remove</MudButton>
                     </MudTabPanel>
                 </MudTabs>
 

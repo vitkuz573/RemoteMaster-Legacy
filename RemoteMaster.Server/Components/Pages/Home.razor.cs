@@ -371,6 +371,24 @@ public partial class Home
         await DialogService.ShowAsync<MoveDialog>("Move", dialogParameters);
     }
 
+    private async Task Remove()
+    {
+        var confirmation = await DialogService.ShowMessageBox("Delete Confirmation", "Are you sure you want to delete the selected computers?", "Yes", "No");
+
+        if (confirmation.HasValue && confirmation.Value)
+        {
+            foreach (var computer in _selectedComputers.ToList())
+            {
+                await DatabaseService.RemoveNodeAsync(computer);
+
+                _availableComputers.Remove(computer);
+                _unavailableComputers.Remove(computer);
+            }
+
+            _selectedComputers.Clear();
+        }
+    }
+
     private async Task<ConcurrentDictionary<Computer, HubConnection?>> GetComputers(bool onlyAvailable = true)
     {
         var computerConnections = new ConcurrentDictionary<Computer, HubConnection?>();
