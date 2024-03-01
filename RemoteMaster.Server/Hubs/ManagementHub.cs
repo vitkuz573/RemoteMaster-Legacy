@@ -238,12 +238,10 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
 
                 return publicKey;
             }
-            else
-            {
-                Log.Warning("Public key file not found at '{Path}'", publicKeyPath);
 
-                return null;
-            }
+            Log.Warning("Public key file not found at '{Path}'", publicKeyPath);
+
+            return null;
         }
         catch (Exception ex)
         {

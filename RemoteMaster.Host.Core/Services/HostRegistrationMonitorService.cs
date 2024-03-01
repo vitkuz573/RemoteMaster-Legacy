@@ -30,18 +30,19 @@ public class HostRegistrationMonitorService(IHostLifecycleService hostLifecycleS
             var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
             var isHostRegistered = await hostLifecycleService.IsHostRegisteredAsync(hostConfiguration);
 
-            if (isHostRegistered && configurationChanged)
+            switch (isHostRegistered)
             {
-                await hostLifecycleService.UpdateHostInformationAsync(hostConfiguration);
-                await hostLifecycleService.UnregisterAsync(hostConfiguration);
-                await hostLifecycleService.RegisterAsync(hostConfiguration);
+                case true when configurationChanged:
+                    await hostLifecycleService.UpdateHostInformationAsync(hostConfiguration);
+                    await hostLifecycleService.UnregisterAsync(hostConfiguration);
+                    await hostLifecycleService.RegisterAsync(hostConfiguration);
 
-                Log.Information("Host information updated and host re-registered due to configuration change.");
-            }
-            else if (!isHostRegistered)
-            {
-                await hostLifecycleService.RegisterAsync(hostConfiguration);
-                Log.Warning("Host is not registered. Performing necessary actions...");
+                    Log.Information("Host information updated and host re-registered due to configuration change.");
+                    break;
+                case false:
+                    await hostLifecycleService.RegisterAsync(hostConfiguration);
+                    Log.Warning("Host is not registered. Performing necessary actions...");
+                    break;
             }
         }
         catch (Exception ex)
