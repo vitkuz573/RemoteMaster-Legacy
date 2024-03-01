@@ -11,8 +11,10 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class HostInformationMonitorService(IServerHubService serverHubService, IHostConfigurationService hostConfigurationService, IHostInformationService hostInformationService, IHostLifecycleService hostLifecycleService) : IHostInformationMonitorService
 {
-    public async Task UpdateHostConfigurationAsync()
+    public async Task<bool> UpdateHostConfigurationAsync()
     {
+        var hasChanges = false;
+
         HostConfiguration hostConfiguration;
 
         try
@@ -22,13 +24,15 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
         catch (Exception ex) when (ex is FileNotFoundException or InvalidDataException)
         {
             Log.Error(ex, "Error loading configuration.");
-            return;
+
+            return false;
         }
 
         if (hostConfiguration.Host == null)
         {
             Log.Error("Host configuration is missing host details.");
-            return;
+
+            return false;
         }
 
         try
@@ -42,6 +46,8 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
                     hostConfiguration.Host = hostInformation;
 
                     await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
+
+                    hasChanges = true;
                 }
                 catch (Exception ex)
                 {
@@ -53,7 +59,7 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
         {
             Log.Warning("{Message}. Unable to update host information at this time.", ex.Message);
             
-            return;
+            return false;
         }
 
         try
@@ -62,18 +68,15 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
 
             var newOrganizationalUnits = await serverHubService.GetNewOrganizationalUnitIfChangeRequested(hostConfiguration.Host.MacAddress);
 
-            if (newOrganizationalUnits.Length == 0)
+            if (newOrganizationalUnits.Length > 0)
             {
-                return;
+                hostConfiguration.Subject.OrganizationalUnit = newOrganizationalUnits;
+                await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
+                Log.Information("Organizational unit for this device was updated based on the organizational unit change request.");
+                await serverHubService.AcknowledgeOrganizationalUnitChange(hostConfiguration.Host.MacAddress);
+
+                hasChanges = true;
             }
-
-            hostConfiguration.Subject.OrganizationalUnit = newOrganizationalUnits;
-            await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
-            Log.Information("Organizational unit for this device was updated based on the organizational unit change request.");
-            await serverHubService.AcknowledgeOrganizationalUnitChange(hostConfiguration.Host.MacAddress);
-
-            await hostLifecycleService.UnregisterAsync(hostConfiguration);
-            await hostLifecycleService.RegisterAsync(hostConfiguration);
         }
         catch (Exception ex)
         {
@@ -81,29 +84,29 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
         }
 
         var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var certificatePath = Path.Combine(programData, "RemoteMaster", "certificate.pfx");
+        var certificatePath = Path.Combine(programData, "RemoteMaster", "Security", "certificate.pfx");
 
-        if (!CertificateHasExpired(certificatePath))
+        if (CertificateHasExpired(certificatePath))
         {
-            return;
+            try
+            {
+                await hostLifecycleService.UnregisterAsync(hostConfiguration);
+                await hostLifecycleService.RegisterAsync(hostConfiguration);
+
+                Log.Information("Certificate renewed.");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error renewing certificate.");
+            }
         }
 
-        try
-        {
-            await hostLifecycleService.UnregisterAsync(hostConfiguration);
-            await hostLifecycleService.RegisterAsync(hostConfiguration);
-
-            Log.Information("Certificate renewed.");
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Error renewing certificate.");
-        }
+        return hasChanges;
     }
 
     private static bool CertificateHasExpired(string certificatePath)
     {
-        using var certificate = new X509Certificate2(certificatePath);
+        using var certificate = new X509Certificate2(certificatePath, "YourPfxPassword");
 
         return DateTime.Now > certificate.NotAfter;
     }

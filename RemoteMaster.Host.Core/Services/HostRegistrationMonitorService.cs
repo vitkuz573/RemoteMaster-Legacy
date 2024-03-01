@@ -26,22 +26,23 @@ public class HostRegistrationMonitorService(IHostLifecycleService hostLifecycleS
     {
         try
         {
-            await hostInformationMonitorService.UpdateHostConfigurationAsync();
-
+            var configurationChanged = await hostInformationMonitorService.UpdateHostConfigurationAsync();
             var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
+            var isHostRegistered = await hostLifecycleService.IsHostRegisteredAsync(hostConfiguration);
 
-            if (await hostLifecycleService.IsHostRegisteredAsync(hostConfiguration))
+            if (isHostRegistered && configurationChanged)
             {
                 await hostLifecycleService.UpdateHostInformationAsync(hostConfiguration);
                 await hostLifecycleService.UnregisterAsync(hostConfiguration);
                 await hostLifecycleService.RegisterAsync(hostConfiguration);
 
-                return;
+                Log.Information("Host information updated and host re-registered due to configuration change.");
             }
-
-            Log.Warning("Host is not registered. Performing necessary actions...");
-
-            await hostLifecycleService.RegisterAsync(hostConfiguration);
+            else if (!isHostRegistered)
+            {
+                await hostLifecycleService.RegisterAsync(hostConfiguration);
+                Log.Warning("Host is not registered. Performing necessary actions...");
+            }
         }
         catch (Exception ex)
         {
