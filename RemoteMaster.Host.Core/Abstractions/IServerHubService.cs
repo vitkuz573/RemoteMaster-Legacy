@@ -24,5 +24,7 @@ public interface IServerHubService
 
     void OnReceiveCertificate(Action<byte[]> onReceiveCertificate);
 
+    void OnReceiveHostGuid(Action<Guid> onReceiveHostGuid);
+
     Task<string> GetPublicKeyAsync();
 }

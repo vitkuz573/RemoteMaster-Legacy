@@ -71,7 +71,9 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
                 Parent = parentOu
             };
 
-            await databaseService.AddNodeAsync(computer);
+            var hostGuid = await databaseService.AddNodeAsync(computer);
+
+            await Clients.Caller.ReceiveHostGuid(hostGuid);
         }
 
         return true;

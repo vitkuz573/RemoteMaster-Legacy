@@ -7,4 +7,6 @@ namespace RemoteMaster.Server.Abstractions;
 public interface IManagementClient
 {
     Task ReceiveCertificate(byte[] certificate);
+
+    Task ReceiveHostGuid(Guid hostGuid);
 }

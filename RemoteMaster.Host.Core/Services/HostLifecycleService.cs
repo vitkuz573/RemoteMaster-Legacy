@@ -11,7 +11,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostLifecycleService(IServerHubService serverHubService, ICertificateRequestService certificateRequestService, ISubjectService subjectService) : IHostLifecycleService
+public class HostLifecycleService(IServerHubService serverHubService, ICertificateRequestService certificateRequestService, ISubjectService subjectService, IHostConfigurationService hostConfigurationService) : IHostLifecycleService
 {
     private volatile bool _isRegistrationInvoked;
 
@@ -176,9 +176,22 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
     private async Task InvokeHostRegistration(HostConfiguration hostConfiguration, byte[] signingRequest, TaskCompletionSource<bool> tcs, string securityDirectory)
     {
+        var tcsGuid = new TaskCompletionSource<Guid>();
+        
+        serverHubService.OnReceiveHostGuid(guid => {
+            Log.Information("Host GUID received: {GUID}.", guid);
+
+            hostConfiguration.HostGuid = guid;
+
+            hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
+
+            tcsGuid.SetResult(guid);
+        });
+
         if (await serverHubService.RegisterHostAsync(hostConfiguration, signingRequest))
         {
             _isRegistrationInvoked = true;
+            
             Log.Information("Host registration invoked successfully. Waiting for the certificate...");
             var isCertificateReceived = await tcs.Task;
 
