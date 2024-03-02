@@ -28,36 +28,24 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
             return false;
         }
 
-        if (hostConfiguration.Host == null)
-        {
-            Log.Error("Host configuration is missing host details.");
+        var hostInformation = hostInformationService.GetHostInformation();
 
-            return false;
+        if (hostConfiguration.Host == null || !hostConfiguration.Host.Equals(hostInformation))
+        {
+            hostConfiguration.Host = hostInformation;
+            
+            Log.Information("Host details were either missing or have been updated.");
+            
+            hasChanges = true;
         }
 
         try
         {
-            var hostInformation = hostInformationService.GetHostInformation();
-
-            if (!hostConfiguration.Host.Equals(hostInformation))
-            {
-                try
-                {
-                    hostConfiguration.Host = hostInformation;
-
-                    await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
-
-                    hasChanges = true;
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "Error saving updated configuration.");
-                }
-            }
+            await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
         }
-        catch (InvalidOperationException ex)
+        catch (Exception ex)
         {
-            Log.Warning("{Message}. Unable to update host information at this time.", ex.Message);
+            Log.Error(ex, "Error saving updated configuration.");
             
             return false;
         }
@@ -65,16 +53,18 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
         try
         {
             await serverHubService.ConnectAsync(hostConfiguration.Server);
-
             var newOrganizationalUnits = await serverHubService.GetNewOrganizationalUnitIfChangeRequested(hostConfiguration.Host.MacAddress);
 
             if (newOrganizationalUnits.Length > 0)
             {
                 hostConfiguration.Subject.OrganizationalUnit = newOrganizationalUnits;
+                
                 await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
+                
                 Log.Information("Organizational unit for this device was updated based on the organizational unit change request.");
+                
                 await serverHubService.AcknowledgeOrganizationalUnitChange(hostConfiguration.Host.MacAddress);
-
+                
                 hasChanges = true;
             }
         }
