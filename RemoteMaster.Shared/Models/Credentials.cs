@@ -2,11 +2,12 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using RemoteMaster.Shared.Models;
+namespace RemoteMaster.Shared.Models;
 
-namespace RemoteMaster.Host.Core.Abstractions;
-
-public interface IUpdaterInstanceService
+public class Credentials
 {
-    Task Start(UpdateRequest updateRequest);
+    public string Username { get; init; }
+
+    public string Password { get; init; }
 }
+

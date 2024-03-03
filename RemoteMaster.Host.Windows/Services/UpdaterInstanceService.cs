@@ -20,11 +20,11 @@ public class UpdaterInstanceService(IHubContext<ControlHub, IControlClient> hubC
     private readonly string _sourcePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "RemoteMaster.Host.exe");
     private readonly string _executablePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "Updater", "RemoteMaster.Host.exe");
 
-    public async Task Start(string folderPath, string? username, string? password)
+    public async Task Start(UpdateRequest updateRequest)
     {
-        ArgumentNullException.ThrowIfNull(folderPath);
+        ArgumentNullException.ThrowIfNull(updateRequest);
 
-        var additionalArguments = BuildArguments(folderPath, username, password);
+        var additionalArguments = BuildArguments(updateRequest.FolderPath, updateRequest.UserCredentials);
 
         try
         {
@@ -37,25 +37,30 @@ public class UpdaterInstanceService(IHubContext<ControlHub, IControlClient> hubC
         }
     }
 
-    private string BuildArguments(string folderPath, string? username, string? password)
+    private string BuildArguments(string folderPath, Credentials? userCredentials)
     {
         var arguments = new StringBuilder(_argument);
         var escapedFolderPath = "\"" + folderPath.Replace("\"", "\\\"") + "\"";
 
         arguments.Append($" --folder-path={escapedFolderPath}");
 
-        if (!string.IsNullOrEmpty(username))
-        {
-            var escapedUsername = "\"" + username.Replace("\"", "\\\"") + "\"";
-            arguments.Append($" --username={escapedUsername}");
-        }
-
-        if (string.IsNullOrEmpty(password))
+        if (userCredentials == null)
         {
             return arguments.ToString();
         }
 
-        var escapedPassword = "\"" + password.Replace("\"", "\\\"") + "\"";
+        if (!string.IsNullOrEmpty(userCredentials.Username))
+        {
+            var escapedUsername = "\"" + userCredentials.Username.Replace("\"", "\\\"") + "\"";
+            arguments.Append($" --username={escapedUsername}");
+        }
+
+        if (string.IsNullOrEmpty(userCredentials.Password))
+        {
+            return arguments.ToString();
+        }
+
+        var escapedPassword = "\"" + userCredentials.Password.Replace("\"", "\\\"") + "\"";
         arguments.Append($" --password={escapedPassword}");
 
         return arguments.ToString();

@@ -35,7 +35,16 @@ public partial class UpdateDialog
         {
             var updateTask = Task.Run(async () =>
             {
-                await connection.InvokeAsync("SendStartUpdater", _folderPath, _username, _password);
+                var updateRequest = new UpdateRequest(_folderPath)
+                {
+                    UserCredentials = new Credentials()
+                    {
+                        Username = _username,
+                        Password = _password
+                    }
+                };
+
+                await connection.InvokeAsync("SendStartUpdater", updateRequest);
 
                 if (!_subscribedConnections.Contains(connection))
                 {
