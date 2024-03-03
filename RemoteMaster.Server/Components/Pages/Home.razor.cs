@@ -361,7 +361,7 @@ public partial class Home
 
         var dialogParameters = new DialogParameters<FileUploadDialog>
         {
-            { x => x.Hosts, await GetComputers() }
+            { x => x.Hosts, await GetComputers(hubPath: "/hubs/filemanager") }
         };
 
         await DialogService.ShowAsync<FileUploadDialog>("File Upload", dialogParameters);
