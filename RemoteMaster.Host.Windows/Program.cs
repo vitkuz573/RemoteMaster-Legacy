@@ -17,6 +17,7 @@ using RemoteMaster.Host.Core.Extensions;
 using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Host.Windows.Hubs;
 using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Host.Windows.Services;
 
@@ -193,6 +194,7 @@ internal class Program
         if (launchArguments.LaunchMode is LaunchMode.User)
         {
             app.MapCoreHubs();
+            app.MapHub<ServiceHub>("/hubs/service");
         }
 
         if (launchArguments.LaunchMode is LaunchMode.Updater)

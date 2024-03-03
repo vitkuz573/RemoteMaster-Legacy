@@ -12,7 +12,7 @@ using Serilog;
 namespace RemoteMaster.Host.Core.Hubs;
 
 [Authorize]
-public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturerService, IHostConfigurationService hostConfigurationService, IPsExecService psExecService, IHostLifecycleService hostLifecycleService) : Hub<IControlClient>
+public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturerService, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService) : Hub<IControlClient>
 {
     public async Task ConnectAs(Intention intention)
     {
@@ -159,15 +159,5 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
         await hostLifecycleService.UnregisterAsync(hostConfiguration);
         await hostLifecycleService.RegisterAsync(hostConfiguration);
-    }
-
-    public async Task SetPsExecRules(bool enable)
-    {
-        await psExecService.DisableAsync();
-
-        if (enable)
-        {
-            await psExecService.EnableAsync();
-        }
     }
 }

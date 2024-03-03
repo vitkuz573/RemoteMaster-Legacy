@@ -2,11 +2,8 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-namespace RemoteMaster.Host.Core.Abstractions;
+namespace RemoteMaster.Host.Windows.Abstractions;
 
-public interface IPsExecService
+public interface IServiceClient
 {
-    Task EnableAsync();
-
-    Task DisableAsync();
 }

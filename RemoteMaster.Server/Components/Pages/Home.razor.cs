@@ -295,7 +295,7 @@ public partial class Home
 
         var dialogParameters = new DialogParameters<PsExecRulesDialog>
         {
-            { x => x.Hosts, await GetComputers() }
+            { x => x.Hosts, await GetComputers(hubName: "service") }
         };
 
         await DialogService.ShowAsync<PsExecRulesDialog>("PSExec rules", dialogParameters, dialogOptions);
