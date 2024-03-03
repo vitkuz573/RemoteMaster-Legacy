@@ -4,6 +4,7 @@
 
 using System.ComponentModel;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Shared.Models;
 using Windows.Win32.NetworkManagement.NetManagement;
 using static Windows.Win32.PInvoke;
 
@@ -11,9 +12,11 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class DomainService : IDomainService
 {
-    public void JoinToDomain(string domain, string user, string password)
+    public void JoinToDomain(DomainJoinRequest domainJoinRequest)
     {
-        var result = NetJoinDomain(null, domain, null, user, password, NET_JOIN_DOMAIN_JOIN_OPTIONS.NETSETUP_JOIN_DOMAIN | NET_JOIN_DOMAIN_JOIN_OPTIONS.NETSETUP_ACCT_CREATE);
+        ArgumentNullException.ThrowIfNull(domainJoinRequest);
+
+        var result = NetJoinDomain(null, domainJoinRequest.Domain, null, domainJoinRequest.UserCredentials.Username, domainJoinRequest.UserCredentials.Password, NET_JOIN_DOMAIN_JOIN_OPTIONS.NETSETUP_JOIN_DOMAIN | NET_JOIN_DOMAIN_JOIN_OPTIONS.NETSETUP_ACCT_CREATE);
 
         if (result != 0)
         {
@@ -21,9 +24,11 @@ public class DomainService : IDomainService
         }
     }
 
-    public void UnjoinFromDomain(string user, string password)
+    public void UnjoinFromDomain(DomainUnjoinRequest domainUnjoinRequest)
     {
-        var result = NetUnjoinDomain(null, user, password, NETSETUP_ACCT_DELETE);
+        ArgumentNullException.ThrowIfNull(domainUnjoinRequest);
+
+        var result = NetUnjoinDomain(null, domainUnjoinRequest.UserCredentials.Username, domainUnjoinRequest.UserCredentials.Password, NETSETUP_ACCT_DELETE);
 
         if (result != 0)
         {

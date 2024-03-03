@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
+using RemoteMaster.Shared.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Components.Dialogs;
@@ -22,14 +23,30 @@ public partial class DomainManagementDialog
 
     private async Task JoinDomain()
     {
-        await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("SendJoinToDomain", _domain, _username, _password));
+        var credentials = new Credentials
+        {
+            Username = _username,
+            Password = _password
+        };
+
+        var domainJoinRequest = new DomainJoinRequest(_domain, credentials);
+
+        await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("SendJoinToDomain", domainJoinRequest));
 
         MudDialog.Close(DialogResult.Ok(true));
     }
 
     private async Task LeaveDomain()
     {
-        await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("SendUnjoinFromDomain", _username, _password));
+        var credentials = new Credentials
+        {
+            Username = _username,
+            Password = _password
+        };
+
+        var domainUnjoinRequest = new DomainUnjoinRequest(credentials);
+
+        await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("SendUnjoinFromDomain", domainUnjoinRequest));
 
         MudDialog.Close(DialogResult.Ok(true));
     }

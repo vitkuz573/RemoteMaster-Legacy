@@ -159,14 +159,14 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         await Clients.Group("serviceGroup").ReceiveCommand(command);
     }
 
-    public void SendJoinToDomain(string domain, string user, string password)
+    public void SendJoinToDomain(DomainJoinRequest domainJoinRequest)
     {
-        domainService.JoinToDomain(domain, user, password);
+        domainService.JoinToDomain(domainJoinRequest);
     }
 
-    public void SendUnjoinFromDomain(string user, string password)
+    public void SendUnjoinFromDomain(DomainUnjoinRequest domainUnjoinRequest)
     {
-        domainService.UnjoinFromDomain(user, password);
+        domainService.UnjoinFromDomain(domainUnjoinRequest);
     }
 
     public async Task UploadFile(FileUploadDto dto)
