@@ -4,6 +4,7 @@
 
 using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
@@ -25,7 +26,12 @@ public partial class ScreenRecorderDialog
     {
         await ComputerCommandService.Execute(Hosts, async (_, connection) =>
         {
-            await connection.InvokeAsync("SendStartScreenRecording", _outputPath, _durationInSeconds);
+            var screenRecordingRequest = new ScreenRecordingRequest(_outputPath)
+            {
+                Duration = _durationInSeconds
+            };
+
+            await connection.InvokeAsync("SendStartScreenRecording", screenRecordingRequest);
         });
 
         MudDialog.Close(DialogResult.Ok(true));
