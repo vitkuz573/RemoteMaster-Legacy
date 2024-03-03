@@ -143,6 +143,12 @@ public partial class Home
                 }
             });
 
+            connection.On("ReceiveCloseConnection", async () =>
+            {
+                await connection.StopAsync();
+                Log.Information("Connection closed for {IPAddress}", computer.IpAddress);
+            });
+
             await connection.StartAsync();
 
             Log.Information("Calling ConnectAs with Intention.GetThumbnail for {IPAddress}", computer.IpAddress);

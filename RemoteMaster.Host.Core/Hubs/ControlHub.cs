@@ -26,7 +26,8 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
                     await Clients.Caller.ReceiveThumbnail(thumbnail);
                 }
 
-                Context.Abort();
+                await Clients.Caller.ReceiveCloseConnection();
+
                 break;
 
             case Intention.ManageDevice:
