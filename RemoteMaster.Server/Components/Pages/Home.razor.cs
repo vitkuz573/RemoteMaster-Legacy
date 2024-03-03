@@ -233,7 +233,7 @@ public partial class Home
             { x => x.Hosts, await GetComputers() }
         };
 
-        await DialogService.ShowAsync<OpenShellDialog>("Connect to shell", dialogParameters);
+        await DialogService.ShowAsync<OpenShellDialog>("Open Shell", dialogParameters);
     }
 
     private async Task ExecuteScript()
