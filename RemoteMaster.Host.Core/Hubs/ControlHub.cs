@@ -12,7 +12,7 @@ using Serilog;
 namespace RemoteMaster.Host.Core.Hubs;
 
 [Authorize]
-public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IDomainService domainService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturerService, IScreenRecorderService screenRecorderService, IFileManagerService fileManagerService, ITaskManagerService taskManagerService, IHostConfigurationService hostConfigurationService, IPsExecService psExecService, IHostLifecycleService hostLifecycleService, IUpdaterInstanceService updaterInstanceService) : Hub<IControlClient>
+public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IDomainService domainService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturerService, IScreenRecorderService screenRecorderService, IHostConfigurationService hostConfigurationService, IPsExecService psExecService, IHostLifecycleService hostLifecycleService, IUpdaterInstanceService updaterInstanceService) : Hub<IControlClient>
 {
     public async Task ConnectAs(Intention intention)
     {
@@ -167,50 +167,6 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     public void SendUnjoinFromDomain(DomainUnjoinRequest domainUnjoinRequest)
     {
         domainService.UnjoinFromDomain(domainUnjoinRequest);
-    }
-
-    public async Task UploadFile(FileUploadDto dto)
-    {
-        ArgumentNullException.ThrowIfNull(dto);
-
-        await fileManagerService.UploadFileAsync(dto.DestinationPath, dto.Name, dto.Data);
-    }
-
-    public async Task DownloadFile(string path)
-    {
-        using var stream = fileManagerService.DownloadFile(path) as MemoryStream ?? throw new InvalidOperationException("Expected a MemoryStream");
-        var bytes = stream.ToArray();
-
-        await Clients.Caller.ReceiveFile(bytes, Path.GetFileName(path));
-    }
-
-    public async Task GetFilesAndDirectories(string path)
-    {
-        var items = fileManagerService.GetFilesAndDirectories(path);
-        await Clients.Caller.ReceiveFilesAndDirectories(items);
-    }
-
-    public async Task GetAvailableDrives()
-    {
-        var drives = await fileManagerService.GetAvailableDrivesAsync();
-        await Clients.Caller.ReceiveAvailableDrives(drives);
-    }
-
-    public async Task GetRunningProcesses()
-    {
-        var processes = taskManagerService.GetRunningProcesses();
-        await Clients.Caller.ReceiveRunningProcesses(processes);
-    }
-
-    public async Task KillProcess(int processId)
-    {
-        taskManagerService.KillProcess(processId);
-        await GetRunningProcesses();
-    }
-
-    public void StartProcess(string processPath)
-    {
-        taskManagerService.StartProcess(processPath);
     }
 
     public async Task ChangeOrganizationalUnit(string[] newOrganizationalUnits)

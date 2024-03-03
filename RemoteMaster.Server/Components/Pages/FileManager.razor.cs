@@ -103,7 +103,7 @@ public partial class FileManager : IDisposable
         }
 
         _connection = new HubConnectionBuilder()
-            .WithUrl($"https://{Host}:5001/hubs/control", options =>
+            .WithUrl($"https://{Host}:5001/hubs/filemanager", options =>
             {
                 options.Headers.Add("Authorization", $"Bearer {accessToken}");
             })

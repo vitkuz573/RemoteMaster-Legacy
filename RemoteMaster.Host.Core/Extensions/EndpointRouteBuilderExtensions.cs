@@ -13,5 +13,7 @@ public static class EndpointRouteBuilderExtensions
     public static void MapCoreHubs(this IEndpointRouteBuilder endpoints)
     {
         endpoints.MapHub<ControlHub>("/hubs/control");
+        endpoints.MapHub<FileManagerHub>("/hubs/filemanager");
+        endpoints.MapHub<TaskManagerHub>("/hubs/taskmanager");
     }
 }

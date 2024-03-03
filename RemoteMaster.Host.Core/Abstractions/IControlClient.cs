@@ -23,13 +23,5 @@ public interface IControlClient
 
     Task ReceiveHostVersion(Version version);
 
-    Task ReceiveFile(byte[] content, string fileName);
-
-    Task ReceiveFilesAndDirectories(List<FileSystemItem> fileSystemItems);
-
-    Task ReceiveRunningProcesses(List<ProcessInfo> processes);
-
-    Task ReceiveAvailableDrives(List<string> availableDrives);
-
     Task ReceiveCloseConnection();
 }
