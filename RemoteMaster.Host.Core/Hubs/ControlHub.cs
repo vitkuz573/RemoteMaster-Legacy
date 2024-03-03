@@ -99,14 +99,14 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         shutdownService.ImmediateShutdown();
     }
 
-    public void SendRebootComputer(string message, int timeout, bool forceAppsClosed)
+    public void SendRebootComputer(PowerActionRequest powerActionRequest)
     {
-        powerService.Reboot(message, (uint)timeout, forceAppsClosed);
+        powerService.Reboot(powerActionRequest);
     }
 
-    public void SendShutdownComputer(string message, int timeout, bool forceAppsClosed)
+    public void SendShutdownComputer(PowerActionRequest powerActionRequest)
     {
-        powerService.Shutdown(message, (uint)timeout, forceAppsClosed);
+        powerService.Shutdown(powerActionRequest);
     }
 
     private void ExecuteActionForViewer(Action<IViewer> action)

@@ -19,6 +19,8 @@ public class ScreenRecorderService(IScreenCapturerService screenCapturerService)
 
     public Task StartRecordingAsync(ScreenRecordingRequest screenRecordingRequest)
     {
+        ArgumentNullException.ThrowIfNull(screenRecordingRequest);
+
         _cancellationTokenSource = new CancellationTokenSource();
         _recordingTask = RecordVideo(screenRecordingRequest.Output, _cancellationTokenSource.Token);
 
@@ -72,7 +74,7 @@ public class ScreenRecorderService(IScreenCapturerService screenCapturerService)
         }
     }
 
-    private async void StopRecordingAfterDelay(int durationInSeconds)
+    private async void StopRecordingAfterDelay(uint durationInSeconds)
     {
         await Task.Delay(TimeSpan.FromSeconds(durationInSeconds));
         await StopRecordingAsync();

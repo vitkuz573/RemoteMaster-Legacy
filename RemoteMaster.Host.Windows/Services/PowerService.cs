@@ -4,6 +4,7 @@
 
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Shared.Models;
 using Serilog;
 using static Windows.Win32.PInvoke;
 
@@ -11,9 +12,11 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class PowerService(ITokenPrivilegeService tokenPrivilegeService) : IPowerService
 {
-    public void Reboot(string message, uint timeout = 0, bool forceAppsClosed = true)
+    public void Reboot(PowerActionRequest powerActionRequest)
     {
-        Log.Information("Attempting to reboot the system with message: {Message}, timeout: {Timeout}, forceAppsClosed: {ForceAppsClosed}", message, timeout, forceAppsClosed);
+        ArgumentNullException.ThrowIfNull(powerActionRequest);
+
+        Log.Information("Attempting to reboot the system with message: {Message}, timeout: {Timeout}, forceAppsClosed: {ForceAppsClosed}", powerActionRequest.Message, powerActionRequest.Timeout, powerActionRequest.ForceAppsClosed);
 
         if (!tokenPrivilegeService.AdjustPrivilege(SE_SHUTDOWN_NAME))
         {
@@ -25,9 +28,9 @@ public class PowerService(ITokenPrivilegeService tokenPrivilegeService) : IPower
 
         unsafe
         {
-            fixed (char* pMessage = message)
+            fixed (char* pMessage = powerActionRequest.Message)
             {
-                result = InitiateSystemShutdown(null, pMessage, timeout, forceAppsClosed, true);
+                result = InitiateSystemShutdown(null, pMessage, powerActionRequest.Timeout, powerActionRequest.ForceAppsClosed, true);
             }
         }
 
@@ -41,9 +44,11 @@ public class PowerService(ITokenPrivilegeService tokenPrivilegeService) : IPower
         }
     }
 
-    public void Shutdown(string message, uint timeout = 0, bool forceAppsClosed = true)
+    public void Shutdown(PowerActionRequest powerActionRequest)
     {
-        Log.Information("Attempting to shutdown the system with message: {Message}, timeout: {Timeout}, forceAppsClosed: {ForceAppsClosed}", message, timeout, forceAppsClosed);
+        ArgumentNullException.ThrowIfNull(powerActionRequest);
+
+        Log.Information("Attempting to shutdown the system with message: {Message}, timeout: {Timeout}, forceAppsClosed: {ForceAppsClosed}", powerActionRequest.Message, powerActionRequest.Timeout, powerActionRequest.ForceAppsClosed);
 
         if (!tokenPrivilegeService.AdjustPrivilege(SE_SHUTDOWN_NAME))
         {
@@ -55,9 +60,9 @@ public class PowerService(ITokenPrivilegeService tokenPrivilegeService) : IPower
 
         unsafe
         {
-            fixed (char* pMessage = message)
+            fixed (char* pMessage = powerActionRequest.Message)
             {
-                result = InitiateSystemShutdown(null, pMessage, timeout, forceAppsClosed, false);
+                result = InitiateSystemShutdown(null, pMessage, powerActionRequest.Timeout, powerActionRequest.ForceAppsClosed, false);
             }
         }
 

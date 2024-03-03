@@ -4,6 +4,7 @@
 
 using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
@@ -13,13 +14,20 @@ public partial class PowerDialog
 
     private async Task Confirm()
     {
+        var powerActionRequest = new PowerActionRequest()
+        {
+            Message = string.Empty,
+            Timeout = 0,
+            ForceAppsClosed = true
+        };
+
         switch (_selectedOption)
         {
             case "shutdown":
-                await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("SendShutdownComputer", "", 0, true));
+                await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("SendShutdownComputer", powerActionRequest));
                 break;
             case "reboot":
-                await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("SendRebootComputer", "", 0, true));
+                await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("SendRebootComputer", powerActionRequest));
                 break;
             case "wakeup":
             {

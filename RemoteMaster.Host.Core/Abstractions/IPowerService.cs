@@ -2,11 +2,13 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using RemoteMaster.Shared.Models;
+
 namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IPowerService
 {
-    void Shutdown(string message, uint timeout = 0, bool forceAppsClosed = true);
+    void Shutdown(PowerActionRequest powerActionRequest);
 
-    void Reboot(string message, uint timeout = 0, bool forceAppsClosed = true);
+    void Reboot(PowerActionRequest powerActionRequest);
 }
