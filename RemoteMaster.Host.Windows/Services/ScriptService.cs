@@ -14,17 +14,19 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) : IScriptService
 {
-    public async Task Execute(string script, Shell shell, bool asSystem)
+    public async Task Execute(ScriptExecutionRequest scriptExecutionRequest)
     {
-        Log.Information("Executing script with shell: {Shell}", shell);
+        ArgumentNullException.ThrowIfNull(scriptExecutionRequest);
+
+        Log.Information("Executing script with shell: {Shell}", scriptExecutionRequest.Shell);
 
         const string publicDirectory = @"C:\Users\Public";
 
-        var extension = shell switch
+        var extension = scriptExecutionRequest.Shell switch
         {
             Shell.Cmd => ".bat",
             Shell.PowerShell => ".ps1",
-            _ => throw new InvalidOperationException($"Unsupported shell: {shell}")
+            _ => throw new InvalidOperationException($"Unsupported shell: {scriptExecutionRequest.Shell}")
         };
 
         var fileName = $"{Guid.NewGuid()}{extension}";
@@ -32,7 +34,7 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
 
         Log.Information("Temporary file path: {TempFilePath}", tempFilePath);
 
-        var scriptContent = shell == Shell.Cmd ? "@echo off\r\n" + script : script;
+        var scriptContent = scriptExecutionRequest.Shell == Shell.Cmd ? "@echo off\r\n" + scriptExecutionRequest.Content : scriptExecutionRequest.Content;
         await File.WriteAllTextAsync(tempFilePath, scriptContent);
 
         try
@@ -44,11 +46,11 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
                 return;
             }
 
-            var applicationToRun = shell switch
+            var applicationToRun = scriptExecutionRequest.Shell switch
             {
                 Shell.Cmd => $"cmd.exe /c \"{tempFilePath}\"",
                 Shell.PowerShell => $"powershell.exe -ExecutionPolicy Bypass -File \"{tempFilePath}\"",
-                _ => throw new ArgumentOutOfRangeException(nameof(shell), shell, null)
+                _ => throw new ArgumentOutOfRangeException(nameof(scriptExecutionRequest.Shell), scriptExecutionRequest.Shell, null)
             };
 
             using var process = new NativeProcess();
@@ -58,7 +60,7 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
                 ForceConsoleSession = true,
                 DesktopName = "Default",
                 CreateNoWindow = true,
-                UseCurrentUserToken = !asSystem,
+                UseCurrentUserToken = !scriptExecutionRequest.AsSystem,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true
             };

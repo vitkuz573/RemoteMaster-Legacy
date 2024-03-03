@@ -35,9 +35,9 @@ public partial class Access : IDisposable
         .Handle<Exception>()
         .WaitAndRetryAsync(new[]
         {
-                TimeSpan.FromSeconds(5),
-                TimeSpan.FromSeconds(7),
-                TimeSpan.FromSeconds(10),
+            TimeSpan.FromSeconds(5),
+            TimeSpan.FromSeconds(7),
+            TimeSpan.FromSeconds(10)
         });
 
     private bool _isDarkMode = true;
@@ -122,6 +122,7 @@ public partial class Access : IDisposable
     {
         var imgElement = await JsRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", "screenImage");
         var imgPosition = await imgElement.InvokeAsync<DomRect>("getBoundingClientRect");
+        
         var percentX = (e.ClientX - imgPosition.Left) / imgPosition.Width;
         var percentY = (e.ClientY - imgPosition.Top) / imgPosition.Height;
 

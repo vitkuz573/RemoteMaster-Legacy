@@ -34,9 +34,14 @@ public partial class ScriptExecutorDialog
                 _subscribedConnections.Add(connection);
             }
 
+            var scriptExecutionRequest = new ScriptExecutionRequest(_content, _shell)
+            {
+                AsSystem = _asSystem
+            };
+
             if (connection != null)
             {
-                await connection.InvokeAsync("SendScript", _content, _shell, _asSystem);
+                await connection.InvokeAsync("SendScript", scriptExecutionRequest);
             }
         }
     }
