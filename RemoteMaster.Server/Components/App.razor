@@ -47,8 +47,10 @@
 
         window.setTitle = (title) => document.title = title;
 
-        window.openNewWindow = function (url) {
-            return window.open(url, '_blank', 'toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=600,height=400');
+        window.openNewWindow = function (url, width, height) {
+            var windowFeatures = 'toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes,' +
+                'width=' + width + ',height=' + height;
+            return window.open(url, '_blank', windowFeatures);
         };
 
         window.addEventListener("keydown", function (e) {

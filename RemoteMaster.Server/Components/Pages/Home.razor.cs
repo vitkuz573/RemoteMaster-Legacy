@@ -200,16 +200,16 @@ public partial class Home
         await DialogService.ShowAsync<ConnectDialog>("Connect", dialogParameters);
     }
 
-    private async Task OpenWindow(string url)
+    private async Task OpenWindow(string url, uint width, uint height)
     {
-        await JsRuntime.InvokeVoidAsync("openNewWindow", url);
+        await JsRuntime.InvokeVoidAsync("openNewWindow", url, width, height);
     }
 
     private async Task TaskManager()
     {
         foreach (var computer in _selectedComputers)
         {
-            await OpenWindow($"/{computer.IpAddress}/taskmanager");
+            await OpenWindow($"/{computer.IpAddress}/taskmanager", 800, 800);
         }
     }
 
@@ -217,7 +217,7 @@ public partial class Home
     {
         foreach (var computer in _selectedComputers)
         {
-            await OpenWindow($"/{computer.IpAddress}/filemanager");
+            await OpenWindow($"/{computer.IpAddress}/filemanager", 800, 800);
         }
     }
 

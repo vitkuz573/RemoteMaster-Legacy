@@ -28,6 +28,6 @@ public partial class ConnectDialog : CommonDialogBase
 
     protected async Task OpenWindow(string url)
     {
-        await JsRuntime.InvokeVoidAsync("openNewWindow", url);
+        await JsRuntime.InvokeVoidAsync("openNewWindow", url, 600, 400);
     }
 }
