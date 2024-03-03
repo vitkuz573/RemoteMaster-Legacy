@@ -17,5 +17,6 @@ public static class EndpointRouteBuilderExtensions
         endpoints.MapHub<TaskManagerHub>("/hubs/taskmanager");
         endpoints.MapHub<ScreenRecorderHub>("/hubs/screenrecorder");
         endpoints.MapHub<DomainMembershipHub>("/hubs/domainmembership");
+        endpoints.MapHub<UpdaterHub>("/hubs/updater");
     }
 }

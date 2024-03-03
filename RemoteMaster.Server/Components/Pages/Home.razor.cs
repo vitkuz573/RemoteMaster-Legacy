@@ -346,7 +346,7 @@ public partial class Home
 
         var dialogParameters = new DialogParameters<UpdateDialog>
         {
-            { x => x.Hosts, await GetComputers() }
+            { x => x.Hosts, await GetComputers(hubName: "updater") }
         };
 
         await DialogService.ShowAsync<UpdateDialog>("Update", dialogParameters, dialogOptions);
