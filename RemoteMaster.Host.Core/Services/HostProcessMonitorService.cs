@@ -34,6 +34,7 @@ public class HostProcessMonitorService : IHostedService
         }
 
         Log.Information("Host instance is not running. Starting it...");
+
         _userInstanceService.Start();
     }
 

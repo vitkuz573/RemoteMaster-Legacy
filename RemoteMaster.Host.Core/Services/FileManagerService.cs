@@ -11,10 +11,8 @@ public class FileManagerService : IFileManagerService
 {
     public async Task UploadFileAsync(string path, string fileName, byte[] fileData)
     {
-        ArgumentNullException.ThrowIfNull(fileData);
-        ArgumentNullException.ThrowIfNull(fileName);
-
         var filePath = Path.Combine(path, fileName);
+
         await File.WriteAllBytesAsync(filePath, fileData);
     }
 
