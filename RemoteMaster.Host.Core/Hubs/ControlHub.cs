@@ -149,16 +149,6 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         await Clients.Group("serviceGroup").ReceiveCommand(command);
     }
 
-    public void SendJoinToDomain(DomainJoinRequest domainJoinRequest)
-    {
-        domainService.JoinToDomain(domainJoinRequest);
-    }
-
-    public void SendUnjoinFromDomain(DomainUnjoinRequest domainUnjoinRequest)
-    {
-        domainService.UnjoinFromDomain(domainUnjoinRequest);
-    }
-
     public async Task ChangeOrganizationalUnit(string[] newOrganizationalUnits)
     {
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);

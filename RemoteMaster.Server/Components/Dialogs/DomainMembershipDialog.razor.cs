@@ -12,7 +12,7 @@ using Serilog;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
-public partial class DomainManagementDialog
+public partial class DomainMembershipDialog
 {
     private bool _isShowPassword;
     private InputType _passwordInput = InputType.Password;

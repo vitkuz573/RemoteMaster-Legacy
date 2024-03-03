@@ -316,19 +316,19 @@ public partial class Home
         await DialogService.ShowAsync<ScreenRecorderDialog>("Screen Recorder", dialogParameters);
     }
 
-    private async Task DomainManagement()
+    private async Task DomainMembership()
     {
         if (_selectedComputers.All(computer => !_availableComputers.Contains(computer)))
         {
             return;
         }
 
-        var dialogParameters = new DialogParameters<DomainManagementDialog>
+        var dialogParameters = new DialogParameters<DomainMembershipDialog>
         {
-            { x => x.Hosts, await GetComputers() }
+            { x => x.Hosts, await GetComputers(hubName: "domainmembership") }
         };
 
-        await DialogService.ShowAsync<DomainManagementDialog>("Domain Management", dialogParameters);
+        await DialogService.ShowAsync<DomainMembershipDialog>("Domain Membership", dialogParameters);
     }
 
     private async Task Update()
