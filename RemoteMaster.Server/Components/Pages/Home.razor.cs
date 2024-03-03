@@ -295,7 +295,7 @@ public partial class Home
 
         var dialogParameters = new DialogParameters<PsExecRulesDialog>
         {
-            { x => x.Hosts, await GetComputers(hubName: "service") }
+            { x => x.Hosts, await GetComputers(hubPath: "hubs/service") }
         };
 
         await DialogService.ShowAsync<PsExecRulesDialog>("PSExec rules", dialogParameters, dialogOptions);
@@ -310,7 +310,7 @@ public partial class Home
 
         var dialogParameters = new DialogParameters<ScreenRecorderDialog>
         {
-            { x => x.Hosts, await GetComputers(hubName: "screenrecorder") }
+            { x => x.Hosts, await GetComputers(hubPath: "hubs/screenrecorder") }
         };
 
         await DialogService.ShowAsync<ScreenRecorderDialog>("Screen Recorder", dialogParameters);
@@ -325,7 +325,7 @@ public partial class Home
 
         var dialogParameters = new DialogParameters<DomainMembershipDialog>
         {
-            { x => x.Hosts, await GetComputers(hubName: "domainmembership") }
+            { x => x.Hosts, await GetComputers(hubPath: "hubs/domainmembership") }
         };
 
         await DialogService.ShowAsync<DomainMembershipDialog>("Domain Membership", dialogParameters);
@@ -346,7 +346,7 @@ public partial class Home
 
         var dialogParameters = new DialogParameters<UpdateDialog>
         {
-            { x => x.Hosts, await GetComputers(hubName: "updater") }
+            { x => x.Hosts, await GetComputers(hubPath: "hubs/updater") }
         };
 
         await DialogService.ShowAsync<UpdateDialog>("Update", dialogParameters, dialogOptions);
@@ -395,7 +395,7 @@ public partial class Home
         }
     }
 
-    private async Task<ConcurrentDictionary<Computer, HubConnection?>> GetComputers(bool onlyAvailable = true, string hubName = "control")
+    private async Task<ConcurrentDictionary<Computer, HubConnection?>> GetComputers(bool onlyAvailable = true, string hubPath = "hubs/control")
     {
         var computerConnections = new ConcurrentDictionary<Computer, HubConnection?>();
 
@@ -415,7 +415,7 @@ public partial class Home
                 var accessToken = HttpContextAccessor.HttpContext?.Request.Cookies["accessToken"];
 
                 connection = new HubConnectionBuilder()
-                    .WithUrl($"https://{computer.IpAddress}:5001/hubs/{hubName}", options =>
+                    .WithUrl($"https://{computer.IpAddress}:5001/{hubPath}", options =>
                     {
                         options.Headers.Add("Authorization", $"Bearer {accessToken}");
                     })
