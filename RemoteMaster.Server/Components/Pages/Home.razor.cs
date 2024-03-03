@@ -310,7 +310,7 @@ public partial class Home
 
         var dialogParameters = new DialogParameters<ScreenRecorderDialog>
         {
-            { x => x.Hosts, await GetComputers() }
+            { x => x.Hosts, await GetComputers(hubName: "screenrecorder") }
         };
 
         await DialogService.ShowAsync<ScreenRecorderDialog>("Screen Recorder", dialogParameters);
@@ -395,7 +395,7 @@ public partial class Home
         }
     }
 
-    private async Task<ConcurrentDictionary<Computer, HubConnection?>> GetComputers(bool onlyAvailable = true)
+    private async Task<ConcurrentDictionary<Computer, HubConnection?>> GetComputers(bool onlyAvailable = true, string hubName = "control")
     {
         var computerConnections = new ConcurrentDictionary<Computer, HubConnection?>();
 
@@ -415,7 +415,7 @@ public partial class Home
                 var accessToken = HttpContextAccessor.HttpContext?.Request.Cookies["accessToken"];
 
                 connection = new HubConnectionBuilder()
-                    .WithUrl($"https://{computer.IpAddress}:5001/hubs/control", options =>
+                    .WithUrl($"https://{computer.IpAddress}:5001/hubs/{hubName}", options =>
                     {
                         options.Headers.Add("Authorization", $"Bearer {accessToken}");
                     })

@@ -15,5 +15,6 @@ public static class EndpointRouteBuilderExtensions
         endpoints.MapHub<ControlHub>("/hubs/control");
         endpoints.MapHub<FileManagerHub>("/hubs/filemanager");
         endpoints.MapHub<TaskManagerHub>("/hubs/taskmanager");
+        endpoints.MapHub<ScreenRecorderHub>("/hubs/screenrecorder");
     }
 }

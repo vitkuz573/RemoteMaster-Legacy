@@ -12,7 +12,7 @@ using Serilog;
 namespace RemoteMaster.Host.Core.Hubs;
 
 [Authorize]
-public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IDomainService domainService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturerService, IScreenRecorderService screenRecorderService, IHostConfigurationService hostConfigurationService, IPsExecService psExecService, IHostLifecycleService hostLifecycleService, IUpdaterInstanceService updaterInstanceService) : Hub<IControlClient>
+public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IDomainService domainService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturerService, IHostConfigurationService hostConfigurationService, IPsExecService psExecService, IHostLifecycleService hostLifecycleService, IUpdaterInstanceService updaterInstanceService) : Hub<IControlClient>
 {
     public async Task ConnectAs(Intention intention)
     {
@@ -122,16 +122,6 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         {
             Log.Error("Failed to find a viewer for connection ID {ConnectionId}", Context.ConnectionId);
         }
-    }
-
-    public async Task SendStartScreenRecording(ScreenRecordingRequest screenRecordingRequest)
-    {
-        await screenRecorderService.StartRecordingAsync(screenRecordingRequest);
-    }
-
-    public async Task SendStopScreenRecording()
-    {
-        await screenRecorderService.StopRecordingAsync();
     }
 
     public void SendMonitorState(MonitorState state)
