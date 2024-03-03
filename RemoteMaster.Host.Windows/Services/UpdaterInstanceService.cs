@@ -14,7 +14,7 @@ using static RemoteMaster.Shared.Models.ScriptResult;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class UpdaterInstanceService(IHubContext<ControlHub, IControlClient> hubContext) : IUpdaterInstanceService
+public class UpdaterInstanceService(IHubContext<UpdaterHub, IUpdaterClient> hubContext) : IUpdaterInstanceService
 {
     private readonly string _argument = $"--launch-mode={LaunchMode.Updater.ToString().ToLower()}";
     private readonly string _sourcePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "RemoteMaster.Host.exe");
@@ -119,7 +119,7 @@ public class UpdaterInstanceService(IHubContext<ControlHub, IControlClient> hubC
         }
     }
 
-    private async Task ReadStreamAsync(TextReader streamReader, ScriptResult.MessageType messageType)
+    private async Task ReadStreamAsync(TextReader streamReader, MessageType messageType)
     {
         while (await streamReader.ReadLineAsync() is { } line)
         {

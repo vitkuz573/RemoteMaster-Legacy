@@ -6,15 +6,15 @@ using System.Diagnostics;
 using System.Globalization;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Core.Hubs;
 using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Host.Windows.Hubs;
 using RemoteMaster.Shared.Models;
 using Serilog;
 using static RemoteMaster.Shared.Models.ScriptResult;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class PsExecService(IHostConfigurationService hostConfigurationService, IHubContext<ControlHub, IControlClient> hubContext) : IPsExecService
+public class PsExecService(IHostConfigurationService hostConfigurationService, IHubContext<ServiceHub, IServiceClient> hubContext) : IPsExecService
 {
     private readonly Dictionary<string, string> _ruleGroupNames = new()
     {
