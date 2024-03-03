@@ -141,7 +141,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     public void SendScript(string script, Shell shell, bool asSystem)
     {
-        scriptService.Execute(shell, script, asSystem);
+        scriptService.Execute(script, shell, asSystem);
     }
 
     public async Task JoinGroup(string groupName)

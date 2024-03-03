@@ -14,7 +14,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) : IScriptService
 {
-    public async Task Execute(Shell shell, string script, bool asSystem)
+    public async Task Execute(string script, Shell shell, bool asSystem)
     {
         Log.Information("Executing script with shell: {Shell}", shell);
 
