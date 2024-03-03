@@ -2,45 +2,55 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Timers;
 using Microsoft.Extensions.Hosting;
 using RemoteMaster.Host.Core.Abstractions;
 using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostRegistrationMonitorService(IHostLifecycleService hostLifecycleService, IHostConfigurationService hostConfigurationService, IHostInformationMonitorService hostInformationMonitorService) : IHostedService
+public class HostRegistrationMonitorService : IHostedService
 {
-    private System.Timers.Timer? _timer;
+    private readonly IHostLifecycleService _hostLifecycleService;
+    private readonly IHostConfigurationService _hostConfigurationService;
+    private readonly IHostInformationMonitorService _hostInformationMonitorService;
+
+    private readonly Timer _timer;
+
+    public HostRegistrationMonitorService(IHostLifecycleService hostLifecycleService, IHostConfigurationService hostConfigurationService, IHostInformationMonitorService hostInformationMonitorService)
+    {
+        _hostLifecycleService = hostLifecycleService;
+        _hostConfigurationService = hostConfigurationService;
+        _hostInformationMonitorService = hostInformationMonitorService;
+
+        _timer = new Timer(CheckHostRegistration, null, Timeout.Infinite, 0);
+    }
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _timer = new System.Timers.Timer(60000);
-        _timer.Elapsed += CheckHostRegistration;
-        _timer.Start();
+        _timer.Change(TimeSpan.Zero, TimeSpan.FromMinutes(1));
 
         return Task.CompletedTask;
     }
 
-    private async void CheckHostRegistration(object? sender, ElapsedEventArgs e)
+    private async void CheckHostRegistration(object? state)
     {
         try
         {
-            var configurationChanged = await hostInformationMonitorService.UpdateHostConfigurationAsync();
-            var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
-            var isHostRegistered = await hostLifecycleService.IsHostRegisteredAsync(hostConfiguration);
+            var configurationChanged = await _hostInformationMonitorService.UpdateHostConfigurationAsync();
+            var hostConfiguration = await _hostConfigurationService.LoadConfigurationAsync(false);
+            var isHostRegistered = await _hostLifecycleService.IsHostRegisteredAsync(hostConfiguration);
 
             switch (isHostRegistered)
             {
                 case true when configurationChanged:
-                    await hostLifecycleService.UpdateHostInformationAsync(hostConfiguration);
-                    await hostLifecycleService.UnregisterAsync(hostConfiguration);
-                    await hostLifecycleService.RegisterAsync(hostConfiguration);
+                    await _hostLifecycleService.UpdateHostInformationAsync(hostConfiguration);
+                    await _hostLifecycleService.UnregisterAsync(hostConfiguration);
+                    await _hostLifecycleService.RegisterAsync(hostConfiguration);
 
                     Log.Information("Host information updated and host re-registered due to configuration change.");
                     break;
                 case false:
-                    await hostLifecycleService.RegisterAsync(hostConfiguration);
+                    await _hostLifecycleService.RegisterAsync(hostConfiguration);
                     Log.Warning("Host is not registered. Performing necessary actions...");
                     break;
             }
@@ -53,8 +63,7 @@ public class HostRegistrationMonitorService(IHostLifecycleService hostLifecycleS
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _timer?.Stop();
-        _timer?.Dispose();
+        _timer.Dispose();
 
         return Task.CompletedTask;
     }
