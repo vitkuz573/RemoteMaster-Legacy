@@ -34,7 +34,6 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
                 var viewer = viewerFactory.Create(Context.ConnectionId);
                 appState.TryAddViewer(viewer);
                 break;
-
             default:
                 Log.Error("Unknown intention: {Intention}", intention);
                 break;
@@ -179,10 +178,9 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     public async Task DownloadFile(string path)
     {
-        var stream = fileManagerService.DownloadFile(path);
-        var memoryStream = new MemoryStream();
-        await stream.CopyToAsync(memoryStream);
-        var bytes = memoryStream.ToArray();
+        using var stream = fileManagerService.DownloadFile(path) as MemoryStream ?? throw new InvalidOperationException("Expected a MemoryStream");
+        var bytes = stream.ToArray();
+
         await Clients.Caller.ReceiveFile(bytes, Path.GetFileName(path));
     }
 
