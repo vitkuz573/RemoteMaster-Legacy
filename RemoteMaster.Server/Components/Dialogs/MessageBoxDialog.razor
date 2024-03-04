@@ -1,9 +1,17 @@
-﻿@inherits CommonDialogBase
+﻿@using RemoteMaster.Server.Models
+@inherits CommonDialogBase
 
 <CommonDialog Hosts="@Hosts">
     <Content>
         <MudTextField Label="Caption" @bind-Value="_caption" />
         <MudTextField Label="Text" @bind-Value="_text" />
+        
+        <MudSelect Label="Message Type" @bind-Value="_selectedType" Dense="true">
+            <MudSelectItem Value="MessageBoxType.Information" />
+            <MudSelectItem Value="MessageBoxType.Error" />
+            <MudSelectItem Value="MessageBoxType.Warning" />
+            <MudSelectItem Value="MessageBoxType.Question" />
+        </MudSelect>
     </Content>
     <Actions>
         <MudButton OnClick="Cancel">Cancel</MudButton>

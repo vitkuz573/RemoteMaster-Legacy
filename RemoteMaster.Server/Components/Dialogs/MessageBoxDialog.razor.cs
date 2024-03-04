@@ -4,6 +4,7 @@
 
 using System.Text;
 using Microsoft.AspNetCore.SignalR.Client;
+using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Dialogs;
@@ -12,6 +13,7 @@ public partial class MessageBoxDialog
 {
     private string _caption;
     private string _text;
+    private MessageBoxType _selectedType = MessageBoxType.Information;
 
     protected async Task Show()
     {
@@ -20,7 +22,9 @@ public partial class MessageBoxDialog
             var content = new StringBuilder();
             content.Append("Add-Type -AssemblyName System.Windows.Forms;");
             content.AppendFormat("$text = \"{0}\"; $caption = \"{1}\";", _text.Replace("\"", "`\""), _caption.Replace("\"", "`\""));
-            content.Append("[System.Windows.Forms.MessageBox]::Show($text, $caption, [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Information)");
+
+            var messageBoxIcon = $"[System.Windows.Forms.MessageBoxIcon]::{_selectedType}";
+            content.Append($"[System.Windows.Forms.MessageBox]::Show($text, $caption, [System.Windows.Forms.MessageBoxButtons]::OK, {messageBoxIcon})");
 
             var scriptExecutionRequest = new ScriptExecutionRequest(content.ToString(), Shell.PowerShell);
 
