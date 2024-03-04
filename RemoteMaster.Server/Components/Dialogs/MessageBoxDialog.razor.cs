@@ -11,8 +11,8 @@ namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class MessageBoxDialog
 {
-    private string _caption;
-    private string _text;
+    private string _caption = string.Empty;
+    private string _text = string.Empty;
     private MessageBoxType _selectedType = MessageBoxType.Information;
 
     protected async Task Show()
