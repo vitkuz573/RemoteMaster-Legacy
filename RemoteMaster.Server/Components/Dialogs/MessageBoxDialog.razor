@@ -6,6 +6,13 @@
         <MudTextField Label="Caption" @bind-Value="_caption" />
         <MudTextField Label="Text" @bind-Value="_text" />
         
+        <MudSelect T="MessageBoxButtons" Label="Button Type" @bind-Value="_selectedButtons" Dense="true">
+            @foreach (MessageBoxButtons messageBoxButtons in Enum.GetValues(typeof(MessageBoxButtons)))
+            {
+                <MudSelectItem Value="@messageBoxButtons" />
+            }
+        </MudSelect>
+
         <MudSelect T="MessageBoxType" Label="Message Type" @bind-Value="_selectedType" Dense="true">
             @foreach (MessageBoxType messageBoxType in Enum.GetValues(typeof(MessageBoxType)))
             {

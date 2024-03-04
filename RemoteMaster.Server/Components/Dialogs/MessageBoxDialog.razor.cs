@@ -13,6 +13,7 @@ public partial class MessageBoxDialog
 {
     private string _caption = string.Empty;
     private string _text = string.Empty;
+    private MessageBoxButtons _selectedButtons = MessageBoxButtons.OK;
     private MessageBoxType _selectedType = MessageBoxType.Information;
 
     protected async Task Show()
@@ -20,11 +21,14 @@ public partial class MessageBoxDialog
         foreach (var (_, connection) in Hosts)
         {
             var content = new StringBuilder();
+            
             content.Append("Add-Type -AssemblyName System.Windows.Forms;");
             content.AppendFormat("$text = \"{0}\"; $caption = \"{1}\";", _text.Replace("\"", "`\""), _caption.Replace("\"", "`\""));
 
             var messageBoxIcon = $"[System.Windows.Forms.MessageBoxIcon]::{_selectedType}";
-            content.Append($"[System.Windows.Forms.MessageBox]::Show($text, $caption, [System.Windows.Forms.MessageBoxButtons]::OK, {messageBoxIcon})");
+            var messageBoxButtons = $"[System.Windows.Forms.MessageBoxButtons]::{_selectedButtons}";
+            
+            content.Append($"[System.Windows.Forms.MessageBox]::Show($text, $caption, {messageBoxButtons}, {messageBoxIcon})");
 
             var scriptExecutionRequest = new ScriptExecutionRequest(content.ToString(), Shell.PowerShell);
 
