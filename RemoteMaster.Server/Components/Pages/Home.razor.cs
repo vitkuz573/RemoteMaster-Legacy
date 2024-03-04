@@ -412,17 +412,24 @@ public partial class Home
 
             if (isAvailable)
             {
-                var accessToken = HttpContextAccessor.HttpContext?.Request.Cookies["accessToken"];
+                try
+                {
+                    var accessToken = HttpContextAccessor.HttpContext?.Request.Cookies["accessToken"];
 
-                connection = new HubConnectionBuilder()
-                    .WithUrl($"https://{computer.IpAddress}:5001/{hubPath}", options =>
-                    {
-                        options.Headers.Add("Authorization", $"Bearer {accessToken}");
-                    })
-                    .AddMessagePackProtocol()
-                    .Build();
+                    connection = new HubConnectionBuilder()
+                        .WithUrl($"https://{computer.IpAddress}:5001/{hubPath}", options =>
+                        {
+                            options.Headers.Add("Authorization", $"Bearer {accessToken}");
+                        })
+                        .AddMessagePackProtocol()
+                        .Build();
 
-                await connection.StartAsync();
+                    await connection.StartAsync();
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"Error connecting to {hubPath} for {computer.IpAddress}: {ex.Message}");
+                }
             }
 
             computerConnections.AddOrUpdate(computer, connection, (_, _) => connection);
