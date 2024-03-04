@@ -373,6 +373,21 @@ public partial class Home
         await DialogService.ShowAsync<FileUploadDialog>("File Upload", dialogParameters);
     }
 
+    private async Task MessageBox()
+    {
+        if (_selectedComputers.All(computer => !_availableComputers.Contains(computer)))
+        {
+            return;
+        }
+
+        var dialogParameters = new DialogParameters<MessageBoxDialog>
+        {
+            { x => x.Hosts, await GetComputers() }
+        };
+
+        await DialogService.ShowAsync<MessageBoxDialog>("MessageBox", dialogParameters);
+    }
+
     private async Task Move()
     {
         var dialogParameters = new DialogParameters<MoveDialog>

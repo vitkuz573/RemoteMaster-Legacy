@@ -1,0 +1,12 @@
+﻿@inherits CommonDialogBase
+
+<CommonDialog Hosts="@Hosts">
+    <Content>
+        <MudTextField Label="Caption" @bind-Value="_caption" />
+        <MudTextField Label="Text" @bind-Value="_text" />
+    </Content>
+    <Actions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Show">Show</MudButton>
+    </Actions>
+</CommonDialog>

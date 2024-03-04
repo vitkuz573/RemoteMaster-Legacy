@@ -70,6 +70,7 @@
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="TaskManager" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Task Manager</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="FileManager" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">File Manager</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="FileUpload" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Upload File</MudButton>
+                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="MessageBox" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">MessageBox</MudButton>
                     </MudTabPanel>
 
                     <MudTabPanel Text="Management" Icon="@Icons.Material.Filled.Settings">
