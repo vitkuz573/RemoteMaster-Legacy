@@ -58,6 +58,7 @@ public partial class Home
         }
 
         var computers = organizationalUnit.Nodes.OfType<Computer>().ToList();
+
         _availableComputers = computers;
         _unavailableComputers.Clear();
 
@@ -83,6 +84,11 @@ public partial class Home
     private void DrawerToggle()
     {
         _drawerOpen = !_drawerOpen;
+    }
+
+    private void ToggleTheme()
+    {
+        _isDarkMode = !_isDarkMode;
     }
 
     private async Task OpenHostConfigurationGenerator()
@@ -243,15 +249,15 @@ public partial class Home
             return;
         }
 
+        var dialogParameters = new DialogParameters<ScriptExecutorDialog>
+        {
+            { x => x.Hosts, await GetComputers() }
+        };
+
         var dialogOptions = new DialogOptions
         {
             MaxWidth = MaxWidth.ExtraExtraLarge,
             FullWidth = true
-        };
-
-        var dialogParameters = new DialogParameters<ScriptExecutorDialog>
-        {
-            { x => x.Hosts, await GetComputers() }
         };
 
         await DialogService.ShowAsync<ScriptExecutorDialog>("Script Executor", dialogParameters, dialogOptions);
@@ -277,7 +283,7 @@ public partial class Home
             { x => x.Hosts, await GetComputers() }
         };
 
-        await DialogService.ShowAsync<MonitorStateDialog>("Monitor state", dialogParameters);
+        await DialogService.ShowAsync<MonitorStateDialog>("Monitor State", dialogParameters);
     }
 
     private async Task ManagePsExecRules()
@@ -287,15 +293,15 @@ public partial class Home
             return;
         }
 
+        var dialogParameters = new DialogParameters<PsExecRulesDialog>
+        {
+            { x => x.Hosts, await GetComputers(hubPath: "hubs/service") }
+        };
+
         var dialogOptions = new DialogOptions
         {
             MaxWidth = MaxWidth.ExtraExtraLarge,
             FullWidth = true
-        };
-
-        var dialogParameters = new DialogParameters<PsExecRulesDialog>
-        {
-            { x => x.Hosts, await GetComputers(hubPath: "hubs/service") }
         };
 
         await DialogService.ShowAsync<PsExecRulesDialog>("PSExec rules", dialogParameters, dialogOptions);
@@ -338,15 +344,15 @@ public partial class Home
             return;
         }
 
+        var dialogParameters = new DialogParameters<UpdateDialog>
+        {
+            { x => x.Hosts, await GetComputers(hubPath: "hubs/updater") }
+        };
+
         var dialogOptions = new DialogOptions
         {
             MaxWidth = MaxWidth.ExtraExtraLarge,
             FullWidth = true
-        };
-
-        var dialogParameters = new DialogParameters<UpdateDialog>
-        {
-            { x => x.Hosts, await GetComputers(hubPath: "hubs/updater") }
         };
 
         await DialogService.ShowAsync<UpdateDialog>("Update", dialogParameters, dialogOptions);
@@ -469,10 +475,5 @@ public partial class Home
         _unavailableComputers = tempUnavailable;
 
         _selectedComputers = _selectedComputers.Where(computer => _availableComputers.Contains(computer) || _unavailableComputers.Contains(computer)).ToList();
-    }
-
-    private void ToggleTheme()
-    {
-        _isDarkMode = !_isDarkMode;
     }
 }
