@@ -42,7 +42,7 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
             _ => Encoding.UTF8
         };
 
-        var scriptContent = scriptExecutionRequest.Shell == Shell.Cmd ? "@echo off\r\n" + scriptExecutionRequest.Content : scriptExecutionRequest.Content;
+        var scriptContent = scriptExecutionRequest.Shell == Shell.Cmd ? $"@echo off\r\n{scriptExecutionRequest.Content}" : scriptExecutionRequest.Content;
        
         await File.WriteAllTextAsync(tempFilePath, scriptContent, encoding);
 
