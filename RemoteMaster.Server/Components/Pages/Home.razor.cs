@@ -286,7 +286,29 @@ public partial class Home
     {
         if (_selectedNode is OrganizationalUnit selectedOrganizationalUnit)
         {
-            await UpdateComputersThumbnailsAsync(selectedOrganizationalUnit.Nodes.OfType<Computer>());
+            var computers = selectedOrganizationalUnit.Nodes.OfType<Computer>().ToList();
+            var tempAvailable = new List<Computer>();
+            var tempUnavailable = new List<Computer>();
+
+            var tasks = computers.Select(async computer =>
+            {
+                try
+                {
+                    await UpdateComputerThumbnailAsync(computer);
+                    tempAvailable.Add(computer);
+                }
+                catch
+                {
+                    tempUnavailable.Add(computer);
+                }
+            });
+
+            await Task.WhenAll(tasks);
+
+            _availableComputers = tempAvailable;
+            _unavailableComputers = tempUnavailable;
+
+            await InvokeAsync(StateHasChanged);
         }
     }
 
@@ -487,52 +509,5 @@ public partial class Home
         await Task.WhenAll(tasks);
 
         return computerConnections;
-    }
-
-    private async Task CheckSelectedComputersStatus()
-    {
-        var tempAvailable = _availableComputers.ToList();
-        var tempUnavailable = _unavailableComputers.ToList();
-
-        const string hubPath = "hubs/control";
-
-        var tasks = _selectedComputers.Select(async computer =>
-        {
-            if (await computer.IsAvailable())
-            {
-                var isHubAvailable = await ComputerConnectivityService.IsHubAvailable(computer, hubPath);
-
-                if (isHubAvailable)
-                {
-                    if (tempUnavailable.Remove(computer))
-                    {
-                        tempAvailable.Add(computer);
-                    }
-                }
-                else
-                {
-                    if (tempAvailable.Remove(computer))
-                    {
-                        tempUnavailable.Add(computer);
-                    }
-                }
-            }
-            else
-            {
-                if (tempAvailable.Remove(computer))
-                {
-                    tempUnavailable.Add(computer);
-                }
-            }
-        });
-
-        await Task.WhenAll(tasks);
-
-        _availableComputers = tempAvailable;
-        _unavailableComputers = tempUnavailable;
-
-        _selectedComputers = _selectedComputers.Where(computer => _availableComputers.Contains(computer) || _unavailableComputers.Contains(computer)).ToList();
-
-        await InvokeAsync(StateHasChanged);
     }
 }
