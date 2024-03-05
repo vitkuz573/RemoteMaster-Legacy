@@ -33,12 +33,12 @@ public partial class Access : IDisposable
 
     private readonly AsyncRetryPolicy _retryPolicy = Policy
         .Handle<Exception>()
-        .WaitAndRetryAsync(new[]
-        {
+        .WaitAndRetryAsync(
+        [
             TimeSpan.FromSeconds(5),
             TimeSpan.FromSeconds(7),
             TimeSpan.FromSeconds(10)
-        });
+        ]);
 
     private bool _isDarkMode = true;
 
@@ -141,12 +141,26 @@ public partial class Access : IDisposable
 
     private async Task RebootComputer()
     {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendRebootComputer", string.Empty, 0, true));
+        var powerActionRequest = new PowerActionRequest
+        {
+            Message = string.Empty,
+            Timeout = 0,
+            ForceAppsClosed = true
+        };
+
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendRebootComputer", powerActionRequest));
     }
 
     private async Task ShutdownComputer()
     {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendShutdownComputer", string.Empty, 0, true));
+        var powerActionRequest = new PowerActionRequest
+        {
+            Message = string.Empty,
+            Timeout = 0,
+            ForceAppsClosed = true
+        };
+
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendShutdownComputer", powerActionRequest));
     }
 
     private async Task InitializeHostConnectionAsync()
