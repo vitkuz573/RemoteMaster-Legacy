@@ -65,20 +65,39 @@ public partial class Home
         _ = UpdateComputerAvailabilityAsync(computers);
     }
 
-    private async Task UpdateComputerAvailabilityAsync(List<Computer> computers)
+    private async Task UpdateComputerAvailabilityAsync(IEnumerable<Computer> computers)
     {
-        foreach (var computer in computers)
+        var tasks = computers.Select(async computer =>
         {
-            var isAvailable = await computer.IsAvailable();
+            if (await computer.IsAvailable())
+            {
+                var isHubAvailable = await ComputerConnectivityService.IsHubAvailable(computer, "hubs/control");
 
-            if (!isAvailable)
+                if (isHubAvailable)
+                {
+                    if (!_availableComputers.Contains(computer))
+                    {
+                        _availableComputers.Add(computer);
+                    }
+
+                    _unavailableComputers.Remove(computer);
+                }
+                else
+                {
+                    _availableComputers.Remove(computer);
+                    _unavailableComputers.Add(computer);
+                }
+            }
+            else
             {
                 _availableComputers.Remove(computer);
                 _unavailableComputers.Add(computer);
             }
+        });
 
-            await InvokeAsync(StateHasChanged);
-        }
+        await Task.WhenAll(tasks);
+
+        await InvokeAsync(StateHasChanged);
     }
 
     private void DrawerToggle()
@@ -422,22 +441,26 @@ public partial class Home
 
         var tasks = _selectedComputers.Select(async computer =>
         {
-            var isAvailable = await computer.IsAvailable();
+            var isPingAvailable = await computer.IsAvailable();
 
-            if (!isAvailable && onlyAvailable)
+            if (!isPingAvailable)
             {
+                if (!onlyAvailable)
+                {
+                    computerConnections.TryAdd(computer, null);
+                }
+
                 return;
             }
 
-            HubConnection? connection = null;
+            var isHubAvailable = await ComputerConnectivityService.IsHubAvailable(computer, hubPath);
 
-            if (isAvailable)
+            if (isHubAvailable || !onlyAvailable)
             {
                 try
                 {
                     var accessToken = HttpContextAccessor.HttpContext?.Request.Cookies["accessToken"];
-
-                    connection = new HubConnectionBuilder()
+                    var connection = new HubConnectionBuilder()
                         .WithUrl($"https://{computer.IpAddress}:5001/{hubPath}", options =>
                         {
                             options.Headers.Add("Authorization", $"Bearer {accessToken}");
@@ -446,14 +469,19 @@ public partial class Home
                         .Build();
 
                     await connection.StartAsync();
+
+                    computerConnections.TryAdd(computer, connection);
                 }
                 catch (Exception ex)
                 {
                     Log.Error($"Error connecting to {hubPath} for {computer.IpAddress}: {ex.Message}");
+
+                    if (!onlyAvailable)
+                    {
+                        computerConnections.TryAdd(computer, null);
+                    }
                 }
             }
-
-            computerConnections.AddOrUpdate(computer, connection, (_, _) => connection);
         });
 
         await Task.WhenAll(tasks);
@@ -466,15 +494,27 @@ public partial class Home
         var tempAvailable = _availableComputers.ToList();
         var tempUnavailable = _unavailableComputers.ToList();
 
-        foreach (var computer in _selectedComputers.ToList())
-        {
-            var isAvailable = await computer.IsAvailable();
+        const string hubPath = "hubs/control";
 
-            if (isAvailable)
+        var tasks = _selectedComputers.Select(async computer =>
+        {
+            if (await computer.IsAvailable())
             {
-                if (tempUnavailable.Remove(computer))
+                var isHubAvailable = await ComputerConnectivityService.IsHubAvailable(computer, hubPath);
+
+                if (isHubAvailable)
                 {
-                    tempAvailable.Add(computer);
+                    if (tempUnavailable.Remove(computer))
+                    {
+                        tempAvailable.Add(computer);
+                    }
+                }
+                else
+                {
+                    if (tempAvailable.Remove(computer))
+                    {
+                        tempUnavailable.Add(computer);
+                    }
                 }
             }
             else
@@ -484,11 +524,15 @@ public partial class Home
                     tempUnavailable.Add(computer);
                 }
             }
-        }
+        });
+
+        await Task.WhenAll(tasks);
 
         _availableComputers = tempAvailable;
         _unavailableComputers = tempUnavailable;
 
         _selectedComputers = _selectedComputers.Where(computer => _availableComputers.Contains(computer) || _unavailableComputers.Contains(computer)).ToList();
+
+        await InvokeAsync(StateHasChanged);
     }
 }
