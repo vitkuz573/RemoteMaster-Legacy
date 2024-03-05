@@ -18,9 +18,11 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
     public async Task Execute(ScriptExecutionRequest scriptExecutionRequest)
     {
         ArgumentNullException.ThrowIfNull(scriptExecutionRequest);
+
         Log.Information("Executing script with shell: {Shell}", scriptExecutionRequest.Shell);
 
         const string publicDirectory = @"C:\Users\Public";
+
         var extension = scriptExecutionRequest.Shell switch
         {
             Shell.Cmd => ".bat",
@@ -30,6 +32,7 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
 
         var fileName = $"{Guid.NewGuid()}{extension}";
         var tempFilePath = Path.Combine(publicDirectory, fileName);
+
         Log.Information("Temporary file path: {TempFilePath}", tempFilePath);
 
         var encoding = scriptExecutionRequest.Shell switch
@@ -40,6 +43,7 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
         };
 
         var scriptContent = scriptExecutionRequest.Shell == Shell.Cmd ? "@echo off\r\n" + scriptExecutionRequest.Content : scriptExecutionRequest.Content;
+       
         await File.WriteAllTextAsync(tempFilePath, scriptContent, encoding);
 
         try
@@ -47,6 +51,7 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
             if (!File.Exists(tempFilePath))
             {
                 Log.Error("Temp file was not created: {TempFilePath}", tempFilePath);
+                
                 return;
             }
 
@@ -69,6 +74,7 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
             };
 
             process.Start();
+
             await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult
             {
                 Message = process.Id.ToString(),
@@ -80,6 +86,7 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
             var readOutputTask = ReadStreamAsync(process.StandardOutput!, MessageType.Output);
 
             process.WaitForExit();
+
             await Task.WhenAll(readErrorTask, readOutputTask);
         }
         catch (Exception ex)
@@ -89,6 +96,7 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
         finally
         {
             await Task.Delay(5000);
+
             if (File.Exists(tempFilePath))
             {
                 File.Delete(tempFilePath);
