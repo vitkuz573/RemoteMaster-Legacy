@@ -143,10 +143,10 @@ internal class Program
                 builder.ConfigureCoreUrls();
                 break;
             case LaunchMode.Service:
-                builder.Services.AddHostedService<MessageLoopService>();
-                builder.Services.AddHostedService<CommandListenerService>();
                 builder.Services.AddHostedService<HostProcessMonitorService>();
                 builder.Services.AddHostedService<HostRegistrationMonitorService>();
+                builder.Services.AddHostedService<MessageLoopService>();
+                builder.Services.AddHostedService<CommandListenerService>();
                 break;
         }
 
