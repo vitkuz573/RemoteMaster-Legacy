@@ -5,6 +5,7 @@
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 using Serilog;
+using Windows.Win32.Foundation;
 
 namespace RemoteMaster.Host.Windows.Services;
 
@@ -120,7 +121,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
                 File.Copy(sourceFile, destFile, overwrite);
                 break;
             }
-            catch (IOException ex) when (ex.HResult == -2147024864)
+            catch (IOException ex) when (ex.HResult == (int)WIN32_ERROR.ERROR_SHARING_VIOLATION)
             {
                 if (++attempts == 5)
                 {
