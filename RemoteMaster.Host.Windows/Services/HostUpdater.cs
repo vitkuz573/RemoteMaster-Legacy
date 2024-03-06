@@ -14,7 +14,6 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 {
     private static readonly string BaseFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
     
-    private readonly string _scriptPath = Path.Combine(BaseFolderPath, "update.ps1");
     private readonly string _updateFolderPath = Path.Combine(BaseFolderPath, "Update");
 
     public async Task UpdateAsync(string folderPath, string? username, string? password)
@@ -31,9 +30,12 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
                 networkDriveService.MapNetworkDrive(folderPath, username, password);
             }
 
-            var isDownloaded = DirectoryCopy(sourceFolderPath, _updateFolderPath, true, true);
+            if (!Directory.Exists(_updateFolderPath))
+            {
+                Directory.CreateDirectory(_updateFolderPath);
+            }
 
-            Log.Information("Copied from {SourceFolder} to {DestinationFolder}", sourceFolderPath, _updateFolderPath);
+            var isDownloaded = await CopyDirectoryAsync(sourceFolderPath, _updateFolderPath, true);
 
             if (isNetworkPath)
             {
@@ -42,58 +44,115 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             if (!isDownloaded)
             {
+                Log.Information("Download or copy failed. Update aborted.");
                 return;
             }
 
             var hostService = serviceFactory.GetService("RCHost");
-
             hostService.Stop();
-
-            Console.WriteLine($"{hostService.Name} sucessfully stopped. Starting update...");
-
             userInstanceService.Stop();
 
-            var contentBuilder = new StringBuilder();
-            contentBuilder.AppendLine("$filesLocked = $true");
-            contentBuilder.AppendLine("while ($filesLocked) {");
-            contentBuilder.AppendLine("    Start-Sleep -Seconds 2");
-            contentBuilder.AppendLine("    $filesLocked = $false");
-            contentBuilder.AppendLine("    Get-ChildItem $PSScriptRoot | Where-Object { !$_.PSIsContainer } | ForEach-Object {");
-            contentBuilder.AppendLine("        try {");
-            contentBuilder.AppendLine("            $stream = [System.IO.File]::Open($_.FullName, 'Open', 'Write', 'None')");
-            contentBuilder.AppendLine("            $stream.Close()");
-            contentBuilder.AppendLine("        } catch [UnauthorizedAccessException] {");
-            contentBuilder.AppendLine("            Write-Host \"Access denied for file: $($_.FullName). Update for this file is skipped.\" -ForegroundColor Red");
-            contentBuilder.AppendLine("        } catch {");
-            contentBuilder.AppendLine("            $filesLocked = $true");
-            contentBuilder.AppendLine("        }");
-            contentBuilder.AppendLine("    }");
-            contentBuilder.AppendLine("}");
-            contentBuilder.AppendLine("Copy-Item -Path \"$PSScriptRoot\\Update\\*.*\" -Destination $PSScriptRoot -Recurse -Force");
-            await File.WriteAllTextAsync(_scriptPath, contentBuilder.ToString());
-            Log.Information("Updater script created at: {ScriptPath}", _scriptPath);
+            await WaitForFileRelease(_updateFolderPath);
 
-            var processStartInfo = new ProcessStartInfo("powershell.exe", $"-ExecutionPolicy Bypass -NoProfile -File \"{_scriptPath}\"")
-            {
-                CreateNoWindow = true
-            };
-
-            using var process = new Process();
-            process.StartInfo = processStartInfo;
-            process.Start();
-
-            await process.WaitForExitAsync();
+            await CopyDirectoryAsync(_updateFolderPath, BaseFolderPath, true);
 
             hostService.Start();
+            userInstanceService.Start();
 
-            var servicesToStart = new IRunnable[] { hostService, userInstanceService };
-            await EnsureServicesRunning(servicesToStart, 5, 5);
+            await EnsureServicesRunning(new IRunnable[] { hostService, userInstanceService }, 5, 5);
 
-            Log.Information("Executed updater script: {ScriptPath}", _scriptPath);
+            Log.Information("Update completed successfully.");
         }
         catch (Exception ex)
         {
             Log.Error("Error while updating host: {Message}", ex.Message);
+        }
+    }
+
+    private static async Task<bool> CopyDirectoryAsync(string sourceDir, string destDir, bool overwrite = false)
+    {
+        try
+        {
+            var dir = new DirectoryInfo(sourceDir);
+
+            if (!dir.Exists)
+            {
+                throw new DirectoryNotFoundException($"Source directory does not exist or could not be found: {sourceDir}");
+            }
+
+            var dirs = dir.GetDirectories();
+
+            if (!Directory.Exists(destDir))
+            {
+                Directory.CreateDirectory(destDir);
+            }
+
+            foreach (var file in dir.GetFiles())
+            {
+                var tempPath = Path.Combine(destDir, file.Name);
+                await TryCopyFileAsync(file.FullName, tempPath, overwrite);
+            }
+
+            foreach (var subdir in dirs)
+            {
+                var tempPath = Path.Combine(destDir, subdir.Name);
+                await CopyDirectoryAsync(subdir.FullName, tempPath, overwrite);
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Error($"Failed to copy directory {sourceDir} to {destDir}: {ex.Message}");
+            return false;
+        }
+    }
+
+    private static async Task TryCopyFileAsync(string sourceFile, string destFile, bool overwrite)
+    {
+        var attempts = 0;
+
+        while (true)
+        {
+            try
+            {
+                File.Copy(sourceFile, destFile, overwrite);
+                break;
+            }
+            catch (IOException ex) when (ex.HResult == -2147024864)
+            {
+                if (++attempts == 5)
+                {
+                    throw;
+                }
+
+                await Task.Delay(1000);
+            }
+        }
+    }
+
+    private static async Task WaitForFileRelease(string directory)
+    {
+        var locked = true;
+
+        while (locked)
+        {
+            locked = false;
+
+            foreach (var file in new DirectoryInfo(directory).GetFiles("*", SearchOption.AllDirectories))
+            {
+                try
+                {
+                    using var stream = file.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+                    stream.Close();
+                }
+                catch
+                {
+                    locked = true;
+                    await Task.Delay(2000);
+                    break;
+                }
+            }
         }
     }
 
