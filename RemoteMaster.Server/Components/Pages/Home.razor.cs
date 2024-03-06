@@ -19,7 +19,8 @@ public partial class Home
     private bool _drawerOpen;
     private Node? _selectedNode;
     private HashSet<Node>? _nodes;
-    private List<Computer> _selectedComputers = [];
+
+    private readonly List<Computer> _selectedComputers = [];
     private List<Computer> _availableComputers = [];
     private List<Computer> _unavailableComputers = [];
 
