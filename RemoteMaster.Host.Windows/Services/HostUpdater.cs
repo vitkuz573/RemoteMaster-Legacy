@@ -143,7 +143,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             foreach (var file in new DirectoryInfo(directory).GetFiles("*", SearchOption.AllDirectories))
             {
-                if (excludedFolders.Any(excluded => file.DirectoryName.Contains(excluded)))
+                if (excludedFolders.Any(file.DirectoryName.Contains))
                 {
                     continue;
                 }
