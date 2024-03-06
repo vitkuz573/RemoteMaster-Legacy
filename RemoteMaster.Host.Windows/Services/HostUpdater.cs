@@ -63,6 +63,8 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         catch (Exception ex)
         {
             Log.Error("Error while updating host: {Message}", ex.Message);
+
+            AttemptEmergencyRecovery();
         }
     }
 
