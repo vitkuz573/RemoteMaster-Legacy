@@ -103,6 +103,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         catch (Exception ex)
         {
             Log.Error($"Failed to copy directory {sourceDir} to {destDir}: {ex.Message}");
+
             return false;
         }
     }
