@@ -204,6 +204,11 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
                 hostService.Stop();
             }
 
+            if (userInstanceService.IsRunning)
+            {
+                userInstanceService.Stop();
+            }
+
             var sourceExePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "Updater", "RemoteMaster.Host.exe");
             var destinationExePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "RemoteMaster.Host.exe");
 
