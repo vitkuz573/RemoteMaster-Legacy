@@ -47,10 +47,11 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             }
 
             var hostService = serviceFactory.GetService("RCHost");
+
             hostService.Stop();
             userInstanceService.Stop();
 
-            await WaitForFileRelease(_updateFolderPath);
+            await WaitForFileRelease(BaseFolderPath);
 
             await CopyDirectoryAsync(_updateFolderPath, BaseFolderPath, true);
 
@@ -134,6 +135,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
     private static async Task WaitForFileRelease(string directory)
     {
         var locked = true;
+        var excludedFolders = new HashSet<string> { "Updater", "Update" };
 
         while (locked)
         {
@@ -141,6 +143,11 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             foreach (var file in new DirectoryInfo(directory).GetFiles("*", SearchOption.AllDirectories))
             {
+                if (excludedFolders.Any(excluded => file.DirectoryName.Contains(excluded)))
+                {
+                    continue;
+                }
+
                 try
                 {
                     using var stream = file.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
