@@ -147,6 +147,24 @@ public partial class Home
     {
         Log.Information("UpdateComputerThumbnailAsync Called for {IPAddress}", computer.IpAddress);
 
+        var isPingAvailable = await computer.IsAvailable();
+
+        if (!isPingAvailable)
+        {
+            Log.Information("Computer {IPAddress} is not reachable via ping, skipping thumbnail update.", computer.IpAddress);
+
+            return;
+        }
+
+        var isHubAvailable = await ComputerConnectivityService.IsHubAvailable(computer, "hubs/control");
+
+        if (!isHubAvailable)
+        {
+            Log.Information("Hub is not available for {IPAddress}, skipping thumbnail update.", computer.IpAddress);
+
+            return;
+        }
+
         var accessToken = HttpContextAccessor.HttpContext?.Request.Cookies["accessToken"];
 
         var connection = new HubConnectionBuilder()
@@ -159,7 +177,7 @@ public partial class Home
 
         try
         {
-            connection.On<byte[]>("ReceiveThumbnail",  async (thumbnailBytes) =>
+            connection.On<byte[]>("ReceiveThumbnail", async (thumbnailBytes) =>
             {
                 if (thumbnailBytes.Length > 0)
                 {
@@ -177,6 +195,7 @@ public partial class Home
             await connection.StartAsync();
 
             Log.Information("Calling ConnectAs with Intention.GetThumbnail for {IPAddress}", computer.IpAddress);
+
             await connection.InvokeAsync("ConnectAs", Intention.ReceiveThumbnail);
         }
         catch (Exception ex)

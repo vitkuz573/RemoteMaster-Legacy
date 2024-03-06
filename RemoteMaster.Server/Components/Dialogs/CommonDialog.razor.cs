@@ -29,8 +29,26 @@ public class CommonDialogBase : ComponentBase
     [Parameter]
     public RenderFragment Actions { get; set; } = default!;
 
-    protected void Cancel()
+    protected async void Cancel()
     {
+        await FreeResources();
+
         MudDialog.Cancel();
+    }
+
+    public async Task FreeResources()
+    {
+        foreach (var connection in Hosts.Values.Where(connection => connection != null))
+        {
+            try
+            {
+                await connection.StopAsync();
+                await connection.DisposeAsync();
+            }
+            catch (Exception ex)
+            {
+                // ignored
+            }
+        }
     }
 }
