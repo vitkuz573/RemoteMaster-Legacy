@@ -55,7 +55,6 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             await CopyDirectoryAsync(_updateFolderPath, BaseFolderPath, true);
 
             hostService.Start();
-            userInstanceService.Start();
 
             await EnsureServicesRunning(new IRunnable[] { hostService, userInstanceService }, 5, 5);
 
