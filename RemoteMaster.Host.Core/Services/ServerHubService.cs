@@ -41,9 +41,14 @@ public class ServerHubService : IServerHubService
         _hubConnection.On("ReceiveHostGuid", onReceiveHostGuid);
     }
 
-    public async Task<bool> RegisterHostAsync(HostConfiguration hostConfiguration, byte[] signingRequest)
+    public async Task<bool> IssueCertificateAsync(byte[] signingRequest)
     {
-        return await _hubConnection.InvokeAsync<bool>("RegisterHostAsync", hostConfiguration, signingRequest);
+        return await _hubConnection.InvokeAsync<bool>("IssueCertificateAsync", signingRequest);
+    }
+
+    public async Task<bool> RegisterHostAsync(HostConfiguration hostConfiguration)
+    {
+        return await _hubConnection.InvokeAsync<bool>("RegisterHostAsync", hostConfiguration);
     }
 
     public async Task<bool> UnregisterHostAsync(HostConfiguration hostConfiguration)

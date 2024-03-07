@@ -188,11 +188,19 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
             tcsGuid.SetResult(guid);
         });
 
-        if (await serverHubService.RegisterHostAsync(hostConfiguration, signingRequest))
+        if (await serverHubService.RegisterHostAsync(hostConfiguration))
         {
             _isRegistrationInvoked = true;
             
             Log.Information("Host registration invoked successfully. Waiting for the certificate...");
+
+            var certificateIssued = await serverHubService.IssueCertificateAsync(signingRequest);
+
+            if (!certificateIssued)
+            {
+                throw new InvalidOperationException("Failed to issue certificate.");
+            }
+
             var isCertificateReceived = await tcs.Task;
 
             if (!isCertificateReceived)

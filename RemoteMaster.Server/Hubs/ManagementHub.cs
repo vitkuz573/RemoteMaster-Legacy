@@ -13,7 +13,7 @@ namespace RemoteMaster.Server.Hubs;
 
 public class ManagementHub(ICertificateService certificateService, IDatabaseService databaseService) : Hub<IManagementClient>
 {
-    public async Task<bool> RegisterHostAsync(HostConfiguration hostConfiguration, byte[] csrBytes)
+    public async Task<bool> RegisterHostAsync(HostConfiguration hostConfiguration)
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
         ArgumentNullException.ThrowIfNull(hostConfiguration.Subject);
@@ -23,9 +23,6 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         {
             throw new ArgumentException("Host configuration must have a non-null Host property.", nameof(hostConfiguration));
         }
-
-        var certificate = certificateService.IssueCertificate(csrBytes);
-        await Clients.Caller.ReceiveCertificate(certificate.Export(X509ContentType.Pfx));
 
         OrganizationalUnit? parentOu = null;
 
@@ -303,6 +300,25 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         else
         {
             Log.Warning("Organizational unit change requests file not found at '{Path}'. Unable to acknowledge change request.", ouChangeRequestsFilePath);
+        }
+    }
+
+    public async Task<bool> IssueCertificateAsync(byte[] csrBytes)
+    {
+        ArgumentNullException.ThrowIfNull(csrBytes, nameof(csrBytes));
+
+        try
+        {
+            var certificate = certificateService.IssueCertificate(csrBytes);
+            await Clients.Caller.ReceiveCertificate(certificate.Export(X509ContentType.Pfx));
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error while issuing certificate.");
+
+            return false;
         }
     }
 }

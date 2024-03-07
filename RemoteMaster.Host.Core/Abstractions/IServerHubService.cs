@@ -14,7 +14,9 @@ public interface IServerHubService
 
     Task AcknowledgeOrganizationalUnitChange(string macAddress);
 
-    Task<bool> RegisterHostAsync(HostConfiguration hostConfiguration, byte[] signingRequest);
+    Task<bool> IssueCertificateAsync(byte[] signingRequest);
+
+    Task<bool> RegisterHostAsync(HostConfiguration hostConfiguration);
 
     Task<bool> UnregisterHostAsync(HostConfiguration hostConfiguration);
 
