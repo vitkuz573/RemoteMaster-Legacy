@@ -10,8 +10,15 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
+/// <summary>
+/// Provides services for managing domain membership of the machine.
+/// </summary>
 public class DomainService : IDomainService
 {
+    /// <summary>
+    /// Joins the machine to a domain.
+    /// </summary>
+    /// <param name="domainJoinRequest">The request to join a domain, containing the domain name and user credentials.</param>
     public void JoinToDomain(DomainJoinRequest domainJoinRequest)
     {
         ArgumentNullException.ThrowIfNull(domainJoinRequest);
@@ -24,6 +31,10 @@ public class DomainService : IDomainService
         }
     }
 
+    /// <summary>
+    /// Unjoins the machine from a domain.
+    /// </summary>
+    /// <param name="domainUnjoinRequest">The request to unjoin a domain, containing the user credentials.</param>
     public void UnjoinFromDomain(DomainUnjoinRequest domainUnjoinRequest)
     {
         ArgumentNullException.ThrowIfNull(domainUnjoinRequest);
