@@ -58,7 +58,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             hostService.Start();
 
-            await EnsureServicesRunning(new IRunnable[] { hostService, userInstanceService }, 5, 5);
+            await EnsureServicesRunning([hostService, userInstanceService], 5, 5);
 
             Log.Information("Update completed successfully.");
         }
