@@ -328,6 +328,9 @@ public partial class Home
             _availableComputers = tempAvailable;
             _unavailableComputers = tempUnavailable;
 
+            _availableComputers = [.. _availableComputers.OrderBy(computer => computer.Name)];
+            _unavailableComputers = [.. _unavailableComputers.OrderBy(computer => computer.Name)];
+
             await InvokeAsync(StateHasChanged);
         }
     }
