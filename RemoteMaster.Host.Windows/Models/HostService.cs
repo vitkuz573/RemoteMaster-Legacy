@@ -9,14 +9,11 @@ namespace RemoteMaster.Host.Windows.Models;
 
 public class HostService : AbstractService
 {
-    private const string MainAppName = "RemoteMaster";
-    private const string SubAppName = "Host";
-
     public override string Name => "RCHost";
 
     protected override string DisplayName => "RemoteMaster Control Service";
 
-    protected override string BinPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), MainAppName, SubAppName, $"{MainAppName}.{SubAppName}.exe");
+    protected override string BinPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "RemoteMaster.Host.exe");
 
     protected override IDictionary<string, string?> Arguments { get; } = new Dictionary<string, string?>
     {
