@@ -3,6 +3,6 @@
         <MudImage Src="@ThumbnailUri" Alt="Thumbnail" Class="max-h-32 w-full h-auto object-contain" draggable="false" />
     </MudCardContent>
     <MudCardActions Class="flex justify-between items-center p-4">
-        <MudCheckBox T="bool" Checked="@IsSelected" CheckedChanged="HandleCheckboxChange" Label="@Computer.Name" />
+        <MudCheckBox T="bool" Value="@IsSelected" ValueChanged="HandleCheckboxChange" Label="@Computer.Name" />
     </MudCardActions>
 </MudCard>
