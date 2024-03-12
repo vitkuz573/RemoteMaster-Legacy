@@ -312,12 +312,22 @@ public partial class Home
 
             var tasks = computers.Select(async computer =>
             {
-                try
+                var isPingAvailable = await computer.IsAvailable();
+
+                if (!isPingAvailable)
+                {
+                    tempUnavailable.Add(computer);
+                    return;
+                }
+
+                var isHubAvailable = await ComputerConnectivityService.IsHubAvailable(computer, "hubs/control");
+
+                if (isHubAvailable)
                 {
                     await UpdateComputerThumbnailAsync(computer);
                     tempAvailable.Add(computer);
                 }
-                catch
+                else
                 {
                     tempUnavailable.Add(computer);
                 }
@@ -325,11 +335,8 @@ public partial class Home
 
             await Task.WhenAll(tasks);
 
-            _availableComputers = tempAvailable;
-            _unavailableComputers = tempUnavailable;
-
-            _availableComputers = [.. _availableComputers.OrderBy(computer => computer.Name)];
-            _unavailableComputers = [.. _unavailableComputers.OrderBy(computer => computer.Name)];
+            _availableComputers = [.. tempAvailable.OrderBy(computer => computer.Name)];
+            _unavailableComputers = [.. tempUnavailable.OrderBy(computer => computer.Name)];
 
             await InvokeAsync(StateHasChanged);
         }
