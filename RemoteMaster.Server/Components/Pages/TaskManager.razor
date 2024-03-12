@@ -15,6 +15,8 @@
         <ToolBarContent>
             <MudText Typo="Typo.h6">Task Manager</MudText>
             <MudSpacer />
+            <MudTextField @bind-Value="_processPath" Placeholder="Enter process path" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.AddBox" IconSize="Size.Medium" Class="mt-0 mx-2"></MudTextField>
+            <MudButton OnClick="StartProcess" Variant="Variant.Filled" Color="Color.Primary">Start Process</MudButton>
             <MudTextField @bind-Value="_searchQuery" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
         </ToolBarContent>
         <HeaderContent>

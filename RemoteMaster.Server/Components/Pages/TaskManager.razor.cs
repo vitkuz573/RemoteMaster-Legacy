@@ -21,15 +21,16 @@ public partial class TaskManager : IDisposable
     private HubConnection _connection = null!;
     private string _searchQuery = string.Empty;
     private List<ProcessInfo> _processes = [];
+    private string _processPath = string.Empty;
 
     private readonly AsyncRetryPolicy _retryPolicy = Policy
         .Handle<Exception>()
-        .WaitAndRetryAsync(new[]
-        {
+        .WaitAndRetryAsync(
+        [
             TimeSpan.FromSeconds(5),
             TimeSpan.FromSeconds(7),
             TimeSpan.FromSeconds(10),
-        });
+        ]);
 
     private bool _isDarkMode = true;
 
@@ -138,6 +139,20 @@ public partial class TaskManager : IDisposable
         }
 
         return processInfo.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task StartProcess()
+    {
+        if (!string.IsNullOrWhiteSpace(_processPath))
+        {
+            await SafeInvokeAsync(() => _connection.InvokeAsync("StartProcess", _processPath));
+            _processPath = string.Empty;
+            await InvokeAsync(StateHasChanged);
+        }
+        else
+        {
+            await JsRuntime.InvokeVoidAsync("showAlert", "Please enter a valid process path.");
+        }
     }
 
     [JSInvokable]
