@@ -91,6 +91,8 @@ public partial class Home
             }
             else
             {
+                computer.Thumbnail = null;
+
                 _availableComputers.Remove(computer);
                 _unavailableComputers.Add(computer);
             }
@@ -329,6 +331,8 @@ public partial class Home
                 }
                 else
                 {
+                    computer.Thumbnail = null;
+
                     tempUnavailable.Add(computer);
                 }
             });
