@@ -195,7 +195,7 @@ public partial class Home
 
             await connection.StartAsync();
 
-            Log.Information("Calling ConnectAs with Intention.GetThumbnail for {IPAddress}", computer.IpAddress);
+            Log.Information("Calling ConnectAs with Intention.ReceiveThumbnail for {IPAddress}", computer.IpAddress);
 
             await connection.InvokeAsync("ConnectAs", Intention.ReceiveThumbnail);
         }
