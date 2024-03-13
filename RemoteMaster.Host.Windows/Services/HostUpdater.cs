@@ -2,6 +2,8 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Diagnostics;
+using System.Reflection;
 using System.Security.Cryptography;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
@@ -46,6 +48,12 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             if (!isDownloaded)
             {
                 Log.Information("Download or copy failed. Update aborted.");
+                return;
+            }
+
+            if (!CheckForUpdateVersion())
+            {
+                Log.Information("Downgrade is not allowed. Update aborted.");
                 return;
             }
 
@@ -307,5 +315,32 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         }
 
         return false;
+    }
+
+    private bool CheckForUpdateVersion()
+    {
+        var currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
+        var updateVersion = GetVersionFromExecutable(Path.Combine(_updateFolderPath, "RemoteMaster.Host.exe"));
+
+        if (updateVersion <= currentVersion)
+        {
+            Log.Information($"Current version {currentVersion} is up to date or newer than update version {updateVersion}.");
+            
+            return false;
+        }
+
+        return true;
+    }
+
+    private static Version GetVersionFromExecutable(string filePath)
+    {
+        if (!File.Exists(filePath))
+        {
+            throw new FileNotFoundException("Update executable file not found.", filePath);
+        }
+
+        var versionInfo = FileVersionInfo.GetVersionInfo(filePath);
+
+        return new Version(versionInfo.FileVersion);
     }
 }

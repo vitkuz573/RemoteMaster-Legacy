@@ -115,7 +115,8 @@ public class Viewer : IViewer
 
     private async Task SendHostVersion()
     {
-        var version = Assembly.GetExecutingAssembly().GetName().Version ?? new Version();
+        var assembly = Assembly.GetEntryAssembly();
+        var version = assembly?.GetName().Version ?? new Version();
 
         await _hubContext.Clients.Clients(ConnectionId).ReceiveHostVersion(version);
     }
