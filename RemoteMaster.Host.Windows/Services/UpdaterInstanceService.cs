@@ -24,7 +24,7 @@ public class UpdaterInstanceService(IHubContext<UpdaterHub, IUpdaterClient> hubC
     {
         ArgumentNullException.ThrowIfNull(updateRequest);
 
-        var additionalArguments = BuildArguments(updateRequest.FolderPath, updateRequest.UserCredentials);
+        var additionalArguments = BuildArguments(updateRequest.FolderPath, updateRequest.UserCredentials, updateRequest.ForceUpdate);
 
         try
         {
@@ -37,7 +37,7 @@ public class UpdaterInstanceService(IHubContext<UpdaterHub, IUpdaterClient> hubC
         }
     }
 
-    private string BuildArguments(string folderPath, Credentials? userCredentials)
+    private string BuildArguments(string folderPath, Credentials? userCredentials, bool forceUpdate)
     {
         var arguments = new StringBuilder(_argument);
         var escapedFolderPath = "\"" + folderPath.Replace("\"", "\\\"") + "\"";
@@ -62,6 +62,11 @@ public class UpdaterInstanceService(IHubContext<UpdaterHub, IUpdaterClient> hubC
 
         var escapedPassword = "\"" + userCredentials.Password.Replace("\"", "\\\"") + "\"";
         arguments.Append($" --password={escapedPassword}");
+
+        if (forceUpdate)
+        {
+            arguments.Append(" --force-update");
+        }
 
         return arguments.ToString();
     }

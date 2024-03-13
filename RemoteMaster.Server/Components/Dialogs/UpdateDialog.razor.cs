@@ -18,6 +18,7 @@ public partial class UpdateDialog
     private string _folderPath = string.Empty;
     private string _username = string.Empty;
     private string _password = string.Empty;
+    private bool _forceUpdate = false;
 
     private readonly Dictionary<Computer, ComputerResults> _resultsPerComputer = [];
     private readonly HashSet<HubConnection> _subscribedConnections = [];
@@ -41,7 +42,8 @@ public partial class UpdateDialog
                     {
                         Username = _username,
                         Password = _password
-                    }
+                    },
+                    ForceUpdate = _forceUpdate
                 };
 
                 await connection.InvokeAsync("SendStartUpdater", updateRequest);

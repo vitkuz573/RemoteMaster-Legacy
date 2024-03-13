@@ -201,7 +201,7 @@ internal class Program
         {
             var hostUpdater = app.Services.GetRequiredService<IHostUpdater>();
 
-            await hostUpdater.UpdateAsync(launchArguments.FolderPath, launchArguments.Username, launchArguments.Password);
+            await hostUpdater.UpdateAsync(launchArguments.FolderPath, launchArguments.Username, launchArguments.Password, launchArguments.ForceUpdate);
         }
         else
         {
@@ -245,6 +245,10 @@ internal class Program
             {
                 launchArguments.Password = arg["--password=".Length..];
             }
+            else if (arg.Equals("--force-update"))
+            {
+                launchArguments.ForceUpdate = true;
+            }
         }
 
         return launchArguments;
@@ -265,10 +269,11 @@ internal class Program
         Console.WriteLine("  --folder-path=PATH\tSpecifies the folder path for the update operation. Required for update mode.");
         Console.WriteLine("  --username=USERNAME\tSpecifies the username for authentication. Optional.");
         Console.WriteLine("  --password=PASSWORD\tSpecifies the password for authentication. Optional.");
-        Console.WriteLine(); 
+        Console.WriteLine("  --force-update\tForces the update operation to proceed, even if no update is needed.");
+        Console.WriteLine();
         Console.WriteLine("Examples:");
         Console.WriteLine("  RemoteMaster.Host --launch-mode=Service");
-        Console.WriteLine("  RemoteMaster.Host --launch-mode=Updater --folder-path=\"C:\\UpdateFolder\"");
+        Console.WriteLine("  RemoteMaster.Host --launch-mode=Updater --folder-path=\"C:\\UpdateFolder\" --force-update");
         Console.WriteLine("  RemoteMaster.Host --help");
     }
 }

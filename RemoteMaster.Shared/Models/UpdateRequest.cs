@@ -9,4 +9,6 @@ public class UpdateRequest(string folderPath)
     public string FolderPath { get; } = folderPath;
 
     public Credentials? UserCredentials { get; init; }
+
+    public bool ForceUpdate { get; init; }
 }
