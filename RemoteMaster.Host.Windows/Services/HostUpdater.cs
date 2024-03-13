@@ -43,14 +43,15 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             var isDownloaded = await CopyDirectoryAsync(sourceFolderPath, _updateFolderPath, true);
 
-            if (isNetworkPath)
-            {
-                networkDriveService.CancelNetworkDrive(folderPath);
-            }
-
             if (!isDownloaded)
             {
                 Log.Information("Download or copy failed. Update aborted.");
+                return;
+            }
+
+            if (!NeedUpdate())
+            {
+                Log.Information("No update required. Files are identical.");
                 return;
             }
 
@@ -60,11 +61,9 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             userInstanceService.Stop();
 
             await WaitForFileRelease(BaseFolderPath);
-
             await CopyDirectoryAsync(_updateFolderPath, BaseFolderPath, true);
 
             hostService.Start();
-
             await EnsureServicesRunning([hostService, userInstanceService], 5, 5);
 
             Log.Information("Update completed successfully.");
@@ -72,7 +71,6 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         catch (Exception ex)
         {
             Log.Error("Error while updating host: {Message}", ex.Message);
-
             AttemptEmergencyRecovery();
         }
     }
@@ -279,5 +277,27 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         {
             Log.Error($"Emergency recovery failed: {ex.Message}");
         }
+    }
+
+    private bool NeedUpdate()
+    {
+        var updateFiles = Directory.GetFiles(_updateFolderPath, "*", SearchOption.AllDirectories).Select(Path.GetFullPath);
+        
+        foreach (var file in updateFiles)
+        {
+            var targetFile = file.Replace(_updateFolderPath, BaseFolderPath);
+
+            if (!File.Exists(targetFile))
+            {
+                return true;
+            }
+
+            if (!VerifyChecksum(file, targetFile))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
