@@ -83,7 +83,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             if (!dir.Exists)
             {
-                throw new DirectoryNotFoundException($"Source directory does not exist or could not be found: {sourceDir}");
+                throw new DirectoryNotFoundException($"Source directory does not exist or could not be found: {sourceDir}.");
             }
 
             var dirs = dir.GetDirectories();
@@ -134,23 +134,31 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
     }
 
-    private static bool VerifyChecksum(string sourceFilePath, string destFilePath)
+    private static bool VerifyChecksum(string sourceFilePath, string destFilePath, bool expectDifference = false)
     {
         var sourceChecksum = GenerateChecksum(sourceFilePath);
         var destChecksum = GenerateChecksum(destFilePath);
 
-        Log.Information($"Verifying checksum: {sourceFilePath} [Checksum: {sourceChecksum}] -> {destFilePath} [Checksum: {destChecksum}]");
+        var checksumMatch = sourceChecksum == destChecksum;
 
-        if (sourceChecksum == destChecksum)
+        Log.Information($"Verifying checksum: {sourceFilePath} [Source Checksum: {sourceChecksum}] -> {destFilePath} [Destination Checksum: {destChecksum}].");
+
+        if (expectDifference && !checksumMatch)
         {
-            Log.Information("Checksum verification successful.");
-            return true;
-        }
-        else
-        {
-            Log.Error($"Checksum verification failed for file {sourceFilePath}. Source checksum: {sourceChecksum}, Destination checksum: {destChecksum}");
+            Log.Information("Checksums do not match as expected for an update. An update is needed.");
+
             return false;
         }
+        else if (!expectDifference && !checksumMatch)
+        {
+            Log.Error("Unexpected checksum mismatch. The files may have been tampered with or corrupted.");
+
+            return false;
+        }
+
+        Log.Information("Checksum verification successful. No differences found.");
+
+        return true;
     }
 
     private static async Task<bool> TryCopyFileAsync(string sourceFile, string destFile, bool overwrite)
@@ -282,7 +290,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
     private bool NeedUpdate()
     {
         var updateFiles = Directory.GetFiles(_updateFolderPath, "*", SearchOption.AllDirectories).Select(Path.GetFullPath);
-        
+
         foreach (var file in updateFiles)
         {
             var targetFile = file.Replace(_updateFolderPath, BaseFolderPath);
@@ -292,7 +300,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
                 return true;
             }
 
-            if (!VerifyChecksum(file, targetFile))
+            if (!VerifyChecksum(file, targetFile, true))
             {
                 return true;
             }
