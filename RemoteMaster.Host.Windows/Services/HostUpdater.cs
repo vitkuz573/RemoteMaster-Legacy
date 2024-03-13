@@ -27,7 +27,13 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             if (isNetworkPath)
             {
-                networkDriveService.MapNetworkDrive(folderPath, username, password);
+                var isMapped = networkDriveService.MapNetworkDrive(folderPath, username, password);
+
+                if (!isMapped)
+                {
+                    Log.Error("Unable to map network drive with the provided credentials. Update aborted.");
+                    return;
+                }
             }
 
             if (!Directory.Exists(_updateFolderPath))

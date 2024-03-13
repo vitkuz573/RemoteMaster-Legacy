@@ -6,7 +6,7 @@ namespace RemoteMaster.Host.Windows.Abstractions;
 
 public interface INetworkDriveService
 {
-    void MapNetworkDrive(string remotePath, string username, string password);
+    bool MapNetworkDrive(string remotePath, string username, string password);
 
     void CancelNetworkDrive(string remotePath);
 }
