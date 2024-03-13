@@ -5,7 +5,7 @@
 <CommonDialog Hosts="@Hosts">
     <Content>
         <MudGrid>
-            <MudItem xs="4">
+            <MudItem xs="3">
                 <MudTextField T="string" Label="Script" @bind-Value="_content" Lines="4" Placeholder="Enter or upload your script here..." />
 
                 <MudFileUpload T="IBrowserFile" OnFilesChanged="UploadFiles">
@@ -33,7 +33,7 @@
 
             <MudDivider Vertical="true" FlexItem="true" />
 
-            <MudItem xs="6">
+            <MudItem xs="8">
                 <MudExpansionPanels Class="max-h-[340px] overflow-y-auto" MultiExpansion="true">
                     @foreach (var (computer, results) in _resultsPerComputer)
                     {
