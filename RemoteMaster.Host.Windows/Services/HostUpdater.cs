@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Security.Cryptography;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 using Serilog;
@@ -91,13 +92,23 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             foreach (var file in dir.GetFiles())
             {
                 var tempPath = Path.Combine(destDir, file.Name);
-                await TryCopyFileAsync(file.FullName, tempPath, overwrite);
+                var copiedSuccessfully = await TryCopyFileAsync(file.FullName, tempPath, overwrite);
+
+                if (!copiedSuccessfully)
+                {
+                    Log.Error($"File {file.Name} copied with errors. Checksum does not match.");
+                    return false;
+                }
             }
 
             foreach (var subdir in dirs)
             {
                 var tempPath = Path.Combine(destDir, subdir.Name);
-                await CopyDirectoryAsync(subdir.FullName, tempPath, overwrite);
+
+                if (!await CopyDirectoryAsync(subdir.FullName, tempPath, overwrite))
+                {
+                    return false;
+                }
             }
 
             return true;
@@ -110,7 +121,35 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         }
     }
 
-    private static async Task TryCopyFileAsync(string sourceFile, string destFile, bool overwrite)
+    private static string GenerateChecksum(string filePath)
+    {
+        using var sha256 = SHA256.Create();
+        using var stream = File.OpenRead(filePath);
+        var hash = sha256.ComputeHash(stream);
+
+        return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+    }
+
+    private static bool VerifyChecksum(string sourceFilePath, string destFilePath)
+    {
+        var sourceChecksum = GenerateChecksum(sourceFilePath);
+        var destChecksum = GenerateChecksum(destFilePath);
+
+        Log.Information($"Verifying checksum: {sourceFilePath} [Checksum: {sourceChecksum}] -> {destFilePath} [Checksum: {destChecksum}]");
+
+        if (sourceChecksum == destChecksum)
+        {
+            Log.Information("Checksum verification successful.");
+            return true;
+        }
+        else
+        {
+            Log.Error($"Checksum verification failed for file {sourceFilePath}. Source checksum: {sourceChecksum}, Destination checksum: {destChecksum}");
+            return false;
+        }
+    }
+
+    private static async Task<bool> TryCopyFileAsync(string sourceFile, string destFile, bool overwrite)
     {
         var attempts = 0;
 
@@ -119,7 +158,16 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             try
             {
                 File.Copy(sourceFile, destFile, overwrite);
-                break;
+
+                if (VerifyChecksum(sourceFile, destFile))
+                {
+                    break;
+                }
+                else
+                {
+                    Log.Error($"Checksum verification failed for file {sourceFile}.");
+                    return false;
+                }
             }
             catch (IOException ex) when (ex.HResult == (int)WIN32_ERROR.ERROR_SHARING_VIOLATION)
             {
@@ -131,6 +179,8 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
                 await Task.Delay(1000);
             }
         }
+
+        return true;
     }
 
     private static async Task WaitForFileRelease(string directory)
