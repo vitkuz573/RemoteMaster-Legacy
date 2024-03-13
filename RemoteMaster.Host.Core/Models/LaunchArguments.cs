@@ -17,4 +17,6 @@ public class LaunchArguments
     public string? Password { get; set; }
 
     public bool ForceUpdate { get; set; }
+
+    public bool AllowDowngrade { get; set; }
 }

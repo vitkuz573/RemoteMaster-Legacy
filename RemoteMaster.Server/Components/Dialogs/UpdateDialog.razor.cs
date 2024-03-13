@@ -19,6 +19,7 @@ public partial class UpdateDialog
     private string _username = string.Empty;
     private string _password = string.Empty;
     private bool _forceUpdate = false;
+    private bool _allowDowngrade = false;
 
     private readonly Dictionary<Computer, ComputerResults> _resultsPerComputer = [];
     private readonly HashSet<HubConnection> _subscribedConnections = [];
@@ -43,7 +44,8 @@ public partial class UpdateDialog
                         Username = _username,
                         Password = _password
                     },
-                    ForceUpdate = _forceUpdate
+                    ForceUpdate = _forceUpdate,
+                    AllowDowngrade = _allowDowngrade
                 };
 
                 await connection.InvokeAsync("SendStartUpdater", updateRequest);

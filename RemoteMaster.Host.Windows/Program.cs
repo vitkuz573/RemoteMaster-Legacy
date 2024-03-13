@@ -201,7 +201,7 @@ internal class Program
         {
             var hostUpdater = app.Services.GetRequiredService<IHostUpdater>();
 
-            await hostUpdater.UpdateAsync(launchArguments.FolderPath, launchArguments.Username, launchArguments.Password, launchArguments.ForceUpdate);
+            await hostUpdater.UpdateAsync(launchArguments.FolderPath, launchArguments.Username, launchArguments.Password, launchArguments.ForceUpdate, launchArguments.AllowDowngrade);
         }
         else
         {
@@ -249,6 +249,10 @@ internal class Program
             {
                 launchArguments.ForceUpdate = true;
             }
+            else if (arg.Equals("--allow-downgrade"))
+            {
+                launchArguments.AllowDowngrade = true;
+            }
         }
 
         return launchArguments;
@@ -270,10 +274,11 @@ internal class Program
         Console.WriteLine("  --username=USERNAME\tSpecifies the username for authentication. Optional.");
         Console.WriteLine("  --password=PASSWORD\tSpecifies the password for authentication. Optional.");
         Console.WriteLine("  --force-update\tForces the update operation to proceed, even if no update is needed.");
+        Console.WriteLine("  --allow-downgrade\tAllows the update operation to proceed with a lower version than the current one.");
         Console.WriteLine();
         Console.WriteLine("Examples:");
         Console.WriteLine("  RemoteMaster.Host --launch-mode=Service");
-        Console.WriteLine("  RemoteMaster.Host --launch-mode=Updater --folder-path=\"C:\\UpdateFolder\" --force-update");
+        Console.WriteLine("  RemoteMaster.Host --launch-mode=Updater --folder-path=\"C:\\UpdateFolder\" --force-update --allow-downgrade");
         Console.WriteLine("  RemoteMaster.Host --help");
     }
 }

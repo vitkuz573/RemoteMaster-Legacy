@@ -11,4 +11,6 @@ public class UpdateRequest(string folderPath)
     public Credentials? UserCredentials { get; init; }
 
     public bool ForceUpdate { get; init; }
+
+    public bool AllowDowngrade { get; init; }
 }

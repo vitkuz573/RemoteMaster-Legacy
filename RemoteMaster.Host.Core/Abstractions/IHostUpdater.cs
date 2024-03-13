@@ -6,5 +6,5 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IHostUpdater
 {
-    Task UpdateAsync(string folderPath, string? username, string? password, bool forceUpdate = false);
+    Task UpdateAsync(string folderPath, string? username, string? password, bool forceUpdate = false, bool allowDowngrade = false);
 }

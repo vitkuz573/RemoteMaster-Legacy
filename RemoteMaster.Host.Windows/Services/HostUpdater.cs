@@ -18,7 +18,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
     
     private readonly string _updateFolderPath = Path.Combine(BaseFolderPath, "Update");
 
-    public async Task UpdateAsync(string folderPath, string? username, string? password, bool forceUpdate = false)
+    public async Task UpdateAsync(string folderPath, string? username, string? password, bool forceUpdate = false, bool allowDowngrade = false)
     {
         ArgumentNullException.ThrowIfNull(folderPath);
 
@@ -51,9 +51,9 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
                 return;
             }
 
-            if (!CheckForUpdateVersion())
+            if (!CheckForUpdateVersion(allowDowngrade))
             {
-                Log.Information("Downgrade is not allowed. Update aborted.");
+                Log.Information("Update aborted due to version check.");
                 return;
             }
 
@@ -317,15 +317,14 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         return false;
     }
 
-    private bool CheckForUpdateVersion()
+    private bool CheckForUpdateVersion(bool allowDowngrade)
     {
         var currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
         var updateVersion = GetVersionFromExecutable(Path.Combine(_updateFolderPath, "RemoteMaster.Host.exe"));
 
-        if (updateVersion <= currentVersion)
+        if (updateVersion <= currentVersion && !allowDowngrade)
         {
-            Log.Information($"Current version {currentVersion} is up to date or newer than update version {updateVersion}.");
-            
+            Log.Information($"Current version {currentVersion} is up to date or newer than update version {updateVersion}. Downgrade is not allowed.");
             return false;
         }
 
