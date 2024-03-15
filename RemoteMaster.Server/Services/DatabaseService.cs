@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Shared.Models;
+using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
@@ -71,8 +72,22 @@ public class DatabaseService(NodesDbContext context) : IDatabaseService
     {
         var nodes = await context.Nodes.Where(node => nodeIds.Contains(node.NodeId)).ToListAsync();
 
+        if (nodes.Count == 0)
+        {
+            Log.Warning($"No nodes found with the provided IDs: {string.Join(", ", nodeIds)}");
+            return;
+        }
+
         foreach (var node in nodes)
         {
+            if (node.NodeId == newParentId)
+            {
+                Log.Error($"Attempting to move a node into itself. Node ID: {node.NodeId}");
+                continue;
+            }
+
+            Log.Information($"Moving node {node.NodeId} to new parent {newParentId}");
+
             node.ParentId = newParentId;
         }
 

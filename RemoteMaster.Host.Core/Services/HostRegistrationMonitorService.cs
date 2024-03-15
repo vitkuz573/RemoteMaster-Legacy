@@ -44,14 +44,11 @@ public class HostRegistrationMonitorService : IHostedService
             {
                 case true when configurationChanged:
                     await _hostLifecycleService.UpdateHostInformationAsync(hostConfiguration);
-                    await _hostLifecycleService.UnregisterAsync(hostConfiguration);
-                    await _hostLifecycleService.RegisterAsync(hostConfiguration);
-
-                    Log.Information("Host information updated and host re-registered due to configuration change.");
+                    Log.Information("Host information updated due to configuration change.");
                     break;
                 case false:
-                    await _hostLifecycleService.RegisterAsync(hostConfiguration);
                     Log.Warning("Host is not registered. Performing necessary actions...");
+                    await _hostLifecycleService.RegisterAsync(hostConfiguration);
                     break;
             }
         }

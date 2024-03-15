@@ -30,22 +30,10 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         {
             await serverHubService.ConnectAsync(hostConfiguration.Server);
 
-            var ipAddresses = new List<string>
-            {
-                hostConfiguration.Host.IpAddress
-            };
-
-            var distinguishedName = subjectService.GetDistinguishedName(hostConfiguration.Host.Name);
-            var csr = certificateRequestService.GenerateSigningRequest(distinguishedName, ipAddresses, out rsaKeyPair);
-            var signingRequest = csr.CreateSigningRequest();
-
             var securityDirectory = EnsureSecurityDirectoryExists();
 
-            var tcs = new TaskCompletionSource<bool>();
-            serverHubService.OnReceiveCertificate(certificateBytes => ProcessCertificate(certificateBytes, rsaKeyPair, securityDirectory, tcs));
-
             Log.Information("Attempting to register host...");
-            await InvokeHostRegistration(hostConfiguration, signingRequest, tcs, securityDirectory);
+            await InvokeHostRegistration(hostConfiguration, securityDirectory);
         }
         catch (Exception ex)
         {
@@ -79,6 +67,52 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         catch (Exception ex)
         {
             Log.Error(ex, "Unregistering host failed: {Message}.", ex.Message);
+        }
+    }
+
+    public async Task IssueCertificateAsync(HostConfiguration hostConfiguration)
+    {
+        ArgumentNullException.ThrowIfNull(hostConfiguration);
+
+        RSA? rsaKeyPair = null;
+
+        try
+        {
+            await serverHubService.ConnectAsync(hostConfiguration.Server);
+
+            var ipAddresses = new List<string>
+            {
+                hostConfiguration.Host.IpAddress
+            };
+
+            var distinguishedName = subjectService.GetDistinguishedName(hostConfiguration.Host.Name);
+            var csr = certificateRequestService.GenerateSigningRequest(distinguishedName, ipAddresses, out rsaKeyPair);
+            var signingRequest = csr.CreateSigningRequest();
+
+            var tcs = new TaskCompletionSource<bool>();
+
+            var securityDirectory = EnsureSecurityDirectoryExists();
+            serverHubService.OnReceiveCertificate(certificateBytes => ProcessCertificate(certificateBytes, rsaKeyPair, securityDirectory, tcs));
+
+            Log.Information("Attempting to issue certificate...");
+            await serverHubService.IssueCertificateAsync(signingRequest);
+
+            var isCertificateReceived = await tcs.Task;
+
+            if (!isCertificateReceived)
+            {
+                throw new InvalidOperationException("Certificate processing failed.");
+            }
+
+            Log.Information("Certificate issued and processed successfully.");
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Issuing certificate failed: {Message}.", ex.Message);
+        }
+        finally
+        {
+            rsaKeyPair?.Dispose();
         }
     }
 
@@ -174,7 +208,7 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         }
     }
 
-    private async Task InvokeHostRegistration(HostConfiguration hostConfiguration, byte[] signingRequest, TaskCompletionSource<bool> tcs, string securityDirectory)
+    private async Task InvokeHostRegistration(HostConfiguration hostConfiguration, string securityDirectory)
     {
         var tcsGuid = new TaskCompletionSource<Guid>();
         
@@ -193,20 +227,6 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
             _isRegistrationInvoked = true;
             
             Log.Information("Host registration invoked successfully. Waiting for the certificate...");
-
-            var certificateIssued = await serverHubService.IssueCertificateAsync(signingRequest);
-
-            if (!certificateIssued)
-            {
-                throw new InvalidOperationException("Failed to issue certificate.");
-            }
-
-            var isCertificateReceived = await tcs.Task;
-
-            if (!isCertificateReceived)
-            {
-                throw new InvalidOperationException("Certificate processing failed.");
-            }
 
             var publicKey = await serverHubService.GetPublicKeyAsync();
 

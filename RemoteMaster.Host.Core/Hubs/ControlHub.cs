@@ -156,8 +156,5 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         hostConfiguration.Subject.OrganizationalUnit = newOrganizationalUnits;
 
         await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
-
-        await hostLifecycleService.UnregisterAsync(hostConfiguration);
-        await hostLifecycleService.RegisterAsync(hostConfiguration);
     }
 }

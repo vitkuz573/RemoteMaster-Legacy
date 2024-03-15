@@ -12,6 +12,8 @@ public interface IHostLifecycleService
 
     Task UnregisterAsync(HostConfiguration hostConfiguration);
 
+    Task IssueCertificateAsync(HostConfiguration hostConfiguration);
+
     Task UpdateHostInformationAsync(HostConfiguration hostConfiguration);
 
     Task<bool> IsHostRegisteredAsync(HostConfiguration hostConfiguration);
