@@ -324,7 +324,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
         if (updateVersion <= currentVersion && !allowDowngrade)
         {
-            Log.Information($"Current version {currentVersion} is up to date or newer than update version {updateVersion}. Downgrade is not allowed.");
+            Log.Information($"Current version {currentVersion} is up to date or newer than update version {updateVersion}. To allow downgrades, use the --allow-downgrade option.");
             return false;
         }
 
