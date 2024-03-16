@@ -52,10 +52,12 @@ public sealed class InputService : IInputService
             Task.Factory.StartNew(() =>
             {
                 CancellationToken token;
+
                 lock (_ctsLock)
                 {
                     token = _cts.Token;
                 }
+
                 ProcessQueue(token);
             }, TaskCreationOptions.LongRunning);
         }

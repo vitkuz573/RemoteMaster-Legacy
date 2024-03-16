@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.ComponentModel;
 using RemoteMaster.Host.Windows.Abstractions;
 using Serilog;
 using Windows.Win32.Foundation;
@@ -51,7 +50,7 @@ public class NetworkDriveService : INetworkDriveService
         return true;
     }
 
-    public void CancelNetworkDrive(string remotePath)
+    public bool CancelNetworkDrive(string remotePath)
     {
         Log.Information("Attempting to cancel network drive with remote path: {RemotePath}", remotePath);
 
@@ -69,9 +68,11 @@ public class NetworkDriveService : INetworkDriveService
         {
             Log.Error("Failed to cancel network drive with remote path {RemotePath}. Error code: {Result}", remotePath, (int)result);
 
-            throw new Win32Exception((int)result);
+            return false;
         }
 
         Log.Information("Successfully canceled network drive with remote path: {RemotePath}", remotePath);
+
+        return true;
     }
 }

@@ -34,6 +34,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
                 if (!isMapped)
                 {
                     Log.Error("Unable to map network drive with the provided credentials. Update aborted.");
+                    
                     return;
                 }
             }
@@ -48,18 +49,21 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             if (!isDownloaded)
             {
                 Log.Information("Download or copy failed. Update aborted.");
+                
                 return;
             }
 
             if (!CheckForUpdateVersion(allowDowngrade))
             {
                 Log.Information("Update aborted due to version check.");
+                
                 return;
             }
 
             if (!NeedUpdate() && !forceUpdate)
             {
                 Log.Information("No update required. Files are identical.");
+                
                 return;
             }
 
@@ -109,6 +113,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
                 if (!copiedSuccessfully)
                 {
                     Log.Error($"File {file.Name} copied with errors. Checksum does not match.");
+                    
                     return false;
                 }
             }
@@ -186,6 +191,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
                 else
                 {
                     Log.Error($"Checksum verification failed for file {sourceFile}.");
+                    
                     return false;
                 }
             }
@@ -241,6 +247,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         for (var attempt = 1; attempt <= attempts; attempt++)
         {
             Log.Information($"Attempt {attempt}: Checking if services are running...");
+            
             await Task.Delay(TimeSpan.FromSeconds(delayInSeconds));
 
             allServicesRunning = services.All(service => service.IsRunning);
@@ -325,6 +332,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         if (updateVersion <= currentVersion && !allowDowngrade)
         {
             Log.Information($"Current version {currentVersion} is up to date or newer than update version {updateVersion}. To allow downgrades, use the --allow-downgrade option.");
+            
             return false;
         }
 

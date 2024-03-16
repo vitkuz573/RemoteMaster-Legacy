@@ -3,8 +3,11 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.ComponentModel;
+using System.Security.Principal;
+using Microsoft.Win32;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Models;
+using Serilog;
 using Windows.Win32.NetworkManagement.NetManagement;
 using static Windows.Win32.PInvoke;
 
@@ -44,6 +47,42 @@ public class DomainService : IDomainService
         if (result != 0)
         {
             throw new Win32Exception((int)result, "Failed to unjoin from the domain.");
+        }
+
+        if (domainUnjoinRequest.RemoveUserProfiles)
+        {
+            var profileListPath = @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList";
+
+            using var profileListKey = Registry.LocalMachine.OpenSubKey(profileListPath, true);
+
+            foreach (var sidString in profileListKey.GetSubKeyNames())
+            {
+                using var sidKey = profileListKey.OpenSubKey(sidString, true);
+
+                var sid = new SecurityIdentifier(sidString);
+                var isDomainSid = sid.IsAccountSid() && !sid.IsWellKnown(WellKnownSidType.LocalSystemSid) && !sid.IsWellKnown(WellKnownSidType.LocalServiceSid) && !sid.IsWellKnown(WellKnownSidType.NetworkServiceSid);
+
+                if (isDomainSid)
+                {
+                    var profileImagePath = (string)sidKey.GetValue("ProfileImagePath");
+
+                    if (!string.IsNullOrEmpty(profileImagePath) && Directory.Exists(profileImagePath))
+                    {
+                        try
+                        {
+                            Directory.Delete(profileImagePath, true);
+                            Log.Information("Profile directory {ProfileImagePath} deleted successfully.", profileImagePath);
+
+                            profileListKey.DeleteSubKeyTree(sidString);
+                            Log.Information("Registry key for SID {SID} deleted successfully.", sidString);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex, "Error deleting profile directory {ProfileImagePath}.");
+                        }
+                    }
+                }
+            }
         }
     }
 }

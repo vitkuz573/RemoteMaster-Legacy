@@ -8,5 +8,5 @@ public interface INetworkDriveService
 {
     bool MapNetworkDrive(string remotePath, string username, string password);
 
-    void CancelNetworkDrive(string remotePath);
+    bool CancelNetworkDrive(string remotePath);
 }

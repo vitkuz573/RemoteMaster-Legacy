@@ -7,4 +7,6 @@ namespace RemoteMaster.Shared.Models;
 public class DomainUnjoinRequest(Credentials userCredentials)
 {
     public Credentials UserCredentials { get; } = userCredentials;
+
+    public bool RemoveUserProfiles { get; init; }
 }
