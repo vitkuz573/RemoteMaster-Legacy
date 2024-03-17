@@ -238,12 +238,22 @@ internal class Program
 
         foreach (var arg in args)
         {
-            var split = arg.Split('=', 2);
-
-            if (split.Length == 2)
+            if (arg.StartsWith("--"))
             {
-                var key = split[0].StartsWith("--") ? split[0][2..] : split[0];
-                var value = split[1];
+                var equalIndex = arg.IndexOf('=');
+                string key;
+                var value = "";
+
+                if (equalIndex >= 0)
+                {
+                    key = arg.Substring(2, equalIndex - 2);
+                    value = arg.Substring(equalIndex + 1);
+                }
+                else
+                {
+                    key = arg.Substring(2);
+                    value = "true";
+                }
 
                 if (launchModeInstance.Parameters.ContainsKey(key))
                 {
