@@ -281,6 +281,8 @@ internal class Program
 
             Console.WriteLine($"  {specificMode.Description}");
 
+            Console.WriteLine();
+
             foreach (var param in specificMode.Parameters)
             {
                 Console.WriteLine($"  --{param.Key}: {param.Value.Description} {(param.Value.IsRequired ? "(Required)" : "(Optional)")}");
