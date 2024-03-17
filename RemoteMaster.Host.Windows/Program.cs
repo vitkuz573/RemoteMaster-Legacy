@@ -246,12 +246,12 @@ internal class Program
 
                 if (equalIndex >= 0)
                 {
-                    key = arg.Substring(2, equalIndex - 2);
-                    value = arg.Substring(equalIndex + 1);
+                    key = arg[2..equalIndex];
+                    value = arg[(equalIndex + 1)..];
                 }
                 else
                 {
-                    key = arg.Substring(2);
+                    key = arg[2..];
                     value = "true";
                 }
 
@@ -283,7 +283,7 @@ internal class Program
 
             foreach (var param in specificMode.Parameters)
             {
-                Console.WriteLine($"  {param.Key}: {param.Value.Description} {(param.Value.IsRequired ? "(Required)" : "(Optional)")}");
+                Console.WriteLine($"  --{param.Key}: {param.Value.Description} {(param.Value.IsRequired ? "(Required)" : "(Optional)")}");
             }
         }
         else
