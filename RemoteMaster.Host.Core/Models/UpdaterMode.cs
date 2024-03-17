@@ -14,11 +14,11 @@ public class UpdaterMode : LaunchModeBase
 
     protected override void InitializeParameters()
     {
-        Parameters.Add("folderPath", new LaunchParameter("Specifies the folder path for the update operation.", true));
+        Parameters.Add("folder-path", new LaunchParameter("Specifies the folder path for the update operation.", true));
         Parameters.Add("username", new LaunchParameter("Specifies the username for authentication.", false));
         Parameters.Add("password", new LaunchParameter("Specifies the password for authentication.", false));
-        Parameters.Add("forceUpdate", new LaunchParameter("Forces the update operation to proceed, even if no update is needed.", false));
-        Parameters.Add("allowDowngrade", new LaunchParameter("Allows the update operation to proceed with a lower version than the current one.", false));
+        Parameters.Add("force", new LaunchParameter("Forces the update operation to proceed, even if no update is needed.", false));
+        Parameters.Add("allow-downgrade", new LaunchParameter("Allows the update operation to proceed with a lower version than the current one.", false));
     }
 
     public async override Task ExecuteAsync()

@@ -18,7 +18,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
     
     private readonly string _updateFolderPath = Path.Combine(BaseFolderPath, "Update");
 
-    public async Task UpdateAsync(string folderPath, string? username, string? password, bool forceUpdate = false, bool allowDowngrade = false)
+    public async Task UpdateAsync(string folderPath, string? username, string? password, bool force = false, bool allowDowngrade = false)
     {
         ArgumentNullException.ThrowIfNull(folderPath);
 
@@ -60,7 +60,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
                 return;
             }
 
-            if (!NeedUpdate() && !forceUpdate)
+            if (!NeedUpdate() && !force)
             {
                 Log.Information("No update required. Files are identical.");
                 

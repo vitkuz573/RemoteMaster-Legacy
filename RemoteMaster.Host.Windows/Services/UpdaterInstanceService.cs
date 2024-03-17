@@ -16,7 +16,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class UpdaterInstanceService(IHubContext<UpdaterHub, IUpdaterClient> hubContext) : IUpdaterInstanceService
 {
-    private readonly string _argument = $"--launchMode=updater";
+    private readonly string _argument = $"--launch-mode=updater";
     private readonly string _sourcePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "RemoteMaster.Host.exe");
     private readonly string _executablePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "Updater", "RemoteMaster.Host.exe");
 
@@ -37,7 +37,7 @@ public class UpdaterInstanceService(IHubContext<UpdaterHub, IUpdaterClient> hubC
         }
     }
 
-    private string BuildArguments(string folderPath, Credentials? userCredentials, bool forceUpdate, bool allowDowngrade)
+    private string BuildArguments(string folderPath, Credentials? userCredentials, bool force, bool allowDowngrade)
     {
         var arguments = new StringBuilder(_argument);
         var escapedFolderPath = "\"" + folderPath.Replace("\"", "\\\"") + "\"";
@@ -63,7 +63,7 @@ public class UpdaterInstanceService(IHubContext<UpdaterHub, IUpdaterClient> hubC
         var escapedPassword = "\"" + userCredentials.Password.Replace("\"", "\\\"") + "\"";
         arguments.Append($" --password={escapedPassword}");
 
-        if (forceUpdate)
+        if (force)
         {
             arguments.Append(" --force-update");
         }

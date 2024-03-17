@@ -30,7 +30,7 @@ internal class Program
     {
         var launchModeInstance = ParseArguments(args);
 
-        if (launchModeInstance is UpdaterMode updaterMode && string.IsNullOrEmpty(updaterMode.Parameters["folderPath"].Value))
+        if (launchModeInstance is UpdaterMode updaterMode && string.IsNullOrEmpty(updaterMode.Parameters["folder-path"].Value))
         {
             PrintHelp(launchModeInstance);
             return;
@@ -196,13 +196,13 @@ internal class Program
         {
             var hostUpdater = app.Services.GetRequiredService<IHostUpdater>();
 
-            var folderPath = updateMode.Parameters["folderPath"].Value ?? throw new InvalidOperationException("Folder path is required.");
+            var folderPath = updateMode.Parameters["folder-path"].Value ?? throw new InvalidOperationException("Folder path is required.");
             var username = updateMode.Parameters["username"].Value;
             var password = updateMode.Parameters["password"].Value;
-            var forceUpdate = updateMode.Parameters["forceUpdate"].Value?.ToLower() == "true";
-            var allowDowngrade = updateMode.Parameters["allowDowngrade"].Value?.ToLower() == "true";
+            var force = updateMode.Parameters["force"].Value?.ToLower() == "true";
+            var allowDowngrade = updateMode.Parameters["allow-downgrade"].Value?.ToLower() == "true";
 
-            await hostUpdater.UpdateAsync(folderPath, username, password, forceUpdate, allowDowngrade);
+            await hostUpdater.UpdateAsync(folderPath, username, password, force, allowDowngrade);
         }
         else
         {
@@ -213,7 +213,7 @@ internal class Program
     private static LaunchModeBase ParseArguments(string[] args)
     {
         var helpRequested = args.Any(arg => arg.Equals("--help", StringComparison.OrdinalIgnoreCase));
-        var modeArgument = args.FirstOrDefault(arg => arg.StartsWith("--launchMode="))?.Split('=')[1];
+        var modeArgument = args.FirstOrDefault(arg => arg.StartsWith("--launch-mode="))?.Split('=')[1];
 
         if (args.Length == 0 || (helpRequested && string.IsNullOrEmpty(modeArgument)))
         {
@@ -310,7 +310,7 @@ internal class Program
             }
 
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("Use \"--help --launchMode=<MODE>\" for more details on a specific mode.");
+            Console.WriteLine("Use \"--help --launch-mode=<MODE>\" for more details on a specific mode.");
             Console.ResetColor();
         }
     }
