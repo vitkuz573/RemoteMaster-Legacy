@@ -230,7 +230,8 @@ internal class Program
 
         if (launchModeType == null)
         {
-            Console.WriteLine($"Error: Unrecognized launch mode '{modeArgument}'. Available modes are: {string.Join(", ", launchModes.Select(m => m.Name.Replace("Mode", "", StringComparison.OrdinalIgnoreCase)))}.");
+            Console.WriteLine($"Error: Unrecognized launch mode '{modeArgument}'.");
+            SuggestSimilarModes(modeArgument, launchModes);
             Environment.Exit(1);
         }
 
@@ -269,6 +270,44 @@ internal class Program
         }
 
         return launchModeInstance;
+    }
+
+    private static void SuggestSimilarModes(string inputMode, Type[] availableModes)
+    {
+        var modeNames = availableModes.Select(m => m.Name.Replace("Mode", "", StringComparison.OrdinalIgnoreCase));
+        var suggestions = modeNames.Select(name => new
+        {
+            Name = name,
+            Distance = ComputeLevenshteinDistance(inputMode.ToLower(), name.ToLower())
+        })
+        .OrderBy(x => x.Distance)
+        .Take(3);
+
+        Console.WriteLine("Did you mean one of these modes?");
+
+        foreach (var suggestion in suggestions)
+        {
+            Console.WriteLine($"- {suggestion.Name}");
+        }
+    }
+
+    private static int ComputeLevenshteinDistance(string source1, string source2)
+    {
+        var matrix = new int[source1.Length + 1, source2.Length + 1];
+
+        for (var i = 0; i <= source1.Length; matrix[i, 0] = i++) { }
+        for (var j = 0; j <= source2.Length; matrix[0, j] = j++) { }
+
+        for (var i = 1; i <= source1.Length; i++)
+        {
+            for (var j = 1; j <= source2.Length; j++)
+            {
+                var cost = (source2[j - 1] == source1[i - 1]) ? 0 : 1;
+                matrix[i, j] = Math.Min(Math.Min(matrix[i - 1, j] + 1, matrix[i, j - 1] + 1), matrix[i - 1, j - 1] + cost);
+            }
+        }
+
+        return matrix[source1.Length, source2.Length];
     }
 
     private static void PrintHelp(LaunchModeBase? specificMode)
