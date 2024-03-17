@@ -151,15 +151,15 @@ internal class Program
         {
             case InstallMode:
             {
-                var hostInstallerService = app.Services.GetRequiredService<IHostInstaller>();
-                await hostInstallerService.InstallAsync();
+                var hostInstaller = app.Services.GetRequiredService<IHostInstaller>();
+                await hostInstaller.InstallAsync();
 
                 return;
             }
             case UninstallMode:
             {
-                var hostUninstallerService = app.Services.GetRequiredService<IHostUninstaller>();
-                await hostUninstallerService.UninstallAsync();
+                var hostUninstaller = app.Services.GetRequiredService<IHostUninstaller>();
+                await hostUninstaller.UninstallAsync();
 
                 return;
             }
