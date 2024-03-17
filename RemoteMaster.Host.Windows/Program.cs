@@ -222,8 +222,12 @@ internal class Program
                 }
                 else
                 {
+                    Console.ForegroundColor = ConsoleColor.DarkRed;
                     Console.WriteLine($"Error: '{modeString}' is not a valid launch mode.");
+                    Console.ResetColor();
+
                     PrintHelp();
+
                     Environment.Exit(1);
                 }
             }
