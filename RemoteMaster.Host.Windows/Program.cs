@@ -260,25 +260,48 @@ internal class Program
 
     private static void PrintHelp()
     {
+        Console.ForegroundColor = ConsoleColor.Green;
         Console.WriteLine("Usage: RemoteMaster.Host [OPTIONS]");
+        Console.ResetColor();
+
         Console.WriteLine();
+
+        Console.ForegroundColor = ConsoleColor.Yellow;
         Console.WriteLine("Options:");
+        Console.ResetColor();
+
+        Console.ForegroundColor = ConsoleColor.Cyan;
         Console.WriteLine("  --help\t\tDisplays this help message and exits.");
         Console.WriteLine("  --launch-mode=MODE\tSpecifies the launch mode of the program. Available modes:");
+        Console.ResetColor();
+
+        Console.ForegroundColor = ConsoleColor.Magenta;
         Console.WriteLine("\t\t\tUser - Runs the program in user mode.");
         Console.WriteLine("\t\t\tService - Runs the program as a service.");
         Console.WriteLine("\t\t\tInstall - Installs the necessary components for the program.");
         Console.WriteLine("\t\t\tUninstall - Removes the program and its components.");
         Console.WriteLine("\t\t\tUpdater - Updates the program to the latest version.");
-        Console.WriteLine("  --folder-path=PATH\tSpecifies the folder path for the update operation. Required for update mode.");
-        Console.WriteLine("  --username=USERNAME\tSpecifies the username for authentication. Optional.");
-        Console.WriteLine("  --password=PASSWORD\tSpecifies the password for authentication. Optional.");
-        Console.WriteLine("  --force-update\tForces the update operation to proceed, even if no update is needed.");
-        Console.WriteLine("  --allow-downgrade\tAllows the update operation to proceed with a lower version than the current one.");
+        Console.ResetColor();
+
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("Options applicable only in Updater mode:");
+        Console.WriteLine("  --folder-path=PATH\tSpecifies the folder path for the update operation. Required for Updater mode.");
+        Console.WriteLine("  --username=USERNAME\tSpecifies the username for authentication. Optional for Updater mode.");
+        Console.WriteLine("  --password=PASSWORD\tSpecifies the password for authentication. Optional for Updater mode.");
+        Console.WriteLine("  --force-update\tForces the update operation to proceed, even if no update is needed. Optional for Updater mode.");
+        Console.WriteLine("  --allow-downgrade\tAllows the update operation to proceed with a lower version than the current one. Optional for Updater mode.");
+        Console.ResetColor();
+
         Console.WriteLine();
+
+        Console.ForegroundColor = ConsoleColor.Yellow;
         Console.WriteLine("Examples:");
+        Console.ResetColor();
+
+        Console.ForegroundColor = ConsoleColor.Magenta;
         Console.WriteLine("  RemoteMaster.Host --launch-mode=Service");
         Console.WriteLine("  RemoteMaster.Host --launch-mode=Updater --folder-path=\"C:\\UpdateFolder\" --force-update --allow-downgrade");
         Console.WriteLine("  RemoteMaster.Host --help");
+        Console.ResetColor();
     }
 }
