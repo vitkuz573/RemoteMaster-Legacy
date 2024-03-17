@@ -15,10 +15,4 @@ public class UninstallMode : LaunchModeBase
     protected override void InitializeParameters()
     {
     }
-
-    public async override Task ExecuteAsync()
-    {
-        Console.WriteLine("Uninstalling...");
-        await Task.CompletedTask;
-    }
 }

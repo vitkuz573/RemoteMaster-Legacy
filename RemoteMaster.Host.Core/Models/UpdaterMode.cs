@@ -20,10 +20,4 @@ public class UpdaterMode : LaunchModeBase
         Parameters.Add("force", new LaunchParameter("Forces the update operation to proceed, even if no update is needed.", false));
         Parameters.Add("allow-downgrade", new LaunchParameter("Allows the update operation to proceed with a lower version than the current one.", false));
     }
-
-    public async override Task ExecuteAsync()
-    {
-        Console.WriteLine("Updating...");
-        await Task.CompletedTask;
-    }
 }

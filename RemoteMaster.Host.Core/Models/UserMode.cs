@@ -15,10 +15,4 @@ public class UserMode : LaunchModeBase
     protected override void InitializeParameters()
     {
     }
-
-    public async override Task ExecuteAsync()
-    {
-        Console.WriteLine("Running in user mode...");
-        await Task.CompletedTask;
-    }
 }

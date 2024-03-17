@@ -15,10 +15,4 @@ public class ServiceMode : LaunchModeBase
     protected override void InitializeParameters()
     {
     }
-
-    public async override Task ExecuteAsync()
-    {
-        Console.WriteLine("Running in service mode...");
-        await Task.CompletedTask;
-    }
 }

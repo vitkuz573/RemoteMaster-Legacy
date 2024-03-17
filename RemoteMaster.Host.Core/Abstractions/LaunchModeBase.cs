@@ -15,12 +15,9 @@ public abstract class LaunchModeBase
 
     public abstract string Description { get; }
 
-#pragma warning disable CA2227
-    public Dictionary<string, ILaunchParameter> Parameters { get; protected set; } = [];
+    public Dictionary<string, ILaunchParameter> Parameters { get; } = [];
 
     protected abstract void InitializeParameters();
-
-    public abstract Task ExecuteAsync();
 
     protected LaunchModeBase()
     {

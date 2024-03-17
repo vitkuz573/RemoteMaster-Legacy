@@ -15,10 +15,4 @@ public class InstallMode : LaunchModeBase
     protected override void InitializeParameters()
     {
     }
-
-    public async override Task ExecuteAsync()
-    {
-        Console.WriteLine("Installing...");
-        await Task.CompletedTask;
-    }
 }
