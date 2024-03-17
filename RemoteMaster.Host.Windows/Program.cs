@@ -29,15 +29,9 @@ internal class Program
     {
         var launchArguments = ParseArguments(args);
 
-        if (launchArguments.HelpRequested || launchArguments.LaunchMode == LaunchMode.Default)
+        if (launchArguments.HelpRequested || (launchArguments.LaunchMode == LaunchMode.Updater && string.IsNullOrEmpty(launchArguments.FolderPath)) || launchArguments.LaunchMode == LaunchMode.Default)
         {
             PrintHelp(launchArguments.LaunchMode);
-            return;
-        }
-
-        if (launchArguments.LaunchMode == LaunchMode.Updater && string.IsNullOrEmpty(launchArguments.FolderPath))
-        {
-            Console.WriteLine("Error: The --folder-path option must be specified for the updater mode (--launch-mode=update).");
             return;
         }
 
