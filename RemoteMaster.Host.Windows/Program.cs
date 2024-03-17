@@ -210,7 +210,7 @@ internal class Program
         }
     }
 
-    private static LaunchModeBase ParseArguments(string[] args)
+    private static LaunchModeBase? ParseArguments(string[] args)
     {
         var helpRequested = args.Any(arg => arg.Equals("--help", StringComparison.OrdinalIgnoreCase));
         var modeArgument = args.FirstOrDefault(arg => arg.StartsWith("--launch-mode="))?.Split('=')[1];
