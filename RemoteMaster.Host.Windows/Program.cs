@@ -230,8 +230,15 @@ internal class Program
 
         if (launchModeType == null)
         {
-            Console.WriteLine($"Error: Unrecognized launch mode '{modeArgument}'.");
-            SuggestSimilarModes(modeArgument, launchModes);
+            if (modeArgument is null)
+            {
+                PrintHelp(null);
+            }
+            else
+            {
+                SuggestSimilarModes(modeArgument, launchModes);
+            }
+
             Environment.Exit(1);
         }
 
@@ -274,14 +281,20 @@ internal class Program
 
     private static void SuggestSimilarModes(string inputMode, Type[] availableModes)
     {
+        if (string.IsNullOrEmpty(inputMode))
+        {
+            Console.WriteLine("No launch mode provided.");
+            return;
+        }
+
         var modeNames = availableModes.Select(m => m.Name.Replace("Mode", "", StringComparison.OrdinalIgnoreCase));
         var suggestions = modeNames.Select(name => new
         {
             Name = name,
             Distance = ComputeLevenshteinDistance(inputMode.ToLower(), name.ToLower())
         })
-        .OrderBy(x => x.Distance)
-        .Take(3);
+            .OrderBy(x => x.Distance)
+            .Take(3);
 
         Console.WriteLine("Did you mean one of these modes?");
 
