@@ -14,9 +14,9 @@ namespace RemoteMaster.Host.Core.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static void AddCoreServices(this IServiceCollection services, LaunchMode launchMode)
+    public static void AddCoreServices(this IServiceCollection services, LaunchModeBase launchModeInstance)
     {
-        if (launchMode is not LaunchMode.Updater)
+        if (launchModeInstance is not UpdaterMode)
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Path.GetDirectoryName(Environment.ProcessPath)!)

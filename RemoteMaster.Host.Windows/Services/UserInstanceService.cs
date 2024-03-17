@@ -13,7 +13,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class UserInstanceService : IUserInstanceService
 {
-    private readonly string _argument = $"--launch-mode={LaunchMode.User.ToString().ToLower()}";
+    private readonly string _argument = $"--launchMode=user";
     private readonly string _currentExecutablePath = Environment.ProcessPath!;
 
     public bool IsRunning => FindHostProcesses().Any(IsUserInstance);

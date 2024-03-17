@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Net;
+using System.Reflection;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -27,11 +28,11 @@ internal class Program
 {
     private static async Task Main(string[] args)
     {
-        var launchArguments = ParseArguments(args);
+        var launchModeInstance = ParseArguments(args);
 
-        if (launchArguments.HelpRequested || (launchArguments.LaunchMode == LaunchMode.Updater && string.IsNullOrEmpty(launchArguments.FolderPath)) || launchArguments.LaunchMode == LaunchMode.Default)
+        if (launchModeInstance is UpdaterMode updaterMode && string.IsNullOrEmpty(updaterMode.Parameters["folderPath"].Value))
         {
-            PrintHelp(launchArguments.LaunchMode);
+            PrintHelp(launchModeInstance);
             return;
         }
 
@@ -43,7 +44,7 @@ internal class Program
         var builder = WebApplication.CreateSlimBuilder(options);
         builder.Host.UseWindowsService();
 
-        builder.Services.AddCoreServices(launchArguments.LaunchMode);
+        builder.Services.AddCoreServices(launchModeInstance);
         builder.Services.AddTransient<IServiceFactory, ServiceFactory>();
         builder.Services.AddSingleton<IUserInstanceService, UserInstanceService>();
         builder.Services.AddSingleton<IUpdaterInstanceService, UpdaterInstanceService>();
@@ -131,12 +132,12 @@ internal class Program
 
         builder.ConfigureSerilog();
 
-        switch (launchArguments.LaunchMode)
+        switch (launchModeInstance)
         {
-            case LaunchMode.User:
+            case UserMode:
                 builder.ConfigureCoreUrls();
                 break;
-            case LaunchMode.Service:
+            case ServiceMode:
                 builder.Services.AddHostedService<HostProcessMonitorService>();
                 builder.Services.AddHostedService<HostRegistrationMonitorService>();
                 builder.Services.AddHostedService<MessageLoopService>();
@@ -146,16 +147,16 @@ internal class Program
 
         var app = builder.Build();
 
-        switch (launchArguments.LaunchMode)
+        switch (launchModeInstance)
         {
-            case LaunchMode.Install:
+            case InstallMode:
             {
                 var hostInstallerService = app.Services.GetRequiredService<IHostInstaller>();
                 await hostInstallerService.InstallAsync();
 
                 return;
             }
-            case LaunchMode.Uninstall:
+            case UninstallMode:
             {
                 var hostUninstallerService = app.Services.GetRequiredService<IHostUninstaller>();
                 await hostUninstallerService.UninstallAsync();
@@ -185,17 +186,23 @@ internal class Program
         app.UseAuthentication();
         app.UseAuthorization();
 
-        if (launchArguments.LaunchMode is LaunchMode.User)
+        if (launchModeInstance is UserMode userMode)
         {
             app.MapCoreHubs();
             app.MapHub<ServiceHub>("/hubs/service");
         }
 
-        if (launchArguments.LaunchMode is LaunchMode.Updater)
+        if (launchModeInstance is UpdaterMode updateMode)
         {
             var hostUpdater = app.Services.GetRequiredService<IHostUpdater>();
 
-            await hostUpdater.UpdateAsync(launchArguments.FolderPath, launchArguments.Username, launchArguments.Password, launchArguments.ForceUpdate, launchArguments.AllowDowngrade);
+            var folderPath = updateMode.Parameters["folderPath"].Value ?? throw new InvalidOperationException("Folder path is required.");
+            var username = updateMode.Parameters["username"].Value;
+            var password = updateMode.Parameters["password"].Value;
+            var forceUpdate = updateMode.Parameters["forceUpdate"].Value?.ToLower() == "true";
+            var allowDowngrade = updateMode.Parameters["allowDowngrade"].Value?.ToLower() == "true";
+
+            await hostUpdater.UpdateAsync(folderPath, username, password, forceUpdate, allowDowngrade);
         }
         else
         {
@@ -203,118 +210,97 @@ internal class Program
         }
     }
 
-    private static LaunchArguments ParseArguments(string[] args)
+    private static LaunchModeBase ParseArguments(string[] args)
     {
-        var launchArguments = new LaunchArguments
+        var helpRequested = args.Any(arg => arg.Equals("--help", StringComparison.OrdinalIgnoreCase));
+        var modeArgument = args.FirstOrDefault(arg => arg.StartsWith("--launchMode="))?.Split('=')[1];
+
+        if (args.Length == 0 || (helpRequested && string.IsNullOrEmpty(modeArgument)))
         {
-            HelpRequested = args.Contains("--help")
-        };
+            PrintHelp(null);
+            Environment.Exit(0);
+        }
+
+        var assembly = Assembly.GetAssembly(typeof(LaunchModeBase));
+        var launchModes = assembly.GetTypes()
+            .Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(LaunchModeBase)))
+            .ToArray();
+
+        var launchModeType = launchModes.FirstOrDefault(t => string.Equals(t.Name, modeArgument + "Mode", StringComparison.OrdinalIgnoreCase));
+
+        if (launchModeType == null)
+        {
+            Console.WriteLine($"Error: Unrecognized launch mode '{modeArgument}'. Available modes are: {string.Join(", ", launchModes.Select(m => m.Name.Replace("Mode", "", StringComparison.OrdinalIgnoreCase)))}.");
+            Environment.Exit(1);
+        }
+
+        var launchModeInstance = (LaunchModeBase)Activator.CreateInstance(launchModeType);
 
         foreach (var arg in args)
         {
-            if (arg.StartsWith("--launch-mode="))
-            {
-                var modeString = arg["--launch-mode=".Length..];
+            var split = arg.Split('=', 2);
 
-                if (Enum.TryParse(modeString, true, out LaunchMode launchMode) && Enum.IsDefined(typeof(LaunchMode), launchMode))
+            if (split.Length == 2)
+            {
+                var key = split[0].StartsWith("--") ? split[0][2..] : split[0];
+                var value = split[1];
+
+                if (launchModeInstance.Parameters.ContainsKey(key))
                 {
-                    launchArguments.LaunchMode = launchMode;
+                    launchModeInstance.Parameters[key].Value = value;
                 }
-                else
-                {
-                    Console.ForegroundColor = ConsoleColor.DarkRed;
-                    Console.WriteLine($"Error: '{modeString}' is not a valid launch mode.");
-                    Console.ResetColor();
-
-                    PrintHelp();
-
-                    Environment.Exit(1);
-                }
-            }
-            else if (arg.StartsWith("--folder-path="))
-            {
-                launchArguments.FolderPath = arg["--folder-path=".Length..];
-            }
-            else if (arg.StartsWith("--username="))
-            {
-                launchArguments.Username = arg["--username=".Length..];
-            }
-            else if (arg.StartsWith("--password="))
-            {
-                launchArguments.Password = arg["--password=".Length..];
-            }
-            else if (arg.Equals("--force-update"))
-            {
-                launchArguments.ForceUpdate = true;
-            }
-            else if (arg.Equals("--allow-downgrade"))
-            {
-                launchArguments.AllowDowngrade = true;
             }
         }
 
-        return launchArguments;
+        if (helpRequested)
+        {
+            PrintHelp(launchModeInstance);
+            Environment.Exit(0);
+        }
+
+        return launchModeInstance;
     }
 
-    private static void PrintHelp(LaunchMode launchMode = LaunchMode.Default)
+    private static void PrintHelp(LaunchModeBase? specificMode)
     {
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine("Usage: RemoteMaster.Host [OPTIONS]");
-        Console.ResetColor();
-
-        Console.WriteLine();
-
-        if (launchMode == LaunchMode.Updater)
+        if (specificMode != null)
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("Updater Mode Options:");
+            Console.WriteLine($"{specificMode.Name} Mode Options:");
             Console.ResetColor();
 
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine("  --folder-path=PATH\tSpecifies the folder path for the update operation. Required.");
-            Console.WriteLine("  --username=USERNAME\tSpecifies the username for authentication. Optional.");
-            Console.WriteLine("  --password=PASSWORD\tSpecifies the password for authentication. Optional.");
-            Console.WriteLine("  --force-update\tForces the update operation to proceed, even if no update is needed. Optional.");
-            Console.WriteLine("  --allow-downgrade\tAllows the update operation to proceed with a lower version than the current one. Optional.");
-            Console.ResetColor();
+            Console.WriteLine($"  {specificMode.Description}");
 
-            Console.WriteLine();
-
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("Example:");
-            Console.ResetColor();
-
-            Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.WriteLine("  RemoteMaster.Host --launch-mode=Updater --folder-path=\"C:\\UpdateFolder\" --force-update --allow-downgrade");
-            Console.ResetColor();
+            foreach (var param in specificMode.Parameters)
+            {
+                Console.WriteLine($"  {param.Key}: {param.Value.Description} {(param.Value.IsRequired ? "(Required)" : "(Optional)")}");
+            }
         }
         else
         {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("Options:");
-            Console.ResetColor();
+            var assembly = Assembly.GetAssembly(typeof(LaunchModeBase));
+            var launchModes = assembly.GetTypes()
+                .Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(LaunchModeBase)))
+                .Select(t => Activator.CreateInstance(t) as LaunchModeBase)
+                .Where(instance => instance != null);
 
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine("  --help\t\tDisplays this help message and exits.");
-            Console.WriteLine("  --launch-mode=MODE\tSpecifies the launch mode of the program. Available modes:");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("Usage: RemoteMaster.Host [OPTIONS]");
             Console.ResetColor();
-
-            Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.WriteLine("\t\t\tUser - Runs the program in user mode.");
-            Console.WriteLine("\t\t\tService - Runs the program as a service.");
-            Console.WriteLine("\t\t\tInstall - Installs the necessary components for the program.");
-            Console.WriteLine("\t\t\tUninstall - Removes the program and its components.");
-            Console.WriteLine("\t\t\tUpdater - Updates the program to the latest version.");
-            Console.ResetColor();
-
             Console.WriteLine();
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("Examples:");
-            Console.ResetColor();
 
-            Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.WriteLine("  RemoteMaster.Host --launch-mode=Service");
-            Console.WriteLine("  RemoteMaster.Host --help");
+            foreach (var mode in launchModes)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine($"{mode.Name} Mode:");
+                Console.ResetColor();
+
+                Console.WriteLine($"  {mode.Description}");
+                Console.WriteLine();
+            }
+
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("Use \"--help --launchMode=<MODE>\" for more details on a specific mode.");
             Console.ResetColor();
         }
     }

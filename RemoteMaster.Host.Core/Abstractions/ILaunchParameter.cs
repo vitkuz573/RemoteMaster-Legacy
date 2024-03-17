@@ -2,14 +2,13 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-namespace RemoteMaster.Host.Core.Models;
+namespace RemoteMaster.Host.Core.Abstractions;
 
-public enum LaunchMode
+public interface ILaunchParameter
 {
-    Default,
-    Service,
-    Updater,
-    User,
-    Install,
-    Uninstall
+    string Description { get; }
+
+    bool IsRequired { get; }
+
+    string? Value { get; set; }
 }
