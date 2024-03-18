@@ -65,7 +65,7 @@ public class UpdaterInstanceService(IHubContext<UpdaterHub, IUpdaterClient> hubC
 
         if (force)
         {
-            arguments.Append(" --force-update");
+            arguments.Append(" --force");
         }
 
         if (allowDowngrade)
