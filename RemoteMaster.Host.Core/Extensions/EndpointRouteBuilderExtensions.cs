@@ -4,19 +4,28 @@
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
+using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
+using RemoteMaster.Host.Core.Models;
 
 namespace RemoteMaster.Host.Core.Extensions;
 
 public static class EndpointRouteBuilderExtensions
 {
-    public static void MapCoreHubs(this IEndpointRouteBuilder endpoints)
+    public static void MapCoreHubs(this IEndpointRouteBuilder endpoints, LaunchModeBase launchModeBase)
     {
-        endpoints.MapHub<ControlHub>("/hubs/control");
-        endpoints.MapHub<FileManagerHub>("/hubs/filemanager");
-        endpoints.MapHub<TaskManagerHub>("/hubs/taskmanager");
-        endpoints.MapHub<ScreenRecorderHub>("/hubs/screenrecorder");
-        endpoints.MapHub<DomainMembershipHub>("/hubs/domainmembership");
-        endpoints.MapHub<UpdaterHub>("/hubs/updater");
+        if (launchModeBase is UserMode)
+        {
+            endpoints.MapHub<ControlHub>("/hubs/control");
+            endpoints.MapHub<FileManagerHub>("/hubs/filemanager");
+            endpoints.MapHub<TaskManagerHub>("/hubs/taskmanager");
+            endpoints.MapHub<ScreenRecorderHub>("/hubs/screenrecorder");
+            endpoints.MapHub<DomainMembershipHub>("/hubs/domainmembership");
+        }
+
+        if (launchModeBase is UserMode or UpdaterMode)
+        {
+            endpoints.MapHub<UpdaterHub>("/hubs/updater");
+        }
     }
 }

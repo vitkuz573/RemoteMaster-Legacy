@@ -2,6 +2,7 @@
 @using RemoteMaster.Server.Models
 @inherits CommonDialogBase
 @inject IOptions<ApplicationSettings> ApplicationSettings
+@inject IHttpContextAccessor HttpContextAccessor
 
 <CommonDialog Hosts="@Hosts">
     <Content>

@@ -10,11 +10,13 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Extensions;
+using RemoteMaster.Host.Core.Hubs;
 using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Host.Windows.Abstractions;
@@ -42,6 +44,9 @@ internal class Program
         };
 
         var builder = WebApplication.CreateSlimBuilder(options);
+
+        builder.Configuration.AddCommandLine(args);
+
         builder.Host.UseWindowsService();
 
         builder.Services.AddCoreServices(launchModeInstance);
@@ -130,18 +135,20 @@ internal class Program
                 });
         }
 
-        builder.ConfigureSerilog();
+        builder.ConfigureSerilog(launchModeInstance);
+
+        builder.ConfigureCoreUrls(launchModeInstance);
 
         switch (launchModeInstance)
         {
-            case UserMode:
-                builder.ConfigureCoreUrls();
-                break;
             case ServiceMode:
                 builder.Services.AddHostedService<HostProcessMonitorService>();
                 builder.Services.AddHostedService<HostRegistrationMonitorService>();
                 builder.Services.AddHostedService<MessageLoopService>();
                 builder.Services.AddHostedService<CommandListenerService>();
+                break;
+            case UpdaterMode:
+                builder.Services.AddHostedService<UpdaterBackground>();
                 break;
         }
 
@@ -175,8 +182,12 @@ internal class Program
         var firewallSettingService = app.Services.GetRequiredService<IFirewallSettingService>();
 
         var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-        var applicationPath = Path.Combine(programFiles, "RemoteMaster", "Host", "RemoteMaster.Host.exe");
-        firewallSettingService.Execute("Remote Master Host", applicationPath);
+        
+        var hostApplicationPath = Path.Combine(programFiles, "RemoteMaster", "Host", "RemoteMaster.Host.exe");
+        var hostUpdaterApplicationPath = Path.Combine(programFiles, "RemoteMaster", "Host", "Updater", "RemoteMaster.Host.exe");
+        
+        firewallSettingService.Execute("Remote Master Host", hostApplicationPath);
+        firewallSettingService.Execute("Remote Master Host Updater", hostUpdaterApplicationPath);
 
         if (!app.Environment.IsDevelopment())
         {
@@ -186,28 +197,15 @@ internal class Program
         app.UseAuthentication();
         app.UseAuthorization();
 
+        app.MapCoreHubs(launchModeInstance);
+
         if (launchModeInstance is UserMode userMode)
         {
-            app.MapCoreHubs();
             app.MapHub<ServiceHub>("/hubs/service");
         }
 
-        if (launchModeInstance is UpdaterMode updateMode)
-        {
-            var hostUpdater = app.Services.GetRequiredService<IHostUpdater>();
+        await app.RunAsync();
 
-            var folderPath = updateMode.Parameters["folder-path"].Value ?? throw new InvalidOperationException("Folder path is required.");
-            var username = updateMode.Parameters["username"].Value;
-            var password = updateMode.Parameters["password"].Value;
-            var force = updateMode.Parameters["force"].Value?.ToLower() == "true";
-            var allowDowngrade = updateMode.Parameters["allow-downgrade"].Value?.ToLower() == "true";
-
-            await hostUpdater.UpdateAsync(folderPath, username, password, force, allowDowngrade);
-        }
-        else
-        {
-            await app.RunAsync();
-        }
     }
 
     private static LaunchModeBase? ParseArguments(string[] args)
@@ -349,7 +347,7 @@ internal class Program
                 .Where(instance => instance != null);
 
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Usage: RemoteMaster.Host [OPTIONS]");
+            Console.WriteLine($"Usage: {Assembly.GetExecutingAssembly().GetName().Name} [OPTIONS]");
             Console.ResetColor();
             Console.WriteLine();
 

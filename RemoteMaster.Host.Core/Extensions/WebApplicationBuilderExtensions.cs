@@ -5,13 +5,16 @@
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Models;
 using Serilog;
+using Serilog.Events;
 
 namespace RemoteMaster.Host.Core.Extensions;
 
 public static class WebApplicationBuilderExtensions
 {
-    public static void ConfigureCoreUrls(this WebApplicationBuilder builder)
+    public static void ConfigureCoreUrls(this WebApplicationBuilder builder, LaunchModeBase launchModeInstance)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
@@ -24,17 +27,30 @@ public static class WebApplicationBuilderExtensions
             {
                 var httpsCertificate = new X509Certificate2(certificatePath, "YourPfxPassword");
 
-                options.ListenAnyIP(5001, listenOptions =>
+                if (launchModeInstance is UserMode)
                 {
-                    listenOptions.UseHttps(httpsCertificate);
-                });
+                    options.ListenAnyIP(5001, listenOptions =>
+                    {
+                        listenOptions.UseHttps(httpsCertificate);
+                    });
+                }
+                else if (launchModeInstance is UpdaterMode)
+                {
+                    options.ListenAnyIP(6001, listenOptions =>
+                    {
+                        listenOptions.UseHttps(httpsCertificate);
+                    });
+                }
             }
 
-            options.ListenAnyIP(5000);
+            if (launchModeInstance is UserMode)
+            {
+                options.ListenAnyIP(5000);
+            }
         });
     }
 
-    public static void ConfigureSerilog(this WebApplicationBuilder builder)
+    public static void ConfigureSerilog(this WebApplicationBuilder builder, LaunchModeBase launchModeInstance)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
@@ -48,6 +64,12 @@ public static class WebApplicationBuilderExtensions
             configuration.MinimumLevel.Debug();
 #else
             configuration.MinimumLevel.Information();
+            
+            if (launchModeInstance is UpdaterMode)
+            {
+                configuration.MinimumLevel.Override("Microsoft", LogEventLevel.Warning);
+                configuration.MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning);
+            }
 #endif
             configuration.WriteTo.Console();
             configuration.WriteTo.Seq("http://172.20.20.33:5341");

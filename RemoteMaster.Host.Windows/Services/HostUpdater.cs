@@ -83,7 +83,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         catch (Exception ex)
         {
             Log.Error("Error while updating host: {Message}", ex.Message);
-            AttemptEmergencyRecovery();
+            await AttemptEmergencyRecovery();
         }
     }
 
@@ -267,11 +267,11 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         {
             Log.Error("Failed to start all services after {Attempts} attempts. Initiating emergency recovery...", attempts);
 
-            AttemptEmergencyRecovery();
+            await AttemptEmergencyRecovery();
         }
     }
 
-    private void AttemptEmergencyRecovery()
+    private async Task AttemptEmergencyRecovery()
     {
         try
         {
@@ -286,6 +286,8 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             {
                 userInstanceService.Stop();
             }
+
+            await WaitForFileRelease(BaseFolderPath);
 
             var sourceExePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "Updater", "RemoteMaster.Host.exe");
             var destinationExePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "RemoteMaster.Host.exe");

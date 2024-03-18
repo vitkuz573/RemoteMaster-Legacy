@@ -37,6 +37,16 @@ public partial class UpdateDialog
         {
             var updateTask = Task.Run(async () =>
             {
+                var accessToken = HttpContextAccessor.HttpContext?.Request.Cookies["accessToken"];
+
+                var updaterConnection = new HubConnectionBuilder()
+                .WithUrl($"https://{computer.IpAddress}:6001/hubs/updater", options =>
+                {
+                    options.Headers.Add("Authorization", $"Bearer {accessToken}");
+                })
+                .AddMessagePackProtocol()
+                .Build();
+
                 var updateRequest = new UpdateRequest(_folderPath)
                 {
                     UserCredentials = new Credentials()
@@ -59,6 +69,19 @@ public partial class UpdateDialog
                     });
 
                     _subscribedConnections.Add(connection);
+                }
+
+                await updaterConnection.StartAsync();
+
+                if (!_subscribedConnections.Contains(updaterConnection))
+                {
+                    updaterConnection.On<ScriptResult>("ReceiveScriptResult", async scriptResult =>
+                    {
+                        UpdateResultsForComputer(computer, scriptResult);
+                        await InvokeAsync(StateHasChanged);
+                    });
+
+                    _subscribedConnections.Add(updaterConnection);
                 }
             });
 
