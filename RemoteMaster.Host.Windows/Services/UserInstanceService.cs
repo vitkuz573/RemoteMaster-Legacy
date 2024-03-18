@@ -4,7 +4,6 @@
 
 using System.Diagnostics;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Windows.Extensions;
 using RemoteMaster.Host.Windows.Models;
 using Serilog;
