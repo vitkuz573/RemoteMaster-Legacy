@@ -40,7 +40,7 @@ public class NetworkDriveService : INetworkDriveService
                 return true;
             }
 
-            Log.Error("Failed to map network drive with remote path {RemotePath}. Error code: {Result}", remotePath, (int)result);
+            Log.Error("Failed to map network drive with remote path {RemotePath}. Error code: {ErrorValue} ({ErrorCode})", remotePath, result.ToString(), (int)result);
             
             return false;
         }
@@ -66,7 +66,7 @@ public class NetworkDriveService : INetworkDriveService
 
         if (result != WIN32_ERROR.NO_ERROR)
         {
-            Log.Error("Failed to cancel network drive with remote path {RemotePath}. Error code: {Result}", remotePath, (int)result);
+            Log.Error("Failed to cancel network drive with remote path {RemotePath}. Error code: {ErrorValue} ({ErrorCode})", remotePath, result.ToString(), (int)result);
 
             return false;
         }
