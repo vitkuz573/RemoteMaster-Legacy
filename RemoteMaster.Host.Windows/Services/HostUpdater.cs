@@ -10,6 +10,7 @@ using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Models;
+using Serilog;
 using Windows.Win32.Foundation;
 using static RemoteMaster.Shared.Models.ScriptResult;
 
@@ -36,6 +37,8 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
                 if (!isMapped)
                 {
+                    Log.Error("Unable to map network drive with the provided credentials. Update aborted.");
+
                     await ReadStreamAsync(new StringReader("Unable to map network drive with the provided credentials. Update aborted."), MessageType.Error);
                     
                     return;
@@ -53,6 +56,8 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             if (!isDownloaded)
             {
+                Log.Error("Download or copy failed. Update aborted.");
+
                 await ReadStreamAsync(new StringReader("Download or copy failed. Update aborted."), MessageType.Error);
                 
                 return;
@@ -60,6 +65,8 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             if (!await CheckForUpdateVersion(allowDowngrade))
             {
+                Log.Error("Update aborted due to version check.");
+
                 await ReadStreamAsync(new StringReader("Update aborted due to version check."), MessageType.Error);
                 
                 return;
@@ -67,6 +74,8 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             if (!await NeedUpdate() && !force)
             {
+                Log.Information("No update required. Files are identical.");
+
                 await ReadStreamAsync(new StringReader("No update required. Files are identical."), MessageType.Output);
 
                 return;
@@ -83,10 +92,14 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             hostService.Start();
             await EnsureServicesRunning([hostService, userInstanceService], 5, 5);
 
+            Log.Information("Update completed successfully.");
+
             await ReadStreamAsync(new StringReader("Update completed successfully."), MessageType.Output);
         }
         catch (Exception ex)
         {
+            Log.Error("Error while updating host: {Message}", ex.Message);
+
             await ReadStreamAsync(new StringReader($"Error while updating host: {ex.Message}"), MessageType.Error);
             await AttemptEmergencyRecovery();
         }
@@ -117,6 +130,8 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
                 if (!copiedSuccessfully)
                 {
+                    Log.Error($"File {file.Name} copied with errors. Checksum does not match.");
+
                     await ReadStreamAsync(new StringReader($"File {file.Name} copied with errors. Checksum does not match."), MessageType.Error);
 
                     return false;
@@ -137,6 +152,8 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         }
         catch (Exception ex)
         {
+            Log.Error($"Failed to copy directory {sourceDir} to {destDir}: {ex.Message}");
+
             await ReadStreamAsync(new StringReader($"Failed to copy directory {sourceDir} to {destDir}: {ex.Message}"), MessageType.Error);
 
             return false;
@@ -159,20 +176,28 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
         var checksumMatch = sourceChecksum == destChecksum;
 
+        Log.Information($"Verifying checksum: {sourceFilePath} [Source Checksum: {sourceChecksum}] -> {destFilePath} [Destination Checksum: {destChecksum}].");
+
         await ReadStreamAsync(new StringReader($"Verifying checksum: {sourceFilePath} [Source Checksum: {sourceChecksum}] -> {destFilePath} [Destination Checksum: {destChecksum}]."), MessageType.Output);
 
         if (expectDifference && !checksumMatch)
         {
+            Log.Information("Checksums do not match as expected for an update. An update is needed.");
+
             await ReadStreamAsync(new StringReader("Checksums do not match as expected for an update. An update is needed."), MessageType.Output);
 
             return false;
         }
         else if (!expectDifference && !checksumMatch)
         {
+            Log.Error("Unexpected checksum mismatch. The files may have been tampered with or corrupted.");
+
             await ReadStreamAsync(new StringReader("Unexpected checksum mismatch. The files may have been tampered with or corrupted."), MessageType.Error);
 
             return false;
         }
+
+        Log.Information("Checksum verification successful. No differences found.");
 
         await ReadStreamAsync(new StringReader("Checksum verification successful. No differences found."), MessageType.Output);
 
@@ -195,6 +220,8 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
                 }
                 else
                 {
+                    Log.Error($"Checksum verification failed for file {sourceFile}.");
+
                     await ReadStreamAsync(new StringReader($"Checksum verification failed for file {sourceFile}."), MessageType.Error);
                     
                     return false;
@@ -251,6 +278,8 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
         for (var attempt = 1; attempt <= attempts; attempt++)
         {
+            Log.Information($"Attempt {attempt}: Checking if services are running...");
+
             await ReadStreamAsync(new StringReader($"Attempt {attempt}: Checking if services are running..."), MessageType.Output);
             
             await Task.Delay(TimeSpan.FromSeconds(delayInSeconds));
@@ -259,10 +288,14 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             if (!allServicesRunning)
             {
+                Log.Warning("Not all services are running. Waiting and retrying...");
+
                 await ReadStreamAsync(new StringReader("Not all services are running. Waiting and retrying..."), MessageType.Output);
             }
             else
             {
+                Log.Information("All services have been successfully started.");
+
                 await ReadStreamAsync(new StringReader("All services have been successfully started."), MessageType.Output);
                 break;
             }
@@ -270,6 +303,8 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
         if (!allServicesRunning)
         {
+            Log.Error($"Failed to start all services after {attempts} attempts. Initiating emergency recovery...");
+
             await ReadStreamAsync(new StringReader($"Failed to start all services after {attempts} attempts. Initiating emergency recovery..."), MessageType.Output);
 
             await AttemptEmergencyRecovery();
@@ -299,12 +334,16 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             File.Copy(sourceExePath, destinationExePath, true);
 
+            Log.Information("Emergency recovery completed successfully. Attempting to restart services...");
+
             await ReadStreamAsync(new StringReader("Emergency recovery completed successfully. Attempting to restart services..."), MessageType.Output);
 
             hostService.Start();
         }
         catch (Exception ex)
         {
+            Log.Error("Emergency recovery failed: {Message}", ex.Message);
+
             await ReadStreamAsync(new StringReader($"Emergency recovery failed: {ex.Message}"), MessageType.Error);
         }
     }
@@ -338,6 +377,8 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
         if (updateVersion <= currentVersion && !allowDowngrade)
         {
+            Log.Information($"Current version {currentVersion} is up to date or newer than update version {updateVersion}. To allow downgrades, use the --allow-downgrade=true option.");
+
             await ReadStreamAsync(new StringReader($"Current version {currentVersion} is up to date or newer than update version {updateVersion}. To allow downgrades, use the --allow-downgrade=true option."), MessageType.Output);
             
             return false;
