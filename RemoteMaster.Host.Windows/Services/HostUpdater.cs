@@ -49,6 +49,8 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             var isDownloaded = await CopyDirectoryAsync(sourceFolderPath, _updateFolderPath, true);
 
+            networkDriveService.CancelNetworkDrive(folderPath);
+
             if (!isDownloaded)
             {
                 await ReadStreamAsync(new StringReader("Download or copy failed. Update aborted."), MessageType.Error);
