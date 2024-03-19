@@ -64,12 +64,12 @@ public class UpdaterInstanceService(IHubContext<UpdaterHub, IUpdaterClient> hubC
 
         if (force)
         {
-            arguments.Append(" --force");
+            arguments.Append(" --force=true");
         }
 
         if (allowDowngrade)
         {
-            arguments.Append(" --allow-downgrade");
+            arguments.Append(" --allow-downgrade=true");
         }
 
         return arguments.ToString();
