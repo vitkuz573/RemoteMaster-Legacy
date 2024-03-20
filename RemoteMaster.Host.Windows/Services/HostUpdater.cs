@@ -40,20 +40,20 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             if (isNetworkPath)
             {
-                await ReadStreamAsync($"Attempting to map network drive with remote path: {folderPath}", MessageType.Output);
+                await Notify($"Attempting to map network drive with remote path: {folderPath}", MessageType.Output);
 
                 var isMapped = networkDriveService.MapNetworkDrive(folderPath, username, password);
 
                 if (!isMapped)
                 {
-                    await ReadStreamAsync($"Failed to map network drive with remote path {folderPath}. Details can be found in the log files.", MessageType.Error);
-                    await ReadStreamAsync("Unable to map network drive with the provided credentials. Update aborted.", MessageType.Error);
+                    await Notify($"Failed to map network drive with remote path {folderPath}. Details can be found in the log files.", MessageType.Error);
+                    await Notify("Unable to map network drive with the provided credentials. Update aborted.", MessageType.Error);
                     
                     return;
                 }
                 else
                 {
-                    await ReadStreamAsync($"Successfully mapped network drive with remote path: {folderPath}", MessageType.Output); ;
+                    await Notify($"Successfully mapped network drive with remote path: {folderPath}", MessageType.Output); ;
                 }
             }
 
@@ -64,36 +64,36 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             var isDownloaded = await CopyDirectoryAsync(sourceFolderPath, _updateFolderPath, true);
 
-            await ReadStreamAsync($"Attempting to cancel network drive with remote path: {folderPath}", MessageType.Output);
+            await Notify($"Attempting to cancel network drive with remote path: {folderPath}", MessageType.Output);
 
             var isCancelled = networkDriveService.CancelNetworkDrive(folderPath);
 
             if (!isCancelled)
             {
-                await ReadStreamAsync($"Failed to cancel network drive with remote path {folderPath}. Details can be found in the log files.", MessageType.Error);
+                await Notify($"Failed to cancel network drive with remote path {folderPath}. Details can be found in the log files.", MessageType.Error);
             }
             else
             {
-                await ReadStreamAsync($"Successfully canceled network drive with remote path: {folderPath}", MessageType.Output);
+                await Notify($"Successfully canceled network drive with remote path: {folderPath}", MessageType.Output);
             }
 
             if (!isDownloaded)
             {
-                await ReadStreamAsync("Download or copy failed. Update aborted.", MessageType.Error);
+                await Notify("Download or copy failed. Update aborted.", MessageType.Error);
                 
                 return;
             }
 
             if (!await CheckForUpdateVersion(allowDowngrade))
             {
-                await ReadStreamAsync("Update aborted due to version check.", MessageType.Error);
+                await Notify("Update aborted due to version check.", MessageType.Error);
                 
                 return;
             }
 
             if (!await NeedUpdate() && !force)
             {
-                await ReadStreamAsync("No update required. Files are identical.", MessageType.Output);
+                await Notify("No update required. Files are identical.", MessageType.Output);
 
                 return;
             }
@@ -109,11 +109,11 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             hostService.Start();
             await EnsureServicesRunning([hostService, userInstanceService], 5, 5);
 
-            await ReadStreamAsync("Update completed successfully.", MessageType.Output);
+            await Notify("Update completed successfully.", MessageType.Output);
         }
         catch (Exception ex)
         {
-            await ReadStreamAsync($"Error while updating host: {ex.Message}", MessageType.Error);
+            await Notify($"Error while updating host: {ex.Message}", MessageType.Error);
             await AttemptEmergencyRecovery();
         }
     }
@@ -143,7 +143,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
                 if (!copiedSuccessfully)
                 {
-                    await ReadStreamAsync($"File {file.Name} copied with errors. Checksum does not match.", MessageType.Error);
+                    await Notify($"File {file.Name} copied with errors. Checksum does not match.", MessageType.Error);
 
                     return false;
                 }
@@ -163,7 +163,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         }
         catch (Exception ex)
         {
-            await ReadStreamAsync($"Failed to copy directory {sourceDir} to {destDir}: {ex.Message}", MessageType.Error);
+            await Notify($"Failed to copy directory {sourceDir} to {destDir}: {ex.Message}", MessageType.Error);
 
             return false;
         }
@@ -185,22 +185,22 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
         var checksumMatch = sourceChecksum == destChecksum;
 
-        await ReadStreamAsync($"Verifying checksum: {sourceFilePath} [Source Checksum: {sourceChecksum}] -> {destFilePath} [Destination Checksum: {destChecksum}].", MessageType.Output);
+        await Notify($"Verifying checksum: {sourceFilePath} [Source Checksum: {sourceChecksum}] -> {destFilePath} [Destination Checksum: {destChecksum}].", MessageType.Output);
 
         if (expectDifference && !checksumMatch)
         {
-            await ReadStreamAsync("Checksums do not match as expected for an update. An update is needed.", MessageType.Output);
+            await Notify("Checksums do not match as expected for an update. An update is needed.", MessageType.Output);
 
             return false;
         }
         else if (!expectDifference && !checksumMatch)
         {
-            await ReadStreamAsync("Unexpected checksum mismatch. The files may have been tampered with or corrupted.", MessageType.Error);
+            await Notify("Unexpected checksum mismatch. The files may have been tampered with or corrupted.", MessageType.Error);
 
             return false;
         }
 
-        await ReadStreamAsync("Checksum verification successful. No differences found.", MessageType.Output);
+        await Notify("Checksum verification successful. No differences found.", MessageType.Output);
 
         return true;
     }
@@ -221,7 +221,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
                 }
                 else
                 {
-                    await ReadStreamAsync($"Checksum verification failed for file {sourceFile}.", MessageType.Error);
+                    await Notify($"Checksum verification failed for file {sourceFile}.", MessageType.Error);
                     
                     return false;
                 }
@@ -277,7 +277,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
         for (var attempt = 1; attempt <= attempts; attempt++)
         {
-            await ReadStreamAsync($"Attempt {attempt}: Checking if services are running...", MessageType.Output);
+            await Notify($"Attempt {attempt}: Checking if services are running...", MessageType.Output);
             
             await Task.Delay(TimeSpan.FromSeconds(delayInSeconds));
 
@@ -285,18 +285,18 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             if (!allServicesRunning)
             {
-                await ReadStreamAsync("Not all services are running. Waiting and retrying...", MessageType.Warning);
+                await Notify("Not all services are running. Waiting and retrying...", MessageType.Warning);
             }
             else
             {
-                await ReadStreamAsync("All services have been successfully started.", MessageType.Output);
+                await Notify("All services have been successfully started.", MessageType.Output);
                 break;
             }
         }
 
         if (!allServicesRunning)
         {
-            await ReadStreamAsync($"Failed to start all services after {attempts} attempts. Initiating emergency recovery...", MessageType.Output);
+            await Notify($"Failed to start all services after {attempts} attempts. Initiating emergency recovery...", MessageType.Output);
 
             await AttemptEmergencyRecovery();
         }
@@ -325,13 +325,13 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             File.Copy(sourceExePath, destinationExePath, true);
 
-            await ReadStreamAsync("Emergency recovery completed successfully. Attempting to restart services...", MessageType.Output);
+            await Notify("Emergency recovery completed successfully. Attempting to restart services...", MessageType.Output);
 
             hostService.Start();
         }
         catch (Exception ex)
         {
-            await ReadStreamAsync($"Emergency recovery failed: {ex.Message}", MessageType.Error);
+            await Notify($"Emergency recovery failed: {ex.Message}", MessageType.Error);
         }
     }
 
@@ -364,7 +364,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
         if (updateVersion <= currentVersion && !allowDowngrade)
         {
-            await ReadStreamAsync($"Current version {currentVersion} is up to date or newer than update version {updateVersion}. To allow downgrades, use the --allow-downgrade=true option.", MessageType.Output);
+            await Notify($"Current version {currentVersion} is up to date or newer than update version {updateVersion}. To allow downgrades, use the --allow-downgrade=true option.", MessageType.Output);
             
             return false;
         }
@@ -384,7 +384,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         return new Version(versionInfo.FileVersion);
     }
 
-    private async Task ReadStreamAsync(string message, MessageType messageType)
+    private async Task Notify(string message, MessageType messageType)
     {
         if (messageType == MessageType.Output)
         {

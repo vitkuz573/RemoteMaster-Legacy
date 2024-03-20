@@ -12,7 +12,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class NetworkDriveService : INetworkDriveService
 {
-    public bool MapNetworkDrive(string remotePath, string username, string password)
+    public bool MapNetworkDrive(string remotePath, string? username, string? password)
     {
         Log.Information("Attempting to map network drive with remote path: {RemotePath}", remotePath);
 
