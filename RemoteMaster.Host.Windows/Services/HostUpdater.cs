@@ -67,6 +67,8 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             var isDownloaded = await CopyDirectoryAsync(sourceFolderPath, _updateFolderPath, true);
 
+            Log.Information($"Attempting to cancel network drive with remote path: {folderPath}");
+
             await ReadStreamAsync(new StringReader($"Attempting to cancel network drive with remote path: {folderPath}"), MessageType.Output);
 
             var isCancelled = networkDriveService.CancelNetworkDrive(folderPath);
