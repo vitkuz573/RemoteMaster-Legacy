@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -20,7 +21,7 @@ public static class ServiceCollectionExtensions
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Path.GetDirectoryName(Environment.ProcessPath)!)
-                .AddJsonFile("RemoteMaster.Host.json");
+                .AddJsonFile($"{Assembly.GetEntryAssembly().GetName().Name}.json");
 
             var configuration = builder.Build();
 

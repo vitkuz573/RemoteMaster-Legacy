@@ -95,9 +95,7 @@ public class UpdaterInstanceService(IHubContext<UpdaterHub, IUpdaterClient> hubC
 
             process.StartInfo = new ProcessStartInfo(_executablePath, additionalArguments)
             {
-                CreateNoWindow = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true
+                CreateNoWindow = true
             };
 
             process.Start();
