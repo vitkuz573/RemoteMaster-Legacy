@@ -28,6 +28,13 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
         try
         {
+            await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult
+            {
+                Message = Environment.ProcessId.ToString(),
+                Type = MessageType.Service,
+                Meta = "pid"
+            });
+
             var sourceFolderPath = Path.Combine(folderPath, "Host");
             var isNetworkPath = folderPath.StartsWith(@"\\");
 
