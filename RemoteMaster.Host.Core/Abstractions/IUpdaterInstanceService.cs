@@ -8,5 +8,5 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IUpdaterInstanceService
 {
-    Task Start(UpdateRequest updateRequest);
+    void Start(UpdateRequest updateRequest);
 }

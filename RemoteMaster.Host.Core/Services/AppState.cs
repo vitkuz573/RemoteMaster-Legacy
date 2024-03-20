@@ -11,7 +11,7 @@ public class AppState : IAppState
 {
     public event EventHandler<IViewer>? ViewerAdded;
 
-    public event EventHandler<IViewer>? ViewerRemoved;
+    public event EventHandler<IViewer?>? ViewerRemoved;
 
     private readonly ConcurrentDictionary<string, IViewer> _viewers = new();
 

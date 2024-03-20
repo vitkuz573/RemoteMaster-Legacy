@@ -8,7 +8,7 @@ public interface IAppState
 {
     event EventHandler<IViewer> ViewerAdded;
 
-    event EventHandler<IViewer> ViewerRemoved;
+    event EventHandler<IViewer?> ViewerRemoved;
 
     IReadOnlyDictionary<string, IViewer> Viewers { get; }
 

@@ -4,22 +4,19 @@
 
 using System.Diagnostics;
 using System.Text;
-using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Core.Hubs;
 using RemoteMaster.Shared.Models;
 using Serilog;
-using static RemoteMaster.Shared.Models.ScriptResult;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class UpdaterInstanceService(IHubContext<UpdaterHub, IUpdaterClient> hubContext) : IUpdaterInstanceService
+public class UpdaterInstanceService : IUpdaterInstanceService
 {
     private readonly string _argument = $"--launch-mode=updater";
     private readonly string _sourcePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "RemoteMaster.Host.exe");
     private readonly string _executablePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "Updater", "RemoteMaster.Host.exe");
 
-    public async Task Start(UpdateRequest updateRequest)
+    public void Start(UpdateRequest updateRequest)
     {
         ArgumentNullException.ThrowIfNull(updateRequest);
 
@@ -27,7 +24,7 @@ public class UpdaterInstanceService(IHubContext<UpdaterHub, IUpdaterClient> hubC
 
         try
         {
-            await StartNewInstance(additionalArguments);
+            StartNewInstance(additionalArguments);
             Log.Information("Successfully started a new instance of the host.");
         }
         catch (Exception ex)
@@ -75,7 +72,7 @@ public class UpdaterInstanceService(IHubContext<UpdaterHub, IUpdaterClient> hubC
         return arguments.ToString();
     }
 
-    private async Task StartNewInstance(string additionalArguments)
+    private void StartNewInstance(string additionalArguments)
     {
         try
         {
@@ -100,20 +97,6 @@ public class UpdaterInstanceService(IHubContext<UpdaterHub, IUpdaterClient> hubC
 
             process.Start();
 
-            await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult
-            {
-                Message = process.Id.ToString(),
-                Type = MessageType.Service,
-                Meta = "pid"
-            });
-
-            var readErrorTask = ReadStreamAsync(process.StandardError, MessageType.Error);
-            var readOutputTask = ReadStreamAsync(process.StandardOutput, MessageType.Output);
-
-            await process.WaitForExitAsync();
-
-            await Task.WhenAll(readErrorTask, readOutputTask);
-
             Log.Information("Started a new instance of the host with options: {@Options}", process.StartInfo);
         }
         catch (IOException ioEx)
@@ -123,18 +106,6 @@ public class UpdaterInstanceService(IHubContext<UpdaterHub, IUpdaterClient> hubC
         catch (Exception ex)
         {
             Log.Error(ex, "Error starting new instance of the host. Executable path: {Path}", _executablePath);
-        }
-    }
-
-    private async Task ReadStreamAsync(TextReader streamReader, MessageType messageType)
-    {
-        while (await streamReader.ReadLineAsync() is { } line)
-        {
-            await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult
-            {
-                Message = line,
-                Type = messageType
-            });
         }
     }
 }
