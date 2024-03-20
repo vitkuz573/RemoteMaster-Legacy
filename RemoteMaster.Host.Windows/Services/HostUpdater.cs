@@ -33,15 +33,23 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             if (isNetworkPath)
             {
+                await ReadStreamAsync(new StringReader($"Attempting to map network drive with remote path: {folderPath}"), MessageType.Output);
+
                 var isMapped = networkDriveService.MapNetworkDrive(folderPath, username, password);
 
                 if (!isMapped)
                 {
+                    await ReadStreamAsync(new StringReader($"Failed to map network drive with remote path {folderPath}. Details can be found in the log files."), MessageType.Error);
+
                     Log.Error("Unable to map network drive with the provided credentials. Update aborted.");
 
                     await ReadStreamAsync(new StringReader("Unable to map network drive with the provided credentials. Update aborted."), MessageType.Error);
                     
                     return;
+                }
+                else
+                {
+                    await ReadStreamAsync(new StringReader($"Successfully mapped network drive with remote path: {folderPath}"), MessageType.Output); ;
                 }
             }
 
@@ -52,7 +60,18 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             var isDownloaded = await CopyDirectoryAsync(sourceFolderPath, _updateFolderPath, true);
 
-            networkDriveService.CancelNetworkDrive(folderPath);
+            await ReadStreamAsync(new StringReader($"Attempting to cancel network drive with remote path: {folderPath}"), MessageType.Output);
+
+            var isCancelled = networkDriveService.CancelNetworkDrive(folderPath);
+
+            if (!isCancelled)
+            {
+                await ReadStreamAsync(new StringReader($"Failed to cancel network drive with remote path {folderPath}. Details can be found in the log files."), MessageType.Error);
+            }
+            else
+            {
+                await ReadStreamAsync(new StringReader($"Successfully canceled network drive with remote path: {folderPath}"), MessageType.Output);
+            }
 
             if (!isDownloaded)
             {
