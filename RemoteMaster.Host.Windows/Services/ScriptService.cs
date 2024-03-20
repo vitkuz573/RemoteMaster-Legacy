@@ -59,7 +59,7 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
             {
                 Shell.Cmd => $"cmd.exe /c \"{tempFilePath}\"",
                 Shell.PowerShell => $"powershell.exe -ExecutionPolicy Bypass -File \"{tempFilePath}\"",
-                _ => throw new ArgumentOutOfRangeException(nameof(scriptExecutionRequest.Shell), scriptExecutionRequest.Shell, null)
+                _ => throw new ArgumentOutOfRangeException(nameof(scriptExecutionRequest))
             };
 
             using var process = new NativeProcess();

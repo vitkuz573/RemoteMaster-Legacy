@@ -16,6 +16,7 @@ public class ScriptResult
     {
         Output,
         Error,
+        Warning,
         Service
     }
 }
