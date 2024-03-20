@@ -21,7 +21,7 @@ public class UpdaterBackground(IConfiguration configuration, IHostApplicationLif
             var force = configuration["force"] != null;
             var allowDowngrade = configuration["allow-downgrade"] != null;
 
-            Thread.Sleep(3000);
+            await Task.Delay(2000);
 
             await hostUpdater.UpdateAsync(folderPath, username, password, force, allowDowngrade);
 
