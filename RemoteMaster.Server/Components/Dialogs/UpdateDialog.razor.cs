@@ -62,7 +62,7 @@ public partial class UpdateDialog
 
                 if (!_subscribedConnections.Contains(connection))
                 {
-                    connection.On<ScriptResult>("ReceiveScriptResult", async scriptResult =>
+                    connection.On<Message>("ReceiveScriptResult", async scriptResult =>
                     {
                         UpdateResultsForComputer(computer, scriptResult);
                         await InvokeAsync(StateHasChanged);
@@ -75,7 +75,7 @@ public partial class UpdateDialog
 
                 if (!_subscribedConnections.Contains(updaterConnection))
                 {
-                    updaterConnection.On<ScriptResult>("ReceiveScriptResult", async scriptResult =>
+                    updaterConnection.On<Message>("ReceiveScriptResult", async scriptResult =>
                     {
                         UpdateResultsForComputer(computer, scriptResult);
                         await InvokeAsync(StateHasChanged);
@@ -91,7 +91,7 @@ public partial class UpdateDialog
         await Task.WhenAll(updateTasks);
     }
 
-    private void UpdateResultsForComputer(Computer computer, ScriptResult scriptResult)
+    private void UpdateResultsForComputer(Computer computer, Message scriptResult)
     {
         if (!_resultsPerComputer.TryGetValue(computer, out var results))
         {
@@ -101,11 +101,11 @@ public partial class UpdateDialog
 
         if (scriptResult.Meta == "pid")
         {
-            results.LastPid = int.Parse(scriptResult.Message);
+            results.LastPid = int.Parse(scriptResult.Content);
         }
         else
         {
-            results.Messages.AppendLine(scriptResult.Message);
+            results.Messages.AppendLine(scriptResult.Content);
         }
     }
 

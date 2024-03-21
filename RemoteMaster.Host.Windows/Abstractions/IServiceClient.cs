@@ -8,5 +8,5 @@ namespace RemoteMaster.Host.Windows.Abstractions;
 
 public interface IServiceClient
 { 
-    Task ReceiveScriptResult(ScriptResult result);
+    Task ReceiveScriptResult(Message result);
 }

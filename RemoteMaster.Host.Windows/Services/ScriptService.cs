@@ -9,7 +9,7 @@ using RemoteMaster.Host.Core.Hubs;
 using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Shared.Models;
 using Serilog;
-using static RemoteMaster.Shared.Models.ScriptResult;
+using static RemoteMaster.Shared.Models.Message;
 
 namespace RemoteMaster.Host.Windows.Services;
 
@@ -75,10 +75,8 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
 
             process.Start();
 
-            await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult
+            await hubContext.Clients.All.ReceiveScriptResult(new Message(process.Id.ToString(), MessageType.Service)
             {
-                Message = process.Id.ToString(),
-                Type = MessageType.Service,
                 Meta = "pid"
             });
 
@@ -108,11 +106,7 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
     {
         while (await streamReader.ReadLineAsync() is { } line)
         {
-            await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult
-            {
-                Message = line,
-                Type = messageType
-            });
+            await hubContext.Clients.All.ReceiveScriptResult(new Message(line, messageType));
         }
     }
 }

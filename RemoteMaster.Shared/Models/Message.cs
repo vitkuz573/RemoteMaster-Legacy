@@ -2,13 +2,15 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using static RemoteMaster.Shared.Models.Message;
+
 namespace RemoteMaster.Shared.Models;
 
-public class ScriptResult
+public class Message(string content, MessageType type)
 {
-    public string Message { get; init; }
+    public string Content { get; } = content;
 
-    public MessageType Type { get; set; }
+    public MessageType Type { get; } = type;
 
     public string? Meta { get; init; }
 

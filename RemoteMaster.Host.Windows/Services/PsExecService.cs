@@ -10,7 +10,7 @@ using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Hubs;
 using RemoteMaster.Shared.Models;
 using Serilog;
-using static RemoteMaster.Shared.Models.ScriptResult;
+using static RemoteMaster.Shared.Models.Message;
 
 namespace RemoteMaster.Host.Windows.Services;
 
@@ -56,10 +56,8 @@ public class PsExecService(IHostConfigurationService hostConfigurationService, I
             process.StartInfo = processStartInfo;
             process.Start();
 
-            await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult
+            await hubContext.Clients.All.ReceiveScriptResult(new Message(process.Id.ToString(), MessageType.Service)
             {
-                Message = process.Id.ToString(),
-                Type = MessageType.Service,
                 Meta = "pid"
             });
 
@@ -87,11 +85,7 @@ public class PsExecService(IHostConfigurationService hostConfigurationService, I
     {
         while (await streamReader.ReadLineAsync() is { } line)
         {
-            await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult
-            {
-                Message = line,
-                Type = messageType
-            });
+            await hubContext.Clients.All.ReceiveScriptResult(new Message(line, messageType));
         }
     }
 }

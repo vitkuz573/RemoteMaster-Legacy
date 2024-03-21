@@ -12,7 +12,7 @@ using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Models;
 using Serilog;
 using Windows.Win32.Foundation;
-using static RemoteMaster.Shared.Models.ScriptResult;
+using static RemoteMaster.Shared.Models.Message;
 
 namespace RemoteMaster.Host.Windows.Services;
 
@@ -28,10 +28,8 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
         try
         {
-            await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult
+            await hubContext.Clients.All.ReceiveScriptResult(new Message(Environment.ProcessId.ToString(), MessageType.Service)
             {
-                Message = Environment.ProcessId.ToString(),
-                Type = MessageType.Service,
                 Meta = "pid"
             });
 
@@ -403,11 +401,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
         while (await streamReader.ReadLineAsync() is { } line)
         {
-            await hubContext.Clients.All.ReceiveScriptResult(new ScriptResult
-            {
-                Message = line,
-                Type = messageType
-            });
+            await hubContext.Clients.All.ReceiveScriptResult(new Message(line, messageType));
         }
     }
 }

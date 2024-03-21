@@ -25,7 +25,7 @@ public partial class ScriptExecutorDialog
         {
             if (connection != null && !_subscribedConnections.Contains(connection))
             {
-                connection.On<ScriptResult>("ReceiveScriptResult", async scriptResult =>
+                connection.On<Message>("ReceiveScriptResult", async scriptResult =>
                 {
                     UpdateResultsForComputer(computer, scriptResult);
                     await InvokeAsync(StateHasChanged);
@@ -46,7 +46,7 @@ public partial class ScriptExecutorDialog
         }
     }
 
-    private void UpdateResultsForComputer(Computer computer, ScriptResult scriptResult)
+    private void UpdateResultsForComputer(Computer computer, Message scriptResult)
     {
         if (!_resultsPerComputer.TryGetValue(computer, out var results))
         {
@@ -56,11 +56,11 @@ public partial class ScriptExecutorDialog
 
         if (scriptResult.Meta == "pid")
         {
-            results.LastPid = int.Parse(scriptResult.Message);
+            results.LastPid = int.Parse(scriptResult.Content);
         }
         else
         {
-            results.Messages.AppendLine(scriptResult.Message);
+            results.Messages.AppendLine(scriptResult.Content);
         }
     }
 
