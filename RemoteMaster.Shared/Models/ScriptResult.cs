@@ -14,7 +14,7 @@ public class ScriptResult
 
     public enum MessageType
     {
-        Output,
+        Information,
         Error,
         Warning,
         Service

@@ -83,7 +83,7 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
             });
 
             var readErrorTask = ReadStreamAsync(process.StandardError!, MessageType.Error);
-            var readOutputTask = ReadStreamAsync(process.StandardOutput!, MessageType.Output);
+            var readOutputTask = ReadStreamAsync(process.StandardOutput!, MessageType.Information);
 
             process.WaitForExit();
 

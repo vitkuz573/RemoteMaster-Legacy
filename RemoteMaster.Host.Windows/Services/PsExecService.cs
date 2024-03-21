@@ -64,7 +64,7 @@ public class PsExecService(IHostConfigurationService hostConfigurationService, I
             });
 
             var readErrorTask = ReadStreamAsync(process.StandardError, MessageType.Error);
-            var readOutputTask = ReadStreamAsync(process.StandardOutput, MessageType.Output);
+            var readOutputTask = ReadStreamAsync(process.StandardOutput, MessageType.Information);
 
             await process.WaitForExitAsync();
 
