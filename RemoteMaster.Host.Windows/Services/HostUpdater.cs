@@ -92,6 +92,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             if (!await NeedUpdate() && !force)
             {
                 await Notify("No update required. Files are identical.", MessageType.Information);
+                await Notify("If you wish to force an update regardless, you can use --force=true to override this check.", MessageType.Information);
 
                 return;
             }
@@ -362,7 +363,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
         if (updateVersion <= currentVersion && !allowDowngrade)
         {
-            await Notify($"Current version {currentVersion} is up to date or newer than update version {updateVersion}. To allow downgrades, use the --allow-downgrade=true option.", MessageType.Information);
+            await Notify($"Current version {currentVersion} is up to date or newer than update version {updateVersion}. To allow downgrades, use the --allow-downgrade=true option. If you wish to force an update regardless, you can use --force=true.", MessageType.Information);
             
             return false;
         }
