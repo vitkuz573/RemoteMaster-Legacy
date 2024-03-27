@@ -266,4 +266,59 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
             Log.Error("Failed to save public key: {ErrorMessage}.", ex.Message);
         }
     }
+
+    public async Task GetCaCertificateAsync()
+    {
+        try
+        {
+            Log.Information("Requesting CA certificate's public part...");
+
+            var tcs = new TaskCompletionSource<bool>();
+
+            serverHubService.OnReceiveCertificate(caCertificateBytes =>
+            {
+                if (caCertificateBytes == null || caCertificateBytes.Length == 0)
+                {
+                    Log.Error("Received CA certificate is null or empty.");
+                    tcs.SetResult(false);
+                }
+                else
+                {
+                    try
+                    {
+                        using var caCertificate = new X509Certificate2(caCertificateBytes);
+
+                        var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
+
+                        store.Open(OpenFlags.ReadWrite);
+                        store.Add(caCertificate);
+                        store.Close();
+
+                        Log.Information("CA certificate imported successfully into the certificate store.");
+                        tcs.SetResult(true);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("An error occurred while importing the CA certificate: {ErrorMessage}.", ex.Message);
+                        tcs.SetResult(false);
+                    }
+                }
+            });
+
+            var success = await serverHubService.GetCaCertificateAsync();
+
+            if (!success)
+            {
+                throw new InvalidOperationException("Failed to request or process CA certificate.");
+            }
+
+            await tcs.Task;
+
+            Log.Information("CA certificate's public part received and processed successfully.");
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Failed to get CA certificate: {Message}.", ex.Message);
+        }
+    }
 }

@@ -50,6 +50,7 @@ public class HostInstaller(IHostInformationService hostInformationService, IHost
 
             await hostLifecycleService.RegisterAsync(hostConfiguration);
             await hostLifecycleService.IssueCertificateAsync(hostConfiguration);
+            await hostLifecycleService.GetCaCertificateAsync();
         }
         catch (Exception ex)
         {

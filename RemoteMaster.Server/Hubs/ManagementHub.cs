@@ -321,4 +321,31 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             return false;
         }
     }
+
+    public async Task<bool> GetCaCertificateAsync()
+    {
+        try
+        {
+            var caCertificatePublicPart = certificateService.GetCaCertificate();
+
+            if (caCertificatePublicPart != null)
+            {
+                await Clients.Caller.ReceiveCertificate(caCertificatePublicPart.Export(X509ContentType.Cert));
+
+                return true;
+            }
+            else
+            {
+                Log.Warning("CA certificate public part could not be retrieved.");
+
+                return false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error while sending CA certificate public part.");
+
+            return false;
+        }
+    }
 }

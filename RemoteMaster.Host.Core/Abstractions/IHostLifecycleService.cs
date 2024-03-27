@@ -17,4 +17,6 @@ public interface IHostLifecycleService
     Task UpdateHostInformationAsync(HostConfiguration hostConfiguration);
 
     Task<bool> IsHostRegisteredAsync(HostConfiguration hostConfiguration);
+
+    Task GetCaCertificateAsync();
 }

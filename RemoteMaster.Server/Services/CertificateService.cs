@@ -66,4 +66,12 @@ public class CertificateService(IOptions<CertificateOptions> options) : ICertifi
 
         return SHA3_256.IsSupported ? SHA3_256.HashData(combinedBytes) : SHA256.HashData(combinedBytes);
     }
+
+    public X509Certificate2 GetCaCertificate()
+    {
+        using var caCertificate = new X509Certificate2(_settings.PfxPath, _settings.PfxPassword, X509KeyStorageFlags.Exportable);
+        var publicCert = new X509Certificate2(caCertificate.Export(X509ContentType.Cert));
+
+        return publicCert;
+    }
 }

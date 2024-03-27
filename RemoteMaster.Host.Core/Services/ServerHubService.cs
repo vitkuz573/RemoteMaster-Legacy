@@ -70,4 +70,9 @@ public class ServerHubService : IServerHubService
     {
         return await _hubConnection.InvokeAsync<string>("GetPublicKey");
     }
+
+    public async Task<bool> GetCaCertificateAsync()
+    {
+        return await _hubConnection.InvokeAsync<bool>("GetCaCertificateAsync");
+    }
 }
