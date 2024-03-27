@@ -60,9 +60,9 @@
   <ItemGroup>
     <ProjectReference Include="..\RemoteMaster.Host.Core\RemoteMaster.Host.Core.csproj" />
   </ItemGroup>
-	
-  <Target Name="AfterFileSystemPublish" AfterTargets="FileSystemPublish">
-    <Exec Command="powershell.exe -ExecutionPolicy Bypass -File $(SolutionDir)scripts\DigitalSignExecutable.ps1 -exeFilePath $(PublishUrl)\$(AssemblyName).exe" />
+
+  <Target Name="TaskPublish" AfterTargets="Publish">
+    <Exec Command="powershell.exe -ExecutionPolicy Bypass -File $(SolutionDir)scripts\DigitalSignExecutable.ps1 -exeFilePath $(PublishDir)\$(AssemblyName).exe" />
   </Target>
 
 </Project>
