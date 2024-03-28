@@ -26,7 +26,7 @@ public static class WebApplicationBuilderExtensions
             {
                 store.Open(OpenFlags.ReadOnly);
 
-                var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, hostName, validOnly: false);
+                var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, hostName, false);
 
                 X509Certificate2? httpsCertificate = null;
 
