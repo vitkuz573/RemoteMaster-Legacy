@@ -360,6 +360,8 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
                     {
                         using var caCertificate = new X509Certificate2(caCertificateBytes);
 
+                        LogCertificateDetails(caCertificate);
+
                         var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
 
                         store.Open(OpenFlags.ReadWrite);
