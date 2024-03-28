@@ -29,12 +29,55 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
         try
         {
-            await serverHubService.ConnectAsync(hostConfiguration.Server);
-
             var securityDirectory = EnsureSecurityDirectoryExists();
 
+            await serverHubService.ConnectAsync(hostConfiguration.Server);
+
             Log.Information("Attempting to register host...");
-            await InvokeHostRegistration(hostConfiguration, securityDirectory);
+
+            var tcsGuid = new TaskCompletionSource<Guid>();
+
+            serverHubService.OnReceiveHostGuid(guid => {
+                Log.Information("Host GUID received: {GUID}.", guid);
+
+                hostConfiguration.HostGuid = guid;
+
+                hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
+
+                tcsGuid.SetResult(guid);
+            });
+
+            if (await serverHubService.RegisterHostAsync(hostConfiguration))
+            {
+                _isRegistrationInvoked = true;
+
+                Log.Information("Host registration invoked successfully. Waiting for the certificate...");
+
+                var publicKey = await serverHubService.GetPublicKeyAsync();
+
+                if (string.IsNullOrEmpty(publicKey))
+                {
+                    throw new InvalidOperationException("Failed to obtain JWT public key.");
+                }
+
+                var publicKeyPath = Path.Combine(securityDirectory, "public_key.pem");
+
+                try
+                {
+                    File.WriteAllText(publicKeyPath, publicKey);
+                    Log.Information("Public key saved successfully at {Path}.", publicKeyPath);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("Failed to save public key: {ErrorMessage}.", ex.Message);
+                }
+
+                Log.Information("Host registration successful with certificate received.");
+            }
+            else
+            {
+                Log.Warning("Host registration was not successful.");
+            }
         }
         catch (Exception ex)
         {
@@ -44,42 +87,6 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         {
             rsaKeyPair?.Dispose();
         }
-    }
-
-    private static void RemoveExistingCertificate()
-    {
-        Log.Information("Starting the process of removing existing certificates...");
-
-        using var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
-        store.Open(OpenFlags.ReadWrite);
-
-        var existingCertificates = store.Certificates.Find(X509FindType.FindBySubjectName, Environment.MachineName, false);
-
-        if (existingCertificates.Count > 0)
-        {
-            Log.Information("Found {Count} certificates to remove.", existingCertificates.Count);
-
-            foreach (var cert in existingCertificates)
-            {
-                try
-                {
-                    store.Remove(cert);
-                    Log.Information("Successfully removed certificate with serial number: {SerialNumber}.", cert.SerialNumber);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error("Failed to remove certificate with serial number: {SerialNumber}. Error: {Message}", cert.SerialNumber, ex.Message);
-                }
-            }
-        }
-        else
-        {
-            Log.Information("No certificates found to remove.");
-        }
-
-        store.Close();
-
-        Log.Information("Finished removing existing certificates.");
     }
 
     public async Task UnregisterAsync(HostConfiguration hostConfiguration)
@@ -306,57 +313,6 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         Log.Information("    Version: {Version}", certificate.Version);
     }
 
-    private async Task InvokeHostRegistration(HostConfiguration hostConfiguration, string securityDirectory)
-    {
-        var tcsGuid = new TaskCompletionSource<Guid>();
-        
-        serverHubService.OnReceiveHostGuid(guid => {
-            Log.Information("Host GUID received: {GUID}.", guid);
-
-            hostConfiguration.HostGuid = guid;
-
-            hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
-
-            tcsGuid.SetResult(guid);
-        });
-
-        if (await serverHubService.RegisterHostAsync(hostConfiguration))
-        {
-            _isRegistrationInvoked = true;
-            
-            Log.Information("Host registration invoked successfully. Waiting for the certificate...");
-
-            var publicKey = await serverHubService.GetPublicKeyAsync();
-
-            if (string.IsNullOrEmpty(publicKey))
-            {
-                throw new InvalidOperationException("Failed to obtain JWT public key.");
-            }
-
-            var publicKeyPath = Path.Combine(securityDirectory, "public_key.pem");
-            SavePublicKey(publicKey, publicKeyPath);
-
-            Log.Information("Host registration successful with certificate received.");
-        }
-        else
-        {
-            Log.Warning("Host registration was not successful.");
-        }
-    }
-
-    private static void SavePublicKey(string publicKey, string filePath)
-    {
-        try
-        {
-            File.WriteAllText(filePath, publicKey);
-            Log.Information("Public key saved successfully at {Path}.", filePath);
-        }
-        catch (Exception ex)
-        {
-            Log.Error("Failed to save public key: {ErrorMessage}.", ex.Message);
-        }
-    }
-
     public async Task GetCaCertificateAsync()
     {
         try
@@ -412,5 +368,41 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         {
             Log.Error("Failed to get CA certificate: {Message}.", ex.Message);
         }
+    }
+
+    private static void RemoveExistingCertificate()
+    {
+        Log.Information("Starting the process of removing existing certificates...");
+
+        using var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
+        store.Open(OpenFlags.ReadWrite);
+
+        var existingCertificates = store.Certificates.Find(X509FindType.FindBySubjectName, Environment.MachineName, false);
+
+        if (existingCertificates.Count > 0)
+        {
+            Log.Information("Found {Count} certificates to remove.", existingCertificates.Count);
+
+            foreach (var cert in existingCertificates)
+            {
+                try
+                {
+                    store.Remove(cert);
+                    Log.Information("Successfully removed certificate with serial number: {SerialNumber}.", cert.SerialNumber);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("Failed to remove certificate with serial number: {SerialNumber}. Error: {Message}", cert.SerialNumber, ex.Message);
+                }
+            }
+        }
+        else
+        {
+            Log.Information("No certificates found to remove.");
+        }
+
+        store.Close();
+
+        Log.Information("Finished removing existing certificates.");
     }
 }
