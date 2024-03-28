@@ -20,26 +20,41 @@ public static class WebApplicationBuilderExtensions
 
         builder.WebHost.ConfigureKestrel(options =>
         {
-            var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-            var certificatePath = Path.Combine(programData, "RemoteMaster", "Security", "certificate.pfx");
+            var hostName = Environment.MachineName;
 
-            if (File.Exists(certificatePath))
+            using (var store = new X509Store(StoreName.My, StoreLocation.LocalMachine))
             {
-                var httpsCertificate = new X509Certificate2(certificatePath, "YourPfxPassword");
+                store.Open(OpenFlags.ReadOnly);
 
-                if (launchModeInstance is UserMode)
+                var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, hostName, validOnly: false);
+
+                X509Certificate2? httpsCertificate = null;
+
+                foreach (var cert in certificates)
                 {
-                    options.ListenAnyIP(5001, listenOptions =>
+                    if (cert.HasPrivateKey)
                     {
-                        listenOptions.UseHttps(httpsCertificate);
-                    });
+                        httpsCertificate = cert;
+                        break;
+                    }
                 }
-                else if (launchModeInstance is UpdaterMode)
+
+                if (httpsCertificate != null)
                 {
-                    options.ListenAnyIP(6001, listenOptions =>
+                    if (launchModeInstance is UserMode)
                     {
-                        listenOptions.UseHttps(httpsCertificate);
-                    });
+                        options.ListenAnyIP(5001, listenOptions =>
+                        {
+                            listenOptions.UseHttps(httpsCertificate);
+                        });
+                    }
+                    else if (launchModeInstance is UpdaterMode)
+                    {
+                        options.ListenAnyIP(6001, listenOptions =>
+                        {
+                            listenOptions.UseHttps(httpsCertificate);
+                        });
+                    }
                 }
             }
 

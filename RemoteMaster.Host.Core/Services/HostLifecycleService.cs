@@ -91,8 +91,7 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
             var tcs = new TaskCompletionSource<bool>();
 
-            var securityDirectory = EnsureSecurityDirectoryExists();
-            serverHubService.OnReceiveCertificate(certificateBytes => ProcessCertificate(certificateBytes, rsaKeyPair, securityDirectory, tcs));
+            serverHubService.OnReceiveCertificate(certificateBytes => ProcessCertificate(certificateBytes, rsaKeyPair, tcs));
 
             Log.Information("Attempting to issue certificate...");
             await serverHubService.IssueCertificateAsync(signingRequest);
@@ -180,8 +179,10 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         return securityDirectory;
     }
 
-    private void ProcessCertificate(byte[] certificateBytes, RSA rsaKeyPair, string securityDirectory, TaskCompletionSource<bool> tcs)
+    private void ProcessCertificate(byte[] certificateBytes, RSA rsaKeyPair, TaskCompletionSource<bool> tcs)
     {
+        X509Certificate2? tempCertificate = null;
+
         try
         {
             SpinWait.SpinUntil(() => _isRegistrationInvoked);
@@ -191,20 +192,39 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
                 throw new Exception("Certificate bytes are null or empty.");
             }
 
-            using var certificate = new X509Certificate2(certificateBytes);
-            Log.Information("Certificate received with Serial Number: {SerialNumber}.", certificate.SerialNumber);
+            tempCertificate = new X509Certificate2(certificateBytes, (string?)null, X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.Exportable);
 
-            var pfxFilePath = Path.Combine(securityDirectory, "certificate.pfx");
-            const string pfxPassword = "YourPfxPassword";
-            CreatePfxFile(certificateBytes, rsaKeyPair, pfxFilePath, pfxPassword);
+            var cspParams = new CspParameters
+            {
+                KeyContainerName = Guid.NewGuid().ToString(),
+                Flags = CspProviderFlags.UseMachineKeyStore,
+                KeyNumber = (int)KeyNumber.Exchange
+            };
 
-            Log.Information("PFX file saved successfully at {Path}.", pfxFilePath);
+            using var rsaProvider = new RSACryptoServiceProvider(cspParams);
+
+            var rsaParameters = rsaKeyPair.ExportParameters(true);
+            rsaProvider.ImportParameters(rsaParameters);
+
+            var certificateWithPrivateKey = tempCertificate.CopyWithPrivateKey(rsaProvider);
+
+            using (var store = new X509Store(StoreName.My, StoreLocation.LocalMachine))
+            {
+                store.Open(OpenFlags.ReadWrite);
+                store.Add(certificateWithPrivateKey);
+            }
+
+            Log.Information("Certificate with private key imported successfully into the certificate store.");
             tcs.SetResult(true);
         }
         catch (Exception ex)
         {
             Log.Error("An error occurred while processing the certificate: {ErrorMessage}.", ex.Message);
             tcs.SetResult(false);
+        }
+        finally
+        {
+            tempCertificate?.Dispose();
         }
     }
 
@@ -244,14 +264,6 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         {
             Log.Warning("Host registration was not successful.");
         }
-    }
-
-    private static void CreatePfxFile(byte[] certificateBytes, RSA rsaKeyPair, string outputPfxPath, string password)
-    {
-        using var certificate = new X509Certificate2(certificateBytes);
-        var pfxBytes = certificate.CopyWithPrivateKey(rsaKeyPair).Export(X509ContentType.Pfx, password);
-
-        File.WriteAllBytes(outputPfxPath, pfxBytes);
     }
 
     private static void SavePublicKey(string publicKey, string filePath)
