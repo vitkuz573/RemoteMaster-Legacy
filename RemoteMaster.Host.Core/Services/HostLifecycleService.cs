@@ -229,10 +229,17 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
             if (certificateBytes == null || certificateBytes.Length == 0)
             {
-                throw new Exception("Certificate bytes are null or empty.");
+                Log.Error("Certificate bytes are null or empty.");
+                tcs.SetResult(false);
+                return;
             }
 
+            Log.Information("Received certificate bytes, starting processing...");
+
             tempCertificate = new X509Certificate2(certificateBytes, (string?)null, X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.Exportable);
+            Log.Information("Temporary certificate created successfully.");
+
+            LogCertificateDetails(tempCertificate);
 
             var cspParams = new CspParameters
             {
@@ -242,19 +249,19 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
             };
 
             using var rsaProvider = new RSACryptoServiceProvider(cspParams);
-
             var rsaParameters = rsaKeyPair.ExportParameters(true);
             rsaProvider.ImportParameters(rsaParameters);
 
             var certificateWithPrivateKey = tempCertificate.CopyWithPrivateKey(rsaProvider);
+            Log.Information("Certificate with private key prepared.");
 
             using (var store = new X509Store(StoreName.My, StoreLocation.LocalMachine))
             {
                 store.Open(OpenFlags.ReadWrite);
                 store.Add(certificateWithPrivateKey);
+                Log.Information("Certificate with private key imported successfully into the certificate store.");
             }
 
-            Log.Information("Certificate with private key imported successfully into the certificate store.");
             tcs.SetResult(true);
         }
         catch (Exception ex)
@@ -266,6 +273,19 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         {
             tempCertificate?.Dispose();
         }
+    }
+
+    private static void LogCertificateDetails(X509Certificate2 certificate)
+    {
+        Log.Information("Certificate Details:");
+
+        Log.Information("    Subject: {Subject}", certificate.Subject);
+        Log.Information("    Issuer: {Issuer}", certificate.Issuer);
+        Log.Information("    Valid From: {ValidFrom}", certificate.NotBefore);
+        Log.Information("    Valid To: {ValidTo}", certificate.NotAfter);
+        Log.Information("    Serial Number: {SerialNumber}", certificate.SerialNumber);
+        Log.Information("    Thumbprint: {Thumbprint}", certificate.Thumbprint);
+        Log.Information("    Version: {Version}", certificate.Version);
     }
 
     private async Task InvokeHostRegistration(HostConfiguration hostConfiguration, string securityDirectory)
