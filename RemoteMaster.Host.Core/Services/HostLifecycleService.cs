@@ -14,6 +14,7 @@ namespace RemoteMaster.Host.Core.Services;
 public class HostLifecycleService(IServerHubService serverHubService, ICertificateRequestService certificateRequestService, ISubjectService subjectService, IHostConfigurationService hostConfigurationService) : IHostLifecycleService
 {
     private volatile bool _isRegistrationInvoked;
+    private bool _isRenewalProcess = false;
 
     public async Task RegisterAsync(HostConfiguration hostConfiguration)
     {
@@ -155,6 +156,20 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         }
     }
 
+    public async Task RenewCertificateAsync(HostConfiguration hostConfiguration)
+    {
+        _isRenewalProcess = true;
+
+        try
+        {
+            await IssueCertificateAsync(hostConfiguration);
+        }
+        finally
+        {
+            _isRenewalProcess = false;
+        }
+    }
+
     public async Task UpdateHostInformationAsync(HostConfiguration hostConfiguration)
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
@@ -225,7 +240,10 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
         try
         {
-            SpinWait.SpinUntil(() => _isRegistrationInvoked);
+            if (!_isRenewalProcess)
+            {
+                SpinWait.SpinUntil(() => _isRegistrationInvoked);
+            }
 
             if (certificateBytes == null || certificateBytes.Length == 0)
             {
