@@ -32,8 +32,6 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
             var securityDirectory = EnsureSecurityDirectoryExists();
 
-            RemoveExistingCertificate();
-
             Log.Information("Attempting to register host...");
             await InvokeHostRegistration(hostConfiguration, securityDirectory);
         }
@@ -113,6 +111,10 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
             };
 
             var distinguishedName = subjectService.GetDistinguishedName(hostConfiguration.Host.Name);
+
+            Log.Information("Removing existing certificates...");
+            RemoveExistingCertificate();
+
             var csr = certificateRequestService.GenerateSigningRequest(distinguishedName, ipAddresses, out rsaKeyPair);
             var signingRequest = csr.CreateSigningRequest();
 
