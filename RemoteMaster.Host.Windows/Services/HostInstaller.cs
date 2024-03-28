@@ -47,8 +47,8 @@ public class HostInstaller(IHostInformationService hostInformationService, IHost
             Log.Information("{ServiceName} installed and started successfully.", hostService.Name);
 
             await hostLifecycleService.RegisterAsync(hostConfiguration);
-            await hostLifecycleService.IssueCertificateAsync(hostConfiguration);
             await hostLifecycleService.GetCaCertificateAsync();
+            await hostLifecycleService.IssueCertificateAsync(hostConfiguration);
 
             hostService.Start();
         }
