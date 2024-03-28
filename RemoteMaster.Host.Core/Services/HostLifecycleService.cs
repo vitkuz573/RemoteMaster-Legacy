@@ -49,26 +49,18 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
     private static void RemoveExistingCertificate()
     {
-        Log.Information("Opening the certificate store.");
-
         using var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
         store.Open(OpenFlags.ReadWrite);
 
-        var hostName = Environment.MachineName;
-
-        Log.Information("Searching for existing certificates with Subject Name: {SubjectName}.", hostName);
-        var existingCertificates = store.Certificates.Find(X509FindType.FindBySubjectName, hostName, false);
+        var existingCertificates = store.Certificates.Find(X509FindType.FindBySubjectName, Environment.MachineName, false);
 
         if (existingCertificates.Count > 0)
         {
-            Log.Information("Found {Count} existing certificate(s) to remove.", existingCertificates.Count);
-
             foreach (var cert in existingCertificates)
             {
                 try
                 {
                     store.Remove(cert);
-                    Log.Information("Removed existing certificate with serial number: {SerialNumber}.", cert.SerialNumber);
                 }
                 catch (Exception ex)
                 {
@@ -76,13 +68,8 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
                 }
             }
         }
-        else
-        {
-            Log.Warning("No existing certificates found with Subject Name: {SubjectName}.", hostName);
-        }
 
         store.Close();
-        Log.Information("Closed the certificate store.");
     }
 
     public async Task UnregisterAsync(HostConfiguration hostConfiguration)
