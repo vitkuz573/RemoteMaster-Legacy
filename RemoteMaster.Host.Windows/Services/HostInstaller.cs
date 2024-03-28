@@ -44,13 +44,13 @@ public class HostInstaller(IHostInformationService hostInformationService, IHost
 
             await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
 
-            hostService.Start();
-
             Log.Information("{ServiceName} installed and started successfully.", hostService.Name);
 
             await hostLifecycleService.RegisterAsync(hostConfiguration);
             await hostLifecycleService.IssueCertificateAsync(hostConfiguration);
             await hostLifecycleService.GetCaCertificateAsync();
+
+            hostService.Start();
         }
         catch (Exception ex)
         {
