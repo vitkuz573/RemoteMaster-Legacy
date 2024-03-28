@@ -157,4 +157,11 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
         await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
     }
+
+    public async Task SendRenewCertificate()
+    {
+        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
+
+        await hostLifecycleService.IssueCertificateAsync(hostConfiguration);
+    }
 }

@@ -491,6 +491,16 @@ public partial class Home
         }
     }
 
+    private async Task RenewCertificate()
+    {
+        var dialogParameters = new DialogParameters<RenewCertificateDialog>
+        {
+            { x => x.Hosts, await GetComputers(false) }
+        };
+
+        await DialogService.ShowAsync<RenewCertificateDialog>("Renew Certificate", dialogParameters);
+    }
+
     private async Task<ConcurrentDictionary<Computer, HubConnection?>> GetComputers(bool onlyAvailable = true, string hubPath = "hubs/control")
     {
         var computerConnections = new ConcurrentDictionary<Computer, HubConnection?>();
