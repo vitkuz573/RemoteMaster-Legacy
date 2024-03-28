@@ -20,13 +20,11 @@ public static class WebApplicationBuilderExtensions
 
         builder.WebHost.ConfigureKestrel(options =>
         {
-            var hostName = Environment.MachineName;
-
             using (var store = new X509Store(StoreName.My, StoreLocation.LocalMachine))
             {
                 store.Open(OpenFlags.ReadOnly);
 
-                var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, hostName, false);
+                var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, Environment.MachineName, false);
 
                 X509Certificate2? httpsCertificate = null;
 

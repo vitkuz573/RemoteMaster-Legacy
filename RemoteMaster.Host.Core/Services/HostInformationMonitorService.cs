@@ -73,16 +73,29 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
             Log.Error(ex, "Error processing organizational unit change requests.");
         }
 
-        var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var certificatePath = Path.Combine(programData, "RemoteMaster", "Security", "certificate.pfx");
-
-        return CertificateHasExpired(certificatePath) || hasChanges;
+        return CertificateHasExpired() || hasChanges;
     }
 
-    private static bool CertificateHasExpired(string certificatePath)
+    private static bool CertificateHasExpired()
     {
-        using var certificate = new X509Certificate2(certificatePath, "YourPfxPassword");
+        X509Certificate2? httpsCertificate = null;
 
-        return DateTime.Now > certificate.NotAfter;
+        using (var store = new X509Store(StoreName.My, StoreLocation.LocalMachine))
+        {
+            store.Open(OpenFlags.ReadOnly);
+
+            var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, Environment.MachineName, false);
+
+            foreach (var cert in certificates)
+            {
+                if (cert.HasPrivateKey)
+                {
+                    httpsCertificate = cert;
+                    break;
+                }
+            }
+        }
+
+        return DateTime.Now > httpsCertificate?.NotAfter;
     }
 }
