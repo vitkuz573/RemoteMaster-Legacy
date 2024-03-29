@@ -278,6 +278,9 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
             rsaProvider.ImportParameters(rsaParameters);
 
             var certificateWithPrivateKey = tempCertificate.CopyWithPrivateKey(rsaProvider);
+
+            certificateWithPrivateKey.FriendlyName = "RemoteMaster Host Certificate";
+
             Log.Information("Certificate with private key prepared.");
 
             using (var store = new X509Store(StoreName.My, StoreLocation.LocalMachine))
