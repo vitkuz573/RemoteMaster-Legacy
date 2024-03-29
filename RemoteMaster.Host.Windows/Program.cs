@@ -141,6 +141,7 @@ internal class Program
         switch (launchModeInstance)
         {
             case ServiceMode:
+                builder.Services.AddHostedService<CertificateManagementService>();
                 builder.Services.AddHostedService<HostProcessMonitorService>();
                 builder.Services.AddHostedService<HostRegistrationMonitorService>();
                 builder.Services.AddHostedService<MessageLoopService>();

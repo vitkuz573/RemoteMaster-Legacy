@@ -40,7 +40,7 @@ public class CertificateService(IOptions<CertificateOptions> options) : ICertifi
 
         var signatureGenerator = X509SignatureGenerator.CreateForRSA(rsaPrivateKey, RSASignaturePadding.Pkcs1);
         var notBefore = DateTimeOffset.UtcNow;
-        var notAfter = DateTimeOffset.UtcNow.AddYears(1);
+        var notAfter = DateTimeOffset.UtcNow.AddMinutes(1);
         var serialNumber = GenerateSerialNumber();
 
         var certificate = csr.Create(subjectName, signatureGenerator, notBefore, notAfter, serialNumber);
