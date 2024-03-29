@@ -73,10 +73,10 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
             Log.Error(ex, "Error processing organizational unit change requests.");
         }
 
-        return CertificateHasExpired() || hasChanges;
+        return hasChanges;
     }
 
-    private static bool CertificateHasExpired()
+    public bool CheckCertificateExpiration()
     {
         X509Certificate2? httpsCertificate = null;
 

@@ -7,4 +7,6 @@ namespace RemoteMaster.Host.Core.Abstractions;
 public interface IHostInformationMonitorService
 {
     Task<bool> UpdateHostConfigurationAsync();
+
+    bool CheckCertificateExpiration();
 }
