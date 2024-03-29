@@ -19,7 +19,7 @@ public class CertificateRequestService : ICertificateRequestService
 
         Log.Information("Starting CSR generation.");
 
-        rsaKeyPair = RSA.Create(2048);
+        rsaKeyPair = RSA.Create(4096);
 
         var csr = new CertificateRequest(subjectName, rsaKeyPair, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
         var sanBuilder = new SubjectAlternativeNameBuilder();
