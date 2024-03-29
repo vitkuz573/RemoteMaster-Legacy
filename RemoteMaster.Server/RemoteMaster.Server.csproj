@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net8.0-windows</TargetFramework>
     <UserSecretsId>aspnet-RemoteMaster.Server-ac910d17-4dab-42e0-8184-668d77f2c502</UserSecretsId>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 	
   <ItemGroup>

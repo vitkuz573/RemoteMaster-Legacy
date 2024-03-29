@@ -55,7 +55,7 @@ public class CaCertificateService(IOptions<CaCertificateOptions> options) : ICaC
         return caCert;
     }
 
-    private X509Certificate2 FindExistingCertificate()
+    private X509Certificate2? FindExistingCertificate()
     {
         using var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
 
