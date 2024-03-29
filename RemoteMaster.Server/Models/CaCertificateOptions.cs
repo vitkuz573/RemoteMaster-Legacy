@@ -4,8 +4,10 @@
 
 namespace RemoteMaster.Server.Models;
 
-public class CertificateOptions
+public class CaCertificateOptions
 {
+    public string Name { get; init; }
+
     public string PfxPath { get; init; }
 
     public string PfxPassword { get; init; }

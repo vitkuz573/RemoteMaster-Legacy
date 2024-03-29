@@ -11,9 +11,9 @@ using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class CertificateService(IOptions<CertificateOptions> options) : ICertificateService
+public class CertificateService(IOptions<CaCertificateOptions> options) : ICertificateService
 {
-    private readonly CertificateOptions _settings = options.Value ?? throw new ArgumentNullException(nameof(options));
+    private readonly CaCertificateOptions _settings = options.Value ?? throw new ArgumentNullException(nameof(options));
 
     public X509Certificate2 IssueCertificate(byte[] csrBytes)
     {
@@ -60,6 +60,7 @@ public class CertificateService(IOptions<CertificateOptions> options) : ICertifi
         }
 
         var combinedBytes = new byte[8 + uuid.Length + randomBytes.Length];
+
         Array.Copy(BitConverter.GetBytes(timestamp), 0, combinedBytes, 0, 8);
         Array.Copy(uuid, 0, combinedBytes, 8, uuid.Length);
         Array.Copy(randomBytes, 0, combinedBytes, 8 + uuid.Length, randomBytes.Length);

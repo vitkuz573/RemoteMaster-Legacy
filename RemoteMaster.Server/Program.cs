@@ -64,6 +64,7 @@ builder.Services.AddSingleton<ICertificateService, CertificateService>();
 builder.Services.AddSingleton<IPacketSender, UdpPacketSender>();
 builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
 builder.Services.AddSingleton<IComputerConnectivityService, ComputerConnectivityService>();
+builder.Services.AddSingleton<ICaCertificateService, CaCertificateService>();
 
 builder.Services.AddSingleton(new JsonSerializerOptions
 {
@@ -74,7 +75,7 @@ builder.Services.AddSingleton(new JsonSerializerOptions
 
 builder.Services.AddTransient<ITokenService, TokenService>();
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
-builder.Services.Configure<CertificateOptions>(builder.Configuration.GetSection("CertificateSettings"));
+builder.Services.Configure<CaCertificateOptions>(builder.Configuration.GetSection("CASettings"));
 builder.Services.Configure<ApplicationSettings>(builder.Configuration);
 
 builder.Services.AddMudServices();
@@ -116,5 +117,9 @@ app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 app.MapAdditionalIdentityEndpoints();
 
 app.MapHub<ManagementHub>("/hubs/management");
+
+var caCertificateService = app.Services.GetRequiredService<ICaCertificateService>();
+
+caCertificateService.CreateCaCertificate();
 
 app.Run();
