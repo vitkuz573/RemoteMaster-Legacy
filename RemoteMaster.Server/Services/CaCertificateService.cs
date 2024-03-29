@@ -17,50 +17,59 @@ public class CaCertificateService(IOptions<CaCertificateOptions> options) : ICaC
 
     public X509Certificate2 CreateCaCertificate()
     {
-        X509Certificate2 caCert;
+        var existingCert = FindExistingCertificate();
 
-        var directoryPath = Path.GetDirectoryName(_settings.PfxPath);
-
-        if (!Directory.Exists(directoryPath))
+        if (existingCert != null)
         {
-            Directory.CreateDirectory(directoryPath ?? string.Empty);
-            Log.Information("Created directory path for certificate storage: '{DirectoryPath}'.", directoryPath);
+            Log.Information("Existing CA certificate for '{Name}' found.", _settings.Name);
+
+            return existingCert;
         }
 
-        if (File.Exists(_settings.PfxPath))
+        Log.Information("Starting CA certificate generation for '{Name}'.", _settings.Name);
+
+        var cspParams = new CspParameters
         {
-            Log.Information("CA certificate already exists at '{PfxPath}'. Loading existing certificate.", _settings.PfxPath);
-            caCert = new X509Certificate2(_settings.PfxPath, _settings.PfxPassword, X509KeyStorageFlags.Exportable);
-        }
-        else
-        {
-            Log.Information("Starting CA certificate generation for '{Name}'.", _settings.Name);
+            KeyContainerName = Guid.NewGuid().ToString(),
+            Flags = CspProviderFlags.UseMachineKeyStore,
+            KeyNumber = (int)KeyNumber.Exchange
+        };
 
-            using var rsa = RSA.Create(4096);
+        using var rsaProvider = new RSACryptoServiceProvider(4096, cspParams);
 
-            var subjectName = new X500DistinguishedName($"CN={_settings.Name}");
-            var request = new CertificateRequest(subjectName, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        var subjectName = new X500DistinguishedName($"CN={_settings.Name}");
+        var request = new CertificateRequest(subjectName, rsaProvider, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
-            request.CertificateExtensions.Add(new X509BasicConstraintsExtension(true, false, 0, true));
-            request.CertificateExtensions.Add(new X509SubjectKeyIdentifierExtension(request.PublicKey, false));
-            request.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.KeyCertSign | X509KeyUsageFlags.CrlSign, true));
+        request.CertificateExtensions.Add(new X509BasicConstraintsExtension(true, false, 0, true));
+        request.CertificateExtensions.Add(new X509SubjectKeyIdentifierExtension(request.PublicKey, false));
+        request.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.KeyCertSign | X509KeyUsageFlags.CrlSign, true));
 
-            caCert = request.CreateSelfSigned(DateTimeOffset.Now, DateTimeOffset.Now.AddYears(10));
+        var caCert = request.CreateSelfSigned(DateTimeOffset.Now, DateTimeOffset.Now.AddYears(10));
 
-            var pfxBytes = caCert.Export(X509ContentType.Pfx, _settings.PfxPassword);
-            File.WriteAllBytes(_settings.PfxPath, pfxBytes);
+        caCert.FriendlyName = _settings.Name;
 
-            Log.Information("CA certificate for '{Name}' generated and saved to {PfxPath}.", _settings.Name, _settings.PfxPath);
-        }
+        Log.Information("CA certificate for '{Name}' generated.", _settings.Name);
 
-        AddCertificateToStore(caCert, StoreName.Root, StoreLocation.CurrentUser);
+        AddCertificateToStore(caCert, StoreName.Root, StoreLocation.LocalMachine);
 
         return caCert;
+    }
+
+    private X509Certificate2 FindExistingCertificate()
+    {
+        using var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
+
+        store.Open(OpenFlags.ReadOnly);
+
+        var existingCertificates = store.Certificates.Find(X509FindType.FindBySubjectName, _settings.Name, false);
+
+        return existingCertificates.Count > 0 ? existingCertificates[0] : null;
     }
 
     private static void AddCertificateToStore(X509Certificate2 cert, StoreName storeName, StoreLocation storeLocation)
     {
         using var store = new X509Store(storeName, storeLocation);
+
         store.Open(OpenFlags.ReadOnly);
 
         var isCertificateAlreadyAdded = store.Certificates

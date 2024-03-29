@@ -19,6 +19,8 @@ public class CertificateService(IOptions<CaCertificateOptions> options) : ICerti
     {
         ArgumentNullException.ThrowIfNull(csrBytes);
 
+        X509Certificate2? caCertificate = null;
+
         var csr = CertificateRequest.LoadSigningRequest(csrBytes, HashAlgorithmName.SHA256, CertificateRequestLoadOptions.UnsafeLoadCertificateExtensions);
 
         var basicConstraints = csr.CertificateExtensions.OfType<X509BasicConstraintsExtension>().FirstOrDefault();
@@ -28,7 +30,22 @@ public class CertificateService(IOptions<CaCertificateOptions> options) : ICerti
             Log.Error("CSR for CA certificates are not allowed.");
         }
 
-        using var caCertificate = new X509Certificate2(_settings.PfxPath, _settings.PfxPassword);
+        using (var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine))
+        {
+            store.Open(OpenFlags.ReadOnly);
+
+            var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, _settings.Name, false);
+
+            foreach (var cert in certificates)
+            {
+                if (cert.HasPrivateKey)
+                {
+                    caCertificate = cert;
+                    break;
+                }
+            }
+        }
+
         var subjectName = caCertificate.SubjectName;
         var rsaPrivateKey = caCertificate.GetRSAPrivateKey();
 
@@ -70,7 +87,24 @@ public class CertificateService(IOptions<CaCertificateOptions> options) : ICerti
 
     public X509Certificate2 GetCaCertificate()
     {
-        using var caCertificate = new X509Certificate2(_settings.PfxPath, _settings.PfxPassword, X509KeyStorageFlags.Exportable);
+        X509Certificate2? caCertificate = null;
+
+        using (var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine))
+        {
+            store.Open(OpenFlags.ReadOnly);
+
+            var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, _settings.Name, false);
+
+            foreach (var cert in certificates)
+            {
+                if (cert.HasPrivateKey)
+                {
+                    caCertificate = cert;
+                    break;
+                }
+            }
+        }
+
         var publicCert = new X509Certificate2(caCertificate.Export(X509ContentType.Cert));
 
         return publicCert;
