@@ -36,7 +36,7 @@ public class CaCertificateService(IOptions<CaCertificateOptions> options, ISubje
             KeyNumber = (int)KeyNumber.Exchange
         };
 
-        using var rsaProvider = new RSACryptoServiceProvider(4096, cspParams);
+        using var rsaProvider = new RSACryptoServiceProvider(_settings.RSAKeySize, cspParams);
 
         var distinguishedName = subjectService.GetDistinguishedName(_settings.CommonName);
         var request = new CertificateRequest(distinguishedName, rsaProvider, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
@@ -45,7 +45,7 @@ public class CaCertificateService(IOptions<CaCertificateOptions> options, ISubje
         request.CertificateExtensions.Add(new X509SubjectKeyIdentifierExtension(request.PublicKey, false));
         request.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.KeyCertSign | X509KeyUsageFlags.CrlSign, true));
 
-        var caCert = request.CreateSelfSigned(DateTimeOffset.Now, DateTimeOffset.Now.AddYears(10));
+        var caCert = request.CreateSelfSigned(DateTimeOffset.Now, DateTimeOffset.Now.AddYears(_settings.ValidityPeriod));
 
         caCert.FriendlyName = _settings.CommonName;
 

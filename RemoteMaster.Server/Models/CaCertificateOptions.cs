@@ -8,6 +8,10 @@ namespace RemoteMaster.Server.Models;
 
 public class CaCertificateOptions
 {
+    public int RSAKeySize { get; init; }
+
+    public int ValidityPeriod { get; init; }
+
     public string CommonName { get; init; }
 
     public SubjectOptions Subject { get; init; }
