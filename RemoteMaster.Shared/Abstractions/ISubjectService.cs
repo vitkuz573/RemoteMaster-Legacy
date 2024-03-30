@@ -4,7 +4,7 @@
 
 using System.Security.Cryptography.X509Certificates;
 
-namespace RemoteMaster.Host.Core.Abstractions;
+namespace RemoteMaster.Shared.Abstractions;
 
 public interface ISubjectService
 {

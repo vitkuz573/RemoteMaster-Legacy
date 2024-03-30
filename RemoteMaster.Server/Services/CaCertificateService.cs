@@ -7,11 +7,12 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Shared.Abstractions;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class CaCertificateService(IOptions<CaCertificateOptions> options) : ICaCertificateService
+public class CaCertificateService(IOptions<CaCertificateOptions> options, ISubjectService subjectService) : ICaCertificateService
 {
     private readonly CaCertificateOptions _settings = options.Value ?? throw new ArgumentNullException(nameof(options));
 
@@ -21,12 +22,12 @@ public class CaCertificateService(IOptions<CaCertificateOptions> options) : ICaC
 
         if (existingCert != null)
         {
-            Log.Information("Existing CA certificate for '{Name}' found.", _settings.Name);
+            Log.Information("Existing CA certificate for '{Name}' found.", _settings.CommonName);
 
             return existingCert;
         }
 
-        Log.Information("Starting CA certificate generation for '{Name}'.", _settings.Name);
+        Log.Information("Starting CA certificate generation for '{Name}'.", _settings.CommonName);
 
         var cspParams = new CspParameters
         {
@@ -37,8 +38,8 @@ public class CaCertificateService(IOptions<CaCertificateOptions> options) : ICaC
 
         using var rsaProvider = new RSACryptoServiceProvider(4096, cspParams);
 
-        var subjectName = new X500DistinguishedName($"CN={_settings.Name}");
-        var request = new CertificateRequest(subjectName, rsaProvider, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        var distinguishedName = subjectService.GetDistinguishedName(_settings.CommonName);
+        var request = new CertificateRequest(distinguishedName, rsaProvider, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
         request.CertificateExtensions.Add(new X509BasicConstraintsExtension(true, false, 0, true));
         request.CertificateExtensions.Add(new X509SubjectKeyIdentifierExtension(request.PublicKey, false));
@@ -46,9 +47,9 @@ public class CaCertificateService(IOptions<CaCertificateOptions> options) : ICaC
 
         var caCert = request.CreateSelfSigned(DateTimeOffset.Now, DateTimeOffset.Now.AddYears(10));
 
-        caCert.FriendlyName = _settings.Name;
+        caCert.FriendlyName = _settings.CommonName;
 
-        Log.Information("CA certificate for '{Name}' generated.", _settings.Name);
+        Log.Information("CA certificate for '{Name}' generated.", _settings.CommonName);
 
         AddCertificateToStore(caCert, StoreName.Root, StoreLocation.LocalMachine);
 
@@ -61,7 +62,7 @@ public class CaCertificateService(IOptions<CaCertificateOptions> options) : ICaC
 
         store.Open(OpenFlags.ReadOnly);
 
-        var existingCertificates = store.Certificates.Find(X509FindType.FindBySubjectName, _settings.Name, false);
+        var existingCertificates = store.Certificates.Find(X509FindType.FindBySubjectName, _settings.CommonName, false);
 
         return existingCertificates.Count > 0 ? existingCertificates[0] : null;
     }

@@ -16,6 +16,9 @@ using RemoteMaster.Server.Hubs;
 using RemoteMaster.Server.Middlewares;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
+using RemoteMaster.Shared.Abstractions;
+using RemoteMaster.Shared.Models;
+using RemoteMaster.Shared.Services;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -65,6 +68,7 @@ builder.Services.AddSingleton<IPacketSender, UdpPacketSender>();
 builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
 builder.Services.AddSingleton<IComputerConnectivityService, ComputerConnectivityService>();
 builder.Services.AddSingleton<ICaCertificateService, CaCertificateService>();
+builder.Services.AddSingleton<ISubjectService, SubjectService>();
 
 builder.Services.AddSingleton(new JsonSerializerOptions
 {
@@ -75,6 +79,7 @@ builder.Services.AddSingleton(new JsonSerializerOptions
 
 builder.Services.AddTransient<ITokenService, TokenService>();
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
+builder.Services.Configure<SubjectOptions>(builder.Configuration.GetSection("CASettings:Subject"));
 builder.Services.Configure<CaCertificateOptions>(builder.Configuration.GetSection("CASettings"));
 builder.Services.Configure<ApplicationSettings>(builder.Configuration);
 

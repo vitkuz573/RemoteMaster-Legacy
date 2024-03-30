@@ -4,10 +4,10 @@
 
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Options;
-using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;
 
-namespace RemoteMaster.Host.Core.Services;
+namespace RemoteMaster.Shared.Services;
 
 public class SubjectService(IOptions<SubjectOptions> options) : ISubjectService
 {

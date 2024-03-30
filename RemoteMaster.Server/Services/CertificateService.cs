@@ -34,7 +34,7 @@ public class CertificateService(IOptions<CaCertificateOptions> options) : ICerti
         {
             store.Open(OpenFlags.ReadOnly);
 
-            var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, _settings.Name, false);
+            var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, _settings.CommonName, false);
 
             foreach (var cert in certificates)
             {
@@ -93,7 +93,7 @@ public class CertificateService(IOptions<CaCertificateOptions> options) : ICerti
         {
             store.Open(OpenFlags.ReadOnly);
 
-            var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, _settings.Name, false);
+            var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, _settings.CommonName, false);
 
             foreach (var cert in certificates)
             {

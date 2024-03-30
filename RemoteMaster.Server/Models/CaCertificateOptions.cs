@@ -2,9 +2,13 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using RemoteMaster.Shared.Models;
+
 namespace RemoteMaster.Server.Models;
 
 public class CaCertificateOptions
 {
-    public string Name { get; init; }
+    public string CommonName { get; init; }
+
+    public SubjectOptions Subject { get; init; }
 }
