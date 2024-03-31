@@ -14,7 +14,7 @@ namespace RemoteMaster.Server.Services;
 
 public class CaCertificateService(IOptions<CaCertificateOptions> options, ISubjectService subjectService) : ICaCertificateService
 {
-    private readonly CaCertificateOptions _settings = options.Value ?? throw new ArgumentNullException(nameof(options));
+    private readonly CaCertificateOptions _settings = options.Value;
 
     public X509Certificate2 CreateCaCertificate()
     {
@@ -22,55 +22,88 @@ public class CaCertificateService(IOptions<CaCertificateOptions> options, ISubje
 
         if (existingCert != null)
         {
-            Log.Information("Existing CA certificate for '{Name}' found.", _settings.CommonName);
+            if (existingCert.NotAfter > DateTime.Now)
+            {
+                Log.Information("Existing CA certificate for '{Name}' found.", _settings.CommonName);
+                
+                return existingCert;
+            }
+            else
+            {
+                Log.Information("Existing CA certificate for '{Name}' has expired. Reissuing with the same key.", _settings.CommonName);
 
-            return existingCert;
+                return GenerateCertificate(existingCert.GetRSAPrivateKey(), true);
+            }
         }
 
-        Log.Information("Starting CA certificate generation for '{Name}'.", _settings.CommonName);
+        Log.Information("No existing CA certificate found or it has expired. Generating a new one for '{Name}'.", _settings.CommonName);
 
-        var cspParams = new CspParameters
+        return GenerateCertificate(null, false);
+    }
+
+    private X509Certificate2 GenerateCertificate(RSA? externalRsaProvider, bool reuseKey)
+    {
+        RSA? rsaProvider = null;
+
+        try
         {
-            KeyContainerName = Guid.NewGuid().ToString(),
-            Flags = CspProviderFlags.UseMachineKeyStore,
-            KeyNumber = (int)KeyNumber.Exchange
-        };
+            if (!reuseKey)
+            {
+                var cspParams = new CspParameters
+                {
+                    KeyContainerName = Guid.NewGuid().ToString(),
+                    Flags = CspProviderFlags.UseMachineKeyStore,
+                    KeyNumber = (int)KeyNumber.Exchange
+                };
 
-        using var rsaProvider = new RSACryptoServiceProvider(_settings.RSAKeySize, cspParams);
+#pragma warning disable CA2000
+                rsaProvider = new RSACryptoServiceProvider(_settings.RSAKeySize, cspParams);
+#pragma warning restore CA2000
+            }
+            else
+            {
+                rsaProvider = externalRsaProvider;
+            }
 
-        var distinguishedName = subjectService.GetDistinguishedName(_settings.CommonName);
-        var request = new CertificateRequest(distinguishedName, rsaProvider, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+            var distinguishedName = subjectService.GetDistinguishedName(_settings.CommonName);
+            var request = new CertificateRequest(distinguishedName, rsaProvider, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
-        request.CertificateExtensions.Add(new X509BasicConstraintsExtension(true, false, 0, true));
-        request.CertificateExtensions.Add(new X509SubjectKeyIdentifierExtension(request.PublicKey, false));
-        request.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.KeyCertSign | X509KeyUsageFlags.CrlSign, true));
+            request.CertificateExtensions.Add(new X509BasicConstraintsExtension(true, false, 0, true));
+            request.CertificateExtensions.Add(new X509SubjectKeyIdentifierExtension(request.PublicKey, false));
+            request.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.KeyCertSign | X509KeyUsageFlags.CrlSign, true));
 
-        var caCert = request.CreateSelfSigned(DateTimeOffset.Now, DateTimeOffset.Now.AddYears(_settings.ValidityPeriod));
+            var caCert = request.CreateSelfSigned(DateTimeOffset.Now, DateTimeOffset.Now.AddYears(_settings.ValidityPeriod));
+            
+            caCert.FriendlyName = _settings.CommonName;
 
-        caCert.FriendlyName = _settings.CommonName;
+            AddCertificateToStore(caCert, StoreName.Root, StoreLocation.LocalMachine);
 
-        Log.Information("CA certificate for '{Name}' generated.", _settings.CommonName);
-
-        AddCertificateToStore(caCert, StoreName.Root, StoreLocation.LocalMachine);
-
-        return caCert;
+            return caCert;
+        }
+        finally
+        {
+            if (!reuseKey && rsaProvider != null && rsaProvider != externalRsaProvider)
+            {
+                rsaProvider.Dispose();
+            }
+        }
     }
 
     private X509Certificate2? FindExistingCertificate()
     {
         using var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
-
+        
         store.Open(OpenFlags.ReadOnly);
-
+        
         var existingCertificates = store.Certificates.Find(X509FindType.FindBySubjectName, _settings.CommonName, false);
-
+        
         return existingCertificates.Count > 0 ? existingCertificates[0] : null;
     }
 
     private static void AddCertificateToStore(X509Certificate2 cert, StoreName storeName, StoreLocation storeLocation)
     {
         using var store = new X509Store(storeName, storeLocation);
-
+        
         store.Open(OpenFlags.ReadOnly);
 
         var isCertificateAlreadyAdded = store.Certificates
@@ -86,7 +119,7 @@ public class CaCertificateService(IOptions<CaCertificateOptions> options, ISubje
             store.Close();
             store.Open(OpenFlags.ReadWrite);
             store.Add(cert);
-
+            
             Log.Information("Certificate with thumbprint {Thumbprint} added to the {StoreName} store in {StoreLocation} location.", cert.Thumbprint, storeName, storeLocation);
         }
 
