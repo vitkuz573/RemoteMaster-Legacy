@@ -48,6 +48,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 builder.Services.AddDbContext<NodesDbContext>(options => options.UseSqlServer(connectionString));
+builder.Services.AddDbContext<CertificateDbContext>(options => options.UseSqlServer(connectionString));
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -62,6 +63,7 @@ builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSe
 builder.Services.AddScoped<IQueryParameterService, QueryParameterService>();
 builder.Services.AddScoped<IDatabaseService, DatabaseService>();
 builder.Services.AddScoped<IComputerCommandService, ComputerCommandService>();
+builder.Services.AddScoped<ICrlService, CrlService>();
 builder.Services.AddSingleton<IBrandingService, BrandingService>();
 builder.Services.AddSingleton<ICertificateService, CertificateService>();
 builder.Services.AddSingleton<IPacketSender, UdpPacketSender>();
@@ -123,8 +125,24 @@ app.MapAdditionalIdentityEndpoints();
 
 app.MapHub<ManagementHub>("/hubs/management");
 
-var caCertificateService = app.Services.GetRequiredService<ICaCertificateService>();
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
 
-caCertificateService.CreateCaCertificate();
+    try
+    {
+        var caCertificateService = services.GetRequiredService<ICaCertificateService>();
+        caCertificateService.CreateCaCertificate();
+
+        var crlService = services.GetRequiredService<ICrlService>();
+        var crl = crlService.GenerateCrl();
+        crlService.PublishCrl(crl);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while seeding the database.");
+    }
+}
 
 app.Run();

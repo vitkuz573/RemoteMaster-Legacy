@@ -72,6 +72,15 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
             request.CertificateExtensions.Add(new X509SubjectKeyIdentifierExtension(request.PublicKey, false));
             request.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.KeyCertSign | X509KeyUsageFlags.CrlSign, true));
 
+            var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+            var crlFilePath = Path.Combine(programDataPath, "RemoteMaster", "list.crl");
+            var crlFileUri = $"file:///{crlFilePath.Replace("\\", "/")}";
+
+            var crlDistributionPoints = new List<string> { crlFileUri };
+            var crlDistributionPointExtension = CertificateRevocationListBuilder.BuildCrlDistributionPointExtension(crlDistributionPoints, false);
+            
+            request.CertificateExtensions.Add(crlDistributionPointExtension);
+
             var caCert = request.CreateSelfSigned(DateTimeOffset.Now, DateTimeOffset.Now.AddYears(_settings.ValidityPeriod));
             
             caCert.FriendlyName = _settings.CommonName;

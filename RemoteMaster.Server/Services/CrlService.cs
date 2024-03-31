@@ -7,20 +7,31 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
+using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class CrlService(IOptions<CertificateOptions> options) : ICrlService
+public class CrlService(IOptions<CertificateOptions> options, CertificateDbContext context) : ICrlService
 {
     private readonly CertificateOptions _settings = options.Value;
     
-    private readonly List<(byte[] serialNumber, X509RevocationReason reason)> _revokedCertificates = [];
-    private BigInteger _crlNumber = BigInteger.One;
+    private BigInteger _crlNumber = BigInteger.Zero;
 
     public void RevokeCertificate(byte[] serialNumber, X509RevocationReason reason)
     {
-        _revokedCertificates.Add((serialNumber, reason));
+        var serialNumberHex = BitConverter.ToString(serialNumber).Replace("-", "");
+
+        var revokedCertificate = new RevokedCertificate
+        {
+            SerialNumber = serialNumberHex,
+            Reason = reason.ToString(),
+            RevocationDate = DateTime.UtcNow
+        };
+
+        context.RevokedCertificates.Add(revokedCertificate);
+        context.SaveChanges();
     }
 
     public byte[] GenerateCrl()
@@ -28,22 +39,44 @@ public class CrlService(IOptions<CertificateOptions> options) : ICrlService
         var issuerCertificate = GetIssuerCertificate();
         var crlBuilder = new CertificateRevocationListBuilder();
 
-        foreach (var (serialNumber, reason) in _revokedCertificates)
+        var revokedCertificates = context.RevokedCertificates.ToList();
+
+        foreach (var revoked in revokedCertificates)
         {
-            crlBuilder.AddEntry(serialNumber, DateTimeOffset.UtcNow, reason);
+            var serialNumberBytes = Enumerable.Range(0, revoked.SerialNumber.Length)
+                                 .Where(x => x % 2 == 0)
+                                 .Select(x => Convert.ToByte(revoked.SerialNumber.Substring(x, 2), 16))
+                                 .ToArray();
+
+            Enum.TryParse<X509RevocationReason>(revoked.Reason, out var reason);
+
+            crlBuilder.AddEntry(serialNumberBytes, revoked.RevocationDate, reason);
         }
 
         _crlNumber += 1;
 
         var nextUpdate = DateTimeOffset.UtcNow.AddDays(30);
 
-        var crlData = crlBuilder.Build(issuerCertificate, _crlNumber, nextUpdate, HashAlgorithmName.SHA256);
+        var crlData = crlBuilder.Build(issuerCertificate, _crlNumber, nextUpdate, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
         return crlData;
     }
 
     public void PublishCrl(byte[] crlData)
     {
+        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        var crlFilePath = Path.Combine(programDataPath, "RemoteMaster", "list.crl");
+
+        var directoryPath = Path.GetDirectoryName(crlFilePath);
+
+        if (!Directory.Exists(directoryPath))
+        {
+            Directory.CreateDirectory(directoryPath);
+        }
+
+        File.WriteAllBytes(crlFilePath, crlData);
+
+        Log.Information($"CRL published to {crlFilePath}");
     }
 
     private X509Certificate2 GetIssuerCertificate()
