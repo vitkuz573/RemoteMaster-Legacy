@@ -12,9 +12,9 @@ using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class CaCertificateService(IOptions<CaCertificateOptions> options, ISubjectService subjectService) : ICaCertificateService
+public class CaCertificateService(IOptions<CertificateOptions> options, ISubjectService subjectService) : ICaCertificateService
 {
-    private readonly CaCertificateOptions _settings = options.Value;
+    private readonly CertificateOptions _settings = options.Value;
 
     public X509Certificate2 CreateCaCertificate()
     {

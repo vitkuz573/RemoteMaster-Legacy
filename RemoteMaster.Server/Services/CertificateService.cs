@@ -11,9 +11,9 @@ using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class CertificateService(IOptions<CaCertificateOptions> options) : ICertificateService
+public class CertificateService(IOptions<CertificateOptions> options) : ICertificateService
 {
-    private readonly CaCertificateOptions _settings = options.Value ?? throw new ArgumentNullException(nameof(options));
+    private readonly CertificateOptions _settings = options.Value ?? throw new ArgumentNullException(nameof(options));
 
     public X509Certificate2 IssueCertificate(byte[] csrBytes)
     {

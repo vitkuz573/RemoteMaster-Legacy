@@ -6,7 +6,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Models;
 
-public class CaCertificateOptions
+public class CertificateOptions
 {
     public int RSAKeySize { get; init; }
 
