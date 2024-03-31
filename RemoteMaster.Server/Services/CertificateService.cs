@@ -2,11 +2,10 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Net.Sockets;
 using System.Net;
+using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using Azure.Core;
 using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
@@ -63,8 +62,6 @@ public class CertificateService(IOptions<CertificateOptions> options) : ICertifi
         var notAfter = DateTimeOffset.UtcNow.AddYears(1);
         var serialNumber = GenerateSerialNumber();
 
-        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var crlFilePath = Path.Combine(programDataPath, "RemoteMaster", "list.crl");
         var crlFileUri = $"http://{GetLocalIpAddress()}:5254/crl";
 
         var crlDistributionPoints = new List<string> { crlFileUri };
