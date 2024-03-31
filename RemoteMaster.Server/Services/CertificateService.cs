@@ -2,8 +2,11 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net.Sockets;
+using System.Net;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using Azure.Core;
 using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
@@ -60,6 +63,15 @@ public class CertificateService(IOptions<CertificateOptions> options) : ICertifi
         var notAfter = DateTimeOffset.UtcNow.AddYears(1);
         var serialNumber = GenerateSerialNumber();
 
+        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        var crlFilePath = Path.Combine(programDataPath, "RemoteMaster", "list.crl");
+        var crlFileUri = $"http://{GetLocalIpAddress()}:5254/crl";
+
+        var crlDistributionPoints = new List<string> { crlFileUri };
+        var crlDistributionPointExtension = CertificateRevocationListBuilder.BuildCrlDistributionPointExtension(crlDistributionPoints, false);
+
+        csr.CertificateExtensions.Add(crlDistributionPointExtension);
+
         var certificate = csr.Create(subjectName, signatureGenerator, notBefore, notAfter, serialNumber);
 
         return certificate;
@@ -108,5 +120,20 @@ public class CertificateService(IOptions<CertificateOptions> options) : ICertifi
         var publicCert = new X509Certificate2(caCertificate.Export(X509ContentType.Cert));
 
         return publicCert;
+    }
+
+    private static string GetLocalIpAddress()
+    {
+        var host = Dns.GetHostEntry(Dns.GetHostName());
+
+        foreach (var ip in host.AddressList)
+        {
+            if (ip.AddressFamily == AddressFamily.InterNetwork)
+            {
+                return ip.ToString();
+            }
+        }
+
+        throw new Exception("No network adapters with an IPv4 address in the system!");
     }
 }
