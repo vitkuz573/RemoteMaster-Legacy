@@ -167,7 +167,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     }
 
 #pragma warning disable CA1822
-    public async Task<byte[]> GetCertificateSerialNumber()
+    public async Task<string> GetCertificateSerialNumber()
 #pragma warning restore CA1822
     {
         X509Certificate2? certificate = null;
@@ -188,6 +188,6 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
             }
         }
         
-        return certificate.GetSerialNumber();
+        return certificate.GetSerialNumberString();
     }
 }

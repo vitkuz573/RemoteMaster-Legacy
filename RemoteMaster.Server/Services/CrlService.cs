@@ -17,15 +17,11 @@ public class CrlService(IOptions<CertificateOptions> options, CertificateDbConte
 {
     private readonly CertificateOptions _settings = options.Value;
     
-    private BigInteger _crlNumber = BigInteger.Zero;
-
-    public void RevokeCertificate(byte[] serialNumber, X509RevocationReason reason)
+    public void RevokeCertificate(string serialNumber, X509RevocationReason reason)
     {
-        var serialNumberHex = BitConverter.ToString(serialNumber).Replace("-", "");
-
         var revokedCertificate = new RevokedCertificate
         {
-            SerialNumber = serialNumberHex,
+            SerialNumber = serialNumber,
             Reason = reason.ToString(),
             RevocationDate = DateTime.UtcNow
         };

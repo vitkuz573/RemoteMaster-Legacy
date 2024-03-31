@@ -19,7 +19,7 @@ public partial class RenewCertificateDialog
 
         foreach (var (computer, connection) in Hosts)
         {
-            var serialNumber = await connection.InvokeAsync<byte[]>("GetCertificateSerialNumber");
+            var serialNumber = await connection.InvokeAsync<string>("GetCertificateSerialNumber");
 
             var revokeCertificateTask = Task.Run(() => CrlService.RevokeCertificate(serialNumber, _selectedRevocationReason));
             revokeCertificateTasks.Add(revokeCertificateTask);

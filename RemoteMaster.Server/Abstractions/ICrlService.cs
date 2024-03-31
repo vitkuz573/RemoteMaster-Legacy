@@ -8,7 +8,7 @@ namespace RemoteMaster.Server.Abstractions;
 
 public interface ICrlService
 {
-    void RevokeCertificate(byte[] serialNumber, X509RevocationReason reason);
+    void RevokeCertificate(string serialNumber, X509RevocationReason reason);
 
     byte[] GenerateCrl();
 
