@@ -9,6 +9,9 @@ namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class RenewCertificateDialog
 {
+    private readonly List<X509RevocationReason> revocationReasons = Enum.GetValues(typeof(X509RevocationReason)).Cast<X509RevocationReason>().ToList();
+    private X509RevocationReason _selectedRevocationReason = X509RevocationReason.Unspecified;
+
     private async Task Confirm()
     {
         var revokeCertificateTasks = new List<Task>();
@@ -18,7 +21,7 @@ public partial class RenewCertificateDialog
         {
             var serialNumber = await connection.InvokeAsync<byte[]>("GetCertificateSerialNumber");
 
-            var revokeCertificateTask = Task.Run(() => CrlService.RevokeCertificate(serialNumber, X509RevocationReason.Superseded));
+            var revokeCertificateTask = Task.Run(() => CrlService.RevokeCertificate(serialNumber, _selectedRevocationReason));
             revokeCertificateTasks.Add(revokeCertificateTask);
 
             var renewCertificateTask = Task.Run(async () =>

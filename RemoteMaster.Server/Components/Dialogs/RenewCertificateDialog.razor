@@ -1,10 +1,16 @@
 ﻿@inherits CommonDialogBase
 @using RemoteMaster.Server.Abstractions
+@using System.Security.Cryptography.X509Certificates
 @inject ICrlService CrlService
 
 <CommonDialog Hosts="@Hosts">
     <Content>
-
+        <MudSelect T="X509RevocationReason" Label="Select revocation reason" @bind-Value="_selectedRevocationReason" Dense="true">
+            @foreach (var reason in revocationReasons)
+            {
+                <MudSelectItem Value="@reason" />
+            }
+        </MudSelect>
     </Content>
     <Actions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
