@@ -12,6 +12,8 @@ public class CertificateDbContext(DbContextOptions<CertificateDbContext> options
 {
     public DbSet<RevokedCertificate> RevokedCertificates { get; set; }
 
+    public DbSet<CrlInfo> CrlInfos { get; set; }
+
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "ModelBuilder will not be null.")]
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

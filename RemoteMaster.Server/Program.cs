@@ -94,6 +94,8 @@ builder.Host.UseSerilog((_, configuration) =>
     configuration.WriteTo.File(@"C:\ProgramData\RemoteMaster\Server\RemoteMaster_Server.log", rollingInterval: RollingInterval.Day);
 });
 
+builder.Services.AddControllers();
+
 var app = builder.Build();
 
 app.Urls.Clear();
@@ -119,6 +121,7 @@ app.UseMiddleware<RouteRestrictionMiddleware>();
 app.UseStaticFiles();
 app.UseAntiforgery();
 
+app.MapControllers();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
 app.MapAdditionalIdentityEndpoints();

@@ -39,6 +39,13 @@ public class CrlService(IOptions<CertificateOptions> options, CertificateDbConte
         var issuerCertificate = GetIssuerCertificate();
         var crlBuilder = new CertificateRevocationListBuilder();
 
+        var crlInfo = context.CrlInfos.FirstOrDefault() ?? new CrlInfo
+        {
+            CurrentCrlNumber = BigInteger.Zero.ToString()
+        };
+
+        var currentCrlNumber = BigInteger.Parse(crlInfo.CurrentCrlNumber);
+
         var revokedCertificates = context.RevokedCertificates.ToList();
 
         foreach (var revoked in revokedCertificates)
@@ -53,11 +60,23 @@ public class CrlService(IOptions<CertificateOptions> options, CertificateDbConte
             crlBuilder.AddEntry(serialNumberBytes, revoked.RevocationDate, reason);
         }
 
-        _crlNumber += 1;
+        currentCrlNumber += 1;
+
+        crlInfo.CurrentCrlNumber = currentCrlNumber.ToString();
+
+        if (context.CrlInfos.Any())
+        {
+            context.CrlInfos.Update(crlInfo);
+        }
+        else
+        {
+            context.CrlInfos.Add(crlInfo);
+        }
+
+        context.SaveChanges();
 
         var nextUpdate = DateTimeOffset.UtcNow.AddDays(30);
-
-        var crlData = crlBuilder.Build(issuerCertificate, _crlNumber, nextUpdate, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        var crlData = crlBuilder.Build(issuerCertificate, currentCrlNumber, nextUpdate, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
         return crlData;
     }

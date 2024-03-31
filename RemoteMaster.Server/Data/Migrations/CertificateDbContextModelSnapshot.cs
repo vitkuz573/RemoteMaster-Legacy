@@ -22,6 +22,23 @@ namespace RemoteMaster.Server.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("RemoteMaster.Server.Models.CrlInfo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CurrentCrlNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CrlInfos");
+                });
+
             modelBuilder.Entity("RemoteMaster.Server.Models.RevokedCertificate", b =>
                 {
                     b.Property<int>("Id")

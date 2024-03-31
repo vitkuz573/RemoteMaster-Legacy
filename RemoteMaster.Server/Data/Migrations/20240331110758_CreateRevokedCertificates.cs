@@ -12,6 +12,19 @@ namespace RemoteMaster.Server.Data.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "CrlInfos",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CurrentCrlNumber = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CrlInfos", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "RevokedCertificates",
                 columns: table => new
                 {
@@ -30,6 +43,9 @@ namespace RemoteMaster.Server.Data.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "CrlInfos");
+
             migrationBuilder.DropTable(
                 name: "RevokedCertificates");
         }
