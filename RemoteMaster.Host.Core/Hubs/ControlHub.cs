@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
@@ -163,5 +164,30 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
 
         await hostLifecycleService.RenewCertificateAsync(hostConfiguration);
+    }
+
+#pragma warning disable CA1822
+    public async Task<byte[]> GetCertificateSerialNumber()
+#pragma warning restore CA1822
+    {
+        X509Certificate2? certificate = null;
+
+        using (var store = new X509Store(StoreName.My, StoreLocation.LocalMachine))
+        {
+            store.Open(OpenFlags.ReadOnly);
+
+            var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, Environment.MachineName, false);
+
+            foreach (var cert in certificates)
+            {
+                if (cert.HasPrivateKey)
+                {
+                    certificate = cert;
+                    break;
+                }
+            }
+        }
+        
+        return certificate.GetSerialNumber();
     }
 }
