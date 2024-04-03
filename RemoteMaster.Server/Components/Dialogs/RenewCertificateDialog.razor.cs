@@ -21,7 +21,7 @@ public partial class RenewCertificateDialog
         {
             var serialNumber = await connection.InvokeAsync<string>("GetCertificateSerialNumber");
 
-            var revokeCertificateTask = Task.Run(() => CrlService.RevokeCertificate(serialNumber, _selectedRevocationReason));
+            var revokeCertificateTask = Task.Run(async () => await CrlService.RevokeCertificateAsync(serialNumber, _selectedRevocationReason));
             revokeCertificateTasks.Add(revokeCertificateTask);
 
             var renewCertificateTask = Task.Run(async () =>

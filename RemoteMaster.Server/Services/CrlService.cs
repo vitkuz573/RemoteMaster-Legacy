@@ -18,7 +18,7 @@ public class CrlService(IOptions<CertificateOptions> options, IDbContextFactory<
 {
     private readonly CertificateOptions _settings = options.Value;
     
-    public void RevokeCertificate(string serialNumber, X509RevocationReason reason)
+    public async Task RevokeCertificateAsync(string serialNumber, X509RevocationReason reason)
     {
         var revokedCertificate = new RevokedCertificate
         {
@@ -27,18 +27,18 @@ public class CrlService(IOptions<CertificateOptions> options, IDbContextFactory<
             RevocationDate = DateTime.UtcNow
         };
 
-        using var context = contextFactory.CreateDbContext();
+        using var context = await contextFactory.CreateDbContextAsync();
 
         context.RevokedCertificates.Add(revokedCertificate);
         context.SaveChanges();
     }
 
-    public byte[] GenerateCrl()
+    public async Task<byte[]> GenerateCrlAsync()
     {
         var issuerCertificate = GetIssuerCertificate();
         var crlBuilder = new CertificateRevocationListBuilder();
 
-        using var context = contextFactory.CreateDbContext();
+        using var context = await contextFactory.CreateDbContextAsync();
 
         var crlInfo = context.CrlInfos.FirstOrDefault() ?? new CrlInfo
         {
@@ -125,5 +125,25 @@ public class CrlService(IOptions<CertificateOptions> options, IDbContextFactory<
         }
 
         return caCertificate;
+    }
+
+    public async Task<CrlMetadata> GetCrlMetadataAsync()
+    {
+        using var context = await contextFactory.CreateDbContextAsync();
+
+        var crlInfo = await context.CrlInfos.FirstOrDefaultAsync();
+        var revokedCertificatesCount = await context.RevokedCertificates.CountAsync();
+
+        if (crlInfo != null)
+        {
+            return new CrlMetadata
+            {
+                CurrentCrlNumber = crlInfo.CurrentCrlNumber,
+                NextUpdate = DateTimeOffset.UtcNow.AddDays(30),
+                RevokedCertificatesCount = revokedCertificatesCount
+            };
+        }
+
+        throw new InvalidOperationException("CRL Metadata is not available.");
     }
 }

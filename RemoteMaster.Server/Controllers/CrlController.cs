@@ -4,6 +4,7 @@
 
 using Microsoft.AspNetCore.Mvc;
 using RemoteMaster.Server.Abstractions;
+using Serilog;
 
 namespace RemoteMaster.Server.Controllers;
 
@@ -12,17 +13,36 @@ namespace RemoteMaster.Server.Controllers;
 public class CrlController(ICrlService crlService) : ControllerBase
 {
     [HttpGet]
-    public IActionResult GetCrl()
+    public async Task<IActionResult> GetCrlAsync()
     {
         try
         {
-            var crlData = crlService.GenerateCrl();
+            var crlData = await crlService.GenerateCrlAsync();
 
             return File(crlData, "application/pkix-crl", "list.crl");
         }
-        catch
+        catch (Exception ex)
         {
-            return StatusCode(500, "Internal Server Error");
+            Log.Error(ex, "Error generating CRL");
+
+            return StatusCode(500, "Internal Server Error. Please try again later.");
+        }
+    }
+
+    [HttpGet("metadata")]
+    public async Task<IActionResult> GetCrlMetadataAsync()
+    {
+        try
+        {
+            var metadata = await crlService.GetCrlMetadataAsync();
+
+            return Ok(metadata);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error retrieving CRL metadata");
+
+            return StatusCode(500, "Internal Server Error. Please try again later.");
         }
     }
 }

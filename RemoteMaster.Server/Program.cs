@@ -162,7 +162,7 @@ using (var scope = app.Services.CreateScope())
         caCertificateService.CreateCaCertificate();
 
         var crlService = services.GetRequiredService<ICrlService>();
-        var crl = crlService.GenerateCrl();
+        var crl = await crlService.GenerateCrlAsync();
         crlService.PublishCrl(crl);
     }
     catch (Exception ex)

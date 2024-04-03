@@ -3,14 +3,17 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Cryptography.X509Certificates;
+using RemoteMaster.Server.Services;
 
 namespace RemoteMaster.Server.Abstractions;
 
 public interface ICrlService
 {
-    void RevokeCertificate(string serialNumber, X509RevocationReason reason);
+    Task RevokeCertificateAsync(string serialNumber, X509RevocationReason reason);
 
-    byte[] GenerateCrl();
+    Task<byte[]> GenerateCrlAsync();
 
     void PublishCrl(byte[] crlData);
+
+    Task<CrlMetadata> GetCrlMetadataAsync();
 }
