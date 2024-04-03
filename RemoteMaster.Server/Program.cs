@@ -98,6 +98,30 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+
+    try
+    {
+        var dbContexts = new List<DbContext>
+        {
+            services.GetRequiredService<ApplicationDbContext>(),
+            services.GetRequiredService<NodesDbContext>(),
+            services.GetRequiredService<CertificateDbContext>(),
+        };
+
+        foreach (var dbContext in dbContexts)
+        {
+            dbContext.Database.Migrate();
+        }
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "An error occurred while applying the database migrations.");
+    }
+}
+
 app.Urls.Clear();
 app.Urls.Add("http://0.0.0.0:5254");
 
