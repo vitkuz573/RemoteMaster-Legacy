@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using MudBlazor;
 using RemoteMaster.Server.Components.Dialogs;
+using RemoteMaster.Server.Services;
 using RemoteMaster.Shared.Models;
 using Serilog;
 
@@ -121,6 +122,15 @@ public partial class Home
         };
 
         await DialogService.ShowAsync<HostConfigurationGenerator>("Host Configuration Generator", dialogOptions);
+    }
+
+    private async Task PublishCrl()
+    {
+        var crl = await CrlService.GenerateCrlAsync();
+
+        CrlService.PublishCrl(crl);
+
+        Snackbar.Add($"CRL published", Severity.Info);
     }
 
     private void Logout()

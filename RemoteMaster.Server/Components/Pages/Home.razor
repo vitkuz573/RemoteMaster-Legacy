@@ -9,6 +9,8 @@
 @inject IDatabaseService DatabaseService
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IComputerConnectivityService ComputerConnectivityService
+@inject ICrlService CrlService
+@inject ISnackbar Snackbar
 @inject IJSRuntime JsRuntime
 
 <MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme" />
@@ -34,6 +36,7 @@
         </MudDrawerHeader>
         <MudNavMenu>
             <MudNavLink Match="NavLinkMatch.All" OnClick="OpenHostConfigurationGenerator">Host Configuration Generator</MudNavLink>
+            <MudNavLink Match="NavLinkMatch.All" OnClick="PublishCrl">Publish CRL</MudNavLink>
             <MudNavLink Match="NavLinkMatch.All" OnClick="Logout">Logout</MudNavLink>
         </MudNavMenu>
     </MudDrawer>

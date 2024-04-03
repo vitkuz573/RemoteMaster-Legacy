@@ -152,24 +152,7 @@ app.MapAdditionalIdentityEndpoints();
 
 app.MapHub<ManagementHub>("/hubs/management");
 
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-
-    try
-    {
-        var caCertificateService = services.GetRequiredService<ICaCertificateService>();
-        caCertificateService.CreateCaCertificate();
-
-        var crlService = services.GetRequiredService<ICrlService>();
-        var crl = await crlService.GenerateCrlAsync();
-        crlService.PublishCrl(crl);
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while seeding the database.");
-    }
-}
+var caCertificateService = app.Services.GetRequiredService<ICaCertificateService>();
+caCertificateService.CreateCaCertificate();
 
 app.Run();
