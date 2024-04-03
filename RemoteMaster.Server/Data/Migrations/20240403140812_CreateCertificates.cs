@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace RemoteMaster.Server.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class CreateRevokedCertificates : Migration
+    public partial class CreateCertificates : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -17,7 +17,9 @@ namespace RemoteMaster.Server.Data.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    CurrentCrlNumber = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    CrlNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    NextUpdate = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    CrlHash = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {

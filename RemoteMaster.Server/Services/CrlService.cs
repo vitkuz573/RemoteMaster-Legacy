@@ -42,28 +42,32 @@ public class CrlService(IOptions<CertificateOptions> options, IDbContextFactory<
 
         var crlInfo = context.CrlInfos.FirstOrDefault() ?? new CrlInfo
         {
-            CurrentCrlNumber = BigInteger.Zero.ToString()
+            CrlNumber = BigInteger.Zero.ToString()
         };
 
-        var currentCrlNumber = BigInteger.Parse(crlInfo.CurrentCrlNumber);
+        var currentCrlNumber = BigInteger.Parse(crlInfo.CrlNumber) + 1;
+        var nextUpdate = DateTimeOffset.UtcNow.AddDays(30);
 
         var revokedCertificates = context.RevokedCertificates.ToList();
 
         foreach (var revoked in revokedCertificates)
         {
             var serialNumberBytes = Enumerable.Range(0, revoked.SerialNumber.Length)
-                                 .Where(x => x % 2 == 0)
-                                 .Select(x => Convert.ToByte(revoked.SerialNumber.Substring(x, 2), 16))
-                                 .ToArray();
+                .Where(x => x % 2 == 0)
+                .Select(x => Convert.ToByte(revoked.SerialNumber.Substring(x, 2), 16))
+                .ToArray();
 
             Enum.TryParse<X509RevocationReason>(revoked.Reason, out var reason);
 
             crlBuilder.AddEntry(serialNumberBytes, revoked.RevocationDate, reason);
         }
 
-        currentCrlNumber += 1;
+        var crlData = crlBuilder.Build(issuerCertificate, currentCrlNumber, nextUpdate, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        var crlHash = BitConverter.ToString(SHA256.HashData(crlData)).Replace("-", "").ToLowerInvariant();
 
-        crlInfo.CurrentCrlNumber = currentCrlNumber.ToString();
+        crlInfo.CrlNumber = currentCrlNumber.ToString();
+        crlInfo.NextUpdate = nextUpdate;
+        crlInfo.CrlHash = crlHash;
 
         if (context.CrlInfos.Any())
         {
@@ -75,9 +79,6 @@ public class CrlService(IOptions<CertificateOptions> options, IDbContextFactory<
         }
 
         context.SaveChanges();
-
-        var nextUpdate = DateTimeOffset.UtcNow.AddDays(30);
-        var crlData = crlBuilder.Build(issuerCertificate, currentCrlNumber, nextUpdate, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
         return crlData;
     }
@@ -149,8 +150,7 @@ public class CrlService(IOptions<CertificateOptions> options, IDbContextFactory<
         {
             return new CrlMetadata
             {
-                CurrentCrlNumber = crlInfo.CurrentCrlNumber,
-                NextUpdate = DateTimeOffset.UtcNow.AddDays(30),
+                CrlInfo = crlInfo,
                 RevokedCertificatesCount = revokedCertificatesCount
             };
         }

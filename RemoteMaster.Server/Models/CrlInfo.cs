@@ -8,5 +8,9 @@ public class CrlInfo
 {
     public int Id { get; set; }
 
-    public string CurrentCrlNumber { get; set; }
+    public string CrlNumber { get; set; }
+
+    public DateTimeOffset NextUpdate { get; set; }
+
+    public string CrlHash { get; set; }
 }

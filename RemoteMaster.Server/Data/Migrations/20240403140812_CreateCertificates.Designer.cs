@@ -12,8 +12,8 @@ using RemoteMaster.Server.Data;
 namespace RemoteMaster.Server.Data.Migrations
 {
     [DbContext(typeof(CertificateDbContext))]
-    [Migration("20240331110758_CreateRevokedCertificates")]
-    partial class CreateRevokedCertificates
+    [Migration("20240403140812_CreateCertificates")]
+    partial class CreateCertificates
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,9 +33,16 @@ namespace RemoteMaster.Server.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("CurrentCrlNumber")
+                    b.Property<string>("CrlHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CrlNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("NextUpdate")
+                        .HasColumnType("datetimeoffset");
 
                     b.HasKey("Id");
 
