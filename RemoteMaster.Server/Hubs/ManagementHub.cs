@@ -228,8 +228,8 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
     {
         try
         {
-            var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-            var publicKeyPath = Path.Combine(programData, "RemoteMaster", "Security", "JWT", "public_key.pem");
+            var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+            var publicKeyPath = Path.Combine(programDataPath, "RemoteMaster", "Security", "JWT", "public_key.pem");
 
             if (File.Exists(publicKeyPath))
             {
@@ -252,8 +252,8 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
 
     public async Task<string[]> GetNewOrganizationalUnitIfChangeRequested(string macAddress)
     {
-        var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var ouChangeRequestsFilePath = Path.Combine(programData, "RemoteMaster", "Server", "OrganizationalUnitChangeRequests.json");
+        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        var ouChangeRequestsFilePath = Path.Combine(programDataPath, "RemoteMaster", "Server", "OrganizationalUnitChangeRequests.json");
 
         if (File.Exists(ouChangeRequestsFilePath))
         {
@@ -274,8 +274,8 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
 
     public async Task AcknowledgeOrganizationalUnitChange(string macAddress)
     {
-        var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var ouChangeRequestsFilePath = Path.Combine(programData, "RemoteMaster", "Server", "OrganizationalUnitChangeRequests.json");
+        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        var ouChangeRequestsFilePath = Path.Combine(programDataPath, "RemoteMaster", "Server", "OrganizationalUnitChangeRequests.json");
 
         if (File.Exists(ouChangeRequestsFilePath))
         {

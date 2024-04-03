@@ -77,8 +77,8 @@ internal class Program
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         });
 
-        var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var publicKeyPath = Path.Combine(programData, "RemoteMaster", "Security", "public_key.pem");
+        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        var publicKeyPath = Path.Combine(programDataPath, "RemoteMaster", "Security", "public_key.pem");
 
         if (File.Exists(publicKeyPath))
         {

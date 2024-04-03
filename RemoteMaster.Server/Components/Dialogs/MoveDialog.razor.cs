@@ -69,8 +69,8 @@ public partial class MoveDialog
 
     private static async Task AppendOrganizationalUnitChangeRequests(List<Computer> unavailableHosts, string[] targetOrganizationalUnits)
     {
-        var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var applicationData = Path.Combine(programData, "RemoteMaster", "Server");
+        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        var applicationData = Path.Combine(programDataPath, "RemoteMaster", "Server");
 
         if (!Directory.Exists(applicationData))
         {

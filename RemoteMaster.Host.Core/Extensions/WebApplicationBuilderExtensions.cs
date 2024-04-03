@@ -67,8 +67,8 @@ public static class WebApplicationBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var fileLog = Path.Combine(programData, "RemoteMaster", "Host", "RemoteMaster_Host.log");
+        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        var fileLog = Path.Combine(programDataPath, "RemoteMaster", "Host", "RemoteMaster_Host.log");
 
         builder.Host.UseSerilog((_, configuration) =>
         {

@@ -228,8 +228,8 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
     private static string EnsureSecurityDirectoryExists()
     {
-        var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var securityDirectory = Path.Combine(programData, "RemoteMaster", "Security");
+        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        var securityDirectory = Path.Combine(programDataPath, "RemoteMaster", "Security");
 
         if (Directory.Exists(securityDirectory))
         {
