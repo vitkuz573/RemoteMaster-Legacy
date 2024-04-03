@@ -48,7 +48,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 builder.Services.AddDbContext<NodesDbContext>(options => options.UseSqlServer(connectionString));
-builder.Services.AddDbContext<CertificateDbContext>(options => options.UseSqlServer(connectionString));
+builder.Services.AddDbContextFactory<CertificateDbContext>(options => options.UseSqlServer(connectionString));
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 

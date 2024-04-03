@@ -5,6 +5,7 @@
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
@@ -13,7 +14,7 @@ using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class CrlService(IOptions<CertificateOptions> options, CertificateDbContext context) : ICrlService
+public class CrlService(IOptions<CertificateOptions> options, IDbContextFactory<CertificateDbContext> contextFactory) : ICrlService
 {
     private readonly CertificateOptions _settings = options.Value;
     
@@ -26,6 +27,8 @@ public class CrlService(IOptions<CertificateOptions> options, CertificateDbConte
             RevocationDate = DateTime.UtcNow
         };
 
+        using var context = contextFactory.CreateDbContext();
+
         context.RevokedCertificates.Add(revokedCertificate);
         context.SaveChanges();
     }
@@ -34,6 +37,8 @@ public class CrlService(IOptions<CertificateOptions> options, CertificateDbConte
     {
         var issuerCertificate = GetIssuerCertificate();
         var crlBuilder = new CertificateRevocationListBuilder();
+
+        using var context = contextFactory.CreateDbContext();
 
         var crlInfo = context.CrlInfos.FirstOrDefault() ?? new CrlInfo
         {
