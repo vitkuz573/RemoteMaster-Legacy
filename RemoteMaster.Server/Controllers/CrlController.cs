@@ -9,7 +9,7 @@ using Serilog;
 namespace RemoteMaster.Server.Controllers;
 
 [ApiController]
-[Route("crl")]
+[Route("[controller]")]
 public class CrlController(ICrlService crlService) : ControllerBase
 {
     [HttpGet]
