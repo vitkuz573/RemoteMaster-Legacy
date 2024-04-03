@@ -82,21 +82,32 @@ public class CrlService(IOptions<CertificateOptions> options, IDbContextFactory<
         return crlData;
     }
 
-    public void PublishCrl(byte[] crlData)
+    public async Task<bool> PublishCrlAsync(byte[] crlData)
     {
-        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var crlFilePath = Path.Combine(programDataPath, "RemoteMaster", "list.crl");
-
-        var directoryPath = Path.GetDirectoryName(crlFilePath);
-
-        if (!Directory.Exists(directoryPath))
+        try
         {
-            Directory.CreateDirectory(directoryPath);
+            var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+            var crlFilePath = Path.Combine(programDataPath, "RemoteMaster", "list.crl");
+
+            var directoryPath = Path.GetDirectoryName(crlFilePath);
+
+            if (!Directory.Exists(directoryPath))
+            {
+                Directory.CreateDirectory(directoryPath);
+            }
+
+            await File.WriteAllBytesAsync(crlFilePath, crlData);
+
+            Log.Information($"CRL published to {crlFilePath}");
+
+            return true;
         }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to publish CRL");
 
-        File.WriteAllBytes(crlFilePath, crlData);
-
-        Log.Information($"CRL published to {crlFilePath}");
+            return false;
+        }
     }
 
     private X509Certificate2 GetIssuerCertificate()

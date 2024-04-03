@@ -127,10 +127,16 @@ public partial class Home
     private async Task PublishCrl()
     {
         var crl = await CrlService.GenerateCrlAsync();
+        var result = await CrlService.PublishCrlAsync(crl);
 
-        CrlService.PublishCrl(crl);
-
-        Snackbar.Add($"CRL published", Severity.Info);
+        if (result)
+        {
+            Snackbar.Add($"CRL successfully published", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add($"Failed to publish CRL", Severity.Error);
+        }
     }
 
     private void Logout()
