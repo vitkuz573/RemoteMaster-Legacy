@@ -17,12 +17,12 @@ public class ComputerCommandService(IJSRuntime jsRuntime) : IComputerCommandServ
 {
     private readonly AsyncRetryPolicy _retryPolicy = Policy
         .Handle<Exception>()
-        .WaitAndRetryAsync(new[]
-        {
+        .WaitAndRetryAsync(
+        [
             TimeSpan.FromSeconds(5),
             TimeSpan.FromSeconds(7),
             TimeSpan.FromSeconds(10),
-        });
+        ]);
 
     public async Task Execute(ConcurrentDictionary<Computer, HubConnection?> hosts, Func<Computer, HubConnection, Task> action)
     {
