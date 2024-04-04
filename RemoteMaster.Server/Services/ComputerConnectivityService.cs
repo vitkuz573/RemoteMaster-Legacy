@@ -26,6 +26,7 @@ public class ComputerConnectivityService(IHttpContextAccessor httpContextAccesso
                 .Build();
 
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+
             await connection.StartAsync(cts.Token);
             await connection.DisposeAsync();
 
