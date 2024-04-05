@@ -71,6 +71,7 @@ builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
 builder.Services.AddSingleton<IComputerConnectivityService, ComputerConnectivityService>();
 builder.Services.AddSingleton<ICaCertificateService, CaCertificateService>();
 builder.Services.AddSingleton<ISubjectService, SubjectService>();
+builder.Services.AddSingleton<IAuthService, AuthService>();
 
 builder.Services.AddSingleton(new JsonSerializerOptions
 {

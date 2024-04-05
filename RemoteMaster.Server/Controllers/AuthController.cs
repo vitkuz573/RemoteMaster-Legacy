@@ -27,6 +27,10 @@ public class AuthController(ITokenService tokenService) : ControllerBase
             return Unauthorized(new ApiResponse(false, "Invalid refresh token."));
         }
 
-        return Ok(new ApiResponse(true, "Tokens refreshed successfully.", new { newTokens.AccessToken, newTokens.RefreshToken }));
+        return Ok(new ApiResponse(true, "Tokens refreshed successfully.", new
+        {
+            newTokens.AccessToken,
+            newTokens.RefreshToken
+        }));
     }
 }
