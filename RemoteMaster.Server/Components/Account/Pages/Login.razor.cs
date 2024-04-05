@@ -47,9 +47,11 @@ public partial class Login
         }
         else if (result.RequiresTwoFactor)
         {
-            RedirectManager.RedirectTo(
-                "Account/LoginWith2fa",
-                new() { ["returnUrl"] = ReturnUrl, ["rememberMe"] = Input.RememberMe });
+            RedirectManager.RedirectTo("Account/LoginWith2fa", new()
+            {
+                ["returnUrl"] = ReturnUrl,
+                ["rememberMe"] = Input.RememberMe
+            });
         }
         else if (result.IsLockedOut)
         {
