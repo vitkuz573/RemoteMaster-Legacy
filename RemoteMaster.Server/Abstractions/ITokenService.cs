@@ -7,4 +7,6 @@ namespace RemoteMaster.Server.Abstractions;
 public interface ITokenService
 {
     string GenerateAccessToken(string email);
+
+    string GenerateRefreshToken();
 }
