@@ -5,6 +5,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using RemoteMaster.Server.Abstractions;
@@ -61,5 +62,44 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         context.SaveChanges();
 
         return refreshToken.Token;
+    }
+
+    public async Task<(string? AccessToken, string? RefreshToken)> RefreshTokensAsync(string oldRefreshToken, string ipAddress)
+    {
+        var oldRefreshTokenEntity = await context.RefreshTokens.SingleOrDefaultAsync(rt => rt.Token == oldRefreshToken && rt.Revoked == null && rt.Expires > DateTime.UtcNow);
+
+        if (oldRefreshTokenEntity == null)
+        {
+            return (null, null);
+        }
+
+        var newRefreshTokenEntity = new RefreshToken
+        {
+            UserId = oldRefreshTokenEntity.UserId,
+            Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
+            Expires = DateTime.UtcNow.AddDays(7),
+            Created = DateTime.UtcNow,
+            CreatedByIp = ipAddress
+        };
+
+        context.RefreshTokens.Add(newRefreshTokenEntity);
+        await context.SaveChangesAsync();
+
+        oldRefreshTokenEntity.Revoked = DateTime.UtcNow;
+        oldRefreshTokenEntity.RevokedByIp = ipAddress;
+        oldRefreshTokenEntity.ReplacedByToken = newRefreshTokenEntity.Token;
+
+        await context.SaveChangesAsync();
+
+        var user = await context.Users.FindAsync(oldRefreshTokenEntity.UserId);
+
+        if (user == null)
+        {
+            return (null, null);
+        }
+
+        var newAccessToken = GenerateAccessToken(user.Email);
+
+        return (newAccessToken, newRefreshTokenEntity.Token);
     }
 }

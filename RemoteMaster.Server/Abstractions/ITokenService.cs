@@ -9,4 +9,6 @@ public interface ITokenService
     string GenerateAccessToken(string email);
 
     string GenerateRefreshToken(string userId, string ipAddress);
+
+    Task<(string? AccessToken, string? RefreshToken)> RefreshTokensAsync(string oldRefreshToken, string ipAddress);
 }
