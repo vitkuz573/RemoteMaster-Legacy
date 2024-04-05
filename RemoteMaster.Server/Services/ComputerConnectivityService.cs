@@ -20,7 +20,7 @@ public class ComputerConnectivityService(IHttpContextAccessor httpContextAccesso
             var connection = new HubConnectionBuilder()
                 .WithUrl($"https://{computer.IpAddress}:5001/{hubPath}", options =>
                 {
-                    options.Headers.Add("Authorization", $"Bearer {accessToken}");
+                    options.AccessTokenProvider = () => Task.FromResult(accessToken);
                 })
                 .AddMessagePackProtocol()
                 .Build();

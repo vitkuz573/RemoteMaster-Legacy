@@ -176,7 +176,7 @@ public partial class Access : IDisposable
         _connection = new HubConnectionBuilder()
             .WithUrl($"https://{Host}:5001/hubs/control", options =>
             {
-                options.Headers.Add("Authorization", $"Bearer {accessToken}");
+                options.AccessTokenProvider = () => Task.FromResult(accessToken);
             })
             .AddMessagePackProtocol()
             .Build();

@@ -189,7 +189,7 @@ public partial class Home
         var connection = new HubConnectionBuilder()
             .WithUrl($"https://{computer.IpAddress}:5001/hubs/control", options =>
             {
-                options.Headers.Add("Authorization", $"Bearer {accessToken}");
+                options.AccessTokenProvider = () => Task.FromResult(accessToken);
             })
             .AddMessagePackProtocol()
             .Build();
@@ -545,7 +545,7 @@ public partial class Home
                     var connection = new HubConnectionBuilder()
                         .WithUrl($"https://{computer.IpAddress}:5001/{hubPath}", options =>
                         {
-                            options.Headers.Add("Authorization", $"Bearer {accessToken}");
+                            options.AccessTokenProvider = () => Task.FromResult(accessToken);
                         })
                         .AddMessagePackProtocol()
                         .Build();
