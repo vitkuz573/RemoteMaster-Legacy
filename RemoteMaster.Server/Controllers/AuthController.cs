@@ -15,15 +15,18 @@ public class AuthController(ITokenService tokenService) : ControllerBase
     [HttpPost("refresh-token")]
     public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
     {
-        ArgumentNullException.ThrowIfNull(request);
+        if (request == null || string.IsNullOrWhiteSpace(request.RefreshToken))
+        {
+            return BadRequest(new ApiResponse(false, "Refresh token is required."));
+        }
 
         var newTokens = await tokenService.RefreshTokensAsync(request.RefreshToken, HttpContext.Connection.RemoteIpAddress?.ToString());
 
         if (newTokens.AccessToken == null || newTokens.RefreshToken == null)
         {
-            return Unauthorized("Invalid refresh token");
+            return Unauthorized(new ApiResponse(false, "Invalid refresh token."));
         }
 
-        return Ok(newTokens);
+        return Ok(new ApiResponse(true, "Tokens refreshed successfully.", new { newTokens.AccessToken, newTokens.RefreshToken }));
     }
 }
