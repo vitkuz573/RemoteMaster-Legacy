@@ -8,5 +8,5 @@ public interface ITokenService
 {
     string GenerateAccessToken(string email);
 
-    string GenerateRefreshToken();
+    string GenerateRefreshToken(string userId, string ipAddress);
 }

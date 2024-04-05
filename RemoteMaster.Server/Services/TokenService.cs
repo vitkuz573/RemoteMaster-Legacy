@@ -8,11 +8,12 @@ using System.Security.Cryptography;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class TokenService(IOptions<JwtOptions> options) : ITokenService
+public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext context) : ITokenService
 {
     private readonly JwtOptions _options = options.Value ?? throw new ArgumentNullException(nameof(options));
 
@@ -45,13 +46,20 @@ public class TokenService(IOptions<JwtOptions> options) : ITokenService
         return tokenHandler.WriteToken(token);
     }
 
-    public string GenerateRefreshToken()
+    public string GenerateRefreshToken(string userId, string ipAddress)
     {
-        var randomNumber = new byte[32];
+        var refreshToken = new RefreshToken
+        {
+            UserId = userId,
+            Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
+            Expires = DateTime.UtcNow.AddDays(7),
+            Created = DateTime.UtcNow,
+            CreatedByIp = ipAddress
+        };
 
-        using var rng = RandomNumberGenerator.Create();
-        rng.GetBytes(randomNumber);
+        context.RefreshTokens.Add(refreshToken);
+        context.SaveChanges();
 
-        return Convert.ToBase64String(randomNumber);
+        return refreshToken.Token;
     }
 }

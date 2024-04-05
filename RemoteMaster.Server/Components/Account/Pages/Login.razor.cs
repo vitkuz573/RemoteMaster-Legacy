@@ -32,14 +32,18 @@ public partial class Login
 
     public async Task LoginUser()
     {
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+
         var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
 
         if (result.Succeeded)
         {
+            var userId = UserManager.GetUserId(HttpContext.User);
+
             Logger.LogInformation("User logged in.");
 
             var accessTokenString = TokenService.GenerateAccessToken(Input.Email);
-            var refreshTokenString = TokenService.GenerateRefreshToken();
+            var refreshTokenString = TokenService.GenerateRefreshToken(userId, ipAddress);
 
             SetTokenCookies(accessTokenString, refreshTokenString);
 
