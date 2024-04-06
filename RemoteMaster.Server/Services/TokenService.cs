@@ -102,4 +102,19 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         return (newAccessToken, newRefreshTokenEntity.Token);
     }
+
+    public bool RequiresTokenUpdate(string accessToken)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+
+        if (tokenHandler.ReadToken(accessToken) is not JwtSecurityToken jsonToken)
+        {
+            return true;
+        }
+
+        var expDate = jsonToken.ValidTo;
+        var currentDate = DateTime.UtcNow;
+
+        return (expDate - currentDate).TotalMinutes <= 5;
+    }
 }

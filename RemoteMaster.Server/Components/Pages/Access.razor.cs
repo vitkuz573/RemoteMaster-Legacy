@@ -176,7 +176,21 @@ public partial class Access : IDisposable
         _connection = new HubConnectionBuilder()
             .WithUrl($"https://{Host}:5001/hubs/control", options =>
             {
-                options.AccessTokenProvider = () => Task.FromResult(accessToken);
+                options.AccessTokenProvider = async () =>
+                {
+                    var currentAccessToken = HttpContextAccessor.HttpContext.Request.Cookies["accessToken"];
+                    var refreshToken = HttpContextAccessor.HttpContext.Request.Cookies["refreshToken"];
+
+                    if (TokenService.RequiresTokenUpdate(currentAccessToken))
+                    {
+                        if (await AuthService.RefreshTokensAsync(refreshToken))
+                        {
+                            currentAccessToken = HttpContextAccessor.HttpContext.Request.Cookies["accessToken"];
+                        }
+                    }
+
+                    return currentAccessToken;
+                };
             })
             .AddMessagePackProtocol()
             .Build();

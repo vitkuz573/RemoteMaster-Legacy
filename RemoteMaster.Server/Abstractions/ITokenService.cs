@@ -11,4 +11,6 @@ public interface ITokenService
     string GenerateRefreshToken(string userId, string ipAddress);
 
     Task<(string? AccessToken, string? RefreshToken)> RefreshTokensAsync(string oldRefreshToken, string ipAddress);
+
+    bool RequiresTokenUpdate(string accessToken);
 }
