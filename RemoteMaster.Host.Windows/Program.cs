@@ -70,7 +70,7 @@ internal class Program
         builder.Services.AddSingleton<ISecureAttentionSequenceService, SecureAttentionSequenceService>();
         builder.Services.AddSingleton<IPsExecService, PsExecService>();
         builder.Services.AddSingleton<IFirewallSettingService, FirewallSettingService>();
-        builder.Services.AddSingleton<IRegistryConfiguratorService, WoLConfiguratorService>();
+        builder.Services.AddSingleton<IWoLConfiguratorService, WoLConfiguratorService>();
         builder.Services.AddSingleton(new JsonSerializerOptions
         {
             WriteIndented = true,
