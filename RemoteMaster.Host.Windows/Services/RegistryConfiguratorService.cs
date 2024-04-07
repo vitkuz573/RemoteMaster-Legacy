@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿using System.Diagnostics;
+using Microsoft.Win32;
 using RemoteMaster.Host.Windows.Abstractions;
 
 namespace RemoteMaster.Host.Windows.Services;
@@ -39,6 +40,43 @@ public class RegistryConfiguratorService : IRegistryConfiguratorService
             {
                 key.SetValue(valueName, value, RegistryValueKind.DWord);
             }
+        }
+    }
+
+    public void EnableWakeOnLanForAllAdapters()
+    {
+        var startInfoForDeviceQuery = new ProcessStartInfo
+        {
+            FileName = "powercfg.exe",
+            Arguments = "/devicequery wake_programmable",
+            CreateNoWindow = true,
+            UseShellExecute = false,
+            RedirectStandardOutput = true
+        };
+
+        var programmableDevices = string.Empty;
+        
+        using (var process = Process.Start(startInfoForDeviceQuery))
+        {
+            process.WaitForExit();
+            programmableDevices = process.StandardOutput.ReadToEnd();
+        }
+
+        var deviceNames = programmableDevices.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+        
+        foreach (var deviceName in deviceNames)
+        {
+            var startInfoForEnableWake = new ProcessStartInfo
+            {
+                FileName = "powercfg.exe",
+                Arguments = $"/deviceenablewake \"{deviceName}\"",
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardOutput = true
+            };
+
+            using var powerCfgProcess = Process.Start(startInfoForEnableWake);
+            powerCfgProcess.WaitForExit();
         }
     }
 }

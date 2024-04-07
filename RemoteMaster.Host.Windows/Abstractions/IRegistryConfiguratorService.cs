@@ -9,4 +9,6 @@ public interface IRegistryConfiguratorService
     void DisableFastStartup();
 
     void DisablePnPEnergySaving();
+
+    void EnableWakeOnLanForAllAdapters();
 }

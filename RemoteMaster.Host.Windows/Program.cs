@@ -194,6 +194,7 @@ internal class Program
        
         registryConfiguratorService.DisableFastStartup();
         registryConfiguratorService.DisablePnPEnergySaving();
+        registryConfiguratorService.EnableWakeOnLanForAllAdapters();
 
         if (!app.Environment.IsDevelopment())
         {
