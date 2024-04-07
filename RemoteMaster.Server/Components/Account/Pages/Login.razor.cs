@@ -78,7 +78,7 @@ public partial class Login
         };
 
         var accessTokenOptions = CopyCookieOptions(baseCookieOptions);
-        accessTokenOptions.Expires = DateTime.UtcNow.AddSeconds(10);
+        accessTokenOptions.Expires = DateTime.UtcNow.AddHours(2);
 
         HttpContext.Response.Cookies.Append("accessToken", accessToken, accessTokenOptions);
 

@@ -6,5 +6,5 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IFirewallSettingService
 {
-    void Execute(string name, string applicationPath);
+    void AddRule(string name, string applicationPath);
 }

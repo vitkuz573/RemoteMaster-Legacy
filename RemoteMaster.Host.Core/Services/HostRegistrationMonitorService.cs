@@ -44,6 +44,7 @@ public class HostRegistrationMonitorService : IHostedService
             {
                 case true when configurationChanged:
                     await _hostLifecycleService.UpdateHostInformationAsync(hostConfiguration);
+                    await _hostLifecycleService.RenewCertificateAsync(hostConfiguration);
                     Log.Information("Host information updated due to configuration change.");
                     break;
                 case false:

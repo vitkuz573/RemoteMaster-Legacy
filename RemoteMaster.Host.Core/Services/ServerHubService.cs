@@ -12,10 +12,10 @@ public class ServerHubService : IServerHubService
 {
     private HubConnection _hubConnection = null!;
 
-    public async Task ConnectAsync(string serverIp)
+    public async Task ConnectAsync(string server)
     {
         _hubConnection = new HubConnectionBuilder()
-            .WithUrl($"http://{serverIp}:5254/hubs/management")
+            .WithUrl($"http://{server}:5254/hubs/management")
             .Build();
 
         await _hubConnection.StartAsync();

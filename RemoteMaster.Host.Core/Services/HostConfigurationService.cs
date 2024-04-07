@@ -39,7 +39,7 @@ public class HostConfigurationService : IHostConfigurationService
 
         if (string.IsNullOrWhiteSpace(config.Server))
         {
-            throw new ValidationException("Server IP must not be empty.");
+            throw new ValidationException("Server must not be empty.");
         }
 
         if (config.Subject == null || string.IsNullOrWhiteSpace(config.Subject.Organization) || config.Subject.OrganizationalUnit == null || config.Subject.OrganizationalUnit.Length == 0 || config.Subject.OrganizationalUnit.Any(string.IsNullOrWhiteSpace) || string.IsNullOrWhiteSpace(config.Subject.Locality) || string.IsNullOrWhiteSpace(config.Subject.State) || string.IsNullOrWhiteSpace(config.Subject.Country))

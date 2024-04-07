@@ -9,7 +9,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class FirewallSettingService : IFirewallSettingService
 {
-    public void Execute(string name, string applicationPath)
+    public void AddRule(string name, string applicationPath)
     {
         var netFwPolicy2Type = Type.GetTypeFromProgID("HNetCfg.FwPolicy2", false);
         var fwPolicy2 = (INetFwPolicy2)Activator.CreateInstance(netFwPolicy2Type);

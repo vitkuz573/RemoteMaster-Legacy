@@ -186,8 +186,8 @@ internal class Program
         var hostApplicationPath = Path.Combine(programFiles, "RemoteMaster", "Host", "RemoteMaster.Host.exe");
         var hostUpdaterApplicationPath = Path.Combine(programFiles, "RemoteMaster", "Host", "Updater", "RemoteMaster.Host.exe");
         
-        firewallSettingService.Execute("Remote Master Host", hostApplicationPath);
-        firewallSettingService.Execute("Remote Master Host Updater", hostUpdaterApplicationPath);
+        firewallSettingService.AddRule("Remote Master Host", hostApplicationPath);
+        firewallSettingService.AddRule("Remote Master Host Updater", hostUpdaterApplicationPath);
 
         if (!app.Environment.IsDevelopment())
         {
@@ -224,7 +224,7 @@ internal class Program
             .Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(LaunchModeBase)))
             .ToArray();
 
-        var launchModeType = launchModes.FirstOrDefault(t => string.Equals(t.Name, modeArgument + "Mode", StringComparison.OrdinalIgnoreCase));
+        var launchModeType = launchModes.FirstOrDefault(t => string.Equals(t.Name, $"{modeArgument}Mode", StringComparison.OrdinalIgnoreCase));
 
         if (launchModeType == null)
         {

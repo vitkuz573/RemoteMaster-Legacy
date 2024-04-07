@@ -165,14 +165,6 @@ public partial class Access : IDisposable
 
     private async Task InitializeHostConnectionAsync()
     {
-        var httpContext = HttpContextAccessor.HttpContext ?? throw new InvalidOperationException("HttpContext is not available.");
-        var accessToken = httpContext.Request.Cookies["accessToken"];
-        
-        if (string.IsNullOrEmpty(accessToken))
-        {
-            throw new InvalidOperationException("Access token is not available.");
-        }
-
         _connection = new HubConnectionBuilder()
             .WithUrl($"https://{Host}:5001/hubs/control", options =>
             {
@@ -181,7 +173,7 @@ public partial class Access : IDisposable
                     var currentAccessToken = HttpContextAccessor.HttpContext.Request.Cookies["accessToken"];
                     var refreshToken = HttpContextAccessor.HttpContext.Request.Cookies["refreshToken"];
 
-                    if (TokenService.RequiresTokenUpdate(currentAccessToken))
+                    if (currentAccessToken == null)
                     {
                         if (await AuthService.RefreshTokensAsync(refreshToken))
                         {

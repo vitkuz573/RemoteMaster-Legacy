@@ -12,7 +12,7 @@ public class AuthService(IHttpContextAccessor httpContextAccessor, HttpClient ht
 {
     public async Task<bool> RefreshTokensAsync(string refreshToken)
     {
-        var response = await httpClient.PostAsJsonAsync("/api/auth/refresh-token", new
+        var response = await httpClient.PostAsJsonAsync("http://127.0.0.1:5254/api/auth/refresh-token", new RefreshTokenRequest
         {
             RefreshToken = refreshToken
         });

@@ -48,11 +48,14 @@ public class Viewer : IViewer
         }
     }
 
-    private void AppState_ViewerRemoved(object? sender, IViewer e)
+    private void AppState_ViewerRemoved(object? sender, IViewer? e)
     {
-        if (e.ConnectionId == ConnectionId)
+        if (e != null)
         {
-            StopStreaming();
+            if (e.ConnectionId == ConnectionId)
+            {
+                StopStreaming();
+            }
         }
     }
 

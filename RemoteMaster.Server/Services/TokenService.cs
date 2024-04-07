@@ -11,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
+using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
@@ -107,14 +108,31 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
     {
         var tokenHandler = new JwtSecurityTokenHandler();
 
-        if (tokenHandler.ReadToken(accessToken) is not JwtSecurityToken jsonToken)
+        try
         {
+            if (tokenHandler.ReadToken(accessToken) is JwtSecurityToken jsonToken)
+            {
+                var expDate = jsonToken.ValidTo.ToUniversalTime();
+                var currentDate = DateTime.UtcNow;
+
+                return (expDate - currentDate).TotalMinutes <= 5;
+            }
+        }
+        catch (ArgumentException ex)
+        {
+            Log.Error(ex, "An error occurred while reading JWT token: Invalid token format.");
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An unexpected error occurred while processing JWT token.");
+
             return true;
         }
 
-        var expDate = jsonToken.ValidTo;
-        var currentDate = DateTime.UtcNow;
+        Log.Warning("The token provided is not a valid JWT token.");
 
-        return (expDate - currentDate).TotalMinutes <= 5;
+        return true;
     }
 }

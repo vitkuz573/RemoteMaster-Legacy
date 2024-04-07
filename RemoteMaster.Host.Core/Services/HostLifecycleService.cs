@@ -38,7 +38,8 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
             var tcsGuid = new TaskCompletionSource<Guid>();
 
-            serverHubService.OnReceiveHostGuid(guid => {
+            serverHubService.OnReceiveHostGuid(guid =>
+            {
                 Log.Information("Host GUID received: {GUID}.", guid);
 
                 hostConfiguration.HostGuid = guid;

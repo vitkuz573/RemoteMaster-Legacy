@@ -277,19 +277,23 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         for (var attempt = 1; attempt <= attempts; attempt++)
         {
             await Notify($"Attempt {attempt}: Checking if services are running...", MessageType.Information);
-            
+
             await Task.Delay(TimeSpan.FromSeconds(delayInSeconds));
 
-            allServicesRunning = services.All(service => service.IsRunning);
+            var nonRunningServices = services.Where(service => !service.IsRunning).ToList();
 
-            if (!allServicesRunning)
-            {
-                await Notify("Not all services are running. Waiting and retrying...", MessageType.Warning);
-            }
-            else
+            allServicesRunning = nonRunningServices.Count == 0;
+
+            if (allServicesRunning)
             {
                 await Notify("All services have been successfully started.", MessageType.Information);
                 break;
+            }
+            else
+            {
+                var nonRunningServicesList = nonRunningServices.Select(service => service.ToString()).Aggregate((i, j) => i + ", " + j);
+                
+                await Notify($"Not all services are running. The following services are not active: {nonRunningServicesList}. Waiting and retrying...", MessageType.Warning);
             }
         }
 

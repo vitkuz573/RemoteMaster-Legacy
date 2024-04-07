@@ -30,12 +30,14 @@ public class FileManagerHub(IFileManagerService fileManagerService) : Hub<IFileM
     public async Task GetFilesAndDirectories(string path)
     {
         var items = fileManagerService.GetFilesAndDirectories(path);
+
         await Clients.Caller.ReceiveFilesAndDirectories(items);
     }
 
     public async Task GetAvailableDrives()
     {
         var drives = await fileManagerService.GetAvailableDrivesAsync();
+
         await Clients.Caller.ReceiveAvailableDrives(drives);
     }
 }
