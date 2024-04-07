@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Host.Windows.Abstractions;
 
-public interface IRegistryConfiguratorService
+public interface IWoLConfiguratorService
 {
     void DisableFastStartup();
 

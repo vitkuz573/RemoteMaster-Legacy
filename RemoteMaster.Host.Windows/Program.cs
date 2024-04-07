@@ -70,7 +70,7 @@ internal class Program
         builder.Services.AddSingleton<ISecureAttentionSequenceService, SecureAttentionSequenceService>();
         builder.Services.AddSingleton<IPsExecService, PsExecService>();
         builder.Services.AddSingleton<IFirewallSettingService, FirewallSettingService>();
-        builder.Services.AddSingleton<IRegistryConfiguratorService, RegistryConfiguratorService>();
+        builder.Services.AddSingleton<IRegistryConfiguratorService, WoLConfiguratorService>();
         builder.Services.AddSingleton(new JsonSerializerOptions
         {
             WriteIndented = true,
@@ -190,11 +190,11 @@ internal class Program
         firewallSettingService.AddRule("Remote Master Host", hostApplicationPath);
         firewallSettingService.AddRule("Remote Master Host Updater", hostUpdaterApplicationPath);
 
-        var registryConfiguratorService = app.Services.GetRequiredService<IRegistryConfiguratorService>();
+        var wolConfiguratorService = app.Services.GetRequiredService<IWoLConfiguratorService>();
        
-        registryConfiguratorService.DisableFastStartup();
-        registryConfiguratorService.DisablePnPEnergySaving();
-        registryConfiguratorService.EnableWakeOnLanForAllAdapters();
+        wolConfiguratorService.DisableFastStartup();
+        wolConfiguratorService.DisablePnPEnergySaving();
+        wolConfiguratorService.EnableWakeOnLanForAllAdapters();
 
         if (!app.Environment.IsDevelopment())
         {

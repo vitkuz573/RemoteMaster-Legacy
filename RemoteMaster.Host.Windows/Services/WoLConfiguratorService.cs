@@ -1,130 +1,82 @@
-﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
-// This file is part of the RemoteMaster project.
-// Licensed under the GNU Affero General Public License v3.0.
-
-using System.Diagnostics;
-using System.Management;
+﻿using System.Diagnostics;
 using Microsoft.Win32;
-using RemoteMaster.Host.Core.Abstractions;
-using Serilog;
+using RemoteMaster.Host.Windows.Abstractions;
 
 namespace RemoteMaster.Host.Windows.Services;
 
 public class WoLConfiguratorService : IWoLConfiguratorService
 {
-    private const int AllowToTurnOff = 0x18;
+    private const string PowerSettingsKeyPath = @"SYSTEM\CurrentControlSet\Control\Session Manager\Power";
+    private const string HiberbootEnabledValueName = "HiberbootEnabled";
 
-    public void Configure()
+    private const string NetworkAdaptersKeyPath = @"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}";
+    private const string PnPCapabilitiesValueName = "PnPCapabilities";
+
+    public void DisableFastStartup()
     {
-        try
-        {
-            using var searcher = new ManagementObjectSearcher("SELECT * FROM Win32_NetworkAdapter WHERE NetEnabled = TRUE");
+        SetRegistryValue(PowerSettingsKeyPath, HiberbootEnabledValueName, 0);
+    }
 
-            foreach (var networkAdapter in searcher.Get().Cast<ManagementObject>())
+    public void DisablePnPEnergySaving()
+    {
+        using var adapters = Registry.LocalMachine.OpenSubKey(NetworkAdaptersKeyPath, true);
+
+        if (adapters != null)
+        {
+            foreach (var subkeyName in adapters.GetSubKeyNames())
             {
-                var connectionId = (string)networkAdapter["NetConnectionID"];
-
-                if (connectionId == null)
-                {
-                    continue;
-                }
-
-                Log.Information("Enabling WoL for {ConnectionId}...", connectionId);
-                EnableWoLForAdapter(connectionId);
+                SetRegistryValue($"{NetworkAdaptersKeyPath}\\{subkeyName}", PnPCapabilitiesValueName, 0);
             }
-
-            DisablePowerManagementForAllAdapters();
-        }
-        catch (Exception ex)
-        {
-            Log.Error("Failed to enable WoL: {Message}", ex.Message);
         }
     }
 
-    private static void EnableWoLForAdapter(string connectionId)
+    private static void SetRegistryValue(string keyPath, string valueName, int value)
     {
-        try
+        using var key = Registry.LocalMachine.OpenSubKey(keyPath, true);
+
+        if (key != null)
         {
-            var command = $"powercfg /deviceenablewake \"{connectionId}\"";
-            ExecuteCommand(command);
-        }
-        catch (Exception ex)
-        {
-            Log.Error("Failed to enable WoL for {ConnectionId}: {Message}", connectionId, ex.Message);
+            if ((int)key.GetValue(valueName, 1) != value)
+            {
+                key.SetValue(valueName, value, RegistryValueKind.DWord);
+            }
         }
     }
 
-    private static void ExecuteCommand(string command)
+    public void EnableWakeOnLanForAllAdapters()
     {
-        using var process = new Process();
-
-        process.StartInfo = new ProcessStartInfo
+        var startInfoForDeviceQuery = new ProcessStartInfo
         {
-            FileName = "cmd.exe",
-            Arguments = $"/c {command}",
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
+            FileName = "powercfg.exe",
+            Arguments = "/devicequery wake_programmable",
+            CreateNoWindow = true,
             UseShellExecute = false,
-            CreateNoWindow = true
+            RedirectStandardOutput = true
         };
 
-        process.Start();
-
-        var output = process.StandardOutput.ReadToEnd();
-        var error = process.StandardError.ReadToEnd();
-
-        process.WaitForExit();
-
-        if (!string.IsNullOrEmpty(output))
+        var programmableDevices = string.Empty;
+        
+        using (var process = Process.Start(startInfoForDeviceQuery))
         {
-            Log.Information("{Output}", output);
+            process.WaitForExit();
+            programmableDevices = process.StandardOutput.ReadToEnd();
         }
 
-        if (!string.IsNullOrEmpty(error))
+        var deviceNames = programmableDevices.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+        
+        foreach (var deviceName in deviceNames)
         {
-            Log.Error("Error: {Error}", error);
-        }
-    }
-
-    private static void DisablePowerManagementForAllAdapters()
-    {
-        try
-        {
-            const string registryPath = @"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}";
-            using var key = Registry.LocalMachine.OpenSubKey(registryPath, true);
-
-            if (key == null)
+            var startInfoForEnableWake = new ProcessStartInfo
             {
-                Log.Error("Failed to open registry path: {Path}", registryPath);
-                return;
-            }
+                FileName = "powercfg.exe",
+                Arguments = $"/deviceenablewake \"{deviceName}\"",
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardOutput = true
+            };
 
-            foreach (var subKeyName in key.GetSubKeyNames())
-            {
-                try
-                {
-                    using var subKey = key.OpenSubKey(subKeyName, true);
-
-                    if (subKey?.GetValue("PnPCapabilities") == null)
-                    {
-                        continue;
-                    }
-
-                    var currentValue = (int?)subKey.GetValue("PnPCapabilities");
-                    Log.Information("Current PnPCapabilities for adapter {Adapter}: {Value}", subKeyName, currentValue);
-
-                    subKey.SetValue("PnPCapabilities", AllowToTurnOff);
-                    Log.Information("Set PnPCapabilities for adapter {Adapter} to {Value}", subKeyName, AllowToTurnOff);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error("Failed to disable power management for adapter {Adapter}: {Message}", subKeyName, ex.Message);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Error("Failed to disable power management for network adapters: {Message}", ex.Message);
+            using var powerCfgProcess = Process.Start(startInfoForEnableWake);
+            powerCfgProcess.WaitForExit();
         }
     }
 }
