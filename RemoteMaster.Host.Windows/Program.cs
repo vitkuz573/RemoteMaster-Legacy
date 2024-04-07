@@ -190,6 +190,11 @@ internal class Program
         firewallSettingService.AddRule("Remote Master Host", hostApplicationPath);
         firewallSettingService.AddRule("Remote Master Host Updater", hostUpdaterApplicationPath);
 
+        var registryConfiguratorService = app.Services.GetRequiredService<IRegistryConfiguratorService>();
+       
+        registryConfiguratorService.DisableFastStartup();
+        registryConfiguratorService.DisablePnPEnergySaving();
+
         if (!app.Environment.IsDevelopment())
         {
             app.UseExceptionHandler("/Error");
