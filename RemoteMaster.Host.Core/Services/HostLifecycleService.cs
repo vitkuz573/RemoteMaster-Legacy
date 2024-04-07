@@ -210,19 +210,19 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         {
             await serverHubService.ConnectAsync(hostConfiguration.Server);
             var isRegistered = await serverHubService.IsHostRegisteredAsync(hostConfiguration);
-            
+
             return isRegistered;
         }
         catch (HttpRequestException ex) when (ex.InnerException is SocketException { SocketErrorCode: SocketError.NetworkUnreachable })
         {
             Log.Warning("Network is unreachable. Assuming host is still registered based on previous state.");
-            
+
             return true;
         }
         catch (Exception ex)
         {
             Log.Error("Error checking host registration status: {Message}", ex.Message);
-            
+
             return true;
         }
     }

@@ -22,9 +22,9 @@ public class HostInstaller(IHostInformationService hostInformationService, IHost
             Log.Information("Starting installation...");
             Log.Information("Server: {Server}", hostConfiguration.Server);
             Log.Information("Host Name: {HostName}, IP Address: {IPAddress}, MAC Address: {MacAddress}", hostInformation.Name, hostInformation.IpAddress, hostInformation.MacAddress);
-            
+
             var organizationalUnits = string.Join(", ", hostConfiguration.Subject.OrganizationalUnit.Select(ou => $"OU={ou}"));
-            
+
             Log.Information("Distinguished Name: CN={CommonName}, O={Organization}, {OrganizationalUnits}, L={Locality}, ST={State}, C={Country}", hostInformation.Name, hostConfiguration.Subject.Organization, organizationalUnits, hostConfiguration.Subject.Locality, hostConfiguration.Subject.State, hostConfiguration.Subject.Country);
 
             var hostService = serviceFactory.GetService("RCHost");

@@ -2,10 +2,10 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Models;
-using System.ComponentModel.DataAnnotations;
 
 namespace RemoteMaster.Host.Core.Services;
 

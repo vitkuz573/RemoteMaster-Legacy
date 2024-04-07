@@ -2,8 +2,8 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Net.Sockets;
 using System.Net;
+using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Options;
@@ -27,7 +27,7 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
             if (existingCert.NotAfter > DateTime.Now)
             {
                 Log.Information("Existing CA certificate for '{Name}' found.", _settings.CommonName);
-                
+
                 return existingCert;
             }
             else
@@ -84,11 +84,11 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
             };
 
             var crlDistributionPointExtension = CertificateRevocationListBuilder.BuildCrlDistributionPointExtension(crlDistributionPoints, false);
-            
+
             request.CertificateExtensions.Add(crlDistributionPointExtension);
 
             var caCert = request.CreateSelfSigned(DateTimeOffset.Now, DateTimeOffset.Now.AddYears(_settings.ValidityPeriod));
-            
+
             caCert.FriendlyName = _settings.CommonName;
 
             AddCertificateToStore(caCert, StoreName.Root, StoreLocation.LocalMachine);
@@ -107,18 +107,18 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
     private X509Certificate2? FindExistingCertificate()
     {
         using var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
-        
+
         store.Open(OpenFlags.ReadOnly);
-        
+
         var existingCertificates = store.Certificates.Find(X509FindType.FindBySubjectName, _settings.CommonName, false);
-        
+
         return existingCertificates.Count > 0 ? existingCertificates[0] : null;
     }
 
     private static void AddCertificateToStore(X509Certificate2 cert, StoreName storeName, StoreLocation storeLocation)
     {
         using var store = new X509Store(storeName, storeLocation);
-        
+
         store.Open(OpenFlags.ReadOnly);
 
         var isCertificateAlreadyAdded = store.Certificates
@@ -134,7 +134,7 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
             store.Close();
             store.Open(OpenFlags.ReadWrite);
             store.Add(cert);
-            
+
             Log.Information("Certificate with thumbprint {Thumbprint} added to the {StoreName} store in {StoreLocation} location.", cert.Thumbprint, storeName, storeLocation);
         }
 

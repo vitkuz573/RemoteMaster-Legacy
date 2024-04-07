@@ -51,7 +51,7 @@ public class JwtSecurityService : IJwtSecurityService
         var privateKeyPath = Path.Combine(_destDirectory, "private_key.pem");
         var privateKeyBytes = rsa.ExportRSAPrivateKey();
         var privateKeyPem = ConvertToPem(privateKeyBytes, "RSA PRIVATE KEY");
-        
+
         File.WriteAllText(privateKeyPath, privateKeyPem);
         Log.Information($"Private key saved to: {privateKeyPath}");
     }
@@ -61,7 +61,7 @@ public class JwtSecurityService : IJwtSecurityService
         var publicKeyPath = Path.Combine(_destDirectory, "public_key.pem");
         var publicKeyBytes = rsa.ExportRSAPublicKey();
         var publicKeyPem = ConvertToPem(publicKeyBytes, "PUBLIC KEY");
-        
+
         File.WriteAllText(publicKeyPath, publicKeyPem);
         Log.Information($"Public key saved to: {publicKeyPath}");
     }

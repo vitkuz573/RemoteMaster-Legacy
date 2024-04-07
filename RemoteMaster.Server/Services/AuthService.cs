@@ -37,7 +37,7 @@ public class AuthService(IHttpContextAccessor httpContextAccessor, HttpClient ht
                 var httpContext = httpContextAccessor.HttpContext;
 
                 httpContext.Response.Cookies.Append("accessToken", accessToken, сookieOptions);
-                
+
                 return true;
             }
         }

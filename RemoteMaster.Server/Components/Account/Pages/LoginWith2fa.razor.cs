@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Data;
-using System.ComponentModel.DataAnnotations;
 
 namespace RemoteMaster.Server.Components.Account.Pages;
 
@@ -18,7 +18,7 @@ public partial class LoginWith2fa
     [SupplyParameterFromQuery]
     private bool RememberMe { get; set; }
 
-    protected override async Task OnInitializedAsync()
+    protected async override Task OnInitializedAsync()
     {
         // Ensure the user has gone through the username & password screen first
         user = await SignInManager.GetTwoFactorAuthenticationUserAsync() ??

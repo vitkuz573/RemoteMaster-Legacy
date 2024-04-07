@@ -17,7 +17,7 @@ namespace RemoteMaster.Server.Services;
 public class CrlService(IOptions<CertificateOptions> options, IDbContextFactory<CertificateDbContext> contextFactory) : ICrlService
 {
     private readonly CertificateOptions _settings = options.Value;
-    
+
     public async Task RevokeCertificateAsync(string serialNumber, X509RevocationReason reason)
     {
         var revokedCertificate = new RevokedCertificate
@@ -60,7 +60,7 @@ public class CrlService(IOptions<CertificateOptions> options, IDbContextFactory<
             if (!Enum.TryParse<X509RevocationReason>(revoked.Reason, out var reason))
             {
                 Log.Warning("Failed to parse the certificate revocation reason: '{Reason}'. Using default value 'Unspecified'.", revoked.Reason);
-                
+
                 reason = X509RevocationReason.Unspecified;
             }
 
@@ -123,7 +123,7 @@ public class CrlService(IOptions<CertificateOptions> options, IDbContextFactory<
         using (var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine))
         {
             store.Open(OpenFlags.ReadOnly);
-            
+
             var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, _settings.CommonName, false);
 
             foreach (var cert in certificates)

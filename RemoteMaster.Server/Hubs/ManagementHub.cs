@@ -91,7 +91,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         {
             var ous = await databaseService.GetNodesAsync(n => n.Name == ouName && n is OrganizationalUnit && (lastOu == null || n.ParentId == lastOu.NodeId));
             var ou = ous.OfType<OrganizationalUnit>().FirstOrDefault();
-            
+
             if (ou != null)
             {
                 lastOu = ou;
@@ -99,7 +99,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             else
             {
                 Log.Warning("Unregistration failed: OrganizationalUnit '{OUName}' not found.", ouName);
-                
+
                 return false;
             }
         }
@@ -107,12 +107,12 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         if (lastOu == null)
         {
             Log.Warning("Unregistration failed: Specified OrganizationalUnit hierarchy not found.");
-            
+
             return false;
         }
 
         var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(lastOu.NodeId)).FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
-        
+
         if (existingComputer != null)
         {
             await databaseService.RemoveNodeAsync(existingComputer);
@@ -122,7 +122,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             while (currentOu != null)
             {
                 var children = await databaseService.GetChildrenByParentIdAsync<Node>(currentOu.NodeId);
-                
+
                 if (!children.Any())
                 {
                     var parentOu = currentOu.Parent;
@@ -139,7 +139,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         }
 
         Log.Warning("Unregistration failed: Computer with MAC address '{MACAddress}' not found in the last organizational unit.", hostConfiguration.Host.MacAddress);
-        
+
         return false;
     }
 
@@ -166,7 +166,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
             else
             {
                 Log.Warning("Update failed: OrganizationalUnit '{OUName}' not found.", ouName);
-                
+
                 return false;
             }
         }
@@ -174,7 +174,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         if (lastOu == null)
         {
             Log.Warning("Update failed: Specified OrganizationalUnit hierarchy not found.");
-            
+
             return false;
         }
 
@@ -184,7 +184,7 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         if (computer == null)
         {
             Log.Warning("Update failed: Computer with MAC address '{MACAddress}' not found in the last organizational unit.", hostConfiguration.Host.MacAddress);
-            
+
             return false;
         }
 

@@ -33,9 +33,9 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
         if (hostConfiguration.Host == null || !hostConfiguration.Host.Equals(hostInformation))
         {
             hostConfiguration.Host = hostInformation;
-            
+
             Log.Information("Host details were either missing or have been updated.");
-            
+
             hasChanges = true;
         }
 
@@ -46,7 +46,7 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
         catch (Exception ex)
         {
             Log.Error(ex, "Error saving updated configuration.");
-            
+
             return false;
         }
 
@@ -58,13 +58,13 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
             if (newOrganizationalUnits.Length > 0)
             {
                 hostConfiguration.Subject.OrganizationalUnit = newOrganizationalUnits;
-                
+
                 await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
-                
+
                 Log.Information("Organizational unit for this device was updated based on the organizational unit change request.");
-                
+
                 await serverHubService.AcknowledgeOrganizationalUnitChange(hostConfiguration.Host.MacAddress);
-                
+
                 hasChanges = true;
             }
         }

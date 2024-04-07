@@ -157,19 +157,19 @@ internal class Program
         switch (launchModeInstance)
         {
             case InstallMode:
-            {
-                var hostInstaller = app.Services.GetRequiredService<IHostInstaller>();
-                await hostInstaller.InstallAsync();
+                {
+                    var hostInstaller = app.Services.GetRequiredService<IHostInstaller>();
+                    await hostInstaller.InstallAsync();
 
-                return;
-            }
+                    return;
+                }
             case UninstallMode:
-            {
-                var hostUninstaller = app.Services.GetRequiredService<IHostUninstaller>();
-                await hostUninstaller.UninstallAsync();
+                {
+                    var hostUninstaller = app.Services.GetRequiredService<IHostUninstaller>();
+                    await hostUninstaller.UninstallAsync();
 
-                return;
-            }
+                    return;
+                }
         }
 
         var secureAttentionSequenceService = app.Services.GetRequiredService<ISecureAttentionSequenceService>();
@@ -182,10 +182,10 @@ internal class Program
         var firewallSettingService = app.Services.GetRequiredService<IFirewallSettingService>();
 
         var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-        
+
         var hostApplicationPath = Path.Combine(programFiles, "RemoteMaster", "Host", "RemoteMaster.Host.exe");
         var hostUpdaterApplicationPath = Path.Combine(programFiles, "RemoteMaster", "Host", "Updater", "RemoteMaster.Host.exe");
-        
+
         firewallSettingService.AddRule("Remote Master Host", hostApplicationPath);
         firewallSettingService.AddRule("Remote Master Host Updater", hostUpdaterApplicationPath);
 

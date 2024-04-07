@@ -187,7 +187,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
                 }
             }
         }
-        
+
         return certificate.GetSerialNumberString();
     }
 }

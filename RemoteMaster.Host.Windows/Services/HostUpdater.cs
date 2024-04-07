@@ -19,7 +19,7 @@ namespace RemoteMaster.Host.Windows.Services;
 public class HostUpdater(INetworkDriveService networkDriveService, IUserInstanceService userInstanceService, IServiceFactory serviceFactory, IHubContext<UpdaterHub, IUpdaterClient> hubContext) : IHostUpdater
 {
     private static readonly string BaseFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
-    
+
     private readonly string _updateFolderPath = Path.Combine(BaseFolderPath, "Update");
 
     public async Task UpdateAsync(string folderPath, string? username, string? password, bool force = false, bool allowDowngrade = false)
@@ -46,7 +46,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
                 {
                     await Notify($"Failed to map network drive with remote path {folderPath}. Details can be found in the log files.", MessageType.Error);
                     await Notify("Unable to map network drive with the provided credentials. Update aborted.", MessageType.Error);
-                    
+
                     return;
                 }
                 else
@@ -78,14 +78,14 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             if (!isDownloaded)
             {
                 await Notify("Download or copy failed. Update aborted.", MessageType.Error);
-                
+
                 return;
             }
 
             if (!await CheckForUpdateVersion(allowDowngrade))
             {
                 await Notify("Update aborted due to version check.", MessageType.Error);
-                
+
                 return;
             }
 
@@ -221,7 +221,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
                 else
                 {
                     await Notify($"Checksum verification failed for file {sourceFile}.", MessageType.Error);
-                    
+
                     return false;
                 }
             }
@@ -292,7 +292,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             else
             {
                 var nonRunningServicesList = nonRunningServices.Select(service => service.ToString()).Aggregate((i, j) => i + ", " + j);
-                
+
                 await Notify($"Not all services are running. The following services are not active: {nonRunningServicesList}. Waiting and retrying...", MessageType.Warning);
             }
         }
@@ -368,7 +368,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         if (updateVersion <= currentVersion && !allowDowngrade)
         {
             await Notify($"Current version {currentVersion} is up to date or newer than update version {updateVersion}. To allow downgrades, use the --allow-downgrade=true option. If you wish to force an update regardless, you can use --force=true.", MessageType.Information);
-            
+
             return false;
         }
 

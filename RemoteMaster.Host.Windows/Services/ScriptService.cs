@@ -43,7 +43,7 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
         };
 
         var scriptContent = scriptExecutionRequest.Shell == Shell.Cmd ? $"@echo off\r\n{scriptExecutionRequest.Content}" : scriptExecutionRequest.Content;
-       
+
         await File.WriteAllTextAsync(tempFilePath, scriptContent, encoding);
 
         try
@@ -51,7 +51,7 @@ public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) :
             if (!File.Exists(tempFilePath))
             {
                 Log.Error("Temp file was not created: {TempFilePath}", tempFilePath);
-                
+
                 return;
             }
 
