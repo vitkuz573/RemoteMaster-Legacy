@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Net;
-using System.Net.Sockets;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using RemoteMaster.Shared.Models;
@@ -18,7 +17,7 @@ public partial class HostConfigurationGenerator
 
     protected override void OnInitialized()
     {
-        _model.Server = GetLocalIpAddress();
+        _model.Server = Dns.GetHostName();
         _model.Subject = new();
 
         _countries.Add("Afghanistan", "AF");
@@ -282,20 +281,5 @@ public partial class HostConfigurationGenerator
     public void DownloadHost()
     {
         NavigationManager.NavigateTo("api/HostConfiguration/download-host", true);
-    }
-
-    private static string GetLocalIpAddress()
-    {
-        var host = Dns.GetHostEntry(Dns.GetHostName());
-
-        foreach (var ip in host.AddressList)
-        {
-            if (ip.AddressFamily == AddressFamily.InterNetwork)
-            {
-                return ip.ToString();
-            }
-        }
-
-        throw new Exception("No network adapters with an IPv4 address in the system!");
     }
 }
