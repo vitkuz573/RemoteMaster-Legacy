@@ -157,6 +157,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         hostConfiguration.Subject.OrganizationalUnit = newOrganizationalUnits;
 
         await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
+        await hostLifecycleService.RenewCertificateAsync(hostConfiguration);
     }
 
     public async Task SendRenewCertificate()
