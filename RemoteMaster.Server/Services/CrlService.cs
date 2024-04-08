@@ -20,6 +20,17 @@ public class CrlService(IOptions<CertificateOptions> options, IDbContextFactory<
 
     public async Task RevokeCertificateAsync(string serialNumber, X509RevocationReason reason)
     {
+        using var context = await contextFactory.CreateDbContextAsync();
+
+        var existingRevokedCertificate = await context.RevokedCertificates.FirstOrDefaultAsync(rc => rc.SerialNumber == serialNumber);
+
+        if (existingRevokedCertificate != null)
+        {
+            Log.Information($"Certificate with serial number {serialNumber} has already been revoked.");
+
+            return;
+        }
+
         var revokedCertificate = new RevokedCertificate
         {
             SerialNumber = serialNumber,
@@ -27,10 +38,11 @@ public class CrlService(IOptions<CertificateOptions> options, IDbContextFactory<
             RevocationDate = DateTime.UtcNow
         };
 
-        using var context = await contextFactory.CreateDbContextAsync();
-
         context.RevokedCertificates.Add(revokedCertificate);
-        context.SaveChanges();
+
+        await context.SaveChangesAsync();
+
+        Log.Information($"Certificate with serial number {serialNumber} has been successfully revoked.");
     }
 
     public async Task<byte[]> GenerateCrlAsync()
