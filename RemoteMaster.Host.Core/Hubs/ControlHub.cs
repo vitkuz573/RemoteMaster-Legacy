@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -177,7 +178,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         {
             store.Open(OpenFlags.ReadOnly);
 
-            var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, Environment.MachineName, false);
+            var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, Dns.GetHostName(), false);
 
             foreach (var cert in certificates)
             {

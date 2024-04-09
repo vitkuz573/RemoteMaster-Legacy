@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -183,7 +184,7 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
     {
         using var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
         store.Open(OpenFlags.ReadWrite);
-        var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, Environment.MachineName, false);
+        var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, Dns.GetHostName(), false);
 
         X509Certificate2? certificate = null;
 
@@ -404,7 +405,7 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         using var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
         store.Open(OpenFlags.ReadWrite);
 
-        var existingCertificates = store.Certificates.Find(X509FindType.FindBySubjectName, Environment.MachineName, false);
+        var existingCertificates = store.Certificates.Find(X509FindType.FindBySubjectName, Dns.GetHostName(), false);
 
         if (existingCertificates.Count > 0)
         {

@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Models;
@@ -84,7 +85,7 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
         {
             store.Open(OpenFlags.ReadOnly);
 
-            var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, Environment.MachineName, false);
+            var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, Dns.GetHostName(), false);
 
             foreach (var cert in certificates)
             {
