@@ -34,12 +34,13 @@ internal class Program
         if (launchModeInstance is UpdaterMode updaterMode && string.IsNullOrEmpty(updaterMode.Parameters["folder-path"].Value))
         {
             PrintHelp(launchModeInstance);
+
             return;
         }
 
         var options = new WebApplicationOptions
         {
-            ContentRootPath = AppContext.BaseDirectory,
+            ContentRootPath = AppContext.BaseDirectory
         };
 
         var builder = WebApplication.CreateSlimBuilder(options);

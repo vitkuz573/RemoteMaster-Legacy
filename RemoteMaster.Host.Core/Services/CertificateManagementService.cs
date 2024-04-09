@@ -15,7 +15,7 @@ public class CertificateManagementService(IHostConfigurationService hostConfigur
     {
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
 
-        if (hostConfiguration != null && CheckCertificateExpiration())
+        if (hostConfiguration != null && IsCertificateValid())
         {
             await hostLifecycleService.RenewCertificateAsync(hostConfiguration);
         }
@@ -26,25 +26,33 @@ public class CertificateManagementService(IHostConfigurationService hostConfigur
         return Task.CompletedTask;
     }
 
-    private static bool CheckCertificateExpiration()
+    private static bool IsCertificateValid()
     {
-        X509Certificate2? httpsCertificate = null;
+        X509Certificate2? сertificate = null;
 
         using (var store = new X509Store(StoreName.My, StoreLocation.LocalMachine))
         {
             store.Open(OpenFlags.ReadOnly);
+
             var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, Dns.GetHostName(), false);
 
             foreach (var cert in certificates)
             {
                 if (cert.HasPrivateKey)
                 {
-                    httpsCertificate = cert;
+                    сertificate = cert;
                     break;
                 }
             }
         }
 
-        return DateTime.Now > httpsCertificate?.NotAfter;
+        if (сertificate == null)
+        {
+            return false;
+        }
+
+        var currentTime = DateTime.Now;
+
+        return (currentTime >= сertificate.NotBefore) && (currentTime <= сertificate.NotAfter);
     }
 }
