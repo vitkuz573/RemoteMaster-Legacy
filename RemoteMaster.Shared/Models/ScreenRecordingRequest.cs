@@ -9,4 +9,6 @@ public class ScreenRecordingRequest(string output)
     public string Output { get; } = output;
 
     public uint Duration { get; init; }
+
+    public uint VideoQuality { get; init; }
 }

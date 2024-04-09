@@ -6,6 +6,7 @@
     <Content>
         <MudTextField T="string" Label="Output Path" @bind-Value="@_outputPath" FullWidth />
          <MudNumericField T="uint" HideSpinButtons="true" Label="Duration (in seconds)" @bind-Value="@_durationInSeconds" FullWidth />
+         <MudNumericField T="uint" HideSpinButtons="true" Label="Video Quality" @bind-Value="@_videoQuality" FullWidth />
     </Content>
     <Actions>
          <MudButton OnClick="Cancel">Cancel</MudButton>

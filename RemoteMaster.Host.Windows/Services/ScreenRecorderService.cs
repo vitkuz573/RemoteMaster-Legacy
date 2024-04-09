@@ -22,7 +22,7 @@ public class ScreenRecorderService(IScreenCapturerService screenCapturerService)
         ArgumentNullException.ThrowIfNull(screenRecordingRequest);
 
         _cancellationTokenSource = new CancellationTokenSource();
-        _recordingTask = RecordVideo(screenRecordingRequest.Output, _cancellationTokenSource.Token);
+        _recordingTask = RecordVideo(screenRecordingRequest, _cancellationTokenSource.Token);
 
         if (screenRecordingRequest.Duration > 0)
         {
@@ -41,7 +41,7 @@ public class ScreenRecorderService(IScreenCapturerService screenCapturerService)
         _recordingTask = Task.CompletedTask;
     }
 
-    private async Task RecordVideo(string outputPath, CancellationToken cancellationToken)
+    private async Task RecordVideo(ScreenRecordingRequest screenRecordingRequest, CancellationToken cancellationToken)
     {
         var videoFramesSource = new RawVideoPipeSource(GenerateFrames(cancellationToken))
         {
@@ -50,9 +50,9 @@ public class ScreenRecorderService(IScreenCapturerService screenCapturerService)
 
         await FFMpegArguments
             .FromPipeInput(videoFramesSource)
-            .OutputToFile(outputPath, false, options => options
+            .OutputToFile(screenRecordingRequest.Output, false, options => options
                 .WithVideoCodec(VideoCodec.LibX264)
-                .WithConstantRateFactor(21))
+                .WithConstantRateFactor(screenRecordingRequest.VideoQuality))
             .ProcessAsynchronously();
     }
 

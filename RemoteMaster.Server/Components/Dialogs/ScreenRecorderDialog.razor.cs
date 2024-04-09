@@ -12,6 +12,7 @@ public partial class ScreenRecorderDialog
 {
     private string _outputPath;
     private uint _durationInSeconds;
+    private uint _videoQuality;
 
     public ScreenRecorderDialog()
     {
@@ -28,7 +29,8 @@ public partial class ScreenRecorderDialog
         {
             var screenRecordingRequest = new ScreenRecordingRequest(_outputPath)
             {
-                Duration = _durationInSeconds
+                Duration = _durationInSeconds,
+                VideoQuality = _videoQuality
             };
 
             await connection.InvokeAsync("SendStartScreenRecording", screenRecordingRequest);
