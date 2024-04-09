@@ -22,6 +22,8 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
     private readonly string _updateFolderPath = Path.Combine(BaseFolderPath, "Update");
 
+    private bool _emergencyRecoveryApplied = false;
+
     public async Task UpdateAsync(string folderPath, string? username, string? password, bool force = false, bool allowDowngrade = false)
     {
         ArgumentNullException.ThrowIfNull(folderPath);
@@ -108,7 +110,14 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             hostService.Start();
             await EnsureServicesRunning([hostService, userInstanceService], 5, 5);
 
-            await Notify("Update completed successfully.", MessageType.Information);
+            if (!_emergencyRecoveryApplied)
+            {
+                await Notify("Update completed successfully.", MessageType.Information);
+            }
+            else
+            {
+                await Notify("Emergency recovery was applied. Please check the system's integrity.", MessageType.Warning);
+            }
         }
         catch (Exception ex)
         {
@@ -307,6 +316,8 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
     private async Task AttemptEmergencyRecovery()
     {
+        _emergencyRecoveryApplied = true;
+
         try
         {
             var hostService = serviceFactory.GetService("RCHost");
