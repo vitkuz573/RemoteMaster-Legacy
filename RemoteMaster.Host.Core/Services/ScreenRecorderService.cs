@@ -10,7 +10,7 @@ using FFMpegCore.Pipes;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Models;
 
-namespace RemoteMaster.Host.Windows.Services;
+namespace RemoteMaster.Host.Core.Services;
 
 public class ScreenRecorderService(IScreenCapturerService screenCapturerService) : IScreenRecorderService
 {
