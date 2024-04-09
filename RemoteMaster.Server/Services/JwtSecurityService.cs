@@ -3,9 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Cryptography;
-using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;

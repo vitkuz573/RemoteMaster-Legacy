@@ -179,6 +179,28 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         }
     }
 
+    public async Task RemoveCertificateAsync()
+    {
+        using var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
+        store.Open(OpenFlags.ReadWrite);
+        var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, Environment.MachineName, false);
+
+        X509Certificate2? certificate = null;
+
+        foreach (var cert in certificates)
+        {
+            if (cert.HasPrivateKey)
+            {
+                certificate = cert;
+                break;
+            }
+        }
+
+        store.Remove(certificate);
+
+        Log.Information("Certificate with private key removed successfully from certificate store.");
+    }
+
     public async Task UpdateHostInformationAsync(HostConfiguration hostConfiguration)
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);

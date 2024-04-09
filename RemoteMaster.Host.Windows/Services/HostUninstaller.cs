@@ -40,6 +40,7 @@ public class HostUninstaller(IHostConfigurationService hostConfigurationService,
             DeleteFiles(_applicationDirectory);
 
             await hostLifecycleService.UnregisterAsync(hostConfiguration);
+            await hostLifecycleService.RemoveCertificateAsync();
         }
         catch (Exception ex)
         {
