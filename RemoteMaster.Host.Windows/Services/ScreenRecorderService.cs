@@ -52,7 +52,7 @@ public class ScreenRecorderService(IScreenCapturerService screenCapturerService)
             .FromPipeInput(videoFramesSource)
             .OutputToFile(screenRecordingRequest.Output, false, options => options
                 .WithVideoCodec(VideoCodec.LibX264)
-                .WithConstantRateFactor(screenRecordingRequest.VideoQuality))
+                .WithConstantRateFactor((int)screenRecordingRequest.VideoQuality))
             .ProcessAsynchronously();
     }
 
