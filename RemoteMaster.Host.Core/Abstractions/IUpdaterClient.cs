@@ -8,5 +8,5 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IUpdaterClient
 {
-    Task ReceiveScriptResult(Message result);
+    Task ReceiveMessage(Message message);
 }

@@ -56,7 +56,7 @@ public class PsExecService(IHostConfigurationService hostConfigurationService, I
             process.StartInfo = processStartInfo;
             process.Start();
 
-            await hubContext.Clients.All.ReceiveScriptResult(new Message(process.Id.ToString(), MessageType.Service)
+            await hubContext.Clients.All.ReceiveMessage(new Message(process.Id.ToString(), MessageType.Service)
             {
                 Meta = "pid"
             });
@@ -85,7 +85,7 @@ public class PsExecService(IHostConfigurationService hostConfigurationService, I
     {
         while (await streamReader.ReadLineAsync() is { } line)
         {
-            await hubContext.Clients.All.ReceiveScriptResult(new Message(line, messageType));
+            await hubContext.Clients.All.ReceiveMessage(new Message(line, messageType));
         }
     }
 }

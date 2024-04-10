@@ -62,7 +62,7 @@ public partial class UpdateDialog
 
                 if (!_subscribedConnections.Contains(connection))
                 {
-                    connection.On<Message>("ReceiveScriptResult", async scriptResult =>
+                    connection.On<Message>("ReceiveMessage", async scriptResult =>
                     {
                         UpdateResultsForComputer(computer, scriptResult);
                         await InvokeAsync(StateHasChanged);
@@ -75,9 +75,9 @@ public partial class UpdateDialog
 
                 if (!_subscribedConnections.Contains(updaterConnection))
                 {
-                    updaterConnection.On<Message>("ReceiveScriptResult", async scriptResult =>
+                    updaterConnection.On<Message>("ReceiveMessage", async message =>
                     {
-                        UpdateResultsForComputer(computer, scriptResult);
+                        UpdateResultsForComputer(computer, message);
                         await InvokeAsync(StateHasChanged);
                     });
 

@@ -30,7 +30,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
         try
         {
-            await hubContext.Clients.All.ReceiveScriptResult(new Message(Environment.ProcessId.ToString(), MessageType.Service)
+            await hubContext.Clients.All.ReceiveMessage(new Message(Environment.ProcessId.ToString(), MessageType.Service)
             {
                 Meta = "pid"
             });
@@ -417,7 +417,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
         while (await streamReader.ReadLineAsync() is { } line)
         {
-            await hubContext.Clients.All.ReceiveScriptResult(new Message(line, messageType));
+            await hubContext.Clients.All.ReceiveMessage(new Message(line, messageType));
         }
     }
 }

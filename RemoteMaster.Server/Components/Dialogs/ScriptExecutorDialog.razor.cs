@@ -25,9 +25,9 @@ public partial class ScriptExecutorDialog
         {
             if (connection != null && !_subscribedConnections.Contains(connection))
             {
-                connection.On<Message>("ReceiveScriptResult", async scriptResult =>
+                connection.On<Message>("ReceiveMessage", async message =>
                 {
-                    UpdateResultsForComputer(computer, scriptResult);
+                    UpdateResultsForComputer(computer, message);
                     await InvokeAsync(StateHasChanged);
                 });
 
