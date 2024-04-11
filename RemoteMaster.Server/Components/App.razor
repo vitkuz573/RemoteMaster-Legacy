@@ -33,16 +33,6 @@
             return window.createObjectBlobUrl(data, 'image/jpeg');
         }
 
-        window.addKeyEventListener = (dotnetHelper) => {
-            window.onkeydown = (e) => {
-                dotnetHelper.invokeMethodAsync('OnKey', e.keyCode, true);
-            };
-
-            window.onkeyup = (e) => {
-                dotnetHelper.invokeMethodAsync('OnKey', e.keyCode, false);
-            };
-        };
-
         window.setTitle = (title) => document.title = title;
 
         window.openNewWindow = function (url, width, height) {

@@ -6,9 +6,9 @@ namespace RemoteMaster.Shared.Dtos;
 
 public class MouseInputDto
 {
-    public long? Button { get; init; }
+    public long? Button { get; set; }
 
-    public bool? IsPressed { get; init; }
+    public bool? IsPressed { get; set; }
 
     public double? X { get; init; }
 

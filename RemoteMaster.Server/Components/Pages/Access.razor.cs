@@ -3,16 +3,13 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using MudBlazor;
 using Polly;
 using Polly.Retry;
-using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
-using PointD = (double, double);
 
 namespace RemoteMaster.Server.Components.Pages;
 
@@ -54,11 +51,6 @@ public partial class Access : IDisposable
     {
         await JsRuntime.InvokeVoidAsync("setTitle", Host);
         await JsRuntime.InvokeVoidAsync("preventDefaultForKeydownWhenDrawerClosed", _drawerOpen);
-
-        if (firstRender)
-        {
-            await SetupEventListeners();
-        }
     }
 
     protected async override Task OnInitializedAsync()
@@ -116,17 +108,6 @@ public partial class Access : IDisposable
                 throw new InvalidOperationException("Connection is not active");
             }
         });
-    }
-
-    private async Task<PointD> GetRelativeMousePositionPercentAsync(MouseEventArgs e)
-    {
-        var imgElement = await JsRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", "screenImage");
-        var imgPosition = await imgElement.InvokeAsync<DomRect>("getBoundingClientRect");
-        
-        var percentX = (e.ClientX - imgPosition.Left) / imgPosition.Width;
-        var percentY = (e.ClientY - imgPosition.Top) / imgPosition.Height;
-
-        return new PointD(percentX, percentY);
     }
 
     private async Task KillHost()
@@ -219,11 +200,6 @@ public partial class Access : IDisposable
         _screenDataUrl = await JsRuntime.InvokeAsync<string>("createImageBlobUrl", screenData);
 
         await InvokeAsync(StateHasChanged);
-    }
-
-    private async Task SetupEventListeners()
-    {
-        await JsRuntime.InvokeVoidAsync("addKeyEventListener", DotNetObjectReference.Create(this));
     }
 
     private async Task ToggleInputEnabled(bool value)

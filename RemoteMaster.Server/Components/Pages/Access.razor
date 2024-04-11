@@ -65,7 +65,7 @@
         </MudNavMenu>
     </MudDrawer>
 
-    <MudMainContent>
+    <MudMainContent @onkeydown="OnKeyEvent" @onkeyup="OnKeyEvent">
         <div class="flex h-screen items-center justify-center bg-gray-800 pb-14 text-white">
             @if (!string.IsNullOrEmpty(_screenDataUrl))
             {
