@@ -112,67 +112,42 @@ public sealed class InputService : IInputService
         ReturnInput(input);
     }
 
-    public void SendMouseCoordinates(MouseMoveDto dto, IViewer viewer)
+    public void SendMouseInput(MouseInputDto dto, IViewer viewer)
     {
         EnqueueOperation(() =>
         {
             var xyPercent = GetAbsolutePercentFromRelativePercent(dto.X, dto.Y, viewer.ScreenCapturer);
-
+            
             var normalizedX = xyPercent.Item1 * 65535D;
             var normalizedY = xyPercent.Item2 * 65535D;
+
+            var mouseEventFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE | MOUSE_EVENT_FLAGS.MOUSEEVENTF_VIRTUALDESK;
+            
+            if (dto.Button.HasValue && dto.Pressed.HasValue)
+            {
+                mouseEventFlags |= dto.Button.Value switch
+                {
+                    0 => dto.Pressed.Value ? MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN : MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP,
+                    1 => dto.Pressed.Value ? MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEDOWN : MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEUP,
+                    2 => dto.Pressed.Value ? MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN : MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP,
+                    _ => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE,
+                };
+            }
+            else
+            {
+                mouseEventFlags |= MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE;
+            }
 
             PrepareAndSendInput(INPUT_TYPE.INPUT_MOUSE, dto, (input, _) =>
             {
                 input.Anonymous.mi = new MOUSEINPUT
                 {
-                    dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE | MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE | MOUSE_EVENT_FLAGS.MOUSEEVENTF_VIRTUALDESK,
+                    dwFlags = mouseEventFlags,
                     dx = (int)normalizedX,
                     dy = (int)normalizedY,
                     time = 0,
                     mouseData = 0,
                     dwExtraInfo = (nuint)GetMessageExtraInfo().Value
-                };
-
-                return input;
-            });
-        });
-    }
-
-    public void SendMouseButton(MouseClickDto dto, IViewer viewer)
-    {
-        EnqueueOperation(() =>
-        {
-            var mouseEvent = dto.Button switch
-            {
-                0 => dto.Pressed switch
-                {
-                    true => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN,
-                    false => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP,
-                },
-                1 => dto.Pressed switch
-                {
-                    true => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEDOWN,
-                    false => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEUP,
-                },
-                2 => dto.Pressed switch
-                {
-                    true => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN,
-                    false => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP,
-                }
-            };
-
-            var xyPercent = GetAbsolutePercentFromRelativePercent(dto.X, dto.Y, viewer.ScreenCapturer);
-
-            var normalizedX = xyPercent.Item1 * 65535D;
-            var normalizedY = xyPercent.Item2 * 65535D;
-
-            PrepareAndSendInput(INPUT_TYPE.INPUT_MOUSE, dto, (input, _) =>
-            {
-                input.Anonymous.mi = new MOUSEINPUT
-                {
-                    dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE | mouseEvent | MOUSE_EVENT_FLAGS.MOUSEEVENTF_VIRTUALDESK,
-                    dx = (int)normalizedX,
-                    dy = (int)normalizedY
                 };
 
                 return input;

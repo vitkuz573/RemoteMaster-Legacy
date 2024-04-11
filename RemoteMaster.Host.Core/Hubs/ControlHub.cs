@@ -49,14 +49,9 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         await base.OnDisconnectedAsync(exception);
     }
 
-    public void SendMouseCoordinates(MouseMoveDto dto)
+    public void SendMouseInput(MouseInputDto dto)
     {
-        ExecuteActionForViewer(viewer => inputService.SendMouseCoordinates(dto, viewer));
-    }
-
-    public void SendMouseButton(MouseClickDto dto)
-    {
-        ExecuteActionForViewer(viewer => inputService.SendMouseButton(dto, viewer));
+        ExecuteActionForViewer(viewer => inputService.SendMouseInput(dto, viewer));
     }
 
     public void SendMouseWheel(MouseWheelDto dto)

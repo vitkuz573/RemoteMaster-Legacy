@@ -4,11 +4,11 @@
 
 namespace RemoteMaster.Shared.Dtos;
 
-public class MouseClickDto
+public class MouseInputDto
 {
-    public long Button { get; init; }
+    public long? Button { get; init; }
 
-    public bool Pressed { get; init; }
+    public bool? Pressed { get; init; }
 
     public double X { get; init; }
 

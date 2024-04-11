@@ -10,9 +10,7 @@ public interface IInputService : IDisposable
 {
     bool InputEnabled { get; set; }
 
-    void SendMouseCoordinates(MouseMoveDto dto, IViewer viewer);
-
-    void SendMouseButton(MouseClickDto dto, IViewer viewer);
+    void SendMouseInput(MouseInputDto dto, IViewer viewer);
 
     void SendMouseWheel(MouseWheelDto dto);
 

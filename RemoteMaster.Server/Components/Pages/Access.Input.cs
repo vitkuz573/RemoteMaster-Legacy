@@ -11,22 +11,11 @@ namespace RemoteMaster.Server.Components.Pages;
 
 public partial class Access
 {
-    private async Task OnMouseMove(MouseEventArgs e)
+    private async Task OnMouseEvent(MouseEventArgs e)
     {
         var (x, y) = await GetRelativeMousePositionPercentAsync(e);
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendMouseCoordinates", new MouseMoveDto
-        {
-            X = x,
-            Y = y
-        }));
-    }
-
-    private async Task SendMouseInputAsync(MouseEventArgs e)
-    {
-        var (x, y) = await GetRelativeMousePositionPercentAsync(e);
-
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendMouseButton", new MouseClickDto
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendMouseInput", new MouseInputDto
         {
             Button = e.Button,
             Pressed = e.Type == "mousedown",
