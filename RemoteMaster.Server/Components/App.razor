@@ -33,15 +33,13 @@
             return window.createObjectBlobUrl(data, 'image/jpeg');
         }
 
-        window.addKeyDownEventListener = (dotnetHelper) => {
+        window.addKeyEventListener = (dotnetHelper) => {
             window.onkeydown = (e) => {
-                dotnetHelper.invokeMethodAsync('OnKeyDown', e.keyCode);
+                dotnetHelper.invokeMethodAsync('OnKey', e.keyCode, true);
             };
-        };
 
-        window.addKeyUpEventListener = (dotnetHelper) => {
             window.onkeyup = (e) => {
-                dotnetHelper.invokeMethodAsync('OnKeyUp', e.keyCode);
+                dotnetHelper.invokeMethodAsync('OnKey', e.keyCode, false);
             };
         };
 

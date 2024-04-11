@@ -223,8 +223,7 @@ public partial class Access : IDisposable
 
     private async Task SetupEventListeners()
     {
-        await JsRuntime.InvokeVoidAsync("addKeyDownEventListener", DotNetObjectReference.Create(this));
-        await JsRuntime.InvokeVoidAsync("addKeyUpEventListener", DotNetObjectReference.Create(this));
+        await JsRuntime.InvokeVoidAsync("addKeyEventListener", DotNetObjectReference.Create(this));
     }
 
     private async Task ToggleInputEnabled(bool value)
