@@ -18,7 +18,7 @@ public partial class Access
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendMouseInput", new MouseInputDto
         {
             Button = e.Button,
-            Pressed = e.Type == "mousedown",
+            IsPressed = e.Type == "mousedown",
             X = x,
             Y = y
         }));
@@ -34,10 +34,10 @@ public partial class Access
 
     private async Task SendKeyboardInput(int keyCode, bool pressed)
     {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendKeyboardInput", new KeyboardKeyDto
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendKeyboardInput", new KeyboardInputDto
         {
             KeyCode = keyCode,
-            Pressed = pressed
+            IsPressed = pressed
         }));
     }
 

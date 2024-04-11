@@ -8,7 +8,7 @@ public class MouseInputDto
 {
     public long? Button { get; init; }
 
-    public bool? Pressed { get; init; }
+    public bool? IsPressed { get; init; }
 
     public double? X { get; init; }
 

@@ -10,7 +10,7 @@ public interface IInputService : IDisposable
 {
     bool InputEnabled { get; set; }
 
-    void SendMouseInput(MouseInputDto dto, IViewer viewer);
+    void SendMouseInput(MouseInputDto dto, IScreenCapturerService screenCapturer);
 
-    void SendKeyboardInput(KeyboardKeyDto dto);
+    void SendKeyboardInput(KeyboardInputDto dto);
 }

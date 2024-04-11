@@ -4,9 +4,9 @@
 
 namespace RemoteMaster.Shared.Dtos;
 
-public class KeyboardKeyDto
+public class KeyboardInputDto
 {
     public int KeyCode { get; init; }
 
-    public bool Pressed { get; init; }
+    public bool IsPressed { get; init; }
 }

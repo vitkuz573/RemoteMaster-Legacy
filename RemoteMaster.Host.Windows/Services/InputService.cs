@@ -112,7 +112,7 @@ public sealed class InputService : IInputService
         ReturnInput(input);
     }
 
-    public void SendMouseInput(MouseInputDto dto, IViewer viewer)
+    public void SendMouseInput(MouseInputDto dto, IScreenCapturerService screenCapturer)
     {
         EnqueueOperation(() =>
         {
@@ -130,18 +130,18 @@ public sealed class InputService : IInputService
             }
             else
             {
-                var xyPercent = GetAbsolutePercentFromRelativePercent(dto.X.GetValueOrDefault(), dto.Y.GetValueOrDefault(), viewer.ScreenCapturer);
+                var xyPercent = GetAbsolutePercentFromRelativePercent(dto.X.GetValueOrDefault(), dto.Y.GetValueOrDefault(), screenCapturer);
                 
                 dx = (int)(xyPercent.Item1 * 65535D);
                 dy = (int)(xyPercent.Item2 * 65535D);
 
-                if (dto.Button.HasValue && dto.Pressed.HasValue)
+                if (dto.Button.HasValue && dto.IsPressed.HasValue)
                 {
                     mouseEventFlags |= dto.Button.Value switch
                     {
-                        0 => dto.Pressed.Value ? MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN : MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP,
-                        1 => dto.Pressed.Value ? MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEDOWN : MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEUP,
-                        2 => dto.Pressed.Value ? MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN : MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP,
+                        0 => dto.IsPressed.Value ? MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN : MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP,
+                        1 => dto.IsPressed.Value ? MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEDOWN : MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEUP,
+                        2 => dto.IsPressed.Value ? MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN : MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP,
                         _ => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE,
                     };
                 }
@@ -167,7 +167,7 @@ public sealed class InputService : IInputService
         });
     }
 
-    public void SendKeyboardInput(KeyboardKeyDto dto)
+    public void SendKeyboardInput(KeyboardInputDto dto)
     {
         ArgumentNullException.ThrowIfNull(dto);
 
@@ -185,7 +185,7 @@ public sealed class InputService : IInputService
                     wVk = (VIRTUAL_KEY)data.KeyCode,
                     wScan = 0,
                     time = 0,
-                    dwFlags = data.Pressed == false ? KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP : 0,
+                    dwFlags = data.IsPressed == false ? KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP : 0,
                     dwExtraInfo = (nuint)GetMessageExtraInfo().Value
                 };
 

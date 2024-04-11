@@ -51,10 +51,10 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     public void SendMouseInput(MouseInputDto dto)
     {
-        ExecuteActionForViewer(viewer => inputService.SendMouseInput(dto, viewer));
+        ExecuteActionForViewer(viewer => inputService.SendMouseInput(dto, viewer.ScreenCapturer));
     }
 
-    public void SendKeyboardInput(KeyboardKeyDto dto)
+    public void SendKeyboardInput(KeyboardInputDto dto)
     {
         inputService.SendKeyboardInput(dto);
     }
