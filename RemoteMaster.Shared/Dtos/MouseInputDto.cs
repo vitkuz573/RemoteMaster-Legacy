@@ -2,6 +2,8 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Drawing;
+
 namespace RemoteMaster.Shared.Dtos;
 
 public class MouseInputDto
@@ -10,9 +12,7 @@ public class MouseInputDto
 
     public bool? IsPressed { get; set; }
 
-    public double? X { get; init; }
-
-    public double? Y { get; init; }
+    public PointF? Position { get; init; }
 
     public double? DeltaY { get; init; }
 }

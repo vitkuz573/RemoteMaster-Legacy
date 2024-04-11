@@ -2,36 +2,34 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Drawing;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
-using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Dtos;
-using PointD = (double, double);
 
 namespace RemoteMaster.Server.Components.Pages;
 
 public partial class Access
 {
-    private async Task<PointD> GetRelativeMousePositionPercentAsync(MouseEventArgs e)
+    private async Task<PointF> GetRelativeMousePositionPercentAsync(MouseEventArgs e)
     {
         var imgElement = await JsRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", "screenImage");
-        var imgPosition = await imgElement.InvokeAsync<DomRect>("getBoundingClientRect");
+        var imgPosition = await imgElement.InvokeAsync<RectangleF>("getBoundingClientRect");
 
-        var percentX = (e.ClientX - imgPosition.Left) / imgPosition.Width;
-        var percentY = (e.ClientY - imgPosition.Top) / imgPosition.Height;
+        var percentX = (float)(e.ClientX - imgPosition.Left) / imgPosition.Width;
+        var percentY = (float)(e.ClientY - imgPosition.Top) / imgPosition.Height;
 
-        return new PointD(percentX, percentY);
+        return new PointF(percentX, percentY);
     }
 
     private async Task OnMouseEvent(MouseEventArgs e)
     {
-        var (x, y) = await GetRelativeMousePositionPercentAsync(e);
+        var position = await GetRelativeMousePositionPercentAsync(e);
 
         var mouseInputDto = new MouseInputDto
         {
-            X = x,
-            Y = y
+            Position = position
         };
 
         switch (e.Type)

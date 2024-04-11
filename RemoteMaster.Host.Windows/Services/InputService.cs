@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Collections.Concurrent;
+using System.Drawing;
 using System.Runtime.InteropServices;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
@@ -37,12 +38,12 @@ public sealed class InputService : IInputService
         StartWorkerThreads();
     }
 
-    private static (double, double) GetAbsolutePercentFromRelativePercent(double percentX, double percentY, IScreenCapturerService screenCapturer)
+    private static PointF GetAbsolutePercentFromRelativePercent(PointF? position, IScreenCapturerService screenCapturer)
     {
-        var absoluteX = screenCapturer.CurrentScreenBounds.Width * percentX + screenCapturer.CurrentScreenBounds.Left - screenCapturer.VirtualScreenBounds.Left;
-        var absoluteY = screenCapturer.CurrentScreenBounds.Height * percentY + screenCapturer.CurrentScreenBounds.Top - screenCapturer.VirtualScreenBounds.Top;
+        var absoluteX = screenCapturer.CurrentScreenBounds.Width * position.GetValueOrDefault().X + screenCapturer.CurrentScreenBounds.Left - screenCapturer.VirtualScreenBounds.Left;
+        var absoluteY = screenCapturer.CurrentScreenBounds.Height * position.GetValueOrDefault().Y + screenCapturer.CurrentScreenBounds.Top - screenCapturer.VirtualScreenBounds.Top;
 
-        return (absoluteX / screenCapturer.VirtualScreenBounds.Width, absoluteY / screenCapturer.VirtualScreenBounds.Height);
+        return new PointF((float)(absoluteX / screenCapturer.VirtualScreenBounds.Width), (float)(absoluteY / screenCapturer.VirtualScreenBounds.Height));
     }
 
     private void StartWorkerThreads()
@@ -130,10 +131,10 @@ public sealed class InputService : IInputService
             }
             else
             {
-                var xyPercent = GetAbsolutePercentFromRelativePercent(dto.X.GetValueOrDefault(), dto.Y.GetValueOrDefault(), screenCapturer);
+                var xyPercent = GetAbsolutePercentFromRelativePercent(dto.Position, screenCapturer);
                 
-                dx = (int)(xyPercent.Item1 * 65535D);
-                dy = (int)(xyPercent.Item2 * 65535D);
+                dx = (int)(xyPercent.X * 65535F);
+                dy = (int)(xyPercent.Y * 65535F);
 
                 if (dto.Button.HasValue && dto.IsPressed.HasValue)
                 {
