@@ -92,7 +92,7 @@ public partial class TaskManager : IDisposable
                 }
                 catch (HubException ex) when (ex.Message.Contains("Method does not exist"))
                 {
-                    await JsRuntime.InvokeVoidAsync("showAlert", "This function is not available in the current host version. Please update your host.");
+                    await JsRuntime.InvokeVoidAsync("alert", "This function is not available in the current host version. Please update your host.");
                 }
             }
             else
@@ -151,7 +151,7 @@ public partial class TaskManager : IDisposable
         }
         else
         {
-            await JsRuntime.InvokeVoidAsync("showAlert", "Please enter a valid process path.");
+            await JsRuntime.InvokeVoidAsync("alert", "Please enter a valid process path.");
         }
     }
 

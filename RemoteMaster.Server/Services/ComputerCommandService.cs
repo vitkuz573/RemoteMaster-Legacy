@@ -40,7 +40,7 @@ public class ComputerCommandService(IJSRuntime jsRuntime) : IComputerCommandServ
                     }
                     catch (HubException ex) when (ex.Message.Contains("Method does not exist"))
                     {
-                        await jsRuntime.InvokeVoidAsync("showAlert", $"Host: {computer.Name}.\nThis function is not available in the current host version. Please update your host.");
+                        await jsRuntime.InvokeVoidAsync("alert", $"Host: {computer.Name}.\nThis function is not available in the current host version. Please update your host.");
                     }
                 }
             });
