@@ -26,9 +26,9 @@ public partial class Access
 
     private async Task OnMouseWheel(WheelEventArgs e)
     {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendMouseWheel", new MouseWheelDto
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendMouseInput", new MouseInputDto
         {
-            DeltaY = (int)e.DeltaY
+            DeltaY = e.DeltaY
         }));
     }
 

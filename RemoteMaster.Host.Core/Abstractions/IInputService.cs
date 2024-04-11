@@ -12,7 +12,5 @@ public interface IInputService : IDisposable
 
     void SendMouseInput(MouseInputDto dto, IViewer viewer);
 
-    void SendMouseWheel(MouseWheelDto dto);
-
     void SendKeyboardInput(KeyboardKeyDto dto);
 }

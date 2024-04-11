@@ -116,26 +116,39 @@ public sealed class InputService : IInputService
     {
         EnqueueOperation(() =>
         {
-            var xyPercent = GetAbsolutePercentFromRelativePercent(dto.X, dto.Y, viewer.ScreenCapturer);
-            
-            var normalizedX = xyPercent.Item1 * 65535D;
-            var normalizedY = xyPercent.Item2 * 65535D;
-
             var mouseEventFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE | MOUSE_EVENT_FLAGS.MOUSEEVENTF_VIRTUALDESK;
             
-            if (dto.Button.HasValue && dto.Pressed.HasValue)
+            var dx = 0;
+            var dy = 0;
+            
+            uint mouseData = 0;
+
+            if (dto.DeltaY.HasValue)
             {
-                mouseEventFlags |= dto.Button.Value switch
-                {
-                    0 => dto.Pressed.Value ? MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN : MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP,
-                    1 => dto.Pressed.Value ? MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEDOWN : MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEUP,
-                    2 => dto.Pressed.Value ? MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN : MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP,
-                    _ => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE,
-                };
+                mouseEventFlags |= MOUSE_EVENT_FLAGS.MOUSEEVENTF_WHEEL;
+                mouseData = (uint)(dto.DeltaY.Value < 0 ? -120 : 120);
             }
             else
             {
-                mouseEventFlags |= MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE;
+                var xyPercent = GetAbsolutePercentFromRelativePercent(dto.X.GetValueOrDefault(), dto.Y.GetValueOrDefault(), viewer.ScreenCapturer);
+                
+                dx = (int)(xyPercent.Item1 * 65535D);
+                dy = (int)(xyPercent.Item2 * 65535D);
+
+                if (dto.Button.HasValue && dto.Pressed.HasValue)
+                {
+                    mouseEventFlags |= dto.Button.Value switch
+                    {
+                        0 => dto.Pressed.Value ? MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN : MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP,
+                        1 => dto.Pressed.Value ? MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEDOWN : MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEUP,
+                        2 => dto.Pressed.Value ? MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN : MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP,
+                        _ => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE,
+                    };
+                }
+                else
+                {
+                    mouseEventFlags |= MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE;
+                }
             }
 
             PrepareAndSendInput(INPUT_TYPE.INPUT_MOUSE, dto, (input, _) =>
@@ -143,31 +156,9 @@ public sealed class InputService : IInputService
                 input.Anonymous.mi = new MOUSEINPUT
                 {
                     dwFlags = mouseEventFlags,
-                    dx = (int)normalizedX,
-                    dy = (int)normalizedY,
-                    time = 0,
-                    mouseData = 0,
-                    dwExtraInfo = (nuint)GetMessageExtraInfo().Value
-                };
-
-                return input;
-            });
-        });
-    }
-
-    public void SendMouseWheel(MouseWheelDto dto)
-    {
-        EnqueueOperation(() =>
-        {
-            PrepareAndSendInput(INPUT_TYPE.INPUT_MOUSE, dto, (input, data) =>
-            {
-                input.Anonymous.mi = new MOUSEINPUT
-                {
-                    dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_WHEEL,
-                    dx = 0,
-                    dy = 0,
-                    time = 0,
-                    mouseData = data.DeltaY < 0 ? 120u : data.DeltaY > 0 ? unchecked((uint)-120) : 0u,
+                    dx = dx,
+                    dy = dy,
+                    mouseData = mouseData,
                     dwExtraInfo = (nuint)GetMessageExtraInfo().Value
                 };
 

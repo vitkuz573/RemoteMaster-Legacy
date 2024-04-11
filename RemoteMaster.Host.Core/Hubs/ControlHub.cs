@@ -54,11 +54,6 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         ExecuteActionForViewer(viewer => inputService.SendMouseInput(dto, viewer));
     }
 
-    public void SendMouseWheel(MouseWheelDto dto)
-    {
-        inputService.SendMouseWheel(dto);
-    }
-
     public void SendKeyboardInput(KeyboardKeyDto dto)
     {
         inputService.SendKeyboardInput(dto);
