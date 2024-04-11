@@ -24,7 +24,7 @@ public partial class Access
 
     private async Task OnMouseUpDown(MouseEventArgs e)
     {
-        var pressed = e.Type != "mouseup";
+        var pressed = e.Type == "mousedown";
 
         await SendMouseInputAsync(e, pressed);
     }
