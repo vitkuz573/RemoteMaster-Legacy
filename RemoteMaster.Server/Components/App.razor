@@ -47,26 +47,6 @@
             }
         });
 
-        window.selectFile = function () {
-            return new window.Promise((resolve, reject) => {
-                var input = document.createElement('input');
-                input.type = 'file';
-                input.accept = '.ps1, application/x-powershell, .bat, .cmd, application/x-bat, application/x-cmd';
-                input.onchange = function (e) {
-                    var file = e.target.files[0];
-                    const reader = new FileReader();
-                    reader.onload = function (event) {
-                        resolve({ content: event.target.result, name: file.name });
-                    };
-                    reader.onerror = function (error) {
-                        reject(`Error reading file: ${error.toString()}`);
-                    };
-                    reader.readAsText(file);
-                };
-                input.click();
-            });
-        };
-
         window.addBeforeUnloadListener = (instance) => {
             window.addEventListener("beforeunload", function () {
                 instance.invokeMethodAsync("OnBeforeUnload");
