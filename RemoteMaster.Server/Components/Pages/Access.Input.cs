@@ -22,26 +22,14 @@ public partial class Access
         }));
     }
 
-    private async Task OnMouseUpDown(MouseEventArgs e)
-    {
-        var pressed = e.Type == "mousedown";
-
-        await SendMouseInputAsync(e, pressed);
-    }
-
-    private async Task OnMouseOver(MouseEventArgs e)
-    {
-        await SendMouseInputAsync(e, false);
-    }
-
-    private async Task SendMouseInputAsync(MouseEventArgs e, bool pressed)
+    private async Task SendMouseInputAsync(MouseEventArgs e)
     {
         var (x, y) = await GetRelativeMousePositionPercentAsync(e);
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendMouseButton", new MouseClickDto
         {
             Button = e.Button,
-            Pressed = pressed,
+            Pressed = e.Type == "mousedown",
             X = x,
             Y = y
         }));
