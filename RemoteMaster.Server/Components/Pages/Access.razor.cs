@@ -47,9 +47,15 @@ public partial class Access : IDisposable
         }
     };
 
+    private string _title;
+
+    protected override void OnParametersSet()
+    {
+        _title = Host;
+    }
+
     protected async override Task OnAfterRenderAsync(bool firstRender)
     {
-        await JsRuntime.InvokeVoidAsync("setTitle", Host);
         await JsRuntime.InvokeVoidAsync("preventDefaultForKeydownWhenDrawerClosed", _drawerOpen);
     }
 
