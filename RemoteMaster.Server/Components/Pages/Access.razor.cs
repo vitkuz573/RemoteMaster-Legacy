@@ -47,11 +47,14 @@ public partial class Access : IDisposable
         }
     };
 
-    private string _title;
+    private string? _title;
 
     protected override void OnParametersSet()
     {
-        _title = Host;
+        if (string.IsNullOrEmpty(_title))
+        {
+            _title = Host;
+        }
     }
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
