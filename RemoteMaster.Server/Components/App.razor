@@ -39,6 +39,18 @@
             return window.open(url, '_blank', windowFeatures);
         };
 
+        window.addKeyDownEventListener = (dotnetHelper) => {
+            window.onkeydown = (e) => {
+                dotnetHelper.invokeMethodAsync('OnKeyDown', e.keyCode);
+            };
+        };
+
+        window.addKeyUpEventListener = (dotnetHelper) => {
+            window.onkeyup = (e) => {
+                dotnetHelper.invokeMethodAsync('OnKeyUp', e.keyCode);
+            };
+        };
+
         window.addEventListener("keydown", function (e) {
             if (e.ctrlKey && e.which === 83) {
                 e.preventDefault();

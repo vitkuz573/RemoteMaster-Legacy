@@ -127,7 +127,7 @@ public sealed class InputService : IInputService
             if (dto.DeltaY.HasValue)
             {
                 mouseEventFlags |= MOUSE_EVENT_FLAGS.MOUSEEVENTF_WHEEL;
-                mouseData = (uint)(dto.DeltaY.Value < 0 ? -120 : 120);
+                mouseData = (uint)(dto.DeltaY.Value < 0 ? 120 : -120);
             }
             else
             {

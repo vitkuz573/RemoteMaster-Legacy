@@ -23,56 +23,64 @@ public partial class Access
         return new PointF(percentX, percentY);
     }
 
-    private async Task OnMouseEvent(EventArgs e)
+    private async Task OnMouseEvent(MouseEventArgs e)
     {
-        MouseInputDto? mouseInputDto = null;
+        var position = await GetRelativeMousePositionPercentAsync(e);
 
-        if (e is MouseEventArgs mouseEventArgs)
+        var mouseInputDto = new MouseInputDto
         {
-            var position = await GetRelativeMousePositionPercentAsync(mouseEventArgs);
+            Position = position
+        };
 
-            mouseInputDto = new MouseInputDto
-            {
-                Position = position
-            };
-
-            switch (mouseEventArgs.Type)
-            {
-                case "mousedown":
-                case "mouseup":
-                    mouseInputDto.Button = mouseEventArgs.Button;
-                    mouseInputDto.IsPressed = mouseEventArgs.Type == "mousedown";
-                    break;
-                case "mousemove":
-                    break;
-                default:
-                    return;
-            }
-        }
-        else if (e is WheelEventArgs wheelEventArgs)
+        switch (e.Type)
         {
-            mouseInputDto = new MouseInputDto
-            {
-                DeltaY = wheelEventArgs.DeltaY
-            };
-        }
-        else
-        {
-            return;
+            case "mousedown":
+                mouseInputDto.Button = e.Button;
+                mouseInputDto.IsPressed = true;
+                break;
+            case "mouseup":
+                mouseInputDto.Button = e.Button;
+                mouseInputDto.IsPressed = false;
+                break;
+            case "mouseover":
+                mouseInputDto.Button = e.Button;
+                mouseInputDto.IsPressed = false;
+                break;
+            case "mousemove":
+                break;
+            default:
+                return;
         }
 
-        if (mouseInputDto != null)
-        {
-            await SafeInvokeAsync(() => _connection.InvokeAsync("SendMouseInput", mouseInputDto));
-        }
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendMouseInput", mouseInputDto));
     }
 
-    private async Task OnKeyboardEvent(KeyboardEventArgs e)
+    private async Task OnMouseWheel(WheelEventArgs e)
+    {
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendMouseInput", new MouseInputDto
+        {
+            DeltaY = e.DeltaY
+        }));
+    }
+
+    private async Task SendKeyboardInput(int keyCode, bool isPressed)
     {
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendKeyboardInput", new KeyboardInputDto
         {
-            KeyCode = Convert.ToInt32(e.Code),
-            IsPressed = e.Type == "keydown"
+            KeyCode = keyCode,
+            IsPressed = isPressed
         }));
+    }
+
+    [JSInvokable]
+    public async Task OnKeyDown(int keyCode)
+    {
+        await SendKeyboardInput(keyCode, true);
+    }
+
+    [JSInvokable]
+    public async Task OnKeyUp(int keyCode)
+    {
+        await SendKeyboardInput(keyCode, false);
     }
 }
