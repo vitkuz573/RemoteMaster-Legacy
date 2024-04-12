@@ -39,9 +39,6 @@ public partial class Access
                 mouseInputDto.IsPressed = true;
                 break;
             case "mouseup":
-                mouseInputDto.Button = e.Button;
-                mouseInputDto.IsPressed = false;
-                break;
             case "mouseover":
                 mouseInputDto.Button = e.Button;
                 mouseInputDto.IsPressed = false;
