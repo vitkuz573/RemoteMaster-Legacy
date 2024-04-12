@@ -71,7 +71,7 @@
         <div class="flex h-screen items-center justify-center bg-gray-800 pb-14 text-white">
             @if (!string.IsNullOrEmpty(_screenDataUrl))
             {
-                <img id="screenImage" src="@_screenDataUrl" @oncontextmenu:preventDefault="true" @oncontextmenu="_ => { }" draggable="false" class="@( _selectedDisplay == "VIRTUAL_SCREEN" ? "h-auto max-w-full" : "max-h-full w-auto" ) object-contain mx-auto" onload="window.revokeUrl(this.src)" @onmousemove="OnMouseEvent" @onmousedown="OnMouseEvent" @onmouseup="OnMouseEvent" @onmouseover="OnMouseEvent" @onmousewheel="OnMouseWheel" alt="" />
+                <img id="screenImage" src="@_screenDataUrl" @oncontextmenu:preventDefault="true" @oncontextmenu="_ => { }" draggable="false" class="@( _selectedDisplay == "VIRTUAL_SCREEN" ? "h-auto max-w-full" : "max-h-full w-auto" ) object-contain mx-auto" onload="window.revokeUrl(this.src)" @onmousemove="OnMouseEvent" @onmousedown="OnMouseEvent" @onmouseup="OnMouseEvent" @onmouseover="OnMouseEvent" @onmousewheel="OnMouseEvent" alt="" />
             }
             else
             {

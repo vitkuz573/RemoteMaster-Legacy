@@ -23,37 +23,48 @@ public partial class Access
         return new PointF(percentX, percentY);
     }
 
-    private async Task OnMouseEvent(MouseEventArgs e)
+    private async Task OnMouseEvent(EventArgs e)
     {
-        var position = await GetRelativeMousePositionPercentAsync(e);
+        MouseInputDto? mouseInputDto = null;
 
-        var mouseInputDto = new MouseInputDto
+        if (e is MouseEventArgs mouseEventArgs)
         {
-            Position = position
-        };
+            var position = await GetRelativeMousePositionPercentAsync(mouseEventArgs);
 
-        switch (e.Type)
+            mouseInputDto = new MouseInputDto
+            {
+                Position = position
+            };
+
+            switch (mouseEventArgs.Type)
+            {
+                case "mousedown":
+                case "mouseup":
+                    mouseInputDto.Button = mouseEventArgs.Button;
+                    mouseInputDto.IsPressed = mouseEventArgs.Type == "mousedown";
+                    break;
+                case "mousemove":
+                    break;
+                default:
+                    return;
+            }
+        }
+        else if (e is WheelEventArgs wheelEventArgs)
         {
-            case "mousedown":
-            case "mouseup":
-                mouseInputDto.Button = e.Button;
-                mouseInputDto.IsPressed = e.Type == "mousedown";
-                break;
-            case "mousemove":
-                break;
-            default:
-                return;
+            mouseInputDto = new MouseInputDto
+            {
+                DeltaY = wheelEventArgs.DeltaY
+            };
+        }
+        else
+        {
+            return;
         }
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendMouseInput", mouseInputDto));
-    }
-
-    private async Task OnMouseWheel(WheelEventArgs e)
-    {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendMouseInput", new MouseInputDto
+        if (mouseInputDto != null)
         {
-            DeltaY = e.DeltaY
-        }));
+            await SafeInvokeAsync(() => _connection.InvokeAsync("SendMouseInput", mouseInputDto));
+        }
     }
 
     private async Task OnKeyEvent(KeyboardEventArgs e)
