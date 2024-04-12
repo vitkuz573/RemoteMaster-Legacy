@@ -67,7 +67,7 @@ public partial class Access
         }
     }
 
-    private async Task OnKeyEvent(KeyboardEventArgs e)
+    private async Task OnKeyboardEvent(KeyboardEventArgs e)
     {
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendKeyboardInput", new KeyboardInputDto
         {
