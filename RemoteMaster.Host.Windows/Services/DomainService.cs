@@ -6,7 +6,7 @@ using System.ComponentModel;
 using System.Security.Principal;
 using Microsoft.Win32;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Shared.Models;
+using RemoteMaster.Shared.Dtos;
 using Serilog;
 using Windows.Win32.NetworkManagement.NetManagement;
 using static Windows.Win32.PInvoke;
@@ -22,7 +22,7 @@ public class DomainService : IDomainService
     /// Joins the machine to a domain.
     /// </summary>
     /// <param name="domainJoinRequest">The request to join a domain, containing the domain name and user credentials.</param>
-    public void JoinToDomain(DomainJoinRequest domainJoinRequest)
+    public void JoinToDomain(DomainJoinDto domainJoinRequest)
     {
         ArgumentNullException.ThrowIfNull(domainJoinRequest);
 
@@ -38,7 +38,7 @@ public class DomainService : IDomainService
     /// Unjoins the machine from a domain.
     /// </summary>
     /// <param name="domainUnjoinRequest">The request to unjoin a domain, containing the user credentials.</param>
-    public void UnjoinFromDomain(DomainUnjoinRequest domainUnjoinRequest)
+    public void UnjoinFromDomain(DomainUnjoinDto domainUnjoinRequest)
     {
         ArgumentNullException.ThrowIfNull(domainUnjoinRequest);
 

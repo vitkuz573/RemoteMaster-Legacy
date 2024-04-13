@@ -5,19 +5,19 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Shared.Models;
+using RemoteMaster.Shared.Dtos;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
 [Authorize]
 public class DomainMembershipHub(IDomainService domainService) : Hub<IDomainMembershipClient>
 {
-    public void SendJoinToDomain(DomainJoinRequest domainJoinRequest)
+    public void SendJoinToDomain(DomainJoinDto domainJoinRequest)
     {
         domainService.JoinToDomain(domainJoinRequest);
     }
 
-    public void SendUnjoinFromDomain(DomainUnjoinRequest domainUnjoinRequest)
+    public void SendUnjoinFromDomain(DomainUnjoinDto domainUnjoinRequest)
     {
         domainService.UnjoinFromDomain(domainUnjoinRequest);
     }

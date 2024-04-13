@@ -5,14 +5,14 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Shared.Models;
+using RemoteMaster.Shared.Dtos;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
 [Authorize]
 public class UpdaterHub(IUpdaterInstanceService updaterInstanceService) : Hub<IUpdaterClient>
 {
-    public void SendStartUpdater(UpdateRequest updateRequest)
+    public void SendStartUpdater(UpdateDto updateRequest)
     {
         updaterInstanceService.Start(updateRequest);
     }

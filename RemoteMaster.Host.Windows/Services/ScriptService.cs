@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
 using RemoteMaster.Host.Windows.Models;
+using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
 using Serilog;
 using static RemoteMaster.Shared.Models.Message;
@@ -15,7 +16,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) : IScriptService
 {
-    public async Task Execute(ScriptExecutionRequest scriptExecutionRequest)
+    public async Task Execute(ScriptExecutionDto scriptExecutionRequest)
     {
         ArgumentNullException.ThrowIfNull(scriptExecutionRequest);
 

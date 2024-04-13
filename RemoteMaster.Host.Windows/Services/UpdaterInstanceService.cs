@@ -5,6 +5,7 @@
 using System.Diagnostics;
 using System.Text;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
 using Serilog;
 
@@ -16,7 +17,7 @@ public class UpdaterInstanceService : IUpdaterInstanceService
     private readonly string _sourcePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "RemoteMaster.Host.exe");
     private readonly string _executablePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "Updater", "RemoteMaster.Host.exe");
 
-    public void Start(UpdateRequest updateRequest)
+    public void Start(UpdateDto updateRequest)
     {
         ArgumentNullException.ThrowIfNull(updateRequest);
 

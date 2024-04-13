@@ -5,14 +5,14 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Shared.Models;
+using RemoteMaster.Shared.Dtos;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
 [Authorize]
 public class ScreenRecorderHub(IScreenRecorderService screenRecorderService) : Hub<IScreenRecorderClient>
 {
-    public async Task SendStartScreenRecording(ScreenRecordingRequest screenRecordingRequest)
+    public async Task SendStartScreenRecording(ScreenRecordingDto screenRecordingRequest)
     {
         await screenRecorderService.StartRecordingAsync(screenRecordingRequest);
     }

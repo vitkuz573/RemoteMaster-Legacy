@@ -2,13 +2,13 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using RemoteMaster.Shared.Models;
+using RemoteMaster.Shared.Dtos;
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IDomainService
 {
-    void JoinToDomain(DomainJoinRequest domainJoinRequest);
+    void JoinToDomain(DomainJoinDto domainJoinRequest);
 
-    void UnjoinFromDomain(DomainUnjoinRequest domainUnjoinRequest);
+    void UnjoinFromDomain(DomainUnjoinDto domainUnjoinRequest);
 }

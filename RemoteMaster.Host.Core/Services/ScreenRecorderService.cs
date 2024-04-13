@@ -8,7 +8,7 @@ using FFMpegCore.Enums;
 using FFMpegCore.Extensions.System.Drawing.Common;
 using FFMpegCore.Pipes;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Shared.Models;
+using RemoteMaster.Shared.Dtos;
 
 namespace RemoteMaster.Host.Core.Services;
 
@@ -17,7 +17,7 @@ public class ScreenRecorderService(IScreenCapturerService screenCapturerService)
     private CancellationTokenSource _cancellationTokenSource = new();
     private Task _recordingTask = Task.CompletedTask;
 
-    public Task StartRecordingAsync(ScreenRecordingRequest screenRecordingRequest)
+    public Task StartRecordingAsync(ScreenRecordingDto screenRecordingRequest)
     {
         ArgumentNullException.ThrowIfNull(screenRecordingRequest);
 
@@ -41,7 +41,7 @@ public class ScreenRecorderService(IScreenCapturerService screenCapturerService)
         _recordingTask = Task.CompletedTask;
     }
 
-    private async Task RecordVideo(ScreenRecordingRequest screenRecordingRequest, CancellationToken cancellationToken)
+    private async Task RecordVideo(ScreenRecordingDto screenRecordingRequest, CancellationToken cancellationToken)
     {
         var videoFramesSource = new RawVideoPipeSource(GenerateFrames(cancellationToken))
         {

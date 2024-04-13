@@ -4,7 +4,7 @@
 
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
-using RemoteMaster.Shared.Models;
+using RemoteMaster.Shared.Dtos;
 using Serilog;
 using static Windows.Win32.PInvoke;
 
@@ -12,7 +12,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class PowerService(ITokenPrivilegeService tokenPrivilegeService) : IPowerService
 {
-    public void Reboot(PowerActionRequest powerActionRequest)
+    public void Reboot(PowerActionDto powerActionRequest)
     {
         ArgumentNullException.ThrowIfNull(powerActionRequest);
 
@@ -44,7 +44,7 @@ public class PowerService(ITokenPrivilegeService tokenPrivilegeService) : IPower
         }
     }
 
-    public void Shutdown(PowerActionRequest powerActionRequest)
+    public void Shutdown(PowerActionDto powerActionRequest)
     {
         ArgumentNullException.ThrowIfNull(powerActionRequest);
 
