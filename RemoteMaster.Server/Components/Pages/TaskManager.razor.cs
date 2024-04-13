@@ -64,7 +64,7 @@ public partial class TaskManager : IDisposable
                 };
             })
             .AddMessagePackProtocol()
-        .Build();
+            .Build();
 
         _connection.On<IEnumerable<ProcessInfo>>("ReceiveRunningProcesses", async (processes) =>
         {

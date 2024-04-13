@@ -97,6 +97,8 @@ builder.Host.UseSerilog((_, configuration) =>
 
 builder.Services.AddControllers();
 
+builder.Services.AddSignalR().AddMessagePackProtocol();
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())

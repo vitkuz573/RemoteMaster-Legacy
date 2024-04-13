@@ -109,7 +109,7 @@ public partial class FileManager : IDisposable
                 };
             })
             .AddMessagePackProtocol()
-        .Build();
+            .Build();
 
         _connection.On<List<FileSystemItem>>("ReceiveFilesAndDirectories", async (fileSystemItems) =>
         {
