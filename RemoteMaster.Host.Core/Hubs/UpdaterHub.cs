@@ -12,7 +12,7 @@ namespace RemoteMaster.Host.Core.Hubs;
 [Authorize]
 public class UpdaterHub(IUpdaterInstanceService updaterInstanceService) : Hub<IUpdaterClient>
 {
-    public void SendStartUpdater(UpdateDto updateRequest)
+    public void SendStartUpdater(UpdateRequest updateRequest)
     {
         updaterInstanceService.Start(updateRequest);
     }

@@ -12,7 +12,7 @@ namespace RemoteMaster.Host.Core.Hubs;
 [Authorize]
 public class ScreenRecorderHub(IScreenRecorderService screenRecorderService) : Hub<IScreenRecorderClient>
 {
-    public async Task SendStartScreenRecording(ScreenRecordingDto screenRecordingRequest)
+    public async Task SendStartScreenRecording(ScreenRecordingRequest screenRecordingRequest)
     {
         await screenRecorderService.StartRecordingAsync(screenRecordingRequest);
     }

@@ -6,7 +6,7 @@ using RemoteMaster.Shared.Enums;
 
 namespace RemoteMaster.Shared.Dtos;
 
-public class ScriptExecutionDto(string content, Shell shell)
+public class ScriptExecutionRequest(string content, Shell shell)
 {
     public string Content { get; } = content;
 

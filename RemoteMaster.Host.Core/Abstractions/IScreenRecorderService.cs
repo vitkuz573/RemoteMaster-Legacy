@@ -8,7 +8,7 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IScreenRecorderService
 {
-    Task StartRecordingAsync(ScreenRecordingDto screenRecordingRequest);
+    Task StartRecordingAsync(ScreenRecordingRequest screenRecordingRequest);
 
     Task StopRecordingAsync();
 }

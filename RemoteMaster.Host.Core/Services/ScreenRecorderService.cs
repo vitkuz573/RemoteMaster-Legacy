@@ -17,7 +17,7 @@ public class ScreenRecorderService(IScreenCapturerService screenCapturerService)
     private CancellationTokenSource _cancellationTokenSource = new();
     private Task _recordingTask = Task.CompletedTask;
 
-    public Task StartRecordingAsync(ScreenRecordingDto screenRecordingRequest)
+    public Task StartRecordingAsync(ScreenRecordingRequest screenRecordingRequest)
     {
         ArgumentNullException.ThrowIfNull(screenRecordingRequest);
 
@@ -41,7 +41,7 @@ public class ScreenRecorderService(IScreenCapturerService screenCapturerService)
         _recordingTask = Task.CompletedTask;
     }
 
-    private async Task RecordVideo(ScreenRecordingDto screenRecordingRequest, CancellationToken cancellationToken)
+    private async Task RecordVideo(ScreenRecordingRequest screenRecordingRequest, CancellationToken cancellationToken)
     {
         var videoFramesSource = new RawVideoPipeSource(GenerateFrames(cancellationToken))
         {

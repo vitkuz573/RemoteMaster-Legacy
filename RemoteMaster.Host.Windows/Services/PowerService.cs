@@ -12,7 +12,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class PowerService(ITokenPrivilegeService tokenPrivilegeService) : IPowerService
 {
-    public void Reboot(PowerActionDto powerActionRequest)
+    public void Reboot(PowerActionRequest powerActionRequest)
     {
         ArgumentNullException.ThrowIfNull(powerActionRequest);
 
@@ -44,7 +44,7 @@ public class PowerService(ITokenPrivilegeService tokenPrivilegeService) : IPower
         }
     }
 
-    public void Shutdown(PowerActionDto powerActionRequest)
+    public void Shutdown(PowerActionRequest powerActionRequest)
     {
         ArgumentNullException.ThrowIfNull(powerActionRequest);
 

@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Shared.Dtos;
 
-public class ScreenRecordingDto(string output)
+public class ScreenRecordingRequest(string output)
 {
     public string Output { get; } = output;
 

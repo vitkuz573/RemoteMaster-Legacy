@@ -91,12 +91,12 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         shutdownService.ImmediateShutdown();
     }
 
-    public void SendRebootComputer(PowerActionDto powerActionRequest)
+    public void SendRebootComputer(PowerActionRequest powerActionRequest)
     {
         powerService.Reboot(powerActionRequest);
     }
 
-    public void SendShutdownComputer(PowerActionDto powerActionRequest)
+    public void SendShutdownComputer(PowerActionRequest powerActionRequest)
     {
         powerService.Shutdown(powerActionRequest);
     }
@@ -121,7 +121,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         hardwareService.SetMonitorState(state);
     }
 
-    public void SendScript(ScriptExecutionDto scriptExecutionRequest)
+    public void SendScript(ScriptExecutionRequest scriptExecutionRequest)
     {
         scriptService.Execute(scriptExecutionRequest);
     }

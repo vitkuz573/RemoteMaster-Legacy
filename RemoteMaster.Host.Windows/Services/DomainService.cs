@@ -22,7 +22,7 @@ public class DomainService : IDomainService
     /// Joins the machine to a domain.
     /// </summary>
     /// <param name="domainJoinRequest">The request to join a domain, containing the domain name and user credentials.</param>
-    public void JoinToDomain(DomainJoinDto domainJoinRequest)
+    public void JoinToDomain(DomainJoinRequest domainJoinRequest)
     {
         ArgumentNullException.ThrowIfNull(domainJoinRequest);
 
@@ -38,7 +38,7 @@ public class DomainService : IDomainService
     /// Unjoins the machine from a domain.
     /// </summary>
     /// <param name="domainUnjoinRequest">The request to unjoin a domain, containing the user credentials.</param>
-    public void UnjoinFromDomain(DomainUnjoinDto domainUnjoinRequest)
+    public void UnjoinFromDomain(DomainUnjoinRequest domainUnjoinRequest)
     {
         ArgumentNullException.ThrowIfNull(domainUnjoinRequest);
 

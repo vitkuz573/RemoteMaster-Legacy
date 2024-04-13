@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Shared.Dtos;
 
-public class PowerActionDto
+public class PowerActionRequest
 {
     public string? Message { get; init; }
 

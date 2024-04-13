@@ -17,7 +17,7 @@ public class UpdaterInstanceService : IUpdaterInstanceService
     private readonly string _sourcePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "RemoteMaster.Host.exe");
     private readonly string _executablePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "Updater", "RemoteMaster.Host.exe");
 
-    public void Start(UpdateDto updateRequest)
+    public void Start(UpdateRequest updateRequest)
     {
         ArgumentNullException.ThrowIfNull(updateRequest);
 

@@ -17,7 +17,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class ScriptService(IHubContext<ControlHub, IControlClient> hubContext) : IScriptService
 {
-    public async Task Execute(ScriptExecutionDto scriptExecutionRequest)
+    public async Task Execute(ScriptExecutionRequest scriptExecutionRequest)
     {
         ArgumentNullException.ThrowIfNull(scriptExecutionRequest);
 
