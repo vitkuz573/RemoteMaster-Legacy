@@ -41,11 +41,9 @@ public class CertificateService(IOptions<CertificateOptions> options, IHostInfor
 
         var hostInformation = hostInformationService.GetHostInformation();
 
-        var crlFileUri = $"http://{hostInformation.IpAddress}:5254/crl";
-
         var crlDistributionPoints = new List<string>
         {
-            crlFileUri
+            $"http://{hostInformation.Name}:5254/crl"
         };
 
         var crlDistributionPointExtension = CertificateRevocationListBuilder.BuildCrlDistributionPointExtension(crlDistributionPoints, false);
