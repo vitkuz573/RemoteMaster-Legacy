@@ -9,7 +9,6 @@
     <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.4" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.4" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="8.0.2" />
-    <PackageVersion Include="Moq" Version="4.20.70" />
     <PackageVersion Include="MudBlazor" Version="6.19.1" />
     <PackageVersion Include="Polly" Version="8.3.1" />
     <PackageVersion Include="Serilog" Version="3.1.1" />
@@ -28,9 +27,5 @@
     <PackageVersion Include="Microsoft.Windows.SDK.Win32Metadata" Version="59.0.13-preview" />
     <PackageVersion Include="System.Management" Version="8.0.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.4" />
-    <PackageVersion Include="coverlet.collector" Version="6.0.2" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
-    <PackageVersion Include="xunit" Version="2.7.0" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.7" />
   </ItemGroup>
 </Project>
