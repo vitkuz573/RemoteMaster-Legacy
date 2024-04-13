@@ -48,11 +48,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Windows.SDK.Win32Metadata" />
     <PackageReference Include="Polly" />
-    <PackageReference Include="SkiaSharp" />
     <PackageReference Include="SkiaSharp.Views.Desktop.Common" />
-    <PackageReference Include="System.Drawing.Common">
-      <TreatAsUsed>true</TreatAsUsed>
-    </PackageReference>
     <PackageReference Include="System.Management" />
   </ItemGroup>
 
