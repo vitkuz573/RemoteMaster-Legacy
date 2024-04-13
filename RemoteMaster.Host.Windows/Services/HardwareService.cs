@@ -3,7 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Shared.Models;
+using RemoteMaster.Shared.Enums;
 using Windows.Win32.Foundation;
 using static Windows.Win32.PInvoke;
 

@@ -4,7 +4,7 @@
 
 using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
-using RemoteMaster.Shared.Models;
+using RemoteMaster.Shared.Enums;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 

@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Dtos;
-using RemoteMaster.Shared.Models;
+using RemoteMaster.Shared.Enums;
 using Serilog;
 
 namespace RemoteMaster.Host.Core.Hubs;

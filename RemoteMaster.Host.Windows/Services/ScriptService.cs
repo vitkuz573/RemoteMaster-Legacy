@@ -8,6 +8,7 @@ using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
 using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Shared.Dtos;
+using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
 using Serilog;
 using static RemoteMaster.Shared.Models.Message;

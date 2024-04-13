@@ -9,6 +9,7 @@ using MudBlazor;
 using RemoteMaster.Server.Components.Dialogs;
 using RemoteMaster.Server.Extensions;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
 using Serilog;
 

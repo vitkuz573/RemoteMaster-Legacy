@@ -2,11 +2,10 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-namespace RemoteMaster.Shared.Models;
+namespace RemoteMaster.Shared.Enums;
 
-public enum MonitorState
+public enum Shell
 {
-    On = -1,
-    Standby = 1,
-    Off = 2
+    Cmd,
+    PowerShell
 }
