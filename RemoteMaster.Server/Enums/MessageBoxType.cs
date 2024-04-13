@@ -2,14 +2,12 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-namespace RemoteMaster.Server.Models;
+namespace RemoteMaster.Server.Enums;
 
-public enum MessageBoxButtons
+public enum MessageBoxType
 {
-    OK,
-    OKCancel,
-    AbortRetryIgnore,
-    YesNoCancel,
-    YesNo,
-    RetryCancel
+    Information,
+    Error,
+    Warning,
+    Question
 }
