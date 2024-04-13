@@ -4,7 +4,7 @@
 
 using Microsoft.Win32;
 using RemoteMaster.Host.Windows.Abstractions;
-using RemoteMaster.Host.Windows.Models;
+using RemoteMaster.Host.Windows.Enums;
 
 namespace RemoteMaster.Host.Windows.Services;
 

@@ -19,8 +19,8 @@ using RemoteMaster.Host.Core.Extensions;
 using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Host.Windows.Enums;
 using RemoteMaster.Host.Windows.Hubs;
-using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Host.Windows.Services;
 
 namespace RemoteMaster.Host.Windows;
