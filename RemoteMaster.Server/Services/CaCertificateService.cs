@@ -16,7 +16,7 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
 {
     private readonly CertificateOptions _settings = options.Value;
 
-    public X509Certificate2 EnsureCaCertificateExists()
+    public void EnsureCaCertificateExists()
     {
         var existingCert = FindExistingCertificate();
 
@@ -25,20 +25,18 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
             if (existingCert.NotAfter > DateTime.Now)
             {
                 Log.Information("Existing CA certificate for '{Name}' found.", _settings.CommonName);
-
-                return existingCert;
             }
             else
             {
                 Log.Information("Existing CA certificate for '{Name}' has expired. Reissuing with the same key.", _settings.CommonName);
 
-                return GenerateCertificate(existingCert.GetRSAPrivateKey(), true);
+                GenerateCertificate(existingCert.GetRSAPrivateKey(), true);
             }
         }
 
         Log.Information("No existing CA certificate found or it has expired. Generating a new one for '{Name}'.", _settings.CommonName);
 
-        return GenerateCertificate(null, false);
+        GenerateCertificate(null, false);
     }
 
     private X509Certificate2 GenerateCertificate(RSA? externalRsaProvider, bool reuseKey)
