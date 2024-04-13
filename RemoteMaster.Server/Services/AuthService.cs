@@ -8,11 +8,13 @@ using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class AuthService(IHttpContextAccessor httpContextAccessor, HttpClient httpClient) : IAuthService
+public class AuthService(IHttpContextAccessor httpContextAccessor, HttpClient apiClient) : IAuthService
 {
     public async Task<bool> RefreshTokensAsync(string refreshToken)
     {
-        var response = await httpClient.PostAsJsonAsync("http://127.0.0.1:5254/api/auth/refresh-token", new RefreshTokenRequest
+        apiClient.BaseAddress = new Uri("http://127.0.0.1:5254/api");
+
+        var response = await apiClient.PostAsJsonAsync("auth/refresh-token", new RefreshTokenRequest
         {
             RefreshToken = refreshToken
         });
@@ -34,9 +36,9 @@ public class AuthService(IHttpContextAccessor httpContextAccessor, HttpClient ht
                     Expires = DateTime.UtcNow.AddHours(2)
                 };
 
-                var httpContext = httpContextAccessor.HttpContext;
+                var cookies = httpContextAccessor.HttpContext?.Response.Cookies;
 
-                httpContext.Response.Cookies.Append(CookieNames.AccessToken, accessToken, сookieOptions);
+                cookies?.Append(CookieNames.AccessToken, accessToken, сookieOptions);
 
                 return true;
             }

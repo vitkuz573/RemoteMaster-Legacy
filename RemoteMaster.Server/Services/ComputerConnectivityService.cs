@@ -4,6 +4,7 @@
 
 using Microsoft.AspNetCore.SignalR.Client;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Extensions;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 
@@ -22,7 +23,9 @@ public class ComputerConnectivityService(IHttpContextAccessor httpContextAccesso
                 {
                     options.AccessTokenProvider = () =>
                     {
-                        var accessToken = httpContextAccessor.HttpContext?.Request.Cookies[CookieNames.AccessToken];
+                        var cookies = httpContextAccessor.HttpContext?.Request.Cookies;
+
+                        var accessToken = cookies?.GetCookieOrDefault(CookieNames.AccessToken);
 
                         return Task.FromResult(accessToken);
                     };

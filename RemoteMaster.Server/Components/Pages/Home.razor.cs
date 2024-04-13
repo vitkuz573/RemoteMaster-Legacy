@@ -9,7 +9,6 @@ using MudBlazor;
 using RemoteMaster.Server.Components.Dialogs;
 using RemoteMaster.Server.Extensions;
 using RemoteMaster.Server.Models;
-using RemoteMaster.Server.Services;
 using RemoteMaster.Shared.Models;
 using Serilog;
 
@@ -548,11 +547,17 @@ public partial class Home
             {
                 try
                 {
-                    var accessToken = HttpContextAccessor.HttpContext?.Request.Cookies[CookieNames.AccessToken];
                     var connection = new HubConnectionBuilder()
                         .WithUrl($"https://{computer.IpAddress}:5001/{hubPath}", options =>
                         {
-                            options.AccessTokenProvider = () => Task.FromResult(accessToken);
+                            options.AccessTokenProvider = () =>
+                            {
+                                var cookies = HttpContextAccessor.HttpContext?.Request.Cookies;
+
+                                var accessToken = cookies?.GetCookieOrDefault(CookieNames.AccessToken);
+
+                                return Task.FromResult(accessToken);
+                            };
                         })
                         .AddMessagePackProtocol()
                         .Build();

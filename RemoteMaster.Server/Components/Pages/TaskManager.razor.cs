@@ -9,6 +9,7 @@ using Microsoft.JSInterop;
 using MudBlazor;
 using Polly;
 using Polly.Retry;
+using RemoteMaster.Server.Extensions;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 
@@ -50,18 +51,17 @@ public partial class TaskManager : IDisposable
 
     private async Task InitializeHostConnectionAsync()
     {
-        var httpContext = HttpContextAccessor.HttpContext ?? throw new InvalidOperationException("HttpContext is not available.");
-        var accessToken = httpContext.Request.Cookies[CookieNames.AccessToken];
-
-        if (string.IsNullOrEmpty(accessToken))
-        {
-            throw new InvalidOperationException("Access token is not available.");
-        }
-
         _connection = new HubConnectionBuilder()
             .WithUrl($"https://{Host}:5001/hubs/taskmanager", options =>
             {
-                options.AccessTokenProvider = () => Task.FromResult(accessToken);
+                options.AccessTokenProvider = () =>
+                {
+                    var cookies = HttpContextAccessor.HttpContext?.Request.Cookies;
+                    
+                    var accessToken = cookies?.GetCookieOrDefault(CookieNames.AccessToken);
+
+                    return Task.FromResult(accessToken);
+                };
             })
             .AddMessagePackProtocol()
         .Build();
