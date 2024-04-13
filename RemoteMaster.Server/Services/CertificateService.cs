@@ -2,18 +2,17 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Net;
-using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Shared.Abstractions;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class CertificateService(IOptions<CertificateOptions> options) : ICertificateService
+public class CertificateService(IOptions<CertificateOptions> options, IHostInformationService hostInformationService) : ICertificateService
 {
     private readonly CertificateOptions _settings = options.Value ?? throw new ArgumentNullException(nameof(options));
 
@@ -21,57 +20,64 @@ public class CertificateService(IOptions<CertificateOptions> options) : ICertifi
     {
         ArgumentNullException.ThrowIfNull(csrBytes);
 
-        X509Certificate2? caCertificate = null;
+        var caCertificate = GetPrivateCaCertificate();
 
         var csr = CertificateRequest.LoadSigningRequest(csrBytes, HashAlgorithmName.SHA256, CertificateRequestLoadOptions.UnsafeLoadCertificateExtensions);
-
         var basicConstraints = csr.CertificateExtensions.OfType<X509BasicConstraintsExtension>().FirstOrDefault();
-
-        if (basicConstraints is { CertificateAuthority: true })
+        
+        if (basicConstraints?.CertificateAuthority == true)
         {
             Log.Error("CSR for CA certificates are not allowed.");
+            
+            throw new InvalidOperationException("CSR for CA certificates are not allowed.");
         }
 
-        using (var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine))
-        {
-            store.Open(OpenFlags.ReadOnly);
-
-            var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, _settings.CommonName, false);
-
-            foreach (var cert in certificates)
-            {
-                if (cert.HasPrivateKey)
-                {
-                    caCertificate = cert;
-                    break;
-                }
-            }
-        }
-
-        var subjectName = caCertificate.SubjectName;
         var rsaPrivateKey = caCertificate.GetRSAPrivateKey();
-
-        if (rsaPrivateKey == null)
-        {
-            Log.Error("Failed to obtain RSA private key from CA certificate.");
-            throw new InvalidOperationException("CA certificate does not have an accessible RSA private key.");
-        }
-
         var signatureGenerator = X509SignatureGenerator.CreateForRSA(rsaPrivateKey, RSASignaturePadding.Pkcs1);
+        
         var notBefore = DateTimeOffset.UtcNow;
         var notAfter = DateTimeOffset.UtcNow.AddYears(1);
         var serialNumber = GenerateSerialNumber();
 
-        var crlFileUri = $"http://{GetLocalIpAddress()}:5254/crl";
+        var hostInformation = hostInformationService.GetHostInformation();
 
-        var crlDistributionPoints = new List<string> { crlFileUri };
+        var crlFileUri = $"http://{hostInformation.IpAddress}:5254/crl";
+
+        var crlDistributionPoints = new List<string>
+        {
+            crlFileUri
+        };
+
         var crlDistributionPointExtension = CertificateRevocationListBuilder.BuildCrlDistributionPointExtension(crlDistributionPoints, false);
 
         csr.CertificateExtensions.Add(crlDistributionPointExtension);
 
-        var certificate = csr.Create(subjectName, signatureGenerator, notBefore, notAfter, serialNumber);
+        return csr.Create(caCertificate.SubjectName, signatureGenerator, notBefore, notAfter, serialNumber);
+    }
 
-        return certificate;
+    public X509Certificate2 GetCaCertificate()
+    {
+        var caCertificate = GetPrivateCaCertificate();
+        
+        return new X509Certificate2(caCertificate.Export(X509ContentType.Cert));
+    }
+
+    private X509Certificate2 GetPrivateCaCertificate()
+    {
+        using var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
+        store.Open(OpenFlags.ReadOnly);
+        
+        var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, _settings.CommonName, false);
+
+        foreach (var cert in certificates)
+        {
+            if (cert.HasPrivateKey)
+            {
+                return cert;
+            }
+        }
+
+        throw new InvalidOperationException("No valid CA certificate found.");
     }
 
     private static byte[] GenerateSerialNumber()
@@ -92,45 +98,5 @@ public class CertificateService(IOptions<CertificateOptions> options) : ICertifi
         Array.Copy(randomBytes, 0, combinedBytes, 8 + uuid.Length, randomBytes.Length);
 
         return SHA3_256.IsSupported ? SHA3_256.HashData(combinedBytes) : SHA256.HashData(combinedBytes);
-    }
-
-    public X509Certificate2 GetCaCertificate()
-    {
-        X509Certificate2? caCertificate = null;
-
-        using (var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine))
-        {
-            store.Open(OpenFlags.ReadOnly);
-
-            var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, _settings.CommonName, false);
-
-            foreach (var cert in certificates)
-            {
-                if (cert.HasPrivateKey)
-                {
-                    caCertificate = cert;
-                    break;
-                }
-            }
-        }
-
-        var publicCert = new X509Certificate2(caCertificate.Export(X509ContentType.Cert));
-
-        return publicCert;
-    }
-
-    private static string GetLocalIpAddress()
-    {
-        var host = Dns.GetHostEntry(Dns.GetHostName());
-
-        foreach (var ip in host.AddressList)
-        {
-            if (ip.AddressFamily == AddressFamily.InterNetwork)
-            {
-                return ip.ToString();
-            }
-        }
-
-        throw new Exception("No network adapters with an IPv4 address in the system!");
     }
 }
