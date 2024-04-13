@@ -56,11 +56,11 @@ public partial class ScriptExecutorDialog
 
         if (scriptResult.Meta == "pid")
         {
-            results.LastPid = int.Parse(scriptResult.Content);
+            results.LastPid = int.Parse(scriptResult.Text);
         }
         else
         {
-            results.Messages.AppendLine(scriptResult.Content);
+            results.Messages.AppendLine(scriptResult.Text);
         }
     }
 

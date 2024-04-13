@@ -4,6 +4,7 @@
 
 using Microsoft.AspNetCore.SignalR.Client;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
@@ -16,11 +17,15 @@ public class ComputerConnectivityService(IHttpContextAccessor httpContextAccesso
 
         try
         {
-            var accessToken = httpContextAccessor.HttpContext?.Request.Cookies["accessToken"];
             var connection = new HubConnectionBuilder()
                 .WithUrl($"https://{computer.IpAddress}:5001/{hubPath}", options =>
                 {
-                    options.AccessTokenProvider = () => Task.FromResult(accessToken);
+                    options.AccessTokenProvider = () =>
+                    {
+                        var accessToken = httpContextAccessor.HttpContext?.Request.Cookies[CookieNames.AccessToken];
+
+                        return Task.FromResult(accessToken);
+                    };
                 })
                 .AddMessagePackProtocol()
                 .Build();

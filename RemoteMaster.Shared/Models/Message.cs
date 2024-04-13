@@ -6,9 +6,9 @@ using static RemoteMaster.Shared.Models.Message;
 
 namespace RemoteMaster.Shared.Models;
 
-public class Message(string content, MessageType type)
+public class Message(string text, MessageType type)
 {
-    public string Content { get; } = content;
+    public string Text { get; } = text;
 
     public MessageType Type { get; } = type;
 

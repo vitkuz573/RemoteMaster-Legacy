@@ -9,6 +9,7 @@ using Microsoft.JSInterop;
 using MudBlazor;
 using Polly;
 using Polly.Retry;
+using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Pages;
@@ -50,7 +51,7 @@ public partial class TaskManager : IDisposable
     private async Task InitializeHostConnectionAsync()
     {
         var httpContext = HttpContextAccessor.HttpContext ?? throw new InvalidOperationException("HttpContext is not available.");
-        var accessToken = httpContext.Request.Cookies["accessToken"];
+        var accessToken = httpContext.Request.Cookies[CookieNames.AccessToken];
 
         if (string.IsNullOrEmpty(accessToken))
         {

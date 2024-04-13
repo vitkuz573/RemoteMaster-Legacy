@@ -9,6 +9,8 @@ using Microsoft.JSInterop;
 using MudBlazor;
 using Polly;
 using Polly.Retry;
+using RemoteMaster.Server.Extensions;
+using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Pages;
@@ -166,18 +168,20 @@ public partial class Access : IDisposable
             {
                 options.AccessTokenProvider = async () =>
                 {
-                    var currentAccessToken = HttpContextAccessor.HttpContext.Request.Cookies["accessToken"];
-                    var refreshToken = HttpContextAccessor.HttpContext.Request.Cookies["refreshToken"];
+                    var cookies = HttpContextAccessor.HttpContext?.Request.Cookies;
 
-                    if (currentAccessToken == null)
+                    var accessToken = cookies?.GetCookieOrDefault(CookieNames.AccessToken);
+                    var refreshToken = cookies?.GetCookieOrDefault(CookieNames.RefreshToken);
+
+                    if (TokenService.RequiresTokenUpdate(accessToken) || string.IsNullOrEmpty(accessToken))
                     {
                         if (await AuthService.RefreshTokensAsync(refreshToken))
                         {
-                            currentAccessToken = HttpContextAccessor.HttpContext.Request.Cookies["accessToken"];
+                            accessToken = cookies?.GetCookieOrDefault(CookieNames.AccessToken);
                         }
                     }
 
-                    return currentAccessToken;
+                    return accessToken;
                 };
             })
             .AddMessagePackProtocol()

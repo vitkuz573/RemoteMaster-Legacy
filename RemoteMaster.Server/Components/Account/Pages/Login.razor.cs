@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
+using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Components.Account.Pages;
 
@@ -80,12 +81,12 @@ public partial class Login
         var accessTokenOptions = CopyCookieOptions(baseCookieOptions);
         accessTokenOptions.Expires = DateTime.UtcNow.AddHours(2);
 
-        HttpContext.Response.Cookies.Append("accessToken", accessToken, accessTokenOptions);
+        HttpContext.Response.Cookies.Append(CookieNames.AccessToken, accessToken, accessTokenOptions);
 
         var refreshTokenOptions = CopyCookieOptions(baseCookieOptions);
         refreshTokenOptions.Expires = DateTime.UtcNow.AddDays(7);
 
-        HttpContext.Response.Cookies.Append("refreshToken", refreshToken, refreshTokenOptions);
+        HttpContext.Response.Cookies.Append(CookieNames.RefreshToken, refreshToken, refreshTokenOptions);
     }
 
     private static CookieOptions CopyCookieOptions(CookieOptions options)

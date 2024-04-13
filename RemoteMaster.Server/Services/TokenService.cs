@@ -84,6 +84,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         };
 
         context.RefreshTokens.Add(newRefreshTokenEntity);
+
         await context.SaveChangesAsync();
 
         oldRefreshTokenEntity.Revoked = DateTime.UtcNow;

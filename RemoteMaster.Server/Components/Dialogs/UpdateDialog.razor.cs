@@ -37,7 +37,7 @@ public partial class UpdateDialog
         {
             var updateTask = Task.Run(async () =>
             {
-                var accessToken = HttpContextAccessor.HttpContext?.Request.Cookies["accessToken"];
+                var accessToken = HttpContextAccessor.HttpContext?.Request.Cookies[CookieNames.AccessToken];
 
                 var updaterConnection = new HubConnectionBuilder()
                 .WithUrl($"https://{computer.IpAddress}:6001/hubs/updater", options =>
@@ -62,9 +62,9 @@ public partial class UpdateDialog
 
                 if (!_subscribedConnections.Contains(connection))
                 {
-                    connection.On<Message>("ReceiveMessage", async scriptResult =>
+                    connection.On<Message>("ReceiveMessage", async message =>
                     {
-                        UpdateResultsForComputer(computer, scriptResult);
+                        UpdateResultsForComputer(computer, message);
                         await InvokeAsync(StateHasChanged);
                     });
 
@@ -91,7 +91,7 @@ public partial class UpdateDialog
         await Task.WhenAll(updateTasks);
     }
 
-    private void UpdateResultsForComputer(Computer computer, Message scriptResult)
+    private void UpdateResultsForComputer(Computer computer, Message message)
     {
         if (!_resultsPerComputer.TryGetValue(computer, out var results))
         {
@@ -99,13 +99,13 @@ public partial class UpdateDialog
             _resultsPerComputer[computer] = results;
         }
 
-        if (scriptResult.Meta == "pid")
+        if (message.Meta == "pid")
         {
-            results.LastPid = int.Parse(scriptResult.Content);
+            results.LastPid = int.Parse(message.Text);
         }
         else
         {
-            results.Messages.AppendLine(scriptResult.Content);
+            results.Messages.AppendLine(message.Text);
         }
     }
 
