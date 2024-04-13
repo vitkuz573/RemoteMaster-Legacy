@@ -86,7 +86,7 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
 
     public bool CheckCertificateExpiration()
     {
-        X509Certificate2? httpsCertificate = null;
+        X509Certificate2? сertificate = null;
 
         using (var store = new X509Store(StoreName.My, StoreLocation.LocalMachine))
         {
@@ -98,12 +98,12 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
             {
                 if (cert.HasPrivateKey)
                 {
-                    httpsCertificate = cert;
+                    сertificate = cert;
                     break;
                 }
             }
         }
 
-        return DateTime.Now > httpsCertificate?.NotAfter;
+        return сertificate == null || DateTime.Now > сertificate.NotAfter;
     }
 }

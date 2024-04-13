@@ -27,31 +27,31 @@ public static class WebApplicationBuilderExtensions
 
                 var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, Dns.GetHostName(), false);
 
-                X509Certificate2? httpsCertificate = null;
+                X509Certificate2? certificate = null;
 
                 foreach (var cert in certificates)
                 {
                     if (cert.HasPrivateKey)
                     {
-                        httpsCertificate = cert;
+                        certificate = cert;
                         break;
                     }
                 }
 
-                if (httpsCertificate != null)
+                if (certificate != null)
                 {
                     if (launchModeInstance is UserMode)
                     {
                         options.ListenAnyIP(5001, listenOptions =>
                         {
-                            listenOptions.UseHttps(httpsCertificate);
+                            listenOptions.UseHttps(certificate);
                         });
                     }
                     else if (launchModeInstance is UpdaterMode)
                     {
                         options.ListenAnyIP(6001, listenOptions =>
                         {
-                            listenOptions.UseHttps(httpsCertificate);
+                            listenOptions.UseHttps(certificate);
                         });
                     }
                 }
