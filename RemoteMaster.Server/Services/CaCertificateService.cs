@@ -18,7 +18,7 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
 {
     private readonly CertificateOptions _settings = options.Value;
 
-    public X509Certificate2 CreateCaCertificate()
+    public X509Certificate2 EnsureCaCertificateExists()
     {
         var existingCert = FindExistingCertificate();
 

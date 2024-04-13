@@ -72,6 +72,7 @@ builder.Services.AddSingleton<IComputerConnectivityService, ComputerConnectivity
 builder.Services.AddSingleton<ICaCertificateService, CaCertificateService>();
 builder.Services.AddSingleton<ISubjectService, SubjectService>();
 builder.Services.AddSingleton<IAuthService, AuthService>();
+builder.Services.AddSingleton<IJwtSecurityService, JwtSecurityService>();
 
 builder.Services.AddSingleton(new JsonSerializerOptions
 {
@@ -154,6 +155,9 @@ app.MapAdditionalIdentityEndpoints();
 app.MapHub<ManagementHub>("/hubs/management");
 
 var caCertificateService = app.Services.GetRequiredService<ICaCertificateService>();
-caCertificateService.CreateCaCertificate();
+caCertificateService.EnsureCaCertificateExists();
+
+var jwtSecurityService = app.Services.GetRequiredService<IJwtSecurityService>();
+jwtSecurityService.EnsureKeysExist();
 
 app.Run();

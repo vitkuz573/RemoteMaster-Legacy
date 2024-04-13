@@ -11,13 +11,31 @@ namespace RemoteMaster.Server.Services;
 public class JwtSecurityService : IJwtSecurityService
 {
     private readonly string _destDirectory = @"C:\ProgramData\RemoteMaster\Security\JWT";
+    
+    private readonly string _privateKeyPath;
+    private readonly string _publicKeyPath;
 
     public JwtSecurityService()
     {
+        _privateKeyPath = Path.Combine(_destDirectory, "private_key.pem");
+        _publicKeyPath = Path.Combine(_destDirectory, "public_key.pem");
+        
         EnsureKeysDirectoryExists();
     }
 
-    public void GenerateRsaKeys()
+    public void EnsureKeysExist()
+    {
+        if (!File.Exists(_privateKeyPath) || !File.Exists(_publicKeyPath))
+        {
+            GenerateRsaKeys();
+        }
+        else
+        {
+            Log.Information("RSA keys already exist and will not be regenerated.");
+        }
+    }
+
+    private void GenerateRsaKeys()
     {
         using (var rsa = RSA.Create(4096))
         {
@@ -46,22 +64,20 @@ public class JwtSecurityService : IJwtSecurityService
 
     private void ExportPrivateKey(RSA rsa)
     {
-        var privateKeyPath = Path.Combine(_destDirectory, "private_key.pem");
         var privateKeyBytes = rsa.ExportRSAPrivateKey();
         var privateKeyPem = ConvertToPem(privateKeyBytes, "RSA PRIVATE KEY");
 
-        File.WriteAllText(privateKeyPath, privateKeyPem);
-        Log.Information($"Private key saved to: {privateKeyPath}");
+        File.WriteAllText(_privateKeyPath, privateKeyPem);
+        Log.Information($"Private key saved to: {_privateKeyPath}");
     }
 
     private void ExportPublicKey(RSA rsa)
     {
-        var publicKeyPath = Path.Combine(_destDirectory, "public_key.pem");
         var publicKeyBytes = rsa.ExportRSAPublicKey();
         var publicKeyPem = ConvertToPem(publicKeyBytes, "PUBLIC KEY");
 
-        File.WriteAllText(publicKeyPath, publicKeyPem);
-        Log.Information($"Public key saved to: {publicKeyPath}");
+        File.WriteAllText(_publicKeyPath, publicKeyPem);
+        Log.Information($"Public key saved to: {_publicKeyPath}");
     }
 
     private static string ConvertToPem(byte[] keyBytes, string title)

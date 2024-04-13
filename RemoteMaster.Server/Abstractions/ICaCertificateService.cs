@@ -8,5 +8,5 @@ namespace RemoteMaster.Server.Abstractions;
 
 public interface ICaCertificateService
 {
-    X509Certificate2 CreateCaCertificate();
+    X509Certificate2 EnsureCaCertificateExists();
 }
