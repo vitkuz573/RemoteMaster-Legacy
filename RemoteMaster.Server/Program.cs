@@ -73,6 +73,7 @@ builder.Services.AddSingleton<ICaCertificateService, CaCertificateService>();
 builder.Services.AddSingleton<ISubjectService, SubjectService>();
 builder.Services.AddSingleton<IAuthService, AuthService>();
 builder.Services.AddSingleton<IJwtSecurityService, JwtSecurityService>();
+builder.Services.AddSingleton<IHostInformationService, HostInformationService>();
 
 builder.Services.AddSingleton(new JsonSerializerOptions
 {

@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Net;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using RemoteMaster.Shared.Models;
@@ -17,7 +16,9 @@ public partial class HostConfigurationGenerator
 
     protected override void OnInitialized()
     {
-        _model.Server = Dns.GetHostName();
+        var hostInformation = HostInformationService.GetHostInformation();
+
+        _model.Server = hostInformation.Name;
         _model.Subject = new();
 
         _countries.Add("Afghanistan", "AF");

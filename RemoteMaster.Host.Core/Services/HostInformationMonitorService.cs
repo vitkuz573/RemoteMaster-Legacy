@@ -5,6 +5,7 @@
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;
 using Serilog;
 

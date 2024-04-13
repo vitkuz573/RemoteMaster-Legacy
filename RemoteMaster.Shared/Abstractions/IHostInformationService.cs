@@ -4,7 +4,7 @@
 
 using RemoteMaster.Shared.Models;
 
-namespace RemoteMaster.Host.Core.Abstractions;
+namespace RemoteMaster.Shared.Abstractions;
 
 public interface IHostInformationService
 {

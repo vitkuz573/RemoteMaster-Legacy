@@ -5,10 +5,10 @@
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;
 
-namespace RemoteMaster.Host.Core.Services;
+namespace RemoteMaster.Shared.Services;
 
 public class HostInformationService : IHostInformationService
 {

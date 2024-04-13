@@ -4,6 +4,7 @@
 
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Shared.Abstractions;
 using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
