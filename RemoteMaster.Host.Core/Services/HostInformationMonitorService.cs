@@ -34,10 +34,16 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
 
         if (hostConfiguration.Host == null || !hostConfiguration.Host.Equals(hostInformation))
         {
+            if (hostConfiguration.Host != null && hostConfiguration.Host.MacAddress != hostInformation.MacAddress)
+            {
+                Log.Information("MAC address has changed, which might indicate restoration from backup. System will be registered under a special organizational unit.");
+                hostConfiguration.Subject.OrganizationalUnit = ["RestoredSystems"];
+            }
+
             hostConfiguration.Host = hostInformation;
-
+            
             Log.Information("Host details were either missing or have been updated.");
-
+            
             hasChanges = true;
         }
 
