@@ -47,7 +47,10 @@ internal class Program
 
         builder.Configuration.AddCommandLine(args);
 
-        builder.Host.UseWindowsService();
+        if (launchModeInstance is ServiceMode)
+        {
+            builder.Host.UseWindowsService();
+        }
 
         builder.Services.AddCoreServices(launchModeInstance);
         builder.Services.AddTransient<IServiceFactory, ServiceFactory>();
