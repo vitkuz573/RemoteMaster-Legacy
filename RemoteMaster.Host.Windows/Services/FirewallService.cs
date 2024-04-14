@@ -7,7 +7,7 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class FirewallSettingService : IFirewallSettingService
+public class FirewallService : IFirewallService
 {
     public void AddRule(string name, string applicationPath)
     {

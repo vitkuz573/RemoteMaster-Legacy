@@ -73,7 +73,7 @@ internal class Program
         builder.Services.AddSingleton<ITaskManagerService, TaskManagerService>();
         builder.Services.AddSingleton<ISecureAttentionSequenceService, SecureAttentionSequenceService>();
         builder.Services.AddSingleton<IPsExecService, PsExecService>();
-        builder.Services.AddSingleton<IFirewallSettingService, FirewallSettingService>();
+        builder.Services.AddSingleton<IFirewallService, FirewallService>();
         builder.Services.AddSingleton<IWoLConfiguratorService, WoLConfiguratorService>();
         builder.Services.AddSingleton(new JsonSerializerOptions
         {
@@ -184,15 +184,15 @@ internal class Program
             secureAttentionSequenceService.SasOption = SoftwareSasOption.ServicesAndEaseOfAccessApplications;
         }
 
-        var firewallSettingService = app.Services.GetRequiredService<IFirewallSettingService>();
+        var firewallService = app.Services.GetRequiredService<IFirewallService>();
 
         var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
 
         var hostApplicationPath = Path.Combine(programFiles, "RemoteMaster", "Host", "RemoteMaster.Host.exe");
         var hostUpdaterApplicationPath = Path.Combine(programFiles, "RemoteMaster", "Host", "Updater", "RemoteMaster.Host.exe");
 
-        firewallSettingService.AddRule("Remote Master Host", hostApplicationPath);
-        firewallSettingService.AddRule("Remote Master Host Updater", hostUpdaterApplicationPath);
+        firewallService.AddRule("Remote Master Host", hostApplicationPath);
+        firewallService.AddRule("Remote Master Host Updater", hostUpdaterApplicationPath);
 
         var wolConfiguratorService = app.Services.GetRequiredService<IWoLConfiguratorService>();
        
