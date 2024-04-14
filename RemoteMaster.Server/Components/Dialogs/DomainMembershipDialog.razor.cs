@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
+using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
 using Serilog;
 

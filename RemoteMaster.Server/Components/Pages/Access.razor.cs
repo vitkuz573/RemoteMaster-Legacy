@@ -11,6 +11,7 @@ using Polly;
 using Polly.Retry;
 using RemoteMaster.Server.Extensions;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
 

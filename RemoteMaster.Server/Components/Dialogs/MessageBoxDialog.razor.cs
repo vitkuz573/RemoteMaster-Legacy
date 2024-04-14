@@ -5,6 +5,7 @@
 using System.Text;
 using Microsoft.AspNetCore.SignalR.Client;
 using RemoteMaster.Server.Enums;
+using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Enums;
 
 namespace RemoteMaster.Server.Components.Dialogs;
