@@ -159,6 +159,8 @@ internal class Program
 
         var app = builder.Build();
 
+        app.UseDynamicHttps();
+
         switch (launchModeInstance)
         {
             case InstallMode:

@@ -45,6 +45,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IServerHubService, ServerHubService>();
         services.AddSingleton<IScreenRecorderService, ScreenRecorderService>();
         services.AddTransient<IViewerFactory, ViewerFactory>();
+        services.AddSingleton<ICertificateLoaderService, CertificateLoaderService>();
 
         services.AddSignalR().AddMessagePackProtocol();
     }

@@ -2,10 +2,9 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Net;
-using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Models;
 using Serilog;
@@ -19,47 +18,32 @@ public static class WebApplicationBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
+        var serviceProvider = builder.Services.BuildServiceProvider();
+        var certLoaderService = serviceProvider.GetRequiredService<ICertificateLoaderService>();
+
         builder.WebHost.ConfigureKestrel(options =>
         {
-            using (var store = new X509Store(StoreName.My, StoreLocation.LocalMachine))
-            {
-                store.Open(OpenFlags.ReadOnly);
-
-                var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, Dns.GetHostName(), false);
-
-                X509Certificate2? certificate = null;
-
-                foreach (var cert in certificates)
-                {
-                    if (cert.HasPrivateKey)
-                    {
-                        certificate = cert;
-                        break;
-                    }
-                }
-
-                if (certificate != null)
-                {
-                    if (launchModeInstance is UserMode)
-                    {
-                        options.ListenAnyIP(5001, listenOptions =>
-                        {
-                            listenOptions.UseHttps(certificate);
-                        });
-                    }
-                    else if (launchModeInstance is UpdaterMode)
-                    {
-                        options.ListenAnyIP(6001, listenOptions =>
-                        {
-                            listenOptions.UseHttps(certificate);
-                        });
-                    }
-                }
-            }
-
             if (launchModeInstance is UserMode)
             {
+                options.ListenAnyIP(5001, listenOptions =>
+                {
+                    listenOptions.UseHttps(adapterOptions =>
+                    {
+                        adapterOptions.ServerCertificateSelector = (context, name) => certLoaderService.GetCurrentCertificate();
+                    });
+                });
+
                 options.ListenAnyIP(5000);
+            }
+            else if (launchModeInstance is UpdaterMode)
+            {
+                options.ListenAnyIP(6001, listenOptions =>
+                {
+                    listenOptions.UseHttps(adapterOptions =>
+                    {
+                        adapterOptions.ServerCertificateSelector = (context, name) => certLoaderService.GetCurrentCertificate();
+                    });
+                });
             }
         });
     }

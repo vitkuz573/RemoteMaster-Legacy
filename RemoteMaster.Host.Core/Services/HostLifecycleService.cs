@@ -13,7 +13,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostLifecycleService(IServerHubService serverHubService, ICertificateRequestService certificateRequestService, ISubjectService subjectService, IHostConfigurationService hostConfigurationService) : IHostLifecycleService
+public class HostLifecycleService(IServerHubService serverHubService, ICertificateRequestService certificateRequestService, ISubjectService subjectService, IHostConfigurationService hostConfigurationService, ICertificateLoaderService certificateLoaderService) : IHostLifecycleService
 {
     private volatile bool _isRegistrationInvoked;
     private bool _isRenewalProcess = false;
@@ -316,6 +316,8 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
             }
 
             tcs.SetResult(true);
+
+            certificateLoaderService.LoadCertificate();
         }
         catch (Exception ex)
         {
