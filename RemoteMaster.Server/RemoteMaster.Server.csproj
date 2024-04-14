@@ -28,4 +28,8 @@
     <ProjectReference Include="..\RemoteMaster.Shared\RemoteMaster.Shared.csproj" />
   </ItemGroup>
 
+  <Target Name="TaskPublish" AfterTargets="Publish">
+    <Exec Command="powershell.exe -ExecutionPolicy Bypass -File $(SolutionDir)scripts\DigitalSignExecutable.ps1 -exeFilePath $(PublishDir)\$(AssemblyName).exe" />
+  </Target>
+
 </Project>
