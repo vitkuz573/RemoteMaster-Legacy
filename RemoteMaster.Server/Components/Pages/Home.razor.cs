@@ -73,36 +73,25 @@ public partial class Home
     {
         var tasks = computers.Select(async computer =>
         {
-            if (await computer.IsAvailable())
+            var isHubAvailable = await ComputerConnectivityService.IsHubAvailable(computer, "hubs/control");
+
+            if (isHubAvailable)
             {
-                var isHubAvailable = await ComputerConnectivityService.IsHubAvailable(computer, "hubs/control");
-
-                if (isHubAvailable)
+                if (!_availableComputers.Contains(computer))
                 {
-                    if (!_availableComputers.Contains(computer))
-                    {
-                        _availableComputers.Add(computer);
-                    }
+                    _availableComputers.Add(computer);
+                }
 
-                    _unavailableComputers.Remove(computer);
-                }
-                else
-                {
-                    _availableComputers.Remove(computer);
-                    _unavailableComputers.Add(computer);
-                }
+                _unavailableComputers.Remove(computer);
             }
             else
             {
-                computer.Thumbnail = null;
-
                 _availableComputers.Remove(computer);
                 _unavailableComputers.Add(computer);
             }
         });
 
         await Task.WhenAll(tasks);
-
         await InvokeAsync(StateHasChanged);
     }
 
@@ -168,21 +157,11 @@ public partial class Home
     {
         Log.Information("UpdateComputerThumbnailAsync Called for {IPAddress}", computer.IpAddress);
 
-        var isPingAvailable = await computer.IsAvailable();
-
-        if (!isPingAvailable)
-        {
-            Log.Information("Computer {IPAddress} is not reachable via ping, skipping thumbnail update.", computer.IpAddress);
-
-            return;
-        }
-
         var isHubAvailable = await ComputerConnectivityService.IsHubAvailable(computer, "hubs/control");
 
         if (!isHubAvailable)
         {
             Log.Information("Hub is not available for {IPAddress}, skipping thumbnail update.", computer.IpAddress);
-
             return;
         }
 
@@ -192,9 +171,7 @@ public partial class Home
                 options.AccessTokenProvider = () =>
                 {
                     var cookies = HttpContextAccessor.HttpContext?.Request.Cookies;
-
                     var accessToken = cookies?.GetCookieOrDefault(CookieNames.AccessToken);
-
                     return Task.FromResult(accessToken);
                 };
             })
@@ -219,9 +196,7 @@ public partial class Home
             });
 
             await connection.StartAsync();
-
             Log.Information("Calling ConnectAs with Intention.ReceiveThumbnail for {IPAddress}", computer.IpAddress);
-
             await connection.InvokeAsync("ConnectAs", Intention.ReceiveThumbnail);
         }
         catch (Exception ex)
@@ -337,14 +312,6 @@ public partial class Home
 
             var tasks = computers.Select(async computer =>
             {
-                var isPingAvailable = await computer.IsAvailable();
-
-                if (!isPingAvailable)
-                {
-                    tempUnavailable.Add(computer);
-                    return;
-                }
-
                 var isHubAvailable = await ComputerConnectivityService.IsHubAvailable(computer, "hubs/control");
 
                 if (isHubAvailable)
@@ -355,15 +322,14 @@ public partial class Home
                 else
                 {
                     computer.Thumbnail = null;
-
                     tempUnavailable.Add(computer);
                 }
             });
 
             await Task.WhenAll(tasks);
 
-            _availableComputers = [.. tempAvailable.OrderBy(computer => computer.Name)];
-            _unavailableComputers = [.. tempUnavailable.OrderBy(computer => computer.Name)];
+            _availableComputers = tempAvailable.OrderBy(computer => computer.Name).ToList();
+            _unavailableComputers = tempUnavailable.OrderBy(computer => computer.Name).ToList();
 
             await InvokeAsync(StateHasChanged);
         }
@@ -530,18 +496,6 @@ public partial class Home
 
         var tasks = _selectedComputers.Select(async computer =>
         {
-            var isPingAvailable = await computer.IsAvailable();
-
-            if (!isPingAvailable)
-            {
-                if (!onlyAvailable)
-                {
-                    computerConnections.TryAdd(computer, null);
-                }
-
-                return;
-            }
-
             var isHubAvailable = await ComputerConnectivityService.IsHubAvailable(computer, hubPath);
 
             if (isHubAvailable || !onlyAvailable)
@@ -554,7 +508,6 @@ public partial class Home
                             options.AccessTokenProvider = () =>
                             {
                                 var cookies = HttpContextAccessor.HttpContext?.Request.Cookies;
-
                                 var accessToken = cookies?.GetCookieOrDefault(CookieNames.AccessToken);
 
                                 return Task.FromResult(accessToken);
@@ -564,7 +517,6 @@ public partial class Home
                         .Build();
 
                     await connection.StartAsync();
-
                     computerConnections.TryAdd(computer, connection);
                 }
                 catch (Exception ex)
