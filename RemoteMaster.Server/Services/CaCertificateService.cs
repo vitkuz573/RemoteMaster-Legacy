@@ -25,6 +25,8 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
             if (existingCert.NotAfter > DateTime.Now)
             {
                 Log.Information("Existing CA certificate for '{Name}' found.", _settings.CommonName);
+
+                return;
             }
             else
             {
