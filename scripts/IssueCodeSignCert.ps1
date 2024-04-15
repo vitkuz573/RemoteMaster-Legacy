@@ -1,15 +1,7 @@
 $subjectName = "RemoteMaster Development"
 $caName = "RemoteMaster Internal CA"
-$caDirectory = "C:\ProgramData\RemoteMaster\Security\InternalCA"
 $codeSignCertDirectory = "CodeSignCert"
 $opensslPath = "C:\Program Files\OpenSSL-Win64\bin\openssl.exe"
-
-# Check if CA certificate exists
-$caCertPath = "$caDirectory\$caName.crt"
-if (-not (Test-Path $caCertPath)) {
-    Write-Host "CA certificate not found. Please execute CreateInternalCA.ps1 to generate the CA certificate." -ForegroundColor Yellow
-    return
-}
 
 # Ensure destination directory exists
 if (-not (Test-Path $codeSignCertDirectory)) {
@@ -40,22 +32,33 @@ $config | Out-File "$codeSignCertDirectory\openssl.cnf" -Encoding ascii
 # Generate a CSR for the new certificate using the private key
 & $opensslPath req -new -key "$codeSignCertDirectory\$subjectName.key" -out "$codeSignCertDirectory\$subjectName.csr" -subj "/CN=$subjectName" -config "$codeSignCertDirectory\openssl.cnf"
 
-# Generate a certificate using the CSR and sign it using the CA's private key
-& $opensslPath x509 -req -days 365 -in "$codeSignCertDirectory\$subjectName.csr" -CA "$caDirectory\$caName.crt" -CAkey "$caDirectory\$caName.key" -set_serial 01 -out "$codeSignCertDirectory\$subjectName.crt" -extfile "$codeSignCertDirectory\openssl.cnf" -extensions req_ext
+# Find and use the CA certificate from the Windows Certificate Store
+$caCert = Get-ChildItem -Path Cert:\LocalMachine\Root | Where-Object { $_.Subject -like "*CN=$caName*" }
+if ($null -eq $caCert) {
+    Write-Host "CA certificate not found in the LocalMachine\Root store." -ForegroundColor Red
+    return
+} else {
+    Write-Host "CA certificate found: $($caCert.Thumbprint)" -ForegroundColor Green
+}
 
-# Ask for password to secure the private key
+# Export the CA certificate and its private key to PEM files
+$caCertPath = "$codeSignCertDirectory\ca_cert.pem"
+$caKeyPath = "$codeSignCertDirectory\ca_key.pem"
+$caCert.Export('Cert') | Set-Content $caCertPath -Encoding Byte
+$caCert.PrivateKey.ExportCspBlob($true) | Set-Content $caKeyPath -Encoding Byte
+
+# Sign the CSR using the exported CA certificate and key
+& $opensslPath x509 -req -days 365 -in "$codeSignCertDirectory\$subjectName.csr" -CA $caCertPath -CAkey $caKeyPath -out "$codeSignCertDirectory\$subjectName.crt" -CAcreateserial -extfile "$codeSignCertDirectory\openssl.cnf" -extensions req_ext
+
+# Continue as previously to create the PFX and import it
 $password = Read-Host -Prompt "Enter password for the private key" -AsSecureString
 $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($password)
 $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
 
-# Export the certificate and private key to a PFX file
 & $opensslPath pkcs12 -export -out "$codeSignCertDirectory\$subjectName.pfx" -inkey "$codeSignCertDirectory\$subjectName.key" -in "$codeSignCertDirectory\$subjectName.crt" -name "$subjectName" -passout pass:$password
-
 Write-Host "Generated certificate for $subjectName and signed it with $caName." -ForegroundColor Green
 
-# Import the PFX file into the CurrentUser\My (Personal) store
 $pfxFilePath = "$codeSignCertDirectory\$subjectName.pfx"
 $certPassword = ConvertTo-SecureString -String $password -Force -AsPlainText
 Import-PfxCertificate -FilePath $pfxFilePath -CertStoreLocation Cert:\CurrentUser\My -Password $certPassword
-
 Write-Host "Imported certificate into the CurrentUser\My store." -ForegroundColor Green
