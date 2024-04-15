@@ -98,6 +98,12 @@ builder.Services.AddControllers();
 
 // builder.Services.AddSignalR().AddMessagePackProtocol();
 
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.ListenAnyIP(80);
+    serverOptions.ListenAnyIP(5254);
+});
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -124,9 +130,6 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.Urls.Clear();
-app.Urls.Add("http://0.0.0.0:5254");
-
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
@@ -141,6 +144,20 @@ else
 
 var isRegisterAllowed = builder.Configuration.GetValue<bool>("RegisterAllowed");
 
+app.Use(async (context, next) =>
+{
+    var connectionInfo = context.Connection;
+    
+    if (connectionInfo.LocalPort == 5254 && !context.Request.Path.StartsWithSegments("/hubs"))
+    {
+        context.Response.StatusCode = 404;
+
+        return;
+    }
+    
+    await next();
+});
+
 app.UseMiddleware<RegistrationRestrictionMiddleware>(isRegisterAllowed);
 app.UseMiddleware<RouteRestrictionMiddleware>();
 
@@ -152,7 +169,7 @@ app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
 app.MapAdditionalIdentityEndpoints();
 
-app.MapHub<ManagementHub>("/hubs/management");
+app.MapHub<ManagementHub>("/hubs/management").RequireHost("*:5254");
 
 var caCertificateService = app.Services.GetRequiredService<ICaCertificateService>();
 caCertificateService.EnsureCaCertificateExists();
