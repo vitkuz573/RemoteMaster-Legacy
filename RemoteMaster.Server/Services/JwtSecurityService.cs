@@ -4,14 +4,13 @@
 
 using System.Security.Cryptography;
 using RemoteMaster.Server.Abstractions;
-using Serilog;
 
 namespace RemoteMaster.Server.Services;
+
 
 public class JwtSecurityService : IJwtSecurityService
 {
     private readonly string _destDirectory = @"C:\ProgramData\RemoteMaster\Security\JWT";
-    
     private readonly string _privateKeyPath;
     private readonly string _publicKeyPath;
 
@@ -19,7 +18,7 @@ public class JwtSecurityService : IJwtSecurityService
     {
         _privateKeyPath = Path.Combine(_destDirectory, "private_key.pem");
         _publicKeyPath = Path.Combine(_destDirectory, "public_key.pem");
-        
+
         EnsureKeysDirectoryExists();
     }
 
@@ -27,63 +26,37 @@ public class JwtSecurityService : IJwtSecurityService
     {
         if (!File.Exists(_privateKeyPath) || !File.Exists(_publicKeyPath))
         {
-            GenerateRsaKeys();
-        }
-        else
-        {
-            Log.Information("RSA keys already exist and will not be regenerated.");
+            GenerateAndSaveRsaKeys();
         }
     }
 
-    private void GenerateRsaKeys()
+    private void GenerateAndSaveRsaKeys()
     {
-        using (var rsa = RSA.Create(4096))
-        {
-            ExportPrivateKey(rsa);
-            ExportPublicKey(rsa);
-        }
+        using var rsa = RSA.Create(4096);
 
-        Log.Information($"RSA keys successfully generated in '{_destDirectory}'");
+        ExportPrivateKey(rsa, _privateKeyPath);
+        ExportPublicKey(rsa, _publicKeyPath);
     }
 
     private void EnsureKeysDirectoryExists()
     {
-        try
+        if (!Directory.Exists(_destDirectory))
         {
-            if (!Directory.Exists(_destDirectory))
-            {
-                Directory.CreateDirectory(_destDirectory);
-                Log.Information($"Created directory: {_destDirectory}");
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, $"Failed to create directory: {_destDirectory}");
+            Directory.CreateDirectory(_destDirectory);
         }
     }
 
-    private void ExportPrivateKey(RSA rsa)
+    private static void ExportPrivateKey(RSA rsa, string filePath)
     {
-        var privateKeyBytes = rsa.ExportRSAPrivateKey();
-        var privateKeyPem = ConvertToPem(privateKeyBytes, "RSA PRIVATE KEY");
+        var privateKeyPem = rsa.ExportPkcs8PrivateKeyPem();
 
-        File.WriteAllText(_privateKeyPath, privateKeyPem);
-        Log.Information($"Private key saved to: {_privateKeyPath}");
+        File.WriteAllText(filePath, privateKeyPem);
     }
 
-    private void ExportPublicKey(RSA rsa)
+    private static void ExportPublicKey(RSA rsa, string filePath)
     {
-        var publicKeyBytes = rsa.ExportRSAPublicKey();
-        var publicKeyPem = ConvertToPem(publicKeyBytes, "PUBLIC KEY");
+        var publicKeyPem = rsa.ExportRSAPublicKeyPem();
 
-        File.WriteAllText(_publicKeyPath, publicKeyPem);
-        Log.Information($"Public key saved to: {_publicKeyPath}");
-    }
-
-    private static string ConvertToPem(byte[] keyBytes, string title)
-    {
-        var base64 = Convert.ToBase64String(keyBytes);
-
-        return $"-----BEGIN {title}-----\n{base64}\n-----END {title}-----";
+        File.WriteAllText(filePath, publicKeyPem);
     }
 }
