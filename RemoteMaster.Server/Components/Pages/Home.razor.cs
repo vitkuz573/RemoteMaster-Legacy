@@ -63,8 +63,8 @@ public partial class Home
 
         var computers = organizationalUnit.Nodes.OfType<Computer>().ToList();
 
-        _availableComputers = computers;
-        _unavailableComputers.Clear();
+        _unavailableComputers = computers;
+        _availableComputers.Clear();
 
         _ = UpdateComputerAvailabilityAsync(computers);
     }
