@@ -10,7 +10,10 @@ namespace RemoteMaster.Server.Services;
 
 public class JwtSecurityService : IJwtSecurityService
 {
-    private readonly string _destDirectory = @"C:\ProgramData\RemoteMaster\Security\JWT";
+    private static readonly string _programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+
+    private readonly string _destDirectory = Path.Combine(_programDataPath, "RemoteMaster", "Security", "JWT");
+
     private readonly string _privateKeyPath;
     private readonly string _publicKeyPath;
 
@@ -19,44 +22,20 @@ public class JwtSecurityService : IJwtSecurityService
         _privateKeyPath = Path.Combine(_destDirectory, "private_key.pem");
         _publicKeyPath = Path.Combine(_destDirectory, "public_key.pem");
 
-        EnsureKeysDirectoryExists();
-    }
-
-    public void EnsureKeysExist()
-    {
-        if (!File.Exists(_privateKeyPath) || !File.Exists(_publicKeyPath))
-        {
-            GenerateAndSaveRsaKeys();
-        }
-    }
-
-    private void GenerateAndSaveRsaKeys()
-    {
-        using var rsa = RSA.Create(4096);
-
-        ExportPrivateKey(rsa, _privateKeyPath);
-        ExportPublicKey(rsa, _publicKeyPath);
-    }
-
-    private void EnsureKeysDirectoryExists()
-    {
         if (!Directory.Exists(_destDirectory))
         {
             Directory.CreateDirectory(_destDirectory);
         }
     }
 
-    private static void ExportPrivateKey(RSA rsa, string filePath)
+    public void EnsureKeysExist()
     {
-        var privateKeyPem = rsa.ExportPkcs8PrivateKeyPem();
+        if (!File.Exists(_privateKeyPath) || !File.Exists(_publicKeyPath))
+        {
+            using var rsa = RSA.Create(4096);
 
-        File.WriteAllText(filePath, privateKeyPem);
-    }
-
-    private static void ExportPublicKey(RSA rsa, string filePath)
-    {
-        var publicKeyPem = rsa.ExportRSAPublicKeyPem();
-
-        File.WriteAllText(filePath, publicKeyPem);
+            File.WriteAllText(_privateKeyPath, rsa.ExportPkcs8PrivateKeyPem());
+            File.WriteAllText(_publicKeyPath, rsa.ExportRSAPublicKeyPem());
+        }
     }
 }
