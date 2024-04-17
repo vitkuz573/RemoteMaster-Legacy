@@ -172,6 +172,7 @@ public partial class Home
                 {
                     var cookies = HttpContextAccessor.HttpContext?.Request.Cookies;
                     var accessToken = cookies?.GetCookieOrDefault(CookieNames.AccessToken);
+
                     return Task.FromResult(accessToken);
                 };
             })

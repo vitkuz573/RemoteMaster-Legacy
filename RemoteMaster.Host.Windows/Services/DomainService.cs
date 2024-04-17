@@ -16,7 +16,7 @@ namespace RemoteMaster.Host.Windows.Services;
 /// <summary>
 /// Provides services for managing domain membership of the machine.
 /// </summary>
-public class DomainService : IDomainService
+public class DomainService(IPowerService powerService) : IDomainService
 {
     /// <summary>
     /// Joins the machine to a domain.
@@ -32,6 +32,15 @@ public class DomainService : IDomainService
         {
             throw new Win32Exception((int)result, "Failed to join the domain.");
         }
+
+        var powerActionRequest = new PowerActionRequest
+        {
+            Message = string.Empty,
+            Timeout = 0,
+            ForceAppsClosed = true
+        };
+
+        powerService.Reboot(powerActionRequest);
     }
 
     /// <summary>
@@ -84,5 +93,14 @@ public class DomainService : IDomainService
                 }
             }
         }
+
+        var powerActionRequest = new PowerActionRequest
+        {
+            Message = string.Empty,
+            Timeout = 0,
+            ForceAppsClosed = true
+        };
+
+        powerService.Reboot(powerActionRequest);
     }
 }
