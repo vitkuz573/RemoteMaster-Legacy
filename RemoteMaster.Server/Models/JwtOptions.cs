@@ -11,8 +11,4 @@ public class JwtOptions
     public string Issuer { get; init; }
 
     public string Audience { get; init; }
-
-    public int AccessTokenExpirationMinutes { get; set; } = 120;
-
-    public int RefreshTokenExpirationDays { get; set; } = 7;
 }
