@@ -2,17 +2,22 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Text.Json.Serialization;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Models;
 
 public class CertificateOptions
 {
-    public int RSAKeySize { get; init; }
+    [JsonPropertyName("keySize")]
+    public int KeySize { get; init; }
 
+    [JsonPropertyName("validityPeriod")]
     public int ValidityPeriod { get; init; }
 
+    [JsonPropertyName("commonName")]
     public string CommonName { get; init; }
 
+    [JsonPropertyName("subject")]
     public SubjectOptions Subject { get; init; }
 }

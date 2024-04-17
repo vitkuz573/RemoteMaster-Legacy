@@ -26,7 +26,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
             new(ClaimTypes.Name, email)
         };
 
-        var privateKeyPath = Path.Combine(_options.KeysPath, "private_key.pem");
+        var privateKeyPath = Path.Combine(_options.KeysDirectory, "private_key.pem");
         var privateKey = File.ReadAllText(privateKeyPath);
 
 #pragma warning disable CA2000

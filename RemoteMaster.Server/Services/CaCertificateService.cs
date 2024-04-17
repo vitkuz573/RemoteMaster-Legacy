@@ -57,7 +57,7 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
                 };
 
 #pragma warning disable CA2000
-                rsaProvider = new RSACryptoServiceProvider(_settings.RSAKeySize, cspParams);
+                rsaProvider = new RSACryptoServiceProvider(_settings.KeySize, cspParams);
 #pragma warning restore CA2000
             }
             else

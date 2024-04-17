@@ -23,12 +23,12 @@ public class JwtSecurityService : IJwtSecurityService
 
         _options = options.Value ?? throw new ArgumentNullException(nameof(options));
 
-        _privateKeyPath = Path.Combine(_options.KeysPath, "private_key.pem");
-        _publicKeyPath = Path.Combine(_options.KeysPath, "public_key.pem");
+        _privateKeyPath = Path.Combine(_options.KeysDirectory, "private_key.pem");
+        _publicKeyPath = Path.Combine(_options.KeysDirectory, "public_key.pem");
 
-        if (!Directory.Exists(_options.KeysPath))
+        if (!Directory.Exists(_options.KeysDirectory))
         {
-            Directory.CreateDirectory(_options.KeysPath);
+            Directory.CreateDirectory(_options.KeysDirectory);
         }
     }
 
