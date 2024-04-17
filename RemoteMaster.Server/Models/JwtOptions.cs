@@ -6,7 +6,7 @@ namespace RemoteMaster.Server.Models;
 
 public class JwtOptions
 {
-    public string PrivateKeyPath { get; init; }
+    public string KeysPath { get; init; }
 
     public string Issuer { get; init; }
 

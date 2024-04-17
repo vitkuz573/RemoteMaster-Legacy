@@ -26,7 +26,8 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
             new(ClaimTypes.Name, email)
         };
 
-        var privateKey = File.ReadAllText(_options.PrivateKeyPath);
+        var privateKeyPath = Path.Combine(_options.KeysPath, "private_key.pem");
+        var privateKey = File.ReadAllText(privateKeyPath);
 
 #pragma warning disable CA2000
         var rsa = RSA.Create();

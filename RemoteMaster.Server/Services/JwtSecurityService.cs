@@ -3,28 +3,32 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Cryptography;
+using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Services;
 
 
 public class JwtSecurityService : IJwtSecurityService
 {
-    private static readonly string _programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-
-    private readonly string _destDirectory = Path.Combine(_programDataPath, "RemoteMaster", "Security", "JWT");
+    private readonly JwtOptions _options;
 
     private readonly string _privateKeyPath;
     private readonly string _publicKeyPath;
 
-    public JwtSecurityService()
+    public JwtSecurityService(IOptions<JwtOptions> options)
     {
-        _privateKeyPath = Path.Combine(_destDirectory, "private_key.pem");
-        _publicKeyPath = Path.Combine(_destDirectory, "public_key.pem");
+        ArgumentNullException.ThrowIfNull(options);
 
-        if (!Directory.Exists(_destDirectory))
+        _options = options.Value ?? throw new ArgumentNullException(nameof(options));
+
+        _privateKeyPath = Path.Combine(_options.KeysPath, "private_key.pem");
+        _publicKeyPath = Path.Combine(_options.KeysPath, "public_key.pem");
+
+        if (!Directory.Exists(_options.KeysPath))
         {
-            Directory.CreateDirectory(_destDirectory);
+            Directory.CreateDirectory(_options.KeysPath);
         }
     }
 
