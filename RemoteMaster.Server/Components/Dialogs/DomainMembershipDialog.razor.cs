@@ -24,6 +24,8 @@ public partial class DomainMembershipDialog
 
     private async Task JoinDomain()
     {
+        EnsureDomainInUsername();
+
         var credentials = new Credentials
         {
             Username = _username,
@@ -83,6 +85,14 @@ public partial class DomainMembershipDialog
             Snackbar.Add($"Error during domain discovery: {ex.Message}", Severity.Error);
 
             Log.Error(ex, "Error during domain discovery.");
+        }
+    }
+
+    private void EnsureDomainInUsername()
+    {
+        if (!string.IsNullOrWhiteSpace(_username) && !string.IsNullOrWhiteSpace(_domain) && !_username.Contains("@"))
+        {
+            _username += "@" + _domain;
         }
     }
 }

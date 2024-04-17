@@ -14,7 +14,7 @@ public partial class RenewCertificateDialog
         .Where(reason => reason != X509RevocationReason.AACompromise && reason != X509RevocationReason.RemoveFromCrl)
         .ToList();
 
-    private X509RevocationReason _selectedRevocationReason = X509RevocationReason.Unspecified;
+    private X509RevocationReason _selectedRevocationReason = X509RevocationReason.Superseded;
 
     private async Task Confirm()
     {
