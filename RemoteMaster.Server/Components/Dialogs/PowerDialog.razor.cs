@@ -51,9 +51,16 @@ public partial class PowerDialog
         {
             var (computer, connection) = kvp;
 
-            if (connection != null)
+            try
             {
-                await connection.StartAsync();
+                if (connection != null)
+                {
+                    await connection.StartAsync();
+                }
+            }
+            catch
+            {
+                connection = null;
             }
         });
 
