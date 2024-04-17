@@ -37,8 +37,8 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         var tokenHandler = new JwtSecurityTokenHandler();
         var tokenDescriptor = new SecurityTokenDescriptor
         {
-            Issuer = _options.Issuer,
-            Audience = _options.Audience,
+            Issuer = "RemoteMaster Server",
+            Audience = "RMServiceAPI",
             Subject = new ClaimsIdentity(claims),
             Expires = DateTime.UtcNow.AddHours(2),
             SigningCredentials = new SigningCredentials(new RsaSecurityKey(rsa), SecurityAlgorithms.RsaSha256)
