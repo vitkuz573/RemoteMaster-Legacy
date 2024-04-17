@@ -10,4 +10,7 @@ public class JwtOptions
 {
     [JsonPropertyName("keysDirectory")]
     public string KeysDirectory { get; init; }
+
+    [JsonPropertyName("keySize")]
+    public int KeySize { get; init; }
 }

@@ -36,7 +36,7 @@ public class JwtSecurityService : IJwtSecurityService
     {
         if (!File.Exists(_privateKeyPath) || !File.Exists(_publicKeyPath))
         {
-            using var rsa = RSA.Create(4096);
+            using var rsa = RSA.Create(_options.KeySize);
 
             File.WriteAllText(_privateKeyPath, rsa.ExportPkcs8PrivateKeyPem());
             File.WriteAllText(_publicKeyPath, rsa.ExportRSAPublicKeyPem());
