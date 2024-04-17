@@ -224,7 +224,7 @@ public partial class Home
     {
         var dialogParameters = new DialogParameters<PowerDialog>
         {
-            { x => x.Hosts, await GetComputers(false) }
+            { x => x.Hosts, await GetComputers(onlyAvailable: false, startConnection: false) }
         };
 
         await DialogService.ShowAsync<PowerDialog>("Power", dialogParameters);
@@ -490,7 +490,7 @@ public partial class Home
         await DialogService.ShowAsync<RenewCertificateDialog>("Renew Certificate", dialogParameters);
     }
 
-    private async Task<ConcurrentDictionary<Computer, HubConnection?>> GetComputers(bool onlyAvailable = true, string hubPath = "hubs/control")
+    private async Task<ConcurrentDictionary<Computer, HubConnection?>> GetComputers(bool onlyAvailable = true, string hubPath = "hubs/control", bool startConnection = true)
     {
         var computerConnections = new ConcurrentDictionary<Computer, HubConnection?>();
 
@@ -516,7 +516,12 @@ public partial class Home
                         .AddMessagePackProtocol()
                         .Build();
 
-                    await connection.StartAsync();
+                    if (startConnection)
+                    {
+                        await connection.StartAsync();
+                        Log.Information("Connection started for {IPAddress}", computer.IpAddress);
+                    }
+
                     computerConnections.TryAdd(computer, connection);
                 }
                 catch (Exception ex)

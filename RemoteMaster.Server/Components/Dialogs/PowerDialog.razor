@@ -2,6 +2,7 @@
 @inherits CommonDialogBase
 @inject IComputerCommandService ComputerCommandService
 @inject IWakeOnLanService WakeOnLanService
+@inject IHttpContextAccessor HttpContextAccessor
 
 <CommonDialog Hosts="@Hosts" ContentStyle="width: 500px;">
     <Content>
