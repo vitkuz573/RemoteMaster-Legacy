@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Components;
+using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Components.Account.Pages;
 
@@ -11,6 +12,11 @@ public partial class Logout
     protected async override Task OnInitializedAsync()
     {
         await SignInManager.SignOutAsync();
+
+        var httpContext = HttpContextAccessor.HttpContext;
+
+        httpContext?.Response.Cookies.Delete(CookieNames.AccessToken);
+        httpContext?.Response.Cookies.Delete(CookieNames.RefreshToken);
 
         NavigationManager.NavigateTo("/Account/Login", true);
     }
