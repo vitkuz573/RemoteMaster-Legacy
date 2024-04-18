@@ -141,7 +141,7 @@ public partial class Home
 
     private void Logout()
     {
-
+        NavigationManager.NavigateTo("/Account/Logout");
     }
 
     private async Task OnNodeSelected(Node? node)
