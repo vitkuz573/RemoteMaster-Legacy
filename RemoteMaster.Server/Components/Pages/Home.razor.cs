@@ -151,7 +151,7 @@ public partial class Home
 
         if (node is OrganizationalUnit organizationalUnit)
         {
-            LoadNodes(node);
+            await LoadNodes(node);
             await UpdateComputersThumbnailsAsync(organizationalUnit.Nodes.OfType<Computer>());
         }
     }
