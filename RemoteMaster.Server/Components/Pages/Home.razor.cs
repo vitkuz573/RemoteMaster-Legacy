@@ -24,8 +24,8 @@ public partial class Home
     private HashSet<Node>? _nodes;
 
     private readonly List<Computer> _selectedComputers = [];
-    private List<Computer> _availableComputers = [];
-    private List<Computer> _unavailableComputers = [];
+    private ConcurrentBag<Computer> _availableComputers = [];
+    private ConcurrentBag<Computer> _unavailableComputers = [];
 
     private bool _isDarkMode = true;
 
@@ -54,7 +54,7 @@ public partial class Home
         return units;
     }
 
-    private void LoadNodes(Node node)
+    private async Task LoadNodes(Node node)
     {
         if (node is not OrganizationalUnit organizationalUnit)
         {
@@ -63,35 +63,44 @@ public partial class Home
 
         var computers = organizationalUnit.Nodes.OfType<Computer>().ToList();
 
-        _availableComputers = computers;
-        _unavailableComputers.Clear();
+        _unavailableComputers = new ConcurrentBag<Computer>(computers);
 
-        _ = UpdateComputerAvailabilityAsync(computers);
+        await UpdateComputerAvailabilityAsync(computers);
     }
 
     private async Task UpdateComputerAvailabilityAsync(IEnumerable<Computer> computers)
     {
+        var tempAvailable = new ConcurrentBag<Computer>();
+        var tempUnavailable = new ConcurrentBag<Computer>();
+
+        foreach (var computer in _unavailableComputers)
+        {
+            tempUnavailable.Add(computer);
+        }
+
         var tasks = computers.Select(async computer =>
         {
             var isHubAvailable = await ComputerConnectivityService.IsHubAvailable(computer, "hubs/control");
 
             if (isHubAvailable)
             {
-                if (!_availableComputers.Contains(computer))
-                {
-                    _availableComputers.Add(computer);
-                }
-
-                _unavailableComputers.Remove(computer);
+                tempAvailable.Add(computer);
+                tempUnavailable = new ConcurrentBag<Computer>(tempUnavailable.Where(c => c != computer));
             }
             else
             {
-                _availableComputers.Remove(computer);
-                _unavailableComputers.Add(computer);
+                if (!tempUnavailable.Contains(computer) && !_availableComputers.Contains(computer))
+                {
+                    tempUnavailable.Add(computer);
+                }
             }
         });
 
         await Task.WhenAll(tasks);
+
+        _availableComputers = new ConcurrentBag<Computer>(tempAvailable);
+        _unavailableComputers = new ConcurrentBag<Computer>(tempUnavailable);
+
         await InvokeAsync(StateHasChanged);
     }
 
@@ -308,8 +317,8 @@ public partial class Home
         if (_selectedNode is OrganizationalUnit selectedOrganizationalUnit)
         {
             var computers = selectedOrganizationalUnit.Nodes.OfType<Computer>().ToList();
-            var tempAvailable = new List<Computer>();
-            var tempUnavailable = new List<Computer>();
+            var tempAvailable = new ConcurrentBag<Computer>();
+            var tempUnavailable = new ConcurrentBag<Computer>();
 
             var tasks = computers.Select(async computer =>
             {
@@ -329,8 +338,8 @@ public partial class Home
 
             await Task.WhenAll(tasks);
 
-            _availableComputers = tempAvailable.OrderBy(computer => computer.Name).ToList();
-            _unavailableComputers = tempUnavailable.OrderBy(computer => computer.Name).ToList();
+            _availableComputers = new ConcurrentBag<Computer>(tempAvailable.OrderBy(computer => computer.Name));
+            _unavailableComputers = new ConcurrentBag<Computer>(tempUnavailable.OrderBy(computer => computer.Name));
 
             await InvokeAsync(StateHasChanged);
         }
@@ -469,12 +478,14 @@ public partial class Home
 
         if (confirmation.HasValue && confirmation.Value)
         {
-            foreach (var computer in _selectedComputers.ToList())
+            var computersToRemove = _selectedComputers.ToList();
+
+            foreach (var computer in computersToRemove)
             {
                 await DatabaseService.RemoveNodeAsync(computer);
 
-                _availableComputers.Remove(computer);
-                _unavailableComputers.Remove(computer);
+                _availableComputers.TryTake(out _);
+                _unavailableComputers.TryTake(out _);
             }
 
             _selectedComputers.Clear();
