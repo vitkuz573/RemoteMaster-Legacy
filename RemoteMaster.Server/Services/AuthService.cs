@@ -2,12 +2,11 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
-using Serilog; // Убедитесь, что Serilog подключен
+using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
@@ -20,12 +19,13 @@ public class AuthService : IAuthService
     {
         _httpContextAccessor = httpContextAccessor;
         _apiClient = apiClient;
+
         _apiClient.BaseAddress = new Uri("http://127.0.0.1/api/");
     }
 
     public async Task<bool> RefreshTokensAsync(string refreshToken)
     {
-        Log.Error("Starting token refresh process.");
+        Log.Information("Starting token refresh process.");
 
         var requestObject = new
         {
@@ -41,13 +41,15 @@ public class AuthService : IAuthService
         if (response.IsSuccessStatusCode)
         {
             var jsonResponse = await response.Content.ReadAsStringAsync();
-            Log.Error($"Server responded with: {jsonResponse}");
+
+            Log.Information($"Server responded with: {jsonResponse}");
 
             var apiResponse = JsonSerializer.Deserialize<ApiResponse<TokenResponseData>>(jsonResponse);
 
             if (apiResponse == null)
             {
                 Log.Error("Deserialized API response is null.");
+
                 return false;
             }
 
@@ -61,7 +63,7 @@ public class AuthService : IAuthService
                     var accessTokenCookieOptions = new CookieOptions
                     {
                         HttpOnly = true,
-                        Secure = false, // Consider setting to true if using HTTPS
+                        Secure = false,
                         SameSite = SameSiteMode.Strict,
                         Expires = DateTime.UtcNow.AddHours(2)
                     };
@@ -69,7 +71,7 @@ public class AuthService : IAuthService
                     var refreshTokenCookieOptions = new CookieOptions
                     {
                         HttpOnly = true,
-                        Secure = false, // Consider setting to true if using HTTPS
+                        Secure = false,
                         SameSite = SameSiteMode.Strict,
                         Expires = DateTime.UtcNow.AddDays(7)
                     };
@@ -77,7 +79,8 @@ public class AuthService : IAuthService
                     _httpContextAccessor.HttpContext?.Response.Cookies.Append(CookieNames.AccessToken, accessToken, accessTokenCookieOptions);
                     _httpContextAccessor.HttpContext?.Response.Cookies.Append(CookieNames.RefreshToken, newRefreshToken, refreshTokenCookieOptions);
 
-                    Log.Error("Tokens refreshed and cookies updated successfully.");
+                    Log.Information("Tokens refreshed and cookies updated successfully.");
+
                     return true;
                 }
                 else
@@ -93,6 +96,7 @@ public class AuthService : IAuthService
         else
         {
             var errorResponse = await response.Content.ReadAsStringAsync();
+
             Log.Error($"Failed to refresh token. StatusCode: {response.StatusCode}, Response: {errorResponse}");
         }
 
