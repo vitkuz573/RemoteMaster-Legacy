@@ -12,7 +12,7 @@ public class AuthService(IHttpContextAccessor httpContextAccessor, HttpClient ap
 {
     public async Task<bool> RefreshTokensAsync(string refreshToken)
     {
-        apiClient.BaseAddress = new Uri("http://127.0.0.1:5254/api");
+        apiClient.BaseAddress = new Uri("http://127.0.0.1:5254/api/");
 
         var response = await apiClient.PostAsJsonAsync("auth/refresh-token", new RefreshTokenRequest
         {

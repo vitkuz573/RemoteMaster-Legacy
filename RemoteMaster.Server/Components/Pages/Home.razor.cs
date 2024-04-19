@@ -3,6 +3,8 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Collections.Concurrent;
+using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using MudBlazor;
@@ -142,6 +144,39 @@ public partial class Home
     private void Logout()
     {
         NavigationManager.NavigateTo("/Account/Logout");
+    }
+
+    private async Task RefreshToken()
+    {
+        using var httpClient = new HttpClient();
+        httpClient.BaseAddress = new Uri("http://127.0.0.1/api/");
+
+        var httpContext = HttpContextAccessor.HttpContext;
+        var beforeRefreshToken = httpContext.Request.Cookies.GetCookieOrDefault(CookieNames.RefreshToken);
+
+        var requestObject = new
+        {
+            RefreshToken = beforeRefreshToken
+        };
+
+        var jsonRequest = JsonSerializer.Serialize(requestObject);
+
+        using var content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
+
+        var requestUri = new Uri(httpClient.BaseAddress, "auth/refresh-token");
+
+        var response = await httpClient.PostAsync(requestUri, content);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+            await JsRuntime.InvokeVoidAsync("console.log", $"Server response: {jsonResponse}");
+        }
+        else
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            await JsRuntime.InvokeVoidAsync("console.log", $"Error response: {response.StatusCode} to {requestUri} {errorContent}");
+        }
     }
 
     private async Task OnNodeSelected(Node? node)
