@@ -20,18 +20,18 @@ public class HostConfigurationController(IOptions<ApplicationSettings> options) 
 
         if (!System.IO.File.Exists(filePath))
         {
-            var apiResponse = new ApiResponse(false, "File not found.");
-            
+            var apiResponse = new ApiResponse<string>(false, "File not found.");
+
             return NotFound(apiResponse);
         }
 
         var memoryStream = new MemoryStream();
-        
+
         using (var stream = new FileStream(filePath, FileMode.Open))
         {
             await stream.CopyToAsync(memoryStream);
         }
-        
+
         memoryStream.Position = 0;
 
         return File(memoryStream, "application/octet-stream", fileName);

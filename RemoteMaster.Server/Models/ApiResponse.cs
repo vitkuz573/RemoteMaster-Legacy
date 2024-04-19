@@ -6,12 +6,12 @@ using System.Text.Json.Serialization;
 
 namespace RemoteMaster.Server.Models;
 
-public class ApiResponse(bool success, string message, object? data = null)
+public class ApiResponse<T>(bool success, string message, T? data = default)
 {
     public bool Success { get; set; } = success;
 
     public string Message { get; set; } = message;
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public object? Data { get; set; } = data;
+    public T? Data { get; set; } = data;
 }

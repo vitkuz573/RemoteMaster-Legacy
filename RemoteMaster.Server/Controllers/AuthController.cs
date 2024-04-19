@@ -17,20 +17,22 @@ public class AuthController(ITokenService tokenService) : ControllerBase
     {
         if (request == null || string.IsNullOrWhiteSpace(request.RefreshToken))
         {
-            return BadRequest(new ApiResponse(false, "Refresh token is required."));
+            return BadRequest(new ApiResponse<string>(false, "Refresh token is required."));
         }
 
         var newTokens = await tokenService.RefreshTokensAsync(request.RefreshToken, HttpContext.Connection.RemoteIpAddress?.ToString());
 
         if (newTokens.AccessToken == null || newTokens.RefreshToken == null)
         {
-            return Unauthorized(new ApiResponse(false, "Invalid refresh token."));
+            return Unauthorized(new ApiResponse<string>(false, "Invalid refresh token."));
         }
 
-        return Ok(new ApiResponse(true, "Tokens refreshed successfully.", new
+        var tokenData = new TokenResponseData
         {
-            newTokens.AccessToken,
-            newTokens.RefreshToken
-        }));
+            AccessToken = newTokens.AccessToken,
+            RefreshToken = newTokens.RefreshToken
+        };
+
+        return Ok(new ApiResponse<TokenResponseData>(true, "Tokens refreshed successfully.", tokenData));
     }
 }
