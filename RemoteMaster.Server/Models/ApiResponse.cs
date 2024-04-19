@@ -8,10 +8,13 @@ namespace RemoteMaster.Server.Models;
 
 public class ApiResponse<T>(bool success, string message, T? data = default)
 {
+    [JsonPropertyName("success")]
     public bool Success { get; set; } = success;
 
+    [JsonPropertyName("message")]
     public string Message { get; set; } = message;
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("data")]
     public T? Data { get; set; } = data;
 }

@@ -2,11 +2,15 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Text.Json.Serialization;
+
 namespace RemoteMaster.Server.Models;
 
 public class TokenResponseData
 {
+    [JsonPropertyName("accessToken")]
     public string AccessToken { get; set; }
 
+    [JsonPropertyName("refreshToken")]
     public string RefreshToken { get; set; }
 }
