@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace RemoteMaster.Server.Models;
 
-public class ApiResponse<T>(bool success, string message, T? data = default)
+public class ApiResponse<TData>(bool success, string message, TData? data = default)
 {
     [JsonPropertyName("success")]
     public bool Success { get; set; } = success;
@@ -16,5 +16,5 @@ public class ApiResponse<T>(bool success, string message, T? data = default)
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("data")]
-    public T? Data { get; set; } = data;
+    public TData? Data { get; set; } = data;
 }
