@@ -9,12 +9,12 @@ namespace RemoteMaster.Server.Models;
 public class ApiResponse<TData>(bool success, string message, TData? data = default)
 {
     [JsonPropertyName("success")]
-    public bool Success { get; set; } = success;
+    public bool Success { get; init; } = success;
 
     [JsonPropertyName("message")]
-    public string Message { get; set; } = message;
+    public string Message { get; init; } = message;
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("data")]
-    public TData? Data { get; set; } = data;
+    public TData? Data { get; init; } = data;
 }
