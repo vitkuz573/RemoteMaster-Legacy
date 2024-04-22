@@ -43,7 +43,7 @@ public partial class Login
 
             Logger.LogInformation("User logged in.");
 
-            var accessTokenString = TokenService.GenerateAccessToken(Input.Email);
+            var accessTokenString = await TokenService.GenerateAccessTokenAsync(Input.Email);
             var refreshTokenString = TokenService.GenerateRefreshToken(userId, ipAddress);
 
             SetTokenCookies(accessTokenString, refreshTokenString);

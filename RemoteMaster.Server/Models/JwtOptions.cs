@@ -13,4 +13,7 @@ public class JwtOptions
 
     [JsonPropertyName("keySize")]
     public int KeySize { get; init; }
+
+    [JsonPropertyName("keyPassword")]
+    public string KeyPassword { get; set; }
 }

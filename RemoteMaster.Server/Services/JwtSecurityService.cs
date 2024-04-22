@@ -3,12 +3,12 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Cryptography;
+using System.Text;
 using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Services;
-
 
 public class JwtSecurityService : IJwtSecurityService
 {
@@ -38,7 +38,12 @@ public class JwtSecurityService : IJwtSecurityService
         {
             using var rsa = RSA.Create(_options.KeySize);
 
-            File.WriteAllText(_privateKeyPath, rsa.ExportPkcs8PrivateKeyPem());
+            var passwordBytes = Encoding.UTF8.GetBytes(_options.KeyPassword);
+            var encryptionAlgorithm = new PbeParameters(PbeEncryptionAlgorithm.Aes256Cbc, HashAlgorithmName.SHA256, 100000);
+
+            var encryptedPrivateKey = rsa.ExportEncryptedPkcs8PrivateKey(passwordBytes, encryptionAlgorithm);
+
+            File.WriteAllBytes(_privateKeyPath, encryptedPrivateKey);
             File.WriteAllText(_publicKeyPath, rsa.ExportRSAPublicKeyPem());
         }
     }

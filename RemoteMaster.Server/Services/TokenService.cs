@@ -5,6 +5,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -19,20 +20,31 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 {
     private readonly JwtOptions _options = options.Value ?? throw new ArgumentNullException(nameof(options));
 
-    public string GenerateAccessToken(string email)
+    public async Task<string> GenerateAccessTokenAsync(string email)
     {
         var claims = new List<Claim>
         {
             new(ClaimTypes.Name, email)
         };
 
-        var privateKeyPath = Path.Combine(_options.KeysDirectory, "private_key.pem");
-        var privateKey = File.ReadAllText(privateKeyPath);
-
 #pragma warning disable CA2000
         var rsa = RSA.Create();
 #pragma warning restore CA2000
-        rsa.ImportFromPem(privateKey.ToCharArray());
+
+        try
+        {
+            var passphraseBytes = Encoding.UTF8.GetBytes(_options.KeyPassword);
+
+            var privateKeyPath = Path.Combine(_options.KeysDirectory, "private_key.pem");
+            var privateKeyBytes = await File.ReadAllBytesAsync(privateKeyPath);
+
+            rsa.ImportEncryptedPkcs8PrivateKey(passphraseBytes, privateKeyBytes, out _);
+        }
+        catch (CryptographicException ex)
+        {
+            Log.Error(ex, "Failed to decrypt or import the private key.");
+            //throw;
+        }
 
         var tokenHandler = new JwtSecurityTokenHandler();
         var tokenDescriptor = new SecurityTokenDescriptor
@@ -43,9 +55,9 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
             Expires = DateTime.UtcNow.AddHours(2),
             SigningCredentials = new SigningCredentials(new RsaSecurityKey(rsa), SecurityAlgorithms.RsaSha256)
         };
-
+        
         var token = tokenHandler.CreateToken(tokenDescriptor);
-
+        
         return tokenHandler.WriteToken(token);
     }
 
@@ -101,7 +113,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
             return (null, null);
         }
 
-        var newAccessToken = GenerateAccessToken(user.Email);
+        var newAccessToken = await GenerateAccessTokenAsync(user.Email);
 
         return (newAccessToken, newRefreshTokenEntity.Token);
     }
