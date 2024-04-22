@@ -5,6 +5,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -44,6 +45,11 @@ builder.Services.AddAuthentication(options =>
 }).AddIdentityCookies();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+if (string.IsNullOrEmpty(connectionString))
+{
+    throw new InvalidOperationException("Could not find a connection string named 'DefaultConnection'.");
+}
 
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 builder.Services.AddDbContext<NodesDbContext>(options => options.UseSqlServer(connectionString));
@@ -92,10 +98,24 @@ builder.Host.UseSerilog((_, configuration) =>
 {
     configuration.MinimumLevel.Error();
     configuration.WriteTo.Console();
-    configuration.WriteTo.File(@"C:\ProgramData\RemoteMaster\Server\RemoteMaster_Server.log", rollingInterval: RollingInterval.Day);
+
+    var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+
+    configuration.WriteTo.File(Path.Combine(programDataPath, "RemoteMaster", "Server", "RemoteMaster_Server.log"), rollingInterval: RollingInterval.Day);
 });
 
 builder.Services.AddControllers();
+
+builder.Services
+    .AddHealthChecksUI()
+    .AddSqlServerStorage(connectionString);
+
+builder.Services
+    .AddHealthChecks()
+    .AddSqlServer(connectionString)
+    .AddDbContextCheck<ApplicationDbContext>()
+    .AddDbContextCheck<CertificateDbContext>()
+    .AddDbContextCheck<NodesDbContext>();
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -136,6 +156,8 @@ builder.Services.AddRateLimiter(options =>
 
 // builder.Services.AddSignalR().AddMessagePackProtocol();
 
+builder.WebHost.UseWebRoot("wwwroot");
+
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
     serverOptions.ListenAnyIP(80);
@@ -143,6 +165,11 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
 });
 
 var app = builder.Build();
+
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    AllowCachingResponses = true
+});
 
 app.UseRateLimiter();
 
@@ -203,6 +230,8 @@ app.UseMiddleware<RouteRestrictionMiddleware>();
 
 app.UseStaticFiles();
 app.UseAntiforgery();
+
+app.MapHealthChecksUI();
 
 app.MapControllers();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();

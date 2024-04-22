@@ -15,6 +15,9 @@
   </PropertyGroup>
 	
   <ItemGroup>
+    <PackageReference Include="AspNetCore.HealthChecks.SqlServer" />
+    <PackageReference Include="AspNetCore.HealthChecks.UI" />
+    <PackageReference Include="AspNetCore.HealthChecks.UI.SqlServer.Storage" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
@@ -25,6 +28,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <TreatAsUsed>true</TreatAsUsed>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
     <PackageReference Include="MudBlazor" />
     <PackageReference Include="Polly" />
     <PackageReference Include="Serilog" />
@@ -34,6 +38,10 @@
 	
   <ItemGroup>
     <ProjectReference Include="..\RemoteMaster.Shared\RemoteMaster.Shared.csproj" />
+  </ItemGroup>
+	
+  <ItemGroup>
+    <Folder Include="wwwroot\ui\resources\" />
   </ItemGroup>
 
   <Target Name="TaskPublish" AfterTargets="Publish">
