@@ -80,7 +80,7 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
             var crlDistributionPoints = new List<string>
             {
                 $"file:///{crlFilePath.Replace("\\", "/")}",
-                $"http://{hostInformation.IpAddress}:5254/crl"
+                $"http://{hostInformation.IpAddress}/crl"
             };
 
             var crlDistributionPointExtension = CertificateRevocationListBuilder.BuildCrlDistributionPointExtension(crlDistributionPoints, false);

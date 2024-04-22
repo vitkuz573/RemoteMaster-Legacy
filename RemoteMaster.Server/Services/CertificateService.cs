@@ -43,7 +43,7 @@ public class CertificateService(IOptions<CertificateOptions> options, IHostInfor
 
         var crlDistributionPoints = new List<string>
         {
-            $"http://{hostInformation.Name}:5254/crl"
+            $"http://{hostInformation.Name}/crl"
         };
 
         var crlDistributionPointExtension = CertificateRevocationListBuilder.BuildCrlDistributionPointExtension(crlDistributionPoints, false);
