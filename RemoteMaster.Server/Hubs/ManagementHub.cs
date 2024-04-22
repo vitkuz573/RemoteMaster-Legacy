@@ -224,18 +224,16 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
         }
     }
 
-    public async Task<string?> GetPublicKey()
+    public async Task<byte[]?> GetPublicKey()
     {
         try
         {
             var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-            var publicKeyPath = Path.Combine(programDataPath, "RemoteMaster", "Security", "JWT", "public_key.pem");
+            var publicKeyPath = Path.Combine(programDataPath, "RemoteMaster", "Security", "JWT", "public_key.der");
 
             if (File.Exists(publicKeyPath))
             {
-                var publicKey = await File.ReadAllTextAsync(publicKeyPath);
-
-                return publicKey;
+                return await File.ReadAllBytesAsync(publicKeyPath);
             }
 
             Log.Warning("Public key file not found at '{Path}'", publicKeyPath);

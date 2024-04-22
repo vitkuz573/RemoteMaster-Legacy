@@ -83,16 +83,16 @@ internal class Program
         });
 
         var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var publicKeyPath = Path.Combine(programDataPath, "RemoteMaster", "Security", "public_key.pem");
+        var publicKeyPath = Path.Combine(programDataPath, "RemoteMaster", "Security", "public_key.der");
 
         if (File.Exists(publicKeyPath))
         {
-            var publicKey = await File.ReadAllTextAsync(publicKeyPath);
+            var publicKey = await File.ReadAllBytesAsync(publicKeyPath);
 
 #pragma warning disable CA2000
             var rsa = RSA.Create();
 #pragma warning restore CA2000
-            rsa.ImportFromPem(publicKey.ToCharArray());
+            rsa.ImportRSAPublicKey(publicKey, out _);
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(jwtBearerOptions =>

@@ -175,6 +175,6 @@ var caCertificateService = app.Services.GetRequiredService<ICaCertificateService
 caCertificateService.EnsureCaCertificateExists();
 
 var jwtSecurityService = app.Services.GetRequiredService<IJwtSecurityService>();
-jwtSecurityService.EnsureKeysExist();
+await jwtSecurityService.EnsureKeysExistAsync();
 
 app.Run();

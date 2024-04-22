@@ -58,16 +58,16 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
                 var publicKey = await serverHubService.GetPublicKeyAsync();
 
-                if (string.IsNullOrEmpty(publicKey))
+                if (publicKey.Length == 0)
                 {
                     throw new InvalidOperationException("Failed to obtain JWT public key.");
                 }
 
-                var publicKeyPath = Path.Combine(securityDirectory, "public_key.pem");
+                var publicKeyPath = Path.Combine(securityDirectory, "public_key.der");
 
                 try
                 {
-                    File.WriteAllText(publicKeyPath, publicKey);
+                    await File.WriteAllBytesAsync(publicKeyPath, publicKey);
                     Log.Information("Public key saved successfully at {Path}.", publicKeyPath);
                 }
                 catch (Exception ex)

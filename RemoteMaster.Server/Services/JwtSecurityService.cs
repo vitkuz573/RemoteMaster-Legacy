@@ -23,8 +23,8 @@ public class JwtSecurityService : IJwtSecurityService
 
         _options = options.Value ?? throw new ArgumentNullException(nameof(options));
 
-        _privateKeyPath = Path.Combine(_options.KeysDirectory, "private_key.pem");
-        _publicKeyPath = Path.Combine(_options.KeysDirectory, "public_key.pem");
+        _privateKeyPath = Path.Combine(_options.KeysDirectory, "private_key.der");
+        _publicKeyPath = Path.Combine(_options.KeysDirectory, "public_key.der");
 
         if (!Directory.Exists(_options.KeysDirectory))
         {
@@ -32,7 +32,7 @@ public class JwtSecurityService : IJwtSecurityService
         }
     }
 
-    public void EnsureKeysExist()
+    public async Task EnsureKeysExistAsync()
     {
         if (!File.Exists(_privateKeyPath) || !File.Exists(_publicKeyPath))
         {
@@ -41,10 +41,8 @@ public class JwtSecurityService : IJwtSecurityService
             var passwordBytes = Encoding.UTF8.GetBytes(_options.KeyPassword);
             var encryptionAlgorithm = new PbeParameters(PbeEncryptionAlgorithm.Aes256Cbc, HashAlgorithmName.SHA256, 100000);
 
-            var encryptedPrivateKey = rsa.ExportEncryptedPkcs8PrivateKey(passwordBytes, encryptionAlgorithm);
-
-            File.WriteAllBytes(_privateKeyPath, encryptedPrivateKey);
-            File.WriteAllText(_publicKeyPath, rsa.ExportRSAPublicKeyPem());
+            await File.WriteAllBytesAsync(_privateKeyPath, rsa.ExportEncryptedPkcs8PrivateKey(passwordBytes, encryptionAlgorithm));
+            await File.WriteAllBytesAsync(_publicKeyPath, rsa.ExportRSAPublicKey());
         }
     }
 }

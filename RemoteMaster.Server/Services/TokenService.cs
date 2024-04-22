@@ -35,7 +35,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         {
             var passphraseBytes = Encoding.UTF8.GetBytes(_options.KeyPassword);
 
-            var privateKeyPath = Path.Combine(_options.KeysDirectory, "private_key.pem");
+            var privateKeyPath = Path.Combine(_options.KeysDirectory, "private_key.der");
             var privateKeyBytes = await File.ReadAllBytesAsync(privateKeyPath);
 
             rsa.ImportEncryptedPkcs8PrivateKey(passphraseBytes, privateKeyBytes, out _);

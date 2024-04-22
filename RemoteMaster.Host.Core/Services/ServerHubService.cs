@@ -66,9 +66,9 @@ public class ServerHubService : IServerHubService
         return await _hubConnection.InvokeAsync<bool>("IsHostRegisteredAsync", hostConfiguration);
     }
 
-    public async Task<string> GetPublicKeyAsync()
+    public async Task<byte[]> GetPublicKeyAsync()
     {
-        return await _hubConnection.InvokeAsync<string>("GetPublicKey");
+        return await _hubConnection.InvokeAsync<byte[]>("GetPublicKey");
     }
 
     public async Task<bool> GetCaCertificateAsync()

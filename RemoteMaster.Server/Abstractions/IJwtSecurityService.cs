@@ -6,5 +6,5 @@ namespace RemoteMaster.Server.Abstractions;
 
 public interface IJwtSecurityService
 {
-    void EnsureKeysExist();
+    Task EnsureKeysExistAsync();
 }
