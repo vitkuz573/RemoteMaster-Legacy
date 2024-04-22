@@ -43,7 +43,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         catch (CryptographicException ex)
         {
             Log.Error(ex, "Failed to decrypt or import the private key.");
-            //throw;
+            throw;
         }
 
         var tokenHandler = new JwtSecurityTokenHandler();
