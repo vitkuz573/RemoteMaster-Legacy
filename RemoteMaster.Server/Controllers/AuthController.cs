@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
 
@@ -13,6 +14,7 @@ namespace RemoteMaster.Server.Controllers;
 public class AuthController(ITokenService tokenService) : ControllerBase
 {
     [HttpPost("refresh-token")]
+    [EnableRateLimiting("AuthRefreshPolicy")]
     public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
     {
         if (request == null || string.IsNullOrWhiteSpace(request.RefreshToken))

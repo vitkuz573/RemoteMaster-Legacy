@@ -4,6 +4,7 @@
 
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Models;
@@ -11,6 +12,7 @@ using Serilog;
 
 namespace RemoteMaster.Server.Hubs;
 
+[EnableRateLimiting("ManagementHubPolicy")]
 public class ManagementHub(ICertificateService certificateService, IDatabaseService databaseService) : Hub<IManagementClient>
 {
     public async Task<bool> RegisterHostAsync(HostConfiguration hostConfiguration)

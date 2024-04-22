@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Models;
 
@@ -13,6 +14,7 @@ namespace RemoteMaster.Server.Controllers;
 public class HostConfigurationController(IOptions<ApplicationSettings> options) : ControllerBase
 {
     [HttpGet("download-host")]
+    [EnableRateLimiting("HostDownloadPolicy")]
     public async Task<IActionResult> DownloadHost()
     {
         var filePath = Path.Combine(options.Value.ExecutablesRoot, "Host", "RemoteMaster.Host.exe");

@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using RemoteMaster.Server.Abstractions;
 using Serilog;
 
@@ -10,6 +11,7 @@ namespace RemoteMaster.Server.Controllers;
 
 [ApiController]
 [Route("[controller]")]
+[EnableRateLimiting("CrlPolicy")]
 public class CrlController(ICrlService crlService) : ControllerBase
 {
     [HttpGet]

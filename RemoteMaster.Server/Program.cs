@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 using RemoteMaster.Server.Abstractions;
@@ -96,6 +97,43 @@ builder.Host.UseSerilog((_, configuration) =>
 
 builder.Services.AddControllers();
 
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("ManagementHubPolicy", opts =>
+    {
+        opts.PermitLimit = 10;
+        opts.Window = TimeSpan.FromMinutes(1);
+    });
+
+    options.AddFixedWindowLimiter("AuthRefreshPolicy", opts =>
+    {
+        opts.PermitLimit = 5;
+        opts.Window = TimeSpan.FromMinutes(10);
+    });
+
+    options.AddSlidingWindowLimiter("CrlPolicy", opts =>
+    {
+        opts.PermitLimit = 3;
+        opts.Window = TimeSpan.FromMinutes(5);
+        opts.SegmentsPerWindow = 5;
+    });
+
+    options.AddTokenBucketLimiter("HostDownloadPolicy", opts =>
+    {
+        opts.TokenLimit = 10;
+        opts.QueueLimit = 2;
+        opts.ReplenishmentPeriod = TimeSpan.FromHours(1);
+        opts.TokensPerPeriod = 10;
+    });
+
+    options.OnRejected = (ctx, token) =>
+    {
+        ctx.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+
+        return ValueTask.CompletedTask;
+    };
+});
+
 // builder.Services.AddSignalR().AddMessagePackProtocol();
 
 builder.WebHost.ConfigureKestrel(serverOptions =>
@@ -105,6 +143,8 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
 });
 
 var app = builder.Build();
+
+app.UseRateLimiter();
 
 using (var scope = app.Services.CreateScope())
 {
