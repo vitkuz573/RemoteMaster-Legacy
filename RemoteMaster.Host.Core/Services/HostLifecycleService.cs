@@ -63,7 +63,7 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
                     throw new InvalidOperationException("Failed to obtain JWT public key.");
                 }
 
-                var publicKeyPath = Path.Combine(securityDirectory, "public_key.der");
+                var publicKeyPath = Path.Combine(securityDirectory, "JWT", "public_key.der");
 
                 try
                 {
