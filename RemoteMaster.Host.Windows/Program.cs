@@ -188,10 +188,10 @@ internal class Program
 
         var firewallService = app.Services.GetRequiredService<IFirewallService>();
 
-        var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-
-        var hostApplicationPath = Path.Combine(programFiles, "RemoteMaster", "Host", "RemoteMaster.Host.exe");
-        var hostUpdaterApplicationPath = Path.Combine(programFiles, "RemoteMaster", "Host", "Updater", "RemoteMaster.Host.exe");
+        var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+        var hostRootPath = Path.Combine(programFilesPath, "RemoteMaster", "Host");
+        var hostApplicationPath = Path.Combine(hostRootPath, "RemoteMaster.Host.exe");
+        var hostUpdaterApplicationPath = Path.Combine(hostRootPath, "Updater", "RemoteMaster.Host.exe");
 
         firewallService.AddRule("Remote Master Host", hostApplicationPath);
         firewallService.AddRule("Remote Master Host Updater", hostUpdaterApplicationPath);
