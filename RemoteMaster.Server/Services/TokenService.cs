@@ -78,13 +78,13 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         return refreshToken.Token;
     }
 
-    public async Task<(string? AccessToken, string? RefreshToken)> RefreshTokensAsync(string oldRefreshToken, string ipAddress)
+    public async Task<TokenResponseData?> RefreshTokensAsync(string oldRefreshToken, string ipAddress)
     {
         var oldRefreshTokenEntity = await context.RefreshTokens.SingleOrDefaultAsync(rt => rt.Token == oldRefreshToken && rt.Revoked == null && rt.Expires > DateTime.UtcNow);
 
         if (oldRefreshTokenEntity == null)
         {
-            return (null, null);
+            return null;
         }
 
         var newRefreshTokenEntity = new RefreshToken
@@ -110,12 +110,16 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         if (user == null)
         {
-            return (null, null);
+            return null;
         }
 
         var newAccessToken = await GenerateAccessTokenAsync(user.Email);
 
-        return (newAccessToken, newRefreshTokenEntity.Token);
+        return new TokenResponseData
+        {
+            AccessToken = newAccessToken,
+            RefreshToken = oldRefreshTokenEntity.Token,
+        };
     }
 
     public bool RequiresTokenUpdate(string accessToken)

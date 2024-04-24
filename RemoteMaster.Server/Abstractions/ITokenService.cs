@@ -2,6 +2,8 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using RemoteMaster.Server.Models;
+
 namespace RemoteMaster.Server.Abstractions;
 
 public interface ITokenService
@@ -10,7 +12,7 @@ public interface ITokenService
 
     string GenerateRefreshToken(string userId, string ipAddress);
 
-    Task<(string? AccessToken, string? RefreshToken)> RefreshTokensAsync(string oldRefreshToken, string ipAddress);
+    Task<TokenResponseData?> RefreshTokensAsync(string oldRefreshToken, string ipAddress);
 
     bool RequiresTokenUpdate(string accessToken);
 }
