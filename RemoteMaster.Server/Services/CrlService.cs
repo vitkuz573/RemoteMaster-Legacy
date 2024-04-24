@@ -34,8 +34,8 @@ public class CrlService(IOptions<CertificateOptions> options, IDbContextFactory<
         var revokedCertificate = new RevokedCertificate
         {
             SerialNumber = serialNumber,
-            Reason = reason.ToString(),
-            RevocationDate = DateTime.UtcNow
+            Reason = reason,
+            RevocationDate = DateTimeOffset.UtcNow
         };
 
         context.RevokedCertificates.Add(revokedCertificate);
@@ -69,14 +69,7 @@ public class CrlService(IOptions<CertificateOptions> options, IDbContextFactory<
                 .Select(x => Convert.ToByte(revoked.SerialNumber.Substring(x, 2), 16))
                 .ToArray();
 
-            if (!Enum.TryParse<X509RevocationReason>(revoked.Reason, out var reason))
-            {
-                Log.Warning("Failed to parse the certificate revocation reason: '{Reason}'. Using default value 'Unspecified'.", revoked.Reason);
-
-                reason = X509RevocationReason.Unspecified;
-            }
-
-            crlBuilder.AddEntry(serialNumberBytes, revoked.RevocationDate, reason);
+            crlBuilder.AddEntry(serialNumberBytes, revoked.RevocationDate, revoked.Reason);
         }
 
         var crlData = crlBuilder.Build(issuerCertificate, currentCrlNumber, nextUpdate, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
