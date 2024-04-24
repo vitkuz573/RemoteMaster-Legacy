@@ -31,7 +31,7 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
         try
         {
-            var securityDirectory = EnsureSecurityDirectoryExists();
+            var jwtDirectory = EnsureJwtDirectoryExists();
 
             await serverHubService.ConnectAsync(hostConfiguration.Server);
 
@@ -63,7 +63,7 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
                     throw new InvalidOperationException("Failed to obtain JWT public key.");
                 }
 
-                var publicKeyPath = Path.Combine(securityDirectory, "JWT", "public_key.der");
+                var publicKeyPath = Path.Combine(jwtDirectory, "public_key.der");
 
                 try
                 {
@@ -250,20 +250,20 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         }
     }
 
-    private static string EnsureSecurityDirectoryExists()
+    private static string EnsureJwtDirectoryExists()
     {
         var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var securityDirectory = Path.Combine(programDataPath, "RemoteMaster", "Security");
+        var directory = Path.Combine(programDataPath, "RemoteMaster", "Security", "JWT");
 
-        if (Directory.Exists(securityDirectory))
+        if (Directory.Exists(directory))
         {
-            return securityDirectory;
+            return directory;
         }
 
-        Directory.CreateDirectory(securityDirectory);
-        Log.Debug("Security directory created at {DirectoryPath}.", securityDirectory);
+        Directory.CreateDirectory(directory);
+        Log.Debug("JWT directory created at {DirectoryPath}.", directory);
 
-        return securityDirectory;
+        return directory;
     }
 
     private void ProcessCertificate(byte[] certificateBytes, RSA rsaKeyPair, TaskCompletionSource<bool> tcs)
