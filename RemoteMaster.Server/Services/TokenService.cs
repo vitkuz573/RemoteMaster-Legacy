@@ -16,7 +16,7 @@ using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext context) : ITokenService
+public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext context, IHttpContextAccessor httpContextAccessor) : ITokenService
 {
     private readonly JwtOptions _options = options.Value ?? throw new ArgumentNullException(nameof(options));
 
@@ -78,82 +78,6 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         return refreshToken.Token;
     }
 
-    public async Task<TokenResponseData?> RefreshTokensAsync(string oldRefreshToken, string ipAddress)
-    {
-        var oldRefreshTokenEntity = await context.RefreshTokens.SingleOrDefaultAsync(rt => rt.Token == oldRefreshToken && rt.Revoked == null && rt.Expires > DateTime.UtcNow);
-
-        if (oldRefreshTokenEntity == null)
-        {
-            return null;
-        }
-
-        var newRefreshTokenEntity = new RefreshToken
-        {
-            UserId = oldRefreshTokenEntity.UserId,
-            Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
-            Expires = DateTime.UtcNow.AddDays(7),
-            Created = DateTime.UtcNow,
-            CreatedByIp = ipAddress
-        };
-
-        context.RefreshTokens.Add(newRefreshTokenEntity);
-
-        await context.SaveChangesAsync();
-
-        oldRefreshTokenEntity.Revoked = DateTime.UtcNow;
-        oldRefreshTokenEntity.RevokedByIp = ipAddress;
-        oldRefreshTokenEntity.ReplacedByToken = newRefreshTokenEntity.Token;
-
-        await context.SaveChangesAsync();
-
-        var user = await context.Users.FindAsync(oldRefreshTokenEntity.UserId);
-
-        if (user == null)
-        {
-            return null;
-        }
-
-        var newAccessToken = await GenerateAccessTokenAsync(user.Email);
-
-        return new TokenResponseData
-        {
-            AccessToken = newAccessToken,
-            RefreshToken = oldRefreshTokenEntity.Token,
-        };
-    }
-
-    public bool RequiresTokenUpdate(string accessToken)
-    {
-        var tokenHandler = new JwtSecurityTokenHandler();
-
-        try
-        {
-            if (tokenHandler.ReadToken(accessToken) is JwtSecurityToken jsonToken)
-            {
-                var expDate = jsonToken.ValidTo.ToUniversalTime();
-                var currentDate = DateTime.UtcNow;
-
-                return (expDate - currentDate).TotalMinutes <= 5;
-            }
-        }
-        catch (ArgumentException ex)
-        {
-            Log.Error(ex, "An error occurred while reading JWT token: Invalid token format.");
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "An unexpected error occurred while processing JWT token.");
-
-            return true;
-        }
-
-        Log.Warning("The token provided is not a valid JWT token.");
-
-        return true;
-    }
-
     public bool IsTokenValid(string accessToken)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
@@ -200,10 +124,11 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
     private RSA GetPublicKey()
     {
         var rsa = RSA.Create();
+
         var publicKeyPath = Path.Combine(_options.KeysDirectory, "public_key.der");
         var publicKeyBytes = File.ReadAllBytes(publicKeyPath);
         
-        rsa.ImportSubjectPublicKeyInfo(publicKeyBytes, out _);
+        rsa.ImportRSAPublicKey(publicKeyBytes, out _);
 
         return rsa;
     }
@@ -227,34 +152,63 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         return !tokenEntity.IsExpired;
     }
 
-    public async Task<string?> RefreshAccessToken(string refreshToken)
+    public async Task<TokenResponseData?> RefreshAccessToken(string refreshToken)
     {
         var refreshTokenEntity = await context.RefreshTokens
-            .SingleOrDefaultAsync(rt => rt.Token == refreshToken && !rt.IsExpired && !rt.Revoked.HasValue);
+            .AsNoTracking()
+            .FirstOrDefaultAsync(rt => rt.Token == refreshToken && !rt.Revoked.HasValue);
 
-        if (refreshTokenEntity == null)
+        if (refreshTokenEntity == null || refreshTokenEntity.IsExpired)
         {
-            Log.Warning("Invalid or expired refresh token.");
-
             return null;
         }
 
-        refreshTokenEntity.Revoked = DateTime.UtcNow;
-        // refreshTokenEntity.RevokedByIp = null;
+        var newRefreshTokenEntity = new RefreshToken
+        {
+            UserId = refreshTokenEntity.UserId,
+            Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
+            Expires = DateTime.UtcNow.AddDays(7),
+            Created = DateTime.UtcNow,
+            CreatedByIp = "127.0.0.1"
+        };
 
-        context.RefreshTokens.Update(refreshTokenEntity);
+        context.RefreshTokens.Add(newRefreshTokenEntity);
+        await context.SaveChangesAsync();
+
+        refreshTokenEntity.Revoked = DateTime.UtcNow;
+        refreshTokenEntity.RevokedByIp = "127.0.0.1";
+        refreshTokenEntity.ReplacedByToken = newRefreshTokenEntity.Token;
 
         await context.SaveChangesAsync();
 
         var user = await context.Users.FindAsync(refreshTokenEntity.UserId);
-
         if (user == null)
         {
-            Log.Error("User not found.");
-
             return null;
         }
 
-        return await GenerateAccessTokenAsync(user.Email);
+        var newAccessToken = await GenerateAccessTokenAsync(user.Email);
+
+        SetCookie(CookieNames.AccessToken, newAccessToken, 2);
+        SetCookie(CookieNames.RefreshToken, newRefreshTokenEntity.Token, 7 * 24);
+
+        return new TokenResponseData
+        {
+            AccessToken = newAccessToken,
+            RefreshToken = newRefreshTokenEntity.Token,
+        };
+    }
+
+    private void SetCookie(string key, string value, int expireHours)
+    {
+        var options = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.None,
+            Expires = DateTime.UtcNow.AddHours(expireHours)
+        };
+
+        httpContextAccessor.HttpContext.Response.Cookies.Append(key, value, options);
     }
 }

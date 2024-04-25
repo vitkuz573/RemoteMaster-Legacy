@@ -2,36 +2,52 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using Microsoft.JSInterop;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class AccessTokenProvider(ITokenService tokenService, IJSRuntime jsRuntime) : IAccessTokenProvider
+public class AccessTokenProvider(ITokenService tokenService, IHttpContextAccessor httpContextAccessor) : IAccessTokenProvider
 {
     public async Task<string> GetAccessTokenAsync()
-    {        
-        var accessToken = await jsRuntime.InvokeAsync<string>("localStorage.getItem", "accessToken");
-        
+    {
+        var context = httpContextAccessor.HttpContext;
+        var accessToken = context.Request.Cookies[CookieNames.AccessToken];
+
         if (!string.IsNullOrEmpty(accessToken) && tokenService.IsTokenValid(accessToken))
         {
             return accessToken;
         }
 
-        var refreshToken = await jsRuntime.InvokeAsync<string>("localStorage.getItem", "refreshToken");
-       
+        var refreshToken = context.Request.Cookies[CookieNames.RefreshToken];
+        
         if (!string.IsNullOrEmpty(refreshToken) && tokenService.IsRefreshTokenValid(refreshToken))
         {
-            var newAccessToken = await tokenService.RefreshAccessToken(refreshToken);
+            var newTokens = await tokenService.RefreshAccessToken(refreshToken);
             
-            if (!string.IsNullOrEmpty(newAccessToken))
+            if (newTokens != null && !string.IsNullOrEmpty(newTokens.AccessToken))
             {
-                await jsRuntime.InvokeVoidAsync("localStorage.setItem", "accessToken", newAccessToken);
-                
-                return newAccessToken;
+                SetCookie(CookieNames.AccessToken, newTokens.AccessToken, 2);
+                SetCookie(CookieNames.RefreshToken, newTokens.RefreshToken, 7 * 24);
+               
+                return newTokens.AccessToken;
             }
         }
 
         throw new InvalidOperationException("No valid access token available.");
     }
+
+    private void SetCookie(string key, string value, int expireHours)
+    {
+        var options = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.None,
+            Expires = DateTime.UtcNow.AddHours(expireHours)
+        };
+
+        httpContextAccessor.HttpContext.Response.Cookies.Append(key, value, options);
+    }
 }
+

@@ -71,6 +71,7 @@ builder.Services.AddScoped<IQueryParameterService, QueryParameterService>();
 builder.Services.AddScoped<IDatabaseService, DatabaseService>();
 builder.Services.AddScoped<IComputerCommandService, ComputerCommandService>();
 builder.Services.AddScoped<ICrlService, CrlService>();
+builder.Services.AddScoped<IAccessTokenProvider, AccessTokenProvider>();
 builder.Services.AddSingleton<IBrandingService, BrandingService>();
 builder.Services.AddSingleton<ICertificateService, CertificateService>();
 builder.Services.AddSingleton<IPacketSender, UdpPacketSender>();
@@ -78,7 +79,6 @@ builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
 builder.Services.AddSingleton<IComputerConnectivityService, ComputerConnectivityService>();
 builder.Services.AddSingleton<ICaCertificateService, CaCertificateService>();
 builder.Services.AddSingleton<IJwtSecurityService, JwtSecurityService>();
-builder.Services.AddSingleton<IAccessTokenProvider, AccessTokenProvider>();
 
 builder.Services.AddSingleton(new JsonSerializerOptions
 {

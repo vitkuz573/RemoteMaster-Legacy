@@ -12,13 +12,9 @@ public interface ITokenService
 
     string GenerateRefreshToken(string userId, string ipAddress);
 
-    Task<TokenResponseData?> RefreshTokensAsync(string oldRefreshToken, string ipAddress);
-
-    bool RequiresTokenUpdate(string accessToken);
-
     bool IsTokenValid(string accessToken);
 
     bool IsRefreshTokenValid(string refreshToken);
 
-    Task<string?> RefreshAccessToken(string refreshToken);
+    Task<TokenResponseData?> RefreshAccessToken(string refreshToken);
 }
