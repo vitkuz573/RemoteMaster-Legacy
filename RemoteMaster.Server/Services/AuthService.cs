@@ -33,6 +33,7 @@ public class AuthService : IAuthService
         };
 
         var jsonRequest = JsonSerializer.Serialize(requestObject);
+        
         using var content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
         var requestUri = new Uri(_apiClient.BaseAddress, "auth/refresh-token");
 
@@ -46,17 +47,10 @@ public class AuthService : IAuthService
 
             var apiResponse = JsonSerializer.Deserialize<ApiResponse<TokenResponseData>>(jsonResponse);
 
-            if (apiResponse == null)
+            if (apiResponse != null && apiResponse.Data != null)
             {
-                Log.Error("Deserialized API response is null.");
-
-                return false;
-            }
-
-            if (apiResponse.Success)
-            {
-                var accessToken = apiResponse.Data?.AccessToken;
-                var newRefreshToken = apiResponse.Data?.RefreshToken;
+                var accessToken = apiResponse.Data.AccessToken;
+                var newRefreshToken = apiResponse.Data.RefreshToken;
 
                 if (!string.IsNullOrEmpty(accessToken))
                 {
@@ -85,12 +79,12 @@ public class AuthService : IAuthService
                 }
                 else
                 {
-                    Log.Error("AccessToken is null or empty.");
+                    Log.Error("{CookieName} is null or empty.", CookieNames.AccessToken);
                 }
             }
             else
             {
-                Log.Error($"API response indicates failure: {apiResponse.Message}");
+                Log.Error("Deserialized API response is invalid or missing data.");
             }
         }
         else

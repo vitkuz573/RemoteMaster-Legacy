@@ -22,9 +22,7 @@ public class HostConfigurationController(IOptions<ApplicationSettings> options) 
 
         if (!System.IO.File.Exists(filePath))
         {
-            var apiResponse = new ApiResponse<string>(false, "File not found.");
-
-            return NotFound(apiResponse);
+            return NotFound(ApiResponse<string>.Failure<string>("File not found.", StatusCodes.Status404NotFound));
         }
 
         var memoryStream = new MemoryStream();

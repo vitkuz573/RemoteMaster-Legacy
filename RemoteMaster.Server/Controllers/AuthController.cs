@@ -19,14 +19,14 @@ public class AuthController(ITokenService tokenService) : ControllerBase
     {
         if (request == null || string.IsNullOrWhiteSpace(request.RefreshToken))
         {
-            return BadRequest(new ApiResponse<string>(false, "Refresh token is required."));
+            return BadRequest(ApiResponse<string>.Failure<string>("Refresh token is required."));
         }
 
         var newTokens = await tokenService.RefreshTokensAsync(request.RefreshToken, HttpContext.Connection.RemoteIpAddress?.ToString());
 
         if (newTokens.AccessToken == null || newTokens.RefreshToken == null)
         {
-            return Unauthorized(new ApiResponse<string>(false, "Invalid refresh token."));
+            return Unauthorized(ApiResponse<string>.Failure<string>("Invalid refresh token."));
         }
 
         var tokenData = new TokenResponseData
@@ -35,6 +35,6 @@ public class AuthController(ITokenService tokenService) : ControllerBase
             RefreshToken = newTokens.RefreshToken
         };
 
-        return Ok(new ApiResponse<TokenResponseData>(true, "Tokens refreshed successfully.", tokenData));
+        return Ok(ApiResponse<TokenResponseData>.Success(tokenData, "Tokens refreshed successfully."));
     }
 }

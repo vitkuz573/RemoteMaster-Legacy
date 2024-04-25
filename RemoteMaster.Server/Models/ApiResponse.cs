@@ -6,15 +6,27 @@ using System.Text.Json.Serialization;
 
 namespace RemoteMaster.Server.Models;
 
-public class ApiResponse<TData>(bool success, string message, TData? data = default)
+/// <summary>
+/// Represents a generic API response with a status code, message, and optional data payload.
+/// </summary>
+public record ApiResponse<TData>(int StatusCode, string Message, [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] TData? Data)
 {
-    [JsonPropertyName("success")]
-    public bool Success { get; init; } = success;
+    /// <summary>
+    /// Factory method to create a success response.
+    /// </summary>
+    public static ApiResponse<TData> Success(TData data, string message = "Operation successful.")
+        => new(StatusCodes.Status200OK, message, data);
 
-    [JsonPropertyName("message")]
-    public string Message { get; init; } = message;
+    /// <summary>
+    /// Factory method to create a failure response.
+    /// </summary>
+    public static ApiResponse<T> Failure<T>(string message, int statusCode = StatusCodes.Status400BadRequest)
+        => new(statusCode, message, default);
 
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    [JsonPropertyName("data")]
-    public TData? Data { get; init; } = data;
+    /// <summary>
+    /// Optional links for HATEOAS support.
+    /// </summary>
+    [JsonPropertyName("_links")]
+    public Dictionary<string, string>? Links { get; init; }
 }
+
