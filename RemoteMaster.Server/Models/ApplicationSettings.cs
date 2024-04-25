@@ -12,12 +12,12 @@ public class ApplicationSettings
     public string ExecutablesRoot { get; init; }
 
     [JsonPropertyName("isRegisterAllowed")]
-    public bool IsRegisterAllowed { get; set; }
+    public bool IsRegisterAllowed { get; init; }
 
     [JsonPropertyName("jwt")]
-    public JwtOptions Jwt { get; set; }
+    public JwtOptions Jwt { get; init; }
 
     [JsonPropertyName("caSettings")]
-    public CertificateOptions CASettings { get; set; }
+    public CertificateOptions CASettings { get; init; }
 }
 
