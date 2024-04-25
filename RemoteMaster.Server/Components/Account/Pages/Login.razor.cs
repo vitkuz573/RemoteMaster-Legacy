@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.ComponentModel.DataAnnotations;
+using Azure.Core;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
@@ -46,7 +47,8 @@ public partial class Login
             var accessTokenString = await TokenService.GenerateAccessTokenAsync(Input.Email);
             var refreshTokenString = TokenService.GenerateRefreshToken(userId, ipAddress);
 
-            SetTokenCookies(accessTokenString, refreshTokenString);
+            SetCookie(CookieNames.AccessToken, accessTokenString, TimeSpan.FromMinutes(20));
+            SetCookie(CookieNames.RefreshToken, refreshTokenString, TimeSpan.FromHours(25));
 
             RedirectManager.RedirectTo(ReturnUrl);
         }
@@ -69,35 +71,17 @@ public partial class Login
         }
     }
 
-    private void SetTokenCookies(string accessToken, string refreshToken)
+    private void SetCookie(string key, string value, TimeSpan duration)
     {
-        var baseCookieOptions = new CookieOptions
+        var options = new CookieOptions
         {
             HttpOnly = true,
             Secure = false,
-            SameSite = SameSiteMode.Strict
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTime.UtcNow.Add(duration)
         };
 
-        var accessTokenOptions = CopyCookieOptions(baseCookieOptions);
-        accessTokenOptions.Expires = DateTime.UtcNow.AddHours(2);
-
-        HttpContext.Response.Cookies.Append(CookieNames.AccessToken, accessToken, accessTokenOptions);
-
-        var refreshTokenOptions = CopyCookieOptions(baseCookieOptions);
-        refreshTokenOptions.Expires = DateTime.UtcNow.AddDays(7);
-
-        HttpContext.Response.Cookies.Append(CookieNames.RefreshToken, refreshToken, refreshTokenOptions);
-    }
-
-    private static CookieOptions CopyCookieOptions(CookieOptions options)
-    {
-        return new CookieOptions
-        {
-            HttpOnly = options.HttpOnly,
-            Secure = options.Secure,
-            SameSite = options.SameSite,
-            Expires = options.Expires
-        };
+        HttpContext.Response.Cookies.Append(key, value, options);
     }
 
     private sealed class InputModel

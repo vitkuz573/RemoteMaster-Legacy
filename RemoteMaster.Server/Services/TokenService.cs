@@ -52,7 +52,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
             Issuer = "RemoteMaster Server",
             Audience = "RMServiceAPI",
             Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddHours(2),
+            Expires = DateTime.UtcNow.AddMinutes(15),
             SigningCredentials = new SigningCredentials(new RsaSecurityKey(rsa), SecurityAlgorithms.RsaSha256)
         };
         
@@ -67,7 +67,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         {
             UserId = userId,
             Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
-            Expires = DateTime.UtcNow.AddDays(7),
+            Expires = DateTime.UtcNow.AddDays(1),
             Created = DateTime.UtcNow,
             CreatedByIp = ipAddress
         };
@@ -189,8 +189,8 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         var newAccessToken = await GenerateAccessTokenAsync(user.Email);
 
-        SetCookie(CookieNames.AccessToken, newAccessToken, 2);
-        SetCookie(CookieNames.RefreshToken, newRefreshTokenEntity.Token, 7 * 24);
+        SetCookie(CookieNames.AccessToken, newAccessToken, TimeSpan.FromMinutes(20));
+        SetCookie(CookieNames.RefreshToken, newRefreshTokenEntity.Token, TimeSpan.FromHours(25));
 
         return new TokenResponseData
         {
@@ -199,14 +199,14 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         };
     }
 
-    private void SetCookie(string key, string value, int expireHours)
+    private void SetCookie(string key, string value, TimeSpan duration)
     {
         var options = new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.None,
-            Expires = DateTime.UtcNow.AddHours(expireHours)
+            Secure = false,
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTime.UtcNow.Add(duration)
         };
 
         httpContextAccessor.HttpContext.Response.Cookies.Append(key, value, options);
