@@ -36,6 +36,8 @@ public partial class Home
     protected async override Task OnInitializedAsync()
     {
         _nodes = new HashSet<Node>(await LoadOrganizationalUnitsWithChildren());
+
+        await AccessTokenProvider.GetAccessTokenAsync();
     }
 
     private async Task<IEnumerable<Node>> LoadOrganizationalUnitsWithChildren(Guid? parentId = null)
