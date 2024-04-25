@@ -15,4 +15,10 @@ public interface ITokenService
     Task<TokenResponseData?> RefreshTokensAsync(string oldRefreshToken, string ipAddress);
 
     bool RequiresTokenUpdate(string accessToken);
+
+    bool IsTokenValid(string accessToken);
+
+    bool IsRefreshTokenValid(string refreshToken);
+
+    Task<string?> RefreshAccessToken(string refreshToken);
 }

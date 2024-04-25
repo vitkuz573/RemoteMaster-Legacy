@@ -142,15 +142,6 @@ public partial class Home
         NavigationManager.NavigateTo("/Account/Logout");
     }
 
-    private async Task RefreshToken()
-    {
-        var httpContext = HttpContextAccessor.HttpContext;
-
-        var refreshToken = httpContext?.Request.Cookies.GetCookieOrDefault(CookieNames.RefreshToken);
-
-        await AuthService.RefreshTokensAsync(refreshToken);
-    }
-
     private async Task OnNodeSelected(Node? node)
     {
         _selectedComputers.Clear();

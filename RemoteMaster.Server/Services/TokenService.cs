@@ -153,4 +153,108 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         return true;
     }
+
+    public bool IsTokenValid(string accessToken)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+
+        if (string.IsNullOrEmpty(accessToken))
+        {
+            return false;
+        }
+
+#pragma warning disable CA2000
+        var validationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new RsaSecurityKey(GetPublicKey()),
+            ValidateIssuer = true,
+            ValidIssuer = "RemoteMaster Server",
+            ValidateAudience = true,
+            ValidAudience = "RMServiceAPI",
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+#pragma warning restore CA2000
+
+        try
+        {
+            tokenHandler.ValidateToken(accessToken, validationParameters, out var validatedToken);
+            
+            return validatedToken != null;
+        }
+        catch (SecurityTokenExpiredException)
+        {
+            return false;
+        }
+        catch (SecurityTokenValidationException)
+        {
+            return false;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    private RSA GetPublicKey()
+    {
+        var rsa = RSA.Create();
+        var publicKeyPath = Path.Combine(_options.KeysDirectory, "public_key.der");
+        var publicKeyBytes = File.ReadAllBytes(publicKeyPath);
+        
+        rsa.ImportSubjectPublicKeyInfo(publicKeyBytes, out _);
+
+        return rsa;
+    }
+
+    public bool IsRefreshTokenValid(string refreshToken)
+    {
+        if (string.IsNullOrEmpty(refreshToken))
+        {
+            return false;
+        }
+
+        var tokenEntity = context.RefreshTokens
+            .AsNoTracking()
+            .SingleOrDefault(rt => rt.Token == refreshToken && rt.Revoked == null);
+
+        if (tokenEntity == null)
+        {
+            return false;
+        }
+
+        return !tokenEntity.IsExpired;
+    }
+
+    public async Task<string?> RefreshAccessToken(string refreshToken)
+    {
+        var refreshTokenEntity = await context.RefreshTokens
+            .SingleOrDefaultAsync(rt => rt.Token == refreshToken && !rt.IsExpired && !rt.Revoked.HasValue);
+
+        if (refreshTokenEntity == null)
+        {
+            Log.Warning("Invalid or expired refresh token.");
+
+            return null;
+        }
+
+        refreshTokenEntity.Revoked = DateTime.UtcNow;
+        // refreshTokenEntity.RevokedByIp = null;
+
+        context.RefreshTokens.Update(refreshTokenEntity);
+
+        await context.SaveChangesAsync();
+
+        var user = await context.Users.FindAsync(refreshTokenEntity.UserId);
+
+        if (user == null)
+        {
+            Log.Error("User not found.");
+
+            return null;
+        }
+
+        return await GenerateAccessTokenAsync(user.Email);
+    }
 }

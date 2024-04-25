@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Server.Abstractions;
 
-public interface IAuthService
+public interface IAccessTokenProvider
 {
-    Task<bool> RefreshTokensAsync(string refreshToken);
+    Task<string> GetAccessTokenAsync();
 }

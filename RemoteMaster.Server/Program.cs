@@ -77,8 +77,8 @@ builder.Services.AddSingleton<IPacketSender, UdpPacketSender>();
 builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
 builder.Services.AddSingleton<IComputerConnectivityService, ComputerConnectivityService>();
 builder.Services.AddSingleton<ICaCertificateService, CaCertificateService>();
-builder.Services.AddSingleton<IAuthService, AuthService>();
 builder.Services.AddSingleton<IJwtSecurityService, JwtSecurityService>();
+builder.Services.AddSingleton<IAccessTokenProvider, AccessTokenProvider>();
 
 builder.Services.AddSingleton(new JsonSerializerOptions
 {
