@@ -3,8 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Collections.Concurrent;
-using System.Text;
-using System.Text.Json;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using MudBlazor;
@@ -17,8 +15,6 @@ using Serilog;
 
 namespace RemoteMaster.Server.Components.Pages;
 
-#pragma warning disable CA1822
-
 public partial class Home
 {
     private bool _drawerOpen;
@@ -29,7 +25,7 @@ public partial class Home
     private ConcurrentBag<Computer> _availableComputers = [];
     private ConcurrentBag<Computer> _unavailableComputers = [];
 
-    private bool _isDarkMode = true;
+    private bool _isDarkMode = false;
 
     private readonly MudTheme _theme = new()
     {

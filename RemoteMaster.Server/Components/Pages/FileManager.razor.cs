@@ -32,14 +32,14 @@ public partial class FileManager : IDisposable
 
     private readonly AsyncRetryPolicy _retryPolicy = Policy
         .Handle<Exception>()
-        .WaitAndRetryAsync(new[]
-        {
+        .WaitAndRetryAsync(
+        [
             TimeSpan.FromSeconds(5),
             TimeSpan.FromSeconds(7),
             TimeSpan.FromSeconds(10),
-        });
+        ]);
 
-    private bool _isDarkMode = true;
+    private bool _isDarkMode = false;
 
     private readonly MudTheme _theme = new();
 
