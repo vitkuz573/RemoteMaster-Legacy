@@ -88,10 +88,11 @@ builder.Services.AddSingleton(new JsonSerializerOptions
 });
 
 builder.Services.AddTransient<ITokenService, TokenService>();
-builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
-builder.Services.Configure<SubjectOptions>(builder.Configuration.GetSection("CASettings:Subject"));
-builder.Services.Configure<CertificateOptions>(builder.Configuration.GetSection("CASettings"));
+
 builder.Services.Configure<ApplicationSettings>(builder.Configuration);
+builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("jwt"));
+builder.Services.Configure<CertificateOptions>(builder.Configuration.GetSection("caSettings"));
+builder.Services.Configure<SubjectOptions>(builder.Configuration.GetSection("caSettings:subject"));
 
 builder.Services.AddMudServices();
 
