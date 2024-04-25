@@ -4,13 +4,11 @@
 
 using Microsoft.AspNetCore.SignalR.Client;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Extensions;
-using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class ComputerConnectivityService(IHttpContextAccessor httpContextAccessor) : IComputerConnectivityService
+public class ComputerConnectivityService(IAccessTokenProvider accessTokenProvider) : IComputerConnectivityService
 {
     public async Task<bool> IsHubAvailable(Computer computer, string hubPath)
     {
@@ -21,14 +19,7 @@ public class ComputerConnectivityService(IHttpContextAccessor httpContextAccesso
             var connection = new HubConnectionBuilder()
                 .WithUrl($"https://{computer.IpAddress}:5001/{hubPath}", options =>
                 {
-                    options.AccessTokenProvider = () =>
-                    {
-                        var cookies = httpContextAccessor.HttpContext?.Request.Cookies;
-
-                        var accessToken = cookies?.GetCookieOrDefault(CookieNames.AccessToken);
-
-                        return Task.FromResult(accessToken);
-                    };
+                    options.AccessTokenProvider = async () => await accessTokenProvider.GetAccessTokenAsync();
                 })
                 .AddMessagePackProtocol()
                 .Build();

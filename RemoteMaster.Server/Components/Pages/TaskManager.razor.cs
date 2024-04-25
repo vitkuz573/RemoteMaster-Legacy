@@ -9,8 +9,6 @@ using Microsoft.JSInterop;
 using MudBlazor;
 using Polly;
 using Polly.Retry;
-using RemoteMaster.Server.Extensions;
-using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Pages;
@@ -54,14 +52,7 @@ public partial class TaskManager : IDisposable
         _connection = new HubConnectionBuilder()
             .WithUrl($"https://{Host}:5001/hubs/taskmanager", options =>
             {
-                options.AccessTokenProvider = () =>
-                {
-                    var cookies = HttpContextAccessor.HttpContext?.Request.Cookies;
-                    
-                    var accessToken = cookies?.GetCookieOrDefault(CookieNames.AccessToken);
-
-                    return Task.FromResult(accessToken);
-                };
+                options.AccessTokenProvider = async () => await AccessTokenProvider.GetAccessTokenAsync();
             })
             .AddMessagePackProtocol()
             .Build();

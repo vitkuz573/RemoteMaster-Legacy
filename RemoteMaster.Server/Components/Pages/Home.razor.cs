@@ -7,8 +7,6 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using MudBlazor;
 using RemoteMaster.Server.Components.Dialogs;
-using RemoteMaster.Server.Extensions;
-using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
 using Serilog;
@@ -175,13 +173,7 @@ public partial class Home
         var connection = new HubConnectionBuilder()
             .WithUrl($"https://{computer.IpAddress}:5001/hubs/control", options =>
             {
-                options.AccessTokenProvider = () =>
-                {
-                    var cookies = HttpContextAccessor.HttpContext?.Request.Cookies;
-                    var accessToken = cookies?.GetCookieOrDefault(CookieNames.AccessToken);
-
-                    return Task.FromResult(accessToken);
-                };
+                options.AccessTokenProvider = async () => await AccessTokenProvider.GetAccessTokenAsync();
             })
             .AddMessagePackProtocol()
             .Build();
@@ -525,13 +517,7 @@ public partial class Home
                     var connection = new HubConnectionBuilder()
                         .WithUrl($"https://{computer.IpAddress}:5001/{hubPath}", options =>
                         {
-                            options.AccessTokenProvider = () =>
-                            {
-                                var cookies = HttpContextAccessor.HttpContext?.Request.Cookies;
-                                var accessToken = cookies?.GetCookieOrDefault(CookieNames.AccessToken);
-
-                                return Task.FromResult(accessToken);
-                            };
+                            options.AccessTokenProvider = async () => await AccessTokenProvider.GetAccessTokenAsync();
                         })
                         .AddMessagePackProtocol()
                         .Build();

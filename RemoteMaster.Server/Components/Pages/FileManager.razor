@@ -2,9 +2,10 @@
 @rendermode InteractiveServer
 @attribute [Authorize]
 @using Microsoft.AspNetCore.Authorization
+@using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Shared.Models
-@inject IHttpContextAccessor HttpContextAccessor
 @inject IJSRuntime JsRuntime
+@inject IAccessTokenProvider AccessTokenProvider
 
 <MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme" />
 <MudDialogProvider />
@@ -32,7 +33,7 @@
             <MudSpacer />
 
             <MudTextField @bind-Value="@_currentPath" Label="Path" AdornmentIcon="@Icons.Material.Filled.Folder" />
-            <MudButton OnClick="@NavigateToPath" Color="Color.Primary" Variant="Variant.Filled" Class="mt-4 ms-2">Navigate</MudButton>
+            <MudButton OnClick="@NavigateToPath" Color="Color.Primary" Variant="Variant.Filled" Class="ms-2 mt-4">Navigate</MudButton>
             
             <MudSpacer />
             

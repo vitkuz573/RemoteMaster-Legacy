@@ -4,7 +4,6 @@
 
 using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
-using RemoteMaster.Server.Extensions;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
@@ -42,14 +41,7 @@ public partial class UpdateDialog
                 var updaterConnection = new HubConnectionBuilder()
                 .WithUrl($"https://{computer.IpAddress}:6001/hubs/updater", options =>
                 {
-                    options.AccessTokenProvider = () =>
-                    {
-                        var cookies = HttpContextAccessor.HttpContext?.Request.Cookies;
-
-                        var accessToken = cookies?.GetCookieOrDefault(CookieNames.AccessToken);
-
-                        return Task.FromResult(accessToken);
-                    };
+                    options.AccessTokenProvider = async () => await AccessTokenProvider.GetAccessTokenAsync();
                 })
                 .AddMessagePackProtocol()
                 .Build();
