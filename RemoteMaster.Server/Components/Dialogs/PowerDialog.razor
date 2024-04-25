@@ -1,7 +1,6 @@
 ﻿@using RemoteMaster.Server.Abstractions
 @inherits CommonDialogBase
 @inject IComputerCommandService ComputerCommandService
-@inject IWakeOnLanService WakeOnLanService
 @inject IHttpContextAccessor HttpContextAccessor
 
 <CommonDialog Hosts="@Hosts" ContentStyle="width: 500px;">
@@ -9,7 +8,6 @@
         <MudRadioGroup T="string" @bind-Value="@_selectedOption">
             <MudRadio Value="@("shutdown")">Shutdown</MudRadio>
             <MudRadio Value="@("reboot")">Reboot</MudRadio>
-            <MudRadio Value="@("wakeup")">Wake Up</MudRadio>
         </MudRadioGroup>
     </Content>
     <Actions>

@@ -247,6 +247,16 @@ public partial class Home
         await DialogService.ShowAsync<PowerDialog>("Power", dialogParameters);
     }
 
+    private async Task WakeUp()
+    {
+        var dialogParameters = new DialogParameters<WakeUpDialog>
+        {
+            { x => x.Hosts, await GetComputers(onlyAvailable: false, startConnection: false) }
+        };
+
+        await DialogService.ShowAsync<WakeUpDialog>("Wake Up", dialogParameters);
+    }
+
     private async Task Connect()
     {
         if (_selectedComputers.All(computer => !_availableComputers.Contains(computer)))

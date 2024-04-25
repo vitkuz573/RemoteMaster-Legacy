@@ -31,15 +31,6 @@ public partial class PowerDialog
             case "reboot":
                 await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("SendRebootComputer", powerActionRequest));
                 break;
-            case "wakeup":
-            {
-                foreach (var (computer, _) in Hosts)
-                {
-                    WakeOnLanService.WakeUp(computer.MacAddress);
-                }
-
-                break;
-            }
         }
 
         MudDialog.Close(DialogResult.Ok(true));
