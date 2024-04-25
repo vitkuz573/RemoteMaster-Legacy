@@ -241,7 +241,7 @@ public partial class Home
     {
         var dialogParameters = new DialogParameters<PowerDialog>
         {
-            { x => x.Hosts, await GetComputers(onlyAvailable: false, startConnection: false) }
+            { x => x.Hosts, await GetComputers() }
         };
 
         await DialogService.ShowAsync<PowerDialog>("Power", dialogParameters);
