@@ -2,10 +2,22 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Text.Json.Serialization;
+
 namespace RemoteMaster.Server.Models;
 
 public class ApplicationSettings
 {
+    [JsonPropertyName("executablesRoot")]
     public string ExecutablesRoot { get; init; }
+
+    [JsonPropertyName("isRegisterAllowed")]
+    public bool IsRegisterAllowed { get; set; }
+
+    [JsonPropertyName("jwt")]
+    public JwtOptions Jwt { get; set; }
+
+    [JsonPropertyName("caSettings")]
+    public CertificateOptions CASettings { get; set; }
 }
 

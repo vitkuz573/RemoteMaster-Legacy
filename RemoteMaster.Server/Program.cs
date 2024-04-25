@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using MudBlazor.Services;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Components;
@@ -209,7 +210,7 @@ else
 
 // app.UseHttpsRedirection();
 
-var isRegisterAllowed = builder.Configuration.GetValue<bool>("RegisterAllowed");
+var applicationSettings = app.Services.GetRequiredService<IOptions<ApplicationSettings>>().Value;
 
 app.Use(async (context, next) =>
 {
@@ -225,7 +226,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.UseMiddleware<RegistrationRestrictionMiddleware>(isRegisterAllowed);
+app.UseMiddleware<RegistrationRestrictionMiddleware>(applicationSettings.IsRegisterAllowed);
 app.UseMiddleware<RouteRestrictionMiddleware>();
 
 app.UseStaticFiles();
