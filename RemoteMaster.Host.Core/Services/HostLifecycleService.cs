@@ -253,7 +253,7 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
     private static string EnsureJwtDirectoryExists()
     {
         var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var directory = Path.Combine(programDataPath, "RemoteMaster", "Security");
+        var directory = Path.Combine(programDataPath, "RemoteMaster", "Security", "JWT");
 
         if (Directory.Exists(directory))
         {
