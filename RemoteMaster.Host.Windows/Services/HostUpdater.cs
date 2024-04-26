@@ -146,6 +146,11 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             foreach (var file in dir.GetFiles())
             {
+                if (file.Name.Equals("RemoteMaster.Host.json", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
                 var tempPath = Path.Combine(destDir, file.Name);
                 var copiedSuccessfully = await TryCopyFileAsync(file.FullName, tempPath, overwrite);
 

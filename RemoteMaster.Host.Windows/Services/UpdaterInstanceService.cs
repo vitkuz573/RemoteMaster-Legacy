@@ -98,7 +98,7 @@ public class UpdaterInstanceService : IUpdaterInstanceService
 
             process.Start();
 
-            Log.Information("Started a new instance of the host with options: {@Options}", process.StartInfo);
+            Log.Information("Started a new instance of the host with options: {@Options}", SafeLogArguments(process.StartInfo));
         }
         catch (IOException ioEx)
         {
@@ -108,5 +108,33 @@ public class UpdaterInstanceService : IUpdaterInstanceService
         {
             Log.Error(ex, "Error starting new instance of the host. Executable path: {Path}", _executablePath);
         }
+    }
+
+    private static object SafeLogArguments(ProcessStartInfo startInfo)
+    {
+        var safeArguments = startInfo.Arguments.Replace(ExtractSensitivePart(startInfo.Arguments, "--username="), "[USERNAME]")
+                                               .Replace(ExtractSensitivePart(startInfo.Arguments, "--password="), "[PASSWORD]");
+
+        return new
+        {
+            startInfo.FileName,
+            Arguments = safeArguments
+        };
+    }
+
+    private static string ExtractSensitivePart(string arguments, string prefix)
+    {
+        var startIndex = arguments.IndexOf(prefix);
+
+        if (startIndex == -1)
+        {
+            return string.Empty;
+        }
+
+        startIndex += prefix.Length;
+        var endIndex = arguments.IndexOf(' ', startIndex);
+        endIndex = endIndex == -1 ? arguments.Length : endIndex;
+
+        return arguments[startIndex..endIndex];
     }
 }
