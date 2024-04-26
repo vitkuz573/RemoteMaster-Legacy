@@ -188,28 +188,10 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
             return null;
         }
 
-        var newAccessToken = await GenerateAccessTokenAsync(user.Email);
-
-        SetCookie(CookieNames.AccessToken, newAccessToken, TimeSpan.FromMinutes(20));
-        SetCookie(CookieNames.RefreshToken, newRefreshTokenEntity.Token, TimeSpan.FromHours(25));
-
         return new TokenResponseData
         {
-            AccessToken = newAccessToken,
+            AccessToken = await GenerateAccessTokenAsync(user.Email),
             RefreshToken = newRefreshTokenEntity.Token,
         };
-    }
-
-    private void SetCookie(string key, string value, TimeSpan duration)
-    {
-        var options = new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = false,
-            SameSite = SameSiteMode.Strict,
-            Expires = DateTime.UtcNow.Add(duration)
-        };
-
-        httpContextAccessor.HttpContext.Response.Cookies.Append(key, value, options);
     }
 }
