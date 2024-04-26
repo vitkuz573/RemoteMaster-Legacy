@@ -182,6 +182,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         await context.SaveChangesAsync();
 
         var user = await context.Users.FindAsync(refreshTokenEntity.UserId);
+
         if (user == null)
         {
             return null;
