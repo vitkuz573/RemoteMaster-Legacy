@@ -73,8 +73,6 @@ public partial class Access : IDisposable
 
     protected async override Task OnInitializedAsync()
     {
-        _transportType = new Uri(NavigationManager.Uri).Scheme.ToUpper();
-
         await InitializeHostConnectionAsync();
         await SetParametersFromUriAsync();
     }
