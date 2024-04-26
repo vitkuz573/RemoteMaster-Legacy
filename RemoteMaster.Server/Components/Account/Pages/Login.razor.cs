@@ -44,11 +44,11 @@ public partial class Login
 
             Logger.LogInformation("User logged in.");
 
-            var accessTokenString = await TokenService.GenerateAccessTokenAsync(Input.Email);
-            var refreshTokenString = TokenService.GenerateRefreshToken(userId, ipAddress);
+            var accessToken = await TokenService.GenerateAccessTokenAsync(Input.Email);
+            var refreshToken = TokenService.GenerateRefreshToken(userId, ipAddress);
 
-            SetCookie(CookieNames.AccessToken, accessTokenString, TimeSpan.FromMinutes(20));
-            SetCookie(CookieNames.RefreshToken, refreshTokenString, TimeSpan.FromHours(25));
+            SetCookie(CookieNames.AccessToken, accessToken, TimeSpan.FromMinutes(20));
+            SetCookie(CookieNames.RefreshToken, refreshToken, TimeSpan.FromHours(25));
 
             RedirectManager.RedirectTo(ReturnUrl);
         }
