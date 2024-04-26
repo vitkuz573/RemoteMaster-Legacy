@@ -21,8 +21,6 @@ public partial class PowerDialog
             ForceAppsClosed = true
         };
 
-        await EnsureConnectionsInitialized();
-
         switch (_selectedOption)
         {
             case "shutdown":
@@ -34,27 +32,5 @@ public partial class PowerDialog
         }
 
         MudDialog.Close(DialogResult.Ok(true));
-    }
-
-    private async Task EnsureConnectionsInitialized()
-    {
-        var tasks = Hosts.Select(async kvp =>
-        {
-            var (computer, connection) = kvp;
-
-            try
-            {
-                if (connection != null)
-                {
-                    await connection.StartAsync();
-                }
-            }
-            catch
-            {
-                connection = null;
-            }
-        });
-
-        await Task.WhenAll(tasks);
     }
 }

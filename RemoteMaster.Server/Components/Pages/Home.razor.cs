@@ -224,6 +224,11 @@ public partial class Home
 
     private async Task Power()
     {
+        if (_selectedComputers.All(computer => !_availableComputers.Contains(computer)))
+        {
+            return;
+        }
+
         var dialogParameters = new DialogParameters<PowerDialog>
         {
             { x => x.Hosts, await GetComputers() }
