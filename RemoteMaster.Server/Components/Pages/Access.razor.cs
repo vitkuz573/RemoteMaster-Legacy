@@ -20,6 +20,7 @@ public partial class Access : IDisposable
     [Parameter]
     public string Host { get; set; } = default!;
 
+    private string _transportType = string.Empty;
     private string? _screenDataUrl;
     private bool _drawerOpen;
     private HubConnection _connection = null!;
@@ -72,6 +73,8 @@ public partial class Access : IDisposable
 
     protected async override Task OnInitializedAsync()
     {
+        _transportType = new Uri(NavigationManager.Uri).Scheme.ToUpper();
+
         await InitializeHostConnectionAsync();
         await SetParametersFromUriAsync();
     }
@@ -185,6 +188,7 @@ public partial class Access : IDisposable
 
         _connection.On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate);
         _connection.On<Version>("ReceiveHostVersion", version => _hostVersion = version.ToString());
+        _connection.On<string>("ReceiveTransportType", transportType => _transportType = transportType);
 
         _connection.Closed += async (_) =>
         {

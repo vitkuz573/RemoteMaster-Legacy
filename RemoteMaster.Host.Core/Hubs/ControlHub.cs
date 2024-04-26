@@ -5,6 +5,7 @@
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Connections.Features;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Dtos;
@@ -35,6 +36,9 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
             case Intention.ManageDevice:
                 var viewer = viewerFactory.Create(Context.ConnectionId);
                 appState.TryAddViewer(viewer);
+
+                var transportType = Context.Features.Get<IHttpTransportFeature>().TransportType;
+                await Clients.Caller.ReceiveTransportType(transportType.ToString());
                 break;
             default:
                 Log.Error("Unknown intention: {Intention}", intention);

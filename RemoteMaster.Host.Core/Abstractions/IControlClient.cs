@@ -24,4 +24,6 @@ public interface IControlClient
     Task ReceiveHostVersion(Version version);
 
     Task ReceiveCloseConnection();
+
+    Task ReceiveTransportType(string transportType);
 }

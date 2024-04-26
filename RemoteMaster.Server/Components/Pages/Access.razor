@@ -62,6 +62,10 @@
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.History" OnClick="RebootComputer">Reboot Computer</MudNavLink>
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.PowerOff" OnClick="ShutdownComputer">Shutdown Computer</MudNavLink>
 
+            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Https">
+                Transport Type: @_transportType
+            </MudNavLink>
+
             <MudNavLink Icon="@Icons.Material.Filled.Computer">Host Version: @(_hostVersion)</MudNavLink>
         </MudNavMenu>
     </MudDrawer>
