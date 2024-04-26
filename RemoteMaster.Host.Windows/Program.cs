@@ -83,7 +83,7 @@ internal class Program
         });
 
         var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var publicKeyPath = Path.Combine(programDataPath, "RemoteMaster", "Security", "public_key.der");
+        var publicKeyPath = Path.Combine(programDataPath, "RemoteMaster", "Security", "JWT", "public_key.der");
 
         if (File.Exists(publicKeyPath))
         {
