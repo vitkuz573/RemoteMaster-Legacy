@@ -163,20 +163,22 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
             return null;
         }
 
+        var ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
+
         var newRefreshTokenEntity = new RefreshToken
         {
             UserId = refreshTokenEntity.UserId,
             Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
             Expires = DateTime.UtcNow.AddDays(7),
             Created = DateTime.UtcNow,
-            CreatedByIp = "127.0.0.1"
+            CreatedByIp = ipAddress
         };
 
         context.RefreshTokens.Add(newRefreshTokenEntity);
         await context.SaveChangesAsync();
 
         refreshTokenEntity.Revoked = DateTime.UtcNow;
-        refreshTokenEntity.RevokedByIp = "127.0.0.1";
+        refreshTokenEntity.RevokedByIp = ipAddress;
         refreshTokenEntity.ReplacedByToken = newRefreshTokenEntity.Token;
 
         await context.SaveChangesAsync();
