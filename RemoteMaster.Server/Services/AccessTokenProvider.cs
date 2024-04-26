@@ -9,7 +9,7 @@ namespace RemoteMaster.Server.Services;
 
 public class AccessTokenProvider(ITokenService tokenService, IHttpContextAccessor httpContextAccessor) : IAccessTokenProvider
 {
-    public async Task<string> GetAccessTokenAsync()
+    public async Task<string?> GetAccessTokenAsync()
     {
         var context = httpContextAccessor.HttpContext;
         var accessToken = context.Request.Cookies[CookieNames.AccessToken];
@@ -34,7 +34,9 @@ public class AccessTokenProvider(ITokenService tokenService, IHttpContextAccesso
             }
         }
 
-        throw new InvalidOperationException("No valid access token available.");
+        context.Response.Redirect("/Account/Logout");
+
+        return null;
     }
 
     private void SetCookie(string key, string value, TimeSpan duration)

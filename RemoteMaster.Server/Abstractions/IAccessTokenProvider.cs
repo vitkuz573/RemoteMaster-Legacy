@@ -6,5 +6,5 @@ namespace RemoteMaster.Server.Abstractions;
 
 public interface IAccessTokenProvider
 {
-    Task<string> GetAccessTokenAsync();
+    Task<string?> GetAccessTokenAsync();
 }
