@@ -43,7 +43,7 @@ public class AccessTokenProvider(ITokenService tokenService, IHttpContextAccesso
         {
             HttpOnly = true,
             Secure = true,
-            SameSite = SameSiteMode.None,
+            SameSite = SameSiteMode.Strict,
             Expires = DateTime.UtcNow.AddHours(expireHours)
         };
 
