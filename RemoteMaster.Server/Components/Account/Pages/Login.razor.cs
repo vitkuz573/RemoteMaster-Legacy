@@ -3,10 +3,10 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.ComponentModel.DataAnnotations;
-using Azure.Core;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
+using RemoteMaster.Server.Extensions;
 using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Components.Account.Pages;
@@ -36,7 +36,7 @@ public partial class Login
     {
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
 
-        var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+        var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, false);
 
         if (result.Succeeded)
         {
@@ -47,8 +47,8 @@ public partial class Login
             var accessToken = await TokenService.GenerateAccessTokenAsync(Input.Email);
             var refreshToken = TokenService.GenerateRefreshToken(userId, ipAddress);
 
-            SetCookie(CookieNames.AccessToken, accessToken, TimeSpan.FromMinutes(20));
-            SetCookie(CookieNames.RefreshToken, refreshToken, TimeSpan.FromHours(25));
+            HttpContext.SetCookie(CookieNames.AccessToken, accessToken, TimeSpan.FromMinutes(20));
+            HttpContext.SetCookie(CookieNames.RefreshToken, refreshToken, TimeSpan.FromHours(25));
 
             RedirectManager.RedirectTo(ReturnUrl);
         }
@@ -69,19 +69,6 @@ public partial class Login
         {
             errorMessage = "Error: Invalid login attempt.";
         }
-    }
-
-    private void SetCookie(string key, string value, TimeSpan duration)
-    {
-        var options = new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = false,
-            SameSite = SameSiteMode.Strict,
-            Expires = DateTime.UtcNow.Add(duration)
-        };
-
-        HttpContext.Response.Cookies.Append(key, value, options);
     }
 
     private sealed class InputModel

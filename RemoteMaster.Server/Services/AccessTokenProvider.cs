@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Extensions;
 using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Services;
@@ -27,8 +28,8 @@ public class AccessTokenProvider(ITokenService tokenService, IHttpContextAccesso
             
             if (newTokens != null && !string.IsNullOrEmpty(newTokens.AccessToken))
             {
-                SetCookie(CookieNames.AccessToken, newTokens.AccessToken, TimeSpan.FromMinutes(20));
-                SetCookie(CookieNames.RefreshToken, newTokens.RefreshToken, TimeSpan.FromHours(25));
+                context.SetCookie(CookieNames.AccessToken, newTokens.AccessToken, TimeSpan.FromMinutes(20));
+                context.SetCookie(CookieNames.RefreshToken, newTokens.RefreshToken, TimeSpan.FromHours(25));
                
                 return newTokens.AccessToken;
             }
@@ -37,19 +38,6 @@ public class AccessTokenProvider(ITokenService tokenService, IHttpContextAccesso
         context.Response.Redirect("/Account/Logout");
 
         return null;
-    }
-
-    private void SetCookie(string key, string value, TimeSpan duration)
-    {
-        var options = new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = false,
-            SameSite = SameSiteMode.Strict,
-            Expires = DateTime.UtcNow.Add(duration)
-        };
-
-        httpContextAccessor.HttpContext.Response.Cookies.Append(key, value, options);
     }
 }
 
