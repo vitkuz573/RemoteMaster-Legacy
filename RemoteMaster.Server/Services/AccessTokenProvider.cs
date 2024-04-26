@@ -27,8 +27,8 @@ public class AccessTokenProvider(ITokenService tokenService, IHttpContextAccesso
             
             if (newTokens != null && !string.IsNullOrEmpty(newTokens.AccessToken))
             {
-                SetCookie(CookieNames.AccessToken, newTokens.AccessToken, 2);
-                SetCookie(CookieNames.RefreshToken, newTokens.RefreshToken, 7 * 24);
+                SetCookie(CookieNames.AccessToken, newTokens.AccessToken, TimeSpan.FromMinutes(20));
+                SetCookie(CookieNames.RefreshToken, newTokens.RefreshToken, TimeSpan.FromHours(25));
                
                 return newTokens.AccessToken;
             }
@@ -37,14 +37,14 @@ public class AccessTokenProvider(ITokenService tokenService, IHttpContextAccesso
         throw new InvalidOperationException("No valid access token available.");
     }
 
-    private void SetCookie(string key, string value, int expireHours)
+    private void SetCookie(string key, string value, TimeSpan duration)
     {
         var options = new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
+            Secure = false,
             SameSite = SameSiteMode.Strict,
-            Expires = DateTime.UtcNow.AddHours(expireHours)
+            Expires = DateTime.UtcNow.Add(duration)
         };
 
         httpContextAccessor.HttpContext.Response.Cookies.Append(key, value, options);
