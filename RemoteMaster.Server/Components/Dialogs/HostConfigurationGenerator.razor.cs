@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
 using RemoteMaster.Shared.Models;
 
@@ -14,12 +15,14 @@ public partial class HostConfigurationGenerator
     private string _organizationalUnitInput;
     private readonly Dictionary<string, string> _countries = [];
 
-    protected override void OnInitialized()
+    protected async override Task OnInitializedAsync()
     {
         var hostInformation = HostInformationService.GetHostInformation();
 
         _model.Server = hostInformation.Name;
         _model.Subject = new();
+
+        await LoadUserOrganizationAsync();
 
         _countries.Add("Afghanistan", "AF");
         _countries.Add("Åland Islands", "AX");
@@ -282,5 +285,27 @@ public partial class HostConfigurationGenerator
     public void DownloadHost()
     {
         NavigationManager.NavigateTo("api/HostConfiguration/download-host", true);
+    }
+
+    private async Task LoadUserOrganizationAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            var userEmail = user.Identity.Name;
+            var appUser = await UserManager.FindByEmailAsync(userEmail);
+
+            if (appUser != null && appUser.OrganizationId != Guid.Empty)
+            {
+                var organization = await DbContext.Organizations.FirstOrDefaultAsync(o => o.OrganizationId == appUser.OrganizationId);
+
+                if (organization != null)
+                {
+                    _model.Subject.Organization = organization.Name;
+                }
+            }
+        }
     }
 }

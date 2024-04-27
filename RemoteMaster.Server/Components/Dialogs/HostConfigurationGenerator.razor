@@ -1,7 +1,12 @@
-﻿@using RemoteMaster.Shared.Abstractions
+﻿@using Microsoft.AspNetCore.Identity
+@using RemoteMaster.Server.Data
+@using RemoteMaster.Shared.Abstractions
 @inject NavigationManager NavigationManager
 @inject IHostInformationService HostInformationService
 @inject IJSRuntime JsRuntime
+@inject UserManager<ApplicationUser> UserManager
+@inject ApplicationDbContext DbContext
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <MudDialog>
     <DialogContent>
