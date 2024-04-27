@@ -59,6 +59,7 @@ builder.Services.AddDbContextFactory<CertificateDbContext>(options => options.Us
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
@@ -247,5 +248,20 @@ caCertificateService.EnsureCaCertificateExists();
 
 var jwtSecurityService = app.Services.GetRequiredService<IJwtSecurityService>();
 await jwtSecurityService.EnsureKeysExistAsync();
+
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+    if (!await roleManager.RoleExistsAsync("SystemAdministrator"))
+    {
+        await roleManager.CreateAsync(new IdentityRole("SystemAdministrator"));
+    }
+
+    if (!await roleManager.RoleExistsAsync("Administrator"))
+    {
+        await roleManager.CreateAsync(new IdentityRole("Administrator"));
+    }
+}
 
 app.Run();
