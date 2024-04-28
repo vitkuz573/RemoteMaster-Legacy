@@ -54,7 +54,7 @@ public partial class Register
 
         var user = CreateUser(organization.OrganizationId);
 
-        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+        await UserStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
         
         var emailStore = GetEmailStore();
         
@@ -141,6 +141,10 @@ public partial class Register
 
     private sealed class InputModel
     {
+        [Required]
+        [Display(Name = "Username")]
+        public string Username { get; set; } = "";
+
         [Required]
         [EmailAddress]
         [Display(Name = "Email")]

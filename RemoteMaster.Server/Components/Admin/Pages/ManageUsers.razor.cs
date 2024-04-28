@@ -39,7 +39,7 @@ public partial class ManageUsers
     {
         var user = CreateUser(_user.OrganizationId);
 
-        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+        await UserStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
 
         var emailStore = GetEmailStore();
 
@@ -87,13 +87,16 @@ public partial class ManageUsers
 
     private sealed class InputModel
     {
+        [Required]
         [Display(Name = "Username")]
-        public string Username { get; set; }
+        public string Username { get; set; } = "";
 
+        [Required]
         [EmailAddress]
         [Display(Name = "Email")]
         public string Email { get; set; }
 
+        [Required]
         [Display(Name = "Role")]
         public string Role { get; set; }
 
