@@ -26,7 +26,7 @@ public partial class Register
 
     private string? Message => _identityErrors is null ? null : $"Error: {string.Join(", ", _identityErrors.Select(error => error.Description))}";
 
-    public async Task RegisterUser(EditContext editContext)
+    protected async override Task OnInitializedAsync()
     {
         if (await RootAdministratorExists())
         {
@@ -40,7 +40,10 @@ public partial class Register
 
             return;
         }
+    }
 
+    public async Task RegisterUser(EditContext editContext)
+    {
         var organization = new Organization
         {
             Name = Input.OrganizationName
