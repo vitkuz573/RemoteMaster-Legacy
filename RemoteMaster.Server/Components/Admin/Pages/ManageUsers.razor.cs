@@ -18,8 +18,11 @@ public partial class ManageUsers
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
 
+    private IEnumerable<IdentityError>? _identityErrors;
     private ApplicationUser _user = default!;
     private List<IdentityRole> _roles = [];
+
+    private string? Message => _identityErrors is null ? null : $"Error: {string.Join(", ", _identityErrors.Select(error => error.Description))}";
 
     protected async override Task OnInitializedAsync()
     {
@@ -32,17 +35,52 @@ public partial class ManageUsers
 
     private async Task OnValidSubmitAsync()
     {
-        var user = new ApplicationUser
-        {
-            UserName = Input.Username,
-            Email = Input.Email,
-            OrganizationId = _user.OrganizationId
-        };
+        var user = CreateUser(_user.OrganizationId);
 
-        await UserManager.CreateAsync(user);
+        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+
+        var emailStore = GetEmailStore();
+
+        await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+
+        var result = await UserManager.CreateAsync(user, Input.Password);
+
+        if (!result.Succeeded)
+        {
+            _identityErrors = result.Errors;
+
+            return;
+        }
+
         await UserManager.AddToRoleAsync(user, Input.Role);
 
         RedirectManager.RedirectToCurrentPageWithStatus("User created", HttpContext);
+    }
+
+    private ApplicationUser CreateUser(Guid organizationId)
+    {
+        try
+        {
+            var user = Activator.CreateInstance<ApplicationUser>();
+            user.OrganizationId = organizationId;
+
+            return user;
+        }
+        catch
+        {
+            throw new InvalidOperationException($"Can't create an instance of '{nameof(ApplicationUser)}'. " +
+                $"Ensure that '{nameof(ApplicationUser)}' is not an abstract class and has a parameterless constructor.");
+        }
+    }
+
+    private IUserEmailStore<ApplicationUser> GetEmailStore()
+    {
+        if (!UserManager.SupportsUserEmail)
+        {
+            throw new NotSupportedException("The default UI requires a user store with email support.");
+        }
+
+        return (IUserEmailStore<ApplicationUser>)UserStore;
     }
 
     private sealed class InputModel

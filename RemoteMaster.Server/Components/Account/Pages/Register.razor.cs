@@ -80,7 +80,7 @@ public partial class Register
             });
         }
 
-        await SignInManager.SignInAsync(user, isPersistent: false);
+        // await SignInManager.SignInAsync(user, isPersistent: false);
 
         RedirectManager.RedirectTo(ReturnUrl);
     }
