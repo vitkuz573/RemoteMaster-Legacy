@@ -14,6 +14,7 @@
 @inject IJSRuntime JsRuntime
 @inject NavigationManager NavigationManager
 @inject IAccessTokenProvider AccessTokenProvider
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme" />
 <MudDialogProvider />
@@ -39,6 +40,10 @@
         <MudNavMenu>
             <MudNavLink Match="NavLinkMatch.All" OnClick="OpenHostConfigurationGenerator">Host Configuration Generator</MudNavLink>
             <MudNavLink Match="NavLinkMatch.All" OnClick="PublishCrl">Publish CRL</MudNavLink>
+            @if (_isSystemAdministrator)
+            {
+                <MudNavLink Match="NavLinkMatch.All" OnClick="OpenAdminPanel">Admin Panel</MudNavLink>
+            }            
             <MudNavLink Match="NavLinkMatch.All" OnClick="Logout">Logout</MudNavLink>
         </MudNavMenu>
     </MudDrawer>

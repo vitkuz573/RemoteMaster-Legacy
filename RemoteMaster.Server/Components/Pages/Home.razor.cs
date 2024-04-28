@@ -15,6 +15,8 @@ namespace RemoteMaster.Server.Components.Pages;
 
 public partial class Home
 {
+    private bool _isSystemAdministrator = false;
+
     private bool _drawerOpen;
     private Node? _selectedNode;
     private HashSet<Node>? _nodes;
@@ -35,6 +37,11 @@ public partial class Home
 
     protected async override Task OnInitializedAsync()
     {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        _isSystemAdministrator = user.IsInRole("SystemAdministrator");
+
         _nodes = new HashSet<Node>(await LoadOrganizationalUnitsWithChildren());
 
         await AccessTokenProvider.GetAccessTokenAsync();
@@ -135,6 +142,11 @@ public partial class Home
         {
             Snackbar.Add($"Failed to publish CRL", Severity.Error);
         }
+    }
+
+    private void OpenAdminPanel()
+    {
+        NavigationManager.NavigateTo("/Admin/Users");
     }
 
     private void Logout()

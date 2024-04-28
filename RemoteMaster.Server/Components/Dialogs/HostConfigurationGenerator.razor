@@ -21,8 +21,8 @@
                     <MudExpansionPanel Text="Subject Parameters">
                         <MudTextField Label="Organization" @bind-Value="_model.Subject.Organization" For="@(() => _model.Subject.Organization)" ReadOnly />
                         <MudTextField Label="Organizational Unit" @bind-Value="_organizationalUnitInput" />
-                        <MudTextField Label="Locality" @bind-Value="_model.Subject.Locality" For="@(() => _model.Subject.Locality)"/>
-                        <MudTextField Label="State" @bind-Value="_model.Subject.State" For="@(() => _model.Subject.State)"/>
+                        <MudTextField Label="Locality" @bind-Value="_model.Subject.Locality" For="@(() => _model.Subject.Locality)" />
+                        <MudTextField Label="State" @bind-Value="_model.Subject.State" For="@(() => _model.Subject.State)" />
                         <MudSelect T="string" Label="Country" @bind-Value="_model.Subject.Country" Dense="true">
                             @foreach (var country in _countries)
                             {
