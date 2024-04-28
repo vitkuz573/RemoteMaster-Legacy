@@ -16,7 +16,7 @@ namespace RemoteMaster.Server.Components.Account.Pages;
 
 public partial class Register
 {
-    private IEnumerable<IdentityError>? identityErrors;
+    private IEnumerable<IdentityError>? _identityErrors;
 
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
@@ -24,10 +24,23 @@ public partial class Register
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
 
-    private string? Message => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error => error.Description))}";
+    private string? Message => _identityErrors is null ? null : $"Error: {string.Join(", ", _identityErrors.Select(error => error.Description))}";
 
     public async Task RegisterUser(EditContext editContext)
     {
+        if (await RootAdministratorExists())
+        {
+            _identityErrors =
+            [
+                new IdentityError
+                {
+                    Description = "Registration is closed. Only one RootAdministrator is allowed."
+                }
+            ];
+
+            return;
+        }
+
         var organization = new Organization
         {
             Name = Input.OrganizationName
@@ -48,12 +61,12 @@ public partial class Register
 
         if (!result.Succeeded)
         {
-            identityErrors = result.Errors;
+            _identityErrors = result.Errors;
 
             return;
         }
 
-        await UserManager.AddToRoleAsync(user, "SystemAdministrator");
+        await UserManager.AddToRoleAsync(user, "RootAdministrator");
 
         Logger.LogInformation("User created a new account with password.");
 
@@ -79,8 +92,6 @@ public partial class Register
                 ["returnUrl"] = ReturnUrl
             });
         }
-
-        // await SignInManager.SignInAsync(user, isPersistent: false);
 
         RedirectManager.RedirectTo(ReturnUrl);
     }
@@ -109,6 +120,20 @@ public partial class Register
         }
 
         return (IUserEmailStore<ApplicationUser>)UserStore;
+    }
+
+    private async Task<bool> RootAdministratorExists()
+    {
+        var roleExist = await RoleManager.RoleExistsAsync("RootAdministrator");
+        
+        if (!roleExist)
+        {
+            return false;
+        }
+
+        var users = await UserManager.GetUsersInRoleAsync("RootAdministrator");
+
+        return users.Any();
     }
 
     private sealed class InputModel

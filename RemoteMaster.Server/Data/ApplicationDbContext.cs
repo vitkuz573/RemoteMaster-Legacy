@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Data;
+
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser>(options)
 {
     public DbSet<RefreshToken> RefreshTokens { get; set; }

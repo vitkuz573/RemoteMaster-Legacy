@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace RemoteMaster.Server.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class CreateCertificates : Migration
+    public partial class CreateCrlInfrastructure : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -32,14 +32,20 @@ namespace RemoteMaster.Server.Data.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    SerialNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SerialNumber = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Reason = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    RevocationDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    RevocationDate = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_RevokedCertificates", x => x.Id);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RevokedCertificates_SerialNumber",
+                table: "RevokedCertificates",
+                column: "SerialNumber",
+                unique: true);
         }
 
         /// <inheritdoc />

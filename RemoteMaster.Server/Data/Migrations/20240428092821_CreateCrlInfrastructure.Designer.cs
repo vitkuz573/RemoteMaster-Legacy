@@ -12,8 +12,8 @@ using RemoteMaster.Server.Data;
 namespace RemoteMaster.Server.Data.Migrations
 {
     [DbContext(typeof(CertificateDbContext))]
-    [Migration("20240424071119_SomeUpdateRevokedCertificateStructure")]
-    partial class SomeUpdateRevokedCertificateStructure
+    [Migration("20240428092821_CreateCrlInfrastructure")]
+    partial class CreateCrlInfrastructure
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

@@ -15,7 +15,7 @@ namespace RemoteMaster.Server.Components.Pages;
 
 public partial class Home
 {
-    private bool _isSystemAdministrator = false;
+    private bool _isRootAdministrator = false;
 
     private bool _drawerOpen;
     private Node? _selectedNode;
@@ -40,7 +40,7 @@ public partial class Home
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
-        _isSystemAdministrator = user.IsInRole("SystemAdministrator");
+        _isRootAdministrator = user.IsInRole("RootAdministrator");
 
         _nodes = new HashSet<Node>(await LoadOrganizationalUnitsWithChildren());
 

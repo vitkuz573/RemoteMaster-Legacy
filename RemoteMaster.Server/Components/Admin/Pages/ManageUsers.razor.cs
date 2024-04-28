@@ -11,7 +11,7 @@ using RemoteMaster.Server.Data;
 
 namespace RemoteMaster.Server.Components.Admin.Pages;
 
-[Authorize(Roles = "SystemAdministrator")]
+[Authorize(Roles = "RootAdministrator")]
 public partial class ManageUsers
 {
     [CascadingParameter]
@@ -31,7 +31,7 @@ public partial class ManageUsers
         _user = await UserAccessor.GetRequiredUserAsync(HttpContext);
 
         _roles = await RoleManager.Roles
-            .Where(role => role.Name != "SystemAdministrator")
+            .Where(role => role.Name != "RootAdministrator")
             .ToListAsync();
     }
 

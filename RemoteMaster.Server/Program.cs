@@ -253,9 +253,9 @@ using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-    if (!await roleManager.RoleExistsAsync("SystemAdministrator"))
+    if (!await roleManager.RoleExistsAsync("RootAdministrator"))
     {
-        await roleManager.CreateAsync(new IdentityRole("SystemAdministrator"));
+        await roleManager.CreateAsync(new IdentityRole("RootAdministrator"));
     }
 
     if (!await roleManager.RoleExistsAsync("Administrator"))
