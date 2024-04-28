@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -260,7 +261,13 @@ using (var scope = app.Services.CreateScope())
 
     if (!await roleManager.RoleExistsAsync("Administrator"))
     {
-        await roleManager.CreateAsync(new IdentityRole("Administrator"));
+        var role = new IdentityRole("Administrator");
+
+        await roleManager.CreateAsync(role);
+
+        await roleManager.AddClaimAsync(role, new Claim("device:control", true.ToString()));
+        await roleManager.AddClaimAsync(role, new Claim("device:filemanager", true.ToString()));
+        await roleManager.AddClaimAsync(role, new Claim("device:taskmanager", true.ToString()));
     }
 }
 

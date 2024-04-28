@@ -26,7 +26,7 @@ public partial class Register
 
     private string? Message => _identityErrors is null ? null : $"Error: {string.Join(", ", _identityErrors.Select(error => error.Description))}";
 
-    protected async override Task OnInitializedAsync()
+    public async Task RegisterUser(EditContext editContext)
     {
         if (await RootAdministratorExists())
         {
@@ -40,10 +40,7 @@ public partial class Register
 
             return;
         }
-    }
 
-    public async Task RegisterUser(EditContext editContext)
-    {
         var organization = new Organization
         {
             Name = Input.OrganizationName
@@ -54,7 +51,7 @@ public partial class Register
 
         var user = CreateUser(organization.OrganizationId);
 
-        await UserStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
+        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
         
         var emailStore = GetEmailStore();
         
@@ -141,10 +138,6 @@ public partial class Register
 
     private sealed class InputModel
     {
-        [Required]
-        [Display(Name = "Username")]
-        public string Username { get; set; } = "";
-
         [Required]
         [EmailAddress]
         [Display(Name = "Email")]
