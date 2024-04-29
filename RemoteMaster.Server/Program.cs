@@ -5,7 +5,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -110,10 +109,6 @@ builder.Host.UseSerilog((_, configuration) =>
 builder.Services.AddControllers();
 
 builder.Services
-    .AddHealthChecksUI()
-    .AddSqlServerStorage(connectionString);
-
-builder.Services
     .AddHealthChecks()
     .AddSqlServer(connectionString)
     .AddDbContextCheck<ApplicationDbContext>()
@@ -169,10 +164,7 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
 
 var app = builder.Build();
 
-app.MapHealthChecks("/health", new HealthCheckOptions
-{
-    AllowCachingResponses = true
-});
+app.MapHealthChecks("/health");
 
 app.UseRateLimiter();
 
@@ -233,8 +225,6 @@ app.UseMiddleware<RouteRestrictionMiddleware>();
 
 app.UseStaticFiles();
 app.UseAntiforgery();
-
-app.MapHealthChecksUI();
 
 app.MapControllers();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
