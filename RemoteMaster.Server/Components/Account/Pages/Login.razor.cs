@@ -36,15 +36,22 @@ public partial class Login
     public async Task LoginUser()
     {
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-
         var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, false);
 
         if (result.Succeeded)
         {
             var userId = UserManager.GetUserId(HttpContext.User);
+            var user = await UserManager.FindByIdAsync(userId);
+
+            if (await UserManager.IsInRoleAsync(user, "RootAdministrator"))
+            {
+                Logger.LogInformation("RootAdministrator logged in. Redirecting to Admin page.");
+                RedirectManager.RedirectTo("Admin");
+                
+                return;
+            }
 
             await TokenService.RevokeAllRefreshTokensAsync(userId, TokenRevocationReason.PreemptiveSecurity);
-
             Logger.LogInformation("User logged in. All previous refresh tokens revoked.");
 
             var accessToken = await TokenService.GenerateAccessTokenAsync(Input.Email);
