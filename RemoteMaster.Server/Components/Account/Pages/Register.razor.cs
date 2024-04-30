@@ -3,12 +3,9 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.ComponentModel.DataAnnotations;
-using System.Text;
-using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.WebUtilities;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
 
@@ -70,30 +67,7 @@ public partial class Register
 
         Logger.LogInformation("User created a new account with password.");
 
-        var userId = await UserManager.GetUserIdAsync(user);
-        var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
-        
-        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-        
-        var callbackUrl = NavigationManager.GetUriWithQueryParameters(NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri, new Dictionary<string, object?>
-        {
-            ["userId"] = userId,
-            ["code"] = code,
-            ["returnUrl"] = ReturnUrl
-        });
-
-        await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
-
-        if (UserManager.Options.SignIn.RequireConfirmedAccount)
-        {
-            RedirectManager.RedirectTo("Account/RegisterConfirmation", new()
-            {
-                ["email"] = Input.Email,
-                ["returnUrl"] = ReturnUrl
-            });
-        }
-
-        RedirectManager.RedirectTo(ReturnUrl);
+        RedirectManager.RedirectTo("Admin");
     }
 
     private ApplicationUser CreateUser(Guid organizationId)
