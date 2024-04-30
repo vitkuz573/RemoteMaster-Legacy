@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using RemoteMaster.Server.Enums;
 using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Abstractions;
@@ -17,4 +18,6 @@ public interface ITokenService
     bool IsRefreshTokenValid(string refreshToken);
 
     Task<TokenResponseData?> RefreshAccessToken(string refreshToken);
+
+    Task RevokeRefreshTokenAsync(string refreshToken, string revokedByIp, TokenRevocationReason revocationReason);
 }

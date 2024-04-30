@@ -11,6 +11,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
+using RemoteMaster.Server.Enums;
 using RemoteMaster.Server.Models;
 using Serilog;
 
@@ -179,7 +180,8 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         refreshTokenEntity.Revoked = DateTime.UtcNow;
         refreshTokenEntity.RevokedByIp = ipAddress;
-        refreshTokenEntity.ReplacedByToken = newRefreshTokenEntity.Token;
+        refreshTokenEntity.RevocationReason = TokenRevocationReason.ReplacedDuringRefresh;
+        refreshTokenEntity.ReplacedByToken = newRefreshTokenEntity;
 
         context.Update(refreshTokenEntity);
 
@@ -197,5 +199,22 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
             AccessToken = await GenerateAccessTokenAsync(user.Email),
             RefreshToken = newRefreshTokenEntity.Token,
         };
+    }
+
+    public async Task RevokeRefreshTokenAsync(string refreshToken, string revokedByIp, TokenRevocationReason revocationReason)
+    {
+        var refreshTokenEntity = await context.RefreshTokens.SingleOrDefaultAsync(rt => rt.Token == refreshToken);
+
+        if (refreshTokenEntity == null || refreshTokenEntity.Revoked.HasValue)
+        {
+            throw new InvalidOperationException("Refresh token is not valid or already revoked.");
+        }
+
+        refreshTokenEntity.Revoked = DateTime.UtcNow;
+        refreshTokenEntity.RevokedByIp = revokedByIp;
+        refreshTokenEntity.RevocationReason = revocationReason;
+
+        context.Update(refreshTokenEntity);
+        await context.SaveChangesAsync();
     }
 }

@@ -181,14 +181,15 @@ namespace RemoteMaster.Server.Data.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Token = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    Token = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
                     Expires = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Created = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedByIp = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedByIp = table.Column<string>(type: "nvarchar(45)", maxLength: 45, nullable: false),
                     Revoked = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    RevokedByIp = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ReplacedByToken = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    RevokedByIp = table.Column<string>(type: "nvarchar(45)", maxLength: 45, nullable: true),
+                    RevocationReason = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ReplacedByTokenId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -199,6 +200,11 @@ namespace RemoteMaster.Server.Data.Migrations
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_RefreshTokens_RefreshTokens_ReplacedByTokenId",
+                        column: x => x.ReplacedByTokenId,
+                        principalTable: "RefreshTokens",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateIndex(
@@ -244,6 +250,11 @@ namespace RemoteMaster.Server.Data.Migrations
                 column: "NormalizedUserName",
                 unique: true,
                 filter: "[NormalizedUserName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RefreshTokens_ReplacedByTokenId",
+                table: "RefreshTokens",
+                column: "ReplacedByTokenId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RefreshTokens_UserId",
