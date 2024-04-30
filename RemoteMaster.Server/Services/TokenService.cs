@@ -181,6 +181,8 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         refreshTokenEntity.RevokedByIp = ipAddress;
         refreshTokenEntity.ReplacedByToken = newRefreshTokenEntity.Token;
 
+        context.Update(refreshTokenEntity);
+
         await context.SaveChangesAsync();
 
         var user = await context.Users.FindAsync(refreshTokenEntity.UserId);
