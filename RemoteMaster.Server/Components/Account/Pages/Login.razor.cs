@@ -31,6 +31,14 @@ public partial class Login
         {
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
         }
+
+        if (HttpContext.User.Identity?.IsAuthenticated == true)
+        {
+            Logger.LogInformation("User already logged in. Redirecting to the origin page or default page.");
+            RedirectManager.RedirectTo(ReturnUrl ?? "/");
+            
+            return;
+        }
     }
 
     public async Task LoginUser()
