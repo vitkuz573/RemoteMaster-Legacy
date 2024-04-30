@@ -1,6 +1,8 @@
 ﻿@page "/Account/Logout"
 @using Microsoft.AspNetCore.Identity
+@using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Server.Data
 @inject SignInManager<ApplicationUser> SignInManager
 @inject NavigationManager NavigationManager
 @inject IHttpContextAccessor HttpContextAccessor
+@inject ITokenService TokenService

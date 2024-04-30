@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Components;
+using RemoteMaster.Server.Enums;
 using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Components.Account.Pages;
@@ -14,6 +15,13 @@ public partial class Logout
         await SignInManager.SignOutAsync();
 
         var httpContext = HttpContextAccessor.HttpContext;
+
+        var refreshToken = httpContext?.Request.Cookies[CookieNames.RefreshToken];
+
+        if (refreshToken != null)
+        {
+            await TokenService.RevokeRefreshTokenAsync(refreshToken, TokenRevocationReason.UserLoggedOut);
+        }
 
         httpContext?.Response.Cookies.Delete(CookieNames.AccessToken);
         httpContext?.Response.Cookies.Delete(CookieNames.RefreshToken);

@@ -201,7 +201,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         };
     }
 
-    public async Task RevokeRefreshTokenAsync(string refreshToken, string revokedByIp, TokenRevocationReason revocationReason)
+    public async Task RevokeRefreshTokenAsync(string refreshToken, TokenRevocationReason revocationReason)
     {
         var refreshTokenEntity = await context.RefreshTokens.SingleOrDefaultAsync(rt => rt.Token == refreshToken);
 
@@ -210,8 +210,10 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
             throw new InvalidOperationException("Refresh token is not valid or already revoked.");
         }
 
+        var ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
+
         refreshTokenEntity.Revoked = DateTime.UtcNow;
-        refreshTokenEntity.RevokedByIp = revokedByIp;
+        refreshTokenEntity.RevokedByIp = ipAddress;
         refreshTokenEntity.RevocationReason = revocationReason;
 
         context.Update(refreshTokenEntity);
