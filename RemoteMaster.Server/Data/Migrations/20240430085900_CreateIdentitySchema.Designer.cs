@@ -12,7 +12,7 @@ using RemoteMaster.Server.Data;
 namespace RemoteMaster.Server.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240430073431_CreateIdentitySchema")]
+    [Migration("20240430085900_CreateIdentitySchema")]
     partial class CreateIdentitySchema
     {
         /// <inheritdoc />

@@ -10,7 +10,7 @@ using RemoteMaster.Server.Enums;
 
 namespace RemoteMaster.Server.Models;
 
-public class RefreshToken
+public class RefreshToken : IValidatableObject
 {
     [Key]
     public int Id { get; set; }
@@ -56,6 +56,14 @@ public class RefreshToken
 
     [ForeignKey("UserId")]
     public ApplicationUser User { get; set; }
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (RevocationReason == TokenRevocationReason.ReplacedDuringRefresh && ReplacedByTokenId == null)
+        {
+            yield return new ValidationResult("ReplacedByToken must be specified if the RevocationReason is ReplacedDuringRefresh.", ["ReplacedByTokenId"]);
+        }
+    }
 
     public override string ToString()
     {
