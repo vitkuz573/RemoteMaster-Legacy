@@ -21,6 +21,7 @@ using RemoteMaster.Server.Services;
 using RemoteMaster.Shared.Extensions;
 using RemoteMaster.Shared.Models;
 using Serilog;
+using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -98,8 +99,8 @@ builder.Services.AddMudServices();
 
 builder.Host.UseSerilog((_, configuration) =>
 {
-    configuration.MinimumLevel.Warning();
-    configuration.WriteTo.Console();
+    configuration.MinimumLevel.Information();
+    configuration.WriteTo.Console().MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning);
 
     var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
 
