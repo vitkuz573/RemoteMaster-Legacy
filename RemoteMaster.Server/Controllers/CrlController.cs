@@ -54,7 +54,7 @@ public class CrlController(ICrlService crlService) : ControllerBase
         catch (Exception ex)
         {
             Log.Error(ex, "Error retrieving CRL metadata");
-            
+
             return StatusCode(StatusCodes.Status500InternalServerError, ApiResponse<CrlMetadata>.Failure<string>("Internal Server Error. Please try again later.", StatusCodes.Status500InternalServerError));
         }
     }
