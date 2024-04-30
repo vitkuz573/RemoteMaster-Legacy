@@ -98,7 +98,7 @@ builder.Services.AddMudServices();
 
 builder.Host.UseSerilog((_, configuration) =>
 {
-    configuration.MinimumLevel.Error();
+    configuration.MinimumLevel.Warning();
     configuration.WriteTo.Console();
 
     var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);

@@ -20,4 +20,6 @@ public interface ITokenService
     Task<TokenResponseData?> RefreshAccessToken(string refreshToken);
 
     Task RevokeRefreshTokenAsync(string refreshToken, TokenRevocationReason revocationReason);
+
+    Task RevokeAllRefreshTokensAsync(string userId, TokenRevocationReason revocationReason);
 }

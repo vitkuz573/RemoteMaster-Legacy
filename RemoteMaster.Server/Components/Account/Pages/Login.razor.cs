@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
+using RemoteMaster.Server.Enums;
 using RemoteMaster.Server.Extensions;
 using RemoteMaster.Server.Models;
 
@@ -42,7 +43,9 @@ public partial class Login
         {
             var userId = UserManager.GetUserId(HttpContext.User);
 
-            Logger.LogInformation("User logged in.");
+            await TokenService.RevokeAllRefreshTokensAsync(userId, TokenRevocationReason.PreemptiveSecurity);
+
+            Logger.LogInformation("User logged in. All previous refresh tokens revoked.");
 
             var accessToken = await TokenService.GenerateAccessTokenAsync(Input.Email);
             var refreshToken = TokenService.GenerateRefreshToken(userId, ipAddress);

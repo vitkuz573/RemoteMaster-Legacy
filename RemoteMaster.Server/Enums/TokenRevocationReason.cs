@@ -10,5 +10,6 @@ public enum TokenRevocationReason
     UserLoggedOut = 1,
     ReplacedDuringRefresh = 2,
     AdminRevoked = 3,
-    SuspiciousActivity = 4
+    SuspiciousActivity = 4,
+    PreemptiveSecurity = 5
 }

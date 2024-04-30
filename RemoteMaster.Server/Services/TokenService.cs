@@ -6,7 +6,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using Azure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -225,5 +224,32 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         context.Update(refreshTokenEntity);
         await context.SaveChangesAsync();
+    }
+
+    public async Task RevokeAllRefreshTokensAsync(string userId, TokenRevocationReason revocationReason)
+    {
+        var now = DateTime.UtcNow;
+        var refreshTokens = await context.RefreshTokens
+            .Where(rt => rt.UserId == userId && rt.Revoked == null && rt.Expires > now)
+            .ToListAsync();
+
+        if (refreshTokens.Count > 0)
+        {
+            foreach (var refreshToken in refreshTokens)
+            {
+                refreshToken.Revoked = now;
+                refreshToken.RevokedByIp = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
+                refreshToken.RevocationReason = revocationReason;
+            }
+
+            context.RefreshTokens.UpdateRange(refreshTokens);
+            await context.SaveChangesAsync();
+
+            Log.Information($"All refresh tokens for user {userId} have been revoked. Reason: {revocationReason}");
+        }
+        else
+        {
+            Log.Information("No active refresh tokens found for revocation.");
+        }
     }
 }
