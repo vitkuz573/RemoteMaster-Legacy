@@ -11,9 +11,6 @@ public class ApplicationSettings
     [JsonPropertyName("executablesRoot")]
     public string ExecutablesRoot { get; init; }
 
-    [JsonPropertyName("isRegisterAllowed")]
-    public bool IsRegisterAllowed { get; init; }
-
     [JsonPropertyName("jwt")]
     public JwtOptions Jwt { get; init; }
 

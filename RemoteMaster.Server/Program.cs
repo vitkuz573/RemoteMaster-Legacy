@@ -220,7 +220,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.UseMiddleware<RegistrationRestrictionMiddleware>(applicationSettings.IsRegisterAllowed);
+app.UseMiddleware<RegistrationRestrictionMiddleware>();
 app.UseMiddleware<RouteRestrictionMiddleware>();
 
 app.UseStaticFiles();
