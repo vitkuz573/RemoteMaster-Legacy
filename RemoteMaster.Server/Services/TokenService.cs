@@ -169,7 +169,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         {
             UserId = refreshTokenEntity.UserId,
             Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
-            Expires = DateTime.UtcNow.AddDays(7),
+            Expires = DateTime.UtcNow.AddDays(1),
             Created = DateTime.UtcNow,
             CreatedByIp = ipAddress
         };
