@@ -21,11 +21,11 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 {
     private readonly JwtOptions _options = options.Value ?? throw new ArgumentNullException(nameof(options));
 
-    public async Task<string> GenerateAccessTokenAsync(string email)
+    public async Task<string> GenerateAccessTokenAsync(string username)
     {
         var claims = new List<Claim>
         {
-            new(ClaimTypes.Name, email)
+            new(ClaimTypes.Name, username)
         };
 
 #pragma warning disable CA2000

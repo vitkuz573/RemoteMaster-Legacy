@@ -44,7 +44,7 @@ public partial class Login
     public async Task LoginUser()
     {
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-        var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, false);
+        var result = await SignInManager.PasswordSignInAsync(Input.Username, Input.Password, Input.RememberMe, false);
 
         if (result.Succeeded)
         {
@@ -62,7 +62,7 @@ public partial class Login
             await TokenService.RevokeAllRefreshTokensAsync(userId, TokenRevocationReason.PreemptiveSecurity);
             Logger.LogInformation("User logged in. All previous refresh tokens revoked.");
 
-            var accessToken = await TokenService.GenerateAccessTokenAsync(Input.Email);
+            var accessToken = await TokenService.GenerateAccessTokenAsync(Input.Username);
             var refreshToken = TokenService.GenerateRefreshToken(userId, ipAddress);
 
             HttpContext.SetCookie(CookieNames.AccessToken, accessToken, TimeSpan.FromMinutes(20));
@@ -92,8 +92,8 @@ public partial class Login
     private sealed class InputModel
     {
         [Required]
-        [EmailAddress]
-        public string Email { get; set; } = "";
+        [DataType(DataType.Text)]
+        public string Username { get; set; } = "";
 
         [Required]
         [DataType(DataType.Password)]

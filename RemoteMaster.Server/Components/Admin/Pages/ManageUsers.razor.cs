@@ -50,11 +50,7 @@ public partial class ManageUsers
     {
         var user = CreateUser(_user.OrganizationId);
 
-        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
-
-        var emailStore = GetEmailStore();
-
-        await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+        await UserStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
 
         var result = await UserManager.CreateAsync(user, Input.Password);
 
@@ -86,22 +82,12 @@ public partial class ManageUsers
         }
     }
 
-    private IUserEmailStore<ApplicationUser> GetEmailStore()
-    {
-        if (!UserManager.SupportsUserEmail)
-        {
-            throw new NotSupportedException("The default UI requires a user store with email support.");
-        }
-
-        return (IUserEmailStore<ApplicationUser>)UserStore;
-    }
-
     private sealed class InputModel
     {
         [Required]
-        [EmailAddress]
-        [Display(Name = "Email")]
-        public string Email { get; set; }
+        [DataType(DataType.Text)]
+        [Display(Name = "Username")]
+        public string Username { get; set; }
 
         [Required]
         [Display(Name = "Role")]

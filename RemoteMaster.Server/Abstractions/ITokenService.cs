@@ -9,7 +9,7 @@ namespace RemoteMaster.Server.Abstractions;
 
 public interface ITokenService
 {
-    Task<string> GenerateAccessTokenAsync(string email);
+    Task<string> GenerateAccessTokenAsync(string username);
 
     string GenerateRefreshToken(string userId, string ipAddress);
 
