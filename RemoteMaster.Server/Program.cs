@@ -99,12 +99,11 @@ builder.Services.AddMudServices();
 
 builder.Host.UseSerilog((_, configuration) =>
 {
-    configuration.MinimumLevel.Information();
-    configuration.WriteTo.Console().MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning).MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning);
-
-    var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-
-    configuration.WriteTo.File(Path.Combine(programDataPath, "RemoteMaster", "Server", "RemoteMaster_Server.log"), rollingInterval: RollingInterval.Day);
+    configuration.MinimumLevel.Information()
+                 .WriteTo.Console()
+                 .WriteTo.File(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "RemoteMaster", "Server", "RemoteMaster_Server.log"), rollingInterval: RollingInterval.Day)
+                 .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning)
+                 .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning);
 });
 
 builder.Services.AddControllers();
