@@ -23,7 +23,7 @@ public partial class ManageUsers
     private IEnumerable<IdentityError>? _identityErrors;
     private ApplicationUser _user = default!;
     private List<ApplicationUser> _users = [];
-    private Dictionary<ApplicationUser, List<string>> _userRoles = [];
+    private readonly Dictionary<ApplicationUser, List<string>> _userRoles = [];
     private List<IdentityRole> _roles = [];
 
     private string? Message => _identityErrors is null ? null : $"Error: {string.Join(", ", _identityErrors.Select(error => error.Description))}";
@@ -33,6 +33,13 @@ public partial class ManageUsers
         _user = await UserAccessor.GetRequiredUserAsync(HttpContext);
 
         _users = await UserManager.Users.ToListAsync();
+
+        foreach (var user in _users)
+        {
+            var roles = await UserManager.GetRolesAsync(user);
+
+            _userRoles.Add(user, [.. roles]);
+        }
 
         _roles = await RoleManager.Roles
             .Where(role => role.Name != "RootAdministrator")
