@@ -6,6 +6,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Azure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -207,7 +208,13 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         if (refreshTokenEntity == null || refreshTokenEntity.Revoked.HasValue)
         {
-            throw new InvalidOperationException("Refresh token is not valid or already revoked.");
+            var reason = refreshTokenEntity?.RevocationReason.ToString() ?? "Unknown reason";
+            Log.Warning($"Refresh token is not valid or already revoked. Revocation Reason: {reason}, Token ID: {refreshTokenEntity?.Id}");
+
+            var httpContext = httpContextAccessor.HttpContext;
+            httpContext?.Response.Redirect("/Account/Logout");
+
+            return;
         }
 
         var ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
