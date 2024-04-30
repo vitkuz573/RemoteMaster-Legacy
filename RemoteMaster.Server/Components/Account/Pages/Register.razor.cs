@@ -25,19 +25,6 @@ public partial class Register
 
     public async Task RegisterUser(EditContext editContext)
     {
-        if (await RootAdministratorExists())
-        {
-            _identityErrors =
-            [
-                new IdentityError
-                {
-                    Description = "Registration is closed. Only one RootAdministrator is allowed."
-                }
-            ];
-
-            return;
-        }
-
         var organization = new Organization
         {
             Name = Input.OrganizationName
@@ -94,20 +81,6 @@ public partial class Register
         }
 
         return (IUserEmailStore<ApplicationUser>)UserStore;
-    }
-
-    private async Task<bool> RootAdministratorExists()
-    {
-        var roleExist = await RoleManager.RoleExistsAsync("RootAdministrator");
-        
-        if (!roleExist)
-        {
-            return false;
-        }
-
-        var users = await UserManager.GetUsersInRoleAsync("RootAdministrator");
-
-        return users.Any();
     }
 
     private sealed class InputModel
