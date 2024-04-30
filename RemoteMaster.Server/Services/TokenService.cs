@@ -143,14 +143,14 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         var tokenEntity = context.RefreshTokens
             .AsNoTracking()
-            .SingleOrDefault(rt => rt.Token == refreshToken && rt.Revoked == null);
+            .SingleOrDefault(rt => rt.Token == refreshToken);
 
         if (tokenEntity == null)
         {
             return false;
         }
 
-        return !tokenEntity.IsExpired;
+        return tokenEntity.IsActive;
     }
 
     public async Task<TokenResponseData?> RefreshAccessToken(string refreshToken)
