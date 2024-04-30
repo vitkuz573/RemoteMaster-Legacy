@@ -27,6 +27,11 @@ public record ApiResponse<TData>(int StatusCode, string Message, [property: Json
     /// Optional links for HATEOAS support.
     /// </summary>
     [JsonPropertyName("_links")]
-    public Dictionary<string, string>? Links { get; init; }
+    public Dictionary<string, string>? Links { get; private set; }
+
+    public void SetLinks(Dictionary<string, string> links)
+    {
+        Links = links;
+    }
 }
 

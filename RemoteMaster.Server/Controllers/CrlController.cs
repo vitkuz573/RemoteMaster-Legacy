@@ -5,6 +5,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Controllers;
@@ -14,37 +15,48 @@ namespace RemoteMaster.Server.Controllers;
 [EnableRateLimiting("CrlPolicy")]
 public class CrlController(ICrlService crlService) : ControllerBase
 {
-    [HttpGet]
+    [HttpGet(Name = "GetCrl")]
     public async Task<IActionResult> GetCrlAsync()
     {
         try
         {
             var crlData = await crlService.GenerateCrlAsync();
-
+           
             return File(crlData, "application/pkix-crl", "list.crl");
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Error generating CRL");
-
-            return StatusCode(500, "Internal Server Error. Please try again later.");
+           
+            return StatusCode(StatusCodes.Status500InternalServerError, ApiResponse<byte[]>.Failure<string>("Internal Server Error. Please try again later.", StatusCodes.Status500InternalServerError));
         }
     }
 
-    [HttpGet("metadata")]
+    [HttpGet("metadata", Name = "GetCrlMetadata")]
     public async Task<IActionResult> GetCrlMetadataAsync()
     {
         try
         {
             var metadata = await crlService.GetCrlMetadataAsync();
+            var response = ApiResponse<CrlMetadata>.Success(metadata);
 
-            return Ok(metadata);
+            var selfUrl = Url.Action("GetCrlMetadata");
+            var downloadUrl = Url.Action("GetCrl");
+
+            response.SetLinks(new Dictionary<string, string>
+            {
+                { "self", selfUrl },
+                { "downloadCRL", downloadUrl }
+            });
+
+            return Ok(response);
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Error retrieving CRL metadata");
-
-            return StatusCode(500, "Internal Server Error. Please try again later.");
+            
+            return StatusCode(StatusCodes.Status500InternalServerError, ApiResponse<CrlMetadata>.Failure<string>("Internal Server Error. Please try again later.", StatusCodes.Status500InternalServerError));
         }
     }
 }
+
