@@ -100,7 +100,7 @@ builder.Services.AddMudServices();
 builder.Host.UseSerilog((_, configuration) =>
 {
     configuration.MinimumLevel.Information();
-    configuration.WriteTo.Console().MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning);
+    configuration.WriteTo.Console().MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning).MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning);
 
     var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
 
