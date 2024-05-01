@@ -7,7 +7,6 @@
 @using RemoteMaster.Server.Data
 
 @inject UserManager<ApplicationUser> UserManager
-@inject SignInManager<ApplicationUser> SignInManager
 @inject IdentityUserAccessor UserAccessor
 @inject IdentityRedirectManager RedirectManager
 @inject RoleManager<IdentityRole> RoleManager
@@ -17,83 +16,88 @@
 
 <StatusMessage />
 
-<div class="flex min-h-screen items-center justify-center bg-gray-900 px-4 sm:px-6 lg:px-8">
-    <div class="w-full max-w-4xl space-y-8">
-        <div class="rounded-lg bg-white shadow-xl">
-            <div class="p-8">
-                <h2 class="mb-4 text-center text-3xl font-bold text-gray-800">Manage Users</h2>
-                <EditForm Model="Input" OnValidSubmit="OnValidSubmitAsync" class="space-y-6" FormName="CreateUser">
-                    <DataAnnotationsValidator />
-                    <ValidationSummary class="text-red-500" role="alert" />
+<div class="flex min-h-screen flex-col items-center justify-center bg-gray-900 px-4 py-10 sm:px-6 lg:px-8">
+    
+    <!-- Form Card -->
+    <div class="mb-10 w-full max-w-4xl rounded-lg bg-white shadow-xl">
+        <div class="p-8">
+            <h2 class="mb-4 text-center text-3xl font-bold text-gray-800">Manage Users</h2>
+            <EditForm Model="Input" OnValidSubmit="OnValidSubmitAsync" class="space-y-6" FormName="CreateUser">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="text-red-500" role="alert" />
 
-                    <div class="grid-cols-3 grid gap-6">
-                        <div class="col-span-3">
-                            <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
-                            <InputText @bind-Value="Input.Username" id="username" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
-                            <ValidationMessage For="() => Input.Username" class="text-red-500 mt-1" />
-                        </div>
-
-                        <div class="col-span-3">
-                            <label for="role" class="block text-sm font-medium text-gray-700">Role</label>
-                            <InputSelect @bind-Value="Input.Role" id="role" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                                @foreach (var role in _roles)
-                                {
-                                    <option value="@role.Name">@role.Name</option>
-                                }
-                            </InputSelect>
-                            <ValidationMessage For="() => Input.Role" class="text-red-500 mt-1" />
-                        </div>
-
-                        <div class="col-span-3">
-                            <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-                            <InputText type="password" @bind-Value="Input.Password" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
-                            <ValidationMessage For="() => Input.Password" class="text-red-600 mt-1" />
-                        </div>
-
-                        <div class="col-span-3">
-                            <label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirm Password</label>
-                            <InputText type="password" @bind-Value="Input.ConfirmPassword" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
-                            <ValidationMessage For="() => Input.ConfirmPassword" class="text-red-600 mt-1" />
-                        </div>
+                <div class="grid-cols-3 grid gap-6">
+                    <div class="col-span-3">
+                        <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+                        <InputText @bind-Value="Input.Username" id="username" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                        <ValidationMessage For="() => Input.Username" class="text-red-500 mt-1" />
                     </div>
 
-                    <button type="submit" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-lg text-white hover:bg-indigo-700 focus:outline-none">
-                        Create
-                    </button>
-                </EditForm>
-                <div class="mt-10">
-                    <h3 class="leading-6 text-lg font-medium text-gray-900">Current Users</h3>
-                    <div class="mt-4">
-                        <div class="overflow-hidden border-b border-gray-200 shadow sm:rounded-lg">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                            Username
-                                        </th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                            Role
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-200 bg-white">
-                                    @foreach (var user in _users)
-                                    {
-                                        <tr>
-                                            <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
-                                                @user.UserName
-                                            </td>
-                                            <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                                                @(_userRoles.ContainsKey(user) ? string.Join(", ", _userRoles[user]) : "No Roles")
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="col-span-3">
+                        <label for="role" class="block text-sm font-medium text-gray-700">Role</label>
+                        <InputSelect @bind-Value="Input.Role" id="role" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            @foreach (var role in _roles)
+                            {
+                                <option value="@role.Name">@role.Name</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="() => Input.Role" class="text-red-500 mt-1" />
                     </div>
+
+                    <div class="col-span-3">
+                        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                        <InputText type="password" @bind-Value="Input.Password" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                        <ValidationMessage For="() => Input.Password" class="text-red-600 mt-1" />
+                    </div>
+
+                    <div class="col-span-3">
+                        <label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+                        <InputText type="password" @bind-Value="Input.ConfirmPassword" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                        <ValidationMessage For="() => Input.ConfirmPassword" class="text-red-600 mt-1" />
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-lg text-white hover:bg-indigo-700 focus:outline-none">
+                    Create
+                </button>
+            </EditForm>
+        </div>
+    </div>
+
+    <!-- Users Table Card -->
+    <div class="w-full max-w-4xl rounded-lg bg-white shadow-xl">
+        <div class="p-8">
+            <h3 class="leading-6 text-lg font-medium text-gray-900">Current Users</h3>
+            <div class="mt-4">
+                <div class="overflow-hidden border-b border-gray-200 shadow sm:rounded-lg">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                    Username
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                    Role
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 bg-white">
+                            @foreach (var user in _users)
+                            {
+                                <tr>
+                                    <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
+                                        @user.UserName
+                                    </td>
+                                    <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                                        @(_userRoles.ContainsKey(user) ? string.Join(", ", _userRoles[user]) : "No Roles")
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
+
 </div>
