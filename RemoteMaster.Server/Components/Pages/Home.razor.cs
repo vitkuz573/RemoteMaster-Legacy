@@ -144,9 +144,9 @@ public partial class Home
         }
     }
 
-    private void OpenAdminPanel()
+    private void ManageProfile()
     {
-        NavigationManager.NavigateTo("/Admin/Users");
+        NavigationManager.NavigateTo("/Account/Manage");
     }
 
     private void Logout()
