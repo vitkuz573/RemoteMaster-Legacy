@@ -84,8 +84,6 @@ public partial class ManageUsers
         }
 
         await ApplicationDbContext.SaveChangesAsync();
-
-        RedirectManager.RedirectToCurrentPageWithStatus("User created", HttpContext);
     }
 
     private ApplicationUser CreateUser()

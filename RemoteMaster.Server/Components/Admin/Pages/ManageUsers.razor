@@ -8,14 +8,11 @@
 
 @inject UserManager<ApplicationUser> UserManager
 @inject IdentityUserAccessor UserAccessor
-@inject IdentityRedirectManager RedirectManager
 @inject RoleManager<IdentityRole> RoleManager
 @inject IUserStore<ApplicationUser> UserStore
 @inject ApplicationDbContext ApplicationDbContext
 
 <PageTitle>Manage Users</PageTitle>
-
-<StatusMessage />
 
 <div class="flex min-h-screen flex-col items-center justify-center bg-gray-900 px-4 py-10 sm:px-6 lg:px-8">
     
@@ -23,6 +20,7 @@
     <div class="mb-10 w-full max-w-4xl rounded-lg bg-white shadow-xl">
         <div class="p-8">
             <h2 class="mb-4 text-center text-3xl font-bold text-gray-800">Manage Users</h2>
+            <StatusMessage Message="@Message" />
             <EditForm Model="Input" OnValidSubmit="OnValidSubmitAsync" class="space-y-6" FormName="CreateUser">
                 <DataAnnotationsValidator />
                 <ValidationSummary class="text-red-500" role="alert" />

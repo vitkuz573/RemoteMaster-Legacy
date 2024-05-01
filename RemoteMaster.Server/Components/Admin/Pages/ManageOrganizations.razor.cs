@@ -12,9 +12,6 @@ namespace RemoteMaster.Server.Components.Admin.Pages;
 [Authorize(Roles = "RootAdministrator")]
 public partial class ManageOrganizations
 {
-    [CascadingParameter]
-    private HttpContext HttpContext { get; set; } = default!;
-
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
 
@@ -31,8 +28,6 @@ public partial class ManageOrganizations
 
         await ApplicationDbContext.Organizations.AddAsync(organization);
         await ApplicationDbContext.SaveChangesAsync();
-
-        RedirectManager.RedirectToCurrentPageWithStatus("Organization created", HttpContext);
     }
 
     private static Organization CreateOrganization(string name)
