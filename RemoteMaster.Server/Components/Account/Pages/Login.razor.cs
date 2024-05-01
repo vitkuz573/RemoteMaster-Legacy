@@ -45,7 +45,7 @@ public partial class Login
     public async Task LoginUser()
     {
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-        var result = await SignInManager.PasswordSignInAsync(Input.Username, Input.Password, Input.RememberMe, false);
+        var result = await SignInManager.PasswordSignInAsync(Input.Username, Input.Password, false, false);
 
         if (result.Succeeded)
         {
@@ -88,8 +88,7 @@ public partial class Login
         {
             RedirectManager.RedirectTo("Account/LoginWith2fa", new()
             {
-                ["returnUrl"] = ReturnUrl,
-                ["rememberMe"] = Input.RememberMe
+                ["returnUrl"] = ReturnUrl
             });
         }
         else if (result.IsLockedOut)
@@ -112,8 +111,5 @@ public partial class Login
         [Required]
         [DataType(DataType.Password)]
         public string Password { get; set; } = "";
-
-        [Display(Name = "Remember me?")]
-        public bool RememberMe { get; set; }
     }
 }
