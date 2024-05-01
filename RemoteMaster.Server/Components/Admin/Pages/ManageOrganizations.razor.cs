@@ -5,6 +5,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
+using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Components.Admin.Pages;
 
@@ -17,9 +18,17 @@ public partial class ManageOrganizations
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
 
-    protected async override Task OnInitializedAsync()
+    private async Task<Organization> CreateOrganization(string name)
     {
+        var organization = new Organization
+        {
+            Name = name
+        };
 
+        await ApplicationDbContext.Organizations.AddAsync(organization);
+        await ApplicationDbContext.SaveChangesAsync();
+
+        return organization;
     }
 
     private sealed class InputModel

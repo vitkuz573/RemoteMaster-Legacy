@@ -47,7 +47,7 @@ public partial class ManageUsers
             .Where(role => role.Name != "RootAdministrator")
             .ToListAsync();
 
-        _organizations = ApplicationDbContext.Organizations.ToList();
+        _organizations = [.. ApplicationDbContext.Organizations];
     }
 
     private async Task OnValidSubmitAsync()

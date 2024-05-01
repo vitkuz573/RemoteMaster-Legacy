@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Identity;
 using RemoteMaster.Server.Data;
-using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Components.Account.Pages;
 
@@ -25,15 +24,7 @@ public partial class Register
 
     public async Task RegisterUser(EditContext editContext)
     {
-        var organization = new Organization
-        {
-            Name = Input.OrganizationName
-        };
-
-        await ApplicationDbContext.Organizations.AddAsync(organization);
-        await ApplicationDbContext.SaveChangesAsync();
-
-        var user = CreateUser(organization.OrganizationId);
+        var user = CreateUser();
 
         await UserStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
         
@@ -53,14 +44,11 @@ public partial class Register
         RedirectManager.RedirectTo("Admin");
     }
 
-    private ApplicationUser CreateUser(Guid organizationId)
+    private ApplicationUser CreateUser()
     {
         try
         {
-            var user = Activator.CreateInstance<ApplicationUser>();
-            user.OrganizationId = organizationId;
-
-            return user;
+            return Activator.CreateInstance<ApplicationUser>();
         }
         catch
         {
@@ -86,9 +74,5 @@ public partial class Register
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; } = "";
-
-        [Required]
-        [Display(Name = "Organization Name")]
-        public string OrganizationName { get; set; } = "";
     }
 }
