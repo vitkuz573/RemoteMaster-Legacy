@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Collections.Concurrent;
+using System.Security.Claims;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using MudBlazor;
@@ -15,7 +16,8 @@ namespace RemoteMaster.Server.Components.Pages;
 
 public partial class Home
 {
-    private bool _isRootAdministrator = false;
+    private string _username;
+    private string _role;
 
     private bool _drawerOpen;
     private Node? _selectedNode;
@@ -38,9 +40,23 @@ public partial class Home
     protected async override Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
+        var userPrincipal = authState.User;
 
-        _isRootAdministrator = user.IsInRole("RootAdministrator");
+        if (userPrincipal.Identity.IsAuthenticated)
+        {
+            var userId = userPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId != null)
+            {
+                var user = await UserManager.FindByIdAsync(userId);
+
+                var roles = await UserManager.GetRolesAsync(user);
+
+                _role = roles.FirstOrDefault();
+            }
+        }
+
+        _username = userPrincipal.Identity.Name;
 
         _nodes = new HashSet<Node>(await LoadOrganizationalUnitsWithChildren());
 

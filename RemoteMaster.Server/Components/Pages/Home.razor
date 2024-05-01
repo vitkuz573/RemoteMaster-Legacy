@@ -1,9 +1,15 @@
 ﻿@page "/"
+
 @rendermode InteractiveServer
+
 @attribute [Authorize]
+
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
 @using RemoteMaster.Server.Abstractions
+@using RemoteMaster.Server.Data
 @using RemoteMaster.Shared.Models
+
 @inject IBrandingService BrandingService
 @inject IDialogService DialogService
 @inject IDatabaseService DatabaseService
@@ -15,6 +21,7 @@
 @inject NavigationManager NavigationManager
 @inject IAccessTokenProvider AccessTokenProvider
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
 
 <MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme" />
 <MudDialogProvider />
@@ -26,10 +33,7 @@
     <MudAppBar>
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@DrawerToggle" />
         <MudSpacer />
-        <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.NightsStay : Icons.Material.Filled.WbSunny)"
-                       Color="Color.Inherit"
-                       OnClick="@ToggleTheme" />
-        <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/vitkuz573/RemoteMaster" Target="_blank" />
+        @_username (@_role)
     </MudAppBar>
     <MudDrawer @bind-Open="@_drawerOpen" Variant="@DrawerVariant.Responsive">
         <MudDrawerHeader>
