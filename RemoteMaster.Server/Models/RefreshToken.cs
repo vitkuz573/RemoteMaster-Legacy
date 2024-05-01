@@ -52,7 +52,7 @@ public class RefreshToken : IValidatableObject
 
     [NotMapped]
     [JsonIgnore]
-    public bool IsActive => Revoked == null && !IsExpired && RevocationReason == TokenRevocationReason.None;
+    public bool IsActive => Revoked == null && !IsExpired;
 
     [ForeignKey("UserId")]
     public ApplicationUser User { get; set; }
