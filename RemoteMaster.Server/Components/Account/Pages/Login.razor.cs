@@ -69,6 +69,13 @@ public partial class Login
                 new(ClaimTypes.NameIdentifier, user.Id.ToString())
             };
 
+            var userRoles = await UserManager.GetRolesAsync(user);
+
+            foreach (var role in userRoles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+
             var accessToken = await TokenService.GenerateAccessTokenAsync(claims);
             var refreshToken = TokenService.GenerateRefreshToken(userId, ipAddress);
 
