@@ -105,11 +105,22 @@ internal class Program
                         ValidateLifetime = true,
                         ValidIssuer = "RemoteMaster Server",
                         ValidAudience = "RMServiceAPI",
-                        IssuerSigningKey = new RsaSecurityKey(rsa)
+                        IssuerSigningKey = new RsaSecurityKey(rsa),
+                        RoleClaimType = ClaimTypes.Role
                     };
 
                     jwtBearerOptions.Events = new JwtBearerEvents
                     {
+                        OnTokenValidated = context =>
+                        {
+                            if (!context.Principal.IsInRole("Administrator"))
+                            {
+                                context.Fail("Access Denied: User is not in the Administrator role.");
+                            }
+
+                            return Task.CompletedTask;
+                        },
+
                         OnMessageReceived = context =>
                         {
                             var remoteIp = context.HttpContext.Connection.RemoteIpAddress;
