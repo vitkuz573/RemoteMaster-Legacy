@@ -41,7 +41,7 @@ public partial class Register
 
         Logger.LogInformation("User created a new account with password.");
 
-        RedirectManager.RedirectTo("Admin");
+        RedirectManager.RedirectTo("Account/Login");
     }
 
     private ApplicationUser CreateUser()
