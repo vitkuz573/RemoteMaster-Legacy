@@ -19,7 +19,12 @@
                     </MudExpansionPanel>
 
                     <MudExpansionPanel Text="Subject Parameters">
-                        <MudTextField Label="Organization" @bind-Value="_model.Subject.Organization" For="@(() => _model.Subject.Organization)" ReadOnly />
+                        <MudSelect Label="Organization" @bind-Value="_model.Subject.Organization" For="@(() => _model.Subject.Organization)" ReadOnly>
+                            @foreach (var organization in _organizations)
+                            {
+                                <MudSelectItem Value="organization.OrganizationId">@organization.Name</MudSelectItem>
+                            }
+                        </MudSelect>
                         <MudTextField Label="Organizational Unit" @bind-Value="_organizationalUnitInput" />
                         <MudTextField Label="Locality" @bind-Value="_model.Subject.Locality" For="@(() => _model.Subject.Locality)" />
                         <MudTextField Label="State" @bind-Value="_model.Subject.State" For="@(() => _model.Subject.State)" />

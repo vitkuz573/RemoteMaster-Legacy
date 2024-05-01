@@ -5,6 +5,7 @@
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
+using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Dialogs;
@@ -12,6 +13,8 @@ namespace RemoteMaster.Server.Components.Dialogs;
 public partial class HostConfigurationGenerator
 {
     private readonly HostConfiguration _model = new();
+    public Guid? _selectedOrganizationId;
+    public List<Organization> _organizations = [];
     private string _organizationalUnitInput;
     private readonly Dictionary<string, string> _countries = [];
 
@@ -22,7 +25,7 @@ public partial class HostConfigurationGenerator
         _model.Server = hostInformation.Name;
         _model.Subject = new();
 
-        await LoadUserOrganizationAsync();
+        await LoadUserOrganizationsAsync();
 
         _countries.Add("Afghanistan", "AF");
         _countries.Add("Åland Islands", "AX");
@@ -287,23 +290,26 @@ public partial class HostConfigurationGenerator
         NavigationManager.NavigateTo("api/HostConfiguration/download-host", true);
     }
 
-    private async Task LoadUserOrganizationAsync()
+    private async Task LoadUserOrganizationsAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
         if (user.Identity.IsAuthenticated)
         {
-            var userEmail = user.Identity.Name;
-            var appUser = await UserManager.FindByEmailAsync(userEmail);
+            var username = user.Identity.Name;
+            var appUser = await UserManager.FindByNameAsync(username);
 
-            if (appUser != null && appUser.OrganizationId != Guid.Empty)
+            if (appUser != null)
             {
-                var organization = await DbContext.Organizations.FirstOrDefaultAsync(o => o.OrganizationId == appUser.OrganizationId);
+                _organizations = await DbContext.UserOrganizations
+                                                   .Where(uo => uo.UserId == appUser.Id)
+                                                   .Select(uo => uo.Organization)
+                                                   .ToListAsync();
 
-                if (organization != null)
+                if (_organizations.Count != 0)
                 {
-                    _model.Subject.Organization = organization.Name;
+                    _selectedOrganizationId = _organizations.FirstOrDefault()?.OrganizationId;
                 }
             }
         }

@@ -52,7 +52,7 @@ public partial class ManageUsers
 
     private async Task OnValidSubmitAsync()
     {
-        var user = CreateUser(_user.OrganizationId);
+        var user = CreateUser();
 
         await UserStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
 
@@ -67,17 +67,32 @@ public partial class ManageUsers
 
         await UserManager.AddToRoleAsync(user, Input.Role);
 
+        foreach (var orgId in Input.Organizations)
+        {
+            var organization = await ApplicationDbContext.Organizations.FindAsync(Guid.Parse(orgId));
+            
+            if (organization != null)
+            {
+                var userOrganization = new UserOrganization
+                {
+                    User = user,
+                    Organization = organization
+                };
+
+                ApplicationDbContext.UserOrganizations.Add(userOrganization);
+            }
+        }
+
+        await ApplicationDbContext.SaveChangesAsync();
+
         RedirectManager.RedirectToCurrentPageWithStatus("User created", HttpContext);
     }
 
-    private ApplicationUser CreateUser(Guid organizationId)
+    private ApplicationUser CreateUser()
     {
         try
         {
-            var user = Activator.CreateInstance<ApplicationUser>();
-            user.OrganizationId = organizationId;
-
-            return user;
+            return Activator.CreateInstance<ApplicationUser>();
         }
         catch
         {

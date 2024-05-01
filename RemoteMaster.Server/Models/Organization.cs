@@ -14,4 +14,8 @@ public class Organization
     public Guid OrganizationId { get; set; }
 
     public string Name { get; set; }
+
+#pragma warning disable CA2227
+    public virtual ICollection<UserOrganization> UserOrganizations { get; set; }
+#pragma warning restore CA2227
 }

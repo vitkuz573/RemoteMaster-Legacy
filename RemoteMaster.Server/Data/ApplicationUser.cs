@@ -6,11 +6,11 @@ using Microsoft.AspNetCore.Identity;
 using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Data;
-// Add profile data for application users by adding properties to the ApplicationUser class
+
 public class ApplicationUser : IdentityUser
 {
-    public Guid OrganizationId { get; set; }
-
-    public virtual Organization Organization { get; set; }
+#pragma warning disable CA2227
+    public virtual ICollection<UserOrganization> UserOrganizations { get; set; }
+#pragma warning restore CA2227
 }
 

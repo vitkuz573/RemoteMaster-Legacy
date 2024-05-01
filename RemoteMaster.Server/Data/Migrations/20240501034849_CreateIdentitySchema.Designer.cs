@@ -12,7 +12,7 @@ using RemoteMaster.Server.Data;
 namespace RemoteMaster.Server.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240430085900_CreateIdentitySchema")]
+    [Migration("20240501034849_CreateIdentitySchema")]
     partial class CreateIdentitySchema
     {
         /// <inheritdoc />
@@ -191,9 +191,6 @@ namespace RemoteMaster.Server.Data.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
-                    b.Property<Guid>("OrganizationId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
 
@@ -222,8 +219,6 @@ namespace RemoteMaster.Server.Data.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
-
-                    b.HasIndex("OrganizationId");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
@@ -295,6 +290,21 @@ namespace RemoteMaster.Server.Data.Migrations
                     b.ToTable("RefreshTokens");
                 });
 
+            modelBuilder.Entity("RemoteMaster.Server.Models.UserOrganization", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("UserId", "OrganizationId");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.ToTable("UserOrganizations");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -346,17 +356,6 @@ namespace RemoteMaster.Server.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("RemoteMaster.Server.Data.ApplicationUser", b =>
-                {
-                    b.HasOne("RemoteMaster.Server.Models.Organization", "Organization")
-                        .WithMany()
-                        .HasForeignKey("OrganizationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Organization");
-                });
-
             modelBuilder.Entity("RemoteMaster.Server.Models.RefreshToken", b =>
                 {
                     b.HasOne("RemoteMaster.Server.Models.RefreshToken", "ReplacedByToken")
@@ -372,6 +371,35 @@ namespace RemoteMaster.Server.Data.Migrations
                     b.Navigation("ReplacedByToken");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("RemoteMaster.Server.Models.UserOrganization", b =>
+                {
+                    b.HasOne("RemoteMaster.Server.Models.Organization", "Organization")
+                        .WithMany("UserOrganizations")
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("RemoteMaster.Server.Data.ApplicationUser", "User")
+                        .WithMany("UserOrganizations")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Organization");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("RemoteMaster.Server.Data.ApplicationUser", b =>
+                {
+                    b.Navigation("UserOrganizations");
+                });
+
+            modelBuilder.Entity("RemoteMaster.Server.Models.Organization", b =>
+                {
+                    b.Navigation("UserOrganizations");
                 });
 #pragma warning restore 612, 618
         }
