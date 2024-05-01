@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
@@ -62,7 +63,13 @@ public partial class Login
             await TokenService.RevokeAllRefreshTokensAsync(userId, TokenRevocationReason.PreemptiveSecurity);
             Logger.LogInformation("User logged in. All previous refresh tokens revoked.");
 
-            var accessToken = await TokenService.GenerateAccessTokenAsync(Input.Username);
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.Name, user.UserName),
+                new(ClaimTypes.NameIdentifier, user.Id.ToString())
+            };
+
+            var accessToken = await TokenService.GenerateAccessTokenAsync(claims);
             var refreshToken = TokenService.GenerateRefreshToken(userId, ipAddress);
 
             HttpContext.SetCookie(CookieNames.AccessToken, accessToken, TimeSpan.FromMinutes(20));

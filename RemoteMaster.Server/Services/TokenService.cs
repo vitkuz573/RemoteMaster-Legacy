@@ -21,12 +21,12 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 {
     private readonly JwtOptions _options = options.Value ?? throw new ArgumentNullException(nameof(options));
 
-    public async Task<string> GenerateAccessTokenAsync(string username)
+    public async Task<string> GenerateAccessTokenAsync(List<Claim> claims)
     {
-        var claims = new List<Claim>
+        if (claims == null || claims.Count == 0)
         {
-            new(ClaimTypes.Name, username)
-        };
+            throw new ArgumentException("Claims cannot be null or empty", nameof(claims));
+        }
 
 #pragma warning disable CA2000
         var rsa = RSA.Create();
@@ -194,9 +194,15 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
             return null;
         }
 
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.Name, user.UserName),
+            new(ClaimTypes.NameIdentifier, user.Id.ToString())
+        };
+
         return new TokenResponseData
         {
-            AccessToken = await GenerateAccessTokenAsync(user.UserName),
+            AccessToken = await GenerateAccessTokenAsync(claims),
             RefreshToken = newRefreshTokenEntity.Token,
         };
     }
