@@ -196,7 +196,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         return new TokenResponseData
         {
-            AccessToken = await GenerateAccessTokenAsync(user.Email),
+            AccessToken = await GenerateAccessTokenAsync(user.UserName),
             RefreshToken = newRefreshTokenEntity.Token,
         };
     }
