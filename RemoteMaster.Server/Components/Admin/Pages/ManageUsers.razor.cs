@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Data;
+using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Components.Admin.Pages;
 
@@ -25,6 +26,7 @@ public partial class ManageUsers
     private List<ApplicationUser> _users = [];
     private readonly Dictionary<ApplicationUser, List<string>> _userRoles = [];
     private List<IdentityRole> _roles = [];
+    private List<Organization> _organizations = [];
 
     private string? Message => _identityErrors is null ? null : $"Error: {string.Join(", ", _identityErrors.Select(error => error.Description))}";
 
@@ -44,6 +46,8 @@ public partial class ManageUsers
         _roles = await RoleManager.Roles
             .Where(role => role.Name != "RootAdministrator")
             .ToListAsync();
+
+        _organizations = ApplicationDbContext.Organizations.ToList();
     }
 
     private async Task OnValidSubmitAsync()
@@ -92,6 +96,10 @@ public partial class ManageUsers
         [Required]
         [Display(Name = "Role")]
         public string Role { get; set; }
+
+        [Required]
+        [Display(Name = "Organizations")]
+        public string[] Organizations { get; set; } = [];
 
         [Required]
         [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
