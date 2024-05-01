@@ -19,10 +19,10 @@
                     </MudExpansionPanel>
 
                     <MudExpansionPanel Text="Subject Parameters">
-                        <MudSelect Label="Organization" @bind-Value="_model.Subject.Organization" For="@(() => _model.Subject.Organization)" ReadOnly>
+                        <MudSelect Label="Organization" @bind-Value="_model.Subject.Organization" For="@(() => _model.Subject.Organization)" Dense>
                             @foreach (var organization in _organizations)
                             {
-                                <MudSelectItem Value="organization.OrganizationId">@organization.Name</MudSelectItem>
+                                <MudSelectItem Value="@organization.Name">@organization.Name</MudSelectItem>
                             }
                         </MudSelect>
                         <MudTextField Label="Organizational Unit" @bind-Value="_organizationalUnitInput" />

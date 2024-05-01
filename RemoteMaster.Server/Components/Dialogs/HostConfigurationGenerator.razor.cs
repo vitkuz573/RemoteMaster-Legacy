@@ -13,7 +13,7 @@ namespace RemoteMaster.Server.Components.Dialogs;
 public partial class HostConfigurationGenerator
 {
     private readonly HostConfiguration _model = new();
-    public Guid? _selectedOrganizationId;
+    public string _selectedOrganization;
     public List<Organization> _organizations = [];
     private string _organizationalUnitInput;
     private readonly Dictionary<string, string> _countries = [];
@@ -306,11 +306,6 @@ public partial class HostConfigurationGenerator
                                                    .Where(uo => uo.UserId == appUser.Id)
                                                    .Select(uo => uo.Organization)
                                                    .ToListAsync();
-
-                if (_organizations.Count != 0)
-                {
-                    _selectedOrganizationId = _organizations.FirstOrDefault()?.OrganizationId;
-                }
             }
         }
     }

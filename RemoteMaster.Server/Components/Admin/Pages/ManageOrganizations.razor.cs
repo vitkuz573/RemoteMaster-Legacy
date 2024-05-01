@@ -18,17 +18,29 @@ public partial class ManageOrganizations
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
 
-    private async Task<Organization> CreateOrganization(string name)
+    private List<Organization> _organizations = [];
+
+    protected override void OnInitialized()
     {
-        var organization = new Organization
-        {
-            Name = name
-        };
+        _organizations = [.. ApplicationDbContext.Organizations];
+    }
+
+    private async Task OnValidSubmitAsync()
+    {
+        var organization = CreateOrganization(Input.Name);
 
         await ApplicationDbContext.Organizations.AddAsync(organization);
         await ApplicationDbContext.SaveChangesAsync();
 
-        return organization;
+        RedirectManager.RedirectToCurrentPageWithStatus("Organization created", HttpContext);
+    }
+
+    private static Organization CreateOrganization(string name)
+    {
+        return new Organization
+        {
+            Name = name
+        };
     }
 
     private sealed class InputModel
