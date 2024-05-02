@@ -19,7 +19,7 @@ public partial class ManageOrganizations
 
     protected override void OnInitialized()
     {
-        _organizations = [.. ApplicationDbContext.Organizations];
+        LoadOrganizations();
     }
 
     private async Task OnValidSubmitAsync()
@@ -28,6 +28,15 @@ public partial class ManageOrganizations
 
         await ApplicationDbContext.Organizations.AddAsync(organization);
         await ApplicationDbContext.SaveChangesAsync();
+
+        LoadOrganizations();
+
+        NavigationManager.NavigateTo("admin/organizations", forceLoad: true);
+    }
+
+    private void LoadOrganizations()
+    {
+        _organizations = [.. ApplicationDbContext.Organizations];
     }
 
     private static Organization CreateOrganization(string name)

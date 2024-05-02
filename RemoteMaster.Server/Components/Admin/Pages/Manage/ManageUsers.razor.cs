@@ -34,7 +34,7 @@ public partial class ManageUsers
     {
         _user = await UserAccessor.GetRequiredUserAsync(HttpContext);
 
-        _users = await UserManager.Users.ToListAsync();
+        await LoadUsers();
 
         foreach (var user in _users)
         {
@@ -84,6 +84,15 @@ public partial class ManageUsers
         }
 
         await ApplicationDbContext.SaveChangesAsync();
+
+        await LoadUsers();
+
+        NavigationManager.NavigateTo("admin/users", forceLoad: true);
+    }
+
+    private async Task LoadUsers()
+    {
+        _users = await UserManager.Users.ToListAsync();
     }
 
     private ApplicationUser CreateUser()
