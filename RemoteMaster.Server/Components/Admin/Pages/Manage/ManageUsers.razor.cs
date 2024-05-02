@@ -87,7 +87,7 @@ public partial class ManageUsers
 
         await LoadUsers();
 
-        NavigationManager.NavigateTo("admin/users", forceLoad: true);
+        NavigationManager.NavigateTo("Admin/Users", true);
     }
 
     private async Task LoadUsers()

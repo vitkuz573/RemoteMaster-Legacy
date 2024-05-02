@@ -31,7 +31,7 @@ public partial class ManageOrganizations
 
         LoadOrganizations();
 
-        NavigationManager.NavigateTo("admin/organizations", forceLoad: true);
+        NavigationManager.NavigateTo("Admin/Organizations", true);
     }
 
     private void LoadOrganizations()
