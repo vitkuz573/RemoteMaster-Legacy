@@ -219,24 +219,26 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
     {
         var refreshTokenEntity = await context.RefreshTokens.SingleOrDefaultAsync(rt => rt.Token == refreshToken);
 
+        var httpContext = httpContextAccessor.HttpContext;
+
         if (refreshTokenEntity == null || refreshTokenEntity.Revoked.HasValue)
         {
             var reason = refreshTokenEntity?.RevocationReason.ToString() ?? "Unknown reason";
             Log.Warning($"Refresh token is not valid or already revoked. Revocation Reason: {reason}, Token ID: {refreshTokenEntity?.Id}");
 
-            var httpContext = httpContextAccessor.HttpContext;
             httpContext?.Response.Redirect("/Account/Logout");
 
             return;
         }
 
-        var ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
+        var ipAddress = httpContext?.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
 
         refreshTokenEntity.Revoked = DateTime.UtcNow;
         refreshTokenEntity.RevokedByIp = ipAddress;
         refreshTokenEntity.RevocationReason = revocationReason;
 
         context.Update(refreshTokenEntity);
+
         await context.SaveChangesAsync();
     }
 
