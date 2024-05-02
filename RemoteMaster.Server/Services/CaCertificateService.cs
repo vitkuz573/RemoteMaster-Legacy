@@ -18,31 +18,37 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
 
     public void EnsureCaCertificateExists()
     {
+        Log.Debug("Starting CA certificate check.");
+
         var existingCert = FindExistingCertificate();
 
         if (existingCert != null)
         {
+            Log.Debug("CA certificate found. Checking validity.");
+
             if (existingCert.NotAfter > DateTime.Now)
             {
-                Log.Information("Existing CA certificate for '{Name}' found.", _settings.CommonName);
+                Log.Information("Existing CA certificate for '{Name}' is valid.", _settings.CommonName);
 
                 return;
             }
-            else
-            {
-                Log.Information("Existing CA certificate for '{Name}' has expired. Reissuing with the same key.", _settings.CommonName);
 
-                GenerateCertificate(existingCert.GetRSAPrivateKey(), true);
-            }
+            Log.Warning("CA certificate for '{Name}' has expired. Reissuing.", _settings.CommonName);
+
+            GenerateCertificate(existingCert.GetRSAPrivateKey(), true);
         }
+        else
+        {
+            Log.Warning("No valid CA certificate found. Generating new certificate for '{Name}'.", _settings.CommonName);
 
-        Log.Information("No existing CA certificate found or it has expired. Generating a new one for '{Name}'.", _settings.CommonName);
-
-        GenerateCertificate(null, false);
+            GenerateCertificate(null, false);
+        }
     }
 
     private X509Certificate2 GenerateCertificate(RSA? externalRsaProvider, bool reuseKey)
     {
+        Log.Debug("Generating new CA certificate with reuseKey={ReuseKey}.", reuseKey);
+
         RSA? rsaProvider = null;
 
         try
@@ -94,6 +100,12 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
             AddCertificateToStore(caCert, StoreName.Root, StoreLocation.LocalMachine);
 
             return caCert;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to generate CA certificate.");
+
+            throw;
         }
         finally
         {

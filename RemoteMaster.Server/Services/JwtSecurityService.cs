@@ -7,6 +7,7 @@ using System.Text;
 using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
+using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
@@ -34,15 +35,34 @@ public class JwtSecurityService : IJwtSecurityService
 
     public async Task EnsureKeysExistAsync()
     {
+        Log.Debug("Checking existence of JWT keys.");
+
         if (!File.Exists(_privateKeyPath) || !File.Exists(_publicKeyPath))
         {
+            Log.Information("JWT keys not found. Generating new keys.");
+
             using var rsa = RSA.Create(_options.KeySize);
 
-            var passwordBytes = Encoding.UTF8.GetBytes(_options.KeyPassword);
-            var encryptionAlgorithm = new PbeParameters(PbeEncryptionAlgorithm.Aes256Cbc, HashAlgorithmName.SHA256, 100000);
+            try
+            {
+                var passwordBytes = Encoding.UTF8.GetBytes(_options.KeyPassword);
+                var encryptionAlgorithm = new PbeParameters(PbeEncryptionAlgorithm.Aes256Cbc, HashAlgorithmName.SHA256, 100000);
 
-            await File.WriteAllBytesAsync(_privateKeyPath, rsa.ExportEncryptedPkcs8PrivateKey(passwordBytes, encryptionAlgorithm));
-            await File.WriteAllBytesAsync(_publicKeyPath, rsa.ExportRSAPublicKey());
+                await File.WriteAllBytesAsync(_privateKeyPath, rsa.ExportEncryptedPkcs8PrivateKey(passwordBytes, encryptionAlgorithm));
+                await File.WriteAllBytesAsync(_publicKeyPath, rsa.ExportRSAPublicKey());
+
+                Log.Information("JWT keys generated and saved successfully.");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to generate JWT keys.");
+
+                throw;
+            }
+        }
+        else
+        {
+            Log.Information("JWT keys already exist.");
         }
     }
 }
