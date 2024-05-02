@@ -2,8 +2,9 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-
 using System.Security.Claims;
+using Microsoft.Extensions.Caching.Memory;
+using RemoteMaster.Server.Data;
 
 namespace RemoteMaster.Server.Components.Admin.Shared;
 
@@ -23,9 +24,21 @@ public partial class ManageNavMenu
 
             if (userId != null)
             {
-                var user = await UserManager.FindByIdAsync(userId);
+                var user = MemoryCache.Get<ApplicationUser>($"UserInfo_{userId}");
 
-                var roles = await UserManager.GetRolesAsync(user);
+                if (user == null)
+                {
+                    user = await UserManager.FindByIdAsync(userId);
+                    MemoryCache.Set($"UserInfo_{userId}", user, TimeSpan.FromMinutes(5));
+                }
+
+                var roles = MemoryCache.Get<IList<string>>($"UserRoles_{userId}");
+
+                if (roles == null)
+                {
+                    roles = await UserManager.GetRolesAsync(user);
+                    MemoryCache.Set($"UserRoles_{userId}", roles, TimeSpan.FromMinutes(5));
+                }
 
                 _role = roles.FirstOrDefault();
             }

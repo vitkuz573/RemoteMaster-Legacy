@@ -106,6 +106,8 @@ builder.Host.UseSerilog((_, configuration) =>
                  .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning);
 });
 
+builder.Services.AddMemoryCache();
+
 builder.Services.AddControllers();
 
 builder.Services

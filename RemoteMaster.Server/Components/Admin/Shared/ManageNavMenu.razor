@@ -1,10 +1,12 @@
 ﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.Caching.Memory
 @using RemoteMaster.Server.Data
 
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject UserManager<ApplicationUser> UserManager
+@inject IMemoryCache MemoryCache
 
-<div class="flex flex-col overflow-hidden rounded-lg bg-white text-gray-800 shadow-lg">
+<div class="flex flex-col overflow-hidden rounded-lg bg-white text-gray-800">
     <div class="bg-blue-800 px-6 py-4 text-white">
         <div class="text-xl font-bold">@_username</div>
         <div class="text-sm">@_role</div>
