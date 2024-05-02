@@ -37,6 +37,15 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         builder.Entity<RefreshToken>()
             .Property(r => r.RevocationReason)
-            .HasConversion<string>();
+        .HasConversion<string>();
+
+        builder.Entity<RefreshToken>()
+            .HasIndex(p => p.UserId);
+
+        builder.Entity<RefreshToken>()
+            .HasIndex(p => p.Expires);
+
+        builder.Entity<RefreshToken>()
+            .HasIndex(p => p.Revoked);
     }
 }

@@ -268,4 +268,19 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
             Log.Information("No active refresh tokens found for revocation.");
         }
     }
+
+    public async Task CleanUpExpiredRefreshTokens()
+    {
+        var expiredTokens = await context.RefreshTokens
+            .Where(rt => rt.Expires < DateTime.UtcNow || rt.Revoked.HasValue)
+            .ToListAsync();
+
+        if (expiredTokens.Count > 0)
+        {
+            context.RefreshTokens.RemoveRange(expiredTokens);
+            await context.SaveChangesAsync();
+
+            Log.Information($"Cleaned up {expiredTokens.Count} expired or revoked refresh tokens.");
+        }
+    }
 }
