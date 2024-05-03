@@ -23,237 +23,249 @@ using RemoteMaster.Shared.Models;
 using Serilog;
 using Serilog.Events;
 
-var builder = WebApplication.CreateBuilder(args);
+namespace RemoteMaster.Server;
 
-builder.Services.AddLogging(loggingBuilder =>
+public static class Program
 {
-    loggingBuilder.ClearProviders();
-});
-
-// Add services to the container.
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
-
-builder.Services.AddCascadingAuthenticationState();
-builder.Services.AddScoped<IdentityUserAccessor>();
-builder.Services.AddScoped<IdentityRedirectManager>();
-builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
-
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultScheme = IdentityConstants.ApplicationScheme;
-    options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
-}).AddIdentityCookies();
-
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-
-if (string.IsNullOrEmpty(connectionString))
-{
-    throw new InvalidOperationException("Could not find a connection string named 'DefaultConnection'.");
-}
-
-builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
-builder.Services.AddDbContext<NodesDbContext>(options => options.UseSqlServer(connectionString));
-builder.Services.AddDbContextFactory<CertificateDbContext>(options => options.UseSqlServer(connectionString));
-
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-
-builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
-    .AddRoles<IdentityRole>()
-    .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddSignInManager()
-    .AddDefaultTokenProviders();
-
-builder.Services.AddHttpClient();
-
-builder.Services.AddSharedServices();
-builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
-builder.Services.AddScoped<IQueryParameterService, QueryParameterService>();
-builder.Services.AddScoped<IDatabaseService, DatabaseService>();
-builder.Services.AddScoped<IComputerCommandService, ComputerCommandService>();
-builder.Services.AddScoped<ICrlService, CrlService>();
-builder.Services.AddScoped<IAccessTokenProvider, AccessTokenProvider>();
-builder.Services.AddScoped<IComputerConnectivityService, ComputerConnectivityService>();
-builder.Services.AddSingleton<IBrandingService, BrandingService>();
-builder.Services.AddSingleton<ICertificateService, CertificateService>();
-builder.Services.AddSingleton<IPacketSender, UdpPacketSender>();
-builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
-builder.Services.AddSingleton<ICaCertificateService, CaCertificateService>();
-builder.Services.AddSingleton<IJwtSecurityService, JwtSecurityService>();
-
-builder.Services.AddSingleton(new JsonSerializerOptions
-{
-    WriteIndented = true,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-});
-
-builder.Services.AddTransient<ITokenService, TokenService>();
-
-builder.Services.Configure<ApplicationSettings>(builder.Configuration);
-builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("jwt"));
-builder.Services.Configure<CertificateOptions>(builder.Configuration.GetSection("caSettings"));
-builder.Services.Configure<SubjectOptions>(builder.Configuration.GetSection("caSettings:subject"));
-
-builder.Services.AddMudServices();
-
-builder.Host.UseSerilog((_, configuration) =>
-{
-    configuration.MinimumLevel.Information()
-                 .WriteTo.Console()
-                 .WriteTo.File(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "RemoteMaster", "Server", "RemoteMaster_Server.log"), rollingInterval: RollingInterval.Day)
-                 .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning)
-                 .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning);
-});
-
-builder.Services.AddMemoryCache();
-
-builder.Services.AddControllers();
-
-builder.Services
-    .AddHealthChecks()
-    .AddSqlServer(connectionString)
-    .AddDbContextCheck<ApplicationDbContext>()
-    .AddDbContextCheck<CertificateDbContext>()
-    .AddDbContextCheck<NodesDbContext>();
-
-builder.Services.AddRateLimiter(options =>
-{
-    options.AddFixedWindowLimiter("ManagementHubPolicy", opts =>
+    public static void Main(string[] args)
     {
-        opts.PermitLimit = 10;
-        opts.Window = TimeSpan.FromMinutes(1);
-    });
+        var builder = WebApplication.CreateBuilder(args);
 
-    options.AddFixedWindowLimiter("AuthRefreshPolicy", opts =>
-    {
-        opts.PermitLimit = 5;
-        opts.Window = TimeSpan.FromMinutes(10);
-    });
+        ConfigureServices(builder.Services, builder.Configuration);
 
-    options.AddSlidingWindowLimiter("CrlPolicy", opts =>
-    {
-        opts.PermitLimit = 3;
-        opts.Window = TimeSpan.FromMinutes(5);
-        opts.SegmentsPerWindow = 5;
-    });
-
-    options.AddTokenBucketLimiter("HostDownloadPolicy", opts =>
-    {
-        opts.TokenLimit = 10;
-        opts.QueueLimit = 2;
-        opts.ReplenishmentPeriod = TimeSpan.FromHours(1);
-        opts.TokensPerPeriod = 10;
-    });
-
-    options.OnRejected = (ctx, token) =>
-    {
-        ctx.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-
-        return ValueTask.CompletedTask;
-    };
-});
-
-// builder.Services.AddSignalR().AddMessagePackProtocol();
-
-builder.WebHost.UseWebRoot("wwwroot");
-
-builder.WebHost.ConfigureKestrel(serverOptions =>
-{
-    serverOptions.ListenAnyIP(80);
-    serverOptions.ListenAnyIP(5254);
-});
-
-var app = builder.Build();
-
-app.MapHealthChecks("/health");
-
-app.UseRateLimiter();
-
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-
-    try
-    {
-        var dbContexts = new List<DbContext>
+        builder.Host.UseSerilog((_, configuration) =>
         {
-            services.GetRequiredService<ApplicationDbContext>(),
-            services.GetRequiredService<NodesDbContext>(),
-            services.GetRequiredService<CertificateDbContext>(),
-        };
+            configuration.MinimumLevel.Information()
+                         .WriteTo.Console()
+                         .WriteTo.File(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "RemoteMaster", "Server", "RemoteMaster_Server.log"), rollingInterval: RollingInterval.Day)
+                         .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning)
+                         .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning);
+        });
 
-        foreach (var dbContext in dbContexts)
+        builder.WebHost.UseWebRoot("wwwroot");
+
+        builder.WebHost.ConfigureKestrel(serverOptions =>
         {
-            dbContext.Database.Migrate();
+            serverOptions.ListenAnyIP(80);
+            serverOptions.ListenAnyIP(5254);
+        });
+
+        var app = builder.Build();
+
+        _ = ConfigurePipeline(app);
+
+        app.Run();
+    }
+
+    private static void ConfigureServices(IServiceCollection services, ConfigurationManager configurationManager)
+    {
+        services.AddLogging(loggingBuilder =>
+        {
+            loggingBuilder.ClearProviders();
+        });
+
+        services.AddRazorComponents().AddInteractiveServerComponents();
+
+        services.AddCascadingAuthenticationState();
+        services.AddScoped<IdentityUserAccessor>();
+        services.AddScoped<IdentityRedirectManager>();
+        services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+
+        services.AddAuthentication(options =>
+        {
+            options.DefaultScheme = IdentityConstants.ApplicationScheme;
+            options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+        }).AddIdentityCookies();
+
+        var connectionString = configurationManager.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+        if (string.IsNullOrEmpty(connectionString))
+        {
+            throw new InvalidOperationException("Could not find a connection string named 'DefaultConnection'.");
+        }
+
+        services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
+        services.AddDbContext<NodesDbContext>(options => options.UseSqlServer(connectionString));
+        services.AddDbContextFactory<CertificateDbContext>(options => options.UseSqlServer(connectionString));
+
+        services.AddDatabaseDeveloperPageExceptionFilter();
+
+        services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
+            .AddRoles<IdentityRole>()
+            .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddSignInManager()
+            .AddDefaultTokenProviders();
+
+        services.AddHttpClient();
+
+        services.AddSharedServices();
+
+        services.AddScoped<IQueryParameterService, QueryParameterService>();
+        services.AddScoped<IDatabaseService, DatabaseService>();
+        services.AddScoped<IComputerCommandService, ComputerCommandService>();
+        services.AddScoped<ICrlService, CrlService>();
+        services.AddScoped<IAccessTokenProvider, AccessTokenProvider>();
+        services.AddScoped<IComputerConnectivityService, ComputerConnectivityService>();
+        services.AddSingleton<IBrandingService, BrandingService>();
+        services.AddSingleton<ICertificateService, CertificateService>();
+        services.AddSingleton<IPacketSender, UdpPacketSender>();
+        services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
+        services.AddSingleton<ICaCertificateService, CaCertificateService>();
+        services.AddSingleton<IJwtSecurityService, JwtSecurityService>();
+
+        services.AddSingleton(new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
+
+        services.AddTransient<ITokenService, TokenService>();
+
+        services.Configure<ApplicationSettings>(configurationManager);
+        services.Configure<JwtOptions>(configurationManager.GetSection("jwt"));
+        services.Configure<CertificateOptions>(configurationManager.GetSection("caSettings"));
+        services.Configure<SubjectOptions>(configurationManager.GetSection("caSettings:subject"));
+
+        services.AddMudServices();
+
+        services.AddMemoryCache();
+
+        services.AddControllers();
+
+        services
+            .AddHealthChecks()
+            .AddSqlServer(connectionString)
+            .AddDbContextCheck<ApplicationDbContext>()
+            .AddDbContextCheck<CertificateDbContext>()
+            .AddDbContextCheck<NodesDbContext>();
+
+        services.AddRateLimiter(options =>
+        {
+            options.AddFixedWindowLimiter("ManagementHubPolicy", opts =>
+            {
+                opts.PermitLimit = 10;
+                opts.Window = TimeSpan.FromMinutes(1);
+            });
+
+            options.AddFixedWindowLimiter("AuthRefreshPolicy", opts =>
+            {
+                opts.PermitLimit = 5;
+                opts.Window = TimeSpan.FromMinutes(10);
+            });
+
+            options.AddSlidingWindowLimiter("CrlPolicy", opts =>
+            {
+                opts.PermitLimit = 3;
+                opts.Window = TimeSpan.FromMinutes(5);
+                opts.SegmentsPerWindow = 5;
+            });
+
+            options.AddTokenBucketLimiter("HostDownloadPolicy", opts =>
+            {
+                opts.TokenLimit = 10;
+                opts.QueueLimit = 2;
+                opts.ReplenishmentPeriod = TimeSpan.FromHours(1);
+                opts.TokensPerPeriod = 10;
+            });
+
+            options.OnRejected = (ctx, token) =>
+            {
+                ctx.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+
+                return ValueTask.CompletedTask;
+            };
+        });
+    }
+
+    private static async Task ConfigurePipeline(WebApplication app)
+    {
+        app.MapHealthChecks("/health");
+
+        app.UseRateLimiter();
+
+        using (var scope = app.Services.CreateScope())
+        {
+            var services = scope.ServiceProvider;
+
+            try
+            {
+                var dbContexts = new List<DbContext>
+                {
+                    services.GetRequiredService<ApplicationDbContext>(),
+                    services.GetRequiredService<NodesDbContext>(),
+                    services.GetRequiredService<CertificateDbContext>(),
+                };
+
+                foreach (var dbContext in dbContexts)
+                {
+                    dbContext.Database.Migrate();
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while applying the database migrations.");
+            }
+        }
+
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseMigrationsEndPoint();
+        }
+        else
+        {
+            app.UseExceptionHandler("/Error", createScopeForErrors: true);
+            app.UseHsts();
+        }
+
+        var applicationSettings = app.Services.GetRequiredService<IOptions<ApplicationSettings>>().Value;
+
+        app.Use(async (context, next) =>
+        {
+            var connectionInfo = context.Connection;
+
+            if (connectionInfo.LocalPort == 5254 && !context.Request.Path.StartsWithSegments("/hubs"))
+            {
+                context.Response.StatusCode = 404;
+
+                return;
+            }
+
+            await next();
+        });
+
+        app.UseMiddleware<RegistrationRestrictionMiddleware>();
+        app.UseMiddleware<RouteRestrictionMiddleware>();
+
+        app.UseStaticFiles();
+        app.UseAntiforgery();
+
+        app.MapControllers();
+        app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
+
+        app.MapAdditionalIdentityEndpoints();
+
+        app.MapHub<ManagementHub>("/hubs/management").RequireHost("*:5254");
+
+        var caCertificateService = app.Services.GetRequiredService<ICaCertificateService>();
+        caCertificateService.EnsureCaCertificateExists();
+
+        var jwtSecurityService = app.Services.GetRequiredService<IJwtSecurityService>();
+        await jwtSecurityService.EnsureKeysExistAsync();
+
+        using (var scope = app.Services.CreateScope())
+        {
+            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+            if (!await roleManager.RoleExistsAsync("RootAdministrator"))
+            {
+                await roleManager.CreateAsync(new IdentityRole("RootAdministrator"));
+            }
+
+            if (!await roleManager.RoleExistsAsync("Administrator"))
+            {
+                await roleManager.CreateAsync(new IdentityRole("Administrator"));
+            }
         }
     }
-    catch (Exception ex)
-    {
-        Log.Error(ex, "An error occurred while applying the database migrations.");
-    }
 }
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseMigrationsEndPoint();
-}
-else
-{
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    app.UseHsts();
-}
-
-// app.UseHttpsRedirection();
-
-var applicationSettings = app.Services.GetRequiredService<IOptions<ApplicationSettings>>().Value;
-
-app.Use(async (context, next) =>
-{
-    var connectionInfo = context.Connection;
-    
-    if (connectionInfo.LocalPort == 5254 && !context.Request.Path.StartsWithSegments("/hubs"))
-    {
-        context.Response.StatusCode = 404;
-
-        return;
-    }
-    
-    await next();
-});
-
-app.UseMiddleware<RegistrationRestrictionMiddleware>();
-app.UseMiddleware<RouteRestrictionMiddleware>();
-
-app.UseStaticFiles();
-app.UseAntiforgery();
-
-app.MapControllers();
-app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
-
-app.MapAdditionalIdentityEndpoints();
-
-app.MapHub<ManagementHub>("/hubs/management").RequireHost("*:5254");
-
-var caCertificateService = app.Services.GetRequiredService<ICaCertificateService>();
-caCertificateService.EnsureCaCertificateExists();
-
-var jwtSecurityService = app.Services.GetRequiredService<IJwtSecurityService>();
-await jwtSecurityService.EnsureKeysExistAsync();
-
-using (var scope = app.Services.CreateScope())
-{
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-
-    if (!await roleManager.RoleExistsAsync("RootAdministrator"))
-    {
-        await roleManager.CreateAsync(new IdentityRole("RootAdministrator"));
-    }
-
-    if (!await roleManager.RoleExistsAsync("Administrator"))
-    {
-        await roleManager.CreateAsync(new IdentityRole("Administrator"));
-    }
-}
-
-app.Run();
