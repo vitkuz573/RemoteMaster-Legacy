@@ -124,6 +124,7 @@ public static class Program
 
         services.AddHostedService<SecurityInitializationService>();
         services.AddHostedService<RoleInitializationService>();
+        services.AddHostedService<DatabaseCleanerService>();
 
         services.Configure<ApplicationSettings>(configurationManager);
         services.Configure<JwtOptions>(configurationManager.GetSection("jwt"));
