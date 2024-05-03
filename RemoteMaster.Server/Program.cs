@@ -90,7 +90,7 @@ public static class Program
 
         services.AddDatabaseDeveloperPageExceptionFilter();
 
-        services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
+        services.AddIdentityCore<ApplicationUser>()
             .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddSignInManager()
