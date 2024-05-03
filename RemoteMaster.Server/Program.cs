@@ -108,6 +108,7 @@ public static class Program
         services.AddScoped<ICrlService, CrlService>();
         services.AddScoped<IAccessTokenProvider, AccessTokenProvider>();
         services.AddScoped<IComputerConnectivityService, ComputerConnectivityService>();
+        services.AddScoped<ITokenService, TokenService>();
         services.AddSingleton<IBrandingService, BrandingService>();
         services.AddSingleton<ICertificateService, CertificateService>();
         services.AddSingleton<IPacketSender, UdpPacketSender>();
@@ -121,8 +122,6 @@ public static class Program
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         });
-
-        services.AddTransient<ITokenService, TokenService>();
 
         services.AddHostedService<SecurityInitializationService>();
         services.AddHostedService<RoleInitializationService>();
@@ -227,6 +226,7 @@ public static class Program
                 };
 
                 var result = JsonSerializer.Serialize(response, new JsonSerializerOptions { WriteIndented = true });
+               
                 await context.Response.WriteAsync(result);
             }
         });
