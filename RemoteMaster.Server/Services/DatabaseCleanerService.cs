@@ -2,18 +2,20 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Data;
 
 namespace RemoteMaster.Server.Services;
 
 public class DatabaseCleanerService : IHostedService
 {
-    private readonly ITokenService _tokenService;
+    private readonly IServiceProvider _serviceProvider;
     private readonly Timer _timer;
 
-    public DatabaseCleanerService(ITokenService tokenService)
+    public DatabaseCleanerService(IServiceProvider serviceProvider)
     {
-        _tokenService = tokenService;
+        _serviceProvider = serviceProvider;
         _timer = new Timer(MonitorDatabase, null, Timeout.Infinite, 0);
     }
 
@@ -24,13 +26,29 @@ public class DatabaseCleanerService : IHostedService
         return Task.CompletedTask;
     }
 
-    private void MonitorDatabase(object? state)
+    private async void MonitorDatabase(object? state)
     {
-        _tokenService.CleanUpExpiredRefreshTokens();
+        using var scope = _serviceProvider.CreateScope();
+
+        using var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+
+        try
+        {
+            await context.Database.OpenConnectionAsync();
+            await tokenService.CleanUpExpiredRefreshTokens();
+        }
+        finally
+        {
+            await context.Database.CloseConnectionAsync();
+        }
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
+        _timer?.Dispose();
+
         return Task.CompletedTask;
     }
 }

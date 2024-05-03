@@ -7,19 +7,24 @@ using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class RoleInitializationService(RoleManager<IdentityRole> roleManager) : IHostedService
+public class RoleInitializationService(IServiceProvider serviceProvider) : IHostedService
 {
     private readonly List<string> _roles = ["RootAdministrator", "Administrator"];
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        foreach (var role in _roles)
+        using (var scope = serviceProvider.CreateScope())
         {
-            await EnsureRoleExists(role);
+            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+            foreach (var role in _roles)
+            {
+                await EnsureRoleExists(roleManager, role);
+            }
         }
     }
 
-    private async Task EnsureRoleExists(string roleName)
+    private static async Task EnsureRoleExists(RoleManager<IdentityRole> roleManager, string roleName)
     {
         if (!await roleManager.RoleExistsAsync(roleName))
         {
