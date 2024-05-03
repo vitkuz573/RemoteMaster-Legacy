@@ -14,6 +14,9 @@ public partial class Register
 {
     private IEnumerable<IdentityError>? _identityErrors;
 
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
 
@@ -24,6 +27,23 @@ public partial class Register
 
     public async Task RegisterUser(EditContext editContext)
     {
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var isLocalhost = ipAddress == "127.0.0.1" || ipAddress == "::1" || ipAddress == "::ffff:127.0.0.1";
+
+        if (!isLocalhost)
+        {
+            Logger.LogWarning("Attempt to register from non-localhost IP.");
+
+            _identityErrors = [
+                new IdentityError
+                {
+                    Description = "Registration is restricted to localhost."
+                }
+            ];
+
+            return;
+        }
+
         var user = CreateUser();
 
         await UserStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
