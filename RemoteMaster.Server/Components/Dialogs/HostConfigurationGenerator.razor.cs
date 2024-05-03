@@ -2,6 +2,8 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
@@ -12,6 +14,9 @@ namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class HostConfigurationGenerator
 {
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; }
+
     private readonly HostConfiguration _model = new();
     public string _selectedOrganization;
     public List<Organization> _organizations = [];
@@ -292,7 +297,7 @@ public partial class HostConfigurationGenerator
 
     private async Task LoadUserOrganizationsAsync()
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var authState = await AuthenticationStateTask;
         var user = authState.User;
 
         if (user.Identity.IsAuthenticated)

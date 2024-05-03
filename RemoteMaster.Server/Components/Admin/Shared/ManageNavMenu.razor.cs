@@ -3,6 +3,8 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Claims;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.Caching.Memory;
 using RemoteMaster.Server.Data;
 
@@ -10,12 +12,15 @@ namespace RemoteMaster.Server.Components.Admin.Shared;
 
 public partial class ManageNavMenu
 {
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; }
+
     private string _username;
     private string _role;
 
     protected async override Task OnInitializedAsync()
     {
-        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var authenticationState = await AuthenticationStateTask;
         var userPrincipal = authenticationState.User;
 
         if (userPrincipal.Identity.IsAuthenticated)

@@ -4,6 +4,8 @@
 
 using System.Collections.Concurrent;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using MudBlazor;
@@ -16,6 +18,9 @@ namespace RemoteMaster.Server.Components.Pages;
 
 public partial class Home
 {
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; }
+
     private string _username;
     private string _role;
 
@@ -39,7 +44,7 @@ public partial class Home
 
     protected async override Task OnInitializedAsync()
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var authState = await AuthenticationStateTask;
         var userPrincipal = authState.User;
 
         if (userPrincipal.Identity.IsAuthenticated)
