@@ -123,6 +123,7 @@ public static class Program
         services.AddTransient<ITokenService, TokenService>();
 
         services.AddHostedService<SecurityInitializationService>();
+        services.AddHostedService<RoleInitializationService>();
 
         services.Configure<ApplicationSettings>(configurationManager);
         services.Configure<JwtOptions>(configurationManager.GetSection("jwt"));
@@ -248,20 +249,5 @@ public static class Program
         app.MapAdditionalIdentityEndpoints();
 
         app.MapHub<ManagementHub>("/hubs/management").RequireHost("*:5254");
-
-        using (var scope = app.Services.CreateScope())
-        {
-            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-
-            if (!await roleManager.RoleExistsAsync("RootAdministrator"))
-            {
-                await roleManager.CreateAsync(new IdentityRole("RootAdministrator"));
-            }
-
-            if (!await roleManager.RoleExistsAsync("Administrator"))
-            {
-                await roleManager.CreateAsync(new IdentityRole("Administrator"));
-            }
-        }
     }
 }
