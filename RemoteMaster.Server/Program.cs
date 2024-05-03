@@ -5,6 +5,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -184,7 +185,26 @@ public static class Program
 
     private static void ConfigurePipeline(WebApplication app)
     {
-        app.MapHealthChecks("/health");
+        app.MapHealthChecks("/health", new HealthCheckOptions
+        {
+            ResponseWriter = async (context, report) =>
+            {
+                var result = JsonSerializer.Serialize(
+                    new
+                    {
+                        status = report.Status.ToString(),
+                        checks = report.Entries.Select(entry => new {
+                            name = entry.Key,
+                            status = entry.Value.Status.ToString(),
+                            exception = entry.Value.Exception?.ToString(),
+                            duration = entry.Value.Duration.ToString()
+                        })
+                    });
+
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync(result);
+            }
+        });
 
         app.UseRateLimiter();
 
