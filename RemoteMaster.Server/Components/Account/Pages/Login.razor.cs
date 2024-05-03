@@ -52,11 +52,22 @@ public partial class Login
             var userId = UserManager.GetUserId(HttpContext.User);
             var user = await UserManager.FindByIdAsync(userId);
 
-            if (await UserManager.IsInRoleAsync(user, "RootAdministrator"))
+            var isRootAdmin = await UserManager.IsInRoleAsync(user, "RootAdministrator");
+            var isLocalhost = ipAddress == "127.0.0.1" || ipAddress == "::1" || ipAddress == "::ffff:127.0.0.1";
+
+            if (isRootAdmin && !isLocalhost)
             {
-                Logger.LogInformation("RootAdministrator logged in. Redirecting to Admin page.");
+                Logger.LogWarning("Attempt to login as RootAdministrator from non-localhost IP.");
+                errorMessage = "RootAdministrator access is restricted to localhost.";
+
+                return;
+            }
+
+            if (isRootAdmin && isLocalhost)
+            {
+                Logger.LogInformation("RootAdministrator logged in from localhost. Redirecting to Admin page.");
                 RedirectManager.RedirectTo("Admin");
-                
+
                 return;
             }
 
