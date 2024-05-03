@@ -29,20 +29,9 @@ public class DatabaseCleanerService : IHostedService
     private async void MonitorDatabase(object? state)
     {
         using var scope = _serviceProvider.CreateScope();
-
-        using var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
         var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
 
-        try
-        {
-            await context.Database.OpenConnectionAsync();
-            await tokenService.CleanUpExpiredRefreshTokens();
-        }
-        finally
-        {
-            await context.Database.CloseConnectionAsync();
-        }
+        await tokenService.CleanUpExpiredRefreshTokens();
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
