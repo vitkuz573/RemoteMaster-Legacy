@@ -52,7 +52,7 @@ public static class Program
 
         var app = builder.Build();
 
-        _ = ConfigurePipeline(app);
+        ConfigurePipeline(app);
 
         app.Run();
     }
@@ -181,7 +181,7 @@ public static class Program
         });
     }
 
-    private static async Task ConfigurePipeline(WebApplication app)
+    private static void ConfigurePipeline(WebApplication app)
     {
         app.MapHealthChecks("/health");
 
