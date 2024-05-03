@@ -122,6 +122,8 @@ public static class Program
 
         services.AddTransient<ITokenService, TokenService>();
 
+        services.AddHostedService<SecurityInitializationService>();
+
         services.Configure<ApplicationSettings>(configurationManager);
         services.Configure<JwtOptions>(configurationManager.GetSection("jwt"));
         services.Configure<CertificateOptions>(configurationManager.GetSection("caSettings"));
@@ -246,12 +248,6 @@ public static class Program
         app.MapAdditionalIdentityEndpoints();
 
         app.MapHub<ManagementHub>("/hubs/management").RequireHost("*:5254");
-
-        var caCertificateService = app.Services.GetRequiredService<ICaCertificateService>();
-        caCertificateService.EnsureCaCertificateExists();
-
-        var jwtSecurityService = app.Services.GetRequiredService<IJwtSecurityService>();
-        await jwtSecurityService.EnsureKeysExistAsync();
 
         using (var scope = app.Services.CreateScope())
         {
