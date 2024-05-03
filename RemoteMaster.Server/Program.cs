@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using MudBlazor.Services;
 using RemoteMaster.Server.Abstractions;
@@ -138,12 +139,29 @@ public static class Program
 
         services.AddControllers();
 
-        services
-            .AddHealthChecks()
-            .AddSqlServer(connectionString)
-            .AddDbContextCheck<ApplicationDbContext>()
-            .AddDbContextCheck<CertificateDbContext>()
-            .AddDbContextCheck<NodesDbContext>();
+        services.AddHealthChecks()
+            .AddSqlServer(
+                connectionString: connectionString,
+                name: "SqlServer",
+                failureStatus: HealthStatus.Degraded,
+                tags: ["db", "sql"],
+                timeout: TimeSpan.FromSeconds(5)
+            )
+            .AddDbContextCheck<ApplicationDbContext>(
+                name: "ApplicationDbContext",
+                failureStatus: HealthStatus.Unhealthy,
+                tags: ["db", "entityframework"]
+            )
+            .AddDbContextCheck<CertificateDbContext>(
+                name: "CertificateDbContext",
+                failureStatus: HealthStatus.Unhealthy,
+                tags: ["db", "entityframework"]
+            )
+            .AddDbContextCheck<NodesDbContext>(
+                name: "NodesDbContext",
+                failureStatus: HealthStatus.Unhealthy,
+                tags: ["db", "entityframework"]
+            );
 
         services.AddRateLimiter(options =>
         {
@@ -189,22 +207,41 @@ public static class Program
         {
             ResponseWriter = async (context, report) =>
             {
-                var result = JsonSerializer.Serialize(
-                    new
-                    {
-                        status = report.Status.ToString(),
-                        checks = report.Entries.Select(entry => new {
-                            name = entry.Key,
-                            status = entry.Value.Status.ToString(),
-                            exception = entry.Value.Exception?.ToString(),
-                            duration = entry.Value.Duration.ToString()
-                        })
-                    });
-
                 context.Response.ContentType = "application/json";
+
+                var response = new
+                {
+                    status = report.Status.ToString(),
+                    overallStatusCode = report.Status == HealthStatus.Healthy ? StatusCodes.Status200OK : StatusCodes.Status503ServiceUnavailable,
+                    timestamp = DateTime.UtcNow,
+                    checks = report.Entries.Select(entry => new
+                    {
+                        name = entry.Key,
+                        status = entry.Value.Status.ToString(),
+                        statusCode = entry.Value.Status == HealthStatus.Healthy ? StatusCodes.Status200OK : StatusCodes.Status503ServiceUnavailable,
+                        duration = entry.Value.Duration.ToString(),
+                        description = GetDescriptionByCheckName(entry.Key),
+                        exception = entry.Value.Exception?.Message,
+                        data = entry.Value.Data.Select(kv => new { key = kv.Key, value = kv.Value.ToString() })
+                    })
+                };
+
+                var result = JsonSerializer.Serialize(response, new JsonSerializerOptions { WriteIndented = true });
                 await context.Response.WriteAsync(result);
             }
         });
+
+        static string GetDescriptionByCheckName(string checkName)
+        {
+            return checkName switch
+            {
+                "SqlServer" => "Checks if the SQL Server database is reachable and responsive within the given timeout.",
+                "ApplicationDbContext" => "Verifies that the ApplicationDbContext can connect to its database and run a sample query within the given timeout.",
+                "CertificateDbContext" => "Checks connectivity and query ability of the CertificateDbContext against its database within a set timeout.",
+                "NodesDbContext" => "Ensures that the NodesDbContext can communicate with its designated database and execute a basic query within the expected time frame.",
+                _ => "No description available."
+            };
+        }
 
         app.UseRateLimiter();
 
