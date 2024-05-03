@@ -57,6 +57,8 @@ public partial class Login
 
             if (isRootAdmin && !isLocalhost)
             {
+                HttpContext.Response.Cookies.Delete(".AspNetCore.Identity.Application");
+
                 Logger.LogWarning("Attempt to login as RootAdministrator from non-localhost IP.");
                 errorMessage = "RootAdministrator access is restricted to localhost.";
 
