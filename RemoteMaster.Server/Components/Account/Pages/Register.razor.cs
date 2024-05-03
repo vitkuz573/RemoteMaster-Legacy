@@ -59,7 +59,7 @@ public partial class Register
 
         await UserManager.AddToRoleAsync(user, "RootAdministrator");
 
-        Logger.LogInformation("User created a new account with password.");
+        Logger.LogInformation("RootAdministrator account created successfully.");
 
         RedirectManager.RedirectTo("Account/Login");
     }
