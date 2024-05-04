@@ -5,6 +5,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
@@ -131,6 +132,46 @@ public static class Program
         services.Configure<JwtOptions>(configurationManager.GetSection("jwt"));
         services.Configure<CertificateOptions>(configurationManager.GetSection("caSettings"));
         services.Configure<SubjectOptions>(configurationManager.GetSection("caSettings:subject"));
+        
+        services.AddCookiePolicy(options =>
+        {
+            options.HttpOnly = HttpOnlyPolicy.Always;
+            options.MinimumSameSitePolicy = SameSiteMode.Strict;
+            options.Secure = CookieSecurePolicy.Always;
+
+            options.OnAppendCookie = cookieContext =>
+            {
+                if (cookieContext.CookieName.StartsWith(".AspNetCore"))
+                {
+                    return;
+                }
+
+                cookieContext.CookieOptions.HttpOnly = true;
+                cookieContext.CookieOptions.Secure = cookieContext.Context.Request.IsHttps;
+                cookieContext.CookieOptions.SameSite = SameSiteMode.Strict;
+
+                if (cookieContext.CookieName == CookieNames.AccessToken)
+                {
+                    cookieContext.CookieOptions.Expires = DateTime.UtcNow.AddMinutes(15);
+                }
+                else if (cookieContext.CookieName == CookieNames.RefreshToken)
+                {
+                    cookieContext.CookieOptions.Expires = DateTime.UtcNow.AddDays(1);
+                }
+            };
+
+            options.OnDeleteCookie = cookieContext =>
+            {
+                if (cookieContext.CookieName.StartsWith(".AspNetCore"))
+                {
+                    return;
+                }
+
+                cookieContext.CookieOptions.HttpOnly = true;
+                cookieContext.CookieOptions.Secure = cookieContext.Context.Request.IsHttps;
+                cookieContext.CookieOptions.SameSite = SameSiteMode.Strict;
+            };
+        });
 
         services.AddMudServices();
 
@@ -280,6 +321,8 @@ public static class Program
         }
 
         var applicationSettings = app.Services.GetRequiredService<IOptions<ApplicationSettings>>().Value;
+
+        app.UseCookiePolicy();
 
         app.Use(async (context, next) =>
         {

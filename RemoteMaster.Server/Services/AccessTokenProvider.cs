@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Extensions;
 using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Services;
@@ -28,8 +27,8 @@ public class AccessTokenProvider(ITokenService tokenService, IHttpContextAccesso
             
             if (newTokens != null && !string.IsNullOrEmpty(newTokens.AccessToken))
             {
-                context.SetCookie(CookieNames.AccessToken, newTokens.AccessToken, TimeSpan.FromMinutes(20));
-                context.SetCookie(CookieNames.RefreshToken, newTokens.RefreshToken, TimeSpan.FromHours(25));
+                context.Response.Cookies.Append(CookieNames.AccessToken, newTokens.AccessToken);
+                context.Response.Cookies.Append(CookieNames.RefreshToken, newTokens.RefreshToken);
                
                 return newTokens.AccessToken;
             }
