@@ -305,9 +305,7 @@ public static class Program
 
         app.Use(async (context, next) =>
         {
-            var connectionInfo = context.Connection;
-
-            if (connectionInfo.LocalPort == 5254 && !context.Request.Path.StartsWithSegments("/hubs"))
+            if (context.Connection.LocalPort == 5254 && !context.Request.Path.StartsWithSegments("/hubs"))
             {
                 context.Response.StatusCode = 404;
 
