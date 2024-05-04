@@ -4,6 +4,7 @@
 
 using System.Diagnostics;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Diagnostics;
 
 namespace RemoteMaster.Server.Components.Pages;
 
@@ -16,8 +17,16 @@ public partial class Error
 
     private bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
 
+    private IExceptionHandlerFeature? ExceptionDetails { get; set; }
+
     protected override void OnInitialized()
     {
         RequestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier;
+
+        if (HttpContext != null)
+        {
+            ExceptionDetails = HttpContext.Features.Get<IExceptionHandlerFeature>();
+        }
     }
 }
+
