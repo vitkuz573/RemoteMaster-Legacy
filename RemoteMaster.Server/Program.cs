@@ -228,16 +228,15 @@ public static class Program
             {
                 context.Response.ContentType = "application/json";
 
-                var healthCheckResults = report.Entries.Select(entry => new HealthCheck
-                {
-                    Name = entry.Key,
-                    Status = entry.Value.Status.ToString(),
-                    StatusCode = entry.Value.Status == HealthStatus.Healthy ? StatusCodes.Status200OK : StatusCodes.Status503ServiceUnavailable,
-                    Duration = entry.Value.Duration.ToString(),
-                    Description = GetDescriptionByCheckName(entry.Key),
-                    Exception = entry.Value.Exception?.Message,
-                    Data = entry.Value.Data.ToDictionary(kv => kv.Key, kv => kv.Value.ToString())
-                }).ToList();
+                var healthCheckResults = report.Entries.Select(entry => new HealthCheck(
+                    name: entry.Key,
+                    status: entry.Value.Status.ToString(),
+                    statusCode: entry.Value.Status == HealthStatus.Healthy ? StatusCodes.Status200OK : StatusCodes.Status503ServiceUnavailable,
+                    duration: entry.Value.Duration.ToString(),
+                    description: GetDescriptionByCheckName(entry.Key),
+                    exception: entry.Value.Exception?.Message,
+                    data: entry.Value.Data.ToDictionary(kv => kv.Key, kv => kv.Value.ToString())
+                )).ToList();
 
                 var responseModel = ApiResponse<List<HealthCheck>>.Success(healthCheckResults, "Health checks completed");
                 var jsonResponse = JsonSerializer.Serialize(responseModel, new JsonSerializerOptions { WriteIndented = true });
