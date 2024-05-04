@@ -228,26 +228,21 @@ public static class Program
             {
                 context.Response.ContentType = "application/json";
 
-                var response = new
+                var healthCheckResults = report.Entries.Select(entry => new HealthCheck
                 {
-                    status = report.Status.ToString(),
-                    overallStatusCode = report.Status == HealthStatus.Healthy ? StatusCodes.Status200OK : StatusCodes.Status503ServiceUnavailable,
-                    timestamp = DateTime.UtcNow,
-                    checks = report.Entries.Select(entry => new
-                    {
-                        name = entry.Key,
-                        status = entry.Value.Status.ToString(),
-                        statusCode = entry.Value.Status == HealthStatus.Healthy ? StatusCodes.Status200OK : StatusCodes.Status503ServiceUnavailable,
-                        duration = entry.Value.Duration.ToString(),
-                        description = GetDescriptionByCheckName(entry.Key),
-                        exception = entry.Value.Exception?.Message,
-                        data = entry.Value.Data.Select(kv => new { key = kv.Key, value = kv.Value.ToString() })
-                    })
-                };
+                    Name = entry.Key,
+                    Status = entry.Value.Status.ToString(),
+                    StatusCode = entry.Value.Status == HealthStatus.Healthy ? StatusCodes.Status200OK : StatusCodes.Status503ServiceUnavailable,
+                    Duration = entry.Value.Duration.ToString(),
+                    Description = GetDescriptionByCheckName(entry.Key),
+                    Exception = entry.Value.Exception?.Message,
+                    Data = entry.Value.Data.ToDictionary(kv => kv.Key, kv => kv.Value.ToString())
+                }).ToList();
 
-                var result = JsonSerializer.Serialize(response, new JsonSerializerOptions { WriteIndented = true });
-               
-                await context.Response.WriteAsync(result);
+                var responseModel = ApiResponse<List<HealthCheck>>.Success(healthCheckResults, "Health checks completed");
+                var jsonResponse = JsonSerializer.Serialize(responseModel, new JsonSerializerOptions { WriteIndented = true });
+
+                await context.Response.WriteAsync(jsonResponse);
             }
         });
 
