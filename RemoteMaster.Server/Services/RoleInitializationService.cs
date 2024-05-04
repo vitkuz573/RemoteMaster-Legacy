@@ -13,14 +13,12 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        using (var scope = serviceProvider.CreateScope())
-        {
-            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        using var scope = serviceProvider.CreateScope();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-            foreach (var role in _roles)
-            {
-                await EnsureRoleExists(roleManager, role);
-            }
+        foreach (var role in _roles)
+        {
+            await EnsureRoleExists(roleManager, role);
         }
     }
 
