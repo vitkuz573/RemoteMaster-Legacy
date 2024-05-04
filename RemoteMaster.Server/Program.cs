@@ -318,7 +318,6 @@ public static class Program
         });
 
         app.UseMiddleware<RegistrationRestrictionMiddleware>();
-        app.UseMiddleware<RouteRestrictionMiddleware>();
 
         app.UseStaticFiles();
         app.UseAntiforgery();
