@@ -1,8 +1,13 @@
 ﻿@page "/Admin/CertificateAuthority"
 
+@rendermode InteractiveServer
+
 @using Microsoft.Extensions.Options
+@using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Server.Models
 
+@inject ICertificateService CertificateService
+@inject IJSRuntime JsRuntime
 @inject IOptions<CertificateOptions> CertificateAuthorityCertificate
 
 <PageTitle>Manage Certificate Authority</PageTitle>
@@ -25,7 +30,7 @@
                 </div>
             </div>
 
-            <button class="w-full rounded-md bg-indigo-600 px-4 py-2 text-lg text-white hover:bg-indigo-700 focus:outline-none">
+            <button @onclick="ExportCaCertificateAsync" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-lg text-white hover:bg-indigo-700 focus:outline-none">
                 Export
             </button>
         </div>

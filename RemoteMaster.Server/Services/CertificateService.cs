@@ -60,7 +60,7 @@ public class CertificateService(IOptions<CertificateOptions> options, IHostInfor
         return new X509Certificate2(caCertificate.Export(X509ContentType.Cert));
     }
 
-    private X509Certificate2 GetPrivateCaCertificate()
+    public X509Certificate2 GetPrivateCaCertificate()
     {
         using var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
         store.Open(OpenFlags.ReadOnly);

@@ -11,4 +11,6 @@ public interface ICertificateService
     X509Certificate2 IssueCertificate(byte[] csrBytes);
 
     X509Certificate2 GetCaCertificate();
+
+    X509Certificate2 GetPrivateCaCertificate();
 }

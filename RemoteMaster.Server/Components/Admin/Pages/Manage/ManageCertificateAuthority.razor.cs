@@ -2,6 +2,10 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Security.Cryptography.X509Certificates;
+using Microsoft.JSInterop;
+using Serilog;
+
 namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 
 public partial class ManageCertificateAuthority
@@ -17,5 +21,29 @@ public partial class ManageCertificateAuthority
         _commonName = certificateAuthorityCertificate.CommonName;
         _keySize = certificateAuthorityCertificate.KeySize;
         _validityPeriod = certificateAuthorityCertificate.ValidityPeriod;
+    }
+
+    private async Task ExportCaCertificateAsync()
+    {
+        try
+        {
+            var caCertificate = CertificateService.GetPrivateCaCertificate();
+
+            if (caCertificate.HasPrivateKey)
+            {
+                var pfxBytes = caCertificate.Export(X509ContentType.Pfx, "YourSecurePassword");
+                var base64Pfx = Convert.ToBase64String(pfxBytes);
+
+                await JsRuntime.InvokeVoidAsync("saveAsFile", "certificate.pfx", base64Pfx);
+            }
+            else
+            {
+                throw new InvalidOperationException("The certificate does not contain a private key.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error($"Error exporting certificate: {ex.Message}");
+        }
     }
 }
