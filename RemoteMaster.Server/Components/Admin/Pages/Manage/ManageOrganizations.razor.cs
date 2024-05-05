@@ -25,19 +25,43 @@ public partial class ManageOrganizations
 
     private async Task OnValidSubmitAsync()
     {
-        var organization = CreateOrganization(Input.Name);
+        Organization organization;
 
-        await ApplicationDbContext.Organizations.AddAsync(organization);
-        await ApplicationDbContext.SaveChangesAsync();
+        using var scope = ScopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        if (Input.Id.HasValue)
+        {
+            organization = dbContext.Organizations.Find(Input.Id.Value);
+            
+            if (organization == null)
+            {
+                return;
+            }
+
+            organization.Name = Input.Name;
+        }
+        else
+        {
+            organization = CreateOrganization(Input.Name);
+            await dbContext.Organizations.AddAsync(organization);
+        }
+
+        await dbContext.SaveChangesAsync();
 
         LoadOrganizations();
 
         NavigationManager.NavigateTo("Admin/Organizations", true);
+
+        Input = new InputModel();
     }
 
     private void LoadOrganizations()
     {
-        _organizations = [.. ApplicationDbContext.Organizations];
+        using var scope = ScopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        _organizations = [.. dbContext.Organizations];
     }
 
     private static Organization CreateOrganization(string name)
@@ -59,8 +83,19 @@ public partial class ManageOrganizations
         LoadOrganizations();
     }
 
+    private void EditOrganization(Organization organization)
+    {
+        Input = new InputModel
+        {
+            Id = organization.OrganizationId,
+            Name = organization.Name
+        };
+    }
+
     private sealed class InputModel
     {
+        public Guid? Id { get; set; }
+
         [Required]
         [DataType(DataType.Text)]
         [Display(Name = "Name")]
