@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace RemoteMaster.Server.Components.Admin.Pages;
 
@@ -102,13 +101,27 @@ public partial class ManageUsers
         }
     }
 
-    private void EditUser(ApplicationUser user)
+    private async Task EditUser(ApplicationUser user)
     {
         Input = new InputModel
         {
             Id = user.Id,
-            Username = user.UserName
+            Username = user.UserName,
+            Role = (await UserManager.GetRolesAsync(user)).FirstOrDefault()
         };
+
+        var userOrganizations = ApplicationDbContext.UserOrganizations
+                                   .Where(uo => uo.UserId == user.Id)
+                                   .Include(uo => uo.Organization);
+
+        if (userOrganizations != null && await userOrganizations.AnyAsync())
+        {
+            Input.Organizations = await userOrganizations.Select(uo => uo.OrganizationId.ToString()).ToArrayAsync();
+        }
+        else
+        {
+            Input.Organizations = [];
+        }
     }
 
     private async Task LoadUsers()
