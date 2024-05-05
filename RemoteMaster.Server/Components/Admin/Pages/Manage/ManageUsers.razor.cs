@@ -19,7 +19,6 @@ public partial class ManageUsers
     private InputModel Input { get; set; } = new();
 
     private IEnumerable<IdentityError>? _identityErrors;
-    private ApplicationUser _user = default!;
     private List<ApplicationUser> _users = [];
     private readonly Dictionary<ApplicationUser, List<string>> _userRoles = [];
     private List<IdentityRole> _roles = [];
