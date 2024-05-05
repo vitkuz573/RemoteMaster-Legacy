@@ -15,8 +15,10 @@ namespace RemoteMaster.Server.Components.Admin.Pages;
 [Authorize(Roles = "RootAdministrator")]
 public partial class ManageUsers
 {
-    [SupplyParameterFromForm]
+    [SupplyParameterFromForm(FormName = "CreateUser")]
     private InputModel Input { get; set; } = new();
+
+    private readonly Dictionary<string, DeletionInputModel> _deletionModels = [];
 
     private IEnumerable<IdentityError>? _identityErrors;
     private List<ApplicationUser> _users = [];
@@ -32,6 +34,8 @@ public partial class ManageUsers
 
         foreach (var user in _users)
         {
+            _deletionModels[user.UserName] = new DeletionInputModel { Username = user.UserName };
+
             var roles = await UserManager.GetRolesAsync(user);
 
             _userRoles.Add(user, [.. roles]);
@@ -84,6 +88,24 @@ public partial class ManageUsers
         NavigationManager.NavigateTo("Admin/Users", true);
     }
 
+    private async Task OnDeleteAsync(string username)
+    {
+        if (_deletionModels.TryGetValue(username, out var model))
+        {
+            var user = await UserManager.FindByNameAsync(model.Username);
+
+            if (user != null)
+            {
+                await UserManager.DeleteAsync(user);
+
+                _deletionModels.Remove(username);
+                _users.Remove(user);
+
+                StateHasChanged();
+            }
+        }
+    }
+
     private async Task LoadUsers()
     {
         _users = await UserManager.Users.ToListAsync();
@@ -127,5 +149,13 @@ public partial class ManageUsers
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; } = "";
+    }
+
+    private sealed class DeletionInputModel
+    {
+        [Required]
+        [DataType(DataType.Text)]
+        [Display(Name = "Username")]
+        public string Username { get; set; }
     }
 }

@@ -96,6 +96,13 @@
                                 <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
                                     @(_userRoles.ContainsKey(user) ? string.Join(", ", _userRoles[user]) : "No Roles")
                                 </td>
+                                <td class="whitespace-nowrap px-6 py-4 text-right">
+                                    <EditForm Model="_deletionModels[user.UserName]" OnValidSubmit="() => OnDeleteAsync(user.UserName)" class="space-y-6" FormName="@($"userForm-{user.Id}")">
+                                        <button class="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 focus:outline-none">
+                                            Delete
+                                        </button>
+                                    </EditForm>
+                                </td>
                             </tr>
                         }
                     </tbody>
