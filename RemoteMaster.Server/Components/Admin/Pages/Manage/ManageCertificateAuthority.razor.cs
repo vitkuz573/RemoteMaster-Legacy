@@ -13,6 +13,7 @@ public partial class ManageCertificateAuthority
     private string _commonName;
     private int _keySize;
     private int _validityPeriod;
+    private string _exportPassword;
 
     protected override void OnInitialized()
     {
@@ -31,7 +32,7 @@ public partial class ManageCertificateAuthority
 
             if (caCertificate.HasPrivateKey)
             {
-                var pfxBytes = caCertificate.Export(X509ContentType.Pfx, "YourSecurePassword");
+                var pfxBytes = caCertificate.Export(X509ContentType.Pfx, _exportPassword);
                 var base64Pfx = Convert.ToBase64String(pfxBytes);
 
                 await JsRuntime.InvokeVoidAsync("saveAsFile", "certificate.pfx", base64Pfx);
