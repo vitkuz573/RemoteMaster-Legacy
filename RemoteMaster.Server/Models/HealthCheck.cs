@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Server.Models;
 
-public class HealthCheck(string name, string status, int statusCode, string duration, string description, string? exception, Dictionary<string, string?> data)
+public class HealthCheck(string name, string status, int statusCode, string duration, string? description, string? exception, Dictionary<string, string?> data)
 {
     public string Name { get; set; } = name;
 
@@ -14,7 +14,7 @@ public class HealthCheck(string name, string status, int statusCode, string dura
 
     public string Duration { get; set; } = duration;
 
-    public string Description { get; set; } = description;
+    public string? Description { get; set; } = description;
 
     public string? Exception { get; set; } = exception;
 

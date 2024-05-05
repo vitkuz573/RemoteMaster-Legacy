@@ -233,7 +233,7 @@ public static class Program
                     status: entry.Value.Status.ToString(),
                     statusCode: entry.Value.Status == HealthStatus.Healthy ? StatusCodes.Status200OK : StatusCodes.Status503ServiceUnavailable,
                     duration: entry.Value.Duration.ToString(),
-                    description: GetDescriptionByCheckName(entry.Key),
+                    description: entry.Value.Description,
                     exception: entry.Value.Exception?.Message,
                     data: entry.Value.Data.ToDictionary(kv => kv.Key, kv => kv.Value.ToString())
                 )).ToList();
@@ -244,18 +244,6 @@ public static class Program
                 await context.Response.WriteAsync(jsonResponse);
             }
         });
-
-        static string GetDescriptionByCheckName(string checkName)
-        {
-            return checkName switch
-            {
-                "SqlServer" => "Checks if the SQL Server database is reachable and responsive within the given timeout.",
-                "ApplicationDbContext" => "Verifies that the ApplicationDbContext can connect to its database and run a sample query within the given timeout.",
-                "CertificateDbContext" => "Checks connectivity and query ability of the CertificateDbContext against its database within a set timeout.",
-                "NodesDbContext" => "Ensures that the NodesDbContext can communicate with its designated database and execute a basic query within the expected time frame.",
-                _ => "No description available."
-            };
-        }
 
         app.UseRateLimiter();
 
