@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace RemoteMaster.Server.Components.Admin.Pages;
 
@@ -18,7 +19,7 @@ public partial class ManageUsers
     [SupplyParameterFromForm(FormName = "CreateUser")]
     private InputModel Input { get; set; } = new();
 
-    private readonly Dictionary<string, DeletionInputModel> _deletionModels = [];
+    private readonly Dictionary<string, PlaceholderInputModel> _userPlaceholderModels = [];
 
     private IEnumerable<IdentityError>? _identityErrors;
     private List<ApplicationUser> _users = [];
@@ -34,7 +35,7 @@ public partial class ManageUsers
 
         foreach (var user in _users)
         {
-            _deletionModels[user.UserName] = new DeletionInputModel { Username = user.UserName };
+            _userPlaceholderModels[user.UserName] = new PlaceholderInputModel { Username = user.UserName };
 
             var roles = await UserManager.GetRolesAsync(user);
 
@@ -88,22 +89,26 @@ public partial class ManageUsers
         NavigationManager.NavigateTo("Admin/Users", true);
     }
 
-    private async Task OnDeleteAsync(string username)
+    private async Task OnDeleteAsync(ApplicationUser user)
     {
-        if (_deletionModels.TryGetValue(username, out var model))
+        if (_userPlaceholderModels.TryGetValue(user.UserName, out _))
         {
-            var user = await UserManager.FindByNameAsync(model.Username);
+            await UserManager.DeleteAsync(user);
 
-            if (user != null)
-            {
-                await UserManager.DeleteAsync(user);
+            _userPlaceholderModels.Remove(user.UserName);
+            _users.Remove(user);
 
-                _deletionModels.Remove(username);
-                _users.Remove(user);
-
-                StateHasChanged();
-            }
+            StateHasChanged();
         }
+    }
+
+    private void EditUser(ApplicationUser user)
+    {
+        Input = new InputModel
+        {
+            Id = user.Id,
+            Username = user.UserName
+        };
     }
 
     private async Task LoadUsers()
@@ -126,6 +131,8 @@ public partial class ManageUsers
 
     private sealed class InputModel
     {
+        public string? Id { get; set; }
+
         [Required]
         [DataType(DataType.Text)]
         [Display(Name = "Username")]
@@ -151,7 +158,7 @@ public partial class ManageUsers
         public string ConfirmPassword { get; set; } = "";
     }
 
-    private sealed class DeletionInputModel
+    private sealed class PlaceholderInputModel
     {
         [Required]
         [DataType(DataType.Text)]
