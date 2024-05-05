@@ -15,9 +15,6 @@ namespace RemoteMaster.Server.Components.Admin.Pages;
 [Authorize(Roles = "RootAdministrator")]
 public partial class ManageUsers
 {
-    [CascadingParameter]
-    private HttpContext HttpContext { get; set; } = default!;
-
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
 
@@ -32,8 +29,6 @@ public partial class ManageUsers
 
     protected async override Task OnInitializedAsync()
     {
-        _user = await UserAccessor.GetRequiredUserAsync(HttpContext);
-
         await LoadUsers();
 
         foreach (var user in _users)
