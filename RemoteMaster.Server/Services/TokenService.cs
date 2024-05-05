@@ -271,6 +271,8 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
     public async Task CleanUpExpiredRefreshTokens()
     {
+        Log.Debug("Starting cleanup of expired and revoked refresh tokens.");
+
         var expiredTokens = await context.RefreshTokens
             .Where(rt => rt.Expires < DateTime.UtcNow || rt.Revoked.HasValue)
             .ToListAsync();
@@ -280,7 +282,16 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
             context.RefreshTokens.RemoveRange(expiredTokens);
             await context.SaveChangesAsync();
 
+            foreach (var token in expiredTokens)
+            {
+                Log.Debug($"Removed token: {token.Token}, User ID: {token.UserId}, Expired at: {token.Expires}, Revoked at: {token.Revoked}");
+            }
+
             Log.Information($"Cleaned up {expiredTokens.Count} expired or revoked refresh tokens.");
+        }
+        else
+        {
+            Log.Information("No expired or revoked refresh tokens found to clean up.");
         }
     }
 }
