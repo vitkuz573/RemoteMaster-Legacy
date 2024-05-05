@@ -50,34 +50,50 @@ public partial class ManageUsers
 
     private async Task OnValidSubmitAsync()
     {
-        var user = CreateUser();
+        ApplicationUser user;
 
-        await UserStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
-
-        var result = await UserManager.CreateAsync(user, Input.Password);
-
-        if (!result.Succeeded)
+        if (Input.Id != null)
         {
-            _identityErrors = result.Errors;
+            user = await UserManager.FindByIdAsync(Input.Id);
 
-            return;
-        }
-
-        await UserManager.AddToRoleAsync(user, Input.Role);
-
-        foreach (var orgId in Input.Organizations)
-        {
-            var organization = await ApplicationDbContext.Organizations.FindAsync(Guid.Parse(orgId));
-            
-            if (organization != null)
+            if (user == null)
             {
-                var userOrganization = new UserOrganization
-                {
-                    User = user,
-                    Organization = organization
-                };
+                return;
+            }
 
-                ApplicationDbContext.UserOrganizations.Add(userOrganization);
+            await UserManager.UpdateAsync(user);
+        }
+        else
+        {
+            user = CreateUser();
+
+            await UserStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
+
+            var result = await UserManager.CreateAsync(user, Input.Password);
+
+            if (!result.Succeeded)
+            {
+                _identityErrors = result.Errors;
+
+                return;
+            }
+
+            await UserManager.AddToRoleAsync(user, Input.Role);
+
+            foreach (var orgId in Input.Organizations)
+            {
+                var organization = await ApplicationDbContext.Organizations.FindAsync(Guid.Parse(orgId));
+
+                if (organization != null)
+                {
+                    var userOrganization = new UserOrganization
+                    {
+                        User = user,
+                        Organization = organization
+                    };
+
+                    ApplicationDbContext.UserOrganizations.Add(userOrganization);
+                }
             }
         }
 
