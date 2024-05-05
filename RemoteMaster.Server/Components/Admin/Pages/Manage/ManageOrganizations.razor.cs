@@ -5,6 +5,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
+using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Components.Admin.Pages;
@@ -45,6 +46,17 @@ public partial class ManageOrganizations
         {
             Name = name
         };
+    }
+
+    private async Task DeleteOrganization(Organization organization)
+    {
+        using var scope = ScopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        dbContext.Organizations.Remove(organization);
+        await dbContext.SaveChangesAsync();
+
+        LoadOrganizations();
     }
 
     private sealed class InputModel
