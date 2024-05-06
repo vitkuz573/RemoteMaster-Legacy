@@ -13,6 +13,8 @@ public partial class ManageCertificateAuthority
     private string _commonName;
     private int _keySize;
     private int _validityPeriod;
+    private DateTime _issueDate;
+    private DateTime _expiryDate;
     private string _exportPassword;
 
     protected override void OnInitialized()
@@ -22,6 +24,11 @@ public partial class ManageCertificateAuthority
         _commonName = certificateAuthorityCertificate.CommonName;
         _keySize = certificateAuthorityCertificate.KeySize;
         _validityPeriod = certificateAuthorityCertificate.ValidityPeriod;
+
+        var caCertificate = CertificateService.GetPrivateCaCertificate();
+
+        _issueDate = caCertificate.NotBefore;
+        _expiryDate = caCertificate.NotAfter;
     }
 
     private async Task ExportCaCertificateAsync()
