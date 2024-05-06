@@ -35,7 +35,7 @@ public partial class ManageCertificateAuthority
                 var pfxBytes = caCertificate.Export(X509ContentType.Pfx, _exportPassword);
                 var base64Pfx = Convert.ToBase64String(pfxBytes);
 
-                await JsRuntime.InvokeVoidAsync("saveAsFile", "certificate.pfx", base64Pfx);
+                await JsRuntime.InvokeVoidAsync("saveAsFile", $"{_commonName}.pfx", base64Pfx);
             }
             else
             {
