@@ -13,6 +13,8 @@ public partial class ManageCertificateAuthority
     private string _commonName;
     private int _keySize;
     private int _validityPeriod;
+    private string _serialNumber;
+    private string _signatureAlgorithm;
     private DateTime _issueDate;
     private DateTime _expiryDate;
     private string _exportPassword;
@@ -27,6 +29,8 @@ public partial class ManageCertificateAuthority
 
         var caCertificate = CertificateService.GetPrivateCaCertificate();
 
+        _serialNumber = caCertificate.SerialNumber;
+        _signatureAlgorithm = caCertificate.SignatureAlgorithm.FriendlyName;
         _issueDate = caCertificate.NotBefore;
         _expiryDate = caCertificate.NotAfter;
     }
