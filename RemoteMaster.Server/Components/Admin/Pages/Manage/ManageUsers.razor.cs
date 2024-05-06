@@ -32,15 +32,6 @@ public partial class ManageUsers
     {
         await LoadUsers();
 
-        foreach (var user in _users)
-        {
-            _userPlaceholderModels[user.UserName] = new PlaceholderInputModel { Username = user.UserName };
-
-            var roles = await UserManager.GetRolesAsync(user);
-
-            _userRoles.Add(user, [.. roles]);
-        }
-
         _roles = await RoleManager.Roles
             .Where(role => role.Name != "RootAdministrator")
             .ToListAsync();
@@ -106,7 +97,7 @@ public partial class ManageUsers
 
     private async Task OnDeleteAsync(ApplicationUser user)
     {
-        if (_userPlaceholderModels.TryGetValue(user.UserName, out _))
+        if (user != null && _userPlaceholderModels.TryGetValue(user.UserName, out var _))
         {
             await UserManager.DeleteAsync(user);
 
@@ -119,30 +110,54 @@ public partial class ManageUsers
 
     private async Task EditUser(ApplicationUser user)
     {
-        Input = new InputModel
+        if (user != null && _userRoles.TryGetValue(user, out var roles))
         {
-            Id = user.Id,
-            Username = user.UserName,
-            Role = (await UserManager.GetRolesAsync(user)).FirstOrDefault()
-        };
+            Input = new InputModel
+            {
+                Id = user.Id,
+                Username = user.UserName,
+                Role = roles.FirstOrDefault(),
+            };
 
-        var userOrganizations = ApplicationDbContext.UserOrganizations
+            var userOrganizations = ApplicationDbContext.UserOrganizations
                                    .Where(uo => uo.UserId == user.Id)
                                    .Include(uo => uo.Organization);
 
-        if (userOrganizations != null && await userOrganizations.AnyAsync())
-        {
-            Input.Organizations = await userOrganizations.Select(uo => uo.OrganizationId.ToString()).ToArrayAsync();
-        }
-        else
-        {
-            Input.Organizations = [];
+            Input.Organizations = userOrganizations.Any()
+                ? await userOrganizations.Select(uo => uo.OrganizationId.ToString()).ToArrayAsync()
+                : [];
         }
     }
 
     private async Task LoadUsers()
     {
-        _users = await UserManager.Users.ToListAsync();
+        var users = await UserManager.Users.ToListAsync();
+        var sortedUsers = new List<ApplicationUser>();
+
+        _userPlaceholderModels.Clear();
+        _userRoles.Clear();
+
+        foreach (var user in users)
+        {
+            var roles = await UserManager.GetRolesAsync(user);
+
+            _userRoles[user] = [.. roles];
+            _userPlaceholderModels[user.UserName] = new PlaceholderInputModel
+            {
+                Username = user.UserName
+            };
+
+            if (roles.Contains("RootAdministrator"))
+            {
+                sortedUsers.Insert(0, user);
+            }
+            else
+            {
+                sortedUsers.Add(user);
+            }
+        }
+
+        _users = sortedUsers;
     }
 
     private ApplicationUser CreateUser()
