@@ -20,25 +20,24 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
     {
         Log.Debug("Starting CA certificate check.");
 
-        var existingCert = FindExistingCertificate();
-
-        if (existingCert != null)
+        try
         {
-            Log.Debug("CA certificate found. Checking validity.");
+            using var existingCert = GetCaCertificate(X509ContentType.Pfx);
 
             if (existingCert.NotAfter > DateTime.Now)
             {
                 Log.Information("Existing CA certificate for '{Name}' is valid.", _settings.CommonName);
-
                 return;
             }
-
-            Log.Warning("CA certificate for '{Name}' has expired. Reissuing.", _settings.CommonName);
-
-            GenerateCertificate(existingCert.GetRSAPrivateKey(), true);
+            else
+            {
+                Log.Warning("CA certificate for '{Name}' has expired. Reissuing.", _settings.CommonName);
+                GenerateCertificate(existingCert.GetRSAPrivateKey(), true);
+            }
         }
-        else
+        catch (InvalidOperationException ex)
         {
+            Log.Warning(ex.Message);
             Log.Warning("No valid CA certificate found. Generating new certificate for '{Name}'.", _settings.CommonName);
 
             GenerateCertificate(null, false);
@@ -114,17 +113,6 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
                 rsaProvider.Dispose();
             }
         }
-    }
-
-    private X509Certificate2? FindExistingCertificate()
-    {
-        using var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
-
-        store.Open(OpenFlags.ReadOnly);
-
-        var existingCertificates = store.Certificates.Find(X509FindType.FindBySubjectName, _settings.CommonName, false);
-
-        return existingCertificates.Count > 0 ? existingCertificates[0] : null;
     }
 
     private static void AddCertificateToStore(X509Certificate2 cert, StoreName storeName, StoreLocation storeLocation)
