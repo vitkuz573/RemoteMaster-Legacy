@@ -20,7 +20,7 @@ public partial class ManageCertificateAuthority
 
     protected override void OnInitialized()
     {
-        var caCertificate = CertificateService.GetPrivateCaCertificate();
+        var caCertificate = CaCertificateService.GetCaCertificate(X509ContentType.Pfx);
 
         var caPrivateKey = caCertificate.GetRSAPrivateKey();
 
@@ -36,7 +36,7 @@ public partial class ManageCertificateAuthority
     {
         try
         {
-            var caCertificate = CertificateService.GetPrivateCaCertificate();
+            var caCertificate = CaCertificateService.GetCaCertificate(X509ContentType.Pfx);
 
             if (caCertificate.HasPrivateKey)
             {
@@ -53,6 +53,7 @@ public partial class ManageCertificateAuthority
         catch (Exception ex)
         {
             Log.Error($"Error exporting certificate: {ex.Message}");
+            throw;
         }
     }
 }

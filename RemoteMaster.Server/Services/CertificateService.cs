@@ -4,37 +4,33 @@
 
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Abstractions;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class CertificateService(IOptions<CertificateOptions> options, IHostInformationService hostInformationService) : ICertificateService
+public class CertificateService(IHostInformationService hostInformationService, ICaCertificateService caCertificateService) : ICertificateService
 {
-    private readonly CertificateOptions _settings = options.Value ?? throw new ArgumentNullException(nameof(options));
-
     public X509Certificate2 IssueCertificate(byte[] csrBytes)
     {
         ArgumentNullException.ThrowIfNull(csrBytes);
 
-        var caCertificate = GetPrivateCaCertificate();
+        var caCertificate = caCertificateService.GetCaCertificate(X509ContentType.Pfx);
 
         var csr = CertificateRequest.LoadSigningRequest(csrBytes, HashAlgorithmName.SHA256, CertificateRequestLoadOptions.UnsafeLoadCertificateExtensions);
         var basicConstraints = csr.CertificateExtensions.OfType<X509BasicConstraintsExtension>().FirstOrDefault();
-        
+
         if (basicConstraints?.CertificateAuthority == true)
         {
             Log.Error("CSR for CA certificates are not allowed.");
-            
+
             throw new InvalidOperationException("CSR for CA certificates are not allowed.");
         }
 
         var rsaPrivateKey = caCertificate.GetRSAPrivateKey();
         var signatureGenerator = X509SignatureGenerator.CreateForRSA(rsaPrivateKey, RSASignaturePadding.Pkcs1);
-        
+
         var notBefore = DateTimeOffset.UtcNow;
         var notAfter = DateTimeOffset.UtcNow.AddYears(1);
         var serialNumber = GenerateSerialNumber();
@@ -51,31 +47,6 @@ public class CertificateService(IOptions<CertificateOptions> options, IHostInfor
         csr.CertificateExtensions.Add(crlDistributionPointExtension);
 
         return csr.Create(caCertificate.SubjectName, signatureGenerator, notBefore, notAfter, serialNumber);
-    }
-
-    public X509Certificate2 GetCaCertificate()
-    {
-        var caCertificate = GetPrivateCaCertificate();
-        
-        return new X509Certificate2(caCertificate.Export(X509ContentType.Cert));
-    }
-
-    public X509Certificate2 GetPrivateCaCertificate()
-    {
-        using var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
-        store.Open(OpenFlags.ReadOnly);
-        
-        var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, _settings.CommonName, false);
-
-        foreach (var cert in certificates)
-        {
-            if (cert.HasPrivateKey)
-            {
-                return cert;
-            }
-        }
-
-        throw new InvalidOperationException("No valid CA certificate found.");
     }
 
     private static byte[] GenerateSerialNumber()

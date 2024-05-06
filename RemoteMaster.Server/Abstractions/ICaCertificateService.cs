@@ -2,9 +2,13 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Security.Cryptography.X509Certificates;
+
 namespace RemoteMaster.Server.Abstractions;
 
 public interface ICaCertificateService
 {
     void EnsureCaCertificateExists();
+
+    X509Certificate2 GetCaCertificate(X509ContentType contentType);
 }

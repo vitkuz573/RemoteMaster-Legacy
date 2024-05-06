@@ -152,4 +152,29 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
 
         store.Close();
     }
+
+    public X509Certificate2 GetCaCertificate(X509ContentType contentType)
+    {
+        using var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
+        store.Open(OpenFlags.ReadOnly);
+
+        var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, _settings.CommonName, false);
+
+        foreach (var cert in certificates)
+        {
+            if (cert.HasPrivateKey)
+            {
+                if (contentType == X509ContentType.Cert)
+                {
+                    return new X509Certificate2(cert.Export(X509ContentType.Cert));
+                }
+                else
+                {
+                    return cert;
+                }
+            }
+        }
+
+        throw new InvalidOperationException("No valid CA certificate with a private key found.");
+    }
 }

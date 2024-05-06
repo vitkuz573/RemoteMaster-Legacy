@@ -13,7 +13,7 @@ using Serilog;
 namespace RemoteMaster.Server.Hubs;
 
 [EnableRateLimiting("ManagementHubPolicy")]
-public class ManagementHub(ICertificateService certificateService, IDatabaseService databaseService) : Hub<IManagementClient>
+public class ManagementHub(ICertificateService certificateService, ICaCertificateService caCertificateService, IDatabaseService databaseService) : Hub<IManagementClient>
 {
     public async Task<bool> RegisterHostAsync(HostConfiguration hostConfiguration)
     {
@@ -326,11 +326,11 @@ public class ManagementHub(ICertificateService certificateService, IDatabaseServ
     {
         try
         {
-            var caCertificatePublicPart = certificateService.GetCaCertificate();
+            var caCertificatePublicPart = caCertificateService.GetCaCertificate(X509ContentType.Cert);
 
             if (caCertificatePublicPart != null)
             {
-                await Clients.Caller.ReceiveCertificate(caCertificatePublicPart.Export(X509ContentType.Cert));
+                await Clients.Caller.ReceiveCertificate(caCertificatePublicPart.RawData);
 
                 return true;
             }
