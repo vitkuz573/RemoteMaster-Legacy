@@ -10,9 +10,8 @@ namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 
 public partial class ManageCertificateAuthority
 {
-    private string _commonName;
+    private string _subject;
     private int _keySize;
-    private int _validityPeriod;
     private string _serialNumber;
     private string _signatureAlgorithm;
     private DateTime _issueDate;
@@ -21,14 +20,12 @@ public partial class ManageCertificateAuthority
 
     protected override void OnInitialized()
     {
-        var certificateAuthorityCertificate = CertificateAuthorityCertificate.Value;
-
-        _commonName = certificateAuthorityCertificate.CommonName;
-        _keySize = certificateAuthorityCertificate.KeySize;
-        _validityPeriod = certificateAuthorityCertificate.ValidityPeriod;
-
         var caCertificate = CertificateService.GetPrivateCaCertificate();
 
+        var caPrivateKey = caCertificate.GetRSAPrivateKey();
+
+        _subject = caCertificate.Subject;
+        _keySize = caPrivateKey.KeySize;
         _serialNumber = caCertificate.SerialNumber;
         _signatureAlgorithm = caCertificate.SignatureAlgorithm.FriendlyName;
         _issueDate = caCertificate.NotBefore;
@@ -46,7 +43,7 @@ public partial class ManageCertificateAuthority
                 var pfxBytes = caCertificate.Export(X509ContentType.Pfx, _exportPassword);
                 var base64Pfx = Convert.ToBase64String(pfxBytes);
 
-                await JsRuntime.InvokeVoidAsync("saveAsFile", $"{_commonName}.pfx", base64Pfx);
+                await JsRuntime.InvokeVoidAsync("saveAsFile", $"{_subject}.pfx", base64Pfx);
             }
             else
             {
