@@ -1,0 +1,24 @@
+﻿@page "/{Host}/access/new"
+
+@rendermode InteractiveServer
+
+<PageTitle>Access</PageTitle>
+
+<div class="relative flex h-full">
+    <!-- Main content area for remote control interface -->
+    <div class="h-full flex-grow bg-gray-100 p-5">
+        <h1 class="text-xl font-semibold">Remote Access: @Host</h1>
+        <div class="mt-4 rounded bg-white p-4 shadow">
+            <p>Remote host management interface will be displayed here.</p>
+        </div>
+    </div>
+
+    <!-- Sidebar, hidden by default, slides in from the right -->
+    <div style="@(IsSidebarOpen ? "right:0" : "right:-256px")" class="fixed top-0 h-full w-64 bg-gray-800 p-5 text-white transition-all duration-300 ease-in-out">
+        <h2 class="text-lg font-bold">Settings</h2>
+        <!-- Button to toggle the sidebar, styled as a part of the sidebar -->
+        <div class="absolute inset-y-1/2 -left-6 flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 hover:bg-blue-700" @onclick="ToggleSidebar">
+            <div class="h-6 w-6 rotate-45 transform bg-white"></div>
+        </div>
+    </div>
+</div>
