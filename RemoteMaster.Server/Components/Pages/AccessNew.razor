@@ -1,129 +1,26 @@
 ﻿@page "/{Host}/access/new"
+@using RemoteMaster.Server.Components.Library
 
 @rendermode InteractiveServer
 
 <PageTitle>Access</PageTitle>
 
 <div class="relative flex h-full">
-    <!-- Main content area for remote control interface -->
-    <div class="h-full flex-grow bg-gray-100 p-5 dark:bg-gray-800">
-        <h1 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Remote Access: @Host</h1>
-        <div class="mt-4 rounded bg-white p-4 shadow dark:bg-gray-700">
-            <p class="text-gray-900 dark:text-gray-100">Remote host management interface will be displayed here.</p>
-        </div>
-    </div>
+    <MainContent Title="@($"Remote Access: {Host}")">
+        <p class="text-gray-900 dark:text-gray-100">Remote host management interface will be displayed here.</p>
+    </MainContent>
 
-    <!-- Sidebar -->
-    <div style="@(_isSidebarOpen ? "right:0" : "right:-256px")" class="fixed top-0 h-full w-64 bg-gray-800 p-5 text-white shadow-lg transition-all duration-500 ease-out">
-        <h2 class="mb-4 text-lg font-bold">Settings</h2>
+    <Sidebar>
+        <ExpandablePanel Title="General Settings">
+            <label class="mt-2 flex items-center">
+                <input type="checkbox" class="form-checkbox mr-2 text-indigo-600" /> Enable Feature X
+            </label>
+        </ExpandablePanel>
 
-        <!-- Expandable Panels -->
-        <div>
-            <!-- General Settings Panel -->
-            <div class="mb-4">
-                <h3 class="flex cursor-pointer items-center text-sm font-semibold" @onclick='() => TogglePanel("general")'>
-                    <svg class="mr-2 h-4 w-4 transition-transform duration-300" style="transform:@(_activePanels.Contains("general") ? "rotate(90deg)" : "rotate(0deg)")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                    General Settings
-                </h3>
-                @if (_activePanels.Contains("general"))
-                {
-                    <div class="ml-4 mt-2 transition-all duration-300">
-                        <label class="mt-2 flex items-center">
-                            <input type="checkbox" class="form-checkbox mr-2 text-indigo-600" /> Enable Feature X
-                        </label>
-                        <label class="mt-2 flex items-center">
-                            <input type="checkbox" class="form-checkbox mr-2 text-indigo-600" /> Enable Feature Y
-                        </label>
-                        <label class="mt-2 flex items-center">
-                            <input type="radio" name="mode" class="form-radio mr-2 text-indigo-600" /> Option 1
-                        </label>
-                        <label class="mt-2 flex items-center">
-                            <input type="radio" name="mode" class="form-radio mr-2 text-indigo-600" /> Option 2
-                        </label>
-                        <p class="mt-2 text-xs text-gray-400">These settings control the general behavior of the system.</p>
-                    </div>
-                }
-            </div>
-
-            <!-- New Dropdown Panel -->
-            <div class="mb-4">
-                <h3 class="flex cursor-pointer items-center text-sm font-semibold" @onclick='() => TogglePanel("dropdown")'>
-                    <svg class="mr-2 h-4 w-4 transition-transform duration-300" style="transform:@(_activePanels.Contains("dropdown") ? "rotate(90deg)" : "rotate(0deg)")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                    Dropdown List
-                </h3>
-                @if (_activePanels.Contains("dropdown"))
-                {
-                    <div class="ml-4 mt-2 transition-all duration-300">
-                        <select class="w-full rounded bg-gray-700 p-2 text-white outline-none focus:ring-0">
-                            <option value="1">Option 1</option>
-                            <option value="2">Option 2</option>
-                            <option value="3">Option 3</option>
-                            <option value="4">Option 4</option>
-                        </select>
-                        <p class="mt-2 text-xs text-gray-400">Choose an option from the dropdown list above.</p>
-                    </div>
-                }
-            </div>
-
-            <!-- Network Settings Panel -->
-            <div class="mb-4">
-                <h3 class="flex cursor-pointer items-center text-sm font-semibold" @onclick='() => TogglePanel("network")'>
-                    <svg class="mr-2 h-4 w-4 transition-transform duration-300" style="transform:@(_activePanels.Contains("network") ? "rotate(90deg)" : "rotate(0deg)")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                    Network Settings
-                </h3>
-                @if (_activePanels.Contains("network"))
-                {
-                    <div class="ml-4 mt-2 transition-all duration-300">
-                        <label class="mt-2 flex items-center">
-                            <input type="checkbox" class="form-checkbox mr-2 text-indigo-600" /> Enable Remote Access
-                        </label>
-                        <label class="mt-2 flex items-center">
-                            <input type="checkbox" class="form-checkbox mr-2 text-indigo-600" /> Enable Local Access
-                        </label>
-                        <label class="mt-2 flex items-center">
-                            <input type="range" min="0" max="100" step="1" value="50" class="form-range mr-2" /> Bandwidth Limit
-                        </label>
-                        <p class="mt-2 text-xs text-gray-400">Configure remote and local network access permissions.</p>
-                    </div>
-                }
-            </div>
-
-            <!-- Security Settings Panel -->
-            <div class="mb-4">
-                <h3 class="flex cursor-pointer items-center text-sm font-semibold" @onclick='() => TogglePanel("security")'>
-                    <svg class="mr-2 h-4 w-4 transition-transform duration-300" style="transform:@(_activePanels.Contains("security") ? "rotate(90deg)" : "rotate(0deg)")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                    Security Settings
-                </h3>
-                @if (_activePanels.Contains("security"))
-                {
-                    <div class="ml-4 mt-2 transition-all duration-300">
-                        <label class="mt-2 flex items-center">
-                            <input type="checkbox" class="form-checkbox mr-2 text-indigo-600" /> Enable Firewall
-                        </label>
-                        <label class="mt-2 flex items-center">
-                            <input type="checkbox" class="form-checkbox mr-2 text-indigo-600" /> Enable VPN
-                        </label>
-                        <button class="mt-4 rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600">Save Changes</button>
-                        <button class="ml-2 mt-4 rounded bg-gray-500 px-4 py-2 text-white hover:bg-gray-600">Reset</button>
-                        <p class="mt-2 text-xs text-gray-400">Manage security settings like firewall and VPN configuration.</p>
-                    </div>
-                }
-            </div>
-        </div>
-
-        <!-- Sidebar toggle button -->
-        <div class="absolute inset-y-1/2 -left-6 flex h-12 w-6 cursor-pointer items-center justify-center rounded-bl-full rounded-tl-full bg-gray-800 hover:bg-gray-500" @onclick="ToggleSidebar">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-        </div>
-    </div>
+        <ExpandablePanel Title="Network Settings">
+            <label class="mt-2 flex items-center">
+                <input type="checkbox" class="form-checkbox mr-2 text-indigo-600" /> Enable Remote Access
+            </label>
+        </ExpandablePanel>
+    </Sidebar>
 </div>
