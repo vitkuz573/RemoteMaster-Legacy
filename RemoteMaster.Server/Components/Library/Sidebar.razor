@@ -2,15 +2,8 @@
     <h2 class="mb-4 text-lg font-bold">@Title</h2>
     @ChildContent
     <div class="absolute inset-y-1/2 -left-6 flex h-12 w-6 cursor-pointer items-center justify-center rounded-bl-full rounded-tl-full bg-gray-800 transition-opacity duration-300 @(!_isSidebarOpen ? "opacity-50" : "opacity-100")" @onclick="ToggleSidebar">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            @if (_isSidebarOpen)
-            {
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            }
-            else
-            {
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            }
-        </svg>
+        <span class="material-icons text-white">
+            @(_isSidebarOpen ? IconOpen : IconClosed)
+        </span>
     </div>
 </div>
