@@ -15,7 +15,7 @@ public partial class ExpandablePanel
     public RenderFragment ChildContent { get; set; }
 
     [Parameter]
-    public string Icon { get; set; } = "default-icon";
+    public string Icon { get; set; } = "chevron_right";
 
     [Parameter]
     public bool StartExpanded { get; set; } = false;

@@ -6,9 +6,9 @@
         }
         else
         {
-            <svg class="mr-2 h-4 w-4 transition-transform" style="transform:@(IsExpanded ? "rotate(90deg)" : "rotate(0deg)"); transition-duration: @(AnimationDurationMs)ms;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
+            <span class="material-icons mr-2 transition-transform" style="transform:@(IsExpanded ? "rotate(90deg)" : "rotate(0deg)"); transition-duration: @(AnimationDurationMs)ms;">
+                @(Icon)
+            </span>
             @Title
         }
     </h3>
