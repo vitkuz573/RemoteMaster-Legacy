@@ -1,4 +1,4 @@
-﻿<div style="@(_isSidebarOpen ? "right:0" : "right:-256px")" class="fixed top-0 h-full w-64 bg-gray-800 p-5 text-white shadow-lg transition-all duration-500 ease-out">
+﻿<div style="@(_isSidebarOpen ? "right:0" : "right:-256px")" class="@(CustomClass) fixed top-0 h-full w-64 p-5 shadow-lg transition-all duration-500 ease-out">
     <h2 class="mb-4 text-lg font-bold">@Title</h2>
     @ChildContent
     <div class="absolute inset-y-1/2 -left-6 flex h-12 w-6 cursor-pointer items-center justify-center rounded-bl-full rounded-tl-full bg-gray-800 transition-opacity duration-300 @(!_isSidebarOpen ? "opacity-50" : "opacity-100")" @onclick="ToggleSidebar">
