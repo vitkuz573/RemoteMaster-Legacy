@@ -47,6 +47,28 @@
                 }
             </div>
 
+            <!-- New Dropdown Panel -->
+            <div class="mb-4">
+                <h3 class="flex cursor-pointer items-center text-sm font-semibold" @onclick='() => TogglePanel("dropdown")'>
+                    <svg class="mr-2 h-4 w-4 transition-transform duration-300" style="transform:@(_activePanels.Contains("dropdown") ? "rotate(90deg)" : "rotate(0deg)")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                    Dropdown List
+                </h3>
+                @if (_activePanels.Contains("dropdown"))
+                {
+                    <div class="ml-4 mt-2 transition-all duration-300">
+                        <select class="w-full rounded bg-gray-700 p-2 text-white outline-none focus:ring-0">
+                            <option value="1">Option 1</option>
+                            <option value="2">Option 2</option>
+                            <option value="3">Option 3</option>
+                            <option value="4">Option 4</option>
+                        </select>
+                        <p class="mt-2 text-xs text-gray-400">Choose an option from the dropdown list above.</p>
+                    </div>
+                }
+            </div>
+
             <!-- Network Settings Panel -->
             <div class="mb-4">
                 <h3 class="flex cursor-pointer items-center text-sm font-semibold" @onclick='() => TogglePanel("network")'>
