@@ -17,8 +17,7 @@
     <div style="@(IsSidebarOpen ? "right:0" : "right:-256px")" class="fixed top-0 h-full w-64 bg-gray-800 p-5 text-white transition-all duration-300 ease-in-out">
         <h2 class="text-lg font-bold">Settings</h2>
         <!-- Button to toggle the sidebar, styled as a part of the sidebar -->
-        <div class="absolute inset-y-1/2 -left-6 flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 hover:bg-blue-700" @onclick="ToggleSidebar">
-            <div class="h-6 w-6 rotate-45 transform bg-white"></div>
+        <div class="absolute inset-y-1/2 -left-6 flex h-12 w-6 items-center justify-center rounded-bl-full rounded-tl-full bg-gray-800 hover:bg-gray-500" @onclick="ToggleSidebar">
         </div>
     </div>
 </div>
