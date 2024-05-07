@@ -14,29 +14,73 @@
     </div>
 
     <!-- Sidebar -->
-    <div style="@(IsSidebarOpen ? "right:0" : "right:-256px")" class="fixed top-0 h-full w-64 bg-gray-800 p-5 text-white shadow-lg transition-all duration-500 ease-out">
-        <h2 class="mb-4 flex items-center space-x-2 text-lg font-bold">
-            <span>Settings</span>
-        </h2>
-        <!-- Different settings sections -->
-        <div class="mb-6">
-            <h3 class="text-sm font-semibold">General Settings</h3>
-            <label class="mt-2 flex items-center">
-                <input type="checkbox" class="form-checkbox mr-2 text-indigo-600" /> Enable Feature X
-            </label>
-            <label class="mt-2 flex items-center">
-                <input type="checkbox" class="form-checkbox mr-2 text-indigo-600" /> Enable Feature Y
-            </label>
-        </div>
+    <div style="@(_isSidebarOpen ? "right:0" : "right:-256px")" class="fixed top-0 h-full w-64 bg-gray-800 p-5 text-white shadow-lg transition-all duration-500 ease-out">
+        <h2 class="mb-4 text-lg font-bold">Settings</h2>
 
-        <div class="mb-6">
-            <h3 class="text-sm font-semibold">Network Settings</h3>
-            <label class="mt-2 flex items-center">
-                <input type="checkbox" class="form-checkbox mr-2 text-indigo-600" /> Enable Remote Access
-            </label>
-            <label class="mt-2 flex items-center">
-                <input type="checkbox" class="form-checkbox mr-2 text-indigo-600" /> Enable Local Access
-            </label>
+        <!-- Expandable Panels -->
+        <div>
+            <!-- General Settings Panel -->
+            <div class="mb-4">
+                <h3 class="flex cursor-pointer items-center text-sm font-semibold" @onclick='() => TogglePanel("general")'>
+                    <svg class="mr-2 h-4 w-4 transition-transform" style="transform:@(_activePanel == "general" ? "rotate(90deg)" : "rotate(0deg)")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                    General Settings
+                </h3>
+                @if (_activePanel == "general")
+                {
+                    <div class="mt-2">
+                        <label class="mt-2 flex items-center">
+                            <input type="checkbox" class="form-checkbox mr-2 text-indigo-600" /> Enable Feature X
+                        </label>
+                        <label class="mt-2 flex items-center">
+                            <input type="checkbox" class="form-checkbox mr-2 text-indigo-600" /> Enable Feature Y
+                        </label>
+                    </div>
+                }
+            </div>
+
+            <!-- Network Settings Panel -->
+            <div class="mb-4">
+                <h3 class="flex cursor-pointer items-center text-sm font-semibold" @onclick='() => TogglePanel("network")'>
+                    <svg class="mr-2 h-4 w-4 transition-transform" style="transform:@(_activePanel == "network" ? "rotate(90deg)" : "rotate(0deg)")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                    Network Settings
+                </h3>
+                @if (_activePanel == "network")
+                {
+                    <div class="mt-2">
+                        <label class="mt-2 flex items-center">
+                            <input type="checkbox" class="form-checkbox mr-2 text-indigo-600" /> Enable Remote Access
+                        </label>
+                        <label class="mt-2 flex items-center">
+                            <input type="checkbox" class="form-checkbox mr-2 text-indigo-600" /> Enable Local Access
+                        </label>
+                    </div>
+                }
+            </div>
+
+            <!-- Security Settings Panel -->
+            <div class="mb-4">
+                <h3 class="flex cursor-pointer items-center text-sm font-semibold" @onclick='() => TogglePanel("security")'>
+                    <svg class="mr-2 h-4 w-4 transition-transform" style="transform:@(_activePanel == "security" ? "rotate(90deg)" : "rotate(0deg)")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                    Security Settings
+                </h3>
+                @if (_activePanel == "security")
+                {
+                    <div class="mt-2">
+                        <label class="mt-2 flex items-center">
+                            <input type="checkbox" class="form-checkbox mr-2 text-indigo-600" /> Enable Firewall
+                        </label>
+                        <label class="mt-2 flex items-center">
+                            <input type="checkbox" class="form-checkbox mr-2 text-indigo-600" /> Enable VPN
+                        </label>
+                    </div>
+                }
+            </div>
         </div>
 
         <!-- Sidebar toggle button -->

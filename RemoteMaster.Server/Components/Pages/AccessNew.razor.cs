@@ -11,10 +11,16 @@ public partial class AccessNew
     [Parameter]
     public string Host { get; set; }
 
-    private bool IsSidebarOpen = false;
+    private bool _isSidebarOpen = false;
+    private string _activePanel = string.Empty;
 
     private void ToggleSidebar()
     {
-        IsSidebarOpen = !IsSidebarOpen;
+        _isSidebarOpen = !_isSidebarOpen;
+    }
+
+    private void TogglePanel(string panelName)
+    {
+        _activePanel = _activePanel == panelName ? string.Empty : panelName;
     }
 }
