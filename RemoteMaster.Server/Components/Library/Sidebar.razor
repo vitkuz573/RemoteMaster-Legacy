@@ -1,10 +1,16 @@
 ﻿<div style="@(_isSidebarOpen ? "right:0" : "right:-256px")" class="fixed top-0 h-full w-64 bg-gray-800 p-5 text-white shadow-lg transition-all duration-500 ease-out">
     <h2 class="mb-4 text-lg font-bold">Settings</h2>
     @ChildContent
-    <!-- Sidebar toggle button -->
     <div class="absolute inset-y-1/2 -left-6 flex h-12 w-6 cursor-pointer items-center justify-center rounded-bl-full rounded-tl-full bg-gray-800 transition-opacity duration-300 @(!_isSidebarOpen ? "opacity-50" : "opacity-100")" @onclick="ToggleSidebar">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            @if (_isSidebarOpen)
+            {
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            }
+            else
+            {
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            }
         </svg>
     </div>
 </div>
