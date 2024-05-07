@@ -1,13 +1,21 @@
-﻿<div class="mb-4">
-    <h3 class="flex cursor-pointer items-center text-sm font-semibold" @onclick="Toggle">
-        <svg class="mr-2 h-4 w-4 transition-transform duration-300" style="transform:@(IsExpanded ? "rotate(90deg)" : "rotate(0deg)")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-        </svg>
-        @Title
+﻿<div class="@(CustomClass ?? "") mb-4">
+    <h3 class="flex cursor-pointer items-center text-sm font-semibold" @onclick="Toggle" aria-expanded="@IsExpanded" aria-disabled="@IsDisabled" aria-label="@AriaLabel">
+        @if (HeaderContent != null)
+        {
+            @HeaderContent
+        }
+        else
+        {
+            <svg class="mr-2 h-4 w-4 transition-transform" style="transform:@(IsExpanded ? "rotate(90deg)" : "rotate(0deg)"); transition-duration: @(AnimationDurationMs)ms;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+            @Title
+        }
     </h3>
+
     @if (IsExpanded)
     {
-        <div class="ml-4 mt-2 transition-all duration-300">
+        <div class="ml-4 mt-2 transition-all" style="transition-duration:@(AnimationDurationMs)ms;">
             @ChildContent
         </div>
     }
