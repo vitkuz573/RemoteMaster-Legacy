@@ -12,7 +12,7 @@ public partial class AccessNew
     public string Host { get; set; }
 
     private bool _isSidebarOpen = false;
-    private string _activePanel = string.Empty;
+    private readonly HashSet<string> _activePanels = [];
 
     private void ToggleSidebar()
     {
@@ -21,6 +21,9 @@ public partial class AccessNew
 
     private void TogglePanel(string panelName)
     {
-        _activePanel = _activePanel == panelName ? string.Empty : panelName;
+        if (!_activePanels.Remove(panelName))
+        {
+            _activePanels.Add(panelName);
+        }
     }
 }

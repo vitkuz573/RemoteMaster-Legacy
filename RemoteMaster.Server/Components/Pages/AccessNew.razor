@@ -22,12 +22,12 @@
             <!-- General Settings Panel -->
             <div class="mb-4">
                 <h3 class="flex cursor-pointer items-center text-sm font-semibold" @onclick='() => TogglePanel("general")'>
-                    <svg class="mr-2 h-4 w-4 transition-transform" style="transform:@(_activePanel == "general" ? "rotate(90deg)" : "rotate(0deg)")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="mr-2 h-4 w-4 transition-transform" style="transform:@(_activePanels.Contains("general") ? "rotate(90deg)" : "rotate(0deg)")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
                     General Settings
                 </h3>
-                @if (_activePanel == "general")
+                @if (_activePanels.Contains("general"))
                 {
                     <div class="mt-2">
                         <label class="mt-2 flex items-center">
@@ -43,12 +43,12 @@
             <!-- Network Settings Panel -->
             <div class="mb-4">
                 <h3 class="flex cursor-pointer items-center text-sm font-semibold" @onclick='() => TogglePanel("network")'>
-                    <svg class="mr-2 h-4 w-4 transition-transform" style="transform:@(_activePanel == "network" ? "rotate(90deg)" : "rotate(0deg)")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="mr-2 h-4 w-4 transition-transform" style="transform:@(_activePanels.Contains("network") ? "rotate(90deg)" : "rotate(0deg)")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
                     Network Settings
                 </h3>
-                @if (_activePanel == "network")
+                @if (_activePanels.Contains("network"))
                 {
                     <div class="mt-2">
                         <label class="mt-2 flex items-center">
@@ -63,13 +63,13 @@
 
             <!-- Security Settings Panel -->
             <div class="mb-4">
-                <h3 class="flex cursor-pointer items-center text-sm font-semibold" @onclick='() => TogglePanel("security")'>
-                    <svg class="mr-2 h-4 w-4 transition-transform" style="transform:@(_activePanel == "security" ? "rotate(90deg)" : "rotate(0deg)")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <h3 class="текст-sm flex cursor-pointer items-center font-semibold" @onclick='() => TogglePanel("security")'>
+                    <svg class="mr-2 h-4 w-4 transition-transform" style="transform:@(_activePanels.Contains("security") ? "rotate(90deg)" : "rotate(0deg)")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
                     Security Settings
                 </h3>
-                @if (_activePanel == "security")
+                @if (_activePanels.Contains("security"))
                 {
                     <div class="mt-2">
                         <label class="mt-2 flex items-center">
