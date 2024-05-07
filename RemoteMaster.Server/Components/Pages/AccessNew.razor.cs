@@ -10,20 +10,4 @@ public partial class AccessNew
 {
     [Parameter]
     public string Host { get; set; }
-
-    private bool _isSidebarOpen = false;
-    private readonly HashSet<string> _activePanels = [];
-
-    private void ToggleSidebar()
-    {
-        _isSidebarOpen = !_isSidebarOpen;
-    }
-
-    private void TogglePanel(string panelName)
-    {
-        if (!_activePanels.Remove(panelName))
-        {
-            _activePanels.Add(panelName);
-        }
-    }
 }
