@@ -10,4 +10,17 @@ public partial class AccessNew
 {
     [Parameter]
     public string Host { get; set; }
+
+    private bool FeatureXEnabled = true;
+    private bool FeatureYEnabled = false;
+    private bool RemoteAccessEnabled = true;
+    private bool LocalAccessEnabled = false;
+
+    private void OnFeatureXChanged(bool isChecked) => FeatureXEnabled = isChecked;
+
+    private void OnFeatureYChanged(bool isChecked) => FeatureYEnabled = isChecked;
+
+    private void OnRemoteAccessChanged(bool isChecked) => RemoteAccessEnabled = isChecked;
+
+    private void OnLocalAccessChanged(bool isChecked) => LocalAccessEnabled = isChecked;
 }
