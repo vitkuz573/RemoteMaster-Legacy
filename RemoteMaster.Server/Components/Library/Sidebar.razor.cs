@@ -21,7 +21,7 @@ public partial class Sidebar
     public string IconClosed { get; set; } = "chevron_left";
 
     [Parameter]
-    public string CustomClass { get; set; } = "bg-gray-800 text-white";
+    public string BaseColorClass { get; set; } = "bg-gray-800 text-white";
 
     [Parameter]
     public int WidthPx { get; set; } = 256;
