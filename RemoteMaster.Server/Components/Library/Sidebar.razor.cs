@@ -15,10 +15,10 @@ public partial class Sidebar
     public string Title { get; set; } = "Settings";
 
     [Parameter]
-    public string IconOpen { get; set; } = "chevron_left";
+    public string IconOpen { get; set; } = "chevron_right";
 
     [Parameter]
-    public string IconClosed { get; set; } = "chevron_right";
+    public string IconClosed { get; set; } = "chevron_left";
 
     [Parameter]
     public string CustomClass { get; set; } = "bg-gray-800 text-white";
