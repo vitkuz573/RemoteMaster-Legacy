@@ -10,7 +10,7 @@ namespace RemoteMaster.Server.Components.Library;
 public partial class Sidebar
 {
     /// <summary>
-    /// The content to be displayed inside the sidebar, represented as a render fragment.
+    /// The content to be displayed inside the sidebar as a render fragment.
     /// </summary>
     [Parameter]
     public RenderFragment ChildContent { get; set; }
@@ -22,68 +22,103 @@ public partial class Sidebar
     public string Title { get; set; } = "Settings";
 
     /// <summary>
-    /// Icon to be shown when the sidebar is open, usually an arrow or similar indicator.
+    /// Icon to be shown when the sidebar is open.
     /// </summary>
     [Parameter]
     public string IconOpen { get; set; } = "chevron_right";
 
     /// <summary>
-    /// Icon to be shown when the sidebar is closed, indicating its current state.
+    /// Icon to be shown when the sidebar is closed.
     /// </summary>
     [Parameter]
     public string IconClosed { get; set; } = "chevron_left";
 
     /// <summary>
-    /// Base color class used for both the sidebar and its toggle switch.
-    /// Defines the primary styles such as background and text colors.
+    /// CSS class to define the base color of the sidebar and its toggle switch.
     /// </summary>
     [Parameter]
     public string BaseColorClass { get; set; } = "bg-gray-800 text-white";
 
     /// <summary>
-    /// Width of the sidebar in pixels.
-    /// Defines the width of the entire sidebar component.
+    /// Sidebar width in pixels.
     /// </summary>
     [Parameter]
     public int WidthPx { get; set; } = 256;
 
     /// <summary>
-    /// Specifies whether the sidebar should start in an open state when first rendered.
+    /// Initial open state of the sidebar.
     /// </summary>
     [Parameter]
     public bool StartOpen { get; set; } = false;
 
     /// <summary>
-    /// Indicates if the sidebar's toggle function is disabled, preventing it from being opened or closed.
+    /// Indicates if the sidebar's toggle function is disabled.
     /// </summary>
     [Parameter]
     public bool IsDisabled { get; set; } = false;
 
     /// <summary>
-    /// Duration of the sidebar open/close animation in milliseconds.
-    /// Defines the animation speed when toggling the sidebar.
+    /// Animation duration in milliseconds for opening/closing the sidebar.
     /// </summary>
     [Parameter]
     public int AnimationDurationMs { get; set; } = 500;
 
     /// <summary>
-    /// Opacity of the toggle switch when the sidebar is open, ranging from 0 (fully transparent) to 1 (fully opaque).
+    /// Opacity of the toggle switch when the sidebar is open.
     /// </summary>
     [Parameter]
     public double SwitchOpacityOpen { get; set; } = 1.0;
 
     /// <summary>
-    /// Opacity of the toggle switch when the sidebar is closed, ranging from 0 (fully transparent) to 1 (fully opaque).
+    /// Opacity of the toggle switch when the sidebar is closed.
     /// </summary>
     [Parameter]
     public double SwitchOpacityClosed { get; set; } = 0.5;
 
     /// <summary>
-    /// Event callback invoked when the sidebar is toggled (opened or closed).
-    /// Provides the current open state as a boolean parameter.
+    /// Callback event invoked when the sidebar is toggled.
     /// </summary>
     [Parameter]
     public EventCallback<bool> OnToggle { get; set; }
+
+    /// <summary>
+    /// Callback event invoked when the sidebar is opened.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnOpen { get; set; }
+
+    /// <summary>
+    /// Callback event invoked when the sidebar is closed.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    /// <summary>
+    /// Additional shadow class to customize sidebar shadow.
+    /// </summary>
+    [Parameter]
+    public string ShadowClass { get; set; } = "shadow-lg";
+
+    /// <summary>
+    /// Additional transition classes for customizing sidebar animation.
+    /// </summary>
+    [Parameter]
+    public string TransitionClasses { get; set; } = "transition-all duration-500 ease-out";
+
+    /// <summary>
+    /// CSS classes for managing light and dark themes.
+    /// </summary>
+    [Parameter]
+    public string LightThemeClass { get; set; } = "bg-white text-gray-900";
+
+    [Parameter]
+    public string DarkThemeClass { get; set; } = "bg-gray-800 text-white";
+
+    /// <summary>
+    /// Determines whether the dark theme is enabled.
+    /// </summary>
+    [Parameter]
+    public bool IsDarkThemeEnabled { get; set; } = true;
 
     private bool _isSidebarOpen;
 
@@ -99,11 +134,27 @@ public partial class Sidebar
             _isSidebarOpen = !_isSidebarOpen;
 
             await OnToggle.InvokeAsync(_isSidebarOpen);
+
+            if (_isSidebarOpen)
+            {
+                await OnOpen.InvokeAsync();
+            }
+            else
+            {
+                await OnClose.InvokeAsync();
+            }
         }
     }
 
     private string GetSwitchOpacity()
     {
         return (_isSidebarOpen ? SwitchOpacityOpen : SwitchOpacityClosed).ToString("0.##", CultureInfo.InvariantCulture);
+    }
+
+    private string GetSidebarClasses()
+    {
+        var themeClass = IsDarkThemeEnabled ? DarkThemeClass : LightThemeClass;
+        
+        return $"{BaseColorClass} {ShadowClass} {TransitionClasses} {themeClass} fixed top-0 h-full p-5";
     }
 }
