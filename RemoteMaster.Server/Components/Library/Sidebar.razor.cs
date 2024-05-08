@@ -51,6 +51,9 @@ public partial class Sidebar
     [Parameter]
     public double SwitchOpacityClosed { get; set; } = 0.5;
 
+    [Parameter]
+    public EventCallback<bool> OnToggle { get; set; }
+
     private bool _isSidebarOpen;
 
     protected override void OnInitialized()
@@ -58,11 +61,12 @@ public partial class Sidebar
         _isSidebarOpen = StartOpen;
     }
 
-    private void ToggleSidebar()
+    private async Task ToggleSidebar()
     {
         if (!IsDisabled)
         {
             _isSidebarOpen = !_isSidebarOpen;
+            await OnToggle.InvokeAsync(_isSidebarOpen);
         }
     }
 
