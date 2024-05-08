@@ -97,6 +97,7 @@ public partial class Sidebar
         if (!IsDisabled)
         {
             _isSidebarOpen = !_isSidebarOpen;
+
             await OnToggle.InvokeAsync(_isSidebarOpen);
         }
     }
