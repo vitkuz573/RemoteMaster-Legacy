@@ -100,18 +100,30 @@ public partial class Sidebar
     public string TransitionClasses { get; set; } = "transition-all duration-500 ease-out";
 
     /// <summary>
-    /// CSS classes for managing light and dark themes for the sidebar.
+    /// CSS classes used for the light theme of the sidebar.
+    /// These classes define the background and text color for the light mode.
     /// </summary>
     [Parameter]
     public string LightThemeClass { get; set; } = "bg-white text-gray-900";
+
+    /// <summary>
+    /// CSS classes used for the dark theme of the sidebar.
+    /// These classes define the background and text color for the dark mode.
+    /// </summary>
     [Parameter]
     public string DarkThemeClass { get; set; } = "bg-gray-800 text-white";
 
     /// <summary>
-    /// CSS classes for managing light and dark themes for the toggle switch.
+    /// CSS classes used for the light theme of the toggle switch.
+    /// These classes define the background and text color for the toggle switch in light mode.
     /// </summary>
     [Parameter]
     public string LightSwitchClass { get; set; } = "bg-gray-300 text-black";
+
+    /// <summary>
+    /// CSS classes used for the dark theme of the toggle switch.
+    /// These classes define the background and text color for the toggle switch in dark mode.
+    /// </summary>
     [Parameter]
     public string DarkSwitchClass { get; set; } = "bg-gray-600 text-white";
 
