@@ -114,7 +114,7 @@ public partial class Sidebar
     /// These classes define the background and text color for the toggle switch in dark mode.
     /// </summary>
     [Parameter]
-    public string DarkSwitchClass { get; set; } = "bg-gray-600 text-white";
+    public string DarkSwitchClass { get; set; } = "bg-gray-800 text-white";
 
     /// <summary>
     /// Specifies the position of the sidebar (left or right).

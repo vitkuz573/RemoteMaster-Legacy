@@ -963,12 +963,12 @@ video {
   border-bottom-left-radius: 9999px;
 }
 
-.rounded-tl-full {
-  border-top-left-radius: 9999px;
-}
-
 .rounded-br-full {
   border-bottom-right-radius: 9999px;
+}
+
+.rounded-tl-full {
+  border-top-left-radius: 9999px;
 }
 
 .rounded-tr-full {
@@ -1042,11 +1042,6 @@ video {
 .bg-gray-50 {
   --tw-bg-opacity: 1;
   background-color: rgb(249 250 251 / var(--tw-bg-opacity));
-}
-
-.bg-gray-600 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(75 85 99 / var(--tw-bg-opacity));
 }
 
 .bg-gray-800 {
