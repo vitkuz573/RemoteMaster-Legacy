@@ -33,7 +33,7 @@ public partial class Dialog
         Show = true;
         IsConfirmation = false;
 
-        StateHasChanged();
+        InvokeAsync(StateHasChanged);
     }
 
     private async Task<bool> ShowConfirmationDialog(string title, string message, string confirmText, string cancelText)
@@ -46,7 +46,7 @@ public partial class Dialog
         IsConfirmation = true;
         ConfirmationResult = new TaskCompletionSource<bool>();
 
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
 
         return await ConfirmationResult.Task;
     }
@@ -55,7 +55,7 @@ public partial class Dialog
     {
         Show = false;
 
-        StateHasChanged();
+        InvokeAsync(StateHasChanged);
     }
 
     private void Confirm()
