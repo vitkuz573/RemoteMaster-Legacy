@@ -19,10 +19,7 @@ public partial class Button
     public bool IsDisabled { get; set; } = false;
 
     [Parameter]
-    public string Icon { get; set; } = "";
-
-    [Parameter]
-    public string IconClasses { get; set; } = "material-icons mr-2";
+    public string Icon { get; set; } = string.Empty;
 
     [Parameter]
     public ButtonType ButtonType { get; set; } = ButtonType.Button;
