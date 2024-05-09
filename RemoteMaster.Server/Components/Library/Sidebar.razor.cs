@@ -9,6 +9,9 @@ namespace RemoteMaster.Server.Components.Library;
 
 public partial class Sidebar
 {
+    [CascadingParameter]
+    private string Theme { get; set; } = "light";
+
     /// <summary>
     /// The content to be displayed inside the sidebar as a render fragment.
     /// </summary>
@@ -127,12 +130,6 @@ public partial class Sidebar
     [Parameter]
     public string DarkSwitchClass { get; set; } = "bg-gray-600 text-white";
 
-    /// <summary>
-    /// Determines whether the dark theme is enabled.
-    /// </summary>
-    [Parameter]
-    public bool IsDarkThemeEnabled { get; set; } = true;
-
     private bool _isSidebarOpen;
 
     protected override void OnInitialized()
@@ -166,13 +163,13 @@ public partial class Sidebar
 
     private string GetSidebarClasses()
     {
-        var themeClass = IsDarkThemeEnabled ? DarkThemeClass : LightThemeClass;
-        
+        var themeClass = Theme == "dark" ? DarkThemeClass : LightThemeClass;
+
         return $"{BaseStyleClass} {TransitionClasses} {themeClass} fixed top-0 h-full";
     }
 
     private string GetSwitchClasses()
     {
-        return IsDarkThemeEnabled ? DarkSwitchClass : LightSwitchClass;
+        return Theme == "dark" ? DarkSwitchClass : LightSwitchClass;
     }
 }
