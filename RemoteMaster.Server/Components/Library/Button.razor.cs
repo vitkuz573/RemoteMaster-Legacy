@@ -62,7 +62,7 @@ public partial class Button
 
         if (IsDisabled)
         {
-            classes += " opacity-50 cursor-not-allowed";
+            classes += " bg-gray-400 hover:bg-gray-400 border-gray-500 cursor-not-allowed opacity-50";
         }
 
         return classes;
