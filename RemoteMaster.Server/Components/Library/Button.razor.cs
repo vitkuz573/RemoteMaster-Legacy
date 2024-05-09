@@ -13,9 +13,6 @@ public partial class Button
     public string Label { get; set; } = "Button";
 
     [Parameter]
-    public string CssClasses { get; set; } = "rounded-lg px-4 py-2 font-semibold text-white hover:bg-blue-700";
-
-    [Parameter]
     public bool IsDisabled
     {
         get => _isDisabled;
@@ -24,6 +21,7 @@ public partial class Button
             if (_isDisabled != value)
             {
                 _isDisabled = value;
+
                 IsDisabledChanged.InvokeAsync(value);
             }
         }
@@ -56,6 +54,7 @@ public partial class Button
             if (_isToggled != value)
             {
                 _isToggled = value;
+
                 IsToggledChanged.InvokeAsync(value);
             }
         }
@@ -73,6 +72,7 @@ public partial class Button
             if (_isLoading != value)
             {
                 _isLoading = value;
+
                 IsLoadingChanged.InvokeAsync(value);
             }
         }
@@ -127,7 +127,7 @@ public partial class Button
             _ => "px-4 py-2 text-base"
         };
 
-        var classes = $"{CssClasses} {colorClasses} {sizeClasses}";
+        var classes = $"rounded-lg px-4 py-2 font-semibold text-white hover:bg-blue-700 {colorClasses} {sizeClasses}";
 
         if (IsDisabled)
         {
