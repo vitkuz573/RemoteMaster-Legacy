@@ -16,9 +16,17 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
+    public static IServiceCollection AddDialogService(this IServiceCollection services)
+    {
+        services.AddSingleton<IDialogWindowService, DialogService>();
+
+        return services;
+    }
+
     public static IServiceCollection AddLibraryServices(this IServiceCollection services)
     {
         services.AddThemeProvider();
+        services.AddDialogService();
 
         return services;
     }

@@ -3,14 +3,20 @@
 @rendermode InteractiveServer
 
 @using RemoteMaster.Server.Components.Library
+@using RemoteMaster.Server.Components.Library.Abstractions
+
+@inject IDialogWindowService DialogService
 
 <PageTitle>@Host</PageTitle>
 
 <ThemeProvider IsDarkTheme="true" />
+<Dialog />
 
 <div class="flex h-screen flex-col">
     <AppBar Title="RemoteMaster Dashboard">
         <RightContent>
+            <button @onclick="ShowInformationDialog">Show Info</button>
+            <button @onclick="ShowConfirmationDialog">Show Confirmation</button>
             <Button Label="Action 1" Icon="menu" IsDisabled="true" Size="Library.Enums.ButtonSize.Small" />
             <Button Label="Action 2" Color="Library.Enums.ButtonColor.Danger" />
             <img src="/images/avatar.jpg" alt="User Profile" class="ml-4 h-8 w-8 rounded-full" />

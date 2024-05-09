@@ -23,4 +23,15 @@ public partial class AccessNew
     private void OnRemoteAccessChanged(bool isChecked) => RemoteAccessEnabled = isChecked;
 
     private void OnLocalAccessChanged(bool isChecked) => LocalAccessEnabled = isChecked;
+
+    private async Task ShowInformationDialog()
+    {
+        await DialogService.ShowDialogAsync("Info", "This is an information dialog.");
+    }
+
+    private async Task ShowConfirmationDialog()
+    {
+        var confirmed = await DialogService.ShowConfirmationDialogAsync("Confirm", "Are you sure?");
+        // Process confirmation response
+    }
 }
