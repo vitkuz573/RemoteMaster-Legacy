@@ -16,7 +16,21 @@ public partial class Button
     public string CssClasses { get; set; } = "rounded-lg px-4 py-2 font-semibold text-white hover:bg-blue-700";
 
     [Parameter]
-    public bool IsDisabled { get; set; } = false;
+    public bool IsDisabled
+    {
+        get => _isDisabled;
+        set
+        {
+            if (_isDisabled != value)
+            {
+                _isDisabled = value;
+                IsDisabledChanged.InvokeAsync(value);
+            }
+        }
+    }
+
+    [Parameter]
+    public EventCallback<bool> IsDisabledChanged { get; set; }
 
     [Parameter]
     public string Icon { get; set; } = string.Empty;
@@ -34,16 +48,48 @@ public partial class Button
     public EventCallback OnMouseOut { get; set; }
 
     [Parameter]
-    public bool IsToggled { get; set; } = false;
+    public bool IsToggled
+    {
+        get => _isToggled;
+        set
+        {
+            if (_isToggled != value)
+            {
+                _isToggled = value;
+                IsToggledChanged.InvokeAsync(value);
+            }
+        }
+    }
 
     [Parameter]
-    public bool IsLoading { get; set; } = false;
+    public EventCallback<bool> IsToggledChanged { get; set; }
+
+    [Parameter]
+    public bool IsLoading
+    {
+        get => _isLoading;
+        set
+        {
+            if (_isLoading != value)
+            {
+                _isLoading = value;
+                IsLoadingChanged.InvokeAsync(value);
+            }
+        }
+    }
+
+    [Parameter]
+    public EventCallback<bool> IsLoadingChanged { get; set; }
 
     [Parameter]
     public ButtonSize Size { get; set; } = ButtonSize.Medium;
 
     [Parameter]
     public ButtonColor Color { get; set; } = ButtonColor.Primary;
+
+    private bool _isDisabled;
+    private bool _isToggled;
+    private bool _isLoading;
 
     private async Task HandleClick()
     {
