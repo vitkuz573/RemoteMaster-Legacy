@@ -6,24 +6,24 @@
 
 <PageTitle>@Host</PageTitle>
 
-<ThemeProvider IsDarkTheme="true">
-    <div class="relative flex h-full">
-        <!-- Main content area -->
-        <MainContent Title="@($"Remote Access: {Host}")">
-            <p class="text-gray-900 dark:text-gray-100">Remote host management interface will be displayed here.</p>
-        </MainContent>
+<ThemeProvider IsDarkTheme="true"/>
 
-        <!-- Sidebar -->
-        <Sidebar>
-            <ExpandablePanel Title="General Settings">
-                <Checkbox Label="Enable Feature X" IsChecked="@FeatureXEnabled" IsCheckedChanged="OnFeatureXChanged" />
-                <Checkbox Label="Enable Feature Y" IsChecked="@FeatureYEnabled" IsCheckedChanged="OnFeatureYChanged" />
-            </ExpandablePanel>
+<div class="relative flex h-full">
+    <!-- Main content area -->
+    <MainContent Title="@($"Remote Access: {Host}")">
+        <p class="text-gray-900 dark:text-gray-100">Remote host management interface will be displayed here.</p>
+    </MainContent>
 
-            <ExpandablePanel Title="Network Settings">
-                <Checkbox Label="Enable Remote Access" IsChecked="@RemoteAccessEnabled" IsCheckedChanged="OnRemoteAccessChanged" />
-                <Checkbox Label="Enable Local Access" IsChecked="@LocalAccessEnabled" IsCheckedChanged="OnLocalAccessChanged" />
-            </ExpandablePanel>
-        </Sidebar>
-    </div>
-</ThemeProvider>
+    <!-- Sidebar -->
+    <Sidebar>
+        <ExpandablePanel Title="General Settings">
+            <Checkbox Label="Enable Feature X" IsChecked="@FeatureXEnabled" IsCheckedChanged="OnFeatureXChanged" />
+            <Checkbox Label="Enable Feature Y" IsChecked="@FeatureYEnabled" IsCheckedChanged="OnFeatureYChanged" />
+        </ExpandablePanel>
+
+        <ExpandablePanel Title="Network Settings">
+            <Checkbox Label="Enable Remote Access" IsChecked="@RemoteAccessEnabled" IsCheckedChanged="OnRemoteAccessChanged" />
+            <Checkbox Label="Enable Local Access" IsChecked="@LocalAccessEnabled" IsCheckedChanged="OnLocalAccessChanged" />
+        </ExpandablePanel>
+    </Sidebar>
+</div>

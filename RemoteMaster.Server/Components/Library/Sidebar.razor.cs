@@ -9,9 +9,6 @@ namespace RemoteMaster.Server.Components.Library;
 
 public partial class Sidebar
 {
-    [CascadingParameter]
-    private string Theme { get; set; } = "light";
-
     /// <summary>
     /// The content to be displayed inside the sidebar as a render fragment.
     /// </summary>
@@ -129,6 +126,8 @@ public partial class Sidebar
     /// </summary>
     [Parameter]
     public string DarkSwitchClass { get; set; } = "bg-gray-600 text-white";
+
+    private string Theme => ThemeService.Theme;
 
     private bool _isSidebarOpen;
 

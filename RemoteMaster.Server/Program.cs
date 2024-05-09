@@ -16,6 +16,7 @@ using MudBlazor.Services;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Components;
 using RemoteMaster.Server.Components.Account;
+using RemoteMaster.Server.Components.Library.Extensions;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Hubs;
 using RemoteMaster.Server.Middlewares;
@@ -116,6 +117,8 @@ public static class Program
         services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
         services.AddSingleton<ICaCertificateService, CaCertificateService>();
         services.AddSingleton<IJwtSecurityService, JwtSecurityService>();
+
+        services.AddLibraryServices();
 
         services.AddSingleton(new JsonSerializerOptions
         {

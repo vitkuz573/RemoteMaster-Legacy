@@ -6,13 +6,17 @@ using Microsoft.AspNetCore.Components;
 
 namespace RemoteMaster.Server.Components.Library;
 
-public class ThemeProviderBase : ComponentBase
+public partial class ThemeProvider
 {
     /// <summary>
     /// Determines whether the dark theme is enabled.
     /// </summary>
     [Parameter]
-    public bool IsDarkTheme { get; set; } = false;
+    public bool IsDarkTheme
+    {
+        get => ThemeService.IsDarkTheme;
+        set => ThemeService.IsDarkTheme = value;
+    }
 
     /// <summary>
     /// Child content that receives the theme parameter.
@@ -20,5 +24,5 @@ public class ThemeProviderBase : ComponentBase
     [Parameter]
     public RenderFragment ChildContent { get; set; }
 
-    protected string Theme => IsDarkTheme ? "dark" : "light";
+    protected string Theme => ThemeService.Theme;
 }
