@@ -43,10 +43,10 @@ public partial class Button
     public bool IsLoading { get; set; } = false;
 
     [Parameter]
-    public string Size { get; set; } = "medium";
+    public ButtonSize Size { get; set; } = ButtonSize.Medium;
 
     [Parameter]
-    public string Color { get; set; } = "primary";
+    public ButtonColor Color { get; set; } = ButtonColor.Primary;
 
     private async Task HandleClick()
     {
@@ -70,17 +70,17 @@ public partial class Button
     {
         var colorClasses = Color switch
         {
-            "primary" => "bg-blue-600 hover:bg-blue-700",
-            "secondary" => "bg-gray-600 hover:bg-gray-700",
-            "success" => "bg-green-600 hover:bg-green-700",
-            "danger" => "bg-red-600 hover:bg-red-700",
+            ButtonColor.Primary => "bg-blue-600 hover:bg-blue-700",
+            ButtonColor.Secondary => "bg-gray-600 hover:bg-gray-700",
+            ButtonColor.Success => "bg-green-600 hover:bg-green-700",
+            ButtonColor.Danger => "bg-red-600 hover:bg-red-700",
             _ => "bg-blue-600 hover:bg-blue-700"
         };
 
         var sizeClasses = Size switch
         {
-            "small" => "px-2 py-1 text-sm",
-            "large" => "px-6 py-3 text-lg",
+            ButtonSize.Small => "px-2 py-1 text-sm",
+            ButtonSize.Large => "px-6 py-3 text-lg",
             _ => "px-4 py-2 text-base"
         };
 
