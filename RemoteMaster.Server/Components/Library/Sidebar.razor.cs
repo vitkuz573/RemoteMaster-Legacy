@@ -4,6 +4,7 @@
 
 using System.Globalization;
 using Microsoft.AspNetCore.Components;
+using RemoteMaster.Server.Components.Library.Enums;
 
 namespace RemoteMaster.Server.Components.Library;
 
@@ -115,7 +116,7 @@ public partial class Sidebar
     [Parameter]
     public string DarkSwitchClass { get; set; } = "bg-gray-600 text-white";
 
-    private string Theme => ThemeService.Theme;
+    private Theme Theme => ThemeService.Theme;
 
     private bool _isSidebarOpen;
 
@@ -141,13 +142,13 @@ public partial class Sidebar
 
     private string GetSidebarClasses()
     {
-        var themeClass = Theme == "dark" ? DarkThemeClass : LightThemeClass;
+        var themeClass = Theme == Theme.Dark ? DarkThemeClass : LightThemeClass;
 
         return $"{BaseStyleClass} {TransitionClasses} {themeClass} fixed top-0 h-full";
     }
 
     private string GetSwitchClasses()
     {
-        return Theme == "dark" ? DarkSwitchClass : LightSwitchClass;
+        return Theme == Theme.Dark ? DarkSwitchClass : LightSwitchClass;
     }
 }

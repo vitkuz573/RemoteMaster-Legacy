@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Components;
+using RemoteMaster.Server.Components.Library.Enums;
 
 namespace RemoteMaster.Server.Components.Library;
 
@@ -24,5 +25,5 @@ public partial class ThemeProvider
     [Parameter]
     public RenderFragment ChildContent { get; set; }
 
-    protected string Theme => ThemeService.Theme;
+    protected Theme Theme => ThemeService.Theme;
 }
