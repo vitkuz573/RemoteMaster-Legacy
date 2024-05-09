@@ -34,10 +34,10 @@ public partial class Sidebar
     public string IconClosed { get; set; } = "chevron_left";
 
     /// <summary>
-    /// CSS class to define the base color of the sidebar and its toggle switch.
+    /// CSS class defining the sidebar's basic styles like borders or padding.
     /// </summary>
     [Parameter]
-    public string BaseColorClass { get; set; } = "bg-gray-800 text-white";
+    public string BaseStyleClass { get; set; } = "shadow-lg p-5";
 
     /// <summary>
     /// Sidebar width in pixels.
@@ -94,12 +94,6 @@ public partial class Sidebar
     public EventCallback OnClose { get; set; }
 
     /// <summary>
-    /// Additional shadow class to customize sidebar shadow.
-    /// </summary>
-    [Parameter]
-    public string ShadowClass { get; set; } = "shadow-lg";
-
-    /// <summary>
     /// Additional transition classes for customizing sidebar animation.
     /// </summary>
     [Parameter]
@@ -119,6 +113,12 @@ public partial class Sidebar
     /// </summary>
     [Parameter]
     public bool IsDarkThemeEnabled { get; set; } = true;
+
+    /// <summary>
+    /// CSS class used for the toggle switch, independent of the sidebar color theme.
+    /// </summary>
+    [Parameter]
+    public string SwitchClass { get; set; } = "bg-gray-600 text-white";
 
     private bool _isSidebarOpen;
 
@@ -154,7 +154,8 @@ public partial class Sidebar
     private string GetSidebarClasses()
     {
         var themeClass = IsDarkThemeEnabled ? DarkThemeClass : LightThemeClass;
-        
-        return $"{BaseColorClass} {ShadowClass} {TransitionClasses} {themeClass} fixed top-0 h-full p-5";
+       
+        return $"{BaseStyleClass} {TransitionClasses} {themeClass} fixed top-0 h-full";
     }
 }
+
