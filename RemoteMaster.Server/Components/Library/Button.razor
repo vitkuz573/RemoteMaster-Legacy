@@ -1,7 +1,14 @@
-﻿<button type="@GetButtonTypeAsString()" class="@GetButtonClasses() focus:outline-none focus:ring-2 focus:ring-blue-400" @onclick="HandleClick" disabled="@IsDisabled" aria-pressed="@IsToggled">
-    @if (!string.IsNullOrEmpty(Icon))
+﻿<button type="@GetButtonTypeAsString()" class="@GetButtonClasses() focus:outline-none focus:ring-2 focus:ring-blue-400" @onclick="HandleClick" @onmouseover="HandleMouseOver" @onmouseout="HandleMouseOut" disabled="@IsDisabled" aria-pressed="@IsToggled">
+    @if (IsLoading)
     {
-        <span class="@IconClasses">@Icon</span>
+        <span class="@IconClasses">hourglass_empty</span>
     }
-    @Label
+    else
+    {
+        @if (!string.IsNullOrEmpty(Icon))
+        {
+            <span class="@IconClasses">@Icon</span>
+        }
+        @Label
+    }
 </button>

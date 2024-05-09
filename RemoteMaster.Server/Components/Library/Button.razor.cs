@@ -13,7 +13,7 @@ public partial class Button
     public string Label { get; set; } = "Button";
 
     [Parameter]
-    public string CssClasses { get; set; } = "rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700";
+    public string CssClasses { get; set; } = "rounded-lg px-4 py-2 font-semibold text-white hover:bg-blue-700";
 
     [Parameter]
     public bool IsDisabled { get; set; } = false;
@@ -31,7 +31,22 @@ public partial class Button
     public EventCallback OnClick { get; set; }
 
     [Parameter]
+    public EventCallback OnMouseOver { get; set; }
+
+    [Parameter]
+    public EventCallback OnMouseOut { get; set; }
+
+    [Parameter]
     public bool IsToggled { get; set; } = false;
+
+    [Parameter]
+    public bool IsLoading { get; set; } = false;
+
+    [Parameter]
+    public string Size { get; set; } = "medium";
+
+    [Parameter]
+    public string Color { get; set; } = "primary";
 
     private async Task HandleClick()
     {
@@ -41,9 +56,35 @@ public partial class Button
         }
     }
 
+    private async Task HandleMouseOver()
+    {
+        await OnMouseOver.InvokeAsync();
+    }
+
+    private async Task HandleMouseOut()
+    {
+        await OnMouseOut.InvokeAsync();
+    }
+
     private string GetButtonClasses()
     {
-        var classes = CssClasses;
+        var colorClasses = Color switch
+        {
+            "primary" => "bg-blue-600 hover:bg-blue-700",
+            "secondary" => "bg-gray-600 hover:bg-gray-700",
+            "success" => "bg-green-600 hover:bg-green-700",
+            "danger" => "bg-red-600 hover:bg-red-700",
+            _ => "bg-blue-600 hover:bg-blue-700"
+        };
+
+        var sizeClasses = Size switch
+        {
+            "small" => "px-2 py-1 text-sm",
+            "large" => "px-6 py-3 text-lg",
+            _ => "px-4 py-2 text-base"
+        };
+
+        var classes = $"{CssClasses} {colorClasses} {sizeClasses}";
 
         if (IsDisabled)
         {
