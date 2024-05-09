@@ -157,9 +157,22 @@ public partial class Sidebar
     private string GetSwitchClasses()
     {
         var baseSwitchClass = Theme == Theme.Dark ? DarkSwitchClass : LightSwitchClass;
-        var switchPositionClass = Position == SidebarPosition.Right ? "-left-5" : "-right-5";
+        
+        string switchPositionClass;
+        string roundedClasses;
 
-        return $"{baseSwitchClass} absolute inset-y-1/2 {switchPositionClass} flex h-10 w-5 cursor-pointer items-center justify-center rounded-bl-full rounded-tl-full transition-opacity duration-300";
+        if (Position == SidebarPosition.Right)
+        {
+            switchPositionClass = "-left-5";
+            roundedClasses = "rounded-bl-full rounded-tl-full";
+        }
+        else
+        {
+            switchPositionClass = "-right-5";
+            roundedClasses = "rounded-br-full rounded-tr-full";
+        }
+
+        return $"{baseSwitchClass} absolute inset-y-1/2 {switchPositionClass} flex h-10 w-5 cursor-pointer items-center justify-center {roundedClasses} transition-opacity duration-300";
     }
 
     private string GetSwitchIcon()
