@@ -613,6 +613,18 @@ video {
   left: -1.25rem;
 }
 
+.-right-5 {
+  right: -1.25rem;
+}
+
+.left-0 {
+  left: 0px;
+}
+
+.right-0 {
+  right: 0px;
+}
+
 .top-0 {
   top: 0px;
 }

@@ -1,13 +1,14 @@
 ﻿@using RemoteMaster.Server.Components.Library.Abstractions
+@using RemoteMaster.Server.Components.Library.Enums
 
 @inject IThemeService ThemeService
 
-<div style="transition-duration:@(AnimationDurationMs)ms; right:@(_isSidebarOpen ? "0" : $"-{WidthPx}px"); width:@($"{WidthPx}px")" class="@GetSidebarClasses()">
+<div style="transition-duration:@(AnimationDurationMs)ms; @(Position == SidebarPosition.Right ? "right" : "left"):@(_isSidebarOpen ? "0" : $"-{WidthPx}px"); width:@($"{WidthPx}px")" class="@GetSidebarClasses()">
     <h2 class="mb-4 text-lg font-bold">@Title</h2>
     @ChildContent
-    <div class="@(GetSwitchClasses()) absolute inset-y-1/2 -left-5 flex h-10 w-5 cursor-pointer items-center justify-center rounded-bl-full rounded-tl-full transition-opacity duration-300" style="opacity:@(GetSwitchOpacity())" @onclick="ToggleSidebar">
+    <div class="@GetSwitchClasses()" style="opacity:@(GetSwitchOpacity())" @onclick="ToggleSidebar">
         <span class="material-icons">
-            @(_isSidebarOpen ? IconOpen : IconClosed)
+            @GetSwitchIcon()
         </span>
     </div>
 </div>

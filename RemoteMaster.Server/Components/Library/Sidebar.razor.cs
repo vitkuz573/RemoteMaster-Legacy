@@ -116,6 +116,12 @@ public partial class Sidebar
     [Parameter]
     public string DarkSwitchClass { get; set; } = "bg-gray-600 text-white";
 
+    /// <summary>
+    /// Specifies the position of the sidebar (left or right).
+    /// </summary>
+    [Parameter]
+    public SidebarPosition Position { get; set; } = SidebarPosition.Right;
+
     private Theme Theme => ThemeService.Theme;
 
     private bool _isSidebarOpen;
@@ -143,12 +149,23 @@ public partial class Sidebar
     private string GetSidebarClasses()
     {
         var themeClass = Theme == Theme.Dark ? DarkThemeClass : LightThemeClass;
+        var positionClass = Position == SidebarPosition.Right ? "right-0" : "left-0";
 
-        return $"{BaseStyleClass} {TransitionClasses} {themeClass} fixed top-0 h-full";
+        return $"{BaseStyleClass} {TransitionClasses} {themeClass} fixed top-0 {positionClass} h-full";
     }
 
     private string GetSwitchClasses()
     {
-        return Theme == Theme.Dark ? DarkSwitchClass : LightSwitchClass;
+        var baseSwitchClass = Theme == Theme.Dark ? DarkSwitchClass : LightSwitchClass;
+        var switchPositionClass = Position == SidebarPosition.Right ? "-left-5" : "-right-5";
+
+        return $"{baseSwitchClass} absolute inset-y-1/2 {switchPositionClass} flex h-10 w-5 cursor-pointer items-center justify-center rounded-bl-full rounded-tl-full transition-opacity duration-300";
+    }
+
+    private string GetSwitchIcon()
+    {
+        return _isSidebarOpen
+            ? (Position == SidebarPosition.Right ? IconOpen : IconClosed)
+            : (Position == SidebarPosition.Right ? IconClosed : IconOpen);
     }
 }
