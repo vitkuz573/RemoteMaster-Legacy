@@ -1,1 +1,7 @@
-﻿<button class="@CssClasses" @onclick="HandleClick">@Label</button>
+﻿<button type="@GetButtonTypeAsString()" class="@GetButtonClasses()" @onclick="HandleClick" disabled="@IsDisabled">
+    @if (!string.IsNullOrEmpty(Icon))
+    {
+        <span class="material-icons mr-2">@Icon</span>
+    }
+    @Label
+</button>
