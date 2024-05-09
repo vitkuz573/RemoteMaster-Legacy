@@ -1,7 +1,7 @@
 ﻿<div style="transition-duration:@(AnimationDurationMs)ms; right:@(_isSidebarOpen ? "0" : $"-{WidthPx}px"); width:@($"{WidthPx}px")" class="@GetSidebarClasses()">
     <h2 class="mb-4 text-lg font-bold">@Title</h2>
     @ChildContent
-    <div class="@(SwitchClass) absolute inset-y-1/2 -left-5 flex h-10 w-5 cursor-pointer items-center justify-center rounded-bl-full rounded-tl-full transition-opacity duration-300" style="opacity:@(GetSwitchOpacity())" @onclick="ToggleSidebar">
+    <div class="@(GetSwitchClasses()) absolute inset-y-1/2 -left-5 flex h-10 w-5 cursor-pointer items-center justify-center rounded-bl-full rounded-tl-full transition-opacity duration-300" style="opacity:@(GetSwitchOpacity())" @onclick="ToggleSidebar">
         <span class="material-icons">
             @(_isSidebarOpen ? IconOpen : IconClosed)
         </span>

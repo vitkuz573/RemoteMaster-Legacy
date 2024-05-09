@@ -100,25 +100,26 @@ public partial class Sidebar
     public string TransitionClasses { get; set; } = "transition-all duration-500 ease-out";
 
     /// <summary>
-    /// CSS classes for managing light and dark themes.
+    /// CSS classes for managing light and dark themes for the sidebar.
     /// </summary>
     [Parameter]
     public string LightThemeClass { get; set; } = "bg-white text-gray-900";
-
     [Parameter]
     public string DarkThemeClass { get; set; } = "bg-gray-800 text-white";
+
+    /// <summary>
+    /// CSS classes for managing light and dark themes for the toggle switch.
+    /// </summary>
+    [Parameter]
+    public string LightSwitchClass { get; set; } = "bg-gray-300 text-black";
+    [Parameter]
+    public string DarkSwitchClass { get; set; } = "bg-gray-600 text-white";
 
     /// <summary>
     /// Determines whether the dark theme is enabled.
     /// </summary>
     [Parameter]
     public bool IsDarkThemeEnabled { get; set; } = true;
-
-    /// <summary>
-    /// CSS class used for the toggle switch, independent of the sidebar color theme.
-    /// </summary>
-    [Parameter]
-    public string SwitchClass { get; set; } = "bg-gray-600 text-white";
 
     private bool _isSidebarOpen;
 
@@ -154,8 +155,12 @@ public partial class Sidebar
     private string GetSidebarClasses()
     {
         var themeClass = IsDarkThemeEnabled ? DarkThemeClass : LightThemeClass;
-       
+        
         return $"{BaseStyleClass} {TransitionClasses} {themeClass} fixed top-0 h-full";
     }
-}
 
+    private string GetSwitchClasses()
+    {
+        return IsDarkThemeEnabled ? DarkSwitchClass : LightSwitchClass;
+    }
+}
