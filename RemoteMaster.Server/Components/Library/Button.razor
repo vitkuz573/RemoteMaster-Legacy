@@ -1,7 +1,7 @@
-﻿<button type="@GetButtonTypeAsString()" class="@GetButtonClasses()" @onclick="HandleClick" disabled="@IsDisabled">
+﻿<button type="@GetButtonTypeAsString()" class="@GetButtonClasses() focus:outline-none focus:ring-2 focus:ring-blue-400" @onclick="HandleClick" disabled="@IsDisabled" aria-pressed="@IsToggled">
     @if (!string.IsNullOrEmpty(Icon))
     {
-        <span class="material-icons mr-2">@Icon</span>
+        <span class="@IconClasses">@Icon</span>
     }
     @Label
 </button>
