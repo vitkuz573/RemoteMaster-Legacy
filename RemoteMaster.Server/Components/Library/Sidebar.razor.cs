@@ -82,18 +82,6 @@ public partial class Sidebar
     public EventCallback<bool> OnToggle { get; set; }
 
     /// <summary>
-    /// Callback event invoked when the sidebar is opened.
-    /// </summary>
-    [Parameter]
-    public EventCallback OnOpen { get; set; }
-
-    /// <summary>
-    /// Callback event invoked when the sidebar is closed.
-    /// </summary>
-    [Parameter]
-    public EventCallback OnClose { get; set; }
-
-    /// <summary>
     /// Additional transition classes for customizing sidebar animation.
     /// </summary>
     [Parameter]
@@ -143,15 +131,6 @@ public partial class Sidebar
             _isSidebarOpen = !_isSidebarOpen;
 
             await OnToggle.InvokeAsync(_isSidebarOpen);
-
-            if (_isSidebarOpen)
-            {
-                await OnOpen.InvokeAsync();
-            }
-            else
-            {
-                await OnClose.InvokeAsync();
-            }
         }
     }
 
