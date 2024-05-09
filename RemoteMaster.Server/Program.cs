@@ -46,8 +46,6 @@ public static class Program
                          .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning);
         });
 
-        builder.WebHost.UseWebRoot("wwwroot");
-
         builder.WebHost.ConfigureKestrel(serverOptions =>
         {
             serverOptions.ListenAnyIP(80);

@@ -37,10 +37,6 @@
   <ItemGroup>
     <ProjectReference Include="..\RemoteMaster.Shared\RemoteMaster.Shared.csproj" />
   </ItemGroup>
-	
-  <ItemGroup>
-    <Folder Include="wwwroot\ui\resources\" />
-  </ItemGroup>
 
   <Target Name="TaskPublish" AfterTargets="Publish">
     <Exec Command="powershell.exe -ExecutionPolicy Bypass -File $(SolutionDir)scripts\DigitalSignExecutable.ps1 -exeFilePath $(PublishDir)\$(AssemblyName).exe" />

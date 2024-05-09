@@ -1,11 +1,12 @@
 ﻿@using RemoteMaster.Server.Components.Library.Abstractions
 
 @inject IDialogWindowService DialogService
+@inject IJSRuntime JsRuntime
 
 @if (Show)
 {
-    <div class="fixed inset-0 z-50 flex items-center justify-center">
-        <div class="w-full max-w-md rounded-lg bg-white p-4 shadow-lg">
+    <div class="fixed inset-0 z-50 flex items-center justify-center" @onclick="CloseOnOutsideClick">
+        <div class="w-full max-w-md rounded-lg bg-white p-4 shadow-lg" @onclick:stopPropagation>
             <h2 class="text-lg font-semibold">@Title</h2>
             <p class="mt-2">@Message</p>
 
@@ -22,5 +23,5 @@
             </div>
         </div>
     </div>
-    <div class="fixed inset-0 bg-black opacity-50"></div>
+    <div class="fixed inset-0 bg-black opacity-50" @onclick="CloseOnOutsideClick"></div>
 }
