@@ -4,6 +4,7 @@
 
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Components.Library.Abstractions;
+using Serilog;
 
 namespace RemoteMaster.Server.Components.Library.Services;
 
@@ -14,6 +15,8 @@ public class DialogService : IDialogWindowService
     public Task ShowDialogAsync<TDialog>(string title) where TDialog : ComponentBase
     {
         var dialogId = Guid.NewGuid();
+
+        Log.Information("Creating dialog of type {DialogType} with title '{Title}' and ID {DialogId}", typeof(TDialog).Name, title, dialogId);
 
         var dialogFragment = new RenderFragment(builder =>
         {
@@ -30,6 +33,9 @@ public class DialogService : IDialogWindowService
     public Task<bool> ShowConfirmationDialogAsync(string title, string message, string confirmText = "OK", string cancelText = "Cancel")
     {
         var dialogId = Guid.NewGuid();
+        
+        Log.Information("Creating confirmation dialog with title '{Title}' and ID {DialogId}", title, dialogId);
+
         var confirmationResult = new TaskCompletionSource<bool>();
 
         var dialogFragment = new RenderFragment(builder =>

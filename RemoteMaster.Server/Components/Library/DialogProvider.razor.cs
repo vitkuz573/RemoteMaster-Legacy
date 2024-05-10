@@ -4,6 +4,7 @@
 
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Components.Library.Abstractions;
+using Serilog;
 
 namespace RemoteMaster.Server.Components.Library;
 
@@ -18,6 +19,8 @@ public partial class DialogProvider
 
     private void ShowDialog(Guid dialogId, RenderFragment dialog)
     {
+        Log.Information("Adding dialog with ID: {DialogId}", dialogId);
+
         var dialogInstance = new DialogInstance();
         dialogInstance.OnClose += () => RemoveDialog(dialogId);
 
@@ -28,6 +31,8 @@ public partial class DialogProvider
 
     private void RemoveDialog(Guid dialogId)
     {
+        Log.Information("Removing dialog with ID: {DialogId}", dialogId);
+
         _dialogs.Remove(dialogId);
 
         InvokeAsync(StateHasChanged);
