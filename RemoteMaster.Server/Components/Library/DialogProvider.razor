@@ -1,6 +1,10 @@
-﻿@if (_currentDialog != null)
+﻿@using RemoteMaster.Server.Components.Library.Abstractions
+
+@inject IDialogWindowService DialogService
+
+@foreach (var dialog in _dialogs.Values)
 {
-    <CascadingValue Value="_dialogInstance">
-        @_currentDialog
+    <CascadingValue Value="dialog.Item2">
+        @dialog.Item1
     </CascadingValue>
 }

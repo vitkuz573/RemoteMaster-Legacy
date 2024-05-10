@@ -9,10 +9,12 @@ namespace RemoteMaster.Server.Components.Library.Services;
 
 public class DialogService : IDialogWindowService
 {
-    public event Action<RenderFragment> OnShowDialog;
+    public event Action<Guid, RenderFragment> OnShowDialog;
 
     public Task ShowDialogAsync<TDialog>(string title) where TDialog : ComponentBase
     {
+        var dialogId = Guid.NewGuid();
+
         var dialogFragment = new RenderFragment(builder =>
         {
             builder.OpenComponent(0, typeof(TDialog));
@@ -20,16 +22,17 @@ public class DialogService : IDialogWindowService
             builder.CloseComponent();
         });
 
-        OnShowDialog?.Invoke(dialogFragment);
+        OnShowDialog?.Invoke(dialogId, dialogFragment);
 
         return Task.CompletedTask;
     }
 
     public Task<bool> ShowConfirmationDialogAsync(string title, string message, string confirmText = "OK", string cancelText = "Cancel")
     {
+        var dialogId = Guid.NewGuid();
         var confirmationResult = new TaskCompletionSource<bool>();
-        
-        OnShowDialog?.Invoke(new RenderFragment(builder =>
+
+        var dialogFragment = new RenderFragment(builder =>
         {
             builder.OpenComponent(0, typeof(ConfirmationDialog));
             builder.AddAttribute(1, "Title", title);
@@ -38,7 +41,9 @@ public class DialogService : IDialogWindowService
             builder.AddAttribute(4, "CancelText", cancelText);
             builder.AddAttribute(5, "ConfirmationResult", confirmationResult);
             builder.CloseComponent();
-        }));
+        });
+
+        OnShowDialog?.Invoke(dialogId, dialogFragment);
 
         return confirmationResult.Task;
     }

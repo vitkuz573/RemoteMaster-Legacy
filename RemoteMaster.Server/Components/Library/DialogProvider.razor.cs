@@ -9,23 +9,27 @@ namespace RemoteMaster.Server.Components.Library;
 
 public partial class DialogProvider
 {
-    private RenderFragment? _currentDialog;
-    private DialogInstance _dialogInstance;
-
-    [Inject]
-    private IDialogWindowService DialogService { get; set; }
+    private Dictionary<Guid, (RenderFragment, DialogInstance)> _dialogs = [];
 
     protected override void OnInitialized()
     {
-        _dialogInstance = new DialogInstance();
-        _dialogInstance.OnClose += () => SetDialog(null);
-
-        DialogService.OnShowDialog += SetDialog;
+        DialogService.OnShowDialog += ShowDialog;
     }
 
-    public void SetDialog(RenderFragment? dialog)
+    private void ShowDialog(Guid dialogId, RenderFragment dialog)
     {
-        _currentDialog = dialog;
+        var dialogInstance = new DialogInstance();
+        dialogInstance.OnClose += () => RemoveDialog(dialogId);
+
+        _dialogs[dialogId] = (dialog, dialogInstance);
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void RemoveDialog(Guid dialogId)
+    {
+        _dialogs.Remove(dialogId);
+
         InvokeAsync(StateHasChanged);
     }
 }
