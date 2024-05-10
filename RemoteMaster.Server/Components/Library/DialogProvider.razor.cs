@@ -36,7 +36,6 @@ public partial class DialogProvider
             builder.AddAttribute(3, "ConfirmText", confirmText);
             builder.AddAttribute(4, "CancelText", cancelText);
             builder.AddAttribute(5, "ConfirmationResult", confirmationResult);
-            builder.AddAttribute(6, "CloseDialog", () => SetDialog(null));
             builder.CloseComponent();
         });
 

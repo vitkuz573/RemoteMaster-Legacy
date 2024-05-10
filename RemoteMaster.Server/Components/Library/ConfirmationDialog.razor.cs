@@ -8,6 +8,9 @@ namespace RemoteMaster.Server.Components.Library;
 
 public partial class ConfirmationDialog
 {
+    [CascadingParameter]
+    private DialogProvider Provider { get; set; }
+
     [Parameter]
     public string Title { get; set; }
 
@@ -23,18 +26,15 @@ public partial class ConfirmationDialog
     [Parameter]
     public TaskCompletionSource<bool> ConfirmationResult { get; set; }
 
-    [Parameter]
-    public Action CloseDialog { get; set; }
-
     private void Confirm()
     {
         ConfirmationResult.SetResult(true);
-        CloseDialog?.Invoke();
+        Provider.SetDialog(null);
     }
 
     private void Cancel()
     {
         ConfirmationResult.SetResult(false);
-        CloseDialog?.Invoke();
+        Provider.SetDialog(null);
     }
 }
