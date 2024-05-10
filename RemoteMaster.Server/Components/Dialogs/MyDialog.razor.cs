@@ -12,8 +12,18 @@ public partial class MyDialog : ComponentBase
     [CascadingParameter]
     private DialogProvider Provider { get; set; }
 
-    private void CloseDialog()
+    private void Close()
     {
         Provider.SetDialog(null);
+    }
+
+    private void OnCancel()
+    {
+        Close();
+    }
+
+    private void OnConfirm()
+    {
+        Close();
     }
 }

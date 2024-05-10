@@ -1,12 +1,12 @@
 ﻿@using RemoteMaster.Server.Components.Library
 
-<Dialog CloseDialog="CloseDialog">
+<Dialog>
     <DialogContent>
         <h2 class="text-lg font-semibold">Sample Dialog</h2>
         <p>This is a sample dialog content.</p>
     </DialogContent>
     <DialogActions>
-        <button class="rounded-md bg-blue-500 px-4 py-2 text-white" @onclick="CloseDialog">Close</button>
-        <button class="rounded-md bg-gray-800 px-4 py-2 text-white" @onclick="CloseDialog">OK</button>
+        <button class="rounded-md bg-blue-500 px-4 py-2 text-white" @onclick="OnCancel">Close</button>
+        <button class="rounded-md bg-gray-800 px-4 py-2 text-white" @onclick="OnConfirm">OK</button>
     </DialogActions>
 </Dialog>
