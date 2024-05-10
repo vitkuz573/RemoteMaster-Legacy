@@ -3,14 +3,13 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Components;
-using RemoteMaster.Server.Components.Library.Abstractions;
 using Serilog;
 
 namespace RemoteMaster.Server.Components.Library;
 
 public partial class DialogProvider
 {
-    private Dictionary<Guid, (RenderFragment, DialogInstance)> _dialogs = [];
+    private readonly Dictionary<Guid, (RenderFragment, DialogInstance)> _dialogs = [];
 
     protected override void OnInitialized()
     {
