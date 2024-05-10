@@ -2,15 +2,17 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Microsoft.AspNetCore.Components;
+
 namespace RemoteMaster.Server.Components.Library.Abstractions;
 
 public interface IDialogWindowService
 {
-    event Action<string, string> OnShowDialog;
+    event Action<RenderFragment> OnShowDialog;
 
     event Func<string, string, string, string, Task<bool>> OnShowConfirmationDialog;
 
-    Task ShowDialogAsync(string title, string message);
+    Task ShowDialogAsync<TDialog>() where TDialog : ComponentBase;
 
     Task<bool> ShowConfirmationDialogAsync(string title, string message, string confirmText = "OK", string cancelText = "Cancel");
 }

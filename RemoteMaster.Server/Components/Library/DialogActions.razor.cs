@@ -6,22 +6,8 @@ using Microsoft.AspNetCore.Components;
 
 namespace RemoteMaster.Server.Components.Library;
 
-public partial class Dialog
+public partial class DialogActions
 {
     [Parameter]
     public RenderFragment ChildContent { get; set; }
-
-    [Parameter]
-    public Action CloseDialog { get; set; }
-
-    [Parameter]
-    public bool CloseOnClickOutside { get; set; }
-
-    private void CloseOnOutsideClick()
-    {
-        if (CloseOnClickOutside)
-        {
-            CloseDialog?.Invoke();
-        }
-    }
 }

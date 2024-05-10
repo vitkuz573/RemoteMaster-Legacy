@@ -1,27 +1,6 @@
-﻿@using RemoteMaster.Server.Components.Library.Abstractions
-
-@inject IDialogWindowService DialogService
-@inject IJSRuntime JsRuntime
-
-@if (Show)
-{
-    <div class="fixed inset-0 z-50 flex items-center justify-center" @onclick="CloseOnOutsideClick">
-        <div class="w-full max-w-md rounded-lg bg-white p-4 shadow-lg" @onclick:stopPropagation>
-            <h2 class="text-lg font-semibold">@Title</h2>
-            <p class="mt-2">@Message</p>
-
-            <div class="mt-4 flex justify-end">
-                @if (IsConfirmation)
-                {
-                    <button class="mr-2 rounded-md bg-red-500 px-4 py-2 text-white" @onclick="Cancel">@CancelText</button>
-                    <button class="rounded-md bg-blue-500 px-4 py-2 text-white" @onclick="Confirm">@ConfirmText</button>
-                }
-                else
-                {
-                    <button class="rounded-md bg-blue-500 px-4 py-2 text-white" @onclick="CloseDialog">Close</button>
-                }
-            </div>
-        </div>
+﻿<div class="fixed inset-0 z-50 flex items-center justify-center" @onclick="CloseOnOutsideClick">
+    <div class="w-full max-w-md rounded-lg bg-white p-4 shadow-lg" @onclick:stopPropagation>
+        @ChildContent
     </div>
-    <div class="fixed inset-0 bg-black opacity-50" @onclick="CloseOnOutsideClick"></div>
-}
+</div>
+<div class="fixed inset-0 bg-black opacity-50" @onclick="CloseOnOutsideClick"></div>

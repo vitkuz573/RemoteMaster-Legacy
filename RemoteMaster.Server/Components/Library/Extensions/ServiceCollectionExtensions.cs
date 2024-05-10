@@ -18,7 +18,7 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddDialogService(this IServiceCollection services)
     {
-        services.AddSingleton<IDialogWindowService, DialogService>();
+        services.AddScoped<IDialogWindowService, DialogService>();
 
         return services;
     }

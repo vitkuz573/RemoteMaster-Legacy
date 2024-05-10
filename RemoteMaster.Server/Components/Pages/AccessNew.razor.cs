@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Components;
+using RemoteMaster.Server.Components.Dialogs;
 
 namespace RemoteMaster.Server.Components.Pages;
 
@@ -26,7 +27,7 @@ public partial class AccessNew
 
     private async Task ShowInformationDialog()
     {
-        await DialogService.ShowDialogAsync("Info", "This is an information dialog.");
+        await DialogService.ShowDialogAsync<MyDialog>();
     }
 
     private async Task ShowConfirmationDialog()

@@ -2,18 +2,25 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Components.Library.Abstractions;
 
 namespace RemoteMaster.Server.Components.Library.Services;
 
 public class DialogService : IDialogWindowService
 {
-    public event Action<string, string> OnShowDialog;
+    public event Action<RenderFragment> OnShowDialog;
     public event Func<string, string, string, string, Task<bool>> OnShowConfirmationDialog;
 
-    public Task ShowDialogAsync(string title, string message)
+    public Task ShowDialogAsync<TDialog>() where TDialog : ComponentBase
     {
-        OnShowDialog?.Invoke(title, message);
+        var dialogFragment = new RenderFragment(builder =>
+        {
+            builder.OpenComponent(0, typeof(TDialog));
+            builder.CloseComponent();
+        });
+
+        OnShowDialog?.Invoke(dialogFragment);
 
         return Task.CompletedTask;
     }
