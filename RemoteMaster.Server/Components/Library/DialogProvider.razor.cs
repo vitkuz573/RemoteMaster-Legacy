@@ -9,7 +9,7 @@ namespace RemoteMaster.Server.Components.Library;
 
 public partial class DialogProvider
 {
-    private RenderFragment CurrentDialog { get; set; }
+    private RenderFragment? CurrentDialog { get; set; }
 
     [Inject]
     private IDialogWindowService DialogService { get; set; }
@@ -20,7 +20,7 @@ public partial class DialogProvider
         DialogService.OnShowConfirmationDialog += SetConfirmationDialog;
     }
 
-    public void SetDialog(RenderFragment dialog)
+    public void SetDialog(RenderFragment? dialog)
     {
         CurrentDialog = dialog;
         InvokeAsync(StateHasChanged);

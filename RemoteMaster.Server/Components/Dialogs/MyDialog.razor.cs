@@ -7,7 +7,7 @@ using RemoteMaster.Server.Components.Library;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
-public partial class MyDialog :ComponentBase
+public partial class MyDialog : ComponentBase
 {
     [CascadingParameter]
     private DialogProvider Provider { get; set; }
