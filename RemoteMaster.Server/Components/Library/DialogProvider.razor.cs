@@ -10,12 +10,16 @@ namespace RemoteMaster.Server.Components.Library;
 public partial class DialogProvider
 {
     private RenderFragment? _currentDialog;
+    private DialogInstance _dialogInstance;
 
     [Inject]
     private IDialogWindowService DialogService { get; set; }
 
     protected override void OnInitialized()
     {
+        _dialogInstance = new DialogInstance();
+        _dialogInstance.OnClose += () => SetDialog(null);
+
         DialogService.OnShowDialog += SetDialog;
     }
 
@@ -23,10 +27,5 @@ public partial class DialogProvider
     {
         _currentDialog = dialog;
         InvokeAsync(StateHasChanged);
-    }
-
-    private DialogInstance CreateDialogInstance()
-    {
-        return new DialogInstance(() => SetDialog(null));
     }
 }

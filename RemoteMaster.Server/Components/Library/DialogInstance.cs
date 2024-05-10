@@ -4,10 +4,12 @@
 
 namespace RemoteMaster.Server.Components.Library;
 
-public class DialogInstance(Action closeDialogAction)
+public class DialogInstance
 {
+    public event Action OnClose;
+
     public void Close()
     {
-        closeDialogAction?.Invoke();
+        OnClose?.Invoke();
     }
 }
