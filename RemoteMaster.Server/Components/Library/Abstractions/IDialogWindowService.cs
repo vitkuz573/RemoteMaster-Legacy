@@ -10,7 +10,7 @@ public interface IDialogWindowService
 {
     event Action<RenderFragment> OnShowDialog;
 
-    event Func<string, string, string, string, Task<bool>> OnShowConfirmationDialog;
+    event Func<string, string, string, string, TaskCompletionSource<bool>, Task> OnShowConfirmationDialog;
 
     Task ShowDialogAsync<TDialog>() where TDialog : ComponentBase;
 

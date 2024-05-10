@@ -10,7 +10,7 @@ namespace RemoteMaster.Server.Components.Library.Services;
 public class DialogService : IDialogWindowService
 {
     public event Action<RenderFragment> OnShowDialog;
-    public event Func<string, string, string, string, Task<bool>> OnShowConfirmationDialog;
+    public event Func<string, string, string, string, TaskCompletionSource<bool>, Task> OnShowConfirmationDialog;
 
     public Task ShowDialogAsync<TDialog>() where TDialog : ComponentBase
     {
@@ -27,8 +27,9 @@ public class DialogService : IDialogWindowService
 
     public Task<bool> ShowConfirmationDialogAsync(string title, string message, string confirmText = "OK", string cancelText = "Cancel")
     {
-        var confirmation = OnShowConfirmationDialog?.Invoke(title, message, confirmText, cancelText);
-
-        return confirmation ?? Task.FromResult(false);
+        var confirmationResult = new TaskCompletionSource<bool>();
+        OnShowConfirmationDialog?.Invoke(title, message, confirmText, cancelText, confirmationResult);
+        
+        return confirmationResult.Task;
     }
 }

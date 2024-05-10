@@ -32,7 +32,7 @@ public partial class AccessNew
 
     private async Task ShowConfirmationDialog()
     {
-        var confirmed = await DialogService.ShowConfirmationDialogAsync("Confirm", "Are you sure?");
+        var confirmed = await DialogService.ShowConfirmationDialogAsync("Confirm", "Are you sure?", "Yes", "No");
         // Process confirmation response
     }
 }
