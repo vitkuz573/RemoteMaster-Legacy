@@ -27,7 +27,7 @@ public partial class AccessNew
 
     private async Task ShowInformationDialog()
     {
-        await DialogService.ShowDialogAsync<MyDialog>();
+        await DialogService.ShowDialogAsync<MyDialog>("Header");
     }
 
     private async Task ShowConfirmationDialog()

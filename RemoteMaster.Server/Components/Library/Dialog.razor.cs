@@ -9,5 +9,8 @@ namespace RemoteMaster.Server.Components.Library;
 public partial class Dialog
 {
     [Parameter]
+    public string Title { get; set; }
+
+    [Parameter]
     public RenderFragment ChildContent { get; set; }
 }
