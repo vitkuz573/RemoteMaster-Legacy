@@ -1,7 +1,5 @@
 ﻿@using RemoteMaster.Server.Components.Library
 
-@rendermode InteractiveServer
-
 <Dialog CloseDialog="CloseDialog">
     <DialogContent>
         <h2 class="text-lg font-semibold">Sample Dialog</h2>
@@ -9,5 +7,6 @@
     </DialogContent>
     <DialogActions>
         <button class="rounded-md bg-blue-500 px-4 py-2 text-white" @onclick="CloseDialog">Close</button>
+        <button class="rounded-md bg-gray-800 px-4 py-2 text-white" @onclick="CloseDialog">OK</button>
     </DialogActions>
 </Dialog>
