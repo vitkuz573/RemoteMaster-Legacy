@@ -9,7 +9,7 @@ namespace RemoteMaster.Server.Components.Library;
 public partial class ConfirmationDialog
 {
     [CascadingParameter]
-    private DialogProvider Provider { get; set; }
+    private DialogInstance Dialog { get; set; }
 
     [Parameter]
     public string Title { get; set; }
@@ -29,12 +29,12 @@ public partial class ConfirmationDialog
     private void Confirm()
     {
         ConfirmationResult.SetResult(true);
-        Provider.SetDialog(null);
+        Dialog.Close();
     }
 
     private void Cancel()
     {
         ConfirmationResult.SetResult(false);
-        Provider.SetDialog(null);
+        Dialog.Close();
     }
 }

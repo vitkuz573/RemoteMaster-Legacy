@@ -1,3 +1,6 @@
-﻿<CascadingValue Value="this">
-    @CurrentDialog
-</CascadingValue>
+﻿@if (_currentDialog != null)
+{
+    <CascadingValue Value="CreateDialogInstance()">
+        @_currentDialog
+    </CascadingValue>
+}

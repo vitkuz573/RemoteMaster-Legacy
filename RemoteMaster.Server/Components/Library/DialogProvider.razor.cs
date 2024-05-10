@@ -9,7 +9,7 @@ namespace RemoteMaster.Server.Components.Library;
 
 public partial class DialogProvider
 {
-    private RenderFragment? CurrentDialog { get; set; }
+    private RenderFragment? _currentDialog;
 
     [Inject]
     private IDialogWindowService DialogService { get; set; }
@@ -22,7 +22,7 @@ public partial class DialogProvider
 
     public void SetDialog(RenderFragment? dialog)
     {
-        CurrentDialog = dialog;
+        _currentDialog = dialog;
         InvokeAsync(StateHasChanged);
     }
 
@@ -42,5 +42,10 @@ public partial class DialogProvider
         SetDialog(dialogFragment);
 
         await InvokeAsync(StateHasChanged);
+    }
+
+    private DialogInstance CreateDialogInstance()
+    {
+        return new DialogInstance(() => SetDialog(null));
     }
 }

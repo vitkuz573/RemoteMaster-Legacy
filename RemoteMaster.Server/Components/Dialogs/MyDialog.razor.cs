@@ -10,20 +10,15 @@ namespace RemoteMaster.Server.Components.Dialogs;
 public partial class MyDialog : ComponentBase
 {
     [CascadingParameter]
-    private DialogProvider Provider { get; set; }
-
-    private void Close()
-    {
-        Provider.SetDialog(null);
-    }
+    private DialogInstance Dialog { get; set; }
 
     private void OnCancel()
     {
-        Close();
+        Dialog.Close();
     }
 
     private void OnConfirm()
     {
-        Close();
+        Dialog.Close();
     }
 }
