@@ -4,6 +4,7 @@
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using RemoteMaster.Server.Components.Library.Models;
 
 namespace RemoteMaster.Server.Components.Library;
 

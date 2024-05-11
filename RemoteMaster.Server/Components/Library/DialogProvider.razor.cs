@@ -5,6 +5,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using RemoteMaster.Server.Components.Library.Abstractions;
+using RemoteMaster.Server.Components.Library.Models;
 
 namespace RemoteMaster.Server.Components.Library;
 

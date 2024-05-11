@@ -4,6 +4,7 @@
 
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Components.Library.Abstractions;
+using RemoteMaster.Server.Components.Library.Models;
 
 namespace RemoteMaster.Server.Components.Library.Services;
 

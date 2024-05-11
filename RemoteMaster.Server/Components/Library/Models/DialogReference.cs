@@ -5,7 +5,7 @@
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Components.Library.Abstractions;
 
-namespace RemoteMaster.Server.Components.Library;
+namespace RemoteMaster.Server.Components.Library.Models;
 
 public class DialogReference(Guid dialogId, IDialogWindowService dialogService) : IDialogReference
 {

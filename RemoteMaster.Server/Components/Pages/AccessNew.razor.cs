@@ -4,7 +4,7 @@
 
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Components.Dialogs;
-using RemoteMaster.Server.Components.Library;
+using RemoteMaster.Server.Components.Library.Models;
 
 namespace RemoteMaster.Server.Components.Pages;
 
