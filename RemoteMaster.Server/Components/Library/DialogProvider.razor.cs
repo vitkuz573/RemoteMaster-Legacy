@@ -4,7 +4,6 @@
 
 using Microsoft.AspNetCore.Components.Routing;
 using RemoteMaster.Server.Components.Library.Abstractions;
-using Serilog;
 
 namespace RemoteMaster.Server.Components.Library;
 
@@ -19,20 +18,18 @@ public partial class DialogProvider : IDisposable
         NavigationManager.LocationChanged += LocationChanged;
     }
 
-    internal void DismissInstance(Guid id)
+    internal void DismissInstance(Guid id, DialogResult result)
     {
         var reference = GetDialogReference(id);
-        
+
         if (reference != null)
         {
-            DismissInstance(reference);
+            DismissInstance(reference, result);
         }
     }
 
     private void AddInstance(IDialogReference dialog)
     {
-        Log.Information("Adding new dialog instance with ID: {DialogId}", dialog.Id);
-
         _dialogs.Add(dialog);
 
         InvokeAsync(StateHasChanged);
@@ -40,21 +37,21 @@ public partial class DialogProvider : IDisposable
 
     public void DismissAll()
     {
-        _dialogs.ToList().ForEach(r => DismissInstance(r));
+        _dialogs.ToList().ForEach(r => DismissInstance(r, DialogResult.Cancel()));
         
         StateHasChanged();
     }
 
-    private void DismissInstance(IDialogReference dialog)
+    private void DismissInstance(IDialogReference dialog, DialogResult result)
     {
-        if (dialog != null)
+        if (!dialog.Dismiss(result))
         {
-            Log.Information("Removing dialog instance with ID: {DialogId}", dialog.Id);
-            
-            _dialogs.Remove(dialog);
-            
-            InvokeAsync(StateHasChanged);
+            return;
         }
+
+        _dialogs.Remove(dialog);
+
+        StateHasChanged();
     }
 
     private IDialogReference? GetDialogReference(Guid id)

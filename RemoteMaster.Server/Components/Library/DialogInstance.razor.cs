@@ -34,7 +34,24 @@ public partial class DialogInstance : ComponentBase, IDisposable
 
     public void Close()
     {
-        Parent.DismissInstance(Id);
+        Close(DialogResult.Ok<object>(null));
+    }
+
+    public void Close(DialogResult dialogResult)
+    {
+        Parent.DismissInstance(Id, dialogResult);
+    }
+
+    public void Close<T>(T returnValue)
+    {
+        var dialogResult = DialogResult.Ok<T>(returnValue);
+
+        Parent.DismissInstance(Id, dialogResult);
+    }
+
+    public void Cancel()
+    {
+        Close(DialogResult.Cancel());
     }
 
     private void ConfigureInstance()

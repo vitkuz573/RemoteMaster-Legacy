@@ -9,15 +9,29 @@ namespace RemoteMaster.Server.Components.Library;
 
 public class DialogReference(Guid dialogId, IDialogWindowService dialogService) : IDialogReference
 {
+    private readonly TaskCompletionSource<DialogResult> _resultCompletion = new();
+
     public Guid Id { get; private set; } = dialogId;
 
     public object Dialog { get; private set; }
 
     public RenderFragment RenderFragment { get; private set; }
 
+    public Task<DialogResult> Result => _resultCompletion.Task;
+
     public void Close()
     {
         dialogService.Close(this);
+    }
+
+    public void Close(DialogResult result)
+    {
+        dialogService.Close(this, result);
+    }
+
+    public virtual bool Dismiss(DialogResult result)
+    {
+        return _resultCompletion.TrySetResult(result);
     }
 
     public void InjectDialog(object inst)

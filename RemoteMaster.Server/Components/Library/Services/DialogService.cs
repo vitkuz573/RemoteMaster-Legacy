@@ -42,7 +42,7 @@ public class DialogService : IDialogWindowService
     }
 
     public event Action<IDialogReference> OnDialogInstanceAdded;
-    public event Action<IDialogReference> OnDialogCloseRequested;
+    public event Action<IDialogReference, DialogResult> OnDialogCloseRequested;
 
     public IDialogReference Show(Type contentComponent, string title)
     {
@@ -91,9 +91,14 @@ public class DialogService : IDialogWindowService
         return dialogReference;
     }
 
-    public virtual void Close(IDialogReference dialog)
+    public void Close(IDialogReference dialog)
     {
-        OnDialogCloseRequested?.Invoke(dialog);
+        Close(dialog, DialogResult.Ok<object>(null));
+    }
+
+    public virtual void Close(IDialogReference dialog, DialogResult result)
+    {
+        OnDialogCloseRequested?.Invoke(dialog, result);
     }
 
     public virtual IDialogReference CreateReference()

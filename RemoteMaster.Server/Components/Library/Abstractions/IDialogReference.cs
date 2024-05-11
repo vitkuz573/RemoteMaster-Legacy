@@ -14,7 +14,13 @@ public interface IDialogReference
 
     RenderFragment RenderFragment { get; }
 
+    Task<DialogResult> Result { get; }
+
     void Close();
+
+    void Close(DialogResult result);
+
+    bool Dismiss(DialogResult result);
 
     void InjectDialog(object inst);
 
