@@ -10,7 +10,7 @@ public interface IDialogReference
 {
     Guid Id { get; }
 
-    RenderFragment Content { get; }
+    RenderFragment RenderFragment { get; }
 
     DialogInstance Instance { get; }
 }

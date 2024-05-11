@@ -11,7 +11,7 @@ public class DialogReference(Guid dialogId, RenderFragment content, DialogInstan
 {
     public Guid Id { get; private set; } = dialogId;
 
-    public RenderFragment Content { get; private set; } = content;
+    public RenderFragment RenderFragment { get; private set; } = content;
 
     public DialogInstance Instance { get; private set; } = instance;
 }

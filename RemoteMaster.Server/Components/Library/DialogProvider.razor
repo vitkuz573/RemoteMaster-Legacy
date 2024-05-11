@@ -5,6 +5,6 @@
 @foreach (var dialogRef in _dialogs)
 {
     <CascadingValue Value="dialogRef.Instance">
-        @dialogRef.Content
+        @dialogRef.RenderFragment
     </CascadingValue>
 }
