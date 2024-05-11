@@ -10,9 +10,13 @@ public interface IDialogReference
 {
     Guid Id { get; }
 
+    object Dialog { get; }
+
     RenderFragment RenderFragment { get; }
 
-    DialogInstance Instance { get; }
+    void Close();
+
+    void InjectDialog(object inst);
 
     void InjectRenderFragment(RenderFragment rf);
 }

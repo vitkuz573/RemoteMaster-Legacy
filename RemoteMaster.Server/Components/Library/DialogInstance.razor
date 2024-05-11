@@ -1,0 +1,23 @@
+﻿<div class="fixed inset-0 z-50 flex items-center justify-center">
+    <div id="@_elementId" class="w-full max-w-md rounded-lg bg-white p-4 shadow-lg" @onclick:stopPropagation>
+        <div id="_@Id.ToString("N")" role="dialog">
+            @if (!NoHeader)
+            {
+                <div>
+                    @if (TitleContent == null)
+                    {
+                        <h2 class="text-lg font-semibold">@Title</h2>
+                    }
+                    else
+                    {
+                        @TitleContent
+                    }
+                </div>
+            }
+            <CascadingValue Value="this" IsFixed="true">
+                @Content
+            </CascadingValue>
+        </div>
+    </div>
+</div>
+<div class="fixed inset-0 bg-black opacity-50"></div>

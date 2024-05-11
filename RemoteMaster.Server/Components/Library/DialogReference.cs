@@ -7,13 +7,23 @@ using RemoteMaster.Server.Components.Library.Abstractions;
 
 namespace RemoteMaster.Server.Components.Library;
 
-public class DialogReference(Guid dialogId, DialogInstance instance) : IDialogReference
+public class DialogReference(Guid dialogId, IDialogWindowService dialogService) : IDialogReference
 {
     public Guid Id { get; private set; } = dialogId;
 
+    public object Dialog { get; private set; }
+
     public RenderFragment RenderFragment { get; private set; }
 
-    public DialogInstance Instance { get; private set; } = instance;
+    public void Close()
+    {
+        dialogService.Close(this);
+    }
+
+    public void InjectDialog(object inst)
+    {
+        Dialog = inst;
+    }
 
     public void InjectRenderFragment(RenderFragment rf)
     {

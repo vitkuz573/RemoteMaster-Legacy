@@ -2,40 +2,82 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Microsoft.AspNetCore.Components.Routing;
 using RemoteMaster.Server.Components.Library.Abstractions;
 using Serilog;
 
 namespace RemoteMaster.Server.Components.Library;
 
-public partial class DialogProvider
+public partial class DialogProvider : IDisposable
 {
     private readonly List<IDialogReference> _dialogs = [];
 
     protected override void OnInitialized()
     {
-        DialogService.OnDialogInstanceAdded += AddDialog;
+        DialogService.OnDialogInstanceAdded += AddInstance;
+        DialogService.OnDialogCloseRequested += DismissInstance;
+        NavigationManager.LocationChanged += LocationChanged;
     }
 
-    private void AddDialog(IDialogReference dialogRef)
+    internal void DismissInstance(Guid id)
     {
-        Log.Information("Adding dialog with ID: {DialogId}", dialogRef.Id);
+        var reference = GetDialogReference(id);
         
-        dialogRef.Instance.OnClose += () => RemoveDialog(dialogRef);
+        if (reference != null)
+        {
+            DismissInstance(reference);
+        }
+    }
 
-        _dialogs.Add(dialogRef);
+    private void AddInstance(IDialogReference dialog)
+    {
+        Log.Information("Adding new dialog instance with ID: {DialogId}", dialog.Id);
+
+        _dialogs.Add(dialog);
 
         InvokeAsync(StateHasChanged);
     }
 
-    private void RemoveDialog(IDialogReference dialogRef)
+    public void DismissAll()
     {
-        if (dialogRef != null)
+        _dialogs.ToList().ForEach(r => DismissInstance(r));
+        
+        StateHasChanged();
+    }
+
+    private void DismissInstance(IDialogReference dialog)
+    {
+        if (dialog != null)
         {
-            Log.Information("Removing dialog with ID: {DialogId}", dialogRef.Id);
+            Log.Information("Removing dialog instance with ID: {DialogId}", dialog.Id);
             
-            _dialogs.Remove(dialogRef);
+            _dialogs.Remove(dialog);
             
             InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private IDialogReference? GetDialogReference(Guid id)
+    {
+        return _dialogs.SingleOrDefault(x => x.Id == id);
+    }
+
+    private void LocationChanged(object? sender, LocationChangedEventArgs args)
+    {
+        DismissAll();
+    }
+
+    public void Dispose()
+    {
+        if (NavigationManager != null)
+        {
+            NavigationManager.LocationChanged -= LocationChanged;
+        }
+
+        if (DialogService != null)
+        {
+            DialogService.OnDialogInstanceAdded -= AddInstance;
+            DialogService.OnDialogCloseRequested -= DismissInstance;
         }
     }
 }

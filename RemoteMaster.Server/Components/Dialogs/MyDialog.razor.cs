@@ -15,6 +15,7 @@ public partial class MyDialog : ComponentBase
     [Parameter]
     public string Title { get; set; }
 
+#pragma warning disable
     private void OnCancel()
     {
         Dialog.Close();

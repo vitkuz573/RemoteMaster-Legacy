@@ -1,10 +1,11 @@
 ﻿@using RemoteMaster.Server.Components.Library.Abstractions
 
 @inject IDialogWindowService DialogService
+@inject NavigationManager NavigationManager
 
-@foreach (var dialogRef in _dialogs)
-{
-    <CascadingValue Value="dialogRef.Instance">
+<CascadingValue Value="this" IsFixed="true">
+    @foreach (var dialogRef in _dialogs)
+    {
         @dialogRef.RenderFragment
-    </CascadingValue>
-}
+    }
+</CascadingValue>

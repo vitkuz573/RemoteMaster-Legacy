@@ -1,7 +1,12 @@
-﻿<div class="fixed inset-0 z-50 flex items-center justify-center">
-    <div class="w-full max-w-md rounded-lg bg-white p-4 shadow-lg" @onclick:stopPropagation>
-        <h2 class="text-lg font-semibold">@Title</h2>
-        @ChildContent
-    </div>
+﻿<div>
+    <CascadingValue Value="true" IsFixed Name="IsNested">
+        @DialogContent
+    </CascadingValue>
 </div>
-<div class="fixed inset-0 bg-black opacity-50"></div>
+
+@if (DialogActions != null)
+{
+    <div>
+        @DialogActions
+    </div>
+}
