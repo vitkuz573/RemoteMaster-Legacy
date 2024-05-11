@@ -11,7 +11,7 @@ namespace RemoteMaster.Server.Components.Library;
 public partial class DialogInstance : ComponentBase, IDisposable
 {
     private DialogOptions _options = new();
-    private readonly string _elementId = $"dialog_{Guid.NewGuid().ToString()[..8]}";
+    private string _elementId;
     private Dialog _dialog;
 
     [CascadingParameter]
@@ -63,6 +63,11 @@ public partial class DialogInstance : ComponentBase, IDisposable
     protected override void OnInitialized()
     {
         ConfigureInstance();
+    }
+
+    protected override void OnParametersSet()
+    {
+        _elementId = $"dialog_{Id:N}";
     }
 
     public void SetOptions(DialogOptions options)
