@@ -13,5 +13,7 @@ public interface IDialogReference
     RenderFragment RenderFragment { get; }
 
     DialogInstance Instance { get; }
+
+    void InjectRenderFragment(RenderFragment rf);
 }
 

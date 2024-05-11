@@ -10,7 +10,7 @@ public interface IDialogWindowService
 {
     event Action<IDialogReference> OnDialogInstanceAdded;
 
-    Task<IDialogReference> ShowDialogAsync<TDialog>(string title) where TDialog : ComponentBase;
+    Task<IDialogReference> ShowAsync<T>(string title) where T : IComponent;
 
-    Task<(bool, IDialogReference)> ShowConfirmationDialogAsync(string title, string message, string confirmText = "OK", string cancelText = "Cancel");
+    Task<(bool, IDialogReference)> ShowMessageBox(string title, string message, string confirmText = "OK", string cancelText = "Cancel");
 }

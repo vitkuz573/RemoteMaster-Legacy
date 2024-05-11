@@ -12,29 +12,31 @@ public class DialogService : IDialogWindowService
 {
     public event Action<IDialogReference> OnDialogInstanceAdded;
 
-    public Task<IDialogReference> ShowDialogAsync<TDialog>(string title) where TDialog : ComponentBase
+    public Task<IDialogReference> ShowAsync<T>(string title) where T : IComponent
     {
         var dialogId = Guid.NewGuid();
         var dialogInstance = new DialogInstance();
+        IDialogReference dialogReference = new DialogReference(dialogId, dialogInstance);
         var dialogFragment = new RenderFragment(builder =>
         {
-            builder.OpenComponent(0, typeof(TDialog));
+            builder.OpenComponent(0, typeof(T));
             builder.AddAttribute(1, "Title", title);
             builder.CloseComponent();
         });
 
-        IDialogReference dialogReference = new DialogReference(dialogId, dialogFragment, dialogInstance);
+        dialogReference.InjectRenderFragment(dialogFragment);
 
-        Log.Information("Creating dialog of type {DialogType} with title '{Title}' and ID {DialogId}", typeof(TDialog).Name, title, dialogId);
+        Log.Information("Creating dialog of type {DialogType} with title '{Title}' and ID {DialogId}", typeof(T).Name, title, dialogId);
         OnDialogInstanceAdded?.Invoke(dialogReference);
 
         return Task.FromResult(dialogReference);
     }
 
-    public Task<(bool, IDialogReference)> ShowConfirmationDialogAsync(string title, string message, string confirmText = "OK", string cancelText = "Cancel")
+    public Task<(bool, IDialogReference)> ShowMessageBox(string title, string message, string confirmText = "OK", string cancelText = "Cancel")
     {
         var dialogId = Guid.NewGuid();
         var dialogInstance = new DialogInstance();
+        IDialogReference dialogReference = new DialogReference(dialogId, dialogInstance);
         var confirmationResult = new TaskCompletionSource<bool>();
 
         var dialogFragment = new RenderFragment(builder =>
@@ -48,7 +50,7 @@ public class DialogService : IDialogWindowService
             builder.CloseComponent();
         });
 
-        IDialogReference dialogReference = new DialogReference(dialogId, dialogFragment, dialogInstance);
+        dialogReference.InjectRenderFragment(dialogFragment);
 
         Log.Information("Creating confirmation dialog with title '{Title}' and ID {DialogId}", title, dialogId);
         
