@@ -31,7 +31,6 @@ public class DialogService : IDialogWindowService
         return Task.FromResult(dialogReference);
     }
 
-
     public Task<(bool, IDialogReference)> ShowConfirmationDialogAsync(string title, string message, string confirmText = "OK", string cancelText = "Cancel")
     {
         var dialogId = Guid.NewGuid();
@@ -52,8 +51,9 @@ public class DialogService : IDialogWindowService
         IDialogReference dialogReference = new DialogReference(dialogId, dialogFragment, dialogInstance);
 
         Log.Information("Creating confirmation dialog with title '{Title}' and ID {DialogId}", title, dialogId);
+        
         OnShowDialog?.Invoke(dialogReference);
 
-        return Task.FromResult((confirmationResult.Task.Result, dialogReference));
+        return confirmationResult.Task.ContinueWith(task => (task.Result, dialogReference));
     }
 }
