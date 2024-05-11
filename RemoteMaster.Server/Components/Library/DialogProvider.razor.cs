@@ -22,25 +22,24 @@ public partial class DialogProvider
         Log.Information("Adding dialog with ID: {DialogId}", dialogId);
 
         var dialogInstance = new DialogInstance();
-        dialogInstance.OnClose += () => RemoveDialog(dialogId);
-
         var dialogReference = new DialogReference(dialogId, dialog, dialogInstance);
+
+        dialogInstance.OnClose += () => RemoveDialog(dialogReference);
+
         _dialogs.Add(dialogReference);
 
         InvokeAsync(StateHasChanged);
     }
 
-    private void RemoveDialog(Guid dialogId)
+    private void RemoveDialog(IDialogReference dialogReference)
     {
-        Log.Information("Removing dialog with ID: {DialogId}", dialogId);
-        
-        var dialogToRemove = _dialogs.FirstOrDefault(d => d.DialogId == dialogId);
-        
-        if (dialogToRemove != null)
+        if (dialogReference != null)
         {
-            _dialogs.Remove(dialogToRemove);
+            Log.Information("Removing dialog with ID: {DialogId}", dialogReference.DialogId);
+            
+            _dialogs.Remove(dialogReference);
+            
+            InvokeAsync(StateHasChanged);
         }
-
-        InvokeAsync(StateHasChanged);
     }
 }
