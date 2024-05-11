@@ -26,6 +26,7 @@ public class DialogService : IDialogWindowService
         dialogReference.InjectRenderFragment(dialogFragment);
 
         Log.Information("Creating dialog of type {DialogType} with title '{Title}' and ID {DialogId}", typeof(T).Name, title, dialogReference.Id);
+        
         OnDialogInstanceAdded?.Invoke(dialogReference);
 
         return Task.FromResult(dialogReference);
