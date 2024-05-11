@@ -10,14 +10,12 @@ namespace RemoteMaster.Server.Components.Library.Services;
 
 public class DialogService : IDialogWindowService
 {
-    public event Action<Guid, RenderFragment> OnShowDialog;
+    public event Action<IDialogReference> OnShowDialog;
 
-    public Task ShowDialogAsync<TDialog>(string title) where TDialog : ComponentBase
+    public Task<IDialogReference> ShowDialogAsync<TDialog>(string title) where TDialog : ComponentBase
     {
         var dialogId = Guid.NewGuid();
-
-        Log.Information("Creating dialog of type {DialogType} with title '{Title}' and ID {DialogId}", typeof(TDialog).Name, title, dialogId);
-
+        var dialogInstance = new DialogInstance();
         var dialogFragment = new RenderFragment(builder =>
         {
             builder.OpenComponent(0, typeof(TDialog));
@@ -25,17 +23,19 @@ public class DialogService : IDialogWindowService
             builder.CloseComponent();
         });
 
-        OnShowDialog?.Invoke(dialogId, dialogFragment);
+        IDialogReference dialogReference = new DialogReference(dialogId, dialogFragment, dialogInstance);
 
-        return Task.CompletedTask;
+        Log.Information("Creating dialog of type {DialogType} with title '{Title}' and ID {DialogId}", typeof(TDialog).Name, title, dialogId);
+        OnShowDialog?.Invoke(dialogReference);
+
+        return Task.FromResult(dialogReference);
     }
 
-    public Task<bool> ShowConfirmationDialogAsync(string title, string message, string confirmText = "OK", string cancelText = "Cancel")
+
+    public Task<(bool, IDialogReference)> ShowConfirmationDialogAsync(string title, string message, string confirmText = "OK", string cancelText = "Cancel")
     {
         var dialogId = Guid.NewGuid();
-        
-        Log.Information("Creating confirmation dialog with title '{Title}' and ID {DialogId}", title, dialogId);
-
+        var dialogInstance = new DialogInstance();
         var confirmationResult = new TaskCompletionSource<bool>();
 
         var dialogFragment = new RenderFragment(builder =>
@@ -49,8 +49,11 @@ public class DialogService : IDialogWindowService
             builder.CloseComponent();
         });
 
-        OnShowDialog?.Invoke(dialogId, dialogFragment);
+        IDialogReference dialogReference = new DialogReference(dialogId, dialogFragment, dialogInstance);
 
-        return confirmationResult.Task;
+        Log.Information("Creating confirmation dialog with title '{Title}' and ID {DialogId}", title, dialogId);
+        OnShowDialog?.Invoke(dialogReference);
+
+        return Task.FromResult((confirmationResult.Task.Result, dialogReference));
     }
 }

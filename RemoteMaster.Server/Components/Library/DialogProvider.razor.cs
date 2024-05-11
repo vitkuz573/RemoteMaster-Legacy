@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Components.Library.Abstractions;
 using Serilog;
 
@@ -14,17 +13,14 @@ public partial class DialogProvider
 
     protected override void OnInitialized()
     {
-        DialogService.OnShowDialog += ShowDialog;
+        DialogService.OnShowDialog += AddDialog;
     }
 
-    private void ShowDialog(Guid dialogId, RenderFragment dialog)
+    private void AddDialog(IDialogReference dialogReference)
     {
-        Log.Information("Adding dialog with ID: {DialogId}", dialogId);
-
-        var dialogInstance = new DialogInstance();
-        var dialogReference = new DialogReference(dialogId, dialog, dialogInstance);
-
-        dialogInstance.OnClose += () => RemoveDialog(dialogReference);
+        Log.Information("Adding dialog with ID: {DialogId}", dialogReference.DialogId);
+        
+        dialogReference.Instance.OnClose += () => RemoveDialog(dialogReference);
 
         _dialogs.Add(dialogReference);
 

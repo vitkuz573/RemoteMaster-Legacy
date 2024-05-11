@@ -8,9 +8,9 @@ namespace RemoteMaster.Server.Components.Library.Abstractions;
 
 public interface IDialogWindowService
 {
-    event Action<Guid, RenderFragment> OnShowDialog;
+    event Action<IDialogReference> OnShowDialog;
 
-    Task ShowDialogAsync<TDialog>(string title) where TDialog : ComponentBase;
+    Task<IDialogReference> ShowDialogAsync<TDialog>(string title) where TDialog : ComponentBase;
 
-    Task<bool> ShowConfirmationDialogAsync(string title, string message, string confirmText = "OK", string cancelText = "Cancel");
+    Task<(bool, IDialogReference)> ShowConfirmationDialogAsync(string title, string message, string confirmText = "OK", string cancelText = "Cancel");
 }
