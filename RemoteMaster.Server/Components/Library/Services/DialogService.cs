@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Components.Library.Abstractions;
 
@@ -32,12 +31,14 @@ public class DialogService : IDialogWindowService
         }
 
         public static RenderFragment Wrap(RenderFragment renderFragment)
-            => new(builder =>
+        {
+            return new RenderFragment(builder =>
             {
                 builder.OpenComponent<DialogHelperComponent>(1);
                 builder.AddAttribute(2, ChildContent, renderFragment);
                 builder.CloseComponent();
             });
+        }
     }
 
     public event Action<IDialogReference> OnDialogInstanceAdded;
@@ -83,7 +84,7 @@ public class DialogService : IDialogWindowService
         return ShowAsync(typeof(T), title);
     }
 
-    public async Task<IDialogReference> ShowAsync([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] Type contentComponent, string title)
+    public async Task<IDialogReference> ShowAsync(Type contentComponent, string title)
     {
         var dialogReference = Show(contentComponent, title);
 
