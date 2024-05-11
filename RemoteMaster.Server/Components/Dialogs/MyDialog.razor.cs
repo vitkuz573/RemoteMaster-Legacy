@@ -12,7 +12,6 @@ public partial class MyDialog : ComponentBase
     [CascadingParameter]
     private DialogInstance Dialog { get; set; }
 
-#pragma warning disable
     private void OnCancel()
     {
         Dialog.Close();
