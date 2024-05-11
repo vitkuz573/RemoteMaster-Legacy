@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using RemoteMaster.Server.Components.Library.Abstractions;
 
@@ -10,12 +11,38 @@ namespace RemoteMaster.Server.Components.Library;
 public partial class DialogProvider : IDisposable
 {
     private readonly List<IDialogReference> _dialogs = [];
+    private readonly DialogOptions _globalDialogOptions = new();
+
+    [Parameter]
+    public bool? NoHeader { get; set; }
+
+    [Parameter]
+    public bool? CloseButton { get; set; }
+
+    [Parameter]
+    public bool? BackdropClick { get; set; }
+
+    [Parameter]
+    public bool? CloseOnEscapeKey { get; set; }
+
+    [Parameter]
+    public bool? FullWidth { get; set; }
+
+    [Parameter]
+    public string? BackgroundClass { get; set; }
 
     protected override void OnInitialized()
     {
         DialogService.OnDialogInstanceAdded += AddInstance;
         DialogService.OnDialogCloseRequested += DismissInstance;
         NavigationManager.LocationChanged += LocationChanged;
+
+        _globalDialogOptions.BackdropClick = BackdropClick;
+        _globalDialogOptions.CloseOnEscapeKey = CloseOnEscapeKey;
+        _globalDialogOptions.CloseButton = CloseButton;
+        _globalDialogOptions.NoHeader = NoHeader;
+        _globalDialogOptions.FullWidth = FullWidth;
+        _globalDialogOptions.BackgroundClass = BackgroundClass;
     }
 
     internal void DismissInstance(Guid id, DialogResult result)

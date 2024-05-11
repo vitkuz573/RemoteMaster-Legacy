@@ -44,7 +44,7 @@ public class DialogService : IDialogWindowService
     public event Action<IDialogReference> OnDialogInstanceAdded;
     public event Action<IDialogReference, DialogResult> OnDialogCloseRequested;
 
-    public IDialogReference Show(Type contentComponent, string title)
+    public IDialogReference Show(Type contentComponent, string title, DialogOptions options)
     {
         if (!typeof(IComponent).IsAssignableFrom(contentComponent))
         {
@@ -66,9 +66,10 @@ public class DialogService : IDialogWindowService
         {
             builder.OpenComponent<DialogInstance>(0);
             builder.SetKey(dialogReference.Id);
-            builder.AddAttribute(1, nameof(DialogInstance.Title), title);
-            builder.AddAttribute(2, nameof(DialogInstance.Content), dialogContent);
-            builder.AddAttribute(3, nameof(DialogInstance.Id), dialogReference.Id);
+            builder.AddAttribute(1, nameof(DialogInstance.Options), options);
+            builder.AddAttribute(2, nameof(DialogInstance.Title), title);
+            builder.AddAttribute(3, nameof(DialogInstance.Content), dialogContent);
+            builder.AddAttribute(4, nameof(DialogInstance.Id), dialogReference.Id);
             builder.CloseComponent();
         });
 
@@ -79,14 +80,14 @@ public class DialogService : IDialogWindowService
         return dialogReference;
     }
 
-    public Task<IDialogReference> ShowAsync<T>(string title) where T : IComponent
+    public Task<IDialogReference> ShowAsync<T>(string title, DialogOptions options) where T : IComponent
     {
-        return ShowAsync(typeof(T), title);
+        return ShowAsync(typeof(T), title, options);
     }
 
-    public async Task<IDialogReference> ShowAsync(Type contentComponent, string title)
+    public async Task<IDialogReference> ShowAsync(Type contentComponent, string title, DialogOptions options)
     {
-        var dialogReference = Show(contentComponent, title);
+        var dialogReference = Show(contentComponent, title, options);
 
         return dialogReference;
     }

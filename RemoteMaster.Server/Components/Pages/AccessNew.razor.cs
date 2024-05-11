@@ -4,6 +4,7 @@
 
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Components.Dialogs;
+using RemoteMaster.Server.Components.Library;
 
 namespace RemoteMaster.Server.Components.Pages;
 
@@ -27,6 +28,13 @@ public partial class AccessNew
 
     private async Task ShowInformationDialog()
     {
-        await DialogService.ShowAsync<MyDialog>("Header");
+        var options = new DialogOptions
+        {
+            BackdropClick = true,
+            NoHeader = false,
+            FullScreen = true,
+        };
+
+        await DialogService.ShowAsync<MyDialog>("Header", options);
     }
 }

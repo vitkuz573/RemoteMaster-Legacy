@@ -6,5 +6,17 @@ namespace RemoteMaster.Server.Components.Library;
 
 public class DialogOptions
 {
-    public bool CloseOnClickOutside { get; set; } = false;
+    public bool? BackdropClick { get; set; }
+
+    public bool? CloseOnEscapeKey { get; set; }
+
+    public bool? NoHeader { get; set; }
+
+    public bool? CloseButton { get; set; }
+
+    public bool? FullScreen { get; set; }
+
+    public bool? FullWidth { get; set; }
+
+    public string? BackgroundClass { get; set; }
 }

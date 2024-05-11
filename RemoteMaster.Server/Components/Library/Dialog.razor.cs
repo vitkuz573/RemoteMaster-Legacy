@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using RemoteMaster.Server.Components.Library.Abstractions;
 
 namespace RemoteMaster.Server.Components.Library;
@@ -26,4 +27,12 @@ public partial class Dialog : ComponentBase
 
     [Parameter]
     public RenderFragment DialogActions { get; set; }
+
+    [Parameter]
+    public DialogOptions Options { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnBackdropClick { get; set; }
+
+    private bool IsInline => IsNested || DialogInstance is null;
 }

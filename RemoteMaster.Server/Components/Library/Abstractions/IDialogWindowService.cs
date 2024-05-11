@@ -11,7 +11,7 @@ public interface IDialogWindowService
     event Action<IDialogReference> OnDialogInstanceAdded;
     event Action<IDialogReference, DialogResult> OnDialogCloseRequested;
 
-    Task<IDialogReference> ShowAsync<T>(string title) where T : IComponent;
+    Task<IDialogReference> ShowAsync<T>(string title, DialogOptions options) where T : IComponent;
 
     IDialogReference CreateReference();
 
