@@ -16,7 +16,7 @@ public partial class AccessNew
     private bool FeatureYEnabled = false;
     private bool RemoteAccessEnabled = true;
     private bool LocalAccessEnabled = false;
-
+    
     private void OnFeatureXChanged(bool isChecked) => FeatureXEnabled = isChecked;
 
     private void OnFeatureYChanged(bool isChecked) => FeatureYEnabled = isChecked;
@@ -28,11 +28,5 @@ public partial class AccessNew
     private async Task ShowInformationDialog()
     {
         await DialogService.ShowAsync<MyDialog>("Header");
-    }
-
-    private async Task ShowConfirmationDialog()
-    {
-        var confirmed = await DialogService.ShowMessageBox("Confirm", "Are you sure?", "Yes", "No");
-        // Process confirmation response
     }
 }

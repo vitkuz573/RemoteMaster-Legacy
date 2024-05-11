@@ -32,31 +32,6 @@ public class DialogService : IDialogWindowService
         return Task.FromResult(dialogReference);
     }
 
-    public Task<(bool, IDialogReference)> ShowMessageBox(string title, string message, string confirmText = "OK", string cancelText = "Cancel")
-    {
-        var dialogReference = CreateReference();
-        var confirmationResult = new TaskCompletionSource<bool>();
-
-        var dialogFragment = new RenderFragment(builder =>
-        {
-            builder.OpenComponent(0, typeof(ConfirmationDialog));
-            builder.AddAttribute(1, "Title", title);
-            builder.AddAttribute(2, "Message", message);
-            builder.AddAttribute(3, "ConfirmText", confirmText);
-            builder.AddAttribute(4, "CancelText", cancelText);
-            builder.AddAttribute(5, "ConfirmationResult", confirmationResult);
-            builder.CloseComponent();
-        });
-
-        dialogReference.InjectRenderFragment(dialogFragment);
-
-        Log.Information("Creating confirmation dialog with title '{Title}' and ID {DialogId}", title, dialogReference.Id);
-        
-        OnDialogInstanceAdded?.Invoke(dialogReference);
-
-        return confirmationResult.Task.ContinueWith(task => (task.Result, dialogReference));
-    }
-
     public IDialogReference CreateReference()
     {
         return new DialogReference(Guid.NewGuid(), new DialogInstance());

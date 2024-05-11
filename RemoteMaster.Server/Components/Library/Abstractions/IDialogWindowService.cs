@@ -11,6 +11,4 @@ public interface IDialogWindowService
     event Action<IDialogReference> OnDialogInstanceAdded;
 
     Task<IDialogReference> ShowAsync<T>(string title) where T : IComponent;
-
-    Task<(bool, IDialogReference)> ShowMessageBox(string title, string message, string confirmText = "OK", string cancelText = "Cancel");
 }
