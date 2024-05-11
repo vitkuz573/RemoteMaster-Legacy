@@ -10,7 +10,7 @@ namespace RemoteMaster.Server.Components.Library.Services;
 
 public class DialogService : IDialogWindowService
 {
-    public event Action<IDialogReference> OnShowDialog;
+    public event Action<IDialogReference> OnDialogInstanceAdded;
 
     public Task<IDialogReference> ShowDialogAsync<TDialog>(string title) where TDialog : ComponentBase
     {
@@ -26,7 +26,7 @@ public class DialogService : IDialogWindowService
         IDialogReference dialogReference = new DialogReference(dialogId, dialogFragment, dialogInstance);
 
         Log.Information("Creating dialog of type {DialogType} with title '{Title}' and ID {DialogId}", typeof(TDialog).Name, title, dialogId);
-        OnShowDialog?.Invoke(dialogReference);
+        OnDialogInstanceAdded?.Invoke(dialogReference);
 
         return Task.FromResult(dialogReference);
     }
@@ -52,7 +52,7 @@ public class DialogService : IDialogWindowService
 
         Log.Information("Creating confirmation dialog with title '{Title}' and ID {DialogId}", title, dialogId);
         
-        OnShowDialog?.Invoke(dialogReference);
+        OnDialogInstanceAdded?.Invoke(dialogReference);
 
         return confirmationResult.Task.ContinueWith(task => (task.Result, dialogReference));
     }

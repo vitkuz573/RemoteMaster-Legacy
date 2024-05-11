@@ -13,7 +13,7 @@ public partial class DialogProvider
 
     protected override void OnInitialized()
     {
-        DialogService.OnShowDialog += AddDialog;
+        DialogService.OnDialogInstanceAdded += AddDialog;
     }
 
     private void AddDialog(IDialogReference dialogRef)

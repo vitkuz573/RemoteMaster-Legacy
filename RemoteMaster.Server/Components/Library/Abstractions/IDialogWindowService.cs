@@ -8,7 +8,7 @@ namespace RemoteMaster.Server.Components.Library.Abstractions;
 
 public interface IDialogWindowService
 {
-    event Action<IDialogReference> OnShowDialog;
+    event Action<IDialogReference> OnDialogInstanceAdded;
 
     Task<IDialogReference> ShowDialogAsync<TDialog>(string title) where TDialog : ComponentBase;
 
