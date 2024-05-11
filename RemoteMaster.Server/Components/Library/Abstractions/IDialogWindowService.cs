@@ -10,9 +10,14 @@ namespace RemoteMaster.Server.Components.Library.Abstractions;
 public interface IDialogWindowService
 {
     event Action<IDialogReference> OnDialogInstanceAdded;
+
     event Action<IDialogReference, DialogResult> OnDialogCloseRequested;
 
+    IDialogReference Show(Type contentComponent, string title, DialogOptions options);
+
     Task<IDialogReference> ShowAsync<T>(string title, DialogOptions options) where T : IComponent;
+
+    Task<IDialogReference> ShowAsync(Type contentComponent, string title, DialogOptions options);
 
     IDialogReference CreateReference();
 
