@@ -7,18 +7,11 @@ using RemoteMaster.Server.Components.Library.Abstractions;
 
 namespace RemoteMaster.Server.Components.Library;
 
-public class DialogReference : IDialogReference
+public class DialogReference(Guid dialogId, RenderFragment content, DialogInstance instance) : IDialogReference
 {
-    public Guid DialogId { get; private set; }
+    public Guid Id { get; private set; } = dialogId;
 
-    public RenderFragment Content { get; private set; }
+    public RenderFragment Content { get; private set; } = content;
 
-    public DialogInstance Instance { get; private set; }
-
-    public DialogReference(Guid dialogId, RenderFragment content, DialogInstance instance)
-    {
-        DialogId = dialogId;
-        Content = content;
-        Instance = instance;
-    }
+    public DialogInstance Instance { get; private set; } = instance;
 }

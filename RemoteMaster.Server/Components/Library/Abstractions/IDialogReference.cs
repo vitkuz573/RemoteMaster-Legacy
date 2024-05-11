@@ -8,7 +8,7 @@ namespace RemoteMaster.Server.Components.Library.Abstractions;
 
 public interface IDialogReference
 {
-    Guid DialogId { get; }
+    Guid Id { get; }
 
     RenderFragment Content { get; }
 

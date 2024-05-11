@@ -16,24 +16,24 @@ public partial class DialogProvider
         DialogService.OnShowDialog += AddDialog;
     }
 
-    private void AddDialog(IDialogReference dialogReference)
+    private void AddDialog(IDialogReference dialogRef)
     {
-        Log.Information("Adding dialog with ID: {DialogId}", dialogReference.DialogId);
+        Log.Information("Adding dialog with ID: {DialogId}", dialogRef.Id);
         
-        dialogReference.Instance.OnClose += () => RemoveDialog(dialogReference);
+        dialogRef.Instance.OnClose += () => RemoveDialog(dialogRef);
 
-        _dialogs.Add(dialogReference);
+        _dialogs.Add(dialogRef);
 
         InvokeAsync(StateHasChanged);
     }
 
-    private void RemoveDialog(IDialogReference dialogReference)
+    private void RemoveDialog(IDialogReference dialogRef)
     {
-        if (dialogReference != null)
+        if (dialogRef != null)
         {
-            Log.Information("Removing dialog with ID: {DialogId}", dialogReference.DialogId);
+            Log.Information("Removing dialog with ID: {DialogId}", dialogRef.Id);
             
-            _dialogs.Remove(dialogReference);
+            _dialogs.Remove(dialogRef);
             
             InvokeAsync(StateHasChanged);
         }
