@@ -63,9 +63,11 @@ public class DialogService : IDialogWindowService
 
         var dialogInstance = new RenderFragment(builder =>
         {
-            builder.OpenComponent(0, typeof(DialogInstance));
-            builder.AddAttribute(1, "Title", title);
-            builder.AddAttribute(2, "Id", dialogReference.Id);
+            builder.OpenComponent<DialogInstance>(0);
+            builder.SetKey(dialogReference.Id);
+            builder.AddAttribute(1, nameof(DialogInstance.Title), title);
+            builder.AddAttribute(2, nameof(DialogInstance.Content), dialogContent);
+            builder.AddAttribute(3, nameof(DialogInstance.Id), dialogReference.Id);
             builder.CloseComponent();
         });
 

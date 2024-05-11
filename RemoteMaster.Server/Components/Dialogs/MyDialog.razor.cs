@@ -12,9 +12,6 @@ public partial class MyDialog : ComponentBase
     [CascadingParameter]
     private DialogInstance Dialog { get; set; }
 
-    [Parameter]
-    public string Title { get; set; }
-
 #pragma warning disable
     private void OnCancel()
     {
