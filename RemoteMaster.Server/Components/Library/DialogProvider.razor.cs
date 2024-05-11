@@ -3,13 +3,14 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Components;
+using RemoteMaster.Server.Components.Library.Abstractions;
 using Serilog;
 
 namespace RemoteMaster.Server.Components.Library;
 
 public partial class DialogProvider
 {
-    private readonly Dictionary<Guid, (RenderFragment, DialogInstance)> _dialogs = [];
+    private readonly List<IDialogReference> _dialogs = [];
 
     protected override void OnInitialized()
     {
@@ -23,7 +24,8 @@ public partial class DialogProvider
         var dialogInstance = new DialogInstance();
         dialogInstance.OnClose += () => RemoveDialog(dialogId);
 
-        _dialogs[dialogId] = (dialog, dialogInstance);
+        var dialogReference = new DialogReference(dialogId, dialog, dialogInstance);
+        _dialogs.Add(dialogReference);
 
         InvokeAsync(StateHasChanged);
     }
@@ -31,8 +33,13 @@ public partial class DialogProvider
     private void RemoveDialog(Guid dialogId)
     {
         Log.Information("Removing dialog with ID: {DialogId}", dialogId);
-
-        _dialogs.Remove(dialogId);
+        
+        var dialogToRemove = _dialogs.FirstOrDefault(d => d.DialogId == dialogId);
+        
+        if (dialogToRemove != null)
+        {
+            _dialogs.Remove(dialogToRemove);
+        }
 
         InvokeAsync(StateHasChanged);
     }

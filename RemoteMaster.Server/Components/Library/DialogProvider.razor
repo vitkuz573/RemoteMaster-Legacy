@@ -2,9 +2,9 @@
 
 @inject IDialogWindowService DialogService
 
-@foreach (var dialog in _dialogs.Values)
+@foreach (var dialogRef in _dialogs)
 {
-    <CascadingValue Value="dialog.Item2">
-        @dialog.Item1
+    <CascadingValue Value="dialogRef.Instance">
+        @dialogRef.Content
     </CascadingValue>
 }
