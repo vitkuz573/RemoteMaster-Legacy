@@ -1,0 +1,24 @@
+﻿@switch (Typo)
+{
+    case "h1":
+        <h1 class="@TextClass" @attributes="AdditionalAttributes">@Content</h1>
+        break;
+    case "h2":
+        <h2 class="@TextClass" @attributes="AdditionalAttributes">@Content</h2>
+        break;
+    case "h3":
+        <h3 class="@TextClass" @attributes="AdditionalAttributes">@Content</h3>
+        break;
+    case "h4":
+        <h4 class="@TextClass" @attributes="AdditionalAttributes">@Content</h4>
+        break;
+    case "h5":
+        <h5 class="@TextClass" @attributes="AdditionalAttributes">@Content</h5>
+        break;
+    case "h6":
+        <h6 class="@TextClass" @attributes="AdditionalAttributes">@Content</h6>
+        break;
+    default:
+        <span class="@TextClass" @attributes="AdditionalAttributes">@Content</span>
+        break;
+}
