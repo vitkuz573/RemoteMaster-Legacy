@@ -1,12 +1,15 @@
-﻿<div>
-    <CascadingValue Value="true" IsFixed Name="IsNested">
-        @DialogContent
-    </CascadingValue>
-</div>
-
-@if (DialogActions != null)
+﻿@if (!IsInline)
 {
     <div>
-        @DialogActions
+        <CascadingValue Value="true" IsFixed Name="IsNested">
+            @DialogContent
+        </CascadingValue>
     </div>
+    
+    @if (DialogActions != null)
+    {
+        <div class="flex justify-end space-x-2">
+            @DialogActions
+        </div>
+    }    
 }
