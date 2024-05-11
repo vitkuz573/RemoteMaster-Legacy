@@ -8,7 +8,7 @@ namespace RemoteMaster.Server.Components.Library;
 
 public partial class DialogInstance : ComponentBase, IDisposable
 {
-    private string _elementId = "dialog_" + Guid.NewGuid().ToString().Substring(0, 8);
+    private readonly string _elementId = $"dialog_{Guid.NewGuid().ToString()[..8]}";
 
     [CascadingParameter]
     private DialogProvider Parent { get; set; }
