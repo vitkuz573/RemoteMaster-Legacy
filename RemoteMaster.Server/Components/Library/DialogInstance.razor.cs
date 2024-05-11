@@ -105,7 +105,7 @@ public partial class DialogInstance : ComponentBase, IDisposable
         NoHeader = SetHideHeader();
         CloseButton = SetCloseButton();
         FullWidth = SetFullWidth();
-        FullScreen = SetFulScreen();
+        FullScreen = SetFullScreen();
         BackdropClick = SetBackdropClick();
         CloseOnEscapeKey = SetCloseOnEscapeKey();
     }
@@ -125,7 +125,7 @@ public partial class DialogInstance : ComponentBase, IDisposable
         return false;
     }
 
-    private bool SetFulScreen()
+    private bool SetFullScreen()
     {
         if (Options.FullScreen.HasValue)
         {
