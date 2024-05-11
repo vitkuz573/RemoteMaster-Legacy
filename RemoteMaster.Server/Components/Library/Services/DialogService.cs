@@ -14,9 +14,8 @@ public class DialogService : IDialogWindowService
 
     public Task<IDialogReference> ShowAsync<T>(string title) where T : IComponent
     {
-        var dialogId = Guid.NewGuid();
-        var dialogInstance = new DialogInstance();
-        IDialogReference dialogReference = new DialogReference(dialogId, dialogInstance);
+        var dialogReference = CreateReference();
+
         var dialogFragment = new RenderFragment(builder =>
         {
             builder.OpenComponent(0, typeof(T));
@@ -26,7 +25,7 @@ public class DialogService : IDialogWindowService
 
         dialogReference.InjectRenderFragment(dialogFragment);
 
-        Log.Information("Creating dialog of type {DialogType} with title '{Title}' and ID {DialogId}", typeof(T).Name, title, dialogId);
+        Log.Information("Creating dialog of type {DialogType} with title '{Title}' and ID {DialogId}", typeof(T).Name, title, dialogReference.Id);
         OnDialogInstanceAdded?.Invoke(dialogReference);
 
         return Task.FromResult(dialogReference);
@@ -34,9 +33,7 @@ public class DialogService : IDialogWindowService
 
     public Task<(bool, IDialogReference)> ShowMessageBox(string title, string message, string confirmText = "OK", string cancelText = "Cancel")
     {
-        var dialogId = Guid.NewGuid();
-        var dialogInstance = new DialogInstance();
-        IDialogReference dialogReference = new DialogReference(dialogId, dialogInstance);
+        var dialogReference = CreateReference();
         var confirmationResult = new TaskCompletionSource<bool>();
 
         var dialogFragment = new RenderFragment(builder =>
@@ -52,10 +49,15 @@ public class DialogService : IDialogWindowService
 
         dialogReference.InjectRenderFragment(dialogFragment);
 
-        Log.Information("Creating confirmation dialog with title '{Title}' and ID {DialogId}", title, dialogId);
+        Log.Information("Creating confirmation dialog with title '{Title}' and ID {DialogId}", title, dialogReference.Id);
         
         OnDialogInstanceAdded?.Invoke(dialogReference);
 
         return confirmationResult.Task.ContinueWith(task => (task.Result, dialogReference));
+    }
+
+    public IDialogReference CreateReference()
+    {
+        return new DialogReference(Guid.NewGuid(), new DialogInstance());
     }
 }
