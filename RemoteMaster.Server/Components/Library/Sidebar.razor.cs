@@ -2,9 +2,9 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Globalization;
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Components.Library.Enums;
+using RemoteMaster.Server.Components.Library.Extensions;
 using RemoteMaster.Server.Components.Library.Utilities;
 
 namespace RemoteMaster.Server.Components.Library;
@@ -39,10 +39,10 @@ public partial class Sidebar
     public int AnimationDurationMs { get; set; } = 500;
 
     [Parameter]
-    public double SwitchOpacityOpen { get; set; } = 1.0;
+    public Opacity SwitchOpacityOpen { get; set; } = Opacity.Full;
 
     [Parameter]
-    public double SwitchOpacityClosed { get; set; } = 0.5;
+    public Opacity SwitchOpacityClosed { get; set; } = Opacity.Fifty;
 
     [Parameter]
     public EventCallback<bool> OnToggle { get; set; }
@@ -96,14 +96,10 @@ public partial class Sidebar
             .AddBase("absolute inset-y-1/2 flex h-10 w-5 cursor-pointer items-center justify-center")
             .Add(Theme == Theme.Dark ? "bg-gray-800 text-white" : "bg-gray-300 text-black")
             .Add(Position == SidebarPosition.Right ? "rounded-bl-full rounded-tl-full -left-5" : "rounded-br-full rounded-tr-full -right-5")
-            .Add("transition-opacity duration-300");
+            .Add("transition-opacity duration-300")
+            .Add(_isSidebarOpen ? SwitchOpacityOpen.ToCss() : SwitchOpacityClosed.ToCss());
 
         return builder.BuildClasses();
-    }
-
-    private string GetSwitchOpacity()
-    {
-        return (_isSidebarOpen ? SwitchOpacityOpen : SwitchOpacityClosed).ToString("0.##", CultureInfo.InvariantCulture);
     }
 
     private string GetSwitchIcon()
