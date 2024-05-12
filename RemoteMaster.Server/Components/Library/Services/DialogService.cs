@@ -225,6 +225,55 @@ public class DialogService : IDialogWindowService
         }
     }
 
+    public Task<bool?> ShowMessageBox(string title, string message, string yesText = "OK", string? noText = null, string? cancelText = null, DialogOptions? options = null)
+    {
+        return ShowMessageBox(new MessageBoxOptions
+        {
+            Title = title,
+            Message = message,
+            YesText = yesText,
+            NoText = noText,
+            CancelText = cancelText,
+        }, options);
+    }
+
+    public Task<bool?> ShowMessageBox(string title, MarkupString markupMessage, string yesText = "OK", string? noText = null, string? cancelText = null, DialogOptions? options = null)
+    {
+        return ShowMessageBox(new MessageBoxOptions
+        {
+            Title = title,
+            MarkupMessage = markupMessage,
+            YesText = yesText,
+            NoText = noText,
+            CancelText = cancelText,
+        }, options);
+    }
+
+    public async Task<bool?> ShowMessageBox(MessageBoxOptions messageBoxOptions, DialogOptions? options = null)
+    {
+        ArgumentNullException.ThrowIfNull(messageBoxOptions);
+
+        var parameters = new DialogParameters()
+        {
+            [nameof(MessageBoxOptions.Title)] = messageBoxOptions.Title,
+            [nameof(MessageBoxOptions.Message)] = messageBoxOptions.Message,
+            [nameof(MessageBoxOptions.MarkupMessage)] = messageBoxOptions.MarkupMessage,
+            [nameof(MessageBoxOptions.CancelText)] = messageBoxOptions.CancelText,
+            [nameof(MessageBoxOptions.NoText)] = messageBoxOptions.NoText,
+            [nameof(MessageBoxOptions.YesText)] = messageBoxOptions.YesText,
+        };
+        
+        var reference = await ShowAsync<MessageBox>(title: messageBoxOptions.Title, parameters: parameters, options: options);
+        var result = await reference.Result;
+        
+        if (result.Canceled || result.Data is not bool data)
+        {
+            return null;
+        }
+
+        return data;
+    }
+
     public void Close(IDialogReference dialog)
     {
         Close(dialog, DialogResult.Ok<object>(null));

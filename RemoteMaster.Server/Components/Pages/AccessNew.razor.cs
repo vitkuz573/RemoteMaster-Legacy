@@ -42,4 +42,13 @@ public partial class AccessNew
 
         await DialogService.ShowAsync<MyDialog>("Header", parameters, options);
     }
+
+    private async Task ShowMessageBox()
+    {
+        await DialogService.ShowMessageBox(new MessageBoxOptions()
+        {
+            Title = "messagebox",
+            Message = "test"
+        });
+    }
 }

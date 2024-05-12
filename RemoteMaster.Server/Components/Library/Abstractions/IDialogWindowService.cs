@@ -58,4 +58,10 @@ public interface IDialogWindowService
     Task<IDialogReference> ShowAsync<T>(string title, DialogParameters parameters) where T : IComponent;
 
     Task<IDialogReference> ShowAsync<T>(string title, DialogParameters parameters, DialogOptions options) where T : IComponent;
+
+    Task<bool?> ShowMessageBox(string title, string message, string yesText = "OK", string? noText = null, string? cancelText = null, DialogOptions? options = null);
+
+    Task<bool?> ShowMessageBox(string title, MarkupString markupMessage, string yesText = "OK", string? noText = null, string? cancelText = null, DialogOptions? options = null);
+
+    Task<bool?> ShowMessageBox(MessageBoxOptions messageBoxOptions, DialogOptions? options = null);
 }
