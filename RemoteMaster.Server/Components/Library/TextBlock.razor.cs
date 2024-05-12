@@ -3,19 +3,20 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Components;
+using RemoteMaster.Server.Components.Library.Enums;
 
 namespace RemoteMaster.Server.Components.Library;
 
 public partial class TextBlock
 {
     [Parameter]
-    public string Content { get; set; } = string.Empty;
+    public RenderFragment ChildContent { get; set; }
 
     [Parameter]
     public string TextClass { get; set; } = string.Empty;
 
     [Parameter]
-    public string Typo { get; set; } = "span";
+    public TypoType Typo { get; set; } = TypoType.Span;
 
 #pragma warning disable CA2227
     [Parameter]

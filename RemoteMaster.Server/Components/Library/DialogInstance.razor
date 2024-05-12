@@ -1,4 +1,6 @@
-﻿<div class="fixed inset-0 z-50 flex items-center justify-center">
+﻿@using RemoteMaster.Server.Components.Library.Enums
+
+<div class="fixed inset-0 z-50 flex items-center justify-center">
     <Overlay OnClick="HandleBackgroundClickAsync" />
     <div id="@_elementId" class="z-10 w-full max-w-md rounded-lg bg-white p-4 shadow-lg" @onclick:stopPropagation>
         <div id="_@Id.ToString("N")" role="dialog">
@@ -7,7 +9,7 @@
                 <div>
                     @if (TitleContent == null)
                     {
-                        <TextBlock Typo="h2" TextClass="text-lg font-semibold" Content="@Title" />
+                        <TextBlock Typo="TypoType.H2" TextClass="text-lg font-semibold">@Title</TextBlock>
                     }
                     else
                     {
