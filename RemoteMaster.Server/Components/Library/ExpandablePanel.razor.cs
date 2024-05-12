@@ -66,11 +66,10 @@ public partial class ExpandablePanel
 
     private string GetIconClasses()
     {
-        var rotation = IsExpanded ? TransformRotation.Rotate90 : TransformRotation.None;
         var builder = new CssClassBuilder()
             .AddBase("material-icons mr-2")
             .Add(Transition.Transform.ToCss())
-            .Add(rotation.ToCss());
+            .Add(TransformRotation.Rotate90.ToCss(), IsExpanded);
 
         return builder.Build();
     }
