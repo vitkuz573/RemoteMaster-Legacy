@@ -28,6 +28,11 @@ public partial class AccessNew
 
     private async Task ShowInformationDialog()
     {
+        var parameters = new DialogParameters<MyDialog>
+        {
+            { x => x.Param, "Param Value" }
+        };
+
         var options = new DialogOptions
         {
             BackdropClick = true,
@@ -35,6 +40,6 @@ public partial class AccessNew
             FullScreen = true,
         };
 
-        await DialogService.ShowAsync<MyDialog>("Header", options);
+        await DialogService.ShowAsync<MyDialog>("Header", parameters, options);
     }
 }

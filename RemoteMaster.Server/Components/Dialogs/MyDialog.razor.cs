@@ -12,6 +12,9 @@ public partial class MyDialog : ComponentBase
     [CascadingParameter]
     private DialogInstance Dialog { get; set; }
 
+    [Parameter]
+    public string Param { get; set; }
+
     private void OnCancel()
     {
         Dialog.Close();

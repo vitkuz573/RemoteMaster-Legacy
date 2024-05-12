@@ -45,7 +45,7 @@ public class DialogService : IDialogWindowService
     public event Action<IDialogReference> OnDialogInstanceAdded;
     public event Action<IDialogReference, DialogResult> OnDialogCloseRequested;
 
-    public IDialogReference Show(Type contentComponent, string title, DialogOptions options)
+    public IDialogReference Show(Type contentComponent, string title, DialogParameters parameters, DialogOptions options)
     {
         if (!typeof(IComponent).IsAssignableFrom(contentComponent))
         {
@@ -59,6 +59,12 @@ public class DialogService : IDialogWindowService
             var i = 0;
 
             builder.OpenComponent(i++, contentComponent);
+
+            foreach (var parameter in parameters)
+            {
+                builder.AddAttribute(i++, parameter.Key, parameter.Value);
+            }
+
             builder.AddComponentReferenceCapture(i++, inst => { dialogReference.InjectDialog(inst); });
             builder.CloseComponent();
         }));
@@ -81,14 +87,14 @@ public class DialogService : IDialogWindowService
         return dialogReference;
     }
 
-    public Task<IDialogReference> ShowAsync<T>(string title, DialogOptions options) where T : IComponent
+    public Task<IDialogReference> ShowAsync<T>(string title, DialogParameters parameters, DialogOptions options) where T : IComponent
     {
-        return ShowAsync(typeof(T), title, options);
+        return ShowAsync(typeof(T), title, parameters, options);
     }
 
-    public async Task<IDialogReference> ShowAsync(Type contentComponent, string title, DialogOptions options)
+    public async Task<IDialogReference> ShowAsync(Type contentComponent, string title, DialogParameters parameters, DialogOptions options)
     {
-        var dialogReference = Show(contentComponent, title, options);
+        var dialogReference = Show(contentComponent, title, parameters, options);
 
         return dialogReference;
     }

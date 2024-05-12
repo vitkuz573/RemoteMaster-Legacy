@@ -13,11 +13,11 @@ public interface IDialogWindowService
 
     event Action<IDialogReference, DialogResult> OnDialogCloseRequested;
 
-    IDialogReference Show(Type contentComponent, string title, DialogOptions options);
+    IDialogReference Show(Type contentComponent, string title, DialogParameters parameters, DialogOptions options);
 
-    Task<IDialogReference> ShowAsync<T>(string title, DialogOptions options) where T : IComponent;
+    Task<IDialogReference> ShowAsync<T>(string title, DialogParameters parameters, DialogOptions options) where T : IComponent;
 
-    Task<IDialogReference> ShowAsync(Type contentComponent, string title, DialogOptions options);
+    Task<IDialogReference> ShowAsync(Type contentComponent, string title, DialogParameters parameters, DialogOptions options);
 
     IDialogReference CreateReference();
 
