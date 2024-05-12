@@ -214,7 +214,15 @@ public class DialogService : IDialogWindowService
     {
         var dialogReference = Show(contentComponent, title, parameters, options);
 
-        return dialogReference;
+        using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        var token = cancellationTokenSource.Token;
+
+        await using (token.Register(() => dialogReference.RenderCompleteTaskCompletionSource.TrySetResult(false)))
+        {
+            await dialogReference.RenderCompleteTaskCompletionSource.Task;
+
+            return dialogReference;
+        }
     }
 
     public void Close(IDialogReference dialog)

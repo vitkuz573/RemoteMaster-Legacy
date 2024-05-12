@@ -16,6 +16,8 @@ public interface IDialogReference
 
     Task<DialogResult> Result { get; }
 
+    TaskCompletionSource<bool> RenderCompleteTaskCompletionSource { get; }
+
     void Close();
 
     void Close(DialogResult result);

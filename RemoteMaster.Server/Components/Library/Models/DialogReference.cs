@@ -19,6 +19,8 @@ public class DialogReference(Guid dialogId, IDialogWindowService dialogService) 
 
     public Task<DialogResult> Result => _resultCompletion.Task;
 
+    TaskCompletionSource<bool> IDialogReference.RenderCompleteTaskCompletionSource { get; } = new();
+
     public void Close()
     {
         dialogService.Close(this);
