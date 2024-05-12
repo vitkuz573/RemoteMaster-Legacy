@@ -30,6 +30,7 @@ public class CssClassBuilder
     public CssClassBuilder Remove(string className)
     {
         _conditions.RemoveAll(c => c.ClassName == className);
+
         return this;
     }
 
