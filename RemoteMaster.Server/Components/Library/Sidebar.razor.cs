@@ -70,8 +70,10 @@ public partial class Sidebar
     {
         var builder = new CssClassBuilder()
             .AddBase("fixed top-0 h-full shadow-lg p-5 transition-all duration-500 ease-out")
-            .Add(Theme == Theme.Dark ? "bg-gray-800 text-white" : "bg-white text-gray-900")
-            .Add(Position == SidebarPosition.Right ? "right-0" : "left-0");
+            .Add("bg-gray-800 text-white", Theme == Theme.Dark)
+            .Add("bg-white text-gray-900", Theme == Theme.Light)
+            .Add("right-0", Position == SidebarPosition.Right)
+            .Add("left-0", Position == SidebarPosition.Left);
 
         return builder.Build();
     }
@@ -90,9 +92,12 @@ public partial class Sidebar
     {
         var builder = new CssClassBuilder()
             .AddBase("absolute inset-y-1/2 flex h-10 w-5 cursor-pointer items-center justify-center transition-opacity duration-300")
-            .Add(Theme == Theme.Dark ? "bg-gray-800 text-white" : "bg-gray-300 text-black")
-            .Add(Position == SidebarPosition.Right ? "rounded-bl-full rounded-tl-full -left-5" : "rounded-br-full rounded-tr-full -right-5")
-            .Add(_isSidebarOpen ? SwitchOpacityOpen.ToCss() : SwitchOpacityClosed.ToCss());
+            .Add("bg-gray-800 text-white", Theme == Theme.Dark)
+            .Add("bg-gray-300 text-black", Theme == Theme.Light)
+            .Add("rounded-bl-full rounded-tl-full -left-5", Position == SidebarPosition.Right)
+            .Add("rounded-br-full rounded-tr-full -right-5", Position == SidebarPosition.Left)
+            .Add(SwitchOpacityOpen.ToCss(), _isSidebarOpen)
+            .Add(SwitchOpacityClosed.ToCss(), !_isSidebarOpen);
 
         return builder.Build();
     }
