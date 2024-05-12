@@ -5,6 +5,7 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Components.Library.Enums;
+using RemoteMaster.Server.Components.Library.Utilities;
 
 namespace RemoteMaster.Server.Components.Library;
 
@@ -141,38 +142,35 @@ public partial class Sidebar
         }
     }
 
-    private string GetSwitchOpacity()
+    private string GetDynamicStyle()
     {
-        return (_isSidebarOpen ? SwitchOpacityOpen : SwitchOpacityClosed).ToString("0.##", CultureInfo.InvariantCulture);
+        return $"transition-duration:{AnimationDurationMs}ms; {(Position == SidebarPosition.Right ? "right" : "left")}:{(_isSidebarOpen ? "0" : $"-{WidthPx}px")}; width:{WidthPx}px";
     }
 
     private string GetSidebarClasses()
     {
-        var themeClass = Theme == Theme.Dark ? DarkThemeClass : LightThemeClass;
-        var positionClass = Position == SidebarPosition.Right ? "right-0" : "left-0";
-
-        return $"{BaseStyleClass} {TransitionClasses} {themeClass} fixed top-0 {positionClass} h-full";
+        return new CssClassBuilder()
+            .AddBase("fixed top-0 h-full")
+            .Add("shadow-lg p-5")
+            .Add(Theme == Theme.Dark ? "bg-gray-800 text-white" : "bg-white text-gray-900")
+            .Add(Position == SidebarPosition.Right ? "right-0" : "left-0")
+            .Add("transition-all duration-500 ease-out")
+            .Build();
     }
 
     private string GetSwitchClasses()
     {
-        var baseSwitchClass = Theme == Theme.Dark ? DarkSwitchClass : LightSwitchClass;
-        
-        string switchPositionClass;
-        string roundedClasses;
+        return new CssClassBuilder()
+            .AddBase("absolute inset-y-1/2 flex h-10 w-5 cursor-pointer items-center justify-center")
+            .Add(Theme == Theme.Dark ? "bg-gray-800 text-white" : "bg-gray-300 text-black")
+            .Add(Position == SidebarPosition.Right ? "rounded-bl-full rounded-tl-full -left-5" : "rounded-br-full rounded-tr-full -right-5")
+            .Add("transition-opacity duration-300")
+            .Build();
+    }
 
-        if (Position == SidebarPosition.Right)
-        {
-            switchPositionClass = "-left-5";
-            roundedClasses = "rounded-bl-full rounded-tl-full";
-        }
-        else
-        {
-            switchPositionClass = "-right-5";
-            roundedClasses = "rounded-br-full rounded-tr-full";
-        }
-
-        return $"{baseSwitchClass} absolute inset-y-1/2 {switchPositionClass} flex h-10 w-5 cursor-pointer items-center justify-center {roundedClasses} transition-opacity duration-300";
+    private string GetSwitchOpacity()
+    {
+        return (_isSidebarOpen ? SwitchOpacityOpen : SwitchOpacityClosed).ToString("0.##", CultureInfo.InvariantCulture);
     }
 
     private string GetSwitchIcon()
