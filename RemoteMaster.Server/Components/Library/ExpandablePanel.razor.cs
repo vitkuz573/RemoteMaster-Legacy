@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Components;
+using RemoteMaster.Server.Components.Library.Utilities;
 
 namespace RemoteMaster.Server.Components.Library;
 
@@ -49,4 +50,32 @@ public partial class ExpandablePanel
             IsExpanded = !IsExpanded;
         }
     }
+
+    private string GetPanelClasses()
+    {
+        var builder = new CssClassBuilder()
+            .AddBase(CustomClass ?? "")
+            .AddBase("mb-4")
+            .Add("cursor-pointer", !IsDisabled);
+
+        return builder.Build();
+    }
+
+    private string GetIconStyles()
+    {
+        var builder = new CssStyleBuilder()
+            .Add("transition-duration", $"{AnimationDurationMs}ms")
+            .Add("transform", IsExpanded ? "rotate(90deg)" : "rotate(0deg)");
+
+        return builder.Build();
+    }
+
+    private string GetContentStyles()
+    {
+        var builder = new CssStyleBuilder()
+            .Add("transition-duration", $"{AnimationDurationMs}ms");
+
+        return builder.Build();
+    }
 }
+

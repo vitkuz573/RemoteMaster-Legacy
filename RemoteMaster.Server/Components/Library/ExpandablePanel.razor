@@ -1,13 +1,13 @@
-﻿<div class="@(CustomClass ?? "") mb-4">
-    <h3 class="flex cursor-pointer items-center text-sm font-semibold" @onclick="Toggle" aria-expanded="@IsExpanded" aria-disabled="@IsDisabled" aria-label="@AriaLabel">
+﻿<div class="@GetPanelClasses()">
+    <h3 class="flex items-center text-sm font-semibold" @onclick="Toggle" aria-expanded="@IsExpanded" aria-disabled="@IsDisabled" aria-label="@AriaLabel">
         @if (HeaderContent != null)
         {
             @HeaderContent
         }
         else
         {
-            <span class="material-icons mr-2 transition-transform" style="transform:@(IsExpanded ? "rotate(90deg)" : "rotate(0deg)"); transition-duration: @(AnimationDurationMs)ms;">
-                @(Icon)
+            <span class="material-icons mr-2 transition-transform" style="@GetIconStyles()">
+                @Icon
             </span>
             @Title
         }
@@ -15,7 +15,7 @@
 
     @if (IsExpanded)
     {
-        <div class="ml-4 mt-2 transition-all" style="transition-duration:@(AnimationDurationMs)ms;">
+        <div class="ml-4 mt-2 transition-all" style="@GetContentStyles()">
             @ChildContent
         </div>
     }
