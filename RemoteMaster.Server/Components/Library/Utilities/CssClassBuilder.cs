@@ -7,34 +7,38 @@ using RemoteMaster.Server.Components.Library.Models;
 
 namespace RemoteMaster.Server.Components.Library.Utilities;
 
-public class CssClassBuilder
+public class CssBuilder
 {
     private readonly List<string> _baseClasses = [];
     private readonly List<CssClassCondition> _conditions = [];
-    private readonly Dictionary<string, CssClassBuilder> _mediaQueries = [];
+    private readonly Dictionary<string, CssBuilder> _mediaQueries = [];
+    private readonly Dictionary<string, string> _styles = [];
 
-    public CssClassBuilder AddBase(string className)
+    public CssBuilder AddBase(string className)
     {
         _baseClasses.Add(className);
-        
+       
         return this;
     }
 
-    public CssClassBuilder Add(string className, bool condition = true, bool important = false)
+    public CssBuilder Add(string className, bool condition = true, bool important = false)
     {
-        _conditions.Add(new CssClassCondition(className, condition, important));
+        if (condition)
+        {
+            _conditions.Add(new CssClassCondition(className, condition, important));
+        }
         
         return this;
     }
 
-    public CssClassBuilder Remove(string className)
+    public CssBuilder Remove(string className)
     {
         _conditions.RemoveAll(c => c.ClassName == className);
 
         return this;
     }
 
-    public CssClassBuilder Toggle(string className, bool condition)
+    public CssBuilder Toggle(string className, bool condition)
     {
         var existingCondition = _conditions.FirstOrDefault(c => c.ClassName == className);
         
@@ -50,11 +54,18 @@ public class CssClassBuilder
         return this;
     }
 
-    public CssClassBuilder AddMediaQuery(string query, Action<CssClassBuilder> configure)
+    public CssBuilder AddStyle(string property, string value)
+    {
+        _styles[property] = value;
+
+        return this;
+    }
+
+    public CssBuilder AddMediaQuery(string query, Action<CssBuilder> configure)
     {
         ArgumentNullException.ThrowIfNull(configure);
 
-        var builder = new CssClassBuilder();
+        var builder = new CssBuilder();
 
         configure(builder);
         _mediaQueries[query] = builder;
@@ -62,10 +73,9 @@ public class CssClassBuilder
         return this;
     }
 
-    public string Build()
+    public string BuildClasses()
     {
         var builder = new StringBuilder();
-
         builder.Append(string.Join(" ", _baseClasses.Distinct()));
 
         foreach (var condition in _conditions)
@@ -86,16 +96,20 @@ public class CssClassBuilder
             }
         }
 
-        foreach (var (query, innerBuilder) in _mediaQueries)
-        {
-            if (builder.Length > 0)
-            {
-                builder.Append(' ');
-            }
-
-            builder.Append($"@media {query} {{ {innerBuilder.Build()} }}");
-        }
-
         return builder.ToString().Trim();
     }
+
+    public string BuildStyles()
+    {
+        return string.Join("; ", _styles.Select(kvp => $"{kvp.Key}: {kvp.Value}"));
+    }
+
+    public string Build()
+    {
+        var classes = BuildClasses();
+        var styles = BuildStyles();
+
+        return $"{classes}{(classes.Length > 0 && styles.Length > 0 ? "; " : "")}{styles}";
+    }
 }
+

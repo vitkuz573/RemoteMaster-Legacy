@@ -3,7 +3,7 @@
 
 @inject IThemeService ThemeService
 
-<div style="@GetDynamicStyle()" class="@GetSidebarClasses()">
+<div style="@GetDynamicStyles()" class="@GetSidebarClasses()">
     <h2 class="mb-4 text-lg font-bold">@Title</h2>
     @ChildContent
     <div class="@GetSwitchClasses()" style="opacity:@(GetSwitchOpacity())" @onclick="ToggleSidebar">
