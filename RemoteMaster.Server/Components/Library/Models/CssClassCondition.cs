@@ -1,0 +1,14 @@
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+// This file is part of the RemoteMaster project.
+// Licensed under the GNU Affero General Public License v3.0.
+
+namespace RemoteMaster.Server.Components.Library.Models;
+
+public class CssClassCondition(string className, bool condition, bool important = false)
+{
+    public string ClassName { get; set; } = className;
+
+    public bool Condition { get; set; } = condition;
+
+    public bool Important { get; set; } = important;
+}
