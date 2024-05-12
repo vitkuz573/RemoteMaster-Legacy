@@ -15,9 +15,9 @@ public class DialogService : IDialogWindowService
         private const string ChildContent = nameof(ChildContent);
         private RenderFragment _renderFragment;
         private RenderHandle _renderHandle;
-        
+
         void IComponent.Attach(RenderHandle renderHandle) => _renderHandle = renderHandle;
-        
+
         Task IComponent.SetParametersAsync(ParameterView parameters)
         {
             if (_renderFragment == null)
@@ -44,6 +44,51 @@ public class DialogService : IDialogWindowService
 
     public event Action<IDialogReference> OnDialogInstanceAdded;
     public event Action<IDialogReference, DialogResult> OnDialogCloseRequested;
+
+    public IDialogReference Show<T>() where T : IComponent
+    {
+        return Show<T>(string.Empty, [], new DialogOptions());
+    }
+
+    public IDialogReference Show<T>(string title) where T : IComponent
+    {
+        return Show<T>(title, [], new DialogOptions());
+    }
+
+    public IDialogReference Show<T>(string title, DialogOptions options) where T : IComponent
+    {
+        return Show<T>(title, [], options);
+    }
+
+    public IDialogReference Show<T>(string title, DialogParameters parameters) where T : IComponent
+    {
+        return Show<T>(title, parameters, new DialogOptions());
+    }
+
+    public IDialogReference Show<T>(string title, DialogParameters parameters, DialogOptions options) where T : IComponent
+    {
+        return Show(typeof(T), title, parameters, options);
+    }
+
+    public IDialogReference Show(Type contentComponent)
+    {
+        return Show(contentComponent, string.Empty, [], new DialogOptions());
+    }
+
+    public IDialogReference Show(Type contentComponent, string title)
+    {
+        return Show(contentComponent, title, [], new DialogOptions());
+    }
+
+    public IDialogReference Show(Type contentComponent, string title, DialogOptions options)
+    {
+        return Show(contentComponent, title, [], options);
+    }
+
+    public IDialogReference Show(Type contentComponent, string title, DialogParameters parameters)
+    {
+        return Show(contentComponent, title, parameters, new DialogOptions());
+    }
 
     public IDialogReference Show(Type contentComponent, string title, DialogParameters parameters, DialogOptions options)
     {
@@ -87,9 +132,49 @@ public class DialogService : IDialogWindowService
         return dialogReference;
     }
 
+    public Task<IDialogReference> ShowAsync<T>() where T : IComponent
+    {
+        return ShowAsync<T>(string.Empty, [], new DialogOptions());
+    }
+
+    public Task<IDialogReference> ShowAsync<T>(string title) where T : IComponent
+    {
+        return ShowAsync<T>(title, [], new DialogOptions());
+    }
+
+    public Task<IDialogReference> ShowAsync<T>(string title, DialogOptions options) where T : IComponent
+    {
+        return ShowAsync<T>(title, [], options);
+    }
+
+    public Task<IDialogReference> ShowAsync<T>(string title, DialogParameters parameters) where T : IComponent
+    {
+        return ShowAsync<T>(title, parameters, new DialogOptions());
+    }
+
     public Task<IDialogReference> ShowAsync<T>(string title, DialogParameters parameters, DialogOptions options) where T : IComponent
     {
         return ShowAsync(typeof(T), title, parameters, options);
+    }
+
+    public Task<IDialogReference> ShowAsync(Type contentComponent)
+    {
+        return ShowAsync(contentComponent, string.Empty, [], new DialogOptions());
+    }
+
+    public Task<IDialogReference> ShowAsync(Type contentComponent, string title)
+    {
+        return ShowAsync(contentComponent, title, [], new DialogOptions());
+    }
+
+    public Task<IDialogReference> ShowAsync(Type contentComponent, string title, DialogOptions options)
+    {
+        return ShowAsync(contentComponent, title, [], options);
+    }
+
+    public Task<IDialogReference> ShowAsync(Type contentComponent, string title, DialogParameters parameters)
+    {
+        return ShowAsync(contentComponent, title, parameters, new DialogOptions());
     }
 
     public async Task<IDialogReference> ShowAsync(Type contentComponent, string title, DialogParameters parameters, DialogOptions options)
