@@ -69,12 +69,14 @@ public partial class DialogInstance : ComponentBase, IDisposable
     {
         Options = options;
         ConfigureInstance();
+
         StateHasChanged();
     }
 
     public void SetTitle(string title)
     {
         Title = title;
+
         StateHasChanged();
     }
 
