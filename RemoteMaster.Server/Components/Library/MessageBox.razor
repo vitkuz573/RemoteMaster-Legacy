@@ -45,7 +45,7 @@
             }
             else if (!string.IsNullOrWhiteSpace(NoText))
             {
-                <MudButton OnClick="OnNoClicked">@NoText</MudButton>
+                <Button OnClick="OnNoClicked" Label="@NoText" />
             }
             @if (YesButton is not null)
             {
