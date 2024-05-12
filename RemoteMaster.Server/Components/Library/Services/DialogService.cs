@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Rendering;
 using RemoteMaster.Server.Components.Library.Abstractions;
 using RemoteMaster.Server.Components.Library.Models;
 
@@ -10,35 +11,63 @@ namespace RemoteMaster.Server.Components.Library.Services;
 
 public class DialogService : IDialogWindowService
 {
-    private class DialogHelperComponent : IComponent
+    private class DialogHelperComponent : ComponentBase
     {
-        private const string ChildContent = nameof(ChildContent);
+        private static readonly Dictionary<RenderFragment, RenderFragment> _fragmentCache = new Dictionary<RenderFragment, RenderFragment>();
         private RenderFragment _renderFragment;
-        private RenderHandle _renderHandle;
 
-        void IComponent.Attach(RenderHandle renderHandle) => _renderHandle = renderHandle;
+        [Parameter]
+        public RenderFragment ChildContent { get; set; }
 
-        Task IComponent.SetParametersAsync(ParameterView parameters)
+        protected override void OnParametersSet()
         {
-            if (_renderFragment == null)
+            if (ChildContent != null)
             {
-                if (parameters.TryGetValue(ChildContent, out _renderFragment))
-                {
-                    _renderHandle.Render(_renderFragment);
-                }
-            }
+                _renderFragment = ChildContent;
 
-            return Task.CompletedTask;
+                StateHasChanged();
+            }
+        }
+
+        protected override void BuildRenderTree(RenderTreeBuilder builder)
+        {
+            ArgumentNullException.ThrowIfNull(builder);
+
+            base.BuildRenderTree(builder);
+
+            if (_renderFragment != null)
+            {
+                builder.AddContent(0, _renderFragment);
+            }
         }
 
         public static RenderFragment Wrap(RenderFragment renderFragment)
         {
-            return new RenderFragment(builder =>
+            if (!_fragmentCache.TryGetValue(renderFragment, out var cachedFragment))
             {
-                builder.OpenComponent<DialogHelperComponent>(1);
-                builder.AddAttribute(2, ChildContent, renderFragment);
-                builder.CloseComponent();
-            });
+                cachedFragment = builder =>
+                {
+                    builder.OpenComponent<DialogHelperComponent>(1);
+                    builder.AddAttribute(2, "ChildContent", renderFragment);
+                    builder.CloseComponent();
+                };
+
+                _fragmentCache[renderFragment] = cachedFragment;
+            }
+
+            return cachedFragment;
+        }
+
+        public override Task SetParametersAsync(ParameterView parameters)
+        {
+            parameters.SetParameterProperties(this);
+
+            if (ChildContent == null)
+            {
+                throw new ArgumentNullException(nameof(ChildContent), "ChildContent cannot be null.");
+            }
+
+            return base.SetParametersAsync(ParameterView.Empty);
         }
     }
 
