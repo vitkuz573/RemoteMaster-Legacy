@@ -61,6 +61,7 @@ public partial class Sidebar
         if (!IsDisabled)
         {
             _isSidebarOpen = !_isSidebarOpen;
+
             await OnToggle.InvokeAsync(_isSidebarOpen);
         }
     }
@@ -88,10 +89,9 @@ public partial class Sidebar
     private string GetSwitchClasses()
     {
         var builder = new CssBuilder()
-            .AddBase("absolute inset-y-1/2 flex h-10 w-5 cursor-pointer items-center justify-center")
+            .AddBase("absolute inset-y-1/2 flex h-10 w-5 cursor-pointer items-center justify-center transition-opacity duration-300")
             .Add(Theme == Theme.Dark ? "bg-gray-800 text-white" : "bg-gray-300 text-black")
             .Add(Position == SidebarPosition.Right ? "rounded-bl-full rounded-tl-full -left-5" : "rounded-br-full rounded-tr-full -right-5")
-            .Add("transition-opacity duration-300")
             .Add(_isSidebarOpen ? SwitchOpacityOpen.ToCss() : SwitchOpacityClosed.ToCss());
 
         return builder.BuildClasses();
