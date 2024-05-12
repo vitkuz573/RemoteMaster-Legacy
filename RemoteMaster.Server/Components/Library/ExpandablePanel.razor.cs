@@ -80,5 +80,21 @@ public partial class ExpandablePanel
 
         return builder.Build();
     }
+
+    private static string GetHeaderClasses()
+    {
+        var builder = new CssClassBuilder()
+            .AddBase("flex items-center text-sm font-semibold");
+
+        return builder.Build();
+    }
+
+    private static string GetContentContainerClasses()
+    {
+        var builder = new CssClassBuilder()
+            .AddBase("ml-4 mt-2 transition-all");
+
+        return builder.Build();
+    }
 }
 

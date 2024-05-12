@@ -1,5 +1,5 @@
 ﻿<div class="@GetPanelClasses()">
-    <h3 class="flex items-center text-sm font-semibold" @onclick="Toggle" aria-expanded="@IsExpanded" aria-disabled="@IsDisabled" aria-label="@AriaLabel">
+    <h3 class="@GetHeaderClasses()" @onclick="Toggle" aria-expanded="@IsExpanded" aria-disabled="@IsDisabled" aria-label="@AriaLabel">
         @if (HeaderContent != null)
         {
             @HeaderContent
@@ -15,7 +15,7 @@
 
     @if (IsExpanded)
     {
-        <div class="ml-4 mt-2 transition-all" style="@GetTransitionStyles()">
+        <div class="@GetContentContainerClasses()" style="@GetTransitionStyles()">
             @ChildContent
         </div>
     }
