@@ -35,7 +35,7 @@
             }
             else if (!string.IsNullOrWhiteSpace(CancelText))
             {
-                <Button OnClick="OnCancelClicked" Label="@CancelText" />
+                <Button OnClick="OnCancelClicked">@CancelText</Button>
             }
             @if (NoButton is not null)
             {
@@ -45,7 +45,7 @@
             }
             else if (!string.IsNullOrWhiteSpace(NoText))
             {
-                <Button OnClick="OnNoClicked" Label="@NoText" />
+                <Button OnClick="OnNoClicked">@NoText</Button>
             }
             @if (YesButton is not null)
             {
@@ -55,7 +55,7 @@
             }
             else if (!string.IsNullOrWhiteSpace(YesText))
             {
-                <Button Color="ButtonColor.Primary" OnClick="OnYesClicked" Label="@YesText" />
+                <Button Color="ButtonColor.Primary" OnClick="OnYesClicked">@YesText</Button>
             }
         </div>
 

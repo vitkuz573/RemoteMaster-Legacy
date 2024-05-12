@@ -7,10 +7,10 @@ using RemoteMaster.Server.Components.Library.Enums;
 
 namespace RemoteMaster.Server.Components.Library;
 
-public partial class Button
+public partial class Button : IHandleEvent
 {
     [Parameter]
-    public string Label { get; set; } = "Button";
+    public RenderFragment ChildContent { get; set; }
 
     [Parameter]
     public bool IsDisabled
