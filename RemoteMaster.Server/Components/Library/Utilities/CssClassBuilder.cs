@@ -9,21 +9,33 @@ namespace RemoteMaster.Server.Components.Library.Utilities;
 
 public class CssClassBuilder
 {
-    private readonly List<string> _baseClasses = [];
+    private readonly HashSet<string> _baseClasses = [];
     private readonly List<CssClassCondition> _conditions = [];
 
-    public CssClassBuilder AddBase(string className)
+    public CssClassBuilder AddBase(string classNames)
     {
-        _baseClasses.Add(className);
+        ArgumentNullException.ThrowIfNull(classNames);
+
+        var classes = classNames.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        
+        foreach (var className in classes)
+        {
+            _baseClasses.Add(className);
+        }
 
         return this;
     }
 
     public CssClassBuilder Add(string className, bool condition = true)
     {
-        if (condition)
+        var existingCondition = _conditions.FirstOrDefault(c => c.ClassName == className);
+        
+        if (existingCondition != null)
         {
-            _conditions.RemoveAll(c => c.ClassName == className);
+            existingCondition.Condition = condition;
+        }
+        else
+        {
             _conditions.Add(new CssClassCondition(className, condition));
         }
 
@@ -49,15 +61,14 @@ public class CssClassBuilder
         {
             Add(className, condition);
         }
-        
+
         return this;
     }
 
     public string Build()
     {
-        var builder = new StringBuilder();
-        builder.Append(string.Join(" ", _baseClasses.Distinct()));
-        
+        var builder = new StringBuilder(string.Join(" ", _baseClasses));
+
         foreach (var condition in _conditions.Where(c => c.Condition))
         {
             if (builder.Length > 0)
@@ -67,8 +78,7 @@ public class CssClassBuilder
 
             builder.Append(condition.ClassName);
         }
-        
+
         return builder.ToString().Trim();
     }
 }
-
