@@ -100,4 +100,29 @@ public static class CssExtensions
         Transition.BackgroundColor => "transition-color",
         _ => throw new ArgumentOutOfRangeException(nameof(transition), transition, null)
     };
+
+    public static string ToCss(this TextSize size) => size switch
+    {
+        TextSize.XS => "text-xs",
+        TextSize.SM => "text-sm",
+        TextSize.Base => "text-base",
+        TextSize.LG => "text-lg",
+        TextSize.XL => "text-xl",
+        TextSize.XXL => "text-2xl",
+        _ => throw new ArgumentOutOfRangeException(nameof(size), size, null)
+    };
+
+    public static string ToCss(this FontWeight weight) => weight switch
+    {
+        FontWeight.Thin => "font-thin",
+        FontWeight.ExtraLight => "font-extralight",
+        FontWeight.Light => "font-light",
+        FontWeight.Normal => "font-normal",
+        FontWeight.Medium => "font-medium",
+        FontWeight.SemiBold => "font-semibold",
+        FontWeight.Bold => "font-bold",
+        FontWeight.ExtraBold => "font-extrabold",
+        FontWeight.Black => "font-black",
+        _ => throw new ArgumentOutOfRangeException(nameof(weight), weight, null)
+    };
 }

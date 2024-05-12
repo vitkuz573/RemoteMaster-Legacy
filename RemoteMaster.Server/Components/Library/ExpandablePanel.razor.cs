@@ -85,7 +85,9 @@ public partial class ExpandablePanel
     private static string GetHeaderClasses()
     {
         var builder = new CssClassBuilder()
-            .AddBase("flex text-sm font-semibold");
+            .AddBase("flex")
+            .Add(TextSize.SM.ToCss())
+            .Add(FontWeight.SemiBold.ToCss());
 
         return builder.Build();
     }
