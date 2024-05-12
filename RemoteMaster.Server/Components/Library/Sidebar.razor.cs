@@ -24,9 +24,6 @@ public partial class Sidebar
     public string IconClosed { get; set; } = "chevron_left";
 
     [Parameter]
-    public string BaseStyleClass { get; set; } = "shadow-lg p-5";
-
-    [Parameter]
     public int WidthPx { get; set; } = 256;
 
     [Parameter]
@@ -71,11 +68,9 @@ public partial class Sidebar
     private string GetSidebarClasses()
     {
         var builder = new CssBuilder()
-            .AddBase("fixed top-0 h-full")
-            .Add(BaseStyleClass)
+            .AddBase("fixed top-0 h-full shadow-lg p-5 transition-all duration-500 ease-out")
             .Add(Theme == Theme.Dark ? "bg-gray-800 text-white" : "bg-white text-gray-900")
-            .Add(Position == SidebarPosition.Right ? "right-0" : "left-0")
-            .Add("transition-all duration-500 ease-out");
+            .Add(Position == SidebarPosition.Right ? "right-0" : "left-0");
 
         return builder.BuildClasses();
     }
