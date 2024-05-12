@@ -78,4 +78,14 @@ public static class CssExtensions
         AlignItems.Baseline => "items-baseline",
         _ => throw new ArgumentOutOfRangeException(nameof(alignItems), alignItems, null)
     };
+
+    public static string ToCss(this TransformRotation rotation) => rotation switch
+    {
+        TransformRotation.None => "",
+        TransformRotation.Rotate90 => "rotate-90",
+        TransformRotation.Rotate180 => "rotate-180",
+        TransformRotation.Rotate270 => "rotate-270",
+        TransformRotation.Rotate360 => "rotate-360",
+        _ => throw new ArgumentOutOfRangeException(nameof(rotation), rotation, null)
+    };
 }

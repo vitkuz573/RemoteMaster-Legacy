@@ -3,6 +3,8 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Components;
+using RemoteMaster.Server.Components.Library.Enums;
+using RemoteMaster.Server.Components.Library.Extensions;
 using RemoteMaster.Server.Components.Library.Utilities;
 
 namespace RemoteMaster.Server.Components.Library;
@@ -64,8 +66,17 @@ public partial class ExpandablePanel
     private string GetIconStyles()
     {
         var builder = new CssStyleBuilder()
-            .Add("transition-duration", $"{AnimationDurationMs}ms")
-            .Add("transform", IsExpanded ? "rotate(90deg)" : "rotate(0deg)");
+            .Add("transition-duration", $"{AnimationDurationMs}ms");
+
+        return builder.Build();
+    }
+
+    private string GetIconClasses()
+    {
+        var rotation = IsExpanded ? TransformRotation.Rotate90 : TransformRotation.None;
+        var builder = new CssClassBuilder()
+            .AddBase("material-icons mr-2 transition-transform")
+            .Add(rotation.ToCss());
 
         return builder.Build();
     }
