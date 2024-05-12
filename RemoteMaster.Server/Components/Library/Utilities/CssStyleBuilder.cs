@@ -3,17 +3,32 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Text;
+using RemoteMaster.Server.Components.Library.Models;
 
 namespace RemoteMaster.Server.Components.Library.Utilities;
 
 public class CssStyleBuilder
 {
-    private readonly Dictionary<string, string> _styles = [];
+    private readonly Dictionary<string, CssStyleCondition> _styles = [];
 
-    public CssStyleBuilder Add(string property, string value, bool important = false)
+    public CssStyleBuilder Add(string property, string value, bool condition = true, bool important = false)
     {
-        _styles[property] = value + (important ? " !important" : "");
-       
+        if (condition)
+        {
+            if (_styles.ContainsKey(property))
+            {
+                _styles[property] = new CssStyleCondition(property, value + (important ? " !important" : ""), condition);
+            }
+            else
+            {
+                _styles.Add(property, new CssStyleCondition(property, value + (important ? " !important" : ""), condition));
+            }
+        }
+        else
+        {
+            _styles.Remove(property);
+        }
+
         return this;
     }
 
@@ -28,16 +43,19 @@ public class CssStyleBuilder
     {
         var builder = new StringBuilder();
 
-        foreach (var kvp in _styles)
+        foreach (var style in _styles.Values)
         {
-            if (builder.Length > 0)
+            if (style.Condition)
             {
-                builder.Append("; ");
-            }
+                if (builder.Length > 0)
+                {
+                    builder.Append("; ");
+                }
 
-            builder.Append($"{kvp.Key}: {kvp.Value}");
+                builder.Append($"{style.Property}: {style.Value}");
+            }
         }
 
-        return builder.ToString();
+        return builder.ToString().TrimEnd();
     }
 }

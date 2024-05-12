@@ -82,7 +82,8 @@ public partial class Sidebar
     {
         var builder = new CssStyleBuilder()
             .Add("transition-duration", $"{AnimationDurationMs}ms")
-            .Add(Position == SidebarPosition.Right ? "right" : "left", _isSidebarOpen ? "0" : $"-{WidthPx}px")
+            .Add("right", _isSidebarOpen ? "0" : $"-{WidthPx}px", Position == SidebarPosition.Right)
+            .Add("left", _isSidebarOpen ? "0" : $"-{WidthPx}px", Position == SidebarPosition.Left)
             .Add("width", $"{WidthPx}px");
 
         return builder.Build();
