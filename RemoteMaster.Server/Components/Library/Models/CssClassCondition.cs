@@ -4,11 +4,9 @@
 
 namespace RemoteMaster.Server.Components.Library.Models;
 
-public class CssClassCondition(string className, bool condition, bool important = false)
+public class CssClassCondition(string className, bool condition)
 {
     public string ClassName { get; set; } = className;
 
     public bool Condition { get; set; } = condition;
-
-    public bool Important { get; set; } = important;
 }

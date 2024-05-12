@@ -11,20 +11,20 @@ public class CssClassBuilder
 {
     private readonly List<string> _baseClasses = [];
     private readonly List<CssClassCondition> _conditions = [];
-    private readonly Dictionary<string, CssClassBuilder> _mediaQueries = [];
 
     public CssClassBuilder AddBase(string className)
     {
         _baseClasses.Add(className);
-        
+
         return this;
     }
 
-    public CssClassBuilder Add(string className, bool condition = true, bool important = false)
+    public CssClassBuilder Add(string className, bool condition = true)
     {
         if (condition)
         {
-            _conditions.Add(new CssClassCondition(className, condition, important));
+            _conditions.RemoveAll(c => c.ClassName == className);
+            _conditions.Add(new CssClassCondition(className, condition));
         }
 
         return this;
@@ -33,14 +33,14 @@ public class CssClassBuilder
     public CssClassBuilder Remove(string className)
     {
         _conditions.RemoveAll(c => c.ClassName == className);
-        
+
         return this;
     }
 
     public CssClassBuilder Toggle(string className, bool condition)
     {
         var existingCondition = _conditions.FirstOrDefault(c => c.ClassName == className);
-       
+        
         if (existingCondition != null)
         {
             existingCondition.Condition = condition;
@@ -49,19 +49,7 @@ public class CssClassBuilder
         {
             Add(className, condition);
         }
-
-        return this;
-    }
-
-    public CssClassBuilder AddMediaQuery(string query, Action<CssClassBuilder> configure)
-    {
-        ArgumentNullException.ThrowIfNull(configure);
-
-        var builder = new CssClassBuilder();
-
-        configure(builder);
-        _mediaQueries[query] = builder;
-
+        
         return this;
     }
 
@@ -69,25 +57,18 @@ public class CssClassBuilder
     {
         var builder = new StringBuilder();
         builder.Append(string.Join(" ", _baseClasses.Distinct()));
-
-        foreach (var condition in _conditions)
+        
+        foreach (var condition in _conditions.Where(c => c.Condition))
         {
-            if (condition.Condition)
+            if (builder.Length > 0)
             {
-                if (builder.Length > 0)
-                {
-                    builder.Append(' ');
-                }
-
-                builder.Append(condition.ClassName);
-
-                if (condition.Important)
-                {
-                    builder.Append(" !important");
-                }
+                builder.Append(' ');
             }
-        }
 
+            builder.Append(condition.ClassName);
+        }
+        
         return builder.ToString().Trim();
     }
 }
+
