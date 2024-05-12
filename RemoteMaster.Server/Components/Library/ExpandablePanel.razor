@@ -6,7 +6,7 @@
         }
         else
         {
-            <span class="@GetIconClasses()" style="@GetIconStyles()">
+            <span class="@GetIconClasses()" style="@GetTransitionStyles()">
                 @Icon
             </span>
             @Title
@@ -15,7 +15,7 @@
 
     @if (IsExpanded)
     {
-        <div class="ml-4 mt-2 transition-all" style="@GetContentStyles()">
+        <div class="ml-4 mt-2 transition-all" style="@GetTransitionStyles()">
             @ChildContent
         </div>
     }

@@ -63,14 +63,6 @@ public partial class ExpandablePanel
         return builder.Build();
     }
 
-    private string GetIconStyles()
-    {
-        var builder = new CssStyleBuilder()
-            .Add("transition-duration", $"{AnimationDurationMs}ms");
-
-        return builder.Build();
-    }
-
     private string GetIconClasses()
     {
         var rotation = IsExpanded ? TransformRotation.Rotate90 : TransformRotation.None;
@@ -81,7 +73,7 @@ public partial class ExpandablePanel
         return builder.Build();
     }
 
-    private string GetContentStyles()
+    private string GetTransitionStyles()
     {
         var builder = new CssStyleBuilder()
             .Add("transition-duration", $"{AnimationDurationMs}ms");
