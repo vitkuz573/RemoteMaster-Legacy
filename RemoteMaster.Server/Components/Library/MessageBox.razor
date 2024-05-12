@@ -26,7 +26,7 @@
         }
     </DialogContent>
     <DialogActions>
-        <div tabindex="-1" @onkeydown="HandleKeyDown">
+        <div tabindex="-1" @onkeydown="HandleKeyDown" class="flex justify-end space-x-2">
             @if (CancelButton is not null)
             {
                 <CascadingValue Value="@_cancelCallback">

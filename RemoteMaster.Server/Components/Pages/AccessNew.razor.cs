@@ -48,7 +48,9 @@ public partial class AccessNew
         await DialogService.ShowMessageBox(new MessageBoxOptions()
         {
             Title = "messagebox",
-            Message = "test"
+            Message = "test",
+            NoText = "No",
+            CancelText = "Cancel"
         });
     }
 }
