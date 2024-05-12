@@ -68,33 +68,33 @@ public partial class Sidebar
 
     private string GetSidebarClasses()
     {
-        var builder = new CssBuilder()
+        var builder = new CssClassBuilder()
             .AddBase("fixed top-0 h-full shadow-lg p-5 transition-all duration-500 ease-out")
             .Add(Theme == Theme.Dark ? "bg-gray-800 text-white" : "bg-white text-gray-900")
             .Add(Position == SidebarPosition.Right ? "right-0" : "left-0");
 
-        return builder.BuildClasses();
+        return builder.Build();
     }
 
     private string GetDynamicStyles()
     {
-        var builder = new CssBuilder()
-            .AddStyle("transition-duration", $"{AnimationDurationMs}ms")
-            .AddStyle(Position == SidebarPosition.Right ? "right" : "left", _isSidebarOpen ? "0" : $"-{WidthPx}px")
-            .AddStyle("width", $"{WidthPx}px");
+        var builder = new CssStyleBuilder()
+            .Add("transition-duration", $"{AnimationDurationMs}ms")
+            .Add(Position == SidebarPosition.Right ? "right" : "left", _isSidebarOpen ? "0" : $"-{WidthPx}px")
+            .Add("width", $"{WidthPx}px");
 
-        return builder.BuildStyles();
+        return builder.Build();
     }
 
     private string GetSwitchClasses()
     {
-        var builder = new CssBuilder()
+        var builder = new CssClassBuilder()
             .AddBase("absolute inset-y-1/2 flex h-10 w-5 cursor-pointer items-center justify-center transition-opacity duration-300")
             .Add(Theme == Theme.Dark ? "bg-gray-800 text-white" : "bg-gray-300 text-black")
             .Add(Position == SidebarPosition.Right ? "rounded-bl-full rounded-tl-full -left-5" : "rounded-br-full rounded-tr-full -right-5")
             .Add(_isSidebarOpen ? SwitchOpacityOpen.ToCss() : SwitchOpacityClosed.ToCss());
 
-        return builder.BuildClasses();
+        return builder.Build();
     }
 
     private string GetSwitchIcon()
