@@ -125,4 +125,16 @@ public static class CssExtensions
         FontWeight.Black => "font-black",
         _ => throw new ArgumentOutOfRangeException(nameof(weight), weight, null)
     };
+
+    public static string ToCss(this Cursor cursor) => cursor switch
+    {
+        Cursor.Auto => "cursor-auto",
+        Cursor.Default => "cursor-default",
+        Cursor.Pointer => "cursor-pointer",
+        Cursor.Wait => "cursor-wait",
+        Cursor.Text => "cursor-text",
+        Cursor.Move => "cursor-move",
+        Cursor.NotAllowed => "cursor-not-allowed",
+        _ => throw new ArgumentOutOfRangeException(nameof(cursor), cursor, null)
+    };
 }

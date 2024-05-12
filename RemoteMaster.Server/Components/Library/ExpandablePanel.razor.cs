@@ -58,7 +58,8 @@ public partial class ExpandablePanel
         var builder = new CssClassBuilder()
             .AddBase(CustomClass ?? "")
             .AddBase("mb-4")
-            .Add("cursor-pointer", !IsDisabled);
+            .Add(Cursor.Pointer.ToCss(), !IsDisabled)
+            .Add(Cursor.NotAllowed.ToCss(), IsDisabled);
 
         return builder.Build();
     }
