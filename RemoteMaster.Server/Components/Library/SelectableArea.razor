@@ -1,0 +1,7 @@
+﻿@inject IJSRuntime JsRuntime
+
+<div id="selectable-container" class="selectable-container" style="@ContainerStyle" 
+     @onmousedown="OnMouseDown" @onmousemove="OnMouseMove" @onmouseup="OnMouseUp">
+    <div style="@SelectionBoxStyle"></div>
+    @ChildContent
+</div>
