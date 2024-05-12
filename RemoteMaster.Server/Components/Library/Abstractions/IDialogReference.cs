@@ -22,7 +22,7 @@ public interface IDialogReference
 
     bool Dismiss(DialogResult result);
 
-    void InjectDialog(object inst);
+    void InjectDialog(object instance);
 
     void InjectRenderFragment(RenderFragment rf);
 }

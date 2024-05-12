@@ -110,7 +110,11 @@ public class DialogService : IDialogWindowService
                 builder.AddAttribute(i++, parameter.Key, parameter.Value);
             }
 
-            builder.AddComponentReferenceCapture(i++, inst => { dialogReference.InjectDialog(inst); });
+            builder.AddComponentReferenceCapture(i++, instance =>
+            {
+                dialogReference.InjectDialog(instance);
+            });
+
             builder.CloseComponent();
         }));
 

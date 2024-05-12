@@ -34,9 +34,9 @@ public class DialogReference(Guid dialogId, IDialogWindowService dialogService) 
         return _resultCompletion.TrySetResult(result);
     }
 
-    public void InjectDialog(object inst)
+    public void InjectDialog(object instance)
     {
-        Dialog = inst;
+        Dialog = instance;
     }
 
     public void InjectRenderFragment(RenderFragment rf)
