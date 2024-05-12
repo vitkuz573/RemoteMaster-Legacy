@@ -67,7 +67,8 @@ public partial class ExpandablePanel
     {
         var rotation = IsExpanded ? TransformRotation.Rotate90 : TransformRotation.None;
         var builder = new CssClassBuilder()
-            .AddBase("material-icons mr-2 transition-transform")
+            .AddBase("material-icons mr-2")
+            .Add(Transition.Transform.ToCss())
             .Add(rotation.ToCss());
 
         return builder.Build();
@@ -92,7 +93,8 @@ public partial class ExpandablePanel
     private static string GetContentContainerClasses()
     {
         var builder = new CssClassBuilder()
-            .AddBase("ml-4 mt-2 transition-all");
+            .AddBase("ml-4 mt-2")
+            .Add(Transition.All.ToCss());
 
         return builder.Build();
     }

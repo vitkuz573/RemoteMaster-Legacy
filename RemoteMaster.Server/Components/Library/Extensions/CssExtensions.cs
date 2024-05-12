@@ -88,4 +88,16 @@ public static class CssExtensions
         TransformRotation.Rotate360 => "rotate-360",
         _ => throw new ArgumentOutOfRangeException(nameof(rotation), rotation, null)
     };
+
+    public static string ToCss(this Transition transition) => transition switch
+    {
+        Transition.None => "",
+        Transition.All => "transition-all",
+        Transition.Opacity => "transition-opacity",
+        Transition.Transform => "transition-transform",
+        Transition.Height => "transition-height",
+        Transition.Width => "transition-width",
+        Transition.BackgroundColor => "transition-color",
+        _ => throw new ArgumentOutOfRangeException(nameof(transition), transition, null)
+    };
 }
