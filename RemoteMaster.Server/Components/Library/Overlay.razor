@@ -1,3 +1,6 @@
-﻿<div class="@OverlayClass" @onclick="OnClick">
-    @ChildContent
-</div>
+﻿@if (IsVisible)
+{
+    <div class="@OverlayClass" @onclick="OnClick">
+        @ChildContent
+    </div>
+}

@@ -4,6 +4,9 @@
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using RemoteMaster.Server.Components.Library.Enums;
+using RemoteMaster.Server.Components.Library.Extensions;
+using Display = RemoteMaster.Server.Components.Library.Enums.Display;
 
 namespace RemoteMaster.Server.Components.Library;
 
@@ -15,8 +18,32 @@ public partial class Overlay
     [Parameter]
     public EventCallback<MouseEventArgs> OnClick { get; set; }
 
-    private string OverlayClass => $"fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center {AdditionalClasses}";
-
     [Parameter]
     public string AdditionalClasses { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool IsVisible { get; set; } = true;
+
+    [Parameter]
+    public BackgroundColor BackgroundColor { get; set; } = BackgroundColor.Black;
+
+    [Parameter]
+    public Opacity Opacity { get; set; } = Opacity.Fifty;
+
+    [Parameter]
+    public Position Position { get; set; } = Position.Fixed;
+
+    [Parameter]
+    public Inset Inset { get; set; } = Inset.All;
+
+    [Parameter]
+    public Display Display { get; set; } = Display.Flex;
+
+    [Parameter]
+    public JustifyContent JustifyContent { get; set; } = JustifyContent.Center;
+
+    [Parameter]
+    public AlignItems AlignItems { get; set; } = AlignItems.Center;
+
+    private string OverlayClass => $"{Position.ToCss()} {Inset.ToCss()} {BackgroundColor.ToCss()} {Opacity.ToCss()} {Display.ToCss()} {JustifyContent.ToCss()} {AlignItems.ToCss()} {AdditionalClasses}";
 }
