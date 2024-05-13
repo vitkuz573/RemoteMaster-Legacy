@@ -40,7 +40,7 @@ public partial class SelectableArea
         if (firstRender)
         {
             var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/SelectableArea.js");
-            await module.InvokeVoidAsync("trackSelectedElements", ContainerId, DotNetObjectReference.Create(this));
+            await module.InvokeVoidAsync("trackSelectedElements", ContainerId, ".selectable", DotNetObjectReference.Create(this));
         }
     }
 

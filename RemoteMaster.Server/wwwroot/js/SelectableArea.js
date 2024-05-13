@@ -1,4 +1,4 @@
-export function trackSelectedElements(containerId, dotNetHelper) {
+export function trackSelectedElements(containerId, selectableSelector, dotNetHelper) {
     const container = document.getElementById(containerId);
     const SELECTION_STYLES = ['ring-2', 'ring-blue-500', 'shadow-lg'];
     if (!container) {
@@ -21,7 +21,7 @@ export function trackSelectedElements(containerId, dotNetHelper) {
         return SELECTION_STYLES.every(style => element.classList.contains(style));
     }
     function updateElementSelection() {
-        const elements = container.querySelectorAll('.selectable');
+        const elements = container.querySelectorAll(selectableSelector);
         elements.forEach(element => {
             const elemRect = element.getBoundingClientRect();
             if (selectionRect && rectOverlap(selectionRect, elemRect)) {

@@ -1,4 +1,4 @@
-﻿export function trackSelectedElements(containerId: string, dotNetHelper: DotNet.DotNetObject): void {
+﻿export function trackSelectedElements(containerId: string, selectableSelector: string, dotNetHelper: DotNet.DotNetObject): void {
     const container = document.getElementById(containerId) as HTMLElement;
     const SELECTION_STYLES = ['ring-2', 'ring-blue-500', 'shadow-lg'];
 
@@ -28,7 +28,7 @@
     }
 
     function updateElementSelection(): void {
-        const elements = container.querySelectorAll('.selectable') as NodeListOf<HTMLElement>;
+        const elements = container.querySelectorAll(selectableSelector) as NodeListOf<HTMLElement>;
 
         elements.forEach(element => {
             const elemRect = element.getBoundingClientRect();
