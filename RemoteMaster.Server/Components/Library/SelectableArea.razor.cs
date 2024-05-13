@@ -23,7 +23,7 @@ public partial class SelectableArea
     public EventCallback<List<string>> SelectedElementsChanged { get; set; }
 
     [Parameter, EditorRequired]
-    public string ContainerId { get; set; }
+    public string ContainerId { get; set; } = null!;
 
     public List<string> SelectedElementIds { get; private set; } = [];
 
