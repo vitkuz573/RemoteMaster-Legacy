@@ -39,19 +39,14 @@ export function trackSelectedElements(containerId: string, dotNetHelper: DotNetH
     }
 
     function updateElementSelection(): void {
-        const elements = container!.querySelectorAll<HTMLElement>('.selectable');
+        const elements = container?.querySelectorAll<HTMLElement>('.selectable');
 
-        elements.forEach(element => {
+        elements?.forEach(element => {
             const elemRect = element.getBoundingClientRect();
 
             if (selectionRect && rectOverlap(selectionRect, elemRect)) {
-                if (element.classList.contains('ring-2')) {
-                    if (isCtrlPressed) {
-                        element.classList.remove('ring-2', 'ring-blue-500', 'shadow-lg');
-                    }
-                } else {
+                element.classList.contains('ring-2') ? isCtrlPressed && element.classList.remove('ring-2', 'ring-blue-500', 'shadow-lg') :
                     element.classList.add('ring-2', 'ring-blue-500', 'shadow-lg');
-                }
             } else if (!isCtrlPressed) {
                 element.classList.remove('ring-2', 'ring-blue-500', 'shadow-lg');
             }
@@ -59,7 +54,7 @@ export function trackSelectedElements(containerId: string, dotNetHelper: DotNetH
     }
 
     function onMouseMove(e: MouseEvent): void {
-        if (startPoint === null) {
+        if (!startPoint) {
             return;
         }
 
@@ -68,7 +63,7 @@ export function trackSelectedElements(containerId: string, dotNetHelper: DotNetH
     }
 
     function onTouchMove(e: TouchEvent): void {
-        if (startPoint === null || e.touches.length === 0) {
+        if (!startPoint || e.touches.length === 0) {
             return;
         }
 
@@ -103,7 +98,7 @@ export function trackSelectedElements(containerId: string, dotNetHelper: DotNetH
     });
 
     container.addEventListener('touchend', (e: TouchEvent) => {
-        if (e.changedTouches && e.changedTouches.length > 0 && startPoint !== null) {
+        if (e.changedTouches && e.changedTouches.length > 0 && startPoint) {
             container.removeEventListener('touchmove', onTouchMove);
             selectionRect = createRectFromPoints(startPoint, { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY });
             updateElementSelection();

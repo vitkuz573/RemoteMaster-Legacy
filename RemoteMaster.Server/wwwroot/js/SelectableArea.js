@@ -17,18 +17,12 @@ export function trackSelectedElements(containerId, dotNetHelper) {
         return !(rect1.right < rect2.left || rect1.left > rect2.right || rect1.bottom < rect2.top || rect1.top > rect2.bottom);
     }
     function updateElementSelection() {
-        const elements = container.querySelectorAll('.selectable');
-        elements.forEach(element => {
+        const elements = container?.querySelectorAll('.selectable');
+        elements?.forEach(element => {
             const elemRect = element.getBoundingClientRect();
             if (selectionRect && rectOverlap(selectionRect, elemRect)) {
-                if (element.classList.contains('ring-2')) {
-                    if (isCtrlPressed) {
-                        element.classList.remove('ring-2', 'ring-blue-500', 'shadow-lg');
-                    }
-                }
-                else {
+                element.classList.contains('ring-2') ? isCtrlPressed && element.classList.remove('ring-2', 'ring-blue-500', 'shadow-lg') :
                     element.classList.add('ring-2', 'ring-blue-500', 'shadow-lg');
-                }
             }
             else if (!isCtrlPressed) {
                 element.classList.remove('ring-2', 'ring-blue-500', 'shadow-lg');
@@ -36,14 +30,14 @@ export function trackSelectedElements(containerId, dotNetHelper) {
         });
     }
     function onMouseMove(e) {
-        if (startPoint === null) {
+        if (!startPoint) {
             return;
         }
         selectionRect = createRectFromPoints(startPoint, { x: e.clientX, y: e.clientY });
         updateElementSelection();
     }
     function onTouchMove(e) {
-        if (startPoint === null || e.touches.length === 0) {
+        if (!startPoint || e.touches.length === 0) {
             return;
         }
         selectionRect = createRectFromPoints(startPoint, { x: e.touches[0].clientX, y: e.touches[0].clientY });
@@ -72,7 +66,7 @@ export function trackSelectedElements(containerId, dotNetHelper) {
         container.addEventListener('touchmove', onTouchMove);
     });
     container.addEventListener('touchend', (e) => {
-        if (e.changedTouches && e.changedTouches.length > 0 && startPoint !== null) {
+        if (e.changedTouches && e.changedTouches.length > 0 && startPoint) {
             container.removeEventListener('touchmove', onTouchMove);
             selectionRect = createRectFromPoints(startPoint, { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY });
             updateElementSelection();
