@@ -27,9 +27,6 @@ public partial class ExpandablePanel
     public bool IsDisabled { get; set; } = false;
 
     [Parameter]
-    public string CustomClass { get; set; }
-
-    [Parameter]
     public string AriaLabel { get; set; }
 
     [Parameter]
@@ -56,7 +53,6 @@ public partial class ExpandablePanel
     private string GetPanelClasses()
     {
         var builder = new CssClassBuilder()
-            .AddBase(CustomClass ?? "")
             .AddBase("mb-4")
             .Add(Cursor.Pointer.ToCss(), !IsDisabled)
             .Add(Cursor.NotAllowed.ToCss(), IsDisabled);
