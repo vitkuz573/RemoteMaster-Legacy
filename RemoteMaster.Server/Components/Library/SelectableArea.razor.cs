@@ -123,12 +123,10 @@ public partial class SelectableArea
     }
 
     [JSInvokable]
-    public Task UpdateSelectedElements(List<string> selectedElementIds)
+    public void UpdateSelectedElements(List<string> selectedElementIds)
     {
         SelectedElementIds = selectedElementIds;
 
         NotifySelectionChanged();
-
-        return Task.CompletedTask;
     }
 }
