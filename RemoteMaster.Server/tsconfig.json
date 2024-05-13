@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2020", // Targeting a more modern ECMAScript version
+    "module": "ES2020", // Modern module system
+    "lib": [ "ES2020", "DOM" ], // Include typings for ES2020 and DOM APIs
+    "outDir": "wwwroot/js",
+    "removeComments": true,
+    "noEmitOnError": true,
+    "sourceMap": true,
+    "strict": true, // Enable all strict type-checking options
+    "esModuleInterop": true, // Enables ES6-style imports from CommonJS modules
+    "allowSyntheticDefaultImports": true, // Allow default imports from modules with no default export
+    "noImplicitAny": false // Considering turning this to true for more rigorous type-checking
+  },
+  "exclude": [
+    "node_modules",
+    "wwwroot"
+  ]
+}
