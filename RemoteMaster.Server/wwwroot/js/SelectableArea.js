@@ -1,5 +1,5 @@
-export function trackSelectedElements(selectableContainerId, dotNetHelper) {
-    const container = document.getElementById(selectableContainerId);
+export function trackSelectedElements(containerId, dotNetHelper) {
+    const container = document.getElementById(containerId);
     if (!container)
         return;
     let startPoint = null;

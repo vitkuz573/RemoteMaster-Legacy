@@ -14,8 +14,8 @@ interface DotNetHelper {
   invokeMethodAsync: (methodName: string, args: any[]) => Promise<void>;
 }
 
-export function trackSelectedElements(selectableContainerId: string, dotNetHelper: DotNetHelper): void {
-  const container = document.getElementById(selectableContainerId);
+export function trackSelectedElements(containerId: string, dotNetHelper: DotNetHelper): void {
+  const container = document.getElementById(containerId);
   if (!container) return;
 
   let startPoint: Point | null = null;
