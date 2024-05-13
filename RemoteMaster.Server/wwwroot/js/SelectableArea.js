@@ -1,6 +1,5 @@
-export function trackSelectedElements(containerId, selectableSelector, dotNetHelper) {
+export function trackSelectedElements(containerId, selectableSelector, selectionStyles, dotNetHelper) {
     const container = document.getElementById(containerId);
-    const SELECTION_STYLES = ['ring-2', 'ring-blue-500', 'shadow-lg'];
     if (!container) {
         return;
     }
@@ -18,7 +17,7 @@ export function trackSelectedElements(containerId, selectableSelector, dotNetHel
         return !(rect1.right < rect2.left || rect1.left > rect2.right || rect1.bottom < rect2.top || rect1.top > rect2.bottom);
     }
     function hasAllSelectionStyles(element) {
-        return SELECTION_STYLES.every(style => element.classList.contains(style));
+        return selectionStyles.every(style => element.classList.contains(style));
     }
     function updateElementSelection() {
         const elements = container.querySelectorAll(selectableSelector);
@@ -26,14 +25,14 @@ export function trackSelectedElements(containerId, selectableSelector, dotNetHel
             const elemRect = element.getBoundingClientRect();
             if (selectionRect && rectOverlap(selectionRect, elemRect)) {
                 if (!hasAllSelectionStyles(element)) {
-                    element.classList.add(...SELECTION_STYLES);
+                    element.classList.add(...selectionStyles);
                 }
                 else if (isCtrlPressed) {
-                    element.classList.remove(...SELECTION_STYLES);
+                    element.classList.remove(...selectionStyles);
                 }
             }
             else if (!isCtrlPressed) {
-                element.classList.remove(...SELECTION_STYLES);
+                element.classList.remove(...selectionStyles);
             }
         });
     }

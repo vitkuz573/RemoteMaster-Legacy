@@ -1,6 +1,5 @@
-﻿export function trackSelectedElements(containerId: string, selectableSelector: string, dotNetHelper: DotNet.DotNetObject): void {
+﻿export function trackSelectedElements(containerId: string, selectableSelector: string, selectionStyles: string[], dotNetHelper: DotNet.DotNetObject): void {
     const container = document.getElementById(containerId) as HTMLElement;
-    const SELECTION_STYLES = ['ring-2', 'ring-blue-500', 'shadow-lg'];
 
     if (!container) {
         return;
@@ -24,7 +23,7 @@
     }
 
     function hasAllSelectionStyles(element: HTMLElement): boolean {
-        return SELECTION_STYLES.every(style => element.classList.contains(style));
+        return selectionStyles.every(style => element.classList.contains(style));
     }
 
     function updateElementSelection(): void {
@@ -35,12 +34,12 @@
 
             if (selectionRect && rectOverlap(selectionRect, elemRect)) {
                 if (!hasAllSelectionStyles(element)) {
-                    element.classList.add(...SELECTION_STYLES);
+                    element.classList.add(...selectionStyles);
                 } else if (isCtrlPressed) {
-                    element.classList.remove(...SELECTION_STYLES);
+                    element.classList.remove(...selectionStyles);
                 }
             } else if (!isCtrlPressed) {
-                element.classList.remove(...SELECTION_STYLES);
+                element.classList.remove(...selectionStyles);
             }
         });
     }
