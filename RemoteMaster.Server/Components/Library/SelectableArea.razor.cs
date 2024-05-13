@@ -17,10 +17,7 @@ public partial class SelectableArea
     public RenderFragment ChildContent { get; set; }
 
     [Parameter]
-    public EventCallback<Rectangle> OnSelectionChanged { get; set; }
-
-    [Parameter]
-    public EventCallback<List<string>> SelectedElementsChanged { get; set; }
+    public EventCallback<SelectionChangeEventArgs> OnSelectionChanged { get; set; }
 
     [Parameter, EditorRequired]
     public string ContainerId { get; set; } = null!;
@@ -79,7 +76,6 @@ public partial class SelectableArea
         _isSelecting = false;
 
         ClearSelectionBox();
-        NotifySelectionChanged();
     }
 
     private void ClearSelectionBox()
@@ -116,17 +112,23 @@ public partial class SelectableArea
     {
         if (OnSelectionChanged.HasDelegate)
         {
-            OnSelectionChanged.InvokeAsync(_selectionRectangle);
+            var args = new SelectionChangeEventArgs
+            {
+                SelectionRectangle = _selectionRectangle,
+                SelectedElementIds = SelectedElementIds
+            };
+
+            OnSelectionChanged.InvokeAsync(args);
         }
     }
 
     [JSInvokable]
-    public async Task UpdateSelectedElements(List<string> selectedElementIds)
+    public Task UpdateSelectedElements(List<string> selectedElementIds)
     {
         SelectedElementIds = selectedElementIds;
 
-        Log.Information("Selected elements updated: {@SelectedElementIds}", SelectedElementIds);
+        NotifySelectionChanged();
 
-        await SelectedElementsChanged.InvokeAsync(SelectedElementIds);
+        return Task.CompletedTask;
     }
 }
