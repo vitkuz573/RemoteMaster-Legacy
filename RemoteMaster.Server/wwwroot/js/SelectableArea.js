@@ -1,5 +1,6 @@
 export function trackSelectedElements(containerId, dotNetHelper) {
     const container = document.getElementById(containerId);
+    const SELECTION_STYLES = ['ring-2', 'ring-blue-500', 'shadow-lg'];
     if (!container) {
         return;
     }
@@ -22,14 +23,14 @@ export function trackSelectedElements(containerId, dotNetHelper) {
             const elemRect = element.getBoundingClientRect();
             if (selectionRect && rectOverlap(selectionRect, elemRect)) {
                 if (!element.classList.contains('ring-2')) {
-                    element.classList.add('ring-2', 'ring-blue-500', 'shadow-lg');
+                    element.classList.add(...SELECTION_STYLES);
                 }
                 else if (isCtrlPressed) {
-                    element.classList.remove('ring-2', 'ring-blue-500', 'shadow-lg');
+                    element.classList.remove(...SELECTION_STYLES);
                 }
             }
             else if (!isCtrlPressed) {
-                element.classList.remove('ring-2', 'ring-blue-500', 'shadow-lg');
+                element.classList.remove(...SELECTION_STYLES);
             }
         });
     }
