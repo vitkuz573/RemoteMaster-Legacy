@@ -90,7 +90,7 @@ export function trackSelectedElements(selectableContainerId: string, dotNetHelpe
   });
 
   container.addEventListener('touchend', (e: TouchEvent) => {
-    if (e.changedTouches && e.changedTouches.length > 0 && startPoint !== null) { // Ensure startPoint is not null
+    if (e.changedTouches && e.changedTouches.length > 0 && startPoint !== null) {
       container.removeEventListener('touchmove', onTouchMove);
       selectionRect = createRectFromPoints(startPoint, { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY });
       updateElementSelection();
