@@ -6,6 +6,7 @@ using System.Drawing;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
+using RemoteMaster.Server.Components.Library.Utilities;
 using Serilog;
 
 namespace RemoteMaster.Server.Components.Library;
@@ -95,9 +96,17 @@ public partial class SelectableArea
 
     private void UpdateSelectionBox()
     {
-        SelectionBoxStyle = $"position: absolute; left: {_selectionRectangle.X}px; top: {_selectionRectangle.Y}px; " +
-                            $"width: {_selectionRectangle.Width}px; height: {_selectionRectangle.Height}px; " +
-                            $"background-color: rgba(0, 120, 215, 0.3); border: 1px solid #0078D7;";
+        var styles = new CssStyleBuilder()
+            .Add("position", "absolute")
+            .Add("left", $"{_selectionRectangle.X}px")
+            .Add("top", $"{_selectionRectangle.Y}px")
+            .Add("width", $"{_selectionRectangle.Width}px")
+            .Add("height", $"{_selectionRectangle.Height}px")
+            .Add("background-color", "rgba(0, 120, 215, 0.3)")
+            .Add("border", "1px solid #0078D7")
+            .Build();
+
+        SelectionBoxStyle = styles;
     }
 
     private void NotifySelectionChanged()
