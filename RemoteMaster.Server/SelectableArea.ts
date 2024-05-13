@@ -28,7 +28,12 @@ export function trackSelectedElements(containerId: string, dotNetHelper: DotNet.
         const width = Math.abs(p1.x - p2.x);
         const height = Math.abs(p1.y - p2.y);
 
-        return { left: x, top: y, right: x + width, bottom: y + height };
+        return {
+            left: x,
+            top: y,
+            right: x + width,
+            bottom: y + height
+        };
     }
 
     function rectOverlap(rect1: Rectangle, rect2: Rectangle): boolean {
@@ -54,7 +59,11 @@ export function trackSelectedElements(containerId: string, dotNetHelper: DotNet.
             return;
         }
 
-        selectionRect = createRectFromPoints(startPoint, { x: e.clientX, y: e.clientY });
+        selectionRect = createRectFromPoints(startPoint, {
+            x: e.clientX,
+            y: e.clientY
+        });
+
         updateElementSelection();
     }
 
@@ -63,21 +72,36 @@ export function trackSelectedElements(containerId: string, dotNetHelper: DotNet.
             return;
         }
 
-        selectionRect = createRectFromPoints(startPoint, { x: e.touches[0].clientX, y: e.touches[0].clientY });
+        selectionRect = createRectFromPoints(startPoint, {
+            x: e.touches[0].clientX,
+            y: e.touches[0].clientY
+        });
+
         updateElementSelection();
     }
 
     container.addEventListener('mousedown', (e: MouseEvent) => {
         isCtrlPressed = e.ctrlKey;
-        startPoint = { x: e.clientX, y: e.clientY };
+
+        startPoint = {
+            x: e.clientX,
+            y: e.clientY
+        };
+
         container.addEventListener('mousemove', onMouseMove);
     });
 
     container.addEventListener('mouseup', (e: MouseEvent) => {
         if (startPoint) {
             container.removeEventListener('mousemove', onMouseMove);
-            selectionRect = createRectFromPoints(startPoint, { x: e.clientX, y: e.clientY });
+
+            selectionRect = createRectFromPoints(startPoint, {
+                x: e.clientX,
+                y: e.clientY
+            });
+
             updateElementSelection();
+
             dotNetHelper.invokeMethodAsync('UpdateSelectedElements', Array.from(container.querySelectorAll('.selectable.ring-2')).map(el => el.id));
 
             if (!isCtrlPressed) {
@@ -89,15 +113,26 @@ export function trackSelectedElements(containerId: string, dotNetHelper: DotNet.
 
     container.addEventListener('touchstart', (e: TouchEvent) => {
         isCtrlPressed = e.touches.length > 1;
-        startPoint = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+
+        startPoint = {
+            x: e.touches[0].clientX,
+            y: e.touches[0].clientY
+        };
+
         container.addEventListener('touchmove', onTouchMove);
     });
 
     container.addEventListener('touchend', (e: TouchEvent) => {
         if (e.changedTouches && e.changedTouches.length > 0 && startPoint) {
             container.removeEventListener('touchmove', onTouchMove);
-            selectionRect = createRectFromPoints(startPoint, { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY });
+
+            selectionRect = createRectFromPoints(startPoint, {
+                x: e.changedTouches[0].clientX,
+                y: e.changedTouches[0].clientY
+            });
+
             updateElementSelection();
+
             dotNetHelper.invokeMethodAsync('UpdateSelectedElements', Array.from(container.querySelectorAll('.selectable.ring-2')).map(el => el.id));
         }
 
