@@ -21,8 +21,7 @@ export function trackSelectedElements(containerId, dotNetHelper) {
         elements?.forEach(element => {
             const elemRect = element.getBoundingClientRect();
             if (selectionRect && rectOverlap(selectionRect, elemRect)) {
-                element.classList.contains('ring-2') ? isCtrlPressed && element.classList.remove('ring-2', 'ring-blue-500', 'shadow-lg') :
-                    element.classList.add('ring-2', 'ring-blue-500', 'shadow-lg');
+                element.classList.contains('ring-2') ? isCtrlPressed && element.classList.remove('ring-2', 'ring-blue-500', 'shadow-lg') : element.classList.add('ring-2', 'ring-blue-500', 'shadow-lg');
             }
             else if (!isCtrlPressed) {
                 element.classList.remove('ring-2', 'ring-blue-500', 'shadow-lg');

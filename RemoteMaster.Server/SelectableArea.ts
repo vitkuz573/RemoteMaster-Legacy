@@ -28,6 +28,7 @@ export function trackSelectedElements(containerId: string, dotNetHelper: DotNetH
     function createRectFromPoints(p1: Point, p2: Point): Rectangle {
         const x = Math.min(p1.x, p2.x);
         const y = Math.min(p1.y, p2.y);
+
         const width = Math.abs(p1.x - p2.x);
         const height = Math.abs(p1.y - p2.y);
 
@@ -45,8 +46,7 @@ export function trackSelectedElements(containerId: string, dotNetHelper: DotNetH
             const elemRect = element.getBoundingClientRect();
 
             if (selectionRect && rectOverlap(selectionRect, elemRect)) {
-                element.classList.contains('ring-2') ? isCtrlPressed && element.classList.remove('ring-2', 'ring-blue-500', 'shadow-lg') :
-                    element.classList.add('ring-2', 'ring-blue-500', 'shadow-lg');
+                element.classList.contains('ring-2') ? isCtrlPressed && element.classList.remove('ring-2', 'ring-blue-500', 'shadow-lg') : element.classList.add('ring-2', 'ring-blue-500', 'shadow-lg');
             } else if (!isCtrlPressed) {
                 element.classList.remove('ring-2', 'ring-blue-500', 'shadow-lg');
             }
