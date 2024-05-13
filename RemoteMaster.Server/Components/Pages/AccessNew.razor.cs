@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using RemoteMaster.Server.Components.Dialogs;
 using RemoteMaster.Server.Components.Library;
 using RemoteMaster.Server.Components.Library.Models;
@@ -57,11 +58,14 @@ public partial class AccessNew
     }
 
 #pragma warning disable
-    private void HandleSelectionArea(SelectionChangeEventArgs e)
+    private async void HandleSelectionArea(SelectionChangeEventArgs e)
     {
-        foreach (var element in e.SelectedElementIds)
+        foreach (var elementId in e.SelectedElementIds)
         {
-            Log.Information(element);
+            var element = await JsRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", elementId);
+
+            var dataValue = await element.InvokeAsync<string>("getAttribute", "data-example");
+            Log.Information("Data-example attribute value: {0}", dataValue);
         }
     }
 }
