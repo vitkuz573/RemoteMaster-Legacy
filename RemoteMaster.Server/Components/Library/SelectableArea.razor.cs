@@ -50,7 +50,7 @@ public partial class SelectableArea
     {
         ArgumentNullException.ThrowIfNull(e);
 
-        var area = await JsRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", "selectable-container");
+        var area = await JsRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", ContainerId);
         var rect = await area.InvokeAsync<Rectangle>("getBoundingClientRect");
         
         _startPoint = new Point((int)(e.ClientX - rect.X), (int)(e.ClientY - rect.Y));
@@ -66,7 +66,7 @@ public partial class SelectableArea
 
         if (_isSelecting)
         {
-            var area = await JsRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", "selectable-container");
+            var area = await JsRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", ContainerId);
             var rect = await area.InvokeAsync<Rectangle>("getBoundingClientRect");
 
             var adjustedX = (int)(e.ClientX - rect.X);
