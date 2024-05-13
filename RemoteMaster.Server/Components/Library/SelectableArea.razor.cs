@@ -22,6 +22,9 @@ public partial class SelectableArea
     [Parameter]
     public EventCallback<List<string>> SelectedElementsChanged { get; set; }
 
+    [Parameter]
+    public string ContainerId { get; set; } = "selectable-container";
+
     public List<string> SelectedElementIds { get; private set; } = [];
 
     protected string ContainerClasses => new CssClassBuilder()
@@ -39,7 +42,7 @@ public partial class SelectableArea
     {
         if (firstRender)
         {
-            await JsRuntime.InvokeVoidAsync("trackSelectedElements", "selectable-container", DotNetObjectReference.Create(this));
+            await JsRuntime.InvokeVoidAsync("trackSelectedElements", ContainerId, DotNetObjectReference.Create(this));
         }
     }
 
