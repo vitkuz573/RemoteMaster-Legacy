@@ -132,6 +132,7 @@
             const container = document.getElementById(selectableContainerId);
             let startPoint = null;
             let selectionRect = null;
+            let isCtrlPressed = false;
 
             function createRectFromPoints(p1, p2) {
                 const x = Math.min(p1.x, p2.x);
@@ -151,14 +152,21 @@
                 elements.forEach(element => {
                     const elemRect = element.getBoundingClientRect();
                     if (rectOverlap(selectionRect, elemRect)) {
-                        element.classList.add('ring-2', 'ring-blue-500', 'shadow-lg');
-                    } else {
+                        if (element.classList.contains('ring-2')) {
+                            if (isCtrlPressed) {
+                                element.classList.remove('ring-2', 'ring-blue-500', 'shadow-lg');
+                            }
+                        } else {
+                            element.classList.add('ring-2', 'ring-blue-500', 'shadow-lg');
+                        }
+                    } else if (!isCtrlPressed) {
                         element.classList.remove('ring-2', 'ring-blue-500', 'shadow-lg');
                     }
                 });
             }
 
             container.addEventListener('mousedown', (e) => {
+                isCtrlPressed = e.ctrlKey;
                 startPoint = { x: e.clientX, y: e.clientY };
                 container.addEventListener('mousemove', onMouseMove);
             });
@@ -168,16 +176,20 @@
                 selectionRect = createRectFromPoints(startPoint, { x: e.clientX, y: e.clientY });
                 updateElementSelection();
                 dotNetHelper.invokeMethodAsync('UpdateSelectedElements', Array.from(container.querySelectorAll('.selectable.ring-2')).map(el => el.id));
-                startPoint = null;
-                selectionRect = null;
+                if (!isCtrlPressed) {
+                    startPoint = null;
+                    selectionRect = null;
+                }
             });
 
             function onMouseMove(e) {
+                if (!startPoint) return;
                 selectionRect = createRectFromPoints(startPoint, { x: e.clientX, y: e.clientY });
                 updateElementSelection();
             }
 
             container.addEventListener('touchstart', (e) => {
+                isCtrlPressed = e.touches.length > 1;
                 startPoint = { x: e.touches[0].clientX, y: e.touches[0].clientY };
                 container.addEventListener('touchmove', onTouchMove);
             });
@@ -189,11 +201,14 @@
                     updateElementSelection();
                     dotNetHelper.invokeMethodAsync('UpdateSelectedElements', Array.from(container.querySelectorAll('.selectable.ring-2')).map(el => el.id));
                 }
-                startPoint = null;
-                selectionRect = null;
+                if (!isCtrlPressed) {
+                    startPoint = null;
+                    selectionRect = null;
+                }
             });
 
             function onTouchMove(e) {
+                if (!startPoint) return;
                 selectionRect = createRectFromPoints(startPoint, { x: e.touches[0].clientX, y: e.touches[0].clientY });
                 updateElementSelection();
             }
