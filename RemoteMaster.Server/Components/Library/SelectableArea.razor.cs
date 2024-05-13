@@ -18,13 +18,26 @@ public partial class SelectableArea
     [Parameter]
     public EventCallback<Rectangle> OnSelectionChanged { get; set; }
 
-    protected string ContainerStyle => "position: relative; user-select: none; width: 100%; height: 100%; min-height: 100px; min-width: 100px; border: 1px solid #ccc;";
+    [Parameter]
+    public EventCallback<List<string>> SelectedElementsChanged { get; set; }
+
+    public List<string> SelectedElementIds { get; private set; } = [];
+
+    protected string ContainerStyle => "position: relative; user-select: none; width: 100%; height: 100%; border: 1px solid #ccc;";
 
     protected string SelectionBoxStyle { get; set; }
 
     private bool _isSelecting;
     private Point _startPoint;
     private Rectangle _selectionRectangle;
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JsRuntime.InvokeVoidAsync("trackSelectedElements", "selectable-container", DotNetObjectReference.Create(this));
+        }
+    }
 
     protected async Task OnMouseDown(MouseEventArgs e)
     {
@@ -50,8 +63,8 @@ public partial class SelectableArea
             var area = await JsRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", "selectable-container");
             var rect = await area.InvokeAsync<Rectangle>("getBoundingClientRect");
 
-            int adjustedX = (int)(e.ClientX - rect.X);
-            int adjustedY = (int)(e.ClientY - rect.Y);
+            var adjustedX = (int)(e.ClientX - rect.X);
+            var adjustedY = (int)(e.ClientY - rect.Y);
 
             UpdateSelectionRectangle(adjustedX, adjustedY);
             UpdateSelectionBox();
@@ -99,5 +112,17 @@ public partial class SelectableArea
         {
             OnSelectionChanged.InvokeAsync(_selectionRectangle);
         }
+    }
+
+    [JSInvokable]
+    public async Task UpdateSelectedElements(List<string> selectedElementIds)
+    {
+        SelectedElementIds = selectedElementIds;
+
+        // Optional: Log the current state of selected elements for debugging
+        Log.Information("Selected elements updated: {@SelectedElementIds}", SelectedElementIds);
+
+        // Optional: Trigger an EventCallback if you need to notify other components
+        await SelectedElementsChanged.InvokeAsync(SelectedElementIds);
     }
 }

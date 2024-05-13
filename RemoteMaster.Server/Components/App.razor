@@ -127,6 +127,39 @@
 
             window.URL.revokeObjectURL(url);
         };
+
+        window.trackSelectedElements = function (selectableContainerId, dotNetHelper) {
+            const container = document.getElementById(selectableContainerId);
+
+            // Function to detect selected elements
+            function detectSelectedElements(event) {
+                const selectionRect = container.getBoundingClientRect();
+                const elements = container.querySelectorAll('.selectable');
+                const selectedElements = [];
+
+                elements.forEach(element => {
+                    const elemRect = element.getBoundingClientRect();
+                    if (rectOverlap(selectionRect, elemRect)) {
+                        selectedElements.push(element.id || element.className);
+                    }
+                });
+
+                // Call the C# method to update the state with selected elements
+                dotNetHelper.invokeMethodAsync('UpdateSelectedElements', selectedElements);
+            }
+
+            // Utility to check if two rectangles overlap
+            function rectOverlap(rect1, rect2) {
+                return !(rect1.right < rect2.left ||
+                    rect1.left > rect2.right ||
+                    rect1.bottom < rect2.top ||
+                    rect1.top > rect2.bottom);
+            }
+
+            // Event listeners for selection update
+            container.addEventListener('mouseup', detectSelectedElements);
+            container.addEventListener('touchend', detectSelectedElements);
+        }
     </script>
 </body>
 
