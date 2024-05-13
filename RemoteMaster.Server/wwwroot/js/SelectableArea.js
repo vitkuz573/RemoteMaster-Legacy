@@ -17,12 +17,15 @@ export function trackSelectedElements(containerId, dotNetHelper) {
     function rectOverlap(rect1, rect2) {
         return !(rect1.right < rect2.left || rect1.left > rect2.right || rect1.bottom < rect2.top || rect1.top > rect2.bottom);
     }
+    function hasAllSelectionStyles(element) {
+        return SELECTION_STYLES.every(style => element.classList.contains(style));
+    }
     function updateElementSelection() {
-        const elements = container?.querySelectorAll('.selectable');
-        elements?.forEach(element => {
+        const elements = container.querySelectorAll('.selectable');
+        elements.forEach(element => {
             const elemRect = element.getBoundingClientRect();
             if (selectionRect && rectOverlap(selectionRect, elemRect)) {
-                if (!element.classList.contains('ring-2')) {
+                if (!hasAllSelectionStyles(element)) {
                     element.classList.add(...SELECTION_STYLES);
                 }
                 else if (isCtrlPressed) {
@@ -58,7 +61,7 @@ export function trackSelectedElements(containerId, dotNetHelper) {
             container.removeEventListener('mousemove', onMouseMove);
             selectionRect = createRectFromPoints(new DOMPoint(startPoint.x, startPoint.y), new DOMPoint(e.clientX, e.clientY));
             updateElementSelection();
-            dotNetHelper.invokeMethodAsync('UpdateSelectedElements', Array.from(container.querySelectorAll('.selectable.ring-2')).map(el => el.id));
+            dotNetHelper.invokeMethodAsync('UpdateSelectedElements', Array.from(container.querySelectorAll('.selectable')).filter(hasAllSelectionStyles).map(el => el.id));
             if (!isCtrlPressed) {
                 startPoint = null;
                 selectionRect = null;
@@ -75,7 +78,7 @@ export function trackSelectedElements(containerId, dotNetHelper) {
             container.removeEventListener('touchmove', onTouchMove);
             selectionRect = createRectFromPoints(new DOMPoint(startPoint.x, startPoint.y), new DOMPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY));
             updateElementSelection();
-            dotNetHelper.invokeMethodAsync('UpdateSelectedElements', Array.from(container.querySelectorAll('.selectable.ring-2')).map(el => el.id));
+            dotNetHelper.invokeMethodAsync('UpdateSelectedElements', Array.from(container.querySelectorAll('.selectable')).filter(hasAllSelectionStyles).map(el => el.id));
         }
         if (!isCtrlPressed) {
             startPoint = null;

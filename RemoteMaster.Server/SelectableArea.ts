@@ -1,5 +1,5 @@
 ﻿export function trackSelectedElements(containerId: string, dotNetHelper: DotNet.DotNetObject): void {
-    const container = document.getElementById(containerId);
+    const container = document.getElementById(containerId) as HTMLElement;
     const SELECTION_STYLES = ['ring-2', 'ring-blue-500', 'shadow-lg'];
 
     if (!container) {
@@ -23,14 +23,18 @@
         return !(rect1.right < rect2.left || rect1.left > rect2.right || rect1.bottom < rect2.top || rect1.top > rect2.bottom);
     }
 
-    function updateElementSelection(): void {
-        const elements = container?.querySelectorAll<HTMLElement>('.selectable');
+    function hasAllSelectionStyles(element: HTMLElement): boolean {
+        return SELECTION_STYLES.every(style => element.classList.contains(style));
+    }
 
-        elements?.forEach(element => {
+    function updateElementSelection(): void {
+        const elements = container.querySelectorAll('.selectable') as NodeListOf<HTMLElement>;
+
+        elements.forEach(element => {
             const elemRect = element.getBoundingClientRect();
 
             if (selectionRect && rectOverlap(selectionRect, elemRect)) {
-                if (!element.classList.contains('ring-2')) {
+                if (!hasAllSelectionStyles(element)) {
                     element.classList.add(...SELECTION_STYLES);
                 } else if (isCtrlPressed) {
                     element.classList.remove(...SELECTION_STYLES);
@@ -63,21 +67,18 @@
 
     container.addEventListener('mousedown', (e: MouseEvent) => {
         isCtrlPressed = e.ctrlKey;
-
         startPoint = new DOMPoint(e.clientX, e.clientY);
-
         container.addEventListener('mousemove', onMouseMove);
     });
 
     container.addEventListener('mouseup', (e: MouseEvent) => {
         if (startPoint) {
             container.removeEventListener('mousemove', onMouseMove);
-
             selectionRect = createRectFromPoints(new DOMPoint(startPoint.x, startPoint.y), new DOMPoint(e.clientX, e.clientY));
 
             updateElementSelection();
 
-            dotNetHelper.invokeMethodAsync('UpdateSelectedElements', Array.from(container.querySelectorAll('.selectable.ring-2')).map(el => el.id));
+            dotNetHelper.invokeMethodAsync('UpdateSelectedElements', Array.from(container.querySelectorAll('.selectable') as NodeListOf<HTMLElement>).filter(hasAllSelectionStyles).map(el => el.id));
 
             if (!isCtrlPressed) {
                 startPoint = null;
@@ -88,21 +89,18 @@
 
     container.addEventListener('touchstart', (e: TouchEvent) => {
         isCtrlPressed = e.touches.length > 1;
-
         startPoint = new DOMPoint(e.touches[0].clientX, e.touches[0].clientY);
-
         container.addEventListener('touchmove', onTouchMove);
     });
 
     container.addEventListener('touchend', (e: TouchEvent) => {
         if (e.changedTouches && e.changedTouches.length > 0 && startPoint) {
             container.removeEventListener('touchmove', onTouchMove);
-
             selectionRect = createRectFromPoints(new DOMPoint(startPoint.x, startPoint.y), new DOMPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY));
 
             updateElementSelection();
 
-            dotNetHelper.invokeMethodAsync('UpdateSelectedElements', Array.from(container.querySelectorAll('.selectable.ring-2')).map(el => el.id));
+            dotNetHelper.invokeMethodAsync('UpdateSelectedElements', Array.from(container.querySelectorAll('.selectable') as NodeListOf<HTMLElement>).filter(hasAllSelectionStyles).map(el => el.id));
         }
 
         if (!isCtrlPressed) {
