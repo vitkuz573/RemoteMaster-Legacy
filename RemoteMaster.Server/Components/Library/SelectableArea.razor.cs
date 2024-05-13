@@ -45,11 +45,10 @@ public partial class SelectableArea
 
         var area = await JsRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", "selectable-container");
         var rect = await area.InvokeAsync<Rectangle>("getBoundingClientRect");
+        
         _startPoint = new Point((int)(e.ClientX - rect.X), (int)(e.ClientY - rect.Y));
         _selectionRectangle = new Rectangle(_startPoint.X, _startPoint.Y, 0, 0);
         _isSelecting = true;
-
-        Log.Information("MouseDown at X: {X}, Y: {Y}, Rect: {Rect}", _startPoint.X, _startPoint.Y, _selectionRectangle);
 
         UpdateSelectionBox();
     }
@@ -68,18 +67,15 @@ public partial class SelectableArea
 
             UpdateSelectionRectangle(adjustedX, adjustedY);
             UpdateSelectionBox();
-
-            Log.Information("Raw MouseMove ClientX: {ClientX}, ClientY: {ClientY}, AdjustedX: {AdjustedX}, AdjustedY: {AdjustedY}, Rect: {Rect}",
-                            e.ClientX, e.ClientY, adjustedX, adjustedY, _selectionRectangle);
         }
     }
 
     protected void OnMouseUp(MouseEventArgs e)
     {
         _isSelecting = false;
+
         ClearSelectionBox();
         NotifySelectionChanged();
-        Log.Information("MouseUp with final rectangle {Rectangle}", _selectionRectangle);
     }
 
     private void ClearSelectionBox()
@@ -95,8 +91,6 @@ public partial class SelectableArea
         var height = Math.Abs(_startPoint.Y - adjustedY);
 
         _selectionRectangle = new Rectangle(x, y, width, height);
-
-        Log.Information("UpdateSelectionRectangle to X: {X}, Y: {Y}, Width: {Width}, Height: {Height}", x, y, width, height);
     }
 
     private void UpdateSelectionBox()
@@ -119,10 +113,8 @@ public partial class SelectableArea
     {
         SelectedElementIds = selectedElementIds;
 
-        // Optional: Log the current state of selected elements for debugging
         Log.Information("Selected elements updated: {@SelectedElementIds}", SelectedElementIds);
 
-        // Optional: Trigger an EventCallback if you need to notify other components
         await SelectedElementsChanged.InvokeAsync(SelectedElementIds);
     }
 }

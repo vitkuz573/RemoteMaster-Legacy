@@ -133,7 +133,6 @@
             let startPoint = null;
             let endPoint = null;
 
-            // Utility to create a rectangle from points
             function createRectFromPoints(p1, p2) {
                 const x = Math.min(p1.x, p2.x);
                 const y = Math.min(p1.y, p2.y);
@@ -142,13 +141,11 @@
                 return { left: x, top: y, right: x + width, bottom: y + height };
             }
 
-            // Utility to check if two rectangles overlap
             function rectOverlap(rect1, rect2) {
                 return !(rect1.right < rect2.left || rect1.left > rect2.right ||
                     rect1.bottom < rect2.top || rect1.top > rect2.bottom);
             }
 
-            // Function to detect selected elements
             function detectSelectedElements() {
                 if (!startPoint || !endPoint) return;
 
@@ -163,11 +160,9 @@
                     }
                 });
 
-                // Call the C# method to update the state with selected elements
                 dotNetHelper.invokeMethodAsync('UpdateSelectedElements', selectedElements);
             }
 
-            // Event listeners for selection update
             container.addEventListener('mousedown', (e) => {
                 startPoint = { x: e.clientX, y: e.clientY };
             });
@@ -175,8 +170,8 @@
             container.addEventListener('mouseup', (e) => {
                 endPoint = { x: e.clientX, y: e.clientY };
                 detectSelectedElements();
-                startPoint = null; // Reset start point
-                endPoint = null;   // Reset end point
+                startPoint = null;
+                endPoint = null;
             });
 
             container.addEventListener('touchstart', (e) => {
@@ -188,8 +183,8 @@
                     endPoint = { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
                 }
                 detectSelectedElements();
-                startPoint = null; // Reset start point
-                endPoint = null;   // Reset end point
+                startPoint = null;
+                endPoint = null;
             });
         }
     </script>
