@@ -32,11 +32,11 @@ public partial class SelectableArea
         .Add("border-gray-300")
         .Build();
 
-    protected string SelectionBoxStyle { get; set; }
-
     private bool _isSelecting;
     private Point _startPoint;
+    private string _selectionBoxStyle = string.Empty;
     private Rectangle _selectionRectangle;
+    private Rectangle _containerRectangle;
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
     {
@@ -51,26 +51,23 @@ public partial class SelectableArea
         ArgumentNullException.ThrowIfNull(e);
 
         var area = await JsRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", ContainerId);
-        var rect = await area.InvokeAsync<Rectangle>("getBoundingClientRect");
-        
-        _startPoint = new Point((int)(e.ClientX - rect.X), (int)(e.ClientY - rect.Y));
+        _containerRectangle = await area.InvokeAsync<Rectangle>("getBoundingClientRect");
+
+        _startPoint = new Point((int)(e.ClientX - _containerRectangle.X), (int)(e.ClientY - _containerRectangle.Y));
         _selectionRectangle = new Rectangle(_startPoint.X, _startPoint.Y, 0, 0);
         _isSelecting = true;
 
         UpdateSelectionBox();
     }
 
-    protected async Task OnMouseMove(MouseEventArgs e)
+    protected void OnMouseMove(MouseEventArgs e)
     {
         ArgumentNullException.ThrowIfNull(e);
 
         if (_isSelecting)
         {
-            var area = await JsRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", ContainerId);
-            var rect = await area.InvokeAsync<Rectangle>("getBoundingClientRect");
-
-            var adjustedX = (int)(e.ClientX - rect.X);
-            var adjustedY = (int)(e.ClientY - rect.Y);
+            var adjustedX = (int)(e.ClientX - _containerRectangle.X);
+            var adjustedY = (int)(e.ClientY - _containerRectangle.Y);
 
             UpdateSelectionRectangle(adjustedX, adjustedY);
             UpdateSelectionBox();
@@ -87,7 +84,7 @@ public partial class SelectableArea
 
     private void ClearSelectionBox()
     {
-        SelectionBoxStyle = "";
+        _selectionBoxStyle = "";
     }
 
     private void UpdateSelectionRectangle(int adjustedX, int adjustedY)
@@ -112,7 +109,7 @@ public partial class SelectableArea
             .Add("border", "1px solid #0078D7")
             .Build();
 
-        SelectionBoxStyle = styles;
+        _selectionBoxStyle = styles;
     }
 
     private void NotifySelectionChanged()
