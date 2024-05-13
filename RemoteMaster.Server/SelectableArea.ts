@@ -10,11 +10,7 @@ interface Rectangle {
     bottom: number;
 }
 
-interface DotNetHelper {
-    invokeMethodAsync: (methodName: string, args: any[]) => Promise<void>;
-}
-
-export function trackSelectedElements(containerId: string, dotNetHelper: DotNetHelper): void {
+export function trackSelectedElements(containerId: string, dotNetHelper: DotNet.DotNetObject): void {
     const container = document.getElementById(containerId);
 
     if (!container) {
