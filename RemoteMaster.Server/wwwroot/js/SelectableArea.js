@@ -1,7 +1,8 @@
 export function trackSelectedElements(containerId, dotNetHelper) {
     const container = document.getElementById(containerId);
-    if (!container)
+    if (!container) {
         return;
+    }
     let startPoint = null;
     let selectionRect = null;
     let isCtrlPressed = false;
@@ -35,14 +36,16 @@ export function trackSelectedElements(containerId, dotNetHelper) {
         });
     }
     function onMouseMove(e) {
-        if (startPoint === null)
+        if (startPoint === null) {
             return;
+        }
         selectionRect = createRectFromPoints(startPoint, { x: e.clientX, y: e.clientY });
         updateElementSelection();
     }
     function onTouchMove(e) {
-        if (startPoint === null || e.touches.length === 0)
+        if (startPoint === null || e.touches.length === 0) {
             return;
+        }
         selectionRect = createRectFromPoints(startPoint, { x: e.touches[0].clientX, y: e.touches[0].clientY });
         updateElementSelection();
     }
