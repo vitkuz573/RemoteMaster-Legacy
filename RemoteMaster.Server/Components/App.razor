@@ -131,7 +131,7 @@
         window.trackSelectedElements = function (selectableContainerId, dotNetHelper) {
             const container = document.getElementById(selectableContainerId);
             let startPoint = null;
-            let endPoint = null;
+            let selectionRect = null;
 
             function createRectFromPoints(p1, p2) {
                 const x = Math.min(p1.x, p2.x);
@@ -146,46 +146,57 @@
                     rect1.bottom < rect2.top || rect1.top > rect2.bottom);
             }
 
-            function detectSelectedElements() {
-                if (!startPoint || !endPoint) return;
-
-                const selectionRect = createRectFromPoints(startPoint, endPoint);
+            function updateElementSelection() {
                 const elements = container.querySelectorAll('.selectable');
-                const selectedElements = [];
-
                 elements.forEach(element => {
                     const elemRect = element.getBoundingClientRect();
                     if (rectOverlap(selectionRect, elemRect)) {
-                        selectedElements.push(element.id || element.className);
+                        element.classList.add('ring-2', 'ring-blue-500', 'shadow-lg');
+                    } else {
+                        element.classList.remove('ring-2', 'ring-blue-500', 'shadow-lg');
                     }
                 });
-
-                dotNetHelper.invokeMethodAsync('UpdateSelectedElements', selectedElements);
             }
 
             container.addEventListener('mousedown', (e) => {
                 startPoint = { x: e.clientX, y: e.clientY };
+                container.addEventListener('mousemove', onMouseMove);
             });
 
             container.addEventListener('mouseup', (e) => {
-                endPoint = { x: e.clientX, y: e.clientY };
-                detectSelectedElements();
+                container.removeEventListener('mousemove', onMouseMove);
+                selectionRect = createRectFromPoints(startPoint, { x: e.clientX, y: e.clientY });
+                updateElementSelection();
+                dotNetHelper.invokeMethodAsync('UpdateSelectedElements', Array.from(container.querySelectorAll('.selectable.bg-blue-300')).map(el => el.id));
                 startPoint = null;
-                endPoint = null;
+                selectionRect = null;
             });
+
+            function onMouseMove(e) {
+                selectionRect = createRectFromPoints(startPoint, { x: e.clientX, y: e.clientY });
+                updateElementSelection();
+            }
 
             container.addEventListener('touchstart', (e) => {
                 startPoint = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                container.addEventListener('touchmove', onTouchMove);
             });
 
             container.addEventListener('touchend', (e) => {
                 if (e.changedTouches && e.changedTouches.length > 0) {
-                    endPoint = { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+                    container.removeEventListener('touchmove', onTouchMove);
+                    selectionRect = createRectFromPoints(startPoint, { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY });
+                    updateElementSelection();
+                    dotNetHelper.invokeMethodAsync('UpdateSelectedElements', Array.from(container.querySelectorAll('.selectable.bg-blue-300')).map(el => el.id));
                 }
-                detectSelectedElements();
                 startPoint = null;
-                endPoint = null;
+                selectionRect = null;
             });
+
+            function onTouchMove(e) {
+                selectionRect = createRectFromPoints(startPoint, { x: e.touches[0].clientX, y: e.touches[0].clientY });
+                updateElementSelection();
+            }
         }
     </script>
 </body>

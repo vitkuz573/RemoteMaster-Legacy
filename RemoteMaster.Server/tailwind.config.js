@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-    content: ["./Components/*.razor", "./Components/*.razor.cs", "./Components/**/*.razor", "./Components/**/*.razor.cs", "./Components/Library/Extensions/*.cs"],
+    content: ["./Components/*.razor", "./Components/*.razor.cs", "./Components/**/*.razor", "./Components/**/*.razor.cs", "./Components/Library/Extensions/*.cs", "./Components/App.razor"],
     darkMode: "class",
     theme: {
         extend: {
