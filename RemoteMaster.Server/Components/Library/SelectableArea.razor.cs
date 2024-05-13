@@ -22,8 +22,8 @@ public partial class SelectableArea
     [Parameter]
     public EventCallback<List<string>> SelectedElementsChanged { get; set; }
 
-    [Parameter]
-    public string ContainerId { get; set; } = "selectable-container";
+    [Parameter, EditorRequired]
+    public string ContainerId { get; set; }
 
     public List<string> SelectedElementIds { get; private set; } = [];
 
