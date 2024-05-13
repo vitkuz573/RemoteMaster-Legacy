@@ -24,7 +24,10 @@ public partial class SelectableArea
 
     public List<string> SelectedElementIds { get; private set; } = [];
 
-    protected string ContainerStyle => "position: relative; user-select: none; width: 100%; height: 100%; border: 1px solid #ccc;";
+    protected string ContainerClasses => new CssClassBuilder()
+        .AddBase("relative user-select-none w-full h-full border")
+        .Add("border-gray-300")
+        .Build();
 
     protected string SelectionBoxStyle { get; set; }
 
