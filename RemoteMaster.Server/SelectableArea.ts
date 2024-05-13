@@ -1,42 +1,24 @@
-﻿interface Point {
-    x: number;
-    y: number;
-}
-
-interface Rectangle {
-    left: number;
-    top: number;
-    right: number;
-    bottom: number;
-}
-
-export function trackSelectedElements(containerId: string, dotNetHelper: DotNet.DotNetObject): void {
+﻿export function trackSelectedElements(containerId: string, dotNetHelper: DotNet.DotNetObject): void {
     const container = document.getElementById(containerId);
 
     if (!container) {
         return;
     }
 
-    let startPoint: Point | null = null;
-    let selectionRect: Rectangle | null = null;
+    let startPoint: DOMPoint | null = null;
+    let selectionRect: DOMRect | null = null;
     let isCtrlPressed: boolean = false;
 
-    function createRectFromPoints(p1: Point, p2: Point): Rectangle {
-        const x = Math.min(p1.x, p2.x);
-        const y = Math.min(p1.y, p2.y);
-
+    function createRectFromPoints(p1: DOMPoint, p2: DOMPoint): DOMRect {
+        const left = Math.min(p1.x, p2.x);
+        const top = Math.min(p1.y, p2.y);
         const width = Math.abs(p1.x - p2.x);
         const height = Math.abs(p1.y - p2.y);
 
-        return {
-            left: x,
-            top: y,
-            right: x + width,
-            bottom: y + height
-        };
+        return new DOMRect(left, top, width, height);
     }
 
-    function rectOverlap(rect1: Rectangle, rect2: Rectangle): boolean {
+    function rectOverlap(rect1: DOMRect, rect2: DOMRect): boolean {
         return !(rect1.right < rect2.left || rect1.left > rect2.right || rect1.bottom < rect2.top || rect1.top > rect2.bottom);
     }
 
@@ -59,10 +41,7 @@ export function trackSelectedElements(containerId: string, dotNetHelper: DotNet.
             return;
         }
 
-        selectionRect = createRectFromPoints(startPoint, {
-            x: e.clientX,
-            y: e.clientY
-        });
+        selectionRect = createRectFromPoints(new DOMPoint(startPoint.x, startPoint.y), new DOMPoint(e.clientX, e.clientY));
 
         updateElementSelection();
     }
@@ -72,10 +51,7 @@ export function trackSelectedElements(containerId: string, dotNetHelper: DotNet.
             return;
         }
 
-        selectionRect = createRectFromPoints(startPoint, {
-            x: e.touches[0].clientX,
-            y: e.touches[0].clientY
-        });
+        selectionRect = createRectFromPoints(new DOMPoint(startPoint.x, startPoint.y), new DOMPoint(e.touches[0].clientX, e.touches[0].clientY));
 
         updateElementSelection();
     }
@@ -83,10 +59,7 @@ export function trackSelectedElements(containerId: string, dotNetHelper: DotNet.
     container.addEventListener('mousedown', (e: MouseEvent) => {
         isCtrlPressed = e.ctrlKey;
 
-        startPoint = {
-            x: e.clientX,
-            y: e.clientY
-        };
+        startPoint = new DOMPoint(e.clientX, e.clientY);
 
         container.addEventListener('mousemove', onMouseMove);
     });
@@ -95,10 +68,7 @@ export function trackSelectedElements(containerId: string, dotNetHelper: DotNet.
         if (startPoint) {
             container.removeEventListener('mousemove', onMouseMove);
 
-            selectionRect = createRectFromPoints(startPoint, {
-                x: e.clientX,
-                y: e.clientY
-            });
+            selectionRect = createRectFromPoints(new DOMPoint(startPoint.x, startPoint.y), new DOMPoint(e.clientX, e.clientY));
 
             updateElementSelection();
 
@@ -114,10 +84,7 @@ export function trackSelectedElements(containerId: string, dotNetHelper: DotNet.
     container.addEventListener('touchstart', (e: TouchEvent) => {
         isCtrlPressed = e.touches.length > 1;
 
-        startPoint = {
-            x: e.touches[0].clientX,
-            y: e.touches[0].clientY
-        };
+        startPoint = new DOMPoint(e.touches[0].clientX, e.touches[0].clientY);
 
         container.addEventListener('touchmove', onTouchMove);
     });
@@ -126,10 +93,7 @@ export function trackSelectedElements(containerId: string, dotNetHelper: DotNet.
         if (e.changedTouches && e.changedTouches.length > 0 && startPoint) {
             container.removeEventListener('touchmove', onTouchMove);
 
-            selectionRect = createRectFromPoints(startPoint, {
-                x: e.changedTouches[0].clientX,
-                y: e.changedTouches[0].clientY
-            });
+            selectionRect = createRectFromPoints(new DOMPoint(startPoint.x, startPoint.y), new DOMPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY));
 
             updateElementSelection();
 
