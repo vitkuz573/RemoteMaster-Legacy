@@ -96,16 +96,21 @@ public partial class SelectableArea
     private void UpdateSelectionBox()
     {
         var styles = new CssStyleBuilder()
-            .Add("position", "absolute")
             .Add("left", $"{_selectionRectangle.X}px")
             .Add("top", $"{_selectionRectangle.Y}px")
             .Add("width", $"{_selectionRectangle.Width}px")
             .Add("height", $"{_selectionRectangle.Height}px")
-            .Add("background-color", "rgba(0, 120, 215, 0.3)")
-            .Add("border", "1px solid #0078D7")
             .Build();
 
         _selectionBoxStyle = styles;
+    }
+
+    private static string GetSelectionBoxClasses()
+    {
+        var builder = new CssClassBuilder()
+            .AddBase("absolute bg-blue-700 opacity-30 border border-blue-900");
+
+        return builder.Build();
     }
 
     private void NotifySelectionChanged()
