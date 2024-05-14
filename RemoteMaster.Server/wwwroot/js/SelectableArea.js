@@ -50,15 +50,9 @@ export function trackSelectedElements(containerId, selectableSelector, selection
         selectionRect = createRectFromPoints(new DOMPoint(startPoint.x, startPoint.y), new DOMPoint(e.touches[0].clientX, e.touches[0].clientY));
         updateElementSelection();
     }
-    container.addEventListener('mousedown', (e) => {
-        isCtrlPressed = e.ctrlKey;
-        startPoint = new DOMPoint(e.clientX, e.clientY);
-        container.addEventListener('mousemove', onMouseMove);
-    });
-    container.addEventListener('mouseup', (e) => {
+    function completeSelection(endPoint) {
         if (startPoint) {
-            container.removeEventListener('mousemove', onMouseMove);
-            selectionRect = createRectFromPoints(new DOMPoint(startPoint.x, startPoint.y), new DOMPoint(e.clientX, e.clientY));
+            selectionRect = createRectFromPoints(new DOMPoint(startPoint.x, startPoint.y), endPoint);
             updateElementSelection();
             dotNetHelper.invokeMethodAsync('UpdateSelectedElements', Array.from(container.querySelectorAll('.selectable')).filter(hasAllSelectionStyles).map(el => el.id));
             if (!isCtrlPressed) {
@@ -66,6 +60,15 @@ export function trackSelectedElements(containerId, selectableSelector, selection
                 selectionRect = null;
             }
         }
+    }
+    container.addEventListener('mousedown', (e) => {
+        isCtrlPressed = e.ctrlKey;
+        startPoint = new DOMPoint(e.clientX, e.clientY);
+        container.addEventListener('mousemove', onMouseMove);
+    });
+    container.addEventListener('mouseup', (e) => {
+        container.removeEventListener('mousemove', onMouseMove);
+        completeSelection(new DOMPoint(e.clientX, e.clientY));
     });
     container.addEventListener('touchstart', (e) => {
         isCtrlPressed = e.touches.length > 1;
@@ -73,15 +76,9 @@ export function trackSelectedElements(containerId, selectableSelector, selection
         container.addEventListener('touchmove', onTouchMove);
     });
     container.addEventListener('touchend', (e) => {
-        if (e.changedTouches && e.changedTouches.length > 0 && startPoint) {
+        if (e.changedTouches && e.changedTouches.length > 0) {
             container.removeEventListener('touchmove', onTouchMove);
-            selectionRect = createRectFromPoints(new DOMPoint(startPoint.x, startPoint.y), new DOMPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY));
-            updateElementSelection();
-            dotNetHelper.invokeMethodAsync('UpdateSelectedElements', Array.from(container.querySelectorAll('.selectable')).filter(hasAllSelectionStyles).map(el => el.id));
-        }
-        if (!isCtrlPressed) {
-            startPoint = null;
-            selectionRect = null;
+            completeSelection(new DOMPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY));
         }
     });
 }

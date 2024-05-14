@@ -64,16 +64,9 @@
         updateElementSelection();
     }
 
-    container.addEventListener('mousedown', (e: MouseEvent) => {
-        isCtrlPressed = e.ctrlKey;
-        startPoint = new DOMPoint(e.clientX, e.clientY);
-        container.addEventListener('mousemove', onMouseMove);
-    });
-
-    container.addEventListener('mouseup', (e: MouseEvent) => {
+    function completeSelection(endPoint: DOMPoint): void {
         if (startPoint) {
-            container.removeEventListener('mousemove', onMouseMove);
-            selectionRect = createRectFromPoints(new DOMPoint(startPoint.x, startPoint.y), new DOMPoint(e.clientX, e.clientY));
+            selectionRect = createRectFromPoints(new DOMPoint(startPoint.x, startPoint.y), endPoint);
 
             updateElementSelection();
 
@@ -84,6 +77,17 @@
                 selectionRect = null;
             }
         }
+    }
+
+    container.addEventListener('mousedown', (e: MouseEvent) => {
+        isCtrlPressed = e.ctrlKey;
+        startPoint = new DOMPoint(e.clientX, e.clientY);
+        container.addEventListener('mousemove', onMouseMove);
+    });
+
+    container.addEventListener('mouseup', (e: MouseEvent) => {
+        container.removeEventListener('mousemove', onMouseMove);
+        completeSelection(new DOMPoint(e.clientX, e.clientY));
     });
 
     container.addEventListener('touchstart', (e: TouchEvent) => {
@@ -93,18 +97,9 @@
     });
 
     container.addEventListener('touchend', (e: TouchEvent) => {
-        if (e.changedTouches && e.changedTouches.length > 0 && startPoint) {
+        if (e.changedTouches && e.changedTouches.length > 0) {
             container.removeEventListener('touchmove', onTouchMove);
-            selectionRect = createRectFromPoints(new DOMPoint(startPoint.x, startPoint.y), new DOMPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY));
-
-            updateElementSelection();
-
-            dotNetHelper.invokeMethodAsync('UpdateSelectedElements', Array.from(container.querySelectorAll('.selectable') as NodeListOf<HTMLElement>).filter(hasAllSelectionStyles).map(el => el.id));
-        }
-
-        if (!isCtrlPressed) {
-            startPoint = null;
-            selectionRect = null;
+            completeSelection(new DOMPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY));
         }
     });
 }
