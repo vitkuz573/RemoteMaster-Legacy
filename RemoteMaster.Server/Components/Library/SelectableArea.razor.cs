@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using RemoteMaster.Server.Components.Library.Utilities;
-using Serilog;
 
 namespace RemoteMaster.Server.Components.Library;
 
@@ -40,7 +39,7 @@ public partial class SelectableArea
         if (firstRender)
         {
             var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/SelectableArea.js");
-            await module.InvokeVoidAsync("trackSelectedElements", ContainerId, ".selectable", new string[] { "ring-2", "ring-blue-500", "shadow-lg" } , DotNetObjectReference.Create(this));
+            await module.InvokeVoidAsync("trackSelectedElements", ContainerId, ".selectable", new string[] { "ring-2", "ring-blue-500", "shadow-lg" }, DotNetObjectReference.Create(this));
         }
     }
 
@@ -81,7 +80,7 @@ public partial class SelectableArea
 
     private void ClearSelectionBox()
     {
-        _selectionBoxStyle = "";
+        _selectionBoxStyle = string.Empty;
     }
 
     private void UpdateSelectionRectangle(int adjustedX, int adjustedY)
