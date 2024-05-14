@@ -4,5 +4,8 @@
     "postcss": "^8.4.31",
     "tailwindcss": "^3.4.3"
   },
-  "scripts": {}
+  "scripts": {},
+  "dependencies": {
+    "@types/blazor__javascript-interop": "^3.1.7"
+  }
 }
