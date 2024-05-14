@@ -10,4 +10,7 @@ export function createImageBlobUrl(data) {
 export function getElementAttribute(element, attribute) {
     return element.getAttribute(attribute);
 }
+export function getElementRect(element) {
+    return element.getBoundingClientRect();
+}
 //# sourceMappingURL=blobUtils.js.map

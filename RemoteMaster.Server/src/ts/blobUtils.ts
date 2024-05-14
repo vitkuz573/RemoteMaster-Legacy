@@ -13,3 +13,7 @@ export function createImageBlobUrl(data: any): string {
 export function getElementAttribute(element: HTMLElement, attribute: string): string | null {
     return element.getAttribute(attribute);
 }
+
+export function getElementRect(element: HTMLElement): DOMRect {
+    return element.getBoundingClientRect();
+}

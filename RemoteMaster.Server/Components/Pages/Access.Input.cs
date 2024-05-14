@@ -14,8 +14,9 @@ public partial class Access
 {
     private async Task<PointF> GetRelativeMousePositionPercentAsync(MouseEventArgs e)
     {
-        var imgElement = await JsRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", "screenImage");
-        var imgPosition = await imgElement.InvokeAsync<RectangleF>("getBoundingClientRect");
+        var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/blobUtils.js");
+
+        var imgPosition = await module.InvokeAsync<RectangleF>("getElementRect", _screenImageElement);
 
         var percentX = (float)(e.ClientX - imgPosition.Left) / imgPosition.Width;
         var percentY = (float)(e.ClientY - imgPosition.Top) / imgPosition.Height;
