@@ -12,6 +12,7 @@ using Polly.Retry;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
+using Serilog;
 
 namespace RemoteMaster.Server.Components.Pages;
 
@@ -30,6 +31,7 @@ public partial class Access : IDisposable
     private string _hostVersion = string.Empty;
     private List<Display> _displays = [];
     private string _selectedDisplay = string.Empty;
+    private ElementReference _screenImageElement;
 
     private readonly AsyncRetryPolicy _retryPolicy = Policy
         .Handle<Exception>()
@@ -66,8 +68,10 @@ public partial class Access : IDisposable
 
         if (firstRender)
         {
-            await JsRuntime.InvokeVoidAsync("addKeyDownEventListener", DotNetObjectReference.Create(this));
-            await JsRuntime.InvokeVoidAsync("addKeyUpEventListener", DotNetObjectReference.Create(this));
+            var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/eventListeners.js");
+
+            await module.InvokeVoidAsync("addKeyDownEventListener", DotNetObjectReference.Create(this));
+            await module.InvokeVoidAsync("addKeyUpEventListener", DotNetObjectReference.Create(this));
         }
     }
 
@@ -202,9 +206,20 @@ public partial class Access : IDisposable
 
     private async Task HandleScreenUpdate(byte[] screenData)
     {
-        _screenDataUrl = await JsRuntime.InvokeAsync<string>("createImageBlobUrl", screenData);
+        var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/blobUtils.js");
+
+        _screenDataUrl = await module.InvokeAsync<string>("createImageBlobUrl", screenData);
 
         await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnLoad()
+    {
+        var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/blobUtils.js");
+
+        var src = await module.InvokeAsync<string>("getElementAttribute", _screenImageElement, "src");
+
+        await module.InvokeAsync<string>("revokeUrl", src);
     }
 
     private async Task ToggleInputEnabled(bool value)

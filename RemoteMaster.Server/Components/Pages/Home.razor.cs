@@ -297,7 +297,9 @@ public partial class Home
 
     private async Task OpenWindow(string url, uint width, uint height)
     {
-        await JsRuntime.InvokeVoidAsync("openNewWindow", url, width, height);
+        var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/windowOperations.js");
+
+        await module.InvokeVoidAsync("openNewWindow", url, width, height);
     }
 
     private async Task TaskManager()

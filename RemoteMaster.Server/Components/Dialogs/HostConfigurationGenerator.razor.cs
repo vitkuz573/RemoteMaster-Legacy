@@ -285,7 +285,9 @@ public partial class HostConfigurationGenerator
     {
         _model.Subject.OrganizationalUnit = _organizationalUnitInput.Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
 
-        await JsRuntime.InvokeVoidAsync("generateAndDownloadFile", _model);
+        var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/fileUtils.js");
+
+        await module.InvokeVoidAsync("generateAndDownloadFile", _model);
 
         StateHasChanged();
     }
