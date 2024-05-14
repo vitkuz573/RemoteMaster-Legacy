@@ -31,6 +31,7 @@ public partial class Access : IDisposable
     private List<Display> _displays = [];
     private string _selectedDisplay = string.Empty;
     private ElementReference _screenImageElement;
+    private string _accessToken;
 
     private readonly AsyncRetryPolicy _retryPolicy = Policy
         .Handle<Exception>()
@@ -167,10 +168,12 @@ public partial class Access : IDisposable
 
     private async Task InitializeHostConnectionAsync()
     {
+        _accessToken = await AccessTokenProvider.GetAccessTokenAsync();
+
         _connection = new HubConnectionBuilder()
             .WithUrl($"https://{Host}:5001/hubs/control", options =>
             {
-                options.AccessTokenProvider = async () => await AccessTokenProvider.GetAccessTokenAsync();
+                options.AccessTokenProvider = async () => await Task.FromResult(_accessToken);
             })
             .AddMessagePackProtocol()
             .Build();
