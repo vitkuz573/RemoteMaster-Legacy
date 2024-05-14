@@ -32,8 +32,8 @@ public partial class SelectableArea
     private bool _isSelecting;
     private Point _startPoint;
     private string _selectionBoxStyle = string.Empty;
-    private Rectangle _selectionRectangle;
-    private Rectangle _containerRectangle;
+    private RectangleF _selectionRectangle;
+    private RectangleF _containerRectangle;
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
     {
@@ -49,10 +49,10 @@ public partial class SelectableArea
         ArgumentNullException.ThrowIfNull(e);
 
         var area = await JsRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", ContainerId);
-        _containerRectangle = await area.InvokeAsync<Rectangle>("getBoundingClientRect");
+        _containerRectangle = await area.InvokeAsync<RectangleF>("getBoundingClientRect");
 
         _startPoint = new Point((int)(e.ClientX - _containerRectangle.X), (int)(e.ClientY - _containerRectangle.Y));
-        _selectionRectangle = new Rectangle(_startPoint.X, _startPoint.Y, 0, 0);
+        _selectionRectangle = new RectangleF(_startPoint.X, _startPoint.Y, 0, 0);
         _isSelecting = true;
 
         UpdateSelectionBox();
@@ -91,7 +91,7 @@ public partial class SelectableArea
         var width = Math.Abs(_startPoint.X - adjustedX);
         var height = Math.Abs(_startPoint.Y - adjustedY);
 
-        _selectionRectangle = new Rectangle(x, y, width, height);
+        _selectionRectangle = new RectangleF(x, y, width, height);
     }
 
     private void UpdateSelectionBox()

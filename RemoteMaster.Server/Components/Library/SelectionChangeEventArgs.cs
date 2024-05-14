@@ -8,7 +8,7 @@ namespace RemoteMaster.Server.Components.Library;
 
 public class SelectionChangeEventArgs : EventArgs
 {
-    public Rectangle SelectionRectangle { get; set; }
+    public RectangleF SelectionRectangle { get; set; }
 
 #pragma warning disable CA2227
     public List<string> SelectedElementIds { get; set; }
