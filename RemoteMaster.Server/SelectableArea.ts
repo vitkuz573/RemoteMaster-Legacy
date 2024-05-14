@@ -70,7 +70,7 @@
 
             updateElementSelection();
 
-            dotNetHelper.invokeMethodAsync('UpdateSelectedElements', Array.from(container.querySelectorAll('.selectable') as NodeListOf<HTMLElement>).filter(hasAllSelectionStyles).map(el => el.id));
+            dotNetHelper.invokeMethodAsync('UpdateSelectedElements', Array.from(container.querySelectorAll(selectableSelector) as NodeListOf<HTMLElement>).filter(hasAllSelectionStyles).map(el => el.id));
 
             if (!isCtrlPressed) {
                 startPoint = null;

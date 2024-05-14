@@ -54,7 +54,7 @@ export function trackSelectedElements(containerId, selectableSelector, selection
         if (startPoint) {
             selectionRect = createRectFromPoints(new DOMPoint(startPoint.x, startPoint.y), endPoint);
             updateElementSelection();
-            dotNetHelper.invokeMethodAsync('UpdateSelectedElements', Array.from(container.querySelectorAll('.selectable')).filter(hasAllSelectionStyles).map(el => el.id));
+            dotNetHelper.invokeMethodAsync('UpdateSelectedElements', Array.from(container.querySelectorAll(selectableSelector)).filter(hasAllSelectionStyles).map(el => el.id));
             if (!isCtrlPressed) {
                 startPoint = null;
                 selectionRect = null;
