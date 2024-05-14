@@ -21,6 +21,9 @@ public partial class SelectableArea
     [Parameter, EditorRequired]
     public string ContainerId { get; set; } = null!;
 
+    [Parameter, EditorRequired]
+    public string SelectableSelector { get; set; } = null!;
+
     public List<string> SelectedElementIds { get; private set; } = [];
 
     protected string ContainerClasses => new CssClassBuilder()
@@ -39,7 +42,7 @@ public partial class SelectableArea
         if (firstRender)
         {
             var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/SelectableArea.js");
-            await module.InvokeVoidAsync("trackSelectedElements", ContainerId, ".selectable", new string[] { "ring-2", "ring-blue-500", "shadow-lg" }, DotNetObjectReference.Create(this));
+            await module.InvokeVoidAsync("trackSelectedElements", ContainerId, SelectableSelector, new string[] { "ring-2", "ring-green-500", "shadow-lg" }, DotNetObjectReference.Create(this));
         }
     }
 
