@@ -44,33 +44,24 @@
         });
     }
 
-    function onMouseMove(e: MouseEvent): void {
+    function onMove(clientX: number, clientY: number): void {
         if (!startPoint) {
             return;
         }
 
-        selectionRect = createRectFromPoints(new DOMPoint(startPoint.x, startPoint.y), new DOMPoint(e.clientX, e.clientY));
-
+        selectionRect = createRectFromPoints(new DOMPoint(startPoint.x, startPoint.y), new DOMPoint(clientX, clientY));
         updateElementSelection();
     }
 
-    function onTouchMove(e: TouchEvent): void {
-        if (!startPoint || e.touches.length === 0) {
-            return;
-        }
-
-        selectionRect = createRectFromPoints(new DOMPoint(startPoint.x, startPoint.y), new DOMPoint(e.touches[0].clientX, e.touches[0].clientY));
-
-        updateElementSelection();
-    }
-
-    function completeSelection(endPoint: DOMPoint): void {
+    function onComplete(clientX: number, clientY: number): void {
         if (startPoint) {
-            selectionRect = createRectFromPoints(new DOMPoint(startPoint.x, startPoint.y), endPoint);
-
+            selectionRect = createRectFromPoints(new DOMPoint(startPoint.x, startPoint.y), new DOMPoint(clientX, clientY));
             updateElementSelection();
-
-            dotNetHelper.invokeMethodAsync('UpdateSelectedElements', Array.from(container.querySelectorAll(selectableSelector) as NodeListOf<HTMLElement>).filter(hasAllSelectionStyles).map(el => el.id));
+            dotNetHelper.invokeMethodAsync('UpdateSelectedElements',
+                Array.from(container.querySelectorAll(selectableSelector) as NodeListOf<HTMLElement>)
+                    .filter(hasAllSelectionStyles)
+                    .map(el => el.id)
+            );
 
             if (!isCtrlPressed) {
                 startPoint = null;
@@ -79,27 +70,42 @@
         }
     }
 
-    container.addEventListener('mousedown', (e: MouseEvent) => {
+    function onMouseDown(e: MouseEvent): void {
         isCtrlPressed = e.ctrlKey;
         startPoint = new DOMPoint(e.clientX, e.clientY);
         container.addEventListener('mousemove', onMouseMove);
-    });
+    }
 
-    container.addEventListener('mouseup', (e: MouseEvent) => {
+    function onMouseMove(e: MouseEvent): void {
+        onMove(e.clientX, e.clientY);
+    }
+
+    function onMouseUp(e: MouseEvent): void {
         container.removeEventListener('mousemove', onMouseMove);
-        completeSelection(new DOMPoint(e.clientX, e.clientY));
-    });
+        onComplete(e.clientX, e.clientY);
+    }
 
-    container.addEventListener('touchstart', (e: TouchEvent) => {
+    function onTouchStart(e: TouchEvent): void {
         isCtrlPressed = e.touches.length > 1;
         startPoint = new DOMPoint(e.touches[0].clientX, e.touches[0].clientY);
         container.addEventListener('touchmove', onTouchMove);
-    });
+    }
 
-    container.addEventListener('touchend', (e: TouchEvent) => {
-        if (e.changedTouches && e.changedTouches.length > 0) {
-            container.removeEventListener('touchmove', onTouchMove);
-            completeSelection(new DOMPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY));
+    function onTouchMove(e: TouchEvent): void {
+        if (e.touches.length > 0) {
+            onMove(e.touches[0].clientX, e.touches[0].clientY);
         }
-    });
+    }
+
+    function onTouchEnd(e: TouchEvent): void {
+        if (e.changedTouches.length > 0) {
+            container.removeEventListener('touchmove', onTouchMove);
+            onComplete(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+        }
+    }
+
+    container.addEventListener('mousedown', onMouseDown);
+    container.addEventListener('mouseup', onMouseUp);
+    container.addEventListener('touchstart', onTouchStart);
+    container.addEventListener('touchend', onTouchEnd);
 }

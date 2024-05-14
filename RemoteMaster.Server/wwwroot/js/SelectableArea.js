@@ -36,50 +36,57 @@ export function trackSelectedElements(containerId, selectableSelector, selection
             }
         });
     }
-    function onMouseMove(e) {
+    function onMove(clientX, clientY) {
         if (!startPoint) {
             return;
         }
-        selectionRect = createRectFromPoints(new DOMPoint(startPoint.x, startPoint.y), new DOMPoint(e.clientX, e.clientY));
+        selectionRect = createRectFromPoints(new DOMPoint(startPoint.x, startPoint.y), new DOMPoint(clientX, clientY));
         updateElementSelection();
     }
-    function onTouchMove(e) {
-        if (!startPoint || e.touches.length === 0) {
-            return;
-        }
-        selectionRect = createRectFromPoints(new DOMPoint(startPoint.x, startPoint.y), new DOMPoint(e.touches[0].clientX, e.touches[0].clientY));
-        updateElementSelection();
-    }
-    function completeSelection(endPoint) {
+    function onComplete(clientX, clientY) {
         if (startPoint) {
-            selectionRect = createRectFromPoints(new DOMPoint(startPoint.x, startPoint.y), endPoint);
+            selectionRect = createRectFromPoints(new DOMPoint(startPoint.x, startPoint.y), new DOMPoint(clientX, clientY));
             updateElementSelection();
-            dotNetHelper.invokeMethodAsync('UpdateSelectedElements', Array.from(container.querySelectorAll(selectableSelector)).filter(hasAllSelectionStyles).map(el => el.id));
+            dotNetHelper.invokeMethodAsync('UpdateSelectedElements', Array.from(container.querySelectorAll(selectableSelector))
+                .filter(hasAllSelectionStyles)
+                .map(el => el.id));
             if (!isCtrlPressed) {
                 startPoint = null;
                 selectionRect = null;
             }
         }
     }
-    container.addEventListener('mousedown', (e) => {
+    function onMouseDown(e) {
         isCtrlPressed = e.ctrlKey;
         startPoint = new DOMPoint(e.clientX, e.clientY);
         container.addEventListener('mousemove', onMouseMove);
-    });
-    container.addEventListener('mouseup', (e) => {
+    }
+    function onMouseMove(e) {
+        onMove(e.clientX, e.clientY);
+    }
+    function onMouseUp(e) {
         container.removeEventListener('mousemove', onMouseMove);
-        completeSelection(new DOMPoint(e.clientX, e.clientY));
-    });
-    container.addEventListener('touchstart', (e) => {
+        onComplete(e.clientX, e.clientY);
+    }
+    function onTouchStart(e) {
         isCtrlPressed = e.touches.length > 1;
         startPoint = new DOMPoint(e.touches[0].clientX, e.touches[0].clientY);
         container.addEventListener('touchmove', onTouchMove);
-    });
-    container.addEventListener('touchend', (e) => {
-        if (e.changedTouches && e.changedTouches.length > 0) {
-            container.removeEventListener('touchmove', onTouchMove);
-            completeSelection(new DOMPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY));
+    }
+    function onTouchMove(e) {
+        if (e.touches.length > 0) {
+            onMove(e.touches[0].clientX, e.touches[0].clientY);
         }
-    });
+    }
+    function onTouchEnd(e) {
+        if (e.changedTouches.length > 0) {
+            container.removeEventListener('touchmove', onTouchMove);
+            onComplete(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+        }
+    }
+    container.addEventListener('mousedown', onMouseDown);
+    container.addEventListener('mouseup', onMouseUp);
+    container.addEventListener('touchstart', onTouchStart);
+    container.addEventListener('touchend', onTouchEnd);
 }
 //# sourceMappingURL=SelectableArea.js.map
