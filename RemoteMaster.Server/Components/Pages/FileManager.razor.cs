@@ -110,7 +110,9 @@ public partial class FileManager : IDisposable
 
         _connection.On<byte[], string>("ReceiveFile", async (file, path) =>
         {
-            await JsRuntime.InvokeVoidAsync("saveAsFile", Path.GetFileName(path), Convert.ToBase64String(file));
+            var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/fileUtils.js");
+
+            await module.InvokeVoidAsync("saveAsFile", Path.GetFileName(path), Convert.ToBase64String(file));
         });
 
         _connection.On<List<string>>("ReceiveAvailableDrives", (drives) =>
