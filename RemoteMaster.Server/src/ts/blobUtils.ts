@@ -2,11 +2,11 @@
     URL.revokeObjectURL(url);
 }
 
-export function createObjectBlobUrl(data: any, type: string): string {
+export function createObjectBlobUrl(data: BlobPart, type: string): string {
     return URL.createObjectURL(new Blob([data], { type }));
 }
 
-export function createImageBlobUrl(data: any): string {
+export function createImageBlobUrl(data: BlobPart): string {
     return createObjectBlobUrl(data, 'image/jpeg');
 }
 

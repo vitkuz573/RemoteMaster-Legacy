@@ -1,16 +1,16 @@
-export function addKeyDownEventListener(dotnetHelper) {
+export function addKeyDownEventListener(dotNetHelper) {
     window.onkeydown = (e) => {
-        dotnetHelper.invokeMethodAsync('OnKeyDown', e.keyCode);
+        dotNetHelper.invokeMethodAsync('OnKeyDown', e.key);
     };
 }
-export function addKeyUpEventListener(dotnetHelper) {
+export function addKeyUpEventListener(dotNetHelper) {
     window.onkeyup = (e) => {
-        dotnetHelper.invokeMethodAsync('OnKeyUp', e.keyCode);
+        dotNetHelper.invokeMethodAsync('OnKeyUp', e.key);
     };
 }
 export function addPreventCtrlSListener() {
     window.addEventListener('keydown', (e) => {
-        if (e.ctrlKey && e.which === 83) {
+        if (e.ctrlKey && e.key === 's') {
             e.preventDefault();
         }
     });

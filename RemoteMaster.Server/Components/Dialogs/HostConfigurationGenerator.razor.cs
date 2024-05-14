@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Forms;
@@ -287,9 +288,15 @@ public partial class HostConfigurationGenerator
 
         var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/fileUtils.js");
 
-        await module.InvokeVoidAsync("generateAndDownloadFile", _model);
+        var jsonContent = JsonSerializer.Serialize(_model, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
 
-        StateHasChanged();
+        var filename = "RemoteMaster.Host.json";
+        var contentType = "application/json";
+
+        await module.InvokeVoidAsync("downloadDataAsFile", jsonContent, filename, contentType);
     }
 
     public void DownloadHost()

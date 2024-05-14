@@ -1,24 +1,24 @@
-﻿export function addKeyDownEventListener(dotnetHelper: any): void {
+﻿export function addKeyDownEventListener(dotNetHelper: DotNet.DotNetObject): void {
     window.onkeydown = (e: KeyboardEvent) => {
-        dotnetHelper.invokeMethodAsync('OnKeyDown', e.keyCode);
+        dotNetHelper.invokeMethodAsync('OnKeyDown', e.key);
     };
 }
 
-export function addKeyUpEventListener(dotnetHelper: any): void {
+export function addKeyUpEventListener(dotNetHelper: DotNet.DotNetObject): void {
     window.onkeyup = (e: KeyboardEvent) => {
-        dotnetHelper.invokeMethodAsync('OnKeyUp', e.keyCode);
+        dotNetHelper.invokeMethodAsync('OnKeyUp', e.key);
     };
 }
 
 export function addPreventCtrlSListener(): void {
     window.addEventListener('keydown', (e: KeyboardEvent) => {
-        if (e.ctrlKey && e.which === 83) {
+        if (e.ctrlKey && e.key === 's') {
             e.preventDefault();
         }
     });
 }
 
-export function addBeforeUnloadListener(instance: any): void {
+export function addBeforeUnloadListener(instance: DotNet.DotNetObject): void {
     window.addEventListener('beforeunload', () => {
         instance.invokeMethodAsync('OnBeforeUnload');
     });
