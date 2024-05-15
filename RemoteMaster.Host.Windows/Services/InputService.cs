@@ -22,10 +22,9 @@ public sealed class InputService : IInputService
     private readonly Thread _workerThread;
     private readonly ConcurrentBag<INPUT> _inputPool;
     private readonly IDesktopService _desktopService;
+    private bool _blockUserInput;
 
     public bool InputEnabled { get; set; } = true;
-
-    private bool _blockUserInput;
 
     public bool BlockUserInput
     {
@@ -36,10 +35,13 @@ public sealed class InputService : IInputService
             {
                 _blockUserInput = value;
 
-                if (!BlockInput(value))
+                EnqueueOperation(() =>
                 {
-                    Log.Error("Failed to block/unblock input. Error code: {0}", Marshal.GetLastWin32Error());
-                }
+                    if (!BlockInput(value))
+                    {
+                        Log.Error("Failed to block/unblock input. Error code: {0}", Marshal.GetLastWin32Error());
+                    }
+                });
             }
         }
     }
