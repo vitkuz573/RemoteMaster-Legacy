@@ -183,7 +183,7 @@ public sealed class InputService : IInputService
         {
             if (shiftState != 0 && dto.IsPressed)
             {
-                SendShiftKey(true);
+                SendShiftKey("ShiftLeft", true);
             }
 
             PrepareAndSendInput(INPUT_TYPE.INPUT_KEYBOARD, dto, (input, data) =>
@@ -202,18 +202,18 @@ public sealed class InputService : IInputService
 
             if (shiftState != 0 && !dto.IsPressed)
             {
-                SendShiftKey(false);
+                SendShiftKey("ShiftLeft", false);
             }
         });
     }
 
-    private void SendShiftKey(bool isDown)
+    private void SendShiftKey(string shiftKey, bool isDown)
     {
-        PrepareAndSendInput(INPUT_TYPE.INPUT_KEYBOARD, new KeyboardInputDto { Code = isDown ? "ShiftLeft" : "ShiftRight", IsPressed = isDown }, (input, data) =>
+        PrepareAndSendInput(INPUT_TYPE.INPUT_KEYBOARD, new KeyboardInputDto { Code = shiftKey, IsPressed = isDown }, (input, data) =>
         {
             input.Anonymous.ki = new KEYBDINPUT
             {
-                wVk = VIRTUAL_KEY.VK_SHIFT,
+                wVk = shiftKey == "ShiftLeft" ? VIRTUAL_KEY.VK_LSHIFT : VIRTUAL_KEY.VK_RSHIFT,
                 wScan = 0,
                 time = 0,
                 dwFlags = isDown ? 0 : KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP,
