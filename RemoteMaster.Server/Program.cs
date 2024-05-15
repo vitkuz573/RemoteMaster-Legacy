@@ -39,11 +39,20 @@ public static class Program
 
         builder.Host.UseSerilog((_, configuration) =>
         {
+            var minimumLevelOverrides = new Dictionary<string, LogEventLevel>
+            {
+                { "Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning },
+                { "Microsoft.AspNetCore", LogEventLevel.Warning }
+            };
+
             configuration.MinimumLevel.Information()
                          .WriteTo.Console()
-                         .WriteTo.File(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "RemoteMaster", "Server", "RemoteMaster_Server.log"), rollingInterval: RollingInterval.Day)
-                         .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning)
-                         .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning);
+                         .WriteTo.File(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "RemoteMaster", "Server", "RemoteMaster_Server.log"), rollingInterval: RollingInterval.Day);
+
+            foreach (var minimumLevelOverride in minimumLevelOverrides)
+            {
+                configuration.MinimumLevel.Override(minimumLevelOverride.Key, minimumLevelOverride.Value);
+            }
         });
 
         builder.WebHost.ConfigureKestrel(serverOptions =>

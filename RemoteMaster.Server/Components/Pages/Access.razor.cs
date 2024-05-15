@@ -12,6 +12,7 @@ using Polly.Retry;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
+using Serilog;
 
 namespace RemoteMaster.Server.Components.Pages;
 
@@ -70,6 +71,8 @@ public partial class Access : IDisposable
         {
             var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/eventListeners.js");
 
+            await module.InvokeVoidAsync("addPreventCtrlSListener");
+            await module.InvokeVoidAsync("addBeforeUnloadListener", DotNetObjectReference.Create(this));
             await module.InvokeVoidAsync("addKeyDownEventListener", DotNetObjectReference.Create(this));
             await module.InvokeVoidAsync("addKeyUpEventListener", DotNetObjectReference.Create(this));
         }
@@ -258,6 +261,8 @@ public partial class Access : IDisposable
     [JSInvokable]
     public void OnBeforeUnload()
     {
+        Log.Information("OnBeforeUnload invoked!");
+
         Dispose();
     }
 
