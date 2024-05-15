@@ -26,6 +26,7 @@ public partial class Access : IDisposable
     private bool _drawerOpen;
     private HubConnection _connection = null!;
     private bool _inputEnabled;
+    private bool _blockUserInput;
     private bool _cursorTracking;
     private int _imageQuality;
     private string _hostVersion = string.Empty;
@@ -231,6 +232,13 @@ public partial class Access : IDisposable
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendToggleInput", value));
         QueryParameterService.UpdateParameter("inputEnabled", value.ToString());
+    }
+
+    private async Task ToggleBlockUserInput(bool value)
+    {
+        _blockUserInput = value;
+
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendBlockUserInput", value));
     }
 
     private async Task ToggleCursorTracking(bool value)

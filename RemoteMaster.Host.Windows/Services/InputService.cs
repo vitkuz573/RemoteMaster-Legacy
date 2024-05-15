@@ -19,23 +19,44 @@ public sealed class InputService : IInputService
     private bool _disposed;
     private readonly BlockingCollection<Action> _operationQueue;
     private readonly CancellationTokenSource _cts;
-    private readonly int _numWorkers;
-    private readonly object _ctsLock;
+    private readonly Thread _workerThread;
     private readonly ConcurrentBag<INPUT> _inputPool;
     private readonly IDesktopService _desktopService;
 
     public bool InputEnabled { get; set; } = true;
 
-    public InputService(IDesktopService desktopService, int numWorkers = 4)
+    private bool _blockUserInput;
+
+    public bool BlockUserInput
+    {
+        get => _blockUserInput;
+        set
+        {
+            if (_blockUserInput != value)
+            {
+                _blockUserInput = value;
+
+                if (!BlockInput(value))
+                {
+                    Log.Error("Failed to block/unblock input. Error code: {0}", Marshal.GetLastWin32Error());
+                }
+            }
+        }
+    }
+
+    public InputService(IDesktopService desktopService)
     {
         _desktopService = desktopService;
         _operationQueue = [];
         _inputPool = [];
-        _cts = new();
-        _ctsLock = new();
-        _numWorkers = numWorkers;
+        _cts = new CancellationTokenSource();
 
-        StartWorkerThreads();
+        _workerThread = new Thread(ProcessQueue)
+        {
+            IsBackground = true
+        };
+
+        _workerThread.Start();
     }
 
     private static PointF GetAbsolutePercentFromRelativePercent(PointF? position, IScreenCapturerService screenCapturer)
@@ -46,27 +67,9 @@ public sealed class InputService : IInputService
         return new PointF((float)(absoluteX / screenCapturer.VirtualScreenBounds.Width), (float)(absoluteY / screenCapturer.VirtualScreenBounds.Height));
     }
 
-    private void StartWorkerThreads()
+    private void ProcessQueue()
     {
-        for (var i = 0; i < _numWorkers; i++)
-        {
-            Task.Factory.StartNew(() =>
-            {
-                CancellationToken token;
-
-                lock (_ctsLock)
-                {
-                    token = _cts.Token;
-                }
-
-                ProcessQueue(token);
-            }, TaskCreationOptions.LongRunning);
-        }
-    }
-
-    private void ProcessQueue(CancellationToken token)
-    {
-        foreach (var operation in _operationQueue.GetConsumingEnumerable(token))
+        foreach (var operation in _operationQueue.GetConsumingEnumerable(_cts.Token))
         {
             try
             {
@@ -93,10 +96,7 @@ public sealed class InputService : IInputService
 
     public void StopProcessing()
     {
-        lock (_ctsLock)
-        {
-            _cts.Cancel();
-        }
+        _cts.Cancel();
     }
 
     private void PrepareAndSendInput<TInput>(INPUT_TYPE inputType, TInput inputData, Func<INPUT, TInput, INPUT> fillInputData)
@@ -118,10 +118,10 @@ public sealed class InputService : IInputService
         EnqueueOperation(() =>
         {
             var mouseEventFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE | MOUSE_EVENT_FLAGS.MOUSEEVENTF_VIRTUALDESK;
-            
+
             var dx = 0;
             var dy = 0;
-            
+
             uint mouseData = 0;
 
             if (dto.DeltaY.HasValue)
@@ -132,7 +132,7 @@ public sealed class InputService : IInputService
             else
             {
                 var xyPercent = GetAbsolutePercentFromRelativePercent(dto.Position, screenCapturer);
-                
+
                 dx = (int)(xyPercent.X * 65535F);
                 dy = (int)(xyPercent.Y * 65535F);
 
@@ -401,11 +401,7 @@ public sealed class InputService : IInputService
         if (disposing)
         {
             _operationQueue.Dispose();
-
-            lock (_ctsLock)
-            {
-                _cts.Dispose();
-            }
+            _cts.Dispose();
         }
 
         _disposed = true;

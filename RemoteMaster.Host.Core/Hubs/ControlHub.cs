@@ -80,6 +80,11 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         inputService.InputEnabled = inputEnabled;
     }
 
+    public void SendBlockUserInput(bool blockInput)
+    {
+        inputService.BlockUserInput = blockInput;
+    }
+
     public void SendImageQuality(int quality)
     {
         ExecuteActionForViewer(viewer => viewer.ScreenCapturer.ImageQuality = quality);
