@@ -6,7 +6,7 @@ namespace RemoteMaster.Shared.Dtos;
 
 public class KeyboardInputDto
 {
-    public int KeyCode { get; init; }
+    public string Code { get; init; }
 
     public bool IsPressed { get; init; }
 }

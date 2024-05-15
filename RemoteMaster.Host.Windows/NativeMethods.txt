@@ -82,3 +82,5 @@ GetConsoleOutputCP
 GetConsoleCP
 DuplicateHandle
 GetStdHandle
+
+VkKeyScan
