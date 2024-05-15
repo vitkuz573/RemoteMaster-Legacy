@@ -259,7 +259,7 @@ public partial class Access : IDisposable
     [JSInvokable]
     public void OnBeforeUnload()
     {
-        Log.Information("OnBeforeUnload invoked!");
+        Log.Information("OnBeforeUnload invoked for host {Host}", Host);
 
         Dispose();
     }
