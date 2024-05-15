@@ -15,7 +15,8 @@
     "strictFunctionTypes": true,
     "strictBindCallApply": true,
     "strictPropertyInitialization": true,
-    "useDefineForClassFields": true
+    "useDefineForClassFields": true,
+    "rootDir": "src/ts"
   },
   "include": [
     "src/ts/**/*.ts",
