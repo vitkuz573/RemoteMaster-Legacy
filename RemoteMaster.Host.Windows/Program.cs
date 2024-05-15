@@ -75,6 +75,7 @@ internal class Program
         builder.Services.AddSingleton<IPsExecService, PsExecService>();
         builder.Services.AddSingleton<IFirewallService, FirewallService>();
         builder.Services.AddSingleton<IWoLConfiguratorService, WoLConfiguratorService>();
+        builder.Services.AddSingleton<ISessionChangeEventService, SessionChangeEventService>();
         builder.Services.AddSingleton(new JsonSerializerOptions
         {
             WriteIndented = true,

@@ -4,6 +4,7 @@
 
 using System.Diagnostics;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Extensions;
 using RemoteMaster.Host.Windows.Models;
 using Serilog;
@@ -16,6 +17,11 @@ public class UserInstanceService : IUserInstanceService
     private readonly string _currentExecutablePath = Environment.ProcessPath!;
 
     public bool IsRunning => FindHostProcesses().Any(IsUserInstance);
+
+    public UserInstanceService(ISessionChangeEventService sessionChangeEventService)
+    {
+        sessionChangeEventService.SessionChanged += OnSessionChanged;
+    }
 
     public void Start()
     {
@@ -80,5 +86,20 @@ public class UserInstanceService : IUserInstanceService
         var commandLine = process.GetCommandLine();
 
         return commandLine.Contains(_argument);
+    }
+
+    private void OnSessionChanged(object sender, SessionChangeEventArgs e)
+    {
+        if (e.ChangeDescription.Contains("A session was connected to the console terminal"))
+        {
+            Stop();
+
+            while (IsRunning)
+            {
+                Task.Delay(50).Wait();
+            }
+
+            Start();
+        }
     }
 }
