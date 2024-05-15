@@ -17,7 +17,8 @@ namespace RemoteMaster.Host.Windows.Services;
 public sealed class InputService : IInputService
 {
     private bool _disposed;
-    private readonly BlockingCollection<Action> _operationQueue;
+    private readonly ConcurrentQueue<Action> _operationQueue;
+    private readonly ManualResetEvent _queueEvent;
     private readonly CancellationTokenSource _cts;
     private readonly Thread _workerThread;
     private readonly ConcurrentBag<INPUT> _inputPool;
@@ -49,9 +50,10 @@ public sealed class InputService : IInputService
     public InputService(IDesktopService desktopService)
     {
         _desktopService = desktopService;
-        _operationQueue = [];
+        _operationQueue = new ConcurrentQueue<Action>();
         _inputPool = [];
         _cts = new CancellationTokenSource();
+        _queueEvent = new ManualResetEvent(false);
 
         _workerThread = new Thread(ProcessQueue)
         {
@@ -71,16 +73,23 @@ public sealed class InputService : IInputService
 
     private void ProcessQueue()
     {
-        foreach (var operation in _operationQueue.GetConsumingEnumerable(_cts.Token))
+        while (!_cts.Token.IsCancellationRequested)
         {
-            try
+            _queueEvent.WaitOne();
+
+            while (_operationQueue.TryDequeue(out var operation))
             {
-                operation();
+                try
+                {
+                    operation();
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Exception occurred during operation processing");
+                }
             }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Exception occurred during operation processing");
-            }
+
+            _queueEvent.Reset();
         }
     }
 
@@ -88,17 +97,20 @@ public sealed class InputService : IInputService
     {
         if (InputEnabled)
         {
-            _operationQueue.Add(() =>
+            _operationQueue.Enqueue(() =>
             {
                 _desktopService.SwitchToInputDesktop();
                 operation();
             });
+
+            _queueEvent.Set();
         }
     }
 
     public void StopProcessing()
     {
         _cts.Cancel();
+        _queueEvent.Set();
     }
 
     private void PrepareAndSendInput<TInput>(INPUT_TYPE inputType, TInput inputData, Func<INPUT, TInput, INPUT> fillInputData)
@@ -373,8 +385,8 @@ public sealed class InputService : IInputService
 
         if (disposing)
         {
-            _operationQueue?.Dispose();
             _cts?.Dispose();
+            _queueEvent?.Dispose();
         }
 
         _disposed = true;
