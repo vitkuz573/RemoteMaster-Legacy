@@ -18,7 +18,8 @@
     "useDefineForClassFields": true
   },
   "include": [
-    "src/ts/**/*.ts"
+    "src/ts/**/*.ts",
+    "Components/Library/*.ts"
   ],
   "exclude": [
     "node_modules",
