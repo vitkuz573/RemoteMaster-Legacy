@@ -1,12 +1,12 @@
 ﻿export function addKeyDownEventListener(dotNetHelper: DotNet.DotNetObject): void {
     window.onkeydown = (e: KeyboardEvent) => {
-        dotNetHelper.invokeMethodAsync('OnKeyDown', e.key);
+        dotNetHelper.invokeMethodAsync('OnKeyDown', e.keyCode);
     };
 }
 
 export function addKeyUpEventListener(dotNetHelper: DotNet.DotNetObject): void {
     window.onkeyup = (e: KeyboardEvent) => {
-        dotNetHelper.invokeMethodAsync('OnKeyUp', e.key);
+        dotNetHelper.invokeMethodAsync('OnKeyUp', e.keyCode);
     };
 }
 

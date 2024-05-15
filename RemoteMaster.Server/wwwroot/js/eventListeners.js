@@ -1,11 +1,11 @@
 export function addKeyDownEventListener(dotNetHelper) {
     window.onkeydown = (e) => {
-        dotNetHelper.invokeMethodAsync('OnKeyDown', e.key);
+        dotNetHelper.invokeMethodAsync('OnKeyDown', e.keyCode);
     };
 }
 export function addKeyUpEventListener(dotNetHelper) {
     window.onkeyup = (e) => {
-        dotNetHelper.invokeMethodAsync('OnKeyUp', e.key);
+        dotNetHelper.invokeMethodAsync('OnKeyUp', e.keyCode);
     };
 }
 export function addPreventCtrlSListener() {
