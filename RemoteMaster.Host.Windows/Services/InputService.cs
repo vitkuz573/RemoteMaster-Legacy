@@ -174,7 +174,7 @@ public sealed class InputService : IInputService
     {
         ArgumentNullException.ThrowIfNull(dto);
 
-        var virtualKeyCode = ConvertKeyToVirtualKeyCode(dto.Code, out var shiftState);
+        var virtualKeyCode = ConvertKeyToVirtualKeyCode(dto.Code);
 
         if (virtualKeyCode == (int)VIRTUAL_KEY.VK_LWIN || virtualKeyCode == (int)VIRTUAL_KEY.VK_RWIN)
         {
@@ -183,11 +183,6 @@ public sealed class InputService : IInputService
 
         EnqueueOperation(() =>
         {
-            if (shiftState != 0 && dto.IsPressed)
-            {
-                SendShiftKey("ShiftLeft", true);
-            }
-
             PrepareAndSendInput(INPUT_TYPE.INPUT_KEYBOARD, dto, (input, data) =>
             {
                 input.Anonymous.ki = new KEYBDINPUT
@@ -201,35 +196,11 @@ public sealed class InputService : IInputService
 
                 return input;
             });
-
-            if (shiftState != 0 && !dto.IsPressed)
-            {
-                SendShiftKey("ShiftLeft", false);
-            }
         });
     }
 
-    private void SendShiftKey(string shiftKey, bool isDown)
+    private static int ConvertKeyToVirtualKeyCode(string code)
     {
-        PrepareAndSendInput(INPUT_TYPE.INPUT_KEYBOARD, new KeyboardInputDto { Code = shiftKey, IsPressed = isDown }, (input, data) =>
-        {
-            input.Anonymous.ki = new KEYBDINPUT
-            {
-                wVk = shiftKey == "ShiftLeft" ? VIRTUAL_KEY.VK_LSHIFT : VIRTUAL_KEY.VK_RSHIFT,
-                wScan = 0,
-                time = 0,
-                dwFlags = isDown ? 0 : KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP,
-                dwExtraInfo = (nuint)GetMessageExtraInfo().Value
-            };
-
-            return input;
-        });
-    }
-
-    private static int ConvertKeyToVirtualKeyCode(string code, out byte shiftState)
-    {
-        shiftState = 0;
-
         if (string.IsNullOrEmpty(code))
         {
             throw new ArgumentException($"Invalid code: {code}");
@@ -402,8 +373,8 @@ public sealed class InputService : IInputService
 
         if (disposing)
         {
-            _operationQueue.Dispose();
-            _cts.Dispose();
+            _operationQueue?.Dispose();
+            _cts?.Dispose();
         }
 
         _disposed = true;
