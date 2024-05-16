@@ -15,7 +15,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class UserInstanceService : IUserInstanceService
 {
-    private readonly string _argument = $"--launch-mode=user";
+    private readonly string _argument = "--launch-mode=user";
     private readonly string _currentExecutablePath = Environment.ProcessPath!;
 
     public event EventHandler<UserInstanceCreatedEventArgs>? UserInstanceCreated;
