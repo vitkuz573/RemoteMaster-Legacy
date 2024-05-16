@@ -16,14 +16,12 @@ namespace RemoteMaster.Host.Windows.Services;
 public class CommandListenerService : IHostedService
 {
     private HubConnection? _connection;
-    private readonly ISessionChangeEventService _sessionChangeEventService;
 
     public CommandListenerService(ISessionChangeEventService sessionChangeEventService)
     {
         ArgumentNullException.ThrowIfNull(sessionChangeEventService);
 
-        _sessionChangeEventService = sessionChangeEventService;
-        _sessionChangeEventService.SessionChanged += OnSessionChanged;
+        sessionChangeEventService.SessionChanged += OnSessionChanged;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
