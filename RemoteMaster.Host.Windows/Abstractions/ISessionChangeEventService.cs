@@ -8,8 +8,7 @@ namespace RemoteMaster.Host.Windows.Abstractions;
 
 public interface ISessionChangeEventService
 {
-    event EventHandler<SessionChangeEventArgs> SessionChanged;
+    event EventHandler<SessionChangeEventArgs>? SessionChanged;
 
-    void OnSessionChanged(SessionChangeEventArgs e);
+    void OnSessionChanged(nuint wtsConstant);
 }
-

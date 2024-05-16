@@ -9,10 +9,12 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class SessionChangeEventService : ISessionChangeEventService
 {
-    public event EventHandler<SessionChangeEventArgs> SessionChanged;
+    public event EventHandler<SessionChangeEventArgs>? SessionChanged;
 
-    public void OnSessionChanged(SessionChangeEventArgs e)
+    public void OnSessionChanged(nuint reason)
     {
-        SessionChanged?.Invoke(this, e);
+        var args = new SessionChangeEventArgs(reason);
+
+        SessionChanged?.Invoke(this, args);
     }
 }

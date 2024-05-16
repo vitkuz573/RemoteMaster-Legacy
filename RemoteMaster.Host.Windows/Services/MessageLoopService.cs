@@ -1,12 +1,10 @@
-﻿
-// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Hosting;
 using RemoteMaster.Host.Windows.Abstractions;
-using RemoteMaster.Host.Windows.Models;
 using Serilog;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
@@ -121,33 +119,9 @@ public class MessageLoopService : IHostedService
     {
         if (msg == WM_WTSSESSION_CHANGE)
         {
-            LogSessionChange(wParam);
+            _sessionChangeEventService.OnSessionChanged(wParam.Value);
         }
 
         return DefWindowProc(hwnd, msg, wParam, lParam);
-    }
-
-    private void LogSessionChange(WPARAM wParam)
-    {
-        var sessionChangeReason = GetSessionChangeDescription(wParam);
-        Log.Information("Received session change notification. Reason: {Reason}", sessionChangeReason);
-        _sessionChangeEventService.OnSessionChanged(new SessionChangeEventArgs(sessionChangeReason));
-    }
-
-    private static string GetSessionChangeDescription(WPARAM wParam)
-    {
-        return wParam.Value switch
-        {
-            WTS_CONSOLE_CONNECT => "A session was connected to the console terminal",
-            WTS_CONSOLE_DISCONNECT => "A session was disconnected from the console terminal",
-            WTS_REMOTE_CONNECT => "A session was connected to the remote terminal",
-            WTS_REMOTE_DISCONNECT => "A session was disconnected from the remote terminal",
-            WTS_SESSION_LOGON => "A user has logged on to the session",
-            WTS_SESSION_LOGOFF => "A user has logged off the session",
-            WTS_SESSION_LOCK => "A session has been locked",
-            WTS_SESSION_UNLOCK => "A session has been unlocked",
-            WTS_SESSION_REMOTE_CONTROL => "A session has changed its remote controlled status",
-            _ => "Unknown session change reason."
-        };
     }
 }

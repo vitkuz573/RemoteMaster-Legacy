@@ -4,8 +4,7 @@
 
 namespace RemoteMaster.Host.Windows.Models;
 
-public class SessionChangeEventArgs(string changeDescription) : EventArgs
+public class SessionChangeEventArgs(nuint reason) : EventArgs
 {
-    public string ChangeDescription { get; } = changeDescription;
+    public nuint Reason { get; } = reason;
 }
-

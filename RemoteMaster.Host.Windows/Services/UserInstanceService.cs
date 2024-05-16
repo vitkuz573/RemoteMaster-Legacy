@@ -9,6 +9,7 @@ using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Extensions;
 using RemoteMaster.Host.Windows.Models;
 using Serilog;
+using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
@@ -100,7 +101,7 @@ public class UserInstanceService : IUserInstanceService
 
     private void OnSessionChanged(object? sender, SessionChangeEventArgs e)
     {
-        if (e.ChangeDescription.Contains("A session was connected to the console terminal"))
+        if (e.Reason == WTS_CONSOLE_CONNECT)
         {
             Stop();
 
