@@ -118,6 +118,8 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             {
                 await Notify("Emergency recovery was applied. Please check the system's integrity.", MessageType.Warning);
             }
+
+            await DeleteDirectoriesAsync(Path.Combine(BaseFolderPath, "Update"), Path.Combine(BaseFolderPath, "Updater"));
         }
         catch (Exception ex)
         {
@@ -423,6 +425,25 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         while (await streamReader.ReadLineAsync() is { } line)
         {
             await hubContext.Clients.All.ReceiveMessage(new Message(line, messageType));
+        }
+    }
+
+    private async Task DeleteDirectoriesAsync(params string[] directories)
+    {
+        foreach (var directory in directories)
+        {
+            try
+            {
+                if (Directory.Exists(directory))
+                {
+                    Directory.Delete(directory, true);
+                    await Notify($"Successfully deleted directory: {directory}", MessageType.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                await Notify($"Failed to delete directory {directory}: {ex.Message}", MessageType.Error);
+            }
         }
     }
 }
