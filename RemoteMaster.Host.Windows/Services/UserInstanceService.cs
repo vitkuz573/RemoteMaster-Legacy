@@ -90,7 +90,7 @@ public class UserInstanceService : IUserInstanceService
         return commandLine.Contains(_argument);
     }
 
-    private void OnSessionChanged(object sender, SessionChangeEventArgs e)
+    private void OnSessionChanged(object? sender, SessionChangeEventArgs e)
     {
         if (e.ChangeDescription.Contains("A session was connected to the console terminal"))
         {
