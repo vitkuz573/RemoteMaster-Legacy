@@ -10,5 +10,5 @@ public interface ISessionChangeEventService
 {
     event EventHandler<SessionChangeEventArgs>? SessionChanged;
 
-    void OnSessionChanged(nuint wtsConstant);
+    void OnSessionChanged(nuint reason);
 }
