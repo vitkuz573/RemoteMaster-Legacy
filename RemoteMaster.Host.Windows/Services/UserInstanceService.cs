@@ -4,6 +4,7 @@
 
 using System.Diagnostics;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Extensions;
 using RemoteMaster.Host.Windows.Models;
@@ -15,6 +16,8 @@ public class UserInstanceService : IUserInstanceService
 {
     private readonly string _argument = $"--launch-mode=user";
     private readonly string _currentExecutablePath = Environment.ProcessPath!;
+
+    public event EventHandler<UserInstanceCreatedEventArgs>? UserInstanceCreated;
 
     public bool IsRunning => FindHostProcesses().Any(IsUserInstance);
 
@@ -29,8 +32,11 @@ public class UserInstanceService : IUserInstanceService
     {
         try
         {
-            StartNewInstance();
+            var processId = StartNewInstance();
+
             Log.Information("Successfully started a new instance of the host.");
+
+            OnUserInstanceCreated(new UserInstanceCreatedEventArgs(processId));
         }
         catch (Exception ex)
         {
@@ -59,7 +65,7 @@ public class UserInstanceService : IUserInstanceService
         }
     }
 
-    private void StartNewInstance()
+    private int StartNewInstance()
     {
         using var process = new NativeProcess();
 
@@ -74,6 +80,8 @@ public class UserInstanceService : IUserInstanceService
         process.Start();
 
         Log.Information("Started a new instance of the host with options: {@Options}", process.StartInfo);
+
+        return process.Id;
     }
 
     private Process[] FindHostProcesses()
@@ -103,5 +111,10 @@ public class UserInstanceService : IUserInstanceService
 
             Start();
         }
+    }
+
+    protected virtual void OnUserInstanceCreated(UserInstanceCreatedEventArgs e)
+    {
+        UserInstanceCreated?.Invoke(this, e);
     }
 }
