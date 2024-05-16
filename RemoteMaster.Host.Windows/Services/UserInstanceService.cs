@@ -20,6 +20,8 @@ public class UserInstanceService : IUserInstanceService
 
     public UserInstanceService(ISessionChangeEventService sessionChangeEventService)
     {
+        ArgumentNullException.ThrowIfNull(sessionChangeEventService);
+
         sessionChangeEventService.SessionChanged += OnSessionChanged;
     }
 
