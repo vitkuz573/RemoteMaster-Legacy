@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using RemoteMaster.Host.Windows.Abstractions;
-using RemoteMaster.Host.Windows.Models;
+using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Models;
 using Serilog;
 using static Windows.Win32.PInvoke;
 
@@ -15,22 +15,20 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class CommandListenerService : IHostedService
 {
+    private readonly IUserInstanceService _userInstanceService;
     private HubConnection? _connection;
 
-    public CommandListenerService(ISessionChangeEventService sessionChangeEventService)
+    public CommandListenerService(IUserInstanceService userInstanceService)
     {
-        ArgumentNullException.ThrowIfNull(sessionChangeEventService);
-
-        sessionChangeEventService.SessionChanged += OnSessionChanged;
+        _userInstanceService = userInstanceService ?? throw new ArgumentNullException(nameof(userInstanceService));
+        _userInstanceService.UserInstanceCreated += OnUserInstanceCreated;
     }
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    public Task StartAsync(CancellationToken cancellationToken)
     {
-        Log.Information("Starting listen service commands");
+        Log.Information("Starting CommandListenerService");
 
-        await Task.Delay(5000, cancellationToken);
-
-        await ConnectToHubAsync(cancellationToken);
+        return Task.CompletedTask;
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
@@ -41,8 +39,10 @@ public class CommandListenerService : IHostedService
         }
     }
 
-    private async Task ConnectToHubAsync(CancellationToken cancellationToken)
+    private async void OnUserInstanceCreated(object? sender, UserInstanceCreatedEventArgs e)
     {
+        Log.Information("UserInstanceCreated event received, connecting to hub");
+
         try
         {
             _connection = new HubConnectionBuilder()
@@ -59,21 +59,12 @@ public class CommandListenerService : IHostedService
                 }
             });
 
-            await _connection.StartAsync(cancellationToken);
-            await _connection.InvokeAsync("JoinGroup", "serviceGroup", cancellationToken: cancellationToken);
+            await _connection.StartAsync();
+            await _connection.InvokeAsync("JoinGroup", "serviceGroup");
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Connection error");
-        }
-    }
-
-    private async void OnSessionChanged(object? sender, SessionChangeEventArgs e)
-    {
-        if (e.ChangeDescription.Contains("A session was connected to the console terminal"))
-        {
-            Log.Information("Session changed, reconnecting to hub");
-            await ConnectToHubAsync(CancellationToken.None);
         }
     }
 }

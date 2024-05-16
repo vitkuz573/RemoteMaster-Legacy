@@ -70,7 +70,7 @@ public static class WebApplicationBuilderExtensions
             }
 #endif
             configuration.WriteTo.Console();
-            // configuration.WriteTo.Seq("http://172.20.20.33:5341");
+            configuration.WriteTo.Seq("http://172.20.20.33:5341");
             configuration.WriteTo.File(fileLog, rollingInterval: RollingInterval.Day);
             configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Received hub invocation"));
             configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Successfully switched to input desktop"));
