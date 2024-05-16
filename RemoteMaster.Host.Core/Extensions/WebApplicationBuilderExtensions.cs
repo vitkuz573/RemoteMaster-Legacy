@@ -32,8 +32,6 @@ public static class WebApplicationBuilderExtensions
                         adapterOptions.ServerCertificateSelector = (context, name) => certLoaderService.GetCurrentCertificate();
                     });
                 });
-
-                options.ListenAnyIP(5000);
             }
             else if (launchModeInstance is UpdaterMode)
             {

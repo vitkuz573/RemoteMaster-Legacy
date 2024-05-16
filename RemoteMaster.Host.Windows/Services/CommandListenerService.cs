@@ -45,8 +45,16 @@ public class CommandListenerService : IHostedService
 
         try
         {
+            using var httpClientHandler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (message, certificate2, arg3, arg4) => true
+            };
+
             _connection = new HubConnectionBuilder()
-                .WithUrl("http://127.0.0.1:5000/hubs/control")
+                .WithUrl("https://127.0.0.1:5001/hubs/control", options =>
+                {
+                    options.HttpMessageHandlerFactory = _ => httpClientHandler;
+                })
                 .AddMessagePackProtocol()
                 .Build();
 
