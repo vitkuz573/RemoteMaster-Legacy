@@ -19,9 +19,11 @@ namespace RemoteMaster.Host.Core.Hubs;
 [Authorize]
 public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturerService, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService) : Hub<IControlClient>
 {
-    public async Task ConnectAs(Intention intention)
+    public async Task ConnectAs(ConnectRequest connectRequest)
     {
-        switch (intention)
+        ArgumentNullException.ThrowIfNull(connectRequest);
+
+        switch (connectRequest.Intention)
         {
             case Intention.ReceiveThumbnail:
                 var thumbnail = screenCapturerService.GetThumbnail(500, 300);
@@ -36,14 +38,14 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
                 break;
 
             case Intention.ManageDevice:
-                var viewer = viewerFactory.Create(Context.ConnectionId);
+                var viewer = viewerFactory.Create(Context.ConnectionId, connectRequest.UserName);
                 appState.TryAddViewer(viewer);
 
                 var transportType = Context.Features.Get<IHttpTransportFeature>().TransportType;
                 await Clients.Caller.ReceiveTransportType(transportType.ToString());
                 break;
             default:
-                Log.Error("Unknown intention: {Intention}", intention);
+                Log.Error("Unknown intention: {Intention}", connectRequest.Intention);
                 break;
         }
     }

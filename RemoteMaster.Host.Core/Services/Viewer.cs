@@ -20,7 +20,7 @@ public class Viewer : IViewer
     private readonly CancellationTokenSource _cts;
     private bool _disposed;
 
-    public Viewer(IAppState appState, IHubContext<ControlHub, IControlClient> hubContext, IScreenCapturerService screenCapturer, string connectionId)
+    public Viewer(IAppState appState, IHubContext<ControlHub, IControlClient> hubContext, IScreenCapturerService screenCapturer, string connectionId, string userName)
     {
         ArgumentNullException.ThrowIfNull(appState);
 
@@ -29,6 +29,8 @@ public class Viewer : IViewer
 
         ScreenCapturer = screenCapturer;
         ConnectionId = connectionId;
+        UserName = userName;
+        ConnectedTime = DateTime.UtcNow;
 
         _appState.ViewerAdded += AppState_ViewerAdded;
         _appState.ViewerRemoved += AppState_ViewerRemoved;
@@ -63,9 +65,9 @@ public class Viewer : IViewer
 
     public string ConnectionId { get; }
 
-    public string UserName => "Test User";
+    public string UserName { get; set; }
 
-    public DateTime ConnectedTime => DateTime.Now;
+    public DateTime ConnectedTime { get; }
 
     private async Task StartStreaming()
     {

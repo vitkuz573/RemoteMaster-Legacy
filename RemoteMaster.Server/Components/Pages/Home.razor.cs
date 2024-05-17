@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using MudBlazor;
 using RemoteMaster.Server.Components.Dialogs;
+using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
 using Serilog;
@@ -231,8 +232,11 @@ public partial class Home
             });
 
             await connection.StartAsync();
+
+            var connectRequest = new ConnectRequest(Intention.ReceiveThumbnail, "UserName");
+
             Log.Information("Calling ConnectAs with Intention.ReceiveThumbnail for {IPAddress}", computer.IpAddress);
-            await connection.InvokeAsync("ConnectAs", Intention.ReceiveThumbnail);
+            await connection.InvokeAsync("ConnectAs", connectRequest);
         }
         catch (Exception ex)
         {

@@ -211,16 +211,18 @@ public partial class Access : IDisposable
         _connection.On<string>("ReceiveTransportType", transportType => _transportType = transportType);
         _connection.On<List<ViewerDto>>("ReceiveAllViewers", viewers => _viewers = viewers);
 
+        var connectRequest = new ConnectRequest(Intention.ManageDevice, "UserName");
+
         _connection.Closed += async (_) =>
         {
             await Task.Delay(TimeSpan.FromSeconds(5));
             await _connection.StartAsync();
-            await SafeInvokeAsync(() => _connection.InvokeAsync("ConnectAs", Intention.ManageDevice));
+            await SafeInvokeAsync(() => _connection.InvokeAsync("ConnectAs", connectRequest));
         };
 
         await _connection.StartAsync();
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("ConnectAs", Intention.ManageDevice));
+        await SafeInvokeAsync(() => _connection.InvokeAsync("ConnectAs", connectRequest));
     }
 
     private async Task FetchViewersAsync()
