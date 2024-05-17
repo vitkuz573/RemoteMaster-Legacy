@@ -22,7 +22,7 @@
 @inject IAccessTokenProvider AccessTokenProvider
 @inject UserManager<ApplicationUser> UserManager
 
-<MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme" />
+<MudThemeProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
@@ -42,7 +42,7 @@
         </MudDrawerHeader>
         <MudNavMenu>
             <MudNavLink Match="NavLinkMatch.All" OnClick="OpenHostConfigurationGenerator">Host Configuration Generator</MudNavLink>
-            <MudNavLink Match="NavLinkMatch.All" OnClick="PublishCrl">Publish CRL</MudNavLink>   
+            <MudNavLink Match="NavLinkMatch.All" OnClick="PublishCrl">Publish CRL</MudNavLink>
             <MudNavLink Match="NavLinkMatch.All" OnClick="ManageProfile">Profile</MudNavLink>
             <MudNavLink Match="NavLinkMatch.All" OnClick="Logout">Logout</MudNavLink>
         </MudNavMenu>
@@ -76,7 +76,7 @@
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="DomainMembership" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Domain Membership</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Update" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Update</MudButton>
                     </MudTabPanel>
-                    
+
                     <MudTabPanel Text="Tools" Icon="@Icons.Material.Filled.MiscellaneousServices">
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="TaskManager" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Task Manager</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="FileManager" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">File Manager</MudButton>
