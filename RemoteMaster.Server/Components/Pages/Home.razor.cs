@@ -31,8 +31,8 @@ public partial class Home
     private HashSet<Node>? _nodes;
 
     private readonly List<Computer> _selectedComputers = new();
-    private ConcurrentBag<Computer> _availableComputers = new();
-    private ConcurrentBag<Computer> _unavailableComputers = new();
+    private ConcurrentDictionary<string, Computer> _availableComputers = new();
+    private ConcurrentDictionary<string, Computer> _unavailableComputers = new();
 
     private readonly AsyncRetryPolicy _retryPolicy;
 
@@ -130,8 +130,13 @@ public partial class Home
         {
             var computers = organizationalUnit.Nodes.OfType<Computer>().ToList();
 
-            _availableComputers = new ConcurrentBag<Computer>();
-            _unavailableComputers = new ConcurrentBag<Computer>(computers);
+            _availableComputers.Clear();
+            _unavailableComputers = new ConcurrentDictionary<string, Computer>();
+
+            foreach (var computer in computers)
+            {
+                _unavailableComputers.TryAdd(computer.IpAddress, computer);
+            }
 
             await UpdateComputerAvailabilityAsync(computers);
         }
@@ -151,12 +156,8 @@ public partial class Home
 
         if (isHubAvailable)
         {
-            _availableComputers.Add(computer);
-            _unavailableComputers = new ConcurrentBag<Computer>(_unavailableComputers.Except(new[] { computer }));
-        }
-        else
-        {
-            _unavailableComputers.Add(computer);
+            _availableComputers.TryAdd(computer.IpAddress, computer);
+            _unavailableComputers.TryRemove(computer.IpAddress, out _);
         }
     }
 
@@ -275,7 +276,7 @@ public partial class Home
 
     private async Task ExecuteActionDialog<TDialog>(string title, bool onlyAvailable = true, bool startConnection = true, bool extraLarge = false) where TDialog : ComponentBase
     {
-        if (_selectedComputers.All(computer => !_availableComputers.Contains(computer)))
+        if (_selectedComputers.All(computer => !_availableComputers.ContainsKey(computer.IpAddress)))
         {
             return;
         }
@@ -386,8 +387,8 @@ public partial class Home
             {
                 await DatabaseService.RemoveNodeAsync(computer);
 
-                _availableComputers.TryTake(out _);
-                _unavailableComputers.TryTake(out _);
+                _availableComputers.TryRemove(computer.IpAddress, out _);
+                _unavailableComputers.TryRemove(computer.IpAddress, out _);
             }
 
             _selectedComputers.Clear();
