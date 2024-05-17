@@ -26,4 +26,6 @@ public interface IControlClient
     Task ReceiveCloseConnection();
 
     Task ReceiveTransportType(string transportType);
+
+    Task ReceiveAllViewers(List<ViewerDto> viewers);
 }

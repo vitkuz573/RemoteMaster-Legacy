@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Enums;
+using RemoteMaster.Shared.Models;
 using Serilog;
 
 namespace RemoteMaster.Host.Core.Hubs;
@@ -190,5 +191,17 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         }
 
         return certificate.GetSerialNumberString();
+    }
+
+    public async Task GetAllViewers()
+    {
+        var viewers = appState.GetAllViewers();
+
+        var viewerList = viewers.Select(v => new ViewerDto
+        {
+            ConnectionId = v.ConnectionId,
+        }).ToList();
+
+        await Clients.Caller.ReceiveAllViewers(viewerList);
     }
 }

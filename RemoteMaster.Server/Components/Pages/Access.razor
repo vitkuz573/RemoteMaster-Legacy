@@ -76,6 +76,25 @@
             </MudNavLink>
 
             <MudNavLink Icon="@Icons.Material.Filled.Computer">Host Version: @(_hostVersion)</MudNavLink>
+
+            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.People">
+                <MudText>Viewers</MudText>
+                @if (_viewers != null && _viewers.Any())
+                {
+                    <MudList>
+                        @foreach (var viewer in _viewers)
+                        {
+                            <MudListItem>
+                                @viewer.ConnectionId
+                            </MudListItem>
+                        }
+                    </MudList>
+                }
+                else
+                {
+                    <MudText>No viewers connected</MudText>
+                }
+            </MudNavLink>
         </MudNavMenu>
     </MudDrawer>
 

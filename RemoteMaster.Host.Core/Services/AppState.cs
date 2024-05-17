@@ -58,4 +58,9 @@ public class AppState : IAppState
 
         return result;
     }
+
+    public IReadOnlyList<IViewer> GetAllViewers()
+    {
+        return [.. _viewers.Values];
+    }
 }

@@ -36,6 +36,7 @@ public partial class Access : IDisposable
     private string _selectedDisplay = string.Empty;
     private ElementReference _screenImageElement;
     private string _accessToken;
+    private List<ViewerDto> _viewers = [];
 
     private readonly AsyncPolicyWrap _combinedPolicy;
 
@@ -48,6 +49,7 @@ public partial class Access : IDisposable
     };
 
     private string? _title;
+    private bool _firstRenderCompleted = false;
 
     public Access()
     {
@@ -67,7 +69,10 @@ public partial class Access : IDisposable
             .Handle<HubException>(ex => ex.Message.Contains("Method does not exist"))
             .FallbackAsync(async (ct) =>
             {
-                await JsRuntime.InvokeVoidAsync("alert", "This function is not available in the current host version. Please update your host.");
+                if (_firstRenderCompleted)
+                {
+                    await JsRuntime.InvokeVoidAsync("alert", "This function is not available in the current host version. Please update your host.");
+                }
             });
 
         _combinedPolicy = Policy.WrapAsync(noRetryPolicy, retryPolicy);
@@ -85,19 +90,18 @@ public partial class Access : IDisposable
     {
         if (firstRender)
         {
+            _firstRenderCompleted = true;
             var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/eventListeners.js");
 
             await module.InvokeVoidAsync("addPreventCtrlSListener");
             await module.InvokeVoidAsync("addBeforeUnloadListener", DotNetObjectReference.Create(this));
             await module.InvokeVoidAsync("addKeyDownEventListener", DotNetObjectReference.Create(this));
             await module.InvokeVoidAsync("addKeyUpEventListener", DotNetObjectReference.Create(this));
-        }
-    }
 
-    protected async override Task OnInitializedAsync()
-    {
-        await InitializeHostConnectionAsync();
-        await SetParametersFromUriAsync();
+            await InitializeHostConnectionAsync();
+            await SetParametersFromUriAsync();
+            await FetchViewersAsync();
+        }
     }
 
     private async Task SetParametersFromUriAsync()
@@ -205,6 +209,7 @@ public partial class Access : IDisposable
         _connection.On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate);
         _connection.On<Version>("ReceiveHostVersion", version => _hostVersion = version.ToString());
         _connection.On<string>("ReceiveTransportType", transportType => _transportType = transportType);
+        _connection.On<List<ViewerDto>>("ReceiveAllViewers", viewers => _viewers = viewers);
 
         _connection.Closed += async (_) =>
         {
@@ -216,6 +221,11 @@ public partial class Access : IDisposable
         await _connection.StartAsync();
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("ConnectAs", Intention.ManageDevice));
+    }
+
+    private async Task FetchViewersAsync()
+    {
+        await SafeInvokeAsync(() => _connection.InvokeAsync("GetAllViewers"));
     }
 
     private async Task HandleScreenUpdate(byte[] screenData)
