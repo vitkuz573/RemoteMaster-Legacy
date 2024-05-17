@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Connections.Features;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
@@ -17,8 +16,58 @@ using Serilog;
 namespace RemoteMaster.Host.Core.Hubs;
 
 [Authorize]
-public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturerService, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService) : Hub<IControlClient>
+public class ControlHub : Hub<IControlClient>
 {
+    private readonly IAppState _appState;
+    private readonly IViewerFactory _viewerFactory;
+    private readonly IScriptService _scriptService;
+    private readonly IInputService _inputService;
+    private readonly IPowerService _powerService;
+    private readonly IHardwareService _hardwareService;
+    private readonly IShutdownService _shutdownService;
+    private readonly IScreenCapturerService _screenCapturerService;
+    private readonly IHostConfigurationService _hostConfigurationService;
+    private readonly IHostLifecycleService _hostLifecycleService;
+
+    public ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturerService, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService)
+    {
+        _appState = appState;
+        _viewerFactory = viewerFactory;
+        _scriptService = scriptService;
+        _inputService = inputService;
+        _powerService = powerService;
+        _hardwareService = hardwareService;
+        _shutdownService = shutdownService;
+        _screenCapturerService = screenCapturerService;
+        _hostConfigurationService = hostConfigurationService;
+        _hostLifecycleService = hostLifecycleService;
+
+        _appState.ViewerAdded += OnViewerAdded;
+        _appState.ViewerRemoved += OnViewerRemoved;
+    }
+
+    private async void OnViewerAdded(object? sender, IViewer viewer)
+    {
+        await NotifyAllViewers();
+    }
+
+    private async void OnViewerRemoved(object? sender, IViewer? viewer)
+    {
+        await NotifyAllViewers();
+    }
+
+    private async Task NotifyAllViewers()
+    {
+        var viewers = _appState.GetAllViewers().Select(v => new ViewerDto
+        {
+            ConnectionId = v.ConnectionId,
+            UserName = v.UserName,
+            ConnectedTime = v.ConnectedTime
+        }).ToList();
+
+        await Clients.All.ReceiveAllViewers(viewers);
+    }
+
     public async Task ConnectAs(ConnectionRequest connectionRequest)
     {
         ArgumentNullException.ThrowIfNull(connectionRequest);
@@ -26,7 +75,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         switch (connectionRequest.Intention)
         {
             case Intention.ReceiveThumbnail:
-                var thumbnail = screenCapturerService.GetThumbnail(500, 300);
+                var thumbnail = _screenCapturerService.GetThumbnail(500, 300);
 
                 if (thumbnail != null)
                 {
@@ -38,8 +87,8 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
                 break;
 
             case Intention.ManageDevice:
-                var viewer = viewerFactory.Create(Context.ConnectionId, connectionRequest.UserName);
-                appState.TryAddViewer(viewer);
+                var viewer = _viewerFactory.Create(Context.ConnectionId, connectionRequest.UserName);
+                _appState.TryAddViewer(viewer);
 
                 var transportType = Context.Features.Get<IHttpTransportFeature>().TransportType;
                 await Clients.Caller.ReceiveTransportType(transportType.ToString());
@@ -52,24 +101,24 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     public async override Task OnDisconnectedAsync(Exception? exception)
     {
-        appState.TryRemoveViewer(Context.ConnectionId);
+        _appState.TryRemoveViewer(Context.ConnectionId);
 
         await base.OnDisconnectedAsync(exception);
     }
 
     public void SendMouseInput(MouseInputDto dto)
     {
-        ExecuteActionForViewer(viewer => inputService.SendMouseInput(dto, viewer.ScreenCapturer));
+        ExecuteActionForViewer(viewer => _inputService.SendMouseInput(dto, viewer.ScreenCapturer));
     }
 
     public void SendKeyboardInput(KeyboardInputDto dto)
     {
-        inputService.SendKeyboardInput(dto);
+        _inputService.SendKeyboardInput(dto);
     }
 
     public void SendSelectedScreen(string displayName)
     {
-        if (appState.TryGetViewer(Context.ConnectionId, out var viewer))
+        if (_appState.TryGetViewer(Context.ConnectionId, out var viewer))
         {
             viewer?.ScreenCapturer.SetSelectedScreen(displayName);
         }
@@ -81,12 +130,12 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     public void SendToggleInput(bool inputEnabled)
     {
-        inputService.InputEnabled = inputEnabled;
+        _inputService.InputEnabled = inputEnabled;
     }
 
     public void SendBlockUserInput(bool blockInput)
     {
-        inputService.BlockUserInput = blockInput;
+        _inputService.BlockUserInput = blockInput;
     }
 
     public void SendImageQuality(int quality)
@@ -101,22 +150,22 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     public void SendKillHost()
     {
-        shutdownService.ImmediateShutdown();
+        _shutdownService.ImmediateShutdown();
     }
 
     public void SendRebootComputer(PowerActionRequest powerActionRequest)
     {
-        powerService.Reboot(powerActionRequest);
+        _powerService.Reboot(powerActionRequest);
     }
 
     public void SendShutdownComputer(PowerActionRequest powerActionRequest)
     {
-        powerService.Shutdown(powerActionRequest);
+        _powerService.Shutdown(powerActionRequest);
     }
 
     private void ExecuteActionForViewer(Action<IViewer> action)
     {
-        if (appState.TryGetViewer(Context.ConnectionId, out var viewer))
+        if (_appState.TryGetViewer(Context.ConnectionId, out var viewer))
         {
             if (viewer != null)
             {
@@ -131,12 +180,12 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     public void SendMonitorState(MonitorState state)
     {
-        hardwareService.SetMonitorState(state);
+        _hardwareService.SetMonitorState(state);
     }
 
     public void SendScript(ScriptExecutionRequest scriptExecutionRequest)
     {
-        scriptService.Execute(scriptExecutionRequest);
+        _scriptService.Execute(scriptExecutionRequest);
     }
 
     public async Task JoinGroup(string groupName)
@@ -156,19 +205,19 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     public async Task ChangeOrganizationalUnit(string[] newOrganizationalUnits)
     {
-        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
+        var hostConfiguration = await _hostConfigurationService.LoadConfigurationAsync(false);
 
         hostConfiguration.Subject.OrganizationalUnit = newOrganizationalUnits;
 
-        await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
-        await hostLifecycleService.RenewCertificateAsync(hostConfiguration);
+        await _hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
+        await _hostLifecycleService.RenewCertificateAsync(hostConfiguration);
     }
 
     public async Task SendRenewCertificate()
     {
-        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
+        var hostConfiguration = await _hostConfigurationService.LoadConfigurationAsync(false);
 
-        await hostLifecycleService.RenewCertificateAsync(hostConfiguration);
+        await _hostLifecycleService.RenewCertificateAsync(hostConfiguration);
     }
 
 #pragma warning disable CA1822
@@ -194,19 +243,5 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         }
 
         return certificate.GetSerialNumberString();
-    }
-
-    public async Task GetAllViewers()
-    {
-        var viewers = appState.GetAllViewers();
-
-        var viewerList = viewers.Select(v => new ViewerDto
-        {
-            ConnectionId = v.ConnectionId,
-            UserName = v.UserName,
-            ConnectedTime = v.ConnectedTime
-        }).ToList();
-
-        await Clients.Caller.ReceiveAllViewers(viewerList);
     }
 }

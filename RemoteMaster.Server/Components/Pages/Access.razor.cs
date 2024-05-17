@@ -44,7 +44,7 @@ public partial class Access : IDisposable
     {
         LayoutProperties = new LayoutProperties()
         {
-            DrawerWidthRight = "350px"
+            DrawerWidthRight = "370px"
         }
     };
 
@@ -100,7 +100,6 @@ public partial class Access : IDisposable
 
             await InitializeHostConnectionAsync();
             await SetParametersFromUriAsync();
-            await FetchViewersAsync();
         }
     }
 
@@ -209,7 +208,13 @@ public partial class Access : IDisposable
         _connection.On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate);
         _connection.On<Version>("ReceiveHostVersion", version => _hostVersion = version.ToString());
         _connection.On<string>("ReceiveTransportType", transportType => _transportType = transportType);
-        _connection.On<List<ViewerDto>>("ReceiveAllViewers", viewers => _viewers = viewers);
+
+        _connection.On<List<ViewerDto>>("ReceiveAllViewers", viewers =>
+        {
+            _viewers = viewers;
+
+            InvokeAsync(StateHasChanged);
+        });
 
         var httpContext = HttpContextAccessor.HttpContext;
         var userIdentity = httpContext?.User.Identity;
@@ -226,11 +231,6 @@ public partial class Access : IDisposable
         await _connection.StartAsync();
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("ConnectAs", connectRequest));
-    }
-
-    private async Task FetchViewersAsync()
-    {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("GetAllViewers"));
     }
 
     private async Task HandleScreenUpdate(byte[] screenData)
