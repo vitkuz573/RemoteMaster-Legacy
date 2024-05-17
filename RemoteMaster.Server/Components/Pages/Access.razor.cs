@@ -214,7 +214,7 @@ public partial class Access : IDisposable
         var httpContext = HttpContextAccessor.HttpContext;
         var userIdentity = httpContext?.User.Identity;
 
-        var connectRequest = new ConnectRequest(Intention.ManageDevice, userIdentity.Name);
+        var connectRequest = new ConnectionRequest(Intention.ManageDevice, userIdentity.Name);
 
         _connection.Closed += async (_) =>
         {

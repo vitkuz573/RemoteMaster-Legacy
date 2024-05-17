@@ -236,7 +236,7 @@ public partial class Home
             var httpContext = HttpContextAccessor.HttpContext;
             var userIdentity = httpContext?.User.Identity;
 
-            var connectRequest = new ConnectRequest(Intention.ReceiveThumbnail, userIdentity.Name);
+            var connectRequest = new ConnectionRequest(Intention.ReceiveThumbnail, userIdentity.Name);
 
             Log.Information("Calling ConnectAs with Intention.ReceiveThumbnail for {IPAddress}", computer.IpAddress);
             await connection.InvokeAsync("ConnectAs", connectRequest);
