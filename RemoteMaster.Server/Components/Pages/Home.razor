@@ -100,7 +100,7 @@
                                     foreach (var computer in _availableComputers)
                                     {
                                         <div class="w-1/6">
-                                            <ComputerCard @key="computer" Computer="computer" IsSelectedChanged="@(isSelected => HandleComputerSelection(computer, isSelected))" />
+                                            <ComputerCard @key="computer" Computer="computer.Value" IsSelectedChanged="@(isSelected => HandleComputerSelection(computer.Value, isSelected))" />
                                         </div>
                                     }
                                 }
@@ -119,7 +119,7 @@
                                     foreach (var computer in _unavailableComputers)
                                     {
                                         <div class="w-1/6">
-                                            <ComputerCard @key="computer" Computer="computer" IsSelectedChanged="@(isSelected => HandleComputerSelection(computer, isSelected))" />
+                                            <ComputerCard @key="computer" Computer="computer.Value" IsSelectedChanged="@(isSelected => HandleComputerSelection(computer.Value, isSelected))" />
                                         </div>
                                     }
                                 }
