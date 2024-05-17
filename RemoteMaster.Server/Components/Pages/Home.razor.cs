@@ -143,8 +143,8 @@ public partial class Home
 
         await Task.WhenAll(tasks);
 
-        _availableComputers = new ConcurrentBag<Computer>(tempAvailable);
-        _unavailableComputers = new ConcurrentBag<Computer>(tempUnavailable);
+        _availableComputers = new ConcurrentBag<Computer>(tempAvailable.OrderBy(computer => computer.Name));
+        _unavailableComputers = new ConcurrentBag<Computer>(tempUnavailable.OrderBy(computer => computer.Name));
 
         await InvokeAsync(StateHasChanged);
     }
