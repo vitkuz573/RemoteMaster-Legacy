@@ -197,6 +197,7 @@ public partial class Home
     private async Task OnNodeSelected(Node? node)
     {
         _selectedComputers.Clear();
+
         _selectedNode = node;
 
         if (node is OrganizationalUnit organizationalUnit)
@@ -282,6 +283,8 @@ public partial class Home
         {
             _selectedComputers.Remove(computer);
         }
+
+        InvokeAsync(StateHasChanged);
     }
 
     private async Task Power()

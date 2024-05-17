@@ -1,8 +1,8 @@
-<MudCard>
-    <MudCardContent Class="flex justify-center items-center h-32">
-        <MudImage Src="@ThumbnailUri" Alt="Thumbnail" Class="max-h-32 w-full h-auto object-contain" draggable="false" />
+﻿<MudCard>
+    <MudCardContent Class="flex h-32 items-center justify-center">
+        <MudImage Src="@ThumbnailUri" Alt="Thumbnail" Class="h-auto max-h-32 w-full object-contain" draggable="false" />
     </MudCardContent>
-    <MudCardActions Class="flex justify-between items-center p-4">
-        <MudCheckBox T="bool" Value="@IsSelected" ValueChanged="HandleCheckboxChange" Label="@Computer.Name" />
+    <MudCardActions Class="flex items-center justify-between p-4">
+        <MudCheckBox T="bool" Value="@IsSelected" ValueChanged="@HandleCheckboxChange" Label="@Computer.Name" />
     </MudCardActions>
 </MudCard>

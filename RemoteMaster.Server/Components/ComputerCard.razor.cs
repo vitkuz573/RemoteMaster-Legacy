@@ -20,9 +20,9 @@ public partial class ComputerCard
     [Parameter]
     public EventCallback<bool> IsSelectedChanged { get; set; }
 
-    private async Task HandleCheckboxChange()
+    private async Task HandleCheckboxChange(bool value)
     {
-        IsSelected = !IsSelected;
+        IsSelected = value;
 
         await IsSelectedChanged.InvokeAsync(IsSelected);
     }
