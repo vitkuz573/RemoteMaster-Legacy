@@ -124,32 +124,6 @@ public partial class Home
         await UpdateComputerThumbnailsAsync(organizationalUnit.Nodes.OfType<Computer>());
     }
 
-    private async Task LoadNodes(Node node)
-    {
-        if (node is OrganizationalUnit organizationalUnit)
-        {
-            var computers = organizationalUnit.Nodes.OfType<Computer>().ToList();
-
-            _availableComputers.Clear();
-            _unavailableComputers = new ConcurrentDictionary<string, Computer>();
-
-            foreach (var computer in computers)
-            {
-                _unavailableComputers.TryAdd(computer.IpAddress, computer);
-            }
-
-            await UpdateComputerAvailabilityAsync(computers);
-        }
-    }
-
-    private async Task UpdateComputerAvailabilityAsync(IEnumerable<Computer> computers)
-    {
-        var tasks = computers.Select(UpdateComputerAvailability);
-
-        await Task.WhenAll(tasks);
-        await InvokeAsync(StateHasChanged);
-    }
-
     private async Task UpdateComputerAvailability(Computer computer)
     {
         var isHubAvailable = await ComputerConnectivityService.IsHubAvailable(computer, "hubs/control");
@@ -163,48 +137,84 @@ public partial class Home
 
     private async Task UpdateComputerThumbnailsAsync(IEnumerable<Computer> computers)
     {
-        var tasks = computers.Select(UpdateComputerThumbnailAsync);
+        var tasks = computers.Select(UpdateComputerThumbnailAndAvailabilityAsync);
 
         await Task.WhenAll(tasks);
     }
 
-    private async Task UpdateComputerThumbnailAsync(Computer computer)
+    private async Task UpdateComputerThumbnailAndAvailabilityAsync(Computer computer)
     {
-        if (!await ComputerConnectivityService.IsHubAvailable(computer, "hubs/control"))
-        {
-            return;
-        }
+        var isHubAvailable = await ComputerConnectivityService.IsHubAvailable(computer, "hubs/control");
 
-        var connection = SetupHubConnection(computer, "hubs/control");
-
-        try
+        if (isHubAvailable)
         {
-            connection.On<byte[]>("ReceiveThumbnail", async thumbnailBytes =>
+            var connection = SetupHubConnection(computer, "hubs/control");
+
+            try
             {
-                if (thumbnailBytes.Length > 0)
+                connection.On<byte[]>("ReceiveThumbnail", async thumbnailBytes =>
                 {
-                    computer.Thumbnail = thumbnailBytes;
-                    await InvokeAsync(StateHasChanged);
-                }
-            });
+                    if (thumbnailBytes.Length > 0)
+                    {
+                        computer.Thumbnail = thumbnailBytes;
+                        await MoveToAvailableIfThumbnailUpdated(computer);
+                    }
+                });
 
-            connection.On("ReceiveCloseConnection", async () =>
+                connection.On("ReceiveCloseConnection", async () =>
+                {
+                    await connection.StopAsync();
+                    Log.Information("Connection closed for {IPAddress}", computer.IpAddress);
+                });
+
+                var httpContext = HttpContextAccessor.HttpContext;
+                var userIdentity = httpContext?.User.Identity;
+
+                var connectRequest = new ConnectionRequest(Intention.ReceiveThumbnail, userIdentity.Name);
+
+                await connection.StartAsync();
+                await _retryPolicy.ExecuteAsync(async () => await connection.InvokeAsync("ConnectAs", connectRequest));
+            }
+            catch (Exception ex)
             {
-                await connection.StopAsync();
-                Log.Information("Connection closed for {IPAddress}", computer.IpAddress);
-            });
-
-            var httpContext = HttpContextAccessor.HttpContext;
-            var userIdentity = httpContext?.User.Identity;
-
-            var connectRequest = new ConnectionRequest(Intention.ReceiveThumbnail, userIdentity.Name);
-
-            await connection.StartAsync();
-            await _retryPolicy.ExecuteAsync(async () => await connection.InvokeAsync("ConnectAs", connectRequest));
+                Log.Error("Exception in UpdateComputerThumbnailAndAvailabilityAsync for {IPAddress}: {Message}", computer.IpAddress, ex.Message);
+            }
         }
-        catch (Exception ex)
+    }
+
+    private async Task MoveToAvailableIfThumbnailUpdated(Computer computer)
+    {
+        if (_unavailableComputers.ContainsKey(computer.IpAddress))
         {
-            Log.Error("Exception in UpdateComputerThumbnailAsync for {IPAddress}: {Message}", computer.IpAddress, ex.Message);
+            _unavailableComputers.TryRemove(computer.IpAddress, out _);
+            _availableComputers.TryAdd(computer.IpAddress, computer);
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task UpdateComputerAvailabilityAsync(IEnumerable<Computer> computers)
+    {
+        var tasks = computers.Select(UpdateComputerThumbnailAndAvailabilityAsync);
+
+        await Task.WhenAll(tasks);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadNodes(Node node)
+    {
+        if (node is OrganizationalUnit organizationalUnit)
+        {
+            var computers = organizationalUnit.Nodes.OfType<Computer>().ToList();
+
+            _availableComputers.Clear();
+            _unavailableComputers.Clear();
+
+            foreach (var computer in computers)
+            {
+                _unavailableComputers.TryAdd(computer.IpAddress, computer);
+            }
+
+            await UpdateComputerAvailabilityAsync(computers);
         }
     }
 
