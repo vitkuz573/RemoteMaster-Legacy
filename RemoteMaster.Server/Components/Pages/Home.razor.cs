@@ -30,9 +30,9 @@ public partial class Home
     private Node? _selectedNode;
     private HashSet<Node>? _nodes;
 
-    private readonly List<Computer> _selectedComputers = [];
-    private readonly ConcurrentBag<Computer> _availableComputers = [];
-    private ConcurrentBag<Computer> _unavailableComputers = [];
+    private readonly List<Computer> _selectedComputers = new();
+    private ConcurrentBag<Computer> _availableComputers = new();
+    private ConcurrentBag<Computer> _unavailableComputers = new();
 
     private readonly AsyncRetryPolicy _retryPolicy;
 
@@ -59,7 +59,7 @@ public partial class Home
         if (userPrincipal.Identity.IsAuthenticated)
         {
             var userId = userPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            
+
             if (userId != null)
             {
                 var user = await UserManager.FindByIdAsync(userId);
@@ -74,7 +74,7 @@ public partial class Home
     private async Task<IEnumerable<Node>> LoadOrganizationalUnitsWithChildren(Guid? parentId = null)
     {
         var units = await DatabaseService.GetNodesAsync(node => node.ParentId == parentId);
-        
+
         foreach (var unit in units.OfType<OrganizationalUnit>())
         {
             unit.Nodes = new HashSet<Node>(await LoadOrganizationalUnitsWithChildren(unit.NodeId));
@@ -99,19 +99,19 @@ public partial class Home
     {
         var crl = await CrlService.GenerateCrlAsync();
         var result = await CrlService.PublishCrlAsync(crl);
-        
+
         Snackbar.Add(result ? "CRL successfully published" : "Failed to publish CRL", result ? Severity.Success : Severity.Error);
     }
 
     private void ManageProfile() => NavigationManager.NavigateTo("/Account/Manage");
-    
+
     private void Logout() => NavigationManager.NavigateTo("/Account/Logout");
 
     private async Task OnNodeSelected(Node? node)
     {
         _selectedComputers.Clear();
         _selectedNode = node;
-        
+
         if (node is OrganizationalUnit organizationalUnit)
         {
             await LoadNodesAndThumbnails(organizationalUnit);
@@ -129,7 +129,10 @@ public partial class Home
         if (node is OrganizationalUnit organizationalUnit)
         {
             var computers = organizationalUnit.Nodes.OfType<Computer>().ToList();
+
+            _availableComputers = new ConcurrentBag<Computer>();
             _unavailableComputers = new ConcurrentBag<Computer>(computers);
+
             await UpdateComputerAvailabilityAsync(computers);
         }
     }
@@ -137,7 +140,7 @@ public partial class Home
     private async Task UpdateComputerAvailabilityAsync(IEnumerable<Computer> computers)
     {
         var tasks = computers.Select(UpdateComputerAvailability);
-        
+
         await Task.WhenAll(tasks);
         await InvokeAsync(StateHasChanged);
     }
@@ -145,11 +148,11 @@ public partial class Home
     private async Task UpdateComputerAvailability(Computer computer)
     {
         var isHubAvailable = await ComputerConnectivityService.IsHubAvailable(computer, "hubs/control");
-        
+
         if (isHubAvailable)
         {
             _availableComputers.Add(computer);
-            _unavailableComputers.TryTake(out _);
+            _unavailableComputers = new ConcurrentBag<Computer>(_unavailableComputers.Except(new[] { computer }));
         }
         else
         {
@@ -172,7 +175,7 @@ public partial class Home
         }
 
         var connection = SetupHubConnection(computer);
-        
+
         try
         {
             connection.On<byte[]>("ReceiveThumbnail", async thumbnailBytes =>
@@ -195,7 +198,7 @@ public partial class Home
 
             var connectRequest = new ConnectionRequest(Intention.ReceiveThumbnail, userIdentity.Name);
 
-            await connection.StartAsync();            
+            await connection.StartAsync();
             await _retryPolicy.ExecuteAsync(async () => await connection.InvokeAsync("ConnectAs", connectRequest));
         }
         catch (Exception ex)
@@ -243,31 +246,31 @@ public partial class Home
     }
 
     private async Task Power() => await ExecuteActionDialog<PowerDialog>("Power");
-    
+
     private async Task WakeUp() => await ExecuteActionDialog<WakeUpDialog>("Wake Up", false, false);
-    
+
     private async Task Connect() => await ExecuteActionDialog<ConnectDialog>("Connect");
-    
+
     private async Task OpenShell() => await ExecuteActionDialog<OpenShellDialog>("Open Shell");
-    
+
     private async Task ExecuteScript() => await ExecuteActionDialog<ScriptExecutorDialog>("Script Executor", extraLarge: true);
-    
+
     private async Task SetMonitorState() => await ExecuteActionDialog<MonitorStateDialog>("Monitor State");
-    
+
     private async Task ManagePsExecRules() => await ExecuteActionDialog<PsExecRulesDialog>("PSExec rules", extraLarge: true);
-    
+
     private async Task ScreenRecorder() => await ExecuteActionDialog<ScreenRecorderDialog>("Screen Recorder");
-    
+
     private async Task DomainMembership() => await ExecuteActionDialog<DomainMembershipDialog>("Domain Membership");
-    
+
     private async Task Update() => await ExecuteActionDialog<UpdateDialog>("Update", extraLarge: true);
-    
+
     private async Task FileUpload() => await ExecuteActionDialog<FileUploadDialog>("File Upload");
-    
+
     private async Task MessageBox() => await ExecuteActionDialog<MessageBoxDialog>("MessageBox");
-    
+
     private async Task Move() => await ExecuteActionDialog<MoveDialog>("Move");
-    
+
     private async Task RenewCertificate() => await ExecuteActionDialog<RenewCertificateDialog>("Renew Certificate");
 
     private async Task ExecuteActionDialog<TDialog>(string title, bool onlyAvailable = true, bool startConnection = true, bool extraLarge = false) where TDialog : ComponentBase
@@ -287,14 +290,14 @@ public partial class Home
             MaxWidth = MaxWidth.ExtraExtraLarge,
             FullWidth = true
         } : null;
-        
+
         await ExecuteDialog<TDialog>(title, dialogParameters, dialogOptions);
     }
 
     private async Task<ConcurrentDictionary<Computer, HubConnection?>> GetComputers(bool onlyAvailable = true, string hubPath = "hubs/control", bool startConnection = true)
     {
         var computerConnections = new ConcurrentDictionary<Computer, HubConnection?>();
-        
+
         var tasks = _selectedComputers.Select(async computer =>
         {
             if (await ComputerConnectivityService.IsHubAvailable(computer, hubPath) || !onlyAvailable)
@@ -307,7 +310,7 @@ public partial class Home
                 catch (Exception ex)
                 {
                     Log.Error($"Error connecting to {hubPath} for {computer.IpAddress}: {ex.Message}");
-                    
+
                     if (!onlyAvailable)
                     {
                         computerConnections.TryAdd(computer, null);
@@ -334,7 +337,7 @@ public partial class Home
         if (startConnection)
         {
             await connection.StartAsync();
-            
+
             Log.Information("Connection started for {IPAddress}", computer.IpAddress);
         }
 
@@ -369,20 +372,20 @@ public partial class Home
     private async Task OpenWindow(string url, uint width, uint height)
     {
         var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/windowOperations.js");
-        
+
         await module.InvokeVoidAsync("openNewWindow", url, width, height);
     }
 
     private async Task Remove()
     {
         var confirmation = await DialogService.ShowMessageBox("Delete Confirmation", "Are you sure you want to delete the selected computers?", "Yes", "No");
-        
+
         if (confirmation.HasValue && confirmation.Value)
         {
             foreach (var computer in _selectedComputers.ToList())
             {
                 await DatabaseService.RemoveNodeAsync(computer);
-                
+
                 _availableComputers.TryTake(out _);
                 _unavailableComputers.TryTake(out _);
             }
