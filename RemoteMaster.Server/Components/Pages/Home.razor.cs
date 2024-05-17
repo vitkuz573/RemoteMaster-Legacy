@@ -30,8 +30,8 @@ public partial class Home
     private Node? _selectedNode;
     private HashSet<Node>? _nodes;
 
-    private readonly List<Computer> _selectedComputers = new();
-    private ConcurrentDictionary<string, Computer> _availableComputers = new();
+    private readonly List<Computer> _selectedComputers = [];
+    private readonly ConcurrentDictionary<string, Computer> _availableComputers = new();
     private ConcurrentDictionary<string, Computer> _unavailableComputers = new();
 
     private readonly AsyncRetryPolicy _retryPolicy;
@@ -241,7 +241,7 @@ public partial class Home
         InvokeAsync(StateHasChanged);
     }
 
-    private async Task ExecuteDialog<TDialog>(string title, DialogParameters parameters = null, DialogOptions options = null) where TDialog : ComponentBase
+    private async Task ExecuteDialog<TDialog>(string title, DialogParameters? parameters = null, DialogOptions? options = null) where TDialog : ComponentBase
     {
         await DialogService.ShowAsync<TDialog>(title, parameters, options);
     }
@@ -277,6 +277,7 @@ public partial class Home
     private async Task ExecuteActionDialog<TDialog>(string title, bool onlyAvailable = true, bool startConnection = true, bool extraLarge = false, string hubPath = "hubs/control") where TDialog : ComponentBase
     {
         var computers = onlyAvailable ? _selectedComputers.Where(c => _availableComputers.ContainsKey(c.IpAddress)) : _selectedComputers;
+        
         if (!computers.Any())
         {
             return;
@@ -394,5 +395,10 @@ public partial class Home
 
             _selectedComputers.Clear();
         }
+    }
+
+    private static IEnumerable<Computer> GetSortedComputers(ConcurrentDictionary<string, Computer> computers)
+    {
+        return computers.Values.OrderBy(computer => computer.Name);
     }
 }

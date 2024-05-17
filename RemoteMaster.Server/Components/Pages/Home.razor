@@ -97,10 +97,10 @@
                             <div class="flex flex-wrap gap-4">
                                 @if (_availableComputers.Any())
                                 {
-                                    foreach (var computer in _availableComputers)
+                                    @foreach (var computer in GetSortedComputers(_availableComputers))
                                     {
                                         <div class="w-1/6">
-                                            <ComputerCard @key="computer" Computer="computer.Value" IsSelectedChanged="@(isSelected => HandleComputerSelection(computer.Value, isSelected))" />
+                                            <ComputerCard @key="computer" Computer="computer" IsSelectedChanged="@(isSelected => HandleComputerSelection(computer, isSelected))" />
                                         </div>
                                     }
                                 }
@@ -116,10 +116,10 @@
                             <div class="flex flex-wrap gap-4">
                                 @if (_unavailableComputers.Any())
                                 {
-                                    foreach (var computer in _unavailableComputers)
+                                    @foreach (var computer in GetSortedComputers(_unavailableComputers))
                                     {
                                         <div class="w-1/6">
-                                            <ComputerCard @key="computer" Computer="computer.Value" IsSelectedChanged="@(isSelected => HandleComputerSelection(computer.Value, isSelected))" />
+                                            <ComputerCard @key="computer" Computer="computer" IsSelectedChanged="@(isSelected => HandleComputerSelection(computer, isSelected))" />
                                         </div>
                                     }
                                 }
