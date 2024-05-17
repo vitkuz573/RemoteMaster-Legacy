@@ -211,7 +211,10 @@ public partial class Access : IDisposable
         _connection.On<string>("ReceiveTransportType", transportType => _transportType = transportType);
         _connection.On<List<ViewerDto>>("ReceiveAllViewers", viewers => _viewers = viewers);
 
-        var connectRequest = new ConnectRequest(Intention.ManageDevice, "UserName");
+        var httpContext = HttpContextAccessor.HttpContext;
+        var userIdentity = httpContext?.User.Identity;
+
+        var connectRequest = new ConnectRequest(Intention.ManageDevice, userIdentity.Name);
 
         _connection.Closed += async (_) =>
         {

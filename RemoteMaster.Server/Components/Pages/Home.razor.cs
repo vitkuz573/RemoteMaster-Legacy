@@ -233,7 +233,10 @@ public partial class Home
 
             await connection.StartAsync();
 
-            var connectRequest = new ConnectRequest(Intention.ReceiveThumbnail, "UserName");
+            var httpContext = HttpContextAccessor.HttpContext;
+            var userIdentity = httpContext?.User.Identity;
+
+            var connectRequest = new ConnectRequest(Intention.ReceiveThumbnail, userIdentity.Name);
 
             Log.Information("Calling ConnectAs with Intention.ReceiveThumbnail for {IPAddress}", computer.IpAddress);
             await connection.InvokeAsync("ConnectAs", connectRequest);
