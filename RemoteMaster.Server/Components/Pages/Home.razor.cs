@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using MudBlazor;
+using Polly;
+using Polly.Retry;
 using RemoteMaster.Server.Components.Dialogs;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Enums;
@@ -42,6 +44,22 @@ public partial class Home
             DrawerWidthLeft = "250px"
         }
     };
+
+    private readonly int _maxRetryAttempts = 3;
+    private readonly TimeSpan _pauseBetweenFailures = TimeSpan.FromSeconds(2);
+
+    private readonly AsyncRetryPolicy _retryPolicy;
+
+    public Home()
+    {
+        _retryPolicy = Policy
+            .Handle<HttpRequestException>()
+            .Or<TimeoutException>()
+            .WaitAndRetryAsync(_maxRetryAttempts, retryAttempt => _pauseBetweenFailures, (exception, timeSpan, retryCount, context) =>
+            {
+                Log.Warning($"Retry {retryCount} encountered an error: {exception.Message}. Waiting {timeSpan} before next retry.");
+            });
+    }
 
     protected async override Task OnInitializedAsync()
     {
@@ -239,7 +257,11 @@ public partial class Home
             var connectRequest = new ConnectionRequest(Intention.ReceiveThumbnail, userIdentity.Name);
 
             Log.Information("Calling ConnectAs with Intention.ReceiveThumbnail for {IPAddress}", computer.IpAddress);
-            await connection.InvokeAsync("ConnectAs", connectRequest);
+            
+            await _retryPolicy.ExecuteAsync(async () =>
+            {
+                await connection.InvokeAsync("ConnectAs", connectRequest);
+            });
         }
         catch (Exception ex)
         {
