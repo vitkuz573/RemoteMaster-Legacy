@@ -15,16 +15,12 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class Viewer : IViewer
 {
-    private readonly IAppState _appState;
     private readonly IHubContext<ControlHub, IControlClient> _hubContext;
     private readonly CancellationTokenSource _cts;
     private bool _disposed;
 
-    public Viewer(IAppState appState, IHubContext<ControlHub, IControlClient> hubContext, IScreenCapturerService screenCapturer, string connectionId, string userName)
+    public Viewer(IHubContext<ControlHub, IControlClient> hubContext, IScreenCapturerService screenCapturer, string connectionId, string userName)
     {
-        ArgumentNullException.ThrowIfNull(appState);
-
-        _appState = appState;
         _hubContext = hubContext;
 
         ScreenCapturer = screenCapturer;
@@ -32,33 +28,13 @@ public class Viewer : IViewer
         UserName = userName;
         ConnectedTime = DateTime.UtcNow;
 
-        _appState.ViewerAdded += AppState_ViewerAdded;
-        _appState.ViewerRemoved += AppState_ViewerRemoved;
-
         _cts = new();
 
         _ = SendHostVersion();
 
         ScreenCapturer.ScreenChanged += async (_, bounds) => await SendScreenSize(bounds.Width, bounds.Height);
-    }
 
-    private async void AppState_ViewerAdded(object? sender, IViewer e)
-    {
-        if (e.ConnectionId == ConnectionId)
-        {
-            await StartStreaming();
-        }
-    }
-
-    private void AppState_ViewerRemoved(object? sender, IViewer? e)
-    {
-        if (e != null)
-        {
-            if (e.ConnectionId == ConnectionId)
-            {
-                StopStreaming();
-            }
-        }
+        StartStreaming();
     }
 
     public IScreenCapturerService ScreenCapturer { get; }
@@ -105,7 +81,7 @@ public class Viewer : IViewer
         }
     }
 
-    private void StopStreaming()
+    public void StopStreaming()
     {
         Log.Information("Stopping screen stream for ID {connectionId}", ConnectionId);
 
@@ -147,9 +123,6 @@ public class Viewer : IViewer
         {
             _cts.Cancel();
             _cts.Dispose();
-
-            _appState.ViewerAdded -= AppState_ViewerAdded;
-            _appState.ViewerRemoved -= AppState_ViewerRemoved;
         }
 
         _disposed = true;

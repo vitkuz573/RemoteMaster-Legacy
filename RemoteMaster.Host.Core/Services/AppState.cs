@@ -3,11 +3,14 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Collections.Concurrent;
+using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Hubs;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class AppState : IAppState
+public class AppState(IHubContext<ControlHub, IControlClient> hubContext) : IAppState
 {
     public event EventHandler<IViewer>? ViewerAdded;
 
@@ -31,6 +34,7 @@ public class AppState : IAppState
         if (result)
         {
             ViewerAdded?.Invoke(this, viewer);
+            NotifyViewersChanged();
         }
 
         return result;
@@ -50,6 +54,7 @@ public class AppState : IAppState
         try
         {
             ViewerRemoved?.Invoke(this, viewer);
+            NotifyViewersChanged();
         }
         finally
         {
@@ -62,5 +67,17 @@ public class AppState : IAppState
     public IReadOnlyList<IViewer> GetAllViewers()
     {
         return [.. _viewers.Values];
+    }
+
+    private void NotifyViewersChanged()
+    {
+        var viewers = GetAllViewers().Select(v => new ViewerDto
+        {
+            ConnectionId = v.ConnectionId,
+            UserName = v.UserName,
+            ConnectedTime = v.ConnectedTime
+        }).ToList();
+
+        hubContext.Clients.All.ReceiveAllViewers(viewers);
     }
 }
