@@ -1,8 +1,12 @@
 ﻿@page "/{Host}/access"
+
 @rendermode InteractiveServer
+
 @attribute [Authorize]
+
 @using Microsoft.AspNetCore.Authorization
 @using RemoteMaster.Server.Abstractions
+
 @inject NavigationManager NavigationManager
 @inject IQueryParameterService QueryParameterService
 @inject IHttpContextAccessor HttpContextAccessor
@@ -11,7 +15,7 @@
 
 <PageTitle>@_title</PageTitle>
 
-<MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme" />
+<MudThemeProvider Theme="_theme" />
 <MudDialogProvider />
 <MudSnackbarProvider />
 

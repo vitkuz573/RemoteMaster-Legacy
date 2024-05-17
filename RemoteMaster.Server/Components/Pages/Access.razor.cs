@@ -2,13 +2,15 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net.Sockets;
+using System.Net.WebSockets;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using MudBlazor;
 using Polly;
-using Polly.Retry;
+using Polly.Wrap;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
@@ -35,16 +37,7 @@ public partial class Access : IDisposable
     private ElementReference _screenImageElement;
     private string _accessToken;
 
-    private readonly AsyncRetryPolicy _retryPolicy = Policy
-        .Handle<Exception>()
-        .WaitAndRetryAsync(
-        [
-            TimeSpan.FromSeconds(5),
-            TimeSpan.FromSeconds(7),
-            TimeSpan.FromSeconds(10)
-        ]);
-
-    private bool _isDarkMode = false;
+    private readonly AsyncPolicyWrap _combinedPolicy;
 
     private readonly MudTheme _theme = new()
     {
@@ -55,6 +48,30 @@ public partial class Access : IDisposable
     };
 
     private string? _title;
+
+    public Access()
+    {
+        var retryPolicy = Policy
+            .Handle<WebSocketException>()
+            .Or<IOException>()
+            .Or<SocketException>()
+            .Or<InvalidOperationException>()
+            .WaitAndRetryAsync(
+            [
+                TimeSpan.FromSeconds(5),
+                TimeSpan.FromSeconds(7),
+                TimeSpan.FromSeconds(10)
+            ]);
+
+        var noRetryPolicy = Policy
+            .Handle<HubException>(ex => ex.Message.Contains("Method does not exist"))
+            .FallbackAsync(async (ct) =>
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "This function is not available in the current host version. Please update your host.");
+            });
+
+        _combinedPolicy = Policy.WrapAsync(noRetryPolicy, retryPolicy);
+    }
 
     protected override void OnParametersSet()
     {
@@ -114,18 +131,11 @@ public partial class Access : IDisposable
 
     private async Task SafeInvokeAsync(Func<Task> action)
     {
-        await _retryPolicy.ExecuteAsync(async () =>
+        await _combinedPolicy.ExecuteAsync(async () =>
         {
             if (_connection.State == HubConnectionState.Connected)
             {
-                try
-                {
-                    await action();
-                }
-                catch (HubException ex) when (ex.Message.Contains("Method does not exist"))
-                {
-                    await JsRuntime.InvokeVoidAsync("alert", "This function is not available in the current host version. Please update your host.");
-                }
+                await action();
             }
             else
             {
