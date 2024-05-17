@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Connections.Features;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
@@ -200,6 +201,8 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         var viewerList = viewers.Select(v => new ViewerDto
         {
             ConnectionId = v.ConnectionId,
+            UserName = v.UserName,
+            ConnectedTime = v.ConnectedTime
         }).ToList();
 
         await Clients.Caller.ReceiveAllViewers(viewerList);

@@ -85,7 +85,11 @@
                             @foreach (var viewer in _viewers)
                             {
                                 <MudListItem>
-                                    <MudText>@viewer.ConnectionId</MudText>
+                                    <MudText>
+                                        <b>ID:</b> @viewer.ConnectionId<br>
+                                        <b>Username:</b> @viewer.UserName<br>
+                                        <b>Connected:</b> @viewer.ConnectedTime.ToLocalTime()
+                                    </MudText>
                                 </MudListItem>
                             }
                         </MudList>

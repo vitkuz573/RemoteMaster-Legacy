@@ -63,6 +63,10 @@ public class Viewer : IViewer
 
     public string ConnectionId { get; }
 
+    public string UserName => "Test User";
+
+    public DateTime ConnectedTime => DateTime.Now;
+
     private async Task StartStreaming()
     {
         var cancellationToken = _cts.Token;

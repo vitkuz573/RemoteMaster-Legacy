@@ -9,4 +9,8 @@ public interface IViewer : IDisposable
     IScreenCapturerService ScreenCapturer { get; }
 
     string ConnectionId { get; }
+
+    string UserName { get; }
+
+    DateTime ConnectedTime { get; }
 }
