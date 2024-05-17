@@ -175,7 +175,7 @@ public partial class Home
             return;
         }
 
-        var connection = SetupHubConnection(computer);
+        var connection = SetupHubConnection(computer, "hubs/control");
 
         try
         {
@@ -208,10 +208,10 @@ public partial class Home
         }
     }
 
-    private HubConnection SetupHubConnection(Computer computer)
+    private HubConnection SetupHubConnection(Computer computer, string hubPath)
     {
         return new HubConnectionBuilder()
-            .WithUrl($"https://{computer.IpAddress}:5001/hubs/control", options =>
+            .WithUrl($"https://{computer.IpAddress}:5001/{hubPath}", options =>
             {
                 options.AccessTokenProvider = async () => await AccessTokenProvider.GetAccessTokenAsync();
             })
@@ -248,7 +248,7 @@ public partial class Home
 
     private async Task Power() => await ExecuteActionDialog<PowerDialog>("Power");
 
-    private async Task WakeUp() => await ExecuteActionDialog<WakeUpDialog>("Wake Up", false, false);
+    private async Task WakeUp() => await ExecuteActionDialog<WakeUpDialog>("Wake Up", false, false, hubPath: "hubs/wakeup");
 
     private async Task Connect() => await ExecuteActionDialog<ConnectDialog>("Connect");
 
@@ -274,16 +274,17 @@ public partial class Home
 
     private async Task RenewCertificate() => await ExecuteActionDialog<RenewCertificateDialog>("Renew Certificate");
 
-    private async Task ExecuteActionDialog<TDialog>(string title, bool onlyAvailable = true, bool startConnection = true, bool extraLarge = false) where TDialog : ComponentBase
+    private async Task ExecuteActionDialog<TDialog>(string title, bool onlyAvailable = true, bool startConnection = true, bool extraLarge = false, string hubPath = "hubs/control") where TDialog : ComponentBase
     {
-        if (_selectedComputers.All(computer => !_availableComputers.ContainsKey(computer.IpAddress)))
+        var computers = onlyAvailable ? _selectedComputers.Where(c => _availableComputers.ContainsKey(c.IpAddress)) : _selectedComputers;
+        if (!computers.Any())
         {
             return;
         }
 
         var dialogParameters = new DialogParameters
         {
-            { "Hosts", await GetComputers(onlyAvailable, startConnection: startConnection) }
+            { "Hosts", await GetComputers(computers, startConnection: startConnection, hubPath: hubPath) }
         };
 
         var dialogOptions = extraLarge ? new DialogOptions
@@ -295,13 +296,13 @@ public partial class Home
         await ExecuteDialog<TDialog>(title, dialogParameters, dialogOptions);
     }
 
-    private async Task<ConcurrentDictionary<Computer, HubConnection?>> GetComputers(bool onlyAvailable = true, string hubPath = "hubs/control", bool startConnection = true)
+    private async Task<ConcurrentDictionary<Computer, HubConnection?>> GetComputers(IEnumerable<Computer> computers, bool startConnection = true, string hubPath = "hubs/control")
     {
         var computerConnections = new ConcurrentDictionary<Computer, HubConnection?>();
 
-        var tasks = _selectedComputers.Select(async computer =>
+        var tasks = computers.Select(async computer =>
         {
-            if (await ComputerConnectivityService.IsHubAvailable(computer, hubPath) || !onlyAvailable)
+            if (await ComputerConnectivityService.IsHubAvailable(computer, hubPath))
             {
                 try
                 {
@@ -311,12 +312,12 @@ public partial class Home
                 catch (Exception ex)
                 {
                     Log.Error($"Error connecting to {hubPath} for {computer.IpAddress}: {ex.Message}");
-
-                    if (!onlyAvailable)
-                    {
-                        computerConnections.TryAdd(computer, null);
-                    }
+                    computerConnections.TryAdd(computer, null);
                 }
+            }
+            else
+            {
+                computerConnections.TryAdd(computer, null);
             }
         });
 
