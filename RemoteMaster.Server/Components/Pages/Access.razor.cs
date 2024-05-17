@@ -44,7 +44,7 @@ public partial class Access : IDisposable
     {
         LayoutProperties = new LayoutProperties()
         {
-            DrawerWidthRight = "300px"
+            DrawerWidthRight = "350px"
         }
     };
 
