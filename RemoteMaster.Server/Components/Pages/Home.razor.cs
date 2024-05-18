@@ -335,23 +335,25 @@ public partial class Home
         }
     }
 
-    private async Task OpenTaskManager() => await OpenComputerWindow("taskmanager");
+    private async Task OpenTaskManager()
+    {
+        await OpenComputerWindow("taskmanager");
+    }
 
-    private async Task OpenFileManager() => await OpenComputerWindow("filemanager");
+    private async Task OpenFileManager()
+    {
+        await OpenComputerWindow("filemanager");
+    }
 
     private async Task OpenComputerWindow(string path, uint width = 800, uint height = 800)
     {
-        foreach (var computer in _selectedComputers)
-        {
-            await OpenNewWindow($"/{computer.IpAddress}/{path}", width, height);
-        }
-    }
-
-    private async Task OpenNewWindow(string url, uint width, uint height)
-    {
         var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/windowOperations.js");
 
-        await module.InvokeVoidAsync("openNewWindow", url, width, height);
+        foreach (var computer in _selectedComputers)
+        {
+            var url = $"/{computer.IpAddress}/{path}";
+            await module.InvokeVoidAsync("openNewWindow", url, width, height);
+        }
     }
 
     private async Task RemoveComputers()
