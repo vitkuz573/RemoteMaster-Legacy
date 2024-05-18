@@ -66,7 +66,7 @@
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenShell" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Open Shell</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ExecuteScript" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Execute Script</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@(async () => await LogonComputers())" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Logon</MudButton>
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@(async () => await LogoffComputers())" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.Any(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Logoff</MudButton>
+                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@(async () => await LogoffComputers())" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Logoff</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Refresh" Class="ml-auto">Refresh</MudButton>
                     </MudTabPanel>
 

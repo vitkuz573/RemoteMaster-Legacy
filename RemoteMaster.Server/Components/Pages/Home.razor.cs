@@ -30,7 +30,7 @@ public partial class Home
     private Node? _selectedNode;
     private HashSet<Node>? _nodes;
 
-    private readonly List<Computer> _selectedComputers = [];
+    private readonly List<Computer> _selectedComputers = new();
     private readonly ConcurrentDictionary<string, Computer> _availableComputers = new();
     private readonly ConcurrentDictionary<string, Computer> _unavailableComputers = new();
     private readonly ConcurrentDictionary<string, Computer> _pendingComputers = new();
@@ -205,12 +205,13 @@ public partial class Home
         catch (Exception ex)
         {
             Log.Error("Exception in LogonComputer for {IPAddress}: {Message}", computer.IpAddress, ex.Message);
+            await MoveToUnavailable(computer);
         }
     }
 
     private async Task LogoffComputers()
     {
-        foreach (var computer in _selectedComputers.Where(c => _availableComputers.ContainsKey(c.IpAddress)))
+        foreach (var computer in _selectedComputers.Where(c => _availableComputers.ContainsKey(c.IpAddress) || _unavailableComputers.ContainsKey(c.IpAddress)))
         {
             await LogoffComputer(computer);
         }
@@ -472,7 +473,7 @@ public partial class Home
 
             foreach (var computer in computers)
             {
-                if (_availableComputers.ContainsKey(computer.IpAddress))
+                if (_availableComputers.ContainsKey(computer.IpAddress) || _unavailableComputers.ContainsKey(computer.IpAddress))
                 {
                     await LogonComputer(computer);
                 }
