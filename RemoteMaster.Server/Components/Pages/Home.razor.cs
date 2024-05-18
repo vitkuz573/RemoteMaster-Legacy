@@ -398,7 +398,7 @@ public partial class Home
 
     private async Task Connect() => await ExecuteAction<ConnectDialog>("Connect");
 
-    private async Task OpenShell() => await ExecuteAction<OpenShellDialog>("Open Shell");
+    private async Task OpenShell() => await ExecuteAction<OpenShellDialog>("Open Shell", false);
 
     private async Task ExecuteScript() => await ExecuteAction<ScriptExecutorDialog>("Execute Script", true, dialogOptions: new DialogOptions
     {
@@ -424,7 +424,7 @@ public partial class Home
 
     private async Task MessageBox() => await ExecuteAction<MessageBoxDialog>("Message Box");
 
-    private async Task Move() => await ExecuteAction<MoveDialog>("Move");
+    private async Task Move() => await ExecuteAction<MoveDialog>("Move", false);
 
     private async Task RenewCertificate() => await ExecuteAction<RenewCertificateDialog>("Renew Certificate");
 
