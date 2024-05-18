@@ -200,6 +200,44 @@ public partial class Home
         }
     }
 
+    private async Task LogoffComputers()
+    {
+        foreach (var computer in _selectedComputers.Where(c => _availableComputers.ContainsKey(c.IpAddress)))
+        {
+            await LogoffComputer(computer);
+        }
+    }
+
+    private async Task LogoffComputer(Computer computer)
+    {
+        try
+        {
+            var connection = await SetupConnection(computer, "hubs/control", false);
+
+            connection.On("ReceiveCloseConnection", async () =>
+            {
+                await connection.StopAsync();
+
+                Log.Information("Connection closed for {IPAddress}", computer.IpAddress);
+            });
+
+            var userName = _userInfo.UserName;
+
+            if (!string.IsNullOrEmpty(userName))
+            {
+                await MoveToPending(computer);
+            }
+            else
+            {
+                Log.Warning("User name is null or empty, unable to create disconnection request.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Exception in LogoffComputer for {IPAddress}: {Message}", computer.IpAddress, ex.Message);
+        }
+    }
+
     private async Task MoveToAvailable(Computer computer)
     {
         if (_pendingComputers.ContainsKey(computer.IpAddress))
@@ -228,6 +266,22 @@ public partial class Home
         }
 
         _unavailableComputers.TryAdd(computer.IpAddress, computer);
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task MoveToPending(Computer computer)
+    {
+        if (_availableComputers.ContainsKey(computer.IpAddress))
+        {
+            _availableComputers.TryRemove(computer.IpAddress, out _);
+        }
+        else if (_unavailableComputers.ContainsKey(computer.IpAddress))
+        {
+            _unavailableComputers.TryRemove(computer.IpAddress, out _);
+        }
+
+        _pendingComputers.TryAdd(computer.IpAddress, computer);
 
         await InvokeAsync(StateHasChanged);
     }
