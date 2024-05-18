@@ -165,25 +165,31 @@ public partial class Home
                 Log.Information("Connection closed for {IPAddress}", computer.IpAddress);
             });
 
-            var httpContext = HttpContextAccessor.HttpContext;
-            var userIdentity = httpContext?.User?.Identity;
-
-            if (userIdentity != null)
+            var userName = GetUserName();
+            
+            if (!string.IsNullOrEmpty(userName))
             {
-                var userName = userIdentity.Name ?? "UnknownUser";
                 var connectRequest = new ConnectionRequest(Intention.ReceiveThumbnail, userName);
 
                 await _retryPolicy.ExecuteAsync(async () => await connection.InvokeAsync("ConnectAs", connectRequest));
             }
             else
             {
-                Log.Warning("User identity is null, unable to create connection request.");
+                Log.Warning("User name is null or empty, unable to create connection request.");
             }
         }
         catch (Exception ex)
         {
             Log.Error("Exception in UpdateComputer for {IPAddress}: {Message}", computer.IpAddress, ex.Message);
         }
+    }
+
+    private string GetUserName()
+    {
+        var httpContext = HttpContextAccessor.HttpContext;
+        var userIdentity = httpContext?.User?.Identity;
+
+        return userIdentity?.Name ?? "UnknownUser";
     }
 
     private async Task MoveToAvailable(Computer computer)
