@@ -12,6 +12,7 @@ using MudBlazor;
 using Polly;
 using Polly.Retry;
 using RemoteMaster.Server.Components.Dialogs;
+using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
@@ -24,8 +25,7 @@ public partial class Home
     [CascadingParameter]
     private Task<AuthenticationState> AuthenticationStateTask { get; set; }
 
-    private string _username;
-    private string _role;
+    private UserInfo _userInfo = new();
     private bool _drawerOpen;
     private Node? _selectedNode;
     private HashSet<Node>? _nodes;
@@ -58,21 +58,29 @@ public partial class Home
 
         if (userPrincipal?.Identity?.IsAuthenticated == true)
         {
-            var userId = userPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (!string.IsNullOrEmpty(userId))
-            {
-                var user = await UserManager.FindByIdAsync(userId);
-
-                if (user != null)
-                {
-                    var roles = await UserManager.GetRolesAsync(user);
-                    _role = roles.FirstOrDefault() ?? string.Empty;
-                }
-            }
-
-            _username = userPrincipal.Identity.Name ?? string.Empty;
+            _userInfo = await GetUserInfoAsync(userPrincipal);
         }
+    }
+
+    private async Task<UserInfo> GetUserInfoAsync(ClaimsPrincipal userPrincipal)
+    {
+        var userInfo = new UserInfo();
+        var userId = userPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!string.IsNullOrEmpty(userId))
+        {
+            var user = await UserManager.FindByIdAsync(userId);
+
+            if (user != null)
+            {
+                var roles = await UserManager.GetRolesAsync(user);
+                userInfo.Role = roles.FirstOrDefault() ?? string.Empty;
+            }
+        }
+
+        userInfo.UserName = userPrincipal.Identity?.Name ?? "UnknownUser";
+
+        return userInfo;
     }
 
     private async Task<IEnumerable<Node>> LoadNodesWithChildren(Guid? parentId = null)
@@ -140,6 +148,7 @@ public partial class Home
     private async Task UpdateComputers(IEnumerable<Computer> computers)
     {
         var tasks = computers.Select(UpdateComputer);
+
         await Task.WhenAll(tasks);
         await InvokeAsync(StateHasChanged);
     }
@@ -162,11 +171,12 @@ public partial class Home
             connection.On("ReceiveCloseConnection", async () =>
             {
                 await connection.StopAsync();
+
                 Log.Information("Connection closed for {IPAddress}", computer.IpAddress);
             });
 
-            var userName = GetUserName();
-            
+            var userName = _userInfo.UserName;
+
             if (!string.IsNullOrEmpty(userName))
             {
                 var connectRequest = new ConnectionRequest(Intention.ReceiveThumbnail, userName);
@@ -184,20 +194,13 @@ public partial class Home
         }
     }
 
-    private string GetUserName()
-    {
-        var httpContext = HttpContextAccessor.HttpContext;
-        var userIdentity = httpContext?.User?.Identity;
-
-        return userIdentity?.Name ?? "UnknownUser";
-    }
-
     private async Task MoveToAvailable(Computer computer)
     {
         if (_unavailableComputers.ContainsKey(computer.IpAddress))
         {
             _unavailableComputers.TryRemove(computer.IpAddress, out _);
             _availableComputers.TryAdd(computer.IpAddress, computer);
+
             await InvokeAsync(StateHasChanged);
         }
     }
