@@ -524,6 +524,16 @@ public partial class Home
         }
     }
 
+    private async Task OpenAddOuDialog()
+    {
+        var dialogOptions = new DialogOptions
+        {
+            CloseOnEscapeKey = true
+        };
+
+        await DialogService.ShowAsync<AddOuDialog>("Add Organizational Unit", dialogOptions);
+    }
+
     private static IEnumerable<Computer> GetSortedComputers(ConcurrentDictionary<string, Computer> computers)
     {
         return computers.Values.OrderBy(computer => computer.Name);

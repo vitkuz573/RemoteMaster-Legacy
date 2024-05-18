@@ -13,7 +13,7 @@ public abstract class Node
     public Guid NodeId { get; init; }
 
     [JsonPropertyName("name")]
-    public required string Name { get; init; }
+    public required string Name { get; set; }
 
     [JsonIgnore]
     public Guid? ParentId { get; set; }

@@ -1,0 +1,21 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using RemoteMaster.Server.Abstractions
+@using RemoteMaster.Server.Data
+
+@inject IDatabaseService DatabaseService
+
+<MudDialog>
+    <DialogContent>
+        <EditForm Model="@_model" OnValidSubmit="OnValidSubmit">
+            <DataAnnotationsValidator />
+            <MudCardContent>
+                <MudTextField Label="OU Name" @bind-Value="_model.Name" For="@(() => _model.Name)" />
+            </MudCardContent>
+
+            <MudCardActions>
+                <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary">Add OU</MudButton>
+                <MudButton Color="Color.Secondary" OnClick="Cancel">Cancel</MudButton>
+            </MudCardActions>
+        </EditForm>
+    </DialogContent>
+</MudDialog>
