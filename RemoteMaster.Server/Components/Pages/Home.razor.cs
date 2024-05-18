@@ -424,8 +424,6 @@ public partial class Home
 
     private async Task MessageBox() => await ExecuteAction<MessageBoxDialog>("Message Box");
 
-    private async Task Move() => await ExecuteAction<MoveDialog>("Move", false);
-
     private async Task RenewCertificate() => await ExecuteAction<RenewCertificateDialog>("Renew Certificate");
 
     private async Task ExecuteAction<TDialog>(string title, bool onlyAvailable = true, bool startConnection = true, string hubPath = "hubs/control", DialogOptions? dialogOptions = null) where TDialog : ComponentBase
@@ -522,6 +520,28 @@ public partial class Home
 
             _selectedComputers.Clear();
         }
+    }
+
+    private async Task OpenMoveDialog()
+    {
+        var dialogOptions = new DialogOptions
+        {
+            CloseOnEscapeKey = true
+        };
+
+        var dialogParameters = new DialogParameters
+        {
+            { "OnNodesMoved", EventCallback.Factory.Create(this, OnNodesMoved) },
+            { "Hosts", await GetComputerConnections(_selectedComputers, true, "hubs/control") }
+        };
+
+        await DialogService.ShowAsync<MoveDialog>("Move", dialogParameters, dialogOptions);
+    }
+
+    private async Task OnNodesMoved()
+    {
+        _nodes = new HashSet<Node>(await LoadNodesWithChildren());
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task OpenAddOuDialog()

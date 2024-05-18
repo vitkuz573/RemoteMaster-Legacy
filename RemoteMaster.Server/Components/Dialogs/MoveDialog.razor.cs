@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Text.Json;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
 using RemoteMaster.Shared.Models;
@@ -11,6 +12,9 @@ namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class MoveDialog
 {
+    [Parameter]
+    public EventCallback OnNodesMoved { get; set; }
+
     private string _currentOrganizationalUnitName = string.Empty;
     private List<OrganizationalUnit> _organizationalUnits = [];
     private Guid _selectedOrganizationalUnitId;
@@ -63,6 +67,7 @@ public partial class MoveDialog
                 await DatabaseService.MoveNodesAsync(nodeIds, _selectedOrganizationalUnitId);
             }
 
+            await OnNodesMoved.InvokeAsync();
             MudDialog.Close(DialogResult.Ok(true));
         }
     }
