@@ -32,7 +32,7 @@ public partial class Home
 
     private readonly List<Computer> _selectedComputers = [];
     private readonly ConcurrentDictionary<string, Computer> _availableComputers = new();
-    private ConcurrentDictionary<string, Computer> _unavailableComputers = new();
+    private readonly ConcurrentDictionary<string, Computer> _unavailableComputers = new();
 
     private readonly AsyncRetryPolicy _retryPolicy;
 
@@ -122,17 +122,6 @@ public partial class Home
     {
         await LoadNodes(organizationalUnit);
         await UpdateComputerThumbnailsAsync(organizationalUnit.Nodes.OfType<Computer>());
-    }
-
-    private async Task UpdateComputerAvailability(Computer computer)
-    {
-        var isHubAvailable = await ComputerConnectivityService.IsHubAvailable(computer, "hubs/control");
-
-        if (isHubAvailable)
-        {
-            _availableComputers.TryAdd(computer.IpAddress, computer);
-            _unavailableComputers.TryRemove(computer.IpAddress, out _);
-        }
     }
 
     private async Task UpdateComputerThumbnailsAsync(IEnumerable<Computer> computers)
