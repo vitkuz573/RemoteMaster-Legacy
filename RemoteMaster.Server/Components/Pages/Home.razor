@@ -29,7 +29,7 @@
 
 <MudLayout>
     <MudAppBar>
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@DrawerToggle" />
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
         <MudSpacer />
         @_username (@_role)
     </MudAppBar>
@@ -40,7 +40,7 @@
             </MudText>
         </MudDrawerHeader>
         <MudNavMenu>
-            <MudNavLink Match="NavLinkMatch.All" OnClick="OpenHostConfigurationGenerator">Host Configuration Generator</MudNavLink>
+            <MudNavLink Match="NavLinkMatch.All" OnClick="OpenHostConfig">Host Configuration Generator</MudNavLink>
             <MudNavLink Match="NavLinkMatch.All" OnClick="PublishCrl">Publish CRL</MudNavLink>
             <MudNavLink Match="NavLinkMatch.All" OnClick="ManageProfile">Profile</MudNavLink>
             <MudNavLink Match="NavLinkMatch.All" OnClick="Logout">Logout</MudNavLink>
@@ -65,7 +65,7 @@
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Connect" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Connect</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenShell" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Open Shell</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ExecuteScript" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Execute Script</MudButton>
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="HandleRefreshClick" Class="ml-auto">Refresh</MudButton>
+                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Refresh" Class="ml-auto">Refresh</MudButton>
                     </MudTabPanel>
 
                     <MudTabPanel Text="Service" Icon="@Icons.Material.Filled.Key">
@@ -77,15 +77,15 @@
                     </MudTabPanel>
 
                     <MudTabPanel Text="Tools" Icon="@Icons.Material.Filled.MiscellaneousServices">
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="TaskManager" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Task Manager</MudButton>
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="FileManager" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">File Manager</MudButton>
+                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenTaskManager" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Task Manager</MudButton>
+                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenFileManager" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">File Manager</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="FileUpload" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Upload File</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="MessageBox" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">MessageBox</MudButton>
                     </MudTabPanel>
 
                     <MudTabPanel Text="Management" Icon="@Icons.Material.Filled.Settings">
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Move" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Move</MudButton>
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Remove" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Remove</MudButton>
+                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="RemoveComputers" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Remove</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="RenewCertificate" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Renew Certificate</MudButton>
                     </MudTabPanel>
                 </MudTabs>
@@ -99,7 +99,7 @@
                                     @foreach (var computer in GetSortedComputers(_availableComputers))
                                     {
                                         <div class="w-1/6">
-                                            <ComputerCard @key="computer" Computer="computer" IsSelectedChanged="@(isSelected => HandleComputerSelection(computer, isSelected))" />
+                                            <ComputerCard @key="computer" Computer="computer" IsSelectedChanged="@(isSelected => SelectComputer(computer, isSelected))" />
                                         </div>
                                     }
                                 }
@@ -118,7 +118,7 @@
                                     @foreach (var computer in GetSortedComputers(_unavailableComputers))
                                     {
                                         <div class="w-1/6">
-                                            <ComputerCard @key="computer" Computer="computer" IsSelectedChanged="@(isSelected => HandleComputerSelection(computer, isSelected))" />
+                                            <ComputerCard @key="computer" Computer="computer" IsSelectedChanged="@(isSelected => SelectComputer(computer, isSelected))" />
                                         </div>
                                     }
                                 }
