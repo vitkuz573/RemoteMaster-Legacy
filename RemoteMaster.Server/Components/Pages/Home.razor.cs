@@ -531,16 +531,25 @@ public partial class Home
 
         var dialogParameters = new DialogParameters
         {
-            { "OnNodesMoved", EventCallback.Factory.Create(this, OnNodesMoved) },
+            { "OnNodesMoved", EventCallback.Factory.Create<IEnumerable<Computer>>(this, OnNodesMoved) },
             { "Hosts", await GetComputerConnections(_selectedComputers, true, "hubs/control") }
         };
 
         await DialogService.ShowAsync<MoveDialog>("Move", dialogParameters, dialogOptions);
     }
 
-    private async Task OnNodesMoved()
+    private async Task OnNodesMoved(IEnumerable<Computer> movedNodes)
     {
         _nodes = new HashSet<Node>(await LoadNodesWithChildren());
+
+        foreach (var movedNode in movedNodes)
+        {
+            _selectedComputers.RemoveAll(c => c.NodeId == movedNode.NodeId);
+            _availableComputers.TryRemove(movedNode.IpAddress, out _);
+            _unavailableComputers.TryRemove(movedNode.IpAddress, out _);
+            _pendingComputers.TryRemove(movedNode.IpAddress, out _);
+        }
+
         await InvokeAsync(StateHasChanged);
     }
 

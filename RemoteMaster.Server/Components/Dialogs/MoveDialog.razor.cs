@@ -13,7 +13,7 @@ namespace RemoteMaster.Server.Components.Dialogs;
 public partial class MoveDialog
 {
     [Parameter]
-    public EventCallback OnNodesMoved { get; set; }
+    public EventCallback<IEnumerable<Computer>> OnNodesMoved { get; set; }
 
     private string _currentOrganizationalUnitName = string.Empty;
     private List<OrganizationalUnit> _organizationalUnits = [];
@@ -21,7 +21,9 @@ public partial class MoveDialog
 
     protected async override Task OnInitializedAsync()
     {
-        _organizationalUnits = (await DatabaseService.GetNodesAsync(node => node is OrganizationalUnit)).OfType<OrganizationalUnit>().ToList();
+        _organizationalUnits = (await DatabaseService.GetNodesAsync(node => node is OrganizationalUnit))
+            .OfType<OrganizationalUnit>()
+            .ToList();
 
         if (!Hosts.IsEmpty)
         {
@@ -67,7 +69,7 @@ public partial class MoveDialog
                 await DatabaseService.MoveNodesAsync(nodeIds, _selectedOrganizationalUnitId);
             }
 
-            await OnNodesMoved.InvokeAsync();
+            await OnNodesMoved.InvokeAsync(Hosts.Keys);
             MudDialog.Close(DialogResult.Ok(true));
         }
     }
