@@ -13,6 +13,9 @@ public partial class AddOuDialog
     [CascadingParameter]
     private MudDialogInstance MudDialog { get; set; }
 
+    [Parameter]
+    public EventCallback<bool> OnOuAdded { get; set; }
+
     private readonly OrganizationalUnit _model = new()
     {
         Name = string.Empty
@@ -28,6 +31,8 @@ public partial class AddOuDialog
         };
 
         await DatabaseService.AddNodeAsync(newOu);
+
+        await OnOuAdded.InvokeAsync(true);
 
         MudDialog.Close(DialogResult.Ok(true));
     }

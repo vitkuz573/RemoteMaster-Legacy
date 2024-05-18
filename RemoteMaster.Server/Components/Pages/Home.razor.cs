@@ -560,7 +560,21 @@ public partial class Home
             CloseOnEscapeKey = true
         };
 
-        await DialogService.ShowAsync<AddOuDialog>("Add Organizational Unit", dialogOptions);
+        var dialogParameters = new DialogParameters
+        {
+            { "OnOuAdded", EventCallback.Factory.Create<bool>(this, OnOuAdded) }
+        };
+
+        await DialogService.ShowAsync<AddOuDialog>("Add Organizational Unit", dialogParameters, dialogOptions);
+    }
+
+    private async Task OnOuAdded(bool ouAdded)
+    {
+        if (ouAdded)
+        {
+            _nodes = new HashSet<Node>(await LoadNodesWithChildren());
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private static IEnumerable<Computer> GetSortedComputers(ConcurrentDictionary<string, Computer> computers)
