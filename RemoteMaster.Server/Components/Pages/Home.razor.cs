@@ -133,41 +133,36 @@ public partial class Home
 
     private async Task UpdateComputerThumbnailAndAvailabilityAsync(Computer computer)
     {
-        var isHubAvailable = await ComputerConnectivityService.IsHubAvailable(computer, "hubs/control");
+        var connection = SetupHubConnection(computer, "hubs/control");
 
-        if (isHubAvailable)
+        try
         {
-            var connection = SetupHubConnection(computer, "hubs/control");
-
-            try
+            connection.On<byte[]>("ReceiveThumbnail", async thumbnailBytes =>
             {
-                connection.On<byte[]>("ReceiveThumbnail", async thumbnailBytes =>
+                if (thumbnailBytes.Length > 0)
                 {
-                    if (thumbnailBytes.Length > 0)
-                    {
-                        computer.Thumbnail = thumbnailBytes;
-                        await MoveToAvailableIfThumbnailUpdated(computer);
-                    }
-                });
+                    computer.Thumbnail = thumbnailBytes;
+                    await MoveToAvailableIfThumbnailUpdated(computer);
+                }
+            });
 
-                connection.On("ReceiveCloseConnection", async () =>
-                {
-                    await connection.StopAsync();
-                    Log.Information("Connection closed for {IPAddress}", computer.IpAddress);
-                });
-
-                var httpContext = HttpContextAccessor.HttpContext;
-                var userIdentity = httpContext?.User.Identity;
-
-                var connectRequest = new ConnectionRequest(Intention.ReceiveThumbnail, userIdentity.Name);
-
-                await connection.StartAsync();
-                await _retryPolicy.ExecuteAsync(async () => await connection.InvokeAsync("ConnectAs", connectRequest));
-            }
-            catch (Exception ex)
+            connection.On("ReceiveCloseConnection", async () =>
             {
-                Log.Error("Exception in UpdateComputerThumbnailAndAvailabilityAsync for {IPAddress}: {Message}", computer.IpAddress, ex.Message);
-            }
+                await connection.StopAsync();
+                Log.Information("Connection closed for {IPAddress}", computer.IpAddress);
+            });
+
+            var httpContext = HttpContextAccessor.HttpContext;
+            var userIdentity = httpContext?.User.Identity;
+
+            var connectRequest = new ConnectionRequest(Intention.ReceiveThumbnail, userIdentity.Name);
+
+            await connection.StartAsync();
+            await _retryPolicy.ExecuteAsync(async () => await connection.InvokeAsync("ConnectAs", connectRequest));
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Exception in UpdateComputerThumbnailAndAvailabilityAsync for {IPAddress}: {Message}", computer.IpAddress, ex.Message);
         }
     }
 
@@ -276,7 +271,7 @@ public partial class Home
     private async Task ExecuteActionDialog<TDialog>(string title, bool onlyAvailable = true, bool startConnection = true, bool extraLarge = false, string hubPath = "hubs/control") where TDialog : ComponentBase
     {
         var computers = onlyAvailable ? _selectedComputers.Where(c => _availableComputers.ContainsKey(c.IpAddress)) : _selectedComputers;
-        
+
         if (!computers.Any())
         {
             return;
@@ -302,21 +297,14 @@ public partial class Home
 
         var tasks = computers.Select(async computer =>
         {
-            if (await ComputerConnectivityService.IsHubAvailable(computer, hubPath))
+            try
             {
-                try
-                {
-                    var connection = await SetupHubConnection(computer, hubPath, startConnection);
-                    computerConnections.TryAdd(computer, connection);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error($"Error connecting to {hubPath} for {computer.IpAddress}: {ex.Message}");
-                    computerConnections.TryAdd(computer, null);
-                }
+                var connection = await SetupHubConnection(computer, hubPath, startConnection);
+                computerConnections.TryAdd(computer, connection);
             }
-            else
+            catch (Exception ex)
             {
+                Log.Error($"Error connecting to {hubPath} for {computer.IpAddress}: {ex.Message}");
                 computerConnections.TryAdd(computer, null);
             }
         });

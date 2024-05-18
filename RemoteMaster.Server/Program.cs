@@ -116,7 +116,6 @@ public static class Program
         services.AddScoped<IComputerCommandService, ComputerCommandService>();
         services.AddScoped<ICrlService, CrlService>();
         services.AddScoped<IAccessTokenProvider, AccessTokenProvider>();
-        services.AddScoped<IComputerConnectivityService, ComputerConnectivityService>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddSingleton<IBrandingService, BrandingService>();
         services.AddSingleton<ICertificateService, CertificateService>();
