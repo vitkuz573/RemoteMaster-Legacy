@@ -238,11 +238,19 @@ public partial class Home
 
     private async Task OpenShell() => await ExecuteAction<OpenShellDialog>("Open Shell");
 
-    private async Task ExecuteScript() => await ExecuteAction<ScriptExecutorDialog>("Execute Script", true);
+    private async Task ExecuteScript() => await ExecuteAction<ScriptExecutorDialog>("Execute Script", true, dialogOptions: new DialogOptions
+    {
+        MaxWidth = MaxWidth.ExtraExtraLarge,
+        FullWidth = true
+    });
+
+    private async Task ManagePsExecRules() => await ExecuteAction<PsExecRulesDialog>("PSExec Rules", true, dialogOptions: new DialogOptions
+    {
+        MaxWidth = MaxWidth.ExtraExtraLarge,
+        FullWidth = true
+    });
 
     private async Task SetMonitorState() => await ExecuteAction<MonitorStateDialog>("Set Monitor State");
-
-    private async Task ManagePsExecRules() => await ExecuteAction<PsExecRulesDialog>("PSExec Rules", true);
 
     private async Task ScreenRecorder() => await ExecuteAction<ScreenRecorderDialog>("Screen Recorder");
 
@@ -258,7 +266,7 @@ public partial class Home
 
     private async Task RenewCertificate() => await ExecuteAction<RenewCertificateDialog>("Renew Certificate");
 
-    private async Task ExecuteAction<TDialog>(string title, bool onlyAvailable = true, bool startConnection = true, string hubPath = "hubs/control") where TDialog : ComponentBase
+    private async Task ExecuteAction<TDialog>(string title, bool onlyAvailable = true, bool startConnection = true, string hubPath = "hubs/control", DialogOptions? dialogOptions = null) where TDialog : ComponentBase
     {
         var computers = onlyAvailable ? _selectedComputers.Where(c => _availableComputers.ContainsKey(c.IpAddress)) : _selectedComputers;
 
@@ -272,7 +280,7 @@ public partial class Home
             { "Hosts", await GetComputerConnections(computers, startConnection, hubPath) }
         };
 
-        await ExecuteDialog<TDialog>(title, dialogParameters, null);
+        await ExecuteDialog<TDialog>(title, dialogParameters, dialogOptions);
     }
 
     private async Task<ConcurrentDictionary<Computer, HubConnection?>> GetComputerConnections(IEnumerable<Computer> computers, bool startConnection, string hubPath)
