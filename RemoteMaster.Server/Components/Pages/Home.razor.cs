@@ -135,13 +135,21 @@ public partial class Home
     {
         var computers = orgUnit.Nodes.OfType<Computer>().ToList();
 
-        _availableComputers.Clear();
-        _unavailableComputers.Clear();
-        _pendingComputers.Clear();
+        var newPendingComputers = new ConcurrentDictionary<string, Computer>();
 
         foreach (var computer in computers)
         {
-            _pendingComputers.TryAdd(computer.IpAddress, computer);
+            if (!_availableComputers.ContainsKey(computer.IpAddress) && !_unavailableComputers.ContainsKey(computer.IpAddress))
+            {
+                newPendingComputers.TryAdd(computer.IpAddress, computer);
+            }
+        }
+
+        _pendingComputers.Clear();
+
+        foreach (var kvp in newPendingComputers)
+        {
+            _pendingComputers.TryAdd(kvp.Key, kvp.Value);
         }
 
         await InvokeAsync(StateHasChanged);
@@ -460,7 +468,15 @@ public partial class Home
     {
         if (_selectedNode is OrganizationalUnit orgUnit)
         {
-            await LoadComputers(orgUnit);
+            var computers = orgUnit.Nodes.OfType<Computer>().ToList();
+
+            foreach (var computer in computers)
+            {
+                if (_availableComputers.ContainsKey(computer.IpAddress))
+                {
+                    await LogonComputer(computer);
+                }
+            }
         }
     }
 
