@@ -233,17 +233,20 @@ public partial class Home
 
     private async Task LogoffComputers()
     {
-        foreach (var computer in _selectedComputers.Where(c => _availableComputers.ContainsKey(c.IpAddress) || _unavailableComputers.ContainsKey(c.IpAddress)))
-        {
-            await LogoffComputer(computer);
-        }
+        var tasks = _selectedComputers
+            .Where(c => _availableComputers.ContainsKey(c.IpAddress) || _unavailableComputers.ContainsKey(c.IpAddress))
+            .Select(computer => LogoffComputer(computer));
+
+        await Task.WhenAll(tasks);
     }
 
     private async Task LogoffComputer(Computer computer)
     {
         try
         {
-            var connection = await SetupConnection(computer, "hubs/control", false);
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)); // Установить таймаут в 5 секунд
+
+            var connection = await SetupConnection(computer, "hubs/control", false, cts.Token);
 
             connection.On("ReceiveCloseConnection", async () =>
             {
@@ -320,7 +323,7 @@ public partial class Home
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task<HubConnection> SetupConnection(Computer computer, string hubPath, bool startConnection)
+    private async Task<HubConnection> SetupConnection(Computer computer, string hubPath, bool startConnection, CancellationToken cancellationToken)
     {
         var connection = new HubConnectionBuilder()
             .WithUrl($"https://{computer.IpAddress}:5001/{hubPath}", options =>
@@ -330,9 +333,12 @@ public partial class Home
             .AddMessagePackProtocol()
             .Build();
 
+        connection.ServerTimeout = TimeSpan.FromSeconds(3);
+        connection.HandshakeTimeout = TimeSpan.FromSeconds(3);
+
         if (startConnection)
         {
-            await connection.StartAsync();
+            await connection.StartAsync(cancellationToken);
             Log.Information("Connection started for {IPAddress}", computer.IpAddress);
         }
 
@@ -473,7 +479,8 @@ public partial class Home
         {
             try
             {
-                var connection = await SetupConnection(computer, hubPath, startConnection);
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)); // Установить таймаут в 5 секунд
+                var connection = await SetupConnection(computer, hubPath, startConnection, cts.Token);
                 computerConnections.TryAdd(computer, connection);
             }
             catch (Exception ex)
