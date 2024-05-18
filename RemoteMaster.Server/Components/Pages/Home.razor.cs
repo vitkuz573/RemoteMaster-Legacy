@@ -133,10 +133,10 @@ public partial class Home
 
     private async Task UpdateComputerThumbnailAndAvailabilityAsync(Computer computer)
     {
-        var connection = SetupHubConnection(computer, "hubs/control");
-
         try
         {
+            var connection = await SetupHubConnection(computer, "hubs/control", true);
+
             connection.On<byte[]>("ReceiveThumbnail", async thumbnailBytes =>
             {
                 if (thumbnailBytes.Length > 0)
@@ -157,7 +157,6 @@ public partial class Home
 
             var connectRequest = new ConnectionRequest(Intention.ReceiveThumbnail, userIdentity.Name);
 
-            await connection.StartAsync();
             await _retryPolicy.ExecuteAsync(async () => await connection.InvokeAsync("ConnectAs", connectRequest));
         }
         catch (Exception ex)
@@ -202,15 +201,23 @@ public partial class Home
         }
     }
 
-    private HubConnection SetupHubConnection(Computer computer, string hubPath)
+    private async Task<HubConnection> SetupHubConnection(Computer computer, string hubPath, bool startConnection)
     {
-        return new HubConnectionBuilder()
+        var connection = new HubConnectionBuilder()
             .WithUrl($"https://{computer.IpAddress}:5001/{hubPath}", options =>
             {
                 options.AccessTokenProvider = async () => await AccessTokenProvider.GetAccessTokenAsync();
             })
             .AddMessagePackProtocol()
             .Build();
+
+        if (startConnection)
+        {
+            await connection.StartAsync();
+            Log.Information("Connection started for {IPAddress}", computer.IpAddress);
+        }
+
+        return connection;
     }
 
     private void OnRetry(Exception exception, TimeSpan timeSpan, int retryCount, Context context)
@@ -312,26 +319,6 @@ public partial class Home
         await Task.WhenAll(tasks);
 
         return computerConnections;
-    }
-
-    private async Task<HubConnection> SetupHubConnection(Computer computer, string hubPath, bool startConnection)
-    {
-        var connection = new HubConnectionBuilder()
-            .WithUrl($"https://{computer.IpAddress}:5001/{hubPath}", options =>
-            {
-                options.AccessTokenProvider = async () => await AccessTokenProvider.GetAccessTokenAsync();
-            })
-            .AddMessagePackProtocol()
-            .Build();
-
-        if (startConnection)
-        {
-            await connection.StartAsync();
-
-            Log.Information("Connection started for {IPAddress}", computer.IpAddress);
-        }
-
-        return connection;
     }
 
     private async Task HandleRefreshClick()
