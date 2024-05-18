@@ -234,6 +234,7 @@ public partial class Home
 
             if (!string.IsNullOrEmpty(userName))
             {
+                computer.Thumbnail = null;
                 await MoveToPending(computer);
             }
             else
@@ -265,6 +266,8 @@ public partial class Home
 
     private async Task MoveToUnavailable(Computer computer)
     {
+        computer.Thumbnail = null;
+
         if (_pendingComputers.ContainsKey(computer.IpAddress))
         {
             _pendingComputers.TryRemove(computer.IpAddress, out _);
