@@ -198,6 +198,7 @@ public partial class Home
                 {
                     await MoveToUnavailable(computer);
                 }
+                await InvokeAsync(StateHasChanged);
             });
 
             connection.On("ReceiveCloseConnection", async () =>
@@ -224,6 +225,7 @@ public partial class Home
         {
             Log.Error("Exception in LogonComputer for {IPAddress}: {Message}", computer.IpAddress, ex.Message);
             await MoveToUnavailable(computer);
+            await InvokeAsync(StateHasChanged);
         }
     }
 
