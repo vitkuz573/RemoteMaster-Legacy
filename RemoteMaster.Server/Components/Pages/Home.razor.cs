@@ -185,7 +185,9 @@ public partial class Home
     {
         try
         {
-            var connection = await SetupConnection(computer, "hubs/control", true);
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)); // Установить таймаут в 5 секунд
+
+            var connection = await SetupConnection(computer, "hubs/control", true, cts.Token);
 
             connection.On<byte[]>("ReceiveThumbnail", async thumbnailBytes =>
             {
@@ -214,7 +216,7 @@ public partial class Home
             {
                 var connectRequest = new ConnectionRequest(Intention.ReceiveThumbnail, userName);
 
-                await _retryPolicy.ExecuteAsync(async () => await connection.InvokeAsync("ConnectAs", connectRequest));
+                await _retryPolicy.ExecuteAsync(async (ct) => await connection.InvokeAsync("ConnectAs", connectRequest), cts.Token);
             }
             else
             {
