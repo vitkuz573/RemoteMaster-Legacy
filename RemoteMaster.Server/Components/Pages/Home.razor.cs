@@ -30,7 +30,7 @@ public partial class Home
     private Node? _selectedNode;
     private HashSet<Node>? _nodes;
 
-    private readonly List<Computer> _selectedComputers = new();
+    private readonly List<Computer> _selectedComputers = [];
     private readonly ConcurrentDictionary<string, Computer> _availableComputers = new();
     private readonly ConcurrentDictionary<string, Computer> _unavailableComputers = new();
     private readonly ConcurrentDictionary<string, Computer> _pendingComputers = new();
@@ -319,7 +319,7 @@ public partial class Home
         Log.Warning($"Retry {retryCount} encountered an error: {exception.Message}. Waiting {timeSpan} before next retry.");
     }
 
-    private void SelectAllNewComputers()
+    private void SelectAllPendingComputers()
     {
         foreach (var computer in _pendingComputers.Values)
         {
@@ -327,7 +327,7 @@ public partial class Home
         }
     }
 
-    private void DeselectAllNewComputers()
+    private void DeselectAllPendingComputers()
     {
         foreach (var computer in _pendingComputers.Values)
         {

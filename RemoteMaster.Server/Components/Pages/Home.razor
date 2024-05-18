@@ -137,8 +137,8 @@
                             </div>
                         </MudExpansionPanel>
                         <MudExpansionPanel Text="@($"Pending computers ({_pendingComputers.Count})")" IsInitiallyExpanded="true">
-                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="SelectAllNewComputers">Select All</MudButton>
-                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="DeselectAllNewComputers">Deselect All</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="SelectAllPendingComputers">Select All</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="DeselectAllPendingComputers">Deselect All</MudButton>
                             <div class="mt-4 flex flex-wrap gap-4">
                                 @if (_pendingComputers.Any())
                                 {
