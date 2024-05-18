@@ -157,10 +157,8 @@ public partial class Home
 
     private async Task LogonComputers()
     {
-        foreach (var computer in _selectedComputers)
-        {
-            await LogonComputer(computer);
-        }
+        var tasks = _selectedComputers.Select(computer => LogonComputer(computer));
+        await Task.WhenAll(tasks);
     }
 
     private async Task LogonComputer(Computer computer)
