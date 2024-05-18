@@ -124,12 +124,17 @@ public partial class Home
     private async Task OnNodeSelected(Node? node)
     {
         _selectedComputers.Clear();
+        _availableComputers.Clear();
+        _unavailableComputers.Clear();
+        _pendingComputers.Clear();
         _selectedNode = node;
 
         if (node is OrganizationalUnit orgUnit)
         {
             await LoadComputers(orgUnit);
         }
+
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task LoadComputers(OrganizationalUnit orgUnit)
