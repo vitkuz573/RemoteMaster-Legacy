@@ -43,7 +43,7 @@ public partial class Home
         _retryPolicy = Policy
             .Handle<HttpRequestException>()
             .Or<TimeoutException>()
-            .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(2), OnRetry);
+            .WaitAndRetryAsync(1, retryAttempt => TimeSpan.FromSeconds(1), OnRetry);
     }
 
     protected async override Task OnInitializedAsync()
