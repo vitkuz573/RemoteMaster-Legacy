@@ -229,6 +229,38 @@ public partial class Home
         Log.Warning($"Retry {retryCount} encountered an error: {exception.Message}. Waiting {timeSpan} before next retry.");
     }
 
+    private void SelectAllAvailableComputers()
+    {
+        foreach (var computer in _availableComputers.Values)
+        {
+            SelectComputer(computer, true);
+        }
+    }
+
+    private void DeselectAllAvailableComputers()
+    {
+        foreach (var computer in _availableComputers.Values)
+        {
+            SelectComputer(computer, false);
+        }
+    }
+
+    private void SelectAllUnavailableComputers()
+    {
+        foreach (var computer in _unavailableComputers.Values)
+        {
+            SelectComputer(computer, true);
+        }
+    }
+
+    private void DeselectAllUnavailableComputers()
+    {
+        foreach (var computer in _unavailableComputers.Values)
+        {
+            SelectComputer(computer, false);
+        }
+    }
+
     private void SelectComputer(Computer computer, bool isSelected)
     {
         if (isSelected)

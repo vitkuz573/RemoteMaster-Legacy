@@ -93,13 +93,15 @@
                 <div class="flex flex-col gap-4">
                     <MudExpansionPanels MultiExpansion="true">
                         <MudExpansionPanel Text="@($"Available computers ({_availableComputers.Count})")" IsInitiallyExpanded="true">
-                            <div class="flex flex-wrap gap-4">
+                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="SelectAllAvailableComputers">Select All</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="DeselectAllAvailableComputers">Deselect All</MudButton>
+                            <div class="mt-4 flex flex-wrap gap-4">
                                 @if (_availableComputers.Any())
                                 {
                                     @foreach (var computer in GetSortedComputers(_availableComputers))
                                     {
                                         <div class="w-1/6">
-                                            <ComputerCard @key="computer" Computer="computer" IsSelectedChanged="@(isSelected => SelectComputer(computer, isSelected))" />
+                                            <ComputerCard @key="computer" Computer="computer" IsSelectedChanged="@(isSelected => SelectComputer(computer, isSelected))" IsSelected="_selectedComputers.Contains(computer)" />
                                         </div>
                                     }
                                 }
@@ -112,13 +114,15 @@
                             </div>
                         </MudExpansionPanel>
                         <MudExpansionPanel Text="@($"Unavailable computers ({_unavailableComputers.Count})")" IsInitiallyExpanded="true">
-                            <div class="flex flex-wrap gap-4">
+                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="SelectAllUnavailableComputers">Select All</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="DeselectAllUnavailableComputers">Deselect All</MudButton>
+                            <div class="mt-4 flex flex-wrap gap-4">
                                 @if (_unavailableComputers.Any())
                                 {
                                     @foreach (var computer in GetSortedComputers(_unavailableComputers))
                                     {
                                         <div class="w-1/6">
-                                            <ComputerCard @key="computer" Computer="computer" IsSelectedChanged="@(isSelected => SelectComputer(computer, isSelected))" />
+                                            <ComputerCard @key="computer" Computer="computer" IsSelectedChanged="@(isSelected => SelectComputer(computer, isSelected))" IsSelected="_selectedComputers.Contains(computer)" />
                                         </div>
                                     }
                                 }
