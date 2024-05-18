@@ -31,7 +31,7 @@ public partial class Home
     private Node? _selectedNode;
     private HashSet<Node>? _nodes;
 
-    private readonly List<Computer> _selectedComputers = new();
+    private readonly List<Computer> _selectedComputers = [];
     private readonly ConcurrentDictionary<string, Computer> _availableComputers = new();
     private readonly ConcurrentDictionary<string, Computer> _unavailableComputers = new();
     private readonly ConcurrentDictionary<string, Computer> _pendingComputers = new();
@@ -165,14 +165,12 @@ public partial class Home
     {
         var channel = Channel.CreateUnbounded<Computer>();
 
-        // Start a task to log on to each computer and write the result to the channel
         var logonTasks = _selectedComputers.Select(async computer =>
         {
             await LogonComputer(computer);
             await channel.Writer.WriteAsync(computer);
         });
 
-        // Start a task to read from the channel and update the UI
         var readTask = Task.Run(async () =>
         {
             await foreach (var computer in channel.Reader.ReadAllAsync())
@@ -240,7 +238,7 @@ public partial class Home
     {
         var tasks = _selectedComputers
             .Where(c => _availableComputers.ContainsKey(c.IpAddress) || _unavailableComputers.ContainsKey(c.IpAddress))
-            .Select(computer => LogoffComputer(computer));
+            .Select(LogoffComputer);
 
         await Task.WhenAll(tasks);
     }
