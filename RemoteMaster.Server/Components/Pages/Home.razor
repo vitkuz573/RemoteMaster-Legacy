@@ -65,6 +65,7 @@
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Connect" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Connect</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenShell" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Open Shell</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ExecuteScript" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Execute Script</MudButton>
+                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@(async () => await LogonComputers())" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Logon</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Refresh" Class="ml-auto">Refresh</MudButton>
                     </MudTabPanel>
 
@@ -130,6 +131,27 @@
                                 {
                                     <div class="w-full p-4 text-center">
                                         <MudText Typo="Typo.body1">No unavailable computers to display.</MudText>
+                                    </div>
+                                }
+                            </div>
+                        </MudExpansionPanel>
+                        <MudExpansionPanel Text="@($"Pending computers ({_pendingComputers.Count})")" IsInitiallyExpanded="true">
+                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="SelectAllNewComputers">Select All</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="DeselectAllNewComputers">Deselect All</MudButton>
+                            <div class="mt-4 flex flex-wrap gap-4">
+                                @if (_pendingComputers.Any())
+                                {
+                                    @foreach (var computer in GetSortedComputers(_pendingComputers))
+                                    {
+                                        <div class="w-1/6">
+                                            <ComputerCard @key="computer" Computer="computer" IsSelectedChanged="@(isSelected => SelectComputer(computer, isSelected))" IsSelected="_selectedComputers.Contains(computer)" />
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="w-full p-4 text-center">
+                                        <MudText Typo="Typo.body1">No pending computers to display.</MudText>
                                     </div>
                                 }
                             </div>

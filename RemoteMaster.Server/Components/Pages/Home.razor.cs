@@ -33,6 +33,7 @@ public partial class Home
     private readonly List<Computer> _selectedComputers = [];
     private readonly ConcurrentDictionary<string, Computer> _availableComputers = new();
     private readonly ConcurrentDictionary<string, Computer> _unavailableComputers = new();
+    private readonly ConcurrentDictionary<string, Computer> _pendingComputers = new();
 
     private readonly AsyncRetryPolicy _retryPolicy;
 
@@ -136,24 +137,25 @@ public partial class Home
 
         _availableComputers.Clear();
         _unavailableComputers.Clear();
+        _pendingComputers.Clear();
 
         foreach (var computer in computers)
         {
-            _unavailableComputers.TryAdd(computer.IpAddress, computer);
+            _pendingComputers.TryAdd(computer.IpAddress, computer);
         }
 
-        await UpdateComputers(computers);
-    }
-
-    private async Task UpdateComputers(IEnumerable<Computer> computers)
-    {
-        var tasks = computers.Select(UpdateComputer);
-
-        await Task.WhenAll(tasks);
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task UpdateComputer(Computer computer)
+    private async Task LogonComputers()
+    {
+        foreach (var computer in _selectedComputers)
+        {
+            await LogonComputer(computer);
+        }
+    }
+
+    private async Task LogonComputer(Computer computer)
     {
         try
         {
@@ -165,6 +167,10 @@ public partial class Home
                 {
                     computer.Thumbnail = thumbnailBytes;
                     await MoveToAvailable(computer);
+                }
+                else
+                {
+                    await MoveToUnavailable(computer);
                 }
             });
 
@@ -190,19 +196,40 @@ public partial class Home
         }
         catch (Exception ex)
         {
-            Log.Error("Exception in UpdateComputer for {IPAddress}: {Message}", computer.IpAddress, ex.Message);
+            Log.Error("Exception in LogonComputer for {IPAddress}: {Message}", computer.IpAddress, ex.Message);
         }
     }
 
     private async Task MoveToAvailable(Computer computer)
     {
-        if (_unavailableComputers.ContainsKey(computer.IpAddress))
+        if (_pendingComputers.ContainsKey(computer.IpAddress))
+        {
+            _pendingComputers.TryRemove(computer.IpAddress, out _);
+        }
+        else if (_unavailableComputers.ContainsKey(computer.IpAddress))
         {
             _unavailableComputers.TryRemove(computer.IpAddress, out _);
-            _availableComputers.TryAdd(computer.IpAddress, computer);
-
-            await InvokeAsync(StateHasChanged);
         }
+
+        _availableComputers.TryAdd(computer.IpAddress, computer);
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task MoveToUnavailable(Computer computer)
+    {
+        if (_pendingComputers.ContainsKey(computer.IpAddress))
+        {
+            _pendingComputers.TryRemove(computer.IpAddress, out _);
+        }
+        else if (_availableComputers.ContainsKey(computer.IpAddress))
+        {
+            _availableComputers.TryRemove(computer.IpAddress, out _);
+        }
+
+        _unavailableComputers.TryAdd(computer.IpAddress, computer);
+
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task<HubConnection> SetupConnection(Computer computer, string hubPath, bool startConnection)
@@ -227,6 +254,22 @@ public partial class Home
     private void OnRetry(Exception exception, TimeSpan timeSpan, int retryCount, Context context)
     {
         Log.Warning($"Retry {retryCount} encountered an error: {exception.Message}. Waiting {timeSpan} before next retry.");
+    }
+
+    private void SelectAllNewComputers()
+    {
+        foreach (var computer in _pendingComputers.Values)
+        {
+            SelectComputer(computer, true);
+        }
+    }
+
+    private void DeselectAllNewComputers()
+    {
+        foreach (var computer in _pendingComputers.Values)
+        {
+            SelectComputer(computer, false);
+        }
     }
 
     private void SelectAllAvailableComputers()
@@ -400,6 +443,7 @@ public partial class Home
 
                 _availableComputers.TryRemove(computer.IpAddress, out _);
                 _unavailableComputers.TryRemove(computer.IpAddress, out _);
+                _pendingComputers.TryRemove(computer.IpAddress, out _);
             }
 
             _selectedComputers.Clear();
