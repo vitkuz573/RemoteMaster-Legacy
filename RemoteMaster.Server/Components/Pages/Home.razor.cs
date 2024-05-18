@@ -4,6 +4,7 @@
 
 using System.Collections.Concurrent;
 using System.Security.Claims;
+using System.Threading.Channels;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -30,7 +31,7 @@ public partial class Home
     private Node? _selectedNode;
     private HashSet<Node>? _nodes;
 
-    private readonly List<Computer> _selectedComputers = [];
+    private readonly List<Computer> _selectedComputers = new();
     private readonly ConcurrentDictionary<string, Computer> _availableComputers = new();
     private readonly ConcurrentDictionary<string, Computer> _unavailableComputers = new();
     private readonly ConcurrentDictionary<string, Computer> _pendingComputers = new();
@@ -157,8 +158,27 @@ public partial class Home
 
     private async Task LogonComputers()
     {
-        var tasks = _selectedComputers.Select(computer => LogonComputer(computer));
-        await Task.WhenAll(tasks);
+        var channel = Channel.CreateUnbounded<Computer>();
+
+        // Start a task to log on to each computer and write the result to the channel
+        var logonTasks = _selectedComputers.Select(async computer =>
+        {
+            await LogonComputer(computer);
+            await channel.Writer.WriteAsync(computer);
+        });
+
+        // Start a task to read from the channel and update the UI
+        var readTask = Task.Run(async () =>
+        {
+            await foreach (var computer in channel.Reader.ReadAllAsync())
+            {
+                await InvokeAsync(StateHasChanged);
+            }
+        });
+
+        await Task.WhenAll(logonTasks);
+        channel.Writer.Complete();
+        await readTask;
     }
 
     private async Task LogonComputer(Computer computer)
@@ -580,3 +600,4 @@ public partial class Home
         return computers.Values.OrderBy(computer => computer.Name);
     }
 }
+
