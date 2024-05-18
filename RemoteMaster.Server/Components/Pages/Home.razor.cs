@@ -56,19 +56,23 @@ public partial class Home
         var authState = await AuthenticationStateTask;
         var userPrincipal = authState.User;
 
-        if (userPrincipal.Identity.IsAuthenticated)
+        if (userPrincipal?.Identity?.IsAuthenticated == true)
         {
             var userId = userPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            if (userId != null)
+            if (!string.IsNullOrEmpty(userId))
             {
                 var user = await UserManager.FindByIdAsync(userId);
-                var roles = await UserManager.GetRolesAsync(user);
-                _role = roles.FirstOrDefault();
-            }
-        }
 
-        _username = userPrincipal.Identity.Name;
+                if (user != null)
+                {
+                    var roles = await UserManager.GetRolesAsync(user);
+                    _role = roles.FirstOrDefault() ?? string.Empty;
+                }
+            }
+
+            _username = userPrincipal.Identity.Name ?? string.Empty;
+        }
     }
 
     private async Task<IEnumerable<Node>> LoadNodesWithChildren(Guid? parentId = null)
@@ -162,11 +166,19 @@ public partial class Home
             });
 
             var httpContext = HttpContextAccessor.HttpContext;
-            var userIdentity = httpContext?.User.Identity;
+            var userIdentity = httpContext?.User?.Identity;
 
-            var connectRequest = new ConnectionRequest(Intention.ReceiveThumbnail, userIdentity.Name);
+            if (userIdentity != null)
+            {
+                var userName = userIdentity.Name ?? "UnknownUser";
+                var connectRequest = new ConnectionRequest(Intention.ReceiveThumbnail, userName);
 
-            await _retryPolicy.ExecuteAsync(async () => await connection.InvokeAsync("ConnectAs", connectRequest));
+                await _retryPolicy.ExecuteAsync(async () => await connection.InvokeAsync("ConnectAs", connectRequest));
+            }
+            else
+            {
+                Log.Warning("User identity is null, unable to create connection request.");
+            }
         }
         catch (Exception ex)
         {
