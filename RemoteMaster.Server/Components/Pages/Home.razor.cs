@@ -188,7 +188,7 @@ public partial class Home
     {
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)); // Установить таймаут в 5 секунд
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
             var connection = await SetupConnection(computer, "hubs/control", true, cts.Token);
 
@@ -247,7 +247,7 @@ public partial class Home
     {
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)); // Установить таймаут в 5 секунд
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
             var connection = await SetupConnection(computer, "hubs/control", false, cts.Token);
 
@@ -482,7 +482,7 @@ public partial class Home
         {
             try
             {
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)); // Установить таймаут в 5 секунд
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
                 var connection = await SetupConnection(computer, hubPath, startConnection, cts.Token);
                 computerConnections.TryAdd(computer, connection);
             }
