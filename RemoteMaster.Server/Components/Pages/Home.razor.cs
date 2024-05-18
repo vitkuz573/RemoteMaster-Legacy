@@ -226,6 +226,7 @@ public partial class Home
                 Log.Warning("User name is null or empty, unable to create connection request.");
             }
         }
+        catch (OperationCanceledException) {}
         catch (Exception ex)
         {
             Log.Error("Exception in LogonComputer for {IPAddress}: {Message}", computer.IpAddress, ex.Message);
