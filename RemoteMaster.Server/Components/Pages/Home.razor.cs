@@ -335,19 +335,15 @@ public partial class Home
         }
     }
 
-    private async Task OpenTaskManager()
-    {
-        foreach (var computer in _selectedComputers)
-        {
-            await OpenNewWindow($"/{computer.IpAddress}/taskmanager", 800, 800);
-        }
-    }
+    private async Task OpenTaskManager() => await OpenComputerWindow("taskmanager");
 
-    private async Task OpenFileManager()
+    private async Task OpenFileManager() => await OpenComputerWindow("filemanager");
+
+    private async Task OpenComputerWindow(string path, uint width = 800, uint height = 800)
     {
         foreach (var computer in _selectedComputers)
         {
-            await OpenNewWindow($"/{computer.IpAddress}/filemanager", 800, 800);
+            await OpenNewWindow($"/{computer.IpAddress}/{path}", width, height);
         }
     }
 
