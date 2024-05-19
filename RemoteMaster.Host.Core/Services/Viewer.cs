@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Drawing;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
@@ -29,8 +28,6 @@ public class Viewer : IViewer
         ConnectedTime = DateTime.UtcNow;
 
         _cts = new();
-
-        _ = SendHostVersion();
 
         ScreenCapturer.ScreenChanged += async (_, bounds) => await SendScreenSize(bounds.Width, bounds.Height);
 
@@ -96,14 +93,6 @@ public class Viewer : IViewer
     private async Task SendScreenSize(int width, int height)
     {
         await _hubContext.Clients.Client(ConnectionId).ReceiveScreenSize(new Size(width, height));
-    }
-
-    private async Task SendHostVersion()
-    {
-        var assembly = Assembly.GetEntryAssembly();
-        var version = assembly?.GetName().Version ?? new Version();
-
-        await _hubContext.Clients.Clients(ConnectionId).ReceiveHostVersion(version);
     }
 
     public void Dispose()

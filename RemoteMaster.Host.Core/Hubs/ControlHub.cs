@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Net;
+using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Connections.Features;
@@ -38,6 +39,11 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
             case Intention.ManageDevice:
                 var viewer = viewerFactory.Create(Context.ConnectionId, connectionRequest.UserName);
                 appState.TryAddViewer(viewer);
+
+                var assembly = Assembly.GetEntryAssembly();
+                var version = assembly?.GetName().Version ?? new Version();
+
+                await Clients.Caller.ReceiveHostVersion(version);
 
                 var transportType = Context.Features.Get<IHttpTransportFeature>().TransportType;
                 await Clients.Caller.ReceiveTransportType(transportType.ToString());
