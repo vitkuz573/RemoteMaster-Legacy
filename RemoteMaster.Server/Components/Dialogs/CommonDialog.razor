@@ -3,7 +3,7 @@
 <MudDialog ContentStyle="@ContentStyle">
     <DialogContent>
         <MudExpansionPanels>
-            <MudExpansionPanel Text="Click to view affected hosts" Class="mb-5">
+            <MudExpansionPanel Text="@GetPanelHeaderText()" Class="mb-5">
                 @foreach (var (computer, connection) in Hosts)
                 {
                     <MudText>
@@ -38,10 +38,9 @@
         from {
             transform: rotate(0deg);
         }
+
         to {
             transform: rotate(360deg);
         }
     }
 </style>
-
-

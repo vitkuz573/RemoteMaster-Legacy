@@ -150,5 +150,10 @@ public class CommonDialogBase : ComponentBase
         return IsLoading(computer) ? "rotating" : string.Empty;
     }
 
+    public string GetPanelHeaderText()
+    {
+        return Hosts.Any(kvp => kvp.Value == null) ? "Click to view affected hosts (some hosts have issues)" : "Click to view affected hosts";
+    }
+
     protected bool IsLoading(Computer computer) => _loadingStates.TryGetValue(computer, out var isLoading) && isLoading;
 }
