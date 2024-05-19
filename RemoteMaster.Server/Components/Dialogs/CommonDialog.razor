@@ -4,9 +4,19 @@
     <DialogContent>
         <MudExpansionPanels>
             <MudExpansionPanel Text="Click to view affected hosts" Class="mb-5">
-                @foreach (var (computer, _) in Hosts)
+                @foreach (var (computer, connection) in Hosts)
                 {
-                    <MudText>@computer.Name (@computer.IpAddress)</MudText>
+                    <MudText>
+                        @computer.Name (@computer.IpAddress) 
+                        @if (connection != null)
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+                        }
+                        else
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" />
+                        }
+                    </MudText>
                 }
             </MudExpansionPanel>
         </MudExpansionPanels>

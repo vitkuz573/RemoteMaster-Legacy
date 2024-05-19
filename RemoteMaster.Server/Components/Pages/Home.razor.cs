@@ -436,7 +436,7 @@ public partial class Home
 
     private async Task Connect() => await ExecuteAction<ConnectDialog>("Connect");
 
-    private async Task OpenShell() => await ExecuteAction<OpenShellDialog>("Open Shell", onlyAvailable: false, requireConnections: false);
+    private async Task OpenShell() => await ExecuteAction<OpenShellDialog>("Open Shell", onlyAvailable: false);
 
     private async Task ExecuteScript() => await ExecuteAction<ScriptExecutorDialog>("Execute Script", true, dialogOptions: new DialogOptions
     {
@@ -468,7 +468,7 @@ public partial class Home
 
     private async Task RenewCertificate() => await ExecuteAction<RenewCertificateDialog>("Renew Certificate");
 
-    private async Task ExecuteAction<TDialog>(string title, bool onlyAvailable = true, bool startConnection = true, string hubPath = "hubs/control", DialogOptions? dialogOptions = null, bool requireConnections = true) where TDialog : ComponentBase
+    private async Task ExecuteAction<TDialog>(string title, bool onlyAvailable = true, bool startConnection = true, string hubPath = "hubs/control", DialogOptions? dialogOptions = null) where TDialog : ComponentBase
     {
         var computers = onlyAvailable ? _selectedComputers.Where(c => _availableComputers.ContainsKey(c.IpAddress)) : _selectedComputers;
 
@@ -477,22 +477,12 @@ public partial class Home
             return;
         }
 
-        DialogParameters dialogParameters;
-
-        if (requireConnections)
+        var dialogParameters = new DialogParameters
         {
-            dialogParameters = new DialogParameters
-            {
-                { "Hosts", await GetComputerConnections(computers, startConnection, hubPath) }
-            };
-        }
-        else
-        {
-            dialogParameters = new DialogParameters
-            {
-                { "Hosts", new ConcurrentDictionary<Computer, HubConnection?>(computers.ToDictionary(c => c, c => (HubConnection?)null)) }
-            };
-        }
+            { "Hosts", new ConcurrentDictionary<Computer, HubConnection?>(computers.ToDictionary(c => c, c => (HubConnection?)null)) },
+            { "HubPath", hubPath },
+            { "StartConnection", startConnection }
+        };
 
         await ExecuteDialog<TDialog>(title, dialogParameters, dialogOptions);
     }
