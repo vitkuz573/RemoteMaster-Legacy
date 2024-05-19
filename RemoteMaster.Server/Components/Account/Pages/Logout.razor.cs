@@ -10,21 +10,22 @@ namespace RemoteMaster.Server.Components.Account.Pages;
 
 public partial class Logout
 {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; }
+
     protected async override Task OnInitializedAsync()
     {
         await SignInManager.SignOutAsync();
 
-        var httpContext = HttpContextAccessor.HttpContext;
-
-        var refreshToken = httpContext?.Request.Cookies[CookieNames.RefreshToken];
+        var refreshToken = HttpContext?.Request.Cookies[CookieNames.RefreshToken];
 
         if (refreshToken != null)
         {
             await TokenService.RevokeRefreshTokenAsync(refreshToken, TokenRevocationReason.UserLoggedOut);
         }
 
-        httpContext?.Response.Cookies.Delete(CookieNames.AccessToken);
-        httpContext?.Response.Cookies.Delete(CookieNames.RefreshToken);
+        HttpContext?.Response.Cookies.Delete(CookieNames.AccessToken);
+        HttpContext?.Response.Cookies.Delete(CookieNames.RefreshToken);
 
         NavigationManager.NavigateTo("/Account/Login", true);
     }
