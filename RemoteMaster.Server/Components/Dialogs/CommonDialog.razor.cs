@@ -39,7 +39,10 @@ public class CommonDialogBase : ComponentBase
     [Parameter]
     public bool StartConnection { get; set; } = true;
 
-    private ConcurrentDictionary<Computer, bool> _loadingStates = new();
+    [Parameter]
+    public bool RequireConnections { get; set; } = true;
+
+    private readonly ConcurrentDictionary<Computer, bool> _loadingStates = new();
 
     protected async void Cancel()
     {
@@ -65,7 +68,10 @@ public class CommonDialogBase : ComponentBase
 
     protected async override Task OnInitializedAsync()
     {
-        await ConnectHosts();
+        if (RequireConnections)
+        {
+            await ConnectHosts();
+        }
     }
 
     private async Task ConnectHosts()
@@ -73,6 +79,7 @@ public class CommonDialogBase : ComponentBase
         var tasks = Hosts.Select(async kvp =>
         {
             var computer = kvp.Key;
+
             try
             {
                 var connection = await SetupConnection(computer, HubPath, StartConnection, CancellationToken.None);
@@ -152,7 +159,7 @@ public class CommonDialogBase : ComponentBase
 
     public string GetPanelHeaderText()
     {
-        return Hosts.Any(kvp => kvp.Value == null) ? "Click to view affected hosts (some hosts have issues)" : "Click to view affected hosts";
+        return RequireConnections && Hosts.Any(kvp => kvp.Value == null) ? "Click to view affected hosts (some hosts have issues)" : "Click to view affected hosts";
     }
 
     protected bool IsLoading(Computer computer) => _loadingStates.TryGetValue(computer, out var isLoading) && isLoading;

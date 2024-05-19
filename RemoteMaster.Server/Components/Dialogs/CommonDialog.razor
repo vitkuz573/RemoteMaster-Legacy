@@ -8,16 +8,19 @@
                 {
                     <MudText>
                         @computer.Name (@computer.IpAddress)
-                        @if (connection != null)
+                        @if (RequireConnections)
                         {
-                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+                            @if (connection != null)
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+                            }
+                            else
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" />
+                            }
+                            <MudIconButton Icon="@Icons.Material.Filled.Refresh" OnClick="@(async () => await RecheckConnection(computer))"
+                                           Class="@GetRefreshIconClass(computer)" Disabled="@IsLoading(computer)" />
                         }
-                        else
-                        {
-                            <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" />
-                        }
-                        <MudIconButton Icon="@Icons.Material.Filled.Refresh" OnClick="@(async () => await RecheckConnection(computer))"
-                                       Class="@GetRefreshIconClass(computer)" Disabled="@IsLoading(computer)" />
                     </MudText>
                 }
             </MudExpansionPanel>
