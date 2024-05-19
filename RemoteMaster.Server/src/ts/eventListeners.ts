@@ -23,3 +23,11 @@ export function addBeforeUnloadListener(instance: DotNet.DotNetObject): void {
         instance.invokeMethodAsync('OnBeforeUnload');
     });
 }
+
+export function preventDefaultForKeydownWhenDrawerClosed(drawerOpen: boolean): void {
+    document.addEventListener("keydown", (event: KeyboardEvent) => {
+        if ((event.key === "Enter" || event.key === " " || event.key === "Spacebar") && !drawerOpen) {
+            event.preventDefault();
+        }
+    });
+}

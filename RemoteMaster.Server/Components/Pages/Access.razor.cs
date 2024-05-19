@@ -97,6 +97,7 @@ public partial class Access : IDisposable
             await module.InvokeVoidAsync("addBeforeUnloadListener", DotNetObjectReference.Create(this));
             await module.InvokeVoidAsync("addKeyDownEventListener", DotNetObjectReference.Create(this));
             await module.InvokeVoidAsync("addKeyUpEventListener", DotNetObjectReference.Create(this));
+            await module.InvokeVoidAsync("preventDefaultForKeydownWhenDrawerClosed", _drawerOpen);
 
             await InitializeHostConnectionAsync();
             await SetParametersFromUriAsync();

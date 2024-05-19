@@ -20,4 +20,11 @@ export function addBeforeUnloadListener(instance) {
         instance.invokeMethodAsync('OnBeforeUnload');
     });
 }
+export function preventDefaultForKeydownWhenDrawerClosed(drawerOpen) {
+    document.addEventListener("keydown", (event) => {
+        if ((event.key === "Enter" || event.key === " " || event.key === "Spacebar") && !drawerOpen) {
+            event.preventDefault();
+        }
+    });
+}
 //# sourceMappingURL=eventListeners.js.map
