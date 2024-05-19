@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
 using RemoteMaster.Server.Enums;
 using RemoteMaster.Server.Models;
+using Serilog;
 
 namespace RemoteMaster.Server.Components.Account.Pages;
 
@@ -34,7 +35,7 @@ public partial class Login
 
         if (HttpContext.User.Identity?.IsAuthenticated == true)
         {
-            Logger.LogInformation("User already logged in. Redirecting to the origin page or default page.");
+            Log.Information("User already logged in. Redirecting to the origin page or default page.");
             RedirectManager.RedirectTo(ReturnUrl ?? "/");
             
             return;
@@ -58,7 +59,7 @@ public partial class Login
             {
                 HttpContext.Response.Cookies.Delete(".AspNetCore.Identity.Application");
 
-                Logger.LogWarning("Attempt to login as RootAdministrator from non-localhost IP.");
+                Log.Warning("Attempt to login as RootAdministrator from non-localhost IP.");
                 errorMessage = "RootAdministrator access is restricted to localhost.";
 
                 return;
@@ -66,14 +67,15 @@ public partial class Login
 
             if (isRootAdmin && isLocalhost)
             {
-                Logger.LogInformation("RootAdministrator logged in from localhost. Redirecting to Admin page.");
+                Log.Information("RootAdministrator logged in from localhost. Redirecting to Admin page.");
                 RedirectManager.RedirectTo("Admin");
 
                 return;
             }
 
             await TokenService.RevokeAllRefreshTokensAsync(userId, TokenRevocationReason.PreemptiveSecurity);
-            Logger.LogInformation("User logged in. All previous refresh tokens revoked.");
+            
+            Log.Information("User logged in. All previous refresh tokens revoked.");
 
             var claims = new List<Claim>
             {
@@ -95,18 +97,6 @@ public partial class Login
             HttpContext.Response.Cookies.Append(CookieNames.RefreshToken, refreshToken);
 
             RedirectManager.RedirectTo(ReturnUrl);
-        }
-        else if (result.RequiresTwoFactor)
-        {
-            RedirectManager.RedirectTo("Account/LoginWith2fa", new()
-            {
-                ["returnUrl"] = ReturnUrl
-            });
-        }
-        else if (result.IsLockedOut)
-        {
-            Logger.LogWarning("User account locked out.");
-            RedirectManager.RedirectTo("Account/Lockout");
         }
         else
         {
