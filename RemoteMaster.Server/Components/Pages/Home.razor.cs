@@ -188,7 +188,7 @@ public partial class Home
     {
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
 
             var connection = await SetupConnection(computer, "hubs/control", true, cts.Token);
 
@@ -203,6 +203,7 @@ public partial class Home
                 {
                     await MoveToUnavailable(computer);
                 }
+
                 await InvokeAsync(StateHasChanged);
             });
 
@@ -252,7 +253,7 @@ public partial class Home
     {
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
 
             var connection = await SetupConnection(computer, "hubs/control", false, cts.Token);
 
@@ -340,9 +341,6 @@ public partial class Home
             })
             .AddMessagePackProtocol()
             .Build();
-
-        connection.ServerTimeout = TimeSpan.FromSeconds(3);
-        connection.HandshakeTimeout = TimeSpan.FromSeconds(3);
 
         if (startConnection)
         {
@@ -499,7 +497,7 @@ public partial class Home
         {
             try
             {
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
                 var connection = await SetupConnection(computer, hubPath, startConnection, cts.Token);
                 computerConnections.TryAdd(computer, connection);
             }
