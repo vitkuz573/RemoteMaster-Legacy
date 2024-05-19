@@ -31,14 +31,14 @@ public class Viewer : IViewer
 
         ScreenCapturer.ScreenChanged += async (_, bounds) => await SendScreenSize(bounds.Width, bounds.Height);
 
-        StartStreaming();
+        _ = StartStreaming();
     }
 
     public IScreenCapturerService ScreenCapturer { get; }
 
     public string ConnectionId { get; }
 
-    public string UserName { get; set; }
+    public string UserName { get; }
 
     public DateTime ConnectedTime { get; }
 
