@@ -1,17 +1,13 @@
 ﻿@page "/Account/Manage/EnableAuthenticator"
 
-@using System.ComponentModel.DataAnnotations
-@using System.Globalization
-@using System.Text
-@using System.Text.Encodings.Web
 @using Microsoft.AspNetCore.Identity
+@using System.Text.Encodings.Web
 @using RemoteMaster.Server.Data
 
 @inject UserManager<ApplicationUser> UserManager
 @inject IdentityUserAccessor UserAccessor
 @inject UrlEncoder UrlEncoder
 @inject IdentityRedirectManager RedirectManager
-@inject ILogger<EnableAuthenticator> Logger
 
 <PageTitle>Configure authenticator app</PageTitle>
 
@@ -22,8 +18,8 @@
 else
 {
     <StatusMessage Message="@message" />
-    <h3 class="text-xl font-semibold text-gray-800 mb-4">Configure authenticator app</h3>
-    <div class="text-gray-700 space-y-4">
+    <h3 class="mb-4 text-xl font-semibold text-gray-800">Configure authenticator app</h3>
+    <div class="space-y-4 text-gray-700">
         <p>To use an authenticator app, go through the following steps:</p>
         <ol class="list-decimal space-y-2">
             <li>
@@ -37,7 +33,7 @@ else
                         <div id="qrCode"></div>
                         <input type="hidden" id="qrCodeData" data-url="@authenticatorUri" />
                     }
-                    <kbd class="bg-gray-200 px-2 py-1 rounded font-mono text-sm">@sharedKey</kbd>
+                    <kbd class="rounded bg-gray-200 px-2 py-1 font-mono text-sm">@sharedKey</kbd>
                 </div>
             </li>
             <li>
@@ -45,122 +41,17 @@ else
                 <div class="mt-4">
                     <EditForm Model="Input" FormName="send-code" OnValidSubmit="OnValidSubmitAsync" method="post">
                         <div class="mb-4">
-                            <InputText @bind-Value="Input.Code" class="form-input w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" autocomplete="off" placeholder="Verification Code" />
+                            <InputText @bind-Value="Input.Code" class="form-input w-full rounded-md border border-gray-300 px-4 py-2 focus:ring-blue-500 focus:border-blue-500" autocomplete="off" placeholder="Verification Code" />
                             <ValidationMessage For="() => Input.Code" class="text-red-500 mt-2" />
                         </div>
-                        <button type="submit" class="w-full px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">Verify</button>
-                        <ValidationSummary class="text-red-500 mt-2" />
+                        <button type="submit" class="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">Verify</button>
+                        <ValidationSummary class="mt-2 text-red-500" />
                     </EditForm>
                 </div>
             </li>
         </ol>
         <div class="text-sm">
-            <a href="https://go.microsoft.com/fwlink/?Linkid=852423" class="text-blue-600 hover:text-blue-700 underline">Learn how to enable QR code generation.</a>
+            <a href="https://go.microsoft.com/fwlink/?Linkid=852423" class="text-blue-600 underline hover:text-blue-700">Learn how to enable QR code generation.</a>
         </div>
     </div>
-}
-
-@code {
-    private const string AuthenticatorUriFormat = "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&digits=6";
-
-    private string? message;
-    private ApplicationUser user = default!;
-    private string? sharedKey;
-    private string? authenticatorUri;
-    private IEnumerable<string>? recoveryCodes;
-
-    [CascadingParameter]
-    private HttpContext HttpContext { get; set; } = default!;
-
-    [SupplyParameterFromForm]
-    private InputModel Input { get; set; } = new();
-
-    protected override async Task OnInitializedAsync()
-    {
-        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
-
-        await LoadSharedKeyAndQrCodeUriAsync(user);
-    }
-
-    private async Task OnValidSubmitAsync()
-    {
-        // Strip spaces and hyphens
-        var verificationCode = Input.Code.Replace(" ", string.Empty).Replace("-", string.Empty);
-
-        var is2faTokenValid = await UserManager.VerifyTwoFactorTokenAsync(
-            user, UserManager.Options.Tokens.AuthenticatorTokenProvider, verificationCode);
-
-        if (!is2faTokenValid)
-        {
-            message = "Error: Verification code is invalid.";
-            return;
-        }
-
-        await UserManager.SetTwoFactorEnabledAsync(user, true);
-        var userId = await UserManager.GetUserIdAsync(user);
-        Logger.LogInformation("User with ID '{UserId}' has enabled 2FA with an authenticator app.", userId);
-
-        message = "Your authenticator app has been verified.";
-
-        if (await UserManager.CountRecoveryCodesAsync(user) == 0)
-        {
-            recoveryCodes = await UserManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10);
-        }
-        else
-        {
-            RedirectManager.RedirectToWithStatus("Account/Manage/TwoFactorAuthentication", message, HttpContext);
-        }
-    }
-
-    private async ValueTask LoadSharedKeyAndQrCodeUriAsync(ApplicationUser user)
-    {
-        // Load the authenticator key & QR code URI to display on the form
-        var unformattedKey = await UserManager.GetAuthenticatorKeyAsync(user);
-        if (string.IsNullOrEmpty(unformattedKey))
-        {
-            await UserManager.ResetAuthenticatorKeyAsync(user);
-            unformattedKey = await UserManager.GetAuthenticatorKeyAsync(user);
-        }
-
-        sharedKey = FormatKey(unformattedKey!);
-
-        var email = await UserManager.GetEmailAsync(user);
-        authenticatorUri = GenerateQrCodeUri(email!, unformattedKey!);
-    }
-
-    private string FormatKey(string unformattedKey)
-    {
-        var result = new StringBuilder();
-        int currentPosition = 0;
-        while (currentPosition + 4 < unformattedKey.Length)
-        {
-            result.Append(unformattedKey.AsSpan(currentPosition, 4)).Append(' ');
-            currentPosition += 4;
-        }
-        if (currentPosition < unformattedKey.Length)
-        {
-            result.Append(unformattedKey.AsSpan(currentPosition));
-        }
-
-        return result.ToString().ToLowerInvariant();
-    }
-
-    private string GenerateQrCodeUri(string email, string unformattedKey)
-    {
-        return string.Format(
-            CultureInfo.InvariantCulture,
-            AuthenticatorUriFormat,
-            UrlEncoder.Encode("RemoteMaster Server"),
-            UrlEncoder.Encode(email),
-            unformattedKey);
-    }
-
-    private sealed class InputModel
-    {
-        [Required]
-        [StringLength(7, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
-        [DataType(DataType.Text)]
-        [Display(Name = "Verification Code")]
-        public string Code { get; set; } = "";
-    }
 }
