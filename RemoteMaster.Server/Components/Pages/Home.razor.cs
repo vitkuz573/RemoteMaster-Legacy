@@ -226,7 +226,11 @@ public partial class Home
                 Log.Warning("User name is null or empty, unable to create connection request.");
             }
         }
-        // catch (OperationCanceledException) {}
+        catch (OperationCanceledException)
+        {
+            await MoveToUnavailable(computer);
+            await InvokeAsync(StateHasChanged);
+        }
         catch (Exception ex)
         {
             Log.Error("Exception in LogonComputer for {IPAddress}: {Message}", computer.IpAddress, ex.Message);
