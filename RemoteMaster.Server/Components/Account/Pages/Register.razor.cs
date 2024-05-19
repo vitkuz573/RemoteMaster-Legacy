@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Identity;
 using RemoteMaster.Server.Data;
+using Serilog;
 
 namespace RemoteMaster.Server.Components.Account.Pages;
 
@@ -32,7 +33,7 @@ public partial class Register
 
         if (!isLocalhost)
         {
-            Logger.LogWarning("Attempt to register from non-localhost IP.");
+            Log.Warning("Attempt to register from non-localhost IP.");
 
             _identityErrors = [
                 new IdentityError
@@ -59,7 +60,7 @@ public partial class Register
 
         await UserManager.AddToRoleAsync(user, "RootAdministrator");
 
-        Logger.LogInformation("RootAdministrator account created successfully.");
+        Log.Information("RootAdministrator account created successfully.");
 
         RedirectManager.RedirectTo("Account/Login");
     }
