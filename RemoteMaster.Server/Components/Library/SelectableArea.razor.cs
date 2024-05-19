@@ -6,6 +6,7 @@ using System.Drawing;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
+using RemoteMaster.Server.Components.Library.Models;
 using RemoteMaster.Server.Components.Library.Utilities;
 
 namespace RemoteMaster.Server.Components.Library;

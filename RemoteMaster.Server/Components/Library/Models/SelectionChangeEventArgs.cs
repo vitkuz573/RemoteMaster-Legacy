@@ -4,7 +4,7 @@
 
 using System.Drawing;
 
-namespace RemoteMaster.Server.Components.Library;
+namespace RemoteMaster.Server.Components.Library.Models;
 
 public class SelectionChangeEventArgs : EventArgs
 {

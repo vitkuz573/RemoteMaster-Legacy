@@ -5,7 +5,7 @@
 using Microsoft.AspNetCore.Components.Web;
 using RemoteMaster.Server.Components.Library.Abstractions;
 
-namespace RemoteMaster.Server.Components.Library;
+namespace RemoteMaster.Server.Components.Library.Models;
 
 public class ActivatableCallback : IActivatable
 {
