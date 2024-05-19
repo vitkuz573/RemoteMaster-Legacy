@@ -106,5 +106,34 @@ public class CommonDialogBase : ComponentBase
 
         return connection;
     }
-}
 
+    public async Task RecheckConnection(Computer computer)
+    {
+        ArgumentNullException.ThrowIfNull(computer);
+
+        if (Hosts.TryGetValue(computer, out var existingConnection) && existingConnection != null)
+        {
+            try
+            {
+                await existingConnection.StopAsync();
+                await existingConnection.DisposeAsync();
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+        }
+
+        try
+        {
+            var newConnection = await SetupConnection(computer, HubPath, StartConnection, CancellationToken.None);
+            Hosts[computer] = newConnection;
+        }
+        catch
+        {
+            Hosts[computer] = null;
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+}
