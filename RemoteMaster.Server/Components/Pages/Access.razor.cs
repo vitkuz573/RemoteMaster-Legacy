@@ -219,18 +219,18 @@ public partial class Access : IDisposable
         var httpContext = HttpContextAccessor.HttpContext;
         var userIdentity = httpContext?.User.Identity;
 
-        var connectRequest = new ConnectionRequest(Intention.ManageDevice, userIdentity.Name);
+        var connectionRequest = new ConnectionRequest(Intention.ManageDevice, userIdentity.Name);
 
         _connection.Closed += async (_) =>
         {
             await Task.Delay(TimeSpan.FromSeconds(5));
             await _connection.StartAsync();
-            await SafeInvokeAsync(() => _connection.InvokeAsync("ConnectAs", connectRequest));
+            await SafeInvokeAsync(() => _connection.InvokeAsync("ConnectAs", connectionRequest));
         };
 
         await _connection.StartAsync();
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("ConnectAs", connectRequest));
+        await SafeInvokeAsync(() => _connection.InvokeAsync("ConnectAs", connectionRequest));
     }
 
     private async Task HandleScreenUpdate(byte[] screenData)

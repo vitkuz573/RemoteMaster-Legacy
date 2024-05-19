@@ -218,9 +218,9 @@ public partial class Home
 
             if (!string.IsNullOrEmpty(userName))
             {
-                var connectRequest = new ConnectionRequest(Intention.ReceiveThumbnail, userName);
+                var connectionRequest = new ConnectionRequest(Intention.ReceiveThumbnail, userName);
 
-                await _retryPolicy.ExecuteAsync(async (ct) => await connection.InvokeAsync("ConnectAs", connectRequest), cts.Token);
+                await _retryPolicy.ExecuteAsync(async (ct) => await connection.InvokeAsync("ConnectAs", connectionRequest), cts.Token);
             }
             else
             {
