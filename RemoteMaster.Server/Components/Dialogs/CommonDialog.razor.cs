@@ -39,6 +39,8 @@ public class CommonDialogBase : ComponentBase
     [Parameter]
     public bool StartConnection { get; set; } = true;
 
+    private ConcurrentDictionary<Computer, bool> _loadingStates = new();
+
     protected async void Cancel()
     {
         await FreeResources();
@@ -111,6 +113,9 @@ public class CommonDialogBase : ComponentBase
     {
         ArgumentNullException.ThrowIfNull(computer);
 
+        _loadingStates[computer] = true;
+        await InvokeAsync(StateHasChanged);
+
         if (Hosts.TryGetValue(computer, out var existingConnection) && existingConnection != null)
         {
             try
@@ -133,7 +138,17 @@ public class CommonDialogBase : ComponentBase
         {
             Hosts[computer] = null;
         }
-
-        await InvokeAsync(StateHasChanged);
+        finally
+        {
+            _loadingStates[computer] = false;
+            await InvokeAsync(StateHasChanged);
+        }
     }
+
+    public string GetRefreshIconClass(Computer computer)
+    {
+        return IsLoading(computer) ? "rotating" : string.Empty;
+    }
+
+    protected bool IsLoading(Computer computer) => _loadingStates.TryGetValue(computer, out var isLoading) && isLoading;
 }

@@ -16,7 +16,8 @@
                         {
                             <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" />
                         }
-                        <MudIconButton Icon="@Icons.Material.Filled.Refresh" OnClick="@(async () => await RecheckConnection(computer))" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Refresh" OnClick="@(async () => await RecheckConnection(computer))"
+                                       Class="@GetRefreshIconClass(computer)" Disabled="@IsLoading(computer)" />
                     </MudText>
                 }
             </MudExpansionPanel>
@@ -27,3 +28,20 @@
         @Actions
     </DialogActions>
 </MudDialog>
+
+<style>
+    .rotating {
+        animation: rotating 2s linear infinite;
+    }
+
+    @@keyframes rotating {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+
+
