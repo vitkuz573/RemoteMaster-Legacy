@@ -31,7 +31,7 @@ public partial class Home
     private Node? _selectedNode;
     private HashSet<Node>? _nodes;
 
-    private readonly List<Computer> _selectedComputers = [];
+    private readonly List<Computer> _selectedComputers = new();
     private readonly ConcurrentDictionary<string, Computer> _availableComputers = new();
     private readonly ConcurrentDictionary<string, Computer> _unavailableComputers = new();
     private readonly ConcurrentDictionary<string, Computer> _pendingComputers = new();
@@ -628,5 +628,8 @@ public partial class Home
     {
         return computers.Values.OrderBy(computer => computer.Name);
     }
-}
 
+    private bool CanSelectAll(ConcurrentDictionary<string, Computer> computers) => !computers.IsEmpty && !_selectedComputers.Intersect(computers.Values).Any();
+    
+    private bool CanDeselectAll(ConcurrentDictionary<string, Computer> computers) => _selectedComputers.Intersect(computers.Values).Any();
+}
