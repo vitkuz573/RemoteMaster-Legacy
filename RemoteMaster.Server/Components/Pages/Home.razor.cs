@@ -452,11 +452,11 @@ public partial class Home
 
     private async Task SetMonitorState() => await ExecuteAction<MonitorStateDialog>("Set Monitor State");
 
-    private async Task ScreenRecorder() => await ExecuteAction<ScreenRecorderDialog>("Screen Recorder");
+    private async Task ScreenRecorder() => await ExecuteAction<ScreenRecorderDialog>("Screen Recorder", hubPath: "hubs/screenrecorder");
 
-    private async Task DomainMembership() => await ExecuteAction<DomainMembershipDialog>("Domain Membership");
+    private async Task DomainMembership() => await ExecuteAction<DomainMembershipDialog>("Domain Membership", hubPath: "hubs/domainmembership");
 
-    private async Task Update() => await ExecuteAction<UpdateDialog>("Update", true, dialogOptions: new DialogOptions
+    private async Task Update() => await ExecuteAction<UpdateDialog>("Update", hubPath: "hubs/updater", dialogOptions: new DialogOptions
     {
         MaxWidth = MaxWidth.ExtraExtraLarge,
         FullWidth = true
