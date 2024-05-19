@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using RemoteMaster.Server.Components.Library.Enums;
 using RemoteMaster.Server.Components.Library.Extensions;
-using Display = RemoteMaster.Server.Components.Library.Enums.Display;
 
 namespace RemoteMaster.Server.Components.Library;
 
