@@ -432,7 +432,7 @@ public partial class Home
 
     private async Task Power() => await ExecuteAction<PowerDialog>("Power");
 
-    private async Task WakeUp() => await ExecuteAction<WakeUpDialog>("Wake Up", false, false, "hubs/wakeup");
+    private async Task WakeUp() => await ExecuteAction<WakeUpDialog>("Wake Up", false, false);
 
     private async Task Connect() => await ExecuteAction<ConnectDialog>("Connect");
 
@@ -456,7 +456,11 @@ public partial class Home
 
     private async Task DomainMembership() => await ExecuteAction<DomainMembershipDialog>("Domain Membership");
 
-    private async Task Update() => await ExecuteAction<UpdateDialog>("Update", true);
+    private async Task Update() => await ExecuteAction<UpdateDialog>("Update", true, dialogOptions: new DialogOptions
+    {
+        MaxWidth = MaxWidth.ExtraExtraLarge,
+        FullWidth = true
+    });
 
     private async Task FileUpload() => await ExecuteAction<FileUploadDialog>("Upload File");
 
