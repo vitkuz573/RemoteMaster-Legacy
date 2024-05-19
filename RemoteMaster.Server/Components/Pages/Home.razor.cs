@@ -31,7 +31,7 @@ public partial class Home
     private Node? _selectedNode;
     private HashSet<Node>? _nodes;
 
-    private readonly List<Computer> _selectedComputers = new();
+    private readonly List<Computer> _selectedComputers = [];
     private readonly ConcurrentDictionary<string, Computer> _availableComputers = new();
     private readonly ConcurrentDictionary<string, Computer> _unavailableComputers = new();
     private readonly ConcurrentDictionary<string, Computer> _pendingComputers = new();
@@ -76,7 +76,11 @@ public partial class Home
             if (user != null)
             {
                 var roles = await UserManager.GetRolesAsync(user);
-                userInfo.Role = roles.FirstOrDefault() ?? string.Empty;
+
+                foreach (var role in roles)
+                {
+                    userInfo.Roles.Add(role);
+                }
             }
         }
 

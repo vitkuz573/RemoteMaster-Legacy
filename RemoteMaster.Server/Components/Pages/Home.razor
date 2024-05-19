@@ -31,7 +31,7 @@
     <MudAppBar>
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
         <MudSpacer />
-        @_userInfo.UserName (@_userInfo.Role)
+        @_userInfo.UserName (@_userInfo.Roles.FirstOrDefault())
     </MudAppBar>
     <MudDrawer @bind-Open="@_drawerOpen" Variant="@DrawerVariant.Responsive">
         <MudDrawerHeader>

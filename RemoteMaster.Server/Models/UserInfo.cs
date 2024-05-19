@@ -8,6 +8,6 @@ public class UserInfo
 {
     public string UserName { get; set; } = "UnknownUser";
 
-    public string Role { get; set; } = string.Empty;
+    public IList<string> Roles { get; } = [];
 }
 
