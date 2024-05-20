@@ -571,12 +571,13 @@ public partial class Home
 
     private async Task OpenMoveDialog()
     {
+        var hosts = await GetComputerConnections(_selectedComputers, true, "hubs/control");
+
         var dialogOptions = new DialogOptions
         {
-            CloseOnEscapeKey = true
+            MaxWidth = MaxWidth.ExtraExtraLarge,
+            FullWidth = true
         };
-
-        var hosts = await GetComputerConnections(_selectedComputers, true, "hubs/control");
 
         var additionalParameters = new Dictionary<string, object>
         {
