@@ -34,7 +34,7 @@ public class CommonDialogBase : ComponentBase
     public RenderFragment Actions { get; set; } = default!;
 
     [Parameter]
-    public string HubPath { get; set; } = "hubs/control";
+    public string HubPath { get; set; }
 
     [Parameter]
     public bool StartConnection { get; set; } = true;
