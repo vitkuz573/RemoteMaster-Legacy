@@ -4,7 +4,7 @@
     <DialogContent>
         <MudExpansionPanels>
             <MudExpansionPanel Text="@GetPanelHeaderText()" Class="mb-5">
-                @foreach (var (computer, connection) in Hosts)
+                @foreach (var (computer, connection) in Hosts.ToList())
                 {
                     <MudText>
                         @computer.Name (@computer.IpAddress)
@@ -21,6 +21,7 @@
                             <MudIconButton Icon="@Icons.Material.Filled.Refresh" OnClick="@(async () => await RecheckConnection(computer))"
                                            Class="@GetRefreshIconClass(computer)" Disabled="@IsLoading(computer)" />
                         }
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(async () => await RemoveComputer(computer))" />
                     </MudText>
                 }
             </MudExpansionPanel>

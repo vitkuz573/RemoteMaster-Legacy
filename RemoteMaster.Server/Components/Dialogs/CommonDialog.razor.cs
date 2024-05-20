@@ -152,6 +152,32 @@ public class CommonDialogBase : ComponentBase
         }
     }
 
+    public async Task RemoveComputer(Computer computer)
+    {
+        ArgumentNullException.ThrowIfNull(computer);
+
+        if (Hosts.TryGetValue(computer, out var existingConnection) && existingConnection != null)
+        {
+            try
+            {
+                await existingConnection.StopAsync();
+                await existingConnection.DisposeAsync();
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+        }
+
+        Hosts.TryRemove(computer, out _);
+        await InvokeAsync(StateHasChanged);
+
+        if (Hosts.IsEmpty)
+        {
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+    }
+
     public string GetRefreshIconClass(Computer computer)
     {
         return IsLoading(computer) ? "rotating" : string.Empty;
