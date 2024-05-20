@@ -9,7 +9,7 @@
     <CascadingValue Value="HubPath">
         <CascadingValue Value="StartConnection">
             <CascadingValue Value="RequireConnections">
-                <DynamicComponent Type="typeof(TDialog)" Parameters="null" />
+                <DynamicComponent Type="typeof(TDialog)" Parameters="AdditionalParameters" />
             </CascadingValue>
         </CascadingValue>
     </CascadingValue>
@@ -20,4 +20,5 @@
     [Parameter] public string HubPath { get; set; } = default!;
     [Parameter] public bool StartConnection { get; set; } = default!;
     [Parameter] public bool RequireConnections { get; set; } = default!;
+    [Parameter] public IDictionary<string, object> AdditionalParameters { get; set; } = new Dictionary<string, object>();
 }

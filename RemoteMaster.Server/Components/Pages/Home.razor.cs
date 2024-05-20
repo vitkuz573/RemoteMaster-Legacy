@@ -427,7 +427,14 @@ public partial class Home
 
     private async Task ExecuteDialog<TDialog>(string title, DialogParameters? parameters = null, DialogOptions? options = null) where TDialog : ComponentBase
     {
-        await DialogService.ShowAsync<CommonDialogWrapper<TDialog>>(title, parameters, options);
+        var parametersWithAdditional = parameters ?? new DialogParameters();
+
+        if (parametersWithAdditional.TryGet<Dictionary<string, object>>(nameof(CommonDialogWrapper<TDialog>.AdditionalParameters)) == null)
+        {
+            parametersWithAdditional.Add(nameof(CommonDialogWrapper<TDialog>.AdditionalParameters), new Dictionary<string, object>());
+        }
+
+        await DialogService.ShowAsync<CommonDialogWrapper<TDialog>>(title, parametersWithAdditional, options);
     }
 
     private async Task Power() => await ExecuteAction<PowerDialog>("Power");
@@ -571,13 +578,18 @@ public partial class Home
 
         var hosts = await GetComputerConnections(_selectedComputers, true, "hubs/control");
 
+        var additionalParameters = new Dictionary<string, object>
+        {
+            { "OnNodesMoved", EventCallback.Factory.Create<IEnumerable<Computer>>(this, OnNodesMoved) }
+        };
+
         var dialogParameters = new DialogParameters
         {
-            { "OnNodesMoved", EventCallback.Factory.Create<IEnumerable<Computer>>(this, OnNodesMoved) },
-            { "Hosts", hosts },
-            { "HubPath", "hubs/control" },
-            { "StartConnection", true },
-            { "RequireConnections", true }
+            { nameof(CommonDialogWrapper<MoveDialog>.Hosts), hosts },
+            { nameof(CommonDialogWrapper<MoveDialog>.HubPath), "hubs/control" },
+            { nameof(CommonDialogWrapper<MoveDialog>.StartConnection), true },
+            { nameof(CommonDialogWrapper<MoveDialog>.RequireConnections), true },
+            { nameof(CommonDialogWrapper<MoveDialog>.AdditionalParameters), additionalParameters }
         };
 
         await ExecuteDialog<MoveDialog>("Move", dialogParameters, dialogOptions);
