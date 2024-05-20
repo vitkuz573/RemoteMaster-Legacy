@@ -1,6 +1,8 @@
 ﻿@inherits CommonDialogBase
+
 @using RemoteMaster.Server.Abstractions
 @using System.Security.Cryptography.X509Certificates
+
 @inject ICrlService CrlService
 
 <CommonDialog>
@@ -13,7 +15,6 @@
         </MudSelect>
     </Content>
     <Actions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="Confirm">OK</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Confirm" Disabled="HasConnectionIssues">OK</MudButton>
     </Actions>
 </CommonDialog>

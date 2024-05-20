@@ -1,7 +1,9 @@
-﻿@using Microsoft.Extensions.Options
+﻿@inherits CommonDialogBase
+
+@using Microsoft.Extensions.Options
 @using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Server.Models
-@inherits CommonDialogBase
+
 @inject IOptions<ApplicationSettings> ApplicationSettings
 @inject IAccessTokenProvider AccessTokenProvider
 
@@ -32,7 +34,6 @@
         </MudGrid>
     </Content>
     <Actions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="Confirm">OK</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Confirm" Disabled="HasConnectionIssues">OK</MudButton>
     </Actions>
 </CommonDialog>

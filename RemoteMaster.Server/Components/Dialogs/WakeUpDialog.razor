@@ -1,5 +1,7 @@
 ﻿@inherits CommonDialogBase
+
 @using RemoteMaster.Server.Abstractions
+
 @inject IWakeOnLanService WakeOnLanService
 
 <CommonDialog ContentStyle="width: 500px;">
@@ -7,7 +9,6 @@
         <MudText>Really?</MudText>
     </Content>
     <Actions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
         <MudButton Color="Color.Primary" OnClick="Confirm">Confirm</MudButton>
     </Actions>
 </CommonDialog>

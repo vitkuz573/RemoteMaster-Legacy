@@ -4,16 +4,18 @@
     <DialogContent>
         <MudExpansionPanels>
             <MudExpansionPanel Text="@GetPanelHeaderText()" Class="mb-5">
-                <MudTable Items="Hosts.ToList()" Hover="true" Class="mb-5">
+                <MudTable Items="Hosts.ToList()" Hover="true" Class="mb-5" Dense>
                     <HeaderContent>
                         <MudTh>Name</MudTh>
                         <MudTh>IP Address</MudTh>
+                        <MudTh>Hub Path</MudTh>
                         <MudTh>Status</MudTh>
                         <MudTh>Actions</MudTh>
                     </HeaderContent>
                     <RowTemplate>
                         <MudTd DataLabel="Name">@context.Key.Name</MudTd>
                         <MudTd DataLabel="IP Address">@context.Key.IpAddress</MudTd>
+                        <MudTd DataLabel="Hub Path">@HubPath</MudTd>
                         <MudTd DataLabel="Status">
                             @if (RequireConnections)
                             {
@@ -44,6 +46,7 @@
         @Content
     </DialogContent>
     <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
         @Actions
     </DialogActions>
 </MudDialog>

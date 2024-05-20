@@ -1,8 +1,10 @@
-﻿@using RemoteMaster.Server.Abstractions
-@inherits CommonDialogBase
+﻿@inherits CommonDialogBase
+
+@using RemoteMaster.Server.Abstractions
+
 @inject IDatabaseService DatabaseService
 
-<CommonDialog ContentStyle="width: 500px;">
+<CommonDialog>
     <Content>
         @if (!string.IsNullOrWhiteSpace(_currentOrganizationalUnitName))
         {
@@ -19,7 +21,6 @@
         </MudSelect>
     </Content>
     <Actions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
         <MudButton Color="Color.Primary" OnClick="Move">Move</MudButton>
     </Actions>
 </CommonDialog>

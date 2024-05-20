@@ -3,30 +3,25 @@
 <CommonDialog>
     <Content>
         <MudGrid>
-            <MudItem xs="4">
-                <MudRadioGroup T="bool" @bind-Value="@_selectedOption">
-                    <MudRadio Value="true">Enable</MudRadio>
-                    <MudRadio Value="false">Disable</MudRadio>
-                </MudRadioGroup>
-            </MudItem>
-            
-            <MudItem xs="6">
-                <MudExpansionPanels Class="max-h-[340px] overflow-y-auto" MultiExpansion="true">
-                    @foreach (var (computer, results) in _resultsPerComputer)
-                    {
-                        <MudExpansionPanel Text="@($"Results for {computer.Name} ({computer.IpAddress}) - PID: {results.LastPid}")">
-                            @foreach (var line in results.Messages.ToString().Split([Environment.NewLine], StringSplitOptions.None))
-                            {
-                                <div>@line</div>
-                            }
-                        </MudExpansionPanel>
-                    }
-                </MudExpansionPanels>
-            </MudItem>
+            <MudRadioGroup T="bool" @bind-Value="@_selectedOption">
+                <MudRadio Value="true">Enable</MudRadio>
+                <MudRadio Value="false">Disable</MudRadio>
+            </MudRadioGroup>
+
+            <MudExpansionPanels Class="max-h-[340px] overflow-y-auto" MultiExpansion="true">
+                @foreach (var (computer, results) in _resultsPerComputer)
+                {
+                    <MudExpansionPanel Text="@($"Results for {computer.Name} ({computer.IpAddress}) - PID: {results.LastPid}")">
+                        @foreach (var line in results.Messages.ToString().Split([Environment.NewLine], StringSplitOptions.None))
+                        {
+                            <div>@line</div>
+                        }
+                    </MudExpansionPanel>
+                }
+            </MudExpansionPanels>
         </MudGrid>
     </Content>
     <Actions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="Ok">Ok</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Ok" Disabled="HasConnectionIssues">Ok</MudButton>
     </Actions>
 </CommonDialog>

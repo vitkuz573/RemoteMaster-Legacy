@@ -1,6 +1,8 @@
 ﻿@inherits CommonDialogBase
+
 @using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Shared.Enums
+
 @inject IComputerCommandService ComputerCommandService
 
 <CommonDialog ContentStyle="width: 500px;">
@@ -31,7 +33,6 @@
         </MudGrid>
     </Content>
     <Actions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
         <MudButton Color="Color.Primary" OnClick="Connect" Disabled="@_isConnecting">
             @_connectButtonText
         </MudButton>

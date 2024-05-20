@@ -1,5 +1,6 @@
-﻿@using RemoteMaster.Server.Enums
-@inherits CommonDialogBase
+﻿@inherits CommonDialogBase
+
+@using RemoteMaster.Server.Enums
 
 <CommonDialog>
     <Content>
@@ -21,7 +22,6 @@
         </MudSelect>
     </Content>
     <Actions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="Show">Show</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Show" Disabled="HasConnectionIssues">Show</MudButton>
     </Actions>
 </CommonDialog>

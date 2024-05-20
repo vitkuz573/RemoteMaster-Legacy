@@ -1,5 +1,7 @@
-﻿@using RemoteMaster.Server.Abstractions
-@inherits CommonDialogBase
+﻿@inherits CommonDialogBase
+
+@using RemoteMaster.Server.Abstractions
+
 @inject IComputerCommandService ComputerCommandService
 
 <CommonDialog>
@@ -24,7 +26,6 @@
     </Content>
 
     <Actions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="Upload" Disabled="@(!_files.Any())">Upload</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Upload" Disabled="@(!_files.Any() || HasConnectionIssues)">Upload</MudButton>
     </Actions>
 </CommonDialog>

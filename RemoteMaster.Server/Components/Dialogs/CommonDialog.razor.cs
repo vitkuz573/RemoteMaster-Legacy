@@ -42,6 +42,8 @@ public class CommonDialogBase : ComponentBase
     [CascadingParameter]
     public bool RequireConnections { get; set; }
 
+    public bool HasConnectionIssues => RequireConnections && Hosts.Any(kvp => kvp.Value == null);
+
     private readonly ConcurrentDictionary<Computer, bool> _loadingStates = new();
     private readonly ConcurrentDictionary<Computer, string> _errorMessages = new();
 

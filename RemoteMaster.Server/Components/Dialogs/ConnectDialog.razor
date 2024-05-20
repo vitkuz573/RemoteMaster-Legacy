@@ -1,5 +1,7 @@
-﻿@using RemoteMaster.Server.Abstractions
-@inherits CommonDialogBase
+﻿@inherits CommonDialogBase
+
+@using RemoteMaster.Server.Abstractions
+
 @inject IComputerCommandService ComputerCommandService
 @inject IJSRuntime JsRuntime
 
@@ -11,7 +13,6 @@
         </MudRadioGroup>
     </Content>
     <Actions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="Connect">Connect</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Connect" Disabled="HasConnectionIssues">Connect</MudButton>
     </Actions>
 </CommonDialog>

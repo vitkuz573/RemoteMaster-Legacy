@@ -438,17 +438,9 @@ public partial class Home
 
     private async Task OpenShell() => await ExecuteAction<OpenShellDialog>("Open Shell", onlyAvailable: false, startConnection: false, requireConnections: false);
 
-    private async Task ExecuteScript() => await ExecuteAction<ScriptExecutorDialog>("Execute Script", true, dialogOptions: new DialogOptions
-    {
-        MaxWidth = MaxWidth.ExtraExtraLarge,
-        FullWidth = true
-    });
+    private async Task ExecuteScript() => await ExecuteAction<ScriptExecutorDialog>("Execute Script");
 
-    private async Task ManagePsExecRules() => await ExecuteAction<PsExecRulesDialog>("PSExec Rules", true, dialogOptions: new DialogOptions
-    {
-        MaxWidth = MaxWidth.ExtraExtraLarge,
-        FullWidth = true
-    });
+    private async Task ManagePsExecRules() => await ExecuteAction<PsExecRulesDialog>("PSExec Rules", hubPath: "hubs/service");
 
     private async Task SetMonitorState() => await ExecuteAction<MonitorStateDialog>("Set Monitor State");
 
@@ -456,11 +448,7 @@ public partial class Home
 
     private async Task DomainMembership() => await ExecuteAction<DomainMembershipDialog>("Domain Membership", hubPath: "hubs/domainmembership");
 
-    private async Task Update() => await ExecuteAction<UpdateDialog>("Update", hubPath: "hubs/updater", dialogOptions: new DialogOptions
-    {
-        MaxWidth = MaxWidth.ExtraExtraLarge,
-        FullWidth = true
-    });
+    private async Task Update() => await ExecuteAction<UpdateDialog>("Update", hubPath: "hubs/updater");
 
     private async Task FileUpload() => await ExecuteAction<FileUploadDialog>("Upload File");
 
@@ -476,6 +464,12 @@ public partial class Home
         {
             return;
         }
+
+        dialogOptions ??= new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraExtraLarge,
+            FullWidth = true
+        };
 
         var dialogParameters = new DialogParameters
         {

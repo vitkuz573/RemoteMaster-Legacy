@@ -1,16 +1,17 @@
-﻿@using RemoteMaster.Server.Abstractions
-@inherits CommonDialogBase
+﻿@inherits CommonDialogBase
+
+@using RemoteMaster.Server.Abstractions
+
 @inject IComputerCommandService ComputerCommandService
 
-<CommonDialog ContentStyle="width: 600px;">
+<CommonDialog>
     <Content>
         <MudTextField T="string" Label="Output Path" @bind-Value="@_outputPath" FullWidth />
-         <MudNumericField T="uint" HideSpinButtons="true" Label="Duration (in seconds)" @bind-Value="@_durationInSeconds" FullWidth />
-         <MudNumericField T="uint" HideSpinButtons="true" Label="Video Quality" @bind-Value="@_videoQuality" FullWidth />
+        <MudNumericField T="uint" HideSpinButtons="true" Label="Duration (in seconds)" @bind-Value="@_durationInSeconds" FullWidth />
+        <MudNumericField T="uint" HideSpinButtons="true" Label="Video Quality" @bind-Value="@_videoQuality" FullWidth />
     </Content>
     <Actions>
-         <MudButton OnClick="Cancel">Cancel</MudButton>
-         <MudButton Color="Color.Primary" OnClick="StartRecording">Start Recording</MudButton>
-         <MudButton Color="Color.Secondary" OnClick="StopRecording">Stop Recording</MudButton>
+        <MudButton Color="Color.Primary" OnClick="StartRecording" Disabled="HasConnectionIssues">Start Recording</MudButton>
+        <MudButton Color="Color.Secondary" OnClick="StopRecording" Disabled="HasConnectionIssues">Stop Recording</MudButton>
     </Actions>
 </CommonDialog>

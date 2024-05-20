@@ -1,9 +1,11 @@
-﻿@using RemoteMaster.Server.Abstractions
-@inherits CommonDialogBase
+﻿@inherits CommonDialogBase
+
+@using RemoteMaster.Server.Abstractions
+
 @inject ISnackbar Snackbar
 @inject IComputerCommandService ComputerCommandService
 
-<CommonDialog ContentStyle="width: 400px;">
+<CommonDialog>
     <Content>
         <MudTextField T="string" Label="Domain" @bind-Value="@_domain" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Domain" OnAdornmentClick="DomainDiscovery" AdornmentAriaLabel="Domain Discovery" />
         <MudTextField T="string" Label="Username" @bind-Value="@_username" />
@@ -11,8 +13,7 @@
     </Content>
 
     <Actions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="JoinDomain">Join Domain</MudButton>
-        <MudButton Color="Color.Secondary" OnClick="LeaveDomain">Leave Domain</MudButton>
+        <MudButton Color="Color.Primary" OnClick="JoinDomain" Disabled="HasConnectionIssues">Join Domain</MudButton>
+        <MudButton Color="Color.Secondary" OnClick="LeaveDomain" Disabled="HasConnectionIssues">Leave Domain</MudButton>
     </Actions>
 </CommonDialog>

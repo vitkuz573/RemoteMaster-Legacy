@@ -1,5 +1,7 @@
 ﻿@inherits CommonDialogBase
+
 @using RemoteMaster.Shared.Enums
+
 @inject IJSRuntime JsRuntime
 
 <CommonDialog>
@@ -49,7 +51,6 @@
         </MudGrid>
     </Content>
     <Actions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="RunScript">Run Script</MudButton>
+        <MudButton Color="Color.Primary" OnClick="RunScript" Disabled="HasConnectionIssues">Run Script</MudButton>
     </Actions>
 </CommonDialog>
