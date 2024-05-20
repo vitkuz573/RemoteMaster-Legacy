@@ -427,7 +427,7 @@ public partial class Home
 
     private async Task ExecuteDialog<TDialog>(string title, DialogParameters? parameters = null, DialogOptions? options = null) where TDialog : ComponentBase
     {
-        var parametersWithAdditional = parameters ?? new DialogParameters();
+        var parametersWithAdditional = parameters ?? [];
 
         if (parametersWithAdditional.TryGet<Dictionary<string, object>>(nameof(CommonDialogWrapper<TDialog>.AdditionalParameters)) == null)
         {
