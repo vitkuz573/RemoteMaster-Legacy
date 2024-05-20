@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Models;
-using Serilog;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 

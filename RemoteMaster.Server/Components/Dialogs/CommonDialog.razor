@@ -4,26 +4,39 @@
     <DialogContent>
         <MudExpansionPanels>
             <MudExpansionPanel Text="@GetPanelHeaderText()" Class="mb-5">
-                @foreach (var (computer, connection) in Hosts.ToList())
-                {
-                    <MudText>
-                        @computer.Name (@computer.IpAddress)
-                        @if (RequireConnections)
-                        {
-                            @if (connection != null)
+                <MudTable Items="Hosts.ToList()" Hover="true" Class="mb-5">
+                    <HeaderContent>
+                        <MudTh>Name</MudTh>
+                        <MudTh>IP Address</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Name">@context.Key.Name</MudTd>
+                        <MudTd DataLabel="IP Address">@context.Key.IpAddress</MudTd>
+                        <MudTd DataLabel="Status">
+                            @if (RequireConnections)
                             {
-                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+                                @if (context.Value != null)
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+                                }
+                                else
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" />
+                                }
                             }
-                            else
+                        </MudTd>
+                        <MudTd DataLabel="Actions">
+                            @if (RequireConnections)
                             {
-                                <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Refresh" OnClick="@(async () => await RecheckConnection(context.Key))"
+                                               Class="@GetRefreshIconClass(context.Key)" Disabled="@IsLoading(context.Key)" />
                             }
-                            <MudIconButton Icon="@Icons.Material.Filled.Refresh" OnClick="@(async () => await RecheckConnection(computer))"
-                                           Class="@GetRefreshIconClass(computer)" Disabled="@IsLoading(computer)" />
-                        }
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(async () => await RemoveComputer(computer))" />
-                    </MudText>
-                }
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(async () => await RemoveComputer(context.Key))" />
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
             </MudExpansionPanel>
         </MudExpansionPanels>
         @Content
