@@ -8,17 +8,20 @@
                     <HeaderContent>
                         <MudTh>Name</MudTh>
                         <MudTh>IP Address</MudTh>
-                        <MudTh>Hub Path</MudTh>
-                        <MudTh>Status</MudTh>
+                        @if (RequireConnections)
+                        {
+                            <MudTh>Hub Path</MudTh>
+                            <MudTh>Status</MudTh>
+                        }
                         <MudTh>Actions</MudTh>
                     </HeaderContent>
                     <RowTemplate>
                         <MudTd DataLabel="Name">@context.Key.Name</MudTd>
                         <MudTd DataLabel="IP Address">@context.Key.IpAddress</MudTd>
-                        <MudTd DataLabel="Hub Path">@HubPath</MudTd>
-                        <MudTd DataLabel="Status">
-                            @if (RequireConnections)
-                            {
+                        @if (RequireConnections)
+                        {
+                            <MudTd DataLabel="Hub Path">@HubPath</MudTd>
+                            <MudTd DataLabel="Status">
                                 @if (context.Value != null)
                                 {
                                     <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
@@ -29,8 +32,8 @@
                                         <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" />
                                     </MudTooltip>
                                 }
-                            }
-                        </MudTd>
+                            </MudTd>
+                        }
                         <MudTd DataLabel="Actions">
                             @if (RequireConnections)
                             {
@@ -60,6 +63,7 @@
         from {
             transform: rotate(0deg);
         }
+
         to {
             transform: rotate(360deg);
         }
