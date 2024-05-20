@@ -195,6 +195,18 @@ public class CommonDialogBase : ComponentBase
         return RequireConnections && Hosts.Any(kvp => kvp.Value == null) ? "Click to view affected hosts (some hosts have issues)" : "Click to view affected hosts";
     }
 
+    public string GetButtonClass(Computer computer)
+    {
+        var baseClass = "fixed-size-button";
+
+        if (IsLoading(computer))
+        {
+            return $"{baseClass} rotating";
+        }
+
+        return baseClass;
+    }
+
     protected bool IsLoading(Computer computer) => _loadingStates.TryGetValue(computer, out var isLoading) && isLoading;
 
     public string GetErrorMessage(Computer computer) => _errorMessages.TryGetValue(computer, out var errorMessage) ? errorMessage : "Unknown error";
