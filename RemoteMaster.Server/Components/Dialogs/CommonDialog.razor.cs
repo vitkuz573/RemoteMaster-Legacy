@@ -11,7 +11,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
-#pragma warning disable CA2227
+#pragma warning disable
 
 public class CommonDialogBase : ComponentBase
 {
@@ -43,6 +43,7 @@ public class CommonDialogBase : ComponentBase
     public bool RequireConnections { get; set; }
 
     private readonly ConcurrentDictionary<Computer, bool> _loadingStates = new();
+    private readonly ConcurrentDictionary<Computer, string> _errorMessages = new();
 
     protected async void Cancel()
     {
@@ -85,9 +86,10 @@ public class CommonDialogBase : ComponentBase
                 var connection = await SetupConnection(computer, HubPath, StartConnection, CancellationToken.None);
                 Hosts[computer] = connection;
             }
-            catch
+            catch (Exception ex)
             {
                 Hosts[computer] = null;
+                _errorMessages[computer] = ex.Message;
             }
             finally
             {
@@ -140,10 +142,12 @@ public class CommonDialogBase : ComponentBase
         {
             var newConnection = await SetupConnection(computer, HubPath, StartConnection, CancellationToken.None);
             Hosts[computer] = newConnection;
+            _errorMessages.TryRemove(computer, out _);
         }
-        catch
+        catch (Exception ex)
         {
             Hosts[computer] = null;
+            _errorMessages[computer] = ex.Message;
         }
         finally
         {
@@ -170,6 +174,7 @@ public class CommonDialogBase : ComponentBase
         }
 
         Hosts.TryRemove(computer, out _);
+        _errorMessages.TryRemove(computer, out _);
         await InvokeAsync(StateHasChanged);
 
         if (Hosts.IsEmpty)
@@ -189,4 +194,6 @@ public class CommonDialogBase : ComponentBase
     }
 
     protected bool IsLoading(Computer computer) => _loadingStates.TryGetValue(computer, out var isLoading) && isLoading;
+
+    public string GetErrorMessage(Computer computer) => _errorMessages.TryGetValue(computer, out var errorMessage) ? errorMessage : "Unknown error";
 }

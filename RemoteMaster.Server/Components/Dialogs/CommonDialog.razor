@@ -23,7 +23,9 @@
                                 }
                                 else
                                 {
-                                    <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" />
+                                    <MudTooltip Text="@GetErrorMessage(context.Key)">
+                                        <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" />
+                                    </MudTooltip>
                                 }
                             }
                         </MudTd>
@@ -55,7 +57,6 @@
         from {
             transform: rotate(0deg);
         }
-
         to {
             transform: rotate(360deg);
         }
