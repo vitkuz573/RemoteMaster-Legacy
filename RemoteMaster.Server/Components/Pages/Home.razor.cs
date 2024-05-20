@@ -477,12 +477,12 @@ public partial class Home
             return;
         }
 
-        var dialogParameters = new DialogParameters
+        var dialogParameters = new DialogParameters<CommonDialog>
         {
-            { "Hosts", new ConcurrentDictionary<Computer, HubConnection?>(computers.ToDictionary(c => c, c => (HubConnection?)null)) },
-            { "HubPath", hubPath },
-            { "StartConnection", startConnection },
-            { "RequireConnections", requireConnections }
+            { x => x.Hosts, new ConcurrentDictionary<Computer, HubConnection?>(computers.ToDictionary(c => c, c => (HubConnection?)null)) },
+            { x => x.HubPath, hubPath },
+            { x => x.StartConnection, startConnection },
+            { x => x.RequireConnections, requireConnections }
         };
 
         await ExecuteDialog<TDialog>(title, dialogParameters, dialogOptions);

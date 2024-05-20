@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Models;
+using Serilog;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
@@ -34,7 +35,7 @@ public class CommonDialogBase : ComponentBase
     public RenderFragment Actions { get; set; } = default!;
 
     [Parameter]
-    public string HubPath { get; set; }
+    public string HubPath { get; set; } = "hubs/control";
 
     [Parameter]
     public bool StartConnection { get; set; } = true;

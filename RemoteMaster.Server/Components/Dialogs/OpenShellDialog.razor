@@ -3,7 +3,7 @@
 @using RemoteMaster.Shared.Enums
 @inject IComputerCommandService ComputerCommandService
 
-<CommonDialog Hosts="@Hosts" ContentStyle="width: 500px;">
+<CommonDialog Hosts="@Hosts" HubPath="@HubPath" StartConnection="@StartConnection" RequireConnections="@RequireConnections" ContentStyle="width: 500px;">
     <Content>
         <MudGrid>
             <MudItem xs="12" md="6">
