@@ -569,13 +569,18 @@ public partial class Home
             CloseOnEscapeKey = true
         };
 
+        var hosts = await GetComputerConnections(_selectedComputers, true, "hubs/control");
+
         var dialogParameters = new DialogParameters
         {
             { "OnNodesMoved", EventCallback.Factory.Create<IEnumerable<Computer>>(this, OnNodesMoved) },
-            { "Hosts", await GetComputerConnections(_selectedComputers, true, "hubs/control") }
+            { "Hosts", hosts },
+            { "HubPath", "hubs/control" },
+            { "StartConnection", true },
+            { "RequireConnections", true }
         };
 
-        await DialogService.ShowAsync<MoveDialog>("Move", dialogParameters, dialogOptions);
+        await ExecuteDialog<MoveDialog>("Move", dialogParameters, dialogOptions);
     }
 
     private async Task OnNodesMoved(IEnumerable<Computer> movedNodes)
