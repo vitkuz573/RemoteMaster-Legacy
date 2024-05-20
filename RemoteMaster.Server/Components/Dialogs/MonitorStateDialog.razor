@@ -3,7 +3,7 @@
 @using RemoteMaster.Shared.Enums
 @inject IComputerCommandService ComputerCommandService
 
-<CommonDialog Hosts="@Hosts">
+<CommonDialog>
     <Content>
         <MudRadioGroup T="MonitorState" @bind-Value="@_monitorState">
             @foreach (MonitorState monitorState in Enum.GetValues(typeof(MonitorState)))

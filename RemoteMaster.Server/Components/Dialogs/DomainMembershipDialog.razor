@@ -3,7 +3,7 @@
 @inject ISnackbar Snackbar
 @inject IComputerCommandService ComputerCommandService
 
-<CommonDialog Hosts="@Hosts" ContentStyle="width: 400px;">
+<CommonDialog ContentStyle="width: 400px;">
     <Content>
         <MudTextField T="string" Label="Domain" @bind-Value="@_domain" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Domain" OnAdornmentClick="DomainDiscovery" AdornmentAriaLabel="Domain Discovery" />
         <MudTextField T="string" Label="Username" @bind-Value="@_username" />

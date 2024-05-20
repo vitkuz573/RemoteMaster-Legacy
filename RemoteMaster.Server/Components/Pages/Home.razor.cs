@@ -427,7 +427,7 @@ public partial class Home
 
     private async Task ExecuteDialog<TDialog>(string title, DialogParameters? parameters = null, DialogOptions? options = null) where TDialog : ComponentBase
     {
-        await DialogService.ShowAsync<TDialog>(title, parameters, options);
+        await DialogService.ShowAsync<CommonDialogWrapper<TDialog>>(title, parameters, options);
     }
 
     private async Task Power() => await ExecuteAction<PowerDialog>("Power");
@@ -477,12 +477,12 @@ public partial class Home
             return;
         }
 
-        var dialogParameters = new DialogParameters<CommonDialog>
+        var dialogParameters = new DialogParameters
         {
-            { x => x.Hosts, new ConcurrentDictionary<Computer, HubConnection?>(computers.ToDictionary(c => c, c => (HubConnection?)null)) },
-            { x => x.HubPath, hubPath },
-            { x => x.StartConnection, startConnection },
-            { x => x.RequireConnections, requireConnections }
+            { nameof(CommonDialogWrapper<TDialog>.Hosts), new ConcurrentDictionary<Computer, HubConnection?>(computers.ToDictionary(c => c, c => (HubConnection?)null)) },
+            { nameof(CommonDialogWrapper<TDialog>.HubPath), hubPath },
+            { nameof(CommonDialogWrapper<TDialog>.StartConnection), startConnection },
+            { nameof(CommonDialogWrapper<TDialog>.RequireConnections), requireConnections }
         };
 
         await ExecuteDialog<TDialog>(title, dialogParameters, dialogOptions);

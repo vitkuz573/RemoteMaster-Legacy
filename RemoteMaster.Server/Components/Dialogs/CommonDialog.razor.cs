@@ -22,7 +22,7 @@ public class CommonDialogBase : ComponentBase
     [Inject]
     private IAccessTokenProvider AccessTokenProvider { get; set; } = default!;
 
-    [Parameter]
+    [CascadingParameter]
     public ConcurrentDictionary<Computer, HubConnection?> Hosts { get; set; } = default!;
 
     [Parameter]
@@ -34,14 +34,14 @@ public class CommonDialogBase : ComponentBase
     [Parameter]
     public RenderFragment Actions { get; set; } = default!;
 
-    [Parameter]
-    public string HubPath { get; set; } = "hubs/control";
+    [CascadingParameter]
+    public string HubPath { get; set; } = default!;
 
-    [Parameter]
-    public bool StartConnection { get; set; } = true;
+    [CascadingParameter]
+    public bool StartConnection { get; set; }
 
-    [Parameter]
-    public bool RequireConnections { get; set; } = true;
+    [CascadingParameter]
+    public bool RequireConnections { get; set; }
 
     private readonly ConcurrentDictionary<Computer, bool> _loadingStates = new();
 

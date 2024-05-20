@@ -2,7 +2,7 @@
 @inherits CommonDialogBase
 @inject IComputerCommandService ComputerCommandService
 
-<CommonDialog Hosts="@Hosts">
+<CommonDialog>
     <Content>
         <MudStack Style="width: 100%">
             <MudFileUpload T="IReadOnlyList<IBrowserFile>" AppendMultipleFiles OnFilesChanged="OnInputFileChanged" Hidden="@false" InputClass="absolute mud-width-full mud-height-full overflow-hidden z-20" InputStyle="opacity:0" @ondragenter="@SetDragClass" @ondragleave="@ClearDragClass" @ondragend="@ClearDragClass">

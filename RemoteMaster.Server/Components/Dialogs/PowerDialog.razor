@@ -3,7 +3,7 @@
 @inject IComputerCommandService ComputerCommandService
 @inject IHttpContextAccessor HttpContextAccessor
 
-<CommonDialog Hosts="@Hosts" ContentStyle="width: 500px;">
+<CommonDialog ContentStyle="width: 500px;">
     <Content>
         <MudRadioGroup T="string" @bind-Value="@_selectedOption">
             <MudRadio Value="@("shutdown")">Shutdown</MudRadio>

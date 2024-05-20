@@ -3,7 +3,7 @@
 @using System.Security.Cryptography.X509Certificates
 @inject ICrlService CrlService
 
-<CommonDialog Hosts="@Hosts">
+<CommonDialog>
     <Content>
         <MudSelect T="X509RevocationReason" Label="Select revocation reason" @bind-Value="_selectedRevocationReason" Dense="true">
             @foreach (var reason in revocationReasons)

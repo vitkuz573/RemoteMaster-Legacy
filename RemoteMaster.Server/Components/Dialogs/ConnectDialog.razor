@@ -3,7 +3,7 @@
 @inject IComputerCommandService ComputerCommandService
 @inject IJSRuntime JsRuntime
 
-<CommonDialog Hosts="@Hosts" HubPath="@HubPath" StartConnection="@StartConnection" RequireConnections="@RequireConnections">
+<CommonDialog>
     <Content>
         <MudRadioGroup @bind-Value="@_selectedOption">
             <MudRadio Value="@("control")">Control</MudRadio>
