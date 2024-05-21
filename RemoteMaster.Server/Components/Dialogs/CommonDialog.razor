@@ -25,7 +25,11 @@
                         {
                             <MudTd DataLabel="Hub Path">@HubPath</MudTd>
                             <MudTd DataLabel="Status">
-                                @if (context.Value != null)
+                                @if (IsChecking(context.Key))
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.HourglassEmpty" Class="rotating" />
+                                }
+                                else if (context.Value != null)
                                 {
                                     <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
                                 }

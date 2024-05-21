@@ -44,6 +44,7 @@ public class CommonDialogBase : ComponentBase
 
     public bool HasConnectionIssues => RequireConnections && Hosts.Any(kvp => kvp.Value == null);
 
+    private readonly ConcurrentDictionary<Computer, bool> _checkingStates = new();
     private readonly ConcurrentDictionary<Computer, bool> _loadingStates = new();
     private readonly ConcurrentDictionary<Computer, string> _errorMessages = new();
 
@@ -82,6 +83,7 @@ public class CommonDialogBase : ComponentBase
         var tasks = Hosts.Select(async kvp =>
         {
             var computer = kvp.Key;
+            _checkingStates[computer] = true;
 
             try
             {
@@ -95,6 +97,7 @@ public class CommonDialogBase : ComponentBase
             }
             finally
             {
+                _checkingStates[computer] = false;
                 await InvokeAsync(StateHasChanged);
             }
         });
@@ -125,6 +128,7 @@ public class CommonDialogBase : ComponentBase
         ArgumentNullException.ThrowIfNull(computer);
 
         _loadingStates[computer] = true;
+        _checkingStates[computer] = true;
         await InvokeAsync(StateHasChanged);
 
         if (Hosts.TryGetValue(computer, out var existingConnection) && existingConnection != null)
@@ -154,6 +158,7 @@ public class CommonDialogBase : ComponentBase
         finally
         {
             _loadingStates[computer] = false;
+            _checkingStates[computer] = false;
             await InvokeAsync(StateHasChanged);
         }
     }
@@ -206,6 +211,8 @@ public class CommonDialogBase : ComponentBase
 
         return baseClass;
     }
+
+    protected bool IsChecking(Computer computer) => _checkingStates.TryGetValue(computer, out var isChecking) && isChecking;
 
     protected bool IsLoading(Computer computer) => _loadingStates.TryGetValue(computer, out var isLoading) && isLoading;
 
