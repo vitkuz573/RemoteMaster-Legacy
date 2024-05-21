@@ -619,9 +619,9 @@ public partial class Home
             CloseOnEscapeKey = true
         };
 
-        var dialogParameters = new DialogParameters
+        var dialogParameters = new DialogParameters<AddOuDialog>
         {
-            { "OnOuAdded", EventCallback.Factory.Create<bool>(this, OnOuAdded) }
+            { x => x.OnOuAdded, EventCallback.Factory.Create<bool>(this, OnOuAdded) }
         };
 
         await DialogService.ShowAsync<AddOuDialog>("Add Organizational Unit", dialogParameters, dialogOptions);
