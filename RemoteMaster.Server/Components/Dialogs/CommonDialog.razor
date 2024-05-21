@@ -7,9 +7,9 @@
     <DialogContent>
         <MudExpansionPanels>
             <MudExpansionPanel Text="@GetPanelHeaderText()" Class="mb-5">
-                <MudTable Items="Hosts.ToList()" Hover="true" Dense="true" SortLabel="Sort By">
+                <MudTable Items="Hosts.ToList()" Hover="true" Dense="true">
                     <HeaderContent>
-                        <MudTh><MudTableSortLabel SortBy="new Func<KeyValuePair<Computer, HubConnection?>, object>(x => x.Key.Name)">Name</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<KeyValuePair<Computer, HubConnection?>, object>(x => x.Key.Name)" InitialDirection="SortDirection.Ascending">Name</MudTableSortLabel></MudTh>
                         <MudTh><MudTableSortLabel SortBy="new Func<KeyValuePair<Computer, HubConnection?>, object>(x => x.Key.IpAddress)">IP Address</MudTableSortLabel></MudTh>
                         @if (RequireConnections)
                         {
