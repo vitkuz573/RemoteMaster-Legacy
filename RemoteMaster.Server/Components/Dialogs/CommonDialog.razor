@@ -45,7 +45,7 @@
                             @if (RequireConnections)
                             {
                                 <MudIconButton Icon="@Icons.Material.Filled.Refresh" OnClick="@(async () => await RecheckConnection(context.Key))"
-                                               Class="@GetButtonClass(context.Key)" Disabled="@IsLoading(context.Key)" />
+                                               Class="@GetButtonClass(context.Key)" Disabled="@IsRefreshDisabled(context.Key)" />
                             }
                             <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(async () => await RemoveComputer(context.Key))" Class="fixed-size-button" Color="Color.Error" />
                         </MudTd>

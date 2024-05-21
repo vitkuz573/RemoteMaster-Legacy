@@ -212,6 +212,11 @@ public class CommonDialogBase : ComponentBase
         return baseClass;
     }
 
+    public bool IsRefreshDisabled(Computer computer)
+    {
+        return IsLoading(computer) || IsChecking(computer);
+    }
+
     protected bool IsChecking(Computer computer) => _checkingStates.TryGetValue(computer, out var isChecking) && isChecking;
 
     protected bool IsLoading(Computer computer) => _loadingStates.TryGetValue(computer, out var isLoading) && isLoading;
