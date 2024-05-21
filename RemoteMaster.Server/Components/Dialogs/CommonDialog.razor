@@ -1,13 +1,16 @@
 ﻿@inherits CommonDialogBase
 
+@using Microsoft.AspNetCore.SignalR.Client
+@using RemoteMaster.Shared.Models
+
 <MudDialog ContentStyle="@ContentStyle">
     <DialogContent>
         <MudExpansionPanels>
             <MudExpansionPanel Text="@GetPanelHeaderText()" Class="mb-5">
-                <MudTable Items="Hosts.ToList()" Hover="true" Dense="true" Class="mb-5">
+                <MudTable Items="Hosts.ToList()" Hover="true" Dense="true" SortLabel="Sort By">
                     <HeaderContent>
-                        <MudTh>Name</MudTh>
-                        <MudTh>IP Address</MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<KeyValuePair<Computer, HubConnection?>, object>(x => x.Key.Name)">Name</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<KeyValuePair<Computer, HubConnection?>, object>(x => x.Key.IpAddress)">IP Address</MudTableSortLabel></MudTh>
                         @if (RequireConnections)
                         {
                             <MudTh>Hub Path</MudTh>
@@ -63,6 +66,7 @@
         from {
             transform: rotate(0deg);
         }
+
         to {
             transform: rotate(360deg);
         }
