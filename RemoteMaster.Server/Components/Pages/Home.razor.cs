@@ -571,7 +571,8 @@ public partial class Home
 
     private async Task OpenMoveDialog()
     {
-        var hosts = await GetComputerConnections(_selectedComputers, true, "hubs/control");
+        var computers = _selectedComputers.ToDictionary(c => c, c => (HubConnection?)null);
+        var hosts = new ConcurrentDictionary<Computer, HubConnection?>(computers);
 
         var dialogOptions = new DialogOptions
         {
