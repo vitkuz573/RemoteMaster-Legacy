@@ -439,11 +439,11 @@ public partial class Home
 
     private async Task Power() => await ExecuteAction<PowerDialog>("Power");
 
-    private async Task WakeUp() => await ExecuteAction<WakeUpDialog>("Wake Up", false, false);
+    private async Task WakeUp() => await ExecuteAction<WakeUpDialog>("Wake Up", false, false, requireConnections: false);
 
     private async Task Connect() => await ExecuteAction<ConnectDialog>("Connect");
 
-    private async Task OpenShell() => await ExecuteAction<OpenShellDialog>("Open Shell", onlyAvailable: false, startConnection: false, requireConnections: false);
+    private async Task OpenShell() => await ExecuteAction<OpenShellDialog>("Open Shell", false, false, requireConnections: false);
 
     private async Task ExecuteScript() => await ExecuteAction<ScriptExecutorDialog>("Execute Script");
 
