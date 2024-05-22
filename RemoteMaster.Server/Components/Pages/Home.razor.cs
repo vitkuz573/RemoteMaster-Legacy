@@ -569,6 +569,22 @@ public partial class Home
         }
     }
 
+    private async Task OpenHostInfo()
+    {
+        var dialogOptions = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraExtraLarge,
+            FullWidth = true
+        };
+
+        var dialogParameters = new DialogParameters
+        {
+            { "Host", _selectedComputers.First() }
+        };
+
+        await DialogService.ShowAsync<HostDialog>("Host Info", dialogParameters, dialogOptions);
+    }
+
     private async Task OpenMoveDialog()
     {
         var computers = _selectedComputers.ToDictionary(c => c, c => (HubConnection?)null);

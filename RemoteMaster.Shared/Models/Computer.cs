@@ -11,10 +11,10 @@ namespace RemoteMaster.Shared.Models;
 public class Computer : Node, IEquatable<Computer>
 {
     [JsonPropertyName("ipAddress")]
-    public required string IpAddress { get; init; }
+    public required string IpAddress { get; set; }
 
     [JsonPropertyName("macAddress")]
-    public required string MacAddress { get; init; }
+    public required string MacAddress { get; set; }
 
     [JsonIgnore]
     [NotMapped]

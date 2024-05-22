@@ -86,6 +86,7 @@
                     </MudTabPanel>
 
                     <MudTabPanel Text="Management" Icon="@Icons.Material.Filled.Settings">
+                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenHostInfo" Disabled="@(_selectedComputers.Count != 1)" Class="mr-2">Host Info</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenMoveDialog" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Move</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="RemoveComputers" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Remove</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenAddOuDialog" Class="mr-2">Add OU</MudButton>
