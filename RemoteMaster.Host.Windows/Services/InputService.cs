@@ -35,14 +35,7 @@ public sealed class InputService : IInputService
             if (_blockUserInput != value)
             {
                 _blockUserInput = value;
-
-                EnqueueOperation(() =>
-                {
-                    if (!BlockInput(value))
-                    {
-                        Log.Error("Failed to block/unblock input. Error code: {0}", Marshal.GetLastWin32Error());
-                    }
-                });
+                HandleBlockInput(value);
             }
         }
     }
@@ -69,6 +62,30 @@ public sealed class InputService : IInputService
         var absoluteY = screenCapturer.CurrentScreenBounds.Height * position.GetValueOrDefault().Y + screenCapturer.CurrentScreenBounds.Top - screenCapturer.VirtualScreenBounds.Top;
 
         return new PointF((float)(absoluteX / screenCapturer.VirtualScreenBounds.Width), (float)(absoluteY / screenCapturer.VirtualScreenBounds.Height));
+    }
+
+    private void HandleBlockInput(bool block)
+    {
+        void blockInputAction()
+        {
+            if (!BlockInput(block))
+            {
+                Log.Error("Failed to block/unblock input. Error code: {0}", Marshal.GetLastWin32Error());
+            }
+        }
+
+        if (InputEnabled)
+        {
+            EnqueueOperation(() =>
+            {
+                _desktopService.SwitchToInputDesktop();
+                blockInputAction();
+            });
+        }
+        else
+        {
+            blockInputAction();
+        }
     }
 
     private void ProcessQueue()
