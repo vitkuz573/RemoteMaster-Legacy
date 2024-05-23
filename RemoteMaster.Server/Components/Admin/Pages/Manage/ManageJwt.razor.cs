@@ -23,24 +23,28 @@ public partial class ManageJwt
     private async Task ExportKeysAsync()
     {
         var memoryStream = new MemoryStream();
-        
+
         using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
         {
             var files = new string[] { "private_key.der", "public_key.der" };
-            
+
             foreach (var file in files)
             {
                 var filePath = Path.Combine(_keysDirectory, file);
                 var entry = archive.CreateEntry(file, CompressionLevel.Fastest);
-                
+
                 using var fileStream = new FileStream(filePath, FileMode.Open);
                 using var entryStream = entry.Open();
-                
+
                 await fileStream.CopyToAsync(entryStream);
             }
         }
         memoryStream.Position = 0;
-        
-        await JsRuntime.InvokeVoidAsync("saveAsFile", "jwtKeys.zip", Convert.ToBase64String(memoryStream.ToArray()));
+
+        var base64Zip = Convert.ToBase64String(memoryStream.ToArray());
+
+        var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/fileUtils.js");
+
+        await module.InvokeVoidAsync("downloadDataAsFile", base64Zip, "jwtKeys.zip", "application/zip;base64");
     }
 }
