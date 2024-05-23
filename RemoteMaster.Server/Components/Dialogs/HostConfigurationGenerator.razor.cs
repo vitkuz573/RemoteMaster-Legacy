@@ -280,6 +280,8 @@ public partial class HostConfigurationGenerator
         _countries.Add("Wallis and Futuna", "WF");
         _countries.Add("Western Sahara", "EH");
         _countries.Add("Yemen", "YE");
+        _countries.Add("Zambia", "ZM");
+        _countries.Add("Zimbabwe", "ZW");
     }
 
     private async Task OnValidSubmit(EditContext context)
