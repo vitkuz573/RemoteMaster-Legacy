@@ -293,10 +293,7 @@ public partial class HostConfigurationGenerator
             WriteIndented = true
         });
 
-        var filename = "RemoteMaster.Host.json";
-        var contentType = "application/json";
-
-        await module.InvokeVoidAsync("downloadDataAsFile", jsonContent, filename, contentType);
+        await module.InvokeVoidAsync("downloadDataAsFile", jsonContent, "RemoteMaster.Host.json", "application/json");
     }
 
     public void DownloadHost()
