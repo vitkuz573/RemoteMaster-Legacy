@@ -118,7 +118,7 @@ public static class Program
         services.AddScoped<ICrlService, CrlService>();
         services.AddScoped<IAccessTokenProvider, AccessTokenProvider>();
         services.AddScoped<ITokenService, TokenService>();
-        services.AddScoped<ITokenStorageService, DbTokenStorageService>();
+        services.AddSingleton<ITokenStorageService, InMemoryTokenStorageService>();
         services.AddSingleton<IBrandingService, BrandingService>();
         services.AddSingleton<ICertificateService, CertificateService>();
         services.AddSingleton<IPacketSender, UdpPacketSender>();
