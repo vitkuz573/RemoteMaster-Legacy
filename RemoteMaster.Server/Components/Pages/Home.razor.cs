@@ -154,6 +154,7 @@ public partial class Home
         {
             if (!_availableComputers.ContainsKey(computer.IpAddress) && !_unavailableComputers.ContainsKey(computer.IpAddress))
             {
+                computer.Thumbnail = null;
                 newPendingComputers.TryAdd(computer.IpAddress, computer);
             }
         }
@@ -325,6 +326,8 @@ public partial class Home
 
     private async Task MoveToPending(Computer computer)
     {
+        computer.Thumbnail = null;
+
         if (_availableComputers.ContainsKey(computer.IpAddress))
         {
             _availableComputers.TryRemove(computer.IpAddress, out _);
