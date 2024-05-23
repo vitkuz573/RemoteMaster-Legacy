@@ -2,11 +2,12 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Abstractions;
 
 namespace RemoteMaster.Server.Services;
 
-public class AccessTokenProvider(ITokenService tokenService, ITokenStorageService tokenStorageService) : IAccessTokenProvider
+public class AccessTokenProvider(ITokenService tokenService, ITokenStorageService tokenStorageService, NavigationManager navigationManager) : IAccessTokenProvider
 {
     public async Task<string?> GetAccessTokenAsync(string userId)
     {
@@ -32,6 +33,8 @@ public class AccessTokenProvider(ITokenService tokenService, ITokenStorageServic
         }
 
         await tokenStorageService.ClearTokensAsync(userId);
+
+        navigationManager.NavigateTo("/Account/Logout", true);
 
         return null;
     }
