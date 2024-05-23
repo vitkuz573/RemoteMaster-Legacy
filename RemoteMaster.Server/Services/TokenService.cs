@@ -57,9 +57,9 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
             Expires = DateTime.UtcNow.AddMinutes(15),
             SigningCredentials = new SigningCredentials(new RsaSecurityKey(rsa), SecurityAlgorithms.RsaSha256)
         };
-        
+
         var token = tokenHandler.CreateToken(tokenDescriptor);
-        
+
         return tokenHandler.WriteToken(token);
     }
 
@@ -106,7 +106,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         try
         {
             tokenHandler.ValidateToken(accessToken, validationParameters, out var validatedToken);
-            
+
             return validatedToken != null;
         }
         catch (SecurityTokenExpiredException)
@@ -129,7 +129,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         var publicKeyPath = Path.Combine(_options.KeysDirectory, "public_key.der");
         var publicKeyBytes = File.ReadAllBytes(publicKeyPath);
-        
+
         rsa.ImportRSAPublicKey(publicKeyBytes, out _);
 
         return rsa;
@@ -162,6 +162,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         if (refreshTokenEntity == null || refreshTokenEntity.IsExpired)
         {
+            Log.Warning("Refresh token is null or expired for token: {RefreshToken}", refreshToken);
             return null;
         }
 
@@ -176,22 +177,47 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
             CreatedByIp = ipAddress
         };
 
-        context.RefreshTokens.Add(newRefreshTokenEntity);
-        await context.SaveChangesAsync();
+        try
+        {
+            await context.RefreshTokens.AddAsync(newRefreshTokenEntity);
+            await context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error saving new refresh token for user: {UserId}", refreshTokenEntity.UserId);
+            throw;
+        }
+
+        var existingEntity = context.ChangeTracker.Entries<RefreshToken>().FirstOrDefault(e => e.Entity.Id == refreshTokenEntity.Id);
+        
+        if (existingEntity != null)
+        {
+            Log.Warning("Detaching already tracked entity with Id: {RefreshTokenId}", refreshTokenEntity.Id);
+            existingEntity.State = EntityState.Detached;
+        }
 
         refreshTokenEntity.Revoked = DateTime.UtcNow;
         refreshTokenEntity.RevokedByIp = ipAddress;
         refreshTokenEntity.RevocationReason = TokenRevocationReason.ReplacedDuringRefresh;
         refreshTokenEntity.ReplacedByToken = newRefreshTokenEntity;
 
-        context.Update(refreshTokenEntity);
-
-        await context.SaveChangesAsync();
+        try
+        {
+            context.RefreshTokens.Attach(refreshTokenEntity);
+            context.Entry(refreshTokenEntity).State = EntityState.Modified;
+            await context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error updating refresh token entity with Id: {RefreshTokenId}", refreshTokenEntity.Id);
+            throw;
+        }
 
         var user = await context.Users.FindAsync(refreshTokenEntity.UserId);
 
         if (user == null)
         {
+            Log.Warning("User not found for userId: {UserId}", refreshTokenEntity.UserId);
             return null;
         }
 
@@ -208,9 +234,11 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
             claims.Add(new Claim(ClaimTypes.Role, role));
         }
 
+        var newAccessToken = await GenerateAccessTokenAsync(claims);
+
         return new TokenResponseData
         {
-            AccessToken = await GenerateAccessTokenAsync(claims),
+            AccessToken = newAccessToken,
             RefreshToken = newRefreshTokenEntity.Token,
         };
     }
