@@ -1,11 +1,19 @@
 ﻿@page "/{Host}/filemanager"
+
 @rendermode InteractiveServer
+
 @attribute [Authorize]
+
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
 @using RemoteMaster.Server.Abstractions
+@using RemoteMaster.Server.Data
 @using RemoteMaster.Shared.Models
+
 @inject IJSRuntime JsRuntime
 @inject IAccessTokenProvider AccessTokenProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject IHttpContextAccessor HttpContextAccessor
 
 <MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme" />
 <MudDialogProvider />

@@ -32,6 +32,9 @@ public partial class UpdateDialog
 
     private async Task Confirm()
     {
+        var httpContext = HttpContextAccessor.HttpContext;
+        var userId = UserManager.GetUserId(httpContext.User);
+
         var updateTasks = new List<Task>();
 
         foreach (var (computer, connection) in Hosts)
@@ -41,7 +44,7 @@ public partial class UpdateDialog
                 var updaterConnection = new HubConnectionBuilder()
                 .WithUrl($"https://{computer.IpAddress}:6001/hubs/updater", options =>
                 {
-                    options.AccessTokenProvider = async () => await AccessTokenProvider.GetAccessTokenAsync();
+                    options.AccessTokenProvider = async () => await AccessTokenProvider.GetAccessTokenAsync(userId);
                 })
                 .AddMessagePackProtocol()
                 .Build();

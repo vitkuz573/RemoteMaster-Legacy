@@ -184,7 +184,10 @@ public partial class Access : IDisposable
 
     private async Task InitializeHostConnectionAsync()
     {
-        _accessToken = await AccessTokenProvider.GetAccessTokenAsync();
+        var httpContext = HttpContextAccessor.HttpContext;
+        var userId = UserManager.GetUserId(httpContext.User);
+
+        _accessToken = await AccessTokenProvider.GetAccessTokenAsync(userId);
 
         _connection = new HubConnectionBuilder()
             .WithUrl($"https://{Host}:5001/hubs/control", options =>
@@ -217,7 +220,6 @@ public partial class Access : IDisposable
             InvokeAsync(StateHasChanged);
         });
 
-        var httpContext = HttpContextAccessor.HttpContext;
         var userIdentity = httpContext?.User.Identity;
 
         var connectionRequest = new ConnectionRequest(Intention.ManageDevice, userIdentity.Name);

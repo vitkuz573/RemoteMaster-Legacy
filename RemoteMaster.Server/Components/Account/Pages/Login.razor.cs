@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
 using RemoteMaster.Server.Enums;
-using RemoteMaster.Server.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Components.Account.Pages;
@@ -49,19 +48,23 @@ public partial class Login
 
         if (result.Succeeded)
         {
-            var userId = UserManager.GetUserId(HttpContext.User);
-            var user = await UserManager.FindByIdAsync(userId);
+            var user = await UserManager.FindByNameAsync(Input.Username);
 
+            if (user == null)
+            {
+                errorMessage = "Error: Invalid login attempt.";
+                return;
+            }
+
+            var userId = user.Id;
             var isRootAdmin = await UserManager.IsInRoleAsync(user, "RootAdministrator");
             var isLocalhost = ipAddress == "127.0.0.1" || ipAddress == "::1" || ipAddress == "::ffff:127.0.0.1";
 
             if (isRootAdmin && !isLocalhost)
             {
-                HttpContext.Response.Cookies.Delete(".AspNetCore.Identity.Application");
-
+                await SignInManager.SignOutAsync();
                 Log.Warning("Attempt to login as RootAdministrator from non-localhost IP.");
                 errorMessage = "RootAdministrator access is restricted to localhost.";
-
                 return;
             }
 
@@ -69,12 +72,11 @@ public partial class Login
             {
                 Log.Information("RootAdministrator logged in from localhost. Redirecting to Admin page.");
                 RedirectManager.RedirectTo("Admin");
-
                 return;
             }
 
             await TokenService.RevokeAllRefreshTokensAsync(userId, TokenRevocationReason.PreemptiveSecurity);
-            
+
             Log.Information("User logged in. All previous refresh tokens revoked.");
 
             var claims = new List<Claim>
@@ -93,8 +95,7 @@ public partial class Login
             var accessToken = await TokenService.GenerateAccessTokenAsync(claims);
             var refreshToken = TokenService.GenerateRefreshToken(userId, ipAddress);
 
-            HttpContext.Response.Cookies.Append(CookieNames.AccessToken, accessToken);
-            HttpContext.Response.Cookies.Append(CookieNames.RefreshToken, refreshToken);
+            await TokenStorageService.StoreTokensAsync(userId, accessToken, refreshToken);
 
             RedirectManager.RedirectTo(ReturnUrl);
         }

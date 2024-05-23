@@ -5,13 +5,16 @@
 @attribute [Authorize]
 
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
 @using RemoteMaster.Server.Abstractions
+@using RemoteMaster.Server.Data
 
 @inject NavigationManager NavigationManager
 @inject IQueryParameterService QueryParameterService
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IJSRuntime JsRuntime
 @inject IAccessTokenProvider AccessTokenProvider
+@inject UserManager<ApplicationUser> UserManager
 
 <PageTitle>@_title</PageTitle>
 

@@ -1,11 +1,16 @@
 ﻿@inherits CommonDialogBase
 
+@using Microsoft.AspNetCore.Identity
 @using Microsoft.Extensions.Options
 @using RemoteMaster.Server.Abstractions
+@using RemoteMaster.Server.Data
 @using RemoteMaster.Server.Models
 
 @inject IOptions<ApplicationSettings> ApplicationSettings
 @inject IAccessTokenProvider AccessTokenProvider
+@inject IAccessTokenProvider AccessTokenProvider
+@inject IHttpContextAccessor HttpContextAccessor
+@inject UserManager<ApplicationUser> UserManager
 
 <CommonDialog>
     <Content>

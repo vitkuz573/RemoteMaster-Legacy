@@ -4,7 +4,13 @@
 
 namespace RemoteMaster.Server.Abstractions;
 
-public interface IAccessTokenProvider
+public interface ITokenStorageService
 {
     Task<string?> GetAccessTokenAsync(string userId);
+
+    Task<string?> GetRefreshTokenAsync(string userId);
+
+    Task StoreTokensAsync(string userId, string accessToken, string refreshToken);
+
+    Task ClearTokensAsync(string userId);
 }

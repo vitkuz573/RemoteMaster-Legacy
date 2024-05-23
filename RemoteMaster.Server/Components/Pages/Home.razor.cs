@@ -48,9 +48,12 @@ public partial class Home
 
     protected async override Task OnInitializedAsync()
     {
+        var httpContext = HttpContextAccessor.HttpContext;
+        var userId = UserManager.GetUserId(httpContext.User);
+
         await InitializeUserAsync();
         _nodes = new HashSet<Node>(await LoadNodesWithChildren());
-        await AccessTokenProvider.GetAccessTokenAsync();
+        await AccessTokenProvider.GetAccessTokenAsync(userId);
     }
 
     private async Task InitializeUserAsync()
@@ -338,10 +341,13 @@ public partial class Home
 
     private async Task<HubConnection> SetupConnection(Computer computer, string hubPath, bool startConnection, CancellationToken cancellationToken)
     {
+        var httpContext = HttpContextAccessor.HttpContext;
+        var userId = UserManager.GetUserId(httpContext.User);
+
         var connection = new HubConnectionBuilder()
             .WithUrl($"https://{computer.IpAddress}:5001/{hubPath}", options =>
             {
-                options.AccessTokenProvider = async () => await AccessTokenProvider.GetAccessTokenAsync();
+                options.AccessTokenProvider = async () => await AccessTokenProvider.GetAccessTokenAsync(userId);
             })
             .AddMessagePackProtocol()
             .Build();
