@@ -17,15 +17,15 @@ public class DbTokenStorageService(TokenDbContext context) : ITokenStorageServic
 
         var tokenEntity = await context.Tokens.FindAsync(userId);
 
-        if (tokenEntity != null)
+        if (tokenEntity != null && tokenEntity.AccessTokenExpiresAt > DateTime.UtcNow)
         {
             Log.Information("Access token found for user {UserId}", userId);
-
+            
             return tokenEntity.AccessToken;
         }
 
-        Log.Warning("Access token not found for user {UserId}", userId);
-
+        Log.Warning("Access token not found or expired for user {UserId}", userId);
+        
         return null;
     }
 
@@ -35,20 +35,22 @@ public class DbTokenStorageService(TokenDbContext context) : ITokenStorageServic
 
         var tokenEntity = await context.Tokens.FindAsync(userId);
 
-        if (tokenEntity != null)
+        if (tokenEntity != null && tokenEntity.RefreshTokenExpiresAt > DateTime.UtcNow)
         {
             Log.Information("Refresh token found for user {UserId}", userId);
-
+            
             return tokenEntity.RefreshToken;
         }
 
-        Log.Warning("Refresh token not found for user {UserId}", userId);
-
+        Log.Warning("Refresh token not found or expired for user {UserId}", userId);
+        
         return null;
     }
 
-    public async Task StoreTokensAsync(string userId, string accessToken, string refreshToken)
+    public async Task StoreTokensAsync(string userId, TokenData tokenData)
     {
+        ArgumentNullException.ThrowIfNull(tokenData);
+
         Log.Information("Storing tokens for user {UserId}", userId);
 
         var tokenEntity = await context.Tokens.FindAsync(userId);
@@ -58,16 +60,20 @@ public class DbTokenStorageService(TokenDbContext context) : ITokenStorageServic
             tokenEntity = new TokenEntity
             {
                 UserId = userId,
-                AccessToken = accessToken,
-                RefreshToken = refreshToken
+                AccessToken = tokenData.AccessToken,
+                AccessTokenExpiresAt = tokenData.AccessTokenExpiresAt,
+                RefreshToken = tokenData.RefreshToken,
+                RefreshTokenExpiresAt = tokenData.RefreshTokenExpiresAt
             };
 
             context.Tokens.Add(tokenEntity);
         }
         else
         {
-            tokenEntity.AccessToken = accessToken;
-            tokenEntity.RefreshToken = refreshToken;
+            tokenEntity.AccessToken = tokenData.AccessToken;
+            tokenEntity.AccessTokenExpiresAt = tokenData.AccessTokenExpiresAt;
+            tokenEntity.RefreshToken = tokenData.RefreshToken;
+            tokenEntity.RefreshTokenExpiresAt = tokenData.RefreshTokenExpiresAt;
             context.Tokens.Update(tokenEntity);
         }
 

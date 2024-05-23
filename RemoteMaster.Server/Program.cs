@@ -5,7 +5,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
@@ -144,25 +143,6 @@ public static class Program
         services.Configure<CertificateOptions>(configurationManager.GetSection("caSettings"));
         services.Configure<SubjectOptions>(configurationManager.GetSection("caSettings:subject"));
 
-        services.AddCookiePolicy(options =>
-        {
-            options.HttpOnly = HttpOnlyPolicy.Always;
-            options.MinimumSameSitePolicy = SameSiteMode.Strict;
-            options.Secure = CookieSecurePolicy.SameAsRequest;
-
-            options.OnAppendCookie = cookieContext =>
-            {
-                if (cookieContext.CookieName == CookieNames.AccessToken)
-                {
-                    cookieContext.CookieOptions.Expires = DateTime.UtcNow.AddMinutes(15);
-                }
-                else if (cookieContext.CookieName == CookieNames.RefreshToken)
-                {
-                    cookieContext.CookieOptions.Expires = DateTime.UtcNow.AddDays(1);
-                }
-            };
-        });
-
         services.AddMudServices();
 
         services.AddMemoryCache();
@@ -294,8 +274,6 @@ public static class Program
         }
 
         var applicationSettings = app.Services.GetRequiredService<IOptions<ApplicationSettings>>().Value;
-
-        app.UseCookiePolicy();
 
         app.Use(async (context, next) =>
         {

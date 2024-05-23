@@ -13,4 +13,10 @@ public class TokenData
 
     [JsonPropertyName("refreshToken")]
     public string RefreshToken { get; set; }
+
+    [JsonPropertyName("accessTokenExpiresAt")]
+    public DateTime AccessTokenExpiresAt { get; set; }
+
+    [JsonPropertyName("refreshTokenExpiresAt")]
+    public DateTime RefreshTokenExpiresAt { get; set; }
 }

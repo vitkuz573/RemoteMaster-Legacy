@@ -17,15 +17,15 @@ public class InMemoryTokenStorageService : ITokenStorageService
     {
         Log.Information("Attempting to retrieve access token for user {UserId}", userId);
 
-        if (_tokenStorage.TryGetValue(userId, out var tokens))
+        if (_tokenStorage.TryGetValue(userId, out var tokens) && tokens.AccessTokenExpiresAt > DateTime.UtcNow)
         {
             Log.Information("Access token found for user {UserId}", userId);
 
             return Task.FromResult<string?>(tokens.AccessToken);
         }
 
-        Log.Warning("Access token not found for user {UserId}", userId);
-
+        Log.Warning("Access token not found or expired for user {UserId}", userId);
+        
         return Task.FromResult<string?>(null);
     }
 
@@ -33,27 +33,21 @@ public class InMemoryTokenStorageService : ITokenStorageService
     {
         Log.Information("Attempting to retrieve refresh token for user {UserId}", userId);
 
-        if (_tokenStorage.TryGetValue(userId, out var tokens))
+        if (_tokenStorage.TryGetValue(userId, out var tokens) && tokens.RefreshTokenExpiresAt > DateTime.UtcNow)
         {
             Log.Information("Refresh token found for user {UserId}", userId);
-
+            
             return Task.FromResult<string?>(tokens.RefreshToken);
         }
 
-        Log.Warning("Refresh token not found for user {UserId}", userId);
-
+        Log.Warning("Refresh token not found or expired for user {UserId}", userId);
+        
         return Task.FromResult<string?>(null);
     }
 
-    public Task StoreTokensAsync(string userId, string accessToken, string refreshToken)
+    public Task StoreTokensAsync(string userId, TokenData tokenData)
     {
         Log.Information("Storing tokens for user {UserId}", userId);
-
-        var tokenData = new TokenData
-        {
-            AccessToken = accessToken,
-            RefreshToken = refreshToken
-        };
 
         _tokenStorage[userId] = tokenData;
 

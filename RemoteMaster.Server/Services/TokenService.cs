@@ -240,6 +240,8 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         {
             AccessToken = newAccessToken,
             RefreshToken = newRefreshTokenEntity.Token,
+            AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(15),
+            RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(1)
         };
     }
 

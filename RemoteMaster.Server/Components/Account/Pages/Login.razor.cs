@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
 using RemoteMaster.Server.Enums;
+using RemoteMaster.Server.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Components.Account.Pages;
@@ -95,7 +96,15 @@ public partial class Login
             var accessToken = await TokenService.GenerateAccessTokenAsync(claims);
             var refreshToken = TokenService.GenerateRefreshToken(userId, ipAddress);
 
-            await TokenStorageService.StoreTokensAsync(userId, accessToken, refreshToken);
+            var tokenData = new TokenData
+            {
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
+                AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(15),
+                RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(1)
+            };
+
+            await TokenStorageService.StoreTokensAsync(userId, tokenData);
 
             RedirectManager.RedirectTo(ReturnUrl);
         }
