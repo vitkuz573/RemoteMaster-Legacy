@@ -98,6 +98,7 @@ public static class Program
         services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
         services.AddDbContext<NodesDbContext>(options => options.UseSqlServer(connectionString));
         services.AddDbContextFactory<CertificateDbContext>(options => options.UseSqlServer(connectionString));
+        services.AddDbContextFactory<TokenDbContext>(options => options.UseSqlServer(connectionString));
 
         services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -117,13 +118,13 @@ public static class Program
         services.AddScoped<ICrlService, CrlService>();
         services.AddScoped<IAccessTokenProvider, AccessTokenProvider>();
         services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<ITokenStorageService, DbTokenStorageService>();
         services.AddSingleton<IBrandingService, BrandingService>();
         services.AddSingleton<ICertificateService, CertificateService>();
         services.AddSingleton<IPacketSender, UdpPacketSender>();
         services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
         services.AddSingleton<ICaCertificateService, CaCertificateService>();
         services.AddSingleton<IJwtSecurityService, JwtSecurityService>();
-        services.AddSingleton<ITokenStorageService, InMemoryTokenStorageService>();
 
         services.AddLibraryServices();
 
@@ -268,6 +269,7 @@ public static class Program
                     services.GetRequiredService<ApplicationDbContext>(),
                     services.GetRequiredService<NodesDbContext>(),
                     services.GetRequiredService<CertificateDbContext>(),
+                    services.GetRequiredService<TokenDbContext>(),
                 };
 
                 foreach (var dbContext in dbContexts)
