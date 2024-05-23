@@ -154,7 +154,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         return tokenEntity.IsActive;
     }
 
-    public async Task<TokenResponseData?> RefreshAccessToken(string refreshToken)
+    public async Task<TokenData?> RefreshAccessToken(string refreshToken)
     {
         var refreshTokenEntity = await context.RefreshTokens
             .AsNoTracking()
@@ -236,7 +236,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         var newAccessToken = await GenerateAccessTokenAsync(claims);
 
-        return new TokenResponseData
+        return new TokenData
         {
             AccessToken = newAccessToken,
             RefreshToken = newRefreshTokenEntity.Token,

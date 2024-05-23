@@ -11,7 +11,7 @@ namespace RemoteMaster.Server.Services;
 
 public class InMemoryTokenStorageService : ITokenStorageService
 {
-    private readonly ConcurrentDictionary<string, TokenResponseData> _tokenStorage = new();
+    private readonly ConcurrentDictionary<string, TokenData> _tokenStorage = new();
 
     public Task<string?> GetAccessTokenAsync(string userId)
     {
@@ -49,7 +49,7 @@ public class InMemoryTokenStorageService : ITokenStorageService
     {
         Log.Information("Storing tokens for user {UserId}", userId);
 
-        var tokenData = new TokenResponseData
+        var tokenData = new TokenData
         {
             AccessToken = accessToken,
             RefreshToken = refreshToken

@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace RemoteMaster.Server.Models;
 
-public class TokenResponseData
+public class TokenData
 {
     [JsonPropertyName("accessToken")]
     public string AccessToken { get; set; }
