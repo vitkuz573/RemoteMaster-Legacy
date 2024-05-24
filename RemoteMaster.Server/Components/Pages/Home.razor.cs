@@ -228,7 +228,7 @@ public partial class Home
             {
                 var connectionRequest = new ConnectionRequest(Intention.ReceiveThumbnail, userName);
 
-                await _retryPolicy.ExecuteAsync(async (ct) => await connection.InvokeAsync("ConnectAs", connectionRequest), cts.Token);
+                await _retryPolicy.ExecuteAsync(async (ct) => await connection.InvokeAsync("ConnectAs", connectionRequest, CancellationToken.None), cts.Token);
             }
             else
             {
@@ -496,30 +496,6 @@ public partial class Home
         };
 
         await ExecuteDialog<TDialog>(title, dialogParameters, dialogOptions);
-    }
-
-    private async Task<ConcurrentDictionary<Computer, HubConnection?>> GetComputerConnections(IEnumerable<Computer> computers, bool startConnection, string hubPath)
-    {
-        var computerConnections = new ConcurrentDictionary<Computer, HubConnection?>();
-
-        var tasks = computers.Select(async computer =>
-        {
-            try
-            {
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
-                var connection = await SetupConnection(computer, hubPath, startConnection, cts.Token);
-                computerConnections.TryAdd(computer, connection);
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"Error connecting to {hubPath} for {computer.IpAddress}: {ex.Message}");
-                computerConnections.TryAdd(computer, null);
-            }
-        });
-
-        await Task.WhenAll(tasks);
-
-        return computerConnections;
     }
 
     private async Task Refresh()
