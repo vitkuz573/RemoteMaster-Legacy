@@ -120,7 +120,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             }
 
             await Notify("Starting cleanup of Update and Updater directories...", MessageType.Information);
-            await DeleteDirectoriesAsync(Path.Combine(BaseFolderPath, "Update"), Path.Combine(BaseFolderPath, "Updater"));
+            await DeleteDirectoriesAsync(Path.Combine(BaseFolderPath, "Update"));
             await Notify("Cleanup of Update and Updater directories completed.", MessageType.Information);
         }
         catch (Exception ex)
