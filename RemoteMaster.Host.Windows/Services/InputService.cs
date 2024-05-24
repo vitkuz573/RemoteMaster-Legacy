@@ -54,13 +54,7 @@ public sealed class InputService(IDesktopService desktopService) : IInputService
 
     public void Stop()
     {
-        _cts.Cancel();
-        _queueEvent.Set();
-
-        if (_workerThread != null && _workerThread.IsAlive)
-        {
-            _workerThread.Join();
-        }
+        Dispose();
     }
 
     private static PointF GetAbsolutePercentFromRelativePercent(PointF? position, IScreenCapturerService screenCapturer)
@@ -403,8 +397,16 @@ public sealed class InputService(IDesktopService desktopService) : IInputService
 
         if (disposing)
         {
-            _cts?.Dispose();
-            _queueEvent?.Dispose();
+            _cts.Cancel();
+            _queueEvent.Set();
+
+            if (_workerThread != null && _workerThread.IsAlive)
+            {
+                _workerThread.Join();
+            }
+
+            _cts.Dispose();
+            _queueEvent.Dispose();
         }
 
         _disposed = true;
