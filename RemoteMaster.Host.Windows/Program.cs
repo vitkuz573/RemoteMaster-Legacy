@@ -157,6 +157,9 @@ internal class Program
 
         switch (launchModeInstance)
         {
+            case UserMode:
+                builder.Services.AddHostedService<InputBackgroundService>();
+                break;
             case ServiceMode:
                 builder.Services.AddHostedService<CertificateManagementService>();
                 builder.Services.AddHostedService<HostProcessMonitorService>();

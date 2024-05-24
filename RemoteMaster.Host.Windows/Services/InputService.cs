@@ -14,16 +14,15 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public sealed class InputService : IInputService
+public sealed class InputService(IDesktopService desktopService) : IInputService
 {
-    private bool _disposed;
-    private readonly ConcurrentQueue<Action> _operationQueue;
-    private readonly ManualResetEvent _queueEvent;
-    private readonly CancellationTokenSource _cts;
-    private readonly Thread _workerThread;
-    private readonly ConcurrentBag<INPUT> _inputPool;
-    private readonly IDesktopService _desktopService;
+    private readonly ConcurrentQueue<Action> _operationQueue = new();
+    private readonly ManualResetEvent _queueEvent = new(false);
+    private readonly CancellationTokenSource _cts = new();
+    private readonly ConcurrentBag<INPUT> _inputPool = [];
+    private Thread _workerThread;
     private bool _blockUserInput;
+    private bool _disposed;
 
     public bool InputEnabled { get; set; } = true;
 
@@ -40,20 +39,28 @@ public sealed class InputService : IInputService
         }
     }
 
-    public InputService(IDesktopService desktopService)
+    public void Start()
     {
-        _desktopService = desktopService;
-        _operationQueue = new ConcurrentQueue<Action>();
-        _inputPool = [];
-        _cts = new CancellationTokenSource();
-        _queueEvent = new ManualResetEvent(false);
-
-        _workerThread = new Thread(ProcessQueue)
+        if (_workerThread == null || !_workerThread.IsAlive)
         {
-            IsBackground = true
-        };
+            _workerThread = new Thread(ProcessQueue)
+            {
+                IsBackground = true
+            };
 
-        _workerThread.Start();
+            _workerThread.Start();
+        }
+    }
+
+    public void Stop()
+    {
+        _cts.Cancel();
+        _queueEvent.Set();
+
+        if (_workerThread != null && _workerThread.IsAlive)
+        {
+            _workerThread.Join();
+        }
     }
 
     private static PointF GetAbsolutePercentFromRelativePercent(PointF? position, IScreenCapturerService screenCapturer)
@@ -78,7 +85,7 @@ public sealed class InputService : IInputService
         {
             EnqueueOperation(() =>
             {
-                _desktopService.SwitchToInputDesktop();
+                desktopService.SwitchToInputDesktop();
                 blockInputAction();
             });
         }
@@ -116,18 +123,12 @@ public sealed class InputService : IInputService
         {
             _operationQueue.Enqueue(() =>
             {
-                _desktopService.SwitchToInputDesktop();
+                desktopService.SwitchToInputDesktop();
                 operation();
             });
 
             _queueEvent.Set();
         }
-    }
-
-    public void StopProcessing()
-    {
-        _cts.Cancel();
-        _queueEvent.Set();
     }
 
     private void PrepareAndSendInput<TInput>(INPUT_TYPE inputType, TInput inputData, Func<INPUT, TInput, INPUT> fillInputData)
