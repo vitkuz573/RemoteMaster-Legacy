@@ -20,7 +20,7 @@ public sealed class InputService(IDesktopService desktopService) : IInputService
     private readonly ManualResetEvent _queueEvent = new(false);
     private readonly CancellationTokenSource _cts = new();
     private readonly ConcurrentBag<INPUT> _inputPool = [];
-    private Thread _workerThread;
+    private Thread? _workerThread;
     private bool _blockUserInput;
     private bool _disposed;
 
