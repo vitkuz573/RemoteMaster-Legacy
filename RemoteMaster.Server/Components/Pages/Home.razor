@@ -93,6 +93,10 @@
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenAddOuDialog" Class="mr-2">Add OU</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="RenewCertificate" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Renew Certificate</MudButton>
                     </MudTabPanel>
+                    
+                    <MudTabPanel Text="Extra" Icon="@Icons.Material.Filled.Settings">
+                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="RemoteExecutor" Class="mr-2">Remote Executor</MudButton>
+                    </MudTabPanel>
                 </MudTabs>
 
                 <div class="flex flex-col gap-4">

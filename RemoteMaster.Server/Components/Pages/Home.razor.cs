@@ -570,6 +570,17 @@ public partial class Home
         await DialogService.ShowAsync<HostDialog>("Host Info", dialogParameters, dialogOptions);
     }
 
+    private async Task RemoteExecutor()
+    {
+        var dialogOptions = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraExtraLarge,
+            FullWidth = true
+        };
+
+        await DialogService.ShowAsync<RemoteExecutorDialog>("Remote Executor", dialogOptions);
+    }
+
     private async Task OpenMoveDialog()
     {
         var computers = _selectedComputers.ToDictionary(c => c, c => (HubConnection?)null);
