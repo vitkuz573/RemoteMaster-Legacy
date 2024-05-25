@@ -30,7 +30,7 @@ public partial class RemoteExecutorDialog
         var securePassword = new NetworkCredential("", _password).SecurePassword;
         var credential = new PSCredential(_username, securePassword);
 
-        HostService.DeployAndExecuteHost(_localFilePath, _remoteFilePath, _host, credential, _launchMode);
+        HostService.DeployAndExecute(_localFilePath, _remoteFilePath, _host, credential, $"--launch-mode={_launchMode}");
     }
 
     private void TogglePasswordVisibility()

@@ -6,7 +6,7 @@ using System.Management.Automation;
 
 namespace RemoteMaster.Server.Abstractions;
 
-public interface IHostService
+public interface IRemoteCommandService
 {
-    void DeployAndExecuteHost(string localFilePath, string remoteFilePath, string host, PSCredential credential, string launchMode);
+    void DeployAndExecute(string localFilePath, string remoteFilePath, string host, PSCredential credential, params string[] args);
 }
