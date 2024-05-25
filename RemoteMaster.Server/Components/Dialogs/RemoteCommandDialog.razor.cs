@@ -2,8 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Management.Automation;
-using System.Net;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
@@ -27,10 +25,7 @@ public partial class RemoteCommandDialog
 
     private void Confirm()
     {
-        var securePassword = new NetworkCredential("", _password).SecurePassword;
-        var credential = new PSCredential(_username, securePassword);
-
-        RemoteCommandService.DeployAndExecute(_localFilePath, _remoteFilePath, _host, credential, $"--launch-mode={_launchMode}");
+        RemoteSchtasksService.CopyAndExecuteRemoteFile(_localFilePath, _host, _remoteFilePath, _username, _password, $"--launch-mode={_launchMode}");
     }
 
     private void TogglePasswordVisibility()

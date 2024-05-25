@@ -125,6 +125,8 @@ public static class Program
         services.AddSingleton<ICaCertificateService, CaCertificateService>();
         services.AddSingleton<IJwtSecurityService, JwtSecurityService>();
         services.AddSingleton<IRemoteCommandService, RemoteCommandService>();
+        services.AddSingleton<IRemoteSchtasksService, RemoteSchtasksService>();
+        services.AddSingleton<INetworkDriveService, NetworkDriveService>();
 
         services.AddLibraryServices();
 

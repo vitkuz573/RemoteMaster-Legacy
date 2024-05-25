@@ -35,6 +35,10 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+		<PackageReference Include="Microsoft.Windows.CsWin32">
+		  <PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.Windows.SDK.Win32Metadata" />
 		<PackageReference Include="MudBlazor" />
 		<PackageReference Include="Polly" />
 		<PackageReference Include="Serilog" />
