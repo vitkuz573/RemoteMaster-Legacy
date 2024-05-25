@@ -18,7 +18,7 @@ public class HostService : IHostService
     {
         var connectionInfo = new WSManConnectionInfo(scheme, host, port, appName, shellUri, credential)
         {
-            AuthenticationMechanism = AuthenticationMechanism.Default,
+            AuthenticationMechanism = AuthenticationMechanism.Negotiate,
             UseCompression = true,
             NoMachineProfile = true,
             SkipCACheck = true,
