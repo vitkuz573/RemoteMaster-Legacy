@@ -9,7 +9,7 @@ using MudBlazor;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
-public partial class RemoteExecutorDialog
+public partial class RemoteCommandDialog
 {
     [CascadingParameter]
     private MudDialogInstance MudDialog { get; set; }
@@ -30,7 +30,7 @@ public partial class RemoteExecutorDialog
         var securePassword = new NetworkCredential("", _password).SecurePassword;
         var credential = new PSCredential(_username, securePassword);
 
-        HostService.DeployAndExecute(_localFilePath, _remoteFilePath, _host, credential, $"--launch-mode={_launchMode}");
+        RemoteCommandService.DeployAndExecute(_localFilePath, _remoteFilePath, _host, credential, $"--launch-mode={_launchMode}");
     }
 
     private void TogglePasswordVisibility()
