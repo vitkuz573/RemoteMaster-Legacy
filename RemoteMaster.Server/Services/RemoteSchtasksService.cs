@@ -6,6 +6,8 @@ using System.Diagnostics;
 using RemoteMaster.Server.Abstractions;
 using Serilog;
 
+namespace RemoteMaster.Server.Services;
+
 public class RemoteSchtasksService(INetworkDriveService networkDriveService) : IRemoteSchtasksService
 {
     public bool CopyAndExecuteRemoteFile(string sourceFilePath, string remoteMachineName, string destinationFolderPath, string? username = null, string? password = null, string? arguments = null)
