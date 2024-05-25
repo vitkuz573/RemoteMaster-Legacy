@@ -96,10 +96,10 @@ public class RemoteCommandService : IRemoteCommandService
 
     public void DeployAndExecute(string localFilePath, string remoteFilePath, string host, PSCredential credential, params string[] args)
     {
-        ArgumentNullException.ThrowIfNull(localFilePath, nameof(localFilePath));
-        ArgumentNullException.ThrowIfNull(remoteFilePath, nameof(remoteFilePath));
-        ArgumentNullException.ThrowIfNull(host, nameof(host));
-        ArgumentNullException.ThrowIfNull(credential, nameof(credential));
+        ArgumentNullException.ThrowIfNull(localFilePath);
+        ArgumentNullException.ThrowIfNull(remoteFilePath);
+        ArgumentNullException.ThrowIfNull(host);
+        ArgumentNullException.ThrowIfNull(credential);
 
         CopyFileToRemote(localFilePath, remoteFilePath, host, credential);
         ExecuteRemoteProcess(remoteFilePath, host, credential, args);
