@@ -124,7 +124,7 @@ public static class Program
         services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
         services.AddSingleton<ICaCertificateService, CaCertificateService>();
         services.AddSingleton<IJwtSecurityService, JwtSecurityService>();
-        services.AddSingleton<IRemoteCommandService, HostService>();
+        services.AddSingleton<IRemoteCommandService, RemoteCommandService>();
 
         services.AddLibraryServices();
 
