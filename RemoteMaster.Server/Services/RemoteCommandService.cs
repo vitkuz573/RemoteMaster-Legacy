@@ -5,7 +5,6 @@
 using System.Management;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
-using System.Net;
 using RemoteMaster.Server.Abstractions;
 using Serilog;
 
@@ -71,7 +70,7 @@ public class RemoteCommandService : IRemoteCommandService
         {
             Impersonation = ImpersonationLevel.Impersonate,
             Username = credential.UserName,
-            Password = new NetworkCredential("", credential.Password).Password
+            SecurePassword = credential.Password
         };
 
         var scope = new ManagementScope($@"\\{host}\root\cimv2", options);
