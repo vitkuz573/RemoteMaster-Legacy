@@ -52,16 +52,6 @@ public class RemoteCommandService : IRemoteCommandService
         }
     }
 
-    public void ExecuteCommand(string command, string host, PSCredential credential)
-    {
-        var connectionInfo = CreateWSManConnectionInfo(WSManConnectionInfo.HttpScheme, host, 5985, "/wsman", "http://schemas.microsoft.com/powershell/Microsoft.PowerShell", credential);
-        using var runspace = CreateRunspace(connectionInfo);
-
-        ExecutePipeline(runspace, command);
-
-        Log.Information("Command executed on remote host {Host}: {Command}", host, command);
-    }
-
     private static void CopyFileToRemote(string localFilePath, string remoteFilePath, string host, PSCredential credential)
     {
         var connectionInfo = CreateWSManConnectionInfo(WSManConnectionInfo.HttpScheme, host, 5985, "/wsman", "http://schemas.microsoft.com/powershell/Microsoft.PowerShell", credential);
