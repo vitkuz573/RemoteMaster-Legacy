@@ -578,7 +578,7 @@ public partial class Home
             FullWidth = true
         };
 
-        await DialogService.ShowAsync<RemoteExecutorDialog>("Remote Executor", dialogOptions);
+        await DialogService.ShowAsync<RemoteCommandDialog>("Remote Command", dialogOptions);
     }
 
     private async Task OpenMoveDialog()
