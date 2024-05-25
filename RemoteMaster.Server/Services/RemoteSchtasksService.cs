@@ -24,14 +24,14 @@ public class RemoteSchtasksService(INetworkDriveService networkDriveService) : I
             }
 
             var remoteSharePath = $"\\\\{remoteMachineName}\\C$";
-            var remoteFilePath = Path.Combine(destinationFolderPath, Path.GetFileName(sourceFilePath));
+            var remoteFilePath = Path.Combine("C$", destinationFolderPath, Path.GetFileName(sourceFilePath));
 
             if (!networkDriveService.MapNetworkDrive(remoteSharePath, username, password))
             {
                 throw new Exception("Failed to map network drive.");
             }
 
-            var fullRemoteFilePath = Path.Combine(remoteSharePath, remoteFilePath);
+            var fullRemoteFilePath = Path.Combine(remoteSharePath, destinationFolderPath, Path.GetFileName(sourceFilePath));
             File.Copy(sourceFilePath, fullRemoteFilePath, true);
 
             ExecuteRemoteFile(remoteMachineName, fullRemoteFilePath, username, password, arguments);
@@ -43,7 +43,6 @@ public class RemoteSchtasksService(INetworkDriveService networkDriveService) : I
         catch (Exception ex)
         {
             Log.Error($"Error: {ex.Message}");
-
             return false;
         }
     }
@@ -77,8 +76,8 @@ public class RemoteSchtasksService(INetworkDriveService networkDriveService) : I
 
         if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
         {
-            taskCommand += $" /u {username} /p {password}";
-            runCommand += $" /u {username} /p {password}";
+            taskCommand += $" /u {username} /p \"{password}\"";
+            runCommand += $" /u {username} /p \"{password}\"";
         }
 
         ExecuteCommand("schtasks", taskCommand);
