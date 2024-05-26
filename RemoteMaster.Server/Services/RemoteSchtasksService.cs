@@ -43,6 +43,7 @@ public class RemoteSchtasksService(INetworkDriveService networkDriveService) : I
         catch (Exception ex)
         {
             Log.Error($"Error: {ex.Message}");
+
             return false;
         }
     }
@@ -92,7 +93,7 @@ public class RemoteSchtasksService(INetworkDriveService networkDriveService) : I
             UseShellExecute = false
         };
 
-        using var process = Process.Start(processInfo);
+        using var process = Process.Start(processInfo) ?? throw new Exception($"Failed to start process {command} with arguments {arguments}");
         process.WaitForExit();
 
         if (process.ExitCode != 0)
