@@ -450,7 +450,28 @@ public partial class Home
 
     private async Task WakeUp() => await ExecuteAction<WakeUpDialog>("Wake Up", false, false, requireConnections: false);
 
-    private async Task Connect() => await ExecuteAction<ConnectDialog>("Connect");
+    private async Task Connect()
+    {
+        if (_userInfo.Roles.Contains("Viewer"))
+        {
+            await ConnectAsViewer();
+        }
+        else
+        {
+            await ExecuteAction<ConnectDialog>("Connect");
+        }
+    }
+
+    private async Task ConnectAsViewer()
+    {
+        var computers = _selectedComputers.Where(c => _availableComputers.ContainsKey(c.IpAddress)).ToList();
+
+        foreach (var computer in computers)
+        {
+            var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/windowOperations.js");
+            await module.InvokeVoidAsync("openNewWindow", $"/{computer.IpAddress}/access?imageQuality=25&cursorTracking=true&inputEnabled=false", 600, 400);
+        }
+    }
 
     private async Task OpenShell() => await ExecuteAction<OpenShellDialog>("Open Shell", false, false, requireConnections: false);
 
