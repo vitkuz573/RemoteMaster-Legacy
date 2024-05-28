@@ -114,9 +114,9 @@ internal class Program
                     {
                         OnTokenValidated = context =>
                         {
-                            if (!context.Principal.IsInRole("Administrator"))
+                            if (!context.Principal.IsInRole("Administrator") && !context.Principal.IsInRole("Viewer"))
                             {
-                                context.Fail("Access Denied: User is not in the Administrator role.");
+                                context.Fail("Access Denied: User is not in the Administrator or Viewer role.");
                             }
 
                             return Task.CompletedTask;

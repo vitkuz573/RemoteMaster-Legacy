@@ -12,7 +12,6 @@ using Serilog;
 
 namespace RemoteMaster.Server.Hubs;
 
-[EnableRateLimiting("ManagementHubPolicy")]
 public class ManagementHub(ICertificateService certificateService, ICaCertificateService caCertificateService, IDatabaseService databaseService) : Hub<IManagementClient>
 {
     public async Task<bool> RegisterHostAsync(HostConfiguration hostConfiguration)

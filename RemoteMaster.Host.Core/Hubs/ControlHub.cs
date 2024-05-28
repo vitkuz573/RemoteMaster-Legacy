@@ -65,11 +65,13 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         await base.OnDisconnectedAsync(exception);
     }
 
+    [Authorize(Roles = "Administrator")]
     public void SendMouseInput(MouseInputDto dto)
     {
         ExecuteActionForViewer(viewer => inputService.SendMouseInput(dto, viewer.ScreenCapturer));
     }
 
+    [Authorize(Roles = "Administrator")]
     public void SendKeyboardInput(KeyboardInputDto dto)
     {
         inputService.SendKeyboardInput(dto);
@@ -87,11 +89,26 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         }
     }
 
-    public void SendToggleInput(bool inputEnabled)
+    public async Task SendToggleInput(bool inputEnabled)
     {
-        inputService.InputEnabled = inputEnabled;
+        if (inputEnabled)
+        {
+            if (Context.User.IsInRole("Administrator"))
+            {
+                inputService.InputEnabled = inputEnabled;
+            }
+            else
+            {
+                await Clients.Caller.ReceiveError("Access Denied: Only administrators can enable input.");
+            }
+        }
+        else
+        {
+            inputService.InputEnabled = inputEnabled;
+        }
     }
 
+    [Authorize(Roles = "Administrator")]
     public void SendBlockUserInput(bool blockInput)
     {
         inputService.BlockUserInput = blockInput;
@@ -107,16 +124,19 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         ExecuteActionForViewer(viewer => viewer.ScreenCapturer.TrackCursor = trackCursor);
     }
 
+    [Authorize(Roles = "Administrator")]
     public void SendKillHost()
     {
         shutdownService.ImmediateShutdown();
     }
 
+    [Authorize(Roles = "Administrator")]
     public void SendRebootComputer(PowerActionRequest powerActionRequest)
     {
         powerService.Reboot(powerActionRequest);
     }
 
+    [Authorize(Roles = "Administrator")]
     public void SendShutdownComputer(PowerActionRequest powerActionRequest)
     {
         powerService.Shutdown(powerActionRequest);
@@ -137,11 +157,13 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         }
     }
 
+    [Authorize(Roles = "Administrator")]
     public void SendMonitorState(MonitorState state)
     {
         hardwareService.SetMonitorState(state);
     }
 
+    [Authorize(Roles = "Administrator")]
     public void SendScript(ScriptExecutionRequest scriptExecutionRequest)
     {
         scriptService.Execute(scriptExecutionRequest);
@@ -162,6 +184,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         await Clients.Group("serviceGroup").ReceiveCommand(command);
     }
 
+    [Authorize(Roles = "Administrator")]
     public async Task ChangeOrganizationalUnit(string[] newOrganizationalUnits)
     {
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
@@ -172,6 +195,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         await hostLifecycleService.RenewCertificateAsync(hostConfiguration);
     }
 
+    [Authorize(Roles = "Administrator")]
     public async Task SendRenewCertificate()
     {
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);

@@ -9,7 +9,7 @@ namespace RemoteMaster.Server.Services;
 
 public class RoleInitializationService(IServiceProvider serviceProvider) : IHostedService
 {
-    private readonly List<string> _roles = ["RootAdministrator", "Administrator"];
+    private readonly List<string> _roles = ["RootAdministrator", "Administrator", "Viewer"];
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {

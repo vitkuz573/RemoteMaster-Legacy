@@ -4,6 +4,7 @@
 
 using System.Net.Sockets;
 using System.Net.WebSockets;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -133,12 +134,17 @@ public partial class Access : IDisposable
         _drawerOpen = !_drawerOpen;
     }
 
-    private async Task SafeInvokeAsync(Func<Task> action)
+    private async Task SafeInvokeAsync(Func<Task> action, bool requireAdmin = false)
     {
         await _combinedPolicy.ExecuteAsync(async () =>
         {
             if (_connection.State == HubConnectionState.Connected)
             {
+                if (requireAdmin && !IsUserInRole("Administrator"))
+                {
+                    return;
+                }
+
                 await action();
             }
             else
@@ -150,12 +156,12 @@ public partial class Access : IDisposable
 
     private async Task KillHost()
     {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendKillHost"));
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendKillHost"), true);
     }
 
     private async Task SendCtrlAltDel()
     {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendCommandToService", "CtrlAltDel"));
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendCommandToService", "CtrlAltDel"), true);
     }
 
     private async Task RebootComputer()
@@ -167,7 +173,7 @@ public partial class Access : IDisposable
             ForceAppsClosed = true
         };
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendRebootComputer", powerActionRequest));
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendRebootComputer", powerActionRequest), true);
     }
 
     private async Task ShutdownComputer()
@@ -179,7 +185,7 @@ public partial class Access : IDisposable
             ForceAppsClosed = true
         };
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendShutdownComputer", powerActionRequest));
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendShutdownComputer", powerActionRequest), true);
     }
 
     private async Task InitializeHostConnectionAsync()
@@ -258,7 +264,7 @@ public partial class Access : IDisposable
     {
         _inputEnabled = value;
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendToggleInput", value));
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendToggleInput", value), true);
         QueryParameterService.UpdateParameter("inputEnabled", value.ToString());
     }
 
@@ -266,7 +272,7 @@ public partial class Access : IDisposable
     {
         _blockUserInput = value;
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendBlockUserInput", value));
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendBlockUserInput", value), true);
     }
 
     private async Task ToggleCursorTracking(bool value)
@@ -291,6 +297,22 @@ public partial class Access : IDisposable
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendSelectedScreen", display));
     }
+
+    private bool IsUserInRole(string role)
+    {
+        var userRoles = new List<string>();
+
+        var httpContext = HttpContextAccessor.HttpContext;
+        var rolesClaim = httpContext?.User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+
+        if (!string.IsNullOrEmpty(rolesClaim))
+        {
+            userRoles = [.. rolesClaim.Split(',')];
+        }
+
+        return userRoles.Contains(role);
+    }
+
 
     [JSInvokable]
     public void OnBeforeUnload()
