@@ -11,11 +11,11 @@ using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class DatabaseService(NodesDbContext context) : IDatabaseService
+public class DatabaseService(ApplicationDbContext applicationDbContext, NodesDbContext nodesDbContext) : IDatabaseService
 {
     public async Task<IList<Node>> GetNodesAsync(Expression<Func<Node, bool>>? predicate = null)
     {
-        var query = context.Nodes.AsQueryable();
+        var query = nodesDbContext.Nodes.AsQueryable();
 
         if (predicate != null)
         {
@@ -27,50 +27,50 @@ public class DatabaseService(NodesDbContext context) : IDatabaseService
 
     public async Task<IList<T>> GetChildrenByParentIdAsync<T>(Guid parentId) where T : Node
     {
-        return await context.Nodes.OfType<T>().Where(node => node.ParentId == parentId).ToListAsync();
+        return await nodesDbContext.Nodes.OfType<T>().Where(node => node.ParentId == parentId).ToListAsync();
     }
 
     public async Task<Guid> AddNodeAsync(Node node)
     {
         ArgumentNullException.ThrowIfNull(node);
 
-        await context.Nodes.AddAsync(node);
-        await context.SaveChangesAsync();
+        await nodesDbContext.Nodes.AddAsync(node);
+        await nodesDbContext.SaveChangesAsync();
 
         return node.NodeId;
     }
 
     public async Task RemoveNodeAsync(Node node)
     {
-        context.Nodes.Remove(node);
-        await context.SaveChangesAsync();
+        nodesDbContext.Nodes.Remove(node);
+        await nodesDbContext.SaveChangesAsync();
     }
 
     public async Task UpdateComputerAsync(Computer computer, string ipAddress, string hostName)
     {
         ArgumentNullException.ThrowIfNull(computer);
 
-        var trackedComputer = context.Nodes.Local
+        var trackedComputer = nodesDbContext.Nodes.Local
             .OfType<Computer>()
             .FirstOrDefault(c => c.NodeId == computer.NodeId);
 
         if (trackedComputer == null)
         {
-            context.Nodes.Attach(computer);
+            nodesDbContext.Nodes.Attach(computer);
         }
 
-        context.Entry(computer).Property("IpAddress").CurrentValue = ipAddress;
-        context.Entry(computer).Property("Name").CurrentValue = hostName;
+        nodesDbContext.Entry(computer).Property("IpAddress").CurrentValue = ipAddress;
+        nodesDbContext.Entry(computer).Property("Name").CurrentValue = hostName;
 
-        context.Entry(computer).Property("IpAddress").IsModified = true;
-        context.Entry(computer).Property("Name").IsModified = true;
+        nodesDbContext.Entry(computer).Property("IpAddress").IsModified = true;
+        nodesDbContext.Entry(computer).Property("Name").IsModified = true;
 
-        await context.SaveChangesAsync();
+        await nodesDbContext.SaveChangesAsync();
     }
 
     public async Task MoveNodesAsync(IEnumerable<Guid> nodeIds, Guid newParentId)
     {
-        var nodes = await context.Nodes.Where(node => nodeIds.Contains(node.NodeId)).ToListAsync();
+        var nodes = await nodesDbContext.Nodes.Where(node => nodeIds.Contains(node.NodeId)).ToListAsync();
 
         if (nodes.Count == 0)
         {
@@ -91,13 +91,13 @@ public class DatabaseService(NodesDbContext context) : IDatabaseService
             node.ParentId = newParentId;
         }
 
-        await context.SaveChangesAsync();
+        await nodesDbContext.SaveChangesAsync();
     }
 
     public async Task<string[]> GetFullPathForOrganizationalUnitAsync(Guid ouId)
     {
         var path = new List<string>();
-        var currentOu = await context.Nodes.OfType<OrganizationalUnit>().FirstOrDefaultAsync(ou => ou.NodeId == ouId);
+        var currentOu = await nodesDbContext.Nodes.OfType<OrganizationalUnit>().FirstOrDefaultAsync(ou => ou.NodeId == ouId);
 
         while (currentOu != null)
         {
@@ -105,7 +105,7 @@ public class DatabaseService(NodesDbContext context) : IDatabaseService
 
             if (currentOu.ParentId.HasValue)
             {
-                currentOu = await context.Nodes.OfType<OrganizationalUnit>().FirstOrDefaultAsync(ou => ou.NodeId == currentOu.ParentId.Value);
+                currentOu = await nodesDbContext.Nodes.OfType<OrganizationalUnit>().FirstOrDefaultAsync(ou => ou.NodeId == currentOu.ParentId.Value);
             }
             else
             {
@@ -114,5 +114,22 @@ public class DatabaseService(NodesDbContext context) : IDatabaseService
         }
 
         return [.. path];
+    }
+
+    public async Task<List<Guid>> GetAllowedOrganizationalUnitsForViewerAsync(string userName)
+    {
+        var user = await applicationDbContext.Users
+            .Include(u => u.UserOrganizationalUnits)
+            .ThenInclude(uou => uou.OrganizationalUnit)
+            .FirstOrDefaultAsync(u => u.UserName == userName);
+
+        if (user == null)
+        {
+            Log.Warning($"User not found: {userName}");
+
+            return [];
+        }
+
+        return user.UserOrganizationalUnits.Select(uou => uou.OrganizationalUnitId).ToList();
     }
 }

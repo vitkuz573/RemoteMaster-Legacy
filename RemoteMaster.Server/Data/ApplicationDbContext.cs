@@ -22,6 +22,14 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     {
         base.OnModelCreating(builder);
 
+        builder.Entity<UserOrganizationalUnit>()
+            .HasKey(uou => new { uou.UserId, uou.OrganizationalUnitId });
+
+        builder.Entity<UserOrganizationalUnit>()
+            .HasOne(uou => uou.User)
+            .WithMany(u => u.UserOrganizationalUnits)
+            .HasForeignKey(uou => uou.UserId);
+
         builder.Entity<UserOrganization>()
             .HasKey(uo => new { uo.UserId, uo.OrganizationId });
 

@@ -52,7 +52,16 @@ public partial class Home
         var userId = UserManager.GetUserId(httpContext.User);
 
         await InitializeUserAsync();
-        _nodes = new HashSet<Node>(await LoadNodesWithChildren());
+
+        List<Guid>? allowedOuIds = null;
+
+        if (_userInfo.Roles.Contains("Viewer"))
+        {
+            allowedOuIds = await GetAllowedOrganizationalUnitsForViewer();
+        }
+
+        _nodes = new HashSet<Node>(await LoadNodesWithChildren(null, allowedOuIds));
+
         await AccessTokenProvider.GetAccessTokenAsync(userId);
     }
 
@@ -65,6 +74,11 @@ public partial class Home
         {
             _userInfo = await GetUserInfoAsync(userPrincipal);
         }
+    }
+
+    private async Task<List<Guid>> GetAllowedOrganizationalUnitsForViewer()
+    {
+        return await DatabaseService.GetAllowedOrganizationalUnitsForViewerAsync(_userInfo.UserName);
     }
 
     private async Task<UserInfo> GetUserInfoAsync(ClaimsPrincipal userPrincipal)
@@ -92,13 +106,18 @@ public partial class Home
         return userInfo;
     }
 
-    private async Task<IEnumerable<Node>> LoadNodesWithChildren(Guid? parentId = null)
+    private async Task<IEnumerable<Node>> LoadNodesWithChildren(Guid? parentId = null, List<Guid>? allowedOuIds = null)
     {
         var units = await DatabaseService.GetNodesAsync(node => node.ParentId == parentId);
 
         foreach (var unit in units.OfType<OrganizationalUnit>())
         {
-            unit.Nodes = new HashSet<Node>(await LoadNodesWithChildren(unit.NodeId));
+            unit.Nodes = new HashSet<Node>(await LoadNodesWithChildren(unit.NodeId, allowedOuIds));
+        }
+
+        if (allowedOuIds != null)
+        {
+            units = units.OfType<OrganizationalUnit>().Where(unit => allowedOuIds.Contains(unit.NodeId)).Cast<Node>().ToList();
         }
 
         return units;

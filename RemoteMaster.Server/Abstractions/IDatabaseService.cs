@@ -22,4 +22,6 @@ public interface IDatabaseService
     Task MoveNodesAsync(IEnumerable<Guid> nodeIds, Guid newParentId);
 
     Task<string[]> GetFullPathForOrganizationalUnitAsync(Guid ouId);
+
+    Task<List<Guid>> GetAllowedOrganizationalUnitsForViewerAsync(string userName);
 }
