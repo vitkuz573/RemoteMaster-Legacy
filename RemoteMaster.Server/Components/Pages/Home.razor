@@ -8,6 +8,7 @@
 @using Microsoft.AspNetCore.Identity
 @using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Server.Data
+@using RemoteMaster.Server.Models
 @using RemoteMaster.Shared.Models
 
 @inject IBrandingService BrandingService
@@ -51,9 +52,18 @@
     <MudMainContent>
         <div class="flex">
             <div>
-                <MudTreeView Items="@_nodes" T="Node" SelectedValueChanged="OnNodeSelected" Hover="true" Class="pa-6">
+                <MudTreeView Items="@_nodes" T="INode" SelectedValueChanged="OnNodeSelected" Hover="true" Class="pa-6">
                     <ItemTemplate>
-                        <MudTreeViewItem Items="@context.Nodes" Value="@context" Text="@context.Name" />
+                        @{
+                            if (context is OrganizationalUnit organizationalUnit)
+                            {
+                                <MudTreeViewItem Items="@(organizationalUnit.Children.Concat<INode>(organizationalUnit.Computers).ToHashSet())" Value="@context" Text="@context.Name" />
+                            }
+                            else if (context is Computer computer)
+                            {
+                                <MudTreeViewItem Value="@context" Text="@context.Name" />
+                            }
+                        }
                     </ItemTemplate>
                 </MudTreeView>
             </div>

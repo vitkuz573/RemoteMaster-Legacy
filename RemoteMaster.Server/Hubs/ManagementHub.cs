@@ -122,7 +122,9 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
 
             while (currentOu != null)
             {
-                var children = await databaseService.GetChildrenByParentIdAsync<Node>(currentOu.NodeId);
+                var childrenOrganizationalUnits = await databaseService.GetChildrenByParentIdAsync<OrganizationalUnit>(currentOu.NodeId);
+                var childrenComputers = await databaseService.GetChildrenByParentIdAsync<Computer>(currentOu.NodeId);
+                var children = childrenOrganizationalUnits.Cast<INode>().Concat(childrenComputers.Cast<INode>());
 
                 if (!children.Any())
                 {

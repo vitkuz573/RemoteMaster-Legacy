@@ -9,13 +9,13 @@ namespace RemoteMaster.Server.Abstractions;
 
 public interface IDatabaseService
 {
-    Task<IList<Node>> GetNodesAsync(Expression<Func<Node, bool>>? predicate = null);
+    Task<IList<INode>> GetNodesAsync(Expression<Func<INode, bool>>? predicate = null);
 
-    Task<IList<T>> GetChildrenByParentIdAsync<T>(Guid parentId) where T : Node;
+    Task<IList<T>> GetChildrenByParentIdAsync<T>(Guid parentId) where T : INode;
 
-    Task<Guid> AddNodeAsync(Node node);
+    Task<Guid> AddNodeAsync(INode node);
 
-    Task RemoveNodeAsync(Node node);
+    Task RemoveNodeAsync(INode node);
 
     Task UpdateComputerAsync(Computer computer, string ipAddress, string hostName);
 

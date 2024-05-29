@@ -2,17 +2,34 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Models;
 
-public class OrganizationalUnit : Node
+public class OrganizationalUnit : INode
 {
+    [Key]
+    public Guid NodeId { get; set; }
+
+    [Required]
+    public string Name { get; set; }
+
     public Guid OrganizationId { get; set; }
 
     public Organization Organization { get; set; }
 
+    public Guid? ParentId { get; set; }
+
+    [ForeignKey(nameof(ParentId))]
+    public INode? Parent { get; set; }
+
 #pragma warning disable CA2227
-    public ICollection<UserOrganizationalUnit> UserOrganizationalUnits { get; set; }
+    public ICollection<OrganizationalUnit> Children { get; set; } = [];
+
+    public ICollection<Computer> Computers { get; set; } = [];
+
+    public ICollection<UserOrganizationalUnit> UserOrganizationalUnits { get; set; } = [];
 #pragma warning restore CA2227
 }

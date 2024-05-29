@@ -14,36 +14,81 @@ namespace RemoteMaster.Server.Services;
 
 public class DatabaseService(ApplicationDbContext applicationDbContext, NodesDbContext nodesDbContext) : IDatabaseService
 {
-    public async Task<IList<Node>> GetNodesAsync(Expression<Func<Node, bool>>? predicate = null)
+    public async Task<IList<INode>> GetNodesAsync(Expression<Func<INode, bool>>? predicate = null)
     {
-        var query = nodesDbContext.Nodes.AsQueryable();
+        var query = nodesDbContext.OrganizationalUnits
+            .Include(node => node.Children)
+            .Include(node => node.Computers)
+            .Cast<INode>()
+            .AsQueryable();
 
         if (predicate != null)
         {
             query = query.Where(predicate);
         }
 
-        return await query.Include(node => node.Nodes).ToListAsync();
+        var organizationalUnits = await query.ToListAsync();
+
+        var computers = await nodesDbContext.Computers
+            .Where(predicate ?? (node => true))
+            .Cast<INode>()
+            .ToListAsync();
+
+        return [.. organizationalUnits, .. computers];
     }
 
-    public async Task<IList<T>> GetChildrenByParentIdAsync<T>(Guid parentId) where T : Node
+    public async Task<IList<T>> GetChildrenByParentIdAsync<T>(Guid parentId) where T : INode
     {
-        return await nodesDbContext.Nodes.OfType<T>().Where(node => node.ParentId == parentId).ToListAsync();
+        if (typeof(T) == typeof(OrganizationalUnit))
+        {
+            return (await nodesDbContext.OrganizationalUnits.Where(node => node.ParentId == parentId).ToListAsync()).Cast<T>().ToList();
+        }
+
+        if (typeof(T) == typeof(Computer))
+        {
+            return (await nodesDbContext.Computers.Where(node => node.ParentId == parentId).ToListAsync()).Cast<T>().ToList();
+        }
+
+        return [];
     }
 
-    public async Task<Guid> AddNodeAsync(Node node)
+    public async Task<Guid> AddNodeAsync(INode node)
     {
         ArgumentNullException.ThrowIfNull(node);
 
-        await nodesDbContext.Nodes.AddAsync(node);
+        if (node is OrganizationalUnit ou)
+        {
+            await nodesDbContext.OrganizationalUnits.AddAsync(ou);
+        }
+        else if (node is Computer computer)
+        {
+            await nodesDbContext.Computers.AddAsync(computer);
+        }
+        else
+        {
+            throw new InvalidOperationException("Unknown node type");
+        }
+
         await nodesDbContext.SaveChangesAsync();
 
         return node.NodeId;
     }
 
-    public async Task RemoveNodeAsync(Node node)
+    public async Task RemoveNodeAsync(INode node)
     {
-        nodesDbContext.Nodes.Remove(node);
+        if (node is OrganizationalUnit ou)
+        {
+            nodesDbContext.OrganizationalUnits.Remove(ou);
+        }
+        else if (node is Computer computer)
+        {
+            nodesDbContext.Computers.Remove(computer);
+        }
+        else
+        {
+            throw new InvalidOperationException("Unknown node type");
+        }
+
         await nodesDbContext.SaveChangesAsync();
     }
 
@@ -51,13 +96,11 @@ public class DatabaseService(ApplicationDbContext applicationDbContext, NodesDbC
     {
         ArgumentNullException.ThrowIfNull(computer);
 
-        var trackedComputer = nodesDbContext.Nodes.Local
-            .OfType<Computer>()
-            .FirstOrDefault(c => c.NodeId == computer.NodeId);
+        var trackedComputer = nodesDbContext.Computers.Local.FirstOrDefault(c => c.NodeId == computer.NodeId);
 
         if (trackedComputer == null)
         {
-            nodesDbContext.Nodes.Attach(computer);
+            nodesDbContext.Computers.Attach(computer);
         }
 
         nodesDbContext.Entry(computer).Property("IpAddress").CurrentValue = ipAddress;
@@ -71,15 +114,10 @@ public class DatabaseService(ApplicationDbContext applicationDbContext, NodesDbC
 
     public async Task MoveNodesAsync(IEnumerable<Guid> nodeIds, Guid newParentId)
     {
-        var nodes = await nodesDbContext.Nodes.Where(node => nodeIds.Contains(node.NodeId)).ToListAsync();
+        var organizationalUnits = await nodesDbContext.OrganizationalUnits.Where(node => nodeIds.Contains(node.NodeId)).ToListAsync();
+        var computers = await nodesDbContext.Computers.Where(node => nodeIds.Contains(node.NodeId)).ToListAsync();
 
-        if (nodes.Count == 0)
-        {
-            Log.Warning($"No nodes found with the provided IDs: {string.Join(", ", nodeIds)}");
-            return;
-        }
-
-        foreach (var node in nodes)
+        foreach (var node in organizationalUnits.Cast<INode>().Concat(computers))
         {
             if (node.NodeId == newParentId)
             {
@@ -98,7 +136,7 @@ public class DatabaseService(ApplicationDbContext applicationDbContext, NodesDbC
     public async Task<string[]> GetFullPathForOrganizationalUnitAsync(Guid ouId)
     {
         var path = new List<string>();
-        var currentOu = await nodesDbContext.Nodes.OfType<OrganizationalUnit>().FirstOrDefaultAsync(ou => ou.NodeId == ouId);
+        var currentOu = await nodesDbContext.OrganizationalUnits.FirstOrDefaultAsync(ou => ou.NodeId == ouId);
 
         while (currentOu != null)
         {
@@ -106,7 +144,7 @@ public class DatabaseService(ApplicationDbContext applicationDbContext, NodesDbC
 
             if (currentOu.ParentId.HasValue)
             {
-                currentOu = await nodesDbContext.Nodes.OfType<OrganizationalUnit>().FirstOrDefaultAsync(ou => ou.NodeId == currentOu.ParentId.Value);
+                currentOu = await nodesDbContext.OrganizationalUnits.FirstOrDefaultAsync(ou => ou.NodeId == currentOu.ParentId.Value);
             }
             else
             {
@@ -114,7 +152,7 @@ public class DatabaseService(ApplicationDbContext applicationDbContext, NodesDbC
             }
         }
 
-        return [.. path];
+        return path.ToArray();
     }
 
     public async Task<List<Guid>> GetAllowedOrganizationalUnitsForViewerAsync(string userName)
@@ -125,10 +163,11 @@ public class DatabaseService(ApplicationDbContext applicationDbContext, NodesDbC
                                              select uou.OrganizationalUnitId)
                                             .ToListAsync();
 
-        if (!userOrganizationalUnits.Any())
+        if (userOrganizationalUnits.Count == 0)
         {
             Log.Warning($"User not found or no organizational units: {userName}");
-            return new List<Guid>();
+
+            return [];
         }
 
         return userOrganizationalUnits;

@@ -11,8 +11,6 @@ namespace RemoteMaster.Server.Data;
 
 public class NodesDbContext(DbContextOptions<NodesDbContext> options) : DbContext(options)
 {
-    public DbSet<Node> Nodes { get; set; }
-
     public DbSet<OrganizationalUnit> OrganizationalUnits { get; set; }
 
     public DbSet<Computer> Computers { get; set; }
@@ -20,19 +18,14 @@ public class NodesDbContext(DbContextOptions<NodesDbContext> options) : DbContex
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "ModelBuilder will not be null.")]
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Node>()
-            .HasDiscriminator<string>("NodeType")
-            .HasValue<OrganizationalUnit>("OrganizationalUnit")
-            .HasValue<Computer>("Computer");
-
-        modelBuilder.Entity<Node>()
-            .HasMany(n => n.Nodes)
-            .WithOne(c => c.Parent)
-            .HasForeignKey(c => c.ParentId)
-            .IsRequired(false);
+        modelBuilder.Entity<OrganizationalUnit>()
+            .HasKey(ou => ou.NodeId);
 
         modelBuilder.Entity<OrganizationalUnit>()
-            .HasBaseType<Node>();
+            .HasMany(ou => ou.Children)
+            .WithOne(c => (OrganizationalUnit?)c.Parent)
+            .HasForeignKey(c => c.ParentId)
+            .IsRequired(false);
 
         modelBuilder.Entity<OrganizationalUnit>()
             .HasOne(ou => ou.Organization)
@@ -40,9 +33,16 @@ public class NodesDbContext(DbContextOptions<NodesDbContext> options) : DbContex
             .HasForeignKey(ou => ou.OrganizationId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<OrganizationalUnit>()
+            .HasMany(ou => ou.Computers)
+            .WithOne(c => (OrganizationalUnit?)c.Parent)
+            .HasForeignKey(c => c.ParentId)
+            .IsRequired(false);
+
         modelBuilder.Ignore<UserOrganization>();
         modelBuilder.Ignore<UserOrganizationalUnit>();
         modelBuilder.Ignore<ApplicationUser>();
         modelBuilder.Ignore<Organization>();
     }
 }
+

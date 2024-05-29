@@ -22,7 +22,7 @@ namespace RemoteMaster.Server.Data.Migrations.NodesDbContextMigrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("RemoteMaster.Shared.Models.Node", b =>
+            modelBuilder.Entity("RemoteMaster.Server.Models.OrganizationalUnit", b =>
                 {
                     b.Property<Guid>("NodeId")
                         .ValueGeneratedOnAdd()
@@ -30,13 +30,10 @@ namespace RemoteMaster.Server.Data.Migrations.NodesDbContextMigrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasAnnotation("Relational:JsonPropertyName", "name");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("NodeType")
-                        .IsRequired()
-                        .HasMaxLength(21)
-                        .HasColumnType("nvarchar(21)");
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("ParentId")
                         .HasColumnType("uniqueidentifier");
@@ -45,26 +42,14 @@ namespace RemoteMaster.Server.Data.Migrations.NodesDbContextMigrations
 
                     b.HasIndex("ParentId");
 
-                    b.ToTable("Nodes");
-
-                    b.HasDiscriminator<string>("NodeType").HasValue("Node");
-
-                    b.UseTphMappingStrategy();
-                });
-
-            modelBuilder.Entity("RemoteMaster.Server.Models.OrganizationalUnit", b =>
-                {
-                    b.HasBaseType("RemoteMaster.Shared.Models.Node");
-
-                    b.Property<Guid>("OrganizationId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasDiscriminator().HasValue("OrganizationalUnit");
+                    b.ToTable("OrganizationalUnits");
                 });
 
             modelBuilder.Entity("RemoteMaster.Shared.Models.Computer", b =>
                 {
-                    b.HasBaseType("RemoteMaster.Shared.Models.Node");
+                    b.Property<Guid>("NodeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("IpAddress")
                         .IsRequired()
@@ -76,21 +61,44 @@ namespace RemoteMaster.Server.Data.Migrations.NodesDbContextMigrations
                         .HasColumnType("nvarchar(max)")
                         .HasAnnotation("Relational:JsonPropertyName", "macAddress");
 
-                    b.HasDiscriminator().HasValue("Computer");
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasAnnotation("Relational:JsonPropertyName", "name");
+
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("NodeId");
+
+                    b.HasIndex("ParentId");
+
+                    b.ToTable("Computers");
                 });
 
-            modelBuilder.Entity("RemoteMaster.Shared.Models.Node", b =>
+            modelBuilder.Entity("RemoteMaster.Server.Models.OrganizationalUnit", b =>
                 {
-                    b.HasOne("RemoteMaster.Shared.Models.Node", "Parent")
-                        .WithMany("Nodes")
+                    b.HasOne("RemoteMaster.Server.Models.OrganizationalUnit", "Parent")
+                        .WithMany("Children")
                         .HasForeignKey("ParentId");
 
                     b.Navigation("Parent");
                 });
 
-            modelBuilder.Entity("RemoteMaster.Shared.Models.Node", b =>
+            modelBuilder.Entity("RemoteMaster.Shared.Models.Computer", b =>
                 {
-                    b.Navigation("Nodes");
+                    b.HasOne("RemoteMaster.Server.Models.OrganizationalUnit", "Parent")
+                        .WithMany("Computers")
+                        .HasForeignKey("ParentId");
+
+                    b.Navigation("Parent");
+                });
+
+            modelBuilder.Entity("RemoteMaster.Server.Models.OrganizationalUnit", b =>
+                {
+                    b.Navigation("Children");
+
+                    b.Navigation("Computers");
                 });
 #pragma warning restore 612, 618
         }

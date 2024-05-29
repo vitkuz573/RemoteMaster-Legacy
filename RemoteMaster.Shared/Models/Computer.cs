@@ -2,14 +2,22 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Net.NetworkInformation;
 using System.Text.Json.Serialization;
 
 namespace RemoteMaster.Shared.Models;
 
-public class Computer : Node, IEquatable<Computer>
+public class Computer : INode, IEquatable<Computer>
 {
+    [Key]
+    [JsonIgnore]
+    public Guid NodeId { get; set; }
+
+    [JsonPropertyName("name")]
+    public required string Name { get; set; }
+
     [JsonPropertyName("ipAddress")]
     public required string IpAddress { get; set; }
 
@@ -19,6 +27,11 @@ public class Computer : Node, IEquatable<Computer>
     [JsonIgnore]
     [NotMapped]
     public byte[]? Thumbnail { get; set; }
+
+    public Guid? ParentId { get; set; }
+
+    [ForeignKey(nameof(ParentId))]
+    public INode? Parent { get; set; }
 
     public async Task<bool> IsAvailable()
     {

@@ -68,7 +68,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         builder.Entity<RefreshToken>()
             .HasIndex(p => p.Revoked);
 
-        builder.Ignore<Node>();
         builder.Ignore<OrganizationalUnit>();
         builder.Ignore<Computer>();
     }

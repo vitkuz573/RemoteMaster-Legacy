@@ -28,8 +28,8 @@ public partial class Home
 
     private UserInfo _userInfo = new();
     private bool _drawerOpen;
-    private Node? _selectedNode;
-    private HashSet<Node>? _nodes;
+    private INode? _selectedNode;
+    private HashSet<INode>? _nodes;
 
     private readonly List<Computer> _selectedComputers = [];
     private readonly ConcurrentDictionary<string, Computer> _availableComputers = new();
@@ -60,7 +60,7 @@ public partial class Home
             allowedOuIds = await GetAllowedOrganizationalUnitsForViewer();
         }
 
-        _nodes = new HashSet<Node>(await LoadNodesWithChildren(null, allowedOuIds));
+        _nodes = new HashSet<INode>(await LoadNodesWithChildren(null, allowedOuIds));
 
         await AccessTokenProvider.GetAccessTokenAsync(userId);
     }
@@ -106,7 +106,7 @@ public partial class Home
         return userInfo;
     }
 
-    private async Task<IEnumerable<Node>> LoadNodesWithChildren(Guid? parentId = null, List<Guid>? allowedOuIds = null)
+    private async Task<IEnumerable<INode>> LoadNodesWithChildren(Guid? parentId = null, List<Guid>? allowedOuIds = null)
     {
         var units = await DatabaseService.GetNodesAsync(node => node.ParentId == parentId);
 
@@ -114,7 +114,7 @@ public partial class Home
         {
             units = units.OfType<OrganizationalUnit>()
                          .Where(unit => allowedOuIds.Contains(unit.NodeId))
-                         .Cast<Node>()
+                         .Cast<INode>()
                          .ToList();
         }
 
@@ -122,7 +122,8 @@ public partial class Home
         {
             if (unit is OrganizationalUnit organizationalUnit)
             {
-                organizationalUnit.Nodes = new HashSet<Node>(await LoadNodesWithChildren(organizationalUnit.NodeId, null));
+                var children = await LoadNodesWithChildren(organizationalUnit.NodeId, null);
+                organizationalUnit.Children = children.OfType<OrganizationalUnit>().ToList();
             }
         }
 
@@ -153,7 +154,7 @@ public partial class Home
 
     private void Logout() => NavigationManager.NavigateTo("/Account/Logout");
 
-    private async Task OnNodeSelected(Node? node)
+    private async Task OnNodeSelected(INode? node)
     {
         _selectedComputers.Clear();
         _availableComputers.Clear();
@@ -171,7 +172,7 @@ public partial class Home
 
     private async Task LoadComputers(OrganizationalUnit orgUnit)
     {
-        var computers = orgUnit.Nodes.OfType<Computer>().ToList();
+        var computers = orgUnit.Children.OfType<Computer>().ToList();
 
         var newPendingComputers = new ConcurrentDictionary<string, Computer>();
 
@@ -548,7 +549,7 @@ public partial class Home
     {
         if (_selectedNode is OrganizationalUnit orgUnit)
         {
-            var computers = orgUnit.Nodes.OfType<Computer>().ToList();
+            var computers = orgUnit.Children.OfType<Computer>().ToList();
 
             foreach (var computer in computers)
             {
@@ -657,7 +658,7 @@ public partial class Home
 
     private async Task OnNodesMoved(IEnumerable<Computer> movedNodes)
     {
-        _nodes = new HashSet<Node>(await LoadNodesWithChildren());
+        _nodes = new HashSet<INode>(await LoadNodesWithChildren());
 
         foreach (var movedNode in movedNodes)
         {
@@ -689,7 +690,7 @@ public partial class Home
     {
         if (ouAdded)
         {
-            _nodes = new HashSet<Node>(await LoadNodesWithChildren());
+            _nodes = new HashSet<INode>(await LoadNodesWithChildren());
             await InvokeAsync(StateHasChanged);
         }
     }
