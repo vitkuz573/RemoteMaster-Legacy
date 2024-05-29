@@ -25,6 +25,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     {
         base.OnModelCreating(builder);
 
+        builder.Entity<Organization>()
+            .Property(p => p.OrganizationalUnit)
+            .HasDefaultValue("Default");
+
         builder.Entity<UserOrganizationalUnit>()
             .HasKey(uou => new { uou.UserId, uou.OrganizationalUnitId });
 

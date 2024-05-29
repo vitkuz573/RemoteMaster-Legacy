@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
+using Serilog;
 
 namespace RemoteMaster.Server.Components.Admin.Pages;
 
@@ -40,10 +41,13 @@ public partial class ManageOrganizations
             }
 
             organization.Name = Input.Name;
+            organization.Locality = Input.Locality;
+            organization.State = Input.State;
+            organization.Country = Input.Country;
         }
         else
         {
-            organization = CreateOrganization(Input.Name);
+            organization = CreateOrganization(Input.Name, Input.Locality, Input.State, Input.Country);
             await dbContext.Organizations.AddAsync(organization);
         }
 
@@ -64,11 +68,14 @@ public partial class ManageOrganizations
         _organizations = [.. dbContext.Organizations];
     }
 
-    private static Organization CreateOrganization(string name)
+    private static Organization CreateOrganization(string name, string locality, string state, string country)
     {
         return new Organization
         {
-            Name = name
+            Name = name,
+            Locality = locality,
+            State = state,
+            Country = country
         };
     }
 
@@ -100,5 +107,20 @@ public partial class ManageOrganizations
         [DataType(DataType.Text)]
         [Display(Name = "Name")]
         public string Name { get; set; }
+
+        [Required]
+        [DataType(DataType.Text)]
+        [Display(Name = "Locality")]
+        public string Locality { get; set; }
+
+        [Required]
+        [DataType(DataType.Text)]
+        [Display(Name = "State")]
+        public string State { get; set; }
+
+        [Required]
+        [DataType(DataType.Text)]
+        [Display(Name = "Country")]
+        public string Country { get; set; }
     }
 }
