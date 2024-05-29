@@ -23,6 +23,7 @@
 		<PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" />
 		<PackageReference Include="Microsoft.CodeAnalysis.Common" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools">
 			<PrivateAssets>all</PrivateAssets>

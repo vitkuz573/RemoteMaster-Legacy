@@ -108,7 +108,7 @@ public partial class Home
 
     private async Task<IEnumerable<INode>> LoadNodesWithChildren(Guid? parentId = null, List<Guid>? allowedOuIds = null)
     {
-        var units = await DatabaseService.GetNodesAsync(node => node.ParentId == parentId);
+        var units = await DatabaseService.GetNodesAsync<INode>(node => node.ParentId == parentId);
 
         if (allowedOuIds != null && allowedOuIds.Count > 0)
         {

@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using MudBlazor.Services;
@@ -94,10 +95,19 @@ public static class Program
             throw new InvalidOperationException("Could not find a connection string named 'DefaultConnection'.");
         }
 
-        services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
-        services.AddDbContext<NodesDbContext>(options => options.UseSqlServer(connectionString));
-        services.AddDbContextFactory<CertificateDbContext>(options => options.UseSqlServer(connectionString));
-        services.AddDbContextFactory<TokenDbContext>(options => options.UseSqlServer(connectionString));
+        Action<DbContextOptionsBuilder> dbContextOptions = options =>
+        {
+            options.UseSqlServer(connectionString, sqlServerOptions =>
+            {
+                sqlServerOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+            })
+            .ConfigureWarnings(warnings => warnings.Throw(RelationalEventId.MultipleCollectionIncludeWarning));
+        };
+
+        services.AddDbContext<ApplicationDbContext>(dbContextOptions);
+        services.AddDbContext<NodesDbContext>(dbContextOptions);
+        services.AddDbContextFactory<CertificateDbContext>(dbContextOptions);
+        services.AddDbContextFactory<TokenDbContext>(dbContextOptions);
 
         services.AddDatabaseDeveloperPageExceptionFilter();
 

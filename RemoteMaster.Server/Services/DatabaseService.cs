@@ -14,27 +14,16 @@ namespace RemoteMaster.Server.Services;
 
 public class DatabaseService(ApplicationDbContext applicationDbContext, NodesDbContext nodesDbContext) : IDatabaseService
 {
-    public async Task<IList<INode>> GetNodesAsync(Expression<Func<INode, bool>>? predicate = null)
+    public async Task<IList<T>> GetNodesAsync<T>(Expression<Func<T, bool>>? predicate = null) where T : class, INode
     {
-        var query = nodesDbContext.OrganizationalUnits
-            .Include(node => node.Children)
-            .Include(node => node.Computers)
-            .Cast<INode>()
-            .AsQueryable();
+        var query = nodesDbContext.Set<T>().AsQueryable();
 
         if (predicate != null)
         {
             query = query.Where(predicate);
         }
 
-        var organizationalUnits = await query.ToListAsync();
-
-        var computers = await nodesDbContext.Computers
-            .Where(predicate ?? (node => true))
-            .Cast<INode>()
-            .ToListAsync();
-
-        return [.. organizationalUnits, .. computers];
+        return await query.ToListAsync();
     }
 
     public async Task<IList<T>> GetChildrenByParentIdAsync<T>(Guid parentId) where T : INode

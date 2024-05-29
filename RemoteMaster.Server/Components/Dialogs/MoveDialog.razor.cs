@@ -22,14 +22,13 @@ public partial class MoveDialog
 
     protected async override Task OnInitializedAsync()
     {
-        _organizationalUnits = (await DatabaseService.GetNodesAsync(node => node is OrganizationalUnit))
-            .OfType<OrganizationalUnit>()
+        _organizationalUnits = (await DatabaseService.GetNodesAsync<OrganizationalUnit>(node => node is OrganizationalUnit))
             .ToList();
 
-        if (!Hosts.IsEmpty)
+        if (Hosts.Any())
         {
             var firstHostParentId = Hosts.First().Key.ParentId;
-            var currentOrganizationalUnit = await DatabaseService.GetNodesAsync(node => node.NodeId == firstHostParentId);
+            var currentOrganizationalUnit = await DatabaseService.GetNodesAsync<OrganizationalUnit>(node => node.NodeId == firstHostParentId);
 
             if (currentOrganizationalUnit.Any())
             {
