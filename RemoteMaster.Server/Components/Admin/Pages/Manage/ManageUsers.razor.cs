@@ -1,14 +1,11 @@
-﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
-// This file is part of the RemoteMaster project.
-// Licensed under the GNU Affero General Public License v3.0.
-
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
+using Serilog;
 
 namespace RemoteMaster.Server.Components.Admin.Pages;
 
@@ -18,19 +15,21 @@ public partial class ManageUsers
     [SupplyParameterFromForm(FormName = "CreateUser")]
     private InputModel Input { get; set; } = new();
 
-    private readonly Dictionary<string, PlaceholderInputModel> _userPlaceholderModels = new();
+    private readonly Dictionary<string, PlaceholderInputModel> _userPlaceholderModels = [];
 
     private IEnumerable<IdentityError>? _identityErrors;
-    private List<ApplicationUser> _users = new();
-    private readonly Dictionary<ApplicationUser, List<string>> _userRoles = new();
-    private List<IdentityRole> _roles = new();
-    private List<Organization> _organizations = new();
-    private List<OrganizationalUnit> _organizationalUnits = new();
+    private List<ApplicationUser> _users = [];
+    private readonly Dictionary<ApplicationUser, List<string>> _userRoles = [];
+    private List<IdentityRole> _roles = [];
+    private List<Organization> _organizations = [];
+    private List<OrganizationalUnit> _organizationalUnits = [];
 
     private string? Message => _identityErrors is null ? null : $"Error: {string.Join(", ", _identityErrors.Select(error => error.Description))}";
 
     protected async override Task OnInitializedAsync()
     {
+        Log.Information("Initializing ManageUsers component");
+
         await LoadUsers();
 
         _roles = await RoleManager.Roles
@@ -43,6 +42,8 @@ public partial class ManageUsers
 
     private async Task OnValidSubmitAsync()
     {
+        Log.Information("OnValidSubmitAsync called with Input: {@Input}", Input);
+
         ApplicationUser user;
 
         if (Input.Id != null)
@@ -51,15 +52,21 @@ public partial class ManageUsers
 
             if (user == null)
             {
+                Log.Warning("User with Id {UserId} not found", Input.Id);
                 return;
             }
 
-            user.UserName = Input.Username; // Make sure to update user properties
+            user.UserName = Input.Username;
+
             var updateResult = await UserManager.UpdateAsync(user);
 
             if (!updateResult.Succeeded)
             {
                 _identityErrors = updateResult.Errors;
+                Log.Error("Failed to update user: {@Errors}", _identityErrors);
+
+                StateHasChanged();
+
                 return;
             }
         }
@@ -74,6 +81,8 @@ public partial class ManageUsers
             if (!result.Succeeded)
             {
                 _identityErrors = result.Errors;
+                Log.Error("Failed to create user: {@Errors}", _identityErrors);
+                StateHasChanged();
                 return;
             }
 
@@ -82,7 +91,7 @@ public partial class ManageUsers
 
         if (Input.Role == "Administrator")
         {
-            foreach (var orgId in Input.Organizations ?? Array.Empty<string>())
+            foreach (var orgId in Input.Organizations ?? [])
             {
                 var organization = await ApplicationDbContext.Organizations.FindAsync(Guid.Parse(orgId));
 
@@ -100,7 +109,7 @@ public partial class ManageUsers
         }
         else if (Input.Role == "Viewer")
         {
-            foreach (var ouId in Input.OrganizationalUnits ?? Array.Empty<string>())
+            foreach (var ouId in Input.OrganizationalUnits ?? [])
             {
                 var organizationalUnit = await NodesDbContext.OrganizationalUnits.FindAsync(Guid.Parse(ouId));
 
@@ -120,7 +129,11 @@ public partial class ManageUsers
         await ApplicationDbContext.SaveChangesAsync();
         await NodesDbContext.SaveChangesAsync();
 
+        Log.Information("User {Username} successfully created/updated", user.UserName);
+
         await LoadUsers();
+
+        Input = new InputModel();
 
         NavigationManager.NavigateTo("Admin/Users", true);
     }
@@ -133,6 +146,8 @@ public partial class ManageUsers
 
             _userPlaceholderModels.Remove(user.UserName);
             _users.Remove(user);
+
+            Log.Information("User {Username} successfully deleted", user.UserName);
 
             StateHasChanged();
         }
@@ -150,13 +165,17 @@ public partial class ManageUsers
                 Organizations = await ApplicationDbContext.UserOrganizations
                                       .Where(uo => uo.UserId == user.Id)
                                       .Select(uo => uo.OrganizationId.ToString())
-                                      .ToArrayAsync() ?? Array.Empty<string>()
+                                      .ToArrayAsync() ?? []
             };
+
+            Log.Information("Editing user {Username}", user.UserName);
         }
     }
 
     private async Task LoadUsers()
     {
+        Log.Information("Loading users");
+
         var users = await UserManager.Users.ToListAsync();
         var sortedUsers = new List<ApplicationUser>();
 
@@ -167,7 +186,7 @@ public partial class ManageUsers
         {
             var roles = await UserManager.GetRolesAsync(user);
 
-            _userRoles[user] = roles.ToList();
+            _userRoles[user] = [.. roles];
             _userPlaceholderModels[user.UserName] = new PlaceholderInputModel
             {
                 Username = user.UserName
@@ -184,16 +203,20 @@ public partial class ManageUsers
         }
 
         _users = sortedUsers;
+        Log.Information("Users loaded successfully");
     }
 
     private ApplicationUser CreateUser()
     {
         try
         {
-            return Activator.CreateInstance<ApplicationUser>();
+            var user = Activator.CreateInstance<ApplicationUser>();
+            Log.Information("Created a new instance of ApplicationUser");
+            return user;
         }
-        catch
+        catch (Exception ex)
         {
+            Log.Error(ex, "Failed to create an instance of ApplicationUser");
             throw new InvalidOperationException($"Can't create an instance of '{nameof(ApplicationUser)}'. " +
                 $"Ensure that '{nameof(ApplicationUser)}' is not an abstract class and has a parameterless constructor.");
         }
@@ -213,10 +236,10 @@ public partial class ManageUsers
         public string Role { get; set; }
 
         [Display(Name = "Organizations")]
-        public string[] Organizations { get; set; } = Array.Empty<string>();
+        public string[] Organizations { get; set; } = [];
 
         [Display(Name = "Organizational Units")]
-        public string[] OrganizationalUnits { get; set; } = Array.Empty<string>();
+        public string[] OrganizationalUnits { get; set; } = [];
 
         [Required]
         [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
@@ -233,11 +256,11 @@ public partial class ManageUsers
         {
             if (Role == "Administrator" && (Organizations == null || Organizations.Length == 0))
             {
-                yield return new ValidationResult("Organizations are required for Administrators.", new[] { nameof(Organizations) });
+                yield return new ValidationResult("Organizations are required for Administrators.", [nameof(Organizations)]);
             }
             if (Role == "Viewer" && (OrganizationalUnits == null || OrganizationalUnits.Length == 0))
             {
-                yield return new ValidationResult("Organizational Units are required for Viewers.", new[] { nameof(OrganizationalUnits) });
+                yield return new ValidationResult("Organizational Units are required for Viewers.", [nameof(OrganizationalUnits)]);
             }
         }
     }
