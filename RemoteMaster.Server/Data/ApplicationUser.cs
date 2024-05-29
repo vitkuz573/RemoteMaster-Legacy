@@ -12,7 +12,7 @@ public class ApplicationUser : IdentityUser
 #pragma warning disable CA2227
     public virtual ICollection<UserOrganization> UserOrganizations { get; set; }
 
-    public ICollection<UserOrganizationalUnit> UserOrganizationalUnits { get; set; }
+    public virtual ICollection<UserOrganizationalUnit> UserOrganizationalUnits { get; set; }
 #pragma warning restore CA2227
 }
 

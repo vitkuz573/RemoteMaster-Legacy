@@ -9,18 +9,18 @@ using RemoteMaster.Server.Data;
 
 #nullable disable
 
-namespace RemoteMaster.Server.Data.Migrations
+namespace RemoteMaster.Server.Data.Migrations.NodesDbContextMigrations
 {
     [DbContext(typeof(NodesDbContext))]
-    [Migration("20240428092917_CreateNodesInfrastructure")]
-    partial class CreateNodesInfrastructure
+    [Migration("20240529035453_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.4")
+                .HasAnnotation("ProductVersion", "8.0.5")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -55,6 +55,13 @@ namespace RemoteMaster.Server.Data.Migrations
                     b.UseTphMappingStrategy();
                 });
 
+            modelBuilder.Entity("RemoteMaster.Server.Models.OrganizationalUnit", b =>
+                {
+                    b.HasBaseType("RemoteMaster.Shared.Models.Node");
+
+                    b.HasDiscriminator().HasValue("OrganizationalUnit");
+                });
+
             modelBuilder.Entity("RemoteMaster.Shared.Models.Computer", b =>
                 {
                     b.HasBaseType("RemoteMaster.Shared.Models.Node");
@@ -70,13 +77,6 @@ namespace RemoteMaster.Server.Data.Migrations
                         .HasAnnotation("Relational:JsonPropertyName", "macAddress");
 
                     b.HasDiscriminator().HasValue("Computer");
-                });
-
-            modelBuilder.Entity("RemoteMaster.Shared.Models.OrganizationalUnit", b =>
-                {
-                    b.HasBaseType("RemoteMaster.Shared.Models.Node");
-
-                    b.HasDiscriminator().HasValue("OrganizationalUnit");
                 });
 
             modelBuilder.Entity("RemoteMaster.Shared.Models.Node", b =>

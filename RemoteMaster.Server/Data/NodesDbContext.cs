@@ -4,6 +4,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
+using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Data;
@@ -11,6 +12,10 @@ namespace RemoteMaster.Server.Data;
 public class NodesDbContext(DbContextOptions<NodesDbContext> options) : DbContext(options)
 {
     public DbSet<Node> Nodes { get; set; }
+
+    public DbSet<OrganizationalUnit> OrganizationalUnits { get; set; }
+
+    public DbSet<Computer> Computers { get; set; }
 
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "ModelBuilder will not be null.")]
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -25,7 +30,13 @@ public class NodesDbContext(DbContextOptions<NodesDbContext> options) : DbContex
             .WithOne(c => c.Parent)
             .HasForeignKey(c => c.ParentId)
             .IsRequired(false);
+
+        modelBuilder.Ignore<UserOrganization>();
+        modelBuilder.Ignore<UserOrganizationalUnit>();
+        modelBuilder.Ignore<ApplicationUser>();
+        modelBuilder.Ignore<Organization>();
+
+        modelBuilder.Entity<OrganizationalUnit>()
+            .HasBaseType<Node>();
     }
 }
-
-

@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace RemoteMaster.Server.Data.Migrations
+namespace RemoteMaster.Server.Data.Migrations.CertificateDbContextMigrations
 {
     /// <inheritdoc />
-    public partial class CreateCrlInfrastructure : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

@@ -9,11 +9,11 @@ using RemoteMaster.Server.Data;
 
 #nullable disable
 
-namespace RemoteMaster.Server.Data.Migrations
+namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240528091141_CreateOuFilter")]
-    partial class CreateOuFilter
+    [Migration("20240529035443_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -319,46 +319,7 @@ namespace RemoteMaster.Server.Data.Migrations
 
                     b.HasKey("UserId", "OrganizationalUnitId");
 
-                    b.HasIndex("OrganizationalUnitId");
-
-                    b.ToTable("UserOrganizationalUnit");
-                });
-
-            modelBuilder.Entity("RemoteMaster.Shared.Models.Node", b =>
-                {
-                    b.Property<Guid>("NodeId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Discriminator")
-                        .IsRequired()
-                        .HasMaxLength(21)
-                        .HasColumnType("nvarchar(21)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasAnnotation("Relational:JsonPropertyName", "name");
-
-                    b.Property<Guid?>("ParentId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("NodeId");
-
-                    b.HasIndex("ParentId");
-
-                    b.ToTable("Node");
-
-                    b.HasDiscriminator<string>("Discriminator").HasValue("Node");
-
-                    b.UseTphMappingStrategy();
-                });
-
-            modelBuilder.Entity("RemoteMaster.Shared.Models.OrganizationalUnit", b =>
-                {
-                    b.HasBaseType("RemoteMaster.Shared.Models.Node");
-
-                    b.HasDiscriminator().HasValue("OrganizationalUnit");
+                    b.ToTable("UserOrganizationalUnits");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -450,30 +411,13 @@ namespace RemoteMaster.Server.Data.Migrations
 
             modelBuilder.Entity("RemoteMaster.Server.Models.UserOrganizationalUnit", b =>
                 {
-                    b.HasOne("RemoteMaster.Shared.Models.OrganizationalUnit", "OrganizationalUnit")
-                        .WithMany()
-                        .HasForeignKey("OrganizationalUnitId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("RemoteMaster.Server.Data.ApplicationUser", "User")
                         .WithMany("UserOrganizationalUnits")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("OrganizationalUnit");
-
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("RemoteMaster.Shared.Models.Node", b =>
-                {
-                    b.HasOne("RemoteMaster.Shared.Models.Node", "Parent")
-                        .WithMany("Nodes")
-                        .HasForeignKey("ParentId");
-
-                    b.Navigation("Parent");
                 });
 
             modelBuilder.Entity("RemoteMaster.Server.Data.ApplicationUser", b =>
@@ -486,11 +430,6 @@ namespace RemoteMaster.Server.Data.Migrations
             modelBuilder.Entity("RemoteMaster.Server.Models.Organization", b =>
                 {
                     b.Navigation("UserOrganizations");
-                });
-
-            modelBuilder.Entity("RemoteMaster.Shared.Models.Node", b =>
-                {
-                    b.Navigation("Nodes");
                 });
 #pragma warning restore 612, 618
         }

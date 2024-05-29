@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Server.Data;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Models;
 

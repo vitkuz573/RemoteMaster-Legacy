@@ -4,7 +4,7 @@
 
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
-using RemoteMaster.Shared.Models;
+using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 

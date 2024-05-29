@@ -4,9 +4,9 @@
 
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 using Serilog;
 

@@ -18,13 +18,14 @@ public partial class ManageUsers
     [SupplyParameterFromForm(FormName = "CreateUser")]
     private InputModel Input { get; set; } = new();
 
-    private readonly Dictionary<string, PlaceholderInputModel> _userPlaceholderModels = [];
+    private readonly Dictionary<string, PlaceholderInputModel> _userPlaceholderModels = new();
 
     private IEnumerable<IdentityError>? _identityErrors;
-    private List<ApplicationUser> _users = [];
-    private readonly Dictionary<ApplicationUser, List<string>> _userRoles = [];
-    private List<IdentityRole> _roles = [];
-    private List<Organization> _organizations = [];
+    private List<ApplicationUser> _users = new();
+    private readonly Dictionary<ApplicationUser, List<string>> _userRoles = new();
+    private List<IdentityRole> _roles = new();
+    private List<Organization> _organizations = new();
+    private List<OrganizationalUnit> _organizationalUnits = new();
 
     private string? Message => _identityErrors is null ? null : $"Error: {string.Join(", ", _identityErrors.Select(error => error.Description))}";
 
@@ -36,7 +37,8 @@ public partial class ManageUsers
             .Where(role => role.Name != "RootAdministrator")
             .ToListAsync();
 
-        _organizations = [.. ApplicationDbContext.Organizations];
+        _organizations = await ApplicationDbContext.Organizations.ToListAsync();
+        _organizationalUnits = await NodesDbContext.OrganizationalUnits.ToListAsync();
     }
 
     private async Task OnValidSubmitAsync()
@@ -52,7 +54,14 @@ public partial class ManageUsers
                 return;
             }
 
-            await UserManager.UpdateAsync(user);
+            user.UserName = Input.Username; // Make sure to update user properties
+            var updateResult = await UserManager.UpdateAsync(user);
+
+            if (!updateResult.Succeeded)
+            {
+                _identityErrors = updateResult.Errors;
+                return;
+            }
         }
         else
         {
@@ -65,13 +74,15 @@ public partial class ManageUsers
             if (!result.Succeeded)
             {
                 _identityErrors = result.Errors;
-
                 return;
             }
 
             await UserManager.AddToRoleAsync(user, Input.Role);
+        }
 
-            foreach (var orgId in Input.Organizations)
+        if (Input.Role == "Administrator")
+        {
+            foreach (var orgId in Input.Organizations ?? Array.Empty<string>())
             {
                 var organization = await ApplicationDbContext.Organizations.FindAsync(Guid.Parse(orgId));
 
@@ -87,8 +98,27 @@ public partial class ManageUsers
                 }
             }
         }
+        else if (Input.Role == "Viewer")
+        {
+            foreach (var ouId in Input.OrganizationalUnits ?? Array.Empty<string>())
+            {
+                var organizationalUnit = await NodesDbContext.OrganizationalUnits.FindAsync(Guid.Parse(ouId));
+
+                if (organizationalUnit != null)
+                {
+                    var userOrganizationalUnit = new UserOrganizationalUnit
+                    {
+                        User = user,
+                        OrganizationalUnitId = organizationalUnit.NodeId
+                    };
+
+                    ApplicationDbContext.UserOrganizationalUnits.Add(userOrganizationalUnit);
+                }
+            }
+        }
 
         await ApplicationDbContext.SaveChangesAsync();
+        await NodesDbContext.SaveChangesAsync();
 
         await LoadUsers();
 
@@ -117,15 +147,11 @@ public partial class ManageUsers
                 Id = user.Id,
                 Username = user.UserName,
                 Role = roles.FirstOrDefault(),
+                Organizations = await ApplicationDbContext.UserOrganizations
+                                      .Where(uo => uo.UserId == user.Id)
+                                      .Select(uo => uo.OrganizationId.ToString())
+                                      .ToArrayAsync() ?? Array.Empty<string>()
             };
-
-            var userOrganizations = ApplicationDbContext.UserOrganizations
-                                   .Where(uo => uo.UserId == user.Id)
-                                   .Include(uo => uo.Organization);
-
-            Input.Organizations = userOrganizations.Any()
-                ? await userOrganizations.Select(uo => uo.OrganizationId.ToString()).ToArrayAsync()
-                : [];
         }
     }
 
@@ -141,7 +167,7 @@ public partial class ManageUsers
         {
             var roles = await UserManager.GetRolesAsync(user);
 
-            _userRoles[user] = [.. roles];
+            _userRoles[user] = roles.ToList();
             _userPlaceholderModels[user.UserName] = new PlaceholderInputModel
             {
                 Username = user.UserName
@@ -173,7 +199,7 @@ public partial class ManageUsers
         }
     }
 
-    private sealed class InputModel
+    public sealed class InputModel : IValidatableObject
     {
         public string? Id { get; set; }
 
@@ -186,9 +212,11 @@ public partial class ManageUsers
         [Display(Name = "Role")]
         public string Role { get; set; }
 
-        [Required]
         [Display(Name = "Organizations")]
-        public string[] Organizations { get; set; } = [];
+        public string[] Organizations { get; set; } = Array.Empty<string>();
+
+        [Display(Name = "Organizational Units")]
+        public string[] OrganizationalUnits { get; set; } = Array.Empty<string>();
 
         [Required]
         [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
@@ -200,6 +228,18 @@ public partial class ManageUsers
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; } = "";
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (Role == "Administrator" && (Organizations == null || Organizations.Length == 0))
+            {
+                yield return new ValidationResult("Organizations are required for Administrators.", new[] { nameof(Organizations) });
+            }
+            if (Role == "Viewer" && (OrganizationalUnits == null || OrganizationalUnits.Length == 0))
+            {
+                yield return new ValidationResult("Organizational Units are required for Viewers.", new[] { nameof(OrganizationalUnits) });
+            }
+        }
     }
 
     private sealed class PlaceholderInputModel

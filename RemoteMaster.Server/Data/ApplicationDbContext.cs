@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Data;
 
@@ -16,6 +17,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Organization> Organizations { get; set; }
 
     public DbSet<UserOrganization> UserOrganizations { get; set; }
+
+    public DbSet<UserOrganizationalUnit> UserOrganizationalUnits { get; set; }
 
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "ModelBuilder will not be null.")]
     protected override void OnModelCreating(ModelBuilder builder)
@@ -29,6 +32,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasOne(uou => uou.User)
             .WithMany(u => u.UserOrganizationalUnits)
             .HasForeignKey(uou => uou.UserId);
+
+        builder.Entity<UserOrganizationalUnit>()
+            .HasOne(uou => uou.OrganizationalUnit)
+            .WithMany(ou => ou.UserOrganizationalUnits)
+            .HasForeignKey(uou => uou.OrganizationalUnitId);
 
         builder.Entity<UserOrganization>()
             .HasKey(uo => new { uo.UserId, uo.OrganizationId });
@@ -45,7 +53,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         builder.Entity<RefreshToken>()
             .Property(r => r.RevocationReason)
-        .HasConversion<string>();
+            .HasConversion<string>();
 
         builder.Entity<RefreshToken>()
             .HasIndex(p => p.UserId);
@@ -55,5 +63,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         builder.Entity<RefreshToken>()
             .HasIndex(p => p.Revoked);
+
+        builder.Ignore<Node>();
+        builder.Ignore<OrganizationalUnit>();
+        builder.Ignore<Computer>();
     }
 }

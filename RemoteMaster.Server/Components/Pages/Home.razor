@@ -77,7 +77,7 @@
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Refresh" Class="ml-auto">Refresh</MudButton>
                     </MudTabPanel>
 
-                    @if (_userInfo.Roles.Contains("Administator"))
+                    @if (_userInfo.Roles.Contains("Administrator"))
                     {
                         <MudTabPanel Text="Service" Icon="@Icons.Material.Filled.Key">
                             <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SetMonitorState" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Set Monitor State</MudButton>

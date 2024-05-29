@@ -110,14 +110,20 @@ public partial class Home
     {
         var units = await DatabaseService.GetNodesAsync(node => node.ParentId == parentId);
 
-        foreach (var unit in units.OfType<OrganizationalUnit>())
+        if (allowedOuIds != null && allowedOuIds.Count > 0)
         {
-            unit.Nodes = new HashSet<Node>(await LoadNodesWithChildren(unit.NodeId, allowedOuIds));
+            units = units.OfType<OrganizationalUnit>()
+                         .Where(unit => allowedOuIds.Contains(unit.NodeId))
+                         .Cast<Node>()
+                         .ToList();
         }
 
-        if (allowedOuIds != null)
+        foreach (var unit in units)
         {
-            units = units.OfType<OrganizationalUnit>().Where(unit => allowedOuIds.Contains(unit.NodeId)).Cast<Node>().ToList();
+            if (unit is OrganizationalUnit organizationalUnit)
+            {
+                organizationalUnit.Nodes = new HashSet<Node>(await LoadNodesWithChildren(organizationalUnit.NodeId, null));
+            }
         }
 
         return units;

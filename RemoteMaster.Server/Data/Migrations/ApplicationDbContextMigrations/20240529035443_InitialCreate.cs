@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace RemoteMaster.Server.Data.Migrations
+namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
 {
     /// <inheritdoc />
-    public partial class CreateIdentitySchema : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -201,6 +201,24 @@ namespace RemoteMaster.Server.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "UserOrganizationalUnits",
+                columns: table => new
+                {
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    OrganizationalUnitId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserOrganizationalUnits", x => new { x.UserId, x.OrganizationalUnitId });
+                    table.ForeignKey(
+                        name: "FK_UserOrganizationalUnits_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "UserOrganizations",
                 columns: table => new
                 {
@@ -264,9 +282,19 @@ namespace RemoteMaster.Server.Data.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
+                name: "IX_RefreshTokens_Expires",
+                table: "RefreshTokens",
+                column: "Expires");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_RefreshTokens_ReplacedByTokenId",
                 table: "RefreshTokens",
                 column: "ReplacedByTokenId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RefreshTokens_Revoked",
+                table: "RefreshTokens",
+                column: "Revoked");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RefreshTokens_UserId",
@@ -299,6 +327,9 @@ namespace RemoteMaster.Server.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "RefreshTokens");
+
+            migrationBuilder.DropTable(
+                name: "UserOrganizationalUnits");
 
             migrationBuilder.DropTable(
                 name: "UserOrganizations");

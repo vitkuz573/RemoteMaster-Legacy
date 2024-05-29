@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
+using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 using Serilog;
 
@@ -118,18 +119,18 @@ public class DatabaseService(ApplicationDbContext applicationDbContext, NodesDbC
 
     public async Task<List<Guid>> GetAllowedOrganizationalUnitsForViewerAsync(string userName)
     {
-        var user = await applicationDbContext.Users
-            .Include(u => u.UserOrganizationalUnits)
-            .ThenInclude(uou => uou.OrganizationalUnit)
-            .FirstOrDefaultAsync(u => u.UserName == userName);
+        var userOrganizationalUnits = await (from user in applicationDbContext.Users
+                                             join uou in applicationDbContext.UserOrganizationalUnits on user.Id equals uou.UserId
+                                             where user.UserName == userName
+                                             select uou.OrganizationalUnitId)
+                                            .ToListAsync();
 
-        if (user == null)
+        if (!userOrganizationalUnits.Any())
         {
-            Log.Warning($"User not found: {userName}");
-
-            return [];
+            Log.Warning($"User not found or no organizational units: {userName}");
+            return new List<Guid>();
         }
 
-        return user.UserOrganizationalUnits.Select(uou => uou.OrganizationalUnitId).ToList();
+        return userOrganizationalUnits;
     }
 }

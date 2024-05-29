@@ -3,24 +3,21 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RemoteMaster.Server.Data;
 
 #nullable disable
 
-namespace RemoteMaster.Server.Data.Migrations
+namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240501034849_CreateIdentitySchema")]
-    partial class CreateIdentitySchema
+    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.4")
+                .HasAnnotation("ProductVersion", "8.0.5")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -283,7 +280,11 @@ namespace RemoteMaster.Server.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Expires");
+
                     b.HasIndex("ReplacedByTokenId");
+
+                    b.HasIndex("Revoked");
 
                     b.HasIndex("UserId");
 
@@ -303,6 +304,19 @@ namespace RemoteMaster.Server.Data.Migrations
                     b.HasIndex("OrganizationId");
 
                     b.ToTable("UserOrganizations");
+                });
+
+            modelBuilder.Entity("RemoteMaster.Server.Models.UserOrganizationalUnit", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<Guid>("OrganizationalUnitId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("UserId", "OrganizationalUnitId");
+
+                    b.ToTable("UserOrganizationalUnits");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -392,8 +406,21 @@ namespace RemoteMaster.Server.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("RemoteMaster.Server.Models.UserOrganizationalUnit", b =>
+                {
+                    b.HasOne("RemoteMaster.Server.Data.ApplicationUser", "User")
+                        .WithMany("UserOrganizationalUnits")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("RemoteMaster.Server.Data.ApplicationUser", b =>
                 {
+                    b.Navigation("UserOrganizationalUnits");
+
                     b.Navigation("UserOrganizations");
                 });
 
