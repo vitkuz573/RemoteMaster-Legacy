@@ -8,6 +8,10 @@ namespace RemoteMaster.Server.Models;
 
 public class OrganizationalUnit : Node
 {
+    public Guid OrganizationId { get; set; }
+
+    public Organization Organization { get; set; }
+
 #pragma warning disable CA2227
     public ICollection<UserOrganizationalUnit> UserOrganizationalUnits { get; set; }
 #pragma warning restore CA2227

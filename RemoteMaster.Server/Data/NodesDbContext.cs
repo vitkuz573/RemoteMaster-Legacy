@@ -31,12 +31,18 @@ public class NodesDbContext(DbContextOptions<NodesDbContext> options) : DbContex
             .HasForeignKey(c => c.ParentId)
             .IsRequired(false);
 
+        modelBuilder.Entity<OrganizationalUnit>()
+            .HasBaseType<Node>();
+
+        modelBuilder.Entity<OrganizationalUnit>()
+            .HasOne(ou => ou.Organization)
+            .WithMany(o => o.OrganizationalUnits)
+            .HasForeignKey(ou => ou.OrganizationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         modelBuilder.Ignore<UserOrganization>();
         modelBuilder.Ignore<UserOrganizationalUnit>();
         modelBuilder.Ignore<ApplicationUser>();
         modelBuilder.Ignore<Organization>();
-
-        modelBuilder.Entity<OrganizationalUnit>()
-            .HasBaseType<Node>();
     }
 }

@@ -25,6 +25,8 @@ public class Organization
     public string Country { get; set; }
 
 #pragma warning disable CA2227
+    public ICollection<OrganizationalUnit> OrganizationalUnits { get; set; }
+
     public virtual ICollection<UserOrganization> UserOrganizations { get; set; }
 #pragma warning restore CA2227
 }
