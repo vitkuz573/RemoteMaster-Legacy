@@ -25,11 +25,21 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             throw new ArgumentException("Host configuration must have a non-null Host property.", nameof(hostConfiguration));
         }
 
+        var organization = await databaseService.GetNodesAsync<Organization>(n => n.Name == hostConfiguration.Subject.Organization);
+        var organizationEntity = organization.FirstOrDefault();
+
+        if (organizationEntity == null)
+        {
+            throw new InvalidOperationException($"Organization '{hostConfiguration.Subject.Organization}' not found.");
+        }
+
+        var organizationId = organizationEntity.OrganizationId;
+
         OrganizationalUnit? parentOu = null;
 
         foreach (var ouName in hostConfiguration.Subject.OrganizationalUnit)
         {
-            var ous = await databaseService.GetNodesAsync<OrganizationalUnit>(n => n.Name == ouName);
+            var ous = await databaseService.GetNodesAsync<OrganizationalUnit>(n => n.Name == ouName && n.OrganizationId == organizationId);
             var ou = ous.FirstOrDefault(o => parentOu == null || o.ParentId == parentOu.NodeId);
 
             if (ou == null)
@@ -37,7 +47,8 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
                 ou = new OrganizationalUnit
                 {
                     Name = ouName,
-                    Parent = parentOu
+                    Parent = parentOu,
+                    OrganizationId = organizationId
                 };
 
                 await databaseService.AddNodeAsync(ou);
@@ -85,11 +96,22 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             throw new ArgumentException("Host configuration must have a non-null Host property with a valid MAC address.", nameof(hostConfiguration));
         }
 
+        var organization = await databaseService.GetNodesAsync<Organization>(n => n.Name == hostConfiguration.Subject.Organization);
+        var organizationEntity = organization.FirstOrDefault();
+
+        if (organizationEntity == null)
+        {
+            Log.Warning("Unregistration failed: Organization '{Organization}' not found.", hostConfiguration.Subject.Organization);
+            return false;
+        }
+
+        var organizationId = organizationEntity.OrganizationId;
+
         OrganizationalUnit? lastOu = null;
 
         foreach (var ouName in hostConfiguration.Subject.OrganizationalUnit)
         {
-            var ous = await databaseService.GetNodesAsync<OrganizationalUnit>(n => n.Name == ouName);
+            var ous = await databaseService.GetNodesAsync<OrganizationalUnit>(n => n.Name == ouName && n.OrganizationId == organizationId);
             var ou = ous.FirstOrDefault(o => lastOu == null || o.ParentId == lastOu.NodeId);
 
             if (ou != null)

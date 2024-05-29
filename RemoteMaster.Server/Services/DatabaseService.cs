@@ -16,7 +16,16 @@ public class DatabaseService(ApplicationDbContext applicationDbContext, NodesDbC
 {
     public async Task<IList<T>> GetNodesAsync<T>(Expression<Func<T, bool>>? predicate = null) where T : class, INode
     {
-        var query = nodesDbContext.Set<T>().AsQueryable();
+        IQueryable<T> query;
+
+        if (typeof(T) == typeof(Organization))
+        {
+            query = applicationDbContext.Set<T>().AsQueryable();
+        }
+        else
+        {
+            query = nodesDbContext.Set<T>().AsQueryable();
+        }
 
         if (predicate != null)
         {
@@ -162,3 +171,4 @@ public class DatabaseService(ApplicationDbContext applicationDbContext, NodesDbC
         return userOrganizationalUnits;
     }
 }
+
