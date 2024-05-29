@@ -25,14 +25,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             throw new ArgumentException("Host configuration must have a non-null Host property.", nameof(hostConfiguration));
         }
 
-        var organization = await databaseService.GetNodesAsync<Organization>(n => n.Name == hostConfiguration.Subject.Organization);
-        var organizationEntity = organization.FirstOrDefault();
-
-        if (organizationEntity == null)
-        {
-            throw new InvalidOperationException($"Organization '{hostConfiguration.Subject.Organization}' not found.");
-        }
-
+        var organizationEntity = (await databaseService.GetNodesAsync<Organization>(n => n.Name == hostConfiguration.Subject.Organization)).FirstOrDefault() ?? throw new InvalidOperationException($"Organization '{hostConfiguration.Subject.Organization}' not found.");
         var organizationId = organizationEntity.OrganizationId;
 
         OrganizationalUnit? parentOu = null;
@@ -96,12 +89,12 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             throw new ArgumentException("Host configuration must have a non-null Host property with a valid MAC address.", nameof(hostConfiguration));
         }
 
-        var organization = await databaseService.GetNodesAsync<Organization>(n => n.Name == hostConfiguration.Subject.Organization);
-        var organizationEntity = organization.FirstOrDefault();
+        var organizationEntity = (await databaseService.GetNodesAsync<Organization>(n => n.Name == hostConfiguration.Subject.Organization)).FirstOrDefault();
 
         if (organizationEntity == null)
         {
             Log.Warning("Unregistration failed: Organization '{Organization}' not found.", hostConfiguration.Subject.Organization);
+            
             return false;
         }
 
@@ -121,6 +114,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             else
             {
                 Log.Warning("Unregistration failed: OrganizationalUnit '{OUName}' not found.", ouName);
+                
                 return false;
             }
         }
@@ -128,6 +122,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         if (lastOu == null)
         {
             Log.Warning("Unregistration failed: Specified OrganizationalUnit hierarchy not found.");
+            
             return false;
         }
 
@@ -162,6 +157,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         }
 
         Log.Warning("Unregistration failed: Computer with MAC address '{MACAddress}' not found in the last organizational unit.", hostConfiguration.Host.MacAddress);
+        
         return false;
     }
 
@@ -188,6 +184,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             else
             {
                 Log.Warning("Update failed: OrganizationalUnit '{OUName}' not found.", ouName);
+                
                 return false;
             }
         }
@@ -195,6 +192,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         if (lastOu == null)
         {
             Log.Warning("Update failed: Specified OrganizationalUnit hierarchy not found.");
+            
             return false;
         }
 
@@ -204,10 +202,12 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         if (computer == null)
         {
             Log.Warning("Update failed: Computer with MAC address '{MACAddress}' not found in the last organizational unit.", hostConfiguration.Host.MacAddress);
+            
             return false;
         }
 
         await databaseService.UpdateComputerAsync(computer, hostConfiguration.Host.IpAddress, hostConfiguration.Host.Name);
+        
         return true;
     }
 
@@ -222,7 +222,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
 
         if (string.IsNullOrWhiteSpace(hostConfiguration.Host.MacAddress))
         {
-            throw new ArgumentNullException(nameof(hostConfiguration.Host.MacAddress));
+            throw new ArgumentNullException(hostConfiguration.Host.MacAddress);
         }
 
         try
@@ -235,6 +235,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         catch (Exception ex)
         {
             Log.Error(ex, "Error while checking registration of the host '{HostName}'.", hostConfiguration.Host.Name);
+            
             return false;
         }
     }
