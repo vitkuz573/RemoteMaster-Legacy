@@ -108,30 +108,20 @@ public partial class Home
 
     private async Task<IEnumerable<INode>> LoadNodesWithChildren(Guid? parentId = null, List<Guid>? allowedOuIds = null)
     {
-        Log.Information("LoadNodesWithChildren started with parentId: {ParentId}", parentId);
-
         var units = new List<INode>();
 
         if (parentId == null)
         {
-            var organizations = await DatabaseService.GetNodesAsync<Organization>() ?? new List<Organization>();
+            var organizations = await DatabaseService.GetNodesAsync<Organization>() ?? [];
             units.AddRange(organizations);
-            Log.Information("Loaded {Count} organizations", organizations.Count);
-
-            foreach (var org in organizations)
-            {
-                Log.Information("Organization {OrganizationName} has {OUCount} OUs", org.Name, org.OrganizationalUnits?.Count ?? 0);
-            }
         }
         else
         {
-            var organizationalUnits = await DatabaseService.GetNodesAsync<OrganizationalUnit>(node => node.ParentId == parentId) ?? new List<OrganizationalUnit>();
-            var computers = await DatabaseService.GetNodesAsync<Computer>(node => node.ParentId == parentId) ?? new List<Computer>();
+            var organizationalUnits = await DatabaseService.GetNodesAsync<OrganizationalUnit>(node => node.ParentId == parentId) ?? [];
+            var computers = await DatabaseService.GetNodesAsync<Computer>(node => node.ParentId == parentId) ?? [];
 
             units.AddRange(organizationalUnits);
             units.AddRange(computers);
-
-            Log.Information("Loaded {OrgUnitCount} organizational units and {ComputerCount} computers for parentId: {ParentId}", organizationalUnits.Count, computers.Count, parentId);
 
             if (allowedOuIds != null && allowedOuIds.Count > 0)
             {
@@ -139,7 +129,6 @@ public partial class Home
                              .Where(unit => allowedOuIds.Contains(unit.NodeId))
                              .Cast<INode>()
                              .ToList();
-                Log.Information("Filtered to {Count} allowed organizational units", units.Count);
             }
 
             foreach (var unit in units)
@@ -148,12 +137,10 @@ public partial class Home
                 {
                     organizationalUnit.Children = (await LoadNodesWithChildren(organizationalUnit.NodeId, null)).OfType<OrganizationalUnit>().ToList();
                     organizationalUnit.Computers = (await LoadNodesWithChildren(organizationalUnit.NodeId, null)).OfType<Computer>().ToList();
-                    Log.Information("Loaded {ChildCount} children and {ComputerCount} computers for organizational unit {UnitName}", organizationalUnit.Children.Count, organizationalUnit.Computers.Count, organizationalUnit.Name);
                 }
             }
         }
 
-        Log.Information("LoadNodesWithChildren completed for parentId: {ParentId}", parentId);
         return units;
     }
 
@@ -188,8 +175,6 @@ public partial class Home
             return;
         }
 
-        Log.Information("OnNodeSelected started for node: {NodeName}", node?.Name);
-
         _selectedComputers.Clear();
         _availableComputers.Clear();
         _unavailableComputers.Clear();
@@ -205,26 +190,18 @@ public partial class Home
             var children = await LoadNodesWithChildren(organization.OrganizationId);
             organization.OrganizationalUnits = children.OfType<OrganizationalUnit>().ToList();
 
-            Log.Information("Organization {OrganizationName} has {OUCount} OUs", organization.Name, organization.OrganizationalUnits.Count);
-
             foreach (var ou in organization.OrganizationalUnits)
             {
                 await LoadComputers(ou);
             }
-
-            Log.Information("Loaded {Count} organizational units for organization {OrgName}", organization.OrganizationalUnits.Count, organization.Name);
         }
 
-        Log.Information("OnNodeSelected completed for node: {NodeName}", node?.Name);
         await InvokeAsync(StateHasChanged);
     }
 
     private async Task LoadComputers(OrganizationalUnit orgUnit)
     {
-        Log.Information("Loading computers for organizational unit {UnitName}", orgUnit.Name);
-
         var computers = orgUnit.Computers.ToList();
-        Log.Information("Organizational unit {UnitName} has {ComputerCount} computers", orgUnit.Name, computers.Count);
 
         var newPendingComputers = new ConcurrentDictionary<string, Computer>();
 
