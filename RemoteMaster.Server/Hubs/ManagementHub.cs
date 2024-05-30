@@ -33,26 +33,13 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         foreach (var ouName in hostConfiguration.Subject.OrganizationalUnit)
         {
             var ous = await databaseService.GetNodesAsync<OrganizationalUnit>(n => n.Name == ouName && n.OrganizationId == organizationId);
-            var ou = ous.FirstOrDefault(o => parentOu == null || o.ParentId == parentOu.NodeId);
-
-            if (ou == null)
-            {
-                ou = new OrganizationalUnit
-                {
-                    Name = ouName,
-                    Parent = parentOu,
-                    OrganizationId = organizationId
-                };
-
-                await databaseService.AddNodeAsync(ou);
-            }
-
+            var ou = ous.FirstOrDefault(o => parentOu == null || o.ParentId == parentOu.NodeId) ?? throw new InvalidOperationException($"Organizational Unit '{ouName}' not found.");
             parentOu = ou;
         }
 
         if (parentOu == null)
         {
-            throw new InvalidOperationException("Failed to resolve or create organizational unit for registration.");
+            throw new InvalidOperationException("Failed to resolve organizational unit for registration.");
         }
 
         var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(parentOu.NodeId))
@@ -94,7 +81,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         if (organizationEntity == null)
         {
             Log.Warning("Unregistration failed: Organization '{Organization}' not found.", hostConfiguration.Subject.Organization);
-            
+
             return false;
         }
 
@@ -114,7 +101,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             else
             {
                 Log.Warning("Unregistration failed: OrganizationalUnit '{OUName}' not found.", ouName);
-                
+
                 return false;
             }
         }
@@ -122,7 +109,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         if (lastOu == null)
         {
             Log.Warning("Unregistration failed: Specified OrganizationalUnit hierarchy not found.");
-            
+
             return false;
         }
 
@@ -133,31 +120,11 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         {
             await databaseService.RemoveNodeAsync(existingComputer);
 
-            var currentOu = lastOu;
-
-            while (currentOu != null)
-            {
-                var childrenOrganizationalUnits = await databaseService.GetChildrenByParentIdAsync<OrganizationalUnit>(currentOu.NodeId);
-                var childrenComputers = await databaseService.GetChildrenByParentIdAsync<Computer>(currentOu.NodeId);
-                var children = childrenOrganizationalUnits.Cast<INode>().Concat(childrenComputers.Cast<INode>());
-
-                if (!children.Any())
-                {
-                    var parentOu = currentOu.Parent;
-                    await databaseService.RemoveNodeAsync(currentOu);
-                    currentOu = parentOu as OrganizationalUnit;
-                }
-                else
-                {
-                    break;
-                }
-            }
-
             return true;
         }
 
         Log.Warning("Unregistration failed: Computer with MAC address '{MACAddress}' not found in the last organizational unit.", hostConfiguration.Host.MacAddress);
-        
+
         return false;
     }
 

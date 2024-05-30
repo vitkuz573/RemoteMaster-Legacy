@@ -120,7 +120,7 @@ public partial class Home
     {
         var units = new List<INode>();
 
-        var organizations = await DatabaseService.GetNodesAsync<Organization>(null, _userInfo.AccessibleOrganizations) ?? new List<Organization>();
+        var organizations = await DatabaseService.GetNodesAsync<Organization>(null, _userInfo.AccessibleOrganizations) ?? [];
         units.AddRange(organizations);
         Log.Information("Loaded root organizations: {Organizations}", organizations.Select(o => o.Name));
 
@@ -141,8 +141,8 @@ public partial class Home
     {
         var units = new List<INode>();
 
-        var organizationalUnits = await DatabaseService.GetNodesAsync<OrganizationalUnit>(ou => ou.OrganizationId == organizationId && (parentId == null || ou.ParentId == parentId), _userInfo.AccessibleOrganizationalUnits) ?? new List<OrganizationalUnit>();
-        var computers = await DatabaseService.GetNodesAsync<Computer>(c => c.ParentId == parentId) ?? new List<Computer>();
+        var organizationalUnits = await DatabaseService.GetNodesAsync<OrganizationalUnit>(ou => ou.OrganizationId == organizationId && (parentId == null || ou.ParentId == parentId), _userInfo.AccessibleOrganizationalUnits) ?? [];
+        var computers = await DatabaseService.GetNodesAsync<Computer>(c => c.ParentId == parentId) ?? [];
 
         units.AddRange(organizationalUnits);
         units.AddRange(computers);
@@ -706,30 +706,6 @@ public partial class Home
         }
 
         await InvokeAsync(StateHasChanged);
-    }
-
-    private async Task OpenAddOuDialog()
-    {
-        var dialogOptions = new DialogOptions
-        {
-            CloseOnEscapeKey = true
-        };
-
-        var dialogParameters = new DialogParameters<AddOuDialog>
-        {
-            { x => x.OnOuAdded, EventCallback.Factory.Create<bool>(this, OnOuAdded) }
-        };
-
-        await DialogService.ShowAsync<AddOuDialog>("Add Organizational Unit", dialogParameters, dialogOptions);
-    }
-
-    private async Task OnOuAdded(bool ouAdded)
-    {
-        // if (ouAdded)
-        // {
-        //     _nodes = new HashSet<INode>(await LoadNodesWithChildren());
-        //     await InvokeAsync(StateHasChanged);
-        // }
     }
 
     private static IEnumerable<Computer> GetSortedComputers(ConcurrentDictionary<string, Computer> computers)
