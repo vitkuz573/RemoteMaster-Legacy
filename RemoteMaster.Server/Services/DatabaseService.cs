@@ -8,7 +8,6 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
-using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
@@ -60,15 +59,7 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
             }
         }
 
-        var nodes = await query.ToListAsync();
-        Log.Information("Filtered and loaded {NodeCount} nodes of type {NodeType}", nodes.Count, typeof(T).Name);
-
-        foreach (var node in nodes)
-        {
-            Log.Information("Loaded node: {Node}", node);
-        }
-
-        return nodes;
+        return await query.ToListAsync();
     }
 
     public async Task<IList<T>> GetChildrenByParentIdAsync<T>(Guid parentId) where T : INode

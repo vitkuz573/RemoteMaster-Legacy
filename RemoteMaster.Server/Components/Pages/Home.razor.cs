@@ -67,9 +67,6 @@ public partial class Home
         if (userPrincipal?.Identity?.IsAuthenticated == true)
         {
             _userInfo = await GetUserInfoAsync(userPrincipal);
-            Log.Information("User {UserName} roles: {Roles}", _userInfo.UserName, string.Join(", ", _userInfo.Roles));
-            Log.Information("User {UserName} has access to Organizations: {AccessibleOrganizations}", _userInfo.UserName, string.Join(", ", _userInfo.AccessibleOrganizations));
-            Log.Information("User {UserName} has access to Organizational Units: {AccessibleOrganizationalUnits}", _userInfo.UserName, string.Join(", ", _userInfo.AccessibleOrganizationalUnits));
         }
     }
 
@@ -96,10 +93,6 @@ public partial class Home
 
                 userInfo.AccessibleOrganizations = user.AccessibleOrganizations.Select(org => org.OrganizationId).ToList();
                 userInfo.AccessibleOrganizationalUnits = user.AccessibleOrganizationalUnits.Select(ou => ou.NodeId).ToList();
-
-                Log.Information("User {UserName} roles: {Roles}", user.UserName, string.Join(", ", userInfo.Roles));
-                Log.Information("User {UserName} has access to Organizations: {AccessibleOrganizations}", user.UserName, string.Join(", ", userInfo.AccessibleOrganizations));
-                Log.Information("User {UserName} has access to Organizational Units: {AccessibleOrganizationalUnits}", user.UserName, string.Join(", ", userInfo.AccessibleOrganizationalUnits));
             }
             else
             {
@@ -112,7 +105,7 @@ public partial class Home
         }
 
         userInfo.UserName = userPrincipal.Identity?.Name ?? "UnknownUser";
-        Log.Information("Loaded user info for {UserName}: {UserInfo}", userInfo.UserName, userInfo);
+
         return userInfo;
     }
 
@@ -122,16 +115,10 @@ public partial class Home
 
         var organizations = await DatabaseService.GetNodesAsync<Organization>(null, _userInfo.AccessibleOrganizations) ?? [];
         units.AddRange(organizations);
-        Log.Information("Loaded root organizations: {Organizations}", organizations.Select(o => o.Name));
 
         foreach (var organization in organizations)
         {
             organization.OrganizationalUnits = (await LoadChildNodes(organization.OrganizationId, null)).OfType<OrganizationalUnit>().ToList();
-        }
-
-        foreach (var unit in units)
-        {
-            Log.Information("Final loaded unit: {Unit}", unit);
         }
 
         return units;
@@ -147,18 +134,10 @@ public partial class Home
         units.AddRange(organizationalUnits);
         units.AddRange(computers);
 
-        Log.Information("Loaded organizational units for parent {ParentId}: {OrganizationalUnits}", parentId, organizationalUnits.Select(ou => ou.Name));
-        Log.Information("Loaded computers for parent {ParentId}: {Computers}", parentId, computers.Select(c => c.Name));
-
         foreach (var unit in organizationalUnits)
         {
             unit.Children = (await LoadChildNodes(unit.OrganizationId, unit.NodeId)).OfType<OrganizationalUnit>().ToList();
             unit.Computers = (await LoadChildNodes(unit.OrganizationId, unit.NodeId)).OfType<Computer>().ToList();
-        }
-
-        foreach (var unit in units)
-        {
-            Log.Information("Final loaded unit: {Unit}", unit);
         }
 
         return units;
