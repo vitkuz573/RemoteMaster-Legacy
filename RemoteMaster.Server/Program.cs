@@ -105,7 +105,6 @@ public static class Program
         };
 
         services.AddDbContext<ApplicationDbContext>(dbContextOptions);
-        services.AddDbContext<NodesDbContext>(dbContextOptions);
         services.AddDbContextFactory<CertificateDbContext>(dbContextOptions);
         services.AddDbContextFactory<TokenDbContext>(dbContextOptions);
 
@@ -177,11 +176,6 @@ public static class Program
             )
             .AddDbContextCheck<CertificateDbContext>(
                 name: "CertificateDbContext",
-                failureStatus: HealthStatus.Unhealthy,
-                tags: ["db", "entityframework"]
-            )
-            .AddDbContextCheck<NodesDbContext>(
-                name: "NodesDbContext",
                 failureStatus: HealthStatus.Unhealthy,
                 tags: ["db", "entityframework"]
             );
@@ -260,7 +254,6 @@ public static class Program
                 var dbContexts = new List<DbContext>
                 {
                     services.GetRequiredService<ApplicationDbContext>(),
-                    services.GetRequiredService<NodesDbContext>(),
                     services.GetRequiredService<CertificateDbContext>(),
                     services.GetRequiredService<TokenDbContext>(),
                 };

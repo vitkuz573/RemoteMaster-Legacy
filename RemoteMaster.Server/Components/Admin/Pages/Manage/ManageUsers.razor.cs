@@ -1,4 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+// This file is part of the RemoteMaster project.
+// Licensed under the GNU Affero General Public License v3.0.
+
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
@@ -37,7 +41,7 @@ public partial class ManageUsers
             .ToListAsync();
 
         _organizations = await ApplicationDbContext.Organizations.ToListAsync();
-        _organizationalUnits = await NodesDbContext.OrganizationalUnits.ToListAsync();
+        _organizationalUnits = await ApplicationDbContext.OrganizationalUnits.ToListAsync();
     }
 
     private async Task OnValidSubmitAsync()
@@ -111,7 +115,7 @@ public partial class ManageUsers
         {
             foreach (var ouId in Input.OrganizationalUnits ?? [])
             {
-                var organizationalUnit = await NodesDbContext.OrganizationalUnits.FindAsync(Guid.Parse(ouId));
+                var organizationalUnit = await ApplicationDbContext.OrganizationalUnits.FindAsync(Guid.Parse(ouId));
 
                 if (organizationalUnit != null)
                 {
@@ -127,7 +131,6 @@ public partial class ManageUsers
         }
 
         await ApplicationDbContext.SaveChangesAsync();
-        await NodesDbContext.SaveChangesAsync();
 
         Log.Information("User {Username} successfully created/updated", user.UserName);
 

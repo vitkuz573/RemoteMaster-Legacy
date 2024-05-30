@@ -10,8 +10,8 @@ namespace RemoteMaster.Server.Abstractions;
 public interface IDatabaseService
 {
     Task<IList<T>> GetNodesAsync<T>(Expression<Func<T, bool>>? predicate = null) where T : class, INode;
-    
-        Task<IList<T>> GetChildrenByParentIdAsync<T>(Guid parentId) where T : INode;
+   
+    Task<IList<T>> GetChildrenByParentIdAsync<T>(Guid parentId) where T : INode;
 
     Task<Guid> AddNodeAsync(INode node);
 

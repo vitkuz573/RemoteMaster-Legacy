@@ -12,19 +12,33 @@ using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class DatabaseService(ApplicationDbContext applicationDbContext, NodesDbContext nodesDbContext) : IDatabaseService
+public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatabaseService
 {
     public async Task<IList<T>> GetNodesAsync<T>(Expression<Func<T, bool>>? predicate = null) where T : class, INode
     {
         IQueryable<T> query;
 
-        if (typeof(T) == typeof(Organization))
+        if (typeof(T) == typeof(OrganizationalUnit))
         {
-            query = applicationDbContext.Set<T>().AsQueryable();
+            query = applicationDbContext.OrganizationalUnits
+                                        .Include(ou => ou.Children)
+                                        .Include(ou => ou.Computers)
+                                        .AsQueryable().Cast<T>();
+        }
+        else if (typeof(T) == typeof(Computer))
+        {
+            query = applicationDbContext.Computers.AsQueryable().Cast<T>();
+        }
+        else if (typeof(T) == typeof(Organization))
+        {
+            query = applicationDbContext.Organizations
+                                        .Include(o => o.OrganizationalUnits)
+                                        .ThenInclude(ou => ou.Computers)
+                                        .AsQueryable().Cast<T>();
         }
         else
         {
-            query = nodesDbContext.Set<T>().AsQueryable();
+            throw new InvalidOperationException($"Cannot create a DbSet for '{typeof(T)}' because this type is not included in the model for the context.");
         }
 
         if (predicate != null)
@@ -39,15 +53,21 @@ public class DatabaseService(ApplicationDbContext applicationDbContext, NodesDbC
     {
         if (typeof(T) == typeof(OrganizationalUnit))
         {
-            return (await nodesDbContext.OrganizationalUnits.Where(node => node.ParentId == parentId).ToListAsync()).Cast<T>().ToList();
+            return (await applicationDbContext.OrganizationalUnits
+                .Where(node => node.ParentId == parentId)
+                .Include(ou => ou.Children)
+                .Include(ou => ou.Computers)
+                .ToListAsync()).Cast<T>().ToList();
         }
 
         if (typeof(T) == typeof(Computer))
         {
-            return (await nodesDbContext.Computers.Where(node => node.ParentId == parentId).ToListAsync()).Cast<T>().ToList();
+            return (await applicationDbContext.Computers
+                .Where(node => node.ParentId == parentId)
+                .ToListAsync()).Cast<T>().ToList();
         }
 
-        return [];
+        throw new InvalidOperationException($"Cannot get children for '{typeof(T)}' because this type is not included in the model for the context.");
     }
 
     public async Task<Guid> AddNodeAsync(INode node)
@@ -56,18 +76,18 @@ public class DatabaseService(ApplicationDbContext applicationDbContext, NodesDbC
 
         if (node is OrganizationalUnit ou)
         {
-            await nodesDbContext.OrganizationalUnits.AddAsync(ou);
+            await applicationDbContext.OrganizationalUnits.AddAsync(ou);
         }
         else if (node is Computer computer)
         {
-            await nodesDbContext.Computers.AddAsync(computer);
+            await applicationDbContext.Computers.AddAsync(computer);
         }
         else
         {
             throw new InvalidOperationException("Unknown node type");
         }
 
-        await nodesDbContext.SaveChangesAsync();
+        await applicationDbContext.SaveChangesAsync();
 
         return node.NodeId;
     }
@@ -76,44 +96,44 @@ public class DatabaseService(ApplicationDbContext applicationDbContext, NodesDbC
     {
         if (node is OrganizationalUnit ou)
         {
-            nodesDbContext.OrganizationalUnits.Remove(ou);
+            applicationDbContext.OrganizationalUnits.Remove(ou);
         }
         else if (node is Computer computer)
         {
-            nodesDbContext.Computers.Remove(computer);
+            applicationDbContext.Computers.Remove(computer);
         }
         else
         {
             throw new InvalidOperationException("Unknown node type");
         }
 
-        await nodesDbContext.SaveChangesAsync();
+        await applicationDbContext.SaveChangesAsync();
     }
 
     public async Task UpdateComputerAsync(Computer computer, string ipAddress, string hostName)
     {
         ArgumentNullException.ThrowIfNull(computer);
 
-        var trackedComputer = nodesDbContext.Computers.Local.FirstOrDefault(c => c.NodeId == computer.NodeId);
+        var trackedComputer = applicationDbContext.Computers.Local.FirstOrDefault(c => c.NodeId == computer.NodeId);
 
         if (trackedComputer == null)
         {
-            nodesDbContext.Computers.Attach(computer);
+            applicationDbContext.Computers.Attach(computer);
         }
 
-        nodesDbContext.Entry(computer).Property("IpAddress").CurrentValue = ipAddress;
-        nodesDbContext.Entry(computer).Property("Name").CurrentValue = hostName;
+        applicationDbContext.Entry(computer).Property("IpAddress").CurrentValue = ipAddress;
+        applicationDbContext.Entry(computer).Property("Name").CurrentValue = hostName;
 
-        nodesDbContext.Entry(computer).Property("IpAddress").IsModified = true;
-        nodesDbContext.Entry(computer).Property("Name").IsModified = true;
+        applicationDbContext.Entry(computer).Property("IpAddress").IsModified = true;
+        applicationDbContext.Entry(computer).Property("Name").IsModified = true;
 
-        await nodesDbContext.SaveChangesAsync();
+        await applicationDbContext.SaveChangesAsync();
     }
 
     public async Task MoveNodesAsync(IEnumerable<Guid> nodeIds, Guid newParentId)
     {
-        var organizationalUnits = await nodesDbContext.OrganizationalUnits.Where(node => nodeIds.Contains(node.NodeId)).ToListAsync();
-        var computers = await nodesDbContext.Computers.Where(node => nodeIds.Contains(node.NodeId)).ToListAsync();
+        var organizationalUnits = await applicationDbContext.OrganizationalUnits.Where(node => nodeIds.Contains(node.NodeId)).ToListAsync();
+        var computers = await applicationDbContext.Computers.Where(node => nodeIds.Contains(node.NodeId)).ToListAsync();
 
         foreach (var node in organizationalUnits.Cast<INode>().Concat(computers))
         {
@@ -128,13 +148,13 @@ public class DatabaseService(ApplicationDbContext applicationDbContext, NodesDbC
             node.ParentId = newParentId;
         }
 
-        await nodesDbContext.SaveChangesAsync();
+        await applicationDbContext.SaveChangesAsync();
     }
 
     public async Task<string[]> GetFullPathForOrganizationalUnitAsync(Guid ouId)
     {
         var path = new List<string>();
-        var currentOu = await nodesDbContext.OrganizationalUnits.FirstOrDefaultAsync(ou => ou.NodeId == ouId);
+        var currentOu = await applicationDbContext.OrganizationalUnits.FirstOrDefaultAsync(ou => ou.NodeId == ouId);
 
         while (currentOu != null)
         {
@@ -142,7 +162,7 @@ public class DatabaseService(ApplicationDbContext applicationDbContext, NodesDbC
 
             if (currentOu.ParentId.HasValue)
             {
-                currentOu = await nodesDbContext.OrganizationalUnits.FirstOrDefaultAsync(ou => ou.NodeId == currentOu.ParentId.Value);
+                currentOu = await applicationDbContext.OrganizationalUnits.FirstOrDefaultAsync(ou => ou.NodeId == currentOu.ParentId.Value);
             }
             else
             {
@@ -171,4 +191,3 @@ public class DatabaseService(ApplicationDbContext applicationDbContext, NodesDbC
         return userOrganizationalUnits;
     }
 }
-

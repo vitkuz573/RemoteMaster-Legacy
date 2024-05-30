@@ -20,6 +20,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<UserOrganizationalUnit> UserOrganizationalUnits { get; set; }
 
+    public DbSet<OrganizationalUnit> OrganizationalUnits { get; set; }
+
+    public DbSet<Computer> Computers { get; set; }
+
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "ModelBuilder will not be null.")]
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -68,7 +72,25 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         builder.Entity<RefreshToken>()
             .HasIndex(p => p.Revoked);
 
-        builder.Ignore<OrganizationalUnit>();
-        builder.Ignore<Computer>();
+        builder.Entity<OrganizationalUnit>()
+            .HasKey(ou => ou.NodeId);
+
+        builder.Entity<OrganizationalUnit>()
+            .HasMany(ou => ou.Children)
+            .WithOne(c => (OrganizationalUnit?)c.Parent)
+            .HasForeignKey(c => c.ParentId)
+            .IsRequired(false);
+
+        builder.Entity<OrganizationalUnit>()
+            .HasOne(ou => ou.Organization)
+            .WithMany(o => o.OrganizationalUnits)
+            .HasForeignKey(ou => ou.OrganizationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<OrganizationalUnit>()
+            .HasMany(ou => ou.Computers)
+            .WithOne(c => (OrganizationalUnit?)c.Parent)
+            .HasForeignKey(c => c.ParentId)
+            .IsRequired(false);
     }
 }

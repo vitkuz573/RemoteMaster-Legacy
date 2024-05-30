@@ -55,9 +55,15 @@
                 <MudTreeView Items="@_nodes" T="INode" SelectedValueChanged="OnNodeSelected" Hover="true" Class="pa-6">
                     <ItemTemplate>
                         @{
-                            if (context is OrganizationalUnit organizationalUnit)
+                            if (context is Organization organization)
                             {
-                                <MudTreeViewItem Items="@(organizationalUnit.Children.Concat<INode>(organizationalUnit.Computers).ToHashSet())" Value="@context" Text="@context.Name" />
+                                var orgUnits = organization.OrganizationalUnits?.Cast<INode>().ToHashSet() ?? new HashSet<INode>();
+                                <MudTreeViewItem Items="orgUnits" Value="@context" Text="@context.Name" />
+                            }
+                            else if (context is OrganizationalUnit organizationalUnit)
+                            {
+                                var children = organizationalUnit.Children?.Cast<INode>().Concat(organizationalUnit.Computers).ToHashSet() ?? new HashSet<INode>();
+                                <MudTreeViewItem Items="children" Value="@context" Text="@context.Name" />
                             }
                             else if (context is Computer computer)
                             {

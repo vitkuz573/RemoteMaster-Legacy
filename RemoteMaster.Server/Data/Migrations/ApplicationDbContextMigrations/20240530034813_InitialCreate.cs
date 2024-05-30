@@ -205,20 +205,27 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "UserOrganizationalUnits",
+                name: "OrganizationalUnits",
                 columns: table => new
                 {
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    OrganizationalUnitId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    NodeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    OrganizationId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ParentId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_UserOrganizationalUnits", x => new { x.UserId, x.OrganizationalUnitId });
+                    table.PrimaryKey("PK_OrganizationalUnits", x => x.NodeId);
                     table.ForeignKey(
-                        name: "FK_UserOrganizationalUnits_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
+                        name: "FK_OrganizationalUnits_OrganizationalUnits_ParentId",
+                        column: x => x.ParentId,
+                        principalTable: "OrganizationalUnits",
+                        principalColumn: "NodeId");
+                    table.ForeignKey(
+                        name: "FK_OrganizationalUnits_Organizations_OrganizationId",
+                        column: x => x.OrganizationId,
+                        principalTable: "Organizations",
+                        principalColumn: "OrganizationId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -243,6 +250,50 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                         column: x => x.OrganizationId,
                         principalTable: "Organizations",
                         principalColumn: "OrganizationId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Computers",
+                columns: table => new
+                {
+                    NodeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IpAddress = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    MacAddress = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ParentId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Computers", x => x.NodeId);
+                    table.ForeignKey(
+                        name: "FK_Computers_OrganizationalUnits_ParentId",
+                        column: x => x.ParentId,
+                        principalTable: "OrganizationalUnits",
+                        principalColumn: "NodeId");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UserOrganizationalUnits",
+                columns: table => new
+                {
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    OrganizationalUnitId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserOrganizationalUnits", x => new { x.UserId, x.OrganizationalUnitId });
+                    table.ForeignKey(
+                        name: "FK_UserOrganizationalUnits_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_UserOrganizationalUnits_OrganizationalUnits_OrganizationalUnitId",
+                        column: x => x.OrganizationalUnitId,
+                        principalTable: "OrganizationalUnits",
+                        principalColumn: "NodeId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -286,6 +337,21 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Computers_ParentId",
+                table: "Computers",
+                column: "ParentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrganizationalUnits_OrganizationId",
+                table: "OrganizationalUnits",
+                column: "OrganizationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrganizationalUnits_ParentId",
+                table: "OrganizationalUnits",
+                column: "ParentId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_RefreshTokens_Expires",
                 table: "RefreshTokens",
                 column: "Expires");
@@ -304,6 +370,11 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                 name: "IX_RefreshTokens_UserId",
                 table: "RefreshTokens",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserOrganizationalUnits_OrganizationalUnitId",
+                table: "UserOrganizationalUnits",
+                column: "OrganizationalUnitId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserOrganizations_OrganizationId",
@@ -330,6 +401,9 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "Computers");
+
+            migrationBuilder.DropTable(
                 name: "RefreshTokens");
 
             migrationBuilder.DropTable(
@@ -340,6 +414,9 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "OrganizationalUnits");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
