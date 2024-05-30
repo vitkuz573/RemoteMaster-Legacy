@@ -54,7 +54,7 @@ public partial class Home
 
         await InitializeUserAsync();
 
-        _nodes = new HashSet<INode>(await LoadNodesWithChildren(null));
+        _nodes = new HashSet<INode>(await LoadRootNodes());
 
         await AccessTokenProvider.GetAccessTokenAsync(userId);
     }
@@ -116,31 +116,49 @@ public partial class Home
         return userInfo;
     }
 
-    private async Task<IEnumerable<INode>> LoadNodesWithChildren(Guid? parentId = null)
+    private async Task<IEnumerable<INode>> LoadRootNodes()
     {
         var units = new List<INode>();
 
-        if (parentId == null)
+        var organizations = await DatabaseService.GetNodesAsync<Organization>(null, _userInfo.AccessibleOrganizations) ?? new List<Organization>();
+        units.AddRange(organizations);
+        Log.Information("Loaded root organizations: {Organizations}", organizations.Select(o => o.Name));
+
+        foreach (var organization in organizations)
         {
-            var organizations = await DatabaseService.GetNodesAsync<Organization>(null, _userInfo.AccessibleOrganizations) ?? [];
-            units.AddRange(organizations);
+            organization.OrganizationalUnits = (await LoadChildNodes(organization.OrganizationId, null)).OfType<OrganizationalUnit>().ToList();
         }
-        else
+
+        foreach (var unit in units)
         {
-            var organizationalUnits = await DatabaseService.GetNodesAsync<OrganizationalUnit>(node => node.ParentId == parentId, _userInfo.AccessibleOrganizationalUnits) ?? [];
-            var computers = await DatabaseService.GetNodesAsync<Computer>(node => node.ParentId == parentId) ?? [];
+            Log.Information("Final loaded unit: {Unit}", unit);
+        }
 
-            units.AddRange(organizationalUnits);
-            units.AddRange(computers);
+        return units;
+    }
 
-            foreach (var unit in units)
-            {
-                if (unit is OrganizationalUnit organizationalUnit)
-                {
-                    organizationalUnit.Children = (await LoadNodesWithChildren(organizationalUnit.NodeId)).OfType<OrganizationalUnit>().ToList();
-                    organizationalUnit.Computers = (await LoadNodesWithChildren(organizationalUnit.NodeId)).OfType<Computer>().ToList();
-                }
-            }
+    private async Task<IEnumerable<INode>> LoadChildNodes(Guid? organizationId, Guid? parentId)
+    {
+        var units = new List<INode>();
+
+        var organizationalUnits = await DatabaseService.GetNodesAsync<OrganizationalUnit>(ou => ou.OrganizationId == organizationId && (parentId == null || ou.ParentId == parentId), _userInfo.AccessibleOrganizationalUnits) ?? new List<OrganizationalUnit>();
+        var computers = await DatabaseService.GetNodesAsync<Computer>(c => c.ParentId == parentId) ?? new List<Computer>();
+
+        units.AddRange(organizationalUnits);
+        units.AddRange(computers);
+
+        Log.Information("Loaded organizational units for parent {ParentId}: {OrganizationalUnits}", parentId, organizationalUnits.Select(ou => ou.Name));
+        Log.Information("Loaded computers for parent {ParentId}: {Computers}", parentId, computers.Select(c => c.Name));
+
+        foreach (var unit in organizationalUnits)
+        {
+            unit.Children = (await LoadChildNodes(unit.OrganizationId, unit.NodeId)).OfType<OrganizationalUnit>().ToList();
+            unit.Computers = (await LoadChildNodes(unit.OrganizationId, unit.NodeId)).OfType<Computer>().ToList();
+        }
+
+        foreach (var unit in units)
+        {
+            Log.Information("Final loaded unit: {Unit}", unit);
         }
 
         return units;
@@ -677,7 +695,7 @@ public partial class Home
 
     private async Task OnNodesMoved(IEnumerable<Computer> movedNodes)
     {
-        _nodes = new HashSet<INode>(await LoadNodesWithChildren());
+        // _nodes = new HashSet<INode>(await LoadNodesWithChildren());
 
         foreach (var movedNode in movedNodes)
         {
@@ -707,11 +725,11 @@ public partial class Home
 
     private async Task OnOuAdded(bool ouAdded)
     {
-        if (ouAdded)
-        {
-            _nodes = new HashSet<INode>(await LoadNodesWithChildren());
-            await InvokeAsync(StateHasChanged);
-        }
+        // if (ouAdded)
+        // {
+        //     _nodes = new HashSet<INode>(await LoadNodesWithChildren());
+        //     await InvokeAsync(StateHasChanged);
+        // }
     }
 
     private static IEnumerable<Computer> GetSortedComputers(ConcurrentDictionary<string, Computer> computers)
