@@ -4,6 +4,7 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using RemoteMaster.Server.Data;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Models;
@@ -26,10 +27,10 @@ public class OrganizationalUnit : INode
     public INode? Parent { get; set; }
 
 #pragma warning disable CA2227
-    public ICollection<OrganizationalUnit> Children { get; set; } = [];
+    public ICollection<OrganizationalUnit> Children { get; set; }
 
-    public ICollection<Computer> Computers { get; set; } = [];
+    public ICollection<Computer> Computers { get; set; }
 
-    public ICollection<UserOrganizationalUnit> UserOrganizationalUnits { get; set; } = [];
+    public ICollection<ApplicationUser> AccessibleUsers { get; set; }
 #pragma warning restore CA2227
 }

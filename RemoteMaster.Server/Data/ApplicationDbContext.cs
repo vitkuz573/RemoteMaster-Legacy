@@ -16,10 +16,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<Organization> Organizations { get; set; }
 
-    public DbSet<UserOrganization> UserOrganizations { get; set; }
-
-    public DbSet<UserOrganizationalUnit> UserOrganizationalUnits { get; set; }
-
     public DbSet<OrganizationalUnit> OrganizationalUnits { get; set; }
 
     public DbSet<Computer> Computers { get; set; }
@@ -32,32 +28,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         builder.Entity<Organization>()
             .Property(p => p.OrganizationalUnit)
             .HasDefaultValue("Default");
-
-        builder.Entity<UserOrganizationalUnit>()
-            .HasKey(uou => new { uou.UserId, uou.OrganizationalUnitId });
-
-        builder.Entity<UserOrganizationalUnit>()
-            .HasOne(uou => uou.User)
-            .WithMany(u => u.UserOrganizationalUnits)
-            .HasForeignKey(uou => uou.UserId);
-
-        builder.Entity<UserOrganizationalUnit>()
-            .HasOne(uou => uou.OrganizationalUnit)
-            .WithMany(ou => ou.UserOrganizationalUnits)
-            .HasForeignKey(uou => uou.OrganizationalUnitId);
-
-        builder.Entity<UserOrganization>()
-            .HasKey(uo => new { uo.UserId, uo.OrganizationId });
-
-        builder.Entity<UserOrganization>()
-            .HasOne(uo => uo.User)
-            .WithMany(u => u.UserOrganizations)
-            .HasForeignKey(uo => uo.UserId);
-
-        builder.Entity<UserOrganization>()
-            .HasOne(uo => uo.Organization)
-            .WithMany(o => o.UserOrganizations)
-            .HasForeignKey(uo => uo.OrganizationId);
 
         builder.Entity<RefreshToken>()
             .Property(r => r.RevocationReason)
@@ -92,5 +62,35 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithOne(c => (OrganizationalUnit?)c.Parent)
             .HasForeignKey(c => c.ParentId)
             .IsRequired(false);
+
+        builder.Entity<ApplicationUser>()
+            .HasMany(u => u.AccessibleOrganizations)
+            .WithMany(o => o.AccessibleUsers)
+            .UsingEntity<Dictionary<string, object>>(
+                "UserOrganizations",
+                j => j.HasOne<Organization>().WithMany().HasForeignKey("OrganizationId"),
+                j => j.HasOne<ApplicationUser>().WithMany().HasForeignKey("UserId"),
+                j =>
+                {
+                    j.HasKey("OrganizationId", "UserId");
+                    j.ToTable("UserOrganizations");
+                    j.Property<Guid>("OrganizationId").HasColumnName("OrganizationId");
+                    j.Property<string>("UserId").HasColumnName("UserId");
+                });
+
+        builder.Entity<ApplicationUser>()
+            .HasMany(u => u.AccessibleOrganizationalUnits)
+            .WithMany(ou => ou.AccessibleUsers)
+            .UsingEntity<Dictionary<string, object>>(
+                "UserOrganizationalUnits",
+                j => j.HasOne<OrganizationalUnit>().WithMany().HasForeignKey("OrganizationalUnitId"),
+                j => j.HasOne<ApplicationUser>().WithMany().HasForeignKey("UserId"),
+                j =>
+                {
+                    j.HasKey("OrganizationalUnitId", "UserId");
+                    j.ToTable("UserOrganizationalUnits");
+                    j.Property<Guid>("OrganizationalUnitId").HasColumnName("OrganizationalUnitId");
+                    j.Property<string>("UserId").HasColumnName("UserId");
+                });
     }
 }

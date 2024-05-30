@@ -334,36 +334,6 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                     b.ToTable("RefreshTokens");
                 });
 
-            modelBuilder.Entity("RemoteMaster.Server.Models.UserOrganization", b =>
-                {
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<Guid>("OrganizationId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("UserId", "OrganizationId");
-
-                    b.HasIndex("OrganizationId");
-
-                    b.ToTable("UserOrganizations");
-                });
-
-            modelBuilder.Entity("RemoteMaster.Server.Models.UserOrganizationalUnit", b =>
-                {
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<Guid>("OrganizationalUnitId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("UserId", "OrganizationalUnitId");
-
-                    b.HasIndex("OrganizationalUnitId");
-
-                    b.ToTable("UserOrganizationalUnits");
-                });
-
             modelBuilder.Entity("RemoteMaster.Shared.Models.Computer", b =>
                 {
                     b.Property<Guid>("NodeId")
@@ -393,6 +363,40 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                     b.HasIndex("ParentId");
 
                     b.ToTable("Computers");
+                });
+
+            modelBuilder.Entity("UserOrganizationalUnits", b =>
+                {
+                    b.Property<Guid>("OrganizationalUnitId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("OrganizationalUnitId");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("UserId");
+
+                    b.HasKey("OrganizationalUnitId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserOrganizationalUnits", (string)null);
+                });
+
+            modelBuilder.Entity("UserOrganizations", b =>
+                {
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("OrganizationId");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("UserId");
+
+                    b.HasKey("OrganizationId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserOrganizations", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -480,44 +484,6 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("RemoteMaster.Server.Models.UserOrganization", b =>
-                {
-                    b.HasOne("RemoteMaster.Server.Models.Organization", "Organization")
-                        .WithMany("UserOrganizations")
-                        .HasForeignKey("OrganizationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("RemoteMaster.Server.Data.ApplicationUser", "User")
-                        .WithMany("UserOrganizations")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Organization");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("RemoteMaster.Server.Models.UserOrganizationalUnit", b =>
-                {
-                    b.HasOne("RemoteMaster.Server.Models.OrganizationalUnit", "OrganizationalUnit")
-                        .WithMany("UserOrganizationalUnits")
-                        .HasForeignKey("OrganizationalUnitId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("RemoteMaster.Server.Data.ApplicationUser", "User")
-                        .WithMany("UserOrganizationalUnits")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("OrganizationalUnit");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("RemoteMaster.Shared.Models.Computer", b =>
                 {
                     b.HasOne("RemoteMaster.Server.Models.OrganizationalUnit", "Parent")
@@ -527,18 +493,39 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                     b.Navigation("Parent");
                 });
 
-            modelBuilder.Entity("RemoteMaster.Server.Data.ApplicationUser", b =>
+            modelBuilder.Entity("UserOrganizationalUnits", b =>
                 {
-                    b.Navigation("UserOrganizationalUnits");
+                    b.HasOne("RemoteMaster.Server.Models.OrganizationalUnit", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationalUnitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Navigation("UserOrganizations");
+                    b.HasOne("RemoteMaster.Server.Data.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("UserOrganizations", b =>
+                {
+                    b.HasOne("RemoteMaster.Server.Models.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("RemoteMaster.Server.Data.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("RemoteMaster.Server.Models.Organization", b =>
                 {
                     b.Navigation("OrganizationalUnits");
-
-                    b.Navigation("UserOrganizations");
                 });
 
             modelBuilder.Entity("RemoteMaster.Server.Models.OrganizationalUnit", b =>
@@ -546,8 +533,6 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                     b.Navigation("Children");
 
                     b.Navigation("Computers");
-
-                    b.Navigation("UserOrganizationalUnits");
                 });
 #pragma warning restore 612, 618
         }

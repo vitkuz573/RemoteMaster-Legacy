@@ -312,14 +312,13 @@ public partial class HostConfigurationGenerator
         if (user.Identity.IsAuthenticated)
         {
             var username = user.Identity.Name;
-            var appUser = await UserManager.FindByNameAsync(username);
+            var appUser = await UserManager.Users
+                                           .Include(u => u.AccessibleOrganizations)
+                                           .FirstOrDefaultAsync(u => u.UserName == username);
 
             if (appUser != null)
             {
-                _organizations = await DbContext.UserOrganizations
-                                                   .Where(uo => uo.UserId == appUser.Id)
-                                                   .Select(uo => uo.Organization)
-                                                   .ToListAsync();
+                _organizations = [.. appUser.AccessibleOrganizations];
             }
         }
     }

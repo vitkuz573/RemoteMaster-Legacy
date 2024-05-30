@@ -4,6 +4,7 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using RemoteMaster.Server.Data;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Models;
@@ -40,6 +41,6 @@ public class Organization : INode
 #pragma warning disable CA2227
     public ICollection<OrganizationalUnit> OrganizationalUnits { get; set; }
 
-    public virtual ICollection<UserOrganization> UserOrganizations { get; set; }
+    public ICollection<ApplicationUser> AccessibleUsers { get; set; }
 #pragma warning restore CA2227
 }

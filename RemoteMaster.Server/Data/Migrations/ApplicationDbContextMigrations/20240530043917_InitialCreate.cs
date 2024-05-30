@@ -233,12 +233,12 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                 name: "UserOrganizations",
                 columns: table => new
                 {
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    OrganizationId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    OrganizationId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_UserOrganizations", x => new { x.UserId, x.OrganizationId });
+                    table.PrimaryKey("PK_UserOrganizations", x => new { x.OrganizationId, x.UserId });
                     table.ForeignKey(
                         name: "FK_UserOrganizations_AspNetUsers_UserId",
                         column: x => x.UserId,
@@ -277,12 +277,12 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                 name: "UserOrganizationalUnits",
                 columns: table => new
                 {
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    OrganizationalUnitId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    OrganizationalUnitId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_UserOrganizationalUnits", x => new { x.UserId, x.OrganizationalUnitId });
+                    table.PrimaryKey("PK_UserOrganizationalUnits", x => new { x.OrganizationalUnitId, x.UserId });
                     table.ForeignKey(
                         name: "FK_UserOrganizationalUnits_AspNetUsers_UserId",
                         column: x => x.UserId,
@@ -372,14 +372,14 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_UserOrganizationalUnits_OrganizationalUnitId",
+                name: "IX_UserOrganizationalUnits_UserId",
                 table: "UserOrganizationalUnits",
-                column: "OrganizationalUnitId");
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_UserOrganizations_OrganizationId",
+                name: "IX_UserOrganizations_UserId",
                 table: "UserOrganizations",
-                column: "OrganizationId");
+                column: "UserId");
         }
 
         /// <inheritdoc />

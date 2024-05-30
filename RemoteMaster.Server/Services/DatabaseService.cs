@@ -170,24 +170,22 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
             }
         }
 
-        return path.ToArray();
+        return [.. path];
     }
 
     public async Task<List<Guid>> GetAllowedOrganizationalUnitsForViewerAsync(string userName)
     {
-        var userOrganizationalUnits = await (from user in applicationDbContext.Users
-                                             join uou in applicationDbContext.UserOrganizationalUnits on user.Id equals uou.UserId
-                                             where user.UserName == userName
-                                             select uou.OrganizationalUnitId)
-                                            .ToListAsync();
+        var user = await applicationDbContext.Users
+                                             .Include(u => u.AccessibleOrganizationalUnits)
+                                             .FirstOrDefaultAsync(u => u.UserName == userName);
 
-        if (userOrganizationalUnits.Count == 0)
+        if (user == null || user.AccessibleOrganizationalUnits.Count == 0)
         {
-            Log.Warning($"User not found or no organizational units: {userName}");
+            Log.Warning($"User not found or no accessible organizational units: {userName}");
 
             return [];
         }
 
-        return userOrganizationalUnits;
+        return user.AccessibleOrganizationalUnits.Select(ou => ou.NodeId).ToList();
     }
 }

@@ -68,9 +68,7 @@ public partial class ManageUsers
             {
                 _identityErrors = updateResult.Errors;
                 Log.Error("Failed to update user: {@Errors}", _identityErrors);
-
                 StateHasChanged();
-
                 return;
             }
         }
@@ -93,21 +91,17 @@ public partial class ManageUsers
             await UserManager.AddToRoleAsync(user, Input.Role);
         }
 
+        user.AccessibleOrganizations.Clear();
+        user.AccessibleOrganizationalUnits.Clear();
+
         if (Input.Role == "Administrator")
         {
             foreach (var orgId in Input.Organizations ?? [])
             {
                 var organization = await ApplicationDbContext.Organizations.FindAsync(Guid.Parse(orgId));
-
                 if (organization != null)
                 {
-                    var userOrganization = new UserOrganization
-                    {
-                        User = user,
-                        Organization = organization
-                    };
-
-                    ApplicationDbContext.UserOrganizations.Add(userOrganization);
+                    user.AccessibleOrganizations.Add(organization);
                 }
             }
         }
@@ -119,13 +113,7 @@ public partial class ManageUsers
 
                 if (organizationalUnit != null)
                 {
-                    var userOrganizationalUnit = new UserOrganizationalUnit
-                    {
-                        User = user,
-                        OrganizationalUnitId = organizationalUnit.NodeId
-                    };
-
-                    ApplicationDbContext.UserOrganizationalUnits.Add(userOrganizationalUnit);
+                    user.AccessibleOrganizationalUnits.Add(organizationalUnit);
                 }
             }
         }
@@ -165,10 +153,8 @@ public partial class ManageUsers
                 Id = user.Id,
                 Username = user.UserName,
                 Role = roles.FirstOrDefault(),
-                Organizations = await ApplicationDbContext.UserOrganizations
-                                      .Where(uo => uo.UserId == user.Id)
-                                      .Select(uo => uo.OrganizationId.ToString())
-                                      .ToArrayAsync() ?? []
+                Organizations = user.AccessibleOrganizations.Select(o => o.OrganizationId.ToString()).ToArray(),
+                OrganizationalUnits = user.AccessibleOrganizationalUnits.Select(ou => ou.NodeId.ToString()).ToArray()
             };
 
             Log.Information("Editing user {Username}", user.UserName);
@@ -179,7 +165,11 @@ public partial class ManageUsers
     {
         Log.Information("Loading users");
 
-        var users = await UserManager.Users.ToListAsync();
+        var users = await UserManager.Users
+            .Include(u => u.AccessibleOrganizations)
+            .Include(u => u.AccessibleOrganizationalUnits)
+            .ToListAsync();
+
         var sortedUsers = new List<ApplicationUser>();
 
         _userPlaceholderModels.Clear();
@@ -188,8 +178,7 @@ public partial class ManageUsers
         foreach (var user in users)
         {
             var roles = await UserManager.GetRolesAsync(user);
-
-            _userRoles[user] = [.. roles];
+            _userRoles[user] = roles.ToList();
             _userPlaceholderModels[user.UserName] = new PlaceholderInputModel
             {
                 Username = user.UserName
