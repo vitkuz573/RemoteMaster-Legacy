@@ -21,9 +21,10 @@ public class OrganizationalUnit : INode
 
     public Organization Organization { get; set; }
 
+    [NotMapped]
     public Guid? ParentId { get; set; }
 
-    [ForeignKey(nameof(ParentId))]
+    [NotMapped]
     public INode? Parent { get; set; }
 
 #pragma warning disable CA2227
