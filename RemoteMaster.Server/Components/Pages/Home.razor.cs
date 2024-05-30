@@ -183,6 +183,11 @@ public partial class Home
 
     private async Task OnNodeSelected(INode? node)
     {
+        if (node is Organization)
+        {
+            return;
+        }
+
         Log.Information("OnNodeSelected started for node: {NodeName}", node?.Name);
 
         _selectedComputers.Clear();

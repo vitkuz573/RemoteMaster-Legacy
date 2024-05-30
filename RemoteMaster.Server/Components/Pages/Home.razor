@@ -58,7 +58,11 @@
                             if (context is Organization organization)
                             {
                                 var orgUnits = organization.OrganizationalUnits?.Cast<INode>().ToHashSet() ?? new HashSet<INode>();
-                                <MudTreeViewItem Items="orgUnits" Value="@context" Text="@context.Name" />
+                                <MudTreeViewItem Items="orgUnits" Value="@context" Text="@context.Name" Disabled="true">
+                                    <ChildContent>
+                                        <MudTreeViewItem Text="@context.Name" Items="orgUnits" @onclick:stopPropagation="true" />
+                                    </ChildContent>
+                                </MudTreeViewItem>
                             }
                             else if (context is OrganizationalUnit organizationalUnit)
                             {
