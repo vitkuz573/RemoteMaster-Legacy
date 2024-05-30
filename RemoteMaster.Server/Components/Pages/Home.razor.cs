@@ -8,6 +8,7 @@ using System.Threading.Channels;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
 using MudBlazor;
 using Polly;
@@ -53,14 +54,7 @@ public partial class Home
 
         await InitializeUserAsync();
 
-        List<Guid>? allowedOuIds = null;
-
-        if (_userInfo.Roles.Contains("Viewer"))
-        {
-            allowedOuIds = await GetAllowedOrganizationalUnitsForViewer();
-        }
-
-        _nodes = new HashSet<INode>(await LoadNodesWithChildren(null, allowedOuIds));
+        _nodes = new HashSet<INode>(await LoadNodesWithChildren(null));
 
         await AccessTokenProvider.GetAccessTokenAsync(userId);
     }
@@ -73,12 +67,10 @@ public partial class Home
         if (userPrincipal?.Identity?.IsAuthenticated == true)
         {
             _userInfo = await GetUserInfoAsync(userPrincipal);
+            Log.Information("User {UserName} roles: {Roles}", _userInfo.UserName, string.Join(", ", _userInfo.Roles));
+            Log.Information("User {UserName} has access to Organizations: {AccessibleOrganizations}", _userInfo.UserName, string.Join(", ", _userInfo.AccessibleOrganizations));
+            Log.Information("User {UserName} has access to Organizational Units: {AccessibleOrganizationalUnits}", _userInfo.UserName, string.Join(", ", _userInfo.AccessibleOrganizationalUnits));
         }
-    }
-
-    private async Task<List<Guid>> GetAllowedOrganizationalUnitsForViewer()
-    {
-        return await DatabaseService.GetAllowedOrganizationalUnitsForViewerAsync(_userInfo.UserName);
     }
 
     private async Task<UserInfo> GetUserInfoAsync(ClaimsPrincipal userPrincipal)
@@ -88,7 +80,10 @@ public partial class Home
 
         if (!string.IsNullOrEmpty(userId))
         {
-            var user = await UserManager.FindByIdAsync(userId);
+            var user = await UserManager.Users
+                .Include(u => u.AccessibleOrganizations)
+                .Include(u => u.AccessibleOrganizationalUnits)
+                .FirstOrDefaultAsync(u => u.Id == userId);
 
             if (user != null)
             {
@@ -98,45 +93,52 @@ public partial class Home
                 {
                     userInfo.Roles.Add(role);
                 }
+
+                userInfo.AccessibleOrganizations = user.AccessibleOrganizations.Select(org => org.OrganizationId).ToList();
+                userInfo.AccessibleOrganizationalUnits = user.AccessibleOrganizationalUnits.Select(ou => ou.NodeId).ToList();
+
+                Log.Information("User {UserName} roles: {Roles}", user.UserName, string.Join(", ", userInfo.Roles));
+                Log.Information("User {UserName} has access to Organizations: {AccessibleOrganizations}", user.UserName, string.Join(", ", userInfo.AccessibleOrganizations));
+                Log.Information("User {UserName} has access to Organizational Units: {AccessibleOrganizationalUnits}", user.UserName, string.Join(", ", userInfo.AccessibleOrganizationalUnits));
             }
+            else
+            {
+                Log.Warning("User with ID {UserId} not found", userId);
+            }
+        }
+        else
+        {
+            Log.Warning("User ID not found in claims");
         }
 
         userInfo.UserName = userPrincipal.Identity?.Name ?? "UnknownUser";
-
+        Log.Information("Loaded user info for {UserName}: {UserInfo}", userInfo.UserName, userInfo);
         return userInfo;
     }
 
-    private async Task<IEnumerable<INode>> LoadNodesWithChildren(Guid? parentId = null, List<Guid>? allowedOuIds = null)
+    private async Task<IEnumerable<INode>> LoadNodesWithChildren(Guid? parentId = null)
     {
         var units = new List<INode>();
 
         if (parentId == null)
         {
-            var organizations = await DatabaseService.GetNodesAsync<Organization>() ?? [];
+            var organizations = await DatabaseService.GetNodesAsync<Organization>(null, _userInfo.AccessibleOrganizations) ?? [];
             units.AddRange(organizations);
         }
         else
         {
-            var organizationalUnits = await DatabaseService.GetNodesAsync<OrganizationalUnit>(node => node.ParentId == parentId) ?? [];
+            var organizationalUnits = await DatabaseService.GetNodesAsync<OrganizationalUnit>(node => node.ParentId == parentId, _userInfo.AccessibleOrganizationalUnits) ?? [];
             var computers = await DatabaseService.GetNodesAsync<Computer>(node => node.ParentId == parentId) ?? [];
 
             units.AddRange(organizationalUnits);
             units.AddRange(computers);
 
-            if (allowedOuIds != null && allowedOuIds.Count > 0)
-            {
-                units = units.OfType<OrganizationalUnit>()
-                             .Where(unit => allowedOuIds.Contains(unit.NodeId))
-                             .Cast<INode>()
-                             .ToList();
-            }
-
             foreach (var unit in units)
             {
                 if (unit is OrganizationalUnit organizationalUnit)
                 {
-                    organizationalUnit.Children = (await LoadNodesWithChildren(organizationalUnit.NodeId, null)).OfType<OrganizationalUnit>().ToList();
-                    organizationalUnit.Computers = (await LoadNodesWithChildren(organizationalUnit.NodeId, null)).OfType<Computer>().ToList();
+                    organizationalUnit.Children = (await LoadNodesWithChildren(organizationalUnit.NodeId)).OfType<OrganizationalUnit>().ToList();
+                    organizationalUnit.Computers = (await LoadNodesWithChildren(organizationalUnit.NodeId)).OfType<Computer>().ToList();
                 }
             }
         }
@@ -568,9 +570,7 @@ public partial class Home
     {
         if (_selectedNode is OrganizationalUnit orgUnit)
         {
-            var computers = orgUnit.Children.OfType<Computer>().ToList();
-
-            foreach (var computer in computers)
+            foreach (var computer in orgUnit.Computers)
             {
                 if (_availableComputers.ContainsKey(computer.IpAddress) || _unavailableComputers.ContainsKey(computer.IpAddress))
                 {

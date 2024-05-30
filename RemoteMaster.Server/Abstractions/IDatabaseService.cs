@@ -9,8 +9,8 @@ namespace RemoteMaster.Server.Abstractions;
 
 public interface IDatabaseService
 {
-    Task<IList<T>> GetNodesAsync<T>(Expression<Func<T, bool>>? predicate = null) where T : class, INode;
-   
+    Task<IList<T>> GetNodesAsync<T>(Expression<Func<T, bool>>? predicate = null, List<Guid>? accessibleIds = null) where T : class, INode;
+    
     Task<IList<T>> GetChildrenByParentIdAsync<T>(Guid parentId) where T : INode;
 
     Task<Guid> AddNodeAsync(INode node);
@@ -22,6 +22,4 @@ public interface IDatabaseService
     Task MoveNodesAsync(IEnumerable<Guid> nodeIds, Guid newParentId);
 
     Task<string[]> GetFullPathForOrganizationalUnitAsync(Guid ouId);
-
-    Task<List<Guid>> GetAllowedOrganizationalUnitsForViewerAsync(string userName);
 }

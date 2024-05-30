@@ -8,13 +8,12 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
-using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
 public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatabaseService
 {
-    public async Task<IList<T>> GetNodesAsync<T>(Expression<Func<T, bool>>? predicate = null) where T : class, INode
+    public async Task<IList<T>> GetNodesAsync<T>(Expression<Func<T, bool>>? predicate = null, List<Guid>? accessibleIds = null) where T : class, INode
     {
         IQueryable<T> query;
 
@@ -44,6 +43,20 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         if (predicate != null)
         {
             query = query.Where(predicate);
+        }
+
+        if (accessibleIds != null && accessibleIds.Count != 0)
+        {
+            if (typeof(T) == typeof(Organization))
+            {
+                query = query.Cast<Organization>()
+                             .Where(node => accessibleIds.Contains(node.OrganizationId))
+                             .Cast<T>();
+            }
+            else
+            {
+                query = query.Where(node => accessibleIds.Contains(node.NodeId));
+            }
         }
 
         return await query.ToListAsync();
@@ -139,11 +152,8 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         {
             if (node.NodeId == newParentId)
             {
-                Log.Error($"Attempting to move a node into itself. Node ID: {node.NodeId}");
                 continue;
             }
-
-            Log.Information($"Moving node {node.NodeId} to new parent {newParentId}");
 
             node.ParentId = newParentId;
         }
@@ -171,21 +181,5 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         }
 
         return [.. path];
-    }
-
-    public async Task<List<Guid>> GetAllowedOrganizationalUnitsForViewerAsync(string userName)
-    {
-        var user = await applicationDbContext.Users
-                                             .Include(u => u.AccessibleOrganizationalUnits)
-                                             .FirstOrDefaultAsync(u => u.UserName == userName);
-
-        if (user == null || user.AccessibleOrganizationalUnits.Count == 0)
-        {
-            Log.Warning($"User not found or no accessible organizational units: {userName}");
-
-            return [];
-        }
-
-        return user.AccessibleOrganizationalUnits.Select(ou => ou.NodeId).ToList();
     }
 }
