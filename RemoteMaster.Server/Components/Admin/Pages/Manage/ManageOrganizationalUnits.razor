@@ -1,0 +1,72 @@
+﻿@page "/Admin/OrganizationalUnits"
+
+@namespace RemoteMaster.Server.Components.Admin.Pages.Manage
+
+@rendermode InteractiveServer
+
+@using RemoteMaster.Server.Components.Account
+@using RemoteMaster.Server.Components.Account.Shared
+@using RemoteMaster.Server.Data
+
+@inject ApplicationDbContext ApplicationDbContext
+@inject NavigationManager NavigationManager
+@inject IServiceScopeFactory ScopeFactory
+
+<PageTitle>Manage Organizational Units</PageTitle>
+
+<div class="flex flex-wrap">
+    <!-- Form -->
+    <div class="mb-6 w-full px-3 md:w-1/2">
+        <EditForm Model="Input" OnValidSubmit="OnValidSubmitAsync" class="space-y-6" FormName="CreateOrganizationalUnit">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-red-500" role="alert" />
+
+            <div class="grid-cols-3 grid gap-6">
+                <div class="col-span-3">
+                    <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+                    <InputText @bind-Value="Input.Name" id="name" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                    <ValidationMessage For="() => Input.Name" class="text-red-500 mt-1" />
+                </div>
+            </div>
+
+            <button type="submit" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-lg text-white hover:bg-indigo-700 focus:outline-none">
+                @(Input.Id.HasValue ? "Save" : "Create")
+            </button>
+        </EditForm>
+    </div>
+
+    <!-- OrganizationalUnits Table -->
+    <div class="mb-6 w-full px-3 md:w-1/2">
+        <div class="mt-4">
+            <div class="overflow-hidden border-b border-gray-200 shadow sm:rounded-lg">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                Name
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 bg-white">
+                        @foreach (var organizationalUnit in _organizationalUnits)
+                        {
+                            <tr>
+                                <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
+                                    @organizationalUnit.Name
+                                </td>
+                                <td class="whitespace-nowrap px-6 py-4 text-right">
+                                    <button class="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 focus:outline-none" @onclick="() => EditOrganizationalUnit(organizationalUnit)">
+                                        Edit
+                                    </button>
+                                    <button class="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 focus:outline-none" @onclick="() => DeleteOrganizationalUnit(organizationalUnit)">
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
