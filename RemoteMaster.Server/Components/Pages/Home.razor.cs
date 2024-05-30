@@ -185,16 +185,6 @@ public partial class Home
         {
             await LoadComputers(orgUnit);
         }
-        else if (node is Organization organization)
-        {
-            var children = await LoadNodesWithChildren(organization.OrganizationId);
-            organization.OrganizationalUnits = children.OfType<OrganizationalUnit>().ToList();
-
-            foreach (var ou in organization.OrganizationalUnits)
-            {
-                await LoadComputers(ou);
-            }
-        }
 
         await InvokeAsync(StateHasChanged);
     }
