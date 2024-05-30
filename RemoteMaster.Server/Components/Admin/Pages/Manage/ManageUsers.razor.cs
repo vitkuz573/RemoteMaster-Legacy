@@ -91,23 +91,38 @@ public partial class ManageUsers
             await UserManager.AddToRoleAsync(user, Input.Role);
         }
 
+        await UpdateUserAccess(user);
+
+        Log.Information("User {Username} successfully created/updated", user.UserName);
+
+        await LoadUsers();
+
+        Input = new InputModel();
+
+        NavigationManager.NavigateTo("Admin/Users", true);
+    }
+
+    private async Task UpdateUserAccess(ApplicationUser user)
+    {
         user.AccessibleOrganizations.Clear();
         user.AccessibleOrganizationalUnits.Clear();
 
-        if (Input.Role == "Administrator")
+        if (Input.Organizations != null)
         {
-            foreach (var orgId in Input.Organizations ?? [])
+            foreach (var orgId in Input.Organizations)
             {
                 var organization = await ApplicationDbContext.Organizations.FindAsync(Guid.Parse(orgId));
+
                 if (organization != null)
                 {
                     user.AccessibleOrganizations.Add(organization);
                 }
             }
         }
-        else if (Input.Role == "Viewer")
+
+        if (Input.OrganizationalUnits != null)
         {
-            foreach (var ouId in Input.OrganizationalUnits ?? [])
+            foreach (var ouId in Input.OrganizationalUnits)
             {
                 var organizationalUnit = await ApplicationDbContext.OrganizationalUnits.FindAsync(Guid.Parse(ouId));
 
@@ -119,14 +134,6 @@ public partial class ManageUsers
         }
 
         await ApplicationDbContext.SaveChangesAsync();
-
-        Log.Information("User {Username} successfully created/updated", user.UserName);
-
-        await LoadUsers();
-
-        Input = new InputModel();
-
-        NavigationManager.NavigateTo("Admin/Users", true);
     }
 
     private async Task OnDeleteAsync(ApplicationUser user)
@@ -227,9 +234,11 @@ public partial class ManageUsers
         [Display(Name = "Role")]
         public string Role { get; set; }
 
+        [Required]
         [Display(Name = "Organizations")]
         public string[] Organizations { get; set; } = [];
 
+        [Required]
         [Display(Name = "Organizational Units")]
         public string[] OrganizationalUnits { get; set; } = [];
 
