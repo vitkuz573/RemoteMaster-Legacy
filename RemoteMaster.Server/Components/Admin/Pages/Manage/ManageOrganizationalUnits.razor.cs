@@ -16,10 +16,12 @@ public partial class ManageOrganizationalUnits
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
 
+    private List<Organization> _organizations = [];
     private List<OrganizationalUnit> _organizationalUnits = [];
 
     protected override void OnInitialized()
     {
+        LoadOrganizations();
         LoadOrganizationalUnits();
     }
 
@@ -40,10 +42,11 @@ public partial class ManageOrganizationalUnits
             }
 
             organizationalUnit.Name = Input.Name;
+            organizationalUnit.OrganizationId = Input.OrganizationId;
         }
         else
         {
-            organizationalUnit = CreateOrganizationalUnit(Input.Name);
+            organizationalUnit = CreateOrganizationalUnit(Input.Name, Input.OrganizationId);
             await dbContext.OrganizationalUnits.AddAsync(organizationalUnit);
         }
 
@@ -51,9 +54,17 @@ public partial class ManageOrganizationalUnits
 
         LoadOrganizationalUnits();
 
-        NavigationManager.NavigateTo("Admin/Organizations", true);
+        NavigationManager.NavigateTo("Admin/OrganizationalUnits", true);
 
         Input = new InputModel();
+    }
+
+    private void LoadOrganizations()
+    {
+        using var scope = ScopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        _organizations = [.. dbContext.Organizations];
     }
 
     private void LoadOrganizationalUnits()
@@ -64,11 +75,12 @@ public partial class ManageOrganizationalUnits
         _organizationalUnits = [.. dbContext.OrganizationalUnits];
     }
 
-    private static OrganizationalUnit CreateOrganizationalUnit(string name)
+    private static OrganizationalUnit CreateOrganizationalUnit(string name, Guid organizationId)
     {
         return new OrganizationalUnit
         {
-            Name = name
+            Name = name,
+            OrganizationId = organizationId
         };
     }
 
@@ -87,8 +99,9 @@ public partial class ManageOrganizationalUnits
     {
         Input = new InputModel
         {
-            Id = organizationalUnit.OrganizationId,
-            Name = organizationalUnit.Name
+            Id = organizationalUnit.NodeId,
+            Name = organizationalUnit.Name,
+            OrganizationId = organizationalUnit.OrganizationId
         };
     }
 
@@ -100,5 +113,9 @@ public partial class ManageOrganizationalUnits
         [DataType(DataType.Text)]
         [Display(Name = "Name")]
         public string Name { get; set; }
+
+        [Required]
+        [Display(Name = "Organization")]
+        public Guid OrganizationId { get; set; }
     }
 }
