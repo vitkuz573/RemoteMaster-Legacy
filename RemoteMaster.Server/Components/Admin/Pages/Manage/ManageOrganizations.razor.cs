@@ -58,7 +58,7 @@ public partial class ManageOrganizations
 
         LoadOrganizations();
 
-        NavigationManager.NavigateTo("Admin/Organizations", true);
+        NavigationManager.Refresh();
 
         Input = new InputModel();
     }
@@ -142,6 +142,7 @@ public partial class ManageOrganizations
             else
             {
                 var existingOrganization = user.AccessibleOrganizations.FirstOrDefault(o => o.OrganizationId == organization.OrganizationId);
+                
                 if (existingOrganization != null)
                 {
                     user.AccessibleOrganizations.Remove(existingOrganization);

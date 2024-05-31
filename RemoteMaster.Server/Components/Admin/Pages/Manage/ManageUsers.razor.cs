@@ -85,7 +85,7 @@ public partial class ManageUsers
 
         Input = new InputModel();
 
-        NavigationManager.NavigateTo("Admin/Users", true);
+        NavigationManager.Refresh();
     }
 
     private async Task OnDeleteAsync(ApplicationUser user)
@@ -116,10 +116,7 @@ public partial class ManageUsers
 
     private async Task LoadUsers()
     {
-        var users = await UserManager.Users
-            .Include(u => u.AccessibleOrganizations)
-            .Include(u => u.AccessibleOrganizationalUnits)
-            .ToListAsync();
+        var users = await UserManager.Users.ToListAsync();
 
         var sortedUsers = new List<ApplicationUser>();
 

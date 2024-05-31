@@ -58,7 +58,7 @@ public partial class ManageOrganizationalUnits
 
         LoadOrganizationalUnits();
 
-        NavigationManager.NavigateTo("Admin/OrganizationalUnits", true);
+        NavigationManager.Refresh();
 
         Input = new InputModel();
     }
