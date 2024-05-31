@@ -121,14 +121,19 @@ public partial class ManageOrganizations
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
         var selectedUsers = _users.Where(u => u.IsSelected).Select(u => u.UserId).ToList();
-        var organization = await dbContext.Organizations.FindAsync(_selectedOrganization!.OrganizationId);
+        var organization = await dbContext.Organizations
+            .Include(o => o.OrganizationalUnits)
+            .FirstOrDefaultAsync(o => o.OrganizationId == _selectedOrganization!.OrganizationId);
 
         if (organization == null)
         {
             return;
         }
 
-        var users = await dbContext.Users.Include(u => u.AccessibleOrganizations).ToListAsync();
+        var users = await dbContext.Users
+            .Include(u => u.AccessibleOrganizations)
+            .Include(u => u.AccessibleOrganizationalUnits)
+            .ToListAsync();
 
         foreach (var user in users)
         {
@@ -146,6 +151,16 @@ public partial class ManageOrganizations
                 if (existingOrganization != null)
                 {
                     user.AccessibleOrganizations.Remove(existingOrganization);
+
+                    foreach (var ou in organization.OrganizationalUnits)
+                    {
+                        var existingUnit = user.AccessibleOrganizationalUnits.FirstOrDefault(ouu => ouu.NodeId == ou.NodeId);
+                        
+                        if (existingUnit != null)
+                        {
+                            user.AccessibleOrganizationalUnits.Remove(existingUnit);
+                        }
+                    }
                 }
             }
         }
