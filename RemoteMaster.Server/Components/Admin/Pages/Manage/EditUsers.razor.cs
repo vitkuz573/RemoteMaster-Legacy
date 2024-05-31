@@ -10,8 +10,8 @@ namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 
 public partial class EditUsers
 {
-    private List<UserViewModel> _users = [];
-    private List<OrganizationViewModel> _organizations = [];
+    private List<UserViewModel> _users = new();
+    private List<OrganizationViewModel> _organizations = new();
 
     private string? SelectedUserId { get; set; }
 
@@ -186,7 +186,7 @@ public partial class EditUsers
         public bool IsSelected { get; set; }
 
 #pragma warning disable CA2227
-        public List<OrganizationalUnitViewModel> OrganizationalUnits { get; set; } = [];
+        public List<OrganizationalUnitViewModel> OrganizationalUnits { get; set; } = new();
 #pragma warning restore CA2227
     }
 
@@ -202,9 +202,9 @@ public partial class EditUsers
     public class UserEditModel
     {
 #pragma warning disable CA2227
-        public List<Guid> SelectedOrganizations { get; set; } = [];
+        public List<Guid> SelectedOrganizations { get; set; } = new();
 
-        public List<Guid> SelectedOrganizationalUnits { get; set; } = [];
+        public List<Guid> SelectedOrganizationalUnits { get; set; } = new();
 #pragma warning restore CA2227
     }
 }
