@@ -288,7 +288,8 @@ public partial class HostConfigurationGenerator
 
     private async Task OnValidSubmit(EditContext context)
     {
-        _model.Subject.OrganizationalUnit = new[] { _selectedOrganizationalUnit };
+        _model.Subject.Organization = _selectedOrganization;
+        _model.Subject.OrganizationalUnit = [_selectedOrganizationalUnit];
 
         var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/fileUtils.js");
 
