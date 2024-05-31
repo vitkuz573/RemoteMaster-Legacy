@@ -55,7 +55,7 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
             if (typeof(T) == typeof(Organization))
             {
                 query = query.Cast<Organization>()
-                             .Where(node => accessibleIds.Contains(node.OrganizationId))
+                             .Where(node => accessibleIds.Contains(node.NodeId))
                              .Cast<T>();
             }
             else

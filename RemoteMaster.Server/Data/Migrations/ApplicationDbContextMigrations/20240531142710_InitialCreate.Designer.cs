@@ -12,7 +12,7 @@ using RemoteMaster.Server.Data;
 namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240531141959_InitialCreate")]
+    [Migration("20240531142710_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -225,7 +225,7 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
 
             modelBuilder.Entity("RemoteMaster.Server.Models.Organization", b =>
                 {
-                    b.Property<Guid>("OrganizationId")
+                    b.Property<Guid>("NodeId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier")
                         .HasColumnOrder(0);
@@ -250,7 +250,7 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnOrder(3);
 
-                    b.HasKey("OrganizationId");
+                    b.HasKey("NodeId");
 
                     b.HasIndex("Name")
                         .IsUnique();

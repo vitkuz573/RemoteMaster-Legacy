@@ -55,7 +55,7 @@ public partial class ManageUserRights
             .Include(o => o.OrganizationalUnits)
             .Select(o => new OrganizationViewModel
             {
-                Id = o.OrganizationId,
+                Id = o.NodeId,
                 Name = o.Name,
                 OrganizationalUnits = o.OrganizationalUnits.Select(ou => new OrganizationalUnitViewModel
                 {
@@ -140,7 +140,7 @@ public partial class ManageUserRights
             return;
         }
 
-        _initialSelectedOrganizationIds = user.AccessibleOrganizations.Select(ao => ao.OrganizationId).ToList();
+        _initialSelectedOrganizationIds = user.AccessibleOrganizations.Select(ao => ao.NodeId).ToList();
         _initialSelectedUnitIds = user.AccessibleOrganizationalUnits.Select(aou => aou.NodeId).ToList();
 
         foreach (var organization in _organizations)

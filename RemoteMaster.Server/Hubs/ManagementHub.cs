@@ -26,7 +26,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         }
 
         var organizationEntity = (await databaseService.GetNodesAsync<Organization>(n => n.Name == hostConfiguration.Subject.Organization)).FirstOrDefault() ?? throw new InvalidOperationException($"Organization '{hostConfiguration.Subject.Organization}' not found.");
-        var organizationId = organizationEntity.OrganizationId;
+        var organizationId = organizationEntity.NodeId;
 
         OrganizationalUnit? parentOu = null;
 
@@ -85,7 +85,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             return false;
         }
 
-        var organizationId = organizationEntity.OrganizationId;
+        var organizationId = organizationEntity.NodeId;
 
         OrganizationalUnit? lastOu = null;
 

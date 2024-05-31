@@ -33,7 +33,7 @@
                         <option value="">Select an organization</option>
                         @foreach (var organization in _organizations)
                         {
-                            <option value="@organization.OrganizationId">@organization.Name</option>
+                            <option value="@organization.NodeId">@organization.Name</option>
                         }
                     </InputSelect>
                     <ValidationMessage For="() => Input.OrganizationId" class="text-red-500 mt-1" />
@@ -72,7 +72,7 @@
                                     @organizationalUnit.Name
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                                    @_organizations.FirstOrDefault(o => o.OrganizationId == organizationalUnit.OrganizationId)?.Name
+                                    @_organizations.FirstOrDefault(o => o.NodeId == organizationalUnit.OrganizationId)?.Name
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-right">
                                     <button class="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 focus:outline-none" @onclick="() => EditOrganizationalUnit(organizationalUnit)">

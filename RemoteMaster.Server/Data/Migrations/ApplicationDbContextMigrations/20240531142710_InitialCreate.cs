@@ -54,7 +54,7 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                 name: "Organizations",
                 columns: table => new
                 {
-                    OrganizationId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    NodeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Locality = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     State = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -62,7 +62,7 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Organizations", x => x.OrganizationId);
+                    table.PrimaryKey("PK_Organizations", x => x.NodeId);
                 });
 
             migrationBuilder.CreateTable(
@@ -225,7 +225,7 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                         name: "FK_OrganizationalUnits_Organizations_OrganizationId",
                         column: x => x.OrganizationId,
                         principalTable: "Organizations",
-                        principalColumn: "OrganizationId",
+                        principalColumn: "NodeId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -249,7 +249,7 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                         name: "FK_UserOrganizations_Organizations_OrganizationId",
                         column: x => x.OrganizationId,
                         principalTable: "Organizations",
-                        principalColumn: "OrganizationId",
+                        principalColumn: "NodeId",
                         onDelete: ReferentialAction.Cascade);
                 });
 

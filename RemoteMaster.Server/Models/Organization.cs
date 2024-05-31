@@ -14,14 +14,7 @@ public class Organization : INode
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Column(Order = 0)]
-    public Guid OrganizationId { get; set; }
-
-    [NotMapped]
-    public Guid NodeId
-    {
-        get => OrganizationId;
-        set => OrganizationId = value;
-    }
+    public Guid NodeId { get; set; }
 
     [Required]
     [Column(Order = 1)]

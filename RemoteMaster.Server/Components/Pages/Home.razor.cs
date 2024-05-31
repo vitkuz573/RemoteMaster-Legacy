@@ -91,7 +91,7 @@ public partial class Home
                     userInfo.Roles.Add(role);
                 }
 
-                userInfo.AccessibleOrganizations = user.AccessibleOrganizations.Select(org => org.OrganizationId).ToList();
+                userInfo.AccessibleOrganizations = user.AccessibleOrganizations.Select(org => org.NodeId).ToList();
                 userInfo.AccessibleOrganizationalUnits = user.AccessibleOrganizationalUnits.Select(ou => ou.NodeId).ToList();
             }
             else
@@ -118,7 +118,7 @@ public partial class Home
 
         foreach (var organization in organizations)
         {
-            organization.OrganizationalUnits = (await LoadChildNodes(organization.OrganizationId, null)).OfType<OrganizationalUnit>().ToList();
+            organization.OrganizationalUnits = (await LoadChildNodes(organization.NodeId, null)).OfType<OrganizationalUnit>().ToList();
         }
 
         return units;
