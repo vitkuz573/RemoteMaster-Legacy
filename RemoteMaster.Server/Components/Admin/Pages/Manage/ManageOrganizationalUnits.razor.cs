@@ -5,7 +5,6 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
-using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
 
@@ -19,9 +18,6 @@ public partial class ManageOrganizationalUnits
 
     private List<Organization> _organizations = [];
     private List<OrganizationalUnit> _organizationalUnits = [];
-    private List<UserViewModel> _users = [];
-    private bool _showUserManagementModal = false;
-    private OrganizationalUnit? _selectedOrganizationalUnit;
 
     protected override void OnInitialized()
     {
@@ -107,68 +103,6 @@ public partial class ManageOrganizationalUnits
             Name = organizationalUnit.Name,
             OrganizationId = organizationalUnit.OrganizationId
         };
-    }
-
-    private void ManageUsers(OrganizationalUnit organizationalUnit)
-    {
-        _selectedOrganizationalUnit = organizationalUnit;
-        LoadUsers();
-        _showUserManagementModal = true;
-    }
-
-    private void LoadUsers()
-    {
-        using var scope = ScopeFactory.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-        _users = [.. dbContext.Users
-            .Include(u => u.AccessibleOrganizationalUnits)
-            .Select(u => new UserViewModel
-            {
-                UserId = u.Id,
-                UserName = u.UserName,
-                IsSelected = u.AccessibleOrganizationalUnits.Any(ou => ou.NodeId == _selectedOrganizationalUnit!.NodeId)
-            })];
-    }
-
-    private async Task SaveUserAssignments()
-    {
-        using var scope = ScopeFactory.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-        var selectedUsers = _users.Where(u => u.IsSelected).Select(u => u.UserId).ToList();
-        var organizationalUnit = await dbContext.OrganizationalUnits.FindAsync(_selectedOrganizationalUnit!.NodeId);
-
-        if (organizationalUnit == null)
-        {
-            return;
-        }
-
-        var users = await dbContext.Users.Include(u => u.AccessibleOrganizationalUnits).ToListAsync();
-
-        foreach (var user in users)
-        {
-            if (selectedUsers.Contains(user.Id))
-            {
-                if (!user.AccessibleOrganizationalUnits.Any(ou => ou.NodeId == organizationalUnit.NodeId))
-                {
-                    user.AccessibleOrganizationalUnits.Add(organizationalUnit);
-                }
-            }
-            else
-            {
-                var existingUnit = user.AccessibleOrganizationalUnits.FirstOrDefault(ou => ou.NodeId == organizationalUnit.NodeId);
-                
-                if (existingUnit != null)
-                {
-                    user.AccessibleOrganizationalUnits.Remove(existingUnit);
-                }
-            }
-        }
-
-        await dbContext.SaveChangesAsync();
-
-        _showUserManagementModal = false;
     }
 
     private sealed class InputModel

@@ -5,7 +5,6 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
-using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
 
@@ -18,9 +17,6 @@ public partial class ManageOrganizations
     private InputModel Input { get; set; } = new();
 
     private List<Organization> _organizations = [];
-    private bool _showUserManagementModal = false;
-    private Organization? _selectedOrganization;
-    private List<UserViewModel> _users = [];
 
     protected override void OnInitialized()
     {
@@ -91,82 +87,6 @@ public partial class ManageOrganizations
         await dbContext.SaveChangesAsync();
 
         LoadOrganizations();
-    }
-
-    private void ManageUsers(Organization organization)
-    {
-        _selectedOrganization = organization;
-        LoadUsers();
-        _showUserManagementModal = true;
-    }
-
-    private void LoadUsers()
-    {
-        using var scope = ScopeFactory.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-        _users = [.. dbContext.Users
-            .Include(u => u.AccessibleOrganizations)
-            .Select(u => new UserViewModel
-            {
-                UserId = u.Id,
-                UserName = u.UserName,
-                IsSelected = u.AccessibleOrganizations.Any(o => o.OrganizationId == _selectedOrganization!.OrganizationId)
-            })];
-    }
-
-    private async Task SaveUserAssignments()
-    {
-        using var scope = ScopeFactory.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-        var selectedUsers = _users.Where(u => u.IsSelected).Select(u => u.UserId).ToList();
-        var organization = await dbContext.Organizations
-            .Include(o => o.OrganizationalUnits)
-            .FirstOrDefaultAsync(o => o.OrganizationId == _selectedOrganization!.OrganizationId);
-
-        if (organization == null)
-        {
-            return;
-        }
-
-        var users = await dbContext.Users
-            .Include(u => u.AccessibleOrganizations)
-            .Include(u => u.AccessibleOrganizationalUnits)
-            .ToListAsync();
-
-        foreach (var user in users)
-        {
-            if (selectedUsers.Contains(user.Id))
-            {
-                if (!user.AccessibleOrganizations.Any(o => o.OrganizationId == organization.OrganizationId))
-                {
-                    user.AccessibleOrganizations.Add(organization);
-                }
-            }
-            else
-            {
-                var existingOrganization = user.AccessibleOrganizations.FirstOrDefault(o => o.OrganizationId == organization.OrganizationId);
-                
-                if (existingOrganization != null)
-                {
-                    user.AccessibleOrganizations.Remove(existingOrganization);
-
-                    foreach (var ou in organization.OrganizationalUnits)
-                    {
-                        var existingUnit = user.AccessibleOrganizationalUnits.FirstOrDefault(ouu => ouu.NodeId == ou.NodeId);
-                        
-                        if (existingUnit != null)
-                        {
-                            user.AccessibleOrganizationalUnits.Remove(existingUnit);
-                        }
-                    }
-                }
-            }
-        }
-
-        await dbContext.SaveChangesAsync();
-        _showUserManagementModal = false;
     }
 
     private void EditOrganization(Organization organization)
