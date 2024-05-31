@@ -16,7 +16,6 @@ using MudBlazor.Services;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Components;
 using RemoteMaster.Server.Components.Account;
-using RemoteMaster.Server.Components.Library.Extensions;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Hubs;
 using RemoteMaster.Server.Middlewares;
@@ -136,8 +135,6 @@ public static class Program
         services.AddSingleton<IRemoteCommandService, RemoteCommandService>();
         services.AddSingleton<IRemoteSchtasksService, RemoteSchtasksService>();
         services.AddSingleton<INetworkDriveService, NetworkDriveService>();
-
-        services.AddLibraryServices();
 
         services.AddSingleton(new JsonSerializerOptions
         {
