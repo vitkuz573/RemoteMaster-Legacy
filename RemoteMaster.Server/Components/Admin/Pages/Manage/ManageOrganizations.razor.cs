@@ -5,6 +5,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
+using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
 
@@ -17,6 +18,8 @@ public partial class ManageOrganizations
     private InputModel Input { get; set; } = new();
 
     private List<Organization> _organizations = [];
+    private string _message;
+    private string _messageType;
 
     protected override void OnInitialized()
     {
@@ -36,6 +39,13 @@ public partial class ManageOrganizations
 
             if (organization == null)
             {
+                SetMessage("Organization not found.", "error");
+                return;
+            }
+
+            if (await dbContext.Organizations.AnyAsync(o => o.Name == Input.Name && o.OrganizationId != Input.Id.Value))
+            {
+                SetMessage("Organization with this name already exists.", "error");
                 return;
             }
 
@@ -46,6 +56,12 @@ public partial class ManageOrganizations
         }
         else
         {
+            if (await OrganizationNameExists(Input.Name))
+            {
+                SetMessage("Organization with this name already exists.", "error");
+                return;
+            }
+
             organization = CreateOrganization(Input.Name, Input.Locality, Input.State, Input.Country);
             await dbContext.Organizations.AddAsync(organization);
         }
@@ -57,6 +73,22 @@ public partial class ManageOrganizations
         NavigationManager.Refresh();
 
         Input = new InputModel();
+
+        SetMessage("Organization saved successfully.", "success");
+    }
+
+    private void SetMessage(string message, string type)
+    {
+        _message = message;
+        _messageType = type;
+    }
+
+    private async Task<bool> OrganizationNameExists(string name)
+    {
+        using var scope = ScopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        return await dbContext.Organizations.AnyAsync(o => o.Name == name);
     }
 
     private void LoadOrganizations()
