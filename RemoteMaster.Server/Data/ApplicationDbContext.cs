@@ -50,7 +50,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasKey(ou => ou.NodeId);
 
         builder.Entity<OrganizationalUnit>()
-            .HasIndex(ou => ou.Name)
+            .HasIndex(ou => new { ou.Name, ou.OrganizationId })
             .IsUnique();
 
         builder.Entity<OrganizationalUnit>()

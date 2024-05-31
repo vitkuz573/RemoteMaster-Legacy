@@ -12,7 +12,7 @@ using RemoteMaster.Server.Data;
 namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240531100623_InitialCreate")]
+    [Migration("20240531133524_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -283,12 +283,12 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
 
                     b.HasKey("NodeId");
 
-                    b.HasIndex("Name")
-                        .IsUnique();
-
                     b.HasIndex("OrganizationId");
 
                     b.HasIndex("ParentId");
+
+                    b.HasIndex("Name", "OrganizationId")
+                        .IsUnique();
 
                     b.ToTable("OrganizationalUnits");
                 });

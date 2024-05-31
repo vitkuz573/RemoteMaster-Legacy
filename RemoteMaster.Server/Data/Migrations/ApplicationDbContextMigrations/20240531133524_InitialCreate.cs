@@ -344,9 +344,9 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                 column: "ParentId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_OrganizationalUnits_Name",
+                name: "IX_OrganizationalUnits_Name_OrganizationId",
                 table: "OrganizationalUnits",
-                column: "Name",
+                columns: new[] { "Name", "OrganizationId" },
                 unique: true);
 
             migrationBuilder.CreateIndex(

@@ -280,12 +280,12 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
 
                     b.HasKey("NodeId");
 
-                    b.HasIndex("Name")
-                        .IsUnique();
-
                     b.HasIndex("OrganizationId");
 
                     b.HasIndex("ParentId");
+
+                    b.HasIndex("Name", "OrganizationId")
+                        .IsUnique();
 
                     b.ToTable("OrganizationalUnits");
                 });
