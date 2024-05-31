@@ -10,14 +10,14 @@ namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 
 public partial class EditUsers
 {
-    private List<UserViewModel> _users = new();
-    private List<OrganizationViewModel> _organizations = new();
+    private List<UserViewModel> _users = [];
+    private List<OrganizationViewModel> _organizations = [];
 
     private string? SelectedUserId { get; set; }
 
     private UserEditModel SelectedUserModel { get; set; } = new();
 
-    protected override async Task OnInitializedAsync()
+    protected async override Task OnInitializedAsync()
     {
         using var scope = ScopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -129,9 +129,9 @@ public partial class EditUsers
         StateHasChanged();
     }
 
-    private async Task OnUserChanged(ChangeEventArgs e)
+    private async Task OnUserChanged(string userId)
     {
-        SelectedUserId = e.Value?.ToString();
+        SelectedUserId = userId;
         using var scope = ScopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         await LoadCurrentUserAccess(dbContext);
@@ -152,7 +152,7 @@ public partial class EditUsers
         public bool IsSelected { get; set; }
 
 #pragma warning disable CA2227
-        public List<OrganizationalUnitViewModel> OrganizationalUnits { get; set; } = new();
+        public List<OrganizationalUnitViewModel> OrganizationalUnits { get; set; } = [];
 #pragma warning restore CA2227
     }
 
@@ -168,9 +168,9 @@ public partial class EditUsers
     public class UserEditModel
     {
 #pragma warning disable CA2227
-        public List<Guid> SelectedOrganizations { get; set; } = new();
+        public List<Guid> SelectedOrganizations { get; set; } = [];
 
-        public List<Guid> SelectedOrganizationalUnits { get; set; } = new();
+        public List<Guid> SelectedOrganizationalUnits { get; set; } = [];
 #pragma warning restore CA2227
     }
 }
