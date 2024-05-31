@@ -27,24 +27,24 @@
 
 @if (!string.IsNullOrEmpty(SelectedUserId))
 {
-    <EditForm Model="SelectedUserModel" OnValidSubmit="OnValidSubmitAsync">
+    <EditForm Model="SelectedUserModel" OnValidSubmit="OnValidSubmitAsync" class="space-y-6">
         <DataAnnotationsValidator />
         <ValidationSummary class="text-red-500" role="alert" />
 
         <div>
             @foreach (var organization in _organizations)
             {
-                <div>
+                <div class="mt-4">
                     <div class="flex items-center">
-                        <InputCheckbox @bind-Value="organization.IsSelected" />
-                        <label class="ml-2">@organization.Name</label>
+                        <InputCheckbox @bind-Value="organization.IsSelected" class="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out" />
+                        <label class="ml-2 text-sm font-medium text-gray-700">@organization.Name</label>
                     </div>
-                    <div class="ml-4">
+                    <div class="ml-6 mt-2 space-y-2">
                         @foreach (var unit in organization.OrganizationalUnits)
                         {
                             <div class="flex items-center">
-                                <InputCheckbox @bind-Value="unit.IsSelected" />
-                                <label class="ml-2">@unit.Name</label>
+                                <InputCheckbox @bind-Value="unit.IsSelected" class="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out" />
+                                <label class="ml-2 text-sm font-medium text-gray-700">@unit.Name</label>
                             </div>
                         }
                     </div>
@@ -52,6 +52,6 @@
             }
         </div>
 
-        <button type="submit" class="mt-4 rounded-md bg-indigo-600 px-4 py-2 text-lg text-white hover:bg-indigo-700 focus:outline-none">Save</button>
+        <button type="submit" class="mt-4 flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-lg font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Save</button>
     </EditForm>
 }
