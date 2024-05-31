@@ -36,8 +36,8 @@ public partial class ManageOrganizations
 
         if (Input.Id.HasValue)
         {
-            organization = dbContext.Organizations.Find(Input.Id.Value);
-            
+            organization = await dbContext.Organizations.FindAsync(Input.Id.Value);
+
             if (organization == null)
             {
                 return;
@@ -102,36 +102,54 @@ public partial class ManageOrganizations
 
     private void LoadUsers()
     {
-        _users = [.. ApplicationDbContext.Users
+        using var scope = ScopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        _users = [.. dbContext.Users
             .Include(u => u.AccessibleOrganizations)
             .Select(u => new UserViewModel
             {
                 UserId = u.Id,
                 UserName = u.UserName,
-                IsSelected = u.AccessibleOrganizations.Contains(_selectedOrganization)
+                IsSelected = u.AccessibleOrganizations.Any(o => o.OrganizationId == _selectedOrganization!.OrganizationId)
             })];
     }
 
     private async Task SaveUserAssignments()
     {
-        var usersToUpdate = _users.Where(u => u.IsSelected).Select(u => u.UserId).ToList();
+        using var scope = ScopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-        foreach (var user in ApplicationDbContext.Users.Include(u => u.AccessibleOrganizations))
+        var selectedUsers = _users.Where(u => u.IsSelected).Select(u => u.UserId).ToList();
+        var organization = await dbContext.Organizations.FindAsync(_selectedOrganization!.OrganizationId);
+
+        if (organization == null)
         {
-            if (usersToUpdate.Contains(user.Id))
+            return;
+        }
+
+        var users = await dbContext.Users.Include(u => u.AccessibleOrganizations).ToListAsync();
+
+        foreach (var user in users)
+        {
+            if (selectedUsers.Contains(user.Id))
             {
-                if (!user.AccessibleOrganizations.Contains(_selectedOrganization))
+                if (!user.AccessibleOrganizations.Any(o => o.OrganizationId == organization.OrganizationId))
                 {
-                    user.AccessibleOrganizations.Add(_selectedOrganization);
+                    user.AccessibleOrganizations.Add(organization);
                 }
             }
             else
             {
-                user.AccessibleOrganizations.Remove(_selectedOrganization);
+                var existingOrganization = user.AccessibleOrganizations.FirstOrDefault(o => o.OrganizationId == organization.OrganizationId);
+                if (existingOrganization != null)
+                {
+                    user.AccessibleOrganizations.Remove(existingOrganization);
+                }
             }
         }
 
-        await ApplicationDbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync();
         _showUserManagementModal = false;
     }
 
@@ -140,7 +158,10 @@ public partial class ManageOrganizations
         Input = new InputModel
         {
             Id = organization.OrganizationId,
-            Name = organization.Name
+            Name = organization.Name,
+            Locality = organization.Locality,
+            State = organization.State,
+            Country = organization.Country
         };
     }
 
