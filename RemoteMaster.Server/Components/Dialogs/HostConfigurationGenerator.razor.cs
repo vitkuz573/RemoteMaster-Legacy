@@ -10,7 +10,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
-using Serilog;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
@@ -363,21 +362,13 @@ public partial class HostConfigurationGenerator
 
         var selectedOrg = _organizations.FirstOrDefault(org => org.Name == value);
 
-        Log.Information($"OrganizationChanged called with value: {value}");
-
         if (selectedOrg != null)
         {
-            Log.Information($"Selected Organization: {selectedOrg.Name}");
-
             _model.Subject.Locality = selectedOrg.Locality;
             _model.Subject.State = selectedOrg.State;
             _model.Subject.Country = selectedOrg.Country;
 
             StateHasChanged();
-        }
-        else
-        {
-            Log.Error("No organization selected");
         }
     }
 
