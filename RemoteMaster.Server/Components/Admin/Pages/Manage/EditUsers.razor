@@ -1,5 +1,59 @@
-﻿<h3>EditUsers</h3>
+﻿@page "/Admin/EditUsers"
 
-@code {
+@namespace RemoteMaster.Server.Components.Admin.Pages.Manage
 
+@rendermode InteractiveServer
+
+@using RemoteMaster.Server.Components.Account.Shared
+@using RemoteMaster.Server.Data
+@using RemoteMaster.Server.Models
+@using Microsoft.EntityFrameworkCore
+
+@inject IServiceScopeFactory ScopeFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit Users</PageTitle>
+
+<h3>Edit Users</h3>
+
+<div class="mb-4">
+    <label for="selectedUser" class="block text-sm font-medium text-gray-700">Select User</label>
+    <InputSelect @bind-Value="SelectedUserId" id="selectedUser" @onchange="OnUserChanged" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+        <option value="">Select a user</option>
+        @foreach (var user in _users)
+        {
+            <option value="@user.Id">@user.UserName</option>
+        }
+    </InputSelect>
+</div>
+
+@if (!string.IsNullOrEmpty(SelectedUserId))
+{
+    <EditForm Model="SelectedUserModel" OnValidSubmit="OnValidSubmitAsync">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-red-500" role="alert" />
+
+        <div>
+            @foreach (var organization in _organizations)
+            {
+                <div>
+                    <div class="flex items-center">
+                        <InputCheckbox @bind-Value="organization.IsSelected" />
+                        <label class="ml-2">@organization.Name</label>
+                    </div>
+                    <div class="ml-4">
+                        @foreach (var unit in organization.OrganizationalUnits)
+                        {
+                            <div class="flex items-center">
+                                <InputCheckbox @bind-Value="unit.IsSelected" />
+                                <label class="ml-2">@unit.Name</label>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <button type="submit" class="mt-4 rounded-md bg-indigo-600 px-4 py-2 text-lg text-white hover:bg-indigo-700 focus:outline-none">Save</button>
+    </EditForm>
 }
