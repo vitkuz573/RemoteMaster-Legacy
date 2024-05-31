@@ -43,7 +43,7 @@
             {
                 <div class="mt-4">
                     <div class="flex items-center">
-                        <InputCheckbox @bind-Value="organization.IsSelected" class="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out" />
+                        <InputCheckbox @bind-Value="organization.IsSelected" @onchange="() => OnOrganizationChanged(organization)" class="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out" />
                         <label class="ml-2 text-sm font-medium text-gray-700">@organization.Name</label>
                     </div>
                     <div class="ml-6 mt-2 space-y-2">

@@ -192,6 +192,19 @@ public partial class ManageUserRights
         return !_initialSelectedUnitIds.SequenceEqual(currentSelectedUnitIds);
     }
 
+    private void OnOrganizationChanged(OrganizationViewModel organization)
+    {
+        if (!organization.IsSelected)
+        {
+            foreach (var unit in organization.OrganizationalUnits)
+            {
+                unit.IsSelected = false;
+            }
+        }
+
+        StateHasChanged();
+    }
+
     public class UserViewModel
     {
         public string Id { get; set; } = string.Empty;
@@ -205,7 +218,23 @@ public partial class ManageUserRights
 
         public string Name { get; set; } = string.Empty;
 
-        public bool IsSelected { get; set; }
+        private bool _isSelected;
+
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set
+            {
+                _isSelected = value;
+                if (!_isSelected)
+                {
+                    foreach (var unit in OrganizationalUnits)
+                    {
+                        unit.IsSelected = false;
+                    }
+                }
+            }
+        }
 
 #pragma warning disable CA2227
         public List<OrganizationalUnitViewModel> OrganizationalUnits { get; set; } = [];
