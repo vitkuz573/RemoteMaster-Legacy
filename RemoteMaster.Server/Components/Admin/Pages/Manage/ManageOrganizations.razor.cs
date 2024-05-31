@@ -5,9 +5,9 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
+using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
-using Serilog;
 
 namespace RemoteMaster.Server.Components.Admin.Pages;
 
@@ -18,6 +18,9 @@ public partial class ManageOrganizations
     private InputModel Input { get; set; } = new();
 
     private List<Organization> _organizations = [];
+    private bool _showUserManagementModal = false;
+    private Organization? _selectedOrganization;
+    private List<UserViewModel> _users = [];
 
     protected override void OnInitialized()
     {
@@ -90,6 +93,48 @@ public partial class ManageOrganizations
         LoadOrganizations();
     }
 
+    private void ManageUsers(Organization organization)
+    {
+        _selectedOrganization = organization;
+        LoadUsers();
+        _showUserManagementModal = true;
+    }
+
+    private void LoadUsers()
+    {
+        _users = [.. ApplicationDbContext.Users
+            .Include(u => u.AccessibleOrganizations)
+            .Select(u => new UserViewModel
+            {
+                UserId = u.Id,
+                UserName = u.UserName,
+                IsSelected = u.AccessibleOrganizations.Contains(_selectedOrganization)
+            })];
+    }
+
+    private async Task SaveUserAssignments()
+    {
+        var usersToUpdate = _users.Where(u => u.IsSelected).Select(u => u.UserId).ToList();
+
+        foreach (var user in ApplicationDbContext.Users.Include(u => u.AccessibleOrganizations))
+        {
+            if (usersToUpdate.Contains(user.Id))
+            {
+                if (!user.AccessibleOrganizations.Contains(_selectedOrganization))
+                {
+                    user.AccessibleOrganizations.Add(_selectedOrganization);
+                }
+            }
+            else
+            {
+                user.AccessibleOrganizations.Remove(_selectedOrganization);
+            }
+        }
+
+        await ApplicationDbContext.SaveChangesAsync();
+        _showUserManagementModal = false;
+    }
+
     private void EditOrganization(Organization organization)
     {
         Input = new InputModel
@@ -122,5 +167,14 @@ public partial class ManageOrganizations
         [DataType(DataType.Text)]
         [Display(Name = "Country")]
         public string Country { get; set; }
+    }
+
+    private sealed class UserViewModel
+    {
+        public string UserId { get; set; }
+
+        public string UserName { get; set; }
+
+        public bool IsSelected { get; set; }
     }
 }

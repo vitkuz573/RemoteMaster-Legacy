@@ -85,6 +85,9 @@
                                     <button class="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 focus:outline-none" @onclick="() => DeleteOrganization(organization)">
                                         Delete
                                     </button>
+                                    <button class="rounded-md bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700 focus:outline-none" @onclick="() => ManageUsers(organization)">
+                                        Manage Users
+                                    </button>
                                 </td>
                             </tr>
                         }
@@ -94,3 +97,29 @@
         </div>
     </div>
 </div>
+
+@if (_showUserManagementModal)
+{
+    <div class="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-75">
+        <div class="w-1/2 rounded-lg bg-white p-6 shadow-xl">
+            <h2 class="mb-4 text-2xl font-semibold">Manage Users for @_selectedOrganization.Name</h2>
+            <div class="space-y-4">
+                @foreach (var user in _users)
+                {
+                    <div class="flex items-center">
+                        <label class="mr-4">@user.UserName</label>
+                        <input type="checkbox" @bind="user.IsSelected" />
+                    </div>
+                }
+            </div>
+            <div class="mt-4 flex justify-end">
+                <button class="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none" @onclick="SaveUserAssignments">
+                    Save
+                </button>
+                <button class="ml-2 rounded-md bg-gray-600 px-4 py-2 text-white hover:bg-gray-700 focus:outline-none" @onclick="() => _showUserManagementModal = false">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+}

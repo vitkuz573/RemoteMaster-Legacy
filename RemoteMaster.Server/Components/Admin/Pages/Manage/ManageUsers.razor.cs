@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
-using Serilog;
 
 namespace RemoteMaster.Server.Components.Admin.Pages;
 
@@ -25,29 +24,23 @@ public partial class ManageUsers
     private List<ApplicationUser> _users = [];
     private readonly Dictionary<ApplicationUser, List<string>> _userRoles = [];
     private List<IdentityRole> _roles = [];
-    private List<Organization> _organizations = [];
     private List<OrganizationalUnit> _organizationalUnits = [];
 
     private string? Message => _identityErrors is null ? null : $"Error: {string.Join(", ", _identityErrors.Select(error => error.Description))}";
 
     protected async override Task OnInitializedAsync()
     {
-        Log.Information("Initializing ManageUsers component");
-
         await LoadUsers();
 
         _roles = await RoleManager.Roles
             .Where(role => role.Name != "RootAdministrator")
             .ToListAsync();
 
-        _organizations = await ApplicationDbContext.Organizations.ToListAsync();
         _organizationalUnits = await ApplicationDbContext.OrganizationalUnits.ToListAsync();
     }
 
     private async Task OnValidSubmitAsync()
     {
-        Log.Information("OnValidSubmitAsync called with Input: {@Input}", Input);
-
         ApplicationUser user;
 
         if (Input.Id != null)
@@ -56,7 +49,6 @@ public partial class ManageUsers
 
             if (user == null)
             {
-                Log.Warning("User with Id {UserId} not found", Input.Id);
                 return;
             }
 
@@ -67,7 +59,6 @@ public partial class ManageUsers
             if (!updateResult.Succeeded)
             {
                 _identityErrors = updateResult.Errors;
-                Log.Error("Failed to update user: {@Errors}", _identityErrors);
                 StateHasChanged();
                 return;
             }
@@ -83,7 +74,6 @@ public partial class ManageUsers
             if (!result.Succeeded)
             {
                 _identityErrors = result.Errors;
-                Log.Error("Failed to create user: {@Errors}", _identityErrors);
                 StateHasChanged();
                 return;
             }
@@ -92,8 +82,6 @@ public partial class ManageUsers
         }
 
         await UpdateUserAccess(user);
-
-        Log.Information("User {Username} successfully created/updated", user.UserName);
 
         await LoadUsers();
 
@@ -104,21 +92,7 @@ public partial class ManageUsers
 
     private async Task UpdateUserAccess(ApplicationUser user)
     {
-        user.AccessibleOrganizations.Clear();
         user.AccessibleOrganizationalUnits.Clear();
-
-        if (Input.Organizations != null)
-        {
-            foreach (var orgId in Input.Organizations)
-            {
-                var organization = await ApplicationDbContext.Organizations.FindAsync(Guid.Parse(orgId));
-
-                if (organization != null)
-                {
-                    user.AccessibleOrganizations.Add(organization);
-                }
-            }
-        }
 
         if (Input.OrganizationalUnits != null)
         {
@@ -145,8 +119,6 @@ public partial class ManageUsers
             _userPlaceholderModels.Remove(user.UserName);
             _users.Remove(user);
 
-            Log.Information("User {Username} successfully deleted", user.UserName);
-
             StateHasChanged();
         }
     }
@@ -160,18 +132,13 @@ public partial class ManageUsers
                 Id = user.Id,
                 Username = user.UserName,
                 Role = roles.FirstOrDefault(),
-                Organizations = user.AccessibleOrganizations.Select(o => o.OrganizationId.ToString()).ToArray(),
                 OrganizationalUnits = user.AccessibleOrganizationalUnits.Select(ou => ou.NodeId.ToString()).ToArray()
             };
-
-            Log.Information("Editing user {Username}", user.UserName);
         }
     }
 
     private async Task LoadUsers()
     {
-        Log.Information("Loading users");
-
         var users = await UserManager.Users
             .Include(u => u.AccessibleOrganizations)
             .Include(u => u.AccessibleOrganizationalUnits)
@@ -185,7 +152,7 @@ public partial class ManageUsers
         foreach (var user in users)
         {
             var roles = await UserManager.GetRolesAsync(user);
-            _userRoles[user] = roles.ToList();
+            _userRoles[user] = [.. roles];
             _userPlaceholderModels[user.UserName] = new PlaceholderInputModel
             {
                 Username = user.UserName
@@ -202,7 +169,6 @@ public partial class ManageUsers
         }
 
         _users = sortedUsers;
-        Log.Information("Users loaded successfully");
     }
 
     private ApplicationUser CreateUser()
@@ -210,18 +176,16 @@ public partial class ManageUsers
         try
         {
             var user = Activator.CreateInstance<ApplicationUser>();
-            Log.Information("Created a new instance of ApplicationUser");
             return user;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Log.Error(ex, "Failed to create an instance of ApplicationUser");
             throw new InvalidOperationException($"Can't create an instance of '{nameof(ApplicationUser)}'. " +
                 $"Ensure that '{nameof(ApplicationUser)}' is not an abstract class and has a parameterless constructor.");
         }
     }
 
-    public sealed class InputModel : IValidatableObject
+    public sealed class InputModel
     {
         public string? Id { get; set; }
 
@@ -233,10 +197,6 @@ public partial class ManageUsers
         [Required]
         [Display(Name = "Role")]
         public string Role { get; set; }
-
-        [Required]
-        [Display(Name = "Organizations")]
-        public string[] Organizations { get; set; } = [];
 
         [Required]
         [Display(Name = "Organizational Units")]
@@ -252,18 +212,6 @@ public partial class ManageUsers
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; } = "";
-
-        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-        {
-            if (Role == "Administrator" && (Organizations == null || Organizations.Length == 0))
-            {
-                yield return new ValidationResult("Organizations are required for Administrators.", [nameof(Organizations)]);
-            }
-            if (Role == "Viewer" && (OrganizationalUnits == null || OrganizationalUnits.Length == 0))
-            {
-                yield return new ValidationResult("Organizational Units are required for Viewers.", [nameof(OrganizationalUnits)]);
-            }
-        }
     }
 
     private sealed class PlaceholderInputModel
