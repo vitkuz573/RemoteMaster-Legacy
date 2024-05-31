@@ -45,8 +45,13 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
             query = query.Where(predicate);
         }
 
-        if (accessibleIds != null && accessibleIds.Count > 0)
+        if (accessibleIds != null)
         {
+            if (accessibleIds.Count == 0)
+            {
+                return [];
+            }
+
             if (typeof(T) == typeof(Organization))
             {
                 query = query.Cast<Organization>()
