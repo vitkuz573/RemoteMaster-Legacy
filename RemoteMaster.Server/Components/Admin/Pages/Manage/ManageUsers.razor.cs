@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Data;
-using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Components.Admin.Pages;
 
@@ -24,7 +23,6 @@ public partial class ManageUsers
     private List<ApplicationUser> _users = [];
     private readonly Dictionary<ApplicationUser, List<string>> _userRoles = [];
     private List<IdentityRole> _roles = [];
-    private List<OrganizationalUnit> _organizationalUnits = [];
 
     private string? Message => _identityErrors is null ? null : $"Error: {string.Join(", ", _identityErrors.Select(error => error.Description))}";
 
@@ -35,8 +33,6 @@ public partial class ManageUsers
         _roles = await RoleManager.Roles
             .Where(role => role.Name != "RootAdministrator")
             .ToListAsync();
-
-        _organizationalUnits = await ApplicationDbContext.OrganizationalUnits.ToListAsync();
     }
 
     private async Task OnValidSubmitAsync()
