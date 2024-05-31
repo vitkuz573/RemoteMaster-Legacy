@@ -205,6 +205,12 @@ public partial class ManageUserRights
         StateHasChanged();
     }
 
+    private void ToggleOrganizationExpansion(OrganizationViewModel organization)
+    {
+        organization.IsExpanded = !organization.IsExpanded;
+        StateHasChanged();
+    }
+
     public class UserViewModel
     {
         public string Id { get; set; } = string.Empty;
@@ -219,6 +225,7 @@ public partial class ManageUserRights
         public string Name { get; set; } = string.Empty;
 
         private bool _isSelected;
+        private bool _isExpanded;
 
         public bool IsSelected
         {
@@ -234,6 +241,12 @@ public partial class ManageUserRights
                     }
                 }
             }
+        }
+
+        public bool IsExpanded
+        {
+            get => _isExpanded;
+            set => _isExpanded = value;
         }
 
 #pragma warning disable CA2227
