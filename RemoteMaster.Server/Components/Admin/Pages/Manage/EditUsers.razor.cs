@@ -10,14 +10,15 @@ namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 
 public partial class EditUsers
 {
-    private List<UserViewModel> _users = new();
-    private List<OrganizationViewModel> _organizations = new();
+    private List<UserViewModel> _users = [];
+    private List<OrganizationViewModel> _organizations = [];
+    private List<Guid> _initialSelectedOrganizationIds = [];
+    private List<Guid> _initialSelectedUnitIds = [];
 
     private string? SelectedUserId { get; set; }
-
     private UserEditModel SelectedUserModel { get; set; } = new();
-
     private bool ShowSuccessMessage { get; set; } = false;
+    private bool HasChanges => HasChangesInOrganizations() || HasChangesInUnits();
 
     protected async override Task OnInitializedAsync()
     {
@@ -107,6 +108,9 @@ public partial class EditUsers
         ShowSuccessMessage = true;
         StateHasChanged();
 
+        _initialSelectedOrganizationIds = selectedOrganizationIds;
+        _initialSelectedUnitIds = selectedUnitIds;
+
         _ = Task.Delay(3000).ContinueWith(async _ =>
         {
             ShowSuccessMessage = false;
@@ -133,13 +137,16 @@ public partial class EditUsers
             return;
         }
 
+        _initialSelectedOrganizationIds = user.AccessibleOrganizations.Select(ao => ao.OrganizationId).ToList();
+        _initialSelectedUnitIds = user.AccessibleOrganizationalUnits.Select(aou => aou.NodeId).ToList();
+
         foreach (var organization in _organizations)
         {
-            organization.IsSelected = user.AccessibleOrganizations.Any(ao => ao.OrganizationId == organization.Id);
+            organization.IsSelected = _initialSelectedOrganizationIds.Contains(organization.Id);
 
             foreach (var unit in organization.OrganizationalUnits)
             {
-                unit.IsSelected = user.AccessibleOrganizationalUnits.Any(aou => aou.NodeId == unit.Id);
+                unit.IsSelected = _initialSelectedUnitIds.Contains(unit.Id);
             }
         }
 
@@ -170,6 +177,18 @@ public partial class EditUsers
         }
     }
 
+    private bool HasChangesInOrganizations()
+    {
+        var currentSelectedOrganizationIds = _organizations.Where(o => o.IsSelected).Select(o => o.Id).ToList();
+        return !_initialSelectedOrganizationIds.SequenceEqual(currentSelectedOrganizationIds);
+    }
+
+    private bool HasChangesInUnits()
+    {
+        var currentSelectedUnitIds = _organizations.SelectMany(o => o.OrganizationalUnits).Where(ou => ou.IsSelected).Select(ou => ou.Id).ToList();
+        return !_initialSelectedUnitIds.SequenceEqual(currentSelectedUnitIds);
+    }
+
     public class UserViewModel
     {
         public string Id { get; set; } = string.Empty;
@@ -186,7 +205,7 @@ public partial class EditUsers
         public bool IsSelected { get; set; }
 
 #pragma warning disable CA2227
-        public List<OrganizationalUnitViewModel> OrganizationalUnits { get; set; } = new();
+        public List<OrganizationalUnitViewModel> OrganizationalUnits { get; set; } = [];
 #pragma warning restore CA2227
     }
 
@@ -202,9 +221,9 @@ public partial class EditUsers
     public class UserEditModel
     {
 #pragma warning disable CA2227
-        public List<Guid> SelectedOrganizations { get; set; } = new();
+        public List<Guid> SelectedOrganizations { get; set; } = [];
 
-        public List<Guid> SelectedOrganizationalUnits { get; set; } = new();
+        public List<Guid> SelectedOrganizationalUnits { get; set; } = [];
 #pragma warning restore CA2227
     }
 }
