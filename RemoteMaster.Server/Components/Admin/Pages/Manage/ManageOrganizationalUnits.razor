@@ -59,6 +59,9 @@
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                 Organization
                             </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                Actions
+                            </th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 bg-white">
@@ -78,6 +81,9 @@
                                     <button class="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 focus:outline-none" @onclick="() => DeleteOrganizationalUnit(organizationalUnit)">
                                         Delete
                                     </button>
+                                    <button class="rounded-md bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700 focus:outline-none" @onclick="() => ManageUsers(organizationalUnit)">
+                                        Manage Users
+                                    </button>
                                 </td>
                             </tr>
                         }
@@ -87,3 +93,29 @@
         </div>
     </div>
 </div>
+
+@if (_showUserManagementModal)
+{
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-500 bg-opacity-75">
+        <div class="w-11/12 max-w-3xl rounded-lg bg-white p-6 shadow-xl">
+            <h2 class="mb-4 text-2xl font-semibold">Manage Users for @(_selectedOrganizationalUnit?.Name ?? "Organizational Unit")</h2>
+            <div class="max-h-96 space-y-4 overflow-y-auto">
+                @foreach (var user in _users)
+                {
+                    <div class="flex items-center space-x-4">
+                        <input type="checkbox" class="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out" @bind="user.IsSelected" />
+                        <label class="text-sm font-medium text-gray-700">@user.UserName</label>
+                    </div>
+                }
+            </div>
+            <div class="mt-4 flex justify-end">
+                <button class="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none" @onclick="SaveUserAssignments">
+                    Save
+                </button>
+                <button class="ml-2 rounded-md bg-gray-600 px-4 py-2 text-white hover:bg-gray-700 focus:outline-none" @onclick="() => _showUserManagementModal = false">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+}

@@ -41,17 +41,6 @@
                 </div>
 
                 <div class="col-span-3">
-                    <label for="organizationalUnits" class="block text-sm font-medium text-gray-700">Organizational Units</label>
-                    <InputSelect @bind-Value="Input.OrganizationalUnits" id="organizationalUnits" multiple class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                        @foreach (var organizationalUnit in _organizationalUnits)
-                        {
-                            <option value="@organizationalUnit.NodeId.ToString()">@organizationalUnit.Name</option>
-                        }
-                    </InputSelect>
-                    <ValidationMessage For="() => Input.OrganizationalUnits" class="text-red-500 mt-1" />
-                </div>
-
-                <div class="col-span-3">
                     <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
                     <InputText type="password" @bind-Value="Input.Password" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
                     <ValidationMessage For="() => Input.Password" class="text-red-600 mt-1" />

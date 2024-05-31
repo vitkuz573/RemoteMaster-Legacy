@@ -81,33 +81,11 @@ public partial class ManageUsers
             await UserManager.AddToRoleAsync(user, Input.Role);
         }
 
-        await UpdateUserAccess(user);
-
         await LoadUsers();
 
         Input = new InputModel();
 
         NavigationManager.NavigateTo("Admin/Users", true);
-    }
-
-    private async Task UpdateUserAccess(ApplicationUser user)
-    {
-        user.AccessibleOrganizationalUnits.Clear();
-
-        if (Input.OrganizationalUnits != null)
-        {
-            foreach (var ouId in Input.OrganizationalUnits)
-            {
-                var organizationalUnit = await ApplicationDbContext.OrganizationalUnits.FindAsync(Guid.Parse(ouId));
-
-                if (organizationalUnit != null)
-                {
-                    user.AccessibleOrganizationalUnits.Add(organizationalUnit);
-                }
-            }
-        }
-
-        await ApplicationDbContext.SaveChangesAsync();
     }
 
     private async Task OnDeleteAsync(ApplicationUser user)
@@ -132,7 +110,6 @@ public partial class ManageUsers
                 Id = user.Id,
                 Username = user.UserName,
                 Role = roles.FirstOrDefault(),
-                OrganizationalUnits = user.AccessibleOrganizationalUnits.Select(ou => ou.NodeId.ToString()).ToArray()
             };
         }
     }
@@ -197,10 +174,6 @@ public partial class ManageUsers
         [Required]
         [Display(Name = "Role")]
         public string Role { get; set; }
-
-        [Required]
-        [Display(Name = "Organizational Units")]
-        public string[] OrganizationalUnits { get; set; } = [];
 
         [Required]
         [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
