@@ -24,24 +24,37 @@ public partial class ManageUsers
     private readonly Dictionary<ApplicationUser, List<string>> _userRoles = [];
     private List<IdentityRole> _roles = [];
 
+    [Inject]
+    private IServiceScopeFactory ScopeFactory { get; set; } = null!;
+
     private string? Message => _identityErrors is null ? null : $"Error: {string.Join(", ", _identityErrors.Select(error => error.Description))}";
 
     protected async override Task OnInitializedAsync()
     {
-        await LoadUsers();
+        await LoadRolesAsync();
+        await LoadUsersAsync();
+    }
 
-        _roles = await RoleManager.Roles
+    private async Task LoadRolesAsync()
+    {
+        using var scope = ScopeFactory.CreateScope();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        _roles = await roleManager.Roles
             .Where(role => role.Name != "RootAdministrator")
             .ToListAsync();
     }
 
     private async Task OnValidSubmitAsync()
     {
+        using var scope = ScopeFactory.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var userStore = scope.ServiceProvider.GetRequiredService<IUserStore<ApplicationUser>>();
+
         ApplicationUser user;
 
         if (Input.Id != null)
         {
-            user = await UserManager.FindByIdAsync(Input.Id);
+            user = await userManager.FindByIdAsync(Input.Id);
 
             if (user == null)
             {
@@ -50,12 +63,13 @@ public partial class ManageUsers
 
             user.UserName = Input.Username;
 
-            var updateResult = await UserManager.UpdateAsync(user);
+            var updateResult = await userManager.UpdateAsync(user);
 
             if (!updateResult.Succeeded)
             {
                 _identityErrors = updateResult.Errors;
                 StateHasChanged();
+
                 return;
             }
         }
@@ -63,21 +77,22 @@ public partial class ManageUsers
         {
             user = CreateUser();
 
-            await UserStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
+            await userStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
 
-            var result = await UserManager.CreateAsync(user, Input.Password);
+            var result = await userManager.CreateAsync(user, Input.Password);
 
             if (!result.Succeeded)
             {
                 _identityErrors = result.Errors;
                 StateHasChanged();
+
                 return;
             }
 
-            await UserManager.AddToRoleAsync(user, Input.Role);
+            await userManager.AddToRoleAsync(user, Input.Role);
         }
 
-        await LoadUsers();
+        await LoadUsersAsync();
 
         Input = new InputModel();
 
@@ -86,9 +101,12 @@ public partial class ManageUsers
 
     private async Task OnDeleteAsync(ApplicationUser user)
     {
+        using var scope = ScopeFactory.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
         if (user != null && _userPlaceholderModels.TryGetValue(user.UserName, out var _))
         {
-            await UserManager.DeleteAsync(user);
+            await userManager.DeleteAsync(user);
 
             _userPlaceholderModels.Remove(user.UserName);
             _users.Remove(user);
@@ -97,7 +115,7 @@ public partial class ManageUsers
         }
     }
 
-    private async Task EditUser(ApplicationUser user)
+    private void EditUser(ApplicationUser user)
     {
         if (user != null && _userRoles.TryGetValue(user, out var roles))
         {
@@ -110,9 +128,11 @@ public partial class ManageUsers
         }
     }
 
-    private async Task LoadUsers()
+    private async Task LoadUsersAsync()
     {
-        var users = await UserManager.Users.ToListAsync();
+        using var scope = ScopeFactory.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var users = await userManager.Users.ToListAsync();
 
         var sortedUsers = new List<ApplicationUser>();
 
@@ -121,8 +141,9 @@ public partial class ManageUsers
 
         foreach (var user in users)
         {
-            var roles = await UserManager.GetRolesAsync(user);
-            _userRoles[user] = [.. roles];
+            var roles = await userManager.GetRolesAsync(user);
+
+            _userRoles[user] = new List<string>(roles);
             _userPlaceholderModels[user.UserName] = new PlaceholderInputModel
             {
                 Username = user.UserName
@@ -146,6 +167,7 @@ public partial class ManageUsers
         try
         {
             var user = Activator.CreateInstance<ApplicationUser>();
+
             return user;
         }
         catch (Exception)
