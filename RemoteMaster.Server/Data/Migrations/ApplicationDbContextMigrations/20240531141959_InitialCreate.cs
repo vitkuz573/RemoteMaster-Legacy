@@ -56,7 +56,6 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                 {
                     OrganizationId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    OrganizationalUnit = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValue: "Default"),
                     Locality = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     State = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Country = table.Column<string>(type: "nvarchar(max)", nullable: false)

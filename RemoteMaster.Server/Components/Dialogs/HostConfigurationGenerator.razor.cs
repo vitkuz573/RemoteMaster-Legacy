@@ -334,12 +334,9 @@ public partial class HostConfigurationGenerator
         {
             Log.Information($"Selected Organization: {selectedOrg.Name}");
 
-            _model.Subject.OrganizationalUnit = selectedOrg.OrganizationalUnit?.Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
             _model.Subject.Locality = selectedOrg.Locality;
             _model.Subject.State = selectedOrg.State;
             _model.Subject.Country = selectedOrg.Country;
-
-            _organizationalUnitInput = selectedOrg.OrganizationalUnit;
 
             StateHasChanged();
         }

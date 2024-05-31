@@ -27,19 +27,16 @@ public class Organization : INode
     [Column(Order = 1)]
     public string Name { get; set; }
 
-    [Column(Order = 2)]
-    public string OrganizationalUnit { get; set; }
-
     [Required]
-    [Column(Order = 3)]
+    [Column(Order = 2)]
     public string Locality { get; set; }
 
     [Required]
-    [Column(Order = 4)]
+    [Column(Order = 3)]
     public string State { get; set; }
 
     [Required]
-    [Column(Order = 5)]
+    [Column(Order = 4)]
     public string Country { get; set; }
 
     [NotMapped]
