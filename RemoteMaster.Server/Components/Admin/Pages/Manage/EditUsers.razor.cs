@@ -17,6 +17,8 @@ public partial class EditUsers
 
     private UserEditModel SelectedUserModel { get; set; } = new();
 
+    private bool ShowSuccessMessage { get; set; } = false;
+
     protected async override Task OnInitializedAsync()
     {
         using var scope = ScopeFactory.CreateScope();
@@ -95,6 +97,15 @@ public partial class EditUsers
         }
 
         await dbContext.SaveChangesAsync();
+
+        ShowSuccessMessage = true;
+        StateHasChanged();
+
+        _ = Task.Delay(3000).ContinueWith(async _ =>
+        {
+            ShowSuccessMessage = false;
+            await InvokeAsync(StateHasChanged);
+        });
 
         NavigationManager.Refresh();
     }
