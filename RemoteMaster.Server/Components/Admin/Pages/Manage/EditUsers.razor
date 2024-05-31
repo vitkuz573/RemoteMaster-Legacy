@@ -47,6 +47,10 @@
                         <label class="ml-2 text-sm font-medium text-gray-700">@organization.Name</label>
                     </div>
                     <div class="ml-6 mt-2 space-y-2">
+                        <div class="mb-2 flex items-center">
+                            <button type="button" @onclick="() => SelectAllOrganizationalUnits(organization)" class="text-sm text-white bg-blue-500 hover:bg-blue-700 px-2 py-1 rounded">Select All</button>
+                            <button type="button" @onclick="() => DeselectAllOrganizationalUnits(organization)" class="ml-2 text-sm text-white bg-red-500 hover:bg-red-700 px-2 py-1 rounded">Deselect All</button>
+                        </div>
                         @foreach (var unit in organization.OrganizationalUnits)
                         {
                             <div class="flex items-center">

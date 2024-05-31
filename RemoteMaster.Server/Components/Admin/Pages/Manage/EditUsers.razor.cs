@@ -148,9 +148,26 @@ public partial class EditUsers
         await LoadCurrentUserAccess(dbContext);
     }
 
+    private static void SelectAllOrganizationalUnits(OrganizationViewModel organization)
+    {
+        foreach (var unit in organization.OrganizationalUnits)
+        {
+            unit.IsSelected = true;
+        }
+    }
+
+    private static void DeselectAllOrganizationalUnits(OrganizationViewModel organization)
+    {
+        foreach (var unit in organization.OrganizationalUnits)
+        {
+            unit.IsSelected = false;
+        }
+    }
+
     public class UserViewModel
     {
         public string Id { get; set; } = string.Empty;
+
         public string UserName { get; set; } = string.Empty;
     }
 
