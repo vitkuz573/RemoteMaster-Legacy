@@ -12,6 +12,7 @@ using Microsoft.JSInterop;
 using MudBlazor;
 using Polly;
 using Polly.Wrap;
+using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
@@ -140,6 +141,13 @@ public partial class Access : IDisposable
         {
             if (_connection.State == HubConnectionState.Connected)
             {
+                if (!await HasAccessToComputerAsync())
+                {
+                    Snackbar.Add("Access denied. You do not have permission to access this computer.", Severity.Error);
+                    
+                    return;
+                }
+
                 if (requireAdmin && !IsUserInRole("Administrator"))
                 {
                     return;
@@ -190,6 +198,13 @@ public partial class Access : IDisposable
 
     private async Task InitializeHostConnectionAsync()
     {
+        if (!await HasAccessToComputerAsync())
+        {
+            Snackbar.Add("Access denied. You do not have permission to access this computer.", Severity.Error);
+            
+            return;
+        }
+
         var httpContext = HttpContextAccessor.HttpContext;
         var userId = UserManager.GetUserId(httpContext.User);
 
@@ -311,6 +326,42 @@ public partial class Access : IDisposable
         }
 
         return userRoles.Contains(role);
+    }
+
+    private async Task<bool> HasAccessToComputerAsync()
+    {
+        var httpContext = HttpContextAccessor.HttpContext;
+        var userPrincipal = httpContext?.User;
+
+        if (userPrincipal == null)
+        {
+            return false;
+        }
+
+        var userId = userPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        if (string.IsNullOrEmpty(userId))
+        {
+            return false;
+        }
+
+        var computer = await DatabaseService.GetNodesAsync<Computer>(c => c.Name == Host || c.IpAddress == Host);
+       
+        if (computer == null || computer.Count == 0)
+        {
+            return false;
+        }
+
+        var parentOuId = computer.First().ParentId;
+
+        if (!parentOuId.HasValue)
+        {
+            return false;
+        }
+
+        var accessibleOus = await DatabaseService.GetNodesAsync<OrganizationalUnit>(ou => ou.AccessibleUsers.Any(u => u.Id == userId));
+        
+        return accessibleOus.Any(ou => ou.NodeId == parentOuId.Value);
     }
 
 
