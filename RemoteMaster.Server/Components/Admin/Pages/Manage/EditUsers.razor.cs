@@ -30,7 +30,13 @@ public partial class EditUsers
 
     private async Task LoadUsersAsync(ApplicationDbContext dbContext)
     {
+        var rootAdminRoleId = await dbContext.Roles
+            .Where(r => r.Name == "RootAdministrator")
+            .Select(r => r.Id)
+            .FirstOrDefaultAsync();
+
         _users = await dbContext.Users
+            .Where(u => !dbContext.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == rootAdminRoleId))
             .Select(u => new UserViewModel
             {
                 Id = u.Id,
