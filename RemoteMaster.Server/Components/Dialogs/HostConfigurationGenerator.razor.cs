@@ -17,12 +17,13 @@ namespace RemoteMaster.Server.Components.Dialogs;
 public partial class HostConfigurationGenerator
 {
     [CascadingParameter]
-    private Task<AuthenticationState> AuthenticationStateTask { get; set; }
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
 
     private readonly HostConfiguration _model = new();
-    public string _selectedOrganization;
+    public string? _selectedOrganization;
+    public string? _selectedOrganizationalUnit;
     public List<Organization> _organizations = [];
-    private string _organizationalUnitInput;
+    public List<OrganizationalUnit> _organizationalUnits = [];
     private readonly Dictionary<string, string> _countries = [];
 
     protected async override Task OnInitializedAsync()
@@ -287,7 +288,7 @@ public partial class HostConfigurationGenerator
 
     private async Task OnValidSubmit(EditContext context)
     {
-        _model.Subject.OrganizationalUnit = _organizationalUnitInput.Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
+        _model.Subject.OrganizationalUnit = new[] { _selectedOrganizationalUnit };
 
         var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/fileUtils.js");
 
@@ -323,9 +324,40 @@ public partial class HostConfigurationGenerator
         }
     }
 
-    private void OrganizationChanged(string value)
+    private async Task LoadOrganizationalUnitsAsync()
+    {
+        if (!string.IsNullOrEmpty(_selectedOrganization))
+        {
+            var organization = _organizations.FirstOrDefault(o => o.Name == _selectedOrganization);
+            
+            if (organization != null)
+            {
+                var authState = await AuthenticationStateTask;
+                var user = authState.User;
+
+                if (user.Identity.IsAuthenticated)
+                {
+                    var username = user.Identity.Name;
+                    var appUser = await UserManager.Users
+                                                   .Include(u => u.AccessibleOrganizationalUnits)
+                                                   .FirstOrDefaultAsync(u => u.UserName == username);
+
+                    if (appUser != null)
+                    {
+                        _organizationalUnits = appUser.AccessibleOrganizationalUnits
+                                                      .Where(ou => ou.OrganizationId == organization.NodeId)
+                                                      .ToList();
+                    }
+                }
+            }
+        }
+    }
+
+    private async Task OrganizationChanged(string value)
     {
         _selectedOrganization = value;
+        await LoadOrganizationalUnitsAsync();
+
         var selectedOrg = _organizations.FirstOrDefault(org => org.Name == value);
 
         Log.Information($"OrganizationChanged called with value: {value}");
@@ -344,5 +376,12 @@ public partial class HostConfigurationGenerator
         {
             Log.Error("No organization selected");
         }
+    }
+
+    private void OrganizationalUnitChanged(string value)
+    {
+        _selectedOrganizationalUnit = value;
+
+        StateHasChanged();
     }
 }
