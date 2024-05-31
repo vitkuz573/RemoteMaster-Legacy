@@ -30,30 +30,35 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasDefaultValue("Default");
 
         builder.Entity<Organization>()
-            .HasIndex(p => p.Name)
+            .HasIndex(o => o.Name)
             .IsUnique();
 
         builder.Entity<RefreshToken>()
-            .Property(r => r.RevocationReason)
+            .Property(rt => rt.RevocationReason)
             .HasConversion<string>();
 
         builder.Entity<RefreshToken>()
-            .HasIndex(p => p.UserId);
+            .HasIndex(rt => rt.UserId);
 
         builder.Entity<RefreshToken>()
-            .HasIndex(p => p.Expires);
+            .HasIndex(rt => rt.Expires);
 
         builder.Entity<RefreshToken>()
-            .HasIndex(p => p.Revoked);
+            .HasIndex(rt => rt.Revoked);
 
         builder.Entity<OrganizationalUnit>()
             .HasKey(ou => ou.NodeId);
 
         builder.Entity<OrganizationalUnit>()
+            .HasIndex(ou => ou.Name)
+            .IsUnique();
+
+        builder.Entity<OrganizationalUnit>()
             .HasMany(ou => ou.Children)
             .WithOne(c => (OrganizationalUnit?)c.Parent)
             .HasForeignKey(c => c.ParentId)
-            .IsRequired(false);
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.Entity<OrganizationalUnit>()
             .HasOne(ou => ou.Organization)
@@ -65,7 +70,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasMany(ou => ou.Computers)
             .WithOne(c => (OrganizationalUnit?)c.Parent)
             .HasForeignKey(c => c.ParentId)
-            .IsRequired(false);
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<ApplicationUser>()
             .HasMany(u => u.AccessibleOrganizations)

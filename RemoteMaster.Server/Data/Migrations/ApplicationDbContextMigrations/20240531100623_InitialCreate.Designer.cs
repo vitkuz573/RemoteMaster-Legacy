@@ -12,7 +12,7 @@ using RemoteMaster.Server.Data;
 namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240531093047_InitialCreate")]
+    [Migration("20240531100623_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -273,7 +273,7 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uniqueidentifier");
@@ -282,6 +282,9 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("NodeId");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.HasIndex("OrganizationId");
 
@@ -368,6 +371,7 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                         .HasAnnotation("Relational:JsonPropertyName", "name");
 
                     b.Property<Guid?>("ParentId")
+                        .IsRequired()
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("NodeId");
@@ -472,7 +476,8 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
 
                     b.HasOne("RemoteMaster.Server.Models.OrganizationalUnit", "Parent")
                         .WithMany("Children")
-                        .HasForeignKey("ParentId");
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Organization");
 
@@ -500,7 +505,9 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                 {
                     b.HasOne("RemoteMaster.Server.Models.OrganizationalUnit", "Parent")
                         .WithMany("Computers")
-                        .HasForeignKey("ParentId");
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Parent");
                 });

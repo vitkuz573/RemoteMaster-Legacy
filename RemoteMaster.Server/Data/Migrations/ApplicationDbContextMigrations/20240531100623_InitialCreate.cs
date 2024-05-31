@@ -209,7 +209,7 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                 columns: table => new
                 {
                     NodeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     OrganizationId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ParentId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
                 },
@@ -220,7 +220,8 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                         name: "FK_OrganizationalUnits_OrganizationalUnits_ParentId",
                         column: x => x.ParentId,
                         principalTable: "OrganizationalUnits",
-                        principalColumn: "NodeId");
+                        principalColumn: "NodeId",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_OrganizationalUnits_Organizations_OrganizationId",
                         column: x => x.OrganizationId,
@@ -261,7 +262,7 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IpAddress = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     MacAddress = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ParentId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    ParentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -270,7 +271,8 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                         name: "FK_Computers_OrganizationalUnits_ParentId",
                         column: x => x.ParentId,
                         principalTable: "OrganizationalUnits",
-                        principalColumn: "NodeId");
+                        principalColumn: "NodeId",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -340,6 +342,12 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                 name: "IX_Computers_ParentId",
                 table: "Computers",
                 column: "ParentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrganizationalUnits_Name",
+                table: "OrganizationalUnits",
+                column: "Name",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_OrganizationalUnits_OrganizationId",
