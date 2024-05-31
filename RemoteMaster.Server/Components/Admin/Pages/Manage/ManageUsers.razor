@@ -91,11 +91,6 @@
                                 {
                                     <td class="whitespace-nowrap px-6 py-4 text-right">
                                         <div class="flex justify-end">
-                                            <EditForm Model="_userPlaceholderModels[user.UserName]" OnValidSubmit="() => EditUser(user)" FormName="@($"editUserForm-{user.Id}")">
-                                                <button class="mr-2 rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 focus:outline-none">
-                                                    Edit
-                                                </button>
-                                            </EditForm>
                                             <EditForm Model="_userPlaceholderModels[user.UserName]" OnValidSubmit="() => OnDeleteAsync(user)" FormName="@($"deleteUserForm-{user.Id}")">
                                                 <button class="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 focus:outline-none">
                                                     Delete

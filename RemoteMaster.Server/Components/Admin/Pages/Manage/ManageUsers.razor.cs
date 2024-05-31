@@ -115,19 +115,6 @@ public partial class ManageUsers
         }
     }
 
-    private void EditUser(ApplicationUser user)
-    {
-        if (user != null && _userRoles.TryGetValue(user, out var roles))
-        {
-            Input = new InputModel
-            {
-                Id = user.Id,
-                Username = user.UserName,
-                Role = roles.FirstOrDefault(),
-            };
-        }
-    }
-
     private async Task LoadUsersAsync()
     {
         using var scope = ScopeFactory.CreateScope();
