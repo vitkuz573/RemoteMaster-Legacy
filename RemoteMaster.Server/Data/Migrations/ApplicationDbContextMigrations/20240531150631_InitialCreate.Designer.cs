@@ -12,7 +12,7 @@ using RemoteMaster.Server.Data;
 namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240531142710_InitialCreate")]
+    [Migration("20240531150631_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
