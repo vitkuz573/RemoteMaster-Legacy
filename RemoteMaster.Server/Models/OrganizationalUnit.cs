@@ -17,6 +17,7 @@ public class OrganizationalUnit : INode
     [Required]
     public string Name { get; set; }
 
+    [Required]
     public Guid OrganizationId { get; set; }
 
     public Organization Organization { get; set; }

@@ -239,7 +239,7 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("nvarchar(450)")
                         .HasColumnOrder(1);
 
                     b.Property<string>("OrganizationalUnit")
@@ -255,6 +255,9 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                         .HasColumnOrder(4);
 
                     b.HasKey("OrganizationId");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("Organizations");
                 });

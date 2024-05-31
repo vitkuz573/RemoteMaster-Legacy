@@ -29,6 +29,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .Property(p => p.OrganizationalUnit)
             .HasDefaultValue("Default");
 
+        builder.Entity<Organization>()
+            .HasIndex(p => p.Name)
+            .IsUnique();
+
         builder.Entity<RefreshToken>()
             .Property(r => r.RevocationReason)
             .HasConversion<string>();

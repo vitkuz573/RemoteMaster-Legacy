@@ -55,7 +55,7 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                 columns: table => new
                 {
                     OrganizationId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     OrganizationalUnit = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValue: "Default"),
                     Locality = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     State = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -350,6 +350,12 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                 name: "IX_OrganizationalUnits_ParentId",
                 table: "OrganizationalUnits",
                 column: "ParentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Organizations_Name",
+                table: "Organizations",
+                column: "Name",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_RefreshTokens_Expires",
