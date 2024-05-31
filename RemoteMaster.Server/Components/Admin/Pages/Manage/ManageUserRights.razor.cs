@@ -8,7 +8,7 @@ using RemoteMaster.Server.Data;
 
 namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 
-public partial class EditUsers
+public partial class ManageUserRights
 {
     private List<UserViewModel> _users = [];
     private List<OrganizationViewModel> _organizations = [];
@@ -16,8 +16,11 @@ public partial class EditUsers
     private List<Guid> _initialSelectedUnitIds = [];
 
     private string? SelectedUserId { get; set; }
+
     private UserEditModel SelectedUserModel { get; set; } = new();
+
     private bool ShowSuccessMessage { get; set; } = false;
+
     private bool HasChanges => HasChangesInOrganizations() || HasChangesInUnits();
 
     protected async override Task OnInitializedAsync()
