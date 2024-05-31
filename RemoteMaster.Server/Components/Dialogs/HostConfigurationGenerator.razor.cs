@@ -357,6 +357,8 @@ public partial class HostConfigurationGenerator
     private async Task OrganizationChanged(string value)
     {
         _selectedOrganization = value;
+        _selectedOrganizationalUnit = null;
+
         await LoadOrganizationalUnitsAsync();
 
         var selectedOrg = _organizations.FirstOrDefault(org => org.Name == value);
