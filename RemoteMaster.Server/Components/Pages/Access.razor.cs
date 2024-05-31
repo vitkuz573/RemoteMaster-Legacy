@@ -120,14 +120,20 @@ public partial class Access : IDisposable
             NavigationManager.NavigateTo(newUri, true);
         }
 
-        await UpdateServerParameters();
+        if (_connection != null)
+        {
+            await UpdateServerParameters();
+        }
     }
 
     private async Task UpdateServerParameters()
     {
-        await _connection.InvokeAsync("SendImageQuality", _imageQuality);
-        await _connection.InvokeAsync("SendToggleCursorTracking", _cursorTracking);
-        await _connection.InvokeAsync("SendToggleInput", _inputEnabled);
+        if (_connection != null)
+        {
+            await _connection.InvokeAsync("SendImageQuality", _imageQuality);
+            await _connection.InvokeAsync("SendToggleCursorTracking", _cursorTracking);
+            await _connection.InvokeAsync("SendToggleInput", _inputEnabled);
+        }
     }
 
     private void DrawerToggle()
@@ -139,7 +145,7 @@ public partial class Access : IDisposable
     {
         await _combinedPolicy.ExecuteAsync(async () =>
         {
-            if (_connection.State == HubConnectionState.Connected)
+            if (_connection != null && _connection.State == HubConnectionState.Connected)
             {
                 if (!await HasAccessToComputerAsync())
                 {
@@ -206,7 +212,7 @@ public partial class Access : IDisposable
         }
 
         var httpContext = HttpContextAccessor.HttpContext;
-        var userId = UserManager.GetUserId(httpContext.User);
+        var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         _accessToken = await AccessTokenProvider.GetAccessTokenAsync(userId);
 
