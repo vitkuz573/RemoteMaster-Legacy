@@ -94,14 +94,14 @@ public static class Program
             throw new InvalidOperationException("Could not find a connection string named 'DefaultConnection'.");
         }
 
-        Action<DbContextOptionsBuilder> dbContextOptions = options =>
+        void dbContextOptions(DbContextOptionsBuilder options)
         {
             options.UseSqlServer(connectionString, sqlServerOptions =>
             {
                 sqlServerOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
             })
             .ConfigureWarnings(warnings => warnings.Throw(RelationalEventId.MultipleCollectionIncludeWarning));
-        };
+        }
 
         services.AddDbContext<ApplicationDbContext>(dbContextOptions);
         services.AddDbContextFactory<CertificateDbContext>(dbContextOptions);
@@ -132,7 +132,6 @@ public static class Program
         services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
         services.AddSingleton<ICaCertificateService, CaCertificateService>();
         services.AddSingleton<IJwtSecurityService, JwtSecurityService>();
-        services.AddSingleton<IRemoteCommandService, RemoteCommandService>();
         services.AddSingleton<IRemoteSchtasksService, RemoteSchtasksService>();
         services.AddSingleton<INetworkDriveService, NetworkDriveService>();
 
