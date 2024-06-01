@@ -7,6 +7,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
+using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Enums;
 using RemoteMaster.Server.Models;
 using Serilog;
@@ -37,86 +38,111 @@ public partial class Login
         {
             Log.Information("User already logged in. Redirecting to the origin page or default page.");
             RedirectManager.RedirectTo(ReturnUrl ?? "/");
-            
+
             return;
         }
     }
 
     public async Task LoginUser()
     {
-        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-        var user = await UserManager.FindByNameAsync(Input.Username);
-
-        if (user == null)
+        try
         {
-            errorMessage = "Error: Invalid login attempt.";
-            return;
-        }
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+            var user = await UserManager.FindByNameAsync(Input.Username);
 
-        var userId = user.Id;
-        var userRoles = await UserManager.GetRolesAsync(user);
-
-        if (!userRoles.Any())
-        {
-            errorMessage = "Access denied: User does not belong to any roles.";
-            return;
-        }
-
-        var isRootAdmin = await UserManager.IsInRoleAsync(user, "RootAdministrator");
-        var isLocalhost = ipAddress == "127.0.0.1" || ipAddress == "::1" || ipAddress == "::ffff:127.0.0.1";
-
-        if (isRootAdmin && !isLocalhost)
-        {
-            Log.Warning("Attempt to login as RootAdministrator from non-localhost IP.");
-            errorMessage = "RootAdministrator access is restricted to localhost.";
-            return;
-        }
-
-        var result = await SignInManager.PasswordSignInAsync(Input.Username, Input.Password, false, false);
-
-        if (result.Succeeded)
-        {
-            if (isRootAdmin && isLocalhost)
+            if (user == null)
             {
-                Log.Information("RootAdministrator logged in from localhost. Redirecting to Admin page.");
-                RedirectManager.RedirectTo("Admin");
+                errorMessage = "Error: Invalid login attempt.";
+
                 return;
             }
 
-            await TokenService.RevokeAllRefreshTokensAsync(userId, TokenRevocationReason.PreemptiveSecurity);
+            var userRoles = await UserManager.GetRolesAsync(user);
 
-            Log.Information("User logged in. All previous refresh tokens revoked.");
-
-            var claims = new List<Claim>
+            if (!userRoles.Any())
             {
-                new(ClaimTypes.Name, user.UserName),
-                new(ClaimTypes.NameIdentifier, user.Id.ToString())
-            };
+                errorMessage = "Access denied: User does not belong to any roles.";
 
-            foreach (var role in userRoles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, role));
+                return;
             }
 
-            var accessToken = await TokenService.GenerateAccessTokenAsync(claims);
-            var refreshToken = TokenService.GenerateRefreshToken(userId, ipAddress);
+            var isRootAdmin = await UserManager.IsInRoleAsync(user, "RootAdministrator");
+            var isLocalhost = IsLocalhost(ipAddress);
 
-            var tokenData = new TokenData
+            if (isRootAdmin && !isLocalhost)
             {
-                AccessToken = accessToken,
-                RefreshToken = refreshToken,
-                AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(15),
-                RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(1)
-            };
+                Log.Warning("Attempt to login as RootAdministrator from non-localhost IP.");
+                
+                errorMessage = "RootAdministrator access is restricted to localhost.";
 
-            await TokenStorageService.StoreTokensAsync(userId, tokenData);
+                return;
+            }
 
-            RedirectManager.RedirectTo(ReturnUrl);
+            var result = await SignInManager.PasswordSignInAsync(Input.Username, Input.Password, false, false);
+
+            if (result.Succeeded)
+            {
+                await HandleSuccessfulLogin(user, userRoles, isRootAdmin, isLocalhost);
+            }
+            else
+            {
+                errorMessage = "Error: Invalid login attempt.";
+            }
         }
-        else
+        catch (Exception ex)
         {
-            errorMessage = "Error: Invalid login attempt.";
+            Log.Error(ex, "An error occurred during login.");
+
+            errorMessage = "An unexpected error occurred. Please try again.";
         }
+    }
+
+    private static bool IsLocalhost(string? ipAddress)
+    {
+        return ipAddress == "127.0.0.1" || ipAddress == "::1" || ipAddress == "::ffff:127.0.0.1";
+    }
+
+    private async Task HandleSuccessfulLogin(ApplicationUser user, IList<string> userRoles, bool isRootAdmin, bool isLocalhost)
+    {
+        var userId = user.Id;
+
+        if (isRootAdmin && isLocalhost)
+        {
+            Log.Information("RootAdministrator logged in from localhost. Redirecting to Admin page.");
+            RedirectManager.RedirectTo("Admin");
+
+            return;
+        }
+
+        await TokenService.RevokeAllRefreshTokensAsync(userId, TokenRevocationReason.PreemptiveSecurity);
+        
+        Log.Information("User logged in. All previous refresh tokens revoked.");
+
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.Name, user.UserName),
+            new(ClaimTypes.NameIdentifier, user.Id.ToString())
+        };
+
+        foreach (var role in userRoles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
+
+        var accessToken = await TokenService.GenerateAccessTokenAsync(claims);
+        var refreshToken = TokenService.GenerateRefreshToken(userId, HttpContext.Connection.RemoteIpAddress?.ToString());
+
+        var tokenData = new TokenData
+        {
+            AccessToken = accessToken,
+            RefreshToken = refreshToken,
+            AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(15),
+            RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(1)
+        };
+
+        await TokenStorageService.StoreTokensAsync(userId, tokenData);
+
+        RedirectManager.RedirectTo(ReturnUrl);
     }
 
     private sealed class InputModel
