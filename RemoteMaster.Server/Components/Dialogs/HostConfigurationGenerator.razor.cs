@@ -34,6 +34,11 @@ public partial class HostConfigurationGenerator
 
         await LoadUserOrganizationsAsync();
 
+        InitializeCountries();
+    }
+
+    private void InitializeCountries()
+    {
         _countries.Add("Afghanistan", "AF");
         _countries.Add("Albania", "AL");
         _countries.Add("Algeria", "DZ");
