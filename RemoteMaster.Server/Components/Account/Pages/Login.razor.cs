@@ -45,19 +45,27 @@ public partial class Login
     public async Task LoginUser()
     {
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var user = await UserManager.FindByNameAsync(Input.Username);
+
+        if (user == null)
+        {
+            errorMessage = "Error: Invalid login attempt.";
+            return;
+        }
+
+        var userId = user.Id;
+        var userRoles = await UserManager.GetRolesAsync(user);
+
+        if (!userRoles.Any())
+        {
+            errorMessage = "Access denied: User does not belong to any roles.";
+            return;
+        }
+
         var result = await SignInManager.PasswordSignInAsync(Input.Username, Input.Password, false, false);
 
         if (result.Succeeded)
         {
-            var user = await UserManager.FindByNameAsync(Input.Username);
-
-            if (user == null)
-            {
-                errorMessage = "Error: Invalid login attempt.";
-                return;
-            }
-
-            var userId = user.Id;
             var isRootAdmin = await UserManager.IsInRoleAsync(user, "RootAdministrator");
             var isLocalhost = ipAddress == "127.0.0.1" || ipAddress == "::1" || ipAddress == "::ffff:127.0.0.1";
 
@@ -85,8 +93,6 @@ public partial class Login
                 new(ClaimTypes.Name, user.UserName),
                 new(ClaimTypes.NameIdentifier, user.Id.ToString())
             };
-
-            var userRoles = await UserManager.GetRolesAsync(user);
 
             foreach (var role in userRoles)
             {
