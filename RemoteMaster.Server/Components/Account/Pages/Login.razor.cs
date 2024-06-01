@@ -62,21 +62,20 @@ public partial class Login
             return;
         }
 
+        var isRootAdmin = await UserManager.IsInRoleAsync(user, "RootAdministrator");
+        var isLocalhost = ipAddress == "127.0.0.1" || ipAddress == "::1" || ipAddress == "::ffff:127.0.0.1";
+
+        if (isRootAdmin && !isLocalhost)
+        {
+            Log.Warning("Attempt to login as RootAdministrator from non-localhost IP.");
+            errorMessage = "RootAdministrator access is restricted to localhost.";
+            return;
+        }
+
         var result = await SignInManager.PasswordSignInAsync(Input.Username, Input.Password, false, false);
 
         if (result.Succeeded)
         {
-            var isRootAdmin = await UserManager.IsInRoleAsync(user, "RootAdministrator");
-            var isLocalhost = ipAddress == "127.0.0.1" || ipAddress == "::1" || ipAddress == "::ffff:127.0.0.1";
-
-            if (isRootAdmin && !isLocalhost)
-            {
-                await SignInManager.SignOutAsync();
-                Log.Warning("Attempt to login as RootAdministrator from non-localhost IP.");
-                errorMessage = "RootAdministrator access is restricted to localhost.";
-                return;
-            }
-
             if (isRootAdmin && isLocalhost)
             {
                 Log.Information("RootAdministrator logged in from localhost. Redirecting to Admin page.");
