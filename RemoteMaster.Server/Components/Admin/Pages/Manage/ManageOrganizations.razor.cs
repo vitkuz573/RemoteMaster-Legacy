@@ -20,10 +20,13 @@ public partial class ManageOrganizations
     private List<Organization> _organizations = [];
     private string _message;
     private string _messageType;
+    private Dictionary<string, string> _countries = [];
 
     protected override void OnInitialized()
     {
         LoadOrganizations();
+
+        _countries = CountryProvider.GetCountries();
     }
 
     private async Task OnValidSubmitAsync()
