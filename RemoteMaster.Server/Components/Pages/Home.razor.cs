@@ -5,6 +5,7 @@
 using System.Collections.Concurrent;
 using System.Security.Claims;
 using System.Threading.Channels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -145,6 +146,7 @@ public partial class Home
 
     private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
 
+    [Authorize(Roles = "Administrator")]
     private async Task OpenHostConfig()
     {
         var dialogOptions = new DialogOptions
@@ -155,6 +157,7 @@ public partial class Home
         await DialogService.ShowAsync<HostConfigurationGenerator>("Host Configuration Generator", dialogOptions);
     }
 
+    [Authorize(Roles = "Administrator")]
     private async Task PublishCrl()
     {
         var crl = await CrlService.GenerateCrlAsync();

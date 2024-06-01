@@ -42,8 +42,11 @@
             </MudText>
         </MudDrawerHeader>
         <MudNavMenu>
-            <MudNavLink Match="NavLinkMatch.All" OnClick="OpenHostConfig">Host Configuration Generator</MudNavLink>
-            <MudNavLink Match="NavLinkMatch.All" OnClick="PublishCrl">Publish CRL</MudNavLink>
+            @if (_userInfo.Roles.Contains("Administrator"))
+            {
+                <MudNavLink Match="NavLinkMatch.All" OnClick="OpenHostConfig">Host Configuration Generator</MudNavLink>
+                <MudNavLink Match="NavLinkMatch.All" OnClick="PublishCrl">Publish CRL</MudNavLink>   
+            }
             <MudNavLink Match="NavLinkMatch.All" OnClick="ManageProfile">Profile</MudNavLink>
             <MudNavLink Match="NavLinkMatch.All" OnClick="Logout">Logout</MudNavLink>
         </MudNavMenu>
