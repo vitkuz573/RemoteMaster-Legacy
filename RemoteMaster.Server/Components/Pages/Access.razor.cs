@@ -13,7 +13,6 @@ using Microsoft.JSInterop;
 using MudBlazor;
 using Polly;
 using Polly.Wrap;
-using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
@@ -359,8 +358,19 @@ public partial class Access : IDisposable
             return false;
         }
 
+        var computer = await ApplicationDbContext.Computers
+            .Include(c => c.Parent)
+            .FirstOrDefaultAsync(c => c.Name == Host || c.IpAddress == Host);
+
+        if (computer?.Parent == null)
+        {
+            return false;
+        }
+
+        var organizationalUnitId = computer.ParentId.Value;
+
         return await ApplicationDbContext.OrganizationalUnits
-            .Where(ou => ou.AccessibleUsers.Any(u => u.Id == userId))
+            .Where(ou => ou.NodeId == organizationalUnitId && ou.AccessibleUsers.Any(u => u.Id == userId))
             .AnyAsync();
     }
 
