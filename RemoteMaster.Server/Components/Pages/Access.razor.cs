@@ -8,6 +8,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
 using MudBlazor;
 using Polly;
@@ -147,7 +148,7 @@ public partial class Access : IDisposable
         {
             if (_connection != null && _connection.State == HubConnectionState.Connected)
             {
-                if (!await HasAccessToComputerAsync())
+                if (!await HasAccessAsync())
                 {
                     Snackbar.Add("Access denied. You do not have permission to access this computer.", Severity.Error);
                     
@@ -204,7 +205,7 @@ public partial class Access : IDisposable
 
     private async Task InitializeHostConnectionAsync()
     {
-        if (!await HasAccessToComputerAsync())
+        if (!await HasAccessAsync())
         {
             Snackbar.Add("Access denied. You do not have permission to access this computer.", Severity.Error);
             
@@ -334,7 +335,7 @@ public partial class Access : IDisposable
         return userRoles.Contains(role);
     }
 
-    private async Task<bool> HasAccessToComputerAsync()
+    private async Task<bool> HasAccessAsync()
     {
         var httpContext = HttpContextAccessor.HttpContext;
         var userPrincipal = httpContext?.User;
@@ -345,31 +346,16 @@ public partial class Access : IDisposable
         }
 
         var userId = userPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        
+
         if (string.IsNullOrEmpty(userId))
         {
             return false;
         }
 
-        var computer = await DatabaseService.GetNodesAsync<Computer>(c => c.Name == Host || c.IpAddress == Host);
-       
-        if (computer == null || computer.Count == 0)
-        {
-            return false;
-        }
-
-        var parentOuId = computer.First().ParentId;
-
-        if (!parentOuId.HasValue)
-        {
-            return false;
-        }
-
-        var accessibleOus = await DatabaseService.GetNodesAsync<OrganizationalUnit>(ou => ou.AccessibleUsers.Any(u => u.Id == userId));
-        
-        return accessibleOus.Any(ou => ou.NodeId == parentOuId.Value);
+        return await ApplicationDbContext.OrganizationalUnits
+            .Where(ou => ou.AccessibleUsers.Any(u => u.Id == userId))
+            .AnyAsync();
     }
-
 
     [JSInvokable]
     public void OnBeforeUnload()
