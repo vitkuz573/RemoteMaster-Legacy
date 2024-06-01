@@ -25,7 +25,7 @@
 
         @if (_organizationalUnits.Any())
         {
-            <MudSelect Label="Select target OU" @bind-Value="_selectedOrganizationalUnitId">
+            <MudSelect Label="Select target OU" Value="_selectedOrganizationalUnitId" T="Guid">
                 @foreach (var organizationalUnit in _organizationalUnits)
                 {
                     <MudSelectItem Value="@organizationalUnit.NodeId">

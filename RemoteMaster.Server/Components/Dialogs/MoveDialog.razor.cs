@@ -20,8 +20,8 @@ public partial class MoveDialog
     private string _currentOrganizationalUnitName = string.Empty;
     private List<Organization> _organizations = [];
     private List<OrganizationalUnit> _organizationalUnits = [];
-    private Guid _selectedOrganizationId;
-    private Guid _selectedOrganizationalUnitId;
+    private Guid _selectedOrganizationId = Guid.Empty;
+    private Guid _selectedOrganizationalUnitId = Guid.Empty;
 
     protected async override Task OnInitializedAsync()
     {
@@ -35,15 +35,16 @@ public partial class MoveDialog
             if (currentOrganizationalUnit.Any())
             {
                 var currentOU = currentOrganizationalUnit.First();
-                
+
                 _selectedOrganizationalUnitId = currentOU.NodeId;
                 _currentOrganizationalUnitName = currentOU.Name;
 
                 var currentOrganization = _organizations.FirstOrDefault(org => org.NodeId == currentOU.OrganizationId);
-                
+
                 if (currentOrganization != null)
                 {
                     _currentOrganizationName = currentOrganization.Name;
+                    _selectedOrganizationId = currentOrganization.NodeId;
                 }
             }
         }
@@ -55,7 +56,7 @@ public partial class MoveDialog
         _selectedOrganizationalUnitId = Guid.Empty;
 
         var organization = _organizations.FirstOrDefault(org => org.NodeId == organizationId);
-        
+
         if (organization != null)
         {
             _organizationalUnits = [.. (await DatabaseService.GetNodesAsync<OrganizationalUnit>(node => node.OrganizationId == organizationId))];
@@ -96,7 +97,7 @@ public partial class MoveDialog
             }
 
             await OnNodesMoved.InvokeAsync(Hosts.Keys);
-            
+
             MudDialog.Close(DialogResult.Ok(true));
         }
     }
