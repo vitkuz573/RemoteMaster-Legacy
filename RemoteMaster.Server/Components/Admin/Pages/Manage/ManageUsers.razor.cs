@@ -88,8 +88,6 @@ public partial class ManageUsers
 
                 return;
             }
-
-            await userManager.AddToRoleAsync(user, Input.Role);
         }
 
         await LoadUsersAsync();
@@ -172,10 +170,6 @@ public partial class ManageUsers
         [DataType(DataType.Text)]
         [Display(Name = "Username")]
         public string Username { get; set; }
-
-        [Required]
-        [Display(Name = "Role")]
-        public string Role { get; set; }
 
         [Required]
         [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]

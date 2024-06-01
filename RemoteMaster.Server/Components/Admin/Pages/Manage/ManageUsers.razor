@@ -30,17 +30,6 @@
                 </div>
 
                 <div class="col-span-3">
-                    <label for="role" class="block text-sm font-medium text-gray-700">Role</label>
-                    <InputSelect @bind-Value="Input.Role" id="role" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                        @foreach (var role in _roles)
-                        {
-                            <option value="@role.Name">@role.Name</option>
-                        }
-                    </InputSelect>
-                    <ValidationMessage For="() => Input.Role" class="text-red-500 mt-1" />
-                </div>
-
-                <div class="col-span-3">
                     <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
                     <InputText type="password" @bind-Value="Input.Password" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
                     <ValidationMessage For="() => Input.Password" class="text-red-600 mt-1" />

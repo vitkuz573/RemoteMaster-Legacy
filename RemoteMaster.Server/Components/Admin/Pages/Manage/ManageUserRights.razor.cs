@@ -2,7 +2,9 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Data;
 
@@ -14,6 +16,7 @@ public partial class ManageUserRights
     private List<OrganizationViewModel> _organizations = [];
     private List<Guid> _initialSelectedOrganizationIds = [];
     private List<Guid> _initialSelectedUnitIds = [];
+    private List<IdentityRole> _roles = [];
 
     private string? SelectedUserId { get; set; }
 
@@ -28,8 +31,16 @@ public partial class ManageUserRights
         using var scope = ScopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
+        await LoadRolesAsync(scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>());
         await LoadUsersAsync(dbContext);
         await LoadOrganizationsAsync(dbContext);
+    }
+
+    private async Task LoadRolesAsync(RoleManager<IdentityRole> roleManager)
+    {
+        _roles = await roleManager.Roles
+            .Where(role => role.Name != "RootAdministrator")
+            .ToListAsync();
     }
 
     private async Task LoadUsersAsync(ApplicationDbContext dbContext)
@@ -78,6 +89,19 @@ public partial class ManageUserRights
         if (user == null)
         {
             return;
+        }
+
+        // Assign role to user
+        var userRole = await dbContext.UserRoles.FirstOrDefaultAsync(ur => ur.UserId == user.Id);
+        if (userRole != null)
+        {
+            dbContext.UserRoles.Remove(userRole);
+        }
+
+        var role = await dbContext.Roles.FirstOrDefaultAsync(r => r.Name == SelectedUserModel.Role);
+        if (role != null)
+        {
+            dbContext.UserRoles.Add(new IdentityUserRole<string> { UserId = user.Id, RoleId = role.Id });
         }
 
         var selectedOrganizationIds = _organizations.Where(o => o.IsSelected).Select(o => o.Id).ToList();
@@ -139,6 +163,11 @@ public partial class ManageUserRights
         {
             return;
         }
+
+        var userRole = await dbContext.UserRoles.Where(ur => ur.UserId == user.Id)
+                                                .Join(dbContext.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r.Name)
+                                                .FirstOrDefaultAsync();
+        SelectedUserModel.Role = userRole;
 
         _initialSelectedOrganizationIds = user.AccessibleOrganizations.Select(ao => ao.NodeId).ToList();
         _initialSelectedUnitIds = user.AccessibleOrganizationalUnits.Select(aou => aou.NodeId).ToList();
@@ -265,6 +294,10 @@ public partial class ManageUserRights
 
     public class UserEditModel
     {
+        [Required]
+        [Display(Name = "Role")]
+        public string Role { get; set; }
+
 #pragma warning disable CA2227
         public List<Guid> SelectedOrganizations { get; set; } = [];
 
