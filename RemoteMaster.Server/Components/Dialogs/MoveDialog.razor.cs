@@ -16,26 +16,52 @@ public partial class MoveDialog
     [Parameter]
     public EventCallback<IEnumerable<Computer>> OnNodesMoved { get; set; }
 
+    private string _currentOrganizationName = string.Empty;
     private string _currentOrganizationalUnitName = string.Empty;
+    private List<Organization> _organizations = [];
     private List<OrganizationalUnit> _organizationalUnits = [];
+    private Guid _selectedOrganizationId;
     private Guid _selectedOrganizationalUnitId;
 
     protected async override Task OnInitializedAsync()
     {
-        _organizationalUnits = (await DatabaseService.GetNodesAsync<OrganizationalUnit>(node => node is OrganizationalUnit))
-            .ToList();
+        _organizations = [.. (await DatabaseService.GetNodesAsync<Organization>(node => node is Organization))];
 
-        if (Hosts.Any())
+        if (!Hosts.IsEmpty)
         {
             var firstHostParentId = Hosts.First().Key.ParentId;
             var currentOrganizationalUnit = await DatabaseService.GetNodesAsync<OrganizationalUnit>(node => node.NodeId == firstHostParentId);
 
             if (currentOrganizationalUnit.Any())
             {
-                _selectedOrganizationalUnitId = currentOrganizationalUnit.First().NodeId;
-                _currentOrganizationalUnitName = currentOrganizationalUnit.First().Name;
+                var currentOU = currentOrganizationalUnit.First();
+                
+                _selectedOrganizationalUnitId = currentOU.NodeId;
+                _currentOrganizationalUnitName = currentOU.Name;
+
+                var currentOrganization = _organizations.FirstOrDefault(org => org.NodeId == currentOU.OrganizationId);
+                
+                if (currentOrganization != null)
+                {
+                    _currentOrganizationName = currentOrganization.Name;
+                }
             }
         }
+    }
+
+    private async Task OrganizationChanged(Guid organizationId)
+    {
+        _selectedOrganizationId = organizationId;
+        _selectedOrganizationalUnitId = Guid.Empty;
+
+        var organization = _organizations.FirstOrDefault(org => org.NodeId == organizationId);
+        
+        if (organization != null)
+        {
+            _organizationalUnits = [.. (await DatabaseService.GetNodesAsync<OrganizationalUnit>(node => node.OrganizationId == organizationId))];
+        }
+
+        StateHasChanged();
     }
 
     private async Task Move()
@@ -70,6 +96,7 @@ public partial class MoveDialog
             }
 
             await OnNodesMoved.InvokeAsync(Hosts.Keys);
+            
             MudDialog.Close(DialogResult.Ok(true));
         }
     }
@@ -112,7 +139,11 @@ public partial class MoveDialog
             }
         }
 
-        var json = JsonSerializer.Serialize(changeRequests, new JsonSerializerOptions { WriteIndented = true });
+        var json = JsonSerializer.Serialize(changeRequests, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+
         await File.WriteAllTextAsync(ouChangeRequestsFilePath, json);
     }
 }

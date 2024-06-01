@@ -6,19 +6,34 @@
 
 <CommonDialog>
     <Content>
+        @if (!string.IsNullOrWhiteSpace(_currentOrganizationName))
+        {
+            <MudText Typo="Typo.body1">Current Organization: @_currentOrganizationName</MudText>
+        }
+
         @if (!string.IsNullOrWhiteSpace(_currentOrganizationalUnitName))
         {
             <MudText Typo="Typo.body1">Current OU: @_currentOrganizationalUnitName</MudText>
         }
 
-        <MudSelect Label="Select target OU" @bind-Value="_selectedOrganizationalUnitId">
-            @foreach (var organizationalUnit in _organizationalUnits)
+        <MudSelect Label="Select Organization" Value="_selectedOrganizationId" T="Guid" ValueChanged="OrganizationChanged">
+            @foreach (var organization in _organizations)
             {
-                <MudSelectItem Value="@organizationalUnit.NodeId">
-                    @organizationalUnit.Name
-                </MudSelectItem>
+                <MudSelectItem Value="@organization.NodeId">@organization.Name</MudSelectItem>
             }
         </MudSelect>
+
+        @if (_organizationalUnits.Any())
+        {
+            <MudSelect Label="Select target OU" @bind-Value="_selectedOrganizationalUnitId">
+                @foreach (var organizationalUnit in _organizationalUnits)
+                {
+                    <MudSelectItem Value="@organizationalUnit.NodeId">
+                        @organizationalUnit.Name
+                    </MudSelectItem>
+                }
+            </MudSelect>
+        }
     </Content>
     <Actions>
         <MudButton Color="Color.Primary" OnClick="Move">Move</MudButton>
