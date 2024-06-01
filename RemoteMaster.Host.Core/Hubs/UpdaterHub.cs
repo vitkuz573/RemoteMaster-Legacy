@@ -9,7 +9,7 @@ using RemoteMaster.Shared.Dtos;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
-[Authorize]
+[Authorize(Roles = "Administrator")]
 public class UpdaterHub(IUpdaterInstanceService updaterInstanceService) : Hub<IUpdaterClient>
 {
     public void SendStartUpdater(UpdateRequest updateRequest)

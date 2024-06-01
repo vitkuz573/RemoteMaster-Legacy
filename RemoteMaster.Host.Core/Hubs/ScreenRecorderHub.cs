@@ -9,7 +9,7 @@ using RemoteMaster.Shared.Dtos;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
-[Authorize]
+[Authorize(Roles = "Administrator")]
 public class ScreenRecorderHub(IScreenRecorderService screenRecorderService) : Hub<IScreenRecorderClient>
 {
     public async Task SendStartScreenRecording(ScreenRecordingRequest screenRecordingRequest)

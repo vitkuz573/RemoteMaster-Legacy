@@ -53,7 +53,6 @@ public partial class Login
             return;
         }
 
-        var userId = user.Id;
         var userRoles = await UserManager.GetRolesAsync(user);
 
         if (!userRoles.Any())
@@ -83,7 +82,7 @@ public partial class Login
                 return;
             }
 
-            await TokenService.RevokeAllRefreshTokensAsync(userId, TokenRevocationReason.PreemptiveSecurity);
+            await TokenService.RevokeAllRefreshTokensAsync(user.Id, TokenRevocationReason.PreemptiveSecurity);
 
             Log.Information("User logged in. All previous refresh tokens revoked.");
 
@@ -99,7 +98,7 @@ public partial class Login
             }
 
             var accessToken = await TokenService.GenerateAccessTokenAsync(claims);
-            var refreshToken = TokenService.GenerateRefreshToken(userId, ipAddress);
+            var refreshToken = TokenService.GenerateRefreshToken(user.Id, ipAddress);
 
             var tokenData = new TokenData
             {
@@ -109,7 +108,7 @@ public partial class Login
                 RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(1)
             };
 
-            await TokenStorageService.StoreTokensAsync(userId, tokenData);
+            await TokenStorageService.StoreTokensAsync(user.Id, tokenData);
 
             RedirectManager.RedirectTo(ReturnUrl);
         }
