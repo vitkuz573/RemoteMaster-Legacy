@@ -24,7 +24,7 @@ public partial class ManageUserRights
 
     private bool ShowSuccessMessage { get; set; } = false;
 
-    private bool HasChanges => HasChangesInOrganizations() || HasChangesInUnits();
+    private bool HasChanges => HasChangesInRole() || HasChangesInOrganizations() || HasChangesInUnits();
 
     protected async override Task OnInitializedAsync()
     {
@@ -137,6 +137,7 @@ public partial class ManageUserRights
 
         _initialSelectedOrganizationIds = selectedOrganizationIds;
         _initialSelectedUnitIds = selectedUnitIds;
+        _initialSelectedRole = SelectedUserModel.Role;
 
         _ = Task.Delay(3000).ContinueWith(async _ =>
         {
@@ -168,6 +169,7 @@ public partial class ManageUserRights
                                                 .Join(dbContext.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r.Name)
                                                 .FirstOrDefaultAsync();
         SelectedUserModel.Role = userRole;
+        _initialSelectedRole = userRole;
 
         _initialSelectedOrganizationIds = user.AccessibleOrganizations.Select(ao => ao.NodeId).ToList();
         _initialSelectedUnitIds = user.AccessibleOrganizationalUnits.Select(aou => aou.NodeId).ToList();
@@ -207,6 +209,11 @@ public partial class ManageUserRights
         {
             unit.IsSelected = false;
         }
+    }
+
+    private bool HasChangesInRole()
+    {
+        return _initialSelectedRole != SelectedUserModel.Role;
     }
 
     private bool HasChangesInOrganizations()
@@ -304,4 +311,6 @@ public partial class ManageUserRights
         public List<Guid> SelectedOrganizationalUnits { get; set; } = [];
 #pragma warning restore CA2227
     }
+
+    private string _initialSelectedRole;
 }
