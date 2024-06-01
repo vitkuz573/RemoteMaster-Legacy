@@ -40,6 +40,7 @@ public partial class Access : IDisposable
     private ElementReference _screenImageElement;
     private string _accessToken;
     private List<ViewerDto> _viewers = [];
+    private bool _accessDenied = false;
 
     private readonly AsyncPolicyWrap _combinedPolicy;
 
@@ -151,7 +152,10 @@ public partial class Access : IDisposable
                 if (!await HasAccessAsync())
                 {
                     Snackbar.Add("Access denied. You do not have permission to access this computer.", Severity.Error);
-                    
+                    _accessDenied = true;
+
+                    await InvokeAsync(StateHasChanged);
+
                     return;
                 }
 
@@ -208,7 +212,10 @@ public partial class Access : IDisposable
         if (!await HasAccessAsync())
         {
             Snackbar.Add("Access denied. You do not have permission to access this computer.", Severity.Error);
-            
+            _accessDenied = true;
+
+            await InvokeAsync(StateHasChanged);
+
             return;
         }
 
