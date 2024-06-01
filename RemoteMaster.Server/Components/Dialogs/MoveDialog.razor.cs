@@ -45,6 +45,8 @@ public partial class MoveDialog
                 {
                     _currentOrganizationName = currentOrganization.Name;
                     _selectedOrganizationId = currentOrganization.NodeId;
+
+                    await LoadOrganizationalUnits(currentOrganization.NodeId);
                 }
             }
         }
@@ -59,10 +61,15 @@ public partial class MoveDialog
 
         if (organization != null)
         {
-            _organizationalUnits = [.. (await DatabaseService.GetNodesAsync<OrganizationalUnit>(node => node.OrganizationId == organizationId))];
+            await LoadOrganizationalUnits(organizationId);
         }
 
         StateHasChanged();
+    }
+
+    private async Task LoadOrganizationalUnits(Guid organizationId)
+    {
+        _organizationalUnits = [.. (await DatabaseService.GetNodesAsync<OrganizationalUnit>(node => node.OrganizationId == organizationId))];
     }
 
     private async Task Move()
