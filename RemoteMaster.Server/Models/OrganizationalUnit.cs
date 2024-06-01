@@ -12,20 +12,25 @@ namespace RemoteMaster.Server.Models;
 public class OrganizationalUnit : INode
 {
     [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    [Column(Order = 0)]
     public Guid NodeId { get; set; }
 
     [Required]
+    [Column(Order = 1)]
     public string Name { get; set; }
 
-    [Required]
-    public Guid OrganizationId { get; set; }
-
-    public Organization Organization { get; set; }
-
+    [Column(Order = 2)]
     public Guid? ParentId { get; set; }
 
     [ForeignKey(nameof(ParentId))]
     public INode? Parent { get; set; }
+
+    [Required]
+    [Column(Order = 3)]
+    public Guid OrganizationId { get; set; }
+
+    public Organization Organization { get; set; }
 
 #pragma warning disable CA2227
     public ICollection<OrganizationalUnit> Children { get; set; }
