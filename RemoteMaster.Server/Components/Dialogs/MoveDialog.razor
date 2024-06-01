@@ -13,7 +13,7 @@
 
         @if (!string.IsNullOrWhiteSpace(_currentOrganizationalUnitName))
         {
-            <MudText Typo="Typo.body1">Current OU: @_currentOrganizationalUnitName</MudText>
+            <MudText Typo="Typo.body1">Current Organizational Unit: @_currentOrganizationalUnitName</MudText>
         }
 
         <MudSelect Label="Select Organization" Value="_selectedOrganizationId" T="Guid" ValueChanged="OrganizationChanged">
