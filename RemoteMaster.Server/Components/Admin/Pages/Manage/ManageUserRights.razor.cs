@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Data;
+using RemoteMaster.Server.Enums;
 
 namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 
@@ -91,17 +92,22 @@ public partial class ManageUserRights
             return;
         }
 
-        // Assign role to user
         var userRole = await dbContext.UserRoles.FirstOrDefaultAsync(ur => ur.UserId == user.Id);
+        
         if (userRole != null)
         {
             dbContext.UserRoles.Remove(userRole);
         }
 
         var role = await dbContext.Roles.FirstOrDefaultAsync(r => r.Name == SelectedUserModel.Role);
+        
         if (role != null)
         {
-            dbContext.UserRoles.Add(new IdentityUserRole<string> { UserId = user.Id, RoleId = role.Id });
+            dbContext.UserRoles.Add(new IdentityUserRole<string>
+            {
+                UserId = user.Id,
+                RoleId = role.Id
+            });
         }
 
         var selectedOrganizationIds = _organizations.Where(o => o.IsSelected).Select(o => o.Id).ToList();
@@ -132,7 +138,13 @@ public partial class ManageUserRights
 
         await dbContext.SaveChangesAsync();
 
+        if (_initialSelectedRole != SelectedUserModel.Role)
+        {
+            await TokenService.RevokeAllRefreshTokensAsync(user.Id, TokenRevocationReason.RoleChanged);
+        }
+
         ShowSuccessMessage = true;
+
         StateHasChanged();
 
         _initialSelectedOrganizationIds = selectedOrganizationIds;

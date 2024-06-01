@@ -7,10 +7,12 @@
 @using RemoteMaster.Server.Components.Account.Shared
 @using RemoteMaster.Server.Data
 @using RemoteMaster.Server.Models
+@using RemoteMaster.Server.Abstractions
 @using Microsoft.EntityFrameworkCore
 
 @inject IServiceScopeFactory ScopeFactory
 @inject NavigationManager NavigationManager
+@inject ITokenService TokenService
 
 <PageTitle>Manage User Rights</PageTitle>
 
