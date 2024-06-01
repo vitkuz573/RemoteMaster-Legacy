@@ -134,6 +134,7 @@ public static class Program
         services.AddSingleton<IJwtSecurityService, JwtSecurityService>();
         services.AddSingleton<IRemoteSchtasksService, RemoteSchtasksService>();
         services.AddSingleton<INetworkDriveService, NetworkDriveService>();
+        services.AddSingleton<ICountryProvider, CountryProvider>();
 
         services.AddSingleton(new JsonSerializerOptions
         {
