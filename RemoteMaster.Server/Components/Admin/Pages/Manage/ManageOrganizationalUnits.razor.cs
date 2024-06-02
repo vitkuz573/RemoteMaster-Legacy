@@ -5,6 +5,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
+using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Components.Admin.Dialogs;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
@@ -23,10 +24,10 @@ public partial class ManageOrganizationalUnits
     private ConfirmationDialog confirmationDialog;
     private OrganizationalUnit? _organizationalUnitToDelete;
 
-    protected override void OnInitialized()
+    protected async override Task OnInitializedAsync()
     {
-        LoadOrganizations();
-        LoadOrganizationalUnits();
+        await LoadOrganizationsAsync();
+        await LoadOrganizationalUnitsAsync();
     }
 
     private async Task OnValidSubmitAsync()
@@ -56,27 +57,29 @@ public partial class ManageOrganizationalUnits
 
         await dbContext.SaveChangesAsync();
 
-        LoadOrganizationalUnits();
+        await LoadOrganizationalUnitsAsync();
 
         NavigationManager.Refresh();
 
         Input = new InputModel();
     }
 
-    private void LoadOrganizations()
+    private async Task LoadOrganizationsAsync()
     {
         using var scope = ScopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-        _organizations = [.. dbContext.Organizations];
+        _organizations = await dbContext.Organizations.ToListAsync();
     }
 
-    private void LoadOrganizationalUnits()
+    private async Task LoadOrganizationalUnitsAsync()
     {
         using var scope = ScopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-        _organizationalUnits = [.. dbContext.OrganizationalUnits];
+        _organizationalUnits = await dbContext.OrganizationalUnits
+                                              .Include(ou => ou.Organization)
+                                              .ToListAsync();
     }
 
     private static OrganizationalUnit CreateOrganizationalUnit(string name, Guid organizationId)
@@ -96,7 +99,7 @@ public partial class ManageOrganizationalUnits
         dbContext.OrganizationalUnits.Remove(organizationalUnit);
         await dbContext.SaveChangesAsync();
 
-        LoadOrganizationalUnits();
+        await LoadOrganizationalUnitsAsync();
     }
 
     private void EditOrganizationalUnit(OrganizationalUnit organizationalUnit)
@@ -115,6 +118,7 @@ public partial class ManageOrganizationalUnits
 
         var parameters = new Dictionary<string, string>
         {
+            { "Organization", organizationalUnit.Organization.Name },
             { "Organizational Unit", organizationalUnit.Name }
         };
 
