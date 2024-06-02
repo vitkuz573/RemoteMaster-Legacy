@@ -28,9 +28,11 @@ public class Computer : INode, IEquatable<Computer>
     [NotMapped]
     public byte[]? Thumbnail { get; set; }
 
+    [JsonIgnore]
     public Guid? ParentId { get; set; }
 
     [ForeignKey(nameof(ParentId))]
+    [JsonIgnore]
     public INode? Parent { get; set; }
 
     public async Task<bool> IsAvailable()
