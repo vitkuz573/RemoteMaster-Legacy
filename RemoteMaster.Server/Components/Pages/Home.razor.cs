@@ -55,7 +55,7 @@ public partial class Home
 
         await InitializeUserAsync();
 
-        _nodes = new HashSet<INode>(await LoadRootNodes());
+        _nodes = new HashSet<INode>(await LoadNodes());
 
         await AccessTokenProvider.GetAccessTokenAsync(userId);
     }
@@ -91,9 +91,6 @@ public partial class Home
                 {
                     userInfo.Roles.Add(role);
                 }
-
-                userInfo.AccessibleOrganizations = user.AccessibleOrganizations.Select(org => org.NodeId).ToList();
-                userInfo.AccessibleOrganizationalUnits = user.AccessibleOrganizationalUnits.Select(ou => ou.NodeId).ToList();
             }
             else
             {
@@ -110,38 +107,71 @@ public partial class Home
         return userInfo;
     }
 
-    private async Task<IEnumerable<INode>> LoadRootNodes()
+    private async Task<IEnumerable<INode>> LoadNodes(Guid? organizationId = null, Guid? parentId = null)
     {
+        var authState = await AuthenticationStateTask;
+        var userPrincipal = authState.User;
+        var userId = userPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            Log.Warning("User ID not found in claims");
+
+            return [];
+        }
+
+        var accessibleOrganizations = await GetAccessibleOrganizations(userId);
+        var accessibleOrganizationalUnits = await GetAccessibleOrganizationalUnits(userId);
         var units = new List<INode>();
 
-        var organizations = await DatabaseService.GetNodesAsync<Organization>(o => _userInfo.AccessibleOrganizations.Contains(o.NodeId)) ?? [];
-        units.AddRange(organizations);
-
-        foreach (var organization in organizations)
+        if (organizationId == null)
         {
-            organization.OrganizationalUnits = (await LoadChildNodes(organization.NodeId, null)).OfType<OrganizationalUnit>().ToList();
+            var organizations = await DatabaseService.GetNodesAsync<Organization>(o => accessibleOrganizations.Contains(o.NodeId)) ?? [];
+            units.AddRange(organizations);
+
+            foreach (var organization in organizations)
+            {
+                organization.OrganizationalUnits = (await LoadNodes(organization.NodeId, null)).OfType<OrganizationalUnit>().ToList();
+            }
+        }
+        else
+        {
+            var organizationalUnits = await DatabaseService.GetNodesAsync<OrganizationalUnit>(ou =>
+                ou.OrganizationId == organizationId &&
+                (parentId == null || ou.ParentId == parentId) &&
+                accessibleOrganizationalUnits.Contains(ou.NodeId)) ?? [];
+
+            var computers = await DatabaseService.GetNodesAsync<Computer>(c => c.ParentId == parentId) ?? [];
+
+            units.AddRange(organizationalUnits);
+            units.AddRange(computers);
+
+            foreach (var unit in organizationalUnits)
+            {
+                unit.Children = (await LoadNodes(unit.OrganizationId, unit.NodeId)).OfType<OrganizationalUnit>().ToList();
+                unit.Computers = (await LoadNodes(unit.OrganizationId, unit.NodeId)).OfType<Computer>().ToList();
+            }
         }
 
         return units;
     }
 
-    private async Task<IEnumerable<INode>> LoadChildNodes(Guid? organizationId, Guid? parentId)
+    private async Task<List<Guid>> GetAccessibleOrganizations(string userId)
     {
-        var units = new List<INode>();
+        var user = await UserManager.Users
+            .Include(u => u.AccessibleOrganizations)
+            .FirstOrDefaultAsync(u => u.Id == userId);
 
-        var organizationalUnits = await DatabaseService.GetNodesAsync<OrganizationalUnit>(ou => ou.OrganizationId == organizationId && (parentId == null || ou.ParentId == parentId) && _userInfo.AccessibleOrganizationalUnits.Contains(ou.NodeId)) ?? [];
-        var computers = await DatabaseService.GetNodesAsync<Computer>(c => c.ParentId == parentId) ?? [];
+        return user?.AccessibleOrganizations.Select(org => org.NodeId).ToList() ?? new List<Guid>();
+    }
 
-        units.AddRange(organizationalUnits);
-        units.AddRange(computers);
+    private async Task<List<Guid>> GetAccessibleOrganizationalUnits(string userId)
+    {
+        var user = await UserManager.Users
+            .Include(u => u.AccessibleOrganizationalUnits)
+            .FirstOrDefaultAsync(u => u.Id == userId);
 
-        foreach (var unit in organizationalUnits)
-        {
-            unit.Children = (await LoadChildNodes(unit.OrganizationId, unit.NodeId)).OfType<OrganizationalUnit>().ToList();
-            unit.Computers = (await LoadChildNodes(unit.OrganizationId, unit.NodeId)).OfType<Computer>().ToList();
-        }
-
-        return units;
+        return user?.AccessibleOrganizationalUnits.Select(ou => ou.NodeId).ToList() ?? new List<Guid>();
     }
 
     private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
