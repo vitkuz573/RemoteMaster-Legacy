@@ -142,7 +142,13 @@ public partial class ManageOrganizations
     private void ShowDeleteConfirmation(Organization organization)
     {
         _organizationToDelete = organization;
-        confirmationDialog.Show();
+
+        var parameters = new Dictionary<string, string>
+        {
+            { "Organization", organization.Name }
+        };
+
+        confirmationDialog.Show(parameters);
     }
 
     private async Task OnConfirmDelete(bool confirmed)

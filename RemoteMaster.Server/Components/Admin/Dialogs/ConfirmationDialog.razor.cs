@@ -10,13 +10,19 @@ public partial class ConfirmationDialog
     [Parameter]
     public string Message { get; set; }
 
+#pragma warning disable CA2227
+    [Parameter]
+    public Dictionary<string, string> Parameters { get; set; }
+#pragma warning restore CA2227
+
     [Parameter]
     public EventCallback<bool> OnConfirm { get; set; }
 
     private bool _isVisible;
 
-    public void Show()
+    public void Show(Dictionary<string, string> parameters)
     {
+        Parameters = parameters;
         _isVisible = true;
 
         StateHasChanged();

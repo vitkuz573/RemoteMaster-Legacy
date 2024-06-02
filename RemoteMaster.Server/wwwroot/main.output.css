@@ -1511,6 +1511,10 @@ video {
 }
 
 @media (min-width: 1024px) {
+  .lg\:hidden {
+    display: none;
+  }
+
   .lg\:w-32 {
     width: 8rem;
   }
