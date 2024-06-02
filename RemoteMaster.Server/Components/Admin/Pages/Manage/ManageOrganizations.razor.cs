@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
+using RemoteMaster.Server.Components.Admin.Dialogs;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
 
@@ -21,6 +22,8 @@ public partial class ManageOrganizations
     private string _message;
     private string _messageType;
     private Dictionary<string, string> _countries = [];
+    private ConfirmationDialog confirmationDialog;
+    private Organization? _organizationToDelete;
 
     protected override void OnInitialized()
     {
@@ -134,6 +137,21 @@ public partial class ManageOrganizations
             State = organization.State,
             Country = organization.Country
         };
+    }
+
+    private void ShowDeleteConfirmation(Organization organization)
+    {
+        _organizationToDelete = organization;
+        confirmationDialog.Show();
+    }
+
+    private async Task OnConfirmDelete(bool confirmed)
+    {
+        if (confirmed && _organizationToDelete != null)
+        {
+            await DeleteOrganization(_organizationToDelete);
+            _organizationToDelete = null;
+        }
     }
 
     private sealed class InputModel
