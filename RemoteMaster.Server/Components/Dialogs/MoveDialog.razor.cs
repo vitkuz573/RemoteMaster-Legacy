@@ -4,7 +4,9 @@
 
 using System.Text.Json;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.EntityFrameworkCore;
 using MudBlazor;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
@@ -16,6 +18,9 @@ public partial class MoveDialog
     [Parameter]
     public EventCallback<IEnumerable<Computer>> OnNodesMoved { get; set; }
 
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
+
     private string _currentOrganizationName = string.Empty;
     private string _currentOrganizationalUnitName = string.Empty;
     private List<Organization> _organizations = [];
@@ -25,7 +30,7 @@ public partial class MoveDialog
 
     protected async override Task OnInitializedAsync()
     {
-        _organizations = [.. (await DatabaseService.GetNodesAsync<Organization>(node => node is Organization))];
+        await LoadUserOrganizationsAsync();
 
         if (!Hosts.IsEmpty)
         {
@@ -52,24 +57,54 @@ public partial class MoveDialog
         }
     }
 
+    private async Task LoadUserOrganizationsAsync()
+    {
+        var authState = await AuthenticationStateTask;
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            var username = user.Identity.Name;
+            var appUser = await UserManager.Users
+                                           .Include(u => u.AccessibleOrganizations)
+                                           .FirstOrDefaultAsync(u => u.UserName == username);
+
+            if (appUser != null)
+            {
+                _organizations = [.. appUser.AccessibleOrganizations];
+            }
+        }
+    }
+
+    private async Task LoadOrganizationalUnits(Guid organizationId)
+    {
+        var authState = await AuthenticationStateTask;
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            var username = user.Identity.Name;
+            var appUser = await UserManager.Users
+                                           .Include(u => u.AccessibleOrganizationalUnits)
+                                           .FirstOrDefaultAsync(u => u.UserName == username);
+
+            if (appUser != null)
+            {
+                _organizationalUnits = appUser.AccessibleOrganizationalUnits
+                                               .Where(ou => ou.OrganizationId == organizationId)
+                                               .ToList();
+            }
+        }
+    }
+
     private async Task OrganizationChanged(Guid organizationId)
     {
         _selectedOrganizationId = organizationId;
         _selectedOrganizationalUnitId = Guid.Empty;
 
-        var organization = _organizations.FirstOrDefault(org => org.NodeId == organizationId);
-
-        if (organization != null)
-        {
-            await LoadOrganizationalUnits(organizationId);
-        }
+        await LoadOrganizationalUnits(organizationId);
 
         StateHasChanged();
-    }
-
-    private async Task LoadOrganizationalUnits(Guid organizationId)
-    {
-        _organizationalUnits = [.. (await DatabaseService.GetNodesAsync<OrganizationalUnit>(node => node.OrganizationId == organizationId))];
     }
 
     private async Task Move()

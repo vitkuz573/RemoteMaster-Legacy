@@ -1,8 +1,11 @@
 ﻿@inherits CommonDialogBase
 
+@using Microsoft.AspNetCore.Identity
 @using RemoteMaster.Server.Abstractions
+@using RemoteMaster.Server.Data
 
 @inject IDatabaseService DatabaseService
+@inject UserManager<ApplicationUser> UserManager
 
 <CommonDialog>
     <Content>
