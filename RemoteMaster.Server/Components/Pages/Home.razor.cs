@@ -677,8 +677,6 @@ public partial class Home
 
     private async Task OnNodesMoved(IEnumerable<Computer> movedNodes)
     {
-        // _nodes = new HashSet<INode>(await LoadNodesWithChildren());
-
         foreach (var movedNode in movedNodes)
         {
             _selectedComputers.RemoveAll(c => c.NodeId == movedNode.NodeId);
