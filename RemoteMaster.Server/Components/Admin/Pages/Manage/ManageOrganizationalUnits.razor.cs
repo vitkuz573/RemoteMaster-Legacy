@@ -5,6 +5,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
+using RemoteMaster.Server.Components.Admin.Dialogs;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
 
@@ -18,6 +19,9 @@ public partial class ManageOrganizationalUnits
 
     private List<Organization> _organizations = [];
     private List<OrganizationalUnit> _organizationalUnits = [];
+
+    private ConfirmationDialog confirmationDialog;
+    private OrganizationalUnit? _organizationalUnitToDelete;
 
     protected override void OnInitialized()
     {
@@ -103,6 +107,27 @@ public partial class ManageOrganizationalUnits
             Name = organizationalUnit.Name,
             OrganizationId = organizationalUnit.OrganizationId
         };
+    }
+
+    private void ShowDeleteConfirmation(OrganizationalUnit organizationalUnit)
+    {
+        _organizationalUnitToDelete = organizationalUnit;
+
+        var parameters = new Dictionary<string, string>
+        {
+            { "Organizational Unit", organizationalUnit.Name }
+        };
+
+        confirmationDialog.Show(parameters);
+    }
+
+    private async Task OnConfirmDelete(bool confirmed)
+    {
+        if (confirmed && _organizationalUnitToDelete != null)
+        {
+            await DeleteOrganizationalUnit(_organizationalUnitToDelete);
+            _organizationalUnitToDelete = null;
+        }
     }
 
     private sealed class InputModel
