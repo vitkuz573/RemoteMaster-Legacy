@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Enums;
+using RemoteMaster.Shared.Models;
 using Serilog;
 
 namespace RemoteMaster.Host.Core.Hubs;
@@ -185,11 +186,14 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     }
 
     [Authorize(Roles = "Administrator")]
-    public async Task ChangeOrganizationalUnit(string[] newOrganizationalUnits)
+    public async Task Move(HostMoveRequest hostMoveRequest)
     {
+        ArgumentNullException.ThrowIfNull(hostMoveRequest);
+
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
 
-        hostConfiguration.Subject.OrganizationalUnit = newOrganizationalUnits;
+        hostConfiguration.Subject.Organization = hostMoveRequest.NewOrganization;
+        hostConfiguration.Subject.OrganizationalUnit = hostMoveRequest.NewOrganizationalUnit;
 
         await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
         await hostLifecycleService.RenewCertificateAsync(hostConfiguration);

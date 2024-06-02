@@ -231,56 +231,56 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         }
     }
 
-    public async Task<string[]> GetNewOrganizationalUnitIfChangeRequested(string macAddress)
+    public async Task<HostMoveRequest?> GetHostMoveRequest(string macAddress)
     {
         var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var ouChangeRequestsFilePath = Path.Combine(programDataPath, "RemoteMaster", "Server", "OrganizationalUnitChangeRequests.json");
+        var ouChangeRequestsFilePath = Path.Combine(programDataPath, "RemoteMaster", "Server", "HostMoveRequests.json");
 
         if (File.Exists(ouChangeRequestsFilePath))
         {
             var json = await File.ReadAllTextAsync(ouChangeRequestsFilePath);
-            var changeRequests = JsonSerializer.Deserialize<List<OrganizationalUnitChangeRequest>>(json) ?? [];
-            var request = changeRequests.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
+            var hostMoveRequests = JsonSerializer.Deserialize<List<HostMoveRequest>>(json) ?? [];
+            var hostMoveRequest = hostMoveRequests.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
 
-            if (request != null)
+            if (hostMoveRequest != null)
             {
-                return request.NewOrganizationalUnit;
+                return hostMoveRequest;
             }
         }
 
-        Log.Information("No organizational unit change request found for MAC address {MACAddress}.", macAddress);
+        Log.Information("No host move request found for MAC address {MACAddress}.", macAddress);
 
-        return [];
+        return null;
     }
 
-    public async Task AcknowledgeOrganizationalUnitChange(string macAddress)
+    public async Task AcknowledgeMoveRequest(string macAddress)
     {
         var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var ouChangeRequestsFilePath = Path.Combine(programDataPath, "RemoteMaster", "Server", "OrganizationalUnitChangeRequests.json");
+        var hostMoveRequestsFilePath = Path.Combine(programDataPath, "RemoteMaster", "Server", "HostMoveRequests.json");
 
-        if (File.Exists(ouChangeRequestsFilePath))
+        if (File.Exists(hostMoveRequestsFilePath))
         {
-            var json = await File.ReadAllTextAsync(ouChangeRequestsFilePath);
-            var changeRequests = JsonSerializer.Deserialize<List<OrganizationalUnitChangeRequest>>(json) ?? [];
+            var json = await File.ReadAllTextAsync(hostMoveRequestsFilePath);
+            var hostMoveRequests = JsonSerializer.Deserialize<List<HostMoveRequest>>(json) ?? [];
 
-            var requestToRemove = changeRequests.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
+            var requestToRemove = hostMoveRequests.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
 
             if (requestToRemove != null)
             {
-                changeRequests.Remove(requestToRemove);
-                var updatedJson = JsonSerializer.Serialize(changeRequests);
-                await File.WriteAllTextAsync(ouChangeRequestsFilePath, updatedJson);
+                hostMoveRequests.Remove(requestToRemove);
+                var updatedJson = JsonSerializer.Serialize(hostMoveRequests);
+                await File.WriteAllTextAsync(hostMoveRequestsFilePath, updatedJson);
 
-                Log.Information("Acknowledged and removed organizational unit change request for MAC address {MACAddress}.", macAddress);
+                Log.Information("Acknowledged and removed host move request for MAC address {MACAddress}.", macAddress);
             }
             else
             {
-                Log.Information("No organizational unit change request found for MAC address {MACAddress} to acknowledge.", macAddress);
+                Log.Information("No host move request found for MAC address {MACAddress} to acknowledge.", macAddress);
             }
         }
         else
         {
-            Log.Warning("Organizational unit change requests file not found at '{Path}'. Unable to acknowledge change request.", ouChangeRequestsFilePath);
+            Log.Warning("Host move requests file not found at '{Path}'. Unable to acknowledge change request.", hostMoveRequestsFilePath);
         }
     }
 

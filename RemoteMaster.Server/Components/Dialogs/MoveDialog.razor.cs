@@ -111,6 +111,7 @@ public partial class MoveDialog
     {
         if (_selectedOrganizationalUnitId != Guid.Empty)
         {
+            var targetOrganization = (await DatabaseService.GetNodesAsync<Organization>(o => o.NodeId == _selectedOrganizationId)).First().Name;
             var targetOrganizationalUnitsPath = await DatabaseService.GetFullPathForOrganizationalUnitAsync(_selectedOrganizationalUnitId);
 
             if (targetOrganizationalUnitsPath.Length > 0)
@@ -122,7 +123,9 @@ public partial class MoveDialog
                 {
                     if (host.Value != null)
                     {
-                        await host.Value.InvokeAsync("ChangeOrganizationalUnit", targetOrganizationalUnitsPath);
+                        var hostMoveRequest = new HostMoveRequest(host.Key.MacAddress, targetOrganization, targetOrganizationalUnitsPath);
+
+                        await host.Value.InvokeAsync("Move", hostMoveRequest);
                     }
                     else
                     {
@@ -132,7 +135,7 @@ public partial class MoveDialog
 
                 if (unavailableHosts.Count != 0)
                 {
-                    await AppendOrganizationalUnitChangeRequests(unavailableHosts, targetOrganizationalUnitsPath);
+                    await AppendHostMoveRequests(unavailableHosts, targetOrganization, targetOrganizationalUnitsPath);
                 }
 
                 await DatabaseService.MoveNodesAsync(nodeIds, _selectedOrganizationalUnitId);
@@ -144,7 +147,7 @@ public partial class MoveDialog
         }
     }
 
-    private static async Task AppendOrganizationalUnitChangeRequests(List<Computer> unavailableHosts, string[] targetOrganizationalUnits)
+    private static async Task AppendHostMoveRequests(List<Computer> unavailableHosts, string targetOrganization, string[] targetOrganizationalUnits)
     {
         var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
         var applicationData = Path.Combine(programDataPath, "RemoteMaster", "Server");
@@ -154,39 +157,40 @@ public partial class MoveDialog
             Directory.CreateDirectory(applicationData);
         }
 
-        var ouChangeRequestsFilePath = Path.Combine(applicationData, "OrganizationalUnitChangeRequests.json");
+        var hostMoveRequestsFilePath = Path.Combine(applicationData, "HostMoveRequests.json");
 
-        List<OrganizationalUnitChangeRequest> changeRequests;
+        List<HostMoveRequest> hostMoveRequests;
 
-        if (File.Exists(ouChangeRequestsFilePath))
+        if (File.Exists(hostMoveRequestsFilePath))
         {
-            var existingJson = await File.ReadAllTextAsync(ouChangeRequestsFilePath);
-            changeRequests = JsonSerializer.Deserialize<List<OrganizationalUnitChangeRequest>>(existingJson) ?? [];
+            var existingJson = await File.ReadAllTextAsync(hostMoveRequestsFilePath);
+            hostMoveRequests = JsonSerializer.Deserialize<List<HostMoveRequest>>(existingJson) ?? [];
         }
         else
         {
-            changeRequests = [];
+            hostMoveRequests = [];
         }
 
         foreach (var host in unavailableHosts)
         {
-            var existingRequest = changeRequests.FirstOrDefault(r => r.MacAddress == host.MacAddress);
+            var existingRequest = hostMoveRequests.FirstOrDefault(r => r.MacAddress == host.MacAddress);
 
             if (existingRequest != null)
             {
+                existingRequest.NewOrganization = targetOrganization;
                 existingRequest.NewOrganizationalUnit = targetOrganizationalUnits;
             }
             else
             {
-                changeRequests.Add(new OrganizationalUnitChangeRequest(host.MacAddress, targetOrganizationalUnits));
+                hostMoveRequests.Add(new HostMoveRequest(host.MacAddress, targetOrganization, targetOrganizationalUnits));
             }
         }
 
-        var json = JsonSerializer.Serialize(changeRequests, new JsonSerializerOptions
+        var json = JsonSerializer.Serialize(hostMoveRequests, new JsonSerializerOptions
         {
             WriteIndented = true
         });
 
-        await File.WriteAllTextAsync(ouChangeRequestsFilePath, json);
+        await File.WriteAllTextAsync(hostMoveRequestsFilePath, json);
     }
 }

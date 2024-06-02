@@ -4,9 +4,11 @@
 
 namespace RemoteMaster.Shared.Models;
 
-public class OrganizationalUnitChangeRequest(string macAddress, string[] newOrganizationalUnit)
+public class HostMoveRequest(string macAddress, string newOrganization, string[] newOrganizationalUnit)
 {
     public string MacAddress { get; } = macAddress;
+
+    public string NewOrganization { get; set; } = newOrganization;
 
     public string[] NewOrganizationalUnit { get; set; } = newOrganizationalUnit;
 }
