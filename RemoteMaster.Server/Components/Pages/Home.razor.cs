@@ -114,7 +114,7 @@ public partial class Home
     {
         var units = new List<INode>();
 
-        var organizations = await DatabaseService.GetNodesAsync<Organization>(null, _userInfo.AccessibleOrganizations) ?? [];
+        var organizations = await DatabaseService.GetNodesAsync<Organization>(o => _userInfo.AccessibleOrganizations.Contains(o.NodeId)) ?? [];
         units.AddRange(organizations);
 
         foreach (var organization in organizations)
@@ -129,7 +129,7 @@ public partial class Home
     {
         var units = new List<INode>();
 
-        var organizationalUnits = await DatabaseService.GetNodesAsync<OrganizationalUnit>(ou => ou.OrganizationId == organizationId && (parentId == null || ou.ParentId == parentId), _userInfo.AccessibleOrganizationalUnits) ?? [];
+        var organizationalUnits = await DatabaseService.GetNodesAsync<OrganizationalUnit>(ou => ou.OrganizationId == organizationId && (parentId == null || ou.ParentId == parentId) && _userInfo.AccessibleOrganizationalUnits.Contains(ou.NodeId)) ?? [];
         var computers = await DatabaseService.GetNodesAsync<Computer>(c => c.ParentId == parentId) ?? [];
 
         units.AddRange(organizationalUnits);

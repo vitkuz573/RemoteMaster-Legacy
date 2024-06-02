@@ -13,7 +13,7 @@ namespace RemoteMaster.Server.Services;
 
 public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatabaseService
 {
-    public async Task<IList<T>> GetNodesAsync<T>(Expression<Func<T, bool>>? predicate = null, List<Guid>? accessibleIds = null) where T : class, INode
+    public async Task<IList<T>> GetNodesAsync<T>(Expression<Func<T, bool>>? predicate = null) where T : class, INode
     {
         IQueryable<T> query;
 
@@ -43,25 +43,6 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         if (predicate != null)
         {
             query = query.Where(predicate);
-        }
-
-        if (accessibleIds != null)
-        {
-            if (accessibleIds.Count == 0)
-            {
-                return [];
-            }
-
-            if (typeof(T) == typeof(Organization))
-            {
-                query = query.Cast<Organization>()
-                             .Where(node => accessibleIds.Contains(node.NodeId))
-                             .Cast<T>();
-            }
-            else
-            {
-                query = query.Where(node => accessibleIds.Contains(node.NodeId));
-            }
         }
 
         return await query.ToListAsync();
