@@ -2,6 +2,8 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Security.Cryptography.X509Certificates;
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -25,6 +27,7 @@ using RemoteMaster.Shared.Extensions;
 using RemoteMaster.Shared.Models;
 using Serilog;
 using Serilog.Events;
+using Microsoft.AspNetCore.Server.Kestrel.Https;
 
 namespace RemoteMaster.Server;
 
@@ -54,9 +57,22 @@ public static class Program
             }
         });
 
+
         builder.WebHost.ConfigureKestrel(serverOptions =>
         {
             serverOptions.ListenAnyIP(80);
+
+            var caCertificateService = builder.Services.BuildServiceProvider().GetRequiredService<ICaCertificateService>();
+            var serverCert = GenerateAndSignServerCertificate(caCertificateService);
+
+            serverOptions.ListenAnyIP(443, listenOptions =>
+            {
+                listenOptions.UseHttps(new HttpsConnectionAdapterOptions
+                {
+                    ServerCertificate = serverCert
+                });
+            });
+
             serverOptions.ListenAnyIP(5254);
         });
 
@@ -65,6 +81,39 @@ public static class Program
         ConfigurePipeline(app);
 
         app.Run();
+    }
+
+    private static X509Certificate2 GenerateAndSignServerCertificate(ICaCertificateService caCertificateService)
+    {
+        var certPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "RemoteMaster", "Server", "server.pfx");
+
+        if (File.Exists(certPath))
+        {
+            return new X509Certificate2(certPath);
+        }
+
+        var caCertificate = caCertificateService.GetCaCertificate(X509ContentType.Pfx);
+
+#pragma warning disable CA2000
+        var rsa = RSA.Create(2048);
+#pragma warning restore CA2000
+        var request = new CertificateRequest("CN=Server-RemoteMaster", rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        var notBefore = DateTimeOffset.UtcNow;
+        var notAfter = DateTimeOffset.UtcNow.AddYears(1);
+
+        var serialNumber = new byte[8];
+        using (var rng = RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(serialNumber);
+        }
+
+        var certificate = request.Create(caCertificate, notBefore, notAfter, serialNumber);
+        var certificateWithKey = certificate.CopyWithPrivateKey(rsa);
+
+        var certBytes = certificateWithKey.Export(X509ContentType.Pfx);
+        File.WriteAllBytes(certPath, certBytes);
+
+        return new X509Certificate2(certBytes);
     }
 
     private static void ConfigureServices(IServiceCollection services, ConfigurationManager configurationManager)
@@ -292,6 +341,7 @@ public static class Program
 
         app.UseMiddleware<RegistrationRestrictionMiddleware>();
 
+        app.UseHttpsRedirection();
         app.UseStaticFiles();
         app.UseAntiforgery();
 
