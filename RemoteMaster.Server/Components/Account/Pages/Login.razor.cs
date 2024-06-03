@@ -110,6 +110,8 @@ public partial class Login
 
             await TokenStorageService.StoreTokensAsync(user.Id, tokenData);
 
+            Log.Information("User {Username} logged in from IP {IPAddress} at {LoginTime}.", Input.Username, ipAddress, DateTime.UtcNow.ToLocalTime());
+
             RedirectManager.RedirectTo(ReturnUrl);
         }
         else
