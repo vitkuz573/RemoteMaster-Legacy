@@ -20,7 +20,7 @@ using Serilog;
 
 namespace RemoteMaster.Server.Components.Pages;
 
-public partial class Access : IDisposable
+public partial class Access : IAsyncDisposable
 {
     [Parameter]
     public string Host { get; set; } = default!;
@@ -375,15 +375,25 @@ public partial class Access : IDisposable
     }
 
     [JSInvokable]
-    public void OnBeforeUnload()
+    public async Task OnBeforeUnload()
     {
         Log.Information("OnBeforeUnload invoked for host {Host}", Host);
 
-        Dispose();
+        await DisposeAsync();
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-        _connection.DisposeAsync();
+        try
+        {
+            if (_connection != null)
+            {
+                await _connection.DisposeAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An error occurred while asynchronously disposing the connection for host {Host}", Host);
+        }
     }
 }
