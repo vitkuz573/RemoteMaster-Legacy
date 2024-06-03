@@ -30,9 +30,8 @@ public partial class ManageNavMenu
                 var user = await UserManager.FindByIdAsync(userId);
                 var roles = await UserManager.GetRolesAsync(user);
                 _role = roles.FirstOrDefault();
+                _username = user.UserName;
             }
-
-            _username = userPrincipal.Identity.Name;
         }
     }
 }
