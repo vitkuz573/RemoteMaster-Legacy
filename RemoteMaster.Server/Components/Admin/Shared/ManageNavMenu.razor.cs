@@ -5,8 +5,6 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.Extensions.Caching.Memory;
-using RemoteMaster.Server.Data;
 
 namespace RemoteMaster.Server.Components.Admin.Shared;
 
@@ -29,26 +27,12 @@ public partial class ManageNavMenu
 
             if (userId != null)
             {
-                var user = MemoryCache.Get<ApplicationUser>($"UserInfo_{userId}");
-
-                if (user == null)
-                {
-                    user = await UserManager.FindByIdAsync(userId);
-                    MemoryCache.Set($"UserInfo_{userId}", user, TimeSpan.FromMinutes(5));
-                }
-
-                var roles = MemoryCache.Get<IList<string>>($"UserRoles_{userId}");
-
-                if (roles == null)
-                {
-                    roles = await UserManager.GetRolesAsync(user);
-                    MemoryCache.Set($"UserRoles_{userId}", roles, TimeSpan.FromMinutes(5));
-                }
-
+                var user = await UserManager.FindByIdAsync(userId);
+                var roles = await UserManager.GetRolesAsync(user);
                 _role = roles.FirstOrDefault();
             }
-        }
 
-        _username = userPrincipal.Identity.Name;
+            _username = userPrincipal.Identity.Name;
+        }
     }
 }

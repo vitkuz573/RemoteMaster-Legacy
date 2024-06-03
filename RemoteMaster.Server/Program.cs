@@ -156,8 +156,6 @@ public static class Program
 
         services.AddMudServices();
 
-        services.AddMemoryCache();
-
         services.AddControllers();
 
         services.AddHealthChecks()
@@ -241,7 +239,10 @@ public static class Program
                 )).ToList();
 
                 var responseModel = ApiResponse<List<HealthCheck>>.Success(healthCheckResults, "Health checks completed");
-                var jsonResponse = JsonSerializer.Serialize(responseModel, new JsonSerializerOptions { WriteIndented = true });
+                var jsonResponse = JsonSerializer.Serialize(responseModel, new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
 
                 await context.Response.WriteAsync(jsonResponse);
             }
