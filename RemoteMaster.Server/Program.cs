@@ -219,6 +219,11 @@ public static class Program
 
     private static void ConfigurePipeline(WebApplication app)
     {
+        app.UseForwardedHeaders(new ForwardedHeadersOptions
+        {
+            ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+        });
+
         app.MapHealthChecks("/health", new HealthCheckOptions
         {
             ResponseWriter = async (context, report) =>
@@ -296,11 +301,6 @@ public static class Program
 
         app.UseStaticFiles();
         app.UseAntiforgery();
-
-        app.UseForwardedHeaders(new ForwardedHeadersOptions
-        {
-            ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-        });
 
         app.MapControllers();
         app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
