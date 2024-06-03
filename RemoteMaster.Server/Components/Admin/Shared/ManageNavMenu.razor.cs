@@ -21,16 +21,21 @@ public partial class ManageNavMenu
         var authenticationState = await AuthenticationStateTask;
         var userPrincipal = authenticationState.User;
 
-        if (userPrincipal.Identity.IsAuthenticated)
+        if (userPrincipal.Identity != null && userPrincipal.Identity.IsAuthenticated)
         {
             var userId = userPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (userId != null)
             {
                 var user = await UserManager.FindByIdAsync(userId);
-                var roles = await UserManager.GetRolesAsync(user);
-                _role = roles.FirstOrDefault();
-                _username = user.UserName;
+
+                if (user != null)
+                {
+                    var roles = await UserManager.GetRolesAsync(user);
+
+                    _username = user.UserName ?? string.Empty;
+                    _role = roles.FirstOrDefault() ?? string.Empty;
+                }
             }
         }
     }
