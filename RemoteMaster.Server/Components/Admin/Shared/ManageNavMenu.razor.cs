@@ -11,10 +11,10 @@ namespace RemoteMaster.Server.Components.Admin.Shared;
 public partial class ManageNavMenu
 {
     [CascadingParameter]
-    private Task<AuthenticationState> AuthenticationStateTask { get; set; }
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
 
-    private string _username;
-    private string _role;
+    private string _username = string.Empty;
+    private string _role = string.Empty;
 
     protected async override Task OnInitializedAsync()
     {
