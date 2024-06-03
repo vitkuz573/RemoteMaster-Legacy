@@ -13,6 +13,7 @@ using Microsoft.JSInterop;
 using MudBlazor;
 using Polly;
 using Polly.Wrap;
+using RemoteMaster.Server.Data;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
@@ -343,6 +344,9 @@ public partial class Access : IAsyncDisposable
 
     private async Task<bool> HasAccessAsync()
     {
+        using var scope = ScopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
         var httpContext = HttpContextAccessor.HttpContext;
         var userPrincipal = httpContext?.User;
 
@@ -358,7 +362,7 @@ public partial class Access : IAsyncDisposable
             return false;
         }
 
-        var computer = await ApplicationDbContext.Computers
+        var computer = await dbContext.Computers
             .Include(c => c.Parent)
             .FirstOrDefaultAsync(c => c.Name == Host || c.IpAddress == Host);
 
@@ -369,7 +373,7 @@ public partial class Access : IAsyncDisposable
 
         var organizationalUnitId = computer.ParentId.Value;
 
-        return await ApplicationDbContext.OrganizationalUnits
+        return await dbContext.OrganizationalUnits
             .Where(ou => ou.NodeId == organizationalUnitId && ou.AccessibleUsers.Any(u => u.Id == userId))
             .AnyAsync();
     }
