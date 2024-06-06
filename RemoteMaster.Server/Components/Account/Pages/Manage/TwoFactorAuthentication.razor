@@ -1,6 +1,5 @@
 ﻿@page "/Account/Manage/TwoFactorAuthentication"
 
-@using Microsoft.AspNetCore.Http.Features
 @using Microsoft.AspNetCore.Identity
 @using RemoteMaster.Server.Data
 
@@ -12,90 +11,66 @@
 <PageTitle>Two-factor authentication (2FA)</PageTitle>
 
 <StatusMessage />
-<h3>Two-factor authentication (2FA)</h3>
-@if (canTrack)
-{
-    if (is2faEnabled)
+<div class="space-y-6">
+    <h3 class="leading-6 text-lg font-medium text-gray-900">Two-factor authentication (2FA)</h3>
+    @if (_canTrack)
     {
-        if (recoveryCodesLeft == 0)
+        @if (_is2faEnabled)
         {
-            <div class="alert alert-danger">
-                <strong>You have no recovery codes left.</strong>
-                <p>You must <a href="Account/Manage/GenerateRecoveryCodes">generate a new set of recovery codes</a> before you can log in with a recovery code.</p>
-            </div>
-        }
-        else if (recoveryCodesLeft == 1)
-        {
-            <div class="alert alert-danger">
-                <strong>You have 1 recovery code left.</strong>
-                <p>You can <a href="Account/Manage/GenerateRecoveryCodes">generate a new set of recovery codes</a>.</p>
-            </div>
-        }
-        else if (recoveryCodesLeft <= 3)
-        {
-            <div class="alert alert-warning">
-                <strong>You have @recoveryCodesLeft recovery codes left.</strong>
-                <p>You should <a href="Account/Manage/GenerateRecoveryCodes">generate a new set of recovery codes</a>.</p>
+            @if (_recoveryCodesLeft == 0)
+            {
+                <div class="alert alert-danger rounded-md bg-red-100 p-4 text-red-700">
+                    <strong>You have no recovery codes left.</strong>
+                    <p>You must <a href="Account/Manage/GenerateRecoveryCodes" class="text-indigo-600">generate a new set of recovery codes</a> before you can log in with a recovery code.</p>
+                </div>
+            }
+            else if (_recoveryCodesLeft == 1)
+            {
+                <div class="alert alert-danger rounded-md bg-red-100 p-4 text-red-700">
+                    <strong>You have 1 recovery code left.</strong>
+                    <p>You can <a href="Account/Manage/GenerateRecoveryCodes" class="text-indigo-600">generate a new set of recovery codes</a>.</p>
+                </div>
+            }
+            else if (_recoveryCodesLeft <= 3)
+            {
+                <div class="alert alert-warning rounded-md bg-yellow-100 p-4 text-yellow-700">
+                    <strong>You have @_recoveryCodesLeft recovery codes left.</strong>
+                    <p>You should <a href="Account/Manage/GenerateRecoveryCodes" class="text-indigo-600">generate a new set of recovery codes</a>.</p>
+                </div>
+            }
+
+            @if (_isMachineRemembered)
+            {
+                <form style="display: inline-block" @formname="forget-browser" @onsubmit="OnSubmitForgetBrowserAsync" method="post">
+                    <AntiforgeryToken />
+                    <button type="submit" class="rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none">Forget this browser</button>
+                </form>
+            }
+
+            <div class="space-y-4">
+                <a href="Account/Manage/Disable2fa" class="rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none">Disable 2FA</a>
+                <a href="Account/Manage/GenerateRecoveryCodes" class="rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none">Reset recovery codes</a>
             </div>
         }
 
-        if (isMachineRemembered)
+        <h4 class="leading-6 text-lg font-medium text-gray-900">Authenticator app</h4>
+        @if (!_hasAuthenticator)
         {
-            <form style="display: inline-block" @formname="forget-browser" @onsubmit="OnSubmitForgetBrowserAsync" method="post">
-                <AntiforgeryToken />
-                <button type="submit" class="btn btn-primary">Forget this browser</button>
-            </form>
+            <a href="Account/Manage/EnableAuthenticator" class="rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none">Add authenticator app</a>
         }
-
-        <a href="Account/Manage/Disable2fa" class="btn btn-primary">Disable 2FA</a>
-        <a href="Account/Manage/GenerateRecoveryCodes" class="btn btn-primary">Reset recovery codes</a>
-    }
-
-    <h4>Authenticator app</h4>
-    @if (!hasAuthenticator)
-    {
-        <a href="Account/Manage/EnableAuthenticator" class="btn btn-primary">Add authenticator app</a>
+        else
+        {
+            <div class="space-y-4">
+                <a href="Account/Manage/EnableAuthenticator" class="rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none">Set up authenticator app</a>
+                <a href="Account/Manage/ResetAuthenticator" class="rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none">Reset authenticator app</a>
+            </div>
+        }
     }
     else
     {
-        <a href="Account/Manage/EnableAuthenticator" class="btn btn-primary">Set up authenticator app</a>
-        <a href="Account/Manage/ResetAuthenticator" class="btn btn-primary">Reset authenticator app</a>
+        <div class="alert alert-danger rounded-md bg-red-100 p-4 text-red-700">
+            <strong>Privacy and cookie policy have not been accepted.</strong>
+            <p>You must accept the policy before you can enable two factor authentication.</p>
+        </div>
     }
-}
-else
-{
-    <div class="alert alert-danger">
-        <strong>Privacy and cookie policy have not been accepted.</strong>
-        <p>You must accept the policy before you can enable two factor authentication.</p>
-    </div>
-}
-
-@code {
-    private bool canTrack;
-    private bool hasAuthenticator;
-    private int recoveryCodesLeft;
-    private bool is2faEnabled;
-    private bool isMachineRemembered;
-
-    [CascadingParameter]
-    private HttpContext HttpContext { get; set; } = default!;
-
-    protected override async Task OnInitializedAsync()
-    {
-        var user = await UserAccessor.GetRequiredUserAsync(HttpContext);
-        canTrack = HttpContext.Features.Get<ITrackingConsentFeature>()?.CanTrack ?? true;
-        hasAuthenticator = await UserManager.GetAuthenticatorKeyAsync(user) is not null;
-        is2faEnabled = await UserManager.GetTwoFactorEnabledAsync(user);
-        isMachineRemembered = await SignInManager.IsTwoFactorClientRememberedAsync(user);
-        recoveryCodesLeft = await UserManager.CountRecoveryCodesAsync(user);
-    }
-
-    private async Task OnSubmitForgetBrowserAsync()
-    {
-        await SignInManager.ForgetTwoFactorClientAsync();
-
-        RedirectManager.RedirectToCurrentPageWithStatus(
-            "The current browser has been forgotten. When you login again from this browser you will be prompted for your 2fa code.",
-            HttpContext);
-    }
-}
+</div>
