@@ -2,11 +2,14 @@
 
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Identity
+@using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Server.Data
 
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 @inject IdentityRedirectManager RedirectManager
+@inject ITokenStorageService TokenStorageService
+@inject ITokenService TokenService
 
 <PageTitle>Recovery code verification</PageTitle>
 
