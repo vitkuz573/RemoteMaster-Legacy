@@ -114,6 +114,18 @@ public partial class Login
 
             RedirectManager.RedirectTo(ReturnUrl);
         }
+        else if (result.RequiresTwoFactor)
+        {
+            RedirectManager.RedirectTo("Account/LoginWith2fa", new()
+            {
+                ["returnUrl"] = ReturnUrl
+            });
+        }
+        else if (result.IsLockedOut)
+        {
+            Log.Warning("User account locked out.");
+            RedirectManager.RedirectTo("Account/Lockout");
+        }
         else
         {
             errorMessage = "Error: Invalid login attempt.";
