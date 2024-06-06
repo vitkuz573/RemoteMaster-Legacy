@@ -9,7 +9,7 @@ using Serilog;
 
 namespace RemoteMaster.Server.Components.Account.Pages;
 
-public partial class LoginWith2fa
+public partial class LoginWithRecoveryCode
 {
     private string? _message;
     private ApplicationUser _user = default!;
@@ -20,9 +20,6 @@ public partial class LoginWith2fa
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
 
-    [SupplyParameterFromQuery]
-    private bool RememberMe { get; set; }
-
     protected async override Task OnInitializedAsync()
     {
         _user = await SignInManager.GetTwoFactorAuthenticationUserAsync() ?? throw new InvalidOperationException("Unable to load two-factor authentication user.");
@@ -30,33 +27,34 @@ public partial class LoginWith2fa
 
     private async Task OnValidSubmitAsync()
     {
-        var authenticatorCode = Input.TwoFactorCode!.Replace(" ", string.Empty).Replace("-", string.Empty);
-        var result = await SignInManager.TwoFactorAuthenticatorSignInAsync(authenticatorCode, RememberMe, false);
+        var recoveryCode = Input.RecoveryCode.Replace(" ", string.Empty);
+
+        var result = await SignInManager.TwoFactorRecoveryCodeSignInAsync(recoveryCode);
+
         var userId = await UserManager.GetUserIdAsync(_user);
 
         if (result.Succeeded)
         {
-            Log.Information("User with ID '{UserId}' logged in with 2fa.", userId);
+            Log.Information("User with ID '{UserId}' logged in with a recovery code.", userId);
             RedirectManager.RedirectTo(ReturnUrl);
         }
         else if (result.IsLockedOut)
         {
-            Log.Warning("User with ID '{UserId}' account locked out.", userId);
+            Log.Warning("User account locked out.");
             RedirectManager.RedirectTo("Account/Lockout");
         }
         else
         {
-            Log.Warning("Invalid authenticator code entered for user with ID '{UserId}'.", userId);
-            _message = "Error: Invalid authenticator code.";
+            Log.Warning("Invalid recovery code entered for user with ID '{UserId}' ", userId);
+            _message = "Error: Invalid recovery code entered.";
         }
     }
 
     private sealed class InputModel
     {
         [Required]
-        [StringLength(7, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
         [DataType(DataType.Text)]
-        [Display(Name = "Authenticator code")]
-        public string? TwoFactorCode { get; set; }
+        [Display(Name = "Recovery Code")]
+        public string RecoveryCode { get; set; } = "";
     }
 }
