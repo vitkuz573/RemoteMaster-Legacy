@@ -3,8 +3,10 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Data;
+using RemoteMaster.Server.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Components.Account.Pages;
@@ -13,6 +15,9 @@ public partial class LoginWith2fa
 {
     private string? _message;
     private ApplicationUser _user = default!;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
 
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
@@ -30,13 +35,47 @@ public partial class LoginWith2fa
 
     private async Task OnValidSubmitAsync()
     {
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
         var authenticatorCode = Input.TwoFactorCode!.Replace(" ", string.Empty).Replace("-", string.Empty);
         var result = await SignInManager.TwoFactorAuthenticatorSignInAsync(authenticatorCode, RememberMe, false);
         var userId = await UserManager.GetUserIdAsync(_user);
 
+        var userRoles = await UserManager.GetRolesAsync(_user);
+
+        if (!userRoles.Any())
+        {
+            _message = "Access denied: User does not belong to any roles.";
+            return;
+        }
+
         if (result.Succeeded)
         {
             Log.Information("User with ID '{UserId}' logged in with 2fa.", userId);
+
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.Name, _user.UserName),
+                new(ClaimTypes.NameIdentifier, userId.ToString())
+            };
+
+            foreach (var role in userRoles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+
+            var accessToken = await TokenService.GenerateAccessTokenAsync(claims);
+            var refreshToken = TokenService.GenerateRefreshToken(userId, ipAddress);
+
+            var tokenData = new TokenData
+            {
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
+                AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(15),
+                RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(1)
+            };
+
+            await TokenStorageService.StoreTokensAsync(userId, tokenData);
+
             RedirectManager.RedirectTo(ReturnUrl);
         }
         else if (result.IsLockedOut)
