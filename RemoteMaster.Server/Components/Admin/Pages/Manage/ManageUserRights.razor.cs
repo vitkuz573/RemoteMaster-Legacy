@@ -139,8 +139,15 @@ public partial class ManageUserRights
 
         if (SelectedUserModel.IsLockedOut)
         {
-            var lockoutEndDateTime = SelectedUserModel.LockoutEndDate.Date.Add(SelectedUserModel.LockoutEndTime.TimeOfDay);
-            user.LockoutEnd = lockoutEndDateTime.ToUniversalTime();
+            if (SelectedUserModel.IsPermanentLockout)
+            {
+                user.LockoutEnd = DateTimeOffset.MaxValue;
+            }
+            else
+            {
+                var lockoutEndDateTime = SelectedUserModel.LockoutEndDate.Date.Add(SelectedUserModel.LockoutEndTime.TimeOfDay);
+                user.LockoutEnd = lockoutEndDateTime.ToUniversalTime();
+            }
         }
         else
         {
@@ -162,6 +169,7 @@ public partial class ManageUserRights
         _initialSelectedUnitIds = selectedUnitIds;
         _initialSelectedRole = SelectedUserModel.Role;
         _initialIsLockedOut = SelectedUserModel.IsLockedOut;
+        _initialIsPermanentLockout = SelectedUserModel.IsPermanentLockout;
 
         _ = Task.Delay(3000).ContinueWith(async _ =>
         {
@@ -197,7 +205,16 @@ public partial class ManageUserRights
         SelectedUserModel.IsLockedOut = user.LockoutEnd != null && user.LockoutEnd > DateTime.UtcNow;
         _initialIsLockedOut = SelectedUserModel.IsLockedOut;
 
-        if (SelectedUserModel.IsLockedOut)
+        if (SelectedUserModel.IsLockedOut && user.LockoutEnd == DateTimeOffset.MaxValue)
+        {
+            SelectedUserModel.IsPermanentLockout = true;
+        }
+        else
+        {
+            SelectedUserModel.IsPermanentLockout = false;
+        }
+
+        if (SelectedUserModel.IsLockedOut && !SelectedUserModel.IsPermanentLockout)
         {
             SelectedUserModel.LockoutEndDate = user.LockoutEnd.Value.DateTime.Date;
             SelectedUserModel.LockoutEndTime = user.LockoutEnd.Value.DateTime;
@@ -268,7 +285,9 @@ public partial class ManageUserRights
     private bool HasChangesInLockout()
     {
         return _initialIsLockedOut != SelectedUserModel.IsLockedOut ||
+               _initialIsPermanentLockout != SelectedUserModel.IsPermanentLockout ||
                (SelectedUserModel.IsLockedOut &&
+                !SelectedUserModel.IsPermanentLockout &&
                 (_initialLockoutEndDate != SelectedUserModel.LockoutEndDate || _initialLockoutEndTime != SelectedUserModel.LockoutEndTime));
     }
 
@@ -362,6 +381,8 @@ public partial class ManageUserRights
 
         public bool IsLockedOut { get; set; }
 
+        public bool IsPermanentLockout { get; set; }
+
         [Required]
         public DateTime LockoutEndDate { get; set; } = DateTime.Now.Date;
 
@@ -377,6 +398,7 @@ public partial class ManageUserRights
 
     private string _initialSelectedRole;
     private bool _initialIsLockedOut;
+    private bool _initialIsPermanentLockout;
     private DateTime _initialLockoutEndDate;
     private DateTime _initialLockoutEndTime;
 }
