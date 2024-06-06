@@ -7,7 +7,6 @@
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 @inject IdentityRedirectManager RedirectManager
-@inject ILogger<LoginWith2fa> Logger
 
 <PageTitle>Two-factor authentication</PageTitle>
 
@@ -26,10 +25,6 @@
                 <label for="two-factor-code" class="block text-sm font-medium text-gray-700">Authenticator code</label>
                 <InputText @bind-Value="Input.TwoFactorCode" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" autocomplete="off" />
                 <ValidationMessage For="() => Input.TwoFactorCode" class="text-red-600" />
-            </div>
-            <div class="flex items-center">
-                <InputCheckbox @bind-Value="Input.RememberMachine" class="h-4 w-4 rounded border-gray-300 text-indigo-600" />
-                <label for="remember-machine" class="ml-2 block text-sm text-gray-900">Remember this machine</label>
             </div>
             <div>
                 <button type="submit" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none">Log in</button>
