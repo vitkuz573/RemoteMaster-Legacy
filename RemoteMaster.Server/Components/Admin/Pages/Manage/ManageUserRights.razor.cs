@@ -139,7 +139,8 @@ public partial class ManageUserRights
 
         if (SelectedUserModel.IsLockedOut)
         {
-            user.LockoutEnd = DateTimeOffset.MaxValue;
+            var lockoutEndDateTime = SelectedUserModel.LockoutEndDate.Date.Add(SelectedUserModel.LockoutEndTime.TimeOfDay);
+            user.LockoutEnd = lockoutEndDateTime.ToUniversalTime();
         }
         else
         {
@@ -195,6 +196,17 @@ public partial class ManageUserRights
         _initialSelectedRole = userRole;
         SelectedUserModel.IsLockedOut = user.LockoutEnd != null && user.LockoutEnd > DateTime.UtcNow;
         _initialIsLockedOut = SelectedUserModel.IsLockedOut;
+
+        if (SelectedUserModel.IsLockedOut)
+        {
+            SelectedUserModel.LockoutEndDate = user.LockoutEnd.Value.DateTime.Date;
+            SelectedUserModel.LockoutEndTime = user.LockoutEnd.Value.DateTime;
+        }
+        else
+        {
+            SelectedUserModel.LockoutEndDate = DateTime.Now.Date;
+            SelectedUserModel.LockoutEndTime = DateTime.Now;
+        }
 
         _initialSelectedOrganizationIds = user.AccessibleOrganizations.Select(ao => ao.NodeId).ToList();
         _initialSelectedUnitIds = user.AccessibleOrganizationalUnits.Select(aou => aou.NodeId).ToList();
@@ -255,7 +267,9 @@ public partial class ManageUserRights
 
     private bool HasChangesInLockout()
     {
-        return _initialIsLockedOut != SelectedUserModel.IsLockedOut;
+        return _initialIsLockedOut != SelectedUserModel.IsLockedOut ||
+               (SelectedUserModel.IsLockedOut &&
+                (_initialLockoutEndDate != SelectedUserModel.LockoutEndDate || _initialLockoutEndTime != SelectedUserModel.LockoutEndTime));
     }
 
     private void OnOrganizationChanged(OrganizationViewModel organization)
@@ -275,6 +289,15 @@ public partial class ManageUserRights
     {
         organization.IsExpanded = !organization.IsExpanded;
         StateHasChanged();
+    }
+
+    private void ToggleLockoutDateTimeInputs(ChangeEventArgs e)
+    {
+        if (!(bool)e.Value)
+        {
+            SelectedUserModel.LockoutEndDate = DateTime.Now.Date;
+            SelectedUserModel.LockoutEndTime = DateTime.Now;
+        }
     }
 
     public class UserViewModel
@@ -339,6 +362,12 @@ public partial class ManageUserRights
 
         public bool IsLockedOut { get; set; }
 
+        [Required]
+        public DateTime LockoutEndDate { get; set; } = DateTime.Now.Date;
+
+        [Required]
+        public DateTime LockoutEndTime { get; set; } = DateTime.Now;
+
 #pragma warning disable CA2227
         public List<Guid> SelectedOrganizations { get; set; } = [];
 
@@ -348,4 +377,6 @@ public partial class ManageUserRights
 
     private string _initialSelectedRole;
     private bool _initialIsLockedOut;
+    private DateTime _initialLockoutEndDate;
+    private DateTime _initialLockoutEndTime;
 }
