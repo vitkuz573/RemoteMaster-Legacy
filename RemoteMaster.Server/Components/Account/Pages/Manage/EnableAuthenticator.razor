@@ -35,9 +35,9 @@ else
                 </li>
                 <li>
                     <span>Scan the QR Code or enter this key <kbd class="rounded bg-gray-100 px-2 py-1">@_sharedKey</kbd> into your two-factor authenticator app. Spaces and casing do not matter.</span>
-                    <div class="mt-2 rounded-md bg-blue-50 p-4 text-blue-700">Learn how to <a href="https://go.microsoft.com/fwlink/?Linkid=852423" class="text-indigo-600">enable QR code generation</a>.</div>
                     <div class="my-4">
-                        <div data-url="@_authenticatorUri"></div>
+                        <div id="qrCodeData" data-url="@_authenticatorUri"></div>
+                        <div id="qrCode"></div>
                     </div>
                 </li>
                 <li>
