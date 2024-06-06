@@ -102,7 +102,7 @@ public partial class EnableAuthenticator
 
     private string GenerateQrCodeUri(string username, string unformattedKey)
     {
-        return string.Format(CultureInfo.InvariantCulture, AuthenticatorUriFormat, UrlEncoder.Encode("Microsoft.AspNetCore.Identity.UI"), UrlEncoder.Encode(username), unformattedKey);
+        return string.Format(CultureInfo.InvariantCulture, AuthenticatorUriFormat, UrlEncoder.Encode("RemoteMaster Server"), UrlEncoder.Encode(username), unformattedKey);
     }
 
     private sealed class InputModel
