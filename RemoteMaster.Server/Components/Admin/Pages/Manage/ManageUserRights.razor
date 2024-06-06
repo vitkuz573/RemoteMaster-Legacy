@@ -52,6 +52,11 @@
             <ValidationMessage For="() => SelectedUserModel.Role" class="text-red-500 mt-1" />
         </div>
 
+        <div class="mt-4">
+            <InputCheckbox @bind-Value="SelectedUserModel.IsLockedOut" class="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out" />
+            <label class="ml-2 text-sm font-medium text-gray-700">Lockout Account</label>
+        </div>
+
         <div>
             @foreach (var organization in _organizations)
             {

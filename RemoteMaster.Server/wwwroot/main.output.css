@@ -703,6 +703,10 @@ video {
   margin-top: 0.5rem;
 }
 
+.mt-20 {
+  margin-top: 5rem;
+}
+
 .mt-3 {
   margin-top: 0.75rem;
 }
@@ -713,10 +717,6 @@ video {
 
 .mt-6 {
   margin-top: 1.5rem;
-}
-
-.mt-20 {
-  margin-top: 5rem;
 }
 
 .block {
@@ -821,10 +821,6 @@ video {
 
 .max-w-md {
   max-width: 28rem;
-}
-
-.max-w-2xl {
-  max-width: 42rem;
 }
 
 .flex-shrink-0 {

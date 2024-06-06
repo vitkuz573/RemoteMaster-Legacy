@@ -25,7 +25,7 @@ public partial class ManageUserRights
 
     private bool ShowSuccessMessage { get; set; } = false;
 
-    private bool HasChanges => HasChangesInRole() || HasChangesInOrganizations() || HasChangesInUnits();
+    private bool HasChanges => HasChangesInRole() || HasChangesInOrganizations() || HasChangesInUnits() || HasChangesInLockout();
 
     protected async override Task OnInitializedAsync()
     {
@@ -56,7 +56,8 @@ public partial class ManageUserRights
             .Select(u => new UserViewModel
             {
                 Id = u.Id,
-                UserName = u.UserName
+                UserName = u.UserName,
+                IsLockedOut = u.LockoutEnd != null && u.LockoutEnd > DateTime.UtcNow
             })
             .ToListAsync();
     }
@@ -93,14 +94,14 @@ public partial class ManageUserRights
         }
 
         var userRole = await dbContext.UserRoles.FirstOrDefaultAsync(ur => ur.UserId == user.Id);
-        
+
         if (userRole != null)
         {
             dbContext.UserRoles.Remove(userRole);
         }
 
         var role = await dbContext.Roles.FirstOrDefaultAsync(r => r.Name == SelectedUserModel.Role);
-        
+
         if (role != null)
         {
             dbContext.UserRoles.Add(new IdentityUserRole<string>
@@ -136,6 +137,15 @@ public partial class ManageUserRights
             }
         }
 
+        if (SelectedUserModel.IsLockedOut)
+        {
+            user.LockoutEnd = DateTimeOffset.MaxValue;
+        }
+        else
+        {
+            user.LockoutEnd = null;
+        }
+
         await dbContext.SaveChangesAsync();
 
         if (_initialSelectedRole != SelectedUserModel.Role)
@@ -150,6 +160,7 @@ public partial class ManageUserRights
         _initialSelectedOrganizationIds = selectedOrganizationIds;
         _initialSelectedUnitIds = selectedUnitIds;
         _initialSelectedRole = SelectedUserModel.Role;
+        _initialIsLockedOut = SelectedUserModel.IsLockedOut;
 
         _ = Task.Delay(3000).ContinueWith(async _ =>
         {
@@ -182,6 +193,8 @@ public partial class ManageUserRights
                                                 .FirstOrDefaultAsync();
         SelectedUserModel.Role = userRole;
         _initialSelectedRole = userRole;
+        SelectedUserModel.IsLockedOut = user.LockoutEnd != null && user.LockoutEnd > DateTime.UtcNow;
+        _initialIsLockedOut = SelectedUserModel.IsLockedOut;
 
         _initialSelectedOrganizationIds = user.AccessibleOrganizations.Select(ao => ao.NodeId).ToList();
         _initialSelectedUnitIds = user.AccessibleOrganizationalUnits.Select(aou => aou.NodeId).ToList();
@@ -240,6 +253,11 @@ public partial class ManageUserRights
         return !_initialSelectedUnitIds.SequenceEqual(currentSelectedUnitIds);
     }
 
+    private bool HasChangesInLockout()
+    {
+        return _initialIsLockedOut != SelectedUserModel.IsLockedOut;
+    }
+
     private void OnOrganizationChanged(OrganizationViewModel organization)
     {
         if (!organization.IsSelected)
@@ -264,6 +282,8 @@ public partial class ManageUserRights
         public string Id { get; set; } = string.Empty;
 
         public string UserName { get; set; } = string.Empty;
+
+        public bool IsLockedOut { get; set; }
     }
 
     public class OrganizationViewModel
@@ -317,6 +337,8 @@ public partial class ManageUserRights
         [Display(Name = "Role")]
         public string Role { get; set; }
 
+        public bool IsLockedOut { get; set; }
+
 #pragma warning disable CA2227
         public List<Guid> SelectedOrganizations { get; set; } = [];
 
@@ -325,4 +347,5 @@ public partial class ManageUserRights
     }
 
     private string _initialSelectedRole;
+    private bool _initialIsLockedOut;
 }
