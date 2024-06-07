@@ -45,6 +45,7 @@ public partial class LoginWith2fa
         if (!userRoles.Any())
         {
             _message = "Access denied: User does not belong to any roles.";
+            await LogSignInAttempt(userId, false, ipAddress);
             return;
         }
 
@@ -75,19 +76,38 @@ public partial class LoginWith2fa
             };
 
             await TokenStorageService.StoreTokensAsync(userId, tokenData);
-
+            await LogSignInAttempt(userId, true, ipAddress);
             RedirectManager.RedirectTo(ReturnUrl);
         }
         else if (result.IsLockedOut)
         {
             Log.Warning("User with ID '{UserId}' account locked out.", userId);
+            await LogSignInAttempt(userId, false, ipAddress);
             RedirectManager.RedirectTo("Account/Lockout");
         }
         else
         {
             Log.Warning("Invalid authenticator code entered for user with ID '{UserId}'.", userId);
             _message = "Error: Invalid authenticator code.";
+            await LogSignInAttempt(userId, false, ipAddress);
         }
+    }
+
+    private async Task LogSignInAttempt(string userId, bool isSuccess, string ipAddress)
+    {
+        using var scope = ScopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var signInJournalEntry = new SignInEntry
+        {
+            UserId = userId,
+            SignInTime = DateTime.UtcNow,
+            IsSuccessful = isSuccess,
+            IpAddress = ipAddress
+        };
+
+        dbContext.SignInEntries.Add(signInJournalEntry);
+        await dbContext.SaveChangesAsync();
     }
 
     private sealed class InputModel
