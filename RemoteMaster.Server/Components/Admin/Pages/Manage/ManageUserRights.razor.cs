@@ -58,7 +58,7 @@ public partial class ManageUserRights
             .Select(u => new UserViewModel
             {
                 Id = u.Id,
-                UserName = u.UserName,
+                UserName = u.UserName!,
                 IsLockedOut = u.LockoutEnd != null && u.LockoutEnd > DateTime.UtcNow
             })
             .ToListAsync();
@@ -346,7 +346,7 @@ public partial class ManageUserRights
         public bool IsLockedOut { get; set; }
     }
 
-    public class OrganizationViewModel(Guid id, string name, List<ManageUserRights.OrganizationalUnitViewModel> organizationalUnits)
+    public class OrganizationViewModel(Guid id, string name, List<OrganizationalUnitViewModel> organizationalUnits)
     {
         public Guid Id { get; set; } = id;
 
