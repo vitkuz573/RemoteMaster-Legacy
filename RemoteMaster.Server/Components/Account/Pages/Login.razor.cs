@@ -121,7 +121,6 @@ public partial class Login
         }
         else if (result.RequiresTwoFactor)
         {
-            await LogSignInAttempt(user.Id, false, ipAddress);
             RedirectManager.RedirectTo("Account/LoginWith2fa", new()
             {
                 ["returnUrl"] = ReturnUrl
