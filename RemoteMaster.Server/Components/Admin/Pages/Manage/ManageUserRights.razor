@@ -67,11 +67,8 @@
             @if (!SelectedUserModel.IsPermanentLockout)
             {
                 <div class="mt-4">
-                    <label for="lockoutEndDate" class="block text-sm font-medium text-gray-700">Lockout End Date</label>
-                    <InputDate id="lockoutEndDate" @bind-Value="SelectedUserModel.LockoutEndDate" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm" />
-
-                    <label for="lockoutEndTime" class="mt-4 block text-sm font-medium text-gray-700">Lockout End Time</label>
-                    <InputDate Type="InputDateType.Time" id="lockoutEndTime" @bind-Value="SelectedUserModel.LockoutEndTime" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm" />
+                    <label for="lockoutEndDateTime" class="block text-sm font-medium text-gray-700">Lockout End Date and Time</label>
+                    <InputDate id="lockoutEndDateTime" @bind-Value="SelectedUserModel.LockoutEndDateTime" Type="InputDateType.DateTimeLocal" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm" />
                 </div>
             }
         }
