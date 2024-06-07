@@ -314,6 +314,7 @@ public partial class ManageUserRights
     {
         if (!(bool)e.Value)
         {
+            SelectedUserModel.IsPermanentLockout = false;
             SelectedUserModel.LockoutEndDate = DateTime.Now.Date;
             SelectedUserModel.LockoutEndTime = DateTime.Now;
         }
