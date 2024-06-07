@@ -23,6 +23,7 @@
             <label class="mr-2">Filter:</label>
             <input id="filterInput" type="text" class="rounded border border-gray-300 px-2 py-1" @bind="Filter" @oninput="ApplyFilter" />
             <div id="filterInput-autocomplete-list" class="autocomplete-items"></div>
+            <button class="ml-2 rounded bg-blue-500 px-4 py-2 text-white" @onclick="ShowFilterHelp">Help</button>
         </div>
     </div>
 
@@ -68,4 +69,33 @@
 @if (!_signInJournalEntries.Any())
 {
     <p class="mt-6 text-center text-gray-500">No sign-in attempts recorded.</p>
+}
+
+@if (showFilterHelp)
+{
+    <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        <div class="w-1/2 rounded bg-white p-8 shadow-lg">
+            <h2 class="mb-4 text-2xl">Filter Help</h2>
+            <p class="mb-4">You can filter the sign-in journal using the following syntax:</p>
+            <ul class="mb-4 list-inside list-disc">
+                <li><strong>Column~value</strong> - Filter entries where the column contains the value.</li>
+                <li><strong>Column=value</strong> - Filter entries where the column exactly matches the value.</li>
+            </ul>
+            <p class="mb-4">Supported columns are:</p>
+            <ul class="mb-4 list-inside list-disc">
+                <li><strong>User</strong> - Filter by username.</li>
+                <li><strong>SignInTime</strong> - Filter by sign-in time.</li>
+                <li><strong>Success</strong> - Filter by success (Yes/No).</li>
+                <li><strong>IpAddress</strong> - Filter by IP address.</li>
+            </ul>
+            <p>Examples:</p>
+            <ul class="mb-4 list-inside list-disc">
+                <li><strong>User~John</strong> - Find entries where the username contains "John".</li>
+                <li><strong>SignInTime=2023-06-07</strong> - Find entries where the sign-in time is exactly "2023-06-07".</li>
+                <li><strong>Success=Yes</strong> - Find entries where the sign-in was successful.</li>
+                <li><strong>IpAddress~192.168</strong> - Find entries where the IP address contains "192.168".</li>
+            </ul>
+            <button class="mt-4 rounded bg-blue-500 px-4 py-2 text-white" @onclick="CloseFilterHelp">Close</button>
+        </div>
+    </div>
 }

@@ -13,7 +13,6 @@ public partial class SignInJournal
 {
     private List<SignInEntry> _signInJournalEntries = new();
     private List<SignInEntry> FilteredEntries => FilteredEntriesLogic();
-
     private List<SignInEntry> PagedEntries => (SortAscending
         ? FilteredEntries.OrderBy(GetSortKey)
         : FilteredEntries.OrderByDescending(GetSortKey))
@@ -23,7 +22,6 @@ public partial class SignInJournal
 
     private string SortColumn = "SignInTime";
     private bool SortAscending = true;
-
     private int CurrentPage = 1;
     private int pageSize = 5;
     private int PageSize
@@ -36,10 +34,8 @@ public partial class SignInJournal
         }
     }
     private int TotalPages => (int)Math.Ceiling((double)FilteredEntries.Count / PageSize);
-
     private bool HasPreviousPage => CurrentPage > 1;
     private bool HasNextPage => CurrentPage < TotalPages;
-
     private string filter = string.Empty;
     private string Filter
     {
@@ -50,6 +46,8 @@ public partial class SignInJournal
             ApplyFilter();
         }
     }
+
+    private bool showFilterHelp = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -175,6 +173,16 @@ public partial class SignInJournal
         }
 
         return filteredEntries.ToList();
+    }
+
+    private void ShowFilterHelp()
+    {
+        showFilterHelp = true;
+    }
+
+    private void CloseFilterHelp()
+    {
+        showFilterHelp = false;
     }
 
     private async Task ClearJournal()
