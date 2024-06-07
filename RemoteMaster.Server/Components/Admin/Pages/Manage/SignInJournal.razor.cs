@@ -11,8 +11,10 @@ namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 
 public partial class SignInJournal
 {
-    private List<SignInEntry> _signInJournalEntries = new();
+    private List<SignInEntry> _signInEntries = [];
+
     private List<SignInEntry> FilteredEntries => FilteredEntriesLogic();
+
     private List<SignInEntry> PagedEntries => (SortAscending
         ? FilteredEntries.OrderBy(GetSortKey)
         : FilteredEntries.OrderByDescending(GetSortKey))
@@ -34,9 +36,13 @@ public partial class SignInJournal
         }
     }
     private int TotalPages => (int)Math.Ceiling((double)FilteredEntries.Count / PageSize);
+    
     private bool HasPreviousPage => CurrentPage > 1;
+    
     private bool HasNextPage => CurrentPage < TotalPages;
+    
     private string filter = string.Empty;
+    
     private string Filter
     {
         get => filter;
@@ -49,11 +55,13 @@ public partial class SignInJournal
 
     private bool showFilterHelp = false;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private static readonly string[] _columns = ["User", "SignInTime", "Success", "IpAddress"];
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await JSRuntime.InvokeVoidAsync("setupAutocomplete", "filterInput", new[] { "User", "SignInTime", "Success", "IpAddress" });
+            await JSRuntime.InvokeVoidAsync("setupAutocomplete", "filterInput", _columns);
         }
     }
 
@@ -62,7 +70,7 @@ public partial class SignInJournal
         using var scope = ScopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-        _signInJournalEntries = await dbContext.SignInEntries
+        _signInEntries = await dbContext.SignInEntries
             .Include(entry => entry.User)
             .OrderByDescending(e => e.SignInTime)
             .ToListAsync();
@@ -80,9 +88,9 @@ public partial class SignInJournal
             SortAscending = true;
         }
 
-        _signInJournalEntries = SortAscending
-            ? _signInJournalEntries.OrderBy(GetSortKey).ToList()
-            : _signInJournalEntries.OrderByDescending(GetSortKey).ToList();
+        _signInEntries = SortAscending
+            ? _signInEntries.OrderBy(GetSortKey).ToList()
+            : _signInEntries.OrderByDescending(GetSortKey).ToList();
     }
 
     private object GetSortKey(SignInEntry entry)
@@ -127,15 +135,15 @@ public partial class SignInJournal
     {
         if (string.IsNullOrWhiteSpace(Filter))
         {
-            return _signInJournalEntries;
+            return _signInEntries;
         }
 
         var filters = Filter.Split(';');
-        var filteredEntries = _signInJournalEntries.AsQueryable();
+        var filteredEntries = _signInEntries.AsQueryable();
 
         foreach (var filter in filters)
         {
-            var parts = filter.Split(new[] { '=', '~' }, 2);
+            var parts = filter.Split(['=', '~'], 2);
 
             if (parts.Length < 2)
             {
@@ -172,7 +180,7 @@ public partial class SignInJournal
             }
         }
 
-        return filteredEntries.ToList();
+        return [.. filteredEntries];
     }
 
     private void ShowFilterHelp()
@@ -190,10 +198,10 @@ public partial class SignInJournal
         using var scope = ScopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-        dbContext.SignInEntries.RemoveRange(_signInJournalEntries);
+        dbContext.SignInEntries.RemoveRange(_signInEntries);
         await dbContext.SaveChangesAsync();
 
-        _signInJournalEntries.Clear();
+        _signInEntries.Clear();
     }
 
     private string GetSortIcon(string columnName)
