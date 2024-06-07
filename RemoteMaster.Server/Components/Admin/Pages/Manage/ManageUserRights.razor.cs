@@ -27,6 +27,8 @@ public partial class ManageUserRights
 
     private bool HasChanges => HasChangesInRole() || HasChangesInOrganizations() || HasChangesInUnits() || HasChangesInLockout();
 
+    private const string RootAdminRoleName = "RootAdministrator";
+
     protected async override Task OnInitializedAsync()
     {
         using var scope = ScopeFactory.CreateScope();
@@ -40,14 +42,14 @@ public partial class ManageUserRights
     private async Task LoadRolesAsync(RoleManager<IdentityRole> roleManager)
     {
         _roles = await roleManager.Roles
-            .Where(role => role.Name != "RootAdministrator")
+            .Where(role => role.Name != RootAdminRoleName)
             .ToListAsync();
     }
 
     private async Task LoadUsersAsync(ApplicationDbContext dbContext)
     {
         var rootAdminRoleId = await dbContext.Roles
-            .Where(r => r.Name == "RootAdministrator")
+            .Where(r => r.Name == RootAdminRoleName)
             .Select(r => r.Id)
             .FirstOrDefaultAsync();
 
@@ -66,16 +68,15 @@ public partial class ManageUserRights
     {
         _organizations = await dbContext.Organizations
             .Include(o => o.OrganizationalUnits)
-            .Select(o => new OrganizationViewModel
-            {
-                Id = o.NodeId,
-                Name = o.Name,
-                OrganizationalUnits = o.OrganizationalUnits.Select(ou => new OrganizationalUnitViewModel
+            .Select(o => new OrganizationViewModel(
+                o.NodeId,
+                o.Name,
+                o.OrganizationalUnits.Select(ou => new OrganizationalUnitViewModel
                 {
                     Id = ou.NodeId,
                     Name = ou.Name
                 }).ToList()
-            }).ToListAsync();
+            )).ToListAsync();
     }
 
     private async Task OnValidSubmitAsync()
@@ -93,6 +94,29 @@ public partial class ManageUserRights
             return;
         }
 
+        await UpdateUserRoleAsync(dbContext, user);
+        await UpdateUserAccessAsync(dbContext, user);
+        await UpdateUserLockoutStatusAsync(user);
+
+        await dbContext.SaveChangesAsync();
+
+        if (_initialSelectedRole != SelectedUserModel.Role)
+        {
+            await TokenService.RevokeAllRefreshTokensAsync(user.Id, TokenRevocationReason.RoleChanged);
+        }
+
+        ShowSuccessMessage = true;
+
+        StateHasChanged();
+
+        UpdateInitialSelections();
+
+        await HideSuccessMessageAfterDelay();
+        NavigationManager.Refresh();
+    }
+
+    private async Task UpdateUserRoleAsync(ApplicationDbContext dbContext, ApplicationUser user)
+    {
         var userRole = await dbContext.UserRoles.FirstOrDefaultAsync(ur => ur.UserId == user.Id);
 
         if (userRole != null)
@@ -110,73 +134,56 @@ public partial class ManageUserRights
                 RoleId = role.Id
             });
         }
+    }
 
+    private async Task UpdateUserAccessAsync(ApplicationDbContext dbContext, ApplicationUser user)
+    {
         var selectedOrganizationIds = _organizations.Where(o => o.IsSelected).Select(o => o.Id).ToList();
         var selectedUnitIds = _organizations.SelectMany(o => o.OrganizationalUnits).Where(ou => ou.IsSelected).Select(ou => ou.Id).ToList();
 
         user.AccessibleOrganizations.Clear();
         user.AccessibleOrganizationalUnits.Clear();
 
+        SelectedUserModel.SelectedOrganizations.Clear();
+        SelectedUserModel.SelectedOrganizationalUnits.Clear();
+
         foreach (var orgId in selectedOrganizationIds)
         {
             var organization = await dbContext.Organizations.FindAsync(orgId);
-
+            
             if (organization != null)
             {
                 user.AccessibleOrganizations.Add(organization);
+                SelectedUserModel.SelectedOrganizations.Add(orgId);
             }
         }
 
         foreach (var unitId in selectedUnitIds)
         {
             var unit = await dbContext.OrganizationalUnits.FindAsync(unitId);
-
+            
             if (unit != null)
             {
                 user.AccessibleOrganizationalUnits.Add(unit);
+                SelectedUserModel.SelectedOrganizationalUnits.Add(unitId);
             }
         }
+    }
 
+    private Task UpdateUserLockoutStatusAsync(ApplicationUser user)
+    {
         if (SelectedUserModel.IsLockedOut)
         {
-            if (SelectedUserModel.IsPermanentLockout)
-            {
-                user.LockoutEnd = DateTimeOffset.MaxValue;
-            }
-            else
-            {
-                user.LockoutEnd = SelectedUserModel.LockoutEndDateTime.ToUniversalTime();
-            }
+            user.LockoutEnd = SelectedUserModel.IsPermanentLockout
+                ? DateTimeOffset.MaxValue
+                : SelectedUserModel.LockoutEndDateTime.ToUniversalTime();
         }
         else
         {
             user.LockoutEnd = null;
         }
 
-        await dbContext.SaveChangesAsync();
-
-        if (_initialSelectedRole != SelectedUserModel.Role)
-        {
-            await TokenService.RevokeAllRefreshTokensAsync(user.Id, TokenRevocationReason.RoleChanged);
-        }
-
-        ShowSuccessMessage = true;
-
-        StateHasChanged();
-
-        _initialSelectedOrganizationIds = selectedOrganizationIds;
-        _initialSelectedUnitIds = selectedUnitIds;
-        _initialSelectedRole = SelectedUserModel.Role;
-        _initialIsLockedOut = SelectedUserModel.IsLockedOut;
-        _initialIsPermanentLockout = SelectedUserModel.IsPermanentLockout;
-
-        _ = Task.Delay(3000).ContinueWith(async _ =>
-        {
-            ShowSuccessMessage = false;
-            await InvokeAsync(StateHasChanged);
-        });
-
-        NavigationManager.Refresh();
+        return Task.CompletedTask;
     }
 
     private async Task LoadCurrentUserAccess(ApplicationDbContext dbContext)
@@ -199,28 +206,16 @@ public partial class ManageUserRights
         var userRole = await dbContext.UserRoles.Where(ur => ur.UserId == user.Id)
                                                 .Join(dbContext.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r.Name)
                                                 .FirstOrDefaultAsync();
-        SelectedUserModel.Role = userRole;
+        SelectedUserModel = new UserEditModel
+        {
+            Role = userRole,
+            IsLockedOut = user.LockoutEnd != null && user.LockoutEnd > DateTime.UtcNow,
+            IsPermanentLockout = user.LockoutEnd == DateTimeOffset.MaxValue,
+            LockoutEndDateTime = (user.LockoutEnd != null && user.LockoutEnd < DateTimeOffset.MaxValue) ? user.LockoutEnd.Value.DateTime : DateTime.Now
+        };
+
         _initialSelectedRole = userRole;
-        SelectedUserModel.IsLockedOut = user.LockoutEnd != null && user.LockoutEnd > DateTime.UtcNow;
         _initialIsLockedOut = SelectedUserModel.IsLockedOut;
-
-        if (SelectedUserModel.IsLockedOut && user.LockoutEnd == DateTimeOffset.MaxValue)
-        {
-            SelectedUserModel.IsPermanentLockout = true;
-        }
-        else
-        {
-            SelectedUserModel.IsPermanentLockout = false;
-        }
-
-        if (SelectedUserModel.IsLockedOut && !SelectedUserModel.IsPermanentLockout)
-        {
-            SelectedUserModel.LockoutEndDateTime = user.LockoutEnd.Value.DateTime;
-        }
-        else
-        {
-            SelectedUserModel.LockoutEndDateTime = DateTime.Now;
-        }
 
         _initialSelectedOrganizationIds = user.AccessibleOrganizations.Select(ao => ao.NodeId).ToList();
         _initialSelectedUnitIds = user.AccessibleOrganizationalUnits.Select(aou => aou.NodeId).ToList();
@@ -228,10 +223,20 @@ public partial class ManageUserRights
         foreach (var organization in _organizations)
         {
             organization.IsSelected = _initialSelectedOrganizationIds.Contains(organization.Id);
+            
+            if (organization.IsSelected)
+            {
+                SelectedUserModel.SelectedOrganizations.Add(organization.Id);
+            }
 
             foreach (var unit in organization.OrganizationalUnits)
             {
                 unit.IsSelected = _initialSelectedUnitIds.Contains(unit.Id);
+                
+                if (unit.IsSelected)
+                {
+                    SelectedUserModel.SelectedOrganizationalUnits.Add(unit.Id);
+                }
             }
         }
 
@@ -241,6 +246,7 @@ public partial class ManageUserRights
     private async Task OnUserChanged(string userId)
     {
         SelectedUserId = userId;
+        
         using var scope = ScopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         await LoadCurrentUserAccess(dbContext);
@@ -262,20 +268,19 @@ public partial class ManageUserRights
         }
     }
 
-    private bool HasChangesInRole()
-    {
-        return _initialSelectedRole != SelectedUserModel.Role;
-    }
+    private bool HasChangesInRole() => _initialSelectedRole != SelectedUserModel.Role;
 
     private bool HasChangesInOrganizations()
     {
         var currentSelectedOrganizationIds = _organizations.Where(o => o.IsSelected).Select(o => o.Id).ToList();
+        
         return !_initialSelectedOrganizationIds.SequenceEqual(currentSelectedOrganizationIds);
     }
 
     private bool HasChangesInUnits()
     {
         var currentSelectedUnitIds = _organizations.SelectMany(o => o.OrganizationalUnits).Where(ou => ou.IsSelected).Select(ou => ou.Id).ToList();
+        
         return !_initialSelectedUnitIds.SequenceEqual(currentSelectedUnitIds);
     }
 
@@ -292,10 +297,7 @@ public partial class ManageUserRights
     {
         if (!organization.IsSelected)
         {
-            foreach (var unit in organization.OrganizationalUnits)
-            {
-                unit.IsSelected = false;
-            }
+            DeselectAllOrganizationalUnits(organization);
         }
 
         StateHasChanged();
@@ -304,6 +306,7 @@ public partial class ManageUserRights
     private void ToggleOrganizationExpansion(OrganizationViewModel organization)
     {
         organization.IsExpanded = !organization.IsExpanded;
+
         StateHasChanged();
     }
 
@@ -316,6 +319,24 @@ public partial class ManageUserRights
         }
     }
 
+    private async Task HideSuccessMessageAfterDelay()
+    {
+        await Task.Delay(3000);
+        ShowSuccessMessage = false;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void UpdateInitialSelections()
+    {
+        _initialSelectedOrganizationIds = _organizations.Where(o => o.IsSelected).Select(o => o.Id).ToList();
+        _initialSelectedUnitIds = _organizations.SelectMany(o => o.OrganizationalUnits).Where(ou => ou.IsSelected).Select(ou => ou.Id).ToList();
+        _initialSelectedRole = SelectedUserModel.Role;
+        _initialIsLockedOut = SelectedUserModel.IsLockedOut;
+        _initialIsPermanentLockout = SelectedUserModel.IsPermanentLockout;
+        _initialLockoutEndDateTime = SelectedUserModel.LockoutEndDateTime;
+    }
+
     public class UserViewModel
     {
         public string Id { get; set; } = string.Empty;
@@ -325,11 +346,11 @@ public partial class ManageUserRights
         public bool IsLockedOut { get; set; }
     }
 
-    public class OrganizationViewModel
+    public class OrganizationViewModel(Guid id, string name, List<ManageUserRights.OrganizationalUnitViewModel> organizationalUnits)
     {
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = id;
 
-        public string Name { get; set; } = string.Empty;
+        public string Name { get; set; } = name;
 
         private bool _isSelected;
         private bool _isExpanded;
@@ -340,6 +361,7 @@ public partial class ManageUserRights
             set
             {
                 _isSelected = value;
+
                 if (!_isSelected)
                 {
                     foreach (var unit in OrganizationalUnits)
@@ -356,9 +378,7 @@ public partial class ManageUserRights
             set => _isExpanded = value;
         }
 
-#pragma warning disable CA2227
-        public List<OrganizationalUnitViewModel> OrganizationalUnits { get; set; } = [];
-#pragma warning restore CA2227
+        public List<OrganizationalUnitViewModel> OrganizationalUnits { get; } = organizationalUnits;
     }
 
     public class OrganizationalUnitViewModel
@@ -374,7 +394,7 @@ public partial class ManageUserRights
     {
         [Required]
         [Display(Name = "Role")]
-        public string Role { get; set; }
+        public string? Role { get; set; }
 
         public bool IsLockedOut { get; set; }
 
@@ -383,14 +403,12 @@ public partial class ManageUserRights
         [Required]
         public DateTime LockoutEndDateTime { get; set; } = DateTime.Now;
 
-#pragma warning disable CA2227
-        public List<Guid> SelectedOrganizations { get; set; } = [];
+        public List<Guid> SelectedOrganizations { get; } = [];
 
-        public List<Guid> SelectedOrganizationalUnits { get; set; } = [];
-#pragma warning restore CA2227
+        public List<Guid> SelectedOrganizationalUnits { get; } = [];
     }
 
-    private string _initialSelectedRole;
+    private string? _initialSelectedRole;
     private bool _initialIsLockedOut;
     private bool _initialIsPermanentLockout;
     private DateTime _initialLockoutEndDateTime;
