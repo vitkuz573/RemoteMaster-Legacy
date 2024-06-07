@@ -12,6 +12,22 @@ public partial class SignInJournal
 {
     private List<SignInEntry> _signInJournalEntries = [];
 
+    private List<SignInEntry> PagedEntries => _signInJournalEntries
+                                                .OrderBy(e => e.GetType().GetProperty(SortColumn).GetValue(e, null))
+                                                .Skip((CurrentPage - 1) * PageSize)
+                                                .Take(PageSize)
+                                                .ToList();
+
+    private string SortColumn = "SignInTime";
+    private bool SortAscending = true;
+
+    private int CurrentPage = 1;
+    private int PageSize = 5;
+    private int TotalPages => (int)Math.Ceiling((double)_signInJournalEntries.Count / PageSize);
+
+    private bool HasPreviousPage => CurrentPage > 1;
+    private bool HasNextPage => CurrentPage < TotalPages;
+
     protected async override Task OnInitializedAsync()
     {
         using var scope = ScopeFactory.CreateScope();
@@ -21,5 +37,49 @@ public partial class SignInJournal
             .Include(entry => entry.User)
             .OrderByDescending(e => e.SignInTime)
             .ToListAsync();
+    }
+
+    private void SortByColumn(string columnName)
+    {
+        if (SortColumn == columnName)
+        {
+            SortAscending = !SortAscending;
+        }
+        else
+        {
+            SortColumn = columnName;
+            SortAscending = true;
+        }
+
+        _signInJournalEntries = SortAscending
+            ? _signInJournalEntries.OrderBy(e => e.GetType().GetProperty(columnName).GetValue(e, null)).ToList()
+            : _signInJournalEntries.OrderByDescending(e => e.GetType().GetProperty(columnName).GetValue(e, null)).ToList();
+    }
+
+    private void NextPage()
+    {
+        if (HasNextPage)
+        {
+            CurrentPage++;
+        }
+    }
+
+    private void PreviousPage()
+    {
+        if (HasPreviousPage)
+        {
+            CurrentPage--;
+        }
+    }
+
+    private async Task ClearJournal()
+    {
+        using var scope = ScopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        dbContext.SignInEntries.RemoveRange(_signInJournalEntries);
+        await dbContext.SaveChangesAsync();
+
+        _signInJournalEntries.Clear();
     }
 }
