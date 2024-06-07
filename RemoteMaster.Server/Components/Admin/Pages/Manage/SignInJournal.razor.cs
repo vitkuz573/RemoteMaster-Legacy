@@ -26,6 +26,7 @@ public partial class SignInJournal
     private bool SortAscending = true;
     private int CurrentPage = 1;
     private int pageSize = 5;
+
     private int PageSize
     {
         get => pageSize;
