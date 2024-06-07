@@ -89,8 +89,8 @@ public partial class SignInJournal
         }
 
         _signInEntries = SortAscending
-            ? _signInEntries.OrderBy(GetSortKey).ToList()
-            : _signInEntries.OrderByDescending(GetSortKey).ToList();
+            ? [.. _signInEntries.OrderBy(GetSortKey)]
+            : [.. _signInEntries.OrderByDescending(GetSortKey)];
     }
 
     private object GetSortKey(SignInEntry entry)
