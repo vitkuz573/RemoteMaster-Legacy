@@ -8,14 +8,37 @@
 
 <PageTitle>SignIn Journal</PageTitle>
 
-<div class="overflow-x-auto">
+<div class="overflow-x-auto p-4">
+    <div class="mb-4 flex items-center justify-between">
+        <div class="flex items-center">
+            <label class="mr-2">Items per page:</label>
+            <select class="rounded border border-gray-300 px-2 py-1" @bind="PageSize">
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="20">20</option>
+            </select>
+        </div>
+        <div class="flex items-center">
+            <label class="mr-2">Filter:</label>
+            <input type="text" class="rounded border border-gray-300 px-2 py-1" @bind="Filter" />
+        </div>
+    </div>
+
     <table class="min-w-full border-collapse border border-gray-300 bg-white shadow-lg">
         <thead>
             <tr class="bg-gray-200">
-                <th class="border-b-2 cursor-pointer border-gray-300 px-6 py-3 text-left text-sm uppercase tracking-wider text-gray-600" @onclick='() => SortByColumn("User")'>User</th>
-                <th class="border-b-2 cursor-pointer border-gray-300 px-6 py-3 text-left text-sm uppercase tracking-wider text-gray-600" @onclick='() => SortByColumn("SignInTime")'>Sign-In Time</th>
-                <th class="border-b-2 cursor-pointer border-gray-300 px-6 py-3 text-left text-sm uppercase tracking-wider text-gray-600" @onclick='() => SortByColumn("Success")'>Success</th>
-                <th class="border-b-2 cursor-pointer border-gray-300 px-6 py-3 text-left text-sm uppercase tracking-wider text-gray-600" @onclick='() => SortByColumn("IpAddress")'>IP Address</th>
+                <th class="border-b-2 cursor-pointer border-gray-300 px-6 py-3 text-left text-sm uppercase tracking-wider text-gray-600" @onclick='() => SortByColumn("User")'>
+                    User @GetSortIcon("User")
+                </th>
+                <th class="border-b-2 cursor-pointer border-gray-300 px-6 py-3 text-left text-sm uppercase tracking-wider text-gray-600" @onclick='() => SortByColumn("SignInTime")'>
+                    Sign-In Time @GetSortIcon("SignInTime")
+                </th>
+                <th class="border-b-2 cursor-pointer border-gray-300 px-6 py-3 text-left text-sm uppercase tracking-wider text-gray-600" @onclick='() => SortByColumn("Success")'>
+                    Success @GetSortIcon("Success")
+                </th>
+                <th class="border-b-2 cursor-pointer border-gray-300 px-6 py-3 text-left text-sm uppercase tracking-wider text-gray-600" @onclick='() => SortByColumn("IpAddress")'>
+                    IP Address @GetSortIcon("IpAddress")
+                </th>
             </tr>
         </thead>
         <tbody class="bg-white">
