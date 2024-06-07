@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.JSInterop;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
 
@@ -11,12 +12,7 @@ namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 public partial class SignInJournal
 {
     private List<SignInEntry> _signInJournalEntries = new();
-    private List<SignInEntry> FilteredEntries => string.IsNullOrWhiteSpace(Filter)
-        ? _signInJournalEntries
-        : _signInJournalEntries.Where(e =>
-            e.User.UserName.Contains(Filter, StringComparison.OrdinalIgnoreCase) ||
-            e.IpAddress.Contains(Filter, StringComparison.OrdinalIgnoreCase) ||
-            e.SignInTime.ToString().Contains(Filter, StringComparison.OrdinalIgnoreCase)).ToList();
+    private List<SignInEntry> FilteredEntries => FilteredEntriesLogic();
 
     private List<SignInEntry> PagedEntries => (SortAscending
         ? FilteredEntries.OrderBy(GetSortKey)
@@ -52,6 +48,14 @@ public partial class SignInJournal
         {
             filter = value;
             ApplyFilter();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("setupAutocomplete", "filterInput", new[] { "User", "SignInTime", "Success", "IpAddress" });
         }
     }
 
@@ -119,6 +123,58 @@ public partial class SignInJournal
     private void ApplyFilter()
     {
         CurrentPage = 1;
+    }
+
+    private List<SignInEntry> FilteredEntriesLogic()
+    {
+        if (string.IsNullOrWhiteSpace(Filter))
+        {
+            return _signInJournalEntries;
+        }
+
+        var filters = Filter.Split(';');
+        var filteredEntries = _signInJournalEntries.AsQueryable();
+
+        foreach (var filter in filters)
+        {
+            var parts = filter.Split(new[] { '=', '~' }, 2);
+
+            if (parts.Length < 2)
+            {
+                continue;
+            }
+
+            var column = parts[0].Trim().ToLower();
+            var value = parts[1].Trim();
+            var contains = filter.Contains('~');
+            var equals = filter.Contains('=');
+
+            if (contains)
+            {
+                filteredEntries = column switch
+                {
+                    "user" => filteredEntries.Where(e => e.User.UserName.Contains(value, StringComparison.OrdinalIgnoreCase)),
+                    "signintime" => filteredEntries.Where(e => e.SignInTime.ToString().Contains(value, StringComparison.OrdinalIgnoreCase)),
+                    "success" => filteredEntries.Where(e => (e.IsSuccessful ? "Yes" : "No").Contains(value, StringComparison.OrdinalIgnoreCase)),
+                    "ipaddress" => filteredEntries.Where(e => e.IpAddress.Contains(value, StringComparison.OrdinalIgnoreCase)),
+                    _ => filteredEntries
+                };
+            }
+
+            if (equals)
+            {
+                filteredEntries = column switch
+                {
+                    "user" => filteredEntries.Where(e => e.User.UserName.Equals(value, StringComparison.OrdinalIgnoreCase)),
+                    "signintime" => filteredEntries.Where(e => e.SignInTime.ToString().Equals(value, StringComparison.OrdinalIgnoreCase)),
+                    "success" => filteredEntries.Where(e => (e.IsSuccessful ? "Yes" : "No").Equals(value, StringComparison.OrdinalIgnoreCase)),
+                    "ipaddress" => filteredEntries.Where(e => e.IpAddress.Equals(value, StringComparison.OrdinalIgnoreCase)),
+                    _ => filteredEntries
+                };
+            }
+        }
+
+        return filteredEntries.ToList();
     }
 
     private async Task ClearJournal()

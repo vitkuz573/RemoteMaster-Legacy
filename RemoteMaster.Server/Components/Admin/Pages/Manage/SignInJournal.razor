@@ -5,10 +5,11 @@
 @namespace RemoteMaster.Server.Components.Admin.Pages.Manage
 
 @inject IServiceScopeFactory ScopeFactory
+@inject IJSRuntime JSRuntime
 
 <PageTitle>SignIn Journal</PageTitle>
 
-<div class="overflow-x-auto p-4">
+<div class="relative overflow-x-auto p-4">
     <div class="mb-4 flex items-center justify-between">
         <div class="flex items-center">
             <label class="mr-2">Items per page:</label>
@@ -18,9 +19,10 @@
                 <option value="20">20</option>
             </select>
         </div>
-        <div class="flex items-center">
+        <div class="relative flex items-center">
             <label class="mr-2">Filter:</label>
-            <input type="text" class="rounded border border-gray-300 px-2 py-1" @bind="Filter" />
+            <input id="filterInput" type="text" class="rounded border border-gray-300 px-2 py-1" @bind="Filter" @oninput="ApplyFilter" />
+            <div id="filterInput-autocomplete-list" class="autocomplete-items"></div>
         </div>
     </div>
 
