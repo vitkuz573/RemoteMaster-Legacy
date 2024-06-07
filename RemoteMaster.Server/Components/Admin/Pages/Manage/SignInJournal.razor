@@ -9,7 +9,7 @@
 
 <PageTitle>SignIn Journal</PageTitle>
 
-<div class="relative overflow-x-auto p-4">
+<div class="relative overflow-x-auto">
     <div class="mb-4 flex items-center justify-between">
         <div class="flex items-center">
             <label class="mr-2">Items per page:</label>
@@ -27,75 +27,77 @@
         </div>
     </div>
 
-    <table class="min-w-full border-collapse border border-gray-300 bg-white shadow-lg">
-        <thead>
-            <tr class="bg-gray-200">
-                <th class="border-b-2 cursor-pointer border-gray-300 px-6 py-3 text-left text-sm uppercase tracking-wider text-gray-600" @onclick='() => SortByColumn("User")'>
-                    User @GetSortIcon("User")
-                </th>
-                <th class="border-b-2 cursor-pointer border-gray-300 px-6 py-3 text-left text-sm uppercase tracking-wider text-gray-600" @onclick='() => SortByColumn("SignInTime")'>
-                    Sign-In Time @GetSortIcon("SignInTime")
-                </th>
-                <th class="border-b-2 cursor-pointer border-gray-300 px-6 py-3 text-left text-sm uppercase tracking-wider text-gray-600" @onclick='() => SortByColumn("Success")'>
-                    Success @GetSortIcon("Success")
-                </th>
-                <th class="border-b-2 cursor-pointer border-gray-300 px-6 py-3 text-left text-sm uppercase tracking-wider text-gray-600" @onclick='() => SortByColumn("IpAddress")'>
-                    IP Address @GetSortIcon("IpAddress")
-                </th>
-            </tr>
-        </thead>
-        <tbody class="bg-white">
-            @foreach (var entry in PagedEntries)
-            {
-                <tr class="hover:bg-gray-100">
-                    <td class="whitespace-no-wrap border-b border-gray-300 px-6 py-4">@entry.User.UserName</td>
-                    <td class="whitespace-no-wrap border-b border-gray-300 px-6 py-4">@entry.SignInTime.ToLocalTime()</td>
-                    <td class="whitespace-no-wrap border-b border-gray-300 px-6 py-4">@(entry.IsSuccessful ? "Yes" : "No")</td>
-                    <td class="whitespace-no-wrap border-b border-gray-300 px-6 py-4">@entry.IpAddress</td>
+    @if (!_signInJournalEntries.Any())
+    {
+        <p class="mt-6 text-center text-gray-500">No sign-in attempts recorded.</p>
+    }
+    else
+    {
+        <table class="min-w-full border-collapse border border-gray-300 bg-white shadow-lg">
+            <thead>
+                <tr class="bg-gray-200">
+                    <th class="border-b-2 cursor-pointer border-gray-300 px-6 py-3 text-left text-sm uppercase tracking-wider text-gray-600" @onclick='() => SortByColumn("User")'>
+                        User @GetSortIcon("User")
+                    </th>
+                    <th class="border-b-2 cursor-pointer border-gray-300 px-6 py-3 text-left text-sm uppercase tracking-wider text-gray-600" @onclick='() => SortByColumn("SignInTime")'>
+                        Sign-In Time @GetSortIcon("SignInTime")
+                    </th>
+                    <th class="border-b-2 cursor-pointer border-gray-300 px-6 py-3 text-left text-sm uppercase tracking-wider text-gray-600" @onclick='() => SortByColumn("Success")'>
+                        Success @GetSortIcon("Success")
+                    </th>
+                    <th class="border-b-2 cursor-pointer border-gray-300 px-6 py-3 text-left text-sm uppercase tracking-wider text-gray-600" @onclick='() => SortByColumn("IpAddress")'>
+                        IP Address @GetSortIcon("IpAddress")
+                    </th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody class="bg-white">
+                @foreach (var entry in PagedEntries)
+                {
+                    <tr class="hover:bg-gray-100">
+                        <td class="whitespace-no-wrap border-b border-gray-300 px-6 py-4">@entry.User.UserName</td>
+                        <td class="whitespace-no-wrap border-b border-gray-300 px-6 py-4">@entry.SignInTime.ToLocalTime()</td>
+                        <td class="whitespace-no-wrap border-b border-gray-300 px-6 py-4">@(entry.IsSuccessful ? "Yes" : "No")</td>
+                        <td class="whitespace-no-wrap border-b border-gray-300 px-6 py-4">@entry.IpAddress</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
 
-    <div class="mt-4 flex items-center justify-between">
-        <button class="rounded bg-gray-300 px-4 py-2" @onclick="PreviousPage" disabled="@(!HasPreviousPage)">Previous</button>
-        <span>Page @CurrentPage of @TotalPages</span>
-        <button class="rounded bg-gray-300 px-4 py-2" @onclick="NextPage" disabled="@(!HasNextPage)">Next</button>
-    </div>
-
-    <button class="mt-4 rounded bg-red-500 px-4 py-2 text-white" @onclick="ClearJournal">Clear Journal</button>
-</div>
-
-@if (!_signInJournalEntries.Any())
-{
-    <p class="mt-6 text-center text-gray-500">No sign-in attempts recorded.</p>
-}
-
-@if (showFilterHelp)
-{
-    <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-        <div class="w-1/2 rounded bg-white p-8 shadow-lg">
-            <h2 class="mb-4 text-2xl">Filter Help</h2>
-            <p class="mb-4">You can filter the sign-in journal using the following syntax:</p>
-            <ul class="mb-4 list-inside list-disc">
-                <li><strong>Column~value</strong> - Filter entries where the column contains the value.</li>
-                <li><strong>Column=value</strong> - Filter entries where the column exactly matches the value.</li>
-            </ul>
-            <p class="mb-4">Supported columns are:</p>
-            <ul class="mb-4 list-inside list-disc">
-                <li><strong>User</strong> - Filter by username.</li>
-                <li><strong>SignInTime</strong> - Filter by sign-in time.</li>
-                <li><strong>Success</strong> - Filter by success (Yes/No).</li>
-                <li><strong>IpAddress</strong> - Filter by IP address.</li>
-            </ul>
-            <p>Examples:</p>
-            <ul class="mb-4 list-inside list-disc">
-                <li><strong>User~John</strong> - Find entries where the username contains "John".</li>
-                <li><strong>SignInTime=2023-06-07</strong> - Find entries where the sign-in time is exactly "2023-06-07".</li>
-                <li><strong>Success=Yes</strong> - Find entries where the sign-in was successful.</li>
-                <li><strong>IpAddress~192.168</strong> - Find entries where the IP address contains "192.168".</li>
-            </ul>
-            <button class="mt-4 rounded bg-blue-500 px-4 py-2 text-white" @onclick="CloseFilterHelp">Close</button>
+        <div class="mt-4 flex items-center justify-between">
+            <button class="rounded bg-gray-300 px-4 py-2" @onclick="PreviousPage" disabled="@(!HasPreviousPage)">Previous</button>
+            <span>Page @CurrentPage of @TotalPages</span>
+            <button class="rounded bg-gray-300 px-4 py-2" @onclick="NextPage" disabled="@(!HasNextPage)">Next</button>
         </div>
-    </div>
-}
+
+        <button class="mt-4 rounded bg-red-500 px-4 py-2 text-white" @onclick="ClearJournal">Clear Journal</button>
+    }
+
+    @if (showFilterHelp)
+    {
+        <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+            <div class="w-1/2 rounded bg-white p-8 shadow-lg">
+                <h2 class="mb-4 text-2xl">Filter Help</h2>
+                <p class="mb-4">You can filter the sign-in journal using the following syntax:</p>
+                <ul class="mb-4 list-inside list-disc">
+                    <li><strong>Column~value</strong> - Filter entries where the column contains the value.</li>
+                    <li><strong>Column=value</strong> - Filter entries where the column exactly matches the value.</li>
+                </ul>
+                <p class="mb-4">Supported columns are:</p>
+                <ul class="mb-4 list-inside list-disc">
+                    <li><strong>User</strong> - Filter by username.</li>
+                    <li><strong>SignInTime</strong> - Filter by sign-in time.</li>
+                    <li><strong>Success</strong> - Filter by success (Yes/No).</li>
+                    <li><strong>IpAddress</strong> - Filter by IP address.</li>
+                </ul>
+                <p>Examples:</p>
+                <ul class="mb-4 list-inside list-disc">
+                    <li><strong>User~John</strong> - Find entries where the username contains "John".</li>
+                    <li><strong>SignInTime=2023-06-07</strong> - Find entries where the sign-in time is exactly "2023-06-07".</li>
+                    <li><strong>Success=Yes</strong> - Find entries where the sign-in was successful.</li>
+                    <li><strong>IpAddress~192.168</strong> - Find entries where the IP address contains "192.168".</li>
+                </ul>
+                <button class="mt-4 rounded bg-blue-500 px-4 py-2 text-white" @onclick="CloseFilterHelp">Close</button>
+            </div>
+        </div>
+    }
+</div>
