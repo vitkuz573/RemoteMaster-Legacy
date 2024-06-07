@@ -7,6 +7,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
+using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Enums;
 using RemoteMaster.Server.Models;
 using Serilog;
@@ -58,6 +59,7 @@ public partial class Login
         if (!userRoles.Any())
         {
             errorMessage = "Access denied: User does not belong to any roles.";
+            await LogSignInAttempt(user.Id, false, ipAddress);
             return;
         }
 
@@ -68,6 +70,7 @@ public partial class Login
         {
             Log.Warning("Attempt to login as RootAdministrator from non-localhost IP.");
             errorMessage = "RootAdministrator access is restricted to localhost.";
+            await LogSignInAttempt(user.Id, false, ipAddress);
             return;
         }
 
@@ -78,6 +81,7 @@ public partial class Login
             if (isRootAdmin && isLocalhost)
             {
                 Log.Information("RootAdministrator logged in from localhost. Redirecting to Admin page.");
+                await LogSignInAttempt(user.Id, true, ipAddress);
                 RedirectManager.RedirectTo("Admin");
                 return;
             }
@@ -112,10 +116,12 @@ public partial class Login
 
             Log.Information("User {Username} logged in from IP {IPAddress} at {LoginTime}.", Input.Username, ipAddress, DateTime.UtcNow.ToLocalTime());
 
+            await LogSignInAttempt(user.Id, true, ipAddress);
             RedirectManager.RedirectTo(ReturnUrl);
         }
         else if (result.RequiresTwoFactor)
         {
+            await LogSignInAttempt(user.Id, false, ipAddress);
             RedirectManager.RedirectTo("Account/LoginWith2fa", new()
             {
                 ["returnUrl"] = ReturnUrl
@@ -124,12 +130,31 @@ public partial class Login
         else if (result.IsLockedOut)
         {
             Log.Warning("User account locked out.");
+            await LogSignInAttempt(user.Id, false, ipAddress);
             RedirectManager.RedirectTo("Account/Lockout");
         }
         else
         {
             errorMessage = "Error: Invalid login attempt.";
+            await LogSignInAttempt(user.Id, false, ipAddress);
         }
+    }
+
+    private async Task LogSignInAttempt(string userId, bool isSuccess, string ipAddress)
+    {
+        using var scope = ScopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var signInJournalEntry = new SignInEntry
+        {
+            UserId = userId,
+            SignInTime = DateTime.UtcNow,
+            IsSuccessful = isSuccess,
+            IpAddress = ipAddress
+        };
+
+        dbContext.SignInEntries.Add(signInJournalEntry);
+        await dbContext.SaveChangesAsync();
     }
 
     private sealed class InputModel

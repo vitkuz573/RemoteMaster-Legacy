@@ -20,6 +20,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<Computer> Computers { get; set; }
 
+    public DbSet<SignInEntry> SignInEntries { get; set; }
+
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "ModelBuilder will not be null.")]
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -98,5 +100,24 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                     j.Property<Guid>("OrganizationalUnitId").HasColumnName("OrganizationalUnitId");
                     j.Property<string>("UserId").HasColumnName("UserId");
                 });
+
+        builder.Entity<SignInEntry>()
+            .HasKey(s => s.Id);
+
+        builder.Entity<SignInEntry>()
+            .HasIndex(s => s.UserId);
+
+        builder.Entity<SignInEntry>()
+            .Property(s => s.SignInTime)
+            .IsRequired();
+
+        builder.Entity<SignInEntry>()
+            .Property(s => s.IsSuccessful)
+            .IsRequired();
+
+        builder.Entity<SignInEntry>()
+            .Property(s => s.IpAddress)
+            .HasMaxLength(45)
+            .IsRequired();
     }
 }

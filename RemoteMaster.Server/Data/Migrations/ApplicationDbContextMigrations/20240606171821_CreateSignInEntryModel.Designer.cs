@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RemoteMaster.Server.Data;
 
@@ -11,9 +12,11 @@ using RemoteMaster.Server.Data;
 namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240606171821_CreateSignInEntryModel")]
+    partial class CreateSignInEntryModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -521,17 +524,6 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                         .IsRequired();
 
                     b.Navigation("ReplacedByToken");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("RemoteMaster.Server.Models.SignInEntry", b =>
-                {
-                    b.HasOne("RemoteMaster.Server.Data.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
 
                     b.Navigation("User");
                 });
