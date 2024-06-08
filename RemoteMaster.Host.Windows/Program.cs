@@ -149,6 +149,36 @@ internal class Program
                         }
                     };
                 });
+
+            builder.Services.AddAuthorizationBuilder()
+                .AddPolicy("MouseInputPolicy", policy =>
+                    policy.RequireClaim("Permission", "MouseInput"))
+                .AddPolicy("KeyboardInputPolicy", policy =>
+                    policy.RequireClaim("Permission", "KeyboardInput"))
+                .AddPolicy("SwitchScreenPolicy", policy =>
+                    policy.RequireClaim("Permission", "SwitchScreen"))
+                .AddPolicy("ToggleInputPolicy", policy =>
+                    policy.RequireClaim("Permission", "ToggleInput"))
+                .AddPolicy("BlockUserInputPolicy", policy =>
+                    policy.RequireClaim("Permission", "BlockUserInput"))
+                .AddPolicy("ChangeImageQualityPolicy", policy =>
+                    policy.RequireClaim("Permission", "ChangeImageQuality"))
+                .AddPolicy("ToggleCursorTrackingPolicy", policy =>
+                    policy.RequireClaim("Permission", "ToggleCursorTracking"))
+                .AddPolicy("TerminateHostPolicy", policy =>
+                    policy.RequireClaim("Permission", "TerminateHost"))
+                .AddPolicy("RebootComputerPolicy", policy =>
+                    policy.RequireClaim("Permission", "RebootComputer"))
+                .AddPolicy("ShutdownComputerPolicy", policy =>
+                    policy.RequireClaim("Permission", "ShutdownComputer"))
+                .AddPolicy("ChangeMonitorStatePolicy", policy =>
+                    policy.RequireClaim("Permission", "ChangeMonitorState"))
+                .AddPolicy("ExecuteScriptPolicy", policy =>
+                    policy.RequireClaim("Permission", "ExecuteScript"))
+                .AddPolicy("MovePolicy", policy =>
+                    policy.RequireClaim("Permission", "Move"))
+                .AddPolicy("RenewCertificatePolicy", policy =>
+                    policy.RequireClaim("Permission", "RenewCertificate"));
         }
 
         builder.ConfigureSerilog(launchModeInstance);

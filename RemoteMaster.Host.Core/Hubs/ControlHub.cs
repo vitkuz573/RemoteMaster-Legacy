@@ -66,18 +66,19 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         await base.OnDisconnectedAsync(exception);
     }
 
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Policy = "MouseInputPolicy")]
     public void SendMouseInput(MouseInputDto dto)
     {
         ExecuteActionForViewer(viewer => inputService.SendMouseInput(dto, viewer.ScreenCapturer));
     }
 
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Policy = "KeyboardInputPolicy")]
     public void SendKeyboardInput(KeyboardInputDto dto)
     {
         inputService.SendKeyboardInput(dto);
     }
 
+    [Authorize(Policy = "SwitchScreenPolicy")]
     public void SendSelectedScreen(string displayName)
     {
         if (appState.TryGetViewer(Context.ConnectionId, out var viewer))
@@ -90,54 +91,43 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         }
     }
 
+    [Authorize(Policy = "ToggleInputPolicy")]
     public async Task SendToggleInput(bool inputEnabled)
     {
-        if (inputEnabled)
-        {
-            if (Context.User.IsInRole("Administrator"))
-            {
-                inputService.InputEnabled = inputEnabled;
-            }
-            else
-            {
-                await Clients.Caller.ReceiveError("Access Denied: Only administrators can enable input.");
-            }
-        }
-        else
-        {
-            inputService.InputEnabled = inputEnabled;
-        }
+        inputService.InputEnabled = inputEnabled;
     }
 
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Policy = "BlockUserInputPolicy")]
     public void SendBlockUserInput(bool blockInput)
     {
         inputService.BlockUserInput = blockInput;
     }
 
+    [Authorize(Policy = "ChangeImageQualityPolicy")]
     public void SendImageQuality(int quality)
     {
         ExecuteActionForViewer(viewer => viewer.ScreenCapturer.ImageQuality = quality);
     }
 
+    [Authorize(Policy = "ToggleCursorTrackingPolicy")]
     public void SendToggleCursorTracking(bool trackCursor)
     {
         ExecuteActionForViewer(viewer => viewer.ScreenCapturer.TrackCursor = trackCursor);
     }
 
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Policy = "TerminateHostPolicy")]
     public void SendKillHost()
     {
         shutdownService.ImmediateShutdown();
     }
 
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Policy = "RebootComputerPolicy")]
     public void SendRebootComputer(PowerActionRequest powerActionRequest)
     {
         powerService.Reboot(powerActionRequest);
     }
 
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Policy = "ShutdownComputerPolicy")]
     public void SendShutdownComputer(PowerActionRequest powerActionRequest)
     {
         powerService.Shutdown(powerActionRequest);
@@ -158,13 +148,13 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         }
     }
 
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Policy = "ChangeMonitorStatePolicy")]
     public void SendMonitorState(MonitorState state)
     {
         hardwareService.SetMonitorState(state);
     }
 
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Policy = "ExecuteScriptPolicy")]
     public void SendScript(ScriptExecutionRequest scriptExecutionRequest)
     {
         scriptService.Execute(scriptExecutionRequest);
@@ -185,7 +175,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         await Clients.Group("serviceGroup").ReceiveCommand(command);
     }
 
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Policy = "MovePolicy")]
     public async Task Move(HostMoveRequest hostMoveRequest)
     {
         ArgumentNullException.ThrowIfNull(hostMoveRequest);
@@ -199,7 +189,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         await hostLifecycleService.RenewCertificateAsync(hostConfiguration);
     }
 
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Policy = "RenewCertificatePolicy")]
     public async Task SendRenewCertificate()
     {
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);

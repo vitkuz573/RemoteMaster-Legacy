@@ -38,7 +38,7 @@ public partial class Login
         {
             Log.Information("User already logged in. Redirecting to the origin page or default page.");
             RedirectManager.RedirectTo(ReturnUrl ?? "/");
-            
+
             return;
         }
     }
@@ -99,6 +99,9 @@ public partial class Login
             foreach (var role in userRoles)
             {
                 claims.Add(new Claim(ClaimTypes.Role, role));
+
+                var roleClaims = await GetClaimsForRole(role);
+                claims.AddRange(roleClaims);
             }
 
             var accessToken = await TokenService.GenerateAccessTokenAsync(claims);
@@ -117,6 +120,9 @@ public partial class Login
             Log.Information("User {Username} logged in from IP {IPAddress} at {LoginTime}.", Input.Username, ipAddress, DateTime.UtcNow.ToLocalTime());
 
             await LogSignInAttempt(user.Id, true, ipAddress);
+
+            Log.Information("Generated Access Token: {AccessToken}", accessToken);
+
             RedirectManager.RedirectTo(ReturnUrl);
         }
         else if (result.RequiresTwoFactor)
@@ -137,6 +143,18 @@ public partial class Login
             errorMessage = "Error: Invalid login attempt.";
             await LogSignInAttempt(user.Id, false, ipAddress);
         }
+    }
+
+    private async Task<IEnumerable<Claim>> GetClaimsForRole(string roleName)
+    {
+        using var scope = ScopeFactory.CreateScope();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+        var role = await roleManager.FindByNameAsync(roleName);
+        var roleClaims = await roleManager.GetClaimsAsync(role);
+
+        // Возвращаем только клеймы с типом "Permission"
+        return roleClaims.Where(c => c.Type == "Permission");
     }
 
     private async Task LogSignInAttempt(string userId, bool isSuccess, string ipAddress)
