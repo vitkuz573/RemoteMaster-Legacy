@@ -10,10 +10,7 @@ namespace RemoteMaster.Server.Abstractions;
 
 public interface IIntelHlapiService : IDisposable
 {
-    void Connect(string host, string username, string password, bool secure = false,
-                        string? certificate = null, ConnectionInfoEX.AuthMethod auth = ConnectionInfoEX.AuthMethod.Digest,
-                        ConnectionInfoEX.SocksProxy? proxy = null, ConnectionInfoEX.SocksProxy? redirectionProxy = null,
-                        ConnectionInfoEX.TcpForwarder? tcpForwarder = null, bool acceptSelfSignedCertificate = false);
+    void Connect(string host, string username, string password, bool secure = false, string? certificate = null, ConnectionInfoEX.AuthMethod auth = ConnectionInfoEX.AuthMethod.Digest, ConnectionInfoEX.SocksProxy? proxy = null, ConnectionInfoEX.SocksProxy? redirectionProxy = null, ConnectionInfoEX.TcpForwarder? tcpForwarder = null, bool acceptSelfSignedCertificate = false);
 
     void PowerDown();
 
@@ -23,8 +20,7 @@ public interface IIntelHlapiService : IDisposable
 
     void StopKvmSession();
 
-    void CreateAlertTrigger(string primaryMpsHost, ushort primaryMpsPort, string primaryMpsUsername, string primaryMpsPassword, string primaryMpsCert,
-                        string secondaryMpsHost, ushort secondaryMpsPort, string secondaryMpsUsername, string secondaryMpsPassword, string secondaryMpsCert);
+    void CreateAlertTrigger(string primaryMpsHost, ushort primaryMpsPort, string primaryMpsUsername, string primaryMpsPassword, string primaryMpsCert, string secondaryMpsHost, ushort secondaryMpsPort, string secondaryMpsUsername, string secondaryMpsPassword, string secondaryMpsCert);
 
     void CreatePeriodicTrigger(uint intervalMinutes, uint dailyStartHour, uint dailyStartMinute, string mpsHost);
 
