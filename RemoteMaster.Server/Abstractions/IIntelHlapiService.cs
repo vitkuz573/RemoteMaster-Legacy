@@ -18,5 +18,7 @@ public interface IIntelHlapiService : IDisposable
 
     List<X509Certificate2> GetTrustedRootCertificates();
 
+    void StartKvmSession(string kvmPassword);
 
+    void StopKvmSession();
 }

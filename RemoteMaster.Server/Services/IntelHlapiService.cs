@@ -5,6 +5,7 @@
 using System.Security;
 using System.Security.Cryptography.X509Certificates;
 using Intel.Manageability;
+using Intel.Manageability.KVM;
 using RemoteMaster.Server.Abstractions;
 
 namespace RemoteMaster.Server.Services;
@@ -19,14 +20,16 @@ public class IntelHlapiService : IIntelHlapiService
                         ConnectionInfoEX.SocksProxy? proxy = null, ConnectionInfoEX.SocksProxy? redirectionProxy = null,
                         ConnectionInfoEX.TcpForwarder? tcpForwarder = null, bool acceptSelfSignedCertificate = false)
     {
-        ArgumentNullException.ThrowIfNull(password);
+        ArgumentException.ThrowIfNullOrEmpty(password);
 
         using var securePassword = new SecureString();
-
+        
         foreach (var c in password)
         {
             securePassword.AppendChar(c);
         }
+        
+        securePassword.MakeReadOnly();
 
         using var connection = new ConnectionInfoEX(host, username, securePassword, secure, certificate, auth, proxy, redirectionProxy, tcpForwarder, acceptSelfSignedCertificate);
         _amtInstance = AMTInstanceFactory.CreateEX(connection);
@@ -50,6 +53,39 @@ public class IntelHlapiService : IIntelHlapiService
         }
 
         return _amtInstance.Config.CertificateManagement.GetTrustedRootCertificates();
+    }
+
+    public void StartKvmSession(string kvmPassword)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(kvmPassword);
+
+        if (_amtInstance == null)
+        {
+            throw new InvalidOperationException("Not connected to any Intel AMT device.");
+        }
+
+        using var securePassword = new SecureString();
+
+        foreach (var c in kvmPassword)
+        {
+            securePassword.AppendChar(c);
+        }
+
+        securePassword.MakeReadOnly();
+
+        _amtInstance.KVMSetup.SetInterfaceState(true);
+        _amtInstance.KVMSetup.SetPortsState(KVMPortsState.EnableDefaultPortOnly);
+        _amtInstance.KVMSetup.SetRFBPassword(securePassword);
+    }
+
+    public void StopKvmSession()
+    {
+        if (_amtInstance == null)
+        {
+            throw new InvalidOperationException("Not connected to any Intel AMT device.");
+        }
+
+        _amtInstance.KVMSetup.SetInterfaceState(false);
     }
 
     protected virtual void Dispose(bool disposing)
