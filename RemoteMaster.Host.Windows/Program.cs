@@ -112,16 +112,6 @@ internal class Program
 
                     jwtBearerOptions.Events = new JwtBearerEvents
                     {
-                        OnTokenValidated = context =>
-                        {
-                            if (!context.Principal.IsInRole("Administrator") && !context.Principal.IsInRole("Viewer"))
-                            {
-                                context.Fail("Access Denied: User is not in the Administrator or Viewer role.");
-                            }
-
-                            return Task.CompletedTask;
-                        },
-
                         OnMessageReceived = context =>
                         {
                             var remoteIp = context.HttpContext.Connection.RemoteIpAddress;
