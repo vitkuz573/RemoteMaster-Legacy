@@ -48,6 +48,16 @@
 		<ProjectReference Include="..\RemoteMaster.Shared\RemoteMaster.Shared.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="libs\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Reference Include="HLAPI">
+	    <HintPath>libs\HLAPI.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
+
 	<Target Name="TaskPublish" AfterTargets="Publish">
 		<Exec Command="powershell.exe -ExecutionPolicy Bypass -File $(SolutionDir)scripts\DigitalSignExecutable.ps1 -exeFilePath $(PublishDir)\$(AssemblyName).exe" />
 	</Target>
