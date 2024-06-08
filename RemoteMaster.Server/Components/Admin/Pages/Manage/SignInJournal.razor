@@ -81,6 +81,10 @@
                 <ul class="mb-4 list-inside list-disc">
                     <li><strong>Column~value</strong> - Filter entries where the column contains the value.</li>
                     <li><strong>Column=value</strong> - Filter entries where the column exactly matches the value.</li>
+                    <li><strong>Column&gt;value</strong> - Filter entries where the column is greater than the value.</li>
+                    <li><strong>Column&lt;value</strong> - Filter entries where the column is less than the value.</li>
+                    <li><strong>Column!=value</strong> - Filter entries where the column does not equal the value.</li>
+                    <li>You can combine multiple filters using <strong>;</strong>. For example: <strong>User~John;SignInTime&gt;2023-06-07</strong></li>
                 </ul>
                 <p class="mb-4">Supported columns are:</p>
                 <ul class="mb-4 list-inside list-disc">
@@ -95,6 +99,9 @@
                     <li><strong>SignInTime=2023-06-07</strong> - Find entries where the sign-in time is exactly "2023-06-07".</li>
                     <li><strong>Success=Yes</strong> - Find entries where the sign-in was successful.</li>
                     <li><strong>IpAddress~192.168</strong> - Find entries where the IP address contains "192.168".</li>
+                    <li><strong>SignInTime&gt;2023-06-07</strong> - Find entries where the sign-in time is after "2023-06-07".</li>
+                    <li><strong>SignInTime&lt;2023-06-07</strong> - Find entries where the sign-in time is before "2023-06-07".</li>
+                    <li><strong>Success!=No</strong> - Find entries where the sign-in was not successful.</li>
                 </ul>
                 <button class="mt-4 rounded bg-blue-500 px-4 py-2 text-white" @onclick="CloseFilterHelp">Close</button>
             </div>

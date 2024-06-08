@@ -37,13 +37,13 @@ public partial class SignInJournal
         }
     }
     private int TotalPages => (int)Math.Ceiling((double)FilteredEntries.Count / PageSize);
-    
+
     private bool HasPreviousPage => CurrentPage > 1;
-    
+
     private bool HasNextPage => CurrentPage < TotalPages;
-    
+
     private string filter = string.Empty;
-    
+
     private string Filter
     {
         get => filter;
@@ -144,7 +144,7 @@ public partial class SignInJournal
 
         foreach (var filter in filters)
         {
-            var parts = filter.Split(['=', '~'], 2);
+            var parts = filter.Split(['=', '~', '>', '<', '!'], 2);
 
             if (parts.Length < 2)
             {
@@ -155,6 +155,9 @@ public partial class SignInJournal
             var value = parts[1].Trim();
             var contains = filter.Contains('~');
             var equals = filter.Contains('=');
+            var notEquals = filter.Contains('!');
+            var greaterThan = filter.Contains('>');
+            var lessThan = filter.Contains('<');
 
             if (contains)
             {
@@ -176,6 +179,36 @@ public partial class SignInJournal
                     "signintime" => filteredEntries.Where(e => e.SignInTime.ToString().Equals(value, StringComparison.OrdinalIgnoreCase)),
                     "success" => filteredEntries.Where(e => (e.IsSuccessful ? "Yes" : "No").Equals(value, StringComparison.OrdinalIgnoreCase)),
                     "ipaddress" => filteredEntries.Where(e => e.IpAddress.Equals(value, StringComparison.OrdinalIgnoreCase)),
+                    _ => filteredEntries
+                };
+            }
+
+            if (notEquals)
+            {
+                filteredEntries = column switch
+                {
+                    "user" => filteredEntries.Where(e => !e.User.UserName.Equals(value, StringComparison.OrdinalIgnoreCase)),
+                    "signintime" => filteredEntries.Where(e => !e.SignInTime.ToString().Equals(value, StringComparison.OrdinalIgnoreCase)),
+                    "success" => filteredEntries.Where(e => !(e.IsSuccessful ? "Yes" : "No").Equals(value, StringComparison.OrdinalIgnoreCase)),
+                    "ipaddress" => filteredEntries.Where(e => !e.IpAddress.Equals(value, StringComparison.OrdinalIgnoreCase)),
+                    _ => filteredEntries
+                };
+            }
+
+            if (greaterThan)
+            {
+                filteredEntries = column switch
+                {
+                    "signintime" => filteredEntries.Where(e => DateTime.Parse(e.SignInTime.ToString()) > DateTime.Parse(value)),
+                    _ => filteredEntries
+                };
+            }
+
+            if (lessThan)
+            {
+                filteredEntries = column switch
+                {
+                    "signintime" => filteredEntries.Where(e => DateTime.Parse(e.SignInTime.ToString()) < DateTime.Parse(value)),
                     _ => filteredEntries
                 };
             }
