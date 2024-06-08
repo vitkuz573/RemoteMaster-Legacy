@@ -189,7 +189,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         }
 
         var existingEntity = context.ChangeTracker.Entries<RefreshToken>().FirstOrDefault(e => e.Entity.Id == refreshTokenEntity.Id);
-        
+
         if (existingEntity != null)
         {
             Log.Warning("Detaching already tracked entity with Id: {RefreshTokenId}", refreshTokenEntity.Id);
@@ -232,6 +232,9 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         foreach (var role in userRoles)
         {
             claims.Add(new Claim(ClaimTypes.Role, role));
+
+            var roleClaims = await GetClaimsForRole(role);
+            claims.AddRange(roleClaims);
         }
 
         var newAccessToken = await GenerateAccessTokenAsync(claims);
@@ -243,6 +246,17 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
             AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(15),
             RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(1)
         };
+    }
+
+    private async Task<IEnumerable<Claim>> GetClaimsForRole(string roleName)
+    {
+        using var scope = httpContextAccessor.HttpContext?.RequestServices.CreateScope();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+        var role = await roleManager.FindByNameAsync(roleName);
+        var roleClaims = await roleManager.GetClaimsAsync(role);
+
+        return roleClaims.Where(c => c.Type == "Permission");
     }
 
     public async Task RevokeRefreshTokenAsync(string refreshToken, TokenRevocationReason revocationReason)

@@ -121,8 +121,6 @@ public partial class Login
 
             await LogSignInAttempt(user.Id, true, ipAddress);
 
-            Log.Information("Generated Access Token: {AccessToken}", accessToken);
-
             RedirectManager.RedirectTo(ReturnUrl);
         }
         else if (result.RequiresTwoFactor)
@@ -153,7 +151,6 @@ public partial class Login
         var role = await roleManager.FindByNameAsync(roleName);
         var roleClaims = await roleManager.GetClaimsAsync(role);
 
-        // Возвращаем только клеймы с типом "Permission"
         return roleClaims.Where(c => c.Type == "Permission");
     }
 
