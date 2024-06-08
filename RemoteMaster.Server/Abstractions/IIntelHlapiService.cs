@@ -4,6 +4,7 @@
 
 using System.Security.Cryptography.X509Certificates;
 using Intel.Manageability;
+using Intel.Manageability.RemoteAccess;
 
 namespace RemoteMaster.Server.Abstractions;
 
@@ -21,4 +22,13 @@ public interface IIntelHlapiService : IDisposable
     void StartKvmSession(string kvmPassword);
 
     void StopKvmSession();
+
+    void CreateAlertTrigger(string primaryMpsHost, ushort primaryMpsPort, string primaryMpsUsername, string primaryMpsPassword, string primaryMpsCert,
+                        string secondaryMpsHost, ushort secondaryMpsPort, string secondaryMpsUsername, string secondaryMpsPassword, string secondaryMpsCert);
+
+    void CreatePeriodicTrigger(uint intervalMinutes, uint dailyStartHour, uint dailyStartMinute, string mpsHost);
+
+    void CreateUserInitiatedTrigger(uint timeoutSeconds, string mpsHost, ushort mpsPort, string certPath, string certPassword, string mpsPassword);
+    
+    ICollection<Trigger> GetAllTriggersDetails();
 }
