@@ -4,7 +4,6 @@
 
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Services;
 
@@ -23,26 +22,16 @@ public class AccessTokenProvider(ITokenService tokenService, ITokenStorageServic
 
         if (!string.IsNullOrEmpty(refreshToken) && tokenService.IsRefreshTokenValid(refreshToken))
         {
-            var newTokens = await tokenService.RefreshAccessToken(refreshToken);
+            var newTokens = await tokenService.GenerateTokensAsync(userId, refreshToken);
 
-            if (newTokens != null && !string.IsNullOrEmpty(newTokens.AccessToken))
+            if (!string.IsNullOrEmpty(newTokens.AccessToken))
             {
-                var tokenData = new TokenData
-                {
-                    AccessToken = newTokens.AccessToken,
-                    AccessTokenExpiresAt = newTokens.AccessTokenExpiresAt,
-                    RefreshToken = newTokens.RefreshToken,
-                    RefreshTokenExpiresAt = newTokens.RefreshTokenExpiresAt
-                };
-
-                await tokenStorageService.StoreTokensAsync(userId, tokenData);
-
+                await tokenStorageService.StoreTokensAsync(userId, newTokens);
                 return newTokens.AccessToken;
             }
         }
 
         await tokenStorageService.ClearTokensAsync(userId);
-
         navigationManager.NavigateTo("/Account/Logout", true);
 
         return null;

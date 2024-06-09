@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.ComponentModel.DataAnnotations;
-using System.Security.Claims;
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
@@ -53,27 +52,7 @@ public partial class LoginWith2fa
         {
             Log.Information("User with ID '{UserId}' logged in with 2fa.", userId);
 
-            var claims = new List<Claim>
-            {
-                new(ClaimTypes.Name, _user.UserName),
-                new(ClaimTypes.NameIdentifier, userId.ToString())
-            };
-
-            foreach (var role in userRoles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, role));
-            }
-
-            var accessToken = await TokenService.GenerateAccessTokenAsync(claims);
-            var refreshToken = TokenService.GenerateRefreshToken(userId, ipAddress);
-
-            var tokenData = new TokenData
-            {
-                AccessToken = accessToken,
-                RefreshToken = refreshToken,
-                AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(15),
-                RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(1)
-            };
+            var tokenData = await TokenService.GenerateTokensAsync(userId, ipAddress);
 
             await TokenStorageService.StoreTokensAsync(userId, tokenData);
             await LogSignInAttempt(userId, true, ipAddress);

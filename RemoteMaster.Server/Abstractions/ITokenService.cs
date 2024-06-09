@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Security.Claims;
 using RemoteMaster.Server.Enums;
 using RemoteMaster.Server.Models;
 
@@ -10,15 +9,11 @@ namespace RemoteMaster.Server.Abstractions;
 
 public interface ITokenService
 {
-    Task<string> GenerateAccessTokenAsync(List<Claim> claims);
-
-    string GenerateRefreshToken(string userId, string ipAddress);
+    Task<TokenData> GenerateTokensAsync(string userId, string? refreshToken = null);
 
     bool IsTokenValid(string accessToken);
 
     bool IsRefreshTokenValid(string refreshToken);
-
-    Task<TokenData?> RefreshAccessToken(string refreshToken);
 
     Task RevokeRefreshTokenAsync(string refreshToken, TokenRevocationReason revocationReason);
 

@@ -19,4 +19,9 @@ public class TokenData
 
     [JsonPropertyName("refreshTokenExpiresAt")]
     public DateTime RefreshTokenExpiresAt { get; set; }
+
+    public override string ToString()
+    {
+        return $"TokenData: AccessToken = {AccessToken}, RefreshToken = {RefreshToken}, AccessTokenExpiresAt = {AccessTokenExpiresAt}, RefreshTokenExpiresAt = {RefreshTokenExpiresAt}";
+    }
 }

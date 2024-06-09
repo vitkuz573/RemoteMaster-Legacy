@@ -90,30 +90,7 @@ public partial class Login
 
             Log.Information("User logged in. All previous refresh tokens revoked.");
 
-            var claims = new List<Claim>
-            {
-                new(ClaimTypes.Name, user.UserName),
-                new(ClaimTypes.NameIdentifier, user.Id.ToString())
-            };
-
-            foreach (var role in userRoles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, role));
-
-                var roleClaims = await GetClaimsForRole(role);
-                claims.AddRange(roleClaims);
-            }
-
-            var accessToken = await TokenService.GenerateAccessTokenAsync(claims);
-            var refreshToken = TokenService.GenerateRefreshToken(user.Id, ipAddress);
-
-            var tokenData = new TokenData
-            {
-                AccessToken = accessToken,
-                RefreshToken = refreshToken,
-                AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(15),
-                RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(1)
-            };
+            var tokenData = await TokenService.GenerateTokensAsync(user.Id, null);
 
             await TokenStorageService.StoreTokensAsync(user.Id, tokenData);
 
@@ -141,17 +118,6 @@ public partial class Login
             errorMessage = "Error: Invalid login attempt.";
             await LogSignInAttempt(user.Id, false, ipAddress);
         }
-    }
-
-    private async Task<IEnumerable<Claim>> GetClaimsForRole(string roleName)
-    {
-        using var scope = ScopeFactory.CreateScope();
-        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-
-        var role = await roleManager.FindByNameAsync(roleName);
-        var roleClaims = await roleManager.GetClaimsAsync(role);
-
-        return roleClaims.Where(c => c.Type == "Permission");
     }
 
     private async Task LogSignInAttempt(string userId, bool isSuccess, string ipAddress)
