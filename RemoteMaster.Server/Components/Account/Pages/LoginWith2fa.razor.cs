@@ -52,7 +52,7 @@ public partial class LoginWith2fa
         {
             Log.Information("User with ID '{UserId}' logged in with 2fa.", userId);
 
-            var tokenData = await TokenService.GenerateTokensAsync(userId, ipAddress);
+            var tokenData = await TokenService.GenerateTokensAsync(userId);
 
             await TokenStorageService.StoreTokensAsync(userId, tokenData);
             await LogSignInAttempt(userId, true, ipAddress);

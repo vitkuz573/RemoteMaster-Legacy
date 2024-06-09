@@ -51,7 +51,7 @@ public partial class LoginWithRecoveryCode
         {
             Log.Information("User with ID '{UserId}' logged in with a recovery code.", userId);
 
-            var tokenData = await TokenService.GenerateTokensAsync(userId, ipAddress);
+            var tokenData = await TokenService.GenerateTokensAsync(userId);
 
             await TokenStorageService.StoreTokensAsync(userId, tokenData);
             await LogSignInAttempt(userId, true, ipAddress);

@@ -90,7 +90,7 @@ public partial class Login
 
             Log.Information("User logged in. All previous refresh tokens revoked.");
 
-            var tokenData = await TokenService.GenerateTokensAsync(user.Id, null);
+            var tokenData = await TokenService.GenerateTokensAsync(user.Id);
 
             await TokenStorageService.StoreTokensAsync(user.Id, tokenData);
 
