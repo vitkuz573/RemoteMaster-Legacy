@@ -22,7 +22,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 {
     private readonly JwtOptions _options = options.Value ?? throw new ArgumentNullException(nameof(options));
 
-    private static readonly TimeSpan AccessTokenExpiration = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan AccessTokenExpiration = TimeSpan.FromSeconds(15);
     private static readonly TimeSpan RefreshTokenExpiration = TimeSpan.FromDays(1);
 
     public async Task<TokenData> GenerateTokensAsync(string userId, string? oldRefreshToken = null)
@@ -33,7 +33,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         var claims = await GetClaimsForUser(user);
         var accessToken = await GenerateAccessTokenAsync(claims);
-        var refreshToken = oldRefreshToken == null ? GenerateRefreshToken(user.Id, ipAddress) : await ReplaceRefreshToken(oldRefreshToken, user.Id, ipAddress);
+        var refreshToken = oldRefreshToken == null ? await GenerateRefreshTokenAsync(user.Id, ipAddress) : await ReplaceRefreshToken(oldRefreshToken, user.Id, ipAddress);
 
         return CreateTokenData(accessToken, refreshToken.Token);
     }
@@ -80,6 +80,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 #pragma warning disable CA2000
         var rsa = RSA.Create();
 #pragma warning restore CA2000
+
         try
         {
             var passphraseBytes = Encoding.UTF8.GetBytes(_options.KeyPassword);
@@ -110,7 +111,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         return tokenHandler.WriteToken(token);
     }
 
-    private RefreshToken GenerateRefreshToken(string userId, string ipAddress)
+    private async Task<RefreshToken> GenerateRefreshTokenAsync(string userId, string ipAddress)
     {
         var refreshToken = new RefreshToken
         {
@@ -122,7 +123,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         };
 
         context.RefreshTokens.Add(refreshToken);
-        context.SaveChanges();
+        await context.SaveChangesAsync();
 
         return refreshToken;
     }
@@ -134,21 +135,11 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         if (refreshTokenEntity == null || refreshTokenEntity.Revoked.HasValue || refreshTokenEntity.IsExpired)
         {
             Log.Warning("Refresh token is invalid, revoked, or expired.");
-            
+           
             throw new SecurityTokenException("Invalid refresh token.");
         }
 
-        var newRefreshTokenEntity = new RefreshToken
-        {
-            UserId = userId,
-            Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
-            Expires = DateTime.UtcNow.Add(RefreshTokenExpiration),
-            Created = DateTime.UtcNow,
-            CreatedByIp = ipAddress,
-        };
-
-        context.RefreshTokens.Add(newRefreshTokenEntity);
-        await context.SaveChangesAsync();
+        var newRefreshTokenEntity = await GenerateRefreshTokenAsync(userId, ipAddress);
 
         DetachEntityIfTracked(refreshTokenEntity);
 
@@ -169,7 +160,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         if (existingEntity != null)
         {
-            Log.Warning("Detaching already tracked entity with Id: {RefreshTokenId}", entity.Id);
+            Log.Debug("Detaching already tracked entity with Id: {RefreshTokenId}", entity.Id);
             
             existingEntity.State = EntityState.Detached;
         }
@@ -183,30 +174,10 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         return roleClaims.Where(c => c.Type == "Permission");
     }
 
-    public async Task RevokeRefreshTokenAsync(string refreshToken, TokenRevocationReason revocationReason)
-    {
-        var refreshTokenEntity = await context.RefreshTokens.SingleOrDefaultAsync(rt => rt.Token == refreshToken);
-
-        if (refreshTokenEntity == null || refreshTokenEntity.Revoked.HasValue)
-        {
-            var reason = refreshTokenEntity?.RevocationReason.ToString() ?? "Unknown reason";
-            
-            Log.Warning($"Refresh token is not valid or already revoked. Revocation Reason: {reason}, Token ID: {refreshTokenEntity?.Id}");
-
-            httpContextAccessor.HttpContext?.Response.Redirect("/Account/Logout");
-
-            return;
-        }
-
-        RevokeToken(refreshTokenEntity, revocationReason);
-
-        await context.SaveChangesAsync();
-    }
-
     private void RevokeToken(RefreshToken token, TokenRevocationReason reason)
     {
         var ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
-        
+
         token.Revoked = DateTime.UtcNow;
         token.RevokedByIp = ipAddress;
         token.RevocationReason = reason;
@@ -249,7 +220,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         if (expiredTokens.Count != 0)
         {
             context.RefreshTokens.RemoveRange(expiredTokens);
-
+            
             await context.SaveChangesAsync();
 
             foreach (var token in expiredTokens)
@@ -267,13 +238,12 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
     public bool IsTokenValid(string accessToken)
     {
-        var tokenHandler = new JwtSecurityTokenHandler();
-
         if (string.IsNullOrEmpty(accessToken))
         {
             return false;
         }
 
+        var tokenHandler = new JwtSecurityTokenHandler();
 #pragma warning disable CA2000
         var validationParameters = new TokenValidationParameters
         {

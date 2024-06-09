@@ -15,8 +15,6 @@ public interface ITokenService
 
     bool IsRefreshTokenValid(string refreshToken);
 
-    Task RevokeRefreshTokenAsync(string refreshToken, TokenRevocationReason revocationReason);
-
     Task RevokeAllRefreshTokensAsync(string userId, TokenRevocationReason revocationReason);
 
     Task CleanUpExpiredRefreshTokens();
