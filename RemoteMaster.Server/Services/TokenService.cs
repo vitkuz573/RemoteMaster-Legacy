@@ -36,7 +36,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         {
             AccessToken = accessToken,
             RefreshToken = refreshToken.Token,
-            AccessTokenExpiresAt = DateTime.UtcNow.AddSeconds(10),
+            AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(15),
             RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(1)
         };
     }
