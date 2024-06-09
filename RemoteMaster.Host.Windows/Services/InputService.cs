@@ -24,7 +24,7 @@ public sealed class InputService(IDesktopService desktopService) : IInputService
     private bool _blockUserInput;
     private bool _disposed;
 
-    public bool InputEnabled { get; set; } = true;
+    public bool InputEnabled { get; set; } = false;
 
     public bool BlockUserInput
     {

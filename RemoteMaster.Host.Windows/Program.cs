@@ -149,8 +149,8 @@ internal class Program
                     policy.RequireClaim("Permission", "SwitchScreen"))
                 .AddPolicy("ToggleInputPolicy", policy =>
                     policy.RequireClaim("Permission", "ToggleInput"))
-                .AddPolicy("BlockUserInputPolicy", policy =>
-                    policy.RequireClaim("Permission", "BlockUserInput"))
+                .AddPolicy("ToggleUserInputPolicy", policy =>
+                    policy.RequireClaim("Permission", "ToggleUserInput"))
                 .AddPolicy("ChangeImageQualityPolicy", policy =>
                     policy.RequireClaim("Permission", "ChangeImageQuality"))
                 .AddPolicy("ToggleCursorTrackingPolicy", policy =>

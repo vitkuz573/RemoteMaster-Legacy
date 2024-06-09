@@ -5,6 +5,7 @@
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -134,7 +135,11 @@ public partial class Access : IAsyncDisposable
         {
             await _connection.InvokeAsync("SendImageQuality", _imageQuality);
             await _connection.InvokeAsync("SendToggleCursorTracking", _cursorTracking);
-            await _connection.InvokeAsync("SendToggleInput", _inputEnabled);
+
+            if (HasPermission("ToggleInput"))
+            {
+                await _connection.InvokeAsync("SendToggleInput", _inputEnabled);
+            }
         }
     }
 
@@ -289,6 +294,7 @@ public partial class Access : IAsyncDisposable
         await module.InvokeAsync<string>("revokeUrl", src);
     }
 
+    [Authorize(Policy = "ToggleInputPolicy")]
     private async Task ToggleInputEnabled(bool value)
     {
         _inputEnabled = value;
@@ -340,6 +346,14 @@ public partial class Access : IAsyncDisposable
         }
 
         return userRoles.Contains(role);
+    }
+
+    private bool HasPermission(string permission)
+    {
+        var httpContext = HttpContextAccessor.HttpContext;
+        var permissionClaim = httpContext?.User?.Claims.FirstOrDefault(c => c.Type == "Permission" && c.Value == permission);
+
+        return permissionClaim != null;
     }
 
     private async Task<bool> HasAccessAsync()

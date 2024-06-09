@@ -89,6 +89,9 @@ public static class Program
             options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
         }).AddIdentityCookies();
 
+        services.AddAuthorizationBuilder()
+            .AddPolicy("ToggleInputPolicy", policy => policy.RequireClaim("Permission", "ToggleInput"));
+
         var connectionString = configurationManager.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
         if (string.IsNullOrEmpty(connectionString))

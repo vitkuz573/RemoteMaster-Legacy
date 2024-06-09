@@ -97,7 +97,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         inputService.InputEnabled = inputEnabled;
     }
 
-    [Authorize(Policy = "BlockUserInputPolicy")]
+    [Authorize(Policy = "ToggleUserInputPolicy")]
     public void SendBlockUserInput(bool blockInput)
     {
         inputService.BlockUserInput = blockInput;
