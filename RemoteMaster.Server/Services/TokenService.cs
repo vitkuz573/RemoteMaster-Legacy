@@ -22,6 +22,9 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 {
     private readonly JwtOptions _options = options.Value ?? throw new ArgumentNullException(nameof(options));
 
+    private static readonly TimeSpan AccessTokenExpiration = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan RefreshTokenExpiration = TimeSpan.FromDays(1);
+
     public async Task<TokenData> GenerateTokensAsync(string userId, string? oldRefreshToken = null)
     {
         var user = await userManager.FindByIdAsync(userId) ?? throw new ArgumentNullException(nameof(userId), "User not found");
@@ -32,12 +35,17 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         var accessToken = await GenerateAccessTokenAsync(claims);
         var refreshToken = oldRefreshToken == null ? GenerateRefreshToken(user.Id, ipAddress) : await ReplaceRefreshToken(oldRefreshToken, user.Id, ipAddress);
 
+        return CreateTokenData(accessToken, refreshToken.Token);
+    }
+
+    private static TokenData CreateTokenData(string accessToken, string refreshToken)
+    {
         return new TokenData
         {
             AccessToken = accessToken,
-            RefreshToken = refreshToken.Token,
-            AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(15),
-            RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(1)
+            RefreshToken = refreshToken,
+            AccessTokenExpiresAt = DateTime.UtcNow.Add(AccessTokenExpiration),
+            RefreshTokenExpiresAt = DateTime.UtcNow.Add(RefreshTokenExpiration)
         };
     }
 
@@ -54,6 +62,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         foreach (var role in userRoles)
         {
             claims.Add(new Claim(ClaimTypes.Role, role));
+
             var roleClaims = await GetClaimsForRole(role);
             claims.AddRange(roleClaims);
         }
@@ -76,11 +85,13 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
             var passphraseBytes = Encoding.UTF8.GetBytes(_options.KeyPassword);
             var privateKeyPath = Path.Combine(_options.KeysDirectory, "private_key.der");
             var privateKeyBytes = await File.ReadAllBytesAsync(privateKeyPath);
+
             rsa.ImportEncryptedPkcs8PrivateKey(passphraseBytes, privateKeyBytes, out _);
         }
         catch (CryptographicException ex)
         {
             Log.Error(ex, "Failed to decrypt or import the private key.");
+            
             throw;
         }
 
@@ -90,7 +101,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
             Issuer = "RemoteMaster Server",
             Audience = "RMServiceAPI",
             Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddMinutes(15),
+            Expires = DateTime.UtcNow.Add(AccessTokenExpiration),
             SigningCredentials = new SigningCredentials(new RsaSecurityKey(rsa), SecurityAlgorithms.RsaSha256)
         };
 
@@ -105,7 +116,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         {
             UserId = userId,
             Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
-            Expires = DateTime.UtcNow.AddDays(1),
+            Expires = DateTime.UtcNow.Add(RefreshTokenExpiration),
             Created = DateTime.UtcNow,
             CreatedByIp = ipAddress
         };
@@ -123,6 +134,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         if (refreshTokenEntity == null || refreshTokenEntity.Revoked.HasValue || refreshTokenEntity.IsExpired)
         {
             Log.Warning("Refresh token is invalid, revoked, or expired.");
+            
             throw new SecurityTokenException("Invalid refresh token.");
         }
 
@@ -130,7 +142,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         {
             UserId = userId,
             Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
-            Expires = DateTime.UtcNow.AddDays(1),
+            Expires = DateTime.UtcNow.Add(RefreshTokenExpiration),
             Created = DateTime.UtcNow,
             CreatedByIp = ipAddress,
         };
@@ -158,6 +170,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         if (existingEntity != null)
         {
             Log.Warning("Detaching already tracked entity with Id: {RefreshTokenId}", entity.Id);
+            
             existingEntity.State = EntityState.Detached;
         }
     }
@@ -173,24 +186,27 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
     public async Task RevokeRefreshTokenAsync(string refreshToken, TokenRevocationReason revocationReason)
     {
         var refreshTokenEntity = await context.RefreshTokens.SingleOrDefaultAsync(rt => rt.Token == refreshToken);
-        
+
         if (refreshTokenEntity == null || refreshTokenEntity.Revoked.HasValue)
         {
             var reason = refreshTokenEntity?.RevocationReason.ToString() ?? "Unknown reason";
-            Log.Warning($"Refresh token is not valid or already revoked. Revocation Reason: {reason}, Token ID: {refreshTokenEntity?.Id}");
-            httpContextAccessor.HttpContext?.Response.Redirect("/Account/Logout");
             
+            Log.Warning($"Refresh token is not valid or already revoked. Revocation Reason: {reason}, Token ID: {refreshTokenEntity?.Id}");
+
+            httpContextAccessor.HttpContext?.Response.Redirect("/Account/Logout");
+
             return;
         }
 
         RevokeToken(refreshTokenEntity, revocationReason);
-        
+
         await context.SaveChangesAsync();
     }
 
     private void RevokeToken(RefreshToken token, TokenRevocationReason reason)
     {
         var ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
+        
         token.Revoked = DateTime.UtcNow;
         token.RevokedByIp = ipAddress;
         token.RevocationReason = reason;
@@ -213,6 +229,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
             }
 
             await context.SaveChangesAsync();
+
             Log.Information($"All refresh tokens for user {userId} have been revoked. Reason: {revocationReason}");
         }
         else
@@ -232,6 +249,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         if (expiredTokens.Count != 0)
         {
             context.RefreshTokens.RemoveRange(expiredTokens);
+
             await context.SaveChangesAsync();
 
             foreach (var token in expiredTokens)
@@ -273,6 +291,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         try
         {
             tokenHandler.ValidateToken(accessToken, validationParameters, out var validatedToken);
+            
             return validatedToken != null;
         }
         catch
@@ -284,9 +303,12 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
     private RSA GetPublicKey()
     {
         var rsa = RSA.Create();
+
         var publicKeyPath = Path.Combine(_options.KeysDirectory, "public_key.der");
         var publicKeyBytes = File.ReadAllBytes(publicKeyPath);
+
         rsa.ImportRSAPublicKey(publicKeyBytes, out _);
+
         return rsa;
     }
 
