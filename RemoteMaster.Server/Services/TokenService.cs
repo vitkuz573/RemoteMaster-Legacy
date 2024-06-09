@@ -36,7 +36,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         {
             AccessToken = accessToken,
             RefreshToken = refreshToken.Token,
-            AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(15),
+            AccessTokenExpiresAt = DateTime.UtcNow.AddSeconds(10),
             RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(1)
         };
     }
@@ -118,8 +118,6 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
     private async Task<RefreshToken> ReplaceRefreshToken(string refreshToken, string userId, string ipAddress)
     {
-        Log.Information("Replacing refresh token for user {UserId} with token: {RefreshToken}", userId, refreshToken);
-
         var refreshTokenEntity = await context.RefreshTokens.SingleOrDefaultAsync(rt => rt.Token == refreshToken);
 
         if (refreshTokenEntity == null || refreshTokenEntity.Revoked.HasValue || refreshTokenEntity.IsExpired)
@@ -128,8 +126,6 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
             throw new SecurityTokenException("Invalid refresh token.");
         }
 
-        DetachEntityIfTracked(refreshTokenEntity);
-
         var newRefreshTokenEntity = new RefreshToken
         {
             UserId = userId,
@@ -137,26 +133,20 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
             Expires = DateTime.UtcNow.AddDays(1),
             Created = DateTime.UtcNow,
             CreatedByIp = ipAddress,
-            ReplacedByToken = refreshTokenEntity
         };
+
+        context.RefreshTokens.Add(newRefreshTokenEntity);
+        await context.SaveChangesAsync();
+
+        DetachEntityIfTracked(refreshTokenEntity);
 
         refreshTokenEntity.Revoked = DateTime.UtcNow;
         refreshTokenEntity.RevokedByIp = ipAddress;
         refreshTokenEntity.RevocationReason = TokenRevocationReason.ReplacedDuringRefresh;
         refreshTokenEntity.ReplacedByToken = newRefreshTokenEntity;
 
-        try
-        {
-            context.RefreshTokens.Attach(refreshTokenEntity);
-            context.Entry(refreshTokenEntity).State = EntityState.Modified;
-            context.RefreshTokens.Add(newRefreshTokenEntity);
-            await context.SaveChangesAsync();
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Error updating refresh token entity with Id: {RefreshTokenId}", refreshTokenEntity.Id);
-            throw;
-        }
+        context.RefreshTokens.Update(refreshTokenEntity);
+        await context.SaveChangesAsync();
 
         return newRefreshTokenEntity;
     }
@@ -164,7 +154,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
     private void DetachEntityIfTracked(RefreshToken entity)
     {
         var existingEntity = context.ChangeTracker.Entries<RefreshToken>().FirstOrDefault(e => e.Entity.Id == entity.Id);
-       
+
         if (existingEntity != null)
         {
             Log.Warning("Detaching already tracked entity with Id: {RefreshTokenId}", entity.Id);
