@@ -22,12 +22,13 @@ public class AccessTokenProvider(ITokenService tokenService, ITokenStorageServic
 
         if (!string.IsNullOrEmpty(refreshToken) && tokenService.IsRefreshTokenValid(refreshToken))
         {
-            var newTokens = await tokenService.GenerateTokensAsync(userId, refreshToken);
+            var tokenData = await tokenService.GenerateTokensAsync(userId, refreshToken);
 
-            if (!string.IsNullOrEmpty(newTokens.AccessToken))
+            if (!string.IsNullOrEmpty(tokenData.AccessToken))
             {
-                await tokenStorageService.StoreTokensAsync(userId, newTokens);
-                return newTokens.AccessToken;
+                await tokenStorageService.StoreTokensAsync(userId, tokenData);
+
+                return tokenData.AccessToken;
             }
         }
 
