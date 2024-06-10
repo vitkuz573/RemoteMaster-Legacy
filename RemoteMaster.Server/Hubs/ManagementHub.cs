@@ -17,8 +17,6 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
     public async Task<bool> RegisterHostAsync(HostConfiguration hostConfiguration)
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
-        ArgumentNullException.ThrowIfNull(hostConfiguration.Subject);
-        ArgumentNullException.ThrowIfNull(hostConfiguration.Subject.OrganizationalUnit);
 
         if (hostConfiguration.Host == null)
         {
