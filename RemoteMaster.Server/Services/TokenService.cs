@@ -22,7 +22,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 {
     private readonly JwtOptions _options = options.Value ?? throw new ArgumentNullException(nameof(options));
 
-    private static readonly TimeSpan AccessTokenExpiration = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan AccessTokenExpiration = TimeSpan.FromSeconds(15);
     private static readonly TimeSpan RefreshTokenExpiration = TimeSpan.FromDays(1);
 
     public async Task<TokenData> GenerateTokensAsync(string userId, string? oldRefreshToken = null)
@@ -135,35 +135,20 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         if (refreshTokenEntity == null || refreshTokenEntity.Revoked.HasValue || refreshTokenEntity.IsExpired)
         {
             Log.Warning("Refresh token is invalid, revoked, or expired.");
-           
+
             throw new SecurityTokenException("Invalid refresh token.");
         }
 
         var newRefreshTokenEntity = await GenerateRefreshTokenAsync(userId, ipAddress);
-
-        DetachEntityIfTracked(refreshTokenEntity);
 
         refreshTokenEntity.Revoked = DateTime.UtcNow;
         refreshTokenEntity.RevokedByIp = ipAddress;
         refreshTokenEntity.RevocationReason = TokenRevocationReason.ReplacedDuringRefresh;
         refreshTokenEntity.ReplacedByToken = newRefreshTokenEntity;
 
-        context.RefreshTokens.Update(refreshTokenEntity);
         await context.SaveChangesAsync();
 
         return newRefreshTokenEntity;
-    }
-
-    private void DetachEntityIfTracked(RefreshToken entity)
-    {
-        var existingEntity = context.ChangeTracker.Entries<RefreshToken>().FirstOrDefault(e => e.Entity.Id == entity.Id);
-
-        if (existingEntity != null)
-        {
-            Log.Debug("Detaching already tracked entity with Id: {RefreshTokenId}", entity.Id);
-            
-            existingEntity.State = EntityState.Detached;
-        }
     }
 
     private async Task<IEnumerable<Claim>> GetClaimsForRole(string roleName)
