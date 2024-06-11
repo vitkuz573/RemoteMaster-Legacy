@@ -18,7 +18,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
     {
         var organizations = await databaseService.GetNodesAsync<Organization>(n => n.Name == organizationName);
         var organization = organizations.FirstOrDefault();
-
+        
         return organization ?? throw new InvalidOperationException($"Organization '{organizationName}' not found.");
     }
 
@@ -30,7 +30,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         {
             var ous = await databaseService.GetNodesAsync<OrganizationalUnit>(n => n.Name == ouName && n.OrganizationId == organizationId);
             var ou = ous.FirstOrDefault(o => parentOu == null || o.ParentId == parentOu.NodeId) ?? throw new InvalidOperationException($"Organizational Unit '{ouName}' not found.");
-
+            
             parentOu = ou;
         }
 
@@ -49,8 +49,20 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
-        var organization = await GetOrganizationAsync(hostConfiguration.Subject.Organization);
-        var parentOu = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, organization.NodeId);
+        Organization organization;
+        OrganizationalUnit? parentOu;
+
+        try
+        {
+            organization = await GetOrganizationAsync(hostConfiguration.Subject.Organization);
+            parentOu = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, organization.NodeId);
+        }
+        catch (InvalidOperationException ex)
+        {
+            Log.Warning(ex.Message);
+            
+            return false;
+        }
 
         try
         {
@@ -86,8 +98,20 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             throw new ArgumentException("Host configuration must have a non-null Host property with a valid MAC address.", nameof(hostConfiguration));
         }
 
-        var organizationEntity = await GetOrganizationAsync(hostConfiguration.Subject.Organization);
-        var lastOu = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, organizationEntity.NodeId);
+        Organization organizationEntity;
+        OrganizationalUnit? lastOu;
+
+        try
+        {
+            organizationEntity = await GetOrganizationAsync(hostConfiguration.Subject.Organization);
+            lastOu = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, organizationEntity.NodeId);
+        }
+        catch (InvalidOperationException ex)
+        {
+            Log.Warning(ex.Message);
+            
+            return false;
+        }
 
         try
         {
@@ -108,7 +132,20 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
-        var lastOu = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, Guid.Empty);
+        Organization organization;
+        OrganizationalUnit? lastOu;
+
+        try
+        {
+            organization = await GetOrganizationAsync(hostConfiguration.Subject.Organization);
+            lastOu = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, organization.NodeId);
+        }
+        catch (InvalidOperationException ex)
+        {
+            Log.Warning(ex.Message);
+            
+            return false;
+        }
 
         try
         {
@@ -197,9 +234,8 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
     public async Task<HostMoveRequest?> GetHostMoveRequest(string macAddress)
     {
         var hostMoveRequests = await GetHostMoveRequestsAsync();
-        var hostMoveRequest = hostMoveRequests.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
-
-        return hostMoveRequest;
+        
+        return hostMoveRequests.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
     }
 
     public async Task AcknowledgeMoveRequest(string macAddress)
