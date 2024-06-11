@@ -41,10 +41,8 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
-        var organizationEntity = await GetOrganizationAsync(hostConfiguration.Subject.Organization);
-        var organizationId = organizationEntity.NodeId;
-
-        var parentOu = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, organizationId);
+        var organization = await GetOrganizationAsync(hostConfiguration.Subject.Organization);
+        var parentOu = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, organization.NodeId);
 
         var existingComputers = await databaseService.GetChildrenByParentIdAsync<Computer>(parentOu.NodeId);
         var existingComputer = existingComputers.FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
