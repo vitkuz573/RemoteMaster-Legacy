@@ -14,9 +14,12 @@ namespace RemoteMaster.Server.Hubs;
 
 public class ManagementHub(ICertificateService certificateService, ICaCertificateService caCertificateService, IDatabaseService databaseService) : Hub<IManagementClient>
 {
-    private async Task<Organization?> GetOrganizationAsync(string organizationName)
+    private async Task<Organization> GetOrganizationAsync(string organizationName)
     {
-        return (await databaseService.GetNodesAsync<Organization>(n => n.Name == organizationName)).FirstOrDefault();
+        var organizations = await databaseService.GetNodesAsync<Organization>(n => n.Name == organizationName);
+        var organization = organizations.FirstOrDefault();
+        
+        return organization ?? throw new InvalidOperationException($"Organization '{organizationName}' not found.");
     }
 
     private async Task<OrganizationalUnit?> ResolveOrganizationalUnitHierarchyAsync(IEnumerable<string> ouNames, Guid organizationId)
@@ -26,14 +29,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         foreach (var ouName in ouNames)
         {
             var ous = await databaseService.GetNodesAsync<OrganizationalUnit>(n => n.Name == ouName && n.OrganizationId == organizationId);
-            var ou = ous.FirstOrDefault(o => parentOu == null || o.ParentId == parentOu.NodeId);
-            
-            if (ou == null)
-            {
-                Log.Warning("Organizational Unit '{OUName}' not found.", ouName);
-                
-                return null;
-            }
+            var ou = ous.FirstOrDefault(o => parentOu == null || o.ParentId == parentOu.NodeId) ?? throw new InvalidOperationException($"Organizational Unit '{ouName}' not found.");
             
             parentOu = ou;
         }
@@ -45,15 +41,13 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
-        var organizationEntity = await GetOrganizationAsync(hostConfiguration.Subject.Organization)
-            ?? throw new InvalidOperationException($"Organization '{hostConfiguration.Subject.Organization}' not found.");
+        var organizationEntity = await GetOrganizationAsync(hostConfiguration.Subject.Organization);
         var organizationId = organizationEntity.NodeId;
 
-        var parentOu = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, organizationId)
-            ?? throw new InvalidOperationException("Failed to resolve organizational unit for registration.");
+        var parentOu = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, organizationId);
 
-        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(parentOu.NodeId))
-            .FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
+        var existingComputers = await databaseService.GetChildrenByParentIdAsync<Computer>(parentOu.NodeId);
+        var existingComputer = existingComputers.FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
 
         if (existingComputer != null)
         {
@@ -70,7 +64,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             };
 
             var hostGuid = await databaseService.AddNodeAsync(computer);
-
+            
             await Clients.Caller.ReceiveHostGuid(hostGuid);
         }
 
@@ -87,27 +81,12 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         }
 
         var organizationEntity = await GetOrganizationAsync(hostConfiguration.Subject.Organization);
-        
-        if (organizationEntity == null)
-        {
-            Log.Warning("Unregistration failed: Organization '{Organization}' not found.", hostConfiguration.Subject.Organization);
-            
-            return false;
-        }
 
         var organizationId = organizationEntity.NodeId;
-
         var lastOu = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, organizationId);
-        
-        if (lastOu == null)
-        {
-            Log.Warning("Unregistration failed: Specified OrganizationalUnit hierarchy not found.");
-            
-            return false;
-        }
 
-        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(lastOu.NodeId))
-            .FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
+        var existingComputers = await databaseService.GetChildrenByParentIdAsync<Computer>(lastOu.NodeId);
+        var existingComputer = existingComputers.FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
 
         if (existingComputer != null)
         {
@@ -126,16 +105,9 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
         var lastOu = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, Guid.Empty);
-        
-        if (lastOu == null)
-        {
-            Log.Warning("Update failed: Specified OrganizationalUnit hierarchy not found.");
-            
-            return false;
-        }
 
-        var computer = (await databaseService.GetChildrenByParentIdAsync<Computer>(lastOu.NodeId))
-            .FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
+        var computers = await databaseService.GetChildrenByParentIdAsync<Computer>(lastOu.NodeId);
+        var computer = computers.FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
 
         if (computer == null)
         {
@@ -205,7 +177,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         {
             var json = await File.ReadAllTextAsync(ouChangeRequestsFilePath);
             var hostMoveRequests = JsonSerializer.Deserialize<List<HostMoveRequest>>(json) ?? [];
-            
+           
             return hostMoveRequests.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
         }
 
@@ -225,11 +197,12 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             var hostMoveRequests = JsonSerializer.Deserialize<List<HostMoveRequest>>(json) ?? [];
 
             var requestToRemove = hostMoveRequests.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
-
+            
             if (requestToRemove != null)
             {
                 hostMoveRequests.Remove(requestToRemove);
                 var updatedJson = JsonSerializer.Serialize(hostMoveRequests);
+                
                 await File.WriteAllTextAsync(hostMoveRequestsFilePath, updatedJson);
 
                 Log.Information("Acknowledged and removed host move request for MAC address {MACAddress}.", macAddress);
