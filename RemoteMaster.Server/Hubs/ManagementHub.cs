@@ -14,31 +14,43 @@ namespace RemoteMaster.Server.Hubs;
 
 public class ManagementHub(ICertificateService certificateService, ICaCertificateService caCertificateService, IDatabaseService databaseService) : Hub<IManagementClient>
 {
+    private async Task<Organization?> GetOrganizationAsync(string organizationName)
+    {
+        return (await databaseService.GetNodesAsync<Organization>(n => n.Name == organizationName)).FirstOrDefault();
+    }
+
+    private async Task<OrganizationalUnit?> ResolveOrganizationalUnitHierarchyAsync(IEnumerable<string> ouNames, Guid organizationId)
+    {
+        OrganizationalUnit? parentOu = null;
+
+        foreach (var ouName in ouNames)
+        {
+            var ous = await databaseService.GetNodesAsync<OrganizationalUnit>(n => n.Name == ouName && n.OrganizationId == organizationId);
+            var ou = ous.FirstOrDefault(o => parentOu == null || o.ParentId == parentOu.NodeId);
+            
+            if (ou == null)
+            {
+                Log.Warning("Organizational Unit '{OUName}' not found.", ouName);
+                
+                return null;
+            }
+            
+            parentOu = ou;
+        }
+
+        return parentOu;
+    }
+
     public async Task<bool> RegisterHostAsync(HostConfiguration hostConfiguration)
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
-        if (hostConfiguration.Host == null)
-        {
-            throw new ArgumentException("Host configuration must have a non-null Host property.", nameof(hostConfiguration));
-        }
-
-        var organizationEntity = (await databaseService.GetNodesAsync<Organization>(n => n.Name == hostConfiguration.Subject.Organization)).FirstOrDefault() ?? throw new InvalidOperationException($"Organization '{hostConfiguration.Subject.Organization}' not found.");
+        var organizationEntity = await GetOrganizationAsync(hostConfiguration.Subject.Organization)
+            ?? throw new InvalidOperationException($"Organization '{hostConfiguration.Subject.Organization}' not found.");
         var organizationId = organizationEntity.NodeId;
 
-        OrganizationalUnit? parentOu = null;
-
-        foreach (var ouName in hostConfiguration.Subject.OrganizationalUnit)
-        {
-            var ous = await databaseService.GetNodesAsync<OrganizationalUnit>(n => n.Name == ouName && n.OrganizationId == organizationId);
-            var ou = ous.FirstOrDefault(o => parentOu == null || o.ParentId == parentOu.NodeId) ?? throw new InvalidOperationException($"Organizational Unit '{ouName}' not found.");
-            parentOu = ou;
-        }
-
-        if (parentOu == null)
-        {
-            throw new InvalidOperationException("Failed to resolve organizational unit for registration.");
-        }
+        var parentOu = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, organizationId)
+            ?? throw new InvalidOperationException("Failed to resolve organizational unit for registration.");
 
         var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(parentOu.NodeId))
             .FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
@@ -69,45 +81,28 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
-        if (hostConfiguration.Host == null || string.IsNullOrWhiteSpace(hostConfiguration.Host.MacAddress))
+        if (string.IsNullOrWhiteSpace(hostConfiguration.Host.MacAddress))
         {
             throw new ArgumentException("Host configuration must have a non-null Host property with a valid MAC address.", nameof(hostConfiguration));
         }
 
-        var organizationEntity = (await databaseService.GetNodesAsync<Organization>(n => n.Name == hostConfiguration.Subject.Organization)).FirstOrDefault();
-
+        var organizationEntity = await GetOrganizationAsync(hostConfiguration.Subject.Organization);
+        
         if (organizationEntity == null)
         {
             Log.Warning("Unregistration failed: Organization '{Organization}' not found.", hostConfiguration.Subject.Organization);
-
+            
             return false;
         }
 
         var organizationId = organizationEntity.NodeId;
 
-        OrganizationalUnit? lastOu = null;
-
-        foreach (var ouName in hostConfiguration.Subject.OrganizationalUnit)
-        {
-            var ous = await databaseService.GetNodesAsync<OrganizationalUnit>(n => n.Name == ouName && n.OrganizationId == organizationId);
-            var ou = ous.FirstOrDefault(o => lastOu == null || o.ParentId == lastOu.NodeId);
-
-            if (ou != null)
-            {
-                lastOu = ou;
-            }
-            else
-            {
-                Log.Warning("Unregistration failed: OrganizationalUnit '{OUName}' not found.", ouName);
-
-                return false;
-            }
-        }
-
+        var lastOu = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, organizationId);
+        
         if (lastOu == null)
         {
             Log.Warning("Unregistration failed: Specified OrganizationalUnit hierarchy not found.");
-
+            
             return false;
         }
 
@@ -117,12 +112,12 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         if (existingComputer != null)
         {
             await databaseService.RemoveNodeAsync(existingComputer);
-
+            
             return true;
         }
 
         Log.Warning("Unregistration failed: Computer with MAC address '{MACAddress}' not found in the last organizational unit.", hostConfiguration.Host.MacAddress);
-
+        
         return false;
     }
 
@@ -130,30 +125,8 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
-        if (hostConfiguration.Host == null)
-        {
-            throw new ArgumentException("Host configuration must have a non-null Host property.", nameof(hostConfiguration));
-        }
-
-        OrganizationalUnit? lastOu = null;
-
-        foreach (var ouName in hostConfiguration.Subject.OrganizationalUnit)
-        {
-            var ous = await databaseService.GetNodesAsync<OrganizationalUnit>(n => n.Name == ouName);
-            var ou = ous.FirstOrDefault(o => lastOu == null || o.ParentId == lastOu.NodeId);
-
-            if (ou != null)
-            {
-                lastOu = ou;
-            }
-            else
-            {
-                Log.Warning("Update failed: OrganizationalUnit '{OUName}' not found.", ouName);
-                
-                return false;
-            }
-        }
-
+        var lastOu = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, Guid.Empty);
+        
         if (lastOu == null)
         {
             Log.Warning("Update failed: Specified OrganizationalUnit hierarchy not found.");
@@ -180,11 +153,6 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
-        if (hostConfiguration.Host == null)
-        {
-            throw new ArgumentException("Host configuration must have a non-null Host property.", nameof(hostConfiguration));
-        }
-
         if (string.IsNullOrWhiteSpace(hostConfiguration.Host.MacAddress))
         {
             throw new ArgumentNullException(hostConfiguration.Host.MacAddress);
@@ -193,9 +161,8 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         try
         {
             var computers = await databaseService.GetNodesAsync<Computer>(n => n.MacAddress == hostConfiguration.Host.MacAddress);
-            var isRegistered = computers.Any();
-
-            return isRegistered;
+            
+            return computers.Any();
         }
         catch (Exception ex)
         {
@@ -218,13 +185,13 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             }
 
             Log.Warning("Public key file not found at '{Path}'", publicKeyPath);
-
+            
             return null;
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Error while reading public key file.");
-
+            
             return null;
         }
     }
@@ -238,16 +205,12 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         {
             var json = await File.ReadAllTextAsync(ouChangeRequestsFilePath);
             var hostMoveRequests = JsonSerializer.Deserialize<List<HostMoveRequest>>(json) ?? [];
-            var hostMoveRequest = hostMoveRequests.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
-
-            if (hostMoveRequest != null)
-            {
-                return hostMoveRequest;
-            }
+            
+            return hostMoveRequests.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
         }
 
         Log.Information("No host move request found for MAC address {MACAddress}.", macAddress);
-
+        
         return null;
     }
 
@@ -290,13 +253,13 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         {
             var certificate = certificateService.IssueCertificate(csrBytes);
             await Clients.Caller.ReceiveCertificate(certificate.Export(X509ContentType.Pfx));
-
+            
             return true;
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Error while issuing certificate.");
-
+            
             return false;
         }
     }
@@ -310,20 +273,20 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             if (caCertificatePublicPart != null)
             {
                 await Clients.Caller.ReceiveCertificate(caCertificatePublicPart.RawData);
-
+                
                 return true;
             }
             else
             {
                 Log.Warning("CA certificate public part could not be retrieved.");
-
+                
                 return false;
             }
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Error while sending CA certificate public part.");
-
+            
             return false;
         }
     }
