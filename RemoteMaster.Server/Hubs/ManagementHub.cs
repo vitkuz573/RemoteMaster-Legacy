@@ -18,7 +18,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
     {
         var organizations = await databaseService.GetNodesAsync<Organization>(n => n.Name == organizationName);
         var organization = organizations.FirstOrDefault();
-        
+
         return organization ?? throw new InvalidOperationException($"Organization '{organizationName}' not found.");
     }
 
@@ -30,11 +30,19 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         {
             var ous = await databaseService.GetNodesAsync<OrganizationalUnit>(n => n.Name == ouName && n.OrganizationId == organizationId);
             var ou = ous.FirstOrDefault(o => parentOu == null || o.ParentId == parentOu.NodeId) ?? throw new InvalidOperationException($"Organizational Unit '{ouName}' not found.");
-            
+
             parentOu = ou;
         }
 
         return parentOu;
+    }
+
+    private async Task<Computer> GetComputerByMacAddressAsync(string macAddress, Guid parentOuId)
+    {
+        var existingComputers = await databaseService.GetChildrenByParentIdAsync<Computer>(parentOuId);
+        var computer = existingComputers.FirstOrDefault(c => c.MacAddress == macAddress) ?? throw new InvalidOperationException($"Computer with MAC address '{macAddress}' not found.");
+        
+        return computer;
     }
 
     public async Task<bool> RegisterHostAsync(HostConfiguration hostConfiguration)
@@ -44,15 +52,15 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         var organization = await GetOrganizationAsync(hostConfiguration.Subject.Organization);
         var parentOu = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, organization.NodeId);
 
-        var existingComputers = await databaseService.GetChildrenByParentIdAsync<Computer>(parentOu.NodeId);
-        var existingComputer = existingComputers.FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
-
-        if (existingComputer != null)
+        try
         {
+            var existingComputer = await GetComputerByMacAddressAsync(hostConfiguration.Host.MacAddress, parentOu.NodeId);
             await databaseService.UpdateComputerAsync(existingComputer, hostConfiguration.Host.IpAddress, hostConfiguration.Host.Name);
         }
-        else
+        catch (InvalidOperationException ex)
         {
+            Log.Warning(ex.Message);
+
             var computer = new Computer
             {
                 Name = hostConfiguration.Host.Name,
@@ -79,23 +87,21 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         }
 
         var organizationEntity = await GetOrganizationAsync(hostConfiguration.Subject.Organization);
+        var lastOu = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, organizationEntity.NodeId);
 
-        var organizationId = organizationEntity.NodeId;
-        var lastOu = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, organizationId);
-
-        var existingComputers = await databaseService.GetChildrenByParentIdAsync<Computer>(lastOu.NodeId);
-        var existingComputer = existingComputers.FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
-
-        if (existingComputer != null)
+        try
         {
+            var existingComputer = await GetComputerByMacAddressAsync(hostConfiguration.Host.MacAddress, lastOu.NodeId);
             await databaseService.RemoveNodeAsync(existingComputer);
             
             return true;
         }
-
-        Log.Warning("Unregistration failed: Computer with MAC address '{MACAddress}' not found in the last organizational unit.", hostConfiguration.Host.MacAddress);
-        
-        return false;
+        catch (InvalidOperationException ex)
+        {
+            Log.Warning(ex.Message);
+            
+            return false;
+        }
     }
 
     public async Task<bool> UpdateHostInformationAsync(HostConfiguration hostConfiguration)
@@ -104,19 +110,19 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
 
         var lastOu = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, Guid.Empty);
 
-        var computers = await databaseService.GetChildrenByParentIdAsync<Computer>(lastOu.NodeId);
-        var computer = computers.FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
-
-        if (computer == null)
+        try
         {
-            Log.Warning("Update failed: Computer with MAC address '{MACAddress}' not found in the last organizational unit.", hostConfiguration.Host.MacAddress);
+            var computer = await GetComputerByMacAddressAsync(hostConfiguration.Host.MacAddress, lastOu.NodeId);
+            await databaseService.UpdateComputerAsync(computer, hostConfiguration.Host.IpAddress, hostConfiguration.Host.Name);
+            
+            return true;
+        }
+        catch (InvalidOperationException ex)
+        {
+            Log.Warning(ex.Message);
             
             return false;
         }
-
-        await databaseService.UpdateComputerAsync(computer, hostConfiguration.Host.IpAddress, hostConfiguration.Host.Name);
-        
-        return true;
     }
 
     public async Task<bool> IsHostRegisteredAsync(HostConfiguration hostConfiguration)
@@ -154,8 +160,6 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
                 return await File.ReadAllBytesAsync(publicKeyPath);
             }
 
-            Log.Warning("Public key file not found at '{Path}'", publicKeyPath);
-            
             return null;
         }
         catch (Exception ex)
@@ -166,25 +170,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         }
     }
 
-    public async Task<HostMoveRequest?> GetHostMoveRequest(string macAddress)
-    {
-        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var ouChangeRequestsFilePath = Path.Combine(programDataPath, "RemoteMaster", "Server", "HostMoveRequests.json");
-
-        if (File.Exists(ouChangeRequestsFilePath))
-        {
-            var json = await File.ReadAllTextAsync(ouChangeRequestsFilePath);
-            var hostMoveRequests = JsonSerializer.Deserialize<List<HostMoveRequest>>(json) ?? [];
-           
-            return hostMoveRequests.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
-        }
-
-        Log.Information("No host move request found for MAC address {MACAddress}.", macAddress);
-        
-        return null;
-    }
-
-    public async Task AcknowledgeMoveRequest(string macAddress)
+    private static async Task<List<HostMoveRequest>> GetHostMoveRequestsAsync()
     {
         var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
         var hostMoveRequestsFilePath = Path.Combine(programDataPath, "RemoteMaster", "Server", "HostMoveRequests.json");
@@ -192,27 +178,39 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         if (File.Exists(hostMoveRequestsFilePath))
         {
             var json = await File.ReadAllTextAsync(hostMoveRequestsFilePath);
-            var hostMoveRequests = JsonSerializer.Deserialize<List<HostMoveRequest>>(json) ?? [];
-
-            var requestToRemove = hostMoveRequests.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
             
-            if (requestToRemove != null)
-            {
-                hostMoveRequests.Remove(requestToRemove);
-                var updatedJson = JsonSerializer.Serialize(hostMoveRequests);
-                
-                await File.WriteAllTextAsync(hostMoveRequestsFilePath, updatedJson);
-
-                Log.Information("Acknowledged and removed host move request for MAC address {MACAddress}.", macAddress);
-            }
-            else
-            {
-                Log.Information("No host move request found for MAC address {MACAddress} to acknowledge.", macAddress);
-            }
+            return JsonSerializer.Deserialize<List<HostMoveRequest>>(json) ?? [];
         }
-        else
+
+        return [];
+    }
+
+    private static async Task SaveHostMoveRequestsAsync(List<HostMoveRequest> hostMoveRequests)
+    {
+        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        var hostMoveRequestsFilePath = Path.Combine(programDataPath, "RemoteMaster", "Server", "HostMoveRequests.json");
+        var updatedJson = JsonSerializer.Serialize(hostMoveRequests);
+
+        await File.WriteAllTextAsync(hostMoveRequestsFilePath, updatedJson);
+    }
+
+    public async Task<HostMoveRequest?> GetHostMoveRequest(string macAddress)
+    {
+        var hostMoveRequests = await GetHostMoveRequestsAsync();
+        var hostMoveRequest = hostMoveRequests.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
+
+        return hostMoveRequest;
+    }
+
+    public async Task AcknowledgeMoveRequest(string macAddress)
+    {
+        var hostMoveRequests = await GetHostMoveRequestsAsync();
+        var requestToRemove = hostMoveRequests.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
+
+        if (requestToRemove != null)
         {
-            Log.Warning("Host move requests file not found at '{Path}'. Unable to acknowledge change request.", hostMoveRequestsFilePath);
+            hostMoveRequests.Remove(requestToRemove);
+            await SaveHostMoveRequestsAsync(hostMoveRequests);
         }
     }
 
@@ -249,8 +247,6 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             }
             else
             {
-                Log.Warning("CA certificate public part could not be retrieved.");
-                
                 return false;
             }
         }
