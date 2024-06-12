@@ -37,7 +37,7 @@ public class TelegramNotificationService : INotificationService
         }
     }
 
-    public async Task SendNotificationAsync(string message, ParseMode parseMode = ParseMode.Markdown)
+    public async Task SendNotificationAsync(string message)
     {
         if (!_isConfigured)
         {
@@ -50,7 +50,7 @@ public class TelegramNotificationService : INotificationService
             {
                 foreach (var chatId in _chatIds)
                 {
-                    await _botClient.SendTextMessageAsync(chatId, message, parseMode: parseMode);
+                    await _botClient.SendTextMessageAsync(chatId, message, parseMode: ParseMode.MarkdownV2);
                 }
             }
         }
