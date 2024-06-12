@@ -29,7 +29,9 @@ public partial class ManageRoleClaims
     {
         using var scope = ScopeFactory.CreateScope();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-        _roles = await roleManager.Roles.ToListAsync();
+        _roles = await roleManager.Roles
+            .Where(role => role.Name != "RootAdministrator")
+            .ToListAsync();
 
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var allClaims = await dbContext.RoleClaims
