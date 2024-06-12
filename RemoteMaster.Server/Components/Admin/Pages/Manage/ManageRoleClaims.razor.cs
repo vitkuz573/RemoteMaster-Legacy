@@ -1,8 +1,4 @@
-﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
-// This file is part of the RemoteMaster project.
-// Licensed under the GNU Affero General Public License v3.0.
-
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -67,7 +63,9 @@ namespace RemoteMaster.Server.Components.Admin.Pages.Manage
             }
 
             // Store the initial state of the selected claims
-            _initialRoleClaims = _roleClaims.Select(rc => (rc.ClaimType, rc.ClaimValue)).ToList();
+            _initialRoleClaims = _claimTypes
+                .SelectMany(ct => ct.Values.Where(v => v.IsSelected).Select(v => (ct.Type, v.Value)))
+                .ToList();
 
             StateHasChanged();
         }
