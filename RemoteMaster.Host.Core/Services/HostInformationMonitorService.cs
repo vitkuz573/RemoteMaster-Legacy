@@ -37,7 +37,9 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
             if (hostConfiguration.Host != null && hostConfiguration.Host.MacAddress != hostInformation.MacAddress)
             {
                 Log.Information("MAC address has changed, which might indicate restoration from backup. System will be registered under a special organizational unit.");
-                hostConfiguration.Subject.OrganizationalUnit = ["RestoredSystems"];
+
+                hostConfiguration.Subject.Organization = "Restoration Systems";
+                hostConfiguration.Subject.OrganizationalUnit = ["Backup Recovery"];
             }
 
             hostConfiguration.Host = hostInformation;
