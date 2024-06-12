@@ -192,7 +192,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         catch (InvalidOperationException ex)
         {
             Log.Warning(ex.Message);
-            await notificationService.SendNotificationAsync($"Host information update failed: {ex.Message} for host {hostConfiguration.Host.Name} ({hostConfiguration.Host.MacAddress})");
+            await notificationService.SendNotificationAsync($"Host information update failed: {ex.Message} for host {hostConfiguration.Host.Name} ({hostConfiguration.Host.MacAddress}) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
             return false;
         }
 
@@ -202,14 +202,14 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             await databaseService.UpdateComputerAsync(computer, hostConfiguration.Host.IpAddress, hostConfiguration.Host.Name);
 
             Log.Information("Host information updated: {HostName} ({MacAddress})", hostConfiguration.Host.Name, hostConfiguration.Host.MacAddress);
-            await notificationService.SendNotificationAsync($"Host information updated: {hostConfiguration.Host.Name} ({hostConfiguration.Host.MacAddress})");
+            await notificationService.SendNotificationAsync($"Host information updated: {hostConfiguration.Host.Name} ({hostConfiguration.Host.MacAddress}) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
 
             return true;
         }
         catch (InvalidOperationException ex)
         {
             Log.Warning(ex.Message);
-            await notificationService.SendNotificationAsync($"Host information update failed: {ex.Message} for host {hostConfiguration.Host.Name} ({hostConfiguration.Host.MacAddress})");
+            await notificationService.SendNotificationAsync($"Host information update failed: {ex.Message} for host {hostConfiguration.Host.Name} ({hostConfiguration.Host.MacAddress}) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
 
             return false;
         }
@@ -349,7 +349,6 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             await Clients.Caller.ReceiveCertificate(certificate.Export(X509ContentType.Pfx));
 
             Log.Information("Certificate issued successfully.");
-            await notificationService.SendNotificationAsync($"Certificate issued successfully.");
 
             return true;
         }
@@ -377,7 +376,6 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
                 await Clients.Caller.ReceiveCertificate(caCertificatePublicPart.RawData);
 
                 Log.Information("CA certificate retrieved successfully.");
-                await notificationService.SendNotificationAsync("CA certificate retrieved successfully.");
 
                 return true;
             }
