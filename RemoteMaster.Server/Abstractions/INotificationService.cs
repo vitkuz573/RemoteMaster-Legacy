@@ -2,9 +2,11 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Telegram.Bot.Types.Enums;
+
 namespace RemoteMaster.Server.Abstractions;
 
 public interface INotificationService
 {
-    Task SendNotificationAsync(string message);
+    Task SendNotificationAsync(string message, ParseMode parseMode = ParseMode.Markdown);
 }

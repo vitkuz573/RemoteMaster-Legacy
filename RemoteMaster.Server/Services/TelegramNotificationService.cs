@@ -7,6 +7,7 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
 using Serilog;
 using Telegram.Bot;
+using Telegram.Bot.Types.Enums;
 
 namespace RemoteMaster.Server.Services;
 
@@ -36,10 +37,10 @@ public class TelegramNotificationService : INotificationService
         }
     }
 
-    public async Task SendNotificationAsync(string message)
+    public async Task SendNotificationAsync(string message, ParseMode parseMode = ParseMode.Markdown)
     {
         if (!_isConfigured)
-        {            
+        {
             return;
         }
 
@@ -49,7 +50,7 @@ public class TelegramNotificationService : INotificationService
             {
                 foreach (var chatId in _chatIds)
                 {
-                    await _botClient.SendTextMessageAsync(chatId, message);
+                    await _botClient.SendTextMessageAsync(chatId, message, parseMode: parseMode);
                 }
             }
         }
