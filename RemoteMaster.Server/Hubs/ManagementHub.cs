@@ -15,7 +15,7 @@ namespace RemoteMaster.Server.Hubs;
 /// <summary>
 /// Hub for managing various operations related to hosts and certificates.
 /// </summary>
-public class ManagementHub(ICertificateService certificateService, ICaCertificateService caCertificateService, IDatabaseService databaseService) : Hub<IManagementClient>
+public class ManagementHub(ICertificateService certificateService, ICaCertificateService caCertificateService, IDatabaseService databaseService, INotificationService notificationService) : Hub<IManagementClient>
 {
     /// <summary>
     /// Retrieves an organization by name from the database.
@@ -42,11 +42,14 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
     {
         OrganizationalUnit? parentOu = null;
 
+        var organizations = await databaseService.GetNodesAsync<Organization>(n => n.NodeId == organizationId);
+        var organizationName = organizations.FirstOrDefault()?.Name ?? "Unknown";
+
         foreach (var ouName in ouNames)
         {
             var ous = await databaseService.GetNodesAsync<OrganizationalUnit>(n => n.Name == ouName && n.OrganizationId == organizationId);
-            var ou = ous.FirstOrDefault(o => parentOu == null || o.ParentId == parentOu.NodeId) ?? throw new InvalidOperationException($"Organizational Unit '{ouName}' not found.");
-
+            var ou = ous.FirstOrDefault(o => parentOu == null || o.ParentId == parentOu.NodeId) ?? throw new InvalidOperationException($"Organizational Unit '{ouName}' not found in organization '{organizationName}'.");
+            
             parentOu = ou;
         }
 
@@ -88,7 +91,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         catch (InvalidOperationException ex)
         {
             Log.Warning(ex.Message);
-
+            await notificationService.SendNotificationAsync($"Host registration failed: {ex.Message} for host {hostConfiguration.Host.Name} ({hostConfiguration.Host.MacAddress})");
             return false;
         }
 
@@ -96,11 +99,12 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         {
             var existingComputer = await GetComputerByMacAddressAsync(hostConfiguration.Host.MacAddress, parentOu.NodeId);
             await databaseService.UpdateComputerAsync(existingComputer, hostConfiguration.Host.IpAddress, hostConfiguration.Host.Name);
+            Log.Information("Host registration successful: {HostName} ({MacAddress})", hostConfiguration.Host.Name, hostConfiguration.Host.MacAddress);
+            await notificationService.SendNotificationAsync($"Host registration successful: {hostConfiguration.Host.Name} ({hostConfiguration.Host.MacAddress})");
         }
         catch (InvalidOperationException ex)
         {
             Log.Warning(ex.Message);
-
             var computer = new Computer
             {
                 Name = hostConfiguration.Host.Name,
@@ -110,8 +114,10 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             };
 
             var hostGuid = await databaseService.AddNodeAsync(computer);
-
             await Clients.Caller.ReceiveHostGuid(hostGuid);
+
+            Log.Information("New host registered: {HostName} ({MacAddress})", hostConfiguration.Host.Name, hostConfiguration.Host.MacAddress);
+            await notificationService.SendNotificationAsync($"New host registered: {hostConfiguration.Host.Name} ({hostConfiguration.Host.MacAddress})");
         }
 
         return true;
@@ -143,7 +149,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         catch (InvalidOperationException ex)
         {
             Log.Warning(ex.Message);
-
+            await notificationService.SendNotificationAsync($"Host unregistration failed: {ex.Message} for host {hostConfiguration.Host.Name} ({hostConfiguration.Host.MacAddress})");
             return false;
         }
 
@@ -152,11 +158,15 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             var existingComputer = await GetComputerByMacAddressAsync(hostConfiguration.Host.MacAddress, lastOu.NodeId);
             await databaseService.RemoveNodeAsync(existingComputer);
 
+            Log.Information("Host unregistered: {HostName} ({MacAddress})", hostConfiguration.Host.Name, hostConfiguration.Host.MacAddress);
+            await notificationService.SendNotificationAsync($"Host unregistered: {hostConfiguration.Host.Name} ({hostConfiguration.Host.MacAddress})");
+
             return true;
         }
         catch (InvalidOperationException ex)
         {
             Log.Warning(ex.Message);
+            await notificationService.SendNotificationAsync($"Host unregistration failed: {ex.Message} for host {hostConfiguration.Host.Name} ({hostConfiguration.Host.MacAddress})");
 
             return false;
         }
@@ -182,7 +192,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         catch (InvalidOperationException ex)
         {
             Log.Warning(ex.Message);
-
+            await notificationService.SendNotificationAsync($"Host information update failed: {ex.Message} for host {hostConfiguration.Host.Name} ({hostConfiguration.Host.MacAddress})");
             return false;
         }
 
@@ -191,11 +201,15 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             var computer = await GetComputerByMacAddressAsync(hostConfiguration.Host.MacAddress, lastOu.NodeId);
             await databaseService.UpdateComputerAsync(computer, hostConfiguration.Host.IpAddress, hostConfiguration.Host.Name);
 
+            Log.Information("Host information updated: {HostName} ({MacAddress})", hostConfiguration.Host.Name, hostConfiguration.Host.MacAddress);
+            await notificationService.SendNotificationAsync($"Host information updated: {hostConfiguration.Host.Name} ({hostConfiguration.Host.MacAddress})");
+
             return true;
         }
         catch (InvalidOperationException ex)
         {
             Log.Warning(ex.Message);
+            await notificationService.SendNotificationAsync($"Host information update failed: {ex.Message} for host {hostConfiguration.Host.Name} ({hostConfiguration.Host.MacAddress})");
 
             return false;
         }
@@ -224,6 +238,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         catch (Exception ex)
         {
             Log.Error(ex, "Error while checking registration of the host '{HostName}'.", hostConfiguration.Host.Name);
+            await notificationService.SendNotificationAsync($"Error while checking registration of the host {hostConfiguration.Host.Name} ({hostConfiguration.Host.MacAddress}): {ex.Message}");
 
             return false;
         }
@@ -250,6 +265,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         catch (Exception ex)
         {
             Log.Error(ex, "Error while reading public key file.");
+            await notificationService.SendNotificationAsync($"Error while reading public key file: {ex.Message}");
 
             return null;
         }
@@ -268,7 +284,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         {
             var json = await File.ReadAllTextAsync(hostMoveRequestsFilePath);
 
-            return JsonSerializer.Deserialize<List<HostMoveRequest>>(json) ?? [];
+            return JsonSerializer.Deserialize<List<HostMoveRequest>>(json) ?? new List<HostMoveRequest>();
         }
 
         return [];
@@ -312,6 +328,9 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         {
             hostMoveRequests.Remove(requestToRemove);
             await SaveHostMoveRequestsAsync(hostMoveRequests);
+
+            Log.Information("Acknowledged move request for host with MAC address: {MacAddress}", macAddress);
+            await notificationService.SendNotificationAsync($"Acknowledged move request for host with MAC address: {macAddress}");
         }
     }
 
@@ -329,11 +348,15 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             var certificate = certificateService.IssueCertificate(csrBytes);
             await Clients.Caller.ReceiveCertificate(certificate.Export(X509ContentType.Pfx));
 
+            Log.Information("Certificate issued successfully.");
+            await notificationService.SendNotificationAsync($"Certificate issued successfully.");
+
             return true;
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Error while issuing certificate.");
+            await notificationService.SendNotificationAsync($"Error while issuing certificate: {ex.Message}");
 
             return false;
         }
@@ -353,16 +376,23 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             {
                 await Clients.Caller.ReceiveCertificate(caCertificatePublicPart.RawData);
 
+                Log.Information("CA certificate retrieved successfully.");
+                await notificationService.SendNotificationAsync("CA certificate retrieved successfully.");
+
                 return true;
             }
             else
             {
+                Log.Warning("CA certificate retrieval failed.");
+                await notificationService.SendNotificationAsync("CA certificate retrieval failed.");
+
                 return false;
             }
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Error while sending CA certificate public part.");
+            await notificationService.SendNotificationAsync($"Error while sending CA certificate public part: {ex.Message}");
 
             return false;
         }

@@ -369,3 +369,5 @@ scripts/InternalCA
 scripts/ServerCert
 scripts/CodeSignCert
 scripts/keys
+
+appsettings.json

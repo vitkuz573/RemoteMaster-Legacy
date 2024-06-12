@@ -11,20 +11,20 @@ namespace RemoteMaster.Server.Services;
 
 public class RoleInitializationService(IServiceProvider serviceProvider) : IHostedService
 {
-    private readonly List<string> _roles = new List<string> { "RootAdministrator", "Administrator", "Viewer" };
-    private readonly List<string> _claims = new List<string>
-    {
+    private readonly List<string> _roles = ["RootAdministrator", "Administrator", "Viewer"];
+    private readonly List<string> _claims =
+    [
         "MouseInput", "KeyboardInput", "SwitchScreen", "ToggleInput", "BlockUserInput",
         "ChangeImageQuality", "TerminateHost", "RebootComputer", "ShutdownComputer",
         "ChangeMonitorState", "ExecuteScript", "Move", "RenewCertificate",
         "ToggleCursorTracking"
-    };
+    ];
 
     private readonly Dictionary<string, List<string>> _roleClaims = new Dictionary<string, List<string>>
     {
         { "Administrator", new List<string>
             {
-                "MouseInput", "KeyboardInput", "SwitchScreen", "ToggleInput", "BlockUserInput",
+                "MouseInput", "KeyboardInput", "ToggleCursorTracking", "SwitchScreen", "ToggleInput", "BlockUserInput",
                 "ChangeImageQuality", "TerminateHost", "RebootComputer", "ShutdownComputer",
                 "ChangeMonitorState", "ExecuteScript", "Move", "RenewCertificate"
             }

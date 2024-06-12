@@ -140,6 +140,7 @@ public static class Program
         services.AddSingleton<IRemoteSchtasksService, RemoteSchtasksService>();
         services.AddSingleton<INetworkDriveService, NetworkDriveService>();
         services.AddSingleton<ICountryProvider, CountryProvider>();
+        services.AddSingleton<INotificationService, TelegramNotificationService>();
 
         services.AddSingleton(new JsonSerializerOptions
         {
@@ -156,6 +157,7 @@ public static class Program
         services.Configure<JwtOptions>(configurationManager.GetSection("jwt"));
         services.Configure<CertificateOptions>(configurationManager.GetSection("caSettings"));
         services.Configure<SubjectOptions>(configurationManager.GetSection("caSettings:subject"));
+        services.Configure<TelegramBotOptions>(configurationManager.GetSection("telegramBot"));
 
         services.AddMudServices();
 

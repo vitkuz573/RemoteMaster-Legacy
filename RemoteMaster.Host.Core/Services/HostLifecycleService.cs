@@ -15,9 +15,8 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class HostLifecycleService(IServerHubService serverHubService, ICertificateRequestService certificateRequestService, ISubjectService subjectService, IHostConfigurationService hostConfigurationService, ICertificateLoaderService certificateLoaderService) : IHostLifecycleService
 {
-    private volatile bool _isRegistrationInvoked = false;
+    private volatile bool _isRegistrationInvoked;
     private bool _isRenewalProcess = false;
-    private bool _loggedOnce = false;
 
     public async Task RegisterAsync(HostConfiguration hostConfiguration)
     {
@@ -29,9 +28,6 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         }
 
         RSA? rsaKeyPair = null;
-
-        _isRegistrationInvoked = false;
-        _loggedOnce = false;
 
         try
         {
@@ -54,38 +50,37 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
                 tcsGuid.SetResult(guid);
             });
 
-            if (!await serverHubService.RegisterHostAsync(hostConfiguration))
+            if (await serverHubService.RegisterHostAsync(hostConfiguration))
+            {
+                _isRegistrationInvoked = true;
+
+                Log.Information("Host registration invoked successfully. Waiting for the certificate...");
+
+                var publicKey = await serverHubService.GetPublicKeyAsync();
+
+                if (publicKey.Length == 0)
+                {
+                    throw new InvalidOperationException("Failed to obtain JWT public key.");
+                }
+
+                var publicKeyPath = Path.Combine(jwtDirectory, "public_key.der");
+
+                try
+                {
+                    await File.WriteAllBytesAsync(publicKeyPath, publicKey);
+                    Log.Information("Public key saved successfully at {Path}.", publicKeyPath);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("Failed to save public key: {ErrorMessage}.", ex.Message);
+                }
+
+                Log.Information("Host registration successful with certificate received.");
+            }
+            else
             {
                 Log.Warning("Host registration was not successful.");
-                _loggedOnce = true;
-
-                return;
             }
-
-            _isRegistrationInvoked = true;
-
-            Log.Information("Host registration invoked successfully. Waiting for the certificate...");
-
-            var publicKey = await serverHubService.GetPublicKeyAsync();
-
-            if (publicKey.Length == 0)
-            {
-                throw new InvalidOperationException("Failed to obtain JWT public key.");
-            }
-
-            var publicKeyPath = Path.Combine(jwtDirectory, "public_key.der");
-
-            try
-            {
-                await File.WriteAllBytesAsync(publicKeyPath, publicKey);
-                Log.Information("Public key saved successfully at {Path}.", publicKeyPath);
-            }
-            catch (Exception ex)
-            {
-                Log.Error("Failed to save public key: {ErrorMessage}.", ex.Message);
-            }
-
-            Log.Information("Host registration successful with certificate received.");
         }
         catch (Exception ex)
         {
@@ -97,29 +92,8 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         }
     }
 
-    private bool CheckRegistrationStatus()
-    {
-        if (!_isRegistrationInvoked)
-        {
-            if (!_loggedOnce)
-            {
-                Log.Warning("Skipping further operations as host registration was not successful.");
-                _loggedOnce = true;
-            }
-
-            return false;
-        }
-
-        return true;
-    }
-
     public async Task UnregisterAsync(HostConfiguration hostConfiguration)
     {
-        if (!CheckRegistrationStatus())
-        {
-            return;
-        }
-
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
         try
@@ -145,11 +119,6 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
     public async Task IssueCertificateAsync(HostConfiguration hostConfiguration)
     {
-        if (!CheckRegistrationStatus())
-        {
-            return;
-        }
-
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
         RSA? rsaKeyPair = null;
@@ -199,11 +168,6 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
     public async Task RenewCertificateAsync(HostConfiguration hostConfiguration)
     {
-        if (!CheckRegistrationStatus())
-        {
-            return;
-        }
-
         _isRenewalProcess = true;
 
         try
@@ -218,11 +182,6 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
     public async Task RemoveCertificateAsync()
     {
-        if (!CheckRegistrationStatus())
-        {
-            return;
-        }
-
         using var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
         store.Open(OpenFlags.ReadWrite);
         var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, Dns.GetHostName(), false);
@@ -245,11 +204,6 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
     public async Task UpdateHostInformationAsync(HostConfiguration hostConfiguration)
     {
-        if (!CheckRegistrationStatus())
-        {
-            return;
-        }
-
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
         try
@@ -258,7 +212,7 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
             if (await serverHubService.UpdateHostInformationAsync(hostConfiguration))
             {
-                Log.Information("Host information updated successfully.");
+                Log.Information("Host information updated successful.");
             }
             else
             {
@@ -391,11 +345,6 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
     public async Task GetCaCertificateAsync()
     {
-        if (!CheckRegistrationStatus())
-        {
-            return;
-        }
-
         try
         {
             Log.Information("Requesting CA certificate's public part...");
