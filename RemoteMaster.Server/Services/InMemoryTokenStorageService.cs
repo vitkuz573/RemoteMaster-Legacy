@@ -5,7 +5,6 @@
 using System.Collections.Concurrent;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
-using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
@@ -15,54 +14,34 @@ public class InMemoryTokenStorageService : ITokenStorageService
 
     public Task<string?> GetAccessTokenAsync(string userId)
     {
-        // Log.Information("Attempting to retrieve access token for user {UserId}", userId);
-
         if (_tokenStorage.TryGetValue(userId, out var tokens) && tokens.AccessTokenExpiresAt > DateTime.UtcNow)
         {
-            // Log.Information("Access token found for user {UserId}", userId);
-
             return Task.FromResult<string?>(tokens.AccessToken);
         }
-
-        // Log.Warning("Access token not found or expired for user {UserId}", userId);
         
         return Task.FromResult<string?>(null);
     }
 
     public Task<string?> GetRefreshTokenAsync(string userId)
     {
-        // Log.Information("Attempting to retrieve refresh token for user {UserId}", userId);
-
         if (_tokenStorage.TryGetValue(userId, out var tokens) && tokens.RefreshTokenExpiresAt > DateTime.UtcNow)
-        {
-            // Log.Information("Refresh token found for user {UserId}", userId);
-            
+        {            
             return Task.FromResult<string?>(tokens.RefreshToken);
         }
-
-        // Log.Warning("Refresh token not found or expired for user {UserId}", userId);
         
         return Task.FromResult<string?>(null);
     }
 
     public Task StoreTokensAsync(string userId, TokenData tokenData)
     {
-        // Log.Information("Storing tokens for user {UserId}", userId);
-
         _tokenStorage[userId] = tokenData;
-
-        // Log.Information("Tokens stored successfully for user {UserId}", userId);
 
         return Task.CompletedTask;
     }
 
     public Task ClearTokensAsync(string userId)
     {
-        // Log.Information("Attempting to clear tokens for user {UserId}", userId);
-
         _tokenStorage.TryRemove(userId, out _);
-
-        // Log.Information("Tokens cleared successfully for user {UserId}", userId);
 
         return Task.CompletedTask;
     }
