@@ -17,6 +17,7 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 {
     private volatile bool _isRegistrationInvoked = false;
     private bool _isRenewalProcess = false;
+    private bool _loggedOnce = false;
 
     public async Task RegisterAsync(HostConfiguration hostConfiguration)
     {
@@ -28,7 +29,9 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         }
 
         RSA? rsaKeyPair = null;
+
         _isRegistrationInvoked = false;
+        _loggedOnce = false;
 
         try
         {
@@ -54,6 +57,8 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
             if (!await serverHubService.RegisterHostAsync(hostConfiguration))
             {
                 Log.Warning("Host registration was not successful.");
+                _loggedOnce = true;
+
                 return;
             }
 
@@ -92,11 +97,26 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         }
     }
 
-    public async Task UnregisterAsync(HostConfiguration hostConfiguration)
+    private bool CheckRegistrationStatus()
     {
         if (!_isRegistrationInvoked)
         {
-            Log.Warning("Host registration was not successful. Cannot unregister.");
+            if (!_loggedOnce)
+            {
+                Log.Warning("Skipping further operations as host registration was not successful.");
+                _loggedOnce = true;
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+
+    public async Task UnregisterAsync(HostConfiguration hostConfiguration)
+    {
+        if (!CheckRegistrationStatus())
+        {
             return;
         }
 
@@ -125,9 +145,8 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
     public async Task IssueCertificateAsync(HostConfiguration hostConfiguration)
     {
-        if (!_isRegistrationInvoked)
+        if (!CheckRegistrationStatus())
         {
-            Log.Warning("Host registration was not successful. Cannot issue certificate.");
             return;
         }
 
@@ -180,9 +199,8 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
     public async Task RenewCertificateAsync(HostConfiguration hostConfiguration)
     {
-        if (!_isRegistrationInvoked)
+        if (!CheckRegistrationStatus())
         {
-            Log.Warning("Host registration was not successful. Cannot renew certificate.");
             return;
         }
 
@@ -200,9 +218,8 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
     public async Task RemoveCertificateAsync()
     {
-        if (!_isRegistrationInvoked)
+        if (!CheckRegistrationStatus())
         {
-            Log.Warning("Host registration was not successful. Cannot remove certificate.");
             return;
         }
 
@@ -228,9 +245,8 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
     public async Task UpdateHostInformationAsync(HostConfiguration hostConfiguration)
     {
-        if (!_isRegistrationInvoked)
+        if (!CheckRegistrationStatus())
         {
-            Log.Warning("Host registration was not successful. Cannot update host information.");
             return;
         }
 
@@ -375,9 +391,8 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
     public async Task GetCaCertificateAsync()
     {
-        if (!_isRegistrationInvoked)
+        if (!CheckRegistrationStatus())
         {
-            Log.Warning("Host registration was not successful. Cannot get CA certificate.");
             return;
         }
 
