@@ -39,9 +39,7 @@ public class TelegramNotificationService : INotificationService
     public async Task SendNotificationAsync(string message)
     {
         if (!_isConfigured)
-        {
-            Log.Warning("Attempted to send notification, but Telegram bot is not configured.");
-            
+        {            
             return;
         }
 
