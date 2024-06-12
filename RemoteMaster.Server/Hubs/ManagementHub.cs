@@ -12,16 +12,32 @@ using Serilog;
 
 namespace RemoteMaster.Server.Hubs;
 
+/// <summary>
+/// Hub for managing various operations related to hosts and certificates.
+/// </summary>
 public class ManagementHub(ICertificateService certificateService, ICaCertificateService caCertificateService, IDatabaseService databaseService) : Hub<IManagementClient>
 {
+    /// <summary>
+    /// Retrieves an organization by name from the database.
+    /// </summary>
+    /// <param name="organizationName">The name of the organization.</param>
+    /// <returns>The organization object if found.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if the organization is not found.</exception>
     private async Task<Organization> GetOrganizationAsync(string organizationName)
     {
         var organizations = await databaseService.GetNodesAsync<Organization>(n => n.Name == organizationName);
         var organization = organizations.FirstOrDefault();
-        
+
         return organization ?? throw new InvalidOperationException($"Organization '{organizationName}' not found.");
     }
 
+    /// <summary>
+    /// Resolves the hierarchy of organizational units.
+    /// </summary>
+    /// <param name="ouNames">The list of organizational unit names.</param>
+    /// <param name="organizationId">The ID of the organization.</param>
+    /// <returns>The resolved organizational unit.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if any organizational unit is not found.</exception>
     private async Task<OrganizationalUnit?> ResolveOrganizationalUnitHierarchyAsync(IEnumerable<string> ouNames, Guid organizationId)
     {
         OrganizationalUnit? parentOu = null;
@@ -30,21 +46,33 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         {
             var ous = await databaseService.GetNodesAsync<OrganizationalUnit>(n => n.Name == ouName && n.OrganizationId == organizationId);
             var ou = ous.FirstOrDefault(o => parentOu == null || o.ParentId == parentOu.NodeId) ?? throw new InvalidOperationException($"Organizational Unit '{ouName}' not found.");
-            
+
             parentOu = ou;
         }
 
         return parentOu;
     }
 
+    /// <summary>
+    /// Retrieves a computer by its MAC address.
+    /// </summary>
+    /// <param name="macAddress">The MAC address of the computer.</param>
+    /// <param name="parentOuId">The ID of the parent organizational unit.</param>
+    /// <returns>The computer object if found.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if the computer is not found.</exception>
     private async Task<Computer> GetComputerByMacAddressAsync(string macAddress, Guid parentOuId)
     {
         var existingComputers = await databaseService.GetChildrenByParentIdAsync<Computer>(parentOuId);
         var computer = existingComputers.FirstOrDefault(c => c.MacAddress == macAddress) ?? throw new InvalidOperationException($"Computer with MAC address '{macAddress}' not found.");
-        
+
         return computer;
     }
 
+    /// <summary>
+    /// Registers a host with the specified configuration.
+    /// </summary>
+    /// <param name="hostConfiguration">The host configuration.</param>
+    /// <returns>True if registration is successful, otherwise false.</returns>
     public async Task<bool> RegisterHostAsync(HostConfiguration hostConfiguration)
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
@@ -60,7 +88,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         catch (InvalidOperationException ex)
         {
             Log.Warning(ex.Message);
-            
+
             return false;
         }
 
@@ -82,13 +110,19 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             };
 
             var hostGuid = await databaseService.AddNodeAsync(computer);
-            
+
             await Clients.Caller.ReceiveHostGuid(hostGuid);
         }
 
         return true;
     }
 
+    /// <summary>
+    /// Unregisters a host with the specified configuration.
+    /// </summary>
+    /// <param name="hostConfiguration">The host configuration.</param>
+    /// <returns>True if unregistration is successful, otherwise false.</returns>
+    /// <exception cref="ArgumentException">Thrown if the host configuration is invalid.</exception>
     public async Task<bool> UnregisterHostAsync(HostConfiguration hostConfiguration)
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
@@ -109,7 +143,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         catch (InvalidOperationException ex)
         {
             Log.Warning(ex.Message);
-            
+
             return false;
         }
 
@@ -117,17 +151,22 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         {
             var existingComputer = await GetComputerByMacAddressAsync(hostConfiguration.Host.MacAddress, lastOu.NodeId);
             await databaseService.RemoveNodeAsync(existingComputer);
-            
+
             return true;
         }
         catch (InvalidOperationException ex)
         {
             Log.Warning(ex.Message);
-            
+
             return false;
         }
     }
 
+    /// <summary>
+    /// Updates the information of a host with the specified configuration.
+    /// </summary>
+    /// <param name="hostConfiguration">The host configuration.</param>
+    /// <returns>True if the update is successful, otherwise false.</returns>
     public async Task<bool> UpdateHostInformationAsync(HostConfiguration hostConfiguration)
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
@@ -143,7 +182,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         catch (InvalidOperationException ex)
         {
             Log.Warning(ex.Message);
-            
+
             return false;
         }
 
@@ -151,17 +190,22 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         {
             var computer = await GetComputerByMacAddressAsync(hostConfiguration.Host.MacAddress, lastOu.NodeId);
             await databaseService.UpdateComputerAsync(computer, hostConfiguration.Host.IpAddress, hostConfiguration.Host.Name);
-            
+
             return true;
         }
         catch (InvalidOperationException ex)
         {
             Log.Warning(ex.Message);
-            
+
             return false;
         }
     }
 
+    /// <summary>
+    /// Checks if a host with the specified configuration is registered.
+    /// </summary>
+    /// <param name="hostConfiguration">The host configuration.</param>
+    /// <returns>True if the host is registered, otherwise false.</returns>
     public async Task<bool> IsHostRegisteredAsync(HostConfiguration hostConfiguration)
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
@@ -174,17 +218,21 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         try
         {
             var computers = await databaseService.GetNodesAsync<Computer>(n => n.MacAddress == hostConfiguration.Host.MacAddress);
-            
+
             return computers.Any();
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Error while checking registration of the host '{HostName}'.", hostConfiguration.Host.Name);
-            
+
             return false;
         }
     }
 
+    /// <summary>
+    /// Retrieves the public key.
+    /// </summary>
+    /// <returns>The public key as a byte array if found, otherwise null.</returns>
     public async Task<byte[]?> GetPublicKey()
     {
         try
@@ -202,11 +250,15 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         catch (Exception ex)
         {
             Log.Error(ex, "Error while reading public key file.");
-            
+
             return null;
         }
     }
 
+    /// <summary>
+    /// Retrieves the list of host move requests.
+    /// </summary>
+    /// <returns>The list of host move requests.</returns>
     private static async Task<List<HostMoveRequest>> GetHostMoveRequestsAsync()
     {
         var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
@@ -215,13 +267,17 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         if (File.Exists(hostMoveRequestsFilePath))
         {
             var json = await File.ReadAllTextAsync(hostMoveRequestsFilePath);
-            
+
             return JsonSerializer.Deserialize<List<HostMoveRequest>>(json) ?? [];
         }
 
         return [];
     }
 
+    /// <summary>
+    /// Saves the list of host move requests.
+    /// </summary>
+    /// <param name="hostMoveRequests">The list of host move requests.</param>
     private static async Task SaveHostMoveRequestsAsync(List<HostMoveRequest> hostMoveRequests)
     {
         var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
@@ -231,13 +287,22 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         await File.WriteAllTextAsync(hostMoveRequestsFilePath, updatedJson);
     }
 
+    /// <summary>
+    /// Retrieves a host move request by MAC address.
+    /// </summary>
+    /// <param name="macAddress">The MAC address of the host.</param>
+    /// <returns>The host move request if found, otherwise null.</returns>
     public async Task<HostMoveRequest?> GetHostMoveRequest(string macAddress)
     {
         var hostMoveRequests = await GetHostMoveRequestsAsync();
-        
+
         return hostMoveRequests.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
     }
 
+    /// <summary>
+    /// Acknowledges a host move request by removing it from the list.
+    /// </summary>
+    /// <param name="macAddress">The MAC address of the host.</param>
     public async Task AcknowledgeMoveRequest(string macAddress)
     {
         var hostMoveRequests = await GetHostMoveRequestsAsync();
@@ -250,6 +315,11 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         }
     }
 
+    /// <summary>
+    /// Issues a certificate based on the provided CSR bytes.
+    /// </summary>
+    /// <param name="csrBytes">The CSR bytes.</param>
+    /// <returns>True if the certificate is issued successfully, otherwise false.</returns>
     public async Task<bool> IssueCertificateAsync(byte[] csrBytes)
     {
         ArgumentNullException.ThrowIfNull(csrBytes, nameof(csrBytes));
@@ -258,17 +328,21 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         {
             var certificate = certificateService.IssueCertificate(csrBytes);
             await Clients.Caller.ReceiveCertificate(certificate.Export(X509ContentType.Pfx));
-            
+
             return true;
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Error while issuing certificate.");
-            
+
             return false;
         }
     }
 
+    /// <summary>
+    /// Retrieves the CA certificate.
+    /// </summary>
+    /// <returns>True if the CA certificate is retrieved successfully, otherwise false.</returns>
     public async Task<bool> GetCaCertificateAsync()
     {
         try
@@ -278,7 +352,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             if (caCertificatePublicPart != null)
             {
                 await Clients.Caller.ReceiveCertificate(caCertificatePublicPart.RawData);
-                
+
                 return true;
             }
             else
@@ -289,7 +363,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         catch (Exception ex)
         {
             Log.Error(ex, "Error while sending CA certificate public part.");
-            
+
             return false;
         }
     }
