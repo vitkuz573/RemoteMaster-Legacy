@@ -1,180 +1,165 @@
-﻿using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Data;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace RemoteMaster.Server.Components.Admin.Pages.Manage
+namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
+
+public partial class ManageRoleClaims
 {
-    public partial class ManageRoleClaims
+    private List<IdentityRole> _roles = [];
+    private List<ClaimTypeViewModel> _claimTypes = [];
+    private List<IdentityRoleClaim<string>> _roleClaims = [];
+
+    private string? SelectedRoleId { get; set; }
+
+    private RoleClaimEditModel SelectedRoleModel { get; set; } = new();
+
+    private bool ShowSuccessMessage { get; set; } = false;
+
+    private bool HasChanges => HasChangesInClaims();
+
+    private List<(string ClaimType, string ClaimValue)> _initialRoleClaims = [];
+
+    protected async override Task OnInitializedAsync()
     {
-        private List<IdentityRole> _roles = new();
-        private List<ClaimTypeViewModel> _claimTypes = new();
-        private List<IdentityRoleClaim<string>> _roleClaims = new();
-        private string? SelectedRoleId { get; set; }
-        private RoleClaimEditModel SelectedRoleModel { get; set; } = new();
-        private bool ShowSuccessMessage { get; set; } = false;
+        using var scope = ScopeFactory.CreateScope();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        _roles = await roleManager.Roles.ToListAsync();
 
-        private bool HasChanges => HasChangesInClaims();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var allClaims = await dbContext.RoleClaims
+            .GroupBy(rc => rc.ClaimType)
+            .Select(g => new ClaimTypeViewModel(
+                g.Key,
+                g.Select(rc => new ClaimValueViewModel { Value = rc.ClaimValue }).Distinct().ToList()
+            ))
+            .ToListAsync();
 
-        // Stores the initial state of the claims
-        private List<(string ClaimType, string ClaimValue)> _initialRoleClaims = new();
+        _claimTypes = allClaims;
+    }
 
-        protected async override Task OnInitializedAsync()
-        {
-            using var scope = ScopeFactory.CreateScope();
-            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-            _roles = await roleManager.Roles.ToListAsync();
+    private async Task OnRoleChanged(string roleId)
+    {
+        SelectedRoleId = roleId;
+        SelectedRoleModel.Role = _roles.FirstOrDefault(r => r.Id == roleId)?.Name;
 
-            // Load all unique claim types and values from the AspNetRoleClaims table
-            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            var allClaims = await dbContext.RoleClaims
-                .GroupBy(rc => rc.ClaimType)
-                .Select(g => new ClaimTypeViewModel(
-                    g.Key,
-                    g.Select(rc => new ClaimValueViewModel { Value = rc.ClaimValue }).Distinct().ToList()
-                ))
-                .ToListAsync();
+        using var scope = ScopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-            _claimTypes = allClaims;
-        }
+        _roleClaims = await dbContext.RoleClaims.Where(rc => rc.RoleId == SelectedRoleId).ToListAsync();
 
-        private async Task OnRoleChanged(string roleId)
-        {
-            SelectedRoleId = roleId;
-            SelectedRoleModel.Role = _roles.FirstOrDefault(r => r.Id == roleId)?.Name;
-
-            using var scope = ScopeFactory.CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-            // Load claims for the selected role
-            _roleClaims = await dbContext.RoleClaims.Where(rc => rc.RoleId == SelectedRoleId).ToListAsync();
-
-            // Check the claims that are already assigned to the selected role
-            foreach (var claimType in _claimTypes)
-            {
-                foreach (var value in claimType.Values)
-                {
-                    value.IsSelected = _roleClaims.Any(rc => rc.ClaimType == claimType.Type && rc.ClaimValue == value.Value);
-                }
-            }
-
-            // Store the initial state of the selected claims
-            _initialRoleClaims = _claimTypes
-                .SelectMany(ct => ct.Values.Where(v => v.IsSelected).Select(v => (ct.Type, v.Value)))
-                .ToList();
-
-            StateHasChanged();
-        }
-
-        private async Task OnValidSubmitAsync()
-        {
-            if (string.IsNullOrEmpty(SelectedRoleId))
-            {
-                return;
-            }
-
-            using var scope = ScopeFactory.CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-            var roleClaims = await dbContext.RoleClaims.Where(rc => rc.RoleId == SelectedRoleId).ToListAsync();
-            dbContext.RoleClaims.RemoveRange(roleClaims);
-
-            foreach (var claimType in _claimTypes)
-            {
-                foreach (var value in claimType.Values.Where(v => v.IsSelected))
-                {
-                    dbContext.RoleClaims.Add(new IdentityRoleClaim<string>
-                    {
-                        RoleId = SelectedRoleId,
-                        ClaimType = claimType.Type,
-                        ClaimValue = value.Value
-                    });
-                }
-            }
-
-            await dbContext.SaveChangesAsync();
-
-            ShowSuccessMessage = true;
-
-            // Update the initial state to the current state after saving
-            _initialRoleClaims = _claimTypes
-                .SelectMany(ct => ct.Values.Where(v => v.IsSelected).Select(v => (ct.Type, v.Value)))
-                .ToList();
-
-            StateHasChanged();
-
-            await HideSuccessMessageAfterDelay();
-        }
-
-        private void ToggleClaimTypeExpansion(ClaimTypeViewModel claimType)
-        {
-            claimType.IsExpanded = !claimType.IsExpanded;
-
-            StateHasChanged();
-        }
-
-        private static void SelectAllClaimValues(ClaimTypeViewModel claimType)
+        foreach (var claimType in _claimTypes)
         {
             foreach (var value in claimType.Values)
             {
-                value.IsSelected = true;
+                value.IsSelected = _roleClaims.Any(rc => rc.ClaimType == claimType.Type && rc.ClaimValue == value.Value);
             }
         }
 
-        private static void DeselectAllClaimValues(ClaimTypeViewModel claimType)
+        _initialRoleClaims = _claimTypes
+            .SelectMany(ct => ct.Values.Where(v => v.IsSelected).Select(v => (ct.Type, v.Value)))
+            .ToList();
+
+        StateHasChanged();
+    }
+
+    private async Task OnValidSubmitAsync()
+    {
+        if (string.IsNullOrEmpty(SelectedRoleId))
         {
-            foreach (var value in claimType.Values)
+            return;
+        }
+
+        using var scope = ScopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var roleClaims = await dbContext.RoleClaims.Where(rc => rc.RoleId == SelectedRoleId).ToListAsync();
+        dbContext.RoleClaims.RemoveRange(roleClaims);
+
+        foreach (var claimType in _claimTypes)
+        {
+            foreach (var value in claimType.Values.Where(v => v.IsSelected))
             {
-                value.IsSelected = false;
+                dbContext.RoleClaims.Add(new IdentityRoleClaim<string>
+                {
+                    RoleId = SelectedRoleId,
+                    ClaimType = claimType.Type,
+                    ClaimValue = value.Value
+                });
             }
         }
 
-        private bool HasChangesInClaims()
+        await dbContext.SaveChangesAsync();
+
+        ShowSuccessMessage = true;
+
+        _initialRoleClaims = _claimTypes
+            .SelectMany(ct => ct.Values.Where(v => v.IsSelected).Select(v => (ct.Type, v.Value)))
+            .ToList();
+
+        StateHasChanged();
+
+        await HideSuccessMessageAfterDelay();
+    }
+
+    private void ToggleClaimTypeExpansion(ClaimTypeViewModel claimType)
+    {
+        claimType.IsExpanded = !claimType.IsExpanded;
+
+        StateHasChanged();
+    }
+
+    private static void SelectAllClaimValues(ClaimTypeViewModel claimType)
+    {
+        foreach (var value in claimType.Values)
         {
-            var selectedRoleClaims = _claimTypes
-                .SelectMany(ct => ct.Values.Where(v => v.IsSelected).Select(v => (ct.Type, v.Value)))
-                .ToList();
-
-            return !_initialRoleClaims.SequenceEqual(selectedRoleClaims);
+            value.IsSelected = true;
         }
+    }
 
-        private async Task HideSuccessMessageAfterDelay()
+    private static void DeselectAllClaimValues(ClaimTypeViewModel claimType)
+    {
+        foreach (var value in claimType.Values)
         {
-            await Task.Delay(3000);
-            ShowSuccessMessage = false;
-
-            await InvokeAsync(StateHasChanged);
+            value.IsSelected = false;
         }
+    }
 
-        public class RoleClaimEditModel
-        {
-            public string? Role { get; set; }
-        }
+    private bool HasChangesInClaims()
+    {
+        var selectedRoleClaims = _claimTypes
+            .SelectMany(ct => ct.Values.Where(v => v.IsSelected).Select(v => (ct.Type, v.Value)))
+            .ToList();
 
-        public class ClaimTypeViewModel
-        {
-            public ClaimTypeViewModel(string type, List<ClaimValueViewModel> values)
-            {
-                Type = type;
-                Values = values;
-            }
+        return !_initialRoleClaims.SequenceEqual(selectedRoleClaims);
+    }
 
-            public string Type { get; set; }
+    private async Task HideSuccessMessageAfterDelay()
+    {
+        await Task.Delay(3000);
+        ShowSuccessMessage = false;
 
-            public bool IsExpanded { get; set; }
+        await InvokeAsync(StateHasChanged);
+    }
 
-            public List<ClaimValueViewModel> Values { get; }
-        }
+    public class RoleClaimEditModel
+    {
+        public string? Role { get; set; }
+    }
 
-        public class ClaimValueViewModel
-        {
-            public string Value { get; set; } = string.Empty;
+    public class ClaimTypeViewModel(string type, List<ManageRoleClaims.ClaimValueViewModel> values)
+    {
+        public string Type { get; set; } = type;
 
-            public bool IsSelected { get; set; }
-        }
+        public bool IsExpanded { get; set; }
+
+        public List<ClaimValueViewModel> Values { get; } = values;
+    }
+
+    public class ClaimValueViewModel
+    {
+        public string Value { get; set; } = string.Empty;
+
+        public bool IsSelected { get; set; }
     }
 }
