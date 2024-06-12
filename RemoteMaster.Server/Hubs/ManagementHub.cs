@@ -91,7 +91,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         catch (InvalidOperationException ex)
         {
             Log.Warning(ex.Message);
-            await notificationService.SendNotificationAsync($"Host registration failed: {ex.Message} for host {hostConfiguration.Host.Name} ({hostConfiguration.Host.MacAddress})");
+            await notificationService.SendNotificationAsync($"Host registration failed: {ex.Message} for host {hostConfiguration.Host.Name} ({hostConfiguration.Host.MacAddress}) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
             return false;
         }
 
@@ -100,7 +100,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             var existingComputer = await GetComputerByMacAddressAsync(hostConfiguration.Host.MacAddress, parentOu.NodeId);
             await databaseService.UpdateComputerAsync(existingComputer, hostConfiguration.Host.IpAddress, hostConfiguration.Host.Name);
             Log.Information("Host registration successful: {HostName} ({MacAddress})", hostConfiguration.Host.Name, hostConfiguration.Host.MacAddress);
-            await notificationService.SendNotificationAsync($"Host registration successful: {hostConfiguration.Host.Name} ({hostConfiguration.Host.MacAddress})");
+            await notificationService.SendNotificationAsync($"Host registration successful: {hostConfiguration.Host.Name} ({hostConfiguration.Host.MacAddress}) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
         }
         catch (InvalidOperationException ex)
         {
@@ -117,7 +117,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             await Clients.Caller.ReceiveHostGuid(hostGuid);
 
             Log.Information("New host registered: {HostName} ({MacAddress})", hostConfiguration.Host.Name, hostConfiguration.Host.MacAddress);
-            await notificationService.SendNotificationAsync($"New host registered: {hostConfiguration.Host.Name} ({hostConfiguration.Host.MacAddress})");
+            await notificationService.SendNotificationAsync($"New host registered: {hostConfiguration.Host.Name} ({hostConfiguration.Host.MacAddress}) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
         }
 
         return true;
@@ -149,7 +149,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         catch (InvalidOperationException ex)
         {
             Log.Warning(ex.Message);
-            await notificationService.SendNotificationAsync($"Host unregistration failed: {ex.Message} for host {hostConfiguration.Host.Name} ({hostConfiguration.Host.MacAddress})");
+            await notificationService.SendNotificationAsync($"Host unregistration failed: {ex.Message} for host {hostConfiguration.Host.Name} ({hostConfiguration.Host.MacAddress}) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
             return false;
         }
 
@@ -159,14 +159,14 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             await databaseService.RemoveNodeAsync(existingComputer);
 
             Log.Information("Host unregistered: {HostName} ({MacAddress})", hostConfiguration.Host.Name, hostConfiguration.Host.MacAddress);
-            await notificationService.SendNotificationAsync($"Host unregistered: {hostConfiguration.Host.Name} ({hostConfiguration.Host.MacAddress})");
+            await notificationService.SendNotificationAsync($"Host unregistered: {hostConfiguration.Host.Name} ({hostConfiguration.Host.MacAddress}) from organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' in organization '{hostConfiguration.Subject.Organization}'");
 
             return true;
         }
         catch (InvalidOperationException ex)
         {
             Log.Warning(ex.Message);
-            await notificationService.SendNotificationAsync($"Host unregistration failed: {ex.Message} for host {hostConfiguration.Host.Name} ({hostConfiguration.Host.MacAddress})");
+            await notificationService.SendNotificationAsync($"Host unregistration failed: {ex.Message} for host {hostConfiguration.Host.Name} ({hostConfiguration.Host.MacAddress}) from organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' in organization '{hostConfiguration.Subject.Organization}'");
 
             return false;
         }
