@@ -1,4 +1,9 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+// This file is part of the RemoteMaster project.
+// Licensed under the GNU Affero General Public License v3.0.
+
+using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Data;
 
@@ -18,7 +23,7 @@ public partial class ManageRoleClaims
 
     private bool HasChanges => HasChangesInClaims();
 
-    private List<(string ClaimType, string ClaimValue)> _initialRoleClaims = [];
+    private List<Claim> _initialRoleClaims = [];
 
     protected async override Task OnInitializedAsync()
     {
@@ -56,8 +61,8 @@ public partial class ManageRoleClaims
             }
         }
 
-        _initialRoleClaims = _claimTypes
-            .SelectMany(ct => ct.Values.Where(v => v.IsSelected).Select(v => (ct.Type, v.Value)))
+        _initialRoleClaims = _roleClaims
+            .Select(rc => new Claim(rc.ClaimType, rc.ClaimValue))
             .ToList();
 
         StateHasChanged();
@@ -94,7 +99,7 @@ public partial class ManageRoleClaims
         ShowSuccessMessage = true;
 
         _initialRoleClaims = _claimTypes
-            .SelectMany(ct => ct.Values.Where(v => v.IsSelected).Select(v => (ct.Type, v.Value)))
+            .SelectMany(ct => ct.Values.Where(v => v.IsSelected).Select(v => new Claim(ct.Type, v.Value)))
             .ToList();
 
         StateHasChanged();
@@ -128,10 +133,23 @@ public partial class ManageRoleClaims
     private bool HasChangesInClaims()
     {
         var selectedRoleClaims = _claimTypes
-            .SelectMany(ct => ct.Values.Where(v => v.IsSelected).Select(v => (ct.Type, v.Value)))
+            .SelectMany(ct => ct.Values.Where(v => v.IsSelected).Select(v => new Claim(ct.Type, v.Value)))
             .ToList();
 
-        return !_initialRoleClaims.SequenceEqual(selectedRoleClaims);
+        if (_initialRoleClaims.Count != selectedRoleClaims.Count)
+        {
+            return true;
+        }
+
+        foreach (var claim in _initialRoleClaims)
+        {
+            if (!selectedRoleClaims.Any(c => c.Type == claim.Type && c.Value == claim.Value))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private async Task HideSuccessMessageAfterDelay()
@@ -147,7 +165,7 @@ public partial class ManageRoleClaims
         public string? Role { get; set; }
     }
 
-    public class ClaimTypeViewModel(string type, List<ManageRoleClaims.ClaimValueViewModel> values)
+    public class ClaimTypeViewModel(string type, List<ClaimValueViewModel> values)
     {
         public string Type { get; set; } = type;
 
