@@ -41,15 +41,41 @@
         }
 
         <div>
-            <label for="claimType" class="block text-sm font-medium text-gray-700">Claim Type</label>
-            <InputText id="claimType" @bind-Value="SelectedRoleModel.ClaimType" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm" />
-            <ValidationMessage For="() => SelectedRoleModel.ClaimType" class="text-red-500 mt-1" />
-        </div>
-
-        <div>
-            <label for="claimValue" class="block text-sm font-medium text-gray-700">Claim Value</label>
-            <InputText id="claimValue" @bind-Value="SelectedRoleModel.ClaimValue" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm" />
-            <ValidationMessage For="() => SelectedRoleModel.ClaimValue" class="text-red-500 mt-1" />
+            @foreach (var claimType in _claimTypes)
+            {
+                <div class="mt-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <label class="ml-2 text-sm font-medium text-gray-700">@claimType.Type</label>
+                        </div>
+                        <button type="button" @onclick="() => ToggleClaimTypeExpansion(claimType)" class="text-sm text-blue-500 hover:underline">
+                            @(claimType.IsExpanded ? "Collapse" : "Expand")
+                        </button>
+                    </div>
+                    @if (claimType.IsExpanded)
+                    {
+                        <div class="ml-6 mt-2 space-y-2">
+                            <div class="mb-2 flex items-center">
+                                <button type="button" @onclick="() => SelectAllClaimValues(claimType)" class="text-sm text-white bg-blue-500 hover:bg-blue-700 px-2 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                        disabled="@(claimType.Values.All(v => v.IsSelected))">
+                                    Select All
+                                </button>
+                                <button type="button" @onclick="() => DeselectAllClaimValues(claimType)" class="ml-2 text-sm text-white bg-red-500 hover:bg-red-700 px-2 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                        disabled="@(claimType.Values.All(v => !v.IsSelected))">
+                                    Deselect All
+                                </button>
+                            </div>
+                            @foreach (var value in claimType.Values)
+                            {
+                                <div class="flex items-center">
+                                    <InputCheckbox @bind-Value="value.IsSelected" class="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out" />
+                                    <label class="ml-2 text-sm font-medium text-gray-700">@value.Value</label>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
         </div>
 
         <button type="submit" class="mt-4 flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-lg font-medium text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -57,17 +83,4 @@
             Save
         </button>
     </EditForm>
-
-    <div class="mt-8">
-        <h2 class="text-xl font-medium text-gray-700">Existing Claims</h2>
-        <ul class="mt-4 space-y-2">
-            @foreach (var claim in _roleClaims)
-            {
-                <li class="flex items-center justify-between rounded-md bg-gray-100 px-4 py-2 shadow-sm">
-                    <span>@claim.ClaimType: @claim.ClaimValue</span>
-                    <button @onclick="() => DeleteClaim(claim)" class="text-red-500 hover:underline">Delete</button>
-                </li>
-            }
-        </ul>
-    </div>
 }
