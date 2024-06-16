@@ -14,7 +14,6 @@ using RemoteMaster.Server.Services;
 
 namespace RemoteMaster.Server.Tests;
 
-[CollectionDefinition("CrlServiceTests", DisableParallelization = true)]
 public class CrlServiceTests : IDisposable
 {
     private readonly ICrlService _crlService;
