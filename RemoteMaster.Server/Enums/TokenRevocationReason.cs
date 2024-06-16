@@ -11,5 +11,6 @@ public enum TokenRevocationReason
     ReplacedDuringRefresh = 2,
     AdminRevoked = 3,
     SuspiciousActivity = 4,
-    PreemptiveSecurity = 5
+    PreemptiveSecurity = 5,
+    RoleChanged = 6
 }

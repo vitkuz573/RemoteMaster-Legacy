@@ -5,6 +5,8 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
+using Microsoft.EntityFrameworkCore;
+using RemoteMaster.Server.Components.Admin.Dialogs;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
 
@@ -17,10 +19,17 @@ public partial class ManageOrganizations
     private InputModel Input { get; set; } = new();
 
     private List<Organization> _organizations = [];
+    private string _message;
+    private string _messageType;
+    private Dictionary<string, string> _countries = [];
+    private ConfirmationDialog confirmationDialog;
+    private Organization? _organizationToDelete;
 
     protected override void OnInitialized()
     {
         LoadOrganizations();
+
+        _countries = CountryProvider.GetCountries();
     }
 
     private async Task OnValidSubmitAsync()
@@ -32,18 +41,34 @@ public partial class ManageOrganizations
 
         if (Input.Id.HasValue)
         {
-            organization = dbContext.Organizations.Find(Input.Id.Value);
-            
+            organization = await dbContext.Organizations.FindAsync(Input.Id.Value);
+
             if (organization == null)
             {
+                SetMessage("Organization not found.", "error");
+                return;
+            }
+
+            if (await dbContext.Organizations.AnyAsync(o => o.Name == Input.Name && o.NodeId != Input.Id.Value))
+            {
+                SetMessage("Organization with this name already exists.", "error");
                 return;
             }
 
             organization.Name = Input.Name;
+            organization.Locality = Input.Locality;
+            organization.State = Input.State;
+            organization.Country = Input.Country;
         }
         else
         {
-            organization = CreateOrganization(Input.Name);
+            if (await OrganizationNameExists(Input.Name))
+            {
+                SetMessage("Organization with this name already exists.", "error");
+                return;
+            }
+
+            organization = CreateOrganization(Input.Name, Input.Locality, Input.State, Input.Country);
             await dbContext.Organizations.AddAsync(organization);
         }
 
@@ -51,9 +76,25 @@ public partial class ManageOrganizations
 
         LoadOrganizations();
 
-        NavigationManager.NavigateTo("Admin/Organizations", true);
+        NavigationManager.Refresh();
 
         Input = new InputModel();
+
+        SetMessage("Organization saved successfully.", "success");
+    }
+
+    private void SetMessage(string message, string type)
+    {
+        _message = message;
+        _messageType = type;
+    }
+
+    private async Task<bool> OrganizationNameExists(string name)
+    {
+        using var scope = ScopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        return await dbContext.Organizations.AnyAsync(o => o.Name == name);
     }
 
     private void LoadOrganizations()
@@ -64,11 +105,14 @@ public partial class ManageOrganizations
         _organizations = [.. dbContext.Organizations];
     }
 
-    private static Organization CreateOrganization(string name)
+    private static Organization CreateOrganization(string name, string locality, string state, string country)
     {
         return new Organization
         {
-            Name = name
+            Name = name,
+            Locality = locality,
+            State = state,
+            Country = country
         };
     }
 
@@ -87,9 +131,33 @@ public partial class ManageOrganizations
     {
         Input = new InputModel
         {
-            Id = organization.OrganizationId,
-            Name = organization.Name
+            Id = organization.NodeId,
+            Name = organization.Name,
+            Locality = organization.Locality,
+            State = organization.State,
+            Country = organization.Country
         };
+    }
+
+    private void ShowDeleteConfirmation(Organization organization)
+    {
+        _organizationToDelete = organization;
+
+        var parameters = new Dictionary<string, string>
+        {
+            { "Organization", organization.Name }
+        };
+
+        confirmationDialog.Show(parameters);
+    }
+
+    private async Task OnConfirmDelete(bool confirmed)
+    {
+        if (confirmed && _organizationToDelete != null)
+        {
+            await DeleteOrganization(_organizationToDelete);
+            _organizationToDelete = null;
+        }
     }
 
     private sealed class InputModel
@@ -100,5 +168,29 @@ public partial class ManageOrganizations
         [DataType(DataType.Text)]
         [Display(Name = "Name")]
         public string Name { get; set; }
+
+        [Required]
+        [DataType(DataType.Text)]
+        [Display(Name = "Locality")]
+        public string Locality { get; set; }
+
+        [Required]
+        [DataType(DataType.Text)]
+        [Display(Name = "State")]
+        public string State { get; set; }
+
+        [Required]
+        [DataType(DataType.Text)]
+        [Display(Name = "Country")]
+        public string Country { get; set; }
+    }
+
+    private sealed class UserViewModel
+    {
+        public string UserId { get; set; }
+
+        public string UserName { get; set; }
+
+        public bool IsSelected { get; set; }
     }
 }

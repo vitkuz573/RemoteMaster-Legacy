@@ -8,7 +8,7 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
-[Authorize]
+[Authorize(Roles = "Administrator")]
 public class TaskManagerHub(ITaskManagerService taskManagerService) : Hub<ITaskManagerClient>
 {
     public async Task GetRunningProcesses()

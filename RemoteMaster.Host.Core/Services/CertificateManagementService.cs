@@ -15,7 +15,7 @@ public class CertificateManagementService(IHostConfigurationService hostConfigur
     {
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
 
-        if (hostConfiguration != null && IsCertificateValid())
+        if (hostConfiguration != null && !IsCertificateValid())
         {
             await hostLifecycleService.RenewCertificateAsync(hostConfiguration);
         }

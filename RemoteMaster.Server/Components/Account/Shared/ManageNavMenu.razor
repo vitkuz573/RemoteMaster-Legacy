@@ -1,5 +1,16 @@
 ﻿<ul class="flex flex-col text-gray-800">
     <li>
-        <NavLink class="mt-2 block rounded-md bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition duration-300 hover:bg-blue-500 hover:text-white" href="Account/Manage/ChangePassword">Password</NavLink>
+        <NavLink class="flex items-center px-6 py-4 text-gray-800 transition duration-300 hover:bg-indigo-50 hover:text-indigo-700"
+                 href="Account/Manage/ChangePassword"
+                 ActiveClass="bg-indigo-50 text-indigo-700">
+            <span class="material-icons mr-3">lock</span> Password
+        </NavLink>
+    </li>
+    <li>
+        <NavLink class="flex items-center px-6 py-4 text-gray-800 transition duration-300 hover:bg-indigo-50 hover:text-indigo-700"
+                 href="Account/Manage/TwoFactorAuthentication"
+                 ActiveClass="bg-indigo-50 text-indigo-700">
+            <span class="material-icons mr-3">security</span> Two-factor authentication
+        </NavLink>
     </li>
 </ul>

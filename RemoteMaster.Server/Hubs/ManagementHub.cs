@@ -4,64 +4,107 @@
 
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Hubs;
 
-[EnableRateLimiting("ManagementHubPolicy")]
-public class ManagementHub(ICertificateService certificateService, ICaCertificateService caCertificateService, IDatabaseService databaseService) : Hub<IManagementClient>
+/// <summary>
+/// Hub for managing various operations related to hosts and certificates.
+/// </summary>
+public class ManagementHub(ICertificateService certificateService, ICaCertificateService caCertificateService, IDatabaseService databaseService, INotificationService notificationService) : Hub<IManagementClient>
 {
-    public async Task<bool> RegisterHostAsync(HostConfiguration hostConfiguration)
+    /// <summary>
+    /// Retrieves an organization by name from the database.
+    /// </summary>
+    /// <param name="organizationName">The name of the organization.</param>
+    /// <returns>The organization object if found.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if the organization is not found.</exception>
+    private async Task<Organization> GetOrganizationAsync(string organizationName)
     {
-        ArgumentNullException.ThrowIfNull(hostConfiguration);
-        ArgumentNullException.ThrowIfNull(hostConfiguration.Subject);
-        ArgumentNullException.ThrowIfNull(hostConfiguration.Subject.OrganizationalUnit);
+        var organizations = await databaseService.GetNodesAsync<Organization>(n => n.Name == organizationName);
+        var organization = organizations.FirstOrDefault();
 
-        if (hostConfiguration.Host == null)
-        {
-            throw new ArgumentException("Host configuration must have a non-null Host property.", nameof(hostConfiguration));
-        }
+        return organization ?? throw new InvalidOperationException($"Organization '{organizationName}' not found.");
+    }
 
+    /// <summary>
+    /// Resolves the hierarchy of organizational units.
+    /// </summary>
+    /// <param name="ouNames">The list of organizational unit names.</param>
+    /// <param name="organizationId">The ID of the organization.</param>
+    /// <returns>The resolved organizational unit.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if any organizational unit is not found.</exception>
+    private async Task<OrganizationalUnit?> ResolveOrganizationalUnitHierarchyAsync(IEnumerable<string> ouNames, Guid organizationId)
+    {
         OrganizationalUnit? parentOu = null;
 
-        foreach (var ouName in hostConfiguration.Subject.OrganizationalUnit)
+        var organizations = await databaseService.GetNodesAsync<Organization>(n => n.NodeId == organizationId);
+        var organizationName = organizations.FirstOrDefault()?.Name ?? "Unknown";
+
+        foreach (var ouName in ouNames)
         {
-            var ou = (await databaseService.GetNodesAsync(n => n.Name == ouName && n is OrganizationalUnit && n.Parent == parentOu))
-                     .OfType<OrganizationalUnit>()
-                     .FirstOrDefault();
-
-            if (ou == null)
-            {
-                ou = new OrganizationalUnit
-                {
-                    Name = ouName,
-                    Parent = parentOu
-                };
-
-                await databaseService.AddNodeAsync(ou);
-            }
-
+            var ous = await databaseService.GetNodesAsync<OrganizationalUnit>(n => n.Name == ouName && n.OrganizationId == organizationId);
+            var ou = ous.FirstOrDefault(o => parentOu == null || o.ParentId == parentOu.NodeId) ?? throw new InvalidOperationException($"Organizational Unit '{ouName}' not found in organization '{organizationName}'.");
+            
             parentOu = ou;
         }
 
-        if (parentOu == null)
+        return parentOu;
+    }
+
+    /// <summary>
+    /// Retrieves a computer by its MAC address.
+    /// </summary>
+    /// <param name="macAddress">The MAC address of the computer.</param>
+    /// <param name="parentOuId">The ID of the parent organizational unit.</param>
+    /// <returns>The computer object if found.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if the computer is not found.</exception>
+    private async Task<Computer> GetComputerByMacAddressAsync(string macAddress, Guid parentOuId)
+    {
+        var existingComputers = await databaseService.GetChildrenByParentIdAsync<Computer>(parentOuId);
+        var computer = existingComputers.FirstOrDefault(c => c.MacAddress == macAddress) ?? throw new InvalidOperationException($"Computer with MAC address '{macAddress}' not found.");
+
+        return computer;
+    }
+
+    /// <summary>
+    /// Registers a host with the specified configuration.
+    /// </summary>
+    /// <param name="hostConfiguration">The host configuration.</param>
+    /// <returns>True if registration is successful, otherwise false.</returns>
+    public async Task<bool> RegisterHostAsync(HostConfiguration hostConfiguration)
+    {
+        ArgumentNullException.ThrowIfNull(hostConfiguration);
+
+        Organization organization;
+        OrganizationalUnit? parentOu;
+
+        try
         {
-            throw new InvalidOperationException("Failed to resolve or create organizational unit for registration.");
+            organization = await GetOrganizationAsync(hostConfiguration.Subject.Organization);
+            parentOu = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, organization.NodeId);
+        }
+        catch (InvalidOperationException ex)
+        {
+            Log.Warning(ex.Message);
+            await notificationService.SendNotificationAsync($"Host registration failed: {ex.Message} for host {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
+            return false;
         }
 
-        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(parentOu.NodeId))
-                               .FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
-
-        if (existingComputer != null)
+        try
         {
+            var existingComputer = await GetComputerByMacAddressAsync(hostConfiguration.Host.MacAddress, parentOu.NodeId);
             await databaseService.UpdateComputerAsync(existingComputer, hostConfiguration.Host.IpAddress, hostConfiguration.Host.Name);
+            Log.Information("Host registration successful: {HostName} ({MacAddress})", hostConfiguration.Host.Name, hostConfiguration.Host.MacAddress);
+            await notificationService.SendNotificationAsync($"Host registration successful: {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
         }
-        else
+        catch (InvalidOperationException ex)
         {
+            Log.Warning(ex.Message);
             var computer = new Computer
             {
                 Name = hostConfiguration.Host.Name,
@@ -71,138 +114,115 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             };
 
             var hostGuid = await databaseService.AddNodeAsync(computer);
-
             await Clients.Caller.ReceiveHostGuid(hostGuid);
+
+            Log.Information("New host registered: {HostName} ({MacAddress})", hostConfiguration.Host.Name, hostConfiguration.Host.MacAddress);
+            await notificationService.SendNotificationAsync($"New host registered: {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
         }
 
         return true;
     }
 
+    /// <summary>
+    /// Unregisters a host with the specified configuration.
+    /// </summary>
+    /// <param name="hostConfiguration">The host configuration.</param>
+    /// <returns>True if unregistration is successful, otherwise false.</returns>
+    /// <exception cref="ArgumentException">Thrown if the host configuration is invalid.</exception>
     public async Task<bool> UnregisterHostAsync(HostConfiguration hostConfiguration)
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
-        if (hostConfiguration.Host == null || string.IsNullOrWhiteSpace(hostConfiguration.Host.MacAddress))
+        if (string.IsNullOrWhiteSpace(hostConfiguration.Host.MacAddress))
         {
             throw new ArgumentException("Host configuration must have a non-null Host property with a valid MAC address.", nameof(hostConfiguration));
         }
 
-        OrganizationalUnit? lastOu = null;
+        Organization organizationEntity;
+        OrganizationalUnit? lastOu;
 
-        foreach (var ouName in hostConfiguration.Subject.OrganizationalUnit)
+        try
         {
-            var ous = await databaseService.GetNodesAsync(n => n.Name == ouName && n is OrganizationalUnit && (lastOu == null || n.ParentId == lastOu.NodeId));
-            var ou = ous.OfType<OrganizationalUnit>().FirstOrDefault();
-
-            if (ou != null)
-            {
-                lastOu = ou;
-            }
-            else
-            {
-                Log.Warning("Unregistration failed: OrganizationalUnit '{OUName}' not found.", ouName);
-
-                return false;
-            }
+            organizationEntity = await GetOrganizationAsync(hostConfiguration.Subject.Organization);
+            lastOu = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, organizationEntity.NodeId);
         }
-
-        if (lastOu == null)
+        catch (InvalidOperationException ex)
         {
-            Log.Warning("Unregistration failed: Specified OrganizationalUnit hierarchy not found.");
-
+            Log.Warning(ex.Message);
+            await notificationService.SendNotificationAsync($"Host unregistration failed: {ex.Message} for host {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
             return false;
         }
 
-        var existingComputer = (await databaseService.GetChildrenByParentIdAsync<Computer>(lastOu.NodeId)).FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
-
-        if (existingComputer != null)
+        try
         {
+            var existingComputer = await GetComputerByMacAddressAsync(hostConfiguration.Host.MacAddress, lastOu.NodeId);
             await databaseService.RemoveNodeAsync(existingComputer);
 
-            var currentOu = lastOu;
-
-            while (currentOu != null)
-            {
-                var children = await databaseService.GetChildrenByParentIdAsync<Node>(currentOu.NodeId);
-
-                if (!children.Any())
-                {
-                    var parentOu = currentOu.Parent;
-                    await databaseService.RemoveNodeAsync(currentOu);
-                    currentOu = parentOu as OrganizationalUnit;
-                }
-                else
-                {
-                    break;
-                }
-            }
+            Log.Information("Host unregistered: {HostName} ({MacAddress})", hostConfiguration.Host.Name, hostConfiguration.Host.MacAddress);
+            await notificationService.SendNotificationAsync($"Host unregistered: {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) from organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' in organization '{hostConfiguration.Subject.Organization}'");
 
             return true;
         }
+        catch (InvalidOperationException ex)
+        {
+            Log.Warning(ex.Message);
+            await notificationService.SendNotificationAsync($"Host unregistration failed: {ex.Message} for host {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) from organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' in organization '{hostConfiguration.Subject.Organization}'");
 
-        Log.Warning("Unregistration failed: Computer with MAC address '{MACAddress}' not found in the last organizational unit.", hostConfiguration.Host.MacAddress);
-
-        return false;
+            return false;
+        }
     }
 
+    /// <summary>
+    /// Updates the information of a host with the specified configuration.
+    /// </summary>
+    /// <param name="hostConfiguration">The host configuration.</param>
+    /// <returns>True if the update is successful, otherwise false.</returns>
     public async Task<bool> UpdateHostInformationAsync(HostConfiguration hostConfiguration)
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
-        if (hostConfiguration.Host == null)
+        Organization organization;
+        OrganizationalUnit? lastOu;
+
+        try
         {
-            throw new ArgumentException("Host configuration must have a non-null Host property.", nameof(hostConfiguration));
+            organization = await GetOrganizationAsync(hostConfiguration.Subject.Organization);
+            lastOu = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, organization.NodeId);
         }
-
-        OrganizationalUnit? lastOu = null;
-
-        foreach (var ouName in hostConfiguration.Subject.OrganizationalUnit)
+        catch (InvalidOperationException ex)
         {
-            var ous = await databaseService.GetNodesAsync(n => n.Name == ouName && n is OrganizationalUnit && (lastOu == null || n.ParentId == lastOu.NodeId));
-            var ou = ous.OfType<OrganizationalUnit>().FirstOrDefault();
-
-            if (ou != null)
-            {
-                lastOu = ou;
-            }
-            else
-            {
-                Log.Warning("Update failed: OrganizationalUnit '{OUName}' not found.", ouName);
-
-                return false;
-            }
-        }
-
-        if (lastOu == null)
-        {
-            Log.Warning("Update failed: Specified OrganizationalUnit hierarchy not found.");
-
+            Log.Warning(ex.Message);
+            await notificationService.SendNotificationAsync($"Host information update failed: {ex.Message} for host {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
             return false;
         }
 
-        var computer = (await databaseService.GetChildrenByParentIdAsync<Computer>(lastOu.NodeId))
-            .FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
-
-        if (computer == null)
+        try
         {
-            Log.Warning("Update failed: Computer with MAC address '{MACAddress}' not found in the last organizational unit.", hostConfiguration.Host.MacAddress);
+            var computer = await GetComputerByMacAddressAsync(hostConfiguration.Host.MacAddress, lastOu.NodeId);
+            await databaseService.UpdateComputerAsync(computer, hostConfiguration.Host.IpAddress, hostConfiguration.Host.Name);
+
+            Log.Information("Host information updated: {HostName} ({MacAddress})", hostConfiguration.Host.Name, hostConfiguration.Host.MacAddress);
+            await notificationService.SendNotificationAsync($"Host information updated: {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
+
+            return true;
+        }
+        catch (InvalidOperationException ex)
+        {
+            Log.Warning(ex.Message);
+            await notificationService.SendNotificationAsync($"Host information update failed: {ex.Message} for host {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
 
             return false;
         }
-
-        await databaseService.UpdateComputerAsync(computer, hostConfiguration.Host.IpAddress, hostConfiguration.Host.Name);
-
-        return true;
     }
 
+    /// <summary>
+    /// Checks if a host with the specified configuration is registered.
+    /// </summary>
+    /// <param name="hostConfiguration">The host configuration.</param>
+    /// <returns>True if the host is registered, otherwise false.</returns>
     public async Task<bool> IsHostRegisteredAsync(HostConfiguration hostConfiguration)
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
-
-        if (hostConfiguration.Host == null)
-        {
-            throw new ArgumentException("Host configuration must have a non-null Host property.", nameof(hostConfiguration));
-        }
 
         if (string.IsNullOrWhiteSpace(hostConfiguration.Host.MacAddress))
         {
@@ -211,21 +231,23 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
 
         try
         {
-            var nodes = await databaseService.GetNodesAsync(n => n is Computer && ((Computer)n).MacAddress == hostConfiguration.Host.MacAddress);
-            var computers = nodes.OfType<Computer>();
+            var computers = await databaseService.GetNodesAsync<Computer>(n => n.MacAddress == hostConfiguration.Host.MacAddress);
 
-            var isRegistered = computers.Any();
-
-            return isRegistered;
+            return computers.Any();
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Error while checking registration of the host '{HostName}'.", hostConfiguration.Host.Name);
+            await notificationService.SendNotificationAsync($"Error while checking registration of the host {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`): {ex.Message}");
 
             return false;
         }
     }
 
+    /// <summary>
+    /// Retrieves the public key.
+    /// </summary>
+    /// <returns>The public key as a byte array if found, otherwise null.</returns>
     public async Task<byte[]?> GetPublicKey()
     {
         try
@@ -238,71 +260,85 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
                 return await File.ReadAllBytesAsync(publicKeyPath);
             }
 
-            Log.Warning("Public key file not found at '{Path}'", publicKeyPath);
-
             return null;
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Error while reading public key file.");
+            await notificationService.SendNotificationAsync($"Error while reading public key file: {ex.Message}");
 
             return null;
         }
     }
 
-    public async Task<string[]> GetNewOrganizationalUnitIfChangeRequested(string macAddress)
+    /// <summary>
+    /// Retrieves the list of host move requests.
+    /// </summary>
+    /// <returns>The list of host move requests.</returns>
+    private static async Task<List<HostMoveRequest>> GetHostMoveRequestsAsync()
     {
         var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var ouChangeRequestsFilePath = Path.Combine(programDataPath, "RemoteMaster", "Server", "OrganizationalUnitChangeRequests.json");
+        var hostMoveRequestsFilePath = Path.Combine(programDataPath, "RemoteMaster", "Server", "HostMoveRequests.json");
 
-        if (File.Exists(ouChangeRequestsFilePath))
+        if (File.Exists(hostMoveRequestsFilePath))
         {
-            var json = await File.ReadAllTextAsync(ouChangeRequestsFilePath);
-            var changeRequests = JsonSerializer.Deserialize<List<OrganizationalUnitChangeRequest>>(json) ?? [];
-            var request = changeRequests.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
+            var json = await File.ReadAllTextAsync(hostMoveRequestsFilePath);
 
-            if (request != null)
-            {
-                return request.NewOrganizationalUnit;
-            }
+            return JsonSerializer.Deserialize<List<HostMoveRequest>>(json) ?? new List<HostMoveRequest>();
         }
-
-        Log.Information("No organizational unit change request found for MAC address {MACAddress}.", macAddress);
 
         return [];
     }
 
-    public async Task AcknowledgeOrganizationalUnitChange(string macAddress)
+    /// <summary>
+    /// Saves the list of host move requests.
+    /// </summary>
+    /// <param name="hostMoveRequests">The list of host move requests.</param>
+    private static async Task SaveHostMoveRequestsAsync(List<HostMoveRequest> hostMoveRequests)
     {
         var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var ouChangeRequestsFilePath = Path.Combine(programDataPath, "RemoteMaster", "Server", "OrganizationalUnitChangeRequests.json");
+        var hostMoveRequestsFilePath = Path.Combine(programDataPath, "RemoteMaster", "Server", "HostMoveRequests.json");
+        var updatedJson = JsonSerializer.Serialize(hostMoveRequests);
 
-        if (File.Exists(ouChangeRequestsFilePath))
+        await File.WriteAllTextAsync(hostMoveRequestsFilePath, updatedJson);
+    }
+
+    /// <summary>
+    /// Retrieves a host move request by MAC address.
+    /// </summary>
+    /// <param name="macAddress">The MAC address of the host.</param>
+    /// <returns>The host move request if found, otherwise null.</returns>
+    public async Task<HostMoveRequest?> GetHostMoveRequest(string macAddress)
+    {
+        var hostMoveRequests = await GetHostMoveRequestsAsync();
+
+        return hostMoveRequests.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Acknowledges a host move request by removing it from the list.
+    /// </summary>
+    /// <param name="macAddress">The MAC address of the host.</param>
+    public async Task AcknowledgeMoveRequest(string macAddress)
+    {
+        var hostMoveRequests = await GetHostMoveRequestsAsync();
+        var requestToRemove = hostMoveRequests.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
+
+        if (requestToRemove != null)
         {
-            var json = await File.ReadAllTextAsync(ouChangeRequestsFilePath);
-            var changeRequests = JsonSerializer.Deserialize<List<OrganizationalUnitChangeRequest>>(json) ?? [];
+            hostMoveRequests.Remove(requestToRemove);
+            await SaveHostMoveRequestsAsync(hostMoveRequests);
 
-            var requestToRemove = changeRequests.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
-
-            if (requestToRemove != null)
-            {
-                changeRequests.Remove(requestToRemove);
-                var updatedJson = JsonSerializer.Serialize(changeRequests);
-                await File.WriteAllTextAsync(ouChangeRequestsFilePath, updatedJson);
-
-                Log.Information("Acknowledged and removed organizational unit change request for MAC address {MACAddress}.", macAddress);
-            }
-            else
-            {
-                Log.Information("No organizational unit change request found for MAC address {MACAddress} to acknowledge.", macAddress);
-            }
-        }
-        else
-        {
-            Log.Warning("Organizational unit change requests file not found at '{Path}'. Unable to acknowledge change request.", ouChangeRequestsFilePath);
+            Log.Information("Acknowledged move request for host with MAC address: {MacAddress}", macAddress);
+            await notificationService.SendNotificationAsync($"Acknowledged move request for host with MAC address: {macAddress}");
         }
     }
 
+    /// <summary>
+    /// Issues a certificate based on the provided CSR bytes.
+    /// </summary>
+    /// <param name="csrBytes">The CSR bytes.</param>
+    /// <returns>True if the certificate is issued successfully, otherwise false.</returns>
     public async Task<bool> IssueCertificateAsync(byte[] csrBytes)
     {
         ArgumentNullException.ThrowIfNull(csrBytes, nameof(csrBytes));
@@ -312,16 +348,23 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             var certificate = certificateService.IssueCertificate(csrBytes);
             await Clients.Caller.ReceiveCertificate(certificate.Export(X509ContentType.Pfx));
 
+            Log.Information("Certificate issued successfully.");
+
             return true;
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Error while issuing certificate.");
+            await notificationService.SendNotificationAsync($"Error while issuing certificate: {ex.Message}");
 
             return false;
         }
     }
 
+    /// <summary>
+    /// Retrieves the CA certificate.
+    /// </summary>
+    /// <returns>True if the CA certificate is retrieved successfully, otherwise false.</returns>
     public async Task<bool> GetCaCertificateAsync()
     {
         try
@@ -332,11 +375,14 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
             {
                 await Clients.Caller.ReceiveCertificate(caCertificatePublicPart.RawData);
 
+                Log.Information("CA certificate retrieved successfully.");
+
                 return true;
             }
             else
             {
-                Log.Warning("CA certificate public part could not be retrieved.");
+                Log.Warning("CA certificate retrieval failed.");
+                await notificationService.SendNotificationAsync("CA certificate retrieval failed.");
 
                 return false;
             }
@@ -344,6 +390,7 @@ public class ManagementHub(ICertificateService certificateService, ICaCertificat
         catch (Exception ex)
         {
             Log.Error(ex, "Error while sending CA certificate public part.");
+            await notificationService.SendNotificationAsync($"Error while sending CA certificate public part: {ex.Message}");
 
             return false;
         }

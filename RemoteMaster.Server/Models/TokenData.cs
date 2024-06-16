@@ -1,0 +1,27 @@
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+// This file is part of the RemoteMaster project.
+// Licensed under the GNU Affero General Public License v3.0.
+
+using System.Text.Json.Serialization;
+
+namespace RemoteMaster.Server.Models;
+
+public class TokenData
+{
+    [JsonPropertyName("accessToken")]
+    public string AccessToken { get; set; }
+
+    [JsonPropertyName("refreshToken")]
+    public string RefreshToken { get; set; }
+
+    [JsonPropertyName("accessTokenExpiresAt")]
+    public DateTime AccessTokenExpiresAt { get; set; }
+
+    [JsonPropertyName("refreshTokenExpiresAt")]
+    public DateTime RefreshTokenExpiresAt { get; set; }
+
+    public override string ToString()
+    {
+        return $"TokenData: AccessToken = {AccessToken}, RefreshToken = {RefreshToken}, AccessTokenExpiresAt = {AccessTokenExpiresAt}, RefreshTokenExpiresAt = {RefreshTokenExpiresAt}";
+    }
+}

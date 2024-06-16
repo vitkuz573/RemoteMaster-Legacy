@@ -50,7 +50,7 @@ public partial class Access
                 return;
         }
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendMouseInput", mouseInputDto));
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendMouseInput", mouseInputDto), true);
     }
 
     private async Task OnMouseWheel(WheelEventArgs e)
@@ -58,7 +58,7 @@ public partial class Access
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendMouseInput", new MouseInputDto
         {
             DeltaY = e.DeltaY
-        }));
+        }), true);
     }
 
     private async Task SendKeyboardInput(string code, bool isPressed)
@@ -67,7 +67,7 @@ public partial class Access
         {
             Code = code,
             IsPressed = isPressed
-        }));
+        }), true);
     }
 
     [JSInvokable]

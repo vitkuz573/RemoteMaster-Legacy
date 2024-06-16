@@ -10,9 +10,9 @@ public interface IServerHubService
 {
     Task ConnectAsync(string serverIp);
 
-    Task<string[]> GetNewOrganizationalUnitIfChangeRequested(string macAddress);
+    Task<HostMoveRequest?> GetHostMoveRequest(string macAddress);
 
-    Task AcknowledgeOrganizationalUnitChange(string macAddress);
+    Task AcknowledgeMoveRequest(string macAddress);
 
     Task<bool> IssueCertificateAsync(byte[] signingRequest);
 

@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Data;
-using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Components.Admin.Pages;
 
@@ -24,82 +23,88 @@ public partial class ManageUsers
     private List<ApplicationUser> _users = [];
     private readonly Dictionary<ApplicationUser, List<string>> _userRoles = [];
     private List<IdentityRole> _roles = [];
-    private List<Organization> _organizations = [];
+
+    [Inject]
+    private IServiceScopeFactory ScopeFactory { get; set; } = null!;
 
     private string? Message => _identityErrors is null ? null : $"Error: {string.Join(", ", _identityErrors.Select(error => error.Description))}";
 
     protected async override Task OnInitializedAsync()
     {
-        await LoadUsers();
+        await LoadRolesAsync();
+        await LoadUsersAsync();
+    }
 
-        _roles = await RoleManager.Roles
+    private async Task LoadRolesAsync()
+    {
+        using var scope = ScopeFactory.CreateScope();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        _roles = await roleManager.Roles
             .Where(role => role.Name != "RootAdministrator")
             .ToListAsync();
-
-        _organizations = [.. ApplicationDbContext.Organizations];
     }
 
     private async Task OnValidSubmitAsync()
     {
+        using var scope = ScopeFactory.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var userStore = scope.ServiceProvider.GetRequiredService<IUserStore<ApplicationUser>>();
+
         ApplicationUser user;
 
         if (Input.Id != null)
         {
-            user = await UserManager.FindByIdAsync(Input.Id);
+            user = await userManager.FindByIdAsync(Input.Id);
 
             if (user == null)
             {
                 return;
             }
 
-            await UserManager.UpdateAsync(user);
+            user.UserName = Input.Username;
+
+            var updateResult = await userManager.UpdateAsync(user);
+
+            if (!updateResult.Succeeded)
+            {
+                _identityErrors = updateResult.Errors;
+                StateHasChanged();
+
+                return;
+            }
         }
         else
         {
             user = CreateUser();
 
-            await UserStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
+            await userStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
 
-            var result = await UserManager.CreateAsync(user, Input.Password);
+            var result = await userManager.CreateAsync(user, Input.Password);
 
             if (!result.Succeeded)
             {
                 _identityErrors = result.Errors;
+                StateHasChanged();
 
                 return;
             }
-
-            await UserManager.AddToRoleAsync(user, Input.Role);
-
-            foreach (var orgId in Input.Organizations)
-            {
-                var organization = await ApplicationDbContext.Organizations.FindAsync(Guid.Parse(orgId));
-
-                if (organization != null)
-                {
-                    var userOrganization = new UserOrganization
-                    {
-                        User = user,
-                        Organization = organization
-                    };
-
-                    ApplicationDbContext.UserOrganizations.Add(userOrganization);
-                }
-            }
         }
 
-        await ApplicationDbContext.SaveChangesAsync();
+        await LoadUsersAsync();
 
-        await LoadUsers();
+        Input = new InputModel();
 
-        NavigationManager.NavigateTo("Admin/Users", true);
+        NavigationManager.Refresh();
     }
 
     private async Task OnDeleteAsync(ApplicationUser user)
     {
+        using var scope = ScopeFactory.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
         if (user != null && _userPlaceholderModels.TryGetValue(user.UserName, out var _))
         {
-            await UserManager.DeleteAsync(user);
+            await userManager.DeleteAsync(user);
 
             _userPlaceholderModels.Remove(user.UserName);
             _users.Remove(user);
@@ -108,30 +113,12 @@ public partial class ManageUsers
         }
     }
 
-    private async Task EditUser(ApplicationUser user)
+    private async Task LoadUsersAsync()
     {
-        if (user != null && _userRoles.TryGetValue(user, out var roles))
-        {
-            Input = new InputModel
-            {
-                Id = user.Id,
-                Username = user.UserName,
-                Role = roles.FirstOrDefault(),
-            };
+        using var scope = ScopeFactory.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var users = await userManager.Users.ToListAsync();
 
-            var userOrganizations = ApplicationDbContext.UserOrganizations
-                                   .Where(uo => uo.UserId == user.Id)
-                                   .Include(uo => uo.Organization);
-
-            Input.Organizations = userOrganizations.Any()
-                ? await userOrganizations.Select(uo => uo.OrganizationId.ToString()).ToArrayAsync()
-                : [];
-        }
-    }
-
-    private async Task LoadUsers()
-    {
-        var users = await UserManager.Users.ToListAsync();
         var sortedUsers = new List<ApplicationUser>();
 
         _userPlaceholderModels.Clear();
@@ -139,9 +126,9 @@ public partial class ManageUsers
 
         foreach (var user in users)
         {
-            var roles = await UserManager.GetRolesAsync(user);
+            var roles = await userManager.GetRolesAsync(user);
 
-            _userRoles[user] = [.. roles];
+            _userRoles[user] = new List<string>(roles);
             _userPlaceholderModels[user.UserName] = new PlaceholderInputModel
             {
                 Username = user.UserName
@@ -164,16 +151,18 @@ public partial class ManageUsers
     {
         try
         {
-            return Activator.CreateInstance<ApplicationUser>();
+            var user = Activator.CreateInstance<ApplicationUser>();
+
+            return user;
         }
-        catch
+        catch (Exception)
         {
             throw new InvalidOperationException($"Can't create an instance of '{nameof(ApplicationUser)}'. " +
                 $"Ensure that '{nameof(ApplicationUser)}' is not an abstract class and has a parameterless constructor.");
         }
     }
 
-    private sealed class InputModel
+    public sealed class InputModel
     {
         public string? Id { get; set; }
 
@@ -181,14 +170,6 @@ public partial class ManageUsers
         [DataType(DataType.Text)]
         [Display(Name = "Username")]
         public string Username { get; set; }
-
-        [Required]
-        [Display(Name = "Role")]
-        public string Role { get; set; }
-
-        [Required]
-        [Display(Name = "Organizations")]
-        public string[] Organizations { get; set; } = [];
 
         [Required]
         [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]

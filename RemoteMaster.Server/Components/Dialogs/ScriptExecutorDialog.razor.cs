@@ -108,6 +108,6 @@ public partial class ScriptExecutorDialog
 
         var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/fileUtils.js");
 
-        await module.InvokeVoidAsync("generateAndDownloadResults", base64Zip, "RemoteMaster_Results.zip");
+        await module.InvokeVoidAsync("downloadDataAsFile", base64Zip, "RemoteMaster_Results.zip", "application/zip;base64");
     }
 }

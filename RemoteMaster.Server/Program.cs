@@ -5,18 +5,18 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using MudBlazor.Services;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Components;
 using RemoteMaster.Server.Components.Account;
-using RemoteMaster.Server.Components.Library.Extensions;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Hubs;
 using RemoteMaster.Server.Middlewares;
@@ -55,6 +55,7 @@ public static class Program
             }
         });
 
+
         builder.WebHost.ConfigureKestrel(serverOptions =>
         {
             serverOptions.ListenAnyIP(80);
@@ -88,6 +89,9 @@ public static class Program
             options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
         }).AddIdentityCookies();
 
+        services.AddAuthorizationBuilder()
+            .AddPolicy("ToggleInputPolicy", policy => policy.RequireClaim("Permission", "ToggleInput"));
+
         var connectionString = configurationManager.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
         if (string.IsNullOrEmpty(connectionString))
@@ -95,9 +99,18 @@ public static class Program
             throw new InvalidOperationException("Could not find a connection string named 'DefaultConnection'.");
         }
 
-        services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
-        services.AddDbContext<NodesDbContext>(options => options.UseSqlServer(connectionString));
-        services.AddDbContextFactory<CertificateDbContext>(options => options.UseSqlServer(connectionString));
+        void dbContextOptions(DbContextOptionsBuilder options)
+        {
+            options.UseSqlServer(connectionString, sqlServerOptions =>
+            {
+                sqlServerOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+            })
+            .ConfigureWarnings(warnings => warnings.Throw(RelationalEventId.MultipleCollectionIncludeWarning));
+        }
+
+        services.AddDbContext<ApplicationDbContext>(dbContextOptions);
+        services.AddDbContextFactory<CertificateDbContext>(dbContextOptions);
+        services.AddDbContextFactory<TokenDbContext>(dbContextOptions);
 
         services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -117,14 +130,17 @@ public static class Program
         services.AddScoped<ICrlService, CrlService>();
         services.AddScoped<IAccessTokenProvider, AccessTokenProvider>();
         services.AddScoped<ITokenService, TokenService>();
+        services.AddSingleton<ITokenStorageService, InMemoryTokenStorageService>();
         services.AddSingleton<IBrandingService, BrandingService>();
         services.AddSingleton<ICertificateService, CertificateService>();
         services.AddSingleton<IPacketSender, UdpPacketSender>();
         services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
         services.AddSingleton<ICaCertificateService, CaCertificateService>();
         services.AddSingleton<IJwtSecurityService, JwtSecurityService>();
-
-        services.AddLibraryServices();
+        services.AddSingleton<IRemoteSchtasksService, RemoteSchtasksService>();
+        services.AddSingleton<INetworkDriveService, NetworkDriveService>();
+        services.AddSingleton<ICountryProvider, CountryProvider>();
+        services.AddSingleton<INotificationService, TelegramNotificationService>();
 
         services.AddSingleton(new JsonSerializerOptions
         {
@@ -141,29 +157,9 @@ public static class Program
         services.Configure<JwtOptions>(configurationManager.GetSection("jwt"));
         services.Configure<CertificateOptions>(configurationManager.GetSection("caSettings"));
         services.Configure<SubjectOptions>(configurationManager.GetSection("caSettings:subject"));
-
-        services.AddCookiePolicy(options =>
-        {
-            options.HttpOnly = HttpOnlyPolicy.Always;
-            options.MinimumSameSitePolicy = SameSiteMode.Strict;
-            options.Secure = CookieSecurePolicy.SameAsRequest;
-
-            options.OnAppendCookie = cookieContext =>
-            {
-                if (cookieContext.CookieName == CookieNames.AccessToken)
-                {
-                    cookieContext.CookieOptions.Expires = DateTime.UtcNow.AddMinutes(15);
-                }
-                else if (cookieContext.CookieName == CookieNames.RefreshToken)
-                {
-                    cookieContext.CookieOptions.Expires = DateTime.UtcNow.AddDays(1);
-                }
-            };
-        });
+        services.Configure<TelegramBotOptions>(configurationManager.GetSection("telegramBot"));
 
         services.AddMudServices();
-
-        services.AddMemoryCache();
 
         services.AddControllers();
 
@@ -182,11 +178,6 @@ public static class Program
             )
             .AddDbContextCheck<CertificateDbContext>(
                 name: "CertificateDbContext",
-                failureStatus: HealthStatus.Unhealthy,
-                tags: ["db", "entityframework"]
-            )
-            .AddDbContextCheck<NodesDbContext>(
-                name: "NodesDbContext",
                 failureStatus: HealthStatus.Unhealthy,
                 tags: ["db", "entityframework"]
             );
@@ -231,6 +222,11 @@ public static class Program
 
     private static void ConfigurePipeline(WebApplication app)
     {
+        app.UseForwardedHeaders(new ForwardedHeadersOptions
+        {
+            ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+        });
+
         app.MapHealthChecks("/health", new HealthCheckOptions
         {
             ResponseWriter = async (context, report) =>
@@ -248,7 +244,10 @@ public static class Program
                 )).ToList();
 
                 var responseModel = ApiResponse<List<HealthCheck>>.Success(healthCheckResults, "Health checks completed");
-                var jsonResponse = JsonSerializer.Serialize(responseModel, new JsonSerializerOptions { WriteIndented = true });
+                var jsonResponse = JsonSerializer.Serialize(responseModel, new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
 
                 await context.Response.WriteAsync(jsonResponse);
             }
@@ -265,8 +264,8 @@ public static class Program
                 var dbContexts = new List<DbContext>
                 {
                     services.GetRequiredService<ApplicationDbContext>(),
-                    services.GetRequiredService<NodesDbContext>(),
                     services.GetRequiredService<CertificateDbContext>(),
+                    services.GetRequiredService<TokenDbContext>(),
                 };
 
                 foreach (var dbContext in dbContexts)
@@ -291,8 +290,6 @@ public static class Program
         }
 
         var applicationSettings = app.Services.GetRequiredService<IOptions<ApplicationSettings>>().Value;
-
-        app.UseCookiePolicy();
 
         app.Use(async (context, next) =>
         {

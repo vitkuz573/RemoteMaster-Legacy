@@ -5,13 +5,18 @@
 @attribute [Authorize]
 
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
 @using RemoteMaster.Server.Abstractions
+@using RemoteMaster.Server.Data
 
 @inject NavigationManager NavigationManager
 @inject IQueryParameterService QueryParameterService
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IJSRuntime JsRuntime
 @inject IAccessTokenProvider AccessTokenProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject ISnackbar Snackbar
+@inject IServiceScopeFactory ScopeFactory
 
 <PageTitle>@_title</PageTitle>
 
@@ -38,8 +43,8 @@
                     {
                         var resolution = $"{_displays[i].Resolution.Width} x {_displays[i].Resolution.Height}";
                         var displayName = _displays[i].Name == "VIRTUAL_SCREEN"
-                            ? $"Virtual Screen ({resolution})"
-                            : $"Screen {i + 1} ({resolution})";
+                        ? $"Virtual Screen ({resolution})"
+                        : $"Screen {i + 1} ({resolution})";
 
                         <MudSelectItem Value="_displays[i].Name">@displayName</MudSelectItem>
                     }
@@ -48,28 +53,31 @@
 
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.HighQuality">
                 <MudText>Image Quality</MudText>
-                <MudSlider T="int" Value="@_imageQuality" Min="0" Max="100" ValueChanged="ChangeQuality"/>
+                <MudSlider T="int" Value="@_imageQuality" Min="0" Max="100" ValueChanged="ChangeQuality" />
             </MudNavLink>
 
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.ControlPoint">
                 <MudText>Cursor Tracking</MudText>
-                <MudSwitch T="bool" Value="_cursorTracking" ValueChanged="ToggleCursorTracking"/>
+                <MudSwitch T="bool" Value="_cursorTracking" ValueChanged="ToggleCursorTracking" />
             </MudNavLink>
 
-            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Keyboard">
-                <MudText>Input Toggle</MudText>
-                <MudSwitch T="bool" Value="_inputEnabled" ValueChanged="ToggleInputEnabled"/>
-            </MudNavLink>
+            @if (IsUserInRole("Administrator"))
+            {
+                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Keyboard">
+                    <MudText>Input Toggle</MudText>
+                    <MudSwitch T="bool" Value="_inputEnabled" ValueChanged="ToggleInputEnabled" />
+                </MudNavLink>
 
-            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.KeyboardHide">
-                <MudText>Block User Input Toggle</MudText>
-                <MudSwitch T="bool" Value="_blockUserInput" ValueChanged="ToggleBlockUserInput" />
-            </MudNavLink>
+                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.KeyboardHide">
+                    <MudText>Block User Input Toggle</MudText>
+                    <MudSwitch T="bool" Value="_blockUserInput" ValueChanged="ToggleBlockUserInput" />
+                </MudNavLink>
 
-            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.DeleteSweep" OnClick="KillHost">Kill Host</MudNavLink>
-            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.ControlPoint" OnClick="SendCtrlAltDel">Send Ctrl+Alt+Del</MudNavLink>
-            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.History" OnClick="RebootComputer">Reboot Computer</MudNavLink>
-            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.PowerOff" OnClick="ShutdownComputer">Shutdown Computer</MudNavLink>
+                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.DeleteSweep" OnClick="KillHost">Kill Host</MudNavLink>
+                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.ControlPoint" OnClick="SendCtrlAltDel">Send Ctrl+Alt+Del</MudNavLink>
+                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.History" OnClick="RebootComputer">Reboot Computer</MudNavLink>
+                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.PowerOff" OnClick="ShutdownComputer">Shutdown Computer</MudNavLink>
+            }
 
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Https">
                 Transport Type: @_transportType
@@ -105,7 +113,11 @@
 
     <MudMainContent>
         <div class="flex h-screen items-center justify-center bg-gray-800 pb-14 text-white">
-            @if (!string.IsNullOrEmpty(_screenDataUrl))
+            @if (_accessDenied)
+            {
+                <p>Access Denied. Please contact the administrator.</p>
+            }
+            else if (!string.IsNullOrEmpty(_screenDataUrl))
             {
                 <img @ref="_screenImageElement" src="@_screenDataUrl" @oncontextmenu:preventDefault="true" @oncontextmenu="_ => { }" draggable="false" class="@( _selectedDisplay == "VIRTUAL_SCREEN" ? "h-auto max-w-full" : "max-h-full w-auto" ) object-contain mx-auto" onload="@(async () => await OnLoad())" @onmousemove="OnMouseEvent" @onmousedown="OnMouseEvent" @onmouseup="OnMouseEvent" @onmouseover="OnMouseEvent" @onmousewheel="OnMouseWheel" alt="" />
             }
@@ -122,5 +134,3 @@
         overflow: hidden;
     }
 </style>
-
-

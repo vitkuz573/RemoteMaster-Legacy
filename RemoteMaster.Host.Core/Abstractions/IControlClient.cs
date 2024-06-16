@@ -28,4 +28,6 @@ public interface IControlClient
     Task ReceiveTransportType(string transportType);
 
     Task ReceiveAllViewers(List<ViewerDto> viewers);
+
+    Task ReceiveError(string message);
 }

@@ -9,7 +9,7 @@ using RemoteMaster.Shared.Dtos;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
-[Authorize]
+[Authorize(Roles = "Administrator")]
 public class FileManagerHub(IFileManagerService fileManagerService) : Hub<IFileManagerClient>
 {
     public async Task UploadFile(FileUploadDto dto)

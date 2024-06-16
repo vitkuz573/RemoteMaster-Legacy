@@ -37,13 +37,15 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
             if (hostConfiguration.Host != null && hostConfiguration.Host.MacAddress != hostInformation.MacAddress)
             {
                 Log.Information("MAC address has changed, which might indicate restoration from backup. System will be registered under a special organizational unit.");
-                hostConfiguration.Subject.OrganizationalUnit = ["RestoredSystems"];
+
+                hostConfiguration.Subject.Organization = "Restoration Systems";
+                hostConfiguration.Subject.OrganizationalUnit = ["Backup Recovery"];
             }
 
             hostConfiguration.Host = hostInformation;
-            
+
             Log.Information("Host details were either missing or have been updated.");
-            
+
             hasChanges = true;
         }
 
@@ -61,29 +63,30 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
         try
         {
             await serverHubService.ConnectAsync(hostConfiguration.Server);
-            var newOrganizationalUnits = await serverHubService.GetNewOrganizationalUnitIfChangeRequested(hostConfiguration.Host.MacAddress);
+            var hostMoveRequest = await serverHubService.GetHostMoveRequest(hostConfiguration.Host.MacAddress);
 
-            if (newOrganizationalUnits.Length > 0)
+            if (hostMoveRequest != null)
             {
-                hostConfiguration.Subject.OrganizationalUnit = newOrganizationalUnits;
+                hostConfiguration.Subject.Organization = hostMoveRequest.NewOrganization;
+                hostConfiguration.Subject.OrganizationalUnit = hostMoveRequest.NewOrganizationalUnit;
 
                 await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
 
-                Log.Information("Organizational unit for this device was updated based on the organizational unit change request.");
+                Log.Information("HostMoveRequest applied: Organization changed to {Organization} and Organizational Unit changed to {OrganizationalUnit}.", hostMoveRequest.NewOrganization, string.Join("/", hostMoveRequest.NewOrganizationalUnit));
 
-                await serverHubService.AcknowledgeOrganizationalUnitChange(hostConfiguration.Host.MacAddress);
+                await serverHubService.AcknowledgeMoveRequest(hostConfiguration.Host.MacAddress);
 
                 hasChanges = true;
             }
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error processing organizational unit change requests.");
+            Log.Error(ex, "Error processing HostMoveRequest for organizational unit and organization changes.");
         }
 
         return hasChanges;
     }
-
+    
     public bool CheckCertificateExpiration()
     {
         X509Certificate2? сertificate = null;

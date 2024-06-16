@@ -1,0 +1,42 @@
+﻿@page "/Account/LoginWith2fa"
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using RemoteMaster.Server.Abstractions
+@using RemoteMaster.Server.Data
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject IdentityRedirectManager RedirectManager
+@inject ITokenStorageService TokenStorageService
+@inject ITokenService TokenService
+@inject IServiceScopeFactory ScopeFactory
+
+<PageTitle>Two-factor authentication</PageTitle>
+
+<div class="mx-auto mt-10 max-w-md">
+    <h1 class="text-2xl font-semibold text-gray-900">Two-factor authentication</h1>
+    <hr class="my-4" />
+    <StatusMessage Message="@_message" />
+    <p class="text-gray-700">Your login is protected with an authenticator app. Enter your authenticator code below.</p>
+    <div class="mt-6">
+        <EditForm Model="Input" FormName="login-with-2fa" OnValidSubmit="OnValidSubmitAsync" method="post" class="space-y-6">
+            <input type="hidden" name="ReturnUrl" value="@ReturnUrl" />
+            <input type="hidden" name="RememberMe" value="@RememberMe" />
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-red-600" role="alert" />
+            <div>
+                <label for="two-factor-code" class="block text-sm font-medium text-gray-700">Authenticator code</label>
+                <InputText @bind-Value="Input.TwoFactorCode" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" autocomplete="off" />
+                <ValidationMessage For="() => Input.TwoFactorCode" class="text-red-600" />
+            </div>
+            <div>
+                <button type="submit" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none">Log in</button>
+            </div>
+        </EditForm>
+    </div>
+    <p class="mt-4 text-gray-700">
+        Don't have access to your authenticator device? You can
+        <a href="Account/LoginWithRecoveryCode?ReturnUrl=@ReturnUrl" class="text-indigo-600">log in with a recovery code</a>.
+    </p>
+</div>

@@ -5,9 +5,11 @@
 using System.Collections.Concurrent;
 using System.Security.Claims;
 using System.Threading.Channels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
 using MudBlazor;
 using Polly;
@@ -28,8 +30,8 @@ public partial class Home
 
     private UserInfo _userInfo = new();
     private bool _drawerOpen;
-    private Node? _selectedNode;
-    private HashSet<Node>? _nodes;
+    private INode? _selectedNode;
+    private HashSet<INode>? _nodes;
 
     private readonly List<Computer> _selectedComputers = [];
     private readonly ConcurrentDictionary<string, Computer> _availableComputers = new();
@@ -48,9 +50,14 @@ public partial class Home
 
     protected async override Task OnInitializedAsync()
     {
+        var httpContext = HttpContextAccessor.HttpContext;
+        var userId = UserManager.GetUserId(httpContext.User);
+
         await InitializeUserAsync();
-        _nodes = new HashSet<Node>(await LoadNodesWithChildren());
-        await AccessTokenProvider.GetAccessTokenAsync();
+
+        _nodes = new HashSet<INode>(await LoadNodes());
+
+        await AccessTokenProvider.GetAccessTokenAsync(userId);
     }
 
     private async Task InitializeUserAsync()
@@ -71,7 +78,10 @@ public partial class Home
 
         if (!string.IsNullOrEmpty(userId))
         {
-            var user = await UserManager.FindByIdAsync(userId);
+            var user = await UserManager.Users
+                .Include(u => u.AccessibleOrganizations)
+                .Include(u => u.AccessibleOrganizationalUnits)
+                .FirstOrDefaultAsync(u => u.Id == userId);
 
             if (user != null)
             {
@@ -82,6 +92,14 @@ public partial class Home
                     userInfo.Roles.Add(role);
                 }
             }
+            else
+            {
+                Log.Warning("User with ID {UserId} not found", userId);
+            }
+        }
+        else
+        {
+            Log.Warning("User ID not found in claims");
         }
 
         userInfo.UserName = userPrincipal.Identity?.Name ?? "UnknownUser";
@@ -89,20 +107,76 @@ public partial class Home
         return userInfo;
     }
 
-    private async Task<IEnumerable<Node>> LoadNodesWithChildren(Guid? parentId = null)
+    private async Task<IEnumerable<INode>> LoadNodes(Guid? organizationId = null, Guid? parentId = null)
     {
-        var units = await DatabaseService.GetNodesAsync(node => node.ParentId == parentId);
+        var authState = await AuthenticationStateTask;
+        var userPrincipal = authState.User;
+        var userId = userPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        foreach (var unit in units.OfType<OrganizationalUnit>())
+        if (string.IsNullOrEmpty(userId))
         {
-            unit.Nodes = new HashSet<Node>(await LoadNodesWithChildren(unit.NodeId));
+            Log.Warning("User ID not found in claims");
+
+            return [];
+        }
+
+        var accessibleOrganizations = await GetAccessibleOrganizations(userId);
+        var accessibleOrganizationalUnits = await GetAccessibleOrganizationalUnits(userId);
+        var units = new List<INode>();
+
+        if (organizationId == null)
+        {
+            var organizations = await DatabaseService.GetNodesAsync<Organization>(o => accessibleOrganizations.Contains(o.NodeId)) ?? [];
+            units.AddRange(organizations);
+
+            foreach (var organization in organizations)
+            {
+                organization.OrganizationalUnits = (await LoadNodes(organization.NodeId, null)).OfType<OrganizationalUnit>().ToList();
+            }
+        }
+        else
+        {
+            var organizationalUnits = await DatabaseService.GetNodesAsync<OrganizationalUnit>(ou =>
+                ou.OrganizationId == organizationId &&
+                (parentId == null || ou.ParentId == parentId) &&
+                accessibleOrganizationalUnits.Contains(ou.NodeId)) ?? [];
+
+            var computers = await DatabaseService.GetNodesAsync<Computer>(c => c.ParentId == parentId) ?? [];
+
+            units.AddRange(organizationalUnits);
+            units.AddRange(computers);
+
+            foreach (var unit in organizationalUnits)
+            {
+                unit.Children = (await LoadNodes(unit.OrganizationId, unit.NodeId)).OfType<OrganizationalUnit>().ToList();
+                unit.Computers = (await LoadNodes(unit.OrganizationId, unit.NodeId)).OfType<Computer>().ToList();
+            }
         }
 
         return units;
     }
 
+    private async Task<List<Guid>> GetAccessibleOrganizations(string userId)
+    {
+        var user = await UserManager.Users
+            .Include(u => u.AccessibleOrganizations)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        return user?.AccessibleOrganizations.Select(org => org.NodeId).ToList() ?? new List<Guid>();
+    }
+
+    private async Task<List<Guid>> GetAccessibleOrganizationalUnits(string userId)
+    {
+        var user = await UserManager.Users
+            .Include(u => u.AccessibleOrganizationalUnits)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        return user?.AccessibleOrganizationalUnits.Select(ou => ou.NodeId).ToList() ?? new List<Guid>();
+    }
+
     private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
 
+    [Authorize(Roles = "Administrator")]
     private async Task OpenHostConfig()
     {
         var dialogOptions = new DialogOptions
@@ -113,6 +187,7 @@ public partial class Home
         await DialogService.ShowAsync<HostConfigurationGenerator>("Host Configuration Generator", dialogOptions);
     }
 
+    [Authorize(Roles = "Administrator")]
     private async Task PublishCrl()
     {
         var crl = await CrlService.GenerateCrlAsync();
@@ -125,8 +200,13 @@ public partial class Home
 
     private void Logout() => NavigationManager.NavigateTo("/Account/Logout");
 
-    private async Task OnNodeSelected(Node? node)
+    private async Task OnNodeSelected(INode? node)
     {
+        if (node is Organization)
+        {
+            return;
+        }
+
         _selectedComputers.Clear();
         _availableComputers.Clear();
         _unavailableComputers.Clear();
@@ -143,7 +223,7 @@ public partial class Home
 
     private async Task LoadComputers(OrganizationalUnit orgUnit)
     {
-        var computers = orgUnit.Nodes.OfType<Computer>().ToList();
+        var computers = orgUnit.Computers.ToList();
 
         var newPendingComputers = new ConcurrentDictionary<string, Computer>();
 
@@ -151,6 +231,7 @@ public partial class Home
         {
             if (!_availableComputers.ContainsKey(computer.IpAddress) && !_unavailableComputers.ContainsKey(computer.IpAddress))
             {
+                computer.Thumbnail = null;
                 newPendingComputers.TryAdd(computer.IpAddress, computer);
             }
         }
@@ -224,7 +305,7 @@ public partial class Home
             {
                 var connectionRequest = new ConnectionRequest(Intention.ReceiveThumbnail, userName);
 
-                await _retryPolicy.ExecuteAsync(async (ct) => await connection.InvokeAsync("ConnectAs", connectionRequest), cts.Token);
+                await _retryPolicy.ExecuteAsync(async (ct) => await connection.InvokeAsync("ConnectAs", connectionRequest, CancellationToken.None), cts.Token);
             }
             else
             {
@@ -322,6 +403,8 @@ public partial class Home
 
     private async Task MoveToPending(Computer computer)
     {
+        computer.Thumbnail = null;
+
         if (_availableComputers.ContainsKey(computer.IpAddress))
         {
             _availableComputers.TryRemove(computer.IpAddress, out _);
@@ -338,10 +421,13 @@ public partial class Home
 
     private async Task<HubConnection> SetupConnection(Computer computer, string hubPath, bool startConnection, CancellationToken cancellationToken)
     {
+        var httpContext = HttpContextAccessor.HttpContext;
+        var userId = UserManager.GetUserId(httpContext.User);
+
         var connection = new HubConnectionBuilder()
             .WithUrl($"https://{computer.IpAddress}:5001/{hubPath}", options =>
             {
-                options.AccessTokenProvider = async () => await AccessTokenProvider.GetAccessTokenAsync();
+                options.AccessTokenProvider = async () => await AccessTokenProvider.GetAccessTokenAsync(userId);
             })
             .AddMessagePackProtocol()
             .Build();
@@ -441,7 +527,28 @@ public partial class Home
 
     private async Task WakeUp() => await ExecuteAction<WakeUpDialog>("Wake Up", false, false, requireConnections: false);
 
-    private async Task Connect() => await ExecuteAction<ConnectDialog>("Connect");
+    private async Task Connect()
+    {
+        if (_userInfo.Roles.Contains("Viewer"))
+        {
+            await ConnectAsViewer();
+        }
+        else
+        {
+            await ExecuteAction<ConnectDialog>("Connect");
+        }
+    }
+
+    private async Task ConnectAsViewer()
+    {
+        var computers = _selectedComputers.Where(c => _availableComputers.ContainsKey(c.IpAddress)).ToList();
+
+        foreach (var computer in computers)
+        {
+            var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/windowOperations.js");
+            await module.InvokeVoidAsync("openNewWindow", $"/{computer.IpAddress}/access?imageQuality=25&cursorTracking=true&inputEnabled=false", 600, 400);
+        }
+    }
 
     private async Task OpenShell() => await ExecuteAction<OpenShellDialog>("Open Shell", false, false, requireConnections: false);
 
@@ -489,37 +596,11 @@ public partial class Home
         await ExecuteDialog<TDialog>(title, dialogParameters, dialogOptions);
     }
 
-    private async Task<ConcurrentDictionary<Computer, HubConnection?>> GetComputerConnections(IEnumerable<Computer> computers, bool startConnection, string hubPath)
-    {
-        var computerConnections = new ConcurrentDictionary<Computer, HubConnection?>();
-
-        var tasks = computers.Select(async computer =>
-        {
-            try
-            {
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
-                var connection = await SetupConnection(computer, hubPath, startConnection, cts.Token);
-                computerConnections.TryAdd(computer, connection);
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"Error connecting to {hubPath} for {computer.IpAddress}: {ex.Message}");
-                computerConnections.TryAdd(computer, null);
-            }
-        });
-
-        await Task.WhenAll(tasks);
-
-        return computerConnections;
-    }
-
     private async Task Refresh()
     {
         if (_selectedNode is OrganizationalUnit orgUnit)
         {
-            var computers = orgUnit.Nodes.OfType<Computer>().ToList();
-
-            foreach (var computer in computers)
+            foreach (var computer in orgUnit.Computers)
             {
                 if (_availableComputers.ContainsKey(computer.IpAddress) || _unavailableComputers.ContainsKey(computer.IpAddress))
                 {
@@ -585,6 +666,17 @@ public partial class Home
         await DialogService.ShowAsync<HostDialog>("Host Info", dialogParameters, dialogOptions);
     }
 
+    private async Task RemoteExecutor()
+    {
+        var dialogOptions = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraExtraLarge,
+            FullWidth = true
+        };
+
+        await DialogService.ShowAsync<RemoteCommandDialog>("Remote Command", dialogOptions);
+    }
+
     private async Task OpenMoveDialog()
     {
         var computers = _selectedComputers.ToDictionary(c => c, c => (HubConnection?)null);
@@ -615,8 +707,6 @@ public partial class Home
 
     private async Task OnNodesMoved(IEnumerable<Computer> movedNodes)
     {
-        _nodes = new HashSet<Node>(await LoadNodesWithChildren());
-
         foreach (var movedNode in movedNodes)
         {
             _selectedComputers.RemoveAll(c => c.NodeId == movedNode.NodeId);
@@ -628,36 +718,12 @@ public partial class Home
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task OpenAddOuDialog()
-    {
-        var dialogOptions = new DialogOptions
-        {
-            CloseOnEscapeKey = true
-        };
-
-        var dialogParameters = new DialogParameters<AddOuDialog>
-        {
-            { x => x.OnOuAdded, EventCallback.Factory.Create<bool>(this, OnOuAdded) }
-        };
-
-        await DialogService.ShowAsync<AddOuDialog>("Add Organizational Unit", dialogParameters, dialogOptions);
-    }
-
-    private async Task OnOuAdded(bool ouAdded)
-    {
-        if (ouAdded)
-        {
-            _nodes = new HashSet<Node>(await LoadNodesWithChildren());
-            await InvokeAsync(StateHasChanged);
-        }
-    }
-
     private static IEnumerable<Computer> GetSortedComputers(ConcurrentDictionary<string, Computer> computers)
     {
         return computers.Values.OrderBy(computer => computer.Name);
     }
 
-    private bool CanSelectAll(ConcurrentDictionary<string, Computer> computers) => !computers.IsEmpty && !_selectedComputers.Intersect(computers.Values).Any();
-    
+    private bool CanSelectAll(ConcurrentDictionary<string, Computer> computers) => !computers.IsEmpty && _selectedComputers.Count < computers.Count;
+
     private bool CanDeselectAll(ConcurrentDictionary<string, Computer> computers) => _selectedComputers.Intersect(computers.Values).Any();
 }

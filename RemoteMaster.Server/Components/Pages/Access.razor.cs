@@ -4,13 +4,17 @@
 
 using System.Net.Sockets;
 using System.Net.WebSockets;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
 using MudBlazor;
 using Polly;
 using Polly.Wrap;
+using RemoteMaster.Server.Data;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
@@ -18,7 +22,7 @@ using Serilog;
 
 namespace RemoteMaster.Server.Components.Pages;
 
-public partial class Access : IDisposable
+public partial class Access : IAsyncDisposable
 {
     [Parameter]
     public string Host { get; set; } = default!;
@@ -37,6 +41,7 @@ public partial class Access : IDisposable
     private ElementReference _screenImageElement;
     private string _accessToken;
     private List<ViewerDto> _viewers = [];
+    private bool _accessDenied = false;
 
     private readonly AsyncPolicyWrap _combinedPolicy;
 
@@ -118,14 +123,24 @@ public partial class Access : IDisposable
             NavigationManager.NavigateTo(newUri, true);
         }
 
-        await UpdateServerParameters();
+        if (_connection != null)
+        {
+            await UpdateServerParameters();
+        }
     }
 
     private async Task UpdateServerParameters()
     {
-        await _connection.InvokeAsync("SendImageQuality", _imageQuality);
-        await _connection.InvokeAsync("SendToggleCursorTracking", _cursorTracking);
-        await _connection.InvokeAsync("SendToggleInput", _inputEnabled);
+        if (_connection != null)
+        {
+            await _connection.InvokeAsync("SendImageQuality", _imageQuality);
+            await _connection.InvokeAsync("SendToggleCursorTracking", _cursorTracking);
+
+            if (HasPermission("ToggleInput"))
+            {
+                await _connection.InvokeAsync("SendToggleInput", _inputEnabled);
+            }
+        }
     }
 
     private void DrawerToggle()
@@ -133,12 +148,27 @@ public partial class Access : IDisposable
         _drawerOpen = !_drawerOpen;
     }
 
-    private async Task SafeInvokeAsync(Func<Task> action)
+    private async Task SafeInvokeAsync(Func<Task> action, bool requireAdmin = false)
     {
         await _combinedPolicy.ExecuteAsync(async () =>
         {
-            if (_connection.State == HubConnectionState.Connected)
+            if (_connection != null && _connection.State == HubConnectionState.Connected)
             {
+                if (!await HasAccessAsync())
+                {
+                    Snackbar.Add("Access denied. You do not have permission to access this computer.", Severity.Error);
+                    _accessDenied = true;
+
+                    await InvokeAsync(StateHasChanged);
+
+                    return;
+                }
+
+                if (requireAdmin && !IsUserInRole("Administrator"))
+                {
+                    return;
+                }
+
                 await action();
             }
             else
@@ -150,12 +180,12 @@ public partial class Access : IDisposable
 
     private async Task KillHost()
     {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendKillHost"));
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendKillHost"), true);
     }
 
     private async Task SendCtrlAltDel()
     {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendCommandToService", "CtrlAltDel"));
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendCommandToService", "CtrlAltDel"), true);
     }
 
     private async Task RebootComputer()
@@ -167,7 +197,7 @@ public partial class Access : IDisposable
             ForceAppsClosed = true
         };
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendRebootComputer", powerActionRequest));
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendRebootComputer", powerActionRequest), true);
     }
 
     private async Task ShutdownComputer()
@@ -179,12 +209,25 @@ public partial class Access : IDisposable
             ForceAppsClosed = true
         };
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendShutdownComputer", powerActionRequest));
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendShutdownComputer", powerActionRequest), true);
     }
 
     private async Task InitializeHostConnectionAsync()
     {
-        _accessToken = await AccessTokenProvider.GetAccessTokenAsync();
+        if (!await HasAccessAsync())
+        {
+            Snackbar.Add("Access denied. You do not have permission to access this computer.", Severity.Error);
+            _accessDenied = true;
+
+            await InvokeAsync(StateHasChanged);
+
+            return;
+        }
+
+        var httpContext = HttpContextAccessor.HttpContext;
+        var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        _accessToken = await AccessTokenProvider.GetAccessTokenAsync(userId);
 
         _connection = new HubConnectionBuilder()
             .WithUrl($"https://{Host}:5001/hubs/control", options =>
@@ -217,7 +260,6 @@ public partial class Access : IDisposable
             InvokeAsync(StateHasChanged);
         });
 
-        var httpContext = HttpContextAccessor.HttpContext;
         var userIdentity = httpContext?.User.Identity;
 
         var connectionRequest = new ConnectionRequest(Intention.ManageDevice, userIdentity.Name);
@@ -252,11 +294,12 @@ public partial class Access : IDisposable
         await module.InvokeAsync<string>("revokeUrl", src);
     }
 
+    [Authorize(Policy = "ToggleInputPolicy")]
     private async Task ToggleInputEnabled(bool value)
     {
         _inputEnabled = value;
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendToggleInput", value));
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendToggleInput", value), true);
         QueryParameterService.UpdateParameter("inputEnabled", value.ToString());
     }
 
@@ -264,7 +307,7 @@ public partial class Access : IDisposable
     {
         _blockUserInput = value;
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendBlockUserInput", value));
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendBlockUserInput", value), true);
     }
 
     private async Task ToggleCursorTracking(bool value)
@@ -290,16 +333,85 @@ public partial class Access : IDisposable
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendSelectedScreen", display));
     }
 
+    private bool IsUserInRole(string role)
+    {
+        var userRoles = new List<string>();
+
+        var httpContext = HttpContextAccessor.HttpContext;
+        var rolesClaim = httpContext?.User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+
+        if (!string.IsNullOrEmpty(rolesClaim))
+        {
+            userRoles = [.. rolesClaim.Split(',')];
+        }
+
+        return userRoles.Contains(role);
+    }
+
+    private bool HasPermission(string permission)
+    {
+        var httpContext = HttpContextAccessor.HttpContext;
+        var permissionClaim = httpContext?.User?.Claims.FirstOrDefault(c => c.Type == "Permission" && c.Value == permission);
+
+        return permissionClaim != null;
+    }
+
+    private async Task<bool> HasAccessAsync()
+    {
+        using var scope = ScopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var httpContext = HttpContextAccessor.HttpContext;
+        var userPrincipal = httpContext?.User;
+
+        if (userPrincipal == null)
+        {
+            return false;
+        }
+
+        var userId = userPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            return false;
+        }
+
+        var computer = await dbContext.Computers
+            .Include(c => c.Parent)
+            .FirstOrDefaultAsync(c => c.Name == Host || c.IpAddress == Host);
+
+        if (computer?.Parent == null)
+        {
+            return false;
+        }
+
+        var organizationalUnitId = computer.ParentId.Value;
+
+        return await dbContext.OrganizationalUnits
+            .Where(ou => ou.NodeId == organizationalUnitId && ou.AccessibleUsers.Any(u => u.Id == userId))
+            .AnyAsync();
+    }
+
     [JSInvokable]
-    public void OnBeforeUnload()
+    public async Task OnBeforeUnload()
     {
         Log.Information("OnBeforeUnload invoked for host {Host}", Host);
 
-        Dispose();
+        await DisposeAsync();
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-        _connection.DisposeAsync();
+        try
+        {
+            if (_connection != null)
+            {
+                await _connection.DisposeAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An error occurred while asynchronously disposing the connection for host {Host}", Host);
+        }
     }
 }

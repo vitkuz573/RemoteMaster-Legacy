@@ -4,9 +4,11 @@
 
 using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Data;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Dialogs;
@@ -19,7 +21,13 @@ public class CommonDialogBase : ComponentBase
     protected MudDialogInstance MudDialog { get; set; } = default!;
 
     [Inject]
+    private IHttpContextAccessor HttpContextAccessor { get; set; } = default!;
+
+    [Inject]
     private IAccessTokenProvider AccessTokenProvider { get; set; } = default!;
+
+    [Inject]
+    private UserManager<ApplicationUser> UserManager { get; set; } = default!;
 
     [CascadingParameter]
     public ConcurrentDictionary<Computer, HubConnection?> Hosts { get; set; } = default!;
@@ -80,6 +88,8 @@ public class CommonDialogBase : ComponentBase
 
     private async Task ConnectHosts()
     {
+        var httpContext = HttpContextAccessor.HttpContext;
+
         var tasks = Hosts.Select(async kvp =>
         {
             var computer = kvp.Key;
@@ -87,7 +97,8 @@ public class CommonDialogBase : ComponentBase
 
             try
             {
-                var connection = await SetupConnection(computer, HubPath, StartConnection, CancellationToken.None);
+                var userId = UserManager.GetUserId(httpContext.User);
+                var connection = await SetupConnection(userId, computer, HubPath, StartConnection, CancellationToken.None);
                 Hosts[computer] = connection;
             }
             catch (Exception ex)
@@ -105,12 +116,12 @@ public class CommonDialogBase : ComponentBase
         await Task.WhenAll(tasks);
     }
 
-    private async Task<HubConnection> SetupConnection(Computer computer, string hubPath, bool startConnection, CancellationToken cancellationToken)
+    private async Task<HubConnection> SetupConnection(string userId, Computer computer, string hubPath, bool startConnection, CancellationToken cancellationToken)
     {
         var connection = new HubConnectionBuilder()
             .WithUrl($"https://{computer.IpAddress}:5001/{hubPath}", options =>
             {
-                options.AccessTokenProvider = async () => await AccessTokenProvider.GetAccessTokenAsync();
+                options.AccessTokenProvider = async () => await AccessTokenProvider.GetAccessTokenAsync(userId);
             })
             .AddMessagePackProtocol()
             .Build();
@@ -146,7 +157,10 @@ public class CommonDialogBase : ComponentBase
 
         try
         {
-            var newConnection = await SetupConnection(computer, HubPath, StartConnection, CancellationToken.None);
+            var httpContext = HttpContextAccessor.HttpContext;
+
+            var userId = UserManager.GetUserId(httpContext.User);
+            var newConnection = await SetupConnection(userId, computer, HubPath, StartConnection, CancellationToken.None);
             Hosts[computer] = newConnection;
             _errorMessages.TryRemove(computer, out _);
         }

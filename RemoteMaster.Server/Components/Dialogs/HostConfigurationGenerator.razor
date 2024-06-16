@@ -1,12 +1,14 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using RemoteMaster.Server.Data
 @using RemoteMaster.Shared.Abstractions
+@using RemoteMaster.Server.Abstractions
 
 @inject NavigationManager NavigationManager
 @inject IHostInformationService HostInformationService
 @inject IJSRuntime JsRuntime
 @inject UserManager<ApplicationUser> UserManager
 @inject ApplicationDbContext DbContext
+@inject ICountryProvider CountryProvider
 
 <MudDialog>
     <DialogContent>
@@ -19,16 +21,21 @@
                     </MudExpansionPanel>
 
                     <MudExpansionPanel Text="Subject Parameters">
-                        <MudSelect Label="Organization" @bind-Value="_model.Subject.Organization" For="@(() => _model.Subject.Organization)" Dense>
+                        <MudSelect Label="Organization" Value="_selectedOrganization" T="string" ValueChanged="OrganizationChanged" Dense>
                             @foreach (var organization in _organizations)
                             {
                                 <MudSelectItem Value="@organization.Name">@organization.Name</MudSelectItem>
                             }
                         </MudSelect>
-                        <MudTextField Label="Organizational Unit" @bind-Value="_organizationalUnitInput" />
-                        <MudTextField Label="Locality" @bind-Value="_model.Subject.Locality" For="@(() => _model.Subject.Locality)" />
-                        <MudTextField Label="State" @bind-Value="_model.Subject.State" For="@(() => _model.Subject.State)" />
-                        <MudSelect T="string" Label="Country" @bind-Value="_model.Subject.Country" Dense="true">
+                        <MudSelect Label="Organizational Unit" Value="_selectedOrganizationalUnit" T="string" ValueChanged="OrganizationalUnitChanged" Dense>
+                            @foreach (var unit in _organizationalUnits)
+                            {
+                                <MudSelectItem Value="@unit.Name">@unit.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudTextField Label="Locality" @bind-Value="_model.Subject.Locality" For="@(() => _model.Subject.Locality)" ReadOnly="true" />
+                        <MudTextField Label="State" @bind-Value="_model.Subject.State" For="@(() => _model.Subject.State)" ReadOnly="true" />
+                        <MudSelect T="string" Label="Country" @bind-Value="_model.Subject.Country" Dense="true" ReadOnly="true">
                             @foreach (var country in _countries)
                             {
                                 <MudSelectItem T="string" Value="@country.Value">@country.Key</MudSelectItem>

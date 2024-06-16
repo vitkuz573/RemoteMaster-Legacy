@@ -21,14 +21,14 @@ public class ServerHubService : IServerHubService
         await _hubConnection.StartAsync();
     }
 
-    public async Task<string[]> GetNewOrganizationalUnitIfChangeRequested(string macAddress)
+    public async Task<HostMoveRequest?> GetHostMoveRequest(string macAddress)
     {
-        return await _hubConnection.InvokeAsync<string[]>("GetNewOrganizationalUnitIfChangeRequested", macAddress);
+        return await _hubConnection.InvokeAsync<HostMoveRequest?>("GetHostMoveRequest", macAddress);
     }
 
-    public async Task AcknowledgeOrganizationalUnitChange(string macAddress)
+    public async Task AcknowledgeMoveRequest(string macAddress)
     {
-        await _hubConnection.InvokeAsync("AcknowledgeOrganizationalUnitChange", macAddress);
+        await _hubConnection.InvokeAsync("AcknowledgeMoveRequest", macAddress);
     }
 
     public void OnReceiveCertificate(Action<byte[]> onReceiveCertificate)

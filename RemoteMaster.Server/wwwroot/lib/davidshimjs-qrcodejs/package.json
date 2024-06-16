@@ -1,0 +1,27 @@
+{
+  "name": "davidshimjs-qrcodejs",
+  "version": "0.0.2",
+  "description": "Fork of the awesome https://github.com/davidshimjs/qrcodejs as npm module for browserification",
+  "main": "qrcode.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/makevoid/qrcodejs.git"
+  },
+  "keywords": [
+    "qrcode",
+    "qr",
+    "code",
+    "tag",
+    "browserify",
+    "npm"
+  ],
+  "author": "davidshimjs (original)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/makevoid/qrcodejs/issues"
+  },
+  "homepage": "https://github.com/makevoid/qrcodejs#readme"
+}

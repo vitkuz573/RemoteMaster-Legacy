@@ -94,10 +94,13 @@ public partial class FileManager : IDisposable
 
     private async Task InitializeHostConnectionAsync()
     {
+        var httpContext = HttpContextAccessor.HttpContext;
+        var userId = UserManager.GetUserId(httpContext.User);
+
         _connection = new HubConnectionBuilder()
             .WithUrl($"https://{Host}:5001/hubs/filemanager", options =>
             {
-                options.AccessTokenProvider = async () => await AccessTokenProvider.GetAccessTokenAsync();
+                options.AccessTokenProvider = async () => await AccessTokenProvider.GetAccessTokenAsync(userId);
             })
             .AddMessagePackProtocol()
             .Build();
@@ -112,7 +115,11 @@ public partial class FileManager : IDisposable
         {
             var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/fileUtils.js");
 
-            await module.InvokeVoidAsync("saveAsFile", Path.GetFileName(path), Convert.ToBase64String(file));
+            var base64File = Convert.ToBase64String(file);
+            var fileName = Path.GetFileName(path);
+            var contentType = "application/octet-stream;base64";
+
+            await module.InvokeVoidAsync("downloadDataAsFile", base64File, fileName, contentType);
         });
 
         _connection.On<List<string>>("ReceiveAvailableDrives", (drives) =>

@@ -1,24 +1,42 @@
 ﻿@inherits CommonDialogBase
 
+@using Microsoft.AspNetCore.Identity
 @using RemoteMaster.Server.Abstractions
+@using RemoteMaster.Server.Data
 
 @inject IDatabaseService DatabaseService
+@inject UserManager<ApplicationUser> UserManager
 
 <CommonDialog>
     <Content>
-        @if (!string.IsNullOrWhiteSpace(_currentOrganizationalUnitName))
+        @if (!string.IsNullOrWhiteSpace(_currentOrganizationName))
         {
-            <MudText Typo="Typo.body1">Current OU: @_currentOrganizationalUnitName</MudText>
+            <MudText Typo="Typo.body1">Current Organization: @_currentOrganizationName</MudText>
         }
 
-        <MudSelect Label="Select target OU" @bind-Value="_selectedOrganizationalUnitId">
-            @foreach (var organizationalUnit in _organizationalUnits)
+        @if (!string.IsNullOrWhiteSpace(_currentOrganizationalUnitName))
+        {
+            <MudText Typo="Typo.body1">Current Organizational Unit: @_currentOrganizationalUnitName</MudText>
+        }
+
+        <MudSelect Label="Select target organization" Value="_selectedOrganizationId" T="Guid" ValueChanged="OrganizationChanged">
+            @foreach (var organization in _organizations)
             {
-                <MudSelectItem Value="@organizationalUnit.NodeId">
-                    @organizationalUnit.Name
-                </MudSelectItem>
+                <MudSelectItem Value="@organization.NodeId">@organization.Name</MudSelectItem>
             }
         </MudSelect>
+
+        @if (_organizationalUnits.Any())
+        {
+            <MudSelect Label="Select target organizational unit" @bind-Value="_selectedOrganizationalUnitId" T="Guid">
+                @foreach (var organizationalUnit in _organizationalUnits)
+                {
+                    <MudSelectItem Value="@organizationalUnit.NodeId">
+                        @organizationalUnit.Name
+                    </MudSelectItem>
+                }
+            </MudSelect>
+        }
     </Content>
     <Actions>
         <MudButton Color="Color.Primary" OnClick="Move">Move</MudButton>

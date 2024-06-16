@@ -7,6 +7,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
+using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Enums;
 using RemoteMaster.Server.Models;
 using Serilog;
@@ -37,7 +38,7 @@ public partial class Login
         {
             Log.Information("User already logged in. Redirecting to the origin page or default page.");
             RedirectManager.RedirectTo(ReturnUrl ?? "/");
-            
+
             return;
         }
     }
@@ -45,63 +46,95 @@ public partial class Login
     public async Task LoginUser()
     {
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var user = await UserManager.FindByNameAsync(Input.Username);
+
+        if (user == null)
+        {
+            errorMessage = "Error: Invalid login attempt.";
+            return;
+        }
+
+        var userRoles = await UserManager.GetRolesAsync(user);
+
+        if (!userRoles.Any())
+        {
+            errorMessage = "Access denied: User does not belong to any roles.";
+            await LogSignInAttempt(user.Id, false, ipAddress);
+            return;
+        }
+
+        var isRootAdmin = await UserManager.IsInRoleAsync(user, "RootAdministrator");
+        var isLocalhost = ipAddress == "127.0.0.1" || ipAddress == "::1" || ipAddress == "::ffff:127.0.0.1";
+
+        if (isRootAdmin && !isLocalhost)
+        {
+            Log.Warning("Attempt to login as RootAdministrator from non-localhost IP.");
+            errorMessage = "RootAdministrator access is restricted to localhost.";
+            await LogSignInAttempt(user.Id, false, ipAddress);
+            return;
+        }
+
         var result = await SignInManager.PasswordSignInAsync(Input.Username, Input.Password, false, false);
 
         if (result.Succeeded)
         {
-            var userId = UserManager.GetUserId(HttpContext.User);
-            var user = await UserManager.FindByIdAsync(userId);
-
-            var isRootAdmin = await UserManager.IsInRoleAsync(user, "RootAdministrator");
-            var isLocalhost = ipAddress == "127.0.0.1" || ipAddress == "::1" || ipAddress == "::ffff:127.0.0.1";
-
-            if (isRootAdmin && !isLocalhost)
-            {
-                HttpContext.Response.Cookies.Delete(".AspNetCore.Identity.Application");
-
-                Log.Warning("Attempt to login as RootAdministrator from non-localhost IP.");
-                errorMessage = "RootAdministrator access is restricted to localhost.";
-
-                return;
-            }
-
             if (isRootAdmin && isLocalhost)
             {
                 Log.Information("RootAdministrator logged in from localhost. Redirecting to Admin page.");
+                await LogSignInAttempt(user.Id, true, ipAddress);
                 RedirectManager.RedirectTo("Admin");
-
                 return;
             }
 
-            await TokenService.RevokeAllRefreshTokensAsync(userId, TokenRevocationReason.PreemptiveSecurity);
-            
+            await TokenService.RevokeAllRefreshTokensAsync(user.Id, TokenRevocationReason.PreemptiveSecurity);
+
             Log.Information("User logged in. All previous refresh tokens revoked.");
 
-            var claims = new List<Claim>
-            {
-                new(ClaimTypes.Name, user.UserName),
-                new(ClaimTypes.NameIdentifier, user.Id.ToString())
-            };
+            var tokenData = await TokenService.GenerateTokensAsync(user.Id);
 
-            var userRoles = await UserManager.GetRolesAsync(user);
+            await TokenStorageService.StoreTokensAsync(user.Id, tokenData);
 
-            foreach (var role in userRoles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, role));
-            }
+            Log.Information("User {Username} logged in from IP {IPAddress} at {LoginTime}.", Input.Username, ipAddress, DateTime.UtcNow.ToLocalTime());
 
-            var accessToken = await TokenService.GenerateAccessTokenAsync(claims);
-            var refreshToken = TokenService.GenerateRefreshToken(userId, ipAddress);
-
-            HttpContext.Response.Cookies.Append(CookieNames.AccessToken, accessToken);
-            HttpContext.Response.Cookies.Append(CookieNames.RefreshToken, refreshToken);
+            await LogSignInAttempt(user.Id, true, ipAddress);
 
             RedirectManager.RedirectTo(ReturnUrl);
+        }
+        else if (result.RequiresTwoFactor)
+        {
+            RedirectManager.RedirectTo("Account/LoginWith2fa", new()
+            {
+                ["returnUrl"] = ReturnUrl
+            });
+        }
+        else if (result.IsLockedOut)
+        {
+            Log.Warning("User account locked out.");
+            await LogSignInAttempt(user.Id, false, ipAddress);
+            RedirectManager.RedirectTo("Account/Lockout");
         }
         else
         {
             errorMessage = "Error: Invalid login attempt.";
+            await LogSignInAttempt(user.Id, false, ipAddress);
         }
+    }
+
+    private async Task LogSignInAttempt(string userId, bool isSuccess, string ipAddress)
+    {
+        using var scope = ScopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var signInJournalEntry = new SignInEntry
+        {
+            UserId = userId,
+            SignInTime = DateTime.UtcNow,
+            IsSuccessful = isSuccess,
+            IpAddress = ipAddress
+        };
+
+        dbContext.SignInEntries.Add(signInJournalEntry);
+        await dbContext.SaveChangesAsync();
     }
 
     private sealed class InputModel

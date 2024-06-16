@@ -1,9 +1,0 @@
-﻿@inject IJSRuntime JsRuntime
-
-<div id="@ContainerId" class="@ContainerClasses" @onmousedown="OnMouseDown" @onmousemove="OnMouseMove" @onmouseup="OnMouseUp">
-    @if (_isSelecting)
-    {
-        <div class="@GetSelectionBoxClasses()" style="@_selectionBoxStyle"></div>
-    }
-    @ChildContent
-</div>

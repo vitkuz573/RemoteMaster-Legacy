@@ -2,41 +2,39 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class AccessTokenProvider(ITokenService tokenService, IHttpContextAccessor httpContextAccessor) : IAccessTokenProvider
+public class AccessTokenProvider(ITokenService tokenService, ITokenStorageService tokenStorageService, NavigationManager navigationManager) : IAccessTokenProvider
 {
-    public async Task<string?> GetAccessTokenAsync()
+    public async Task<string?> GetAccessTokenAsync(string userId)
     {
-        var context = httpContextAccessor.HttpContext;
-        var accessToken = context.Request.Cookies[CookieNames.AccessToken];
+        var accessToken = await tokenStorageService.GetAccessTokenAsync(userId);
 
         if (!string.IsNullOrEmpty(accessToken) && tokenService.IsTokenValid(accessToken))
         {
             return accessToken;
         }
 
-        var refreshToken = context.Request.Cookies[CookieNames.RefreshToken];
-        
+        var refreshToken = await tokenStorageService.GetRefreshTokenAsync(userId);
+
         if (!string.IsNullOrEmpty(refreshToken) && tokenService.IsRefreshTokenValid(refreshToken))
         {
-            var newTokens = await tokenService.RefreshAccessToken(refreshToken);
-            
-            if (newTokens != null && !string.IsNullOrEmpty(newTokens.AccessToken))
+            var tokenData = await tokenService.GenerateTokensAsync(userId, refreshToken);
+
+            if (!string.IsNullOrEmpty(tokenData.AccessToken))
             {
-                context.Response.Cookies.Append(CookieNames.AccessToken, newTokens.AccessToken);
-                context.Response.Cookies.Append(CookieNames.RefreshToken, newTokens.RefreshToken);
-               
-                return newTokens.AccessToken;
+                await tokenStorageService.StoreTokensAsync(userId, tokenData);
+
+                return tokenData.AccessToken;
             }
         }
 
-        context.Response.Redirect("/Account/Logout");
+        await tokenStorageService.ClearTokensAsync(userId);
+        navigationManager.NavigateTo("/Account/Logout", true);
 
         return null;
     }
 }
-

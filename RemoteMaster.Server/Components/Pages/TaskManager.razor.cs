@@ -49,10 +49,13 @@ public partial class TaskManager : IDisposable
 
     private async Task InitializeHostConnectionAsync()
     {
+        var httpContext = HttpContextAccessor.HttpContext;
+        var userId = UserManager.GetUserId(httpContext.User);
+
         _connection = new HubConnectionBuilder()
             .WithUrl($"https://{Host}:5001/hubs/taskmanager", options =>
             {
-                options.AccessTokenProvider = async () => await AccessTokenProvider.GetAccessTokenAsync();
+                options.AccessTokenProvider = async () => await AccessTokenProvider.GetAccessTokenAsync(userId);
             })
             .AddMessagePackProtocol()
             .Build();

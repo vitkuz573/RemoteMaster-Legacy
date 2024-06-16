@@ -9,7 +9,7 @@ using RemoteMaster.Shared.Dtos;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
-[Authorize]
+[Authorize(Roles = "Administrator")]
 public class DomainMembershipHub(IDomainService domainService) : Hub<IDomainMembershipClient>
 {
     public void SendJoinToDomain(DomainJoinRequest domainJoinRequest)

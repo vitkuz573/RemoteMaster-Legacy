@@ -5,50 +5,38 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.Extensions.Caching.Memory;
-using RemoteMaster.Server.Data;
 
 namespace RemoteMaster.Server.Components.Admin.Shared;
 
 public partial class ManageNavMenu
 {
     [CascadingParameter]
-    private Task<AuthenticationState> AuthenticationStateTask { get; set; }
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
 
-    private string _username;
-    private string _role;
+    private string _username = string.Empty;
+    private string _role = string.Empty;
 
     protected async override Task OnInitializedAsync()
     {
         var authenticationState = await AuthenticationStateTask;
         var userPrincipal = authenticationState.User;
 
-        if (userPrincipal.Identity.IsAuthenticated)
+        if (userPrincipal.Identity != null && userPrincipal.Identity.IsAuthenticated)
         {
             var userId = userPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (userId != null)
             {
-                var user = MemoryCache.Get<ApplicationUser>($"UserInfo_{userId}");
+                var user = await UserManager.FindByIdAsync(userId);
 
-                if (user == null)
+                if (user != null)
                 {
-                    user = await UserManager.FindByIdAsync(userId);
-                    MemoryCache.Set($"UserInfo_{userId}", user, TimeSpan.FromMinutes(5));
+                    var roles = await UserManager.GetRolesAsync(user);
+
+                    _username = user.UserName ?? string.Empty;
+                    _role = roles.FirstOrDefault() ?? string.Empty;
                 }
-
-                var roles = MemoryCache.Get<IList<string>>($"UserRoles_{userId}");
-
-                if (roles == null)
-                {
-                    roles = await UserManager.GetRolesAsync(user);
-                    MemoryCache.Set($"UserRoles_{userId}", roles, TimeSpan.FromMinutes(5));
-                }
-
-                _role = roles.FirstOrDefault();
             }
         }
-
-        _username = userPrincipal.Identity.Name;
     }
 }

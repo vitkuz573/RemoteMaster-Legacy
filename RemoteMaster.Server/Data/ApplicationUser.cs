@@ -10,7 +10,9 @@ namespace RemoteMaster.Server.Data;
 public class ApplicationUser : IdentityUser
 {
 #pragma warning disable CA2227
-    public virtual ICollection<UserOrganization> UserOrganizations { get; set; }
+    public ICollection<Organization> AccessibleOrganizations { get; set; } = [];
+
+    public ICollection<OrganizationalUnit> AccessibleOrganizationalUnits { get; set; } = [];
 #pragma warning restore CA2227
 }
 

@@ -1,0 +1,93 @@
+﻿@page "/Admin/OrganizationalUnits"
+
+@namespace RemoteMaster.Server.Components.Admin.Pages.Manage
+
+@rendermode InteractiveServer
+
+@using RemoteMaster.Server.Components.Account
+@using RemoteMaster.Server.Components.Account.Shared
+@using RemoteMaster.Server.Data
+@using RemoteMaster.Server.Components.Admin.Dialogs
+
+@inject ApplicationDbContext ApplicationDbContext
+@inject NavigationManager NavigationManager
+@inject IServiceScopeFactory ScopeFactory
+
+<PageTitle>Manage Organizational Units</PageTitle>
+
+<div class="space-y-6">
+    <!-- Form -->
+    <div class="w-full">
+        <EditForm Model="Input" OnValidSubmit="OnValidSubmitAsync" class="space-y-6" FormName="CreateOrganizationalUnit">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-red-500" role="alert" />
+
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+                <InputText @bind-Value="Input.Name" id="name" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                <ValidationMessage For="() => Input.Name" class="text-red-500 mt-1" />
+            </div>
+            <div>
+                <label for="organization" class="block text-sm font-medium text-gray-700">Organization</label>
+                <InputSelect @bind-Value="Input.OrganizationId" id="organization" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="">Select an organization</option>
+                    @foreach (var organization in _organizations)
+                    {
+                        <option value="@organization.NodeId">@organization.Name</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => Input.OrganizationId" class="text-red-500 mt-1" />
+            </div>
+
+            <button type="submit" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-lg text-white hover:bg-indigo-700 focus:outline-none">
+                @(Input.Id.HasValue ? "Save" : "Create")
+            </button>
+        </EditForm>
+    </div>
+
+    <!-- Organizational Units Table -->
+    <div class="w-full">
+        <div class="mt-4">
+            <div class="overflow-hidden border-b border-gray-200 shadow sm:rounded-lg">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                Name
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                Organization
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 bg-white">
+                        @foreach (var organizationalUnit in _organizationalUnits)
+                        {
+                            <tr>
+                                <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
+                                    @organizationalUnit.Name
+                                </td>
+                                <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                                    @_organizations.FirstOrDefault(o => o.NodeId == organizationalUnit.OrganizationId)?.Name
+                                </td>
+                                <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
+                                    <button class="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 focus:outline-none" @onclick="() => EditOrganizationalUnit(organizationalUnit)">
+                                        Edit
+                                    </button>
+                                    <button class="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 focus:outline-none" @onclick="() => ShowDeleteConfirmation(organizationalUnit)">
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ConfirmationDialog @ref="confirmationDialog" Title="Confirm Delete" Message="Are you sure you want to delete this organizational unit?" OnConfirm="OnConfirmDelete" />

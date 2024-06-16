@@ -10,4 +10,3 @@ public class UserInfo
 
     public IList<string> Roles { get; } = [];
 }
-

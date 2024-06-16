@@ -8,6 +8,7 @@
 @using Microsoft.AspNetCore.Identity
 @using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Server.Data
+@using RemoteMaster.Server.Models
 @using RemoteMaster.Shared.Models
 
 @inject IBrandingService BrandingService
@@ -19,6 +20,7 @@
 @inject IJSRuntime JsRuntime
 @inject NavigationManager NavigationManager
 @inject IAccessTokenProvider AccessTokenProvider
+@inject IHttpContextAccessor HttpContextAccessor
 @inject UserManager<ApplicationUser> UserManager
 
 <MudThemeProvider />
@@ -40,8 +42,11 @@
             </MudText>
         </MudDrawerHeader>
         <MudNavMenu>
-            <MudNavLink Match="NavLinkMatch.All" OnClick="OpenHostConfig">Host Configuration Generator</MudNavLink>
-            <MudNavLink Match="NavLinkMatch.All" OnClick="PublishCrl">Publish CRL</MudNavLink>
+            @if (_userInfo.Roles.Contains("Administrator"))
+            {
+                <MudNavLink Match="NavLinkMatch.All" OnClick="OpenHostConfig">Host Configuration Generator</MudNavLink>
+                <MudNavLink Match="NavLinkMatch.All" OnClick="PublishCrl">Publish CRL</MudNavLink>   
+            }
             <MudNavLink Match="NavLinkMatch.All" OnClick="ManageProfile">Profile</MudNavLink>
             <MudNavLink Match="NavLinkMatch.All" OnClick="Logout">Logout</MudNavLink>
         </MudNavMenu>
@@ -50,9 +55,28 @@
     <MudMainContent>
         <div class="flex">
             <div>
-                <MudTreeView Items="@_nodes" T="Node" SelectedValueChanged="OnNodeSelected" Hover="true" Class="pa-6">
+                <MudTreeView Items="@_nodes" T="INode" SelectedValueChanged="OnNodeSelected" Hover="true" Class="pa-6">
                     <ItemTemplate>
-                        <MudTreeViewItem Items="@context.Nodes" Value="@context" Text="@context.Name" />
+                        @{
+                            if (context is Organization organization)
+                            {
+                                var orgUnits = organization.OrganizationalUnits?.Cast<INode>().ToHashSet() ?? new HashSet<INode>();
+                                <MudTreeViewItem Items="orgUnits" Value="@context" Text="@context.Name" Disabled="true">
+                                    <ChildContent>
+                                        <MudTreeViewItem Text="@context.Name" Items="orgUnits" @onclick:stopPropagation="true" />
+                                    </ChildContent>
+                                </MudTreeViewItem>
+                            }
+                            else if (context is OrganizationalUnit organizationalUnit)
+                            {
+                                var children = organizationalUnit.Children?.Cast<INode>().Concat(organizationalUnit.Computers).ToHashSet() ?? new HashSet<INode>();
+                                <MudTreeViewItem Items="children" Value="@context" Text="@context.Name" />
+                            }
+                            else if (context is Computer computer)
+                            {
+                                <MudTreeViewItem Value="@context" Text="@context.Name" />
+                            }
+                        }
                     </ItemTemplate>
                 </MudTreeView>
             </div>
@@ -60,38 +84,50 @@
             <div class="flex flex-grow flex-col gap-4 p-4">
                 <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6 tabs flex">
                     <MudTabPanel Text="Main" Icon="@Icons.Material.Filled.Api">
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Power" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Power</MudButton>
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="WakeUp" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Wake Up</MudButton>
+                        @if (_userInfo.Roles.Contains("Administrator"))
+                        {
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Power" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Power</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="WakeUp" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Wake Up</MudButton>                            
+                        }
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Connect" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Connect</MudButton>
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenShell" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Open Shell</MudButton>
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ExecuteScript" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Execute Script</MudButton>
+                        @if (_userInfo.Roles.Contains("Administrator"))
+                        {
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenShell" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Open Shell</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ExecuteScript" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Execute Script</MudButton>                            
+                        }
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@(async () => await LogonComputers())" Disabled="@(_selectedComputers.Count == 0 || _selectedComputers.Any(c => _availableComputers.ContainsKey(c.IpAddress) || _unavailableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Logon</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@(async () => await LogoffComputers())" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.Any(c => _availableComputers.ContainsKey(c.IpAddress) || _unavailableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Logoff</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Refresh" Class="ml-auto">Refresh</MudButton>
                     </MudTabPanel>
 
-                    <MudTabPanel Text="Service" Icon="@Icons.Material.Filled.Key">
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SetMonitorState" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Set Monitor State</MudButton>
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ManagePsExecRules" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">PSExec Rules</MudButton>
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ScreenRecorder" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Screen Recorder</MudButton>
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="DomainMembership" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Domain Membership</MudButton>
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Update" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Update</MudButton>
-                    </MudTabPanel>
+                    @if (_userInfo.Roles.Contains("Administrator"))
+                    {
+                        <MudTabPanel Text="Service" Icon="@Icons.Material.Filled.Key">
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SetMonitorState" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Set Monitor State</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ManagePsExecRules" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">PSExec Rules</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ScreenRecorder" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Screen Recorder</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="DomainMembership" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Domain Membership</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Update" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Update</MudButton>
+                        </MudTabPanel>
 
-                    <MudTabPanel Text="Tools" Icon="@Icons.Material.Filled.MiscellaneousServices">
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenTaskManager" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Task Manager</MudButton>
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenFileManager" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">File Manager</MudButton>
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="FileUpload" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Upload File</MudButton>
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="MessageBox" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">MessageBox</MudButton>
-                    </MudTabPanel>
+                        <MudTabPanel Text="Tools" Icon="@Icons.Material.Filled.MiscellaneousServices">
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenTaskManager" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Task Manager</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenFileManager" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">File Manager</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="FileUpload" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Upload File</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="MessageBox" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">MessageBox</MudButton>
+                        </MudTabPanel>
 
-                    <MudTabPanel Text="Management" Icon="@Icons.Material.Filled.Settings">
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenHostInfo" Disabled="@(_selectedComputers.Count != 1)" Class="mr-2">Host Info</MudButton>
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenMoveDialog" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Move</MudButton>
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="RemoveComputers" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Remove</MudButton>
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenAddOuDialog" Class="mr-2">Add OU</MudButton>
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="RenewCertificate" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Renew Certificate</MudButton>
-                    </MudTabPanel>
+                        <MudTabPanel Text="Management" Icon="@Icons.Material.Filled.Settings">
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenHostInfo" Disabled="@(_selectedComputers.Count != 1)" Class="mr-2">Host Info</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenMoveDialog" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Move</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="RemoveComputers" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Remove</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="RenewCertificate" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Renew Certificate</MudButton>
+                        </MudTabPanel>
+                    
+                        <MudTabPanel Text="Extra" Icon="@Icons.Material.Filled.Settings">
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="RemoteExecutor" Class="mr-2">Remote Executor</MudButton>
+                        </MudTabPanel>                        
+                    }
                 </MudTabs>
 
                 <div class="flex flex-col gap-4">

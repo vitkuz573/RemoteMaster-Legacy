@@ -14,18 +14,17 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public sealed class InputService : IInputService
+public sealed class InputService(IDesktopService desktopService) : IInputService
 {
-    private bool _disposed;
-    private readonly ConcurrentQueue<Action> _operationQueue;
-    private readonly ManualResetEvent _queueEvent;
-    private readonly CancellationTokenSource _cts;
-    private readonly Thread _workerThread;
-    private readonly ConcurrentBag<INPUT> _inputPool;
-    private readonly IDesktopService _desktopService;
+    private readonly ConcurrentQueue<Action> _operationQueue = new();
+    private readonly ManualResetEvent _queueEvent = new(false);
+    private readonly CancellationTokenSource _cts = new();
+    private readonly ConcurrentBag<INPUT> _inputPool = [];
+    private Thread? _workerThread;
     private bool _blockUserInput;
+    private bool _disposed;
 
-    public bool InputEnabled { get; set; } = true;
+    public bool InputEnabled { get; set; } = false;
 
     public bool BlockUserInput
     {
@@ -35,32 +34,27 @@ public sealed class InputService : IInputService
             if (_blockUserInput != value)
             {
                 _blockUserInput = value;
-
-                EnqueueOperation(() =>
-                {
-                    if (!BlockInput(value))
-                    {
-                        Log.Error("Failed to block/unblock input. Error code: {0}", Marshal.GetLastWin32Error());
-                    }
-                });
+                HandleBlockInput(value);
             }
         }
     }
 
-    public InputService(IDesktopService desktopService)
+    public void Start()
     {
-        _desktopService = desktopService;
-        _operationQueue = new ConcurrentQueue<Action>();
-        _inputPool = [];
-        _cts = new CancellationTokenSource();
-        _queueEvent = new ManualResetEvent(false);
-
-        _workerThread = new Thread(ProcessQueue)
+        if (_workerThread == null || !_workerThread.IsAlive)
         {
-            IsBackground = true
-        };
+            _workerThread = new Thread(ProcessQueue)
+            {
+                IsBackground = true
+            };
 
-        _workerThread.Start();
+            _workerThread.Start();
+        }
+    }
+
+    public void Stop()
+    {
+        Dispose();
     }
 
     private static PointF GetAbsolutePercentFromRelativePercent(PointF? position, IScreenCapturerService screenCapturer)
@@ -69,6 +63,30 @@ public sealed class InputService : IInputService
         var absoluteY = screenCapturer.CurrentScreenBounds.Height * position.GetValueOrDefault().Y + screenCapturer.CurrentScreenBounds.Top - screenCapturer.VirtualScreenBounds.Top;
 
         return new PointF((float)(absoluteX / screenCapturer.VirtualScreenBounds.Width), (float)(absoluteY / screenCapturer.VirtualScreenBounds.Height));
+    }
+
+    private void HandleBlockInput(bool block)
+    {
+        void blockInputAction()
+        {
+            if (!BlockInput(block))
+            {
+                Log.Error("Failed to block/unblock input. Error code: {0}", Marshal.GetLastWin32Error());
+            }
+        }
+
+        if (InputEnabled)
+        {
+            EnqueueOperation(() =>
+            {
+                desktopService.SwitchToInputDesktop();
+                blockInputAction();
+            });
+        }
+        else
+        {
+            blockInputAction();
+        }
     }
 
     private void ProcessQueue()
@@ -99,18 +117,12 @@ public sealed class InputService : IInputService
         {
             _operationQueue.Enqueue(() =>
             {
-                _desktopService.SwitchToInputDesktop();
+                desktopService.SwitchToInputDesktop();
                 operation();
             });
 
             _queueEvent.Set();
         }
-    }
-
-    public void StopProcessing()
-    {
-        _cts.Cancel();
-        _queueEvent.Set();
     }
 
     private void PrepareAndSendInput<TInput>(INPUT_TYPE inputType, TInput inputData, Func<INPUT, TInput, INPUT> fillInputData)
@@ -385,8 +397,16 @@ public sealed class InputService : IInputService
 
         if (disposing)
         {
-            _cts?.Dispose();
-            _queueEvent?.Dispose();
+            _cts.Cancel();
+            _queueEvent.Set();
+
+            if (_workerThread != null && _workerThread.IsAlive)
+            {
+                _workerThread.Join();
+            }
+
+            _cts.Dispose();
+            _queueEvent.Dispose();
         }
 
         _disposed = true;

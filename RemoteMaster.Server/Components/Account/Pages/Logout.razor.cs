@@ -4,7 +4,6 @@
 
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Enums;
-using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Components.Account.Pages;
 
@@ -17,15 +16,13 @@ public partial class Logout
     {
         await SignInManager.SignOutAsync();
 
-        var refreshToken = HttpContext?.Request.Cookies[CookieNames.RefreshToken];
+        var userId = UserManager.GetUserId(HttpContext.User);
 
-        if (refreshToken != null)
+        if (!string.IsNullOrEmpty(userId))
         {
-            await TokenService.RevokeRefreshTokenAsync(refreshToken, TokenRevocationReason.UserLoggedOut);
+            await TokenService.RevokeAllRefreshTokensAsync(userId, TokenRevocationReason.UserLoggedOut);
+            await TokenStorageService.ClearTokensAsync(userId);
         }
-
-        HttpContext?.Response.Cookies.Delete(CookieNames.AccessToken);
-        HttpContext?.Response.Cookies.Delete(CookieNames.RefreshToken);
 
         NavigationManager.NavigateTo("/Account/Login", true);
     }

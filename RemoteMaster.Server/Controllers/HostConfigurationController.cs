@@ -13,9 +13,11 @@ namespace RemoteMaster.Server.Controllers;
 [ApiController]
 public class HostConfigurationController(IOptions<ApplicationSettings> options) : ControllerBase
 {
+    private static readonly object _fileLock = new();
+
     [HttpGet("download-host")]
     [EnableRateLimiting("HostDownloadPolicy")]
-    public async Task<IActionResult> DownloadHost()
+    public IActionResult DownloadHost()
     {
         var filePath = Path.Combine(options.Value.ExecutablesRoot, "Host", "RemoteMaster.Host.exe");
         var fileName = Path.GetFileName(filePath);
@@ -27,9 +29,17 @@ public class HostConfigurationController(IOptions<ApplicationSettings> options) 
 
         var memoryStream = new MemoryStream();
 
-        using (var stream = new FileStream(filePath, FileMode.Open))
+        lock (_fileLock)
         {
-            await stream.CopyToAsync(memoryStream);
+            try
+            {
+                using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.None);
+                stream.CopyTo(memoryStream);
+            }
+            catch (IOException ex)
+            {
+                return StatusCode(500, ApiResponse<string>.Failure<string>($"File access error: {ex.Message}", StatusCodes.Status500InternalServerError));
+            }
         }
 
         memoryStream.Position = 0;
