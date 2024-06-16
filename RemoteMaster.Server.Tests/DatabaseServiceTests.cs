@@ -219,7 +219,7 @@ public class DatabaseServiceTests : IDisposable
         await context.SaveChangesAsync();
 
         // Act
-        await databaseService.MoveNodesAsync(new[] { childOu.NodeId }, newParent.NodeId);
+        await databaseService.MoveNodesAsync([childOu.NodeId], newParent.NodeId);
 
         // Assert
         var movedNode = await context.OrganizationalUnits.FindAsync(childOu.NodeId);
