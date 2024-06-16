@@ -4,7 +4,6 @@
 
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
-using RemoteMaster.Server.Data;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;
@@ -12,15 +11,8 @@ namespace RemoteMaster.Server.Services;
 public class RoleInitializationService(IServiceProvider serviceProvider) : IHostedService
 {
     private readonly List<string> _roles = ["RootAdministrator", "Administrator", "Viewer"];
-    private readonly List<string> _claims =
-    [
-        "MouseInput", "KeyboardInput", "SwitchScreen", "ToggleInput", "BlockUserInput",
-        "ChangeImageQuality", "TerminateHost", "RebootComputer", "ShutdownComputer",
-        "ChangeMonitorState", "ExecuteScript", "Move", "RenewCertificate",
-        "ToggleCursorTracking"
-    ];
 
-    private readonly Dictionary<string, List<string>> _roleClaims = new Dictionary<string, List<string>>
+    private readonly Dictionary<string, List<string>> _roleClaims = new()
     {
         { "Administrator", new List<string>
             {
@@ -87,6 +79,7 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
                 if (!existingClaims.Any(c => c.Type == "Permission" && c.Value == claim))
                 {
                     var result = await roleManager.AddClaimAsync(roleIdentity, new Claim("Permission", claim));
+                    
                     if (result.Succeeded)
                     {
                         Log.Information("Successfully added claim {ClaimType} to role {RoleName}", claim, roleName);
