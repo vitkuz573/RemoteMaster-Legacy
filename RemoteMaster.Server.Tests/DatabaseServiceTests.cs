@@ -61,6 +61,16 @@ public class DatabaseServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task AddNodeAsync_ThrowsInvalidOperationException_ForUnknownNodeType()
+    {
+        // Arrange
+        var unknownNode = new UnknownNode { NodeId = Guid.NewGuid(), Name = "Unknown" };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _databaseService.AddNodeAsync(unknownNode));
+    }
+
+    [Fact]
     public async Task RemoveNodeAsync_RemovesNode()
     {
         // Arrange
@@ -74,6 +84,16 @@ public class DatabaseServiceTests : IDisposable
         // Assert
         var removedNode = await _context.OrganizationalUnits.FindAsync(organizationalUnit.NodeId);
         Assert.Null(removedNode);
+    }
+
+    [Fact]
+    public async Task RemoveNodeAsync_ThrowsInvalidOperationException_ForUnknownNodeType()
+    {
+        // Arrange
+        var unknownNode = new UnknownNode { NodeId = Guid.NewGuid(), Name = "Unknown" };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _databaseService.RemoveNodeAsync(unknownNode));
     }
 
     [Fact]
@@ -118,9 +138,65 @@ public class DatabaseServiceTests : IDisposable
         Assert.Equal(new[] { "ParentOU", "ChildOU" }, result);
     }
 
+    [Fact]
+    public async Task GetChildrenByParentIdAsync_ReturnsChildren()
+    {
+        // Arrange
+        var parentOu = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "ParentOU" };
+        var childOu = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "ChildOU", ParentId = parentOu.NodeId };
+        _context.OrganizationalUnits.AddRange(parentOu, childOu);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _databaseService.GetChildrenByParentIdAsync<OrganizationalUnit>(parentOu.NodeId);
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal(childOu.NodeId, result[0].NodeId);
+    }
+
+    [Fact]
+    public async Task GetChildrenByParentIdAsync_ThrowsInvalidOperationException_ForUnknownNodeType()
+    {
+        // Arrange
+        var parentId = Guid.NewGuid();
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _databaseService.GetChildrenByParentIdAsync<UnknownNode>(parentId));
+    }
+
+    [Fact]
+    public async Task MoveNodesAsync_MovesNodesToNewParent()
+    {
+        // Arrange
+        var oldParent = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "OldParent" };
+        var newParent = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "NewParent" };
+        var childOu = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "ChildOU", ParentId = oldParent.NodeId };
+        _context.OrganizationalUnits.AddRange(oldParent, newParent, childOu);
+        await _context.SaveChangesAsync();
+
+        // Act
+        await _databaseService.MoveNodesAsync([childOu.NodeId], newParent.NodeId);
+
+        // Assert
+        var movedNode = await _context.OrganizationalUnits.FindAsync(childOu.NodeId);
+        Assert.Equal(newParent.NodeId, movedNode.ParentId);
+    }
+
     public void Dispose()
     {
         _context.Database.EnsureDeleted();
         _context.Dispose();
+    }
+
+    private class UnknownNode : INode
+    {
+        public Guid NodeId { get; set; }
+
+        public string Name { get; set; }
+
+        public Guid? ParentId { get; set; }
+
+        public INode? Parent { get; set; }
     }
 }
