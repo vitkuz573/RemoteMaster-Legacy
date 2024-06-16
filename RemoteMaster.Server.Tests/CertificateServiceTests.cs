@@ -16,16 +16,19 @@ public class CertificateServiceTests
 {
     private readonly Mock<ICaCertificateService> _caCertificateServiceMock;
     private readonly Mock<IHostInformationService> _hostInformationServiceMock;
+    private readonly Mock<ISerialNumberService> _serialNumberServiceMock;
     private readonly ICertificateService _certificateService;
 
     public CertificateServiceTests()
     {
         _caCertificateServiceMock = new Mock<ICaCertificateService>();
         _hostInformationServiceMock = new Mock<IHostInformationService>();
+        _serialNumberServiceMock = new Mock<ISerialNumberService>();
 
         _certificateService = new CertificateService(
             _hostInformationServiceMock.Object,
-            _caCertificateServiceMock.Object
+            _caCertificateServiceMock.Object,
+            _serialNumberServiceMock.Object
         );
     }
 
@@ -56,9 +59,11 @@ public class CertificateServiceTests
         var csrBytes = GenerateCsrBytes(false);
         using var caCertificate = GenerateCaCertificate();
         var computer = new Computer { Name = "localhost", IpAddress = "127.0.0.1", MacAddress = "00-14-22-01-23-45" };
+        var serialNumber = new byte[] { 0x01, 0x02, 0x03, 0x04 };
 
         _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(caCertificate);
         _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(computer);
+        _serialNumberServiceMock.Setup(x => x.GenerateSerialNumber()).Returns(serialNumber);
 
         // Act
         var certificate = _certificateService.IssueCertificate(csrBytes);
@@ -66,6 +71,85 @@ public class CertificateServiceTests
         // Assert
         Assert.NotNull(certificate);
         Assert.Equal(caCertificate.SubjectName.Name, certificate.Issuer);
+    }
+
+    [Fact]
+    public void IssueCertificate_WithMinimalValidCsr_ReturnsCertificate()
+    {
+        // Arrange
+        var csrBytes = GenerateMinimalValidCsrBytes();
+        using var caCertificate = GenerateCaCertificate();
+        var computer = new Computer { Name = "localhost", IpAddress = "127.0.0.1", MacAddress = "00-14-22-01-23-45" };
+        var serialNumber = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+
+        _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(caCertificate);
+        _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(computer);
+        _serialNumberServiceMock.Setup(x => x.GenerateSerialNumber()).Returns(serialNumber);
+
+        // Act
+        var certificate = _certificateService.IssueCertificate(csrBytes);
+
+        // Assert
+        Assert.NotNull(certificate);
+        Assert.Equal(caCertificate.SubjectName.Name, certificate.Issuer);
+    }
+
+    [Fact]
+    public void IssueCertificate_WithCsrContainingExtensions_ReturnsCertificate()
+    {
+        // Arrange
+        var csrBytes = GenerateCsrBytesWithExtensions();
+        using var caCertificate = GenerateCaCertificate();
+        var computer = new Computer { Name = "localhost", IpAddress = "127.0.0.1", MacAddress = "00-14-22-01-23-45" };
+        var serialNumber = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+
+        _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(caCertificate);
+        _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(computer);
+        _serialNumberServiceMock.Setup(x => x.GenerateSerialNumber()).Returns(serialNumber);
+
+        // Act
+        var certificate = _certificateService.IssueCertificate(csrBytes);
+
+        // Assert
+        Assert.NotNull(certificate);
+        Assert.Equal(caCertificate.SubjectName.Name, certificate.Issuer);
+    }
+
+    [Fact]
+    public void IssueCertificate_UsesMockedSerialNumbers()
+    {
+        // Arrange
+        var csrBytes = GenerateCsrBytes(false);
+        using var caCertificate = GenerateCaCertificate();
+        var computer = new Computer { Name = "localhost", IpAddress = "127.0.0.1", MacAddress = "00-14-22-01-23-45" };
+
+        _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(caCertificate);
+        _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(computer);
+
+        _serialNumberServiceMock.SetupSequence(s => s.GenerateSerialNumber())
+            .Returns(Guid.NewGuid().ToByteArray())
+            .Returns(Guid.NewGuid().ToByteArray());
+
+        var certificateService1 = new CertificateService(
+            _hostInformationServiceMock.Object,
+            _caCertificateServiceMock.Object,
+            _serialNumberServiceMock.Object
+        );
+
+        var certificateService2 = new CertificateService(
+            _hostInformationServiceMock.Object,
+            _caCertificateServiceMock.Object,
+            _serialNumberServiceMock.Object
+        );
+
+        // Act
+        var certificate1 = certificateService1.IssueCertificate(csrBytes);
+        var certificate2 = certificateService2.IssueCertificate(csrBytes);
+
+        // Assert
+        Assert.NotNull(certificate1);
+        Assert.NotNull(certificate2);
+        Assert.NotEqual(certificate1.SerialNumber, certificate2.SerialNumber);
     }
 
     private static byte[] GenerateCsrBytes(bool isCa)
@@ -81,6 +165,24 @@ public class CertificateServiceTests
         return request.CreateSigningRequest();
     }
 
+    private static byte[] GenerateMinimalValidCsrBytes()
+    {
+        using var rsa = RSA.Create(2048);
+        var request = new CertificateRequest("CN=Minimal", rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+
+        return request.CreateSigningRequest();
+    }
+
+    private static byte[] GenerateCsrBytesWithExtensions()
+    {
+        using var rsa = RSA.Create(2048);
+        var request = new CertificateRequest("CN=WithExtensions", rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        request.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.DigitalSignature, true));
+        request.CertificateExtensions.Add(new X509SubjectKeyIdentifierExtension(request.PublicKey, false));
+
+        return request.CreateSigningRequest();
+    }
+
     private static X509Certificate2 GenerateCaCertificate()
     {
         using var rsa = RSA.Create(2048);
@@ -90,4 +192,5 @@ public class CertificateServiceTests
         return new X509Certificate2(caCertificate.Export(X509ContentType.Pfx));
     }
 }
+
 

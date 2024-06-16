@@ -10,7 +10,7 @@ using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class CertificateService(IHostInformationService hostInformationService, ICaCertificateService caCertificateService) : ICertificateService
+public class CertificateService(IHostInformationService hostInformationService, ICaCertificateService caCertificateService, ISerialNumberService serialNumberService) : ICertificateService
 {
     public X509Certificate2 IssueCertificate(byte[] csrBytes)
     {
@@ -33,7 +33,7 @@ public class CertificateService(IHostInformationService hostInformationService, 
 
         var notBefore = DateTimeOffset.UtcNow;
         var notAfter = DateTimeOffset.UtcNow.AddYears(1);
-        var serialNumber = GenerateSerialNumber();
+        var serialNumber = serialNumberService.GenerateSerialNumber();
 
         var hostInformation = hostInformationService.GetHostInformation();
 
@@ -47,25 +47,5 @@ public class CertificateService(IHostInformationService hostInformationService, 
         csr.CertificateExtensions.Add(crlDistributionPointExtension);
 
         return csr.Create(caCertificate.SubjectName, signatureGenerator, notBefore, notAfter, serialNumber);
-    }
-
-    private static byte[] GenerateSerialNumber()
-    {
-        var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        var uuid = Guid.NewGuid().ToByteArray();
-        var randomBytes = new byte[16];
-
-        using (var rng = RandomNumberGenerator.Create())
-        {
-            rng.GetBytes(randomBytes);
-        }
-
-        var combinedBytes = new byte[8 + uuid.Length + randomBytes.Length];
-
-        Array.Copy(BitConverter.GetBytes(timestamp), 0, combinedBytes, 0, 8);
-        Array.Copy(uuid, 0, combinedBytes, 8, uuid.Length);
-        Array.Copy(randomBytes, 0, combinedBytes, 8 + uuid.Length, randomBytes.Length);
-
-        return SHA3_256.IsSupported ? SHA3_256.HashData(combinedBytes) : SHA256.HashData(combinedBytes);
     }
 }
