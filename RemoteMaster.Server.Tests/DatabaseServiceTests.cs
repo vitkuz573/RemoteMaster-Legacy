@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.EntityFrameworkCore;
+using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
@@ -12,7 +13,7 @@ namespace RemoteMaster.Server.Tests;
 
 public class DatabaseServiceTests : IDisposable
 {
-    private readonly DatabaseService _databaseService;
+    private readonly IDatabaseService _databaseService;
     private readonly ApplicationDbContext _context;
 
     public DatabaseServiceTests()
