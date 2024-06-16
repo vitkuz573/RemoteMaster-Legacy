@@ -162,7 +162,7 @@ public partial class Home
             .Include(u => u.AccessibleOrganizations)
             .FirstOrDefaultAsync(u => u.Id == userId);
 
-        return user?.AccessibleOrganizations.Select(org => org.NodeId).ToList() ?? new List<Guid>();
+        return user?.AccessibleOrganizations.Select(org => org.NodeId).ToList() ?? [];
     }
 
     private async Task<List<Guid>> GetAccessibleOrganizationalUnits(string userId)
