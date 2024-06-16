@@ -13,7 +13,7 @@ public interface ICrlService
 
     Task<byte[]> GenerateCrlAsync();
 
-    Task<bool> PublishCrlAsync(byte[] crlData);
+    Task<bool> PublishCrlAsync(byte[] crlData, string? customPath = null);
 
     Task<CrlMetadata> GetCrlMetadataAsync();
 }

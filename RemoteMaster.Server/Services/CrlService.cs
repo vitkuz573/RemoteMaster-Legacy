@@ -2,11 +2,11 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Abstractions;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
@@ -14,9 +14,9 @@ using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class CrlService(IOptions<CertificateOptions> options, IDbContextFactory<CertificateDbContext> contextFactory) : ICrlService
+public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, ICertificateProvider certificateProvider, IFileSystem fileSystem) : ICrlService
 {
-    private readonly CertificateOptions _settings = options.Value;
+    private readonly IFileSystem _fileSystem = fileSystem;
 
     public async Task RevokeCertificateAsync(string serialNumber, X509RevocationReason reason)
     {
@@ -27,7 +27,6 @@ public class CrlService(IOptions<CertificateOptions> options, IDbContextFactory<
         if (existingRevokedCertificate != null)
         {
             Log.Information($"Certificate with serial number {serialNumber} has already been revoked.");
-
             return;
         }
 
@@ -39,7 +38,6 @@ public class CrlService(IOptions<CertificateOptions> options, IDbContextFactory<
         };
 
         context.RevokedCertificates.Add(revokedCertificate);
-
         await context.SaveChangesAsync();
 
         Log.Information($"Certificate with serial number {serialNumber} has been successfully revoked.");
@@ -47,7 +45,7 @@ public class CrlService(IOptions<CertificateOptions> options, IDbContextFactory<
 
     public async Task<byte[]> GenerateCrlAsync()
     {
-        var issuerCertificate = GetIssuerCertificate();
+        var issuerCertificate = certificateProvider.GetIssuerCertificate();
         var crlBuilder = new CertificateRevocationListBuilder();
 
         using var context = await contextFactory.CreateDbContextAsync();
@@ -93,21 +91,21 @@ public class CrlService(IOptions<CertificateOptions> options, IDbContextFactory<
         return crlData;
     }
 
-    public async Task<bool> PublishCrlAsync(byte[] crlData)
+    public async Task<bool> PublishCrlAsync(byte[] crlData, string? customPath = null)
     {
         try
         {
-            var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-            var crlFilePath = Path.Combine(programDataPath, "RemoteMaster", "list.crl");
+            var programDataPath = customPath ?? Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+            var crlFilePath = _fileSystem.Path.Combine(programDataPath, "RemoteMaster", "list.crl");
 
-            var directoryPath = Path.GetDirectoryName(crlFilePath);
+            var directoryPath = _fileSystem.Path.GetDirectoryName(crlFilePath);
 
-            if (!Directory.Exists(directoryPath))
+            if (!_fileSystem.Directory.Exists(directoryPath))
             {
-                Directory.CreateDirectory(directoryPath);
+                _fileSystem.Directory.CreateDirectory(directoryPath);
             }
 
-            await File.WriteAllBytesAsync(crlFilePath, crlData);
+            await _fileSystem.File.WriteAllBytesAsync(crlFilePath, crlData);
 
             Log.Information($"CRL published to {crlFilePath}");
 
@@ -119,34 +117,6 @@ public class CrlService(IOptions<CertificateOptions> options, IDbContextFactory<
 
             return false;
         }
-    }
-
-    private X509Certificate2 GetIssuerCertificate()
-    {
-        X509Certificate2? caCertificate = null;
-
-        using (var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine))
-        {
-            store.Open(OpenFlags.ReadOnly);
-
-            var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, _settings.CommonName, false);
-
-            foreach (var cert in certificates)
-            {
-                if (cert.HasPrivateKey)
-                {
-                    caCertificate = cert;
-                    break;
-                }
-            }
-        }
-
-        if (caCertificate == null)
-        {
-            throw new InvalidOperationException($"CA certificate with CommonName '{_settings.CommonName}' not found.");
-        }
-
-        return caCertificate;
     }
 
     public async Task<CrlMetadata> GetCrlMetadataAsync()
