@@ -3,18 +3,17 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Net;
-using System.Net.Sockets;
 using RemoteMaster.Server.Abstractions;
 
 namespace RemoteMaster.Server.Services;
 
-public class UdpPacketSender : IPacketSender
+public class UdpPacketSender(Func<IUdpClient> udpClientFactory) : IPacketSender
 {
     public void Send(byte[] packet, IPEndPoint endPoint)
     {
         ArgumentNullException.ThrowIfNull(packet);
 
-        using var client = new UdpClient();
+        using var client = udpClientFactory();
         client.EnableBroadcast = true;
 
         client.Send(packet, packet.Length, endPoint);
