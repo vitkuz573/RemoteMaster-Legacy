@@ -19,7 +19,7 @@ using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext context, IHttpContextAccessor httpContextAccessor, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IFileSystem fileSystem) : ITokenService
+public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext context, IHttpContextAccessor httpContextAccessor, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IClaimsService claimsService, IFileSystem fileSystem) : ITokenService
 {
     private readonly JwtOptions _options = options.Value ?? throw new ArgumentNullException(nameof(options));
 
@@ -32,7 +32,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         var ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
 
-        var claims = await GetClaimsForUser(user);
+        var claims = await claimsService.GetClaimsForUserAsync(user);
         var accessToken = await GenerateAccessTokenAsync(claims);
         var refreshToken = oldRefreshToken == null ? await GenerateRefreshTokenAsync(user.Id, ipAddress) : await ReplaceRefreshToken(oldRefreshToken, user.Id, ipAddress);
 
@@ -48,27 +48,6 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
             AccessTokenExpiresAt = DateTime.UtcNow.Add(AccessTokenExpiration),
             RefreshTokenExpiresAt = DateTime.UtcNow.Add(RefreshTokenExpiration)
         };
-    }
-
-    private async Task<List<Claim>> GetClaimsForUser(ApplicationUser user)
-    {
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.Name, user.UserName),
-            new(ClaimTypes.NameIdentifier, user.Id.ToString())
-        };
-
-        var userRoles = await userManager.GetRolesAsync(user);
-
-        foreach (var role in userRoles)
-        {
-            claims.Add(new Claim(ClaimTypes.Role, role));
-
-            var roleClaims = await GetClaimsForRole(role);
-            claims.AddRange(roleClaims);
-        }
-
-        return claims;
     }
 
     private async Task<string> GenerateAccessTokenAsync(List<Claim> claims)
@@ -150,14 +129,6 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         await context.SaveChangesAsync();
 
         return newRefreshTokenEntity;
-    }
-
-    private async Task<IEnumerable<Claim>> GetClaimsForRole(string roleName)
-    {
-        var role = await roleManager.FindByNameAsync(roleName);
-        var roleClaims = await roleManager.GetClaimsAsync(role);
-
-        return roleClaims.Where(c => c.Type == "Permission");
     }
 
     private void RevokeToken(RefreshToken token, TokenRevocationReason reason)

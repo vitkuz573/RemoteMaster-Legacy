@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Moq;
+using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Enums;
 using RemoteMaster.Server.Models;
@@ -24,6 +25,7 @@ public class TokenServiceTests
     private readonly Mock<RoleManager<IdentityRole>> _mockRoleManager;
     private readonly Mock<IHttpContextAccessor> _mockHttpContextAccessor;
     private readonly Mock<IOptions<JwtOptions>> _mockOptions;
+    private readonly Mock<IClaimsService> _mockClaimsService;
     private readonly ApplicationDbContext _context;
     private readonly JwtOptions _options;
     private readonly TokenService _tokenService;
@@ -34,6 +36,7 @@ public class TokenServiceTests
         _mockUserManager = MockUserManager<ApplicationUser>();
         _mockRoleManager = MockRoleManager<IdentityRole>();
         _mockHttpContextAccessor = new Mock<IHttpContextAccessor>();
+        _mockClaimsService = new Mock<IClaimsService>();
 
         _options = new JwtOptions
         {
@@ -60,7 +63,7 @@ public class TokenServiceTests
             { "TestKeys/public_key.der", new MockFileData(publicKey) }
         });
 
-        _tokenService = new TokenService(_mockOptions.Object, _context, _mockHttpContextAccessor.Object, _mockUserManager.Object, _mockRoleManager.Object, _mockFileSystem);
+        _tokenService = new TokenService(_mockOptions.Object, _context, _mockHttpContextAccessor.Object, _mockUserManager.Object, _mockRoleManager.Object, _mockClaimsService.Object, _mockFileSystem);
     }
 
     [Fact]
@@ -72,6 +75,12 @@ public class TokenServiceTests
         _mockUserManager.Setup(um => um.GetRolesAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(["User"]);
         _mockRoleManager.Setup(rm => rm.FindByNameAsync(It.IsAny<string>())).ReturnsAsync(new IdentityRole("User"));
         _mockRoleManager.Setup(rm => rm.GetClaimsAsync(It.IsAny<IdentityRole>())).ReturnsAsync([]);
+        _mockClaimsService.Setup(cs => cs.GetClaimsForUserAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(
+        [
+            new(ClaimTypes.Name, user.UserName),
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new(ClaimTypes.Role, "User")
+        ]);
 
         var httpContext = new DefaultHttpContext();
         httpContext.Connection.RemoteIpAddress = System.Net.IPAddress.Parse("127.0.0.1");
