@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.IdentityModel.Tokens.Jwt;
+using System.IO.Abstractions;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -18,7 +19,7 @@ using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext context, IHttpContextAccessor httpContextAccessor, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager) : ITokenService
+public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext context, IHttpContextAccessor httpContextAccessor, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IFileSystem fileSystem) : ITokenService
 {
     private readonly JwtOptions _options = options.Value ?? throw new ArgumentNullException(nameof(options));
 
@@ -84,15 +85,15 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         try
         {
             var passphraseBytes = Encoding.UTF8.GetBytes(_options.KeyPassword);
-            var privateKeyPath = Path.Combine(_options.KeysDirectory, "private_key.der");
-            var privateKeyBytes = await File.ReadAllBytesAsync(privateKeyPath);
+            var privateKeyPath = fileSystem.Path.Combine(_options.KeysDirectory, "private_key.der");
+            var privateKeyBytes = await fileSystem.File.ReadAllBytesAsync(privateKeyPath);
 
             rsa.ImportEncryptedPkcs8PrivateKey(passphraseBytes, privateKeyBytes, out _);
         }
         catch (CryptographicException ex)
         {
             Log.Error(ex, "Failed to decrypt or import the private key.");
-            
+
             throw;
         }
 
@@ -205,7 +206,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         if (expiredTokens.Count != 0)
         {
             context.RefreshTokens.RemoveRange(expiredTokens);
-            
+
             await context.SaveChangesAsync();
 
             foreach (var token in expiredTokens)
@@ -246,7 +247,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         try
         {
             tokenHandler.ValidateToken(accessToken, validationParameters, out var validatedToken);
-            
+
             return validatedToken != null;
         }
         catch
@@ -259,8 +260,8 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
     {
         var rsa = RSA.Create();
 
-        var publicKeyPath = Path.Combine(_options.KeysDirectory, "public_key.der");
-        var publicKeyBytes = File.ReadAllBytes(publicKeyPath);
+        var publicKeyPath = fileSystem.Path.Combine(_options.KeysDirectory, "public_key.der");
+        var publicKeyBytes = fileSystem.File.ReadAllBytes(publicKeyPath);
 
         rsa.ImportRSAPublicKey(publicKeyBytes, out _);
 
