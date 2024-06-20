@@ -61,6 +61,8 @@ public abstract class ScreenCapturerService : IScreenCapturerService
         {
             try
             {
+                RefreshCurrentScreenBounds();
+
                 if (!_desktopService.SwitchToInputDesktop())
                 {
                     Log.Error("Failed to switch to input desktop. Last Win32 error code: {ErrorCode}", Marshal.GetLastWin32Error());
