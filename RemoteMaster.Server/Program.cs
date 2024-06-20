@@ -125,17 +125,21 @@ public static class Program
 
         services.AddSharedServices();
 
+        services.AddTransient<IUdpClient, UdpClientWrapper>();
+        services.AddTransient<Func<IUdpClient>>(provider => () => provider.GetRequiredService<IUdpClient>());
         services.AddScoped<IQueryParameterService, QueryParameterService>();
         services.AddScoped<IDatabaseService, DatabaseService>();
         services.AddScoped<IComputerCommandService, ComputerCommandService>();
         services.AddScoped<ICrlService, CrlService>();
         services.AddScoped<IAccessTokenProvider, AccessTokenProvider>();
+        services.AddScoped<IClaimsService, ClaimsService>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<ICertificateProvider, CertificateProvider>();
         services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<ITokenStorageService, InMemoryTokenStorageService>();
         services.AddSingleton<IBrandingService, BrandingService>();
         services.AddSingleton<ICertificateService, CertificateService>();
+        services.AddSingleton<ISerialNumberService, SerialNumberService>();
         services.AddSingleton<IPacketSender, UdpPacketSender>();
         services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
         services.AddSingleton<ICaCertificateService, CaCertificateService>();
