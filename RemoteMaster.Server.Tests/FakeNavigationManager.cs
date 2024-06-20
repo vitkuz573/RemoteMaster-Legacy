@@ -17,6 +17,15 @@ public class FakeNavigationManager : NavigationManager
 
     protected override void NavigateToCore(string uri, bool forceLoad)
     {
+        if (!System.Uri.IsWellFormedUriString(uri, UriKind.Absolute))
+        {
+            uri = ToAbsoluteUri(uri).ToString();
+        }
+
         Uri = uri;
+        ForceLoad = forceLoad;
     }
+
+    public bool ForceLoad { get; private set; } = false;
 }
+
