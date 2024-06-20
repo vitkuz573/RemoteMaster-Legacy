@@ -16,7 +16,7 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
     {
         { "Administrator", new List<string>
             {
-                "MouseInput", "KeyboardInput", "ToggleCursorTracking", "SwitchScreen", "ToggleInput", "BlockUserInput",
+                "MouseInput", "KeyboardInput", "ToggleCursorTracking", "SwitchScreen", "ToggleInput", "ToggleUserInput",
                 "ChangeImageQuality", "TerminateHost", "RebootComputer", "ShutdownComputer",
                 "ChangeMonitorState", "ExecuteScript", "Move", "RenewCertificate"
             }
