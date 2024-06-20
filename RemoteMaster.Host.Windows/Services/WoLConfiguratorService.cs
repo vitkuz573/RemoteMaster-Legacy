@@ -1,10 +1,14 @@
-﻿using System.Diagnostics;
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+// This file is part of the RemoteMaster project.
+// Licensed under the GNU Affero General Public License v3.0.
+
+using System.Diagnostics;
 using Microsoft.Win32;
 using RemoteMaster.Host.Windows.Abstractions;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class WoLConfiguratorService : IWoLConfiguratorService
+public class WoLConfiguratorService(IRegistryService registryService, IProcessService processService) : IWoLConfiguratorService
 {
     private const string PowerSettingsKeyPath = @"SYSTEM\CurrentControlSet\Control\Session Manager\Power";
     private const string HiberbootEnabledValueName = "HiberbootEnabled";
@@ -14,31 +18,18 @@ public class WoLConfiguratorService : IWoLConfiguratorService
 
     public void DisableFastStartup()
     {
-        SetRegistryValue(PowerSettingsKeyPath, HiberbootEnabledValueName, 0);
+        registryService.SetValue(PowerSettingsKeyPath, HiberbootEnabledValueName, 0, RegistryValueKind.DWord);
     }
 
     public void DisablePnPEnergySaving()
     {
-        using var adapters = Registry.LocalMachine.OpenSubKey(NetworkAdaptersKeyPath, true);
+        using var adapters = registryService.OpenSubKey(NetworkAdaptersKeyPath, true);
 
         if (adapters != null)
         {
             foreach (var subkeyName in adapters.GetSubKeyNames())
             {
-                SetRegistryValue($"{NetworkAdaptersKeyPath}\\{subkeyName}", PnPCapabilitiesValueName, 0);
-            }
-        }
-    }
-
-    private static void SetRegistryValue(string keyPath, string valueName, int value)
-    {
-        using var key = Registry.LocalMachine.OpenSubKey(keyPath, true);
-
-        if (key != null)
-        {
-            if ((int)key.GetValue(valueName, 1) != value)
-            {
-                key.SetValue(valueName, value, RegistryValueKind.DWord);
+                registryService.SetValue($"{NetworkAdaptersKeyPath}\\{subkeyName}", PnPCapabilitiesValueName, 0, RegistryValueKind.DWord);
             }
         }
     }
@@ -55,15 +46,15 @@ public class WoLConfiguratorService : IWoLConfiguratorService
         };
 
         var programmableDevices = string.Empty;
-        
-        using (var process = Process.Start(startInfoForDeviceQuery))
+
+        using (var process = processService.Start(startInfoForDeviceQuery))
         {
-            process.WaitForExit();
-            programmableDevices = process.StandardOutput.ReadToEnd();
+            processService.WaitForExit(process);
+            programmableDevices = processService.ReadStandardOutput(process);
         }
 
         var deviceNames = programmableDevices.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-        
+
         foreach (var deviceName in deviceNames)
         {
             var startInfoForEnableWake = new ProcessStartInfo
@@ -75,8 +66,8 @@ public class WoLConfiguratorService : IWoLConfiguratorService
                 RedirectStandardOutput = true
             };
 
-            using var powerCfgProcess = Process.Start(startInfoForEnableWake);
-            powerCfgProcess.WaitForExit();
+            using var powerCfgProcess = processService.Start(startInfoForEnableWake);
+            processService.WaitForExit(powerCfgProcess);
         }
     }
 }
