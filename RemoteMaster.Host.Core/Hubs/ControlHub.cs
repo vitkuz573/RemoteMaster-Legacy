@@ -162,7 +162,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     public async Task JoinGroup(string groupName)
     {
-        var viewer = viewerFactory.Create(Context.ConnectionId, "Windows Service", "Service");
+        var viewer = viewerFactory.Create(Context.ConnectionId, "RCHost", "Windows Service");
         appState.TryAddViewer(viewer);
 
         await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
