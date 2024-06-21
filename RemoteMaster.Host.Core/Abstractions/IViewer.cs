@@ -12,6 +12,8 @@ public interface IViewer : IDisposable
 
     string UserName { get; }
 
+    string Role { get; }
+
     DateTime ConnectedTime { get; }
 
     void StopStreaming();

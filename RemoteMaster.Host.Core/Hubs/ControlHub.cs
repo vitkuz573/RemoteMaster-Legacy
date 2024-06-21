@@ -38,7 +38,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
                 break;
 
             case Intention.ManageDevice:
-                var viewer = viewerFactory.Create(Context.ConnectionId, connectionRequest.UserName);
+                var viewer = viewerFactory.Create(Context.ConnectionId, connectionRequest.UserName, connectionRequest.Role);
                 appState.TryAddViewer(viewer);
 
                 var assembly = Assembly.GetEntryAssembly();
@@ -162,7 +162,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     public async Task JoinGroup(string groupName)
     {
-        var viewer = viewerFactory.Create(Context.ConnectionId, "Windows Service");
+        var viewer = viewerFactory.Create(Context.ConnectionId, "Windows Service", "Service");
         appState.TryAddViewer(viewer);
 
         await Groups.AddToGroupAsync(Context.ConnectionId, groupName);

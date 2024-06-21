@@ -260,9 +260,11 @@ public partial class Access : IAsyncDisposable
             InvokeAsync(StateHasChanged);
         });
 
-        var userIdentity = httpContext?.User.Identity;
+        var userIdentity = httpContext?.User.Identity as ClaimsIdentity ?? throw new InvalidOperationException("User identity is not a ClaimsIdentity.");
+        var role = userIdentity.Claims
+                        .FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
 
-        var connectionRequest = new ConnectionRequest(Intention.ManageDevice, userIdentity.Name);
+        var connectionRequest = new ConnectionRequest(Intention.ManageDevice, userIdentity.Name, role);
 
         _connection.Closed += async (_) =>
         {

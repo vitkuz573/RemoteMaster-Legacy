@@ -75,6 +75,7 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext) : IApp
         {
             ConnectionId = v.ConnectionId,
             UserName = v.UserName,
+            Role = v.Role,
             ConnectedTime = v.ConnectedTime
         }).ToList();
 
