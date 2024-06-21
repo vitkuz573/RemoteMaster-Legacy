@@ -8,7 +8,7 @@ using RemoteMaster.Host.Windows.Enums;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class SecureAttentionSequenceService : ISecureAttentionSequenceService
+public class SecureAttentionSequenceService(IRegistryService registryService) : ISecureAttentionSequenceService
 {
     private const string RegistryKeyPath = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System";
     private const string SasValueName = "SoftwareSASGeneration";
@@ -17,9 +17,9 @@ public class SecureAttentionSequenceService : ISecureAttentionSequenceService
     {
         get
         {
-            using var key = Registry.LocalMachine.OpenSubKey(RegistryKeyPath, false);
+            using var key = registryService.OpenSubKey(RegistryHive.LocalMachine, RegistryKeyPath, false);
 
-            var value = key?.GetValue(SasValueName);
+            var value = key?.GetValue(SasValueName, null);
 
             if (value is int intValue && Enum.IsDefined(typeof(SoftwareSasOption), intValue))
             {
@@ -30,7 +30,7 @@ public class SecureAttentionSequenceService : ISecureAttentionSequenceService
         }
         set
         {
-            using var key = Registry.LocalMachine.CreateSubKey(RegistryKeyPath, true) ?? throw new InvalidOperationException("Cannot access registry to change SAS setting.");
+            using var key = registryService.OpenSubKey(RegistryHive.LocalMachine, RegistryKeyPath, true) ?? throw new InvalidOperationException("Cannot access registry to change SAS setting.");
             key.SetValue(SasValueName, (int)value, RegistryValueKind.DWord);
         }
     }

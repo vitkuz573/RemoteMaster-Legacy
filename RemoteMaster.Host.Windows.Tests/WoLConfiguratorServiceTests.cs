@@ -30,7 +30,7 @@ public class WoLConfiguratorServiceTests
         _service.DisableFastStartup();
 
         // Assert
-        _mockRegistryService.Verify(r => r.SetValue(@"SYSTEM\CurrentControlSet\Control\Session Manager\Power", "HiberbootEnabled", 0, RegistryValueKind.DWord), Times.Once);
+        _mockRegistryService.Verify(r => r.SetValue(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Power", "HiberbootEnabled", 0, RegistryValueKind.DWord), Times.Once);
     }
 
     [Fact]
@@ -38,15 +38,15 @@ public class WoLConfiguratorServiceTests
     {
         // Arrange
         var mockKey = new Mock<IRegistryKey>();
-        _mockRegistryService.Setup(r => r.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}", true)).Returns(mockKey.Object);
+        _mockRegistryService.Setup(r => r.OpenSubKey(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}", true)).Returns(mockKey.Object);
         mockKey.Setup(k => k.GetSubKeyNames()).Returns(["0001", "0002"]);
 
         // Act
         _service.DisablePnPEnergySaving();
 
         // Assert
-        _mockRegistryService.Verify(r => r.SetValue(@"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0001", "PnPCapabilities", 0, RegistryValueKind.DWord), Times.Once);
-        _mockRegistryService.Verify(r => r.SetValue(@"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0002", "PnPCapabilities", 0, RegistryValueKind.DWord), Times.Once);
+        _mockRegistryService.Verify(r => r.SetValue(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0001", "PnPCapabilities", 0, RegistryValueKind.DWord), Times.Once);
+        _mockRegistryService.Verify(r => r.SetValue(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0002", "PnPCapabilities", 0, RegistryValueKind.DWord), Times.Once);
     }
 
     [Fact]

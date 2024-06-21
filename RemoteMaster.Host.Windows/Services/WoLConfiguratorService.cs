@@ -18,18 +18,18 @@ public class WoLConfiguratorService(IRegistryService registryService, IProcessSe
 
     public void DisableFastStartup()
     {
-        registryService.SetValue(PowerSettingsKeyPath, HiberbootEnabledValueName, 0, RegistryValueKind.DWord);
+        registryService.SetValue(RegistryHive.LocalMachine, PowerSettingsKeyPath, HiberbootEnabledValueName, 0, RegistryValueKind.DWord);
     }
 
     public void DisablePnPEnergySaving()
     {
-        using var adapters = registryService.OpenSubKey(NetworkAdaptersKeyPath, true);
+        using var adapters = registryService.OpenSubKey(RegistryHive.LocalMachine, NetworkAdaptersKeyPath, true);
 
         if (adapters != null)
         {
             foreach (var subkeyName in adapters.GetSubKeyNames())
             {
-                registryService.SetValue($"{NetworkAdaptersKeyPath}\\{subkeyName}", PnPCapabilitiesValueName, 0, RegistryValueKind.DWord);
+                registryService.SetValue(RegistryHive.LocalMachine, $"{NetworkAdaptersKeyPath}\\{subkeyName}", PnPCapabilitiesValueName, 0, RegistryValueKind.DWord);
             }
         }
     }

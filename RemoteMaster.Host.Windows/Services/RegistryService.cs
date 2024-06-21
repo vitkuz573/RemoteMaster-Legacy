@@ -10,22 +10,23 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class RegistryService : IRegistryService
 {
-    public IRegistryKey OpenSubKey(string keyPath, bool writable)
+    public IRegistryKey OpenSubKey(RegistryHive hive, string keyPath, bool writable)
     {
-        var key = Registry.LocalMachine.OpenSubKey(keyPath, writable);
+        using var baseKey = RegistryKey.OpenBaseKey(hive, RegistryView.Default);
+        var key = baseKey.OpenSubKey(keyPath, writable);
 
         return key == null ? null : new RegistryKeyWrapper(key);
     }
 
-    public void SetValue(string keyPath, string valueName, object value, RegistryValueKind valueKind)
+    public void SetValue(RegistryHive hive, string keyPath, string valueName, object value, RegistryValueKind valueKind)
     {
-        using var key = OpenSubKey(keyPath, true);
+        using var key = OpenSubKey(hive, keyPath, true);
         key?.SetValue(valueName, value, valueKind);
     }
 
-    public object GetValue(string keyPath, string valueName, object defaultValue)
+    public object GetValue(RegistryHive hive, string keyPath, string valueName, object defaultValue)
     {
-        using var key = OpenSubKey(keyPath, false);
+        using var key = OpenSubKey(hive, keyPath, false);
 
         return key?.GetValue(valueName, defaultValue) ?? defaultValue;
     }
