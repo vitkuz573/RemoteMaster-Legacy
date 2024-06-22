@@ -74,6 +74,7 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext) : IApp
         var viewers = GetAllViewers().Select(v => new ViewerDto
         {
             ConnectionId = v.ConnectionId,
+            Group = v.Group,
             UserName = v.UserName,
             Role = v.Role,
             ConnectedTime = v.ConnectedTime

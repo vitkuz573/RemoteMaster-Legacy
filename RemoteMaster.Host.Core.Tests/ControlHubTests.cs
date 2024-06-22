@@ -377,7 +377,7 @@ public class ControlHubTests
         SetHubContext(connectionId);
 
         var mockGroupClient = new Mock<IControlClient>();
-        _mockClients.Setup(c => c.Group("serviceGroup")).Returns(mockGroupClient.Object);
+        _mockClients.Setup(c => c.Group("Services")).Returns(mockGroupClient.Object);
 
         // Act
         await _controlHub.SendCommandToService(command);

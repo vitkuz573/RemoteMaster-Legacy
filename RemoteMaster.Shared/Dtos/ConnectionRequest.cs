@@ -6,9 +6,11 @@ using RemoteMaster.Shared.Enums;
 
 namespace RemoteMaster.Shared.Dtos;
 
-public class ConnectionRequest(Intention intention, string userName, string role)
+public class ConnectionRequest(Intention intention, string group, string userName, string role)
 {
     public Intention Intention { get; } = intention;
+
+    public string Group { get; } = group;
 
     public string UserName { get; } = userName;
 

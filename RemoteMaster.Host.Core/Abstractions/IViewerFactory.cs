@@ -6,5 +6,5 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IViewerFactory
 {
-    IViewer Create(string connectionId, string userName, string role);
+    IViewer Create(string connectionId, string group, string userName, string role);
 }

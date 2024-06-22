@@ -38,7 +38,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
                 break;
 
             case Intention.ManageDevice:
-                var viewer = viewerFactory.Create(Context.ConnectionId, connectionRequest.UserName, connectionRequest.Role);
+                var viewer = viewerFactory.Create(Context.ConnectionId, connectionRequest.Group, connectionRequest.UserName, connectionRequest.Role);
                 appState.TryAddViewer(viewer);
 
                 var assembly = Assembly.GetEntryAssembly();
@@ -162,7 +162,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     public async Task JoinGroup(string groupName)
     {
-        var viewer = viewerFactory.Create(Context.ConnectionId, "RCHost", "Windows Service");
+        var viewer = viewerFactory.Create(Context.ConnectionId, groupName, "RCHost", "Windows Service");
         appState.TryAddViewer(viewer);
 
         await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
@@ -177,7 +177,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     {
         Log.Information("Received command: {Command}", command);
 
-        await Clients.Group("serviceGroup").ReceiveCommand(command);
+        await Clients.Group("Services").ReceiveCommand(command);
     }
 
     [Authorize(Policy = "MovePolicy")]

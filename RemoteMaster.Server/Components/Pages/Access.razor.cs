@@ -264,7 +264,7 @@ public partial class Access : IAsyncDisposable
         var role = userIdentity.Claims
                         .FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
 
-        var connectionRequest = new ConnectionRequest(Intention.ManageDevice, userIdentity.Name, role);
+        var connectionRequest = new ConnectionRequest(Intention.ManageDevice, "Users", userIdentity.Name, role);
 
         _connection.Closed += async (_) =>
         {

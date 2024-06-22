@@ -18,12 +18,13 @@ public class Viewer : IViewer
     private readonly CancellationTokenSource _cts;
     private bool _disposed;
 
-    public Viewer(IHubContext<ControlHub, IControlClient> hubContext, IScreenCapturerService screenCapturer, string connectionId, string userName, string role)
+    public Viewer(IHubContext<ControlHub, IControlClient> hubContext, IScreenCapturerService screenCapturer, string connectionId, string group, string userName, string role)
     {
         _hubContext = hubContext;
 
         ScreenCapturer = screenCapturer;
         ConnectionId = connectionId;
+        Group = group;
         UserName = userName;
         Role = role;
         ConnectedTime = DateTime.UtcNow;
@@ -37,6 +38,8 @@ public class Viewer : IViewer
 
     public IScreenCapturerService ScreenCapturer { get; }
 
+    public string Group { get; }
+    
     public string ConnectionId { get; }
 
     public string UserName { get; }

@@ -303,7 +303,7 @@ public partial class Home
 
             if (!string.IsNullOrEmpty(userName))
             {
-                var connectionRequest = new ConnectionRequest(Intention.ReceiveThumbnail, userName, _userInfo.Roles.FirstOrDefault());
+                var connectionRequest = new ConnectionRequest(Intention.ReceiveThumbnail, "Users", userName, _userInfo.Roles.FirstOrDefault());
 
                 await _retryPolicy.ExecuteAsync(async (ct) => await connection.InvokeAsync("ConnectAs", connectionRequest, CancellationToken.None), cts.Token);
             }

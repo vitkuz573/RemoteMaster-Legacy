@@ -118,11 +118,11 @@ public class CommandListenerService : IHostedService
 
         if (_connection.State == HubConnectionState.Connected)
         {
-            Log.Information("Connection started successfully, joining serviceGroup");
+            Log.Information("Connection started successfully, joining Services");
 
-            await _connection.InvokeAsync("JoinGroup", "serviceGroup");
+            await _connection.InvokeAsync("JoinGroup", "Services");
 
-            Log.Information("Successfully joined serviceGroup");
+            Log.Information("Successfully joined Services");
         }
         else
         {

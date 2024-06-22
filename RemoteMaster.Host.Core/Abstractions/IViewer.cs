@@ -10,6 +10,8 @@ public interface IViewer : IDisposable
 
     string ConnectionId { get; }
 
+    string Group { get; }
+
     string UserName { get; }
 
     string Role { get; }
