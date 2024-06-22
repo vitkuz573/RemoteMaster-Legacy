@@ -49,17 +49,14 @@ jobs:
     - name: Build non-Windows projects
       run: dotnet build RemoteMaster.NoWindows.sln --configuration Release --no-restore
 
-    - name: Build Windows project
-      run: msbuild RemoteMaster.Host.Windows/RemoteMaster.Host.Windows.csproj /p:Configuration=Release
-
-    - name: Build Windows test project
-      run: msbuild RemoteMaster.Host.Windows.Tests/RemoteMaster.Host.Windows.Tests.csproj /p:Configuration=Release
+    - name: Build original solution (Windows projects)
+      run: dotnet build RemoteMaster.sln --configuration Release --no-restore
 
     - name: Run tests for non-Windows projects with coverage
       run: |
         dotnet test RemoteMaster.NoWindows.sln --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults/nonwindows --logger "trx;LogFileName=TestResults.trx"
 
-    - name: Run tests for Windows project with coverage
+    - name: Run tests for Windows projects with coverage
       run: |
         dotnet test RemoteMaster.Host.Windows.Tests/RemoteMaster.Host.Windows.Tests.csproj --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults/windows --logger "trx;LogFileName=TestResults.trx"
 
@@ -87,8 +84,8 @@ jobs:
           ./TestResults/coverage/report/**
 
     - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v4.0.1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        files: "./TestResults/**/*.cobertura.xml"
-        fail_ci_if_error: true
+      shell: bash
+      run: |
+        find ./TestResults -name 'coverage.cobertura.xml' -exec codecov -f {} -t ${{ secrets.CODECOV_TOKEN }} \;
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
