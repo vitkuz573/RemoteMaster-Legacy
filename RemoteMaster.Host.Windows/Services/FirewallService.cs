@@ -13,12 +13,7 @@ public class FirewallService : IFirewallService
 {
     public void AddRule(string name, string applicationPath)
     {
-        var fwPolicy2 = GetFirewallPolicy();
-        if (fwPolicy2 == null)
-        {
-            throw new InvalidOperationException("Failed to get firewall policy.");
-        }
-
+        var fwPolicy2 = GetFirewallPolicy() ?? throw new InvalidOperationException("Failed to get firewall policy.");
         var existingRule = GetRule(fwPolicy2, name);
 
         var bstrName = (BSTR)Marshal.StringToBSTR(name);
