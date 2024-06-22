@@ -58,17 +58,16 @@ jobs:
       run: |
         dotnet test RemoteMaster.Host.Windows.Tests/RemoteMaster.Host.Windows.Tests.csproj --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults --logger "trx;LogFileName=TestResults.trx"
 
-    - name: List test results directory
+    - name: List coverage reports in detail
       run: |
-        dir TestResults
-        Get-ChildItem -Path TestResults -Recurse | Where-Object { $_.Name -match 'coverage.cobertura.xml' }
+        Get-ChildItem -Path ./TestResults -Recurse | Where-Object { $_.Name -match 'coverage.cobertura.xml' } | Select-Object FullName, LastWriteTime
 
     - name: Report generator
       run: |
         dotnet tool install -g dotnet-reportgenerator-globaltool
         reportgenerator -reports:**/coverage.cobertura.xml -targetdir:./TestResults/coverage/report
 
-    - name: List coverage reports
+    - name: List coverage report contents
       run: |
         dir ./TestResults/coverage/
         Get-ChildItem -Path ./TestResults/coverage/ -Recurse
