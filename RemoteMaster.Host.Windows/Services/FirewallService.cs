@@ -110,7 +110,7 @@ public class FirewallService : IFirewallService
         {
             return fwPolicy2.Rules.Item((BSTR)bstrName);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return null;
         }
