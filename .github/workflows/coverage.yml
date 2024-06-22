@@ -34,8 +34,14 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
 
+    - name: Create solution without Windows project
+      shell: pwsh
+      run: |
+        Copy-Item -Path RemoteMaster.sln -Destination RemoteMaster.NoWindows.sln
+        dotnet sln RemoteMaster.NoWindows.sln remove RemoteMaster.Host.Windows/RemoteMaster.Host.Windows.csproj
+
     - name: Build projects
-      run: dotnet build --configuration Release --no-restore --exclude RemoteMaster.Host.Windows/RemoteMaster.Host.Windows.csproj
+      run: dotnet build RemoteMaster.NoWindows.sln --configuration Release --no-restore
 
     - name: Build Windows project
       run: msbuild RemoteMaster.Host.Windows/RemoteMaster.Host.Windows.csproj /p:Configuration=Release
