@@ -41,6 +41,11 @@ jobs:
         dotnet sln RemoteMaster.NoWindows.sln remove RemoteMaster.Host.Windows/RemoteMaster.Host.Windows.csproj
         dotnet sln RemoteMaster.NoWindows.sln remove RemoteMaster.Host.Windows.Tests/RemoteMaster.Host.Windows.Tests.csproj
 
+    - name: Clean directories
+      run: |
+        if (Test-Path -Path "./TestResults") { Remove-Item -Recurse -Force -Path "./TestResults" }
+        mkdir TestResults
+
     - name: Build non-Windows projects
       run: dotnet build RemoteMaster.NoWindows.sln --configuration Release --no-restore
 
