@@ -81,11 +81,17 @@ jobs:
         dir ./TestResults/coverage/
         Get-ChildItem -Path ./TestResults/coverage/ -Recurse
 
-    - name: Upload coverage report
+    - name: Archive test results
+      run: |
+        mkdir Archive
+        Copy-Item -Recurse -Path "./TestResults" -Destination "./Archive/TestResults"
+        Compress-Archive -Path "./Archive/*" -DestinationPath "./TestResults.zip"
+
+    - name: Upload all test artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: code-coverage-report
-        path: ./TestResults/coverage/report
+        name: all-test-artifacts
+        path: ./TestResults.zip
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v4.0.1
