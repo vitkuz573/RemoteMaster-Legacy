@@ -32,10 +32,13 @@ jobs:
       run: npm install
 
     - name: Restore dependencies
-      run: msbuild -t:restore
+      run: dotnet restore
 
-    - name: Build
-      run: msbuild -t:build -p:Configuration=Release
+    - name: Build projects
+      run: dotnet build --configuration Release --no-restore --exclude RemoteMaster.Host.Windows/RemoteMaster.Host.Windows.csproj
+
+    - name: Build Windows project
+      run: msbuild RemoteMaster.Host.Windows/RemoteMaster.Host.Windows.csproj /p:Configuration=Release
 
     - name: Run tests with coverage
       run: |
