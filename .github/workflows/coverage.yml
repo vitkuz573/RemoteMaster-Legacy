@@ -49,8 +49,11 @@ jobs:
     - name: Build non-Windows projects
       run: dotnet build RemoteMaster.NoWindows.sln --configuration Release --no-restore
 
-    - name: Build Windows project with MSBuild
-      run: msbuild RemoteMaster.sln /t:Restore /p:Configuration=Release
+    - name: Build Windows projects
+      run: msbuild RemoteMaster.Host.Windows/RemoteMaster.Host.Windows.csproj /t:Restore,Build /p:Configuration=Release
+
+    - name: Build Windows test projects
+      run: msbuild RemoteMaster.Host.Windows.Tests/RemoteMaster.Host.Windows.Tests.csproj /t:Restore,Build /p:Configuration=Release
 
     - name: Run tests for non-Windows projects with coverage
       run: |
