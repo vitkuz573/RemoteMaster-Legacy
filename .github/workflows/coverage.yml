@@ -61,7 +61,7 @@ jobs:
     - name: List test results directory
       run: |
         dir TestResults
-        dir TestResults\coverage
+        Get-ChildItem -Path TestResults -Recurse | Where-Object { $_.Name -match 'coverage.cobertura.xml' }
 
     - name: Report generator
       run: |
