@@ -68,6 +68,11 @@ jobs:
         dotnet tool install -g dotnet-reportgenerator-globaltool
         reportgenerator -reports:**/coverage.cobertura.xml -targetdir:./TestResults/coverage/report
 
+    - name: List coverage reports
+      run: |
+        dir ./TestResults/coverage/
+        Get-ChildItem -Path ./TestResults/coverage/ -Recurse
+
     - name: Upload coverage report
       uses: actions/upload-artifact@v2
       with:
