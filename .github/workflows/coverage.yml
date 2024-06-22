@@ -19,6 +19,15 @@ jobs:
       with:
         dotnet-version: '8.0'
 
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+
+    - name: Install npm packages for RemoteMaster.Server
+      working-directory: RemoteMaster.Server
+      run: npm install
+
     - name: Restore dependencies
       run: dotnet restore
 
