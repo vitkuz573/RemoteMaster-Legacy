@@ -1,94 +1,47 @@
-name: .NET Core CI with Coverage
+name: .NET CI
 
 on:
   push:
-    branches: ["main"]
+    branches: [ main ]
   pull_request:
-    branches: ["main"]
+    branches: [ main ]
 
 jobs:
-  build:
-    runs-on: windows-latest
+  build-and-test:
+    runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    - name: Checkout repository
       uses: actions/checkout@v4
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.x'
-
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v1
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '20'
-
-    - name: Install npm packages
-      working-directory: RemoteMaster.Server
-      run: npm install
+        dotnet-version: '8.0'
 
     - name: Restore dependencies
       run: dotnet restore
 
-    - name: Clean directories
+    - name: Build solution excluding Windows-specific projects
       run: |
-        if (Test-Path -Path "./TestResults") { Remove-Item -Recurse -Force -Path "./TestResults" }
-        mkdir TestResults
+        dotnet sln remove RemoteMaster.Host.Windows/RemoteMaster.Host.Windows.csproj
+        dotnet sln remove RemoteMaster.Host.Windows.Tests/RemoteMaster.Host.Windows.Tests.csproj
+        dotnet build --no-restore
 
-    - name: Create solution without Windows projects
-      shell: pwsh
+    - name: Test with coverage for non-Windows projects
+      run: dotnet test --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=./TestResults/NonWindows/
+
+    - name: Setup MSBuild for Windows projects
+      uses: microsoft/setup-msbuild@v1
+
+    - name: Build and test Windows-specific projects
       run: |
-        Copy-Item -Path RemoteMaster.sln -Destination RemoteMaster.NoWindows.sln
-        dotnet sln RemoteMaster.NoWindows.sln remove RemoteMaster.Host.Windows/RemoteMaster.Host.Windows.csproj
-        dotnet sln RemoteMaster.NoWindows.sln remove RemoteMaster.Host.Windows.Tests/RemoteMaster.Host.Windows.Tests.csproj
-
-    - name: Build non-Windows projects
-      run: dotnet build RemoteMaster.NoWindows.sln --configuration Release --no-restore
-
-    - name: Build Windows projects
-      run: msbuild RemoteMaster.Host.Windows/RemoteMaster.Host.Windows.csproj /t:Restore,Build /p:Configuration=Release
-
-    - name: Build Windows test projects
-      run: msbuild RemoteMaster.Host.Windows.Tests/RemoteMaster.Host.Windows.Tests.csproj /t:Restore,Build /p:Configuration=Release
-
-    - name: Run tests for non-Windows projects with coverage
-      run: |
-        dotnet test RemoteMaster.NoWindows.sln --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults/nonwindows --logger "trx;LogFileName=TestResults.trx"
-
-    - name: Run tests for Windows projects with coverage
-      run: |
-        dotnet test RemoteMaster.Host.Windows.Tests/RemoteMaster.Host.Windows.Tests.csproj --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults/windows --logger "trx;LogFileName=TestResults.trx"
-
-    - name: List test results and coverage files
-      run: |
-        dir ./TestResults/
-        Get-ChildItem -Path ./TestResults -Recurse | Where-Object { $_.Name -match 'coverage.cobertura.xml' } | Select-Object FullName, LastWriteTime
-
-    - name: Report generator
-      run: |
-        dotnet tool install -g dotnet-reportgenerator-globaltool
-        reportgenerator -reports:**/coverage.cobertura.xml -targetdir:./TestResults/coverage/report
-
-    - name: List coverage report contents
-      run: |
-        dir ./TestResults/coverage/
-        Get-ChildItem -Path ./TestResults/coverage/ -Recurse
-
-    - name: Upload coverage report
-      uses: actions/upload-artifact@v4
-      with:
-        name: code-coverage-report
-        path: ./TestResults/coverage/report
+        msbuild RemoteMaster.sln /t:Restore,Build /p:Configuration=Release /p:Platform="Any CPU"
+        dotnet test RemoteMaster.Host.Windows.Tests/RemoteMaster.Host.Windows.Tests.csproj --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=./TestResults/Windows/
 
     - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v3
       with:
-        token: ${{ secrets.CODECOV_TOKEN }}
         files: ./TestResults/**/*.cobertura.xml
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: true
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
