@@ -21,11 +21,9 @@ jobs:
 
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v1
-      with:
-        msbuild-architecture: 'x64'
 
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v3
       with:
         node-version: '20'
 
@@ -47,8 +45,6 @@ jobs:
       run: |
         if (Test-Path -Path "./TestResults") { Remove-Item -Recurse -Force -Path "./TestResults" }
         mkdir TestResults
-        mkdir TestResults/nonwindows
-        mkdir TestResults/windows
 
     - name: Build non-Windows projects
       run: dotnet build RemoteMaster.NoWindows.sln --configuration Release --no-restore
@@ -81,24 +77,18 @@ jobs:
         dir ./TestResults/coverage/
         Get-ChildItem -Path ./TestResults/coverage/ -Recurse
 
-    - name: Archive test results
-      run: |
-        mkdir Archive
-        Copy-Item -Recurse -Path "./TestResults" -Destination "./Archive/TestResults"
-        Compress-Archive -Path "./Archive/*" -DestinationPath "./TestResults.zip"
-
-    - name: Upload all test artifacts
+    - name: Upload all artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: all-test-artifacts
-        path: ./TestResults.zip
+        name: test-results-and-coverage
+        path: |
+          ./TestResults/**/*.trx
+          ./TestResults/**/*.cobertura.xml
+          ./TestResults/coverage/report/**
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v4.0.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        files: |
-          ./TestResults/nonwindows/**/*.coverage.cobertura.xml
-          ./TestResults/windows/**/*.coverage.cobertura.xml
-        flags: unittests
-        name: codecov-umbrella
+        files: ./TestResults/**/*.cobertura.xml
+        fail_ci_if_error: true
