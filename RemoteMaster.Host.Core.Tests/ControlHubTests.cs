@@ -89,7 +89,7 @@ public class ControlHubTests
     public async Task ConnectAs_ShouldReceiveThumbnail_WhenIntentionIsReceiveThumbnail()
     {
         // Arrange
-        var connectionRequest = new ConnectionRequest(Intention.ReceiveThumbnail, "TestUser", "TestRole");
+        var connectionRequest = new ConnectionRequest(Intention.ReceiveThumbnail, "TestGroup", "TestUser", "TestRole");
         var thumbnail = new byte[] { 1, 2, 3 };
 
         _mockScreenCapturerService.Setup(s => s.GetThumbnail(500, 300)).Returns(thumbnail);
@@ -106,10 +106,10 @@ public class ControlHubTests
     public async Task ConnectAs_ShouldManageDevice_WhenIntentionIsManageDevice()
     {
         // Arrange
-        var connectionRequest = new ConnectionRequest(Intention.ManageDevice, "TestUser", "TestRole");
+        var connectionRequest = new ConnectionRequest(Intention.ManageDevice, "TestGroup", "TestUser", "TestRole");
         var viewer = new Mock<IViewer>().Object;
 
-        _mockViewerFactory.Setup(f => f.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(viewer);
+        _mockViewerFactory.Setup(f => f.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(viewer);
         _mockAppState.Setup(a => a.TryAddViewer(viewer)).Returns(true);
 
         var version = new Version(1, 0, 0);
@@ -337,7 +337,7 @@ public class ControlHubTests
         var groupName = "TestGroup";
         var viewer = new Mock<IViewer>().Object;
 
-        _mockViewerFactory.Setup(f => f.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(viewer);
+        _mockViewerFactory.Setup(f => f.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(viewer);
         _mockAppState.Setup(a => a.TryAddViewer(viewer)).Returns(true);
 
         var connectionId = "connectionId";
