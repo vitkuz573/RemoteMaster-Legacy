@@ -17,7 +17,7 @@ using Serilog;
 namespace RemoteMaster.Host.Core.Hubs;
 
 [Authorize]
-public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturerService, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService) : Hub<IControlClient>
+public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturerService, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService, ICertificateStoreService certificateStoreService) : Hub<IControlClient>
 {
     public async Task ConnectAs(ConnectionRequest connectionRequest)
     {
@@ -202,28 +202,11 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         await hostLifecycleService.RenewCertificateAsync(hostConfiguration);
     }
 
-#pragma warning disable CA1822
     public async Task<string> GetCertificateSerialNumber()
-#pragma warning restore CA1822
     {
-        X509Certificate2? certificate = null;
-
-        using (var store = new X509Store(StoreName.My, StoreLocation.LocalMachine))
-        {
-            store.Open(OpenFlags.ReadOnly);
-
-            var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, Dns.GetHostName(), false);
-
-            foreach (var cert in certificates)
-            {
-                if (cert.HasPrivateKey)
-                {
-                    certificate = cert;
-                    break;
-                }
-            }
-        }
-
-        return certificate.GetSerialNumberString();
+        var certificates = certificateStoreService.GetCertificates(StoreName.My, StoreLocation.LocalMachine, X509FindType.FindBySubjectName, Dns.GetHostName());
+        var certificate = certificates.Cast<X509Certificate2>().FirstOrDefault(c => c.HasPrivateKey);
+        
+        return certificate?.GetSerialNumberString();
     }
 }
