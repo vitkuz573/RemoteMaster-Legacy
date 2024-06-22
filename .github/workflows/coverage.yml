@@ -39,19 +39,22 @@ jobs:
         if (Test-Path -Path "./TestResults") { Remove-Item -Recurse -Force -Path "./TestResults" }
         mkdir TestResults
 
-    - name: Build non-Windows projects
+    - name: Create solution without Windows projects
+      shell: pwsh
       run: |
-        dotnet build RemoteMaster.sln --configuration Release --no-restore /p:ExcludeProjects=RemoteMaster.Host.Windows.csproj,RemoteMaster.Host.Windows.Tests.csproj
+        Copy-Item -Path RemoteMaster.sln -Destination RemoteMaster.NoWindows.sln
+        dotnet sln RemoteMaster.NoWindows.sln remove RemoteMaster.Host.Windows/RemoteMaster.Host.Windows.csproj
+        dotnet sln RemoteMaster.NoWindows.sln remove RemoteMaster.Host.Windows.Tests/RemoteMaster.Host.Windows.Tests.csproj
 
-    - name: Build Windows project
-      run: msbuild RemoteMaster.Host.Windows/RemoteMaster.Host.Windows.csproj /p:Configuration=Release
+    - name: Build non-Windows projects
+      run: dotnet build RemoteMaster.NoWindows.sln --configuration Release --no-restore
 
-    - name: Build Windows test project
-      run: msbuild RemoteMaster.Host.Windows.Tests/RemoteMaster.Host.Windows.Tests.csproj /p:Configuration=Release
+    - name: Build original solution (Windows projects)
+      run: msbuild RemoteMaster.sln /p:Configuration=Release
 
     - name: Run tests for non-Windows projects with coverage
       run: |
-        dotnet test RemoteMaster.sln --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults/nonwindows --logger "trx;LogFileName=TestResults.trx" /p:ExcludeProjects=RemoteMaster.Host.Windows.csproj,RemoteMaster.Host.Windows.Tests.csproj
+        dotnet test RemoteMaster.NoWindows.sln --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults/nonwindows --logger "trx;LogFileName=TestResults.trx"
 
     - name: Run tests for Windows projects with coverage
       run: |
