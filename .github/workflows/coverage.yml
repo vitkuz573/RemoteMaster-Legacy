@@ -34,14 +34,30 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
 
-    - name: Build solution, excluding COM error
+    - name: Clean directories
       run: |
-        dotnet build RemoteMaster.sln --configuration Release --no-restore /p:ContinueOnError=ErrorAndContinue
+        if (Test-Path -Path "./TestResults") { Remove-Item -Recurse -Force -Path "./TestResults" }
+        mkdir TestResults
 
-    - name: Run tests for all projects with coverage
+    - name: Create solution without Windows projects
+      shell: pwsh
       run: |
-        dotnet test RemoteMaster.Server.Tests/RemoteMaster.Server.Tests.csproj --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults/server --logger "trx;LogFileName=TestResults.trx"
-        dotnet test RemoteMaster.Host.Core.Tests/RemoteMaster.Host.Core.Tests.csproj --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults/hostcore --logger "trx;LogFileName=TestResults.trx"
+        Copy-Item -Path RemoteMaster.sln -Destination RemoteMaster.NoWindows.sln
+        dotnet sln RemoteMaster.NoWindows.sln remove RemoteMaster.Host.Windows/RemoteMaster.Host.Windows.csproj
+        dotnet sln RemoteMaster.NoWindows.sln remove RemoteMaster.Host.Windows.Tests/RemoteMaster.Host.Windows.Tests.csproj
+
+    - name: Build non-Windows projects
+      run: dotnet build RemoteMaster.NoWindows.sln --configuration Release --no-restore
+
+    - name: Build Windows project with MSBuild
+      run: msbuild RemoteMaster.sln /t:Restore /p:Configuration=Release
+
+    - name: Run tests for non-Windows projects with coverage
+      run: |
+        dotnet test RemoteMaster.NoWindows.sln --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults/nonwindows --logger "trx;LogFileName=TestResults.trx"
+
+    - name: Run tests for Windows projects with coverage
+      run: |
         dotnet test RemoteMaster.Host.Windows.Tests/RemoteMaster.Host.Windows.Tests.csproj --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults/windows --logger "trx;LogFileName=TestResults.trx"
 
     - name: List test results and coverage files
