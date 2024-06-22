@@ -150,7 +150,7 @@ public class ControlHubTests
         mockHubCallerContext.Setup(c => c.ConnectionId).Returns(connectionId);
         _controlHub.Context = mockHubCallerContext.Object;
 
-        IViewer outViewer = viewer.Object;
+        var outViewer = viewer.Object;
         _mockAppState.Setup(a => a.TryGetViewer(connectionId, out outViewer)).Returns(true);
 
         // Act
@@ -188,7 +188,7 @@ public class ControlHubTests
         mockHubCallerContext.Setup(c => c.ConnectionId).Returns(connectionId);
         _controlHub.Context = mockHubCallerContext.Object;
 
-        IViewer outViewer = viewer.Object;
+        var outViewer = viewer.Object;
         _mockAppState.Setup(a => a.TryGetViewer(connectionId, out outViewer)).Returns(true);
 
         // Act
@@ -239,7 +239,7 @@ public class ControlHubTests
         mockHubCallerContext.Setup(c => c.ConnectionId).Returns(connectionId);
         _controlHub.Context = mockHubCallerContext.Object;
 
-        IViewer outViewer = viewer.Object;
+        var outViewer = viewer.Object;
         _mockAppState.Setup(a => a.TryGetViewer(connectionId, out outViewer)).Returns(true);
 
         // Act
@@ -264,7 +264,7 @@ public class ControlHubTests
         mockHubCallerContext.Setup(c => c.ConnectionId).Returns(connectionId);
         _controlHub.Context = mockHubCallerContext.Object;
 
-        IViewer outViewer = viewer.Object;
+        var outViewer = viewer.Object;
         _mockAppState.Setup(a => a.TryGetViewer(connectionId, out outViewer)).Returns(true);
 
         // Act
