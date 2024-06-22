@@ -34,32 +34,14 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
 
-    - name: Clean directories
+    - name: Build solution, excluding COM error
       run: |
-        if (Test-Path -Path "./TestResults") { Remove-Item -Recurse -Force -Path "./TestResults" }
-        mkdir TestResults
+        dotnet build RemoteMaster.sln --configuration Release --no-restore /p:ContinueOnError=ErrorAndContinue
 
-    - name: Create solution without Windows projects
-      shell: pwsh
+    - name: Run tests for all projects with coverage
       run: |
-        Copy-Item -Path RemoteMaster.sln -Destination RemoteMaster.NoWindows.sln
-        dotnet sln RemoteMaster.NoWindows.sln remove RemoteMaster.Host.Windows/RemoteMaster.Host.Windows.csproj
-
-    - name: Build non-Windows solution
-      run: dotnet build RemoteMaster.NoWindows.sln --configuration Release --no-restore
-
-    - name: Run tests for non-Windows projects with coverage
-      run: |
-        dotnet test RemoteMaster.NoWindows.sln --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults/nonwindows --logger "trx;LogFileName=TestResults.trx"
-
-    - name: Build Windows project
-      continue-on-error: true
-      run: |
-        msbuild RemoteMaster.Host.Windows/RemoteMaster.Host.Windows.csproj /p:Configuration=Release || exit 0
-
-    - name: Run tests for Windows project with coverage
-      if: success() || failure()
-      run: |
+        dotnet test RemoteMaster.Server.Tests/RemoteMaster.Server.Tests.csproj --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults/server --logger "trx;LogFileName=TestResults.trx"
+        dotnet test RemoteMaster.Host.Core.Tests/RemoteMaster.Host.Core.Tests.csproj --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults/hostcore --logger "trx;LogFileName=TestResults.trx"
         dotnet test RemoteMaster.Host.Windows.Tests/RemoteMaster.Host.Windows.Tests.csproj --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults/windows --logger "trx;LogFileName=TestResults.trx"
 
     - name: List test results and coverage files
