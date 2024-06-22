@@ -39,8 +39,15 @@ jobs:
         if (Test-Path -Path "./TestResults") { Remove-Item -Recurse -Force -Path "./TestResults" }
         mkdir TestResults
 
-    - name: Build solution
-      run: dotnet build RemoteMaster.sln --configuration Release --no-restore /p:ExcludeProjects=RemoteMaster.Host.Windows.csproj,RemoteMaster.Host.Windows.Tests.csproj
+    - name: Create temporary solution without Windows projects
+      shell: pwsh
+      run: |
+        Copy-Item -Path RemoteMaster.sln -Destination RemoteMaster.NoWindows.sln
+        dotnet sln RemoteMaster.NoWindows.sln remove RemoteMaster.Host.Windows/RemoteMaster.Host.Windows.csproj
+        dotnet sln RemoteMaster.NoWindows.sln remove RemoteMaster.Host.Windows.Tests/RemoteMaster.Host.Windows.Tests.csproj
+
+    - name: Build solution without Windows projects
+      run: dotnet build RemoteMaster.NoWindows.sln --configuration Release --no-restore
 
     - name: Build Windows projects
       run: msbuild RemoteMaster.sln /t:Restore /p:Configuration=Release
