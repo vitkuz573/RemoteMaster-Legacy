@@ -34,29 +34,28 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
 
+    - name: Create solution without Windows projects
+      shell: pwsh
+      run: |
+        Copy-Item -Path RemoteMaster.sln -Destination RemoteMaster.NoWindows.sln
+        dotnet sln RemoteMaster.NoWindows.sln remove RemoteMaster.Host.Windows/RemoteMaster.Host.Windows.csproj
+
     - name: Clean directories
       run: |
         if (Test-Path -Path "./TestResults") { Remove-Item -Recurse -Force -Path "./TestResults" }
         mkdir TestResults
 
-    - name: Create temporary solution without Windows projects
-      shell: pwsh
-      run: |
-        Copy-Item -Path RemoteMaster.sln -Destination RemoteMaster.NoWindows.sln
-        dotnet sln RemoteMaster.NoWindows.sln remove RemoteMaster.Host.Windows/RemoteMaster.Host.Windows.csproj
-        dotnet sln RemoteMaster.NoWindows.sln remove RemoteMaster.Host.Windows.Tests/RemoteMaster.Host.Windows.Tests.csproj
-
-    - name: Build solution without Windows projects
+    - name: Build non-Windows solution
       run: dotnet build RemoteMaster.NoWindows.sln --configuration Release --no-restore
 
-    - name: Build Windows projects
-      run: msbuild RemoteMaster.sln /t:Restore /p:Configuration=Release
+    - name: Build Windows project
+      run: msbuild RemoteMaster.Host.Windows/RemoteMaster.Host.Windows.csproj /p:Configuration=Release
 
     - name: Run tests for non-Windows projects with coverage
       run: |
         dotnet test RemoteMaster.NoWindows.sln --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults/nonwindows --logger "trx;LogFileName=TestResults.trx"
 
-    - name: Run tests for Windows projects with coverage
+    - name: Run tests for Windows project with coverage
       run: |
         dotnet test RemoteMaster.Host.Windows.Tests/RemoteMaster.Host.Windows.Tests.csproj --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults/windows --logger "trx;LogFileName=TestResults.trx"
 
