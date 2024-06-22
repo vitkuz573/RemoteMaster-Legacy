@@ -39,18 +39,11 @@ jobs:
         if (Test-Path -Path "./TestResults") { Remove-Item -Recurse -Force -Path "./TestResults" }
         mkdir TestResults
 
-    - name: Create solution without Windows projects
-      shell: pwsh
-      run: |
-        Copy-Item -Path RemoteMaster.sln -Destination RemoteMaster.NoWindows.sln
-        dotnet sln RemoteMaster.NoWindows.sln remove RemoteMaster.Host.Windows/RemoteMaster.Host.Windows.csproj
-        dotnet sln RemoteMaster.NoWindows.sln remove RemoteMaster.Host.Windows.Tests/RemoteMaster.Host.Windows.Tests.csproj
+    - name: Build solution
+      run: dotnet build RemoteMaster.sln --configuration Release --no-restore /p:ExcludeProjects=RemoteMaster.Host.Windows.csproj,RemoteMaster.Host.Windows.Tests.csproj
 
-    - name: Build non-Windows projects
-      run: dotnet build RemoteMaster.NoWindows.sln --configuration Release --no-restore
-
-    - name: Build original solution (Windows projects)
-      run: msbuild RemoteMaster.sln /p:Configuration=Release
+    - name: Build Windows projects
+      run: msbuild RemoteMaster.sln /t:Restore /p:Configuration=Release
 
     - name: Run tests for non-Windows projects with coverage
       run: |
@@ -60,8 +53,9 @@ jobs:
       run: |
         dotnet test RemoteMaster.Host.Windows.Tests/RemoteMaster.Host.Windows.Tests.csproj --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults/windows --logger "trx;LogFileName=TestResults.trx"
 
-    - name: List coverage reports in detail
+    - name: List test results and coverage files
       run: |
+        dir ./TestResults/
         Get-ChildItem -Path ./TestResults -Recurse | Where-Object { $_.Name -match 'coverage.cobertura.xml' } | Select-Object FullName, LastWriteTime
 
     - name: Report generator
@@ -74,16 +68,17 @@ jobs:
         dir ./TestResults/coverage/
         Get-ChildItem -Path ./TestResults/coverage/ -Recurse
 
-    - name: Upload all artifacts
+    - name: Upload coverage report
       uses: actions/upload-artifact@v4
       with:
-        name: test-results-and-coverage
-        path: |
-          ./TestResults/**/*.trx
-          ./TestResults/**/*.cobertura.xml
-          ./TestResults/coverage/report/**
+        name: code-coverage-report
+        path: ./TestResults/coverage/report
 
     - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v4.0.1
+      uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./TestResults/**/*.cobertura.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: true

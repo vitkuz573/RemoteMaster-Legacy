@@ -6,8 +6,6 @@
 	<LangVersion>latest</LangVersion>
 	<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
 	<NoWarn>$(NoWarn);1591;8509</NoWarn>
-  </PropertyGroup>
-  <PropertyGroup>
     <CollectCoverage>true</CollectCoverage>
     <CoverletOutputFormat>cobertura</CoverletOutputFormat>
     <CoverletOutput>./TestResults/coverage/</CoverletOutput>
