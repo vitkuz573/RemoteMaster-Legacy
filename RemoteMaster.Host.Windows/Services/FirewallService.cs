@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
 using RemoteMaster.Host.Core.Abstractions;
 using Windows.Win32.Foundation;
 using Windows.Win32.NetworkManagement.WindowsFirewall;
@@ -35,11 +34,11 @@ public class FirewallService : IFirewallService
                 {
                     return;
                 }
-            
+
                 existingRule.Action = NET_FW_ACTION.NET_FW_ACTION_ALLOW;
                 existingRule.Enabled = true;
                 existingRule.ApplicationName = bstrAppPath;
-            
+
                 return;
             }
 
@@ -58,10 +57,10 @@ public class FirewallService : IFirewallService
         }
         finally
         {
-            Marshal.FreeBSTR(bstrName);
-            Marshal.FreeBSTR(bstrAppPath);
-            Marshal.FreeBSTR(bstrDescription);
-            Marshal.FreeBSTR(bstrAll);
+            Marshal.FreeBSTR((IntPtr)bstrName);
+            Marshal.FreeBSTR((IntPtr)bstrAppPath);
+            Marshal.FreeBSTR((IntPtr)bstrDescription);
+            Marshal.FreeBSTR((IntPtr)bstrAll);
         }
     }
 
@@ -105,38 +104,19 @@ public class FirewallService : IFirewallService
 
     private static INetFwRule? GetRule(INetFwPolicy2 fwPolicy2, string name)
     {
-        var rules = (IEnumVARIANT)fwPolicy2.Rules._NewEnum ?? throw new InvalidOperationException("Failed to get rules enumerator.");
-        var variant = new object[1];
-        var fetched = Marshal.AllocCoTaskMem(sizeof(int));
-    
+        var bstrName = Marshal.StringToBSTR(name);
+
         try
         {
-            while (true)
-            {
-                rules.Next(1, variant, fetched);
-                var count = Marshal.ReadInt32(fetched);
-                
-                if (count == 0)
-                {
-                    break;
-                }
-
-                if (variant[0] is INetFwRule rule)
-                {
-                    var ruleName = Marshal.PtrToStringBSTR((IntPtr)rule.Name);
-
-                    if (ruleName == name)
-                    {
-                        return rule;
-                    }
-                }
-            }
+            return fwPolicy2.Rules.Item((BSTR)bstrName);
+        }
+        catch (Exception ex)
+        {
+            return null;
         }
         finally
         {
-            Marshal.FreeCoTaskMem(fetched);
+            Marshal.FreeBSTR(bstrName);
         }
-    
-        return null;
     }
 }
