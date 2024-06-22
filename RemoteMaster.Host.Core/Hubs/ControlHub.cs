@@ -205,8 +205,8 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     public async Task<string> GetCertificateSerialNumber()
     {
         var certificates = certificateStoreService.GetCertificates(StoreName.My, StoreLocation.LocalMachine, X509FindType.FindBySubjectName, Dns.GetHostName());
-        var certificate = certificates.Cast<X509Certificate2>().FirstOrDefault(c => c.HasPrivateKey);
-        
+        var certificate = certificates.FirstOrDefault(c => c.HasPrivateKey);
+
         return certificate?.GetSerialNumberString();
     }
 }

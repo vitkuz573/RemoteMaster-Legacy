@@ -8,5 +8,5 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface ICertificateStoreService
 {
-    X509Certificate2Collection GetCertificates(StoreName storeName, StoreLocation storeLocation, X509FindType findType, string findValue);
+    IEnumerable<ICertificateWrapper> GetCertificates(StoreName storeName, StoreLocation storeLocation, X509FindType findType, string findValue);
 }

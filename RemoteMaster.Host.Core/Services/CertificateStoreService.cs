@@ -9,11 +9,13 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class CertificateStoreService : ICertificateStoreService
 {
-    public X509Certificate2Collection GetCertificates(StoreName storeName, StoreLocation storeLocation, X509FindType findType, string findValue)
+    public IEnumerable<ICertificateWrapper> GetCertificates(StoreName storeName, StoreLocation storeLocation, X509FindType findType, string findValue)
     {
         using var store = new X509Store(storeName, storeLocation);
         store.Open(OpenFlags.ReadOnly);
 
-        return store.Certificates.Find(findType, findValue, false);
+        var certificates = store.Certificates.Find(findType, findValue, false);
+
+        return certificates.Cast<X509Certificate2>().Select(cert => new CertificateWrapper(cert)).ToList();
     }
 }

@@ -451,11 +451,11 @@ public class ControlHubTests
     {
         // Arrange
         var expectedSerialNumber = "123456";
-        var mockCertificate = new Mock<X509Certificate2>();
+        var mockCertificate = new Mock<ICertificateWrapper>();
         mockCertificate.Setup(c => c.HasPrivateKey).Returns(true);
         mockCertificate.Setup(c => c.GetSerialNumberString()).Returns(expectedSerialNumber);
 
-        var certificates = new X509Certificate2Collection { mockCertificate.Object };
+        var certificates = new List<ICertificateWrapper> { mockCertificate.Object };
         _mockCertificateStoreService.Setup(s => s.GetCertificates(StoreName.My, StoreLocation.LocalMachine, X509FindType.FindBySubjectName, It.IsAny<string>())).Returns(certificates);
 
         // Act
