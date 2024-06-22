@@ -47,6 +47,8 @@ jobs:
       run: |
         if (Test-Path -Path "./TestResults") { Remove-Item -Recurse -Force -Path "./TestResults" }
         mkdir TestResults
+        mkdir TestResults/nonwindows
+        mkdir TestResults/windows
 
     - name: Build non-Windows projects
       run: dotnet build RemoteMaster.NoWindows.sln --configuration Release --no-restore
@@ -89,6 +91,8 @@ jobs:
       uses: codecov/codecov-action@v4.0.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./TestResults/**/coverage.cobertura.xml
+        files: |
+          ./TestResults/nonwindows/**/*.coverage.cobertura.xml
+          ./TestResults/windows/**/*.coverage.cobertura.xml
         flags: unittests
         name: codecov-umbrella
