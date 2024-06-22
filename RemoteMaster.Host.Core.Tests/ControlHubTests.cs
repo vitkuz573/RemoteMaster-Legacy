@@ -1,3 +1,7 @@
+// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+// This file is part of the RemoteMaster project.
+// Licensed under the GNU Affero General Public License v3.0.
+
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Http.Connections;
@@ -29,6 +33,7 @@ public class ControlHubTests
     private readonly Mock<IHubCallerClients<IControlClient>> _mockClients;
     private readonly Mock<IGroupManager> _mockGroups;
     private readonly Mock<IControlClient> _mockClientProxy;
+    private readonly Mock<HubCallerContext> _mockHubCallerContext;
     private readonly ControlHub _controlHub;
 
     public ControlHubTests()
@@ -47,6 +52,7 @@ public class ControlHubTests
         _mockClients = new Mock<IHubCallerClients<IControlClient>>();
         _mockGroups = new Mock<IGroupManager>();
         _mockClientProxy = new Mock<IControlClient>();
+        _mockHubCallerContext = new Mock<HubCallerContext>();
 
         _mockClients.Setup(clients => clients.Caller).Returns(_mockClientProxy.Object);
 
@@ -64,8 +70,19 @@ public class ControlHubTests
             _mockCertificateStoreService.Object)
         {
             Clients = _mockClients.Object,
-            Groups = _mockGroups.Object
+            Groups = _mockGroups.Object,
+            Context = _mockHubCallerContext.Object
         };
+    }
+
+    private void SetHubContext(string connectionId)
+    {
+        _mockHubCallerContext.Setup(c => c.ConnectionId).Returns(connectionId);
+    }
+
+    private void SetupAppState(string connectionId, IViewer viewer)
+    {
+        _mockAppState.Setup(a => a.TryGetViewer(connectionId, out viewer)).Returns(true);
     }
 
     [Fact]
@@ -119,12 +136,9 @@ public class ControlHubTests
     {
         // Arrange
         var viewer = new Mock<IViewer>().Object;
+        SetHubContext("connectionId");
+        SetupAppState("connectionId", viewer);
 
-        var mockHubCallerContext = new Mock<HubCallerContext>();
-        mockHubCallerContext.Setup(c => c.ConnectionId).Returns("connectionId");
-        _controlHub.Context = mockHubCallerContext.Object;
-
-        _mockAppState.Setup(a => a.TryGetViewer("connectionId", out viewer)).Returns(true);
         _mockAppState.Setup(a => a.TryRemoveViewer("connectionId")).Returns(true);
 
         // Act
@@ -145,13 +159,8 @@ public class ControlHubTests
         viewer.Setup(v => v.ScreenCapturer).Returns(screenCapturer);
 
         var connectionId = "testConnectionId";
-
-        var mockHubCallerContext = new Mock<HubCallerContext>();
-        mockHubCallerContext.Setup(c => c.ConnectionId).Returns(connectionId);
-        _controlHub.Context = mockHubCallerContext.Object;
-
-        var outViewer = viewer.Object;
-        _mockAppState.Setup(a => a.TryGetViewer(connectionId, out outViewer)).Returns(true);
+        SetHubContext(connectionId);
+        SetupAppState(connectionId, viewer.Object);
 
         // Act
         _controlHub.SendMouseInput(dto);
@@ -183,13 +192,8 @@ public class ControlHubTests
         viewer.Setup(v => v.ScreenCapturer).Returns(screenCapturer);
 
         var connectionId = "testConnectionId";
-
-        var mockHubCallerContext = new Mock<HubCallerContext>();
-        mockHubCallerContext.Setup(c => c.ConnectionId).Returns(connectionId);
-        _controlHub.Context = mockHubCallerContext.Object;
-
-        var outViewer = viewer.Object;
-        _mockAppState.Setup(a => a.TryGetViewer(connectionId, out outViewer)).Returns(true);
+        SetHubContext(connectionId);
+        SetupAppState(connectionId, viewer.Object);
 
         // Act
         _controlHub.SendSelectedScreen(displayName);
@@ -234,13 +238,8 @@ public class ControlHubTests
         viewer.Setup(v => v.ScreenCapturer).Returns(screenCapturer);
 
         var connectionId = "testConnectionId";
-
-        var mockHubCallerContext = new Mock<HubCallerContext>();
-        mockHubCallerContext.Setup(c => c.ConnectionId).Returns(connectionId);
-        _controlHub.Context = mockHubCallerContext.Object;
-
-        var outViewer = viewer.Object;
-        _mockAppState.Setup(a => a.TryGetViewer(connectionId, out outViewer)).Returns(true);
+        SetHubContext(connectionId);
+        SetupAppState(connectionId, viewer.Object);
 
         // Act
         _controlHub.SendImageQuality(quality);
@@ -259,13 +258,8 @@ public class ControlHubTests
         viewer.Setup(v => v.ScreenCapturer).Returns(screenCapturer);
 
         var connectionId = "testConnectionId";
-
-        var mockHubCallerContext = new Mock<HubCallerContext>();
-        mockHubCallerContext.Setup(c => c.ConnectionId).Returns(connectionId);
-        _controlHub.Context = mockHubCallerContext.Object;
-
-        var outViewer = viewer.Object;
-        _mockAppState.Setup(a => a.TryGetViewer(connectionId, out outViewer)).Returns(true);
+        SetHubContext(connectionId);
+        SetupAppState(connectionId, viewer.Object);
 
         // Act
         _controlHub.SendToggleCursorTracking(trackCursor);
@@ -346,16 +340,15 @@ public class ControlHubTests
         _mockViewerFactory.Setup(f => f.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(viewer);
         _mockAppState.Setup(a => a.TryAddViewer(viewer)).Returns(true);
 
-        var mockHubCallerContext = new Mock<HubCallerContext>();
-        mockHubCallerContext.Setup(c => c.ConnectionId).Returns("connectionId");
-        _controlHub.Context = mockHubCallerContext.Object;
+        var connectionId = "connectionId";
+        SetHubContext(connectionId);
 
         // Act
         await _controlHub.JoinGroup(groupName);
 
         // Assert
         _mockAppState.Verify(a => a.TryAddViewer(viewer), Times.Once);
-        _mockGroups.Verify(g => g.AddToGroupAsync("connectionId", groupName, It.IsAny<CancellationToken>()), Times.Once);
+        _mockGroups.Verify(g => g.AddToGroupAsync(connectionId, groupName, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -364,15 +357,14 @@ public class ControlHubTests
         // Arrange
         var groupName = "TestGroup";
 
-        var mockHubCallerContext = new Mock<HubCallerContext>();
-        mockHubCallerContext.Setup(c => c.ConnectionId).Returns("connectionId");
-        _controlHub.Context = mockHubCallerContext.Object;
+        var connectionId = "connectionId";
+        SetHubContext(connectionId);
 
         // Act
         await _controlHub.LeaveGroup(groupName);
 
         // Assert
-        _mockGroups.Verify(g => g.RemoveFromGroupAsync("connectionId", groupName, It.IsAny<CancellationToken>()), Times.Once);
+        _mockGroups.Verify(g => g.RemoveFromGroupAsync(connectionId, groupName, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -382,9 +374,7 @@ public class ControlHubTests
         var command = "TestCommand";
         var connectionId = "testConnectionId";
 
-        var mockHubCallerContext = new Mock<HubCallerContext>();
-        mockHubCallerContext.Setup(c => c.ConnectionId).Returns(connectionId);
-        _controlHub.Context = mockHubCallerContext.Object;
+        SetHubContext(connectionId);
 
         var mockGroupClient = new Mock<IControlClient>();
         _mockClients.Setup(c => c.Group("serviceGroup")).Returns(mockGroupClient.Object);
