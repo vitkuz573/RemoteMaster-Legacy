@@ -20,15 +20,15 @@ public class CommandListenerService : IHostedService
 
     public CommandListenerService(IUserInstanceService userInstanceService)
     {
-        _userInstanceService = userInstanceService ?? throw new ArgumentNullException(nameof(userInstanceService));
+        _userInstanceService = userInstanceService;
         _userInstanceService.UserInstanceCreated += OnUserInstanceCreated;
     }
 
-    public Task StartAsync(CancellationToken cancellationToken)
+    public async Task StartAsync(CancellationToken cancellationToken)
     {
         Log.Information("Starting CommandListenerService");
 
-        return Task.CompletedTask;
+        await CreateAndStartConnectionAsync();
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
@@ -42,8 +42,6 @@ public class CommandListenerService : IHostedService
 
     private async void OnUserInstanceCreated(object? sender, UserInstanceCreatedEventArgs e)
     {
-        await Task.Delay(3000);
-
         Log.Information("UserInstanceCreated event received, connecting to hub");
 
         try
@@ -58,6 +56,8 @@ public class CommandListenerService : IHostedService
 
     private async Task CreateAndStartConnectionAsync()
     {
+        await Task.Delay(3000);
+
 #pragma warning disable CA2000
         var httpClientHandler = new HttpClientHandler
         {
@@ -130,4 +130,3 @@ public class CommandListenerService : IHostedService
         }
     }
 }
-
