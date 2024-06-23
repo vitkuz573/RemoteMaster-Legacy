@@ -22,7 +22,6 @@ namespace RemoteMaster.Server.Tests;
 public class TokenServiceTests
 {
     private readonly Mock<UserManager<ApplicationUser>> _mockUserManager;
-    private readonly Mock<RoleManager<IdentityRole>> _mockRoleManager;
     private readonly Mock<IHttpContextAccessor> _mockHttpContextAccessor;
     private readonly Mock<IOptions<JwtOptions>> _mockOptions;
     private readonly Mock<IClaimsService> _mockClaimsService;
@@ -34,7 +33,6 @@ public class TokenServiceTests
     public TokenServiceTests()
     {
         _mockUserManager = MockUserManager<ApplicationUser>();
-        _mockRoleManager = MockRoleManager<IdentityRole>();
         _mockHttpContextAccessor = new Mock<IHttpContextAccessor>();
         _mockClaimsService = new Mock<IClaimsService>();
 
@@ -63,7 +61,7 @@ public class TokenServiceTests
             { "TestKeys/public_key.der", new MockFileData(publicKey) }
         });
 
-        _tokenService = new TokenService(_mockOptions.Object, _context, _mockHttpContextAccessor.Object, _mockUserManager.Object, _mockRoleManager.Object, _mockClaimsService.Object, _mockFileSystem);
+        _tokenService = new TokenService(_mockOptions.Object, _context, _mockHttpContextAccessor.Object, _mockUserManager.Object, _mockClaimsService.Object, _mockFileSystem);
     }
 
     [Fact]
@@ -73,8 +71,6 @@ public class TokenServiceTests
         var user = new ApplicationUser { Id = "test-user-id", UserName = "testuser" };
         _mockUserManager.Setup(um => um.FindByIdAsync(It.IsAny<string>())).ReturnsAsync(user);
         _mockUserManager.Setup(um => um.GetRolesAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(["User"]);
-        _mockRoleManager.Setup(rm => rm.FindByNameAsync(It.IsAny<string>())).ReturnsAsync(new IdentityRole("User"));
-        _mockRoleManager.Setup(rm => rm.GetClaimsAsync(It.IsAny<IdentityRole>())).ReturnsAsync([]);
         _mockClaimsService.Setup(cs => cs.GetClaimsForUserAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(
         [
             new(ClaimTypes.Name, user.UserName),
