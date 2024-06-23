@@ -35,10 +35,8 @@
       <TreatAsUsed>true</TreatAsUsed>
     </PackageReference>
     <PackageReference Include="Microsoft.Windows.SDK.Win32Metadata" />
-    <PackageReference Include="Polly" />
     <PackageReference Include="SkiaSharp.Views.Desktop.Common" />
     <PackageReference Include="System.Management" />
-    <PackageReference Include="System.Runtime.InteropServices" />
   </ItemGroup>
 
   <ItemGroup>
