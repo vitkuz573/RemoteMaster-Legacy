@@ -45,7 +45,7 @@ public class JwtSecurityService : IJwtSecurityService
         {
             Log.Information("JWT keys not found. Generating new keys.");
 
-            using var rsa = RSA.Create(_options.KeySize);
+            using var rsa = RSA.Create(_options.KeySize.Value);
 
             try
             {

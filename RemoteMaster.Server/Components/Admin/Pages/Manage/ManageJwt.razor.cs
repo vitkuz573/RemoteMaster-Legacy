@@ -9,8 +9,8 @@ namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 
 public partial class ManageJwt
 {
-    private string _keysDirectory;
-    private int _keySize;
+    private string? _keysDirectory;
+    private int? _keySize;
 
     protected override void OnInitialized()
     {

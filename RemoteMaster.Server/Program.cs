@@ -23,6 +23,7 @@ using RemoteMaster.Server.Hubs;
 using RemoteMaster.Server.Middlewares;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
+using RemoteMaster.Server.Validators;
 using RemoteMaster.Shared.Extensions;
 using RemoteMaster.Shared.Models;
 using Serilog;
@@ -148,6 +149,7 @@ public static class Program
         services.AddSingleton<INetworkDriveService, NetworkDriveService>();
         services.AddSingleton<ICountryProvider, CountryProvider>();
         services.AddSingleton<INotificationService, TelegramNotificationService>();
+        services.AddSingleton<IValidateOptions<JwtOptions>, JwtOptionsValidator>();
 
         services.AddSingleton(new JsonSerializerOptions
         {
