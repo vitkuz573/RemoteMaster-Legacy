@@ -18,5 +18,5 @@ public interface IViewer : IDisposable
 
     DateTime ConnectedTime { get; }
 
-    void StopStreaming();
+    CancellationTokenSource CancellationTokenSource { get; }
 }

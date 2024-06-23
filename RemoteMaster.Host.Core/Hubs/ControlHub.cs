@@ -60,7 +60,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     {
         if (appState.TryGetViewer(Context.ConnectionId, out var viewer))
         {
-            viewer?.StopStreaming();
+            viewer?.CancellationTokenSource.Cancel();
             appState.TryRemoveViewer(Context.ConnectionId);
         }
 

@@ -15,7 +15,6 @@ namespace RemoteMaster.Host.Core.Services;
 public class Viewer : IViewer
 {
     private readonly IHubContext<ControlHub, IControlClient> _hubContext;
-    private readonly CancellationTokenSource _cts;
     private bool _disposed;
 
     public Viewer(IHubContext<ControlHub, IControlClient> hubContext, IScreenCapturerService screenCapturer, string connectionId, string group, string userName, string role)
@@ -28,8 +27,7 @@ public class Viewer : IViewer
         UserName = userName;
         Role = role;
         ConnectedTime = DateTime.UtcNow;
-
-        _cts = new();
+        CancellationTokenSource = new();
 
         ScreenCapturer.ScreenChanged += async (_, bounds) => await SendScreenSize(bounds.Width, bounds.Height);
 
@@ -48,9 +46,11 @@ public class Viewer : IViewer
 
     public DateTime ConnectedTime { get; }
 
+    public CancellationTokenSource CancellationTokenSource { get; }
+
     private async Task StartStreaming()
     {
-        var cancellationToken = _cts.Token;
+        var cancellationToken = CancellationTokenSource.Token;
 
         await SendDisplays(ScreenCapturer.GetDisplays());
 
@@ -84,13 +84,6 @@ public class Viewer : IViewer
         }
     }
 
-    public void StopStreaming()
-    {
-        Log.Information("Stopping screen stream for ID {connectionId}", ConnectionId);
-
-        _cts.Cancel();
-    }
-
     private async Task SendDisplays(IEnumerable<Display> displays)
     {
         await _hubContext.Clients.Client(ConnectionId).ReceiveDisplays(displays);
@@ -116,8 +109,8 @@ public class Viewer : IViewer
 
         if (disposing)
         {
-            _cts.Cancel();
-            _cts.Dispose();
+            CancellationTokenSource.Cancel();
+            CancellationTokenSource.Dispose();
         }
 
         _disposed = true;
