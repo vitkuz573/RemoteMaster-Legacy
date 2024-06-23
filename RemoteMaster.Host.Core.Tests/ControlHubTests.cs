@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.SignalR;
 using Moq;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
+using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;

@@ -24,8 +24,10 @@ using RemoteMaster.Server.Middlewares;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
 using RemoteMaster.Server.Validators;
+using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Extensions;
 using RemoteMaster.Shared.Models;
+using RemoteMaster.Shared.Services;
 using Serilog;
 using Serilog.Events;
 
@@ -149,6 +151,7 @@ public static class Program
         services.AddSingleton<INetworkDriveService, NetworkDriveService>();
         services.AddSingleton<ICountryProvider, CountryProvider>();
         services.AddSingleton<INotificationService, TelegramNotificationService>();
+        services.AddSingleton<ICertificateStoreService, CertificateStoreService>();
         services.AddSingleton<IValidateOptions<JwtOptions>, JwtOptionsValidator>();
 
         services.AddSingleton(new JsonSerializerOptions

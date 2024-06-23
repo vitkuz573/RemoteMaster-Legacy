@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Connections.Features;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
