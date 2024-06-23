@@ -88,5 +88,3 @@ BlockInput
 
 INetFwPolicy2
 NET_FW_IP_PROTOCOL
-CoCreateInstance
-FirewallAddPort
