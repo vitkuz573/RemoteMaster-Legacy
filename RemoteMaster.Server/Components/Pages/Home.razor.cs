@@ -171,7 +171,7 @@ public partial class Home
             .Include(u => u.AccessibleOrganizationalUnits)
             .FirstOrDefaultAsync(u => u.Id == userId);
 
-        return user?.AccessibleOrganizationalUnits.Select(ou => ou.NodeId).ToList() ?? new List<Guid>();
+        return user?.AccessibleOrganizationalUnits.Select(ou => ou.NodeId).ToList() ?? [];
     }
 
     private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
