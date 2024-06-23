@@ -8,7 +8,7 @@ namespace RemoteMaster.Host.Windows.Abstractions;
 
 public interface IRegistryService
 {
-    IRegistryKey OpenSubKey(RegistryHive hive, string keyPath, bool writable);
+    IRegistryKey? OpenSubKey(RegistryHive hive, string keyPath, bool writable);
 
     void SetValue(RegistryHive hive, string keyPath, string valueName, object value, RegistryValueKind valueKind);
 

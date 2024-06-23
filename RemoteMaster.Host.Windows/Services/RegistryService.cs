@@ -10,7 +10,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class RegistryService : IRegistryService
 {
-    public IRegistryKey OpenSubKey(RegistryHive hive, string keyPath, bool writable)
+    public IRegistryKey? OpenSubKey(RegistryHive hive, string keyPath, bool writable)
     {
         using var baseKey = RegistryKey.OpenBaseKey(hive, RegistryView.Default);
         var key = baseKey.OpenSubKey(keyPath, writable);
