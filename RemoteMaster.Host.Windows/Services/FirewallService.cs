@@ -13,7 +13,7 @@ public class FirewallService : IFirewallService
 {
     public void AddRule(string name, string applicationPath)
     {
-        var fwPolicy2 = GetFirewallPolicy() ?? throw new InvalidOperationException("Failed to get firewall policy.");
+        var fwPolicy2 = CreateInstance<INetFwPolicy2>("E2B3C97F-6AE1-41AC-817A-F6F92166D7DD") ?? throw new InvalidOperationException("Failed to get firewall policy.");
         var existingRule = GetRule(fwPolicy2, name);
 
         var bstrName = (BSTR)Marshal.StringToBSTR(name);
@@ -37,7 +37,7 @@ public class FirewallService : IFirewallService
                 return;
             }
 
-            var newRule = CreateFwRuleInstance() ?? throw new InvalidOperationException("Failed to create new firewall rule.");
+            var newRule = CreateInstance<INetFwRule>("2C5BC43E-3369-4C33-AB0C-BE9469677AF4") ?? throw new InvalidOperationException("Failed to create new firewall rule.");
 
             newRule.Name = bstrName;
             newRule.Description = bstrDescription;
@@ -59,44 +59,6 @@ public class FirewallService : IFirewallService
         }
     }
 
-    private static INetFwPolicy2 GetFirewallPolicy()
-    {
-        try
-        {
-            var clsid = new Guid("E2B3C97F-6AE1-41AC-817A-F6F92166D7DD");
-            var type = Type.GetTypeFromCLSID(clsid);
-
-            return (INetFwPolicy2)Activator.CreateInstance(type);
-        }
-        catch (COMException ex) when (ex.ErrorCode == unchecked((int)0x80040154))
-        {
-            throw new InvalidOperationException("INetFwPolicy2 COM object is not registered. Please ensure that all necessary components are installed and registered correctly.", ex);
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException("An unexpected error occurred while trying to get the firewall policy.", ex);
-        }
-    }
-
-    private static INetFwRule CreateFwRuleInstance()
-    {
-        try
-        {
-            var clsid = new Guid("2C5BC43E-3369-4C33-AB0C-BE9469677AF4");
-            var type = Type.GetTypeFromCLSID(clsid);
-
-            return (INetFwRule)Activator.CreateInstance(type);
-        }
-        catch (COMException ex) when (ex.ErrorCode == unchecked((int)0x80040154))
-        {
-            throw new InvalidOperationException("INetFwRule COM object is not registered. Please ensure that all necessary components are installed and registered correctly.", ex);
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException("An unexpected error occurred while trying to create the firewall rule instance.", ex);
-        }
-    }
-
     private static INetFwRule? GetRule(INetFwPolicy2 fwPolicy2, string name)
     {
         var bstrName = Marshal.StringToBSTR(name);
@@ -112,6 +74,26 @@ public class FirewallService : IFirewallService
         finally
         {
             Marshal.FreeBSTR(bstrName);
+        }
+    }
+
+    private static T? CreateInstance<T>(string clsid) where T : class
+    {
+        try
+        {
+            var type = Type.GetTypeFromCLSID(new Guid(clsid));
+
+            return type == null
+                ? throw new InvalidOperationException($"The type for CLSID {clsid} could not be found.")
+                : (T?)Activator.CreateInstance(type);
+        }
+        catch (COMException ex) when (ex.ErrorCode == unchecked((int)0x80040154))
+        {
+            throw new InvalidOperationException($"{typeof(T).Name} COM object is not registered. Please ensure that all necessary components are installed and registered correctly.", ex);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"An unexpected error occurred while trying to create the {typeof(T).Name} instance.", ex);
         }
     }
 }
