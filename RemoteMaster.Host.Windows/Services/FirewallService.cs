@@ -67,7 +67,7 @@ public class FirewallService : IFirewallService
         {
             return fwPolicy2.Rules.Item((BSTR)bstrName);
         }
-        catch (Exception)
+        catch (FileNotFoundException ex) when (ex.HResult == unchecked((int)0x80070002))
         {
             return null;
         }
