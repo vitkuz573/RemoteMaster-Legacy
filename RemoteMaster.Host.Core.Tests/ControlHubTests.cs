@@ -208,7 +208,7 @@ public class ControlHubTests
     }
 
     [Fact]
-    public async Task SendToggleInput_ShouldToggleInput()
+    public void SendToggleInput_ShouldToggleInput()
     {
         // Arrange
         var inputEnabled = true;
