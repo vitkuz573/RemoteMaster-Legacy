@@ -10,7 +10,7 @@ public interface IRegistryKey : IDisposable
 {
     string[] GetSubKeyNames();
 
-    object GetValue(string name, object defaultValue);
+    object? GetValue(string name, object? defaultValue);
 
     void SetValue(string name, object value, RegistryValueKind valueKind);
 }
