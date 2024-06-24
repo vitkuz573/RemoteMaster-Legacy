@@ -136,7 +136,11 @@ public class ControlHubTests
     public async Task OnDisconnectedAsync_ShouldRemoveViewer_WhenViewerExists()
     {
         // Arrange
-        var viewer = new Mock<IViewer>().Object;
+        using var cancellationTokenSource = new CancellationTokenSource();
+        var viewerMock = new Mock<IViewer>();
+        viewerMock.Setup(v => v.CancellationTokenSource).Returns(cancellationTokenSource);
+        var viewer = viewerMock.Object;
+
         SetHubContext("connectionId");
         SetupAppState("connectionId", viewer);
 
@@ -146,7 +150,7 @@ public class ControlHubTests
         await _controlHub.OnDisconnectedAsync(null);
 
         // Assert
-        Mock.Get(viewer).Verify(v => v.StopStreaming(), Times.Once);
+        Assert.True(cancellationTokenSource.IsCancellationRequested);
         _mockAppState.Verify(a => a.TryRemoveViewer("connectionId"), Times.Once);
     }
 
@@ -210,7 +214,7 @@ public class ControlHubTests
         var inputEnabled = true;
 
         // Act
-        await _controlHub.SendToggleInput(inputEnabled);
+        _controlHub.SendToggleInput(inputEnabled);
 
         // Assert
         _mockInputService.VerifySet(i => i.InputEnabled = inputEnabled, Times.Once);
@@ -438,7 +442,7 @@ public class ControlHubTests
     }
 
     [Fact]
-    public async Task GetCertificateSerialNumber_ShouldReturnSerialNumber()
+    public void GetCertificateSerialNumber_ShouldReturnSerialNumber()
     {
         // Arrange
         var expectedSerialNumber = "123456";
@@ -450,7 +454,7 @@ public class ControlHubTests
         _mockCertificateStoreService.Setup(s => s.GetCertificates(StoreName.My, StoreLocation.LocalMachine, X509FindType.FindBySubjectName, It.IsAny<string>())).Returns(certificates);
 
         // Act
-        var result = await _controlHub.GetCertificateSerialNumber();
+        var result = _controlHub.GetCertificateSerialNumber();
 
         // Assert
         Assert.Equal(expectedSerialNumber, result);
