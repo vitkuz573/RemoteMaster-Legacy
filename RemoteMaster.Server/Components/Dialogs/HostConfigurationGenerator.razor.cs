@@ -23,7 +23,7 @@ public partial class HostConfigurationGenerator
     private string? _selectedOrganizationalUnit;
     private List<Organization> _organizations = [];
     private List<OrganizationalUnit> _organizationalUnits = [];
-    private Dictionary<string, string> _countries = [];
+    private List<Country> _countries = [];
 
     protected async override Task OnInitializedAsync()
     {

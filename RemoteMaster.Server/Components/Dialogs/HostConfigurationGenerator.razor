@@ -38,7 +38,7 @@
                         <MudSelect T="string" Label="Country" @bind-Value="_model.Subject.Country" Dense="true" ReadOnly="true">
                             @foreach (var country in _countries)
                             {
-                                <MudSelectItem T="string" Value="@country.Value">@country.Key</MudSelectItem>
+                                <MudSelectItem T="string" Value="@country.Code">@country.Name</MudSelectItem>
                             }
                         </MudSelect>
                     </MudExpansionPanel>

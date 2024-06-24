@@ -2,11 +2,11 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using RemoteMaster.Server.Models;
+namespace RemoteMaster.Server.Models;
 
-namespace RemoteMaster.Server.Abstractions;
-
-public interface ICountryProvider
+public class Country(string name, string code)
 {
-    List<Country> GetCountries();
+    public string Name { get; } = name;
+
+    public string Code { get; } = code;
 }

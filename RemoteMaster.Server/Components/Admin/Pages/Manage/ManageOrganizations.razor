@@ -55,7 +55,7 @@
                     <option value="">Select an country</option>
                     @foreach (var country in _countries)
                     {
-                        <option value="@country.Value">@country.Key</option>
+                        <option value="@country.Code">@country.Name</option>
                     }
                 </InputSelect>
                 <ValidationMessage For="() => Input.Country" class="text-red-500 mt-1" />

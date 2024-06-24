@@ -21,7 +21,7 @@ public partial class ManageOrganizations
     private List<Organization> _organizations = [];
     private string _message;
     private string _messageType;
-    private Dictionary<string, string> _countries = [];
+    private List<Country> _countries = [];
     private ConfirmationDialog confirmationDialog;
     private Organization? _organizationToDelete;
 
