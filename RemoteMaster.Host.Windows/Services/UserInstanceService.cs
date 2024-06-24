@@ -17,15 +17,17 @@ public class UserInstanceService : IUserInstanceService
 {
     private readonly string _argument = "--launch-mode=user";
     private readonly string _currentExecutablePath = Environment.ProcessPath!;
+    private readonly IInstanceStarterService _instanceStarterService;
 
     public event EventHandler<UserInstanceCreatedEventArgs>? UserInstanceCreated;
 
     public bool IsRunning => FindHostProcesses().Any(IsUserInstance);
 
-    public UserInstanceService(ISessionChangeEventService sessionChangeEventService)
+    public UserInstanceService(ISessionChangeEventService sessionChangeEventService, IInstanceStarterService instanceStarterService)
     {
         ArgumentNullException.ThrowIfNull(sessionChangeEventService);
-
+        _instanceStarterService = instanceStarterService;
+       
         sessionChangeEventService.SessionChanged += OnSessionChanged;
     }
 
@@ -34,9 +36,9 @@ public class UserInstanceService : IUserInstanceService
         try
         {
             var processId = StartNewInstance();
-
+            
             Log.Information("Successfully started a new instance of the host.");
-
+            
             OnUserInstanceCreated(new UserInstanceCreatedEventArgs(processId));
         }
         catch (Exception ex)
@@ -57,6 +59,7 @@ public class UserInstanceService : IUserInstanceService
             try
             {
                 process.Kill();
+
                 Log.Information("Successfully stopped an instance of the host. Process ID: {ProcessId}", process.Id);
             }
             catch (Exception ex)
@@ -68,9 +71,12 @@ public class UserInstanceService : IUserInstanceService
 
     private int StartNewInstance()
     {
-        using var process = new NativeProcess();
+        var arguments = _argument;
+        _instanceStarterService.StartNewInstance(_currentExecutablePath, _currentExecutablePath, arguments);
 
-        process.StartInfo = new NativeProcessStartInfo(_currentExecutablePath, _argument)
+        using var process = new NativeProcess();
+        
+        process.StartInfo = new NativeProcessStartInfo(_currentExecutablePath, arguments)
         {
             ForceConsoleSession = true,
             DesktopName = "Default",
@@ -79,7 +85,7 @@ public class UserInstanceService : IUserInstanceService
         };
 
         process.Start();
-
+        
         Log.Information("Started a new instance of the host with options: {@Options}", process.StartInfo);
 
         return process.Id;
