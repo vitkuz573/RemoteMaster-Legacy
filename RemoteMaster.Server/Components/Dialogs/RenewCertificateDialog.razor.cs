@@ -23,10 +23,13 @@ public partial class RenewCertificateDialog
 
         foreach (var (computer, connection) in Hosts)
         {
-            var serialNumber = await connection.InvokeAsync<string>("GetCertificateSerialNumber");
+            var serialNumber = await connection.InvokeAsync<string?>("GetCertificateSerialNumber");
 
-            var revokeCertificateTask = Task.Run(async () => await CrlService.RevokeCertificateAsync(serialNumber, _selectedRevocationReason));
-            revokeCertificateTasks.Add(revokeCertificateTask);
+            if (serialNumber != null)
+            {
+                var revokeCertificateTask = Task.Run(async () => await CrlService.RevokeCertificateAsync(serialNumber, _selectedRevocationReason));
+                revokeCertificateTasks.Add(revokeCertificateTask);
+            }
 
             var renewCertificateTask = Task.Run(async () =>
             {

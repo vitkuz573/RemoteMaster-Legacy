@@ -47,8 +47,18 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
                 await Clients.Caller.ReceiveHostVersion(version);
 
-                var transportType = Context.Features.Get<IHttpTransportFeature>().TransportType;
-                await Clients.Caller.ReceiveTransportType(transportType.ToString());
+                var transportFeature = Context.Features.Get<IHttpTransportFeature>();
+
+                if (transportFeature != null)
+                {
+                    await Clients.Caller.ReceiveTransportType(transportFeature.TransportType.ToString());
+                }
+                else
+                {
+                    Log.Warning("IHttpTransportFeature is null for connection {ConnectionId}", Context.ConnectionId);
+
+                    await Clients.Caller.ReceiveTransportType("Unknown");
+                }
                 break;
             default:
                 Log.Error("Unknown intention: {Intention}", connectionRequest.Intention);
@@ -93,7 +103,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     }
 
     [Authorize(Policy = "ToggleInputPolicy")]
-    public async Task SendToggleInput(bool inputEnabled)
+    public void SendToggleInput(bool inputEnabled)
     {
         inputService.InputEnabled = inputEnabled;
     }
@@ -203,7 +213,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         await hostLifecycleService.RenewCertificateAsync(hostConfiguration);
     }
 
-    public async Task<string> GetCertificateSerialNumber()
+    public string? GetCertificateSerialNumber()
     {
         var certificates = certificateStoreService.GetCertificates(StoreName.My, StoreLocation.LocalMachine, X509FindType.FindBySubjectName, Dns.GetHostName());
         var certificate = certificates.FirstOrDefault(c => c.HasPrivateKey);
