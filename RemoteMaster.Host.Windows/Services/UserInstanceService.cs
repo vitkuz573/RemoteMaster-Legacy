@@ -27,7 +27,7 @@ public class UserInstanceService : IUserInstanceService
     {
         ArgumentNullException.ThrowIfNull(sessionChangeEventService);
         _instanceStarterService = instanceStarterService;
-       
+
         sessionChangeEventService.SessionChanged += OnSessionChanged;
     }
 
@@ -36,9 +36,9 @@ public class UserInstanceService : IUserInstanceService
         try
         {
             var processId = StartNewInstance();
-            
+
             Log.Information("Successfully started a new instance of the host.");
-            
+
             OnUserInstanceCreated(new UserInstanceCreatedEventArgs(processId));
         }
         catch (Exception ex)
@@ -72,11 +72,8 @@ public class UserInstanceService : IUserInstanceService
     private int StartNewInstance()
     {
         var arguments = _argument;
-        _instanceStarterService.StartNewInstance(_currentExecutablePath, _currentExecutablePath, arguments);
 
-        using var process = new NativeProcess();
-        
-        process.StartInfo = new NativeProcessStartInfo(_currentExecutablePath, arguments)
+        var startInfo = new NativeProcessStartInfo(_currentExecutablePath, arguments)
         {
             ForceConsoleSession = true,
             DesktopName = "Default",
@@ -84,11 +81,7 @@ public class UserInstanceService : IUserInstanceService
             UseCurrentUserToken = false
         };
 
-        process.Start();
-        
-        Log.Information("Started a new instance of the host with options: {@Options}", process.StartInfo);
-
-        return process.Id;
+        return _instanceStarterService.StartNewInstance(_currentExecutablePath, null, startInfo);
     }
 
     private Process[] FindHostProcesses()

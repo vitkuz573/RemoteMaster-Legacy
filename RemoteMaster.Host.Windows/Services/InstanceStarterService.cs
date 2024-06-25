@@ -2,76 +2,56 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Diagnostics;
 using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Host.Windows.Models;
 using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
 public class InstanceStarterService : IInstanceStarterService
 {
-    public void StartNewInstance(string sourcePath, string executablePath, string arguments)
+    public int StartNewInstance(string executablePath, string? destinationPath, NativeProcessStartInfo startInfo)
     {
+        ArgumentNullException.ThrowIfNull(startInfo);
+
         try
         {
-            var executableDirectory = Path.GetDirectoryName(executablePath);
-
-            if (!Directory.Exists(executableDirectory))
+            if (destinationPath != null)
             {
-                Log.Information("Creating directory {ExecutableDirectory} for the executable.", executableDirectory);
-                Directory.CreateDirectory(executableDirectory);
+                var destinationDirectory = Path.GetDirectoryName(destinationPath);
+
+                if (!Directory.Exists(destinationDirectory))
+                {
+                    Log.Information("Creating directory {DestinationDirectory} for the executable.", destinationDirectory);
+                    Directory.CreateDirectory(destinationDirectory);
+                }
+
+                Log.Information("Copying executable from {ExecutablePath} to {DestinationPath}", executablePath, destinationPath);
+                File.Copy(executablePath, destinationPath, true);
+                Log.Information("Successfully copied the executable.");
+
+                executablePath = destinationPath;
             }
 
-            Log.Information("Copying executable from {SourcePath} to {ExecutablePath}", sourcePath, executablePath);
-            File.Copy(sourcePath, executablePath, true);
-            Log.Information("Successfully copied the executable.");
+            using var process = new NativeProcess();
 
-            using var process = new Process();
-
-            process.StartInfo = new ProcessStartInfo(executablePath, arguments)
-            {
-                CreateNoWindow = true
-            };
+            startInfo.FileName = executablePath;
+            process.StartInfo = startInfo;
 
             process.Start();
+            Log.Information("Started a new instance of the host with NativeProcess. Process ID: {ProcessId}", process.Id);
 
-            Log.Information("Started a new instance of the host with options: {@Options}", SafeLogArguments(process.StartInfo));
+            return process.Id;
         }
         catch (IOException ioEx)
         {
-            Log.Error(ioEx, "IO error occurred while copying the executable. Source: {SourcePath}, Destination: {ExecutablePath}", sourcePath, executablePath);
+            Log.Error(ioEx, "IO error occurred while copying the executable. Source: {SourcePath}, Destination: {DestinationPath}", executablePath, destinationPath);
+            throw;
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Error starting new instance of the host. Executable path: {Path}", executablePath);
+            throw;
         }
-    }
-
-    private static object SafeLogArguments(ProcessStartInfo startInfo)
-    {
-        var safeArguments = startInfo.Arguments.Replace(ExtractSensitivePart(startInfo.Arguments, "--username="), "[USERNAME]")
-                                               .Replace(ExtractSensitivePart(startInfo.Arguments, "--password="), "[PASSWORD]");
-
-        return new
-        {
-            startInfo.FileName,
-            Arguments = safeArguments
-        };
-    }
-
-    private static string ExtractSensitivePart(string arguments, string prefix)
-    {
-        var startIndex = arguments.IndexOf(prefix);
-
-        if (startIndex == -1)
-        {
-            return string.Empty;
-        }
-
-        startIndex += prefix.Length;
-        var endIndex = arguments.IndexOf(' ', startIndex);
-        endIndex = endIndex == -1 ? arguments.Length : endIndex;
-
-        return arguments[startIndex..endIndex];
     }
 }

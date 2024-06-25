@@ -2,9 +2,11 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using RemoteMaster.Host.Windows.Models;
+
 namespace RemoteMaster.Host.Windows.Abstractions;
 
 public interface IInstanceStarterService
 {
-    void StartNewInstance(string sourcePath, string executablePath, string arguments);
+    int StartNewInstance(string executablePath, string? destinationPath, NativeProcessStartInfo startInfo);
 }

@@ -4,6 +4,7 @@
 
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Shared.Dtos;
 using Serilog;
 
@@ -34,11 +35,14 @@ public class UpdaterInstanceService(IArgumentBuilderService argumentBuilderServi
 
         var additionalArguments = argumentBuilderService.BuildArguments(arguments);
 
+        var startInfo = new NativeProcessStartInfo(_executablePath, additionalArguments)
+        {
+            CreateNoWindow = true
+        };
+
         try
         {
-            instanceStarterService.StartNewInstance(_sourcePath, _executablePath, additionalArguments);
-
-            Log.Information("Successfully started a new instance of the host.");
+            instanceStarterService.StartNewInstance(_sourcePath, _executablePath, startInfo);
         }
         catch (Exception ex)
         {
