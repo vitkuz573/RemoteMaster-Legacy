@@ -103,12 +103,12 @@ public class UpdaterInstanceServiceTests
     {
         // Arrange
         var arguments = new Dictionary<string, object>
-            {
-                { "launch-mode", "updater" },
-                { "folder-path", @"C:\TestPath" },
-                { "force", true },
-                { "allow-downgrade", true }
-            };
+        {
+            { "launch-mode", "updater" },
+            { "folder-path", @"C:\TestPath" },
+            { "force", true },
+            { "allow-downgrade", true }
+        };
 
         _mockArgumentBuilderService
             .Setup(service => service.BuildArguments(It.IsAny<Dictionary<string, object>>()))
