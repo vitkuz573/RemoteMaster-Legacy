@@ -77,6 +77,7 @@ internal class Program
         builder.Services.AddSingleton<IWoLConfiguratorService, WoLConfiguratorService>();
         builder.Services.AddSingleton<IRegistryService, RegistryService>();
         builder.Services.AddSingleton<IProcessService, ProcessService>();
+        builder.Services.AddSingleton<IProcessFinderService, ProcessFinderService>();
         builder.Services.AddSingleton<ISessionChangeEventService, SessionChangeEventService>();
         builder.Services.AddSingleton<IArgumentBuilderService, ArgumentBuilderService>();
         builder.Services.AddSingleton<IInstanceStarterService, InstanceStarterService>();
