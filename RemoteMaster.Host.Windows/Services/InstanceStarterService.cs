@@ -20,7 +20,7 @@ public class InstanceStarterService : IInstanceStarterService
             {
                 var destinationDirectory = Path.GetDirectoryName(destinationPath);
 
-                if (!Directory.Exists(destinationDirectory))
+                if (destinationDirectory != null && !Directory.Exists(destinationDirectory))
                 {
                     Log.Information("Creating directory {DestinationDirectory} for the executable.", destinationDirectory);
                     Directory.CreateDirectory(destinationDirectory);
