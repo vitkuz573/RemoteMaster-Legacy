@@ -4,6 +4,7 @@
 
 using Moq;
 using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Host.Windows.Services;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
@@ -35,14 +36,14 @@ public class UpdaterInstanceServiceTests
         };
 
         var arguments = new Dictionary<string, object>
-            {
-                { "launch-mode", "updater" },
-                { "folder-path", updateRequest.FolderPath },
-                { "username", updateRequest.UserCredentials.Username },
-                { "password", updateRequest.UserCredentials.Password },
-                { "force", updateRequest.ForceUpdate },
-                { "allow-downgrade", updateRequest.AllowDowngrade }
-            };
+        {
+            { "launch-mode", "updater" },
+            { "folder-path", updateRequest.FolderPath },
+            { "username", updateRequest.UserCredentials.Username },
+            { "password", updateRequest.UserCredentials.Password },
+            { "force", updateRequest.ForceUpdate },
+            { "allow-downgrade", updateRequest.AllowDowngrade }
+        };
 
         _mockArgumentBuilderService
             .Setup(service => service.BuildArguments(It.IsAny<Dictionary<string, object>>()))
@@ -53,7 +54,11 @@ public class UpdaterInstanceServiceTests
 
         // Assert
         _mockInstanceStarterService.Verify(service => service.StartNewInstance(
-            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+            It.IsAny<string>(), It.IsAny<string>(),
+            It.Is<NativeProcessStartInfo>(info =>
+                info.Arguments == "--launch-mode=\"updater\" --folder-path=\"C:\\TestPath\" --username=\"testuser\" --password=\"testpassword\" --force=true --allow-downgrade=true"
+                && info.CreateNoWindow == true
+            )), Times.Once);
     }
 
     [Fact]
@@ -131,14 +136,14 @@ public class UpdaterInstanceServiceTests
         };
 
         var arguments = new Dictionary<string, object>
-            {
-                { "launch-mode", "updater" },
-                { "folder-path", updateRequest.FolderPath },
-                { "username", updateRequest.UserCredentials.Username },
-                { "password", updateRequest.UserCredentials.Password },
-                { "force", updateRequest.ForceUpdate },
-                { "allow-downgrade", updateRequest.AllowDowngrade }
-            };
+        {
+            { "launch-mode", "updater" },
+            { "folder-path", updateRequest.FolderPath },
+            { "username", updateRequest.UserCredentials.Username },
+            { "password", updateRequest.UserCredentials.Password },
+            { "force", updateRequest.ForceUpdate },
+            { "allow-downgrade", updateRequest.AllowDowngrade }
+        };
 
         var additionalArguments = "--launch-mode=\"updater\" --folder-path=\"C:\\TestPath\" --username=\"testuser\" --password=\"testpassword\" --force=true --allow-downgrade=true";
 
@@ -151,6 +156,10 @@ public class UpdaterInstanceServiceTests
 
         // Assert
         _mockInstanceStarterService.Verify(service => service.StartNewInstance(
-            It.IsAny<string>(), It.IsAny<string>(), additionalArguments), Times.Once);
+            It.IsAny<string>(), It.IsAny<string>(),
+            It.Is<NativeProcessStartInfo>(info =>
+                info.Arguments == additionalArguments
+                && info.CreateNoWindow == true
+            )), Times.Once);
     }
 }
