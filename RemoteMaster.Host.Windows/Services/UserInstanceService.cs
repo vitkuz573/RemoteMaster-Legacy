@@ -71,10 +71,9 @@ public class UserInstanceService : IUserInstanceService
 
     private int StartNewInstance()
     {
-        var arguments = _argument;
-
-        var startInfo = new NativeProcessStartInfo(_currentExecutablePath, arguments)
+        var startInfo = new NativeProcessStartInfo
         {
+            Arguments = _argument,
             ForceConsoleSession = true,
             DesktopName = "Default",
             CreateNoWindow = true,

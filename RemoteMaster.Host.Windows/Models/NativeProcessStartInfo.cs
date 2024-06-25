@@ -16,21 +16,6 @@ public class NativeProcessStartInfo
 
     internal Dictionary<string, string?> _environmentVariables;
 
-    public NativeProcessStartInfo()
-    {
-    }
-
-    public NativeProcessStartInfo(string fileName)
-    {
-        _fileName = fileName;
-    }
-
-    public NativeProcessStartInfo(string fileName, string arguments)
-    {
-        _fileName = fileName;
-        _arguments = arguments;
-    }
-
     [AllowNull]
     public string FileName
     {

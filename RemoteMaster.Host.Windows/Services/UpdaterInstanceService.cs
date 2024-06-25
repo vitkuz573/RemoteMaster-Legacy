@@ -35,8 +35,9 @@ public class UpdaterInstanceService(IArgumentBuilderService argumentBuilderServi
 
         var additionalArguments = argumentBuilderService.BuildArguments(arguments);
 
-        var startInfo = new NativeProcessStartInfo(_executablePath, additionalArguments)
+        var startInfo = new NativeProcessStartInfo
         {
+            Arguments = additionalArguments,
             CreateNoWindow = true
         };
 
