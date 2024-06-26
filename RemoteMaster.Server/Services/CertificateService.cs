@@ -29,6 +29,14 @@ public class CertificateService(IHostInformationService hostInformationService, 
         }
 
         var rsaPrivateKey = caCertificate.GetRSAPrivateKey();
+
+        if (rsaPrivateKey == null)
+        {
+            Log.Error("The RSA private key for the CA certificate could not be retrieved.");
+            
+            throw new InvalidOperationException("The RSA private key for the CA certificate could not be retrieved.");
+        }
+
         var signatureGenerator = X509SignatureGenerator.CreateForRSA(rsaPrivateKey, RSASignaturePadding.Pkcs1);
 
         var notBefore = DateTimeOffset.UtcNow;
@@ -38,9 +46,9 @@ public class CertificateService(IHostInformationService hostInformationService, 
         var hostInformation = hostInformationService.GetHostInformation();
 
         var crlDistributionPoints = new List<string>
-        {
-            $"http://{hostInformation.Name}/crl"
-        };
+            {
+                $"http://{hostInformation.Name}/crl"
+            };
 
         var crlDistributionPointExtension = CertificateRevocationListBuilder.BuildCrlDistributionPointExtension(crlDistributionPoints, false);
 
