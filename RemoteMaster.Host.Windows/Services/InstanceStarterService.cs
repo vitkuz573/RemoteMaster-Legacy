@@ -2,13 +2,14 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Models;
 using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class InstanceStarterService : IInstanceStarterService
+public class InstanceStarterService(INativeProcessFactory nativeProcessFactory, IFileSystem fileSystem) : IInstanceStarterService
 {
     public int StartNewInstance(string executablePath, string? destinationPath, NativeProcessStartInfo startInfo)
     {
@@ -18,22 +19,22 @@ public class InstanceStarterService : IInstanceStarterService
         {
             if (destinationPath != null)
             {
-                var destinationDirectory = Path.GetDirectoryName(destinationPath);
+                var destinationDirectory = fileSystem.Path.GetDirectoryName(destinationPath);
 
-                if (destinationDirectory != null && !Directory.Exists(destinationDirectory))
+                if (destinationDirectory != null && !fileSystem.Directory.Exists(destinationDirectory))
                 {
                     Log.Information("Creating directory {DestinationDirectory} for the executable.", destinationDirectory);
-                    Directory.CreateDirectory(destinationDirectory);
+                    fileSystem.Directory.CreateDirectory(destinationDirectory);
                 }
 
                 Log.Information("Copying executable from {ExecutablePath} to {DestinationPath}", executablePath, destinationPath);
-                File.Copy(executablePath, destinationPath, true);
+                fileSystem.File.Copy(executablePath, destinationPath, true);
                 Log.Information("Successfully copied the executable.");
 
                 executablePath = destinationPath;
             }
 
-            using var process = new NativeProcess();
+            var process = nativeProcessFactory.Create();
 
             startInfo.FileName = executablePath;
             process.StartInfo = startInfo;
@@ -46,11 +47,13 @@ public class InstanceStarterService : IInstanceStarterService
         catch (IOException ioEx)
         {
             Log.Error(ioEx, "IO error occurred while copying the executable. Source: {SourcePath}, Destination: {DestinationPath}", executablePath, destinationPath);
+
             throw;
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Error starting new instance of the host. Executable path: {Path}", executablePath);
+
             throw;
         }
     }

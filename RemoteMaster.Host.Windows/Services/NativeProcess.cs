@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Win32.SafeHandles;
+using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Models;
 using Windows.Win32;
 using Windows.Win32.Foundation;
@@ -20,7 +21,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 #pragma warning disable CA2000
 
-public class NativeProcess : IDisposable
+public class NativeProcess : INativeProcess
 {
     private static readonly object _createProcessLock = new();
 

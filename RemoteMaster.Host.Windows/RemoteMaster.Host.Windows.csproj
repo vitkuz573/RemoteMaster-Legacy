@@ -36,6 +36,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Windows.SDK.Win32Metadata" />
     <PackageReference Include="SkiaSharp.Views.Desktop.Common" />
+    <PackageReference Include="System.IO.Abstractions" />
     <PackageReference Include="System.Management" />
   </ItemGroup>
 
