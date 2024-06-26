@@ -4,18 +4,14 @@
 
 using Microsoft.Win32;
 using RemoteMaster.Host.Windows.Abstractions;
-using RemoteMaster.Host.Windows.Models;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class RegistryService : IRegistryService
+public class RegistryService(IRegistryKeyFactory registryKeyFactory) : IRegistryService
 {
     public IRegistryKey? OpenSubKey(RegistryHive hive, string keyPath, bool writable)
     {
-        using var baseKey = RegistryKey.OpenBaseKey(hive, RegistryView.Default);
-        var key = baseKey.OpenSubKey(keyPath, writable);
-
-        return key == null ? null : new RegistryKeyWrapper(key);
+        return registryKeyFactory.OpenSubKey(hive, keyPath, writable);
     }
 
     public void SetValue(RegistryHive hive, string keyPath, string valueName, object value, RegistryValueKind valueKind)

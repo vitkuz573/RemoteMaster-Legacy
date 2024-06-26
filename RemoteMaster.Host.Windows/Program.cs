@@ -54,6 +54,7 @@ internal class Program
 
         builder.Services.AddCoreServices(launchModeInstance);
         builder.Services.AddTransient<IServiceFactory, ServiceFactory>();
+        builder.Services.AddTransient<IRegistryKeyFactory, RegistryKeyFactory>();
         builder.Services.AddSingleton<IUserInstanceService, UserInstanceService>();
         builder.Services.AddSingleton<IUpdaterInstanceService, UpdaterInstanceService>();
         builder.Services.AddSingleton<IHostInstaller, HostInstaller>();
