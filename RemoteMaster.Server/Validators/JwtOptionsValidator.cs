@@ -75,10 +75,6 @@ public class JwtOptionsValidator : IValidateOptions<JwtOptions>
         {
             return false;
         }
-        if (!password.Any(ch => "!@#$%^&*()_+-=[]{}|;:,.<>?".Contains(ch)))
-        {
-            return false;
-        }
 
         return true;
     }
