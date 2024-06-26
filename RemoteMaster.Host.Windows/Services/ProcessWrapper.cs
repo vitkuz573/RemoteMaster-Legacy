@@ -21,4 +21,14 @@ public class ProcessWrapper(Process process) : IProcessWrapper
     {
         return process.GetCommandLine();
     }
+
+    public void WaitForExit()
+    {
+        process.WaitForExit();
+    }
+
+    public string ReadStandardOutput()
+    {
+        return process.StandardOutput.ReadToEnd();
+    }
 }

@@ -6,11 +6,7 @@ using System.Diagnostics;
 
 namespace RemoteMaster.Host.Windows.Abstractions;
 
-public interface IProcessService
+public interface IProcessWrapperFactory
 {
-    IProcessWrapper Start(ProcessStartInfo startInfo);
-
-    void WaitForExit(IProcessWrapper process);
-
-    string ReadStandardOutput(IProcessWrapper process);
+    IProcessWrapper Create(ProcessStartInfo startInfo);
 }

@@ -7,24 +7,24 @@ using RemoteMaster.Host.Windows.Abstractions;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class ProcessService : IProcessService
+public class ProcessService(IProcessWrapperFactory processWrapperFactory) : IProcessService
 {
-    public Process Start(ProcessStartInfo startInfo)
+    public IProcessWrapper Start(ProcessStartInfo startInfo)
     {
-        return Process.Start(startInfo);
+        return processWrapperFactory.Create(startInfo);
     }
 
-    public void WaitForExit(Process process)
+    public void WaitForExit(IProcessWrapper process)
     {
         ArgumentNullException.ThrowIfNull(process);
 
         process.WaitForExit();
     }
 
-    public string ReadStandardOutput(Process process)
+    public string ReadStandardOutput(IProcessWrapper process)
     {
         ArgumentNullException.ThrowIfNull(process);
 
-        return process.StandardOutput.ReadToEnd();
+        return process.ReadStandardOutput();
     }
 }

@@ -53,9 +53,9 @@ public class WoLConfiguratorServiceTests
     public void EnableWakeOnLanForAllAdapters_EnablesWakeOnLanForAllDevices()
     {
         // Arrange
-        var mockProcess = new Mock<Process>();
-        _mockProcessService.Setup(p => p.Start(It.Is<ProcessStartInfo>(info => info.FileName == "powercfg.exe" && info.Arguments == "/devicequery wake_programmable"))).Returns(mockProcess.Object);
-        _mockProcessService.Setup(p => p.ReadStandardOutput(mockProcess.Object)).Returns("Device1\r\nDevice2");
+        var mockProcessWrapper = new Mock<IProcessWrapper>();
+        _mockProcessService.Setup(p => p.Start(It.Is<ProcessStartInfo>(info => info.FileName == "powercfg.exe" && info.Arguments == "/devicequery wake_programmable"))).Returns(mockProcessWrapper.Object);
+        _mockProcessService.Setup(p => p.ReadStandardOutput(mockProcessWrapper.Object)).Returns("Device1\r\nDevice2");
 
         // Act
         _service.EnableWakeOnLanForAllAdapters();

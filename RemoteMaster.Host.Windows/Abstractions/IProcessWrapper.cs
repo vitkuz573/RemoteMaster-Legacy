@@ -11,4 +11,8 @@ public interface IProcessWrapper
     void Kill();
 
     string GetCommandLine();
+
+    void WaitForExit();
+
+    string ReadStandardOutput();
 }

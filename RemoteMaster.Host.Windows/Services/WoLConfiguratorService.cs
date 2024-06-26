@@ -45,14 +45,11 @@ public class WoLConfiguratorService(IRegistryService registryService, IProcessSe
             RedirectStandardOutput = true
         };
 
-        var programmableDevices = string.Empty;
+        var process = processService.Start(startInfoForDeviceQuery);
 
-        using (var process = processService.Start(startInfoForDeviceQuery))
-        {
-            processService.WaitForExit(process);
-            programmableDevices = processService.ReadStandardOutput(process);
-        }
+        processService.WaitForExit(process);
 
+        var programmableDevices = processService.ReadStandardOutput(process);
         var deviceNames = programmableDevices.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
         foreach (var deviceName in deviceNames)
@@ -66,7 +63,7 @@ public class WoLConfiguratorService(IRegistryService registryService, IProcessSe
                 RedirectStandardOutput = true
             };
 
-            using var powerCfgProcess = processService.Start(startInfoForEnableWake);
+            var powerCfgProcess = processService.Start(startInfoForEnableWake);
             processService.WaitForExit(powerCfgProcess);
         }
     }
