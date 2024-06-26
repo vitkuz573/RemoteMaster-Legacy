@@ -13,15 +13,15 @@ public class UserInstanceServiceTests
 {
     private readonly Mock<ISessionChangeEventService> _sessionChangeEventServiceMock;
     private readonly Mock<IInstanceStarterService> _instanceStarterServiceMock;
-    private readonly Mock<IProcessFinderService> _processFinderServiceMock;
+    private readonly Mock<IProcessService> _processServiceMock;
     private readonly UserInstanceService _userInstanceService;
 
     public UserInstanceServiceTests()
     {
         _sessionChangeEventServiceMock = new Mock<ISessionChangeEventService>();
         _instanceStarterServiceMock = new Mock<IInstanceStarterService>();
-        _processFinderServiceMock = new Mock<IProcessFinderService>();
-        _userInstanceService = new UserInstanceService(_sessionChangeEventServiceMock.Object, _instanceStarterServiceMock.Object, _processFinderServiceMock.Object);
+        _processServiceMock = new Mock<IProcessService>();
+        _userInstanceService = new UserInstanceService(_sessionChangeEventServiceMock.Object, _instanceStarterServiceMock.Object, _processServiceMock.Object);
     }
 
     [Fact]
@@ -46,15 +46,15 @@ public class UserInstanceServiceTests
         // Arrange
         var processMock = new Mock<IProcessWrapper>();
         processMock.Setup(p => p.Id).Returns(1234);
-        processMock.Setup(p => p.GetCommandLine()).Returns("--launch-mode=user");
+        processMock.Setup(p => p.GetCommandLine()).Returns("host.exe --launch-mode=user");
         var processes = new[] { processMock.Object };
 
-        _processFinderServiceMock
-            .Setup(x => x.FindHostProcesses(It.IsAny<string>()))
+        _processServiceMock
+            .Setup(x => x.FindProcessesByName(It.IsAny<string>()))
             .Returns(processes);
 
-        _processFinderServiceMock
-            .Setup(x => x.IsUserInstance(It.IsAny<IProcessWrapper>(), It.IsAny<string>()))
+        _processServiceMock
+            .Setup(x => x.HasProcessArgument(It.IsAny<IProcessWrapper>(), "--launch-mode=user"))
             .Returns(true);
 
         // Act
@@ -65,5 +65,43 @@ public class UserInstanceServiceTests
         {
             processMock.Verify(p => p.Kill(), Times.Once);
         }
+    }
+
+    [Fact]
+    public void IsRunning_ShouldReturnTrueIfUserInstanceIsRunning()
+    {
+        // Arrange
+        var processMock = new Mock<IProcessWrapper>();
+        processMock.Setup(p => p.GetCommandLine()).Returns("--launch-mode=user");
+        var processes = new[] { processMock.Object };
+
+        _processServiceMock
+            .Setup(x => x.FindProcessesByName(It.IsAny<string>()))
+            .Returns(processes);
+
+        _processServiceMock
+            .Setup(x => x.HasProcessArgument(It.IsAny<IProcessWrapper>(), "--launch-mode=user"))
+            .Returns(true);
+
+        // Act
+        var isRunning = _userInstanceService.IsRunning;
+
+        // Assert
+        Assert.True(isRunning);
+    }
+
+    [Fact]
+    public void IsRunning_ShouldReturnFalseIfNoUserInstanceIsRunning()
+    {
+        // Arrange
+        _processServiceMock
+            .Setup(x => x.FindProcessesByName(It.IsAny<string>()))
+            .Returns([]);
+
+        // Act
+        var isRunning = _userInstanceService.IsRunning;
+
+        // Assert
+        Assert.False(isRunning);
     }
 }

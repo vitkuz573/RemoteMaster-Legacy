@@ -27,4 +27,20 @@ public class ProcessService(IProcessWrapperFactory processWrapperFactory) : IPro
 
         return process.ReadStandardOutput();
     }
+
+    public IProcessWrapper[] FindProcessesByName(string processName)
+    {
+        var processes = Process.GetProcessesByName(processName);
+
+        return processes.Select(p => new ProcessWrapper(p)).ToArray();
+    }
+
+    public bool HasProcessArgument(IProcessWrapper process, string argument)
+    {
+        ArgumentNullException.ThrowIfNull(process);
+
+        var commandLine = process.GetCommandLine();
+
+        return commandLine.Contains(argument);
+    }
 }

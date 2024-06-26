@@ -16,18 +16,18 @@ public class UserInstanceService : IUserInstanceService
     private readonly string _argument = "--launch-mode=user";
     private readonly string _currentExecutablePath = Environment.ProcessPath!;
     private readonly IInstanceStarterService _instanceStarterService;
-    private readonly IProcessFinderService _processFinderService;
+    private readonly IProcessService _processService;
 
     public event EventHandler<UserInstanceCreatedEventArgs>? UserInstanceCreated;
 
-    public bool IsRunning => _processFinderService.FindHostProcesses(_currentExecutablePath).Any(p => _processFinderService.IsUserInstance(p, _argument));
+    public bool IsRunning => _processService.FindProcessesByName(Path.GetFileNameWithoutExtension(_currentExecutablePath)).Any(p => _processService.HasProcessArgument(p, _argument));
 
-    public UserInstanceService(ISessionChangeEventService sessionChangeEventService, IInstanceStarterService instanceStarterService, IProcessFinderService processFinderService)
+    public UserInstanceService(ISessionChangeEventService sessionChangeEventService, IInstanceStarterService instanceStarterService, IProcessService processService)
     {
         ArgumentNullException.ThrowIfNull(sessionChangeEventService);
 
         _instanceStarterService = instanceStarterService;
-        _processFinderService = processFinderService;
+        _processService = processService;
 
         sessionChangeEventService.SessionChanged += OnSessionChanged;
     }
@@ -50,9 +50,9 @@ public class UserInstanceService : IUserInstanceService
 
     public void Stop()
     {
-        foreach (var process in _processFinderService.FindHostProcesses(_currentExecutablePath))
+        foreach (var process in _processService.FindProcessesByName(Path.GetFileNameWithoutExtension(_currentExecutablePath)))
         {
-            if (!_processFinderService.IsUserInstance(process, _argument))
+            if (!_processService.HasProcessArgument(process, _argument))
             {
                 continue;
             }

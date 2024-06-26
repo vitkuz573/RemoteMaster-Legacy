@@ -30,6 +30,7 @@ public class ProcessServiceTests
         {
             FileName = "notepad.exe"
         };
+
         _mockProcessWrapperFactory.Setup(f => f.Create(startInfo)).Returns(_mockProcessWrapper.Object);
 
         // Act

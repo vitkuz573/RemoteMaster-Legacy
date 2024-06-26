@@ -13,4 +13,8 @@ public interface IProcessService
     void WaitForExit(IProcessWrapper process);
 
     string ReadStandardOutput(IProcessWrapper process);
+
+    IProcessWrapper[] FindProcessesByName(string processName);
+
+    bool HasProcessArgument(IProcessWrapper process, string argument);
 }
