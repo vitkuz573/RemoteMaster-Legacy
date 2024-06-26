@@ -73,9 +73,9 @@ public class InstanceStarterServiceTests
         fileMock.Setup(f => f.Copy(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>())).Throws<IOException>();
 
         var mockFileSystem = new TestableMockFileSystem(fileMock.Object, new Dictionary<string, MockFileData>
-            {
-                { executablePath, new MockFileData("content") }
-            });
+        {
+            { executablePath, new MockFileData("content") }
+        });
 
         var instanceStarterService = new InstanceStarterService(_nativeProcessFactoryMock.Object, mockFileSystem);
 
@@ -102,9 +102,9 @@ public class InstanceStarterServiceTests
         fileMock.Setup(f => f.Copy(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>())).Throws<Exception>();
 
         var mockFileSystem = new TestableMockFileSystem(fileMock.Object, new Dictionary<string, MockFileData>
-            {
-                { executablePath, new MockFileData("content") }
-            });
+        {
+            { executablePath, new MockFileData("content") }
+        });
 
         var instanceStarterService = new InstanceStarterService(_nativeProcessFactoryMock.Object, mockFileSystem);
 
