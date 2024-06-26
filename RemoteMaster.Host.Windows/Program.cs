@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Abstractions;
 using System.Net;
 using System.Reflection;
 using System.Security.Claims;
@@ -83,6 +84,7 @@ internal class Program
         builder.Services.AddSingleton<ISessionChangeEventService, SessionChangeEventService>();
         builder.Services.AddSingleton<IArgumentBuilderService, ArgumentBuilderService>();
         builder.Services.AddSingleton<IInstanceStarterService, InstanceStarterService>();
+        builder.Services.AddSingleton<IFileSystem, FileSystem>();
         builder.Services.AddSingleton(new JsonSerializerOptions
         {
             WriteIndented = true,

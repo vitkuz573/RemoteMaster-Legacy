@@ -8,27 +8,44 @@ using RemoteMaster.Host.Windows.Extensions;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class ProcessWrapper(Process process) : IProcessWrapper
+public class ProcessWrapper : IProcessWrapper
 {
-    public int Id => process.Id;
+    private readonly Process _process;
+
+    public ProcessWrapper(Process process)
+    {
+        _process = process ?? throw new ArgumentNullException(nameof(process));
+
+        if (_process.HasExited)
+        {
+            throw new InvalidOperationException("Process has already exited.");
+        }
+    }
+
+    public int Id => _process.Id;
 
     public void Kill()
     {
-        process.Kill();
+        _process.Kill();
     }
 
     public string GetCommandLine()
     {
-        return process.GetCommandLine();
+        return _process.GetCommandLine();
     }
 
     public void WaitForExit()
     {
-        process.WaitForExit();
+        _process.WaitForExit();
     }
 
     public string ReadStandardOutput()
     {
-        return process.StandardOutput.ReadToEnd();
+        return _process.StandardOutput.ReadToEnd();
+    }
+
+    public void Dispose()
+    {
+        _process?.Dispose();
     }
 }

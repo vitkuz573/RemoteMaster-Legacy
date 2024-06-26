@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Host.Windows.Abstractions;
 
-public interface IProcessWrapper
+public interface IProcessWrapper : IDisposable
 {
     int Id { get; }
 

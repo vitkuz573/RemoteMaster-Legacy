@@ -11,7 +11,7 @@ public class ProcessWrapperFactory : IProcessWrapperFactory
 {
     public IProcessWrapper Create(ProcessStartInfo startInfo)
     {
-        using var process = new Process
+        var process = new Process
         {
             StartInfo = startInfo
         };

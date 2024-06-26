@@ -5,6 +5,7 @@
 using System.Diagnostics;
 using Microsoft.Win32;
 using RemoteMaster.Host.Windows.Abstractions;
+using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
@@ -36,35 +37,46 @@ public class WoLConfiguratorService(IRegistryService registryService, IProcessSe
 
     public void EnableWakeOnLanForAllAdapters()
     {
-        var startInfoForDeviceQuery = new ProcessStartInfo
+        try
         {
-            FileName = "powercfg.exe",
-            Arguments = "/devicequery wake_programmable",
-            CreateNoWindow = true,
-            UseShellExecute = false,
-            RedirectStandardOutput = true
-        };
-
-        var process = processService.Start(startInfoForDeviceQuery);
-
-        processService.WaitForExit(process);
-
-        var programmableDevices = processService.ReadStandardOutput(process);
-        var deviceNames = programmableDevices.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-
-        foreach (var deviceName in deviceNames)
-        {
-            var startInfoForEnableWake = new ProcessStartInfo
+            var startInfoForDeviceQuery = new ProcessStartInfo
             {
                 FileName = "powercfg.exe",
-                Arguments = $"/deviceenablewake \"{deviceName}\"",
+                Arguments = "/devicequery wake_programmable",
                 CreateNoWindow = true,
                 UseShellExecute = false,
                 RedirectStandardOutput = true
             };
 
-            var powerCfgProcess = processService.Start(startInfoForEnableWake);
-            processService.WaitForExit(powerCfgProcess);
+            string programmableDevices;
+
+            using (var process = processService.Start(startInfoForDeviceQuery))
+            {
+                processService.WaitForExit(process);
+                programmableDevices = processService.ReadStandardOutput(process);
+            }
+
+            var deviceNames = programmableDevices.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var deviceName in deviceNames)
+            {
+                var startInfoForEnableWake = new ProcessStartInfo
+                {
+                    FileName = "powercfg.exe",
+                    Arguments = $"/deviceenablewake \"{deviceName}\"",
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true
+                };
+
+                using var powerCfgProcess = processService.Start(startInfoForEnableWake);
+                processService.WaitForExit(powerCfgProcess);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An error occurred while enabling Wake on LAN for all adapters.");
+            throw;
         }
     }
 }
