@@ -14,7 +14,7 @@ public class ClaimsService(UserManager<ApplicationUser> userManager, RoleManager
     public async Task<List<Claim>> GetClaimsForUserAsync(ApplicationUser user)
     {
         ArgumentNullException.ThrowIfNull(user);
-        
+
         var claims = new List<Claim>
         {
             new(ClaimTypes.Name, user.UserName),
@@ -37,6 +37,12 @@ public class ClaimsService(UserManager<ApplicationUser> userManager, RoleManager
     private async Task<IEnumerable<Claim>> GetClaimsForRoleAsync(string roleName)
     {
         var role = await roleManager.FindByNameAsync(roleName);
+
+        if (role == null)
+        {
+            return [];
+        }
+
         var roleClaims = await roleManager.GetClaimsAsync(role);
 
         return roleClaims.Where(c => c.Type == "Permission");
