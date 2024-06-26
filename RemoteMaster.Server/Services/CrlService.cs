@@ -100,6 +100,11 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
 
             var directoryPath = _fileSystem.Path.GetDirectoryName(crlFilePath);
 
+            if (string.IsNullOrEmpty(directoryPath))
+            {
+                throw new InvalidOperationException("Directory path is null or empty.");
+            }
+
             if (!_fileSystem.Directory.Exists(directoryPath))
             {
                 _fileSystem.Directory.CreateDirectory(directoryPath);
