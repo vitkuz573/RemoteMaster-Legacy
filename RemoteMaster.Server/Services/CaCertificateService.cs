@@ -70,6 +70,13 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
                 rsaProvider = externalRsaProvider;
             }
 
+            if (rsaProvider == null)
+            {
+                Log.Error("RSA provider is null.");
+
+                throw new InvalidOperationException("RSA provider is null.");
+            }
+
             var distinguishedName = subjectService.GetDistinguishedName(_settings.CommonName);
             var request = new CertificateRequest(distinguishedName, rsaProvider, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
@@ -83,10 +90,10 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
             var hostInformation = hostInformationService.GetHostInformation();
 
             var crlDistributionPoints = new List<string>
-            {
-                $"file:///{crlFilePath.Replace("\\", "/")}",
-                $"http://{hostInformation.Name}/crl"
-            };
+                {
+                    $"file:///{crlFilePath.Replace("\\", "/")}",
+                    $"http://{hostInformation.Name}/crl"
+                };
 
             var crlDistributionPointExtension = CertificateRevocationListBuilder.BuildCrlDistributionPointExtension(crlDistributionPoints, false);
 
@@ -103,7 +110,7 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
         catch (Exception ex)
         {
             Log.Error(ex, "Failed to generate CA certificate.");
-
+            
             throw;
         }
         finally
