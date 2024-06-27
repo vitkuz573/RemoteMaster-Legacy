@@ -24,6 +24,10 @@ public class ProcessWrapper : IProcessWrapper
 
     public int Id => _process.Id;
 
+    public StreamReader StandardOutput => _process.StandardOutput;
+
+    public StreamReader StandardError => _process.StandardError;
+
     public void Kill()
     {
         _process.Kill();

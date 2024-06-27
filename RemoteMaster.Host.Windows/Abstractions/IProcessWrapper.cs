@@ -8,6 +8,10 @@ public interface IProcessWrapper : IDisposable
 {
     int Id { get; }
 
+    StreamReader StandardOutput { get; }
+
+    StreamReader StandardError { get; }
+
     void Kill();
 
     string GetCommandLine();
