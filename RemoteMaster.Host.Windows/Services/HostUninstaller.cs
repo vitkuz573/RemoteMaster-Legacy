@@ -2,13 +2,14 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Abstractions;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostUninstaller(IHostConfigurationService hostConfigurationService, IServiceFactory serviceFactory, IUserInstanceService userInstanceService, IHostLifecycleService hostLifecycleService) : IHostUninstaller
+public class HostUninstaller(IHostConfigurationService hostConfigurationService, IServiceFactory serviceFactory, IUserInstanceService userInstanceService, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem) : IHostUninstaller
 {
     private readonly string _applicationDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
 
@@ -48,22 +49,23 @@ public class HostUninstaller(IHostConfigurationService hostConfigurationService,
         }
     }
 
-    private static void DeleteFiles(string directoryPath)
+    private void DeleteFiles(string directoryPath)
     {
-        if (!Directory.Exists(directoryPath))
+        if (!fileSystem.Directory.Exists(directoryPath))
         {
             Log.Information("Directory {DirectoryPath} does not exist, no files to delete.", directoryPath);
             return;
         }
 
-        foreach (var file in Directory.EnumerateFiles(directoryPath))
+        foreach (var file in fileSystem.Directory.EnumerateFiles(directoryPath))
         {
             WaitForFile(file, 100, 2000);
         }
 
         try
         {
-            Directory.Delete(directoryPath, recursive: true);
+            Log.Information("Attempting to delete directory: {DirectoryPath}", directoryPath);
+            fileSystem.Directory.Delete(directoryPath, true);
             Log.Information("{DirectoryPath} has been successfully deleted.", directoryPath);
         }
         catch (Exception ex)
@@ -72,13 +74,13 @@ public class HostUninstaller(IHostConfigurationService hostConfigurationService,
         }
     }
 
-    private static void WaitForFile(string filepath, int maxRetries, int delayOnRetry)
+    private void WaitForFile(string filepath, int maxRetries, int delayOnRetry)
     {
         for (var i = 0; i < maxRetries; i++)
         {
             try
             {
-                using var stream = File.Open(filepath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+                using var stream = fileSystem.File.Open(filepath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
                 stream.Close();
                 break;
             }

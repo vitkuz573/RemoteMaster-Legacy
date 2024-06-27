@@ -36,9 +36,9 @@ public abstract class AbstractService : IRunnable
 
     protected abstract string? RestartCommand { get; }
 
-    public bool IsInstalled => ServiceController.GetServices().Any(service => service.ServiceName == Name);
+    public virtual bool IsInstalled => ServiceController.GetServices().Any(service => service.ServiceName == Name);
 
-    public bool IsRunning
+    public virtual bool IsRunning
     {
         get
         {
@@ -50,7 +50,7 @@ public abstract class AbstractService : IRunnable
             try
             {
                 using var serviceController = new ServiceController(Name);
-
+                
                 return serviceController.Status == ServiceControllerStatus.Running;
             }
             catch
@@ -60,7 +60,7 @@ public abstract class AbstractService : IRunnable
         }
     }
 
-    public void Create()
+    public virtual void Create()
     {
         var binPath = $"{BinPath} {string.Join(" ", Arguments.Select(kv => kv.Value == null ? $"{kv.Key}" : $"{kv.Key}={kv.Value}"))}";
 
@@ -84,16 +84,6 @@ public abstract class AbstractService : IRunnable
             failureActions += $" command=\"{RestartCommand}\"";
         }
 
-        if (!string.IsNullOrEmpty(RebootMessage))
-        {
-            failureActions += $" reboot=\"{RebootMessage}\"";
-        }
-
-        if (!string.IsNullOrEmpty(RestartCommand))
-        {
-            failureActions += $" command=\"{RestartCommand}\"";
-        }
-
         ExecuteServiceCommand(failureActions);
 
         if (Dependencies == null || !Dependencies.Any())
@@ -105,7 +95,7 @@ public abstract class AbstractService : IRunnable
         ExecuteServiceCommand($"config {Name} depend= {dependenciesStr}");
     }
 
-    public void Start()
+    public virtual void Start()
     {
         using var serviceController = new ServiceController(Name);
 
@@ -118,7 +108,7 @@ public abstract class AbstractService : IRunnable
         serviceController.WaitForStatus(ServiceControllerStatus.Running);
     }
 
-    public void Stop()
+    public virtual void Stop()
     {
         using var serviceController = new ServiceController(Name);
 
@@ -131,28 +121,29 @@ public abstract class AbstractService : IRunnable
         serviceController.WaitForStatus(ServiceControllerStatus.Stopped);
     }
 
-    public void Delete() => ExecuteServiceCommand($"delete {Name}");
+    public virtual void Delete() => ExecuteServiceCommand($"delete {Name}");
 
-    private static void ExecuteServiceCommand(string arguments)
+    protected virtual void ExecuteServiceCommand(string arguments)
     {
-        using var process = new Process();
-
-        process.StartInfo = new ProcessStartInfo
+        using var process = new Process
         {
-            FileName = "sc",
-            Arguments = arguments,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            Verb = "runas"
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = "sc",
+                Arguments = arguments,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                Verb = "runas"
+            }
         };
 
         process.Start();
         process.WaitForExit();
     }
 
-
+    
     protected enum ServiceStartType
     {
         Boot,
