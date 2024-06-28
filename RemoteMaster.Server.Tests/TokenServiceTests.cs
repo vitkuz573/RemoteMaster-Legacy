@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.IO.Abstractions.TestingHelpers;
+using System.Net;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -42,6 +43,7 @@ public class TokenServiceTests
             KeySize = 2048,
             KeyPassword = "TestPassword"
         };
+
         _mockOptions = new Mock<IOptions<JwtOptions>>();
         _mockOptions.Setup(o => o.Value).Returns(_options);
 
@@ -68,9 +70,15 @@ public class TokenServiceTests
     public async Task GenerateTokensAsync_GeneratesTokensSuccessfully()
     {
         // Arrange
-        var user = new ApplicationUser { Id = "test-user-id", UserName = "testuser" };
+        var user = new ApplicationUser
+        {
+            Id = "test-user-id",
+            UserName = "testuser"
+        };
+
         _mockUserManager.Setup(um => um.FindByIdAsync(It.IsAny<string>())).ReturnsAsync(user);
         _mockUserManager.Setup(um => um.GetRolesAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(["User"]);
+
         _mockClaimsService.Setup(cs => cs.GetClaimsForUserAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(
         [
             new(ClaimTypes.Name, user.UserName),
@@ -79,7 +87,8 @@ public class TokenServiceTests
         ]);
 
         var httpContext = new DefaultHttpContext();
-        httpContext.Connection.RemoteIpAddress = System.Net.IPAddress.Parse("127.0.0.1");
+        httpContext.Connection.RemoteIpAddress = IPAddress.Parse("127.0.0.1");
+
         _mockHttpContextAccessor.Setup(h => h.HttpContext).Returns(httpContext);
 
         // Act
@@ -103,6 +112,7 @@ public class TokenServiceTests
             Created = DateTime.UtcNow,
             CreatedByIp = "127.0.0.1"
         };
+
         await _context.RefreshTokens.AddAsync(refreshToken);
         await _context.SaveChangesAsync();
 
@@ -111,6 +121,7 @@ public class TokenServiceTests
 
         // Assert
         var revokedToken = await _context.RefreshTokens.FirstOrDefaultAsync(rt => rt.Token == refreshToken.Token);
+
         Assert.NotNull(revokedToken);
         Assert.NotNull(revokedToken.Revoked);
     }
