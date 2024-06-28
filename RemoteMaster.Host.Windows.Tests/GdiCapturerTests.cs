@@ -21,9 +21,7 @@ public class GdiCapturerTests : IDisposable
         _mockCursorRenderService = new Mock<ICursorRenderService>();
         _mockDesktopService = new Mock<IDesktopService>();
 
-        // Mock the event handler for RequestScreenBounds
-        _mockCursorRenderService.SetupAdd(crs => crs.RequestScreenBounds += It.IsAny<Func<Rectangle>>())
-            .Callback<Func<Rectangle>>(handler => handler.Invoke());
+        _mockCursorRenderService.Setup(crs => crs.DrawCursor(It.IsAny<Graphics>(), It.IsAny<Rectangle>()));
 
         _gdiCapturer = new GdiCapturer(_mockCursorRenderService.Object, _mockDesktopService.Object);
     }

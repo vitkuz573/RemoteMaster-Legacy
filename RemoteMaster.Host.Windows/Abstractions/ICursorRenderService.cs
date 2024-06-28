@@ -8,9 +8,5 @@ namespace RemoteMaster.Host.Windows.Abstractions;
 
 public interface ICursorRenderService : IDisposable
 {
-    event Func<Rectangle> RequestScreenBounds;
-
-    void DrawCursor(Graphics g);
-
-    void UpdateScreenBounds(Rectangle newBounds);
+    void DrawCursor(Graphics g, Rectangle currentScreenBounds);
 }

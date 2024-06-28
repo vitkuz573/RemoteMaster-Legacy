@@ -14,17 +14,14 @@ public class CursorRenderService : ICursorRenderService
 {
     private Point? _lastCursorPoint;
     private Icon? _lastCursorIcon;
-    private Rectangle? _cachedScreenBounds;
     private readonly uint _cursorInfoSize;
-
-    public event Func<Rectangle> RequestScreenBounds;
 
     public CursorRenderService()
     {
         _cursorInfoSize = (uint)Marshal.SizeOf(typeof(CURSORINFO));
     }
 
-    public void DrawCursor(Graphics g)
+    public void DrawCursor(Graphics g, Rectangle currentScreenBounds)
     {
         ArgumentNullException.ThrowIfNull(g);
 
@@ -34,8 +31,6 @@ public class CursorRenderService : ICursorRenderService
         {
             return;
         }
-
-        var currentScreenBounds = _cachedScreenBounds ?? RequestScreenBounds.Invoke();
 
         var relativeX = cursorInfo.ptScreenPos.X - currentScreenBounds.Left;
         var relativeY = cursorInfo.ptScreenPos.Y - currentScreenBounds.Top;
@@ -61,11 +56,6 @@ public class CursorRenderService : ICursorRenderService
         }
 
         g.DrawIcon(icon, relativeX, relativeY);
-    }
-
-    public void UpdateScreenBounds(Rectangle newBounds)
-    {
-        _cachedScreenBounds = newBounds;
     }
 
     private CURSORINFO GetCursorInformation()

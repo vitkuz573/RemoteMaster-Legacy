@@ -11,13 +11,15 @@ public class ServiceFactory : IServiceFactory
 {
     private readonly Dictionary<string, AbstractService> _serviceInstances;
 
-    public ServiceFactory() : this(null) { }
+    public ServiceFactory() : this(Enumerable.Empty<AbstractService>()) { }
 
     public ServiceFactory(IEnumerable<AbstractService> services)
     {
+        ArgumentNullException.ThrowIfNull(services);
+
         _serviceInstances = [];
 
-        if (services == null)
+        if (!services.Any())
         {
             LoadAllServices();
         }

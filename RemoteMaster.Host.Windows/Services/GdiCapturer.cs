@@ -30,7 +30,6 @@ public class GdiCapturer : ScreenCapturerService
     public GdiCapturer(ICursorRenderService cursorRenderService, IDesktopService desktopService) : base(desktopService)
     {
         _cursorRenderService = cursorRenderService;
-        _cursorRenderService.RequestScreenBounds += () => CurrentScreenBounds;
 
         _bitmap = new Bitmap(CurrentScreenBounds.Width, CurrentScreenBounds.Height, PixelFormat.Format32bppArgb);
     }
@@ -85,7 +84,7 @@ public class GdiCapturer : ScreenCapturerService
 
         if (TrackCursor)
         {
-            _cursorRenderService.DrawCursor(memoryGraphics);
+            _cursorRenderService.DrawCursor(memoryGraphics, CurrentScreenBounds);
         }
 
         return SaveBitmap(_bitmap);
@@ -145,10 +144,7 @@ public class GdiCapturer : ScreenCapturerService
     protected override void RefreshCurrentScreenBounds()
     {
         CurrentScreenBounds = SelectedScreen == VirtualScreen ? VirtualScreenBounds : Screen.AllScreens[Screens[SelectedScreen]].Bounds;
-
         RaiseScreenChangedEvent(CurrentScreenBounds);
-
-        _cursorRenderService.UpdateScreenBounds(CurrentScreenBounds);
     }
 
     public override void Dispose()
