@@ -60,7 +60,10 @@ public class ProcessServiceTests
     {
         // Arrange
         var expectedOutput = "Test output";
-        _mockProcessWrapper.Setup(p => p.StandardOutput.ReadToEndAsync()).ReturnsAsync(expectedOutput);
+        var mockStreamReader = new Mock<StreamReader>(new MemoryStream());
+        mockStreamReader.Setup(s => s.ReadToEndAsync()).ReturnsAsync(expectedOutput);
+
+        _mockProcessWrapper.Setup(p => p.StandardOutput).Returns(mockStreamReader.Object);
 
         // Act
         var output = await _processService.ReadStandardOutputAsync(_mockProcessWrapper.Object);

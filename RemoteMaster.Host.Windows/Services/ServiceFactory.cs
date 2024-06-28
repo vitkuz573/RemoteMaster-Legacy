@@ -9,11 +9,25 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class ServiceFactory : IServiceFactory
 {
-    private readonly Dictionary<string, AbstractService> _serviceInstances = [];
+    private readonly Dictionary<string, AbstractService> _serviceInstances;
 
-    public ServiceFactory()
+    public ServiceFactory() : this(null) { }
+
+    public ServiceFactory(IEnumerable<AbstractService> services)
     {
-        LoadAllServices();
+        _serviceInstances = [];
+
+        if (services == null)
+        {
+            LoadAllServices();
+        }
+        else
+        {
+            foreach (var service in services)
+            {
+                _serviceInstances[service.Name] = service;
+            }
+        }
     }
 
     private void LoadAllServices()
