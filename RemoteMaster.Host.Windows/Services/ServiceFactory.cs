@@ -11,7 +11,7 @@ public class ServiceFactory : IServiceFactory
 {
     private readonly Dictionary<string, AbstractService> _serviceInstances;
 
-    public ServiceFactory() : this(Enumerable.Empty<AbstractService>()) { }
+    public ServiceFactory() : this([]) { }
 
     public ServiceFactory(IEnumerable<AbstractService> services)
     {
