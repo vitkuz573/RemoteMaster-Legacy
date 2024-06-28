@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Abstractions;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Abstractions;
@@ -9,9 +10,9 @@ using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class HostInstaller(IHostInformationService hostInformationService, IHostConfigurationService hostConfigurationService, IServiceFactory serviceFactory, IHostLifecycleService hostLifecycleService) : IHostInstaller
+public class HostInstaller(IHostInformationService hostInformationService, IHostConfigurationService hostConfigurationService, IServiceFactory serviceFactory, IHostLifecycleService hostLifecycleService, IFileSystem fileSystem) : IHostInstaller
 {
-    private readonly string _applicationDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
+    private readonly string _applicationDirectory = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
 
     public async Task InstallAsync()
     {
@@ -59,29 +60,29 @@ public class HostInstaller(IHostInformationService hostInformationService, IHost
         }
     }
 
-    private static void CopyToTargetPath(string targetDirectoryPath)
+    private void CopyToTargetPath(string targetDirectoryPath)
     {
-        if (!Directory.Exists(targetDirectoryPath))
+        if (!fileSystem.Directory.Exists(targetDirectoryPath))
         {
-            Directory.CreateDirectory(targetDirectoryPath);
+            fileSystem.Directory.CreateDirectory(targetDirectoryPath);
         }
 
-        var targetExecutablePath = Path.Combine(targetDirectoryPath, "RemoteMaster.Host.exe");
+        var targetExecutablePath = fileSystem.Path.Combine(targetDirectoryPath, "RemoteMaster.Host.exe");
 
         try
         {
-            File.Copy(Environment.ProcessPath!, targetExecutablePath, true);
+            fileSystem.File.Copy(Environment.ProcessPath!, targetExecutablePath, true);
         }
         catch (Exception ex)
         {
             throw new InvalidOperationException($"Failed to copy the executable to {targetExecutablePath}. Details: {ex.Message}", ex);
         }
 
-        var sourceDirectoryPath = Path.GetDirectoryName(Environment.ProcessPath)!;
+        var sourceDirectoryPath = fileSystem.Path.GetDirectoryName(Environment.ProcessPath)!;
 
-        if (File.Exists(sourceDirectoryPath))
+        if (fileSystem.File.Exists(sourceDirectoryPath))
         {
-            File.Copy(sourceDirectoryPath, targetDirectoryPath, true);
+            fileSystem.File.Copy(sourceDirectoryPath, targetDirectoryPath, true);
         }
     }
 }
