@@ -64,33 +64,47 @@ public class DomainService(IPowerService powerService) : IDomainService
 
             using var profileListKey = Registry.LocalMachine.OpenSubKey(profileListPath, true);
 
-            foreach (var sidString in profileListKey.GetSubKeyNames())
+            if (profileListKey != null)
             {
-                using var sidKey = profileListKey.OpenSubKey(sidString, true);
-
-                var sid = new SecurityIdentifier(sidString);
-                var isDomainSid = sid.IsAccountSid() && !sid.IsWellKnown(WellKnownSidType.LocalSystemSid) && !sid.IsWellKnown(WellKnownSidType.LocalServiceSid) && !sid.IsWellKnown(WellKnownSidType.NetworkServiceSid);
-
-                if (isDomainSid)
+                foreach (var sidString in profileListKey.GetSubKeyNames())
                 {
-                    var profileImagePath = (string)sidKey.GetValue("ProfileImagePath");
+                    using var sidKey = profileListKey.OpenSubKey(sidString, true);
 
-                    if (!string.IsNullOrEmpty(profileImagePath) && Directory.Exists(profileImagePath))
+                    if (sidKey != null)
                     {
-                        try
-                        {
-                            Directory.Delete(profileImagePath, true);
-                            Log.Information("Profile directory {ProfileImagePath} deleted successfully.", profileImagePath);
+                        var sid = new SecurityIdentifier(sidString);
+                        var isDomainSid = sid.IsAccountSid() && !sid.IsWellKnown(WellKnownSidType.LocalSystemSid) && !sid.IsWellKnown(WellKnownSidType.LocalServiceSid) && !sid.IsWellKnown(WellKnownSidType.NetworkServiceSid);
 
-                            profileListKey.DeleteSubKeyTree(sidString);
-                            Log.Information("Registry key for SID {SID} deleted successfully.", sidString);
-                        }
-                        catch (Exception ex)
+                        if (isDomainSid)
                         {
-                            Log.Error(ex, "Error deleting profile directory {ProfileImagePath}.");
+                            var profileImagePathValue = sidKey.GetValue("ProfileImagePath");
+                            
+                            if (profileImagePathValue is string profileImagePath && !string.IsNullOrEmpty(profileImagePath) && Directory.Exists(profileImagePath))
+                            {
+                                try
+                                {
+                                    Directory.Delete(profileImagePath, true);
+                                    Log.Information("Profile directory {ProfileImagePath} deleted successfully.", profileImagePath);
+
+                                    profileListKey.DeleteSubKeyTree(sidString);
+                                    Log.Information("Registry key for SID {SID} deleted successfully.", sidString);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Log.Error(ex, "Error deleting profile directory {ProfileImagePath}.");
+                                }
+                            }
                         }
                     }
+                    else
+                    {
+                        Log.Warning("Subkey {SidString} not found.", sidString);
+                    }
                 }
+            }
+            else
+            {
+                Log.Warning("Registry key {ProfileListPath} not found.", profileListPath);
             }
         }
 
