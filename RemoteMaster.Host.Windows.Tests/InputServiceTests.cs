@@ -57,7 +57,7 @@ public class InputServiceTests
         _inputService.BlockUserInput = true;
 
         // Assert
-        _mockDesktopService.Verify(d => d.SwitchToInputDesktop(), Times.AtLeastOnce); // Adjusted to handle multiple invocations
+        _mockDesktopService.Verify(d => d.SwitchToInputDesktop(), Times.AtLeastOnce);
         _inputService.Stop();
     }
 
@@ -81,7 +81,7 @@ public class InputServiceTests
         _inputService.SendMouseInput(mouseInputDto, _mockScreenCapturerService.Object);
 
         // Assert
-        _mockDesktopService.Verify(d => d.SwitchToInputDesktop(), Times.AtLeastOnce); // Adjusted to handle timing issues
+        _mockDesktopService.Verify(d => d.SwitchToInputDesktop(), Times.AtLeastOnce);
         _inputService.Stop();
     }
 
@@ -97,7 +97,7 @@ public class InputServiceTests
         _inputService.SendKeyboardInput(keyboardInputDto);
 
         // Assert
-        _mockDesktopService.Verify(d => d.SwitchToInputDesktop(), Times.AtLeastOnce); // Adjusted to handle timing issues
+        _mockDesktopService.Verify(d => d.SwitchToInputDesktop(), Times.AtLeastOnce);
         _inputService.Stop();
     }
 }
