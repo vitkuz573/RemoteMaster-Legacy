@@ -17,6 +17,4 @@ public interface IProcessWrapper : IDisposable
     string GetCommandLine();
 
     void WaitForExit();
-
-    string ReadStandardOutput();
 }

@@ -35,7 +35,7 @@ public class WoLConfiguratorService(IRegistryService registryService, IProcessSe
         }
     }
 
-    public void EnableWakeOnLanForAllAdapters()
+    public async Task EnableWakeOnLanForAllAdaptersAsync()
     {
         try
         {
@@ -53,7 +53,7 @@ public class WoLConfiguratorService(IRegistryService registryService, IProcessSe
             using (var process = processService.Start(startInfoForDeviceQuery))
             {
                 processService.WaitForExit(process);
-                programmableDevices = processService.ReadStandardOutput(process);
+                programmableDevices = await processService.ReadStandardOutputAsync(process);
             }
 
             var deviceNames = programmableDevices.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);

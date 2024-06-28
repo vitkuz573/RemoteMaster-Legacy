@@ -43,11 +43,6 @@ public class ProcessWrapper : IProcessWrapper
         _process.WaitForExit();
     }
 
-    public string ReadStandardOutput()
-    {
-        return _process.StandardOutput.ReadToEnd();
-    }
-
     public void Dispose()
     {
         _process?.Dispose();

@@ -12,7 +12,7 @@ public interface IProcessService
 
     void WaitForExit(IProcessWrapper process);
 
-    string ReadStandardOutput(IProcessWrapper process);
+    Task<string> ReadStandardOutputAsync(IProcessWrapper process);
 
     IProcessWrapper[] FindProcessesByName(string processName);
 

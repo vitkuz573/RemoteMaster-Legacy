@@ -56,14 +56,14 @@ public class ProcessServiceTests
     }
 
     [Fact]
-    public void ReadStandardOutput_ValidProcess_ReturnsOutput()
+    public async Task ReadStandardOutput_ValidProcess_ReturnsOutput()
     {
         // Arrange
         var expectedOutput = "Test output";
-        _mockProcessWrapper.Setup(p => p.ReadStandardOutput()).Returns(expectedOutput);
+        _mockProcessWrapper.Setup(p => p.StandardOutput.ReadToEndAsync()).ReturnsAsync(expectedOutput);
 
         // Act
-        var output = _processService.ReadStandardOutput(_mockProcessWrapper.Object);
+        var output = await _processService.ReadStandardOutputAsync(_mockProcessWrapper.Object);
 
         // Assert
         Assert.Equal(expectedOutput, output);

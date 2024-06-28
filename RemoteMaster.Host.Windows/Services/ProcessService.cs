@@ -21,11 +21,11 @@ public class ProcessService(IProcessWrapperFactory processWrapperFactory) : IPro
         process.WaitForExit();
     }
 
-    public string ReadStandardOutput(IProcessWrapper process)
+    public async Task<string> ReadStandardOutputAsync(IProcessWrapper process)
     {
         ArgumentNullException.ThrowIfNull(process);
 
-        return process.ReadStandardOutput();
+        return await process.StandardOutput.ReadToEndAsync();
     }
 
     public IProcessWrapper[] FindProcessesByName(string processName)

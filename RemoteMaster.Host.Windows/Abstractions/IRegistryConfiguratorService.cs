@@ -10,5 +10,5 @@ public interface IWoLConfiguratorService
 
     void DisablePnPEnergySaving();
 
-    void EnableWakeOnLanForAllAdapters();
+    Task EnableWakeOnLanForAllAdaptersAsync();
 }

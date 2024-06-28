@@ -242,7 +242,7 @@ internal class Program
        
         wolConfiguratorService.DisableFastStartup();
         wolConfiguratorService.DisablePnPEnergySaving();
-        wolConfiguratorService.EnableWakeOnLanForAllAdapters();
+        await wolConfiguratorService.EnableWakeOnLanForAllAdaptersAsync();
 
         if (!app.Environment.IsDevelopment())
         {
