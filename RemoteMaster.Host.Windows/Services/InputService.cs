@@ -41,6 +41,8 @@ public sealed class InputService(IDesktopService desktopService) : IInputService
 
     public void Start()
     {
+        ObjectDisposedException.ThrowIf(_disposed, nameof(InputService));
+
         if (_workerThread == null || !_workerThread.IsAlive)
         {
             _workerThread = new Thread(ProcessQueue)
@@ -113,6 +115,8 @@ public sealed class InputService(IDesktopService desktopService) : IInputService
 
     private void EnqueueOperation(Action operation)
     {
+        ObjectDisposedException.ThrowIf(_disposed, nameof(InputService));
+
         if (InputEnabled)
         {
             _operationQueue.Enqueue(() =>
@@ -141,6 +145,8 @@ public sealed class InputService(IDesktopService desktopService) : IInputService
 
     public void SendMouseInput(MouseInputDto dto, IScreenCapturerService screenCapturer)
     {
+        ObjectDisposedException.ThrowIf(_disposed, nameof(InputService));
+
         EnqueueOperation(() =>
         {
             var mouseEventFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE | MOUSE_EVENT_FLAGS.MOUSEEVENTF_VIRTUALDESK;
@@ -196,6 +202,8 @@ public sealed class InputService(IDesktopService desktopService) : IInputService
 
     public void SendKeyboardInput(KeyboardInputDto dto)
     {
+        ObjectDisposedException.ThrowIf(_disposed, nameof(InputService));
+
         ArgumentNullException.ThrowIfNull(dto);
 
         var virtualKeyCode = ConvertKeyToVirtualKeyCode(dto.Code);
@@ -395,6 +403,8 @@ public sealed class InputService(IDesktopService desktopService) : IInputService
             return;
         }
 
+        _disposed = true;
+
         if (disposing)
         {
             _cts.Cancel();
@@ -408,8 +418,6 @@ public sealed class InputService(IDesktopService desktopService) : IInputService
             _cts.Dispose();
             _queueEvent.Dispose();
         }
-
-        _disposed = true;
     }
 
     ~InputService()
