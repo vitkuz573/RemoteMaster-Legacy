@@ -3,18 +3,15 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Drawing;
+using System.Drawing.Imaging;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Services;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Windows.Tests;
 
-public class TestScreenCapturerService : ScreenCapturerService
+public class TestScreenCapturerService(IDesktopService desktopService) : ScreenCapturerService(desktopService)
 {
-    public TestScreenCapturerService(IDesktopService desktopService) : base(desktopService)
-    {
-    }
-
     protected override void Init()
     {
         // Implementation for testing
@@ -28,7 +25,7 @@ public class TestScreenCapturerService : ScreenCapturerService
         graphics.Clear(Color.Red);
 
         using var ms = new MemoryStream();
-        bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+        bitmap.Save(ms, ImageFormat.Png);
 
         return ms.ToArray();
     }
