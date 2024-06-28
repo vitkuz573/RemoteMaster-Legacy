@@ -9,4 +9,6 @@ namespace RemoteMaster.Host.Windows.Abstractions;
 public interface ICursorRenderService : IDisposable
 {
     void DrawCursor(Graphics g, Rectangle currentScreenBounds);
+
+    void ClearCache();
 }

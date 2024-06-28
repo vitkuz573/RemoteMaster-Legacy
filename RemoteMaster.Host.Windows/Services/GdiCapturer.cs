@@ -145,6 +145,7 @@ public class GdiCapturer : ScreenCapturerService
     {
         CurrentScreenBounds = SelectedScreen == VirtualScreen ? VirtualScreenBounds : Screen.AllScreens[Screens[SelectedScreen]].Bounds;
         RaiseScreenChangedEvent(CurrentScreenBounds);
+        _cursorRenderService.ClearCache();
     }
 
     public override void Dispose()

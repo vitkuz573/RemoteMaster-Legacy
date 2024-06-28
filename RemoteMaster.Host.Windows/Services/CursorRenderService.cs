@@ -14,6 +14,7 @@ public class CursorRenderService : ICursorRenderService
 {
     private Point? _lastCursorPoint;
     private Icon? _lastCursorIcon;
+    private Rectangle _cachedScreenBounds;
     private readonly uint _cursorInfoSize;
 
     public CursorRenderService()
@@ -25,6 +26,8 @@ public class CursorRenderService : ICursorRenderService
     {
         ArgumentNullException.ThrowIfNull(g);
 
+        _cachedScreenBounds = currentScreenBounds;
+
         var cursorInfo = GetCursorInformation();
 
         if (cursorInfo.flags != CURSORINFO_FLAGS.CURSOR_SHOWING)
@@ -32,10 +35,10 @@ public class CursorRenderService : ICursorRenderService
             return;
         }
 
-        var relativeX = cursorInfo.ptScreenPos.X - currentScreenBounds.Left;
-        var relativeY = cursorInfo.ptScreenPos.Y - currentScreenBounds.Top;
+        var relativeX = cursorInfo.ptScreenPos.X - _cachedScreenBounds.Left;
+        var relativeY = cursorInfo.ptScreenPos.Y - _cachedScreenBounds.Top;
 
-        if (relativeX < 0 || relativeX >= currentScreenBounds.Width || relativeY < 0 || relativeY >= currentScreenBounds.Height)
+        if (relativeX < 0 || relativeX >= _cachedScreenBounds.Width || relativeY < 0 || relativeY >= _cachedScreenBounds.Height)
         {
             return;
         }
@@ -68,6 +71,13 @@ public class CursorRenderService : ICursorRenderService
         GetCursorInfo(ref cursorInfo);
 
         return cursorInfo;
+    }
+
+    public void ClearCache()
+    {
+        _lastCursorIcon?.Dispose();
+        _lastCursorPoint = null;
+        _cachedScreenBounds = Rectangle.Empty;
     }
 
     public void Dispose()

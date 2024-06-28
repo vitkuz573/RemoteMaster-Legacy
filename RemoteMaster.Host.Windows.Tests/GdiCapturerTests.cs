@@ -22,6 +22,7 @@ public class GdiCapturerTests : IDisposable
         _mockDesktopService = new Mock<IDesktopService>();
 
         _mockCursorRenderService.Setup(crs => crs.DrawCursor(It.IsAny<Graphics>(), It.IsAny<Rectangle>()));
+        _mockCursorRenderService.Setup(crs => crs.ClearCache());
 
         _gdiCapturer = new GdiCapturer(_mockCursorRenderService.Object, _mockDesktopService.Object);
     }
