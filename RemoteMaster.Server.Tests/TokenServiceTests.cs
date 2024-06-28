@@ -121,12 +121,4 @@ public class TokenServiceTests
 
         return new Mock<UserManager<TUser>>(store.Object, null, null, null, null, null, null, null, null);
     }
-
-    private static Mock<RoleManager<TRole>> MockRoleManager<TRole>() where TRole : class
-    {
-        var store = new Mock<IRoleStore<TRole>>();
-        var roles = new List<IRoleValidator<TRole>> { new RoleValidator<TRole>() };
-
-        return new Mock<RoleManager<TRole>>(store.Object, roles, null, null, null);
-    }
 }
