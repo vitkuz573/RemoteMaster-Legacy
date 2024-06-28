@@ -17,7 +17,6 @@ public class PsExecServiceTests
     private readonly Mock<IHostConfigurationService> _mockHostConfigurationService;
     private readonly Mock<IHubContext<ServiceHub, IServiceClient>> _mockHubContext;
     private readonly Mock<IServiceClient> _mockServiceClient;
-    private readonly Mock<IProcessService> _mockProcessService;
     private readonly Mock<ICommandExecutor> _mockCommandExecutor;
 
     public PsExecServiceTests()
@@ -25,7 +24,6 @@ public class PsExecServiceTests
         _mockHostConfigurationService = new Mock<IHostConfigurationService>();
         _mockHubContext = new Mock<IHubContext<ServiceHub, IServiceClient>>();
         _mockServiceClient = new Mock<IServiceClient>();
-        _mockProcessService = new Mock<IProcessService>();
         _mockCommandExecutor = new Mock<ICommandExecutor>();
 
         _mockHubContext.Setup(h => h.Clients.All).Returns(_mockServiceClient.Object);
