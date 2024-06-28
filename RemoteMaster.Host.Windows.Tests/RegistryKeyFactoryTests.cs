@@ -26,7 +26,7 @@ public class RegistryKeyFactoryTests
         var writable = false;
 
         // Act
-        var result = _registryKeyFactory.OpenSubKey(hive, keyPath, writable);
+        var result = _registryKeyFactory.Create(hive, keyPath, writable);
 
         // Assert
         Assert.NotNull(result);
@@ -42,7 +42,7 @@ public class RegistryKeyFactoryTests
         var writable = false;
 
         // Act
-        var result = _registryKeyFactory.OpenSubKey(hive, keyPath, writable);
+        var result = _registryKeyFactory.Create(hive, keyPath, writable);
 
         // Assert
         Assert.Null(result);

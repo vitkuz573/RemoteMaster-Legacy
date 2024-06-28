@@ -11,7 +11,7 @@ public class RegistryService(IRegistryKeyFactory registryKeyFactory) : IRegistry
 {
     public IRegistryKey? OpenSubKey(RegistryHive hive, string keyPath, bool writable)
     {
-        return registryKeyFactory.OpenSubKey(hive, keyPath, writable);
+        return registryKeyFactory.Create(hive, keyPath, writable);
     }
 
     public void SetValue(RegistryHive hive, string keyPath, string valueName, object value, RegistryValueKind valueKind)

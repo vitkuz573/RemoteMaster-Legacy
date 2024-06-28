@@ -28,7 +28,7 @@ public class RegistryServiceTests
         // Arrange
         var hive = RegistryHive.CurrentUser;
         var keyPath = @"Software\MyApp";
-        _mockRegistryKeyFactory.Setup(f => f.OpenSubKey(hive, keyPath, false)).Returns(_mockRegistryKey.Object);
+        _mockRegistryKeyFactory.Setup(f => f.Create(hive, keyPath, false)).Returns(_mockRegistryKey.Object);
 
         // Act
         var result = _registryService.OpenSubKey(hive, keyPath, false);
@@ -48,7 +48,7 @@ public class RegistryServiceTests
         var value = "Test";
         var valueKind = RegistryValueKind.String;
 
-        _mockRegistryKeyFactory.Setup(f => f.OpenSubKey(hive, keyPath, true)).Returns(_mockRegistryKey.Object);
+        _mockRegistryKeyFactory.Setup(f => f.Create(hive, keyPath, true)).Returns(_mockRegistryKey.Object);
 
         // Act
         _registryService.SetValue(hive, keyPath, valueName, value, valueKind);
@@ -67,7 +67,7 @@ public class RegistryServiceTests
         var expectedValue = "Test";
 
         _mockRegistryKey.Setup(k => k.GetValue(valueName, It.IsAny<object>())).Returns(expectedValue);
-        _mockRegistryKeyFactory.Setup(f => f.OpenSubKey(hive, keyPath, false)).Returns(_mockRegistryKey.Object);
+        _mockRegistryKeyFactory.Setup(f => f.Create(hive, keyPath, false)).Returns(_mockRegistryKey.Object);
 
         // Act
         var result = _registryService.GetValue(hive, keyPath, valueName, null);
@@ -86,7 +86,7 @@ public class RegistryServiceTests
         var defaultValue = "Default";
 
         _mockRegistryKey.Setup(k => k.GetValue(valueName, It.IsAny<object>())).Returns(defaultValue);
-        _mockRegistryKeyFactory.Setup(f => f.OpenSubKey(hive, keyPath, false)).Returns(_mockRegistryKey.Object);
+        _mockRegistryKeyFactory.Setup(f => f.Create(hive, keyPath, false)).Returns(_mockRegistryKey.Object);
 
         // Act
         var result = _registryService.GetValue(hive, keyPath, valueName, defaultValue);

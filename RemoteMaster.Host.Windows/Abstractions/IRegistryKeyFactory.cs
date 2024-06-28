@@ -8,5 +8,5 @@ namespace RemoteMaster.Host.Windows.Abstractions;
 
 public interface IRegistryKeyFactory
 {
-    IRegistryKey? OpenSubKey(RegistryHive hive, string keyPath, bool writable);
+    IRegistryKey? Create(RegistryHive hive, string keyPath, bool writable);
 }
