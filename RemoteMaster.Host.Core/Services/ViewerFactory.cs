@@ -10,8 +10,8 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class ViewerFactory(IHubContext<ControlHub, IControlClient> hubContext, IScreenCapturerService screenCapturerService) : IViewerFactory
 {
-    public IViewer Create(string connectionId, string group, string userName, string role)
+    public IViewer Create(string connectionId, string group, string userName, string role, bool isUser)
     {
-        return new Viewer(hubContext, screenCapturerService, connectionId, group, userName, role);
+        return new Viewer(hubContext, screenCapturerService, connectionId, group, userName, role, isUser);
     }
 }

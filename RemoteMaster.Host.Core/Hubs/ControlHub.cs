@@ -17,7 +17,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
-[Authorize]
+[AllowAnonymous]
 public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturerService, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService, ICertificateStoreService certificateStoreService) : Hub<IControlClient>
 {
     public async Task ConnectAs(ConnectionRequest connectionRequest)
@@ -39,7 +39,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
                 break;
 
             case Intention.ManageDevice:
-                var viewer = viewerFactory.Create(Context.ConnectionId, connectionRequest.Group, connectionRequest.UserName, connectionRequest.Role);
+                var viewer = viewerFactory.Create(Context.ConnectionId, connectionRequest.Group, connectionRequest.UserName, connectionRequest.Role, true);
                 appState.TryAddViewer(viewer);
 
                 var assembly = Assembly.GetEntryAssembly();
@@ -173,7 +173,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     public async Task JoinGroup(string groupName)
     {
-        var viewer = viewerFactory.Create(Context.ConnectionId, groupName, "RCHost", "Windows Service");
+        var viewer = viewerFactory.Create(Context.ConnectionId, groupName, "RCHost", "Windows Service", false);
         appState.TryAddViewer(viewer);
 
         await Groups.AddToGroupAsync(Context.ConnectionId, groupName);

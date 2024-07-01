@@ -17,7 +17,7 @@ public class Viewer : IViewer
     private readonly IHubContext<ControlHub, IControlClient> _hubContext;
     private bool _disposed;
 
-    public Viewer(IHubContext<ControlHub, IControlClient> hubContext, IScreenCapturerService screenCapturer, string connectionId, string group, string userName, string role)
+    public Viewer(IHubContext<ControlHub, IControlClient> hubContext, IScreenCapturerService screenCapturer, string connectionId, string group, string userName, string role, bool isUser = false)
     {
         _hubContext = hubContext;
 
@@ -31,7 +31,10 @@ public class Viewer : IViewer
 
         ScreenCapturer.ScreenChanged += async (_, bounds) => await SendScreenSize(bounds.Width, bounds.Height);
 
-        _ = StartStreaming();
+        if (isUser)
+        {
+            _ = StartStreaming();
+        }
     }
 
     public IScreenCapturerService ScreenCapturer { get; }

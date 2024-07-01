@@ -131,18 +131,24 @@ internal class Program
                                 return Task.CompletedTask;
                             }
 
-                            if (!remoteIp.Equals(IPAddress.Loopback) && !remoteIp.Equals(IPAddress.IPv6Loopback) && !remoteIp.Equals(localIPv6Mapped))
+                            if (remoteIp.Equals(IPAddress.Loopback) || remoteIp.Equals(IPAddress.IPv6Loopback) || remoteIp.Equals(localIPv6Mapped))
                             {
-                                return Task.CompletedTask;
+                                // Пропускаем проверку токена для localhost
+                                context.NoResult();
                             }
 
-                            var identity = new ClaimsIdentity(
-                            [
-                                new Claim(ClaimTypes.Name, "localhost@localdomain"),
-                            ], "LocalAuth");
+                            return Task.CompletedTask;
+                        },
+                        OnChallenge = context =>
+                        {
+                            var remoteIp = context.HttpContext.Connection.RemoteIpAddress;
+                            var localIPv6Mapped = IPAddress.Parse("::ffff:127.0.0.1");
 
-                            context.Principal = new ClaimsPrincipal(identity);
-                            context.Success();
+                            if (remoteIp != null && (remoteIp.Equals(IPAddress.Loopback) || remoteIp.Equals(IPAddress.IPv6Loopback) || remoteIp.Equals(localIPv6Mapped)))
+                            {
+                                // Пропускаем вызов Challenge для localhost
+                                context.HandleResponse();
+                            }
 
                             return Task.CompletedTask;
                         }
