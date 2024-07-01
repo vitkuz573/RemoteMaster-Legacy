@@ -16,6 +16,7 @@ using Polly;
 using Polly.Retry;
 using RemoteMaster.Server.Components.Dialogs;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
@@ -31,7 +32,7 @@ public partial class Home
     private UserInfo _userInfo = new();
     private bool _drawerOpen;
     private INode? _selectedNode;
-    private HashSet<INode>? _nodes;
+    private List<TreeItemData<INode>> _treeItems = new();
 
     private readonly List<Computer> _selectedComputers = [];
     private readonly ConcurrentDictionary<string, Computer> _availableComputers = new();
@@ -55,7 +56,8 @@ public partial class Home
 
         await InitializeUserAsync();
 
-        _nodes = new HashSet<INode>(await LoadNodes());
+        var nodes = await LoadNodes();
+        _treeItems = nodes.Select(node => new UnifiedTreeItemData(node)).Cast<TreeItemData<INode>>().ToList();
 
         await AccessTokenProvider.GetAccessTokenAsync(userId);
     }
@@ -116,8 +118,7 @@ public partial class Home
         if (string.IsNullOrEmpty(userId))
         {
             Log.Warning("User ID not found in claims");
-
-            return [];
+            return Enumerable.Empty<INode>();
         }
 
         var accessibleOrganizations = await GetAccessibleOrganizations(userId);
@@ -126,7 +127,7 @@ public partial class Home
 
         if (organizationId == null)
         {
-            var organizations = await DatabaseService.GetNodesAsync<Organization>(o => accessibleOrganizations.Contains(o.NodeId)) ?? [];
+            var organizations = await DatabaseService.GetNodesAsync<Organization>(o => accessibleOrganizations.Contains(o.NodeId)) ?? Enumerable.Empty<Organization>();
             units.AddRange(organizations);
 
             foreach (var organization in organizations)
@@ -139,9 +140,9 @@ public partial class Home
             var organizationalUnits = await DatabaseService.GetNodesAsync<OrganizationalUnit>(ou =>
                 ou.OrganizationId == organizationId &&
                 (parentId == null || ou.ParentId == parentId) &&
-                accessibleOrganizationalUnits.Contains(ou.NodeId)) ?? [];
+                accessibleOrganizationalUnits.Contains(ou.NodeId)) ?? Enumerable.Empty<OrganizationalUnit>();
 
-            var computers = await DatabaseService.GetNodesAsync<Computer>(c => c.ParentId == parentId) ?? [];
+            var computers = await DatabaseService.GetNodesAsync<Computer>(c => c.ParentId == parentId) ?? Enumerable.Empty<Computer>();
 
             units.AddRange(organizationalUnits);
             units.AddRange(computers);

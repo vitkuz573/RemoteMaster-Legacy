@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Net.NetworkInformation;
 using System.Text.Json.Serialization;
+using RemoteMaster.Shared.Abstractions;
 
 namespace RemoteMaster.Shared.Models;
 

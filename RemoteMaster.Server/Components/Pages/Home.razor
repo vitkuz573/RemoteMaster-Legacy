@@ -9,6 +9,7 @@
 @using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Server.Data
 @using RemoteMaster.Server.Models
+@using RemoteMaster.Shared.Abstractions
 @using RemoteMaster.Shared.Models
 
 @inject IBrandingService BrandingService
@@ -55,28 +56,19 @@
     <MudMainContent>
         <div class="flex">
             <div>
-                <MudTreeView Items="@_nodes" T="INode" SelectedValueChanged="OnNodeSelected" Hover="true" Class="pa-6">
+                <MudTreeView Items="@_treeItems" T="INode" SelectedValueChanged="OnNodeSelected" Hover="true" Class="pa-6">
                     <ItemTemplate>
-                        @{
-                            if (context is Organization organization)
-                            {
-                                var orgUnits = organization.OrganizationalUnits?.Cast<INode>().ToHashSet() ?? new HashSet<INode>();
-                                <MudTreeViewItem Items="orgUnits" Value="@context" Text="@context.Name" Disabled="true">
-                                    <ChildContent>
-                                        <MudTreeViewItem Text="@context.Name" Items="orgUnits" @onclick:stopPropagation="true" />
-                                    </ChildContent>
-                                </MudTreeViewItem>
-                            }
-                            else if (context is OrganizationalUnit organizationalUnit)
-                            {
-                                var children = organizationalUnit.Children?.Cast<INode>().Concat(organizationalUnit.Computers).ToHashSet() ?? new HashSet<INode>();
-                                <MudTreeViewItem Items="children" Value="@context" Text="@context.Name" />
-                            }
-                            else if (context is Computer computer)
-                            {
-                                <MudTreeViewItem Value="@context" Text="@context.Name" />
-                            }
-                        }
+                        <MudTreeViewItem Text="@context.Text" Value="@context.Value" Icon="@context.Icon">
+                            <ChildContent>
+                                @if (context.Children != null && context.Children.Count > 0)
+                                {
+                                    @foreach (var child in context.Children)
+                                    {
+                                        <MudTreeViewItem Text="@child.Text" Value="@child.Value" Icon="@child.Icon" />
+                                    }
+                                }
+                            </ChildContent>
+                        </MudTreeViewItem>
                     </ItemTemplate>
                 </MudTreeView>
             </div>
@@ -132,7 +124,7 @@
 
                 <div class="flex flex-col gap-4">
                     <MudExpansionPanels MultiExpansion="true">
-                        <MudExpansionPanel Text="@($"Available computers ({_availableComputers.Count})")" IsInitiallyExpanded="true">
+                        <MudExpansionPanel Text="@($"Available computers ({_availableComputers.Count})")" Expanded="true">
                             <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="SelectAllAvailableComputers" Disabled="@(!CanSelectAll(_availableComputers))">Select All</MudButton>
                             <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="DeselectAllAvailableComputers" Disabled="@(!CanDeselectAll(_availableComputers))">Deselect All</MudButton>
                             <div class="mt-4 flex flex-wrap gap-4">
@@ -153,7 +145,7 @@
                                 }
                             </div>
                         </MudExpansionPanel>
-                        <MudExpansionPanel Text="@($"Unavailable computers ({_unavailableComputers.Count})")" IsInitiallyExpanded="true">
+                        <MudExpansionPanel Text="@($"Unavailable computers ({_unavailableComputers.Count})")" Expanded="true">
                             <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="SelectAllUnavailableComputers" Disabled="@(!CanSelectAll(_unavailableComputers))">Select All</MudButton>
                             <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="DeselectAllUnavailableComputers" Disabled="@(!CanDeselectAll(_unavailableComputers))">Deselect All</MudButton>
                             <div class="mt-4 flex flex-wrap gap-4">
@@ -174,7 +166,7 @@
                                 }
                             </div>
                         </MudExpansionPanel>
-                        <MudExpansionPanel Text="@($"Pending computers ({_pendingComputers.Count})")" IsInitiallyExpanded="true">
+                        <MudExpansionPanel Text="@($"Pending computers ({_pendingComputers.Count})")" Expanded="true">
                             <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="SelectAllPendingComputers" Disabled="@(!CanSelectAll(_pendingComputers))">Select All</MudButton>
                             <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="DeselectAllPendingComputers" Disabled="@(!CanDeselectAll(_pendingComputers))">Deselect All</MudButton>
                             <div class="mt-4 flex flex-wrap gap-4">
