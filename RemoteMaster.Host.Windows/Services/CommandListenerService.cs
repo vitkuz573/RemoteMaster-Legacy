@@ -17,6 +17,7 @@ public class CommandListenerService : IHostedService
 {
     private readonly IUserInstanceService _userInstanceService;
     private HubConnection? _connection;
+    private readonly object _connectionLock = new();
 
     public CommandListenerService(IUserInstanceService userInstanceService)
     {
@@ -24,38 +25,44 @@ public class CommandListenerService : IHostedService
         _userInstanceService.UserInstanceCreated += OnUserInstanceCreated;
     }
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    public Task StartAsync(CancellationToken cancellationToken)
     {
-        Log.Information("Starting CommandListenerService");
+        Log.Information("CommandListenerService started at {Time}", DateTimeOffset.Now);
 
-        await CreateAndStartConnectionAsync();
+        return Task.CompletedTask;
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
+        Log.Information("Stopping CommandListenerService at {Time}", DateTimeOffset.Now);
+
         if (_connection != null)
         {
             await _connection.StopAsync(cancellationToken);
             await _connection.DisposeAsync();
+
+            _connection = null;
         }
     }
 
     private async void OnUserInstanceCreated(object? sender, UserInstanceCreatedEventArgs e)
     {
-        Log.Information("UserInstanceCreated event received, connecting to hub");
+        Log.Information("UserInstanceCreated event received at {Time}", DateTimeOffset.Now);
 
-        try
-        {
-            await CreateAndStartConnectionAsync();
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Connection error");
-        }
+        await StartConnectionAsync();
     }
 
-    private async Task CreateAndStartConnectionAsync()
+    private async Task StartConnectionAsync()
     {
+        lock (_connectionLock)
+        {
+            if (_connection != null && _connection.State != HubConnectionState.Disconnected)
+            {
+                Log.Information("Connection is already in a valid state: {State} at {Time}", _connection.State, DateTimeOffset.Now);
+                return;
+            }
+        }
+
         await Task.Delay(3000);
 
 #pragma warning disable CA2000
@@ -65,21 +72,24 @@ public class CommandListenerService : IHostedService
         };
 #pragma warning restore CA2000
 
-        Log.Information("Creating HubConnection");
+        Log.Information("Creating HubConnection at {Time}", DateTimeOffset.Now);
 
-        _connection = new HubConnectionBuilder()
-            .WithUrl("https://127.0.0.1:5001/hubs/control", options =>
-            {
-                options.HttpMessageHandlerFactory = _ => httpClientHandler;
-            })
-            .AddMessagePackProtocol()
-            .Build();
+        lock (_connectionLock)
+        {
+            _connection = new HubConnectionBuilder()
+                .WithUrl("https://127.0.0.1:5001/hubs/control", options =>
+                {
+                    options.HttpMessageHandlerFactory = _ => httpClientHandler;
+                })
+                .AddMessagePackProtocol()
+                .Build();
+        }
 
-        Log.Information("HubConnection created, setting up ReceiveCommand handler");
+        Log.Information("HubConnection created, setting up ReceiveCommand handler at {Time}", DateTimeOffset.Now);
 
         _connection.On<string>("ReceiveCommand", (command) =>
         {
-            Log.Information("Invoked with command: {Command}", command);
+            Log.Information("Invoked with command: {Command} at {Time}", command, DateTimeOffset.Now);
 
             if (command == "CtrlAltDel")
             {
@@ -90,27 +100,27 @@ public class CommandListenerService : IHostedService
 
         _connection.Closed += async (error) =>
         {
-            Log.Warning("Connection closed: {Error}", error?.Message);
+            Log.Warning("Connection closed: {Error} at {Time}", error?.Message, DateTimeOffset.Now);
 
             await Task.Delay(5000);
-            await CreateAndStartConnectionAsync();
+            await StartConnectionAsync();
         };
 
         _connection.Reconnecting += (error) =>
         {
-            Log.Warning("Connection reconnecting: {Error}", error?.Message);
+            Log.Warning("Connection reconnecting: {Error} at {Time}", error?.Message, DateTimeOffset.Now);
 
             return Task.CompletedTask;
         };
 
         _connection.Reconnected += (connectionId) =>
         {
-            Log.Information("Connection reconnected: {ConnectionId}", connectionId);
+            Log.Information("Connection reconnected: {ConnectionId} at {Time}", connectionId, DateTimeOffset.Now);
 
             return Task.CompletedTask;
         };
 
-        Log.Information("Starting connection to the hub");
+        Log.Information("Starting connection to the hub at {Time}", DateTimeOffset.Now);
 
         await _connection.StartAsync();
 
@@ -118,15 +128,15 @@ public class CommandListenerService : IHostedService
 
         if (_connection.State == HubConnectionState.Connected)
         {
-            Log.Information("Connection started successfully, joining Services");
+            Log.Information("Connection started successfully, joining Services at {Time}", DateTimeOffset.Now);
 
             await _connection.InvokeAsync("JoinGroup", "Services");
 
-            Log.Information("Successfully joined Services");
+            Log.Information("Successfully joined Services at {Time}", DateTimeOffset.Now);
         }
         else
         {
-            Log.Warning("Connection did not start successfully. Current state: {State}", _connection.State);
+            Log.Warning("Connection did not start successfully. Current state: {State} at {Time}", _connection.State, DateTimeOffset.Now);
         }
     }
 }

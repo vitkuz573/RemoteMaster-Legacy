@@ -3,21 +3,23 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.IO.Abstractions;
-using System.Net;
 using System.Reflection;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.AuthorizationHandlers;
 using RemoteMaster.Host.Core.Extensions;
 using RemoteMaster.Host.Core.Models;
+using RemoteMaster.Host.Core.Requirements;
 using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Enums;
@@ -53,6 +55,8 @@ internal class Program
             builder.Host.UseWindowsService();
         }
 
+        builder.Services.AddHttpContextAccessor();
+
         builder.Services.AddCoreServices(launchModeInstance);
         builder.Services.AddTransient<IServiceFactory, ServiceFactory>();
         builder.Services.AddTransient<IRegistryKeyFactory, RegistryKeyFactory>();
@@ -85,6 +89,7 @@ internal class Program
         builder.Services.AddSingleton<IArgumentBuilderService, ArgumentBuilderService>();
         builder.Services.AddSingleton<IInstanceStarterService, InstanceStarterService>();
         builder.Services.AddSingleton<IFileSystem, FileSystem>();
+        builder.Services.AddSingleton<IAuthorizationHandler, LocalhostOrAuthenticatedHandler>();
         builder.Services.AddSingleton(new JsonSerializerOptions
         {
             WriteIndented = true,
@@ -118,44 +123,11 @@ internal class Program
                         IssuerSigningKey = new RsaSecurityKey(rsa),
                         RoleClaimType = ClaimTypes.Role
                     };
-
-                    jwtBearerOptions.Events = new JwtBearerEvents
-                    {
-                        OnMessageReceived = context =>
-                        {
-                            var remoteIp = context.HttpContext.Connection.RemoteIpAddress;
-                            var localIPv6Mapped = IPAddress.Parse("::ffff:127.0.0.1");
-
-                            if (remoteIp == null)
-                            {
-                                return Task.CompletedTask;
-                            }
-
-                            if (remoteIp.Equals(IPAddress.Loopback) || remoteIp.Equals(IPAddress.IPv6Loopback) || remoteIp.Equals(localIPv6Mapped))
-                            {
-                                // Пропускаем проверку токена для localhost
-                                context.NoResult();
-                            }
-
-                            return Task.CompletedTask;
-                        },
-                        OnChallenge = context =>
-                        {
-                            var remoteIp = context.HttpContext.Connection.RemoteIpAddress;
-                            var localIPv6Mapped = IPAddress.Parse("::ffff:127.0.0.1");
-
-                            if (remoteIp != null && (remoteIp.Equals(IPAddress.Loopback) || remoteIp.Equals(IPAddress.IPv6Loopback) || remoteIp.Equals(localIPv6Mapped)))
-                            {
-                                // Пропускаем вызов Challenge для localhost
-                                context.HandleResponse();
-                            }
-
-                            return Task.CompletedTask;
-                        }
-                    };
                 });
 
             builder.Services.AddAuthorizationBuilder()
+                .AddPolicy("LocalhostOrAuthenticatedPolicy", policy =>
+                    policy.Requirements.Add(new LocalhostOrAuthenticatedRequirement()))
                 .AddPolicy("MouseInputPolicy", policy =>
                     policy.RequireClaim("Permission", "MouseInput"))
                 .AddPolicy("KeyboardInputPolicy", policy =>

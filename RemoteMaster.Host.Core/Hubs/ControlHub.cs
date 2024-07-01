@@ -17,7 +17,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
-[AllowAnonymous]
+[Authorize(Policy = "LocalhostOrAuthenticatedPolicy")]
 public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturerService, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService, ICertificateStoreService certificateStoreService) : Hub<IControlClient>
 {
     public async Task ConnectAs(ConnectionRequest connectionRequest)

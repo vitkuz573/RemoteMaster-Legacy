@@ -77,7 +77,7 @@ public class UserInstanceService : IUserInstanceService
             Arguments = _argument,
             ForceConsoleSession = true,
             DesktopName = "Default",
-            CreateNoWindow = true,
+            CreateNoWindow = false,
             UseCurrentUserToken = false
         };
 
