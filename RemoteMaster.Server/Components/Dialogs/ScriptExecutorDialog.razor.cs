@@ -66,12 +66,12 @@ public partial class ScriptExecutorDialog
         }
     }
 
-    private async Task UploadFiles(InputFileChangeEventArgs e)
+    private async Task UploadFiles(IBrowserFile file)
     {
-        using var reader = new StreamReader(e.File.OpenReadStream());
+        using var reader = new StreamReader(file.OpenReadStream());
         _content = await reader.ReadToEndAsync();
 
-        _shell = Path.GetExtension(e.File.Name) switch
+        _shell = Path.GetExtension(file.Name) switch
         {
             ".bat" => Shell.Cmd,
             ".cmd" => Shell.Cmd,

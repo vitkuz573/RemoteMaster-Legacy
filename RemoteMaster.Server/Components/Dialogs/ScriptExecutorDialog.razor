@@ -12,7 +12,7 @@
             <MudItem xs="3">
                 <MudTextField T="string" Label="Script" @bind-Value="_content" Lines="4" Placeholder="Enter or upload your script here..." />
 
-                <MudFileUpload T="IBrowserFile" OnFilesChanged="UploadFiles">
+                <MudFileUpload T="IBrowserFile" Accept=".bat, .cmd, .ps1" FilesChanged="UploadFiles">
                     <ActivatorContent>
                         <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FileUpload" FullWidth>
                              Upload Script
