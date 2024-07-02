@@ -28,11 +28,9 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
         }
     };
 
-    private readonly IServiceProvider _serviceProvider = serviceProvider;
-
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        using var scope = _serviceProvider.CreateScope();
+        using var scope = serviceProvider.CreateScope();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
         foreach (var role in _roles)

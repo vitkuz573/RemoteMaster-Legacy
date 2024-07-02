@@ -20,7 +20,7 @@
                      </ActivatorContent>
                  </MudFileUpload>
 
-                 <MudSelect T="Shell" Label="Select Shell" @bind-Value="_shell" Dense="true">
+                 <MudSelect T="Shell" Label="Select Shell" @bind-Value="_shell" AnchorOrigin="Origin.CenterCenter" TransformOrigin="Origin.CenterCenter" Dense="true">
                     @foreach (var shellType in Enum.GetValues(typeof(Shell)).Cast<Shell>())
                     {
                         <MudSelectItem Value="@shellType" />
