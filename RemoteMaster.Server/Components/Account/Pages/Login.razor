@@ -1,6 +1,7 @@
 ﻿@page "/Account/Login"
 
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.Localization
 @using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Server.Data
 
@@ -12,8 +13,9 @@
 @inject IJSRuntime JsRuntime
 @inject ITokenStorageService TokenStorageService
 @inject IServiceScopeFactory ScopeFactory
+@inject IStringLocalizer<Login> Localizer
 
-<PageTitle>Log in - RemoteMaster Server</PageTitle>
+<PageTitle>@Localizer["PageTitle"]</PageTitle>
 
 <style>
     @@keyframes gradient-animation {
@@ -37,7 +39,7 @@
         <div class="rounded-xl bg-white shadow-2xl">
             <div class="p-10">
                 <h1 class="mb-6 text-center text-3xl font-bold text-gray-900">RemoteMaster Server</h1>
-                <h2 class="mb-4 text-center text-xl font-medium text-gray-700">Log in</h2>
+                <h2 class="mb-4 text-center text-xl font-medium text-gray-700">@Localizer["LoginHeader"]</h2>
                 <StatusMessage Message="@errorMessage" />
                 <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
                     <DataAnnotationsValidator />

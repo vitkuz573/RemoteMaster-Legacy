@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Globalization;
 using System.IO.Abstractions;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -123,6 +125,24 @@ public static class Program
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddSignInManager()
             .AddDefaultTokenProviders();
+
+        services.AddLocalization(options => options.ResourcesPath = "Resources");
+
+        var defaultCulture = configurationManager.GetSection("Localization:DefaultCulture").Value ?? "en";
+        var supportedCultures = new List<CultureInfo>
+        {
+            new("en"),
+            new("ru")
+        };
+
+        services.Configure<RequestLocalizationOptions>(options =>
+        {
+            options.DefaultRequestCulture = new RequestCulture(defaultCulture);
+            options.SupportedCultures = supportedCultures;
+            options.SupportedUICultures = supportedCultures;
+            options.RequestCultureProviders.Clear();
+            options.RequestCultureProviders.Add(new QueryStringRequestCultureProvider());
+        });
 
         services.AddHttpClient();
 
@@ -302,6 +322,8 @@ public static class Program
         }
 
         var applicationSettings = app.Services.GetRequiredService<IOptions<ApplicationSettings>>().Value;
+
+        app.UseRequestLocalization();
 
         app.Use(async (context, next) =>
         {
