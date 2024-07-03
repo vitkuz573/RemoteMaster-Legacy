@@ -37,10 +37,6 @@ public partial class FileManager : IDisposable
             TimeSpan.FromSeconds(10),
         ]);
 
-    private bool _isDarkMode = false;
-
-    private readonly MudTheme _theme = new();
-
     protected async override Task OnInitializedAsync()
     {
         await InitializeHostConnectionAsync();

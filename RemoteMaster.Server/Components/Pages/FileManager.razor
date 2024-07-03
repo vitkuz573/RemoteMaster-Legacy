@@ -15,10 +15,6 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject IHttpContextAccessor HttpContextAccessor
 
-<MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme" />
-<MudDialogProvider />
-<MudSnackbarProvider />
-
 <MudLayout>
     <MudToolBar>
         <InputFile OnChange="@OnInputFileChange" />

@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
-using MudBlazor;
 using Polly;
 using Polly.Retry;
 using RemoteMaster.Shared.Models;
@@ -31,10 +30,6 @@ public partial class TaskManager : IDisposable
             TimeSpan.FromSeconds(7),
             TimeSpan.FromSeconds(10),
         ]);
-
-    private bool _isDarkMode = false;
-
-    private readonly MudTheme _theme = new();
 
     protected async override Task OnInitializedAsync()
     {
