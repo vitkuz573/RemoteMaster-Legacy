@@ -117,10 +117,25 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="LoginButton" xml:space="preserve">
+    <value>Войти</value>
+  </data>
   <data name="LoginHeader" xml:space="preserve">
     <value>Войти</value>
   </data>
   <data name="PageTitle" xml:space="preserve">
     <value>Войти - RemoteMaster Server</value>
+  </data>
+  <data name="PasswordLabel" xml:space="preserve">
+    <value>Пароль</value>
+  </data>
+  <data name="PasswordPlaceholder" xml:space="preserve">
+    <value>Введите пароль</value>
+  </data>
+  <data name="UsernameLabel" xml:space="preserve">
+    <value>Имя пользователя</value>
+  </data>
+  <data name="UsernamePlaceholder" xml:space="preserve">
+    <value>Введите имя пользователя</value>
   </data>
 </root>

@@ -44,15 +44,15 @@
                 <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
                     <DataAnnotationsValidator />
                     <div class="mb-6">
-                        <label for="username" class="block text-sm font-medium text-gray-800">Username</label>
-                        <InputText id="username" @bind-Value="Input.Username" class="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Enter your username" />
+                        <label for="username" class="block text-sm font-medium text-gray-800">@Localizer["UsernameLabel"]</label>
+                        <InputText id="username" @bind-Value="Input.Username" class="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="@Localizer["UsernamePlaceholder"]" />
                     </div>
                     <div class="mb-6">
-                        <label for="password" class="block text-sm font-medium text-gray-800">Password</label>
-                        <InputText id="password" type="password" @bind-Value="Input.Password" class="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Enter your password" />
+                        <label for="password" class="block text-sm font-medium text-gray-800">@Localizer["PasswordLabel"]</label>
+                        <InputText id="password" type="password" @bind-Value="Input.Password" class="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="@Localizer["PasswordPlaceholder"]" />
                     </div>
                     <button type="submit" class="w-full rounded-lg bg-purple-600 px-4 py-2 text-lg font-semibold text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500">
-                        Log in
+                        @Localizer["LoginButton"]
                     </button>
                 </EditForm>
             </div>
