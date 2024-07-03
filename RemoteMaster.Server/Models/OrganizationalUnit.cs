@@ -5,6 +5,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using RemoteMaster.Server.Data;
+using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Models;

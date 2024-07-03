@@ -20,10 +20,6 @@
 
 <PageTitle>@_title</PageTitle>
 
-<MudThemeProvider Theme="_theme" />
-<MudDialogProvider />
-<MudSnackbarProvider />
-
 <MudLayout>
     <MudAppBar Dense="true">
         <MudSpacer />
@@ -89,7 +85,7 @@
                 <MudExpansionPanel Text="@($"Viewers ({_viewers.Count})")">
                     @if (_viewers != null && _viewers.Any())
                     {
-                        <MudList>
+                        <MudList T="string">
                             @foreach (var viewer in _viewers)
                             {
                                 <MudListItem>

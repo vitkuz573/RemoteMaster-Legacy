@@ -13,10 +13,10 @@
     <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.6" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.6" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="8.0.2" />
-    <PackageVersion Include="Microsoft.TypeScript.MSBuild" Version="5.4.5" />
+    <PackageVersion Include="Microsoft.TypeScript.MSBuild" Version="5.5.3" />
     <PackageVersion Include="Moq" Version="4.20.70" />
-    <PackageVersion Include="MudBlazor" Version="6.20.0" />
-    <PackageVersion Include="Polly" Version="8.4.0" />
+    <PackageVersion Include="MudBlazor" Version="7.0.0" />
+    <PackageVersion Include="Polly" Version="8.4.1" />
     <PackageVersion Include="Serilog" Version="4.0.0" />
     <PackageVersion Include="Serilog.AspNetCore" Version="8.0.1" />
     <PackageVersion Include="Serilog.Extensions.Logging" Version="8.0.0" />
@@ -26,10 +26,10 @@
     <PackageVersion Include="SkiaSharp.Views.Desktop.Common" Version="2.88.8" />
     <PackageVersion Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
     <PackageVersion Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="8.0.6" />
-    <PackageVersion Include="Microsoft.Windows.CsWin32" Version="0.3.110" />
-    <PackageVersion Include="Microsoft.Windows.SDK.Win32Metadata" Version="60.0.34-preview" />
-    <PackageVersion Include="System.IO.Abstractions" Version="21.0.2" />
-    <PackageVersion Include="System.IO.Abstractions.TestingHelpers" Version="21.0.2" />
+    <PackageVersion Include="Microsoft.Windows.CsWin32" Version="0.3.123" />
+    <PackageVersion Include="Microsoft.Windows.SDK.Win32Metadata" Version="61.0.15-preview" />
+    <PackageVersion Include="System.IO.Abstractions" Version="21.0.22" />
+    <PackageVersion Include="System.IO.Abstractions.TestingHelpers" Version="21.0.22" />
     <PackageVersion Include="System.Management" Version="8.0.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.6" />
     <PackageVersion Include="Telegram.Bot" Version="19.0.0" />

@@ -10,18 +10,18 @@
             <MudItem xs="3">
                 <MudTextField T="string" Label="Script" @bind-Value="_content" Lines="4" Placeholder="Enter or upload your script here..." />
 
-                <MudFileUpload T="IBrowserFile" OnFilesChanged="UploadFiles">
-                    <ButtonTemplate>
-                        <MudButton HtmlTag="label" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FileUpload" FullWidth for="@context">
+                <MudFileUpload T="IBrowserFile" Accept=".bat, .cmd, .ps1" FilesChanged="UploadFiles">
+                    <ActivatorContent>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FileUpload" FullWidth>
                              Upload Script
                          </MudButton>
-                     </ButtonTemplate>
+                     </ActivatorContent>
                  </MudFileUpload>
 
                  <MudSelect T="Shell" Label="Select Shell" @bind-Value="_shell" Dense="true">
-                     @foreach (var shellType in Enum.GetValues(typeof(Shell)).Cast<Shell>())
+                    @foreach (var shellType in Enum.GetValues(typeof(Shell)).Cast<Shell>())
                     {
-                        <MudSelectItem Value="@shellType" Text="@shellType.ToString()" />
+                        <MudSelectItem Value="@shellType" />
                     }
                 </MudSelect>
 
@@ -33,7 +33,7 @@
                 </MudStack>
             </MudItem>
 
-            <MudDivider Vertical="true" FlexItem="true" />
+            <MudDivider Vertical="true" DividerType="DividerType.Middle" FlexItem="true" />
 
             <MudItem xs="8">
                 <MudExpansionPanels Class="max-h-[340px] overflow-y-auto" MultiExpansion="true">

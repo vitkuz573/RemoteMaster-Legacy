@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Linq.Expressions;
+using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Abstractions;

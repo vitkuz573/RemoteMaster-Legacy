@@ -45,14 +45,6 @@ public partial class Access : IAsyncDisposable
 
     private readonly AsyncPolicyWrap _combinedPolicy;
 
-    private readonly MudTheme _theme = new()
-    {
-        LayoutProperties = new LayoutProperties()
-        {
-            DrawerWidthRight = "370px"
-        }
-    };
-
     private string? _title;
     private bool _firstRenderCompleted = false;
 
