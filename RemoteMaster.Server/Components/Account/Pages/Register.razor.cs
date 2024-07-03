@@ -47,6 +47,8 @@ public partial class Register
 
         var user = CreateUser();
 
+        user.EmailConfirmed = true;
+
         await UserStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
         
         var result = await UserManager.CreateAsync(user, Input.Password);
