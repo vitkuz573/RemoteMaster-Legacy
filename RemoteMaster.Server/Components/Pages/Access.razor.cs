@@ -51,6 +51,7 @@ public partial class Access : IAsyncDisposable
 
     private string? _title;
     private bool _firstRenderCompleted = false;
+    private bool _disposed = false;
 
     public Access()
     {
@@ -104,7 +105,7 @@ public partial class Access : IAsyncDisposable
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (firstRender && !_disposed)
         {
             _firstRenderCompleted = true;
             var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/eventListeners.js");
@@ -246,44 +247,52 @@ public partial class Access : IAsyncDisposable
         _connection.On<List<ViewerDto>>("ReceiveAllViewers", viewers =>
         {
             _viewers = viewers;
-
+            
             InvokeAsync(StateHasChanged);
         });
 
         var userIdentity = _user.Identity as ClaimsIdentity ?? throw new InvalidOperationException("User identity is not a ClaimsIdentity.");
-        var role = userIdentity.Claims
-                        .FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+        var role = userIdentity.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
 
         var connectionRequest = new ConnectionRequest(Intention.ManageDevice, "Users", userIdentity.Name, role);
 
         _connection.Closed += async (_) =>
         {
-            await Task.Delay(TimeSpan.FromSeconds(5));
-            await _connection.StartAsync();
-            await SafeInvokeAsync(() => _connection.InvokeAsync("ConnectAs", connectionRequest));
+            if (!_disposed)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(5));
+                await _connection.StartAsync();
+                await SafeInvokeAsync(() => _connection.InvokeAsync("ConnectAs", connectionRequest));
+            }
         };
 
         await _connection.StartAsync();
-
+        
         await SafeInvokeAsync(() => _connection.InvokeAsync("ConnectAs", connectionRequest));
     }
 
     private async Task HandleScreenUpdate(byte[] screenData)
     {
-        var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/blobUtils.js");
+        if (!_disposed && _firstRenderCompleted)
+        {
+            var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/blobUtils.js");
 
-        _screenDataUrl = await module.InvokeAsync<string>("createImageBlobUrl", screenData);
+            _screenDataUrl = await module.InvokeAsync<string>("createImageBlobUrl", screenData);
 
-        await InvokeAsync(StateHasChanged);
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private async Task OnLoad()
     {
-        var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/blobUtils.js");
+        if (!_disposed && _firstRenderCompleted)
+        {
+            var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/blobUtils.js");
 
-        var src = await module.InvokeAsync<string>("getElementAttribute", _screenImageElement, "src");
+            var src = await module.InvokeAsync<string>("getElementAttribute", _screenImageElement, "src");
 
-        await module.InvokeAsync<string>("revokeUrl", src);
+            await module.InvokeAsync<string>("revokeUrl", src);
+        }
     }
 
     private async Task ToggleInputEnabled(bool value)
@@ -327,7 +336,7 @@ public partial class Access : IAsyncDisposable
     private async Task<bool> HasPermissionAsync(string policyName)
     {
         var authorizationResult = await AuthorizationService.AuthorizeAsync(_user, null, policyName);
-
+        
         return authorizationResult.Succeeded;
     }
 
@@ -337,7 +346,7 @@ public partial class Access : IAsyncDisposable
         var requirements = new List<IAuthorizationRequirement> { requirement };
 
         var authorizationResult = await AuthorizationService.AuthorizeAsync(_user, null, requirements);
-
+        
         return authorizationResult.Succeeded;
     }
 
@@ -345,12 +354,14 @@ public partial class Access : IAsyncDisposable
     public async Task OnBeforeUnload()
     {
         Log.Information("OnBeforeUnload invoked for host {Host}", Host);
-
+        
         await DisposeAsync();
     }
 
     public async ValueTask DisposeAsync()
     {
+        _disposed = true;
+        
         try
         {
             if (_connection != null)
