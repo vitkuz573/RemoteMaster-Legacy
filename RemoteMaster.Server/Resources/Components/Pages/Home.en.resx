@@ -171,4 +171,67 @@
   <data name="UnavailableComputers" xml:space="preserve">
     <value>Unavailable computers</value>
   </data>
+  <data name="Connect" xml:space="preserve">
+    <value>Connect</value>
+  </data>
+  <data name="DomainMembership" xml:space="preserve">
+    <value>Domain Membership</value>
+  </data>
+  <data name="ExecuteScript" xml:space="preserve">
+    <value>Execute Script</value>
+  </data>
+  <data name="FileManager" xml:space="preserve">
+    <value>File Manager</value>
+  </data>
+  <data name="HostInfo" xml:space="preserve">
+    <value>Host Info</value>
+  </data>
+  <data name="Logoff" xml:space="preserve">
+    <value>Logoff</value>
+  </data>
+  <data name="Logon" xml:space="preserve">
+    <value>Logon</value>
+  </data>
+  <data name="MessageBox" xml:space="preserve">
+    <value>MessageBox</value>
+  </data>
+  <data name="Move" xml:space="preserve">
+    <value>Move</value>
+  </data>
+  <data name="Power" xml:space="preserve">
+    <value>Power</value>
+  </data>
+  <data name="PSExecRules" xml:space="preserve">
+    <value>PSExec Rules</value>
+  </data>
+  <data name="RemoteExecutor" xml:space="preserve">
+    <value>Remote Executor</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="RenewCertificate" xml:space="preserve">
+    <value>Renew Certificate</value>
+  </data>
+  <data name="ScreenRecorder" xml:space="preserve">
+    <value>Screen Recorder</value>
+  </data>
+  <data name="SetMonitorState" xml:space="preserve">
+    <value>Set Monitor State</value>
+  </data>
+  <data name="TaskManager" xml:space="preserve">
+    <value>Task Manager</value>
+  </data>
+  <data name="Update" xml:space="preserve">
+    <value>Update</value>
+  </data>
+  <data name="UploadFile" xml:space="preserve">
+    <value>Upload File</value>
+  </data>
+  <data name="OpenShell" xml:space="preserve">
+    <value>Open Shell</value>
+  </data>
+  <data name="WakeUp" xml:space="preserve">
+    <value>Wake Up</value>
+  </data>
 </root>

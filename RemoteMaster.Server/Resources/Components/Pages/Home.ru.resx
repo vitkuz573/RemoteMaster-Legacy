@@ -117,58 +117,121 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="PageTitle" xml:space="preserve">
-    <value>RemoteMaster - Главная</value>
+  <data name="AvailableComputer" xml:space="preserve">
+    <value>Доступные компьютеры</value>
   </data>
-  <data name="MenuHostConfig" xml:space="preserve">
-    <value>Генератор конфигурации хоста</value>
+  <data name="Connect" xml:space="preserve">
+    <value>Подключение</value>
   </data>
-  <data name="MenuPublishCrl" xml:space="preserve">
-    <value>Опубликовать CRL</value>
+  <data name="DeselectAll" xml:space="preserve">
+    <value>Отменить выбор</value>
   </data>
-  <data name="MenuProfile" xml:space="preserve">
-    <value>Профиль</value>
+  <data name="DomainMembership" xml:space="preserve">
+    <value>Подключение к домену</value>
   </data>
-  <data name="MenuLogout" xml:space="preserve">
-    <value>Выйти</value>
+  <data name="ExecuteScript" xml:space="preserve">
+    <value>Выполнение скриптов</value>
+  </data>
+  <data name="ExtraTab" xml:space="preserve">
+    <value>Дополнительные</value>
+  </data>
+  <data name="FileManager" xml:space="preserve">
+    <value>Файловый менеджер</value>
+  </data>
+  <data name="HostInfo" xml:space="preserve">
+    <value>Информация</value>
+  </data>
+  <data name="Logoff" xml:space="preserve">
+    <value>Логофф</value>
+  </data>
+  <data name="Logon" xml:space="preserve">
+    <value>Логон</value>
   </data>
   <data name="MainTab" xml:space="preserve">
-    <value>Главная</value>
-  </data>
-  <data name="ServiceTab" xml:space="preserve">
-    <value>Сервис</value>
-  </data>
-  <data name="ToolsTab" xml:space="preserve">
-    <value>Инструменты</value>
+    <value>Основные</value>
   </data>
   <data name="ManagementTab" xml:space="preserve">
     <value>Управление</value>
   </data>
-  <data name="ExtraTab" xml:space="preserve">
-    <value>Дополнительно</value>
+  <data name="MenuHostConfig" xml:space="preserve">
+    <value>Генератор конфигурации хоста</value>
+  </data>
+  <data name="MenuLogout" xml:space="preserve">
+    <value>Выход</value>
+  </data>
+  <data name="MenuProfile" xml:space="preserve">
+    <value>Профиль</value>
+  </data>
+  <data name="MenuPublishCrl" xml:space="preserve">
+    <value>Опубликовать CRL</value>
+  </data>
+  <data name="MessageBox" xml:space="preserve">
+    <value>Месседж бокс</value>
+  </data>
+  <data name="Move" xml:space="preserve">
+    <value>Перемещение</value>
   </data>
   <data name="NoAvailableComputers" xml:space="preserve">
     <value>Нет доступных компьютеров для отображения.</value>
   </data>
-  <data name="NoUnavailableComputers" xml:space="preserve">
-    <value>Нет недоступных компьютеров для отображения.</value>
-  </data>
   <data name="NoPendingComputers" xml:space="preserve">
     <value>Нет ожидающих компьютеров для отображения.</value>
   </data>
-  <data name="AvailableComputers" xml:space="preserve">
-    <value>Доступные компьютеры</value>
+  <data name="NoUnavailableComputers" xml:space="preserve">
+    <value>Нет недоступных компьютеров для отображения.</value>
   </data>
-  <data name="DeselectAll" xml:space="preserve">
-    <value>Снять выделение</value>
+  <data name="OpenShell" xml:space="preserve">
+    <value>Открыть шелл</value>
+  </data>
+  <data name="PageTitle" xml:space="preserve">
+    <value>RemoteMaster - Главная</value>
   </data>
   <data name="PendingComputers" xml:space="preserve">
     <value>Ожидающие компьютеры</value>
   </data>
+  <data name="Power" xml:space="preserve">
+    <value>Питание</value>
+  </data>
+  <data name="PSExecRules" xml:space="preserve">
+    <value>Правила PSExec</value>
+  </data>
+  <data name="RemoteExecutor" xml:space="preserve">
+    <value>Удаленное исполнение</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>Удаление</value>
+  </data>
+  <data name="RenewCertificate" xml:space="preserve">
+    <value>Перевыпуск сертификата</value>
+  </data>
+  <data name="ScreenRecorder" xml:space="preserve">
+    <value>Запись экрана</value>
+  </data>
   <data name="SelectAll" xml:space="preserve">
     <value>Выбрать все</value>
   </data>
+  <data name="ServiceTab" xml:space="preserve">
+    <value>Сервис</value>
+  </data>
+  <data name="SetMonitorState" xml:space="preserve">
+    <value>Изменить состояние монитора</value>
+  </data>
+  <data name="TaskManager" xml:space="preserve">
+    <value>Диспетчер задач</value>
+  </data>
+  <data name="ToolsTab" xml:space="preserve">
+    <value>Инструменты</value>
+  </data>
   <data name="UnavailableComputers" xml:space="preserve">
     <value>Недоступные компьютеры</value>
+  </data>
+  <data name="Update" xml:space="preserve">
+    <value>Обновление</value>
+  </data>
+  <data name="UploadFile" xml:space="preserve">
+    <value>Загрузка файла</value>
+  </data>
+  <data name="WakeUp" xml:space="preserve">
+    <value>Разбудить</value>
   </data>
 </root>

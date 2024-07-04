@@ -76,42 +76,42 @@
                     <MudTabPanel Text="@Localizer["MainTab"]" Icon="@Icons.Material.Filled.Api">
                         @if (_userInfo.Roles.Contains("Administrator"))
                         {
-                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Power" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Power</MudButton>
-                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="WakeUp" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Wake Up</MudButton>                            
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Power" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["Power"]</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="WakeUp" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">@Localizer["WakeUp"]</MudButton>                            
                         }
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Connect" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Connect</MudButton>
+                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Connect" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["Connect"]</MudButton>
                         @if (_userInfo.Roles.Contains("Administrator"))
                         {
-                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenShell" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Open Shell</MudButton>
-                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ExecuteScript" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Execute Script</MudButton>                            
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenShell" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">@Localizer["OpenShell"]</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ExecuteScript" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["ExecuteScript"]</MudButton>                            
                         }
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@(async () => await LogonComputers())" Disabled="@(_selectedComputers.Count == 0 || _selectedComputers.Any(c => _availableComputers.ContainsKey(c.IpAddress) || _unavailableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Logon</MudButton>
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@(async () => await LogoffComputers())" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.Any(c => _availableComputers.ContainsKey(c.IpAddress) || _unavailableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Logoff</MudButton>
+                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@(async () => await LogonComputers())" Disabled="@(_selectedComputers.Count == 0 || _selectedComputers.Any(c => _availableComputers.ContainsKey(c.IpAddress) || _unavailableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["Logon"]</MudButton>
+                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@(async () => await LogoffComputers())" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.Any(c => _availableComputers.ContainsKey(c.IpAddress) || _unavailableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["Logoff"]</MudButton>
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Refresh" Class="ml-auto">Refresh</MudButton>
                     </MudTabPanel>
 
                     @if (_userInfo.Roles.Contains("Administrator"))
                     {
                         <MudTabPanel Text="@Localizer["ServiceTab"]" Icon="@Icons.Material.Filled.Key">
-                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SetMonitorState" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Set Monitor State</MudButton>
-                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ManagePsExecRules" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">PSExec Rules</MudButton>
-                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ScreenRecorder" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Screen Recorder</MudButton>
-                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="DomainMembership" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Domain Membership</MudButton>
-                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Update" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Update</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SetMonitorState" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["SetMonitorState"]</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ManagePsExecRules" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["PSExecRules"]</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ScreenRecorder" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["ScreenRecorder"]</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="DomainMembership" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["DomainMembership"]</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Update" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["Update"]</MudButton>
                         </MudTabPanel>
 
                         <MudTabPanel Text="@Localizer["ToolsTab"]" Icon="@Icons.Material.Filled.MiscellaneousServices">
-                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenTaskManager" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Task Manager</MudButton>
-                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenFileManager" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">File Manager</MudButton>
-                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="FileUpload" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Upload File</MudButton>
-                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="MessageBox" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">MessageBox</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenTaskManager" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["TaskManager"]</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenFileManager" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["FileManager"]</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="FileUpload" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["UploadFile"]</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="MessageBox" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["MessageBox"]</MudButton>
                         </MudTabPanel>
 
                         <MudTabPanel Text="@Localizer["ManagementTab"]" Icon="@Icons.Material.Filled.Settings">
-                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenHostInfo" Disabled="@(_selectedComputers.Count != 1)" Class="mr-2">Host Info</MudButton>
-                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenMoveDialog" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Move</MudButton>
-                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="RemoveComputers" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">Remove</MudButton>
-                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="RenewCertificate" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Renew Certificate</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenHostInfo" Disabled="@(_selectedComputers.Count != 1)" Class="mr-2">@Localizer["HostInfo"]</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenMoveDialog" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">@Localizer["Move"]</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="RemoveComputers" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">@Localizer["Remove"]</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="RenewCertificate" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["RenewCertificate"]</MudButton>
                         </MudTabPanel>
                     
                         <MudTabPanel Text="@Localizer["ExtraTab"]" Icon="@Icons.Material.Filled.Settings">
