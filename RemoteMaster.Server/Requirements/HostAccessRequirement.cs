@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace RemoteMaster.Server.Requirements;
 
-public class ComputerAccessRequirement(string host) : IAuthorizationRequirement
+public class HostAccessRequirement(string host) : IAuthorizationRequirement
 {
     public string Host { get; } = host;
 }

@@ -419,7 +419,7 @@ public partial class Access : IAsyncDisposable
             return false;
         }
 
-        var requirement = new ComputerAccessRequirement(Host);
+        var requirement = new HostAccessRequirement(Host);
         var requirements = new List<IAuthorizationRequirement> { requirement };
 
         var authorizationResult = await AuthorizationService.AuthorizeAsync(_user, Host, requirements);

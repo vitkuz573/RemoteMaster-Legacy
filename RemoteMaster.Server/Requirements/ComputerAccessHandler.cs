@@ -9,9 +9,9 @@ using RemoteMaster.Server.Data;
 
 namespace RemoteMaster.Server.Requirements;
 
-public class ComputerAccessHandler(IServiceScopeFactory scopeFactory) : AuthorizationHandler<ComputerAccessRequirement>
+public class ComputerAccessHandler(IServiceScopeFactory scopeFactory) : AuthorizationHandler<HostAccessRequirement>
 {
-    protected async override Task HandleRequirementAsync(AuthorizationHandlerContext context, ComputerAccessRequirement requirement)
+    protected async override Task HandleRequirementAsync(AuthorizationHandlerContext context, HostAccessRequirement requirement)
     {
         ArgumentNullException.ThrowIfNull(context);
 
