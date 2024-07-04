@@ -28,9 +28,9 @@ public partial class Access : IAsyncDisposable
     public string Host { get; set; } = default!;
 
     [CascadingParameter]
-    private Task<AuthenticationState> AuthenticationStateTask { get; set; }
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
 
-    private ClaimsPrincipal _user;
+    private ClaimsPrincipal? _user;
     private string _transportType = string.Empty;
     private string? _screenDataUrl;
     private bool _drawerOpen;
@@ -43,9 +43,9 @@ public partial class Access : IAsyncDisposable
     private List<Display> _displays = [];
     private string _selectedDisplay = string.Empty;
     private ElementReference _screenImageElement;
-    private string _accessToken;
+    private string? _accessToken;
     private List<ViewerDto> _viewers = [];
-    private bool _accessDenied = false;
+    private bool _isAccessDenied = false;
 
     private readonly AsyncPolicyWrap _combinedPolicy;
 
@@ -96,10 +96,10 @@ public partial class Access : IAsyncDisposable
 
         _user = authState.User;
 
-        if (!await HasAccessAsync())
+        if (_user == null || !await HasAccessAsync())
         {
             Snackbar.Add("Access denied. You do not have permission to access this computer.", Severity.Error);
-            _accessDenied = true;
+            _isAccessDenied = true;
 
             return;
         }
@@ -168,7 +168,7 @@ public partial class Access : IAsyncDisposable
         {
             if (_connection != null && _connection.State == HubConnectionState.Connected)
             {
-                if (requireAdmin && !_user.IsInRole("Administrator"))
+                if (requireAdmin && (_user == null || !_user.IsInRole("Administrator")))
                 {
                     return;
                 }
@@ -228,7 +228,7 @@ public partial class Access : IAsyncDisposable
             _isConnecting = true;
             _retryCount = 0;
 
-            var userId = _user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = _user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (string.IsNullOrEmpty(userId))
             {
@@ -267,7 +267,7 @@ public partial class Access : IAsyncDisposable
                 InvokeAsync(StateHasChanged);
             });
 
-            var userIdentity = _user.Identity as ClaimsIdentity ?? throw new InvalidOperationException("User identity is not a ClaimsIdentity.");
+            var userIdentity = _user?.Identity as ClaimsIdentity ?? throw new InvalidOperationException("User identity is not a ClaimsIdentity.");
 
             var userName = userIdentity.Name;
             var role = userIdentity.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
@@ -403,24 +403,34 @@ public partial class Access : IAsyncDisposable
 
     private async Task<bool> HasPermissionAsync(string policyName)
     {
+        if (_user == null)
+        {
+            return false;
+        }
+
         var authorizationResult = await AuthorizationService.AuthorizeAsync(_user, null, policyName);
-        
+
         return authorizationResult.Succeeded;
     }
 
     private async Task<bool> HasAccessAsync()
     {
+        if (_user == null)
+        {
+            return false;
+        }
+
         var requirement = new ComputerAccessRequirement(Host);
         var requirements = new List<IAuthorizationRequirement> { requirement };
 
         var authorizationResult = await AuthorizationService.AuthorizeAsync(_user, Host, requirements);
-        
+
         return authorizationResult.Succeeded;
     }
 
     [JSInvokable]
     public async Task OnBeforeUnload()
-    {        
+    {
         await DisposeAsync();
     }
 
