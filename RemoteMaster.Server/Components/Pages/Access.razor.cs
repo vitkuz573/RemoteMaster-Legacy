@@ -50,6 +50,8 @@ public partial class Access : IAsyncDisposable
     private readonly AsyncPolicyWrap _combinedPolicy;
 
     private string? _title;
+    private bool _isConnecting;
+    private int _retryCount;
     private bool _firstRenderCompleted = false;
     private bool _disposed = false;
 
@@ -135,7 +137,7 @@ public partial class Access : IAsyncDisposable
             NavigationManager.NavigateTo(newUri, true);
         }
 
-        if (_connection != null)
+        if (!_disposed && _connection != null && _connection.State == HubConnectionState.Connected)
         {
             await UpdateServerParameters();
         }
@@ -143,7 +145,7 @@ public partial class Access : IAsyncDisposable
 
     private async Task UpdateServerParameters()
     {
-        if (_connection != null)
+        if (!_disposed && _connection != null && _connection.State == HubConnectionState.Connected)
         {
             await _connection.InvokeAsync("SendImageQuality", _imageQuality);
             await _connection.InvokeAsync("SendToggleCursorTracking", _cursorTracking);
@@ -216,59 +218,125 @@ public partial class Access : IAsyncDisposable
 
     private async Task InitializeHostConnectionAsync()
     {
-        var userId = _user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        _accessToken = await AccessTokenProvider.GetAccessTokenAsync(userId);
-
-        _connection = new HubConnectionBuilder()
-            .WithUrl($"https://{Host}:5001/hubs/control", options =>
-            {
-                options.AccessTokenProvider = async () => await Task.FromResult(_accessToken);
-            })
-            .AddMessagePackProtocol()
-            .Build();
-
-        _connection.On<IEnumerable<Display>>("ReceiveDisplays", (displays) =>
+        try
         {
-            _displays = displays.ToList();
-
-            var primaryDisplay = _displays.FirstOrDefault(d => d.IsPrimary);
-
-            if (primaryDisplay != null)
+            if (_isConnecting)
             {
-                _selectedDisplay = primaryDisplay.Name;
+                return;
             }
-        });
 
-        _connection.On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate);
-        _connection.On<Version>("ReceiveHostVersion", version => _hostVersion = version.ToString());
-        _connection.On<string>("ReceiveTransportType", transportType => _transportType = transportType);
+            _isConnecting = true;
+            _retryCount = 0;
 
-        _connection.On<List<ViewerDto>>("ReceiveAllViewers", viewers =>
-        {
-            _viewers = viewers;
-            
-            InvokeAsync(StateHasChanged);
-        });
+            var userId = _user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        var userIdentity = _user.Identity as ClaimsIdentity ?? throw new InvalidOperationException("User identity is not a ClaimsIdentity.");
-        var role = userIdentity.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-
-        var connectionRequest = new ConnectionRequest(Intention.ManageDevice, "Users", userIdentity.Name, role);
-
-        _connection.Closed += async (_) =>
-        {
-            if (!_disposed)
+            if (string.IsNullOrEmpty(userId))
             {
-                await Task.Delay(TimeSpan.FromSeconds(5));
-                await _connection.StartAsync();
-                await SafeInvokeAsync(() => _connection.InvokeAsync("ConnectAs", connectionRequest));
+                throw new InvalidOperationException("User ID is missing.");
             }
-        };
 
-        await _connection.StartAsync();
-        
-        await SafeInvokeAsync(() => _connection.InvokeAsync("ConnectAs", connectionRequest));
+            _accessToken = await AccessTokenProvider.GetAccessTokenAsync(userId);
+
+            _connection = new HubConnectionBuilder()
+                .WithUrl($"https://{Host}:5001/hubs/control", options =>
+                {
+                    options.AccessTokenProvider = async () => await Task.FromResult(_accessToken);
+                })
+                .AddMessagePackProtocol()
+                .Build();
+
+            _connection.On<IEnumerable<Display>>("ReceiveDisplays", (displays) =>
+            {
+                _displays = displays.ToList();
+
+                var primaryDisplay = _displays.FirstOrDefault(d => d.IsPrimary);
+
+                if (primaryDisplay != null)
+                {
+                    _selectedDisplay = primaryDisplay.Name;
+                }
+            });
+
+            _connection.On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate);
+            _connection.On<Version>("ReceiveHostVersion", version => _hostVersion = version.ToString());
+            _connection.On<string>("ReceiveTransportType", transportType => _transportType = transportType);
+
+            _connection.On<List<ViewerDto>>("ReceiveAllViewers", viewers =>
+            {
+                _viewers = viewers;
+                InvokeAsync(StateHasChanged);
+            });
+
+            var userIdentity = _user.Identity as ClaimsIdentity ?? throw new InvalidOperationException("User identity is not a ClaimsIdentity.");
+
+            var userName = userIdentity.Name;
+            var role = userIdentity.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+
+            if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(role))
+            {
+                throw new InvalidOperationException("User name or role is missing.");
+            }
+
+            var connectionRequest = new ConnectionRequest(Intention.ManageDevice, "Users", userName, role);
+
+            _connection.Closed += async (_) =>
+            {
+                if (!_disposed && _retryCount < 3)
+                {
+                    _retryCount++;
+                    await Task.Delay(TimeSpan.FromSeconds(5));
+                    await TryStartConnectionAsync(connectionRequest);
+                }
+                else
+                {
+                    Snackbar.Add("Unable to reconnect. Please check the host status and try again later.", Severity.Error);
+                }
+            };
+
+            await TryStartConnectionAsync(connectionRequest);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An error occurred during host connection initialization for host {Host}", Host);
+            Snackbar.Add("An error occurred while initializing the connection. Please try again later.", Severity.Error);
+        }
+        finally
+        {
+            _isConnecting = false;
+        }
+    }
+
+    private async Task TryStartConnectionAsync(ConnectionRequest connectionRequest)
+    {
+        try
+        {
+            await _connection.StartAsync();
+            await SafeInvokeAsync(() => _connection.InvokeAsync("ConnectAs", connectionRequest));
+        }
+        catch (HttpRequestException ex)
+        {
+            Log.Error(ex, "HTTP request error during connection to host {Host}", Host);
+            Snackbar.Add("Unable to connect to the host. Please check the host status and try again later.", Severity.Error);
+        }
+        catch (TimeoutException ex)
+        {
+            Log.Error(ex, "Timeout error during connection to host {Host}", Host);
+            Snackbar.Add("Connection to the host timed out. Please try again later.", Severity.Error);
+        }
+        catch (TaskCanceledException ex)
+        {
+            Log.Error(ex, "Task was canceled during connection to host {Host}", Host);
+            Snackbar.Add("Connection to the host was canceled. Please try again later.", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An error occurred during connection to host {Host}", Host);
+            Snackbar.Add("An error occurred while connecting to the host. Please try again later.", Severity.Error);
+        }
+        finally
+        {
+            _isConnecting = false;
+        }
     }
 
     private async Task HandleScreenUpdate(byte[] screenData)
