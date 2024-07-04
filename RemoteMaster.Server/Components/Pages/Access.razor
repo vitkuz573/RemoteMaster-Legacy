@@ -5,17 +5,13 @@
 @attribute [Authorize]
 
 @using Microsoft.AspNetCore.Authorization
-@using Microsoft.AspNetCore.Identity
 @using RemoteMaster.Server.Abstractions
-@using RemoteMaster.Server.Data
 
 @inject NavigationManager NavigationManager
 @inject IQueryParameterService QueryParameterService
 @inject IJSRuntime JsRuntime
 @inject IAccessTokenProvider AccessTokenProvider
-@inject UserManager<ApplicationUser> UserManager
 @inject ISnackbar Snackbar
-@inject IServiceScopeFactory ScopeFactory
 @inject IAuthorizationService AuthorizationService
 
 <PageTitle>@_title</PageTitle>
