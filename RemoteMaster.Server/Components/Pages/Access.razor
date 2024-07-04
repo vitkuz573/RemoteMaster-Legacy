@@ -17,6 +17,7 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject ISnackbar Snackbar
 @inject IServiceScopeFactory ScopeFactory
+@inject IAuthorizationService AuthorizationService
 
 <PageTitle>@_title</PageTitle>
 
@@ -57,23 +58,24 @@
                 <MudSwitch T="bool" Value="_cursorTracking" ValueChanged="ToggleCursorTracking" />
             </MudNavLink>
 
-            @if (IsUserInRole("Administrator"))
-            {
-                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Keyboard">
-                    <MudText>Input Toggle</MudText>
-                    <MudSwitch T="bool" Value="_inputEnabled" ValueChanged="ToggleInputEnabled" />
-                </MudNavLink>
+            <AuthorizeView Roles="Administrator">
+                <Authorized>
+                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Keyboard">
+                        <MudText>Input Toggle</MudText>
+                        <MudSwitch T="bool" Value="_inputEnabled" ValueChanged="ToggleInputEnabled" />
+                    </MudNavLink>
 
-                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.KeyboardHide">
-                    <MudText>Block User Input Toggle</MudText>
-                    <MudSwitch T="bool" Value="_blockUserInput" ValueChanged="ToggleBlockUserInput" />
-                </MudNavLink>
+                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.KeyboardHide">
+                        <MudText>Block User Input Toggle</MudText>
+                        <MudSwitch T="bool" Value="_blockUserInput" ValueChanged="ToggleBlockUserInput" />
+                    </MudNavLink>
 
-                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.DeleteSweep" OnClick="KillHost">Kill Host</MudNavLink>
-                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.ControlPoint" OnClick="SendCtrlAltDel" Disabled="@(!_viewers.Any(v => v.Group == "Services" && v.UserName == "RCHost"))">Send Ctrl+Alt+Del</MudNavLink>
-                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.History" OnClick="RebootComputer">Reboot Computer</MudNavLink>
-                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.PowerOff" OnClick="ShutdownComputer">Shutdown Computer</MudNavLink>
-            }
+                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.DeleteSweep" OnClick="KillHost">Kill Host</MudNavLink>
+                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.ControlPoint" OnClick="SendCtrlAltDel" Disabled="@(!_viewers.Any(v => v.Group == "Services" && v.UserName == "RCHost"))">Send Ctrl+Alt+Del</MudNavLink>
+                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.History" OnClick="RebootComputer">Reboot Computer</MudNavLink>
+                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.PowerOff" OnClick="ShutdownComputer">Shutdown Computer</MudNavLink>
+                </Authorized>
+            </AuthorizeView>
 
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Https">
                 Transport Type: @_transportType

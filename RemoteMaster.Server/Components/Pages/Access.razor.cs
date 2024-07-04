@@ -128,7 +128,7 @@ public partial class Access : IAsyncDisposable
             await _connection.InvokeAsync("SendImageQuality", _imageQuality);
             await _connection.InvokeAsync("SendToggleCursorTracking", _cursorTracking);
 
-            if (HasPermission("ToggleInput"))
+            if (await HasPermissionAsync("ToggleInput"))
             {
                 await _connection.InvokeAsync("SendToggleInput", _inputEnabled);
             }
@@ -156,7 +156,7 @@ public partial class Access : IAsyncDisposable
                     return;
                 }
 
-                if (requireAdmin && !IsUserInRole("Administrator"))
+                if (requireAdmin && !(await AuthorizationService.AuthorizeAsync(HttpContextAccessor.HttpContext.User, "Administrator")).Succeeded)
                 {
                     return;
                 }
@@ -288,7 +288,6 @@ public partial class Access : IAsyncDisposable
         await module.InvokeAsync<string>("revokeUrl", src);
     }
 
-    [Authorize(Policy = "ToggleInputPolicy")]
     private async Task ToggleInputEnabled(bool value)
     {
         _inputEnabled = value;
@@ -327,27 +326,12 @@ public partial class Access : IAsyncDisposable
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendSelectedScreen", display));
     }
 
-    private bool IsUserInRole(string role)
-    {
-        var userRoles = new List<string>();
-
-        var httpContext = HttpContextAccessor.HttpContext;
-        var rolesClaim = httpContext?.User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-
-        if (!string.IsNullOrEmpty(rolesClaim))
-        {
-            userRoles = [.. rolesClaim.Split(',')];
-        }
-
-        return userRoles.Contains(role);
-    }
-
-    private bool HasPermission(string permission)
+    private async Task<bool> HasPermissionAsync(string permission)
     {
         var httpContext = HttpContextAccessor.HttpContext;
-        var permissionClaim = httpContext?.User?.Claims.FirstOrDefault(c => c.Type == "Permission" && c.Value == permission);
+        var authorizationResult = await AuthorizationService.AuthorizeAsync(httpContext.User, null, permission);
 
-        return permissionClaim != null;
+        return authorizationResult.Succeeded;
     }
 
     private async Task<bool> HasAccessAsync()
