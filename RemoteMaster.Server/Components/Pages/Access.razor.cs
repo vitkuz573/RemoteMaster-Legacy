@@ -18,6 +18,7 @@ using RemoteMaster.Server.Requirements;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
+using Serilog;
 
 namespace RemoteMaster.Server.Components.Pages;
 
@@ -361,7 +362,16 @@ public partial class Access : IAsyncDisposable
 
         if (_connection != null)
         {
-            await _connection.DisposeAsync();
+            try
+            {
+                await _connection.DisposeAsync();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while asynchronously disposing the connection for host {Host}", Host);
+            }
         }
+
+        GC.SuppressFinalize(this);
     }
 }
