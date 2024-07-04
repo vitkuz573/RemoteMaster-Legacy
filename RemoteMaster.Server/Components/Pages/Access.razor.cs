@@ -345,7 +345,7 @@ public partial class Access : IAsyncDisposable
         var requirement = new ComputerAccessRequirement(Host);
         var requirements = new List<IAuthorizationRequirement> { requirement };
 
-        var authorizationResult = await AuthorizationService.AuthorizeAsync(_user, null, requirements);
+        var authorizationResult = await AuthorizationService.AuthorizeAsync(_user, Host, requirements);
         
         return authorizationResult.Succeeded;
     }
