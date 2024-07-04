@@ -9,11 +9,14 @@ using RemoteMaster.Server.Data;
 
 namespace RemoteMaster.Server.Requirements;
 
-public class ComputerAccessHandler(ApplicationDbContext dbContext) : AuthorizationHandler<ComputerAccessRequirement>
+public class ComputerAccessHandler(IServiceScopeFactory scopeFactory) : AuthorizationHandler<ComputerAccessRequirement>
 {
     protected async override Task HandleRequirementAsync(AuthorizationHandlerContext context, ComputerAccessRequirement requirement)
     {
         ArgumentNullException.ThrowIfNull(context);
+
+        using var scope = scopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
         var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
