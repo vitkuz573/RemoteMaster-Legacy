@@ -29,7 +29,7 @@ public class ComputerAccessHandler(IServiceScopeFactory scopeFactory) : Authoriz
 
         var computer = await dbContext.Computers
             .Include(c => c.Parent)
-            .FirstOrDefaultAsync(c => c.Name == requirement.ComputerName || c.IpAddress == requirement.ComputerName);
+            .FirstOrDefaultAsync(c => c.Name == requirement.Host || c.IpAddress == requirement.Host);
 
         if (computer == null || computer.ParentId == null)
         {
