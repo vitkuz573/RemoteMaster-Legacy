@@ -149,7 +149,7 @@ public partial class Access : IAsyncDisposable
             await _connection.InvokeAsync("SendImageQuality", _imageQuality);
             await _connection.InvokeAsync("SendToggleCursorTracking", _cursorTracking);
 
-            if (await HasPermissionAsync("ToggleInputPolicy"))
+            if (await IsPolicyPermittedAsync("ToggleInputPolicy"))
             {
                 await _connection.InvokeAsync("SendToggleInput", _inputEnabled);
             }
@@ -400,7 +400,7 @@ public partial class Access : IAsyncDisposable
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendSelectedScreen", display));
     }
 
-    private async Task<bool> HasPermissionAsync(string policyName)
+    private async Task<bool> IsPolicyPermittedAsync(string policyName)
     {
         if (_user == null)
         {
