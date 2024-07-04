@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO.Abstractions;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -24,6 +25,7 @@ using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Hubs;
 using RemoteMaster.Server.Middlewares;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Server.Requirements;
 using RemoteMaster.Server.Services;
 using RemoteMaster.Server.Validators;
 using RemoteMaster.Shared.Abstractions;
@@ -88,6 +90,7 @@ public static class Program
         services.AddScoped<IdentityUserAccessor>();
         services.AddScoped<IdentityRedirectManager>();
         services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+        services.AddScoped<IAuthorizationHandler, ComputerAccessHandler>();
 
         services.AddAuthentication(options =>
         {

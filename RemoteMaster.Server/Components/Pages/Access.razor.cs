@@ -9,12 +9,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
 using MudBlazor;
 using Polly;
 using Polly.Wrap;
-using RemoteMaster.Server.Data;
+using RemoteMaster.Server.Requirements;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
@@ -128,7 +127,7 @@ public partial class Access : IAsyncDisposable
             await _connection.InvokeAsync("SendImageQuality", _imageQuality);
             await _connection.InvokeAsync("SendToggleCursorTracking", _cursorTracking);
 
-            if (await HasPermissionAsync("ToggleInput"))
+            if (await HasPermissionAsync("ToggleInputPolicy"))
             {
                 await _connection.InvokeAsync("SendToggleInput", _inputEnabled);
             }
@@ -156,7 +155,7 @@ public partial class Access : IAsyncDisposable
                     return;
                 }
 
-                if (requireAdmin && !(await AuthorizationService.AuthorizeAsync(HttpContextAccessor.HttpContext.User, "Administrator")).Succeeded)
+                if (requireAdmin && !HttpContextAccessor.HttpContext.User.IsInRole("Administrator"))
                 {
                     return;
                 }
@@ -326,48 +325,22 @@ public partial class Access : IAsyncDisposable
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendSelectedScreen", display));
     }
 
-    private async Task<bool> HasPermissionAsync(string permission)
+    private async Task<bool> HasPermissionAsync(string policyName)
     {
         var httpContext = HttpContextAccessor.HttpContext;
-        var authorizationResult = await AuthorizationService.AuthorizeAsync(httpContext.User, null, permission);
+        var authorizationResult = await AuthorizationService.AuthorizeAsync(httpContext.User, null, policyName);
 
         return authorizationResult.Succeeded;
     }
 
     private async Task<bool> HasAccessAsync()
     {
-        using var scope = ScopeFactory.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var requirement = new ComputerAccessRequirement(Host);
+        var requirements = new List<IAuthorizationRequirement> { requirement };
 
-        var httpContext = HttpContextAccessor.HttpContext;
-        var userPrincipal = httpContext?.User;
+        var authorizationResult = await AuthorizationService.AuthorizeAsync(HttpContextAccessor.HttpContext.User, null, requirements);
 
-        if (userPrincipal == null)
-        {
-            return false;
-        }
-
-        var userId = userPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (string.IsNullOrEmpty(userId))
-        {
-            return false;
-        }
-
-        var computer = await dbContext.Computers
-            .Include(c => c.Parent)
-            .FirstOrDefaultAsync(c => c.Name == Host || c.IpAddress == Host);
-
-        if (computer?.Parent == null)
-        {
-            return false;
-        }
-
-        var organizationalUnitId = computer.ParentId.Value;
-
-        return await dbContext.OrganizationalUnits
-            .Where(ou => ou.NodeId == organizationalUnitId && ou.AccessibleUsers.Any(u => u.Id == userId))
-            .AnyAsync();
+        return authorizationResult.Succeeded;
     }
 
     [JSInvokable]
