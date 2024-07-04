@@ -45,8 +45,7 @@ public partial class Access : IAsyncDisposable
     private ElementReference _screenImageElement;
     private string? _accessToken;
     private List<ViewerDto> _viewers = [];
-    private bool _isAccessDenied = false;
-
+    private bool _isAccessDenied;
     private readonly AsyncPolicyWrap _combinedPolicy;
 
     private string? _title;
@@ -93,21 +92,22 @@ public partial class Access : IAsyncDisposable
     protected async override Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateTask;
-
         _user = authState.User;
+        _isAccessDenied = _user == null || !await HasAccessAsync();
 
-        if (_user == null || !await HasAccessAsync())
+        if (_isAccessDenied)
         {
             Snackbar.Add("Access denied. You do not have permission to access this computer.", Severity.Error);
-            _isAccessDenied = true;
-
-            return;
+        }
+        else
+        {
+            await InitializeHostConnectionAsync();
         }
     }
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && !_disposed)
+        if (firstRender && !_disposed && !_isAccessDenied)
         {
             _firstRenderCompleted = true;
             var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/eventListeners.js");
@@ -118,7 +118,6 @@ public partial class Access : IAsyncDisposable
             await module.InvokeVoidAsync("addKeyUpEventListener", DotNetObjectReference.Create(this));
             await module.InvokeVoidAsync("preventDefaultForKeydownWhenDrawerClosed", _drawerOpen);
 
-            await InitializeHostConnectionAsync();
             await SetParametersFromUriAsync();
         }
     }
