@@ -31,7 +31,7 @@ public class ComputerAccessHandler(IServiceScopeFactory scopeFactory) : Authoriz
             .Include(c => c.Parent)
             .FirstOrDefaultAsync(c => c.Name == requirement.ComputerName || c.IpAddress == requirement.ComputerName);
 
-        if (computer?.Parent == null)
+        if (computer == null || computer.ParentId == null)
         {
             context.Fail();
 
