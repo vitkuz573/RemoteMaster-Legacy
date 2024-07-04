@@ -47,7 +47,7 @@ public partial class Home
         _retryPolicy = Policy
             .Handle<HttpRequestException>()
             .Or<TimeoutException>()
-            .WaitAndRetryAsync(1, retryAttempt => TimeSpan.FromSeconds(1), OnRetry);
+            .WaitAndRetryAsync(1, retryAttempt => TimeSpan.FromSeconds(1));
     }
 
     protected async override Task OnInitializedAsync()
@@ -377,11 +377,6 @@ public partial class Home
         }
 
         return connection;
-    }
-
-    private static void OnRetry(Exception exception, TimeSpan timeSpan, int retryCount, Context context)
-    {
-        Log.Warning($"Retry {retryCount} encountered an error: {exception.Message}. Waiting {timeSpan} before next retry.");
     }
 
     private void SelectAllPendingComputers()
