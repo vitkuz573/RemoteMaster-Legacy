@@ -7,6 +7,7 @@ using System.Net.WebSockets;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
@@ -26,6 +27,10 @@ public partial class Access : IAsyncDisposable
     [Parameter]
     public string Host { get; set; } = default!;
 
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; }
+
+    private ClaimsPrincipal _user;
     private string _transportType = string.Empty;
     private string? _screenDataUrl;
     private bool _drawerOpen;
@@ -80,6 +85,13 @@ public partial class Access : IAsyncDisposable
         {
             _title = Host;
         }
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateTask;
+        
+        _user = authState.User;
     }
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
@@ -155,7 +167,7 @@ public partial class Access : IAsyncDisposable
                     return;
                 }
 
-                if (requireAdmin && !HttpContextAccessor.HttpContext.User.IsInRole("Administrator"))
+                if (requireAdmin && !_user.IsInRole("Administrator"))
                 {
                     return;
                 }
@@ -215,8 +227,7 @@ public partial class Access : IAsyncDisposable
             return;
         }
 
-        var httpContext = HttpContextAccessor.HttpContext;
-        var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = _user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         _accessToken = await AccessTokenProvider.GetAccessTokenAsync(userId);
 
@@ -251,7 +262,7 @@ public partial class Access : IAsyncDisposable
             InvokeAsync(StateHasChanged);
         });
 
-        var userIdentity = httpContext?.User.Identity as ClaimsIdentity ?? throw new InvalidOperationException("User identity is not a ClaimsIdentity.");
+        var userIdentity = _user.Identity as ClaimsIdentity ?? throw new InvalidOperationException("User identity is not a ClaimsIdentity.");
         var role = userIdentity.Claims
                         .FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
 
@@ -327,8 +338,7 @@ public partial class Access : IAsyncDisposable
 
     private async Task<bool> HasPermissionAsync(string policyName)
     {
-        var httpContext = HttpContextAccessor.HttpContext;
-        var authorizationResult = await AuthorizationService.AuthorizeAsync(httpContext.User, null, policyName);
+        var authorizationResult = await AuthorizationService.AuthorizeAsync(_user, null, policyName);
 
         return authorizationResult.Succeeded;
     }
@@ -338,7 +348,7 @@ public partial class Access : IAsyncDisposable
         var requirement = new ComputerAccessRequirement(Host);
         var requirements = new List<IAuthorizationRequirement> { requirement };
 
-        var authorizationResult = await AuthorizationService.AuthorizeAsync(HttpContextAccessor.HttpContext.User, null, requirements);
+        var authorizationResult = await AuthorizationService.AuthorizeAsync(_user, null, requirements);
 
         return authorizationResult.Succeeded;
     }

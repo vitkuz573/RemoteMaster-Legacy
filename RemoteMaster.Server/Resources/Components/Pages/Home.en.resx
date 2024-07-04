@@ -156,7 +156,7 @@
   <data name="NoPendingComputers" xml:space="preserve">
     <value>No pending computers to display.</value>
   </data>
-  <data name="AvailableComputer" xml:space="preserve">
+  <data name="AvailableComputers" xml:space="preserve">
     <value>Available computers</value>
   </data>
   <data name="DeselectAll" xml:space="preserve">
