@@ -407,7 +407,7 @@ public partial class Access : IAsyncDisposable
             return false;
         }
 
-        var authorizationResult = await AuthorizationService.AuthorizeAsync(_user, null, policyName);
+        var authorizationResult = await AuthorizationService.AuthorizeAsync(_user, Host, policyName);
 
         return authorizationResult.Succeeded;
     }
