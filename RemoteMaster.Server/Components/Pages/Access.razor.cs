@@ -90,8 +90,16 @@ public partial class Access : IAsyncDisposable
     protected async override Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateTask;
-        
+
         _user = authState.User;
+
+        if (!await HasAccessAsync())
+        {
+            Snackbar.Add("Access denied. You do not have permission to access this computer.", Severity.Error);
+            _accessDenied = true;
+
+            return;
+        }
     }
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
@@ -157,16 +165,6 @@ public partial class Access : IAsyncDisposable
         {
             if (_connection != null && _connection.State == HubConnectionState.Connected)
             {
-                if (!await HasAccessAsync())
-                {
-                    Snackbar.Add("Access denied. You do not have permission to access this computer.", Severity.Error);
-                    _accessDenied = true;
-
-                    await InvokeAsync(StateHasChanged);
-
-                    return;
-                }
-
                 if (requireAdmin && !_user.IsInRole("Administrator"))
                 {
                     return;
@@ -217,16 +215,6 @@ public partial class Access : IAsyncDisposable
 
     private async Task InitializeHostConnectionAsync()
     {
-        if (!await HasAccessAsync())
-        {
-            Snackbar.Add("Access denied. You do not have permission to access this computer.", Severity.Error);
-            _accessDenied = true;
-
-            await InvokeAsync(StateHasChanged);
-
-            return;
-        }
-
         var userId = _user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         _accessToken = await AccessTokenProvider.GetAccessTokenAsync(userId);
