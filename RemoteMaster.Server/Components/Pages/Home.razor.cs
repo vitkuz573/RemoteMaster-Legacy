@@ -29,15 +29,16 @@ public partial class Home
     [CascadingParameter]
     private Task<AuthenticationState> AuthenticationStateTask { get; set; }
 
-    private UserInfo _userInfo = new();
     private bool _drawerOpen;
     private INode? _selectedNode;
-    private List<TreeItemData<INode>> _treeItems = new();
+    private List<TreeItemData<INode>> _treeItems = [];
 
     private readonly List<Computer> _selectedComputers = [];
     private readonly ConcurrentDictionary<string, Computer> _availableComputers = new();
     private readonly ConcurrentDictionary<string, Computer> _unavailableComputers = new();
     private readonly ConcurrentDictionary<string, Computer> _pendingComputers = new();
+
+    private ClaimsPrincipal _user;
 
     private readonly AsyncRetryPolicy _retryPolicy;
 
@@ -51,10 +52,11 @@ public partial class Home
 
     protected async override Task OnInitializedAsync()
     {
+        var authState = await AuthenticationStateTask;
+        _user = authState.User;
+
         var httpContext = HttpContextAccessor.HttpContext;
         var userId = UserManager.GetUserId(httpContext.User);
-
-        await InitializeUserAsync();
 
         var nodes = await LoadNodes();
         _treeItems = nodes.Select(node => new UnifiedTreeItemData(node)).Cast<TreeItemData<INode>>().ToList();
@@ -62,63 +64,15 @@ public partial class Home
         await AccessTokenProvider.GetAccessTokenAsync(userId);
     }
 
-    private async Task InitializeUserAsync()
-    {
-        var authState = await AuthenticationStateTask;
-        var userPrincipal = authState.User;
-
-        if (userPrincipal?.Identity?.IsAuthenticated == true)
-        {
-            _userInfo = await GetUserInfoAsync(userPrincipal);
-        }
-    }
-
-    private async Task<UserInfo> GetUserInfoAsync(ClaimsPrincipal userPrincipal)
-    {
-        var userInfo = new UserInfo();
-        var userId = userPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (!string.IsNullOrEmpty(userId))
-        {
-            var user = await UserManager.Users
-                .Include(u => u.AccessibleOrganizations)
-                .Include(u => u.AccessibleOrganizationalUnits)
-                .FirstOrDefaultAsync(u => u.Id == userId);
-
-            if (user != null)
-            {
-                var roles = await UserManager.GetRolesAsync(user);
-
-                foreach (var role in roles)
-                {
-                    userInfo.Roles.Add(role);
-                }
-            }
-            else
-            {
-                Log.Warning("User with ID {UserId} not found", userId);
-            }
-        }
-        else
-        {
-            Log.Warning("User ID not found in claims");
-        }
-
-        userInfo.UserName = userPrincipal.Identity?.Name ?? "UnknownUser";
-
-        return userInfo;
-    }
-
     private async Task<IEnumerable<INode>> LoadNodes(Guid? organizationId = null, Guid? parentId = null)
     {
-        var authState = await AuthenticationStateTask;
-        var userPrincipal = authState.User;
-        var userId = userPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = _user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         if (string.IsNullOrEmpty(userId))
         {
             Log.Warning("User ID not found in claims");
-            return Enumerable.Empty<INode>();
+
+            return [];
         }
 
         var accessibleOrganizations = await GetAccessibleOrganizations(userId);
@@ -300,18 +254,9 @@ public partial class Home
                 Log.Information("Connection closed for {IPAddress}", computer.IpAddress);
             });
 
-            var userName = _userInfo.UserName;
+            var connectionRequest = new ConnectionRequest(Intention.ReceiveThumbnail, "Users", _user.Identity.Name, _user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value);
 
-            if (!string.IsNullOrEmpty(userName))
-            {
-                var connectionRequest = new ConnectionRequest(Intention.ReceiveThumbnail, "Users", userName, _userInfo.Roles.FirstOrDefault());
-
-                await _retryPolicy.ExecuteAsync(async (ct) => await connection.InvokeAsync("ConnectAs", connectionRequest, CancellationToken.None), cts.Token);
-            }
-            else
-            {
-                Log.Warning("User name is null or empty, unable to create connection request.");
-            }
+            await _retryPolicy.ExecuteAsync(async (ct) => await connection.InvokeAsync("ConnectAs", connectionRequest, CancellationToken.None), cts.Token);
         }
         catch (OperationCanceledException)
         {
@@ -321,6 +266,7 @@ public partial class Home
         catch (Exception ex)
         {
             Log.Error("Exception in LogonComputer for {IPAddress}: {Message}", computer.IpAddress, ex.Message);
+
             await MoveToUnavailable(computer);
             await InvokeAsync(StateHasChanged);
         }
@@ -350,17 +296,8 @@ public partial class Home
                 Log.Information("Connection closed for {IPAddress}", computer.IpAddress);
             });
 
-            var userName = _userInfo.UserName;
-
-            if (!string.IsNullOrEmpty(userName))
-            {
-                computer.Thumbnail = null;
-                await MoveToPending(computer);
-            }
-            else
-            {
-                Log.Warning("User name is null or empty, unable to create disconnection request.");
-            }
+            computer.Thumbnail = null;
+            await MoveToPending(computer);
         }
         catch (Exception ex)
         {
@@ -442,7 +379,7 @@ public partial class Home
         return connection;
     }
 
-    private void OnRetry(Exception exception, TimeSpan timeSpan, int retryCount, Context context)
+    private static void OnRetry(Exception exception, TimeSpan timeSpan, int retryCount, Context context)
     {
         Log.Warning($"Retry {retryCount} encountered an error: {exception.Message}. Waiting {timeSpan} before next retry.");
     }
@@ -530,7 +467,7 @@ public partial class Home
 
     private async Task Connect()
     {
-        if (_userInfo.Roles.Contains("Viewer"))
+        if (_user.IsInRole("Viewer"))
         {
             await ConnectAsViewer();
         }
