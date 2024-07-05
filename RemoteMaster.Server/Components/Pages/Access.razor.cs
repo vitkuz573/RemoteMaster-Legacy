@@ -181,6 +181,23 @@ public partial class Access : IAsyncDisposable
         });
     }
 
+    private List<string> GetDisplayNames()
+    {
+        var displayNames = new List<string>();
+
+        for (var i = 0; i < _displays.Count; i++)
+        {
+            var resolution = $"{_displays[i].Resolution.Width} x {_displays[i].Resolution.Height}";
+            var displayName = _displays[i].Name == "VIRTUAL_SCREEN"
+                ? $"Virtual Screen ({resolution})"
+                : $"Screen {i + 1} ({resolution})";
+
+            displayNames.Add(displayName);
+        }
+
+        return displayNames;
+    }
+
     private async Task KillHost()
     {
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendKillHost"), true);

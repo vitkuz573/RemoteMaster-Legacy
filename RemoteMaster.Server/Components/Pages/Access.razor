@@ -31,14 +31,9 @@
         <MudNavMenu>
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.DisplaySettings">
                 <MudSelect Value="@_selectedDisplay" ValueChanged="OnChangeScreen" Label="Display" T="string" Dense="true">
-                    @for (var i = 0; i < _displays.Count; i++)
+                    @foreach (var displayName in GetDisplayNames())
                     {
-                        var resolution = $"{_displays[i].Resolution.Width} x {_displays[i].Resolution.Height}";
-                        var displayName = _displays[i].Name == "VIRTUAL_SCREEN"
-                        ? $"Virtual Screen ({resolution})"
-                        : $"Screen {i + 1} ({resolution})";
-
-                        <MudSelectItem Value="_displays[i].Name">@displayName</MudSelectItem>
+                        <MudSelectItem Value="@displayName">@displayName</MudSelectItem>
                     }
                 </MudSelect>
             </MudNavLink>
