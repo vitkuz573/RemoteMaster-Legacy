@@ -19,23 +19,41 @@
         {
             @if (_recoveryCodesLeft == 0)
             {
-                <div class="alert alert-danger rounded-md bg-red-100 p-4 text-red-700">
-                    <strong>You have no recovery codes left.</strong>
-                    <p>You must <a href="Account/Manage/GenerateRecoveryCodes" class="text-indigo-600">generate a new set of recovery codes</a> before you can log in with a recovery code.</p>
+                <div class="rounded-md bg-red-100 p-4">
+                    <div class="flex">
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-700">You have no recovery codes left.</h3>
+                            <div class="mt-2 text-sm text-red-700">
+                                <p>You must <a href="Account/Manage/GenerateRecoveryCodes" class="text-indigo-600">generate a new set of recovery codes</a> before you can log in with a recovery code.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             }
             else if (_recoveryCodesLeft == 1)
             {
-                <div class="alert alert-danger rounded-md bg-red-100 p-4 text-red-700">
-                    <strong>You have 1 recovery code left.</strong>
-                    <p>You can <a href="Account/Manage/GenerateRecoveryCodes" class="text-indigo-600">generate a new set of recovery codes</a>.</p>
+                <div class="rounded-md bg-red-100 p-4">
+                    <div class="flex">
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-700">You have 1 recovery code left.</h3>
+                            <div class="mt-2 text-sm text-red-700">
+                                <p>You can <a href="Account/Manage/GenerateRecoveryCodes" class="text-indigo-600">generate a new set of recovery codes</a>.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             }
             else if (_recoveryCodesLeft <= 3)
             {
-                <div class="alert alert-warning rounded-md bg-yellow-100 p-4 text-yellow-700">
-                    <strong>You have @_recoveryCodesLeft recovery codes left.</strong>
-                    <p>You should <a href="Account/Manage/GenerateRecoveryCodes" class="text-indigo-600">generate a new set of recovery codes</a>.</p>
+                <div class="rounded-md bg-yellow-100 p-4">
+                    <div class="flex">
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-yellow-700">You have @_recoveryCodesLeft recovery codes left.</h3>
+                            <div class="mt-2 text-sm text-yellow-700">
+                                <p>You should <a href="Account/Manage/GenerateRecoveryCodes" class="text-indigo-600">generate a new set of recovery codes</a>.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             }
 
@@ -43,34 +61,40 @@
             {
                 <form style="display: inline-block" @formname="forget-browser" @onsubmit="OnSubmitForgetBrowserAsync" method="post">
                     <AntiforgeryToken />
-                    <button type="submit" class="rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none">Forget this browser</button>
+                    <button type="submit" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-lg text-white hover:bg-indigo-700 focus:outline-none">Forget this browser</button>
                 </form>
             }
 
             <div class="space-y-4">
-                <a href="Account/Manage/Disable2fa" class="rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none">Disable 2FA</a>
-                <a href="Account/Manage/GenerateRecoveryCodes" class="rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none">Reset recovery codes</a>
+                <a href="Account/Manage/Disable2fa" class="inline-flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Disable 2FA</a>
+                <a href="Account/Manage/GenerateRecoveryCodes" class="inline-flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Reset recovery codes</a>
             </div>
         }
 
         <h4 class="leading-6 text-lg font-medium text-gray-900">Authenticator app</h4>
         @if (!_hasAuthenticator)
         {
-            <a href="Account/Manage/EnableAuthenticator" class="rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none">Add authenticator app</a>
+            <a href="Account/Manage/EnableAuthenticator" class="inline-flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Add authenticator app</a>
         }
         else
         {
             <div class="space-y-4">
-                <a href="Account/Manage/EnableAuthenticator" class="rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none">Set up authenticator app</a>
-                <a href="Account/Manage/ResetAuthenticator" class="rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none">Reset authenticator app</a>
+                <a href="Account/Manage/EnableAuthenticator" class="inline-flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Set up authenticator app</a>
+                <a href="Account/Manage/ResetAuthenticator" class="inline-flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Reset authenticator app</a>
             </div>
         }
     }
     else
     {
-        <div class="alert alert-danger rounded-md bg-red-100 p-4 text-red-700">
-            <strong>Privacy and cookie policy have not been accepted.</strong>
-            <p>You must accept the policy before you can enable two factor authentication.</p>
+        <div class="rounded-md bg-red-100 p-4">
+            <div class="flex">
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-700">Privacy and cookie policy have not been accepted.</h3>
+                    <div class="mt-2 text-sm text-red-700">
+                        <p>You must accept the policy before you can enable two-factor authentication.</p>
+                    </div>
+                </div>
+            </div>
         </div>
     }
 </div>
