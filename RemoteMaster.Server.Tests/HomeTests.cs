@@ -7,7 +7,6 @@ using System.Security.Claims;
 using Bunit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
@@ -75,7 +74,7 @@ public class HomeTests
         _testContext.JSInterop.SetupVoid("mudPopover.initialize", "mudblazor-main-content", 0);
         _testContext.JSInterop.Setup<BoundingClientRect>("mudElementRef.getBoundingClientRect", _ => true);
         _testContext.JSInterop.SetupVoid("mudKeyInterceptor.connect", _ => true);
-        _testContext.JSInterop.Setup<IEnumerable<BoundingClientRect>>("mudResizeObserver.connect", _ => true).SetResult(Enumerable.Empty<BoundingClientRect>());
+        _testContext.JSInterop.Setup<IEnumerable<BoundingClientRect>>("mudResizeObserver.connect", _ => true).SetResult([]);
         _testContext.JSInterop.SetupVoid("mudResizeObserver.disconnect", _ => true);
 
         // Set up the default authorization policy
@@ -92,6 +91,7 @@ public class HomeTests
     {
         var store = new Mock<IUserStore<TUser>>();
         var userManager = new Mock<UserManager<TUser>>(store.Object, null, null, null, null, null, null, null, null);
+
         return userManager;
     }
 
@@ -115,11 +115,11 @@ public class HomeTests
         var homeComponent = cut.FindComponent<Home>();
 
         _mockDatabaseService.Setup(service => service.GetNodesAsync(It.IsAny<Expression<Func<Organization, bool>>>()))
-            .ReturnsAsync(new List<Organization>());
+            .ReturnsAsync([]);
         _mockDatabaseService.Setup(service => service.GetNodesAsync(It.IsAny<Expression<Func<OrganizationalUnit, bool>>>()))
-            .ReturnsAsync(new List<OrganizationalUnit>());
+            .ReturnsAsync([]);
         _mockDatabaseService.Setup(service => service.GetNodesAsync(It.IsAny<Expression<Func<Computer, bool>>>()))
-            .ReturnsAsync(new List<Computer>());
+            .ReturnsAsync([]);
 
         // Act
         await homeComponent.Instance.InitializeAsync();
