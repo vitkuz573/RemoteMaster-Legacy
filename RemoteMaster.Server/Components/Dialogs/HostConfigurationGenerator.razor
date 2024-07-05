@@ -27,7 +27,7 @@
                                 <MudSelectItem Value="@organization.Name">@organization.Name</MudSelectItem>
                             }
                         </MudSelect>
-                        <MudSelect Label="Organizational Unit" Value="_selectedOrganizationalUnit" T="string" ValueChanged="OrganizationalUnitChanged" Dense>
+                        <MudSelect Label="Organizational Unit" Value="_selectedOrganizationalUnit" T="string" ValueChanged="OrganizationalUnitChanged" Dense Disabled="@string.IsNullOrEmpty(_selectedOrganization)">
                             @foreach (var unit in _organizationalUnits)
                             {
                                 <MudSelectItem Value="@unit.Name">@unit.Name</MudSelectItem>
