@@ -8,6 +8,7 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
+using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Tests;

@@ -110,7 +110,7 @@ public class ControlHubTests
         var connectionRequest = new ConnectionRequest(Intention.ManageDevice, "TestGroup", "TestUser", "TestRole");
         var viewer = new Mock<IViewer>().Object;
 
-        _mockViewerFactory.Setup(f => f.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(viewer);
+        _mockViewerFactory.Setup(f => f.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), true)).Returns(viewer);
         _mockAppState.Setup(a => a.TryAddViewer(viewer)).Returns(true);
 
         var version = new Version(1, 0, 0);
@@ -342,7 +342,7 @@ public class ControlHubTests
         var groupName = "TestGroup";
         var viewer = new Mock<IViewer>().Object;
 
-        _mockViewerFactory.Setup(f => f.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(viewer);
+        _mockViewerFactory.Setup(f => f.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>())).Returns(viewer);
         _mockAppState.Setup(a => a.TryAddViewer(viewer)).Returns(true);
 
         var connectionId = "connectionId";
