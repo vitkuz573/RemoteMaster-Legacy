@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +10,6 @@ using RemoteMaster.Server.Data;
 
 namespace RemoteMaster.Server.Components.Admin.Pages;
 
-[Authorize(Roles = "RootAdministrator")]
 public partial class ManageUsers
 {
     [SupplyParameterFromForm(FormName = "CreateUser")]

@@ -1,2 +1,2 @@
 ﻿@layout RemoteMaster.Server.Components.Admin.Shared.ManageLayout
-@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "RootAdministrator")]
