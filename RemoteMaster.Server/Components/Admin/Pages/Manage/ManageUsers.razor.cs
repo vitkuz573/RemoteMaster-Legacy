@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using RemoteMaster.Server.Components.Admin.Dialogs;
 using RemoteMaster.Server.Data;
 
 namespace RemoteMaster.Server.Components.Admin.Pages;
@@ -15,11 +16,13 @@ public partial class ManageUsers
     [SupplyParameterFromForm(FormName = "CreateUser")]
     private InputModel Input { get; set; } = new();
 
-    private readonly Dictionary<string, PlaceholderInputModel> _userPlaceholderModels = new();
+    private readonly Dictionary<string, PlaceholderInputModel> _userPlaceholderModels = [];
 
     private IEnumerable<IdentityError>? _identityErrors;
     private List<ApplicationUser> _users = [];
     private readonly Dictionary<ApplicationUser, List<string>> _userRoles = [];
+    private ApplicationUser? _userToDelete;
+    private ConfirmationDialog confirmationDialog;
 
     private string? Message => _identityErrors is null ? null : $"Error: {string.Join(", ", _identityErrors.Select(error => error.Description))}";
 
@@ -81,20 +84,38 @@ public partial class ManageUsers
         NavigationManager.Refresh();
     }
 
-    private async Task OnDeleteAsync(ApplicationUser user)
+    private void ShowDeleteConfirmation(ApplicationUser user)
+    {
+        _userToDelete = user;
+
+        var parameters = new Dictionary<string, string>
+        {
+            { "User", user.UserName }
+        };
+
+        confirmationDialog.Show(parameters);
+    }
+
+    private async Task OnConfirmDelete(bool confirmed)
+    {
+        if (confirmed && _userToDelete != null)
+        {
+            await DeleteUserAsync(_userToDelete);
+            _userToDelete = null;
+        }
+    }
+
+    private async Task DeleteUserAsync(ApplicationUser user)
     {
         using var scope = ScopeFactory.CreateScope();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-        if (user != null && _userPlaceholderModels.TryGetValue(user.UserName, out var _))
-        {
-            await userManager.DeleteAsync(user);
+        await userManager.DeleteAsync(user);
 
-            _userPlaceholderModels.Remove(user.UserName);
-            _users.Remove(user);
+        _userPlaceholderModels.Remove(user.UserName);
+        _users.Remove(user);
 
-            StateHasChanged();
-        }
+        await LoadUsersAsync();
     }
 
     private async Task LoadUsersAsync()

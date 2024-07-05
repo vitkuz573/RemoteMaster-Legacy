@@ -2,7 +2,10 @@
 
 @namespace RemoteMaster.Server.Components.Admin.Pages
 
+@rendermode InteractiveServer
+
 @using RemoteMaster.Server.Components.Account.Shared
+@using RemoteMaster.Server.Components.Admin.Dialogs
 
 @inject NavigationManager NavigationManager
 @inject IServiceScopeFactory ScopeFactory
@@ -10,7 +13,6 @@
 <PageTitle>Manage Users</PageTitle>
 
 <div class="space-y-6">
-    <StatusMessage Message="@Message" />
 
     <!-- Form -->
     <div class="w-full">
@@ -74,11 +76,9 @@
                                 {
                                     <td class="whitespace-nowrap px-6 py-4 text-right">
                                         <div class="flex">
-                                            <EditForm Model="_userPlaceholderModels[user.UserName]" OnValidSubmit="() => OnDeleteAsync(user)" FormName="@($"deleteUserForm-{user.Id}")">
-                                                <button class="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 focus:outline-none">
-                                                    Delete
-                                                </button>
-                                            </EditForm>
+                                            <button class="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 focus:outline-none" @onclick="() => ShowDeleteConfirmation(user)">
+                                                Delete
+                                            </button>
                                         </div>
                                     </td>
                                 }
@@ -90,3 +90,5 @@
         </div>
     </div>
 </div>
+
+<ConfirmationDialog @ref="confirmationDialog" Title="Confirm Delete" Message="Are you sure you want to delete this user?" OnConfirm="OnConfirmDelete" />
