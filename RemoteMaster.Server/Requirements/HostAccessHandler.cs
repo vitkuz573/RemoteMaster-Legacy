@@ -23,7 +23,7 @@ public class HostAccessHandler(IServiceScopeFactory scopeFactory) : Authorizatio
         if (string.IsNullOrEmpty(userId))
         {
             context.Fail();
-
+            
             return;
         }
 
@@ -34,23 +34,21 @@ public class HostAccessHandler(IServiceScopeFactory scopeFactory) : Authorizatio
         if (computer == null || computer.ParentId == null)
         {
             context.Fail();
-
+            
             return;
         }
 
-        var organizationalUnitId = computer.ParentId.Value;
+        var organizationalUnit = await dbContext.OrganizationalUnits
+            .Include(ou => ou.AccessibleUsers)
+            .FirstOrDefaultAsync(ou => ou.NodeId == computer.ParentId.Value);
 
-        var hasAccess = await dbContext.OrganizationalUnits
-            .Where(ou => ou.NodeId == organizationalUnitId && ou.AccessibleUsers.Any(u => u.Id == userId))
-            .AnyAsync();
-
-        if (hasAccess)
-        {
-            context.Succeed(requirement);
-        }
-        else
+        if (organizationalUnit == null || !organizationalUnit.AccessibleUsers.Any(u => u.Id == userId))
         {
             context.Fail();
+            
+            return;
         }
+
+        context.Succeed(requirement);
     }
 }

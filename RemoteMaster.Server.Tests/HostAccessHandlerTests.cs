@@ -141,4 +141,124 @@ public class HostAccessHandlerTests
         // Assert
         Assert.False(context.HasSucceeded);
     }
+
+    [Fact]
+    public async Task HandleRequirementAsync_HostInMultipleUnits_UserHasAccessToSpecificHost_Succeeds()
+    {
+        // Arrange
+        var requirement = new HostAccessRequirement("sharedHost");
+        var user = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user1")]));
+        var context = new AuthorizationHandlerContext([requirement], user, null);
+
+        var applicationUser = new ApplicationUser
+        {
+            Id = "user1",
+            UserName = "user1"
+        };
+
+        var computer1 = new Computer
+        {
+            NodeId = Guid.NewGuid(),
+            Name = "sharedHost",
+            IpAddress = "127.0.0.1",
+            MacAddress = "00-14-22-01-23-45",
+            ParentId = Guid.NewGuid()
+        };
+
+        var computer2 = new Computer
+        {
+            NodeId = Guid.NewGuid(),
+            Name = "sharedHost",
+            IpAddress = "127.0.0.2",
+            MacAddress = "00-14-22-01-23-46",
+            ParentId = Guid.NewGuid()
+        };
+
+        var organizationalUnit1 = new OrganizationalUnit
+        {
+            NodeId = computer1.ParentId.Value,
+            Name = "Unit 1",
+            OrganizationId = Guid.NewGuid(),
+            AccessibleUsers = [applicationUser]
+        };
+
+        var organizationalUnit2 = new OrganizationalUnit
+        {
+            NodeId = computer2.ParentId.Value,
+            Name = "Unit 2",
+            OrganizationId = Guid.NewGuid(),
+            AccessibleUsers = [new() { Id = "user2" }]
+        };
+
+        _dbContext.Users.Add(applicationUser);
+        _dbContext.Computers.AddRange(computer1, computer2);
+        _dbContext.OrganizationalUnits.AddRange(organizationalUnit1, organizationalUnit2);
+        await _dbContext.SaveChangesAsync();
+
+        // Act
+        await _handler.HandleAsync(context);
+
+        // Assert
+        Assert.True(context.HasSucceeded);
+    }
+
+    [Fact]
+    public async Task HandleRequirementAsync_HostInMultipleUnits_UserHasNoAccessToSpecificHost_Fails()
+    {
+        // Arrange
+        var requirement = new HostAccessRequirement("sharedHost");
+        var user = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user1")]));
+        var context = new AuthorizationHandlerContext([requirement], user, null);
+
+        var applicationUser = new ApplicationUser
+        {
+            Id = "user1",
+            UserName = "user1"
+        };
+
+        var computer1 = new Computer
+        {
+            NodeId = Guid.NewGuid(),
+            Name = "sharedHost",
+            IpAddress = "127.0.0.1",
+            MacAddress = "00-14-22-01-23-45",
+            ParentId = Guid.NewGuid()
+        };
+
+        var computer2 = new Computer
+        {
+            NodeId = Guid.NewGuid(),
+            Name = "sharedHost",
+            IpAddress = "127.0.0.2",
+            MacAddress = "00-14-22-01-23-46",
+            ParentId = Guid.NewGuid()
+        };
+
+        var organizationalUnit1 = new OrganizationalUnit
+        {
+            NodeId = computer1.ParentId.Value,
+            Name = "Unit 1",
+            OrganizationId = Guid.NewGuid(),
+            AccessibleUsers = [new() { Id = "user2" }]
+        };
+
+        var organizationalUnit2 = new OrganizationalUnit
+        {
+            NodeId = computer2.ParentId.Value,
+            Name = "Unit 2",
+            OrganizationId = Guid.NewGuid(),
+            AccessibleUsers = [applicationUser]
+        };
+
+        _dbContext.Users.Add(applicationUser);
+        _dbContext.Computers.AddRange(computer1, computer2);
+        _dbContext.OrganizationalUnits.AddRange(organizationalUnit1, organizationalUnit2);
+        await _dbContext.SaveChangesAsync();
+
+        // Act
+        await _handler.HandleAsync(context);
+
+        // Assert
+        Assert.False(context.HasSucceeded);
+    }
 }
