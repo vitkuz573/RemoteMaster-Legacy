@@ -52,6 +52,11 @@ public partial class Home
 
     protected async override Task OnInitializedAsync()
     {
+        await InitializeAsync();
+    }
+
+    public async Task InitializeAsync()
+    {
         var authState = await AuthenticationStateTask;
         _user = authState.User;
 
@@ -63,6 +68,13 @@ public partial class Home
 
         await AccessTokenProvider.GetAccessTokenAsync(userId);
     }
+
+    public List<TreeItemData<INode>> GetTreeItems()
+    {
+        return _treeItems;
+    }
+
+    public bool DrawerOpen => _drawerOpen;
 
     private async Task<IEnumerable<INode>> LoadNodes(Guid? organizationId = null, Guid? parentId = null)
     {
@@ -129,7 +141,7 @@ public partial class Home
         return user?.AccessibleOrganizationalUnits.Select(ou => ou.NodeId).ToList() ?? [];
     }
 
-    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+    public void ToggleDrawer() => _drawerOpen = !_drawerOpen;
 
     [Authorize(Roles = "Administrator")]
     private async Task OpenHostConfig()
