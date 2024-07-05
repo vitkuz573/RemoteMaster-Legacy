@@ -52,16 +52,22 @@ public partial class Home
 
     protected async override Task OnInitializedAsync()
     {
+        var authState = await AuthenticationStateTask;
+        _user = authState.User;
+
         await InitializeAsync();
     }
 
     public async Task InitializeAsync()
     {
-        var authState = await AuthenticationStateTask;
-        _user = authState.User;
+        var userId = _user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        var httpContext = HttpContextAccessor.HttpContext;
-        var userId = UserManager.GetUserId(httpContext.User);
+        if (userId == null)
+        {
+            Log.Warning("User ID not found in claims");
+            
+            return;
+        }
 
         var nodes = await LoadNodes();
         _treeItems = nodes.Select(node => new UnifiedTreeItemData(node)).Cast<TreeItemData<INode>>().ToList();
@@ -371,8 +377,7 @@ public partial class Home
 
     private async Task<HubConnection> SetupConnection(Computer computer, string hubPath, bool startConnection, CancellationToken cancellationToken)
     {
-        var httpContext = HttpContextAccessor.HttpContext;
-        var userId = UserManager.GetUserId(httpContext.User);
+        var userId = _user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         var connection = new HubConnectionBuilder()
             .WithUrl($"https://{computer.IpAddress}:5001/{hubPath}", options =>

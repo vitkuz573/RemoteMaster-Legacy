@@ -27,7 +27,6 @@ public class HomeTests
 {
     private readonly TestContext _testContext;
     private readonly Mock<IDatabaseService> _mockDatabaseService;
-    private readonly Mock<IHttpContextAccessor> _mockHttpContextAccessor;
     private readonly Mock<IAccessTokenProvider> _mockAccessTokenProvider;
     private readonly Mock<UserManager<ApplicationUser>> _mockUserManager;
     private readonly Mock<IStringLocalizer<Home>> _mockLocalizer;
@@ -43,7 +42,6 @@ public class HomeTests
     {
         _testContext = new TestContext();
         _mockDatabaseService = new Mock<IDatabaseService>();
-        _mockHttpContextAccessor = new Mock<IHttpContextAccessor>();
         _mockAccessTokenProvider = new Mock<IAccessTokenProvider>();
         _mockUserManager = MockUserManager<ApplicationUser>();
         _mockLocalizer = new Mock<IStringLocalizer<Home>>();
@@ -62,7 +60,6 @@ public class HomeTests
     {
         _testContext.Services.AddMudServices();
         _testContext.Services.AddSingleton(_mockDatabaseService.Object);
-        _testContext.Services.AddSingleton(_mockHttpContextAccessor.Object);
         _testContext.Services.AddSingleton(_mockAccessTokenProvider.Object);
         _testContext.Services.AddSingleton(_mockUserManager.Object);
         _testContext.Services.AddSingleton(_mockLocalizer.Object);
@@ -89,10 +86,6 @@ public class HomeTests
         _mockAuthorizationPolicyProvider
             .Setup(x => x.GetDefaultPolicyAsync())
             .ReturnsAsync(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
-
-        // Mock HttpContextAccessor
-        var context = new DefaultHttpContext();
-        _mockHttpContextAccessor.Setup(x => x.HttpContext).Returns(context);
     }
 
     private static Mock<UserManager<TUser>> MockUserManager<TUser>() where TUser : class
