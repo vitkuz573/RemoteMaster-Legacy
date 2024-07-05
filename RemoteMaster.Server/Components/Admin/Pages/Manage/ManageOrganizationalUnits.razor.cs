@@ -30,6 +30,11 @@ public partial class ManageOrganizationalUnits
 
     private async Task OnValidSubmitAsync()
     {
+        if (Input.OrganizationId == Guid.Empty)
+        {
+            return;
+        }
+
         OrganizationalUnit organizationalUnit;
 
         using var scope = ScopeFactory.CreateScope();
