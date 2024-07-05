@@ -44,7 +44,7 @@ public class AccessTests
         ctx.Services.AddSingleton(mockAuthorizationService.Object);
         ctx.Services.AddSingleton(mockSnackbar.Object);
         ctx.Services.AddSingleton(mockAuthorizationPolicyProvider.Object);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(mockAuthStateProvider.Object);
+        ctx.Services.AddSingleton(mockAuthStateProvider.Object);
         ctx.Services.AddMudServices();
 
         ctx.JSInterop.SetupVoid("mudPopover.initialize", "mudblazor-main-content", 0);
@@ -72,12 +72,12 @@ public class AccessTests
 
         // Act
         var cut = _ctx.RenderComponent<CascadingAuthenticationState>(parameters =>
-            parameters.Add(p => p.ChildContent, (RenderFragment)(builder =>
+            parameters.Add(p => p.ChildContent, builder =>
             {
                 builder.OpenComponent<Access>(0);
                 builder.AddAttribute(1, "Host", "test-host");
                 builder.CloseComponent();
-            }))
+            })
         );
 
         // Assert
