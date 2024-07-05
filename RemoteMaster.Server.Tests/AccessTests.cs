@@ -5,7 +5,6 @@
 using System.Security.Claims;
 using Bunit;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
