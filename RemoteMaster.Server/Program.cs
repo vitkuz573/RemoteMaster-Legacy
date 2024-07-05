@@ -90,7 +90,7 @@ public static class Program
         services.AddScoped<IdentityUserAccessor>();
         services.AddScoped<IdentityRedirectManager>();
         services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
-        services.AddScoped<IAuthorizationHandler, ComputerAccessHandler>();
+        services.AddScoped<IAuthorizationHandler, HostAccessHandler>();
 
         services.AddAuthentication(options =>
         {

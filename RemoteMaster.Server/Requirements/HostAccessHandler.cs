@@ -9,7 +9,7 @@ using RemoteMaster.Server.Data;
 
 namespace RemoteMaster.Server.Requirements;
 
-public class ComputerAccessHandler(IServiceScopeFactory scopeFactory) : AuthorizationHandler<HostAccessRequirement>
+public class HostAccessHandler(IServiceScopeFactory scopeFactory) : AuthorizationHandler<HostAccessRequirement>
 {
     protected async override Task HandleRequirementAsync(AuthorizationHandlerContext context, HostAccessRequirement requirement)
     {
