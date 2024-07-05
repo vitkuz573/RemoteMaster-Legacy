@@ -2,15 +2,10 @@
 
 @namespace RemoteMaster.Server.Components.Admin.Pages
 
-@using Microsoft.AspNetCore.Identity
 @using RemoteMaster.Server.Components.Account.Shared
-@using RemoteMaster.Server.Data
 
-@inject UserManager<ApplicationUser> UserManager
-@inject RoleManager<IdentityRole> RoleManager
-@inject IUserStore<ApplicationUser> UserStore
-@inject ApplicationDbContext ApplicationDbContext
 @inject NavigationManager NavigationManager
+@inject IServiceScopeFactory ScopeFactory
 
 <PageTitle>Manage Users</PageTitle>
 

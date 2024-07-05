@@ -15,31 +15,17 @@ public partial class ManageUsers
     [SupplyParameterFromForm(FormName = "CreateUser")]
     private InputModel Input { get; set; } = new();
 
-    private readonly Dictionary<string, PlaceholderInputModel> _userPlaceholderModels = [];
+    private readonly Dictionary<string, PlaceholderInputModel> _userPlaceholderModels = new();
 
     private IEnumerable<IdentityError>? _identityErrors;
     private List<ApplicationUser> _users = [];
     private readonly Dictionary<ApplicationUser, List<string>> _userRoles = [];
-    private List<IdentityRole> _roles = [];
-
-    [Inject]
-    private IServiceScopeFactory ScopeFactory { get; set; } = null!;
 
     private string? Message => _identityErrors is null ? null : $"Error: {string.Join(", ", _identityErrors.Select(error => error.Description))}";
 
     protected async override Task OnInitializedAsync()
     {
-        await LoadRolesAsync();
         await LoadUsersAsync();
-    }
-
-    private async Task LoadRolesAsync()
-    {
-        using var scope = ScopeFactory.CreateScope();
-        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-        _roles = await roleManager.Roles
-            .Where(role => role.Name != "RootAdministrator")
-            .ToListAsync();
     }
 
     private async Task OnValidSubmitAsync()
