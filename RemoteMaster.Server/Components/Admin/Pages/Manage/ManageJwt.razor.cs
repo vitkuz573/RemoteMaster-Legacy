@@ -3,6 +3,8 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.IO.Compression;
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.JSInterop;
 
 namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
@@ -11,6 +13,7 @@ public partial class ManageJwt
 {
     private string? _keysDirectory;
     private int? _keySize;
+    private string? _newKeyPassword;
 
     protected override void OnInitialized()
     {
@@ -46,5 +49,36 @@ public partial class ManageJwt
         var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/fileUtils.js");
 
         await module.InvokeVoidAsync("downloadDataAsFile", base64Zip, "jwtKeys.zip", "application/zip;base64");
+    }
+
+    private async Task ChangePasswordAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_newKeyPassword))
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "New password cannot be empty.");
+            return;
+        }
+
+        var privateKeyPath = Path.Combine(_keysDirectory, "private_key.der");
+
+        try
+        {
+            // Load the existing private key
+            var privateKeyBytes = await File.ReadAllBytesAsync(privateKeyPath);
+            using var rsa = RSA.Create();
+            rsa.ImportEncryptedPkcs8PrivateKey(Encoding.UTF8.GetBytes(Jwt.Value.KeyPassword), privateKeyBytes, out _);
+
+            // Encrypt with new password
+            var newKeyPasswordBytes = Encoding.UTF8.GetBytes(_newKeyPassword);
+            var encryptionAlgorithm = new PbeParameters(PbeEncryptionAlgorithm.Aes256Cbc, HashAlgorithmName.SHA256, 100000);
+
+            await File.WriteAllBytesAsync(privateKeyPath, rsa.ExportEncryptedPkcs8PrivateKey(newKeyPasswordBytes, encryptionAlgorithm));
+
+            await JsRuntime.InvokeVoidAsync("alert", "Key password changed successfully.");
+        }
+        catch (Exception ex)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", $"Failed to change key password: {ex.Message}");
+        }
     }
 }

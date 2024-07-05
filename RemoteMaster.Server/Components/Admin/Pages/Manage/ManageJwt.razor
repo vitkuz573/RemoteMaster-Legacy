@@ -20,9 +20,16 @@
             <label class="block text-sm font-medium text-gray-700">Key Size</label>
             <input type="text" value="@_keySize" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none" readonly />
         </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">New Key Password</label>
+            <input type="password" @bind="_newKeyPassword" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none" />
+        </div>
 
         <button @onclick="ExportKeysAsync" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-lg text-white hover:bg-indigo-700 focus:outline-none">
             Export
+        </button>
+        <button @onclick="ChangePasswordAsync" class="w-full rounded-md bg-green-600 px-4 py-2 text-lg text-white hover:bg-green-700 focus:outline-none">
+            Change Password
         </button>
     </div>
 </div>
