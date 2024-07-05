@@ -1,16 +1,32 @@
-﻿<ul class="flex flex-col text-gray-800">
-    <li>
-        <NavLink class="flex items-center px-6 py-4 text-gray-800 transition duration-300 hover:bg-indigo-50 hover:text-indigo-700"
-                 href="Account/Manage/ChangePassword"
-                 ActiveClass="bg-indigo-50 text-indigo-700">
-            <span class="material-icons mr-3">lock</span> Password
+﻿@inject IServiceScopeFactory ServiceScopeFactory
+
+<div class="flex flex-col overflow-hidden rounded-lg bg-white shadow-lg">
+    <!-- Header -->
+    <div class="flex items-center justify-between bg-gradient-to-r from-indigo-500 to-indigo-700 px-6 py-4 text-white">
+        <div>
+            <div class="text-2xl font-bold">@_username</div>
+            <div class="text-sm">@_role</div>
+        </div>
+        <NavLink class="flex items-center gap-2 text-white transition-opacity duration-300 hover:opacity-75"
+                 href="Account/Logout">
+            <span class="material-icons">logout</span> Logout
         </NavLink>
-    </li>
-    <li>
-        <NavLink class="flex items-center px-6 py-4 text-gray-800 transition duration-300 hover:bg-indigo-50 hover:text-indigo-700"
-                 href="Account/Manage/TwoFactorAuthentication"
-                 ActiveClass="bg-indigo-50 text-indigo-700">
-            <span class="material-icons mr-3">security</span> Two-factor authentication
-        </NavLink>
-    </li>
-</ul>
+    </div>
+    <!-- Menu Items -->
+    <ul class="divide-y divide-gray-200">
+        <li>
+            <NavLink class="flex items-center px-6 py-4 text-gray-800 transition duration-300 hover:bg-indigo-50 hover:text-indigo-700"
+                     href="Account/Manage/ChangePassword"
+                     ActiveClass="bg-indigo-50 text-indigo-700">
+                <span class="material-icons mr-3">lock</span> Password
+            </NavLink>
+        </li>
+        <li>
+            <NavLink class="flex items-center px-6 py-4 text-gray-800 transition duration-300 hover:bg-indigo-50 hover:text-indigo-700"
+                     href="Account/Manage/TwoFactorAuthentication"
+                     ActiveClass="bg-indigo-50 text-indigo-700">
+                <span class="material-icons mr-3">security</span> Two-factor authentication
+            </NavLink>
+        </li>
+    </ul>
+</div>
