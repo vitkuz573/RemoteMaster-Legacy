@@ -31,9 +31,9 @@
         <MudNavMenu>
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.DisplaySettings">
                 <MudSelect Value="@_selectedDisplay" ValueChanged="OnChangeScreen" Label="Display" T="string" Dense="true">
-                    @foreach (var displayName in GetDisplayNames())
+                    @foreach (var displayItem in GetDisplayItems())
                     {
-                        <MudSelectItem Value="@displayName">@displayName</MudSelectItem>
+                        <MudSelectItem Value="@displayItem.Name">@displayItem.DisplayName</MudSelectItem>
                     }
                 </MudSelect>
             </MudNavLink>
