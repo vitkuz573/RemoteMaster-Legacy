@@ -137,7 +137,7 @@ public partial class ManageOrganizationalUnits
         }
     }
 
-    private sealed class InputModel
+    public sealed class InputModel
     {
         public Guid? Id { get; set; }
 
@@ -148,9 +148,19 @@ public partial class ManageOrganizationalUnits
 
         [Required]
         [Display(Name = "Organization")]
+        [CustomValidation(typeof(InputModel), nameof(ValidateOrganizationId))]
         public Guid OrganizationId { get; set; }
-    }
 
+        public static ValidationResult? ValidateOrganizationId(Guid organizationId, ValidationContext _)
+        {
+            if (organizationId == Guid.Empty)
+            {
+                return new ValidationResult("Please select a valid organization.", [nameof(OrganizationId)]);
+            }
+
+            return ValidationResult.Success;
+        }
+    }
 
     private sealed class UserViewModel
     {
