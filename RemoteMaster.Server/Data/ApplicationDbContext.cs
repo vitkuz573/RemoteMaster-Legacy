@@ -119,5 +119,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .Property(s => s.IpAddress)
             .HasMaxLength(45)
             .IsRequired();
+
+        builder.Entity<ApplicationUser>()
+            .ToTable(tb => tb.HasTrigger("AspNetUsers_Trigger"));
     }
 }
