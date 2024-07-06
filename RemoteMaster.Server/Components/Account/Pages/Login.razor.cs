@@ -57,7 +57,7 @@ public partial class Login
 
         if (!userRoles.Any())
         {
-            errorMessage = "Access denied: User does not belong to any roles.";
+            errorMessage = "Error: User does not belong to any roles.";
             await LogSignInAttempt(user.Id, false, ipAddress);
             return;
         }
@@ -68,7 +68,7 @@ public partial class Login
         if (isRootAdmin && !isLocalhost)
         {
             Log.Warning("Attempt to login as RootAdministrator from non-localhost IP.");
-            errorMessage = "RootAdministrator access is restricted to localhost.";
+            errorMessage = "Error: RootAdministrator access is restricted to localhost.";
             await LogSignInAttempt(user.Id, false, ipAddress);
             return;
         }
