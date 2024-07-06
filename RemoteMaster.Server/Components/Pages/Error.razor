@@ -2,22 +2,39 @@
 
 <PageTitle>Error</PageTitle>
 
-<div class="rounded-md bg-red-100 p-4 text-red-800">
-    <h1 class="text-xl font-bold">Error.</h1>
-    <h2>An error occurred while processing your request.</h2>
-
-    @if (ShowRequestId)
-    {
-        <p>
-            <strong>Request ID:</strong> <code class="rounded bg-gray-200 p-1">@RequestId</code>
-        </p>
-    }
-
-    @if (ExceptionDetails?.Error != null)
-    {
-        <div class="mt-3 rounded-lg bg-red-200 p-3 text-red-900">
-            <p><strong>Error Message:</strong> @ExceptionDetails.Error.Message</p>
-            <p><strong>Stack Trace:</strong> <pre>@ExceptionDetails.Error.StackTrace</pre></p>
+<div class="flex min-h-screen items-center justify-center bg-gray-100">
+    <div class="w-full max-w-4xl rounded-lg bg-white p-8 shadow-lg">
+        <div class="mb-6 flex items-center">
+            <div class="flex-shrink-0">
+                <svg class="h-12 w-12 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10" fill="currentColor" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01" stroke="white" />
+                </svg>
+            </div>
+            <div class="ml-4">
+                <h1 class="text-3xl font-bold text-red-700">Error</h1>
+                <h2 class="text-lg text-red-600">An error occurred while processing your request.</h2>
+            </div>
         </div>
-    }
+
+        @if (ShowRequestId)
+        {
+            <div class="mb-4 rounded-md border border-gray-200 bg-gray-50 p-4">
+                <p class="text-sm text-gray-700">
+                    <strong>Request ID:</strong> <code class="rounded bg-gray-200 p-1">@RequestId</code>
+                </p>
+            </div>
+        }
+
+        @if (ExceptionDetails?.Error != null)
+        {
+            <div class="rounded-md border border-red-200 bg-red-50 p-4">
+                <p class="text-lg font-semibold text-red-800"><strong>Error Message:</strong> @ExceptionDetails.Error.Message</p>
+                <div class="mt-4">
+                    <p class="font-medium text-red-800">Stack Trace:</p>
+                    <pre class="mt-2 overflow-x-auto rounded-md border border-gray-200 bg-gray-100 p-4 text-sm">@ExceptionDetails.Error.StackTrace</pre>
+                </div>
+            </div>
+        }
+    </div>
 </div>
