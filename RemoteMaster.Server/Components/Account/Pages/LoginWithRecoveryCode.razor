@@ -29,14 +29,14 @@
         <EditForm Model="Input" FormName="login-with-recovery-code" OnValidSubmit="OnValidSubmitAsync" method="post" class="mt-8 space-y-6">
             <DataAnnotationsValidator />
             <ValidationSummary class="text-red-600" role="alert" />
-            <div class="rounded-md shadow-sm">
+            <div class="space-y-6 rounded-md shadow-sm">
                 <div>
                     <label for="recovery-code" class="sr-only">Recovery Code</label>
-                    <InputText id="recovery-code" @bind-Value="Input.RecoveryCode" class="relative block w-full appearance-none rounded-none rounded-t-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm" placeholder="Recovery Code" autocomplete="off" />
+                    <InputText id="recovery-code" @bind-Value="Input.RecoveryCode" class="relative block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm" placeholder="Recovery Code" autocomplete="off" />
                     <ValidationMessage For="() => Input.RecoveryCode" class="text-red-600 mt-2" />
                 </div>
-                <div>
-                    <button type="submit" class="group relative flex w-full justify-center rounded-none rounded-b-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition duration-200 ease-in-out hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                <div class="mt-6">
+                    <button type="submit" class="group relative flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition duration-200 ease-in-out hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3">
                             <span class="material-icons text-indigo-500 group-hover:text-indigo-400">
                                 lock
