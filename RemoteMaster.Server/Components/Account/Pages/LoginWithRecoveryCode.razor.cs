@@ -42,7 +42,7 @@ public partial class LoginWithRecoveryCode
 
         if (!userRoles.Any())
         {
-            _message = "Access denied: User does not belong to any roles.";
+            _message = "Error: User does not belong to any roles.";
             await LogSignInAttempt(userId, false, ipAddress);
             return;
         }
