@@ -1668,6 +1668,10 @@ video {
     margin-top: 0px;
   }
 
+  .sm\:mt-4 {
+    margin-top: 1rem;
+  }
+
   .sm\:flex {
     display: flex;
   }
@@ -1698,6 +1702,10 @@ video {
 
   .sm\:p-6 {
     padding: 1.5rem;
+  }
+
+  .sm\:p-4 {
+    padding: 1rem;
   }
 
   .sm\:px-6 {
