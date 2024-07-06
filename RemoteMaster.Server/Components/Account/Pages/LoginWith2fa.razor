@@ -14,29 +14,39 @@
 
 <PageTitle>Two-factor authentication</PageTitle>
 
-<div class="mx-auto mt-10 max-w-md">
-    <h1 class="text-2xl font-semibold text-gray-900">Two-factor authentication</h1>
-    <hr class="my-4" />
-    <StatusMessage Message="@_message" />
-    <p class="text-gray-700">Your login is protected with an authenticator app. Enter your authenticator code below.</p>
-    <div class="mt-6">
-        <EditForm Model="Input" FormName="login-with-2fa" OnValidSubmit="OnValidSubmitAsync" method="post" class="space-y-6">
+<div class="flex min-h-screen items-center justify-center bg-gray-100 px-4 py-12 sm:px-6 lg:px-8">
+    <div class="w-full max-w-md space-y-8">
+        <div class="text-center">
+            <span class="material-icons text-indigo-600" style="font-size: 48px;">
+                security
+            </span>
+            <h2 class="mt-6 text-center text-3xl font-bold text-gray-900">Two-factor authentication</h2>
+            <p class="mt-2 text-center text-sm text-gray-600">Enter your authenticator code below to access your account.</p>
+        </div>
+        <StatusMessage Message="@_message" />
+        <EditForm Model="Input" FormName="login-with-2fa" OnValidSubmit="OnValidSubmitAsync" method="post" class="mt-8 space-y-6">
             <input type="hidden" name="ReturnUrl" value="@ReturnUrl" />
             <input type="hidden" name="RememberMe" value="@RememberMe" />
-            <DataAnnotationsValidator />
-            <ValidationSummary class="text-red-600" role="alert" />
-            <div>
-                <label for="two-factor-code" class="block text-sm font-medium text-gray-700">Authenticator code</label>
-                <InputText @bind-Value="Input.TwoFactorCode" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" autocomplete="off" />
-                <ValidationMessage For="() => Input.TwoFactorCode" class="text-red-600" />
+            <div class="-space-y-px rounded-md shadow-sm">
+                <div>
+                    <label for="two-factor-code" class="sr-only">Authenticator code</label>
+                    <InputText id="two-factor-code" @bind-Value="Input.TwoFactorCode" class="relative block w-full appearance-none rounded-none rounded-t-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm" placeholder="Authenticator code" />
+                    <ValidationMessage For="() => Input.TwoFactorCode" class="text-red-600 mt-2" />
+                </div>
             </div>
             <div>
-                <button type="submit" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none">Log in</button>
+                <button type="submit" class="group relative flex w-full transform justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition duration-200 ease-in-out hover:bg-indigo-700 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                        <span class="material-icons text-indigo-500 group-hover:text-indigo-400">
+                            lock
+                        </span>
+                    </span>
+                    Log in
+                </button>
             </div>
         </EditForm>
+        <div class="text-center text-sm text-gray-600">
+            <p>Don't have access to your authenticator device? <a href="Account/LoginWithRecoveryCode?ReturnUrl=@ReturnUrl" class="font-medium text-indigo-600 hover:text-indigo-500">Log&nbsp;in&nbsp;with&nbsp;a&nbsp;recovery&nbsp;code</a>.</p>
+        </div>
     </div>
-    <p class="mt-4 text-gray-700">
-        Don't have access to your authenticator device? You can
-        <a href="Account/LoginWithRecoveryCode?ReturnUrl=@ReturnUrl" class="text-indigo-600">log in with a recovery code</a>.
-    </p>
 </div>
