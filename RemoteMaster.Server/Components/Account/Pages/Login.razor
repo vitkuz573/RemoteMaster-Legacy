@@ -17,45 +17,38 @@
 
 <PageTitle>@Localizer["PageTitle"]</PageTitle>
 
-<style>
-    @@keyframes gradient-animation {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-    }
-
-    .animated-gradient-bg {
-        background: linear-gradient(270deg, #ff6ec4, #7873f5, #7ee8fa, #eec0c6, #ff6ec4);
-        background-size: 1000% 1000%;
-        animation: gradient-animation 30s ease infinite;
-        position: relative;
-        overflow: hidden;
-    }
-</style>
-
-<div class="animated-gradient-bg flex min-h-screen items-center justify-center px-4 sm:px-6 lg:px-8">
-    <div id="tsparticles"></div>
-    <div class="z-10 relative w-full max-w-md space-y-8">
-        <div class="rounded-xl bg-white shadow-2xl">
-            <div class="p-10">
-                <h1 class="mb-6 text-center text-3xl font-bold text-gray-900">RemoteMaster Server</h1>
-                <h2 class="mb-4 text-center text-xl font-medium text-gray-700">@Localizer["LoginHeader"]</h2>
-                <StatusMessage Message="@errorMessage" />
-                <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
-                    <DataAnnotationsValidator />
-                    <div class="mb-6">
-                        <label for="username" class="block text-sm font-medium text-gray-800">@Localizer["UsernameLabel"]</label>
-                        <InputText id="username" @bind-Value="Input.Username" class="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="@Localizer["UsernamePlaceholder"]" />
-                    </div>
-                    <div class="mb-6">
-                        <label for="password" class="block text-sm font-medium text-gray-800">@Localizer["PasswordLabel"]</label>
-                        <InputText id="password" type="password" @bind-Value="Input.Password" class="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="@Localizer["PasswordPlaceholder"]" />
-                    </div>
-                    <button type="submit" class="w-full rounded-lg bg-purple-600 px-4 py-2 text-lg font-semibold text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500">
+<div class="flex min-h-screen items-center justify-center bg-gray-100 px-4 py-12 sm:px-6 lg:px-8">
+    <div class="w-full max-w-md space-y-8">
+        <div class="text-center">
+            <span class="material-icons text-indigo-600" style="font-size: 48px;">
+                security
+            </span>
+            <h1 class="mt-6 text-center text-3xl font-bold text-gray-900">RemoteMaster Server</h1>
+            <h2 class="mt-2 text-center text-xl font-medium text-gray-700">@Localizer["LoginHeader"]</h2>
+        </div>
+        <StatusMessage Message="@errorMessage" />
+        <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login" class="mt-8 space-y-6">
+            <DataAnnotationsValidator />
+            <div class="rounded-md shadow-sm">
+                <div>
+                    <label for="username" class="sr-only">@Localizer["UsernameLabel"]</label>
+                    <InputText id="username" @bind-Value="Input.Username" class="relative block w-full appearance-none rounded-none rounded-t-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm" placeholder="@Localizer["UsernamePlaceholder"]" />
+                </div>
+                <div>
+                    <label for="password" class="sr-only">@Localizer["PasswordLabel"]</label>
+                    <InputText id="password" type="password" @bind-Value="Input.Password" class="relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm" placeholder="@Localizer["PasswordPlaceholder"]" />
+                </div>
+                <div class="mt-6">
+                    <button type="submit" class="group relative flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition duration-200 ease-in-out hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                            <span class="material-icons text-indigo-500 group-hover:text-indigo-400">
+                                lock
+                            </span>
+                        </span>
                         @Localizer["LoginButton"]
                     </button>
-                </EditForm>
+                </div>
             </div>
-        </div>
+        </EditForm>
     </div>
 </div>
