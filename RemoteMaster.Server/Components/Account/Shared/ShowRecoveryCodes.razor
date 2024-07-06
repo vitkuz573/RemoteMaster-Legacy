@@ -9,12 +9,14 @@
     </p>
 </div>
 <div class="mt-6">
-    <div class="grid-cols-1 grid gap-4">
-        @foreach (var recoveryCode in RecoveryCodes)
-        {
-            <div class="rounded-md bg-gray-100 p-2 shadow-sm">
-                <code class="font-mono text-sm">@recoveryCode</code>
-            </div>
-        }
+    <div class="rounded-md bg-gray-100 p-4 shadow-sm">
+        <div class="grid-cols-2 grid gap-4">
+            @foreach (var recoveryCode in RecoveryCodes)
+            {
+                <div class="rounded-md bg-white p-2 shadow-sm">
+                    <code class="block text-center font-mono text-sm">@recoveryCode</code>
+                </div>
+            }
+        </div>
     </div>
 </div>
