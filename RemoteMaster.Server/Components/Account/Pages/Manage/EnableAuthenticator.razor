@@ -19,25 +19,25 @@ else
 {
     <StatusMessage Message="@_message" />
     <div class="space-y-6">
-        <h3 class="leading-6 text-lg font-medium text-gray-900">Configure authenticator app</h3>
-        <div class="text-gray-700">
+        <h3 class="leading-6 text-2xl font-semibold text-gray-900">Configure authenticator app</h3>
+        <div class="space-y-6 text-gray-700">
             <p>To use an authenticator app go through the following steps:</p>
             <ol class="list-inside list-decimal space-y-4">
                 <li>
                     <span>
                         Download a two-factor authenticator app like Microsoft Authenticator for
-                        <a href="https://go.microsoft.com/fwlink/?Linkid=825072" class="text-indigo-600">Android</a> and
-                        <a href="https://go.microsoft.com/fwlink/?Linkid=825073" class="text-indigo-600">iOS</a> or
+                        <a href="https://go.microsoft.com/fwlink/?Linkid=825072" class="text-indigo-600 hover:underline">Android</a> and
+                        <a href="https://go.microsoft.com/fwlink/?Linkid=825073" class="text-indigo-600 hover:underline">iOS</a> or
                         Google Authenticator for
-                        <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&amp;hl=en" class="text-indigo-600">Android</a> and
-                        <a href="https://itunes.apple.com/us/app/google-authenticator/id388497605?mt=8" class="text-indigo-600">iOS</a>.
+                        <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&amp;hl=en" class="text-indigo-600 hover:underline">Android</a> and
+                        <a href="https://itunes.apple.com/us/app/google-authenticator/id388497605?mt=8" class="text-indigo-600 hover:underline">iOS</a>.
                     </span>
                 </li>
                 <li>
                     <span>Scan the QR Code or enter this key <kbd class="rounded bg-gray-100 px-2 py-1">@_sharedKey</kbd> into your two-factor authenticator app. Spaces and casing do not matter.</span>
-                    <div class="my-4">
+                    <div class="my-4 flex justify-center">
                         <div id="qrCodeData" data-url="@_authenticatorUri"></div>
-                        <div id="qrCode"></div>
+                        <div id="qrCode" class="flex items-center justify-center border p-4"></div>
                     </div>
                 </li>
                 <li>
@@ -51,10 +51,10 @@ else
                             <div class="space-y-1">
                                 <label for="code" class="block text-sm font-medium text-gray-700">Verification Code</label>
                                 <InputText @bind-Value="Input.Code" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" autocomplete="off" placeholder="Please enter the code." />
-                                <ValidationMessage For="() => Input.Code" class="text-red-600" />
+                                <ValidationMessage For="() => Input.Code" class="text-red-600 mt-2" />
                             </div>
-                            <button type="submit" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none">Verify</button>
-                            <ValidationSummary class="text-red-600" role="alert" />
+                            <button type="submit" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition duration-200 ease-in-out hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Verify</button>
+                            <ValidationSummary class="mt-4 text-red-600" role="alert" />
                         </EditForm>
                     </div>
                 </li>

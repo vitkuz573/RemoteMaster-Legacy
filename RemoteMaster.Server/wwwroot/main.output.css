@@ -876,6 +876,10 @@ video {
   max-width: 28rem;
 }
 
+.max-w-3xl {
+  max-width: 48rem;
+}
+
 .flex-shrink-0 {
   flex-shrink: 0;
 }
@@ -1336,6 +1340,11 @@ video {
 .py-12 {
   padding-top: 3rem;
   padding-bottom: 3rem;
+}
+
+.py-6 {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
 }
 
 .pb-14 {
