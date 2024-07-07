@@ -4,6 +4,7 @@
 
 using System.Collections.Concurrent;
 using System.Security.Claims;
+using System.Threading.Channels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -64,7 +65,7 @@ public partial class Home
         if (userId == null)
         {
             Log.Warning("User ID not found in claims");
-            
+
             return;
         }
 
@@ -220,9 +221,25 @@ public partial class Home
 
     private async Task LogonComputers()
     {
-        var logonTasks = _selectedComputers.Select(LogonComputer);
+        var channel = Channel.CreateUnbounded<Computer>();
+
+        var logonTasks = _selectedComputers.Select(async computer =>
+        {
+            await LogonComputer(computer);
+            await channel.Writer.WriteAsync(computer);
+        });
+
+        var readTask = Task.Run(async () =>
+        {
+            await foreach (var computer in channel.Reader.ReadAllAsync())
+            {
+                await InvokeAsync(StateHasChanged);
+            }
+        });
 
         await Task.WhenAll(logonTasks);
+        channel.Writer.Complete();
+        await readTask;
     }
 
     private async Task LogonComputer(Computer computer)
@@ -306,21 +323,57 @@ public partial class Home
         }
     }
 
-    private async Task MoveComputer(Computer computer, ConcurrentDictionary<string, Computer> source, ConcurrentDictionary<string, Computer> destination)
+    private async Task MoveToAvailable(Computer computer)
     {
-        computer.Thumbnail = null;
+        if (_pendingComputers.ContainsKey(computer.IpAddress))
+        {
+            _pendingComputers.TryRemove(computer.IpAddress, out _);
+        }
+        else if (_unavailableComputers.ContainsKey(computer.IpAddress))
+        {
+            _unavailableComputers.TryRemove(computer.IpAddress, out _);
+        }
 
-        source.TryRemove(computer.IpAddress, out _);
-        destination.TryAdd(computer.IpAddress, computer);
+        _availableComputers.TryAdd(computer.IpAddress, computer);
 
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task MoveToAvailable(Computer computer) => await MoveComputer(computer, _pendingComputers, _availableComputers);
+    private async Task MoveToUnavailable(Computer computer)
+    {
+        computer.Thumbnail = null;
 
-    private async Task MoveToUnavailable(Computer computer) => await MoveComputer(computer, _pendingComputers, _unavailableComputers);
+        if (_pendingComputers.ContainsKey(computer.IpAddress))
+        {
+            _pendingComputers.TryRemove(computer.IpAddress, out _);
+        }
+        else if (_availableComputers.ContainsKey(computer.IpAddress))
+        {
+            _availableComputers.TryRemove(computer.IpAddress, out _);
+        }
 
-    private async Task MoveToPending(Computer computer) => await MoveComputer(computer, _availableComputers, _pendingComputers);
+        _unavailableComputers.TryAdd(computer.IpAddress, computer);
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task MoveToPending(Computer computer)
+    {
+        computer.Thumbnail = null;
+
+        if (_availableComputers.ContainsKey(computer.IpAddress))
+        {
+            _availableComputers.TryRemove(computer.IpAddress, out _);
+        }
+        else if (_unavailableComputers.ContainsKey(computer.IpAddress))
+        {
+            _unavailableComputers.TryRemove(computer.IpAddress, out _);
+        }
+
+        _pendingComputers.TryAdd(computer.IpAddress, computer);
+
+        await InvokeAsync(StateHasChanged);
+    }
 
     private async Task<HubConnection> SetupConnection(Computer computer, string hubPath, bool startConnection, CancellationToken cancellationToken)
     {
@@ -343,11 +396,51 @@ public partial class Home
         return connection;
     }
 
-    private void SelectComputers(ConcurrentDictionary<string, Computer> computers, bool isSelected)
+    private void SelectAllPendingComputers()
     {
-        foreach (var computer in computers.Values)
+        foreach (var computer in _pendingComputers.Values)
         {
-            SelectComputer(computer, isSelected);
+            SelectComputer(computer, true);
+        }
+    }
+
+    private void DeselectAllPendingComputers()
+    {
+        foreach (var computer in _pendingComputers.Values)
+        {
+            SelectComputer(computer, false);
+        }
+    }
+
+    private void SelectAllAvailableComputers()
+    {
+        foreach (var computer in _availableComputers.Values)
+        {
+            SelectComputer(computer, true);
+        }
+    }
+
+    private void DeselectAllAvailableComputers()
+    {
+        foreach (var computer in _availableComputers.Values)
+        {
+            SelectComputer(computer, false);
+        }
+    }
+
+    private void SelectAllUnavailableComputers()
+    {
+        foreach (var computer in _unavailableComputers.Values)
+        {
+            SelectComputer(computer, true);
+        }
+    }
+
+    private void DeselectAllUnavailableComputers()
+    {
+        foreach (var computer in _unavailableComputers.Values)
+        {
+            SelectComputer(computer, false);
         }
     }
 
@@ -367,18 +460,6 @@ public partial class Home
 
         InvokeAsync(StateHasChanged);
     }
-
-    private void SelectAllPendingComputers() => SelectComputers(_pendingComputers, true);
-
-    private void DeselectAllPendingComputers() => SelectComputers(_pendingComputers, false);
-
-    private void SelectAllAvailableComputers() => SelectComputers(_availableComputers, true);
-
-    private void DeselectAllAvailableComputers() => SelectComputers(_availableComputers, false);
-
-    private void SelectAllUnavailableComputers() => SelectComputers(_unavailableComputers, true);
-
-    private void DeselectAllUnavailableComputers() => SelectComputers(_unavailableComputers, false);
 
     private async Task ExecuteDialog<TDialog>(string title, DialogParameters? parameters = null, DialogOptions? options = null) where TDialog : ComponentBase
     {
