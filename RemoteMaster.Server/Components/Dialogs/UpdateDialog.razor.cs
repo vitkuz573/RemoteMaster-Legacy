@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net;
 using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
 using RemoteMaster.Server.Models;
@@ -51,11 +52,7 @@ public partial class UpdateDialog
 
                 var updateRequest = new UpdateRequest(_folderPath)
                 {
-                    UserCredentials = new Credentials()
-                    {
-                        Username = _username,
-                        Password = _password
-                    },
+                    UserCredentials = new NetworkCredential(_username, _password),
                     ForceUpdate = _forceUpdate,
                     AllowDowngrade = _allowDowngrade
                 };
