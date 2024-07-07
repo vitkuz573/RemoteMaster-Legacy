@@ -4,7 +4,6 @@
 
 using System.Collections.Concurrent;
 using System.Security.Claims;
-using System.Threading.Channels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -221,25 +220,9 @@ public partial class Home
 
     private async Task LogonComputers()
     {
-        var channel = Channel.CreateUnbounded<Computer>();
-
-        var logonTasks = _selectedComputers.Select(async computer =>
-        {
-            await LogonComputer(computer);
-            await channel.Writer.WriteAsync(computer);
-        });
-
-        var readTask = Task.Run(async () =>
-        {
-            await foreach (var computer in channel.Reader.ReadAllAsync())
-            {
-                await InvokeAsync(StateHasChanged);
-            }
-        });
+        var logonTasks = _selectedComputers.Select(LogonComputer);
 
         await Task.WhenAll(logonTasks);
-        channel.Writer.Complete();
-        await readTask;
     }
 
     private async Task LogonComputer(Computer computer)
