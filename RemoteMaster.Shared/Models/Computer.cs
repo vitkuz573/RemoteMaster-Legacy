@@ -36,21 +36,6 @@ public class Computer : INode, IEquatable<Computer>
     [JsonIgnore]
     public INode? Parent { get; set; }
 
-    public async Task<bool> IsAvailable()
-    {
-        try
-        {
-            using var ping = new Ping();
-            var reply = await ping.SendPingAsync(IpAddress, 1000);
-
-            return reply.Status == IPStatus.Success;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
     public bool Equals(Computer? other)
     {
         if (other == null)
