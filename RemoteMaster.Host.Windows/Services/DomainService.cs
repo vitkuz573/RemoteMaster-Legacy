@@ -26,7 +26,7 @@ public class DomainService(IPowerService powerService) : IDomainService
     {
         ArgumentNullException.ThrowIfNull(domainJoinRequest);
 
-        var result = NetJoinDomain(null, domainJoinRequest.Domain, null, domainJoinRequest.UserCredentials.Username, domainJoinRequest.UserCredentials.Password, NET_JOIN_DOMAIN_JOIN_OPTIONS.NETSETUP_JOIN_DOMAIN | NET_JOIN_DOMAIN_JOIN_OPTIONS.NETSETUP_ACCT_CREATE);
+        var result = NetJoinDomain(null, domainJoinRequest.Domain, null, domainJoinRequest.UserCredentials.UserName, domainJoinRequest.UserCredentials.Password, NET_JOIN_DOMAIN_JOIN_OPTIONS.NETSETUP_JOIN_DOMAIN | NET_JOIN_DOMAIN_JOIN_OPTIONS.NETSETUP_ACCT_CREATE);
 
         if (result != 0)
         {
@@ -51,7 +51,7 @@ public class DomainService(IPowerService powerService) : IDomainService
     {
         ArgumentNullException.ThrowIfNull(domainUnjoinRequest);
 
-        var result = NetUnjoinDomain(null, domainUnjoinRequest.UserCredentials.Username, domainUnjoinRequest.UserCredentials.Password, NETSETUP_ACCT_DELETE);
+        var result = NetUnjoinDomain(null, domainUnjoinRequest.UserCredentials.UserName, domainUnjoinRequest.UserCredentials.Password, NETSETUP_ACCT_DELETE);
 
         if (result != 0)
         {

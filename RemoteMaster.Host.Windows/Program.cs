@@ -89,6 +89,7 @@ internal class Program
         builder.Services.AddSingleton<IArgumentBuilderService, ArgumentBuilderService>();
         builder.Services.AddSingleton<IInstanceStarterService, InstanceStarterService>();
         builder.Services.AddSingleton<IFileSystem, FileSystem>();
+        builder.Services.AddSingleton<IWorkStationSecurityService, WorkStationSecurityService>();
         builder.Services.AddSingleton<IAuthorizationHandler, LocalhostOrAuthenticatedHandler>();
         builder.Services.AddSingleton(new JsonSerializerOptions
         {
@@ -152,6 +153,8 @@ internal class Program
                     policy.RequireClaim("Permission", "ChangeMonitorState"))
                 .AddPolicy("ExecuteScriptPolicy", policy =>
                     policy.RequireClaim("Permission", "ExecuteScript"))
+                .AddPolicy("LockWorkStationPolicy", policy =>
+                    policy.RequireClaim("Permission", "LockWorkStation"))
                 .AddPolicy("MovePolicy", policy =>
                     policy.RequireClaim("Permission", "Move"))
                 .AddPolicy("RenewCertificatePolicy", policy =>

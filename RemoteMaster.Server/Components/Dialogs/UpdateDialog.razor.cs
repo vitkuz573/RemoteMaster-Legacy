@@ -8,6 +8,7 @@ using MudBlazor;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Models;
+using Serilog;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
@@ -56,6 +57,8 @@ public partial class UpdateDialog
                     ForceUpdate = _forceUpdate,
                     AllowDowngrade = _allowDowngrade
                 };
+
+                Log.Information("Pass: {Pass}", updateRequest.UserCredentials.Password);
 
                 await connection.InvokeAsync("SendStartUpdater", updateRequest);
 

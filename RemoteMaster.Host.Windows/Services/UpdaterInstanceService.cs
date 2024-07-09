@@ -29,7 +29,7 @@ public class UpdaterInstanceService(IArgumentBuilderService argumentBuilderServi
 
         if (updateRequest.UserCredentials != null)
         {
-            arguments["username"] = updateRequest.UserCredentials.Username;
+            arguments["username"] = updateRequest.UserCredentials.UserName;
             arguments["password"] = updateRequest.UserCredentials.Password;
         }
 

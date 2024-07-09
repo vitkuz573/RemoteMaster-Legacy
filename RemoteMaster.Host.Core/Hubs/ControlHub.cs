@@ -18,7 +18,7 @@ using Serilog;
 namespace RemoteMaster.Host.Core.Hubs;
 
 [Authorize(Policy = "LocalhostOrAuthenticatedPolicy")]
-public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturerService, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService, ICertificateStoreService certificateStoreService) : Hub<IControlClient>
+public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturerService, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService, ICertificateStoreService certificateStoreService, IWorkStationSecurityService workStationSecurityService) : Hub<IControlClient>
 {
     public async Task ConnectAs(ConnectionRequest connectionRequest)
     {
@@ -169,6 +169,12 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     public void SendScript(ScriptExecutionRequest scriptExecutionRequest)
     {
         scriptService.Execute(scriptExecutionRequest);
+    }
+
+    [Authorize(Policy = "LockWorkStationPolicy")]
+    public void SendLockWorkStation()
+    {
+        workStationSecurityService.LockWorkStationDisplay();
     }
 
     public async Task JoinGroup(string groupName)
