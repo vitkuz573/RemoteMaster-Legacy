@@ -27,10 +27,10 @@ public class UpdaterInstanceService(IArgumentBuilderService argumentBuilderServi
             { "allow-downgrade", updateRequest.AllowDowngrade }
         };
 
-        if (updateRequest.UserCredential != null)
+        if (updateRequest.UserCredentials != null)
         {
-            arguments["username"] = updateRequest.UserCredential.UserName;
-            arguments["password"] = updateRequest.UserCredential.Password;
+            arguments["username"] = updateRequest.UserCredentials.UserName;
+            arguments["password"] = updateRequest.UserCredentials.Password;
         }
 
         var additionalArguments = argumentBuilderService.BuildArguments(arguments);

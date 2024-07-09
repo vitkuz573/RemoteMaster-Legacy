@@ -30,7 +30,7 @@ public class UpdaterInstanceServiceTests
         // Arrange
         var updateRequest = new UpdateRequest(@"C:\TestPath")
         {
-            UserCredential = new Credential("testuser", "testpassword"),
+            UserCredentials = new Credential("testuser", "testpassword"),
             ForceUpdate = true,
             AllowDowngrade = true
         };
@@ -39,8 +39,8 @@ public class UpdaterInstanceServiceTests
         {
             { "launch-mode", "updater" },
             { "folder-path", updateRequest.FolderPath },
-            { "username", updateRequest.UserCredential.UserName },
-            { "password", updateRequest.UserCredential.Password },
+            { "username", updateRequest.UserCredentials.UserName },
+            { "password", updateRequest.UserCredentials.Password },
             { "force", updateRequest.ForceUpdate },
             { "allow-downgrade", updateRequest.AllowDowngrade }
         };
@@ -130,7 +130,7 @@ public class UpdaterInstanceServiceTests
         // Arrange
         var updateRequest = new UpdateRequest(@"C:\TestPath")
         {
-            UserCredential = new Credential("testuser", "testpassword"),
+            UserCredentials = new Credential("testuser", "testpassword"),
             ForceUpdate = true,
             AllowDowngrade = true
         };
@@ -139,8 +139,8 @@ public class UpdaterInstanceServiceTests
         {
             { "launch-mode", "updater" },
             { "folder-path", updateRequest.FolderPath },
-            { "username", updateRequest.UserCredential.UserName },
-            { "password", updateRequest.UserCredential.Password },
+            { "username", updateRequest.UserCredentials.UserName },
+            { "password", updateRequest.UserCredentials.Password },
             { "force", updateRequest.ForceUpdate },
             { "allow-downgrade", updateRequest.AllowDowngrade }
         };

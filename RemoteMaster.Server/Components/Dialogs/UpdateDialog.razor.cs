@@ -51,7 +51,7 @@ public partial class UpdateDialog
 
                 var updateRequest = new UpdateRequest(_folderPath)
                 {
-                    UserCredential = new Credential(_username, _password),
+                    UserCredentials = new Credential(_username, _password),
                     ForceUpdate = _forceUpdate,
                     AllowDowngrade = _allowDowngrade
                 };
