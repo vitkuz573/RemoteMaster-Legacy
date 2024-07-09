@@ -6,10 +6,10 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Shared.Dtos;
 
-public class DomainJoinRequest(string domain, Credential userCredentials)
+public class DomainJoinRequest(string domain, Credentials userCredentials)
 {
     public string Domain { get; } = domain;
 
-    public Credential UserCredentials { get; } = userCredentials;
+    public Credentials UserCredentials { get; } = userCredentials;
 }
 

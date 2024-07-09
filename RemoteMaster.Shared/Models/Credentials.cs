@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Shared.Models;
 
-public class Credential(string username, string password)
+public class Credentials(string username, string password)
 {
     public string UserName { get; } = username;
 

@@ -30,7 +30,7 @@ public class UpdaterInstanceServiceTests
         // Arrange
         var updateRequest = new UpdateRequest(@"C:\TestPath")
         {
-            UserCredentials = new Credential("testuser", "testpassword"),
+            UserCredentials = new Credentials("testuser", "testpassword"),
             ForceUpdate = true,
             AllowDowngrade = true
         };
@@ -130,7 +130,7 @@ public class UpdaterInstanceServiceTests
         // Arrange
         var updateRequest = new UpdateRequest(@"C:\TestPath")
         {
-            UserCredentials = new Credential("testuser", "testpassword"),
+            UserCredentials = new Credentials("testuser", "testpassword"),
             ForceUpdate = true,
             AllowDowngrade = true
         };

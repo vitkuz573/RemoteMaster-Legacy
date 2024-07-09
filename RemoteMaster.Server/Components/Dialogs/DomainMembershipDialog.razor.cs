@@ -26,7 +26,7 @@ public partial class DomainMembershipDialog
     {
         EnsureDomainInUsername();
 
-        var credential = new Credential(_username, _password);
+        var credential = new Credentials(_username, _password);
         var domainJoinRequest = new DomainJoinRequest(_domain, credential);
 
         await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("SendJoinToDomain", domainJoinRequest));
@@ -36,7 +36,7 @@ public partial class DomainMembershipDialog
 
     private async Task LeaveDomain()
     {
-        var credential = new Credential(_username, _password);
+        var credential = new Credentials(_username, _password);
         var domainUnjoinRequest = new DomainUnjoinRequest(credential);
 
         await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("SendUnjoinFromDomain", domainUnjoinRequest));

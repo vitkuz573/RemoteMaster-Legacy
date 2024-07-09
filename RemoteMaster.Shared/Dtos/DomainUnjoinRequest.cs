@@ -6,9 +6,9 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Shared.Dtos;
 
-public class DomainUnjoinRequest(Credential userCredentials)
+public class DomainUnjoinRequest(Credentials userCredentials)
 {
-    public Credential UserCredentials { get; } = userCredentials;
+    public Credentials UserCredentials { get; } = userCredentials;
 
     public bool RemoveUserProfiles { get; init; }
 }
