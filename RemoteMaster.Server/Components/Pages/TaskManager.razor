@@ -1,7 +1,4 @@
 ﻿@page "/{Host}/taskmanager"
-
-@rendermode InteractiveServer
-
 @attribute [Authorize]
 
 @using Microsoft.AspNetCore.Authorization
@@ -15,48 +12,55 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject IHttpContextAccessor HttpContextAccessor
 
-<MudLayout>
-    <MudTable Items="@_processes" Dense="true" Hover="true" Filter="new Func<ProcessInfo, bool>(FilterFunc1)">
-        <ToolBarContent>
-            <MudText Typo="Typo.h6">Task Manager</MudText>
-            <MudSpacer />
-            <MudTextField @bind-Value="_processPath" Placeholder="Enter process path" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.AddBox" IconSize="Size.Medium" Class="mx-2 mt-0"></MudTextField>
-            <MudButton OnClick="StartProcess" Variant="Variant.Filled" Color="Color.Primary">Start Process</MudButton>
-            <MudTextField @bind-Value="_searchQuery" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
-        </ToolBarContent>
-        <HeaderContent>
-            <MudTh>
-                <MudTableSortLabel SortBy="new Func<ProcessInfo, object>(x => x.Id)">
-                    Process ID
-                </MudTableSortLabel>
-            </MudTh>
-            <MudTh>
-                <MudTableSortLabel SortBy="new Func<ProcessInfo, object>(x => x.Name)">
-                    Name
-                </MudTableSortLabel>
-            </MudTh>
-            <MudTh>
-                <MudTableSortLabel SortBy="new Func<ProcessInfo, object>(x => x.MemoryUsage)">
-                    Memory Usage
-                </MudTableSortLabel>
-            </MudTh>
-            <MudTh>Actions</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Process ID">@context.Id</MudTd>
-            <MudTd DataLabel="Name">
-                    <div style="display: flex; align-items: center;">
-                        @if (context.Icon != null)
-                    {
-                        <img src="@($"data:image/png;base64,{Convert.ToBase64String(context.Icon)}")" alt="Icon" style="height: 20px; width: 20px; margin-right: 10px;" />
-                    }
-                    <span>@context.Name</span>
-                </div>
-            </MudTd>
-            <MudTd DataLabel="Memory Usage">@FormatSize(context.MemoryUsage)</MudTd>
-            <MudTd>
-                <MudButton OnClick="@(() => KillProcess(context.Id))" Color="Color.Error">Kill</MudButton>
-            </MudTd>
-        </RowTemplate>
-    </MudTable>
-</MudLayout>
+<div class="min-h-screen bg-gray-100 p-6">
+    <div class="mx-auto max-w-7xl">
+        <div class="mb-4 flex items-center justify-between">
+            <h2 class="text-2xl font-bold text-gray-900">Task Manager</h2>
+            <div class="flex space-x-4">
+                <input @bind="_processPath" placeholder="Enter process path" class="rounded-md border border-gray-300 px-4 py-2" />
+                <button @onclick="StartProcess" class="rounded-md bg-blue-600 px-4 py-2 text-white">Start Process</button>
+                <input @bind="_searchQuery" placeholder="Search" class="rounded-md border border-gray-300 px-4 py-2" />
+            </div>
+        </div>
+
+        <table class="min-w-full overflow-hidden rounded-md bg-white shadow">
+            <thead>
+                <tr class="bg-gray-50">
+                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                        Process ID
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                        Name
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                        Memory Usage
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                        Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 bg-white">
+                @foreach (var process in _processes)
+                {
+                    <tr>
+                        <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">@process.Id</td>
+                        <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                            <div class="flex items-center">
+                                @if (process.Icon != null)
+                                {
+                                    <img src="@($"data:image/png;base64,{Convert.ToBase64String(process.Icon)}")" alt="Icon" class="mr-2 h-5 w-5" />
+                                }
+                                <span>@process.Name</span>
+                            </div>
+                        </td>
+                        <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">@FormatSize(process.MemoryUsage)</td>
+                        <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
+                            <button @onclick="() => KillProcess(process.Id)" class="text-red-600 hover:text-red-900">Kill</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -40,6 +40,8 @@ public partial class TaskManager : IDisposable
     private async Task FetchProcesses()
     {
         await SafeInvokeAsync(() => _connection.InvokeAsync("GetRunningProcesses"));
+
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task InitializeHostConnectionAsync()
@@ -112,23 +114,6 @@ public partial class TaskManager : IDisposable
         }
 
         return $"{len:0.##} {sizes[order]}";
-    }
-
-    private bool FilterFunc1(ProcessInfo processInfo) => FilterFunc(processInfo, _searchQuery);
-
-    private static bool FilterFunc(ProcessInfo processInfo, string searchQuery)
-    {
-        if (string.IsNullOrWhiteSpace(searchQuery))
-        {
-            return true;
-        }
-
-        if (int.TryParse(searchQuery, out var pid) && processInfo.Id == pid)
-        {
-            return true;
-        }
-
-        return processInfo.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task StartProcess()
