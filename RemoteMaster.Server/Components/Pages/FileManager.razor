@@ -1,6 +1,7 @@
 ﻿@page "/{Host}/filemanager"
 
 @using RemoteMaster.Server.Abstractions
+@using RemoteMaster.Shared.Models
 
 @rendermode InteractiveServer
 
@@ -53,9 +54,17 @@
                     {
                         <tr>
                             <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                                <div class="flex items-center">
-                                    <button @onclick="() => HandleClick(item)" class="text-left p-0 hover:underline focus:outline-none">
-                                        <span>@item.Name</span>
+                                <div class="flex items-center space-x-2">
+                                    <button @onclick="() => HandleClick(item)" class="flex items-center space-x-2 p-0 hover:underline focus:outline-none">
+                                        @if (item.Type == FileSystemItem.FileSystemItemType.Directory)
+                                        {
+                                            <span class="material-icons">folder</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="material-icons">insert_drive_file</span>
+                                        }
+                                        <span class="hover:no-underline">@item.Name</span>
                                     </button>
                                 </div>
                             </td>
