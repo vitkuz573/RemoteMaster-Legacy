@@ -18,7 +18,7 @@
                 <button @onclick="StartProcess" class="h-10 rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none">
                     Start Process
                 </button>
-                <InputText @bind-Value="_searchQuery" placeholder="Search" class="h-10 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                <InputText @bind-Value="_searchQuery" placeholder="Search" class="h-10 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" @oninput="UpdateSearchQuery" @onkeypress="OnSearchKeyPress" />
             </div>
         </div>
 

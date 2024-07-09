@@ -5,6 +5,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
@@ -23,7 +24,8 @@ public partial class TaskManager : IAsyncDisposable
     [CascadingParameter]
     private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
 
-    private List<ProcessInfo> _processes = [];
+    private List<ProcessInfo> _processes = new();
+    private List<ProcessInfo> _allProcesses = new();
     private string _processPath = string.Empty;
     private string _searchQuery = string.Empty;
     private HubConnection? _connection;
@@ -32,11 +34,12 @@ public partial class TaskManager : IAsyncDisposable
     private readonly AsyncRetryPolicy _retryPolicy = Policy
         .Handle<Exception>()
         .WaitAndRetryAsync(
-        [
+        new[]
+        {
             TimeSpan.FromSeconds(5),
             TimeSpan.FromSeconds(7),
             TimeSpan.FromSeconds(10),
-        ]);
+        });
 
     protected async override Task OnInitializedAsync()
     {
@@ -49,8 +52,34 @@ public partial class TaskManager : IAsyncDisposable
 
     private async Task FetchProcesses()
     {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("GetRunningProcesses"));
+        await SafeInvokeAsync(async () =>
+        {
+            var processes = await _connection.InvokeAsync<IEnumerable<ProcessInfo>>("GetRunningProcesses");
+            _allProcesses = processes?.ToList() ?? new List<ProcessInfo>();
+            FilterProcesses();
+        });
 
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void FilterProcesses()
+    {
+        if (string.IsNullOrWhiteSpace(_searchQuery))
+        {
+            _processes = new List<ProcessInfo>(_allProcesses);
+        }
+        else
+        {
+            _processes = _allProcesses
+                .Where(p => p.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+    }
+
+    private async Task UpdateSearchQuery(ChangeEventArgs e)
+    {
+        _searchQuery = e.Value.ToString();
+        FilterProcesses();
         await InvokeAsync(StateHasChanged);
     }
 
@@ -68,7 +97,8 @@ public partial class TaskManager : IAsyncDisposable
 
         _connection.On<IEnumerable<ProcessInfo>>("ReceiveRunningProcesses", async (processes) =>
         {
-            _processes = processes.ToList();
+            _allProcesses = processes?.ToList() ?? new List<ProcessInfo>();
+            FilterProcesses();
             await InvokeAsync(StateHasChanged);
         });
 
@@ -112,7 +142,7 @@ public partial class TaskManager : IAsyncDisposable
 
     private static string FormatSize(long size)
     {
-        string[] sizes = ["B", "KB", "MB", "GB", "TB"];
+        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
         double len = size;
         var order = 0;
 
@@ -131,11 +161,20 @@ public partial class TaskManager : IAsyncDisposable
         {
             await SafeInvokeAsync(() => _connection.InvokeAsync("StartProcess", _processPath));
             _processPath = string.Empty;
-            await InvokeAsync(StateHasChanged);
+            await FetchProcesses();
         }
         else
         {
             await JsRuntime.InvokeVoidAsync("alert", "Please enter a valid process path.");
+        }
+    }
+
+    private async Task OnSearchKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            FilterProcesses();
+            await InvokeAsync(StateHasChanged);
         }
     }
 
