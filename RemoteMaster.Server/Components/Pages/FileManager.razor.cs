@@ -253,9 +253,9 @@ public partial class FileManager : IAsyncDisposable
         }
     }
 
-    private async Task OnDriveSelected(string selectedDrive)
+    private async Task OnDriveSelected(ChangeEventArgs e)
     {
-        _selectedDrive = selectedDrive;
+        _selectedDrive = e.Value?.ToString() ?? string.Empty;
         _currentPath = _selectedDrive;
 
         await FetchFilesAndDirectories();

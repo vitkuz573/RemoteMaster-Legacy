@@ -17,6 +17,12 @@
                 <button @onclick="UploadFile" class="h-10 w-32 rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none sm:w-auto">
                     Upload
                 </button>
+                <select @onchange="OnDriveSelected" class="h-10 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    @foreach (var drive in _availableDrives)
+                    {
+                        <option value="@drive">@drive</option>
+                    }
+                </select>
                 <InputText @bind-Value="_currentPath" placeholder="Path" class="h-10 w-64 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:w-auto" />
                 <button @onclick="NavigateToPath" class="h-10 w-32 rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none sm:w-auto">
                     Navigate
