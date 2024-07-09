@@ -2,12 +2,15 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
-using MudBlazor;
 using Polly;
 using Polly.Retry;
 using RemoteMaster.Shared.Dtos;
@@ -15,12 +18,17 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Pages;
 
-public partial class FileManager : IDisposable
+[Authorize]
+public partial class FileManager : IAsyncDisposable
 {
     [Parameter]
     public string Host { get; set; } = default!;
 
-    private HubConnection _connection = null!;
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
+
+    private HubConnection? _connection;
+    private ClaimsPrincipal? _user;
     private string _searchQuery = string.Empty;
     private string _currentPath = string.Empty;
     private List<FileSystemItem> _fileSystemItems = [];
@@ -39,14 +47,20 @@ public partial class FileManager : IDisposable
 
     protected async override Task OnInitializedAsync()
     {
-        await InitializeHostConnectionAsync();
-        await FetchAvailableDrives();
+        var authState = await AuthenticationStateTask;
+        _user = authState.User;
 
-        if (_availableDrives.Count != 0)
+        if (_user?.Identity?.IsAuthenticated == true)
         {
-            _selectedDrive = _availableDrives.First();
-            _currentPath = _selectedDrive;
-            await FetchFilesAndDirectories();
+            await InitializeHostConnectionAsync();
+            await FetchAvailableDrives();
+
+            if (_availableDrives.Count > 0)
+            {
+                _selectedDrive = _availableDrives.First();
+                _currentPath = _selectedDrive;
+                await FetchFilesAndDirectories();
+            }
         }
     }
 
@@ -69,13 +83,13 @@ public partial class FileManager : IDisposable
                 DestinationPath = _currentPath
             };
 
-            await _connection.InvokeAsync("UploadFile", fileDto);
+            await SafeInvokeAsync(() => _connection!.InvokeAsync("UploadFile", fileDto));
         }
     }
 
     private async Task FetchAvailableDrives()
     {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("GetAvailableDrives"));
+        await SafeInvokeAsync(() => _connection!.InvokeAsync("GetAvailableDrives"));
     }
 
     private async Task NavigateToPath()
@@ -85,58 +99,60 @@ public partial class FileManager : IDisposable
 
     private async Task FetchFilesAndDirectories()
     {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("GetFilesAndDirectories", _currentPath));
+        await SafeInvokeAsync(() => _connection!.InvokeAsync("GetFilesAndDirectories", _currentPath));
     }
 
     private async Task InitializeHostConnectionAsync()
     {
-        var httpContext = HttpContextAccessor.HttpContext;
-        var userId = UserManager.GetUserId(httpContext.User);
+        var userId = _user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        _connection = new HubConnectionBuilder()
-            .WithUrl($"https://{Host}:5001/hubs/filemanager", options =>
+        if (!string.IsNullOrEmpty(userId))
+        {
+            _connection = new HubConnectionBuilder()
+                .WithUrl($"https://{Host}:5001/hubs/filemanager", options =>
+                {
+                    options.AccessTokenProvider = async () => await AccessTokenProvider.GetAccessTokenAsync(userId);
+                })
+                .AddMessagePackProtocol()
+                .Build();
+
+            _connection.On<List<FileSystemItem>>("ReceiveFilesAndDirectories", async (fileSystemItems) =>
             {
-                options.AccessTokenProvider = async () => await AccessTokenProvider.GetAccessTokenAsync(userId);
-            })
-            .AddMessagePackProtocol()
-            .Build();
+                _fileSystemItems = fileSystemItems ?? [];
+                await InvokeAsync(StateHasChanged);
+            });
 
-        _connection.On<List<FileSystemItem>>("ReceiveFilesAndDirectories", async (fileSystemItems) =>
-        {
-            _fileSystemItems = fileSystemItems;
-            await InvokeAsync(StateHasChanged);
-        });
+            _connection.On<byte[], string>("ReceiveFile", async (file, path) =>
+            {
+                var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/fileUtils.js");
 
-        _connection.On<byte[], string>("ReceiveFile", async (file, path) =>
-        {
-            var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/fileUtils.js");
+                var base64File = Convert.ToBase64String(file);
+                var fileName = Path.GetFileName(path);
+                var contentType = "application/octet-stream;base64";
 
-            var base64File = Convert.ToBase64String(file);
-            var fileName = Path.GetFileName(path);
-            var contentType = "application/octet-stream;base64";
+                await module.InvokeVoidAsync("downloadDataAsFile", base64File, fileName, contentType);
+            });
 
-            await module.InvokeVoidAsync("downloadDataAsFile", base64File, fileName, contentType);
-        });
+            _connection.On<List<string>>("ReceiveAvailableDrives", (drives) =>
+            {
+                _availableDrives = drives ?? [];
+            });
 
-        _connection.On<List<string>>("ReceiveAvailableDrives", (drives) =>
-        {
-            _availableDrives = drives;
-        });
+            _connection.Closed += async (_) =>
+            {
+                await Task.Delay(TimeSpan.FromSeconds(5));
+                await _connection.StartAsync();
+            };
 
-        _connection.Closed += async (_) =>
-        {
-            await Task.Delay(TimeSpan.FromSeconds(5));
             await _connection.StartAsync();
-        };
-
-        await _connection.StartAsync();
+        }
     }
 
     private async Task SafeInvokeAsync(Func<Task> action)
     {
         await _retryPolicy.ExecuteAsync(async () =>
         {
-            if (_connection.State == HubConnectionState.Connected)
+            if (_connection?.State == HubConnectionState.Connected)
             {
                 try
                 {
@@ -156,7 +172,7 @@ public partial class FileManager : IDisposable
 
     private async Task DownloadFile(string fileName)
     {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("DownloadFile", $"{_currentPath}/{fileName}"));
+        await SafeInvokeAsync(() => _connection!.InvokeAsync("DownloadFile", $"{_currentPath}/{fileName}"));
     }
 
     private async Task ChangeDirectory(string directory)
@@ -174,11 +190,6 @@ public partial class FileManager : IDisposable
             _currentPath = parentDir.FullName;
             await FetchFilesAndDirectories();
         }
-    }
-
-    private static string GetIcon(FileSystemItem.FileSystemItemType type)
-    {
-        return type == FileSystemItem.FileSystemItemType.Directory ? Icons.Material.Filled.Folder : Icons.Material.Filled.InsertDriveFile;
     }
 
     private async Task HandleClick(FileSystemItem item)
@@ -212,28 +223,64 @@ public partial class FileManager : IDisposable
         return $"{len:0.##} {sizes[order]}";
     }
 
+    private async Task UpdateSearchQuery(ChangeEventArgs e)
+    {
+        _searchQuery = e.Value?.ToString() ?? string.Empty;
+        FilterItems();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void FilterItems()
+    {
+        if (string.IsNullOrWhiteSpace(_searchQuery))
+        {
+            _fileSystemItems = new List<FileSystemItem>(_fileSystemItems);
+        }
+        else
+        {
+            _fileSystemItems = _fileSystemItems
+                .Where(p => p.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+    }
+
+    private async Task OnSearchKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            FilterItems();
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
     private async Task OnDriveSelected(string selectedDrive)
     {
         _selectedDrive = selectedDrive;
         _currentPath = _selectedDrive;
+
         await FetchFilesAndDirectories();
     }
 
-    private bool FilterFunc1(FileSystemItem fileSystemItem) => FilterFunc(fileSystemItem, _searchQuery);
-
-    private static bool FilterFunc(FileSystemItem fileSystemItem, string searchQuery)
-    {
-        return string.IsNullOrWhiteSpace(searchQuery) || fileSystemItem.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase);
-    }
-
     [JSInvokable]
-    public void OnBeforeUnload()
+    public async Task OnBeforeUnload()
     {
-        Dispose();
+        await DisposeAsync();
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-        _connection.DisposeAsync();
+        if (_connection != null)
+        {
+            try
+            {
+                await _connection.DisposeAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"An error occurred while asynchronously disposing the connection for host {Host}: {ex.Message}");
+            }
+        }
+
+        GC.SuppressFinalize(this);
     }
 }
