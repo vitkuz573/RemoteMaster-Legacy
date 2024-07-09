@@ -1,11 +1,11 @@
-﻿<div class="rounded-lg border border-gray-300 shadow-md transition-shadow hover:shadow-lg">
+﻿<div class="rounded-lg border border-gray-300 shadow-md transition-shadow">
     <div class="flex h-32 items-center justify-center rounded-t-lg bg-gray-100">
-        <img src="@ThumbnailUri" alt="Thumbnail" class="h-auto max-h-32 w-full object-contain" draggable="false" />
+        <img src="@ThumbnailUri" alt="Thumbnail" class="h-full max-h-32 w-full object-contain" draggable="false" />
     </div>
     <div class="flex items-center justify-between rounded-b-lg bg-white p-4">
         <div class="flex items-center">
             <input type="checkbox" checked="@IsSelected" @onchange="HandleCheckboxChange" class="mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
-            <label class="text-gray-700">@Computer.Name</label>
+            <label class="font-medium text-gray-700">@Computer.Name</label>
         </div>
     </div>
 </div>
