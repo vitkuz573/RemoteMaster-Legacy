@@ -1,8 +1,4 @@
-﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
-// This file is part of the RemoteMaster project.
-// Licensed under the GNU Affero General Public License v3.0.
-
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
@@ -24,8 +20,8 @@ public partial class TaskManager : IAsyncDisposable
     [CascadingParameter]
     private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
 
-    private List<ProcessInfo> _processes = new();
-    private List<ProcessInfo> _allProcesses = new();
+    private List<ProcessInfo> _processes = [];
+    private List<ProcessInfo> _allProcesses = [];
     private string _processPath = string.Empty;
     private string _searchQuery = string.Empty;
     private HubConnection? _connection;
@@ -34,29 +30,34 @@ public partial class TaskManager : IAsyncDisposable
     private readonly AsyncRetryPolicy _retryPolicy = Policy
         .Handle<Exception>()
         .WaitAndRetryAsync(
-        new[]
-        {
+        [
             TimeSpan.FromSeconds(5),
             TimeSpan.FromSeconds(7),
             TimeSpan.FromSeconds(10),
-        });
+        ]);
 
     protected async override Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateTask;
         _user = authState.User;
 
-        await InitializeHostConnectionAsync();
-        await FetchProcesses();
+        if (_user != null)
+        {
+            await InitializeHostConnectionAsync();
+            await FetchProcesses();
+        }
     }
 
     private async Task FetchProcesses()
     {
         await SafeInvokeAsync(async () =>
         {
-            var processes = await _connection.InvokeAsync<IEnumerable<ProcessInfo>>("GetRunningProcesses");
-            _allProcesses = processes?.ToList() ?? new List<ProcessInfo>();
-            FilterProcesses();
+            if (_connection != null)
+            {
+                var processes = await _connection.InvokeAsync<IEnumerable<ProcessInfo>>("GetRunningProcesses");
+                _allProcesses = processes?.ToList() ?? [];
+                FilterProcesses();
+            }
         });
 
         await InvokeAsync(StateHasChanged);
@@ -78,44 +79,47 @@ public partial class TaskManager : IAsyncDisposable
 
     private async Task UpdateSearchQuery(ChangeEventArgs e)
     {
-        _searchQuery = e.Value.ToString();
+        _searchQuery = e.Value?.ToString() ?? string.Empty;
         FilterProcesses();
         await InvokeAsync(StateHasChanged);
     }
 
     private async Task InitializeHostConnectionAsync()
     {
-        var userId = _user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = _user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        _connection = new HubConnectionBuilder()
-            .WithUrl($"https://{Host}:5001/hubs/taskmanager", options =>
+        if (userId != null)
+        {
+            _connection = new HubConnectionBuilder()
+                .WithUrl($"https://{Host}:5001/hubs/taskmanager", options =>
+                {
+                    options.AccessTokenProvider = async () => await AccessTokenProvider.GetAccessTokenAsync(userId);
+                })
+                .AddMessagePackProtocol()
+                .Build();
+
+            _connection.On<IEnumerable<ProcessInfo>>("ReceiveRunningProcesses", async (processes) =>
             {
-                options.AccessTokenProvider = async () => await AccessTokenProvider.GetAccessTokenAsync(userId);
-            })
-            .AddMessagePackProtocol()
-            .Build();
+                _allProcesses = processes?.ToList() ?? [];
+                FilterProcesses();
+                await InvokeAsync(StateHasChanged);
+            });
 
-        _connection.On<IEnumerable<ProcessInfo>>("ReceiveRunningProcesses", async (processes) =>
-        {
-            _allProcesses = processes?.ToList() ?? new List<ProcessInfo>();
-            FilterProcesses();
-            await InvokeAsync(StateHasChanged);
-        });
+            _connection.Closed += async (_) =>
+            {
+                await Task.Delay(TimeSpan.FromSeconds(5));
+                await _connection.StartAsync();
+            };
 
-        _connection.Closed += async (_) =>
-        {
-            await Task.Delay(TimeSpan.FromSeconds(5));
             await _connection.StartAsync();
-        };
-
-        await _connection.StartAsync();
+        }
     }
 
     private async Task SafeInvokeAsync(Func<Task> action)
     {
         await _retryPolicy.ExecuteAsync(async () =>
         {
-            if (_connection.State == HubConnectionState.Connected)
+            if (_connection?.State == HubConnectionState.Connected)
             {
                 try
                 {
@@ -135,14 +139,14 @@ public partial class TaskManager : IAsyncDisposable
 
     private async Task KillProcess(int processId)
     {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("KillProcess", processId));
+        await SafeInvokeAsync(() => _connection?.InvokeAsync("KillProcess", processId) ?? Task.CompletedTask);
         await FetchProcesses();
         await InvokeAsync(StateHasChanged);
     }
 
     private static string FormatSize(long size)
     {
-        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+        string[] sizes = ["B", "KB", "MB", "GB", "TB"];
         double len = size;
         var order = 0;
 
@@ -159,7 +163,7 @@ public partial class TaskManager : IAsyncDisposable
     {
         if (!string.IsNullOrWhiteSpace(_processPath))
         {
-            await SafeInvokeAsync(() => _connection.InvokeAsync("StartProcess", _processPath));
+            await SafeInvokeAsync(() => _connection?.InvokeAsync("StartProcess", _processPath) ?? Task.CompletedTask);
             _processPath = string.Empty;
             await FetchProcesses();
         }
