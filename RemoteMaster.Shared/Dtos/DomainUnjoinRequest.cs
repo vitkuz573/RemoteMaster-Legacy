@@ -2,13 +2,13 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Net;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Shared.Dtos;
 
-public class DomainUnjoinRequest(NetworkCredential userCredentials)
+public class DomainUnjoinRequest(Credential userCredential)
 {
-    public NetworkCredential UserCredentials { get; } = userCredentials;
+    public Credential UserCredential { get; } = userCredential;
 
     public bool RemoveUserProfiles { get; init; }
 }

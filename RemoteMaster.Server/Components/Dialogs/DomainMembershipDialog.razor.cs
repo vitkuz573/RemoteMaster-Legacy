@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.DirectoryServices;
-using System.Net;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -27,8 +26,8 @@ public partial class DomainMembershipDialog
     {
         EnsureDomainInUsername();
 
-        var credentials = new NetworkCredential(_username, _password);
-        var domainJoinRequest = new DomainJoinRequest(_domain, credentials);
+        var credential = new Credential(_username, _password);
+        var domainJoinRequest = new DomainJoinRequest(_domain, credential);
 
         await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("SendJoinToDomain", domainJoinRequest));
 
@@ -37,8 +36,8 @@ public partial class DomainMembershipDialog
 
     private async Task LeaveDomain()
     {
-        var credentials = new NetworkCredential(_username, _password);
-        var domainUnjoinRequest = new DomainUnjoinRequest(credentials);
+        var credential = new Credential(_username, _password);
+        var domainUnjoinRequest = new DomainUnjoinRequest(credential);
 
         await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("SendUnjoinFromDomain", domainUnjoinRequest));
 
