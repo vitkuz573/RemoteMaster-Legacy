@@ -30,11 +30,11 @@ public partial class TaskManager : IAsyncDisposable
     private readonly AsyncRetryPolicy _retryPolicy = Policy
         .Handle<Exception>()
         .WaitAndRetryAsync(
-        [
-            TimeSpan.FromSeconds(5),
-            TimeSpan.FromSeconds(7),
-            TimeSpan.FromSeconds(10),
-        ]);
+            [
+                TimeSpan.FromSeconds(5),
+                TimeSpan.FromSeconds(7),
+                TimeSpan.FromSeconds(10),
+            ]);
 
     protected async override Task OnInitializedAsync()
     {
@@ -56,7 +56,6 @@ public partial class TaskManager : IAsyncDisposable
             {
                 var processes = await _connection.InvokeAsync<IEnumerable<ProcessInfo>>("GetRunningProcesses");
                 _allProcesses = processes?.ToList() ?? [];
-                FilterProcesses();
             }
         });
 
