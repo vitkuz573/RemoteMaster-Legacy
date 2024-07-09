@@ -1707,6 +1707,10 @@ video {
     margin-top: 0px;
   }
 
+  .sm\:ml-auto {
+    margin-left: auto;
+  }
+
   .sm\:flex {
     display: flex;
   }
