@@ -673,7 +673,13 @@ public partial class Home
         return computers.Values.OrderBy(computer => computer.Name);
     }
 
-    private bool CanSelectAll(ConcurrentDictionary<string, Computer> computers) => !computers.IsEmpty && _selectedComputers.Count < computers.Count;
+    private bool CanSelectAll(ConcurrentDictionary<string, Computer> computers)
+    {
+        return computers.Any(computer => !_selectedComputers.Contains(computer.Value));
+    }
 
-    private bool CanDeselectAll(ConcurrentDictionary<string, Computer> computers) => _selectedComputers.Intersect(computers.Values).Any();
+    private bool CanDeselectAll(ConcurrentDictionary<string, Computer> computers)
+    {
+        return computers.Any(computer => _selectedComputers.Contains(computer.Value));
+    }
 }
