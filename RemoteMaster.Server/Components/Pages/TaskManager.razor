@@ -13,12 +13,12 @@
     <div class="mx-auto max-w-7xl">
         <div class="mb-4 flex items-center justify-between">
             <h2 class="text-2xl font-bold text-gray-900">Task Manager</h2>
-            <div class="flex space-x-4">
-                <InputText @bind-Value="_processPath" placeholder="Enter process path" class="mt-1 block h-10 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+            <div class="flex items-center space-x-4">
+                <InputText @bind-Value="_processPath" placeholder="Enter process path" class="h-10 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
                 <button @onclick="StartProcess" class="h-10 rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none">
                     Start Process
                 </button>
-                <InputText @bind-Value="_searchQuery" placeholder="Search" class="mt-1 block h-10 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                <InputText @bind-Value="_searchQuery" placeholder="Search" class="h-10 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
             </div>
         </div>
 
