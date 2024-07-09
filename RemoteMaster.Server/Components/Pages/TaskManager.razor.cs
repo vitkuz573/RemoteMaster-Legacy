@@ -2,25 +2,32 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Security.Claims;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using Polly;
 using Polly.Retry;
 using RemoteMaster.Shared.Models;
+using Serilog;
 
 namespace RemoteMaster.Server.Components.Pages;
 
-public partial class TaskManager : IDisposable
+public partial class TaskManager : IAsyncDisposable
 {
     [Parameter]
     public string Host { get; set; } = default!;
 
-    private HubConnection _connection = null!;
-    private string _searchQuery = string.Empty;
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
+
     private List<ProcessInfo> _processes = [];
     private string _processPath = string.Empty;
+    private string _searchQuery = string.Empty;
+    private HubConnection? _connection;
+    private ClaimsPrincipal? _user;
 
     private readonly AsyncRetryPolicy _retryPolicy = Policy
         .Handle<Exception>()
@@ -33,6 +40,9 @@ public partial class TaskManager : IDisposable
 
     protected async override Task OnInitializedAsync()
     {
+        var authState = await AuthenticationStateTask;
+        _user = authState.User;
+
         await InitializeHostConnectionAsync();
         await FetchProcesses();
     }
@@ -46,8 +56,7 @@ public partial class TaskManager : IDisposable
 
     private async Task InitializeHostConnectionAsync()
     {
-        var httpContext = HttpContextAccessor.HttpContext;
-        var userId = UserManager.GetUserId(httpContext.User);
+        var userId = _user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         _connection = new HubConnectionBuilder()
             .WithUrl($"https://{Host}:5001/hubs/taskmanager", options =>
@@ -131,13 +140,25 @@ public partial class TaskManager : IDisposable
     }
 
     [JSInvokable]
-    public void OnBeforeUnload()
+    public async Task OnBeforeUnload()
     {
-        Dispose();
+        await DisposeAsync();
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-        _connection.DisposeAsync();
+        if (_connection != null)
+        {
+            try
+            {
+                await _connection.DisposeAsync();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "An error occurred while asynchronously disposing the connection for host {Host}", Host);
+            }
+        }
+
+        GC.SuppressFinalize(this);
     }
 }
