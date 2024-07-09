@@ -32,6 +32,7 @@ public partial class FileManager : IAsyncDisposable
     private string _searchQuery = string.Empty;
     private string _currentPath = string.Empty;
     private List<FileSystemItem> _fileSystemItems = [];
+    private List<FileSystemItem> _allFileSystemItems = [];
     private List<string> _availableDrives = [];
     private string _selectedDrive = string.Empty;
     private IBrowserFile? _selectedFile;
@@ -119,6 +120,7 @@ public partial class FileManager : IAsyncDisposable
             _connection.On<List<FileSystemItem>>("ReceiveFilesAndDirectories", async (fileSystemItems) =>
             {
                 _fileSystemItems = fileSystemItems ?? [];
+                _allFileSystemItems = new List<FileSystemItem>(_fileSystemItems); // Copy original list
                 await InvokeAsync(StateHasChanged);
             });
 
@@ -226,7 +228,9 @@ public partial class FileManager : IAsyncDisposable
     private async Task UpdateSearchQuery(ChangeEventArgs e)
     {
         _searchQuery = e.Value?.ToString() ?? string.Empty;
+
         FilterItems();
+
         await InvokeAsync(StateHasChanged);
     }
 
@@ -234,22 +238,13 @@ public partial class FileManager : IAsyncDisposable
     {
         if (string.IsNullOrWhiteSpace(_searchQuery))
         {
-            _fileSystemItems = new List<FileSystemItem>(_fileSystemItems);
+            _fileSystemItems = new List<FileSystemItem>(_allFileSystemItems);
         }
         else
         {
-            _fileSystemItems = _fileSystemItems
+            _fileSystemItems = _allFileSystemItems
                 .Where(p => p.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase))
                 .ToList();
-        }
-    }
-
-    private async Task OnSearchKeyPress(KeyboardEventArgs e)
-    {
-        if (e.Key == "Enter")
-        {
-            FilterItems();
-            await InvokeAsync(StateHasChanged);
         }
     }
 

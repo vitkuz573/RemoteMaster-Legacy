@@ -172,15 +172,6 @@ public partial class TaskManager : IAsyncDisposable
         }
     }
 
-    private async Task OnSearchKeyPress(KeyboardEventArgs e)
-    {
-        if (e.Key == "Enter")
-        {
-            FilterProcesses();
-            await InvokeAsync(StateHasChanged);
-        }
-    }
-
     [JSInvokable]
     public async Task OnBeforeUnload()
     {
