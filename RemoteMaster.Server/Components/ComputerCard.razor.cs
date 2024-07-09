@@ -7,7 +7,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components;
 
-public partial class ComputerCard
+public partial class ComputerCard : ComponentBase
 {
     [Parameter]
     public Computer Computer { get; set; } = default!;
@@ -20,10 +20,12 @@ public partial class ComputerCard
     [Parameter]
     public EventCallback<bool> IsSelectedChanged { get; set; }
 
-    private async Task HandleCheckboxChange(bool value)
+    private async Task HandleCheckboxChange(ChangeEventArgs e)
     {
-        IsSelected = value;
-
-        await IsSelectedChanged.InvokeAsync(IsSelected);
+        if (e.Value is bool isChecked)
+        {
+            IsSelected = isChecked;
+            await IsSelectedChanged.InvokeAsync(IsSelected);
+        }
     }
 }
