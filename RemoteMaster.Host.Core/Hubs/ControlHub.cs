@@ -177,6 +177,12 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         workStationSecurityService.LockWorkStationDisplay();
     }
 
+    [Authorize(Policy = "LogOffUserPolicy")]
+    public void SendLogOffUser(bool force)
+    {
+        workStationSecurityService.LogOffUser(force);
+    }
+
     public async Task JoinGroup(string groupName)
     {
         var viewer = viewerFactory.Create(Context.ConnectionId, groupName, "RCHost", "Windows Service", false);

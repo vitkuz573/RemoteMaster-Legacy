@@ -213,6 +213,11 @@ public partial class Access : IAsyncDisposable
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendLockWorkStation"), true);
     }
 
+    private async Task LogOffUser()
+    {
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SendLogOffUser", true), true);
+    }
+
     private async Task SendCtrlAltDel()
     {
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendCommandToService", "CtrlAltDel"), true);

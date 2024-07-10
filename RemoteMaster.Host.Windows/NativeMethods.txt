@@ -90,3 +90,4 @@ INetFwPolicy2
 NET_FW_IP_PROTOCOL
 
 LockWorkStation
+ExitWindowsEx

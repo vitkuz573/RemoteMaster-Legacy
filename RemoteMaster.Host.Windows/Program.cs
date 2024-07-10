@@ -155,6 +155,8 @@ internal class Program
                     policy.RequireClaim("Permission", "ExecuteScript"))
                 .AddPolicy("LockWorkStationPolicy", policy =>
                     policy.RequireClaim("Permission", "LockWorkStation"))
+                .AddPolicy("LogOffUserPolicy", policy =>
+                    policy.RequireClaim("Permission", "LogOffUser"))
                 .AddPolicy("MovePolicy", policy =>
                     policy.RequireClaim("Permission", "Move"))
                 .AddPolicy("RenewCertificatePolicy", policy =>

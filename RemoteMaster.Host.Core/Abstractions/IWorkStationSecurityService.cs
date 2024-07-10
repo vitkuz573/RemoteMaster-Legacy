@@ -7,4 +7,6 @@ namespace RemoteMaster.Host.Core.Abstractions;
 public interface IWorkStationSecurityService
 {
     bool LockWorkStationDisplay();
+
+    bool LogOffUser(bool force);
 }
