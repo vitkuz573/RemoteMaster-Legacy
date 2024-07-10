@@ -1,7 +1,10 @@
-﻿using System.Security.Claims;
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+// This file is part of the RemoteMaster project.
+// Licensed under the GNU Affero General Public License v3.0.
+
+using System.Security.Claims;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
@@ -30,11 +33,11 @@ public partial class TaskManager : IAsyncDisposable
     private readonly AsyncRetryPolicy _retryPolicy = Policy
         .Handle<Exception>()
         .WaitAndRetryAsync(
-            [
-                TimeSpan.FromSeconds(5),
-                TimeSpan.FromSeconds(7),
-                TimeSpan.FromSeconds(10),
-            ]);
+        [
+            TimeSpan.FromSeconds(5),
+            TimeSpan.FromSeconds(7),
+            TimeSpan.FromSeconds(10),
+        ]);
 
     protected async override Task OnInitializedAsync()
     {
@@ -45,6 +48,7 @@ public partial class TaskManager : IAsyncDisposable
         {
             await InitializeHostConnectionAsync();
             await FetchProcesses();
+            FilterProcesses();
         }
     }
 
@@ -58,8 +62,6 @@ public partial class TaskManager : IAsyncDisposable
                 _allProcesses = processes?.ToList() ?? [];
             }
         });
-
-        await InvokeAsync(StateHasChanged);
     }
 
     private void FilterProcesses()
@@ -140,6 +142,7 @@ public partial class TaskManager : IAsyncDisposable
     {
         await SafeInvokeAsync(() => _connection?.InvokeAsync("KillProcess", processId) ?? Task.CompletedTask);
         await FetchProcesses();
+        FilterProcesses();
         await InvokeAsync(StateHasChanged);
     }
 
@@ -165,6 +168,8 @@ public partial class TaskManager : IAsyncDisposable
             await SafeInvokeAsync(() => _connection?.InvokeAsync("StartProcess", _processPath) ?? Task.CompletedTask);
             _processPath = string.Empty;
             await FetchProcesses();
+            FilterProcesses();
+            await InvokeAsync(StateHasChanged);
         }
         else
         {
