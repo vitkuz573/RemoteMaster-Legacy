@@ -31,6 +31,7 @@ public class ControlHubTests
     private readonly Mock<IHostConfigurationService> _mockHostConfigurationService;
     private readonly Mock<IHostLifecycleService> _mockHostLifecycleService;
     private readonly Mock<ICertificateStoreService> _mockCertificateStoreService;
+    private readonly Mock<IWorkStationSecurityService> _mockWorkStationSecurityService;
     private readonly Mock<IHubCallerClients<IControlClient>> _mockClients;
     private readonly Mock<IGroupManager> _mockGroups;
     private readonly Mock<IControlClient> _mockClientProxy;
@@ -50,6 +51,7 @@ public class ControlHubTests
         _mockHostConfigurationService = new Mock<IHostConfigurationService>();
         _mockHostLifecycleService = new Mock<IHostLifecycleService>();
         _mockCertificateStoreService = new Mock<ICertificateStoreService>();
+        _mockWorkStationSecurityService = new Mock<IWorkStationSecurityService>();
         _mockClients = new Mock<IHubCallerClients<IControlClient>>();
         _mockGroups = new Mock<IGroupManager>();
         _mockClientProxy = new Mock<IControlClient>();
@@ -68,7 +70,8 @@ public class ControlHubTests
             _mockScreenCapturerService.Object,
             _mockHostConfigurationService.Object,
             _mockHostLifecycleService.Object,
-            _mockCertificateStoreService.Object)
+            _mockCertificateStoreService.Object,
+            _mockWorkStationSecurityService.Object)
         {
             Clients = _mockClients.Object,
             Groups = _mockGroups.Object,
