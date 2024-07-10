@@ -1,0 +1,15 @@
+﻿@inherits CommonDialogBase
+
+@using RemoteMaster.Server.Abstractions
+@using RemoteMaster.Shared.Enums
+
+@inject IComputerCommandService ComputerCommandService
+
+<CommonDialog>
+    <Content>
+        <MudText>Really?</MudText>
+    </Content>
+    <Actions>
+        <MudButton Color="Color.Primary" OnClick="Lock">Lock</MudButton>
+    </Actions>
+</CommonDialog>

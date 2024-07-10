@@ -500,6 +500,8 @@ public partial class Home
         }
     }
 
+    private async Task Lock() => await ExecuteAction<LockWorkStationDialog>("Lock Workstation");
+
     private async Task OpenShell() => await ExecuteAction<OpenShellDialog>("Open Shell", false, false, requireConnections: false);
 
     private async Task ExecuteScript() => await ExecuteAction<ScriptExecutorDialog>("Execute Script");

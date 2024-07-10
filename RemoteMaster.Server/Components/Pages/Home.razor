@@ -94,6 +94,7 @@
                                 <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Connect" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["Connect"]</MudButton>
                                 @if (context.User.IsInRole("Administrator"))
                                 {
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Lock" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Lock</MudButton>
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenShell" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">@Localizer["OpenShell"]</MudButton>
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ExecuteScript" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["ExecuteScript"]</MudButton>
                                 }
