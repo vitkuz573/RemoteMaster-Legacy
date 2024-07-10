@@ -8,6 +8,7 @@ using Microsoft.JSInterop;
 using Polly;
 using Polly.Retry;
 using RemoteMaster.Shared.Models;
+using Serilog;
 
 namespace RemoteMaster.Server.Components.Pages;
 
@@ -183,7 +184,7 @@ public partial class TaskManager : IAsyncDisposable
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"An error occurred while asynchronously disposing the connection for host {Host}: {ex.Message}");
+                Log.Error($"An error occurred while asynchronously disposing the connection for host {Host}: {ex.Message}");
             }
         }
 
