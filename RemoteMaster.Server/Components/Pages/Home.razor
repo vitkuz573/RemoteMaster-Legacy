@@ -54,9 +54,6 @@
                     <MudNavLink Match="NavLinkMatch.All" OnClick="ManageProfile">@Localizer["MenuProfile"]</MudNavLink>
                     <MudNavLink Match="NavLinkMatch.All" OnClick="Logout">@Localizer["MenuLogout"]</MudNavLink>
                 </Authorized>
-                <NotAuthorized>
-                    <MudNavLink Match="NavLinkMatch.All" Href="/Account/Login">@Localizer["MenuLogin"]</MudNavLink>
-                </NotAuthorized>
             </AuthorizeView>
         </MudNavMenu>
     </MudDrawer>
