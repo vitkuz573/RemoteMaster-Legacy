@@ -10,9 +10,13 @@ public partial class MainLayout
 {
     private readonly MudTheme _theme = new()
     {
-        LayoutProperties = new LayoutProperties()
+        LayoutProperties = new LayoutProperties
         {
             DrawerWidthRight = "370px"
-        }
+        },
+        PaletteLight = new PaletteLight
+        {
+            Primary = "#0A7BCF"
+        },
     };
 }
