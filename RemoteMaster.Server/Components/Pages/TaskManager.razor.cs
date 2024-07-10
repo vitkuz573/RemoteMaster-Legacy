@@ -1,8 +1,5 @@
-﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
-// This file is part of the RemoteMaster project.
-// Licensed under the GNU Affero General Public License v3.0.
-
-using System.Security.Claims;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -11,10 +8,10 @@ using Microsoft.JSInterop;
 using Polly;
 using Polly.Retry;
 using RemoteMaster.Shared.Models;
-using Serilog;
 
 namespace RemoteMaster.Server.Components.Pages;
 
+[Authorize]
 public partial class TaskManager : IAsyncDisposable
 {
     [Parameter]
@@ -23,12 +20,12 @@ public partial class TaskManager : IAsyncDisposable
     [CascadingParameter]
     private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
 
+    private HubConnection? _connection;
+    private ClaimsPrincipal? _user;
+    private string _searchQuery = string.Empty;
     private List<ProcessInfo> _processes = [];
     private List<ProcessInfo> _allProcesses = [];
     private string _processPath = string.Empty;
-    private string _searchQuery = string.Empty;
-    private HubConnection? _connection;
-    private ClaimsPrincipal? _user;
 
     private readonly AsyncRetryPolicy _retryPolicy = Policy
         .Handle<Exception>()
@@ -44,7 +41,7 @@ public partial class TaskManager : IAsyncDisposable
         var authState = await AuthenticationStateTask;
         _user = authState.User;
 
-        if (_user != null)
+        if (_user?.Identity?.IsAuthenticated == true)
         {
             await InitializeHostConnectionAsync();
             await FetchProcesses();
@@ -53,14 +50,7 @@ public partial class TaskManager : IAsyncDisposable
 
     private async Task FetchProcesses()
     {
-        await SafeInvokeAsync(async () =>
-        {
-            if (_connection != null)
-            {
-                var processes = await _connection.InvokeAsync<IEnumerable<ProcessInfo>>("GetRunningProcesses");
-                _allProcesses = processes?.ToList() ?? [];
-            }
-        });
+        await SafeInvokeAsync(async () => await _connection!.InvokeAsync("GetRunningProcesses"));
     }
 
     private void FilterProcesses()
@@ -88,7 +78,7 @@ public partial class TaskManager : IAsyncDisposable
     {
         var userId = _user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        if (userId != null)
+        if (!string.IsNullOrEmpty(userId))
         {
             _connection = new HubConnectionBuilder()
                 .WithUrl($"https://{Host}:5001/hubs/taskmanager", options =>
@@ -98,10 +88,12 @@ public partial class TaskManager : IAsyncDisposable
                 .AddMessagePackProtocol()
                 .Build();
 
-            _connection.On<IEnumerable<ProcessInfo>>("ReceiveRunningProcesses", (processes) =>
+            _connection.On<List<ProcessInfo>>("ReceiveRunningProcesses", async (processes) =>
             {
-                _allProcesses = processes?.ToList() ?? [];
+                _allProcesses = processes ?? [];
+                _processes = new List<ProcessInfo>(_allProcesses);
                 FilterProcesses();
+                await InvokeAsync(StateHasChanged);
             });
 
             _connection.Closed += async (_) =>
@@ -191,7 +183,7 @@ public partial class TaskManager : IAsyncDisposable
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "An error occurred while asynchronously disposing the connection for host {Host}", Host);
+                Console.Error.WriteLine($"An error occurred while asynchronously disposing the connection for host {Host}: {ex.Message}");
             }
         }
 

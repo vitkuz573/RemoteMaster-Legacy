@@ -120,7 +120,7 @@ public partial class FileManager : IAsyncDisposable
             _connection.On<List<FileSystemItem>>("ReceiveFilesAndDirectories", async (fileSystemItems) =>
             {
                 _fileSystemItems = fileSystemItems ?? [];
-                _allFileSystemItems = new List<FileSystemItem>(_fileSystemItems); // Copy original list
+                _allFileSystemItems = new List<FileSystemItem>(_fileSystemItems);
                 await InvokeAsync(StateHasChanged);
             });
 
