@@ -31,3 +31,8 @@ h1:focus {
 .mud-button {
     box-shadow: none !important;
 }
+
+.mud-button:hover {
+    box-shadow: none !important;
+    background-color: rgb(67, 56, 202);
+}

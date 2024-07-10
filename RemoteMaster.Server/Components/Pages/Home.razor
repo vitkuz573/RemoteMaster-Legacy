@@ -95,8 +95,8 @@
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenShell" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">@Localizer["OpenShell"]</MudButton>
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ExecuteScript" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["ExecuteScript"]</MudButton>
                                 }
-                                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@(async () => await LogonComputers())" Disabled="@(_selectedComputers.Count == 0 || _selectedComputers.Any(c => _availableComputers.ContainsKey(c.IpAddress) || _unavailableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["Logon"]</MudButton>
-                                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@(async () => await LogoffComputers())" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.Any(c => _availableComputers.ContainsKey(c.IpAddress) || _unavailableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["Logoff"]</MudButton>
+                                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="LogonComputers" Disabled="@(_selectedComputers.Count == 0 || _selectedComputers.Any(c => _availableComputers.ContainsKey(c.IpAddress) || _unavailableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["Logon"]</MudButton>
+                                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="LogoffComputers" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.Any(c => _availableComputers.ContainsKey(c.IpAddress) || _unavailableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["Logoff"]</MudButton>
                                 <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Refresh" Class="ml-auto">Refresh</MudButton>
                             </Authorized>
                         </AuthorizeView>
