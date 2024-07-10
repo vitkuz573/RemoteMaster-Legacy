@@ -60,12 +60,9 @@ public static class WebApplicationBuilderExtensions
             configuration.MinimumLevel.Debug();
 #else
             configuration.MinimumLevel.Information();
-            
-            if (launchModeInstance is UpdaterMode)
-            {
-                configuration.MinimumLevel.Override("Microsoft", LogEventLevel.Warning);
-                configuration.MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning);
-            }
+
+            configuration.MinimumLevel.Override("Microsoft", LogEventLevel.Warning);
+            configuration.MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning);
 #endif
             configuration.WriteTo.Console();
             // configuration.WriteTo.Seq("http://192.168.0.103:5341");
