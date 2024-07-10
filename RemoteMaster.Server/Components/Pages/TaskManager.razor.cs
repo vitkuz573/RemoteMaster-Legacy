@@ -48,7 +48,6 @@ public partial class TaskManager : IAsyncDisposable
         {
             await InitializeHostConnectionAsync();
             await FetchProcesses();
-            FilterProcesses();
         }
     }
 
@@ -99,11 +98,10 @@ public partial class TaskManager : IAsyncDisposable
                 .AddMessagePackProtocol()
                 .Build();
 
-            _connection.On<IEnumerable<ProcessInfo>>("ReceiveRunningProcesses", async (processes) =>
+            _connection.On<IEnumerable<ProcessInfo>>("ReceiveRunningProcesses", (processes) =>
             {
                 _allProcesses = processes?.ToList() ?? [];
                 FilterProcesses();
-                await InvokeAsync(StateHasChanged);
             });
 
             _connection.Closed += async (_) =>
