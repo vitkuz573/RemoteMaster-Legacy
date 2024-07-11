@@ -15,6 +15,12 @@ public class UpdaterBackground(IConfiguration configuration, IHostApplicationLif
         hostApplicationLifetime.ApplicationStarted.Register(async () =>
         {
             var folderPath = configuration["folder-path"];
+
+            if (folderPath == null)
+            {
+                throw new ArgumentNullException(folderPath, "Configuration 'folder-path' cannot be null or empty");
+            }
+
             var username = configuration["username"];
             var password = configuration["password"];
 
