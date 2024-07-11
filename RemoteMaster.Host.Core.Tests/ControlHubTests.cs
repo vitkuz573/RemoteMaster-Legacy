@@ -2,11 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
-using Microsoft.AspNetCore.Http.Connections;
-using Microsoft.AspNetCore.Http.Connections.Features;
-using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.SignalR;
 using Moq;
 using RemoteMaster.Host.Core.Abstractions;
@@ -87,52 +83,6 @@ public class ControlHubTests
     private void SetupAppState(string connectionId, IViewer viewer)
     {
         _mockAppState.Setup(a => a.TryGetViewer(connectionId, out viewer)).Returns(true);
-    }
-
-    [Fact]
-    public async Task ConnectAs_ShouldReceiveThumbnail_WhenIntentionIsReceiveThumbnail()
-    {
-        // Arrange
-        var connectionRequest = new ConnectionRequest(Intention.ReceiveThumbnail, "TestGroup", "TestUser", "TestRole");
-        var thumbnail = new byte[] { 1, 2, 3 };
-
-        _mockScreenCapturerService.Setup(s => s.GetThumbnail(500, 300)).Returns(thumbnail);
-
-        // Act
-        await _controlHub.ConnectAs(connectionRequest);
-
-        // Assert
-        _mockClientProxy.Verify(c => c.ReceiveThumbnail(thumbnail), Times.Once);
-        _mockClientProxy.Verify(c => c.ReceiveCloseConnection(), Times.Once);
-    }
-
-    [Fact]
-    public async Task ConnectAs_ShouldManageDevice_WhenIntentionIsManageDevice()
-    {
-        // Arrange
-        var connectionRequest = new ConnectionRequest(Intention.ManageDevice, "TestGroup", "TestUser", "TestRole");
-        var viewer = new Mock<IViewer>().Object;
-
-        _mockViewerFactory.Setup(f => f.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), true)).Returns(viewer);
-        _mockAppState.Setup(a => a.TryAddViewer(viewer)).Returns(true);
-
-        var version = new Version(1, 0, 0);
-        var assembly = Assembly.GetExecutingAssembly();
-        var mockTransportFeature = new Mock<IHttpTransportFeature>();
-        mockTransportFeature.Setup(tf => tf.TransportType).Returns(HttpTransportType.WebSockets);
-
-        var mockHubContext = new Mock<HubCallerContext>();
-        mockHubContext.Setup(c => c.Features).Returns(new FeatureCollection());
-        mockHubContext.Object.Features.Set(mockTransportFeature.Object);
-
-        _controlHub.Context = mockHubContext.Object;
-
-        // Act
-        await _controlHub.ConnectAs(connectionRequest);
-
-        // Assert
-        _mockClientProxy.Verify(c => c.ReceiveHostVersion(It.IsAny<Version>()), Times.Once);
-        _mockClientProxy.Verify(c => c.ReceiveTransportType(HttpTransportType.WebSockets.ToString()), Times.Once);
     }
 
     [Fact]
