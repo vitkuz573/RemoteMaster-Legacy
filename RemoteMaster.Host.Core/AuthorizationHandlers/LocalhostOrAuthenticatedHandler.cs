@@ -15,10 +15,17 @@ public class LocalhostOrAuthenticatedHandler(IHttpContextAccessor httpContextAcc
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        var ipAddress = httpContextAccessor.HttpContext.Connection.RemoteIpAddress;
+        var httpContext = httpContextAccessor.HttpContext;
+
+        if (httpContext == null)
+        {
+            return Task.CompletedTask;
+        }
+
+        var ipAddress = httpContext.Connection.RemoteIpAddress;
         var isLocal = ipAddress != null && (ipAddress.Equals(IPAddress.Loopback) || ipAddress.Equals(IPAddress.IPv6Loopback) || ipAddress.ToString().StartsWith("::ffff:127.0.0.1"));
 
-        if (isLocal || context.User.Identity.IsAuthenticated)
+        if (isLocal || (context.User?.Identity?.IsAuthenticated ?? false))
         {
             context.Succeed(requirement);
         }
