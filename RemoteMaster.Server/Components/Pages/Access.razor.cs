@@ -46,7 +46,7 @@ public partial class Access : IAsyncDisposable
     private ElementReference _screenImageElement;
     private string? _accessToken;
     private List<ViewerDto> _viewers = [];
-    private bool _isAccessDenied;
+    private bool _isAccessDenied = true;
     private readonly AsyncPolicyWrap _combinedPolicy;
 
     private string? _title;
@@ -95,15 +95,6 @@ public partial class Access : IAsyncDisposable
         var authState = await AuthenticationStateTask;
         _user = authState.User;
         _isAccessDenied = _user == null || !await HasAccessAsync();
-
-        if (_isAccessDenied)
-        {
-            Snackbar.Add("Access denied. You do not have permission to access this computer.", Severity.Error);
-        }
-        else
-        {
-            await InitializeHostConnectionAsync();
-        }
     }
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
@@ -120,6 +111,15 @@ public partial class Access : IAsyncDisposable
             await module.InvokeVoidAsync("preventDefaultForKeydownWhenDrawerClosed", _drawerOpen);
 
             await SetParametersFromUriAsync();
+
+            if (_isAccessDenied)
+            {
+                Snackbar.Add("Access denied. You do not have permission to access this computer.", Severity.Error);
+            }
+            else
+            {
+                await InitializeHostConnectionAsync();
+            }
         }
     }
 
