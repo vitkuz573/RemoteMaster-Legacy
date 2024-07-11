@@ -64,10 +64,7 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext) : IApp
         return result;
     }
 
-    public IReadOnlyList<IViewer> GetAllViewers()
-    {
-        return [.. _viewers.Values];
-    }
+    public IReadOnlyList<IViewer> GetAllViewers() => [.. _viewers.Values];
 
     private void NotifyViewersChanged()
     {
