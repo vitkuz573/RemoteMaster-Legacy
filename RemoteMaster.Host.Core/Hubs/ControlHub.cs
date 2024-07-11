@@ -37,7 +37,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
             {
                 await SendThumbnailAsync();
                 await Clients.Caller.ReceiveCloseConnection();
-
+                
                 return;
             }
 
@@ -59,14 +59,8 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
                 }
                 else
                 {
-                    Log.Warning("IHttpTransportFeature is null for connection {ConnectionId}", Context.ConnectionId);
-
                     await Clients.Caller.ReceiveTransportType("Unknown");
                 }
-            }
-            else
-            {
-                Log.Error("User claims are missing required information or screencast parameter is missing.");
             }
         }
 
