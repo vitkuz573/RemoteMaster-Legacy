@@ -29,37 +29,42 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         {
             var userName = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
             var role = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-            var query = Context.GetHttpContext().Request.Query;
-            var isThumbnailRequest = query.ContainsKey("thumbnail") && query["thumbnail"] == "true";
-            var isScreenCastRequest = query.ContainsKey("screencast") && query["screencast"] == "true";
+            var httpContext = Context.GetHttpContext();
 
-            if (isThumbnailRequest)
+            if (httpContext != null)
             {
-                await SendThumbnailAsync();
-                await Clients.Caller.ReceiveCloseConnection();
-                
-                return;
-            }
+                var query = httpContext.Request.Query;
+                var isThumbnailRequest = query.ContainsKey("thumbnail") && query["thumbnail"] == "true";
+                var isScreenCastRequest = query.ContainsKey("screencast") && query["screencast"] == "true";
 
-            if (isScreenCastRequest && !string.IsNullOrEmpty(userName) && !string.IsNullOrEmpty(role))
-            {
-                var viewer = viewerFactory.Create(Context.ConnectionId, "Users", userName, role, true);
-                appState.TryAddViewer(viewer);
-
-                var assembly = Assembly.GetEntryAssembly();
-                var version = assembly?.GetName().Version ?? new Version();
-
-                await Clients.Caller.ReceiveHostVersion(version);
-
-                var transportFeature = Context.Features.Get<IHttpTransportFeature>();
-
-                if (transportFeature != null)
+                if (isThumbnailRequest)
                 {
-                    await Clients.Caller.ReceiveTransportType(transportFeature.TransportType.ToString());
+                    await SendThumbnailAsync();
+                    await Clients.Caller.ReceiveCloseConnection();
+
+                    return;
                 }
-                else
+
+                if (isScreenCastRequest && !string.IsNullOrEmpty(userName) && !string.IsNullOrEmpty(role))
                 {
-                    await Clients.Caller.ReceiveTransportType("Unknown");
+                    var viewer = viewerFactory.Create(Context.ConnectionId, "Users", userName, role, true);
+                    appState.TryAddViewer(viewer);
+
+                    var assembly = Assembly.GetEntryAssembly();
+                    var version = assembly?.GetName().Version ?? new Version();
+
+                    await Clients.Caller.ReceiveHostVersion(version);
+
+                    var transportFeature = Context.Features.Get<IHttpTransportFeature>();
+
+                    if (transportFeature != null)
+                    {
+                        await Clients.Caller.ReceiveTransportType(transportFeature.TransportType.ToString());
+                    }
+                    else
+                    {
+                        await Clients.Caller.ReceiveTransportType("Unknown");
+                    }
                 }
             }
         }
