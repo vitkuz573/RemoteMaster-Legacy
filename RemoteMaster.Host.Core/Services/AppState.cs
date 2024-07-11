@@ -71,14 +71,7 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext) : IApp
 
     private void NotifyViewersChanged()
     {
-        var viewers = GetAllViewers().Select(v => new ViewerDto
-        {
-            ConnectionId = v.ConnectionId,
-            Group = v.Group,
-            UserName = v.UserName,
-            Role = v.Role,
-            ConnectedTime = v.ConnectedTime
-        }).ToList();
+        var viewers = GetAllViewers().Select(v => new ViewerDto(v.ConnectionId, v.Group, v.UserName, v.Role, v.ConnectedTime)).ToList();
 
         hubContext.Clients.All.ReceiveAllViewers(viewers);
     }
