@@ -246,7 +246,8 @@ public partial class Home
         {
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
 
-            var connection = await SetupConnection(computer, "hubs/control", true, cts.Token);
+            var url = $"hubs/control?thumbnail=true";
+            var connection = await SetupConnection(computer, url, true, cts.Token);
 
             connection.On<byte[]>("ReceiveThumbnail", async thumbnailBytes =>
             {
@@ -269,6 +270,8 @@ public partial class Home
 
                 Log.Information("Connection closed for {IPAddress}", computer.IpAddress);
             });
+
+            await connection.StartAsync();
         }
         catch (OperationCanceledException)
         {
