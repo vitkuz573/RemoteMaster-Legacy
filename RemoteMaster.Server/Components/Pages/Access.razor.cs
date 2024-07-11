@@ -17,7 +17,6 @@ using Polly.Wrap;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Requirements;
 using RemoteMaster.Shared.Dtos;
-using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
 using Serilog;
 
@@ -110,8 +109,6 @@ public partial class Access : IAsyncDisposable
             await module.InvokeVoidAsync("addKeyUpEventListener", DotNetObjectReference.Create(this));
             await module.InvokeVoidAsync("preventDefaultForKeydownWhenDrawerClosed", _drawerOpen);
 
-            await SetParametersFromUriAsync();
-
             if (_isAccessDenied)
             {
                 Snackbar.Add("Access denied. You do not have permission to access this computer.", Severity.Error);
@@ -120,6 +117,8 @@ public partial class Access : IAsyncDisposable
             {
                 await InitializeHostConnectionAsync();
             }
+
+            await SetParametersFromUriAsync();
         }
     }
 
@@ -308,15 +307,13 @@ public partial class Access : IAsyncDisposable
                 throw new InvalidOperationException("User name or role is missing.");
             }
 
-            var connectionRequest = new ConnectionRequest(Intention.ManageDevice, "Users", userName, role);
-
             _connection.Closed += async (_) =>
             {
                 if (!_disposed && _retryCount < 3)
                 {
                     _retryCount++;
                     await Task.Delay(TimeSpan.FromSeconds(5));
-                    await TryStartConnectionAsync(connectionRequest);
+                    await TryStartConnectionAsync();
                 }
                 else
                 {
@@ -324,7 +321,7 @@ public partial class Access : IAsyncDisposable
                 }
             };
 
-            await TryStartConnectionAsync(connectionRequest);
+            await TryStartConnectionAsync();
         }
         catch (Exception ex)
         {
@@ -337,12 +334,11 @@ public partial class Access : IAsyncDisposable
         }
     }
 
-    private async Task TryStartConnectionAsync(ConnectionRequest connectionRequest)
+    private async Task TryStartConnectionAsync()
     {
         try
         {
             await _connection.StartAsync();
-            await SafeInvokeAsync(() => _connection.InvokeAsync("ConnectAs", connectionRequest));
         }
         catch (HttpRequestException ex)
         {

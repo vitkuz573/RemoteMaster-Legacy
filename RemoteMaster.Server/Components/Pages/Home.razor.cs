@@ -17,8 +17,6 @@ using Polly.Retry;
 using RemoteMaster.Server.Components.Dialogs;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Abstractions;
-using RemoteMaster.Shared.Dtos;
-using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
 using Serilog;
 
@@ -271,10 +269,6 @@ public partial class Home
 
                 Log.Information("Connection closed for {IPAddress}", computer.IpAddress);
             });
-
-            var connectionRequest = new ConnectionRequest(Intention.ReceiveThumbnail, "Users", _user.Identity.Name, _user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value);
-
-            await _retryPolicy.ExecuteAsync(async (ct) => await connection.InvokeAsync("ConnectAs", connectionRequest, CancellationToken.None), cts.Token);
         }
         catch (OperationCanceledException)
         {

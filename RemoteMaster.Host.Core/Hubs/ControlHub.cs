@@ -4,6 +4,7 @@
 
 using System.Net;
 using System.Reflection;
+using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Connections.Features;
@@ -20,26 +21,64 @@ namespace RemoteMaster.Host.Core.Hubs;
 [Authorize(Policy = "LocalhostOrAuthenticatedPolicy")]
 public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturerService, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService, ICertificateStoreService certificateStoreService, IWorkStationSecurityService workStationSecurityService) : Hub<IControlClient>
 {
-    public async Task ConnectAs(ConnectionRequest connectionRequest)
+    // public async Task ConnectAs(ConnectionRequest connectionRequest)
+    // {
+    //     ArgumentNullException.ThrowIfNull(connectionRequest);
+    // 
+    //     switch (connectionRequest.Intention)
+    //     {
+    //         case Intention.ReceiveThumbnail:
+    //             var thumbnail = screenCapturerService.GetThumbnail(500, 300);
+    // 
+    //             if (thumbnail != null)
+    //             {
+    //                 await Clients.Caller.ReceiveThumbnail(thumbnail);
+    //             }
+    // 
+    //             await Clients.Caller.ReceiveCloseConnection();
+    // 
+    //             break;
+    // 
+    //         case Intention.ManageDevice:
+    //             var viewer = viewerFactory.Create(Context.ConnectionId, connectionRequest.Group, connectionRequest.UserName, connectionRequest.Role, true);
+    //             appState.TryAddViewer(viewer);
+    // 
+    //             var assembly = Assembly.GetEntryAssembly();
+    //             var version = assembly?.GetName().Version ?? new Version();
+    // 
+    //             await Clients.Caller.ReceiveHostVersion(version);
+    // 
+    //             var transportFeature = Context.Features.Get<IHttpTransportFeature>();
+    // 
+    //             if (transportFeature != null)
+    //             {
+    //                 await Clients.Caller.ReceiveTransportType(transportFeature.TransportType.ToString());
+    //             }
+    //             else
+    //             {
+    //                 Log.Warning("IHttpTransportFeature is null for connection {ConnectionId}", Context.ConnectionId);
+    // 
+    //                 await Clients.Caller.ReceiveTransportType("Unknown");
+    //             }
+    //             break;
+    //         default:
+    //             Log.Error("Unknown intention: {Intention}", connectionRequest.Intention);
+    //             break;
+    //     }
+    // }
+
+    public async override Task OnConnectedAsync()
     {
-        ArgumentNullException.ThrowIfNull(connectionRequest);
+        var user = Context.User;
 
-        switch (connectionRequest.Intention)
+        if (user != null)
         {
-            case Intention.ReceiveThumbnail:
-                var thumbnail = screenCapturerService.GetThumbnail(500, 300);
+            var userName = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+            var role = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
 
-                if (thumbnail != null)
-                {
-                    await Clients.Caller.ReceiveThumbnail(thumbnail);
-                }
-
-                await Clients.Caller.ReceiveCloseConnection();
-
-                break;
-
-            case Intention.ManageDevice:
-                var viewer = viewerFactory.Create(Context.ConnectionId, connectionRequest.Group, connectionRequest.UserName, connectionRequest.Role, true);
+            if (!string.IsNullOrEmpty(userName) && !string.IsNullOrEmpty(role))
+            {
+                var viewer = viewerFactory.Create(Context.ConnectionId, "Users", userName, role, true);
                 appState.TryAddViewer(viewer);
 
                 var assembly = Assembly.GetEntryAssembly();
@@ -59,11 +98,14 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
                     await Clients.Caller.ReceiveTransportType("Unknown");
                 }
-                break;
-            default:
-                Log.Error("Unknown intention: {Intention}", connectionRequest.Intention);
-                break;
+            }
+            else
+            {
+                Log.Error("User claims are missing required information.");
+            }
         }
+
+        await base.OnConnectedAsync();
     }
 
     public async override Task OnDisconnectedAsync(Exception? exception)
