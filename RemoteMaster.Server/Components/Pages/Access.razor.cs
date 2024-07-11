@@ -268,7 +268,7 @@ public partial class Access : IAsyncDisposable
             _accessToken = await AccessTokenProvider.GetAccessTokenAsync(userId);
 
             _connection = new HubConnectionBuilder()
-                .WithUrl($"https://{Host}:5001/hubs/control", options =>
+                .WithUrl($"https://{Host}:5001/hubs/control?screencast=true", options =>
                 {
                     options.AccessTokenProvider = async () => await Task.FromResult(_accessToken);
                 })

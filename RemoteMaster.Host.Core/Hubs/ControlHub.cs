@@ -31,12 +31,17 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
             var role = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
             var query = Context.GetHttpContext().Request.Query;
             var isThumbnailRequest = query.ContainsKey("thumbnail") && query["thumbnail"] == "true";
+            var isScreenCastRequest = query.ContainsKey("screencast") && query["screencast"] == "true";
 
             if (isThumbnailRequest)
             {
                 await SendThumbnailAsync();
+                await Clients.Caller.ReceiveCloseConnection();
+
+                return;
             }
-            else if (!string.IsNullOrEmpty(userName) && !string.IsNullOrEmpty(role))
+
+            if (isScreenCastRequest && !string.IsNullOrEmpty(userName) && !string.IsNullOrEmpty(role))
             {
                 var viewer = viewerFactory.Create(Context.ConnectionId, "Users", userName, role, true);
                 appState.TryAddViewer(viewer);
@@ -61,7 +66,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
             }
             else
             {
-                Log.Error("User claims are missing required information.");
+                Log.Error("User claims are missing required information or screencast parameter is missing.");
             }
         }
 
@@ -87,8 +92,6 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         {
             await Clients.Caller.ReceiveThumbnail(thumbnail);
         }
-
-        await Clients.Caller.ReceiveCloseConnection();
     }
 
     [Authorize(Policy = "MouseInputPolicy")]
