@@ -15,6 +15,7 @@ using MudBlazor;
 using Polly;
 using Polly.Retry;
 using RemoteMaster.Server.Components.Dialogs;
+using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;
@@ -36,7 +37,8 @@ public partial class Home
     private readonly ConcurrentDictionary<string, Computer> _unavailableComputers = new();
     private readonly ConcurrentDictionary<string, Computer> _pendingComputers = new();
 
-    private ClaimsPrincipal _user;
+    private ClaimsPrincipal? _user;
+    private ApplicationUser? _currentUser;
 
     private readonly AsyncRetryPolicy _retryPolicy;
 
@@ -53,16 +55,33 @@ public partial class Home
         var authState = await AuthenticationStateTask;
         _user = authState.User;
 
+        var userId = _user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId == null)
+        {
+            Log.Warning("User ID not found in claims.");
+            return;
+        }
+
+        _currentUser = await UserManager.Users
+            .Include(u => u.AccessibleOrganizations)
+            .Include(u => u.AccessibleOrganizationalUnits)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (_currentUser == null)
+        {
+            Log.Warning("User not found in database.");
+            return;
+        }
+
         await InitializeAsync();
     }
 
     public async Task InitializeAsync()
     {
-        var userId = _user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (userId == null)
+        if (_currentUser == null)
         {
-            Log.Warning("User ID not found in claims");
+            Log.Warning("Current user not found");
 
             return;
         }
@@ -70,7 +89,7 @@ public partial class Home
         var nodes = await LoadNodes();
         _treeItems = nodes.Select(node => new UnifiedTreeItemData(node)).Cast<TreeItemData<INode>>().ToList();
 
-        await AccessTokenProvider.GetAccessTokenAsync(userId);
+        await AccessTokenProvider.GetAccessTokenAsync(_currentUser.Id);
     }
 
     public List<TreeItemData<INode>> GetTreeItems()
@@ -82,17 +101,15 @@ public partial class Home
 
     private async Task<IEnumerable<INode>> LoadNodes(Guid? organizationId = null, Guid? parentId = null)
     {
-        var userId = _user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (string.IsNullOrEmpty(userId))
+        if (_currentUser == null)
         {
-            Log.Warning("User ID not found in claims");
+            Log.Warning("Current user not found");
 
             return [];
         }
 
-        var accessibleOrganizations = await GetAccessibleOrganizations(userId);
-        var accessibleOrganizationalUnits = await GetAccessibleOrganizationalUnits(userId);
+        var accessibleOrganizations = _currentUser.AccessibleOrganizations.Select(org => org.NodeId).ToList();
+        var accessibleOrganizationalUnits = _currentUser.AccessibleOrganizationalUnits.Select(ou => ou.NodeId).ToList();
         var units = new List<INode>();
 
         if (organizationId == null)
@@ -125,24 +142,6 @@ public partial class Home
         }
 
         return units;
-    }
-
-    private async Task<List<Guid>> GetAccessibleOrganizations(string userId)
-    {
-        var user = await UserManager.Users
-            .Include(u => u.AccessibleOrganizations)
-            .FirstOrDefaultAsync(u => u.Id == userId);
-
-        return user?.AccessibleOrganizations.Select(org => org.NodeId).ToList() ?? [];
-    }
-
-    private async Task<List<Guid>> GetAccessibleOrganizationalUnits(string userId)
-    {
-        var user = await UserManager.Users
-            .Include(u => u.AccessibleOrganizationalUnits)
-            .FirstOrDefaultAsync(u => u.Id == userId);
-
-        return user?.AccessibleOrganizationalUnits.Select(ou => ou.NodeId).ToList() ?? [];
     }
 
     public void ToggleDrawer() => _drawerOpen = !_drawerOpen;
