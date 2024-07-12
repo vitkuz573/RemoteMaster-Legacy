@@ -40,13 +40,21 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
                 if (query.ContainsKey("thumbnail") && query["thumbnail"] == "true")
                 {
                     await HandleThumbnailRequest();
-
+                    
                     return;
                 }
 
                 if (query.ContainsKey("screencast") && query["screencast"] == "true" && !string.IsNullOrEmpty(userName) && !string.IsNullOrEmpty(role))
                 {
                     await HandleScreenCastRequest(userName, role, ipAddress);
+                }
+
+                if (role == "Windows Service" && user.FindFirst(ClaimTypes.Name)?.Value == "RCHost")
+                {
+                    var viewer = viewerFactory.Create(Context.ConnectionId, "Services", userName, role, ipAddress);
+                    appState.TryAddViewer(viewer);
+
+                    await Groups.AddToGroupAsync(Context.ConnectionId, "Services");
                 }
             }
         }

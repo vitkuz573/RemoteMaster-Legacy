@@ -32,7 +32,7 @@ public class LocalhostOrAuthenticatedHandler(IHttpContextAccessor httpContextAcc
             {
                 var claims = new List<Claim>
                 {
-                    new(ClaimTypes.NameIdentifier, "RCHost"),
+                    new(ClaimTypes.Name, "RCHost"),
                     new(ClaimTypes.Role, "Windows Service")
                 };
 
