@@ -24,18 +24,20 @@ public sealed class InputService(IDesktopService desktopService) : IInputService
     private bool _blockUserInput;
     private bool _disposed;
 
-    public bool InputEnabled { get; set; } = false;
+    public bool InputEnabled { get; set; }
 
     public bool BlockUserInput
     {
         get => _blockUserInput;
         set
         {
-            if (_blockUserInput != value)
+            if (_blockUserInput == value)
             {
-                _blockUserInput = value;
-                HandleBlockInput(value);
+                return;
             }
+
+            _blockUserInput = value;
+            HandleBlockInput(value);
         }
     }
 
@@ -43,15 +45,17 @@ public sealed class InputService(IDesktopService desktopService) : IInputService
     {
         ObjectDisposedException.ThrowIf(_disposed, nameof(InputService));
 
-        if (_workerThread == null || !_workerThread.IsAlive)
+        if (_workerThread is { IsAlive: true })
         {
-            _workerThread = new Thread(ProcessQueue)
-            {
-                IsBackground = true
-            };
-
-            _workerThread.Start();
+            return;
         }
+
+        _workerThread = new Thread(ProcessQueue)
+        {
+            IsBackground = true
+        };
+
+        _workerThread.Start();
     }
 
     public void Stop()
@@ -64,30 +68,32 @@ public sealed class InputService(IDesktopService desktopService) : IInputService
         var absoluteX = screenCapturer.CurrentScreenBounds.Width * position.GetValueOrDefault().X + screenCapturer.CurrentScreenBounds.Left - screenCapturer.VirtualScreenBounds.Left;
         var absoluteY = screenCapturer.CurrentScreenBounds.Height * position.GetValueOrDefault().Y + screenCapturer.CurrentScreenBounds.Top - screenCapturer.VirtualScreenBounds.Top;
 
-        return new PointF((float)(absoluteX / screenCapturer.VirtualScreenBounds.Width), (float)(absoluteY / screenCapturer.VirtualScreenBounds.Height));
+        return new PointF(absoluteX / screenCapturer.VirtualScreenBounds.Width, absoluteY / screenCapturer.VirtualScreenBounds.Height);
     }
 
     private void HandleBlockInput(bool block)
     {
-        void blockInputAction()
-        {
-            if (!BlockInput(block))
-            {
-                Log.Error("Failed to block/unblock input. Error code: {0}", Marshal.GetLastWin32Error());
-            }
-        }
-
         if (InputEnabled)
         {
             EnqueueOperation(() =>
             {
                 desktopService.SwitchToInputDesktop();
-                blockInputAction();
+                BlockInputAction();
             });
         }
         else
         {
-            blockInputAction();
+            BlockInputAction();
+        }
+
+        return;
+
+        void BlockInputAction()
+        {
+            if (!BlockInput(block))
+            {
+                Log.Error("Failed to block/unblock input. Error code: {0}", Marshal.GetLastWin32Error());
+            }
         }
     }
 
@@ -117,16 +123,18 @@ public sealed class InputService(IDesktopService desktopService) : IInputService
     {
         ObjectDisposedException.ThrowIf(_disposed, nameof(InputService));
 
-        if (InputEnabled)
+        if (!InputEnabled)
         {
-            _operationQueue.Enqueue(() =>
-            {
-                desktopService.SwitchToInputDesktop();
-                operation();
-            });
-
-            _queueEvent.Set();
+            return;
         }
+
+        _operationQueue.Enqueue(() =>
+        {
+            desktopService.SwitchToInputDesktop();
+            operation();
+        });
+
+        _queueEvent.Set();
     }
 
     private void PrepareAndSendInput<TInput>(INPUT_TYPE inputType, TInput inputData, Func<INPUT, TInput, INPUT> fillInputData)
@@ -168,7 +176,7 @@ public sealed class InputService(IDesktopService desktopService) : IInputService
                 dx = (int)(xyPercent.X * 65535F);
                 dy = (int)(xyPercent.Y * 65535F);
 
-                if (dto.Button.HasValue && dto.IsPressed.HasValue)
+                if (dto is { Button: not null, IsPressed: not null })
                 {
                     mouseEventFlags |= dto.Button.Value switch
                     {
@@ -208,7 +216,7 @@ public sealed class InputService(IDesktopService desktopService) : IInputService
 
         var virtualKeyCode = ConvertKeyToVirtualKeyCode(dto.Code);
 
-        if (virtualKeyCode == (int)VIRTUAL_KEY.VK_LWIN || virtualKeyCode == (int)VIRTUAL_KEY.VK_RWIN)
+        if (virtualKeyCode is (int)VIRTUAL_KEY.VK_LWIN or (int)VIRTUAL_KEY.VK_RWIN)
         {
             return;
         }
@@ -405,19 +413,21 @@ public sealed class InputService(IDesktopService desktopService) : IInputService
 
         _disposed = true;
 
-        if (disposing)
+        if (!disposing)
         {
-            _cts.Cancel();
-            _queueEvent.Set();
-
-            if (_workerThread != null && _workerThread.IsAlive)
-            {
-                _workerThread.Join();
-            }
-
-            _cts.Dispose();
-            _queueEvent.Dispose();
+            return;
         }
+
+        _cts.Cancel();
+        _queueEvent.Set();
+
+        if (_workerThread is { IsAlive: true })
+        {
+            _workerThread.Join();
+        }
+
+        _cts.Dispose();
+        _queueEvent.Dispose();
     }
 
     ~InputService()
