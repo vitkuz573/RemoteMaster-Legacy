@@ -36,7 +36,7 @@
             <MudDivider Vertical="true" DividerType="DividerType.Middle" FlexItem="true" />
 
             <MudItem xs="8">
-                <MudExpansionPanels Class="max-h-[340px] overflow-y-auto" MultiExpansion="true">
+                <MudExpansionPanels MultiExpansion="true">
                     @foreach (var (computer, results) in _resultsPerComputer)
                     {
                         <MudExpansionPanel Text="@($"Results for {computer.Name} ({computer.IpAddress}) - PID: {results.LastPid}")">
