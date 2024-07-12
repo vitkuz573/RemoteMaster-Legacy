@@ -27,8 +27,9 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
         if (user != null)
         {
-            var userName = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
-            var role = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+            var userName = user.FindFirst(ClaimTypes.Name)?.Value;
+            var role = user.FindFirst(ClaimTypes.Role)?.Value;
+
             var httpContext = Context.GetHttpContext();
 
             if (httpContext != null)
