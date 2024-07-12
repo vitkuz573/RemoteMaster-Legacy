@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Collections.Concurrent;
 using System.Drawing;
 using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.SignalR;
@@ -14,29 +13,23 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class ScreenCastingService(IHubContext<ControlHub, IControlClient> hubContext) : IScreenCastingService
 {
-    private readonly ConcurrentDictionary<string, CancellationTokenSource> _streamingTasks = new();
-
     public void StartStreaming(IViewer viewer)
     {
         ArgumentNullException.ThrowIfNull(viewer);
 
-        var cancellationTokenSource = new CancellationTokenSource();
-        _streamingTasks[viewer.ConnectionId] = cancellationTokenSource;
-
         viewer.ScreenCapturer.ScreenChanged += async (_, bounds) => await SendScreenSize(viewer, bounds.Width, bounds.Height);
 
-        Task.Run(async () => await StreamScreenDataAsync(viewer, cancellationTokenSource.Token), cancellationTokenSource.Token);
+        Log.Information("Starting screen streaming for connection ID {ConnectionId}, User: {UserName}", viewer.ConnectionId, viewer.UserName);
+
+        Task.Run(async () => await StreamScreenDataAsync(viewer, viewer.CancellationTokenSource.Token), viewer.CancellationTokenSource.Token);
     }
 
-    public void StopStreaming(string connectionId)
+    public void StopStreaming(IViewer viewer)
     {
-        if (!_streamingTasks.TryRemove(connectionId, out var cancellationTokenSource))
-        {
-            return;
-        }
+        ArgumentNullException.ThrowIfNull(viewer);
 
-        cancellationTokenSource.Cancel();
-        cancellationTokenSource.Dispose();
+        viewer.CancellationTokenSource.Cancel();
+        viewer.Dispose();
     }
 
     private async Task SendDisplays(IViewer viewer)
@@ -54,8 +47,6 @@ public class ScreenCastingService(IHubContext<ControlHub, IControlClient> hubCon
     {
         await SendDisplays(viewer);
 
-        Log.Information("Starting screen stream for ID {connectionId}", viewer.ConnectionId);
-
         try
         {
             await foreach (var screenData in StreamScreenDataAsync(viewer.ScreenCapturer, cancellationToken))
@@ -65,7 +56,7 @@ public class ScreenCastingService(IHubContext<ControlHub, IControlClient> hubCon
         }
         catch (OperationCanceledException)
         {
-            Log.Information("Screen streaming was canceled for ID {connectionId}", viewer.ConnectionId);
+            Log.Information("Screen streaming was canceled for connection ID {ConnectionId}, User: {UserName}", viewer.ConnectionId, viewer.UserName);
         }
         catch (Exception ex)
         {

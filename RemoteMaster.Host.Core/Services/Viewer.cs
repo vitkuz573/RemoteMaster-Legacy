@@ -22,9 +22,18 @@ public class Viewer(IScreenCapturerService screenCapturer, string connectionId, 
 
     public CancellationTokenSource CancellationTokenSource { get; } = new();
 
+    private bool _disposed = false;
+
     public void Dispose()
     {
+        if (_disposed)
+        {
+            return;
+        }
+
         CancellationTokenSource.Cancel();
         CancellationTokenSource.Dispose();
+
+        _disposed = true;
     }
 }

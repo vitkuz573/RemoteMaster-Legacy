@@ -76,8 +76,11 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     public async override Task OnDisconnectedAsync(Exception? exception)
     {
-        screenCastingService.StopStreaming(Context.ConnectionId);
-        appState.TryRemoveViewer(Context.ConnectionId);
+        if (appState.TryGetViewer(Context.ConnectionId, out var viewer))
+        {
+            screenCastingService.StopStreaming(viewer);
+            appState.TryRemoveViewer(Context.ConnectionId);
+        }
 
         await base.OnDisconnectedAsync(exception);
     }

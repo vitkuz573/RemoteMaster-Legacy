@@ -8,5 +8,5 @@ public interface IScreenCastingService
 {
     void StartStreaming(IViewer viewer);
 
-    void StopStreaming(string connectionId);
+    void StopStreaming(IViewer viewer);
 }
