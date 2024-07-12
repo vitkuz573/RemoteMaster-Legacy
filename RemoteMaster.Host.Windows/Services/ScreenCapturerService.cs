@@ -102,8 +102,7 @@ public abstract class ScreenCapturerService : IScreenCapturerService
         var thumbWidth = (int)(fullImage.Width * scale);
         var thumbHeight = (int)(fullImage.Height * scale);
 
-        using var thumbnail = new SKBitmap(thumbWidth, thumbHeight);
-        fullImage.ScalePixels(thumbnail, SKFilterQuality.High);
+        using var thumbnail = fullImage.Resize(new SKImageInfo(thumbWidth, thumbHeight), SKFilterQuality.High);
 
         return EncodeBitmap(thumbnail);
     }

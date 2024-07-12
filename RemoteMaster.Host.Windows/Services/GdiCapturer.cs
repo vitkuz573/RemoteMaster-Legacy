@@ -17,6 +17,7 @@ namespace RemoteMaster.Host.Windows.Services;
 public class GdiCapturer : ScreenCapturerService
 {
     private Bitmap _bitmap;
+    private Graphics _memoryGraphics;
     private readonly ICursorRenderService _cursorRenderService;
 
     public override Rectangle CurrentScreenBounds { get; protected set; } = Screen.PrimaryScreen?.Bounds ?? Rectangle.Empty;
@@ -30,8 +31,8 @@ public class GdiCapturer : ScreenCapturerService
     public GdiCapturer(ICursorRenderService cursorRenderService, IDesktopService desktopService) : base(desktopService)
     {
         _cursorRenderService = cursorRenderService;
-
         _bitmap = new Bitmap(CurrentScreenBounds.Width, CurrentScreenBounds.Height, PixelFormat.Format32bppArgb);
+        _memoryGraphics = Graphics.FromImage(_bitmap);
     }
 
     protected override void Init()
@@ -64,27 +65,21 @@ public class GdiCapturer : ScreenCapturerService
         {
             _bitmap.Dispose();
             _bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+            _memoryGraphics.Dispose();
+            _memoryGraphics = Graphics.FromImage(_bitmap);
         }
 
-        using var memoryGraphics = Graphics.FromImage(_bitmap);
-
         var dc1 = GetDC(HWND.Null);
-        var dc2 = (HDC)memoryGraphics.GetHdc();
+        var dc2 = (HDC)_memoryGraphics.GetHdc();
 
         BitBlt(dc2, 0, 0, width, height, dc1, left, top, ROP_CODE.SRCCOPY);
 
-        memoryGraphics.ReleaseHdc(dc2);
-
-        var result = ReleaseDC(HWND.Null, dc1);
-
-        if (result == 0)
-        {
-            Log.Error("Failed to release the device context.");
-        }
+        _memoryGraphics.ReleaseHdc(dc2);
+        ReleaseDC(HWND.Null, dc1);
 
         if (TrackCursor)
         {
-            _cursorRenderService.DrawCursor(memoryGraphics, CurrentScreenBounds);
+            _cursorRenderService.DrawCursor(_memoryGraphics, CurrentScreenBounds);
         }
 
         return SaveBitmap(_bitmap);
@@ -152,5 +147,6 @@ public class GdiCapturer : ScreenCapturerService
     {
         base.Dispose();
         _bitmap.Dispose();
+        _memoryGraphics.Dispose();
     }
 }
