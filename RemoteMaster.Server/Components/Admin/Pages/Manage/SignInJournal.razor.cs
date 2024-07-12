@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
 using RemoteMaster.Server.Data;
@@ -15,54 +16,54 @@ public partial class SignInJournal
 
     private List<SignInEntry> FilteredEntries => FilteredEntriesLogic();
 
-    private List<SignInEntry> PagedEntries => (SortAscending
+    private List<SignInEntry> PagedEntries => (_sortAscending
         ? FilteredEntries.OrderBy(GetSortKey)
         : FilteredEntries.OrderByDescending(GetSortKey))
-        .Skip((CurrentPage - 1) * PageSize)
+        .Skip((_currentPage - 1) * PageSize)
         .Take(PageSize)
         .ToList();
 
-    private string SortColumn = "SignInTime";
-    private bool SortAscending = true;
-    private int CurrentPage = 1;
-    private int pageSize = 5;
+    private string _sortColumn = "SignInTime";
+    private bool _sortAscending = true;
+    private int _currentPage = 1;
+    private int _pageSize = 5;
 
     private int PageSize
     {
-        get => pageSize;
+        get => _pageSize;
         set
         {
-            pageSize = value;
+            _pageSize = value;
             UpdatePagination();
         }
     }
     private int TotalPages => (int)Math.Ceiling((double)FilteredEntries.Count / PageSize);
 
-    private bool HasPreviousPage => CurrentPage > 1;
+    private bool HasPreviousPage => _currentPage > 1;
 
-    private bool HasNextPage => CurrentPage < TotalPages;
+    private bool HasNextPage => _currentPage < TotalPages;
 
-    private string filter = string.Empty;
+    private string _filter = string.Empty;
 
     private string Filter
     {
-        get => filter;
+        get => _filter;
         set
         {
-            filter = value;
+            _filter = value;
             ApplyFilter();
         }
     }
 
-    private bool showFilterHelp = false;
+    private bool _showFilterHelp;
 
-    private static readonly string[] _columns = ["User", "SignInTime", "Success", "IpAddress"];
+    private static readonly string[] Columns = ["User", "SignInTime", "Success", "IpAddress"];
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await JSRuntime.InvokeVoidAsync("setupAutocomplete", "filterInput", _columns);
+            await JSRuntime.InvokeVoidAsync("setupAutocomplete", "filterInput", Columns);
         }
     }
 
@@ -79,24 +80,24 @@ public partial class SignInJournal
 
     private void SortByColumn(string columnName)
     {
-        if (SortColumn == columnName)
+        if (_sortColumn == columnName)
         {
-            SortAscending = !SortAscending;
+            _sortAscending = !_sortAscending;
         }
         else
         {
-            SortColumn = columnName;
-            SortAscending = true;
+            _sortColumn = columnName;
+            _sortAscending = true;
         }
 
-        _signInEntries = SortAscending
+        _signInEntries = _sortAscending
             ? [.. _signInEntries.OrderBy(GetSortKey)]
             : [.. _signInEntries.OrderByDescending(GetSortKey)];
     }
 
     private object GetSortKey(SignInEntry entry)
     {
-        return SortColumn switch
+        return _sortColumn switch
         {
             "User" => entry.User.UserName,
             "SignInTime" => entry.SignInTime,
@@ -110,7 +111,7 @@ public partial class SignInJournal
     {
         if (HasNextPage)
         {
-            CurrentPage++;
+            _currentPage++;
         }
     }
 
@@ -118,18 +119,18 @@ public partial class SignInJournal
     {
         if (HasPreviousPage)
         {
-            CurrentPage--;
+            _currentPage--;
         }
     }
 
     private void UpdatePagination()
     {
-        CurrentPage = 1;
+        _currentPage = 1;
     }
 
     private void ApplyFilter()
     {
-        CurrentPage = 1;
+        _currentPage = 1;
     }
 
     private List<SignInEntry> FilteredEntriesLogic()
@@ -164,7 +165,7 @@ public partial class SignInJournal
                 filteredEntries = column switch
                 {
                     "user" => filteredEntries.Where(e => e.User.UserName.Contains(value, StringComparison.OrdinalIgnoreCase)),
-                    "signintime" => filteredEntries.Where(e => e.SignInTime.ToString().Contains(value, StringComparison.OrdinalIgnoreCase)),
+                    "signintime" => filteredEntries.Where(e => e.SignInTime.ToString(CultureInfo.InvariantCulture).Contains(value, StringComparison.OrdinalIgnoreCase)),
                     "success" => filteredEntries.Where(e => (e.IsSuccessful ? "Yes" : "No").Contains(value, StringComparison.OrdinalIgnoreCase)),
                     "ipaddress" => filteredEntries.Where(e => e.IpAddress.Contains(value, StringComparison.OrdinalIgnoreCase)),
                     _ => filteredEntries
@@ -176,7 +177,7 @@ public partial class SignInJournal
                 filteredEntries = column switch
                 {
                     "user" => filteredEntries.Where(e => e.User.UserName.Equals(value, StringComparison.OrdinalIgnoreCase)),
-                    "signintime" => filteredEntries.Where(e => e.SignInTime.ToString().Equals(value, StringComparison.OrdinalIgnoreCase)),
+                    "signintime" => filteredEntries.Where(e => e.SignInTime.ToString(CultureInfo.InvariantCulture).Equals(value, StringComparison.OrdinalIgnoreCase)),
                     "success" => filteredEntries.Where(e => (e.IsSuccessful ? "Yes" : "No").Equals(value, StringComparison.OrdinalIgnoreCase)),
                     "ipaddress" => filteredEntries.Where(e => e.IpAddress.Equals(value, StringComparison.OrdinalIgnoreCase)),
                     _ => filteredEntries
@@ -188,7 +189,7 @@ public partial class SignInJournal
                 filteredEntries = column switch
                 {
                     "user" => filteredEntries.Where(e => !e.User.UserName.Equals(value, StringComparison.OrdinalIgnoreCase)),
-                    "signintime" => filteredEntries.Where(e => !e.SignInTime.ToString().Equals(value, StringComparison.OrdinalIgnoreCase)),
+                    "signintime" => filteredEntries.Where(e => !e.SignInTime.ToString(CultureInfo.InvariantCulture).Equals(value, StringComparison.OrdinalIgnoreCase)),
                     "success" => filteredEntries.Where(e => !(e.IsSuccessful ? "Yes" : "No").Equals(value, StringComparison.OrdinalIgnoreCase)),
                     "ipaddress" => filteredEntries.Where(e => !e.IpAddress.Equals(value, StringComparison.OrdinalIgnoreCase)),
                     _ => filteredEntries
@@ -199,7 +200,7 @@ public partial class SignInJournal
             {
                 filteredEntries = column switch
                 {
-                    "signintime" => filteredEntries.Where(e => DateTime.Parse(e.SignInTime.ToString()) > DateTime.Parse(value)),
+                    "signintime" => filteredEntries.Where(e => DateTime.Parse(e.SignInTime.ToString(CultureInfo.InvariantCulture)) > DateTime.Parse(value)),
                     _ => filteredEntries
                 };
             }
@@ -208,7 +209,7 @@ public partial class SignInJournal
             {
                 filteredEntries = column switch
                 {
-                    "signintime" => filteredEntries.Where(e => DateTime.Parse(e.SignInTime.ToString()) < DateTime.Parse(value)),
+                    "signintime" => filteredEntries.Where(e => DateTime.Parse(e.SignInTime.ToString(CultureInfo.InvariantCulture)) < DateTime.Parse(value)),
                     _ => filteredEntries
                 };
             }
@@ -219,12 +220,12 @@ public partial class SignInJournal
 
     private void ShowFilterHelp()
     {
-        showFilterHelp = true;
+        _showFilterHelp = true;
     }
 
     private void CloseFilterHelp()
     {
-        showFilterHelp = false;
+        _showFilterHelp = false;
     }
 
     private async Task ClearJournal()
@@ -240,6 +241,6 @@ public partial class SignInJournal
 
     private string GetSortIcon(string columnName)
     {
-        return SortColumn != columnName ? string.Empty : SortAscending ? "↑" : "↓";
+        return _sortColumn != columnName ? string.Empty : _sortAscending ? "↑" : "↓";
     }
 }
