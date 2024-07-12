@@ -4,7 +4,7 @@
 
 using RemoteMaster.Host.Core.Abstractions;
 
-namespace RemoteMaster.Host.Core.Services;
+namespace RemoteMaster.Host.Core.Models;
 
 public class Viewer(IScreenCapturerService screenCapturer, string connectionId, string group, string userName, string role) : IViewer
 {
