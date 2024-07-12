@@ -83,7 +83,6 @@ public abstract class ScreenCapturerService : IScreenCapturerService
     {
         var originalScreen = SelectedScreen;
 
-        // If there are multiple screens, set to VirtualScreenName temporarily
         if (HasMultipleScreens)
         {
             SetSelectedScreen(VirtualScreen);
@@ -91,7 +90,6 @@ public abstract class ScreenCapturerService : IScreenCapturerService
 
         var frame = GetNextFrame();
 
-        // Restore the original selected screen
         SetSelectedScreen(originalScreen);
 
         if (frame == null)
@@ -104,7 +102,8 @@ public abstract class ScreenCapturerService : IScreenCapturerService
         var thumbWidth = (int)(fullImage.Width * scale);
         var thumbHeight = (int)(fullImage.Height * scale);
 
-        using var thumbnail = fullImage.Resize(new SKImageInfo(thumbWidth, thumbHeight), SKFilterQuality.High);
+        using var thumbnail = new SKBitmap(thumbWidth, thumbHeight);
+        fullImage.ScalePixels(thumbnail, SKFilterQuality.High);
 
         return EncodeBitmap(thumbnail);
     }
@@ -114,15 +113,9 @@ public abstract class ScreenCapturerService : IScreenCapturerService
         ArgumentNullException.ThrowIfNull(bitmap);
 
         using var ms = _recycleManager.GetStream();
-
-        var encoderOptions = new SKJpegEncoderOptions
-        {
-            Quality = ImageQuality,
-            Downsample = SKJpegEncoderDownsample.Downsample420
-        };
-
         using var pixmap = bitmap.PeekPixels();
-        using var data = pixmap.Encode(encoderOptions);
+        using var data = pixmap.Encode(SKEncodedImageFormat.Jpeg, ImageQuality);
+
         data.SaveTo(ms);
 
         return ms.ToArray();
