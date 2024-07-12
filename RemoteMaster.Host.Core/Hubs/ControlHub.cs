@@ -201,19 +201,6 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         workStationSecurityService.LogOffUser(force);
     }
 
-    public async Task JoinGroup(string groupName)
-    {
-        var viewer = viewerFactory.Create(Context.ConnectionId, groupName, "RCHost", "Windows Service", "127.0.0.1");
-        appState.TryAddViewer(viewer);
-
-        await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
-    }
-
-    public async Task LeaveGroup(string groupName)
-    {
-        await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
-    }
-
     public async Task SendCommandToService(string command)
     {
         Log.Information("Received command: {Command}", command);

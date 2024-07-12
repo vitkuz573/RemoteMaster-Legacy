@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Net;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using RemoteMaster.Host.Core.Requirements;
@@ -27,6 +28,19 @@ public class LocalhostOrAuthenticatedHandler(IHttpContextAccessor httpContextAcc
 
         if (isLocal || (context.User?.Identity?.IsAuthenticated ?? false))
         {
+            if (isLocal && !(context.User?.Identity?.IsAuthenticated ?? false))
+            {
+                var claims = new List<Claim>
+                {
+                    new(ClaimTypes.NameIdentifier, "RCHost"),
+                    new(ClaimTypes.Role, "Windows Service")
+                };
+
+                var identity = new ClaimsIdentity(claims, "RemoteMaster Security");
+
+                context.User.AddIdentity(identity);
+            }
+
             context.Succeed(requirement);
         }
 
