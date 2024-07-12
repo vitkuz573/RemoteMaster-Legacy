@@ -58,7 +58,7 @@ public partial class TaskManager : IAsyncDisposable
     {
         if (string.IsNullOrWhiteSpace(_searchQuery))
         {
-            _processes = new List<ProcessInfo>(_allProcesses);
+            _processes = [.._allProcesses];
         }
         else
         {
@@ -92,7 +92,7 @@ public partial class TaskManager : IAsyncDisposable
             _connection.On<List<ProcessInfo>>("ReceiveRunningProcesses", async (processes) =>
             {
                 _allProcesses = processes ?? [];
-                _processes = new List<ProcessInfo>(_allProcesses);
+                _processes = [.._allProcesses];
                 FilterProcesses();
                 await InvokeAsync(StateHasChanged);
             });

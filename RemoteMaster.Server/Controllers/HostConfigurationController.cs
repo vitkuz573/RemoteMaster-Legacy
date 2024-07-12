@@ -13,7 +13,7 @@ namespace RemoteMaster.Server.Controllers;
 [ApiController]
 public class HostConfigurationController(IOptions<ApplicationSettings> options) : ControllerBase
 {
-    private static readonly object _fileLock = new();
+    private static readonly object FileLock = new();
 
     [HttpGet("download-host")]
     [EnableRateLimiting("HostDownloadPolicy")]
@@ -29,7 +29,7 @@ public class HostConfigurationController(IOptions<ApplicationSettings> options) 
 
         var memoryStream = new MemoryStream();
 
-        lock (_fileLock)
+        lock (FileLock)
         {
             try
             {

@@ -51,8 +51,8 @@ public partial class Access : IAsyncDisposable
     private string? _title;
     private bool _isConnecting;
     private int _retryCount;
-    private bool _firstRenderCompleted = false;
-    private bool _disposed = false;
+    private bool _firstRenderCompleted;
+    private bool _disposed;
 
     public Access()
     {
@@ -70,7 +70,7 @@ public partial class Access : IAsyncDisposable
 
         var noRetryPolicy = Policy
             .Handle<HubException>(ex => ex.Message.Contains("Method does not exist"))
-            .FallbackAsync(async (ct) =>
+            .FallbackAsync(async (_) =>
             {
                 if (_firstRenderCompleted)
                 {
@@ -136,7 +136,7 @@ public partial class Access : IAsyncDisposable
             NavigationManager.NavigateTo(newUri, true);
         }
 
-        if (!_disposed && _connection != null && _connection.State == HubConnectionState.Connected)
+        if (!_disposed && _connection is { State: HubConnectionState.Connected })
         {
             await UpdateServerParameters();
         }
@@ -144,7 +144,7 @@ public partial class Access : IAsyncDisposable
 
     private async Task UpdateServerParameters()
     {
-        if (!_disposed && _connection != null && _connection.State == HubConnectionState.Connected)
+        if (!_disposed && _connection is { State: HubConnectionState.Connected })
         {
             await _connection.InvokeAsync("SendImageQuality", _imageQuality);
             await _connection.InvokeAsync("SendToggleCursorTracking", _cursorTracking);
@@ -165,7 +165,7 @@ public partial class Access : IAsyncDisposable
     {
         await _combinedPolicy.ExecuteAsync(async () =>
         {
-            if (_connection != null && _connection.State == HubConnectionState.Connected)
+            if (_connection is { State: HubConnectionState.Connected })
             {
                 if (requireAdmin && (_user == null || !_user.IsInRole("Administrator")))
                 {
@@ -463,7 +463,10 @@ public partial class Access : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        _disposed = true;
+        if (_disposed)
+        {
+            return;
+        }
 
         if (_connection != null)
         {
@@ -476,6 +479,8 @@ public partial class Access : IAsyncDisposable
                 Log.Error(ex, "An error occurred while asynchronously disposing the connection for host {Host}", Host);
             }
         }
+
+        _disposed = true;
 
         GC.SuppressFinalize(this);
     }

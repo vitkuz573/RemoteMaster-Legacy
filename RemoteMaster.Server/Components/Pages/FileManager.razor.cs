@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
@@ -76,7 +75,18 @@ public partial class FileManager : IAsyncDisposable
         if (_selectedFile != null)
         {
             var data = new byte[_selectedFile.Size];
-            await _selectedFile.OpenReadStream(_selectedFile.Size).ReadAsync(data);
+            var stream = _selectedFile.OpenReadStream(_selectedFile.Size);
+            int bytesRead, totalBytesRead = 0;
+
+            while (totalBytesRead < data.Length && (bytesRead = await stream.ReadAsync(data, totalBytesRead, data.Length - totalBytesRead)) > 0)
+            {
+                totalBytesRead += bytesRead;
+            }
+
+            if (totalBytesRead != data.Length)
+            {
+                Log.Warning("Fewer bytes were read than requested.");
+            }
 
             var fileDto = new FileUploadDto
             {
@@ -118,10 +128,10 @@ public partial class FileManager : IAsyncDisposable
                 .AddMessagePackProtocol()
                 .Build();
 
-            _connection.On<List<FileSystemItem>>("ReceiveFilesAndDirectories", async (fileSystemItems) =>
+            _connection.On<List<FileSystemItem>>("ReceiveFilesAndDirectories", async fileSystemItems =>
             {
-                _fileSystemItems = fileSystemItems ?? [];
-                _allFileSystemItems = new List<FileSystemItem>(_fileSystemItems);
+                _fileSystemItems = fileSystemItems;
+                _allFileSystemItems = [.._fileSystemItems];
                 await InvokeAsync(StateHasChanged);
             });
 
@@ -131,14 +141,15 @@ public partial class FileManager : IAsyncDisposable
 
                 var base64File = Convert.ToBase64String(file);
                 var fileName = Path.GetFileName(path);
-                var contentType = "application/octet-stream;base64";
+
+                const string contentType = "application/octet-stream;base64";
 
                 await module.InvokeVoidAsync("downloadDataAsFile", base64File, fileName, contentType);
             });
 
-            _connection.On<List<string>>("ReceiveAvailableDrives", (drives) =>
+            _connection.On<List<string>>("ReceiveAvailableDrives", drives =>
             {
-                _availableDrives = drives ?? [];
+                _availableDrives = drives;
             });
 
             _connection.Closed += async (_) =>
@@ -239,7 +250,7 @@ public partial class FileManager : IAsyncDisposable
     {
         if (string.IsNullOrWhiteSpace(_searchQuery))
         {
-            _fileSystemItems = new List<FileSystemItem>(_allFileSystemItems);
+            _fileSystemItems = [.._allFileSystemItems];
         }
         else
         {
