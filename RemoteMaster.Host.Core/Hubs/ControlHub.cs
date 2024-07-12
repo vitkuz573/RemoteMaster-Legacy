@@ -35,46 +35,53 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
             if (httpContext != null)
             {
                 var query = httpContext.Request.Query;
-                var isThumbnailRequest = query.ContainsKey("thumbnail") && query["thumbnail"] == "true";
-                var isScreenCastRequest = query.ContainsKey("screencast") && query["screencast"] == "true";
-
                 var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
 
-                if (isThumbnailRequest)
+                if (query.ContainsKey("thumbnail") && query["thumbnail"] == "true")
                 {
-                    await SendThumbnailAsync();
-                    await Clients.Caller.ReceiveCloseConnection();
+                    await HandleThumbnailRequest();
 
                     return;
                 }
 
-                if (isScreenCastRequest && !string.IsNullOrEmpty(userName) && !string.IsNullOrEmpty(role))
+                if (query.ContainsKey("screencast") && query["screencast"] == "true" && !string.IsNullOrEmpty(userName) && !string.IsNullOrEmpty(role))
                 {
-                    var viewer = viewerFactory.Create(Context.ConnectionId, "Users", userName, role, ipAddress);
-                    appState.TryAddViewer(viewer);
-
-                    screenCastingService.StartStreaming(viewer);
-
-                    var assembly = Assembly.GetEntryAssembly();
-                    var version = assembly?.GetName().Version ?? new Version();
-
-                    await Clients.Caller.ReceiveHostVersion(version);
-
-                    var transportFeature = Context.Features.Get<IHttpTransportFeature>();
-
-                    if (transportFeature != null)
-                    {
-                        await Clients.Caller.ReceiveTransportType(transportFeature.TransportType.ToString());
-                    }
-                    else
-                    {
-                        await Clients.Caller.ReceiveTransportType("Unknown");
-                    }
+                    await HandleScreenCastRequest(userName, role, ipAddress);
                 }
             }
         }
 
         await base.OnConnectedAsync();
+    }
+
+    private async Task HandleThumbnailRequest()
+    {
+        var thumbnail = screenCapturerService.GetThumbnail(500, 300);
+
+        if (thumbnail != null)
+        {
+            await Clients.Caller.ReceiveThumbnail(thumbnail);
+        }
+
+        await Clients.Caller.ReceiveCloseConnection();
+    }
+
+    private async Task HandleScreenCastRequest(string userName, string role, string ipAddress)
+    {
+        var viewer = viewerFactory.Create(Context.ConnectionId, "Users", userName, role, ipAddress);
+        appState.TryAddViewer(viewer);
+
+        screenCastingService.StartStreaming(viewer);
+
+        var transportFeature = Context.Features.Get<IHttpTransportFeature>();
+        var transportType = transportFeature?.TransportType.ToString() ?? "Unknown";
+
+        await Clients.Caller.ReceiveTransportType(transportType);
+
+        var assembly = Assembly.GetEntryAssembly();
+        var version = assembly?.GetName().Version ?? new Version();
+
+        await Clients.Caller.ReceiveHostVersion(version);
     }
 
     public async override Task OnDisconnectedAsync(Exception? exception)
@@ -86,16 +93,6 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         }
 
         await base.OnDisconnectedAsync(exception);
-    }
-
-    public async Task SendThumbnailAsync()
-    {
-        var thumbnail = screenCapturerService.GetThumbnail(500, 300);
-
-        if (thumbnail != null)
-        {
-            await Clients.Caller.ReceiveThumbnail(thumbnail);
-        }
     }
 
     [Authorize(Policy = "MouseInputPolicy")]
