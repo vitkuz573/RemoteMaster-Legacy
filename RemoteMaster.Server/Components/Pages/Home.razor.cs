@@ -71,6 +71,7 @@ public partial class Home
         if (_currentUser == null)
         {
             Log.Warning("User not found in database.");
+
             return;
         }
 
