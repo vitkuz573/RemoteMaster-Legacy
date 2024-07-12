@@ -11,16 +11,17 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class UserInstanceService : IUserInstanceService
+public sealed class UserInstanceService : IUserInstanceService
 {
-    private readonly string _argument = "--launch-mode=user";
+    private const string Argument = "--launch-mode=user";
+
     private readonly string _currentExecutablePath = Environment.ProcessPath!;
     private readonly IInstanceStarterService _instanceStarterService;
     private readonly IProcessService _processService;
 
     public event EventHandler<UserInstanceCreatedEventArgs>? UserInstanceCreated;
 
-    public bool IsRunning => _processService.FindProcessesByName(Path.GetFileNameWithoutExtension(_currentExecutablePath)).Any(p => _processService.HasProcessArgument(p, _argument));
+    public bool IsRunning => _processService.FindProcessesByName(Path.GetFileNameWithoutExtension(_currentExecutablePath)).Any(p => _processService.HasProcessArgument(p, Argument));
 
     public UserInstanceService(ISessionChangeEventService sessionChangeEventService, IInstanceStarterService instanceStarterService, IProcessService processService)
     {
@@ -52,7 +53,7 @@ public class UserInstanceService : IUserInstanceService
     {
         foreach (var process in _processService.FindProcessesByName(Path.GetFileNameWithoutExtension(_currentExecutablePath)))
         {
-            if (!_processService.HasProcessArgument(process, _argument))
+            if (!_processService.HasProcessArgument(process, Argument))
             {
                 continue;
             }
@@ -74,7 +75,7 @@ public class UserInstanceService : IUserInstanceService
     {
         var startInfo = new NativeProcessStartInfo
         {
-            Arguments = _argument,
+            Arguments = Argument,
             ForceConsoleSession = true,
             DesktopName = "Default",
             CreateNoWindow = false,
@@ -86,20 +87,22 @@ public class UserInstanceService : IUserInstanceService
 
     private void OnSessionChanged(object? sender, SessionChangeEventArgs e)
     {
-        if (e.Reason == WTS_CONSOLE_CONNECT)
+        if (e.Reason != WTS_CONSOLE_CONNECT)
         {
-            Stop();
-
-            while (IsRunning)
-            {
-                Task.Delay(50).Wait();
-            }
-
-            Start();
+            return;
         }
+
+        Stop();
+
+        while (IsRunning)
+        {
+            Task.Delay(50).Wait();
+        }
+
+        Start();
     }
 
-    protected virtual void OnUserInstanceCreated(UserInstanceCreatedEventArgs e)
+    private void OnUserInstanceCreated(UserInstanceCreatedEventArgs e)
     {
         UserInstanceCreated?.Invoke(this, e);
     }

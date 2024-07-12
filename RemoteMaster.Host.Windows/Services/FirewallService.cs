@@ -52,10 +52,10 @@ public class FirewallService : IFirewallService
         }
         finally
         {
-            Marshal.FreeBSTR((IntPtr)bstrName);
-            Marshal.FreeBSTR((IntPtr)bstrAppPath);
-            Marshal.FreeBSTR((IntPtr)bstrDescription);
-            Marshal.FreeBSTR((IntPtr)bstrAll);
+            Marshal.FreeBSTR(bstrName);
+            Marshal.FreeBSTR(bstrAppPath);
+            Marshal.FreeBSTR(bstrDescription);
+            Marshal.FreeBSTR(bstrAll);
         }
     }
 

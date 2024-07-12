@@ -22,7 +22,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
     private readonly string _updateFolderPath = Path.Combine(BaseFolderPath, "Update");
 
-    private bool _emergencyRecoveryApplied = false;
+    private bool _emergencyRecoveryApplied;
 
     public async Task UpdateAsync(string folderPath, string? username, string? password, bool force = false, bool allowDowngrade = false)
     {
@@ -158,11 +158,14 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
                 var tempPath = Path.Combine(destDir, file.Name);
                 var copiedSuccessfully = await TryCopyFileAsync(file.FullName, tempPath, overwrite);
 
-                if (!copiedSuccessfully)
+                if (copiedSuccessfully)
                 {
-                    await Notify($"File {file.Name} copied with errors. Checksum does not match.", MessageType.Error);
-                    return false;
+                    continue;
                 }
+
+                await Notify($"File {file.Name} copied with errors. Checksum does not match.", MessageType.Error);
+
+                return false;
             }
 
             foreach (var subdir in dirs)
@@ -203,19 +206,18 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
         await Notify($"Verifying checksum: {sourceFilePath} [Source Checksum: {sourceChecksum}] -> {destFilePath} [Destination Checksum: {destChecksum}].", MessageType.Information);
 
-        if (expectDifference && !checksumMatch)
+        switch (expectDifference)
         {
-            await Notify("Checksums do not match as expected for an update. An update is needed.", MessageType.Information);
-            return false;
+            case true when !checksumMatch:
+                await Notify("Checksums do not match as expected for an update. An update is needed.", MessageType.Information);
+                return false;
+            case false when !checksumMatch:
+                await Notify("Unexpected checksum mismatch. The files may have been tampered with or corrupted.", MessageType.Error);
+                return false;
+            default:
+                await Notify("Checksum verification successful. No differences found.", MessageType.Information);
+                return true;
         }
-        else if (!expectDifference && !checksumMatch)
-        {
-            await Notify("Unexpected checksum mismatch. The files may have been tampered with or corrupted.", MessageType.Error);
-            return false;
-        }
-
-        await Notify("Checksum verification successful. No differences found.", MessageType.Information);
-        return true;
     }
 
     private async Task<bool> TryCopyFileAsync(string sourceFile, string destFile, bool overwrite)
@@ -272,7 +274,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
                 try
                 {
-                    using var stream = file.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+                    await using var stream = file.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
                     stream.Close();
                 }
                 catch
@@ -304,11 +306,10 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
                 await Notify("All services have been successfully started.", MessageType.Information);
                 break;
             }
-            else
-            {
-                var nonRunningServicesList = string.Join(", ", nonRunningServices.Select(service => service.ToString()));
-                await Notify($"Not all services are running. The following services are not active: {nonRunningServicesList}. Waiting and retrying...", MessageType.Warning);
-            }
+
+            var nonRunningServicesList = string.Join(", ", nonRunningServices.Select(service => service.ToString()));
+
+            await Notify($"Not all services are running. The following services are not active: {nonRunningServicesList}. Waiting and retrying...", MessageType.Warning);
         }
 
         if (!allServicesRunning)
@@ -384,14 +385,15 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         await Notify($"Current version: {currentVersion}", MessageType.Information);
         await Notify($"Update version: {updateVersion}", MessageType.Information);
 
-        if (updateVersion <= currentVersion && !allowDowngrade)
+        if (updateVersion > currentVersion || allowDowngrade)
         {
-            await Notify($"Current version {currentVersion} is up to date or newer than update version {updateVersion}. To allow downgrades, use the --allow-downgrade=true option. If you wish to force an update regardless, you can use --force=true.", MessageType.Information);
-  
-            return false;
+            return true;
         }
 
-        return true;
+        await Notify($"Current version {currentVersion} is up to date or newer than update version {updateVersion}. To allow downgrades, use the --allow-downgrade=true option. If you wish to force an update regardless, you can use --force=true.", MessageType.Information);
+  
+        return false;
+
     }
 
     private static Version GetVersionFromExecutable(string filePath)

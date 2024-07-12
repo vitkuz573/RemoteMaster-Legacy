@@ -17,15 +17,17 @@ public class ServiceFactory : IServiceFactory
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        _serviceInstances = [];
+        var serviceList = services.ToList();
 
-        if (!services.Any())
+        _serviceInstances = new Dictionary<string, AbstractService>();
+
+        if (!serviceList.Any())
         {
             LoadAllServices();
         }
         else
         {
-            foreach (var service in services)
+            foreach (var service in serviceList)
             {
                 _serviceInstances[service.Name] = service;
             }

@@ -60,7 +60,7 @@ public class DomainService(IPowerService powerService) : IDomainService
 
         if (domainUnjoinRequest.RemoveUserProfiles)
         {
-            var profileListPath = @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList";
+            const string profileListPath = @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList";
 
             using var profileListKey = Registry.LocalMachine.OpenSubKey(profileListPath, true);
 
@@ -75,25 +75,29 @@ public class DomainService(IPowerService powerService) : IDomainService
                         var sid = new SecurityIdentifier(sidString);
                         var isDomainSid = sid.IsAccountSid() && !sid.IsWellKnown(WellKnownSidType.LocalSystemSid) && !sid.IsWellKnown(WellKnownSidType.LocalServiceSid) && !sid.IsWellKnown(WellKnownSidType.NetworkServiceSid);
 
-                        if (isDomainSid)
+                        if (!isDomainSid)
                         {
-                            var profileImagePathValue = sidKey.GetValue("ProfileImagePath");
-                            
-                            if (profileImagePathValue is string profileImagePath && !string.IsNullOrEmpty(profileImagePath) && Directory.Exists(profileImagePath))
-                            {
-                                try
-                                {
-                                    Directory.Delete(profileImagePath, true);
-                                    Log.Information("Profile directory {ProfileImagePath} deleted successfully.", profileImagePath);
+                            continue;
+                        }
 
-                                    profileListKey.DeleteSubKeyTree(sidString);
-                                    Log.Information("Registry key for SID {SID} deleted successfully.", sidString);
-                                }
-                                catch (Exception ex)
-                                {
-                                    Log.Error(ex, "Error deleting profile directory {ProfileImagePath}.");
-                                }
-                            }
+                        var profileImagePathValue = sidKey.GetValue("ProfileImagePath");
+
+                        if (profileImagePathValue is not string profileImagePath || string.IsNullOrEmpty(profileImagePath) || !Directory.Exists(profileImagePath))
+                        {
+                            continue;
+                        }
+
+                        try
+                        {
+                            Directory.Delete(profileImagePath, true);
+                            Log.Information("Profile directory {ProfileImagePath} deleted successfully.", profileImagePath);
+
+                            profileListKey.DeleteSubKeyTree(sidString);
+                            Log.Information("Registry key for SID {SID} deleted successfully.", sidString);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex, "Error deleting profile directory {ProfileImagePath}.", profileImagePathValue);
                         }
                     }
                     else

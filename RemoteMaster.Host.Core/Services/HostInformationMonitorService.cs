@@ -94,13 +94,10 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
 
             var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, Dns.GetHostName(), false);
 
-            foreach (var cert in certificates)
+            foreach (var cert in certificates.Where(cert => cert.HasPrivateKey))
             {
-                if (cert.HasPrivateKey)
-                {
-                    сertificate = cert;
-                    break;
-                }
+                сertificate = cert;
+                break;
             }
         }
 

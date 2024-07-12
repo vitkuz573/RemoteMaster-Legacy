@@ -163,7 +163,7 @@ internal class Program
                     policy.RequireClaim("Permission", "RenewCertificate"));
         }
 
-        builder.ConfigureSerilog(launchModeInstance);
+        builder.ConfigureSerilog();
 
         builder.ConfigureCoreUrls(launchModeInstance);
 

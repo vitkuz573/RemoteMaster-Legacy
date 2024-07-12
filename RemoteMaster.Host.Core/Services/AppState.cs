@@ -31,11 +31,13 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext) : IApp
 
         var result = _viewers.TryAdd(viewer.ConnectionId, viewer);
 
-        if (result)
+        if (!result)
         {
-            ViewerAdded?.Invoke(this, viewer);
-            NotifyViewersChanged();
+            return result;
         }
+
+        ViewerAdded?.Invoke(this, viewer);
+        NotifyViewersChanged();
 
         return result;
     }

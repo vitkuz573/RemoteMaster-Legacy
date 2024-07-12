@@ -15,7 +15,6 @@ namespace RemoteMaster.Host.Windows.Services;
 public class MessageLoopService : IHostedService
 {
     private const string ClassName = "HiddenWindowClass";
-    private const int RestartDelay = 50;
 
     private HWND _hwnd;
     private readonly WNDPROC _wndProcDelegate;

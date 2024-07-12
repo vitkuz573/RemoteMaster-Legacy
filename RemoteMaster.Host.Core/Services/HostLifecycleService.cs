@@ -16,7 +16,7 @@ namespace RemoteMaster.Host.Core.Services;
 public class HostLifecycleService(IServerHubService serverHubService, ICertificateRequestService certificateRequestService, ISubjectService subjectService, IHostConfigurationService hostConfigurationService, ICertificateLoaderService certificateLoaderService) : IHostLifecycleService
 {
     private volatile bool _isRegistrationInvoked;
-    private bool _isRenewalProcess = false;
+    private bool _isRenewalProcess;
 
     public async Task RegisterAsync(HostConfiguration hostConfiguration)
     {
@@ -41,7 +41,7 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
             serverHubService.OnReceiveHostGuid(guid =>
             {
-                Log.Information("Host GUID received: {GUID}.", guid);
+                Log.Information("Host GUID received: {Guid}.", guid);
 
                 hostConfiguration.HostGuid = guid;
 
@@ -180,22 +180,13 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         }
     }
 
-    public async Task RemoveCertificateAsync()
+    public void RemoveCertificate()
     {
         using var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
         store.Open(OpenFlags.ReadWrite);
         var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, Dns.GetHostName(), false);
 
-        X509Certificate2? certificate = null;
-
-        foreach (var cert in certificates)
-        {
-            if (cert.HasPrivateKey)
-            {
-                certificate = cert;
-                break;
-            }
-        }
+        var certificate = certificates.FirstOrDefault(cert => cert.HasPrivateKey);
 
         store.Remove(certificate);
 

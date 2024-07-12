@@ -8,5 +8,4 @@ namespace RemoteMaster.Host.Core.Requirements;
 
 public class LocalhostOrAuthenticatedRequirement : IAuthorizationRequirement
 {
-    public LocalhostOrAuthenticatedRequirement() { }
 }

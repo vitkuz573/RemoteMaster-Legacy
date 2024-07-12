@@ -11,10 +11,10 @@ namespace RemoteMaster.Host.Windows.Services;
 public class PsExecService(IHostConfigurationService hostConfigurationService, ICommandExecutor commandExecutor) : IPsExecService
 {
     private readonly Dictionary<string, string> _ruleGroupNames = new()
-        {
-            { "en-US", "Remote Service Management" },
-            { "ru-RU", "Удаленное управление службой" }
-        };
+    {
+        { "en-US", "Remote Service Management" },
+        { "ru-RU", "Удаленное управление службой" }
+    };
 
     public async Task EnableAsync()
     {

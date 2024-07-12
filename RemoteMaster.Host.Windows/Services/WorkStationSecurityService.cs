@@ -21,8 +21,8 @@ public class WorkStationSecurityService : IWorkStationSecurityService
     /// <summary>
     /// Logs off the interactive user.
     /// </summary>
-    /// <param name="force">If true, forces the log off even if there are unsaved changes in open applications.</param>
-    /// <returns>True if the log off operation was initiated successfully, false otherwise.</returns>
+    /// <param name="force">If true, forces the logoff even if there are unsaved changes in open applications.</param>
+    /// <returns>True if the logoff operation was initiated successfully, false otherwise.</returns>
     public bool LogOffUser(bool force)
     {
         var flags = force ? EXIT_WINDOWS_FLAGS.EWX_LOGOFF | EXIT_WINDOWS_FLAGS.EWX_FORCE : EXIT_WINDOWS_FLAGS.EWX_LOGOFF;

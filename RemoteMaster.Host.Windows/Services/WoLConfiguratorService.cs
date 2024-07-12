@@ -26,12 +26,14 @@ public class WoLConfiguratorService(IRegistryService registryService, IProcessSe
     {
         using var adapters = registryService.OpenSubKey(RegistryHive.LocalMachine, NetworkAdaptersKeyPath, true);
 
-        if (adapters != null)
+        if (adapters == null)
         {
-            foreach (var subkeyName in adapters.GetSubKeyNames())
-            {
-                registryService.SetValue(RegistryHive.LocalMachine, $"{NetworkAdaptersKeyPath}\\{subkeyName}", PnPCapabilitiesValueName, 0, RegistryValueKind.DWord);
-            }
+            return;
+        }
+
+        foreach (var subkeyName in adapters.GetSubKeyNames())
+        {
+            registryService.SetValue(RegistryHive.LocalMachine, $"{NetworkAdaptersKeyPath}\\{subkeyName}", PnPCapabilitiesValueName, 0, RegistryValueKind.DWord);
         }
     }
 
@@ -56,7 +58,7 @@ public class WoLConfiguratorService(IRegistryService registryService, IProcessSe
                 programmableDevices = await processService.ReadStandardOutputAsync(process);
             }
 
-            var deviceNames = programmableDevices.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+            var deviceNames = programmableDevices.Split(["\r\n", "\r", "\n"], StringSplitOptions.RemoveEmptyEntries);
 
             foreach (var deviceName in deviceNames)
             {

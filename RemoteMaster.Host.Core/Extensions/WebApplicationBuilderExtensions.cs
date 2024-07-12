@@ -23,30 +23,31 @@ public static class WebApplicationBuilderExtensions
 
         builder.WebHost.ConfigureKestrel(options =>
         {
-            if (launchModeInstance is UserMode)
+            switch (launchModeInstance)
             {
-                options.ListenAnyIP(5001, listenOptions =>
-                {
-                    listenOptions.UseHttps(adapterOptions =>
+                case UserMode:
+                    options.ListenAnyIP(5001, listenOptions =>
                     {
-                        adapterOptions.ServerCertificateSelector = (context, name) => certLoaderService.GetCurrentCertificate();
+                        listenOptions.UseHttps(adapterOptions =>
+                        {
+                            adapterOptions.ServerCertificateSelector = (_, _) => certLoaderService.GetCurrentCertificate();
+                        });
                     });
-                });
-            }
-            else if (launchModeInstance is UpdaterMode)
-            {
-                options.ListenAnyIP(6001, listenOptions =>
-                {
-                    listenOptions.UseHttps(adapterOptions =>
+                    break;
+                case UpdaterMode:
+                    options.ListenAnyIP(6001, listenOptions =>
                     {
-                        adapterOptions.ServerCertificateSelector = (context, name) => certLoaderService.GetCurrentCertificate();
+                        listenOptions.UseHttps(adapterOptions =>
+                        {
+                            adapterOptions.ServerCertificateSelector = (_, _) => certLoaderService.GetCurrentCertificate();
+                        });
                     });
-                });
+                    break;
             }
         });
     }
 
-    public static void ConfigureSerilog(this WebApplicationBuilder builder, LaunchModeBase launchModeInstance)
+    public static void ConfigureSerilog(this WebApplicationBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
 

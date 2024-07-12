@@ -17,18 +17,20 @@ public class ArgumentBuilderService : IArgumentBuilderService
 
         foreach (var argument in arguments)
         {
-            if (argument.Value is string strValue)
+            switch (argument.Value)
             {
-                var escapedValue = "\"" + strValue.Replace("\"", "\\\"") + "\"";
-                argumentsString.Append($" --{argument.Key}={escapedValue}");
-            }
-            else if (argument.Value is bool boolValue)
-            {
-                argumentsString.Append($" --{argument.Key}={boolValue.ToString().ToLower()}");
-            }
-            else
-            {
-                argumentsString.Append($" --{argument.Key}={argument.Value}");
+                case string strValue:
+                {
+                    var escapedValue = "\"" + strValue.Replace("\"", "\\\"") + "\"";
+                    argumentsString.Append($" --{argument.Key}={escapedValue}");
+                    break;
+                }
+                case bool boolValue:
+                    argumentsString.Append($" --{argument.Key}={boolValue.ToString().ToLower()}");
+                    break;
+                default:
+                    argumentsString.Append($" --{argument.Key}={argument.Value}");
+                    break;
             }
         }
 

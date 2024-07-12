@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -68,7 +67,7 @@ public class CommandListenerService : IHostedService
 #pragma warning disable CA2000
         var httpClientHandler = new HttpClientHandler
         {
-            ServerCertificateCustomValidationCallback = (message, certificate2, arg3, arg4) => true
+            ServerCertificateCustomValidationCallback = (_, _, _, _) => true
         };
 #pragma warning restore CA2000
 
@@ -91,11 +90,13 @@ public class CommandListenerService : IHostedService
         {
             Log.Information("Invoked with command: {Command} at {Time}", command, DateTimeOffset.Now);
 
-            if (command == "CtrlAltDel")
+            if (command != "CtrlAltDel")
             {
-                SendSAS(true);
-                SendSAS(false);
+                return;
             }
+
+            SendSAS(true);
+            SendSAS(false);
         });
 
         _connection.Closed += async (error) =>

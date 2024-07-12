@@ -28,7 +28,7 @@ public class CertificateManagementService(IHostConfigurationService hostConfigur
 
     private static bool IsCertificateValid()
     {
-        X509Certificate2? сertificate = null;
+        X509Certificate2? certificate = null;
 
         using (var store = new X509Store(StoreName.My, StoreLocation.LocalMachine))
         {
@@ -36,23 +36,20 @@ public class CertificateManagementService(IHostConfigurationService hostConfigur
 
             var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, Dns.GetHostName(), false);
 
-            foreach (var cert in certificates)
+            foreach (var cert in certificates.Where(cert => cert.HasPrivateKey))
             {
-                if (cert.HasPrivateKey)
-                {
-                    сertificate = cert;
-                    break;
-                }
+                certificate = cert;
+                break;
             }
         }
 
-        if (сertificate == null)
+        if (certificate == null)
         {
             return false;
         }
 
         var currentTime = DateTime.Now;
 
-        return (currentTime >= сertificate.NotBefore) && (currentTime <= сertificate.NotAfter);
+        return (currentTime >= certificate.NotBefore) && (currentTime <= certificate.NotAfter);
     }
 }
