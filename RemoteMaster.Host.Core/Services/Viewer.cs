@@ -22,7 +22,7 @@ public class Viewer(IScreenCapturerService screenCapturer, string connectionId, 
 
     public CancellationTokenSource CancellationTokenSource { get; } = new();
 
-    private bool _disposed = false;
+    private bool _disposed;
 
     public void Dispose()
     {
