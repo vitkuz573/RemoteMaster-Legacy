@@ -63,6 +63,10 @@ public class ScreenCastingService(IHubContext<ControlHub, IControlClient> hubCon
                 await hubContext.Clients.Client(viewer.ConnectionId).ReceiveScreenUpdate(screenData);
             }
         }
+        catch (OperationCanceledException)
+        {
+            Log.Information("Screen streaming was canceled for ID {connectionId}", viewer.ConnectionId);
+        }
         catch (Exception ex)
         {
             Log.Error("An error occurred during streaming: {Message}", ex.Message);
