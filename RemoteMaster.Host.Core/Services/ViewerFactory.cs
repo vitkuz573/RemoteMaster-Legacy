@@ -9,8 +9,8 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class ViewerFactory(IScreenCapturerService screenCapturerService) : IViewerFactory
 {
-    public IViewer Create(string connectionId, string group, string userName, string role, string ipAddress)
+    public IViewer Create(string connectionId, string group, string userName, string role, string ipAddress, string authenticationType)
     {
-        return new Viewer(screenCapturerService, connectionId, group, userName, role, ipAddress);
+        return new Viewer(screenCapturerService, connectionId, group, userName, role, ipAddress, authenticationType);
     }
 }

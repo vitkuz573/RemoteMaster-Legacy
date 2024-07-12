@@ -20,5 +20,7 @@ public interface IViewer : IDisposable
 
     public string IpAddress { get; }
 
+    public string AuthenticationType { get; }
+
     CancellationTokenSource CancellationTokenSource { get; }
 }

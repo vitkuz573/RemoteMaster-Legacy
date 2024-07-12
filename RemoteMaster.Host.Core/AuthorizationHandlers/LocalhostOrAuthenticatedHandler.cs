@@ -33,7 +33,8 @@ public class LocalhostOrAuthenticatedHandler(IHttpContextAccessor httpContextAcc
                 var claims = new List<Claim>
                 {
                     new(ClaimTypes.Name, "RCHost"),
-                    new(ClaimTypes.Role, "Windows Service")
+                    new(ClaimTypes.Role, "Windows Service"),
+                    new("authType", "RemoteMaster Security")
                 };
 
                 var identity = new ClaimsIdentity(claims, "RemoteMaster Security");

@@ -7,7 +7,7 @@ using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Models;
 
-public class Viewer(IScreenCapturerService screenCapturer, string connectionId, string group, string userName, string role, string ipAddress) : IViewer
+public class Viewer(IScreenCapturerService screenCapturer, string connectionId, string group, string userName, string role, string ipAddress, string authenticationType) : IViewer
 {
     public IScreenCapturerService ScreenCapturer { get; } = screenCapturer;
 
@@ -22,6 +22,8 @@ public class Viewer(IScreenCapturerService screenCapturer, string connectionId, 
     public DateTime ConnectedTime { get; } = DateTime.UtcNow;
 
     public string IpAddress { get; } = ipAddress;
+
+    public string AuthenticationType { get; } = authenticationType;
 
     public CancellationTokenSource CancellationTokenSource { get; } = new();
 

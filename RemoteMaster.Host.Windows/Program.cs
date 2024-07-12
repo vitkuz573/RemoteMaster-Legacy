@@ -122,7 +122,8 @@ internal class Program
                         ValidIssuer = "RemoteMaster Server",
                         ValidAudience = "RMServiceAPI",
                         IssuerSigningKey = new RsaSecurityKey(rsa),
-                        RoleClaimType = ClaimTypes.Role
+                        RoleClaimType = ClaimTypes.Role,
+                        AuthenticationType = "JWT Security"
                     };
                 });
 

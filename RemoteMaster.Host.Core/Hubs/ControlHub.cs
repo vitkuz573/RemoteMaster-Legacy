@@ -30,6 +30,8 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
             var userName = user.FindFirst(ClaimTypes.Name)?.Value;
             var role = user.FindFirst(ClaimTypes.Role)?.Value;
 
+            var authenticationType = GetAuthenticationType(user);
+
             var httpContext = Context.GetHttpContext();
 
             if (httpContext != null)
@@ -46,12 +48,12 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
                 if (query.ContainsKey("screencast") && query["screencast"] == "true" && !string.IsNullOrEmpty(userName) && !string.IsNullOrEmpty(role))
                 {
-                    await HandleScreenCastRequest(userName, role, ipAddress);
+                    await HandleScreenCastRequest(userName, role, ipAddress, authenticationType);
                 }
 
-                if (role == "Windows Service" && user.FindFirst(ClaimTypes.Name)?.Value == "RCHost")
+                if (role == "Windows Service" && userName == "RCHost")
                 {
-                    var viewer = viewerFactory.Create(Context.ConnectionId, "Services", userName, role, ipAddress);
+                    var viewer = viewerFactory.Create(Context.ConnectionId, "Services", userName, role, ipAddress, authenticationType);
                     appState.TryAddViewer(viewer);
 
                     await Groups.AddToGroupAsync(Context.ConnectionId, "Services");
@@ -61,6 +63,19 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
         await base.OnConnectedAsync();
     }
+
+    private static string GetAuthenticationType(ClaimsPrincipal user)
+    {
+        var authenticationType = user.Identity?.AuthenticationType;
+
+        if (string.IsNullOrEmpty(authenticationType))
+        {
+            authenticationType = user.FindFirst("authType")?.Value;
+        }
+
+        return authenticationType ?? "Unknown";
+    }
+
 
     private async Task HandleThumbnailRequest()
     {
@@ -74,9 +89,9 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         await Clients.Caller.ReceiveCloseConnection();
     }
 
-    private async Task HandleScreenCastRequest(string userName, string role, string ipAddress)
+    private async Task HandleScreenCastRequest(string userName, string role, string ipAddress, string authenticationType)
     {
-        var viewer = viewerFactory.Create(Context.ConnectionId, "Users", userName, role, ipAddress);
+        var viewer = viewerFactory.Create(Context.ConnectionId, "Users", userName, role, ipAddress, authenticationType);
         appState.TryAddViewer(viewer);
 
         screenCastingService.StartStreaming(viewer);

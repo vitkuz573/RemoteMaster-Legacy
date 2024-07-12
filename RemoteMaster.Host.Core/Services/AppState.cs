@@ -98,7 +98,7 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext) : IApp
 
         lock (Lock)
         {
-            viewers = GetAllViewers().Select(v => new ViewerDto(v.ConnectionId, v.Group, v.UserName, v.Role, v.ConnectedTime, v.IpAddress)).ToList();
+            viewers = GetAllViewers().Select(v => new ViewerDto(v.ConnectionId, v.Group, v.UserName, v.Role, v.ConnectedTime, v.IpAddress, v.AuthenticationType)).ToList();
         }
 
         hubContext.Clients.All.ReceiveAllViewers(viewers);
