@@ -50,7 +50,7 @@ public class CertificateService(IHostInformationService hostInformationService, 
                 $"http://{hostInformation.Name}/crl"
             };
 
-        var crlDistributionPointExtension = CertificateRevocationListBuilder.BuildCrlDistributionPointExtension(crlDistributionPoints, false);
+        var crlDistributionPointExtension = CertificateRevocationListBuilder.BuildCrlDistributionPointExtension(crlDistributionPoints);
 
         csr.CertificateExtensions.Add(crlDistributionPointExtension);
 

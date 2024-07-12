@@ -14,7 +14,7 @@ namespace RemoteMaster.Server.Services;
 public class IntelHlapiService : IIntelHlapiService
 {
     private IAMTInstance? _amtInstance;
-    private bool _disposed = false;
+    private bool _disposed;
 
     public void Connect(string host, string username, string password, bool secure = false, string? certificate = null, ConnectionInfoEX.AuthMethod auth = ConnectionInfoEX.AuthMethod.Digest, ConnectionInfoEX.SocksProxy? proxy = null, ConnectionInfoEX.SocksProxy? redirectionProxy = null, ConnectionInfoEX.TcpForwarder? tcpForwarder = null, bool acceptSelfSignedCertificate = false)
     {
@@ -140,15 +140,17 @@ public class IntelHlapiService : IIntelHlapiService
 
     protected virtual void Dispose(bool disposing)
     {
-        if (!_disposed)
+        if (_disposed)
         {
-            if (disposing)
-            {
-                _amtInstance?.Dispose();
-            }
-
-            _disposed = true;
+            return;
         }
+
+        if (disposing)
+        {
+            _amtInstance?.Dispose();
+        }
+
+        _disposed = true;
     }
 
     public void Dispose()

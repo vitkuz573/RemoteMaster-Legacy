@@ -18,7 +18,7 @@ public class ClaimsService(UserManager<ApplicationUser> userManager, RoleManager
         var claims = new List<Claim>
         {
             new(ClaimTypes.Name, user.UserName ?? string.Empty),
-            new(ClaimTypes.NameIdentifier, user.Id.ToString())
+            new(ClaimTypes.NameIdentifier, user.Id)
         };
 
         var userRoles = await userManager.GetRolesAsync(user);

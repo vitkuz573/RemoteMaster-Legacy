@@ -34,7 +34,7 @@ public class DatabaseCleanerService : IHostedService
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _timer?.Dispose();
+        _timer.Dispose();
 
         return Task.CompletedTask;
     }

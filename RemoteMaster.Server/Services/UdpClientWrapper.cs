@@ -10,12 +10,7 @@ namespace RemoteMaster.Server.Services;
 
 public class UdpClientWrapper : IUdpClient
 {
-    private readonly UdpClient _udpClient;
-
-    public UdpClientWrapper()
-    {
-        _udpClient = new UdpClient();
-    }
+    private readonly UdpClient _udpClient = new();
 
     public bool EnableBroadcast
     {

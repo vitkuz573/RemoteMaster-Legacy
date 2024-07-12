@@ -27,13 +27,12 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
             if (existingCert.NotAfter > DateTime.Now)
             {
                 Log.Information("Existing CA certificate for '{Name}' is valid.", _settings.CommonName);
+
                 return;
             }
-            else
-            {
-                Log.Warning("CA certificate for '{Name}' has expired. Reissuing.", _settings.CommonName);
-                GenerateCertificate(existingCert.GetRSAPrivateKey(), true);
-            }
+
+            Log.Warning("CA certificate for '{Name}' has expired. Reissuing.", _settings.CommonName);
+            GenerateCertificate(existingCert.GetRSAPrivateKey(), true);
         }
         catch (InvalidOperationException ex)
         {
@@ -44,7 +43,7 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
         }
     }
 
-    private X509Certificate2 GenerateCertificate(RSA? externalRsaProvider, bool reuseKey)
+    private void GenerateCertificate(RSA? externalRsaProvider, bool reuseKey)
     {
         Log.Debug("Generating new CA certificate with reuseKey={ReuseKey}.", reuseKey);
 
@@ -95,7 +94,7 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
                     $"http://{hostInformation.Name}/crl"
                 };
 
-            var crlDistributionPointExtension = CertificateRevocationListBuilder.BuildCrlDistributionPointExtension(crlDistributionPoints, false);
+            var crlDistributionPointExtension = CertificateRevocationListBuilder.BuildCrlDistributionPointExtension(crlDistributionPoints);
 
             request.CertificateExtensions.Add(crlDistributionPointExtension);
 
@@ -104,8 +103,6 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
             caCert.FriendlyName = _settings.CommonName;
 
             AddCertificateToStore(caCert, StoreName.Root, StoreLocation.LocalMachine);
-
-            return caCert;
         }
         catch (Exception ex)
         {
@@ -155,19 +152,9 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
 
         var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, _settings.CommonName, false);
 
-        foreach (var cert in certificates)
+        foreach (var cert in certificates.Where(cert => cert.HasPrivateKey))
         {
-            if (cert.HasPrivateKey)
-            {
-                if (contentType == X509ContentType.Cert)
-                {
-                    return new X509Certificate2(cert.Export(X509ContentType.Cert));
-                }
-                else
-                {
-                    return cert;
-                }
-            }
+            return contentType == X509ContentType.Cert ? new X509Certificate2(cert.Export(X509ContentType.Cert)) : cert;
         }
 
         throw new InvalidOperationException("No valid CA certificate with a private key found.");

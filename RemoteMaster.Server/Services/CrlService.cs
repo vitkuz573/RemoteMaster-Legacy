@@ -16,17 +16,16 @@ namespace RemoteMaster.Server.Services;
 
 public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, ICertificateProvider certificateProvider, IFileSystem fileSystem) : ICrlService
 {
-    private readonly IFileSystem _fileSystem = fileSystem;
-
     public async Task RevokeCertificateAsync(string serialNumber, X509RevocationReason reason)
     {
-        using var context = await contextFactory.CreateDbContextAsync();
+        await using var context = await contextFactory.CreateDbContextAsync();
 
         var existingRevokedCertificate = await context.RevokedCertificates.FirstOrDefaultAsync(rc => rc.SerialNumber == serialNumber);
 
         if (existingRevokedCertificate != null)
         {
             Log.Information($"Certificate with serial number {serialNumber} has already been revoked.");
+
             return;
         }
 
@@ -48,7 +47,7 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
         var issuerCertificate = certificateProvider.GetIssuerCertificate();
         var crlBuilder = new CertificateRevocationListBuilder();
 
-        using var context = await contextFactory.CreateDbContextAsync();
+        await using var context = await contextFactory.CreateDbContextAsync();
 
         var crlInfo = context.CrlInfos.FirstOrDefault() ?? new CrlInfo
         {
@@ -86,7 +85,7 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
             context.CrlInfos.Add(crlInfo);
         }
 
-        context.SaveChanges();
+        await context.SaveChangesAsync();
 
         return crlData;
     }
@@ -96,21 +95,21 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
         try
         {
             var programDataPath = customPath ?? Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-            var crlFilePath = _fileSystem.Path.Combine(programDataPath, "RemoteMaster", "list.crl");
+            var crlFilePath = fileSystem.Path.Combine(programDataPath, "RemoteMaster", "list.crl");
 
-            var directoryPath = _fileSystem.Path.GetDirectoryName(crlFilePath);
+            var directoryPath = fileSystem.Path.GetDirectoryName(crlFilePath);
 
             if (string.IsNullOrEmpty(directoryPath))
             {
                 throw new InvalidOperationException("Directory path is null or empty.");
             }
 
-            if (!_fileSystem.Directory.Exists(directoryPath))
+            if (!fileSystem.Directory.Exists(directoryPath))
             {
-                _fileSystem.Directory.CreateDirectory(directoryPath);
+                fileSystem.Directory.CreateDirectory(directoryPath);
             }
 
-            await _fileSystem.File.WriteAllBytesAsync(crlFilePath, crlData);
+            await fileSystem.File.WriteAllBytesAsync(crlFilePath, crlData);
 
             Log.Information($"CRL published to {crlFilePath}");
 
@@ -126,7 +125,7 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
 
     public async Task<CrlMetadata> GetCrlMetadataAsync()
     {
-        using var context = await contextFactory.CreateDbContextAsync();
+        await using var context = await contextFactory.CreateDbContextAsync();
 
         var crlInfo = await context.CrlInfos.FirstOrDefaultAsync();
         var revokedCertificatesCount = await context.RevokedCertificates.CountAsync();

@@ -12,8 +12,6 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
 using MudBlazor;
-using Polly;
-using Polly.Retry;
 using RemoteMaster.Server.Components.Dialogs;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
@@ -26,9 +24,8 @@ namespace RemoteMaster.Server.Components.Pages;
 public partial class Home
 {
     [CascadingParameter]
-    private Task<AuthenticationState> AuthenticationStateTask { get; set; }
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
 
-    private bool _drawerOpen;
     private INode? _selectedNode;
     private List<TreeItemData<INode>> _treeItems = [];
 
@@ -40,16 +37,6 @@ public partial class Home
     private ClaimsPrincipal? _user;
     private ApplicationUser? _currentUser;
 
-    private readonly AsyncRetryPolicy _retryPolicy;
-
-    public Home()
-    {
-        _retryPolicy = Policy
-            .Handle<HttpRequestException>()
-            .Or<TimeoutException>()
-            .WaitAndRetryAsync(1, retryAttempt => TimeSpan.FromSeconds(1));
-    }
-
     protected async override Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateTask;
@@ -60,6 +47,7 @@ public partial class Home
         if (userId == null)
         {
             Log.Warning("User ID not found in claims.");
+
             return;
         }
 
@@ -98,7 +86,7 @@ public partial class Home
         return _treeItems;
     }
 
-    public bool DrawerOpen => _drawerOpen;
+    public bool DrawerOpen { get; private set; }
 
     private async Task<IEnumerable<INode>> LoadNodes(Guid? organizationId = null, Guid? parentId = null)
     {
@@ -120,7 +108,7 @@ public partial class Home
 
             foreach (var organization in organizations)
             {
-                organization.OrganizationalUnits = (await LoadNodes(organization.NodeId, null)).OfType<OrganizationalUnit>().ToList();
+                organization.OrganizationalUnits = (await LoadNodes(organization.NodeId)).OfType<OrganizationalUnit>().ToList();
             }
         }
         else
@@ -128,9 +116,9 @@ public partial class Home
             var organizationalUnits = await DatabaseService.GetNodesAsync<OrganizationalUnit>(ou =>
                 ou.OrganizationId == organizationId &&
                 (parentId == null || ou.ParentId == parentId) &&
-                accessibleOrganizationalUnits.Contains(ou.NodeId)) ?? Enumerable.Empty<OrganizationalUnit>();
+                accessibleOrganizationalUnits.Contains(ou.NodeId));
 
-            var computers = await DatabaseService.GetNodesAsync<Computer>(c => c.ParentId == parentId) ?? Enumerable.Empty<Computer>();
+            var computers = await DatabaseService.GetNodesAsync<Computer>(c => c.ParentId == parentId);
 
             units.AddRange(organizationalUnits);
             units.AddRange(computers);
@@ -145,7 +133,7 @@ public partial class Home
         return units;
     }
 
-    public void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+    public void ToggleDrawer() => DrawerOpen = !DrawerOpen;
 
     [Authorize(Roles = "Administrator")]
     private async Task OpenHostConfig()
@@ -198,13 +186,10 @@ public partial class Home
 
         var newPendingComputers = new ConcurrentDictionary<string, Computer>();
 
-        foreach (var computer in computers)
+        foreach (var computer in computers.Where(computer => !_availableComputers.ContainsKey(computer.IpAddress) && !_unavailableComputers.ContainsKey(computer.IpAddress)))
         {
-            if (!_availableComputers.ContainsKey(computer.IpAddress) && !_unavailableComputers.ContainsKey(computer.IpAddress))
-            {
-                computer.Thumbnail = null;
-                newPendingComputers.TryAdd(computer.IpAddress, computer);
-            }
+            computer.Thumbnail = null;
+            newPendingComputers.TryAdd(computer.IpAddress, computer);
         }
 
         _pendingComputers.Clear();
@@ -229,7 +214,7 @@ public partial class Home
 
         var readTask = Task.Run(async () =>
         {
-            await foreach (var computer in channel.Reader.ReadAllAsync())
+            await foreach (var _ in channel.Reader.ReadAllAsync())
             {
                 await InvokeAsync(StateHasChanged);
             }
@@ -246,7 +231,8 @@ public partial class Home
         {
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
 
-            var url = $"hubs/control?thumbnail=true";
+            const string url = $"hubs/control?thumbnail=true";
+
             var connection = await SetupConnection(computer, url, true, cts.Token);
 
             connection.On<byte[]>("ReceiveThumbnail", async thumbnailBytes =>
@@ -266,12 +252,12 @@ public partial class Home
 
             connection.On("ReceiveCloseConnection", async () =>
             {
-                await connection.StopAsync();
+                await connection.StopAsync(cts.Token);
 
                 Log.Information("Connection closed for {IPAddress}", computer.IpAddress);
             });
 
-            await connection.StartAsync();
+            await connection.StartAsync(cts.Token);
         }
         catch (OperationCanceledException)
         {
@@ -306,7 +292,7 @@ public partial class Home
 
             connection.On("ReceiveCloseConnection", async () =>
             {
-                await connection.StopAsync();
+                await connection.StopAsync(cts.Token);
 
                 Log.Information("Connection closed for {IPAddress}", computer.IpAddress);
             });
@@ -384,11 +370,14 @@ public partial class Home
             .AddMessagePackProtocol()
             .Build();
 
-        if (startConnection)
+        if (!startConnection)
         {
-            await connection.StartAsync(cancellationToken);
-            Log.Information("Connection started for {IPAddress}", computer.IpAddress);
+            return connection;
         }
+
+        await connection.StartAsync(cancellationToken);
+
+        Log.Information("Connection started for {IPAddress}", computer.IpAddress);
 
         return connection;
     }
@@ -536,7 +525,7 @@ public partial class Home
 
         var dialogParameters = new DialogParameters
         {
-            { nameof(CommonDialogWrapper<TDialog>.Hosts), new ConcurrentDictionary<Computer, HubConnection?>(computers.ToDictionary(c => c, c => (HubConnection?)null)) },
+            { nameof(CommonDialogWrapper<TDialog>.Hosts), new ConcurrentDictionary<Computer, HubConnection?>(computers.ToDictionary(c => c, _ => (HubConnection?)null)) },
             { nameof(CommonDialogWrapper<TDialog>.HubPath), hubPath },
             { nameof(CommonDialogWrapper<TDialog>.StartConnection), startConnection },
             { nameof(CommonDialogWrapper<TDialog>.RequireConnections), requireConnections }
@@ -573,9 +562,8 @@ public partial class Home
     {
         var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/windowOperations.js");
 
-        foreach (var computer in _selectedComputers)
+        foreach (var url in _selectedComputers.Select(computer => $"/{computer.IpAddress}/{path}"))
         {
-            var url = $"/{computer.IpAddress}/{path}";
             await module.InvokeVoidAsync("openNewWindow", url, width, height);
         }
     }
@@ -628,7 +616,7 @@ public partial class Home
 
     private async Task OpenMoveDialog()
     {
-        var computers = _selectedComputers.ToDictionary(c => c, c => (HubConnection?)null);
+        var computers = _selectedComputers.ToDictionary(c => c, _ => (HubConnection?)null);
         var hosts = new ConcurrentDictionary<Computer, HubConnection?>(computers);
 
         var dialogOptions = new DialogOptions

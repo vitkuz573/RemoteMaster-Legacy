@@ -9,7 +9,7 @@ namespace RemoteMaster.Server.Validators;
 
 public class JwtOptionsValidator : IValidateOptions<JwtOptions>
 {
-    private readonly int[] ValidKeySizes = [2048, 4096];
+    private readonly int[] _validKeySizes = [2048, 4096];
 
     public ValidateOptionsResult Validate(string? name, JwtOptions options)
     {
@@ -25,9 +25,9 @@ public class JwtOptionsValidator : IValidateOptions<JwtOptions>
             return ValidateOptionsResult.Fail("KeysDirectory is not a valid path.");
         }
 
-        if (options.KeySize == null || !ValidKeySizes.Contains(options.KeySize.Value))
+        if (options.KeySize == null || !_validKeySizes.Contains(options.KeySize.Value))
         {
-            return ValidateOptionsResult.Fail($"KeySize must be one of the following values: {string.Join(", ", ValidKeySizes)}.");
+            return ValidateOptionsResult.Fail($"KeySize must be one of the following values: {string.Join(", ", _validKeySizes)}.");
         }
 
         if (string.IsNullOrWhiteSpace(options.KeyPassword))
@@ -35,12 +35,7 @@ public class JwtOptionsValidator : IValidateOptions<JwtOptions>
             return ValidateOptionsResult.Fail("KeyPassword cannot be null or empty.");
         }
 
-        if (!IsValidPassword(options.KeyPassword))
-        {
-            return ValidateOptionsResult.Fail("KeyPassword does not meet the complexity requirements.");
-        }
-
-        return ValidateOptionsResult.Success;
+        return !IsValidPassword(options.KeyPassword) ? ValidateOptionsResult.Fail("KeyPassword does not meet the complexity requirements.") : ValidateOptionsResult.Success;
     }
 
     private static bool IsValidPath(string path)
@@ -67,15 +62,7 @@ public class JwtOptionsValidator : IValidateOptions<JwtOptions>
         {
             return false;
         }
-        if (!password.Any(char.IsLower))
-        {
-            return false;
-        }
-        if (!password.Any(char.IsDigit))
-        {
-            return false;
-        }
 
-        return true;
+        return password.Any(char.IsLower) && password.Any(char.IsDigit);
     }
 }

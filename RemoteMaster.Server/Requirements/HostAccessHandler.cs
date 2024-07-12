@@ -31,7 +31,7 @@ public class HostAccessHandler(IServiceScopeFactory scopeFactory) : Authorizatio
             .Include(c => c.Parent)
             .FirstOrDefaultAsync(c => c.Name == requirement.Host || c.IpAddress == requirement.Host);
 
-        if (computer == null || computer.ParentId == null)
+        if (computer?.ParentId == null)
         {
             context.Fail();
             
@@ -42,7 +42,7 @@ public class HostAccessHandler(IServiceScopeFactory scopeFactory) : Authorizatio
             .Include(ou => ou.AccessibleUsers)
             .FirstOrDefaultAsync(ou => ou.NodeId == computer.ParentId.Value);
 
-        if (organizationalUnit == null || !organizationalUnit.AccessibleUsers.Any(u => u.Id == userId))
+        if (organizationalUnit == null || organizationalUnit.AccessibleUsers.All(u => u.Id != userId))
         {
             context.Fail();
             

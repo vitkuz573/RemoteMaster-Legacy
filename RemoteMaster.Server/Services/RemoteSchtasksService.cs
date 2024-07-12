@@ -23,8 +23,7 @@ public class RemoteSchtasksService(INetworkDriveService networkDriveService) : I
                 throw new Exception($"Administrative share C$ on {remoteMachineName} is not available.");
             }
 
-            var remoteSharePath = $"\\\\{remoteMachineName}\\C$";
-            var remoteFilePath = Path.Combine("C$", destinationFolderPath, Path.GetFileName(sourceFilePath));
+            var remoteSharePath = $@"\\{remoteMachineName}\C$";
 
             if (!networkDriveService.MapNetworkDrive(remoteSharePath, username, password))
             {
@@ -52,7 +51,7 @@ public class RemoteSchtasksService(INetworkDriveService networkDriveService) : I
     {
         try
         {
-            var sharePath = $"\\\\{remoteMachineName}\\C$";
+            var sharePath = $@"\\{remoteMachineName}\C$";
 
             if (!networkDriveService.MapNetworkDrive(sharePath, username, password))
             {
@@ -71,7 +70,8 @@ public class RemoteSchtasksService(INetworkDriveService networkDriveService) : I
 
     private static void ExecuteRemoteFile(string remoteMachineName, string remoteFilePath, string? username, string? password, string? arguments)
     {
-        var taskName = "RunRemoteFile";
+        const string taskName = "RunRemoteFile";
+
         var taskCommand = $"/create /s {remoteMachineName} /tn {taskName} /tr \"{remoteFilePath} {arguments}\" /sc once /st 00:00 /ru \"SYSTEM\"";
         var runCommand = $"/run /s {remoteMachineName} /tn {taskName}";
 

@@ -14,17 +14,15 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
 
     private readonly Dictionary<string, List<string>> _roleClaims = new()
     {
-        { "Administrator", new List<string>
-            {
+        {
+            "Administrator", [
                 "MouseInput", "KeyboardInput", "ToggleCursorTracking", "SwitchScreen", "ToggleInput", "ToggleUserInput",
                 "ChangeImageQuality", "TerminateHost", "RebootComputer", "ShutdownComputer",
                 "ChangeMonitorState", "ExecuteScript", "LockWorkStation", "LogOffUser", "Move", "RenewCertificate"
-            }
+            ]
         },
-        { "Viewer", new List<string>
-            {
-                "ToggleCursorTracking", "SwitchScreen"
-            }
+        {
+            "Viewer", ["ToggleCursorTracking", "SwitchScreen"]
         }
     };
 
@@ -64,28 +62,22 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
 
     private async Task AssignClaimsToRoles(RoleManager<IdentityRole> roleManager)
     {
-        foreach (var roleClaims in _roleClaims)
+        foreach (var (roleName, claims) in _roleClaims)
         {
-            var roleName = roleClaims.Key;
-            var claims = roleClaims.Value;
-
             var roleIdentity = await roleManager.FindByNameAsync(roleName);
             var existingClaims = await roleManager.GetClaimsAsync(roleIdentity);
 
-            foreach (var claim in claims)
+            foreach (var claim in claims.Where(claim => !existingClaims.Any(c => c.Type == "Permission" && c.Value == claim)))
             {
-                if (!existingClaims.Any(c => c.Type == "Permission" && c.Value == claim))
-                {
-                    var result = await roleManager.AddClaimAsync(roleIdentity, new Claim("Permission", claim));
+                var result = await roleManager.AddClaimAsync(roleIdentity, new Claim("Permission", claim));
                     
-                    if (result.Succeeded)
-                    {
-                        Log.Information("Successfully added claim {ClaimType} to role {RoleName}", claim, roleName);
-                    }
-                    else
-                    {
-                        Log.Error("Error adding claim {ClaimType} to role {RoleName}: {Errors}", claim, roleName, string.Join(", ", result.Errors));
-                    }
+                if (result.Succeeded)
+                {
+                    Log.Information("Successfully added claim {ClaimType} to role {RoleName}", claim, roleName);
+                }
+                else
+                {
+                    Log.Error("Error adding claim {ClaimType} to role {RoleName}: {Errors}", claim, roleName, string.Join(", ", result.Errors));
                 }
             }
         }

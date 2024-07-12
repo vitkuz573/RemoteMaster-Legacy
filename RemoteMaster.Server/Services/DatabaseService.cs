@@ -74,17 +74,16 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
     {
         ArgumentNullException.ThrowIfNull(node);
 
-        if (node is OrganizationalUnit ou)
+        switch (node)
         {
-            await applicationDbContext.OrganizationalUnits.AddAsync(ou);
-        }
-        else if (node is Computer computer)
-        {
-            await applicationDbContext.Computers.AddAsync(computer);
-        }
-        else
-        {
-            throw new InvalidOperationException("Unknown node type");
+            case OrganizationalUnit ou:
+                await applicationDbContext.OrganizationalUnits.AddAsync(ou);
+                break;
+            case Computer computer:
+                await applicationDbContext.Computers.AddAsync(computer);
+                break;
+            default:
+                throw new InvalidOperationException("Unknown node type");
         }
 
         await applicationDbContext.SaveChangesAsync();
@@ -94,17 +93,16 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
 
     public async Task RemoveNodeAsync(INode node)
     {
-        if (node is OrganizationalUnit ou)
+        switch (node)
         {
-            applicationDbContext.OrganizationalUnits.Remove(ou);
-        }
-        else if (node is Computer computer)
-        {
-            applicationDbContext.Computers.Remove(computer);
-        }
-        else
-        {
-            throw new InvalidOperationException("Unknown node type");
+            case OrganizationalUnit ou:
+                applicationDbContext.OrganizationalUnits.Remove(ou);
+                break;
+            case Computer computer:
+                applicationDbContext.Computers.Remove(computer);
+                break;
+            default:
+                throw new InvalidOperationException("Unknown node type");
         }
 
         await applicationDbContext.SaveChangesAsync();

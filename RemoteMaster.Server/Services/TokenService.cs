@@ -112,7 +112,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
     {
         var refreshTokenEntity = await context.RefreshTokens.SingleOrDefaultAsync(rt => rt.Token == refreshToken);
 
-        if (refreshTokenEntity == null || refreshTokenEntity.Revoked.HasValue || refreshTokenEntity.IsExpired)
+        if (refreshTokenEntity is not { Revoked: null } || refreshTokenEntity.IsExpired)
         {
             Log.Warning("Refresh token is invalid, revoked, or expired.");
 
