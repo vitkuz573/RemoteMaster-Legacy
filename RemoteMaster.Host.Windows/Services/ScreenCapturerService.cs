@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Buffers;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using Microsoft.IO;
@@ -17,6 +18,8 @@ namespace RemoteMaster.Host.Windows.Services;
 public abstract class ScreenCapturerService : IScreenCapturerService
 {
     protected const string VirtualScreen = "VIRTUAL_SCREEN";
+
+    private static readonly ArrayPool<byte> ArrayPool = ArrayPool<byte>.Shared;
 
     private readonly RecyclableMemoryStreamManager _recycleManager = new();
     private readonly IDesktopService _desktopService;
@@ -115,7 +118,31 @@ public abstract class ScreenCapturerService : IScreenCapturerService
         using var pixmap = bitmap.PeekPixels();
         using var data = pixmap.Encode(SKEncodedImageFormat.Jpeg, ImageQuality);
 
-        data.SaveTo(ms);
+        var buffer = ArrayPool.Rent((int)data.Size);
+
+        try
+        {
+            using var dataStream = data.AsStream();
+            var totalBytesRead = 0;
+
+            while (totalBytesRead < data.Size)
+            {
+                var bytesRead = dataStream.Read(buffer, totalBytesRead, (int)data.Size - totalBytesRead);
+                
+                if (bytesRead == 0)
+                {
+                    break;
+                }
+
+                totalBytesRead += bytesRead;
+            }
+
+            ms.Write(buffer, 0, totalBytesRead);
+        }
+        finally
+        {
+            ArrayPool.Return(buffer);
+        }
 
         return ms.ToArray();
     }
