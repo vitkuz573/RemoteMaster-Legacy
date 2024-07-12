@@ -38,6 +38,8 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
                 var isThumbnailRequest = query.ContainsKey("thumbnail") && query["thumbnail"] == "true";
                 var isScreenCastRequest = query.ContainsKey("screencast") && query["screencast"] == "true";
 
+                var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+
                 if (isThumbnailRequest)
                 {
                     await SendThumbnailAsync();
@@ -48,7 +50,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
                 if (isScreenCastRequest && !string.IsNullOrEmpty(userName) && !string.IsNullOrEmpty(role))
                 {
-                    var viewer = viewerFactory.Create(Context.ConnectionId, "Users", userName, role);
+                    var viewer = viewerFactory.Create(Context.ConnectionId, "Users", userName, role, ipAddress);
                     appState.TryAddViewer(viewer);
 
                     screenCastingService.StartStreaming(viewer);
@@ -204,7 +206,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     public async Task JoinGroup(string groupName)
     {
-        var viewer = viewerFactory.Create(Context.ConnectionId, groupName, "RCHost", "Windows Service");
+        var viewer = viewerFactory.Create(Context.ConnectionId, groupName, "RCHost", "Windows Service", "127.0.0.1");
         appState.TryAddViewer(viewer);
 
         await Groups.AddToGroupAsync(Context.ConnectionId, groupName);

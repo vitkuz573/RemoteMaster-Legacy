@@ -18,5 +18,7 @@ public interface IViewer : IDisposable
 
     DateTime ConnectedTime { get; }
 
+    public string IpAddress { get; }
+
     CancellationTokenSource CancellationTokenSource { get; }
 }

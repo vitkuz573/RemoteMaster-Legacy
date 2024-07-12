@@ -2,11 +2,12 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net;
 using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Models;
 
-public class Viewer(IScreenCapturerService screenCapturer, string connectionId, string group, string userName, string role) : IViewer
+public class Viewer(IScreenCapturerService screenCapturer, string connectionId, string group, string userName, string role, string ipAddress) : IViewer
 {
     public IScreenCapturerService ScreenCapturer { get; } = screenCapturer;
 
@@ -19,6 +20,8 @@ public class Viewer(IScreenCapturerService screenCapturer, string connectionId, 
     public string Role { get; } = role;
 
     public DateTime ConnectedTime { get; } = DateTime.UtcNow;
+
+    public string IpAddress { get; } = ipAddress;
 
     public CancellationTokenSource CancellationTokenSource { get; } = new();
 
