@@ -99,11 +99,13 @@ public partial class Home
 
         var accessibleOrganizations = _currentUser.AccessibleOrganizations.Select(org => org.NodeId).ToList();
         var accessibleOrganizationalUnits = _currentUser.AccessibleOrganizationalUnits.Select(ou => ou.NodeId).ToList();
+
         var units = new List<INode>();
 
         if (organizationId == null)
         {
-            var organizations = await DatabaseService.GetNodesAsync<Organization>(o => accessibleOrganizations.Contains(o.NodeId)) ?? Enumerable.Empty<Organization>();
+            var organizations = (await DatabaseService.GetNodesAsync<Organization>(o => accessibleOrganizations.Contains(o.NodeId))).ToList();
+
             units.AddRange(organizations);
 
             foreach (var organization in organizations)
@@ -227,19 +229,22 @@ public partial class Home
 
     private async Task LogonComputer(Computer computer)
     {
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+
+        var cancellationToken = cts.Token;
+
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+            const string url = "hubs/control?thumbnail=true";
 
-            const string url = $"hubs/control?thumbnail=true";
-
-            var connection = await SetupConnection(computer, url, true, cts.Token);
+            var connection = await SetupConnection(computer, url, true, cancellationToken);
 
             connection.On<byte[]>("ReceiveThumbnail", async thumbnailBytes =>
             {
                 if (thumbnailBytes.Length > 0)
                 {
                     computer.Thumbnail = thumbnailBytes;
+
                     await MoveToAvailable(computer);
                 }
                 else
@@ -252,12 +257,12 @@ public partial class Home
 
             connection.On("ReceiveCloseConnection", async () =>
             {
-                await connection.StopAsync(cts.Token);
+                await connection.StopAsync(cancellationToken);
 
                 Log.Information("Connection closed for {IPAddress}", computer.IpAddress);
             });
 
-            await connection.StartAsync(cts.Token);
+            await connection.StartAsync(cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -284,20 +289,23 @@ public partial class Home
 
     private async Task LogoffComputer(Computer computer)
     {
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+
+        var cancellationToken = cts.Token;
+
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
-
-            var connection = await SetupConnection(computer, "hubs/control", false, cts.Token);
+            var connection = await SetupConnection(computer, "hubs/control", false, cancellationToken);
 
             connection.On("ReceiveCloseConnection", async () =>
             {
-                await connection.StopAsync(cts.Token);
+                await connection.StopAsync(cancellationToken);
 
                 Log.Information("Connection closed for {IPAddress}", computer.IpAddress);
             });
 
             computer.Thumbnail = null;
+
             await MoveToPending(computer);
         }
         catch (Exception ex)
@@ -360,7 +368,17 @@ public partial class Home
 
     private async Task<HubConnection> SetupConnection(Computer computer, string hubPath, bool startConnection, CancellationToken cancellationToken)
     {
+        if (_user == null)
+        {
+            throw new InvalidOperationException("User is not initialized.");
+        }
+
         var userId = _user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId == null)
+        {
+            throw new InvalidOperationException("User ID is not found.");
+        }
 
         var connection = new HubConnectionBuilder()
             .WithUrl($"https://{computer.IpAddress}:5001/{hubPath}", options =>
@@ -465,6 +483,11 @@ public partial class Home
 
     private async Task Connect()
     {
+        if (_user == null)
+        {
+            throw new InvalidOperationException("User is not initialized.");
+        }
+
         if (_user.IsInRole("Viewer"))
         {
             await ConnectAsViewer();
@@ -510,7 +533,7 @@ public partial class Home
 
     private async Task ExecuteAction<TDialog>(string title, bool onlyAvailable = true, bool startConnection = true, string hubPath = "hubs/control", DialogOptions? dialogOptions = null, bool requireConnections = true) where TDialog : ComponentBase
     {
-        var computers = onlyAvailable ? _selectedComputers.Where(c => _availableComputers.ContainsKey(c.IpAddress)) : _selectedComputers;
+        var computers = onlyAvailable ? _selectedComputers.Where(c => _availableComputers.ContainsKey(c.IpAddress)).ToList() : _selectedComputers.ToList();
 
         if (!computers.Any())
         {
