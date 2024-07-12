@@ -28,6 +28,7 @@ public class ControlHubTests
     private readonly Mock<IHostLifecycleService> _mockHostLifecycleService;
     private readonly Mock<ICertificateStoreService> _mockCertificateStoreService;
     private readonly Mock<IWorkStationSecurityService> _mockWorkStationSecurityService;
+    private readonly Mock<IScreenCastingService> _mockScreenCastingService;
     private readonly Mock<IHubCallerClients<IControlClient>> _mockClients;
     private readonly Mock<IGroupManager> _mockGroups;
     private readonly Mock<IControlClient> _mockClientProxy;
@@ -48,6 +49,7 @@ public class ControlHubTests
         _mockHostLifecycleService = new Mock<IHostLifecycleService>();
         _mockCertificateStoreService = new Mock<ICertificateStoreService>();
         _mockWorkStationSecurityService = new Mock<IWorkStationSecurityService>();
+        _mockScreenCastingService = new Mock<IScreenCastingService>();
         _mockClients = new Mock<IHubCallerClients<IControlClient>>();
         _mockGroups = new Mock<IGroupManager>();
         _mockClientProxy = new Mock<IControlClient>();
@@ -67,7 +69,8 @@ public class ControlHubTests
             _mockHostConfigurationService.Object,
             _mockHostLifecycleService.Object,
             _mockCertificateStoreService.Object,
-            _mockWorkStationSecurityService.Object)
+            _mockWorkStationSecurityService.Object,
+            _mockScreenCastingService.Object)
         {
             Clients = _mockClients.Object,
             Groups = _mockGroups.Object,
@@ -295,7 +298,7 @@ public class ControlHubTests
         var groupName = "TestGroup";
         var viewer = new Mock<IViewer>().Object;
 
-        _mockViewerFactory.Setup(f => f.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>())).Returns(viewer);
+        _mockViewerFactory.Setup(f => f.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(viewer);
         _mockAppState.Setup(a => a.TryAddViewer(viewer)).Returns(true);
 
         var connectionId = "connectionId";
