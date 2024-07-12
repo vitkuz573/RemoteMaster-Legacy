@@ -4,7 +4,9 @@
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface IViewerFactory
+public interface IScreenCastingService
 {
-    IViewer Create(string connectionId, string group, string userName, string role);
+    void StartStreaming(IViewer viewer);
+
+    void StopStreaming(string connectionId);
 }

@@ -19,7 +19,7 @@ using Serilog;
 namespace RemoteMaster.Host.Core.Hubs;
 
 [Authorize(Policy = "LocalhostOrAuthenticatedPolicy")]
-public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturerService, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService, ICertificateStoreService certificateStoreService, IWorkStationSecurityService workStationSecurityService) : Hub<IControlClient>
+public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturerService, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService, ICertificateStoreService certificateStoreService, IWorkStationSecurityService workStationSecurityService, IScreenCastingService screenCastingService) : Hub<IControlClient>
 {
     public async override Task OnConnectedAsync()
     {
@@ -47,8 +47,10 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
                 if (isScreenCastRequest && !string.IsNullOrEmpty(userName) && !string.IsNullOrEmpty(role))
                 {
-                    var viewer = viewerFactory.Create(Context.ConnectionId, "Users", userName, role, true);
+                    var viewer = viewerFactory.Create(Context.ConnectionId, "Users", userName, role);
                     appState.TryAddViewer(viewer);
+
+                    screenCastingService.StartStreaming(viewer);
 
                     var assembly = Assembly.GetEntryAssembly();
                     var version = assembly?.GetName().Version ?? new Version();
@@ -74,11 +76,8 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     public async override Task OnDisconnectedAsync(Exception? exception)
     {
-        if (appState.TryGetViewer(Context.ConnectionId, out var viewer))
-        {
-            viewer?.CancellationTokenSource.Cancel();
-            appState.TryRemoveViewer(Context.ConnectionId);
-        }
+        screenCastingService.StopStreaming(Context.ConnectionId);
+        appState.TryRemoveViewer(Context.ConnectionId);
 
         await base.OnDisconnectedAsync(exception);
     }
@@ -201,7 +200,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     public async Task JoinGroup(string groupName)
     {
-        var viewer = viewerFactory.Create(Context.ConnectionId, groupName, "RCHost", "Windows Service", false);
+        var viewer = viewerFactory.Create(Context.ConnectionId, groupName, "RCHost", "Windows Service");
         appState.TryAddViewer(viewer);
 
         await Groups.AddToGroupAsync(Context.ConnectionId, groupName);

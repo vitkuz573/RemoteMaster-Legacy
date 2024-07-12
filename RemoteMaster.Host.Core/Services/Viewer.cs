@@ -2,125 +2,29 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Drawing;
-using System.Runtime.CompilerServices;
-using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Core.Hubs;
-using RemoteMaster.Shared.Models;
-using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class Viewer : IViewer
+public class Viewer(IScreenCapturerService screenCapturer, string connectionId, string group, string userName, string role) : IViewer
 {
-    private readonly IHubContext<ControlHub, IControlClient> _hubContext;
-    private bool _disposed;
+    public IScreenCapturerService ScreenCapturer { get; } = screenCapturer;
 
-    public Viewer(IHubContext<ControlHub, IControlClient> hubContext, IScreenCapturerService screenCapturer, string connectionId, string group, string userName, string role, bool isUser = false)
-    {
-        _hubContext = hubContext;
+    public string Group { get; } = group;
 
-        ScreenCapturer = screenCapturer;
-        ConnectionId = connectionId;
-        Group = group;
-        UserName = userName;
-        Role = role;
-        ConnectedTime = DateTime.UtcNow;
-        CancellationTokenSource = new();
+    public string ConnectionId { get; } = connectionId;
 
-        ScreenCapturer.ScreenChanged += async (_, bounds) => await SendScreenSize(bounds.Width, bounds.Height);
+    public string UserName { get; } = userName;
 
-        if (isUser)
-        {
-            _ = StartStreaming();
-        }
-    }
+    public string Role { get; } = role;
 
-    public IScreenCapturerService ScreenCapturer { get; }
+    public DateTime ConnectedTime { get; } = DateTime.UtcNow;
 
-    public string Group { get; }
-    
-    public string ConnectionId { get; }
-
-    public string UserName { get; }
-
-    public string Role { get; }
-
-    public DateTime ConnectedTime { get; }
-
-    public CancellationTokenSource CancellationTokenSource { get; }
-
-    private async Task StartStreaming()
-    {
-        var cancellationToken = CancellationTokenSource.Token;
-
-        await SendDisplays(ScreenCapturer.GetDisplays());
-
-        Log.Information("Starting screen stream for ID {connectionId}", ConnectionId);
-
-        try
-        {
-            await foreach (var screenData in StreamScreenDataAsync(cancellationToken))
-            {
-                await _hubContext.Clients.Client(ConnectionId).ReceiveScreenUpdate(screenData);
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Error("An error occurred during streaming: {Message}", ex.Message);
-        }
-    }
-
-    private async IAsyncEnumerable<byte[]> StreamScreenDataAsync([EnumeratorCancellation] CancellationToken cancellationToken)
-    {
-        while (!cancellationToken.IsCancellationRequested)
-        {
-            var screenData = ScreenCapturer.GetNextFrame();
-
-            if (screenData != null)
-            {
-                yield return screenData;
-            }
-
-            await Task.Delay(16, cancellationToken);
-        }
-    }
-
-    private async Task SendDisplays(IEnumerable<Display> displays)
-    {
-        await _hubContext.Clients.Client(ConnectionId).ReceiveDisplays(displays);
-    }
-
-    private async Task SendScreenSize(int width, int height)
-    {
-        await _hubContext.Clients.Client(ConnectionId).ReceiveScreenSize(new Size(width, height));
-    }
+    public CancellationTokenSource CancellationTokenSource { get; } = new();
 
     public void Dispose()
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    protected virtual void Dispose(bool disposing)
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        if (disposing)
-        {
-            CancellationTokenSource.Cancel();
-            CancellationTokenSource.Dispose();
-        }
-
-        _disposed = true;
-    }
-
-    ~Viewer()
-    {
-        Dispose(false);
+        CancellationTokenSource.Cancel();
+        CancellationTokenSource.Dispose();
     }
 }
