@@ -27,13 +27,13 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
         new Claim("Input", "ToggleInput"),
         new Claim("Input", "BlockUserInput"),
         new Claim("Screen", "SetImageQuality"),
-        new Claim("HostControl", "TerminateHost"),
         new Claim("Power", "RebootComputer"),
         new Claim("Power", "ShutdownComputer"),
         new Claim("Hardware", "SetMonitorState"),
         new Claim("Script", "Execute"),
         new Claim("Security", "LockWorkStation"),
         new Claim("Security", "LogOffUser"),
+        new Claim("HostManagement", "TerminateHost"),
         new Claim("HostManagement", "MoveHost"),
         new Claim("HostManagement", "RenewCertificate")
     ];

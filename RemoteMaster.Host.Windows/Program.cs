@@ -220,8 +220,6 @@ internal class Program
                     policy.RequireClaim("Input", "ToggleInput"))
                 .AddPolicy("BlockUserInputPolicy", policy =>
                     policy.RequireClaim("Input", "BlockUserInput"))
-                .AddPolicy("TerminateHostPolicy", policy =>
-                    policy.RequireClaim("Host", "TerminateHost"))
                 .AddPolicy("RebootComputerPolicy", policy =>
                     policy.RequireClaim("Power", "RebootComputer"))
                 .AddPolicy("ShutdownComputerPolicy", policy =>
@@ -234,6 +232,8 @@ internal class Program
                     policy.RequireClaim("Security", "LockWorkStation"))
                 .AddPolicy("LogOffUserPolicy", policy =>
                     policy.RequireClaim("Security", "LogOffUser"))
+                .AddPolicy("TerminateHostPolicy", policy =>
+                    policy.RequireClaim("HostManagement", "TerminateHost"))
                 .AddPolicy("MoveHostPolicy", policy =>
                     policy.RequireClaim("HostManagement", "MoveHost"))
                 .AddPolicy("RenewCertificatePolicy", policy =>
