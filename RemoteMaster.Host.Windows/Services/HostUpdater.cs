@@ -267,7 +267,9 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             foreach (var file in new DirectoryInfo(directory).GetFiles("*", SearchOption.AllDirectories))
             {
-                if (excludedFolders.Any(file.DirectoryName.Contains))
+                var directoryName = file.DirectoryName;
+                
+                if (directoryName == null || excludedFolders.Any(folder => directoryName.Contains(folder)))
                 {
                     continue;
                 }
@@ -404,8 +406,14 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         }
 
         var versionInfo = FileVersionInfo.GetVersionInfo(filePath);
+        var fileVersion = versionInfo.FileVersion;
 
-        return new Version(versionInfo.FileVersion);
+        if (string.IsNullOrEmpty(fileVersion))
+        {
+            throw new InvalidOperationException("The file version information is missing or invalid.");
+        }
+
+        return new Version(fileVersion);
     }
 
     private async Task Notify(string message, MessageType messageType)
