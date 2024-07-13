@@ -180,7 +180,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     }
 
     [Authorize(Policy = "ShutdownComputerPolicy")]
-    public void SendShutdownComputer(PowerActionRequest powerActionRequest)
+    public void ShutdownComputer(PowerActionRequest powerActionRequest)
     {
         powerService.Shutdown(powerActionRequest);
     }

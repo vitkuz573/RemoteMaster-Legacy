@@ -259,7 +259,7 @@ public class ControlHubTests
         var powerActionRequest = new PowerActionRequest();
 
         // Act
-        _controlHub.SendShutdownComputer(powerActionRequest);
+        _controlHub.ShutdownComputer(powerActionRequest);
 
         // Assert
         _mockPowerService.Verify(p => p.Shutdown(powerActionRequest), Times.Once);

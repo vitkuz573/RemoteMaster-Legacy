@@ -24,7 +24,7 @@ public partial class PowerDialog
         switch (_selectedOption)
         {
             case "shutdown":
-                await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("SendShutdownComputer", powerActionRequest));
+                await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("ShutdownComputer", powerActionRequest));
                 break;
             case "reboot":
                 await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("SendRebootComputer", powerActionRequest));

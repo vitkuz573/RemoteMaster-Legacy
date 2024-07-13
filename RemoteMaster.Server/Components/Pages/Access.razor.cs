@@ -243,7 +243,7 @@ public partial class Access : IAsyncDisposable
             ForceAppsClosed = true
         };
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendShutdownComputer", powerActionRequest), true);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("ShutdownComputer", powerActionRequest), true);
     }
 
     private async Task InitializeHostConnectionAsync()
