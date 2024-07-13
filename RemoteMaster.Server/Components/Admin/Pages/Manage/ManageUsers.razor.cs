@@ -25,7 +25,9 @@ public partial class ManageUsers
     private ApplicationUser? _userToDelete;
     private ConfirmationDialog? _confirmationDialog;
 
-    private string? Message => _identityErrors is null ? null : $"Error: {string.Join(", ", _identityErrors.Select(error => error.Description))}";
+    private string? _message;
+
+    private string? Message => _identityErrors is null ? _message : $"Error: {string.Join(", ", _identityErrors.Select(error => error.Description))}";
 
     protected async override Task OnInitializedAsync()
     {
@@ -46,6 +48,8 @@ public partial class ManageUsers
 
             if (user == null)
             {
+                _message = "Error: User not found.";
+
                 return;
             }
 
@@ -60,6 +64,8 @@ public partial class ManageUsers
 
                 return;
             }
+
+            _message = "User updated successfully.";
         }
         else
         {
@@ -76,6 +82,8 @@ public partial class ManageUsers
 
                 return;
             }
+
+            _message = "User created successfully.";
         }
 
         await LoadUsersAsync();
@@ -111,12 +119,21 @@ public partial class ManageUsers
         using var scope = ScopeFactory.CreateScope();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-        await userManager.DeleteAsync(user);
+        var result = await userManager.DeleteAsync(user);
 
-        _userPlaceholderModels.Remove(user.UserName);
-        _users.Remove(user);
+        if (result.Succeeded)
+        {
+            _userPlaceholderModels.Remove(user.UserName);
+            _users.Remove(user);
 
-        await LoadUsersAsync();
+            await LoadUsersAsync();
+
+            _message = "User deleted successfully.";
+        }
+        else
+        {
+            _identityErrors = result.Errors;
+        }
     }
 
     private async Task LoadUsersAsync()
