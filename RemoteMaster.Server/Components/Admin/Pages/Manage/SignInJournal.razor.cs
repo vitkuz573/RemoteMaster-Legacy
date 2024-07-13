@@ -145,7 +145,7 @@ public partial class SignInJournal
 
         foreach (var filter in filters)
         {
-            var parts = filter.Split(['=', '~', '>', '<', '!'], 2);
+            var parts = filter.Split(new[] { '=', '~', '>', '<', '!', ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
 
             if (parts.Length < 2)
             {
@@ -159,12 +159,15 @@ public partial class SignInJournal
             var notEquals = filter.Contains('!');
             var greaterThan = filter.Contains('>');
             var lessThan = filter.Contains('<');
+            var caseSensitive = filter.Contains("CASE SENSITIVE");
 
             if (contains)
             {
                 filteredEntries = column switch
                 {
-                    "user" => filteredEntries.Where(e => e.User.UserName.Contains(value, StringComparison.OrdinalIgnoreCase)),
+                    "user" => caseSensitive
+                        ? filteredEntries.Where(e => e.User.UserName.Contains(value))
+                        : filteredEntries.Where(e => e.User.UserName.Contains(value, StringComparison.OrdinalIgnoreCase)),
                     "signintime" => filteredEntries.Where(e => e.SignInTime.ToString(CultureInfo.InvariantCulture).Contains(value, StringComparison.OrdinalIgnoreCase)),
                     "success" => filteredEntries.Where(e => (e.IsSuccessful ? "Yes" : "No").Contains(value, StringComparison.OrdinalIgnoreCase)),
                     "ipaddress" => filteredEntries.Where(e => e.IpAddress.Contains(value, StringComparison.OrdinalIgnoreCase)),
@@ -176,7 +179,9 @@ public partial class SignInJournal
             {
                 filteredEntries = column switch
                 {
-                    "user" => filteredEntries.Where(e => e.User.UserName.Equals(value, StringComparison.OrdinalIgnoreCase)),
+                    "user" => caseSensitive
+                        ? filteredEntries.Where(e => e.User.UserName.Equals(value))
+                        : filteredEntries.Where(e => e.User.UserName.Equals(value, StringComparison.OrdinalIgnoreCase)),
                     "signintime" => filteredEntries.Where(e => e.SignInTime.ToString(CultureInfo.InvariantCulture).Equals(value, StringComparison.OrdinalIgnoreCase)),
                     "success" => filteredEntries.Where(e => (e.IsSuccessful ? "Yes" : "No").Equals(value, StringComparison.OrdinalIgnoreCase)),
                     "ipaddress" => filteredEntries.Where(e => e.IpAddress.Equals(value, StringComparison.OrdinalIgnoreCase)),
@@ -188,7 +193,9 @@ public partial class SignInJournal
             {
                 filteredEntries = column switch
                 {
-                    "user" => filteredEntries.Where(e => !e.User.UserName.Equals(value, StringComparison.OrdinalIgnoreCase)),
+                    "user" => caseSensitive
+                        ? filteredEntries.Where(e => !e.User.UserName.Equals(value))
+                        : filteredEntries.Where(e => !e.User.UserName.Equals(value, StringComparison.OrdinalIgnoreCase)),
                     "signintime" => filteredEntries.Where(e => !e.SignInTime.ToString(CultureInfo.InvariantCulture).Equals(value, StringComparison.OrdinalIgnoreCase)),
                     "success" => filteredEntries.Where(e => !(e.IsSuccessful ? "Yes" : "No").Equals(value, StringComparison.OrdinalIgnoreCase)),
                     "ipaddress" => filteredEntries.Where(e => !e.IpAddress.Equals(value, StringComparison.OrdinalIgnoreCase)),
