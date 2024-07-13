@@ -183,7 +183,7 @@ public class ControlHubTests
         var blockInput = true;
 
         // Act
-        _controlHub.SendBlockUserInput(blockInput);
+        _controlHub.BlockUserInput(blockInput);
 
         // Assert
         _mockInputService.VerifySet(i => i.BlockUserInput = blockInput, Times.Once);

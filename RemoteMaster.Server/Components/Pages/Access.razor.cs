@@ -402,7 +402,7 @@ public partial class Access : IAsyncDisposable
     {
         _blockUserInput = value;
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendBlockUserInput", value), true);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("BlockUserInput", value), true);
     }
 
     private async Task ToggleCursorTracking(bool value)
