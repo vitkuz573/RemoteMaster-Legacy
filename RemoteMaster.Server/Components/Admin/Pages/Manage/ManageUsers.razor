@@ -60,7 +60,7 @@
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                 2FA Status
                             </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
                                 Actions
                             </th>
                         </tr>
@@ -68,24 +68,24 @@
                     <tbody class="divide-y divide-gray-200 bg-white">
                         @foreach (var user in _users)
                         {
-                            <tr class="h-16">
+                            <tr>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
-                                    <div class="flex h-full items-center">
+                                    <div class="flex items-center">
                                         @user.UserName
                                     </div>
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                                    <div class="flex h-full items-center">
+                                    <div class="flex items-center">
                                         @(_userRoles.ContainsKey(user) ? string.Join(", ", _userRoles[user]) : "No Roles")
                                     </div>
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                                    <div class="flex h-full items-center">
+                                    <div class="flex items-center">
                                         @(_userTwoFactorStatus.ContainsKey(user) && _userTwoFactorStatus[user] ? "Enabled" : "Disabled")
                                     </div>
                                 </td>
-                                <td class="whitespace-nowrap px-6 py-4 text-right">
-                                    <div class="flex h-full items-center justify-end">
+                                <td class="whitespace-nowrap px-6 py-4 text-center">
+                                    <div class="flex items-center justify-center">
                                         @if (!_userRoles[user].Contains("RootAdministrator"))
                                         {
                                             <button class="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 focus:outline-none" @onclick="() => ShowDeleteConfirmation(user)">
