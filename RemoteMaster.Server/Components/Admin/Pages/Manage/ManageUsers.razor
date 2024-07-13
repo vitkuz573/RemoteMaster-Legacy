@@ -68,26 +68,32 @@
                     <tbody class="divide-y divide-gray-200 bg-white">
                         @foreach (var user in _users)
                         {
-                            <tr>
+                            <tr class="h-16">
                                 <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
-                                    @user.UserName
+                                    <div class="flex h-full items-center">
+                                        @user.UserName
+                                    </div>
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                                    @(_userRoles.ContainsKey(user) ? string.Join(", ", _userRoles[user]) : "No Roles")
+                                    <div class="flex h-full items-center">
+                                        @(_userRoles.ContainsKey(user) ? string.Join(", ", _userRoles[user]) : "No Roles")
+                                    </div>
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                                    @(_userTwoFactorStatus.ContainsKey(user) && _userTwoFactorStatus[user] ? "Enabled" : "Disabled")
+                                    <div class="flex h-full items-center">
+                                        @(_userTwoFactorStatus.ContainsKey(user) && _userTwoFactorStatus[user] ? "Enabled" : "Disabled")
+                                    </div>
                                 </td>
-                                @if (!_userRoles[user].Contains("RootAdministrator"))
-                                {
-                                    <td class="whitespace-nowrap px-6 py-4 text-right">
-                                        <div class="flex">
+                                <td class="whitespace-nowrap px-6 py-4 text-right">
+                                    <div class="flex h-full items-center justify-end">
+                                        @if (!_userRoles[user].Contains("RootAdministrator"))
+                                        {
                                             <button class="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 focus:outline-none" @onclick="() => ShowDeleteConfirmation(user)">
                                                 Delete
                                             </button>
-                                        </div>
-                                    </td>
-                                }
+                                        }
+                                    </div>
+                                </td>
                             </tr>
                         }
                     </tbody>
