@@ -9,7 +9,7 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IScreenCapturerService : IDisposable
 {
-    bool TrackCursor { get; set; }
+    bool DrawCursor { get; set; }
 
     int ImageQuality { get; set; }
 

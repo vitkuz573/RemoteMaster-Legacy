@@ -226,7 +226,7 @@ public class ControlHubTests
         _controlHub.ToggleDrawCursor(trackCursor);
 
         // Assert
-        Mock.Get(screenCapturer).VerifySet(s => s.TrackCursor = trackCursor, Times.Once);
+        Mock.Get(screenCapturer).VerifySet(s => s.DrawCursor = trackCursor, Times.Once);
     }
 
     [Fact]

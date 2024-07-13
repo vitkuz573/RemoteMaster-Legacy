@@ -16,13 +16,13 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
     {
         {
             "Administrator", [
-                "MouseInput", "KeyboardInput", "ToggleCursorTracking", "SwitchScreen", "ToggleInput", "ToggleUserInput",
-                "ChangeImageQuality", "TerminateHost", "RebootComputer", "ShutdownComputer",
-                "ChangeMonitorState", "ExecuteScript", "LockWorkStation", "LogOffUser", "MoveHost", "RenewCertificate"
+                "MouseInput", "KeyboardInput", "ToggleDrawCursor", "ChangeSelectedScreen", "ToggleInput", "BlockUserInput",
+                "SetImageQuality", "TerminateHost", "RebootComputer", "ShutdownComputer",
+                "SetMonitorState", "ExecuteScript", "LockWorkStation", "LogOffUser", "MoveHost", "RenewCertificate"
             ]
         },
         {
-            "Viewer", ["ToggleCursorTracking", "SwitchScreen"]
+            "Viewer", ["ToggleDrawCursor", "ChangeSelectedScreen"]
         }
     };
 

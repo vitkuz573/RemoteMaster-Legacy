@@ -130,7 +130,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         inputService.HandleKeyboardInput(dto);
     }
 
-    [Authorize(Policy = "SwitchScreenPolicy")]
+    [Authorize(Policy = "ChangeSelectedScreenPolicy")]
     public void ChangeSelectedScreen(string displayName)
     {
         if (appState.TryGetViewer(Context.ConnectionId, out var viewer))
@@ -149,22 +149,22 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         inputService.InputEnabled = inputEnabled;
     }
 
-    [Authorize(Policy = "ToggleUserInputPolicy")]
+    [Authorize(Policy = "BlockUserInputPolicy")]
     public void BlockUserInput(bool blockInput)
     {
         inputService.BlockUserInput = blockInput;
     }
 
-    [Authorize(Policy = "ChangeImageQualityPolicy")]
+    [Authorize(Policy = "SetImageQualityPolicy")]
     public void SetImageQuality(int quality)
     {
         ExecuteActionForViewer(viewer => viewer.ScreenCapturer.ImageQuality = quality);
     }
 
-    [Authorize(Policy = "ToggleCursorTrackingPolicy")]
+    [Authorize(Policy = "ToggleDrawCursorPolicy")]
     public void ToggleDrawCursor(bool trackCursor)
     {
-        ExecuteActionForViewer(viewer => viewer.ScreenCapturer.TrackCursor = trackCursor);
+        ExecuteActionForViewer(viewer => viewer.ScreenCapturer.DrawCursor = trackCursor);
     }
 
     [Authorize(Policy = "TerminateHostPolicy")]
@@ -200,7 +200,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         }
     }
 
-    [Authorize(Policy = "ChangeMonitorStatePolicy")]
+    [Authorize(Policy = "SetMonitorStatePolicy")]
     public void SetMonitorState(MonitorState state)
     {
         hardwareService.SetMonitorState(state);
@@ -231,7 +231,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         await Clients.Group("Services").ReceiveCommand(command);
     }
 
-    [Authorize(Policy = "MovePolicy")]
+    [Authorize(Policy = "MoveHostPolicy")]
     public async Task MoveHost(HostMoveRequest hostMoveRequest)
     {
         ArgumentNullException.ThrowIfNull(hostMoveRequest);

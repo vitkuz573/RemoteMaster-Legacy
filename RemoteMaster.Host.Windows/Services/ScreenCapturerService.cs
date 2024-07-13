@@ -25,7 +25,7 @@ public abstract class ScreenCapturerService : IScreenCapturerService
     private readonly IDesktopService _desktopService;
     private readonly object _screenBoundsLock = new();
 
-    public bool TrackCursor { get; set; } = false;
+    public bool DrawCursor { get; set; } = false;
 
     public int ImageQuality { get; set; } = 25;
 

@@ -77,7 +77,7 @@ public class GdiCapturer : ScreenCapturerService
         _memoryGraphics.ReleaseHdc(dc2);
         ReleaseDC(HWND.Null, dc1);
 
-        if (TrackCursor)
+        if (DrawCursor)
         {
             _cursorRenderService.DrawCursor(_memoryGraphics, CurrentScreenBounds);
         }

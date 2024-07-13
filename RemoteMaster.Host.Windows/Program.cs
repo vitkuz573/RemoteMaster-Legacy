@@ -210,31 +210,31 @@ internal class Program
                     policy.RequireClaim("Permission", "MouseInput"))
                 .AddPolicy("KeyboardInputPolicy", policy =>
                     policy.RequireClaim("Permission", "KeyboardInput"))
-                .AddPolicy("SwitchScreenPolicy", policy =>
-                    policy.RequireClaim("Permission", "SwitchScreen"))
+                .AddPolicy("ChangeSelectedScreenPolicy", policy =>
+                    policy.RequireClaim("Permission", "ChangeSelectedScreen"))
                 .AddPolicy("ToggleInputPolicy", policy =>
                     policy.RequireClaim("Permission", "ToggleInput"))
-                .AddPolicy("ToggleUserInputPolicy", policy =>
-                    policy.RequireClaim("Permission", "ToggleUserInput"))
-                .AddPolicy("ChangeImageQualityPolicy", policy =>
-                    policy.RequireClaim("Permission", "ChangeImageQuality"))
-                .AddPolicy("ToggleCursorTrackingPolicy", policy =>
-                    policy.RequireClaim("Permission", "ToggleCursorTracking"))
+                .AddPolicy("BlockUserInputPolicy", policy =>
+                    policy.RequireClaim("Permission", "BlockUserInput"))
+                .AddPolicy("SetImageQualityPolicy", policy =>
+                    policy.RequireClaim("Permission", "SetImageQuality"))
+                .AddPolicy("ToggleDrawCursorPolicy", policy =>
+                    policy.RequireClaim("Permission", "ToggleDrawCursor"))
                 .AddPolicy("TerminateHostPolicy", policy =>
                     policy.RequireClaim("Permission", "TerminateHost"))
                 .AddPolicy("RebootComputerPolicy", policy =>
                     policy.RequireClaim("Permission", "RebootComputer"))
                 .AddPolicy("ShutdownComputerPolicy", policy =>
                     policy.RequireClaim("Permission", "ShutdownComputer"))
-                .AddPolicy("ChangeMonitorStatePolicy", policy =>
-                    policy.RequireClaim("Permission", "ChangeMonitorState"))
+                .AddPolicy("SetMonitorStatePolicy", policy =>
+                    policy.RequireClaim("Permission", "SetMonitorState"))
                 .AddPolicy("ExecuteScriptPolicy", policy =>
                     policy.RequireClaim("Permission", "ExecuteScript"))
                 .AddPolicy("LockWorkStationPolicy", policy =>
                     policy.RequireClaim("Permission", "LockWorkStation"))
                 .AddPolicy("LogOffUserPolicy", policy =>
                     policy.RequireClaim("Permission", "LogOffUser"))
-                .AddPolicy("MovePolicy", policy =>
+                .AddPolicy("MoveHostPolicy", policy =>
                     policy.RequireClaim("Permission", "MoveHost"))
                 .AddPolicy("RenewCertificatePolicy", policy =>
                     policy.RequireClaim("Permission", "RenewCertificate"));
