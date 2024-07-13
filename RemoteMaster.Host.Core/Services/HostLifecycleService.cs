@@ -33,7 +33,7 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         {
             var jwtDirectory = EnsureJwtDirectoryExists();
 
-            await serverHubService.ConnectAsync(hostConfiguration.Server);
+            await serverHubService.ConnectAsync(hostConfiguration.Server!);
 
             Log.Information("Attempting to register host...");
 
@@ -98,7 +98,7 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
         try
         {
-            await serverHubService.ConnectAsync(hostConfiguration.Server);
+            await serverHubService.ConnectAsync(hostConfiguration.Server!);
 
             Log.Information("Attempting to unregister host...");
 
@@ -125,11 +125,11 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
         try
         {
-            await serverHubService.ConnectAsync(hostConfiguration.Server);
+            await serverHubService.ConnectAsync(hostConfiguration.Server!);
 
             var ipAddresses = new List<string>
             {
-                hostConfiguration.Host.IpAddress
+                hostConfiguration.Host!.IpAddress
             };
 
             var distinguishedName = subjectService.GetDistinguishedName(hostConfiguration.Host.Name);
@@ -186,11 +186,18 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         store.Open(OpenFlags.ReadWrite);
         var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, Dns.GetHostName(), false);
 
-        var certificate = certificates.FirstOrDefault(cert => cert.HasPrivateKey);
+        var certificate = certificates.Cast<X509Certificate2>().FirstOrDefault(cert => cert.HasPrivateKey);
 
-        store.Remove(certificate);
+        if (certificate != null)
+        {
+            store.Remove(certificate);
 
-        Log.Information("Certificate with private key removed successfully from certificate store.");
+            Log.Information("Certificate with private key removed successfully from certificate store.");
+        }
+        else
+        {
+            Log.Warning("No certificate with a private key found in the certificate store.");
+        }
     }
 
     public async Task UpdateHostInformationAsync(HostConfiguration hostConfiguration)
@@ -199,7 +206,7 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
         try
         {
-            await serverHubService.ConnectAsync(hostConfiguration.Server);
+            await serverHubService.ConnectAsync(hostConfiguration.Server!);
 
             if (await serverHubService.UpdateHostInformationAsync(hostConfiguration))
             {
@@ -222,7 +229,7 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
         try
         {
-            await serverHubService.ConnectAsync(hostConfiguration.Server);
+            await serverHubService.ConnectAsync(hostConfiguration.Server!);
             var isRegistered = await serverHubService.IsHostRegisteredAsync(hostConfiguration);
 
             return isRegistered;
@@ -252,6 +259,7 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         }
 
         Directory.CreateDirectory(directory);
+
         Log.Debug("JWT directory created at {DirectoryPath}.", directory);
 
         return directory;
@@ -272,6 +280,7 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
             {
                 Log.Error("Certificate bytes are null or empty.");
                 tcs.SetResult(false);
+
                 return;
             }
 
@@ -282,32 +291,45 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
             LogCertificateDetails(tempCertificate);
 
-            var cspParams = new CspParameters
+            X509Certificate2? certificateWithPrivateKey = null;
+
+            if (OperatingSystem.IsWindows())
             {
-                KeyContainerName = Guid.NewGuid().ToString(),
-                Flags = CspProviderFlags.UseMachineKeyStore,
-                KeyNumber = (int)KeyNumber.Exchange
-            };
+                var cspParams = new CspParameters
+                {
+                    KeyContainerName = Guid.NewGuid().ToString(),
+                    Flags = CspProviderFlags.UseMachineKeyStore,
+                    KeyNumber = (int)KeyNumber.Exchange
+                };
 
-            using var rsaProvider = new RSACryptoServiceProvider(cspParams);
-            var rsaParameters = rsaKeyPair.ExportParameters(true);
-            rsaProvider.ImportParameters(rsaParameters);
+                using var rsaProvider = new RSACryptoServiceProvider(cspParams);
 
-            var certificateWithPrivateKey = tempCertificate.CopyWithPrivateKey(rsaProvider);
+                var rsaParameters = rsaKeyPair.ExportParameters(true);
+                rsaProvider.ImportParameters(rsaParameters);
 
-            certificateWithPrivateKey.FriendlyName = "RemoteMaster Host Certificate";
+                certificateWithPrivateKey = tempCertificate.CopyWithPrivateKey(rsaProvider);
+                certificateWithPrivateKey.FriendlyName = "RemoteMaster Host Certificate";
 
-            Log.Information("Certificate with private key prepared.");
+                Log.Information("Certificate with private key prepared.");
+            }
 
-            using (var store = new X509Store(StoreName.My, StoreLocation.LocalMachine))
+            if (certificateWithPrivateKey != null)
             {
+                using var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
                 store.Open(OpenFlags.ReadWrite);
                 store.Add(certificateWithPrivateKey);
+                
                 Log.Information("Certificate with private key imported successfully into the certificate store.");
+            }
+            else
+            {
+                Log.Error("Failed to create a certificate with private key.");
+                tcs.SetResult(false);
+
+                return;
             }
 
             tcs.SetResult(true);
-
             certificateLoaderService.LoadCertificate();
         }
         catch (Exception ex)
