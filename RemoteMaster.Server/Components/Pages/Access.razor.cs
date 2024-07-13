@@ -151,7 +151,7 @@ public partial class Access : IAsyncDisposable
 
             if (await IsPolicyPermittedAsync("ToggleInputPolicy"))
             {
-                await _connection.InvokeAsync("SendToggleInput", _inputEnabled);
+                await _connection.InvokeAsync("ToggleInput", _inputEnabled);
             }
         }
     }
@@ -394,7 +394,7 @@ public partial class Access : IAsyncDisposable
     {
         _inputEnabled = value;
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendToggleInput", value), true);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("ToggleInput", value), true);
         QueryParameterService.UpdateParameter("inputEnabled", value.ToString());
     }
 

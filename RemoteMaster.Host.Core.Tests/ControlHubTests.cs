@@ -170,7 +170,7 @@ public class ControlHubTests
         var inputEnabled = true;
 
         // Act
-        _controlHub.SendToggleInput(inputEnabled);
+        _controlHub.ToggleInput(inputEnabled);
 
         // Assert
         _mockInputService.VerifySet(i => i.InputEnabled = inputEnabled, Times.Once);

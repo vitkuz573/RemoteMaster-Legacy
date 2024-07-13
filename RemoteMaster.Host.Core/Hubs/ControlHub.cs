@@ -144,7 +144,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     }
 
     [Authorize(Policy = "ToggleInputPolicy")]
-    public void SendToggleInput(bool inputEnabled)
+    public void ToggleInput(bool inputEnabled)
     {
         inputService.InputEnabled = inputEnabled;
     }
