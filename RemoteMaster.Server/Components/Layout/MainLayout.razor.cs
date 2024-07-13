@@ -12,7 +12,7 @@ public partial class MainLayout
     {
         LayoutProperties = new LayoutProperties
         {
-            DrawerWidthRight = "370px",
+            DrawerWidthRight = "420px",
             AppbarHeight = "55px"
         },
         PaletteLight = new PaletteLight
