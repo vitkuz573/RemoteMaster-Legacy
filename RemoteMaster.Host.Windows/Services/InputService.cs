@@ -146,7 +146,7 @@ public sealed class InputService(IDesktopService desktopService) : IInputService
         ReturnInput(input);
     }
 
-    public void SendMouseInput(MouseInputDto dto, IScreenCapturerService screenCapturer)
+    public void HandleMouseInput(MouseInputDto dto, IScreenCapturerService screenCapturer)
     {
         ObjectDisposedException.ThrowIf(_disposed, nameof(InputService));
 

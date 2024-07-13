@@ -119,9 +119,9 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     }
 
     [Authorize(Policy = "MouseInputPolicy")]
-    public void SendMouseInput(MouseInputDto dto)
+    public void HandleMouseInput(MouseInputDto dto)
     {
-        ExecuteActionForViewer(viewer => inputService.SendMouseInput(dto, viewer.ScreenCapturer));
+        ExecuteActionForViewer(viewer => inputService.HandleMouseInput(dto, viewer.ScreenCapturer));
     }
 
     [Authorize(Policy = "KeyboardInputPolicy")]

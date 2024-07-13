@@ -62,7 +62,7 @@ public class InputServiceTests
     }
 
     [Fact]
-    public void SendMouseInput_ShouldEnqueueOperation()
+    public void HandleMouseInput_ShouldEnqueueOperation()
     {
         // Arrange
         var mouseInputDto = new MouseInputDto
@@ -78,7 +78,7 @@ public class InputServiceTests
         // Act
         _inputService.InputEnabled = true;
         _inputService.Start();
-        _inputService.SendMouseInput(mouseInputDto, _mockScreenCapturerService.Object);
+        _inputService.HandleMouseInput(mouseInputDto, _mockScreenCapturerService.Object);
 
         // Assert
         _mockDesktopService.Verify(d => d.SwitchToInputDesktop(), Times.AtLeastOnce);

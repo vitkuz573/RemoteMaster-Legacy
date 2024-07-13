@@ -111,7 +111,7 @@ public class ControlHubTests
     }
 
     [Fact]
-    public void SendMouseInput_ShouldCallSendMouseInput()
+    public void HandleMouseInput_ShouldCallHandleMouseInput()
     {
         // Arrange
         var dto = new MouseInputDto();
@@ -124,10 +124,10 @@ public class ControlHubTests
         SetupAppState(connectionId, viewer.Object);
 
         // Act
-        _controlHub.SendMouseInput(dto);
+        _controlHub.HandleMouseInput(dto);
 
         // Assert
-        _mockInputService.Verify(i => i.SendMouseInput(dto, screenCapturer), Times.Once);
+        _mockInputService.Verify(i => i.HandleMouseInput(dto, screenCapturer), Times.Once);
     }
 
     [Fact]

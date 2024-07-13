@@ -50,12 +50,12 @@ public partial class Access
                 return;
         }
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendMouseInput", mouseInputDto), true);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("HandleMouseInput", mouseInputDto), true);
     }
 
     private async Task OnMouseWheel(WheelEventArgs e)
     {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendMouseInput", new MouseInputDto
+        await SafeInvokeAsync(() => _connection.InvokeAsync("HandleMouseInput", new MouseInputDto
         {
             DeltaY = e.DeltaY
         }), true);
