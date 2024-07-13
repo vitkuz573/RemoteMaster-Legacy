@@ -91,11 +91,11 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
 
                 if (result.Succeeded)
                 {
-                    Log.Information("Successfully added claim {ClaimType} to role {RoleName}", claim.Type, roleName);
+                    Log.Information("Successfully added claim {ClaimType} with value {ClaimValue} to role {RoleName}", claim.Type, claim.Value, roleName);
                 }
                 else
                 {
-                    Log.Error("Error adding claim {ClaimType} to role {RoleName}: {Errors}", claim.Type, roleName, string.Join(", ", result.Errors));
+                    Log.Error("Error adding claim {ClaimType} with value {ClaimValue} to role {RoleName}: {Errors}", claim.Type, claim.Value, roleName, string.Join(", ", result.Errors));
                 }
             }
         }
