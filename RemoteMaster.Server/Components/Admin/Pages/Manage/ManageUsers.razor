@@ -58,6 +58,9 @@
                                 Role
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                2FA Status
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                 Actions
                             </th>
                         </tr>
@@ -71,6 +74,9 @@
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
                                     @(_userRoles.ContainsKey(user) ? string.Join(", ", _userRoles[user]) : "No Roles")
+                                </td>
+                                <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                                    @(_userTwoFactorStatus.ContainsKey(user) && _userTwoFactorStatus[user] ? "Enabled" : "Disabled")
                                 </td>
                                 @if (!_userRoles[user].Contains("RootAdministrator"))
                                 {
@@ -91,4 +97,4 @@
     </div>
 </div>
 
-<ConfirmationDialog @ref="confirmationDialog" Title="Confirm Delete" Message="Are you sure you want to delete this user?" OnConfirm="OnConfirmDelete" />
+<ConfirmationDialog @ref="_confirmationDialog" Title="Confirm Delete" Message="Are you sure you want to delete this user?" OnConfirm="OnConfirmDelete" />

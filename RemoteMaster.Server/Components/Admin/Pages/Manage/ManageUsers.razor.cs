@@ -21,8 +21,9 @@ public partial class ManageUsers
     private IEnumerable<IdentityError>? _identityErrors;
     private List<ApplicationUser> _users = [];
     private readonly Dictionary<ApplicationUser, List<string>> _userRoles = [];
+    private readonly Dictionary<ApplicationUser, bool> _userTwoFactorStatus = [];
     private ApplicationUser? _userToDelete;
-    private ConfirmationDialog confirmationDialog;
+    private ConfirmationDialog? _confirmationDialog;
 
     private string? Message => _identityErrors is null ? null : $"Error: {string.Join(", ", _identityErrors.Select(error => error.Description))}";
 
@@ -37,7 +38,7 @@ public partial class ManageUsers
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         var userStore = scope.ServiceProvider.GetRequiredService<IUserStore<ApplicationUser>>();
 
-        ApplicationUser user;
+        ApplicationUser? user;
 
         if (Input.Id != null)
         {
@@ -93,7 +94,7 @@ public partial class ManageUsers
             { "User", user.UserName }
         };
 
-        confirmationDialog.Show(parameters);
+        _confirmationDialog?.Show(parameters);
     }
 
     private async Task OnConfirmDelete(bool confirmed)
@@ -128,12 +129,16 @@ public partial class ManageUsers
 
         _userPlaceholderModels.Clear();
         _userRoles.Clear();
+        _userTwoFactorStatus.Clear();
 
         foreach (var user in users)
         {
             var roles = await userManager.GetRolesAsync(user);
+            var isTwoFactorEnabled = await userManager.GetTwoFactorEnabledAsync(user);
 
             _userRoles[user] = new List<string>(roles);
+            _userTwoFactorStatus[user] = isTwoFactorEnabled;
+
             _userPlaceholderModels[user.UserName] = new PlaceholderInputModel
             {
                 Username = user.UserName
