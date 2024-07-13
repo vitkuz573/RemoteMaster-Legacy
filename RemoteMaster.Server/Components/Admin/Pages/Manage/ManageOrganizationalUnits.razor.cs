@@ -44,21 +44,21 @@ public partial class ManageOrganizationalUnits
         {
             if (await UpdateOrganizationalUnitAsync(dbContext))
             {
-                OnOrganizationalUnitSaved("Organizational unit updated successfully.");
+                await OnOrganizationalUnitSaved("Organizational unit updated successfully.");
             }
         }
         else
         {
             if (await CreateOrganizationalUnitAsync(dbContext))
             {
-                OnOrganizationalUnitSaved("Organizational unit created successfully.");
+                await OnOrganizationalUnitSaved("Organizational unit created successfully.");
             }
         }
     }
 
-    private void OnOrganizationalUnitSaved(string message)
+    private async Task OnOrganizationalUnitSaved(string message)
     {
-        LoadOrganizationalUnitsAsync();
+        await LoadOrganizationalUnitsAsync();
         NavigationManager.Refresh();
         Input = new InputModel();
         _message = message;
@@ -75,19 +75,35 @@ public partial class ManageOrganizationalUnits
             return false;
         }
 
+        if (await dbContext.OrganizationalUnits.AnyAsync(ou => ou.Name == Input.Name && ou.OrganizationId == Input.OrganizationId && ou.NodeId != Input.Id.Value))
+        {
+            _message = "Error: Organizational unit with this name already exists in the selected organization.";
+            
+            return false;
+        }
+
         organizationalUnit.Name = Input.Name;
         organizationalUnit.OrganizationId = Input.OrganizationId;
 
         await dbContext.SaveChangesAsync();
-        
+
         return true;
     }
 
     private async Task<bool> CreateOrganizationalUnitAsync(ApplicationDbContext dbContext)
     {
+        if (await dbContext.OrganizationalUnits.AnyAsync(ou => ou.Name == Input.Name && ou.OrganizationId == Input.OrganizationId))
+        {
+            _message = "Error: Organizational unit with this name already exists in the selected organization.";
+            
+            return false;
+        }
+
         var organizationalUnit = CreateOrganizationalUnit(Input.Name, Input.OrganizationId);
         await dbContext.OrganizationalUnits.AddAsync(organizationalUnit);
+
         await dbContext.SaveChangesAsync();
+
         return true;
     }
 
