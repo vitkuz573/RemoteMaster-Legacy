@@ -376,7 +376,7 @@ public class ControlHubTests
     }
 
     [Fact]
-    public async Task SendRenewCertificate_ShouldRenewCertificate()
+    public async Task RenewCertificate_ShouldRenewCertificate()
     {
         // Arrange
         var hostConfiguration = new HostConfiguration
@@ -391,7 +391,7 @@ public class ControlHubTests
         _mockHostConfigurationService.Setup(h => h.LoadConfigurationAsync(It.IsAny<bool>())).ReturnsAsync(hostConfiguration);
 
         // Act
-        await _controlHub.SendRenewCertificate();
+        await _controlHub.RenewCertificate();
 
         // Assert
         _mockHostLifecycleService.Verify(h => h.RenewCertificateAsync(hostConfiguration), Times.Once);

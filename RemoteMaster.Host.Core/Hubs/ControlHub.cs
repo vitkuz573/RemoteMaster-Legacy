@@ -246,7 +246,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     }
 
     [Authorize(Policy = "RenewCertificatePolicy")]
-    public async Task SendRenewCertificate()
+    public async Task RenewCertificate()
     {
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
 

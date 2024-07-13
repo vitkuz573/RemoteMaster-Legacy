@@ -33,7 +33,7 @@ public partial class RenewCertificateDialog
 
             var renewCertificateTask = Task.Run(async () =>
             {
-                await connection.InvokeAsync("SendRenewCertificate");
+                await connection.InvokeAsync("RenewCertificate");
             });
 
             renewCertificateTasks.Add(renewCertificateTask);
