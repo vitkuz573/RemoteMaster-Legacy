@@ -365,7 +365,7 @@ public class ControlHubTests
         _mockHostConfigurationService.Setup(h => h.LoadConfigurationAsync(It.IsAny<bool>())).ReturnsAsync(hostConfiguration);
 
         // Act
-        await _controlHub.Move(hostMoveRequest);
+        await _controlHub.MoveHost(hostMoveRequest);
 
         // Assert
         _mockHostConfigurationService.Verify(h => h.SaveConfigurationAsync(It.Is<HostConfiguration>(hc =>

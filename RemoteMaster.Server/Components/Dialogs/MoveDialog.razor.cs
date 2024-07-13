@@ -107,7 +107,7 @@ public partial class MoveDialog
         StateHasChanged();
     }
 
-    private async Task Move()
+    private async Task MoveHost()
     {
         if (_selectedOrganizationalUnitId != Guid.Empty)
         {
@@ -125,7 +125,7 @@ public partial class MoveDialog
                     {
                         var hostMoveRequest = new HostMoveRequest(host.Key.MacAddress, targetOrganization, targetOrganizationalUnitsPath);
 
-                        await host.Value.InvokeAsync("Move", hostMoveRequest);
+                        await host.Value.InvokeAsync("MoveHost", hostMoveRequest);
                     }
                     else
                     {

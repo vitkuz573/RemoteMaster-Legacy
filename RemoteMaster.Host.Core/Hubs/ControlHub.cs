@@ -232,7 +232,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     }
 
     [Authorize(Policy = "MovePolicy")]
-    public async Task Move(HostMoveRequest hostMoveRequest)
+    public async Task MoveHost(HostMoveRequest hostMoveRequest)
     {
         ArgumentNullException.ThrowIfNull(hostMoveRequest);
 

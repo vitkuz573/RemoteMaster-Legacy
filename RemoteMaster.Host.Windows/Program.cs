@@ -235,7 +235,7 @@ internal class Program
                 .AddPolicy("LogOffUserPolicy", policy =>
                     policy.RequireClaim("Permission", "LogOffUser"))
                 .AddPolicy("MovePolicy", policy =>
-                    policy.RequireClaim("Permission", "Move"))
+                    policy.RequireClaim("Permission", "MoveHost"))
                 .AddPolicy("RenewCertificatePolicy", policy =>
                     policy.RequireClaim("Permission", "RenewCertificate"));
         }

@@ -123,7 +123,7 @@
 
                                 <MudTabPanel Text="@Localizer["ManagementTab"]" Icon="@Icons.Material.Filled.Settings">
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenHostInfo" Disabled="@(_selectedComputers.Count != 1)" Class="mr-2">@Localizer["HostInfo"]</MudButton>
-                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenMoveDialog" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">@Localizer["Move"]</MudButton>
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenMoveDialog" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">@Localizer["MoveHost"]</MudButton>
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="RemoveComputers" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">@Localizer["Remove"]</MudButton>
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="RenewCertificate" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["RenewCertificate"]</MudButton>
                                 </MudTabPanel>

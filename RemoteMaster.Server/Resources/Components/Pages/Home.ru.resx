@@ -168,7 +168,7 @@
   <data name="MessageBox" xml:space="preserve">
     <value>Месседж бокс</value>
   </data>
-  <data name="Move" xml:space="preserve">
+  <data name="MoveHost" xml:space="preserve">
     <value>Перемещение</value>
   </data>
   <data name="NoAvailableComputers" xml:space="preserve">

@@ -195,8 +195,8 @@
   <data name="MessageBox" xml:space="preserve">
     <value>MessageBox</value>
   </data>
-  <data name="Move" xml:space="preserve">
-    <value>Move</value>
+  <data name="MoveHost" xml:space="preserve">
+    <value>MoveHost</value>
   </data>
   <data name="Power" xml:space="preserve">
     <value>Power</value>
