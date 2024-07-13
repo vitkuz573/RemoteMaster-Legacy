@@ -16,5 +16,5 @@ public interface IInputService : IDisposable
 
     void SendMouseInput(MouseInputDto dto, IScreenCapturerService screenCapturer);
 
-    void SendKeyboardInput(KeyboardInputDto dto);
+    void HandleKeyboardInput(KeyboardInputDto dto);
 }

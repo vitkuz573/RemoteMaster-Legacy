@@ -125,9 +125,9 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     }
 
     [Authorize(Policy = "KeyboardInputPolicy")]
-    public void SendKeyboardInput(KeyboardInputDto dto)
+    public void HandleKeyboardInput(KeyboardInputDto dto)
     {
-        inputService.SendKeyboardInput(dto);
+        inputService.HandleKeyboardInput(dto);
     }
 
     [Authorize(Policy = "SwitchScreenPolicy")]

@@ -61,9 +61,9 @@ public partial class Access
         }), true);
     }
 
-    private async Task SendKeyboardInput(string code, bool isPressed)
+    private async Task HandleKeyboardInput(string code, bool isPressed)
     {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendKeyboardInput", new KeyboardInputDto
+        await SafeInvokeAsync(() => _connection.InvokeAsync("HandleKeyboardInput", new KeyboardInputDto
         {
             Code = code,
             IsPressed = isPressed
@@ -73,12 +73,12 @@ public partial class Access
     [JSInvokable]
     public async Task OnKeyDown(string code)
     {
-        await SendKeyboardInput(code, true);
+        await HandleKeyboardInput(code, true);
     }
 
     [JSInvokable]
     public async Task OnKeyUp(string code)
     {
-        await SendKeyboardInput(code, false);
+        await HandleKeyboardInput(code, false);
     }
 }

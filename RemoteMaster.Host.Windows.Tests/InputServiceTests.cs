@@ -43,7 +43,7 @@ public class InputServiceTests
         _inputService.Stop();
 
         // Ensure the service is disposed
-        Assert.Throws<ObjectDisposedException>(() => _inputService.SendKeyboardInput(new KeyboardInputDto { Code = "KeyA", IsPressed = true }));
+        Assert.Throws<ObjectDisposedException>(() => _inputService.HandleKeyboardInput(new KeyboardInputDto { Code = "KeyA", IsPressed = true }));
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public class InputServiceTests
     }
 
     [Fact]
-    public void SendKeyboardInput_ShouldEnqueueOperation()
+    public void HandleKeyboardInput_ShouldEnqueueOperation()
     {
         // Arrange
         var keyboardInputDto = new KeyboardInputDto { Code = "KeyA", IsPressed = true };
@@ -94,7 +94,7 @@ public class InputServiceTests
         // Act
         _inputService.InputEnabled = true;
         _inputService.Start();
-        _inputService.SendKeyboardInput(keyboardInputDto);
+        _inputService.HandleKeyboardInput(keyboardInputDto);
 
         // Assert
         _mockDesktopService.Verify(d => d.SwitchToInputDesktop(), Times.AtLeastOnce);

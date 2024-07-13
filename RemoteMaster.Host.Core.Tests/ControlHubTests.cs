@@ -131,16 +131,16 @@ public class ControlHubTests
     }
 
     [Fact]
-    public void SendKeyboardInput_ShouldCallSendKeyboardInput()
+    public void HandleKeyboardInput_ShouldCallHandleKeyboardInput()
     {
         // Arrange
         var dto = new KeyboardInputDto();
 
         // Act
-        _controlHub.SendKeyboardInput(dto);
+        _controlHub.HandleKeyboardInput(dto);
 
         // Assert
-        _mockInputService.Verify(i => i.SendKeyboardInput(dto), Times.Once);
+        _mockInputService.Verify(i => i.HandleKeyboardInput(dto), Times.Once);
     }
 
     [Fact]

@@ -203,7 +203,7 @@ public sealed class InputService(IDesktopService desktopService) : IInputService
         });
     }
 
-    public void SendKeyboardInput(KeyboardInputDto dto)
+    public void HandleKeyboardInput(KeyboardInputDto dto)
     {
         ObjectDisposedException.ThrowIf(_disposed, nameof(InputService));
 
