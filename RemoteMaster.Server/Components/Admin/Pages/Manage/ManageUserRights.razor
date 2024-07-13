@@ -33,13 +33,6 @@
         <DataAnnotationsValidator />
         <ValidationSummary class="text-red-500" role="alert" />
 
-        @if (ShowSuccessMessage)
-        {
-            <div class="text-sm text-green-600">
-                Changes have been successfully saved.
-            </div>
-        }
-
         <div>
             <label for="role" class="block text-sm font-medium text-gray-700">Role</label>
             <InputSelect @bind-Value="SelectedUserModel.Role" id="role" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm">

@@ -23,8 +23,6 @@ public partial class ManageUserRights
 
     private UserEditModel SelectedUserModel { get; set; } = new();
 
-    private bool ShowSuccessMessage { get; set; } = false;
-
     private bool HasChanges => HasChangesInRole() || HasChangesInOrganizations() || HasChangesInUnits() || HasChangesInLockout();
 
     private const string RootAdminRoleName = "RootAdministrator";
@@ -105,13 +103,10 @@ public partial class ManageUserRights
             await TokenService.RevokeAllRefreshTokensAsync(user.Id, TokenRevocationReason.RoleChanged);
         }
 
-        ShowSuccessMessage = true;
-
         StateHasChanged();
 
         UpdateInitialSelections();
 
-        await HideSuccessMessageAfterDelay();
         NavigationManager.Refresh();
     }
 
@@ -317,14 +312,6 @@ public partial class ManageUserRights
             SelectedUserModel.IsPermanentLockout = false;
             SelectedUserModel.LockoutEndDateTime = DateTime.Now;
         }
-    }
-
-    private async Task HideSuccessMessageAfterDelay()
-    {
-        await Task.Delay(3000);
-        ShowSuccessMessage = false;
-
-        await InvokeAsync(StateHasChanged);
     }
 
     private void UpdateInitialSelections()
