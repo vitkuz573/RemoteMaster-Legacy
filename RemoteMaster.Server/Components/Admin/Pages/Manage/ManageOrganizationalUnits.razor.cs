@@ -19,7 +19,7 @@ public partial class ManageOrganizationalUnits
     private List<Organization> _organizations = [];
     private List<OrganizationalUnit> _organizationalUnits = [];
 
-    private ConfirmationDialog confirmationDialog;
+    private ConfirmationDialog? _confirmationDialog;
     private OrganizationalUnit? _organizationalUnitToDelete;
 
     protected async override Task OnInitializedAsync()
@@ -125,7 +125,7 @@ public partial class ManageOrganizationalUnits
             { "Organizational Unit", organizationalUnit.Name }
         };
 
-        confirmationDialog.Show(parameters);
+        _confirmationDialog?.Show(parameters);
     }
 
     private async Task OnConfirmDelete(bool confirmed)
