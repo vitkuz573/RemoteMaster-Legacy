@@ -204,7 +204,7 @@ public partial class Access : IAsyncDisposable
 
     private async Task KillHost()
     {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendKillHost"), true);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("TerminateHost"), true);
     }
 
     private async Task LockWorkStation()

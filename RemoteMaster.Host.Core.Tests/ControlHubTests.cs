@@ -233,7 +233,7 @@ public class ControlHubTests
     public void SendKillHost_ShouldShutdownHost()
     {
         // Act
-        _controlHub.SendKillHost();
+        _controlHub.TerminateHost();
 
         // Assert
         _mockShutdownService.Verify(s => s.ImmediateShutdown(It.IsAny<int>()), Times.Once);

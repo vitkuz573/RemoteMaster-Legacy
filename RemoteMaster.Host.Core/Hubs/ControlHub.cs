@@ -168,7 +168,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     }
 
     [Authorize(Policy = "TerminateHostPolicy")]
-    public void SendKillHost()
+    public void TerminateHost()
     {
         shutdownService.ImmediateShutdown();
     }
