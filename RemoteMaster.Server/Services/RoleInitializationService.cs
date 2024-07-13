@@ -1,4 +1,4 @@
-﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+﻿// Copyright © 2023 Vitaly Kuzyaев. All rights reserved.
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
@@ -12,19 +12,37 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
 {
     private readonly List<string> _roles = ["RootAdministrator", "Administrator", "Viewer"];
 
-    private readonly Dictionary<string, List<string>> _roleClaims = new()
+    private readonly Dictionary<string, List<Claim>> _roleClaims = new()
     {
-        {
-            "Administrator", [
-                "MouseInput", "KeyboardInput", "ToggleDrawCursor", "ChangeSelectedScreen", "ToggleInput", "BlockUserInput",
-                "SetImageQuality", "TerminateHost", "RebootComputer", "ShutdownComputer",
-                "SetMonitorState", "ExecuteScript", "LockWorkStation", "LogOffUser", "MoveHost", "RenewCertificate"
-            ]
-        },
-        {
-            "Viewer", ["ToggleDrawCursor", "ChangeSelectedScreen"]
-        }
+        { "Administrator", AdminClaims },
+        { "Viewer", ViewerClaims }
     };
+
+    private static readonly List<Claim> AdminClaims =
+    [
+        new Claim("Mouse", "Input"),
+        new Claim("Keyboard", "Input"),
+        new Claim("Screen", "ToggleDrawCursor"),
+        new Claim("Screen", "ChangeSelectedScreen"),
+        new Claim("Input", "ToggleInput"),
+        new Claim("Input", "BlockUserInput"),
+        new Claim("Screen", "SetImageQuality"),
+        new Claim("HostControl", "TerminateHost"),
+        new Claim("Power", "RebootComputer"),
+        new Claim("Power", "ShutdownComputer"),
+        new Claim("Hardware", "SetMonitorState"),
+        new Claim("Script", "Execute"),
+        new Claim("Security", "LockWorkStation"),
+        new Claim("Security", "LogOffUser"),
+        new Claim("HostManagement", "MoveHost"),
+        new Claim("HostManagement", "RenewCertificate")
+    ];
+
+    private static readonly List<Claim> ViewerClaims =
+    [
+        new Claim("Screen", "ToggleDrawCursor"),
+        new Claim("Screen", "ChangeSelectedScreen")
+    ];
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -67,24 +85,21 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
             var roleIdentity = await roleManager.FindByNameAsync(roleName);
             var existingClaims = await roleManager.GetClaimsAsync(roleIdentity);
 
-            foreach (var claim in claims.Where(claim => !existingClaims.Any(c => c.Type == "Permission" && c.Value == claim)))
+            foreach (var claim in claims.Where(claim => !existingClaims.Any(c => c.Type == claim.Type && c.Value == claim.Value)))
             {
-                var result = await roleManager.AddClaimAsync(roleIdentity, new Claim("Permission", claim));
-                    
+                var result = await roleManager.AddClaimAsync(roleIdentity, claim);
+
                 if (result.Succeeded)
                 {
-                    Log.Information("Successfully added claim {ClaimType} to role {RoleName}", claim, roleName);
+                    Log.Information("Successfully added claim {ClaimType} to role {RoleName}", claim.Type, roleName);
                 }
                 else
                 {
-                    Log.Error("Error adding claim {ClaimType} to role {RoleName}: {Errors}", claim, roleName, string.Join(", ", result.Errors));
+                    Log.Error("Error adding claim {ClaimType} to role {RoleName}: {Errors}", claim.Type, roleName, string.Join(", ", result.Errors));
                 }
             }
         }
     }
 
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-    }
+    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }
