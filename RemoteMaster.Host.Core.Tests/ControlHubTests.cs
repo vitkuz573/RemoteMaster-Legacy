@@ -272,7 +272,7 @@ public class ControlHubTests
         var state = MonitorState.On;
 
         // Act
-        _controlHub.SendMonitorState(state);
+        _controlHub.SetMonitorState(state);
 
         // Assert
         _mockHardwareService.Verify(h => h.SetMonitorState(state), Times.Once);

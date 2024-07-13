@@ -201,7 +201,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     }
 
     [Authorize(Policy = "ChangeMonitorStatePolicy")]
-    public void SendMonitorState(MonitorState state)
+    public void SetMonitorState(MonitorState state)
     {
         hardwareService.SetMonitorState(state);
     }
