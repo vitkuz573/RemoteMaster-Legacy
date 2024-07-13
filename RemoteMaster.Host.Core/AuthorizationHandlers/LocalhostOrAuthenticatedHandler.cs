@@ -26,7 +26,9 @@ public class LocalhostOrAuthenticatedHandler(IHttpContextAccessor httpContextAcc
         var ipAddress = httpContext.Connection.RemoteIpAddress;
         var isLocal = ipAddress != null && (ipAddress.Equals(IPAddress.Loopback) || ipAddress.Equals(IPAddress.IPv6Loopback) || ipAddress.ToString().StartsWith("::ffff:127.0.0.1"));
 
-        if (isLocal || (context.User?.Identity?.IsAuthenticated ?? false))
+        var hasServiceFlagHeader = httpContext.Request.Headers.TryGetValue("X-Service-Flag", out var headerValue) && bool.TryParse(headerValue, out var flagValue) && flagValue;
+
+        if ((isLocal && hasServiceFlagHeader) || (context.User?.Identity?.IsAuthenticated ?? false))
         {
             if (isLocal && !(context.User?.Identity?.IsAuthenticated ?? false))
             {

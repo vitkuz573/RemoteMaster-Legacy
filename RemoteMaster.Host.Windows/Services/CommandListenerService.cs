@@ -79,6 +79,7 @@ public class CommandListenerService : IHostedService
                 .WithUrl("https://127.0.0.1:5001/hubs/control", options =>
                 {
                     options.HttpMessageHandlerFactory = _ => httpClientHandler;
+                    options.Headers.Add("X-Service-Flag", "true");
                 })
                 .AddMessagePackProtocol()
                 .Build();
