@@ -38,26 +38,26 @@ public partial class ManageOrganizations
         {
             if (await UpdateOrganizationAsync(dbContext))
             {
-                OnOrganizationSaved();
+                OnOrganizationSaved("Organization updated successfully.");
             }
         }
         else
         {
             if (await CreateOrganizationAsync(dbContext))
             {
-                OnOrganizationSaved();
+                OnOrganizationSaved("Organization created successfully.");
             }
         }
     }
 
-    private void OnOrganizationSaved()
+    private void OnOrganizationSaved(string message)
     {
         LoadOrganizations();
 
         NavigationManager.Refresh();
         Input = new InputModel();
 
-        _message = "Organization saved successfully.";
+        _message = message;
     }
 
     private async Task<bool> UpdateOrganizationAsync(ApplicationDbContext dbContext)
