@@ -209,7 +209,7 @@ public partial class Access : IAsyncDisposable
 
     private async Task LockWorkStation()
     {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendLockWorkStation"), true);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("LockWorkStation"), true);
     }
 
     private async Task LogOffUser()

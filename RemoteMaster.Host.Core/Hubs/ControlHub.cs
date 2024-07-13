@@ -213,7 +213,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     }
 
     [Authorize(Policy = "LockWorkStationPolicy")]
-    public void SendLockWorkStation()
+    public void LockWorkStation()
     {
         workStationSecurityService.LockWorkStationDisplay();
     }
