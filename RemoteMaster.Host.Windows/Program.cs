@@ -37,7 +37,7 @@ internal class Program
         if (launchModeInstance is UpdaterMode updaterMode && string.IsNullOrEmpty(updaterMode.Parameters["folder-path"].Value))
         {
             PrintHelp(launchModeInstance);
-
+            
             return;
         }
 
@@ -57,7 +57,11 @@ internal class Program
 
         builder.Services.AddHttpContextAccessor();
 
-        builder.Services.AddCoreServices(launchModeInstance);
+        if (launchModeInstance != null)
+        {
+            builder.Services.AddCoreServices(launchModeInstance);
+        }
+
         builder.Services.AddTransient<IServiceFactory, ServiceFactory>();
         builder.Services.AddTransient<IRegistryKeyFactory, RegistryKeyFactory>();
         builder.Services.AddTransient<IProcessWrapperFactory, ProcessWrapperFactory>();
@@ -166,7 +170,10 @@ internal class Program
 
         builder.ConfigureSerilog();
 
-        builder.ConfigureCoreUrls(launchModeInstance);
+        if (launchModeInstance != null)
+        {
+            builder.ConfigureCoreUrls(launchModeInstance);
+        }
 
         switch (launchModeInstance)
         {
@@ -193,40 +200,41 @@ internal class Program
                 {
                     var hostInstaller = app.Services.GetRequiredService<IHostInstaller>();
                     await hostInstaller.InstallAsync();
-
                     return;
                 }
             case UninstallMode:
                 {
                     var hostUninstaller = app.Services.GetRequiredService<IHostUninstaller>();
                     await hostUninstaller.UninstallAsync();
-
                     return;
                 }
         }
 
-        var secureAttentionSequenceService = app.Services.GetRequiredService<ISecureAttentionSequenceService>();
-
-        if (secureAttentionSequenceService.SasOption != SoftwareSasOption.ServicesAndEaseOfAccessApplications)
+        if (launchModeInstance != null)
         {
-            secureAttentionSequenceService.SasOption = SoftwareSasOption.ServicesAndEaseOfAccessApplications;
+            var secureAttentionSequenceService = app.Services.GetRequiredService<ISecureAttentionSequenceService>();
+
+            if (secureAttentionSequenceService.SasOption != SoftwareSasOption.ServicesAndEaseOfAccessApplications)
+            {
+                secureAttentionSequenceService.SasOption = SoftwareSasOption.ServicesAndEaseOfAccessApplications;
+            }
+
+            var firewallService = app.Services.GetRequiredService<IFirewallService>();
+
+            var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            var hostRootPath = Path.Combine(programFilesPath, "RemoteMaster", "Host");
+            var hostApplicationPath = Path.Combine(hostRootPath, "RemoteMaster.Host.exe");
+            var hostUpdaterApplicationPath = Path.Combine(hostRootPath, "Updater", "RemoteMaster.Host.exe");
+
+            firewallService.AddRule("Remote Master Host", hostApplicationPath);
+            firewallService.AddRule("Remote Master Host Updater", hostUpdaterApplicationPath);
+
+            var wolConfiguratorService = app.Services.GetRequiredService<IWoLConfiguratorService>();
+
+            wolConfiguratorService.DisableFastStartup();
+            wolConfiguratorService.DisablePnPEnergySaving();
+            await wolConfiguratorService.EnableWakeOnLanForAllAdaptersAsync();
         }
-
-        var firewallService = app.Services.GetRequiredService<IFirewallService>();
-
-        var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-        var hostRootPath = Path.Combine(programFilesPath, "RemoteMaster", "Host");
-        var hostApplicationPath = Path.Combine(hostRootPath, "RemoteMaster.Host.exe");
-        var hostUpdaterApplicationPath = Path.Combine(hostRootPath, "Updater", "RemoteMaster.Host.exe");
-
-        firewallService.AddRule("Remote Master Host", hostApplicationPath);
-        firewallService.AddRule("Remote Master Host Updater", hostUpdaterApplicationPath);
-
-        var wolConfiguratorService = app.Services.GetRequiredService<IWoLConfiguratorService>();
-       
-        wolConfiguratorService.DisableFastStartup();
-        wolConfiguratorService.DisablePnPEnergySaving();
-        await wolConfiguratorService.EnableWakeOnLanForAllAdaptersAsync();
 
         if (!app.Environment.IsDevelopment())
         {
@@ -236,15 +244,17 @@ internal class Program
         app.UseAuthentication();
         app.UseAuthorization();
 
-        app.MapCoreHubs(launchModeInstance);
+        if (launchModeInstance != null)
+        {
+            app.MapCoreHubs(launchModeInstance);
+        }
 
-        if (launchModeInstance is UserMode userMode)
+        if (launchModeInstance is UserMode)
         {
             app.MapHub<ServiceHub>("/hubs/service");
         }
 
         await app.RunAsync();
-
     }
 
     private static LaunchModeBase? ParseArguments(string[] args)
@@ -259,6 +269,12 @@ internal class Program
         }
 
         var assembly = Assembly.GetAssembly(typeof(LaunchModeBase));
+        
+        if (assembly == null)
+        {
+            return null;
+        }
+
         var launchModes = assembly.GetTypes()
             .Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(LaunchModeBase)))
             .ToArray();
@@ -279,7 +295,12 @@ internal class Program
             Environment.Exit(1);
         }
 
-        var launchModeInstance = (LaunchModeBase)Activator.CreateInstance(launchModeType);
+        var launchModeInstance = (LaunchModeBase?)Activator.CreateInstance(launchModeType);
+
+        if (launchModeInstance == null)
+        {
+            return null;
+        }
 
         foreach (var arg in args)
         {
@@ -380,6 +401,12 @@ internal class Program
         else
         {
             var assembly = Assembly.GetAssembly(typeof(LaunchModeBase));
+
+            if (assembly == null)
+            {
+                return;
+            }
+
             var launchModes = assembly.GetTypes()
                 .Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(LaunchModeBase)))
                 .Select(t => Activator.CreateInstance(t) as LaunchModeBase)
@@ -392,12 +419,15 @@ internal class Program
 
             foreach (var mode in launchModes)
             {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine($"{mode.Name} Mode:");
-                Console.ResetColor();
+                if (mode != null)
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine($"{mode.Name} Mode:");
+                    Console.ResetColor();
 
-                Console.WriteLine($"  {mode.Description}");
-                Console.WriteLine();
+                    Console.WriteLine($"  {mode.Description}");
+                    Console.WriteLine();
+                }
             }
 
             Console.ForegroundColor = ConsoleColor.Yellow;
