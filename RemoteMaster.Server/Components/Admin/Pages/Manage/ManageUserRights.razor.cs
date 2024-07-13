@@ -18,6 +18,7 @@ public partial class ManageUserRights
     private List<Guid> _initialSelectedOrganizationIds = [];
     private List<Guid> _initialSelectedUnitIds = [];
     private List<IdentityRole> _roles = [];
+    private string? _message;
 
     private string? SelectedUserId { get; set; }
 
@@ -89,6 +90,8 @@ public partial class ManageUserRights
 
         if (user == null)
         {
+            _message = "Error: User not found.";
+            
             return;
         }
 
@@ -101,6 +104,11 @@ public partial class ManageUserRights
         if (_initialSelectedRole != SelectedUserModel.Role)
         {
             await TokenService.RevokeAllRefreshTokensAsync(user.Id, TokenRevocationReason.RoleChanged);
+            _message = "User role updated successfully.";
+        }
+        else
+        {
+            _message = "User access updated successfully.";
         }
 
         StateHasChanged();
@@ -145,7 +153,7 @@ public partial class ManageUserRights
         foreach (var orgId in selectedOrganizationIds)
         {
             var organization = await dbContext.Organizations.FindAsync(orgId);
-            
+
             if (organization != null)
             {
                 user.AccessibleOrganizations.Add(organization);
@@ -156,7 +164,7 @@ public partial class ManageUserRights
         foreach (var unitId in selectedUnitIds)
         {
             var unit = await dbContext.OrganizationalUnits.FindAsync(unitId);
-            
+
             if (unit != null)
             {
                 user.AccessibleOrganizationalUnits.Add(unit);
@@ -195,6 +203,8 @@ public partial class ManageUserRights
 
         if (user == null)
         {
+            _message = "Error: User not found.";
+            
             return;
         }
 
@@ -218,7 +228,7 @@ public partial class ManageUserRights
         foreach (var organization in _organizations)
         {
             organization.IsSelected = _initialSelectedOrganizationIds.Contains(organization.Id);
-            
+
             if (organization.IsSelected)
             {
                 SelectedUserModel.SelectedOrganizations.Add(organization.Id);
@@ -227,7 +237,7 @@ public partial class ManageUserRights
             foreach (var unit in organization.OrganizationalUnits)
             {
                 unit.IsSelected = _initialSelectedUnitIds.Contains(unit.Id);
-                
+
                 if (unit.IsSelected)
                 {
                     SelectedUserModel.SelectedOrganizationalUnits.Add(unit.Id);
@@ -241,7 +251,7 @@ public partial class ManageUserRights
     private async Task OnUserChanged(string userId)
     {
         SelectedUserId = userId;
-        
+
         using var scope = ScopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         await LoadCurrentUserAccess(dbContext);
@@ -268,14 +278,14 @@ public partial class ManageUserRights
     private bool HasChangesInOrganizations()
     {
         var currentSelectedOrganizationIds = _organizations.Where(o => o.IsSelected).Select(o => o.Id).ToList();
-        
+
         return !_initialSelectedOrganizationIds.SequenceEqual(currentSelectedOrganizationIds);
     }
 
     private bool HasChangesInUnits()
     {
         var currentSelectedUnitIds = _organizations.SelectMany(o => o.OrganizationalUnits).Where(ou => ou.IsSelected).Select(ou => ou.Id).ToList();
-        
+
         return !_initialSelectedUnitIds.SequenceEqual(currentSelectedUnitIds);
     }
 

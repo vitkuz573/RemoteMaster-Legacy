@@ -16,6 +16,8 @@
 
 <PageTitle>Manage User Rights</PageTitle>
 
+<StatusMessage UseHttpContext="false" Message="@_message" />
+
 <div class="mb-4">
     <label for="selectedUser" class="block text-sm font-medium text-gray-700">Select User</label>
     <InputSelect id="selectedUser" Value="SelectedUserId" ValueChanged="@(async (string userId) => await OnUserChanged(userId))" ValueExpression="@(() => SelectedUserId)" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm">
