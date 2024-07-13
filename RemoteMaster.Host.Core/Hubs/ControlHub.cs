@@ -162,7 +162,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     }
 
     [Authorize(Policy = "ToggleCursorTrackingPolicy")]
-    public void SendToggleCursorTracking(bool trackCursor)
+    public void ToggleDrawCursor(bool trackCursor)
     {
         ExecuteActionForViewer(viewer => viewer.ScreenCapturer.TrackCursor = trackCursor);
     }

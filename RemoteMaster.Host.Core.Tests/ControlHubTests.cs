@@ -223,7 +223,7 @@ public class ControlHubTests
         SetupAppState(connectionId, viewer.Object);
 
         // Act
-        _controlHub.SendToggleCursorTracking(trackCursor);
+        _controlHub.ToggleDrawCursor(trackCursor);
 
         // Assert
         Mock.Get(screenCapturer).VerifySet(s => s.TrackCursor = trackCursor, Times.Once);
