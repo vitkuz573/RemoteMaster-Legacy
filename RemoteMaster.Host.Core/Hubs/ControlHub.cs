@@ -156,7 +156,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     }
 
     [Authorize(Policy = "ChangeImageQualityPolicy")]
-    public void SendImageQuality(int quality)
+    public void SetImageQuality(int quality)
     {
         ExecuteActionForViewer(viewer => viewer.ScreenCapturer.ImageQuality = quality);
     }

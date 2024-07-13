@@ -146,7 +146,7 @@ public partial class Access : IAsyncDisposable
     {
         if (!_disposed && _connection is { State: HubConnectionState.Connected })
         {
-            await _connection.InvokeAsync("SendImageQuality", _imageQuality);
+            await _connection.InvokeAsync("SetImageQuality", _imageQuality);
             await _connection.InvokeAsync("ToggleDrawCursor", _cursorTracking);
 
             if (await IsPolicyPermittedAsync("ToggleInputPolicy"))
@@ -417,7 +417,7 @@ public partial class Access : IAsyncDisposable
     {
         _imageQuality = quality;
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendImageQuality", quality));
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SetImageQuality", quality));
         QueryParameterService.UpdateParameter("imageQuality", quality.ToString());
     }
 

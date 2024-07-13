@@ -203,7 +203,7 @@ public class ControlHubTests
         SetupAppState(connectionId, viewer.Object);
 
         // Act
-        _controlHub.SendImageQuality(quality);
+        _controlHub.SetImageQuality(quality);
 
         // Assert
         Mock.Get(screenCapturer).VerifySet(s => s.ImageQuality = quality, Times.Once);
