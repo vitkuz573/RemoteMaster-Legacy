@@ -214,7 +214,7 @@ public partial class Access : IAsyncDisposable
 
     private async Task LogOffUser()
     {
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendLogOffUser", true), true);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("LogOffUser", true), true);
     }
 
     private async Task SendCtrlAltDel()

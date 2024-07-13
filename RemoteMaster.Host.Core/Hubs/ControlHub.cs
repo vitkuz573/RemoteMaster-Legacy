@@ -219,7 +219,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     }
 
     [Authorize(Policy = "LogOffUserPolicy")]
-    public void SendLogOffUser(bool force)
+    public void LogOffUser(bool force)
     {
         workStationSecurityService.LogOffUser(force);
     }
