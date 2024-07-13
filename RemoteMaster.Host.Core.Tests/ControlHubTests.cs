@@ -246,7 +246,7 @@ public class ControlHubTests
         var powerActionRequest = new PowerActionRequest();
 
         // Act
-        _controlHub.SendRebootComputer(powerActionRequest);
+        _controlHub.RebootComputer(powerActionRequest);
 
         // Assert
         _mockPowerService.Verify(p => p.Reboot(powerActionRequest), Times.Once);

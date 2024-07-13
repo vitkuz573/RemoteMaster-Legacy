@@ -231,7 +231,7 @@ public partial class Access : IAsyncDisposable
             ForceAppsClosed = true
         };
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendRebootComputer", powerActionRequest), true);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("RebootComputer", powerActionRequest), true);
     }
 
     private async Task ShutdownComputer()

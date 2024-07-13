@@ -174,7 +174,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     }
 
     [Authorize(Policy = "RebootComputerPolicy")]
-    public void SendRebootComputer(PowerActionRequest powerActionRequest)
+    public void RebootComputer(PowerActionRequest powerActionRequest)
     {
         powerService.Reboot(powerActionRequest);
     }

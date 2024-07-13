@@ -27,7 +27,7 @@ public partial class PowerDialog
                 await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("ShutdownComputer", powerActionRequest));
                 break;
             case "reboot":
-                await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("SendRebootComputer", powerActionRequest));
+                await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("RebootComputer", powerActionRequest));
                 break;
         }
 
