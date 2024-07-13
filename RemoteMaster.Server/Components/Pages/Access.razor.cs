@@ -425,7 +425,7 @@ public partial class Access : IAsyncDisposable
     {
         _selectedDisplay = display;
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("SendSelectedScreen", display));
+        await SafeInvokeAsync(() => _connection.InvokeAsync("ChangeSelectedScreen", display));
     }
 
     private async Task<bool> IsPolicyPermittedAsync(string policyName)

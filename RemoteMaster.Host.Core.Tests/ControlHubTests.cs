@@ -157,7 +157,7 @@ public class ControlHubTests
         SetupAppState(connectionId, viewer.Object);
 
         // Act
-        _controlHub.SendSelectedScreen(displayName);
+        _controlHub.ChangeSelectedScreen(displayName);
 
         // Assert
         Mock.Get(screenCapturer).Verify(s => s.SetSelectedScreen(displayName), Times.Once);

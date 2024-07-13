@@ -131,7 +131,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     }
 
     [Authorize(Policy = "SwitchScreenPolicy")]
-    public void SendSelectedScreen(string displayName)
+    public void ChangeSelectedScreen(string displayName)
     {
         if (appState.TryGetViewer(Context.ConnectionId, out var viewer))
         {
