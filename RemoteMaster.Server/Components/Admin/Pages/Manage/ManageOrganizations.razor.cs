@@ -17,10 +17,9 @@ public partial class ManageOrganizations
     private InputModel Input { get; set; } = new();
 
     private List<Organization> _organizations = [];
-    private string _message;
-    private string _messageType;
+    private string? _message;
     private List<Country> _countries = [];
-    private ConfirmationDialog confirmationDialog;
+    private ConfirmationDialog? _confirmationDialog;
     private Organization? _organizationToDelete;
 
     protected override void OnInitialized()
@@ -32,7 +31,7 @@ public partial class ManageOrganizations
 
     private async Task OnValidSubmitAsync()
     {
-        Organization organization;
+        Organization? organization;
 
         using var scope = ScopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -43,13 +42,15 @@ public partial class ManageOrganizations
 
             if (organization == null)
             {
-                SetMessage("Organization not found.", "error");
+                _message = "Error: Organization not found.";
+
                 return;
             }
 
             if (await dbContext.Organizations.AnyAsync(o => o.Name == Input.Name && o.NodeId != Input.Id.Value))
             {
-                SetMessage("Organization with this name already exists.", "error");
+                _message = "Error: Organization with this name already exists.";
+
                 return;
             }
 
@@ -62,7 +63,8 @@ public partial class ManageOrganizations
         {
             if (await OrganizationNameExists(Input.Name))
             {
-                SetMessage("Organization with this name already exists.", "error");
+                _message = "Error: Organization with this name already exists.";
+
                 return;
             }
 
@@ -78,13 +80,7 @@ public partial class ManageOrganizations
 
         Input = new InputModel();
 
-        SetMessage("Organization saved successfully.", "success");
-    }
-
-    private void SetMessage(string message, string type)
-    {
-        _message = message;
-        _messageType = type;
+        _message = "Organization saved successfully.";
     }
 
     private async Task<bool> OrganizationNameExists(string name)
@@ -146,7 +142,7 @@ public partial class ManageOrganizations
             { "Organization", organization.Name }
         };
 
-        confirmationDialog.Show(parameters);
+        _confirmationDialog?.Show(parameters);
     }
 
     private async Task OnConfirmDelete(bool confirmed)
