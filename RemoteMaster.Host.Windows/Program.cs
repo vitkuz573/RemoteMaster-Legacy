@@ -23,6 +23,7 @@ using RemoteMaster.Host.Core.Requirements;
 using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Enums;
+using RemoteMaster.Host.Windows.Helpers;
 using RemoteMaster.Host.Windows.Hubs;
 using RemoteMaster.Host.Windows.Services;
 
@@ -37,7 +38,6 @@ internal class Program
         if (launchModeInstance is UpdaterMode updaterMode && string.IsNullOrEmpty(updaterMode.Parameters["folder-path"].Value))
         {
             PrintHelp(launchModeInstance);
-            
             return;
         }
 
@@ -55,118 +55,7 @@ internal class Program
             builder.Host.UseWindowsService();
         }
 
-        builder.Services.AddHttpContextAccessor();
-
-        if (launchModeInstance != null)
-        {
-            builder.Services.AddCoreServices(launchModeInstance);
-        }
-
-        builder.Services.AddTransient<IServiceFactory, ServiceFactory>();
-        builder.Services.AddTransient<IRegistryKeyFactory, RegistryKeyFactory>();
-        builder.Services.AddTransient<IProcessWrapperFactory, ProcessWrapperFactory>();
-        builder.Services.AddTransient<INativeProcessFactory, NativeProcessFactory>();
-        builder.Services.AddSingleton<IUserInstanceService, UserInstanceService>();
-        builder.Services.AddSingleton<IUpdaterInstanceService, UpdaterInstanceService>();
-        builder.Services.AddSingleton<IHostInstaller, HostInstaller>();
-        builder.Services.AddSingleton<IHostUninstaller, HostUninstaller>();
-        builder.Services.AddSingleton<IScreenCapturerService, GdiCapturer>();
-        builder.Services.AddSingleton<IScreenRecorderService, ScreenRecorderService>();
-        builder.Services.AddSingleton<ICursorRenderService, CursorRenderService>();
-        builder.Services.AddSingleton<IInputService, InputService>();
-        builder.Services.AddSingleton<IPowerService, PowerService>();
-        builder.Services.AddSingleton<IHardwareService, HardwareService>();
-        builder.Services.AddSingleton<IHostUpdater, HostUpdater>();
-        builder.Services.AddSingleton<ITokenPrivilegeService, TokenPrivilegeService>();
-        builder.Services.AddSingleton<IDesktopService, DesktopService>();
-        builder.Services.AddSingleton<INetworkDriveService, NetworkDriveService>();
-        builder.Services.AddSingleton<IDomainService, DomainService>();
-        builder.Services.AddSingleton<IScriptService, ScriptService>();
-        builder.Services.AddSingleton<ITaskManagerService, TaskManagerService>();
-        builder.Services.AddSingleton<ISecureAttentionSequenceService, SecureAttentionSequenceService>();
-        builder.Services.AddSingleton<IPsExecService, PsExecService>();
-        builder.Services.AddSingleton<IFirewallService, FirewallService>();
-        builder.Services.AddSingleton<IWoLConfiguratorService, WoLConfiguratorService>();
-        builder.Services.AddSingleton<IRegistryService, RegistryService>();
-        builder.Services.AddSingleton<IProcessService, ProcessService>();
-        builder.Services.AddSingleton<ISessionChangeEventService, SessionChangeEventService>();
-        builder.Services.AddSingleton<IArgumentBuilderService, ArgumentBuilderService>();
-        builder.Services.AddSingleton<IInstanceStarterService, InstanceStarterService>();
-        builder.Services.AddSingleton<IFileSystem, FileSystem>();
-        builder.Services.AddSingleton<IWorkStationSecurityService, WorkStationSecurityService>();
-        builder.Services.AddSingleton<IAuthorizationHandler, LocalhostOrAuthenticatedHandler>();
-        builder.Services.AddSingleton(new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
-
-        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var publicKeyPath = Path.Combine(programDataPath, "RemoteMaster", "Security", "JWT", "public_key.der");
-
-        if (File.Exists(publicKeyPath))
-        {
-            var publicKey = await File.ReadAllBytesAsync(publicKeyPath);
-
-#pragma warning disable CA2000
-            var rsa = RSA.Create();
-#pragma warning restore CA2000
-            rsa.ImportRSAPublicKey(publicKey, out _);
-
-            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(jwtBearerOptions =>
-                {
-                    jwtBearerOptions.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuer = true,
-                        ValidateAudience = true,
-                        ValidateIssuerSigningKey = true,
-                        ValidateLifetime = true,
-                        ValidIssuer = "RemoteMaster Server",
-                        ValidAudience = "RMServiceAPI",
-                        IssuerSigningKey = new RsaSecurityKey(rsa),
-                        RoleClaimType = ClaimTypes.Role,
-                        AuthenticationType = "JWT Security"
-                    };
-                });
-
-            builder.Services.AddAuthorizationBuilder()
-                .AddPolicy("LocalhostOrAuthenticatedPolicy", policy =>
-                    policy.Requirements.Add(new LocalhostOrAuthenticatedRequirement()))
-                .AddPolicy("MouseInputPolicy", policy =>
-                    policy.RequireClaim("Permission", "MouseInput"))
-                .AddPolicy("KeyboardInputPolicy", policy =>
-                    policy.RequireClaim("Permission", "KeyboardInput"))
-                .AddPolicy("SwitchScreenPolicy", policy =>
-                    policy.RequireClaim("Permission", "SwitchScreen"))
-                .AddPolicy("ToggleInputPolicy", policy =>
-                    policy.RequireClaim("Permission", "ToggleInput"))
-                .AddPolicy("ToggleUserInputPolicy", policy =>
-                    policy.RequireClaim("Permission", "ToggleUserInput"))
-                .AddPolicy("ChangeImageQualityPolicy", policy =>
-                    policy.RequireClaim("Permission", "ChangeImageQuality"))
-                .AddPolicy("ToggleCursorTrackingPolicy", policy =>
-                    policy.RequireClaim("Permission", "ToggleCursorTracking"))
-                .AddPolicy("TerminateHostPolicy", policy =>
-                    policy.RequireClaim("Permission", "TerminateHost"))
-                .AddPolicy("RebootComputerPolicy", policy =>
-                    policy.RequireClaim("Permission", "RebootComputer"))
-                .AddPolicy("ShutdownComputerPolicy", policy =>
-                    policy.RequireClaim("Permission", "ShutdownComputer"))
-                .AddPolicy("ChangeMonitorStatePolicy", policy =>
-                    policy.RequireClaim("Permission", "ChangeMonitorState"))
-                .AddPolicy("ExecuteScriptPolicy", policy =>
-                    policy.RequireClaim("Permission", "ExecuteScript"))
-                .AddPolicy("LockWorkStationPolicy", policy =>
-                    policy.RequireClaim("Permission", "LockWorkStation"))
-                .AddPolicy("LogOffUserPolicy", policy =>
-                    policy.RequireClaim("Permission", "LogOffUser"))
-                .AddPolicy("MovePolicy", policy =>
-                    policy.RequireClaim("Permission", "Move"))
-                .AddPolicy("RenewCertificatePolicy", policy =>
-                    policy.RequireClaim("Permission", "RenewCertificate"));
-        }
+        ConfigureServices(builder.Services, launchModeInstance);
 
         builder.ConfigureSerilog();
 
@@ -175,39 +64,18 @@ internal class Program
             builder.ConfigureCoreUrls(launchModeInstance);
         }
 
-        switch (launchModeInstance)
-        {
-            case UserMode:
-                builder.Services.AddHostedService<InputBackgroundService>();
-                break;
-            case ServiceMode:
-                builder.Services.AddHostedService<CertificateManagementService>();
-                builder.Services.AddHostedService<HostProcessMonitorService>();
-                builder.Services.AddHostedService<HostRegistrationMonitorService>();
-                builder.Services.AddHostedService<MessageLoopService>();
-                builder.Services.AddHostedService<CommandListenerService>();
-                break;
-            case UpdaterMode:
-                builder.Services.AddHostedService<UpdaterBackground>();
-                break;
-        }
-
         var app = builder.Build();
 
         switch (launchModeInstance)
         {
             case InstallMode:
-                {
-                    var hostInstaller = app.Services.GetRequiredService<IHostInstaller>();
-                    await hostInstaller.InstallAsync();
-                    return;
-                }
+                var hostInstaller = app.Services.GetRequiredService<IHostInstaller>();
+                await hostInstaller.InstallAsync();
+                return;
             case UninstallMode:
-                {
-                    var hostUninstaller = app.Services.GetRequiredService<IHostUninstaller>();
-                    await hostUninstaller.UninstallAsync();
-                    return;
-                }
+                var hostUninstaller = app.Services.GetRequiredService<IHostUninstaller>();
+                await hostUninstaller.UninstallAsync();
+                return;
         }
 
         if (launchModeInstance != null)
@@ -257,6 +125,139 @@ internal class Program
         await app.RunAsync();
     }
 
+    private static void ConfigureServices(IServiceCollection services, LaunchModeBase launchModeInstance)
+    {
+        services.AddHttpContextAccessor();
+
+        if (launchModeInstance != null)
+        {
+            services.AddCoreServices(launchModeInstance);
+        }
+
+        services.AddTransient<IServiceFactory, ServiceFactory>();
+        services.AddTransient<IRegistryKeyFactory, RegistryKeyFactory>();
+        services.AddTransient<IProcessWrapperFactory, ProcessWrapperFactory>();
+        services.AddTransient<INativeProcessFactory, NativeProcessFactory>();
+        services.AddSingleton<IUserInstanceService, UserInstanceService>();
+        services.AddSingleton<IUpdaterInstanceService, UpdaterInstanceService>();
+        services.AddSingleton<IHostInstaller, HostInstaller>();
+        services.AddSingleton<IHostUninstaller, HostUninstaller>();
+        services.AddSingleton<IScreenCapturerService, GdiCapturer>();
+        services.AddSingleton<IScreenRecorderService, ScreenRecorderService>();
+        services.AddSingleton<ICursorRenderService, CursorRenderService>();
+        services.AddSingleton<IInputService, InputService>();
+        services.AddSingleton<IPowerService, PowerService>();
+        services.AddSingleton<IHardwareService, HardwareService>();
+        services.AddSingleton<IHostUpdater, HostUpdater>();
+        services.AddSingleton<ITokenPrivilegeService, TokenPrivilegeService>();
+        services.AddSingleton<IDesktopService, DesktopService>();
+        services.AddSingleton<INetworkDriveService, NetworkDriveService>();
+        services.AddSingleton<IDomainService, DomainService>();
+        services.AddSingleton<IScriptService, ScriptService>();
+        services.AddSingleton<ITaskManagerService, TaskManagerService>();
+        services.AddSingleton<ISecureAttentionSequenceService, SecureAttentionSequenceService>();
+        services.AddSingleton<IPsExecService, PsExecService>();
+        services.AddSingleton<IFirewallService, FirewallService>();
+        services.AddSingleton<IWoLConfiguratorService, WoLConfiguratorService>();
+        services.AddSingleton<IRegistryService, RegistryService>();
+        services.AddSingleton<IProcessService, ProcessService>();
+        services.AddSingleton<ISessionChangeEventService, SessionChangeEventService>();
+        services.AddSingleton<IArgumentBuilderService, ArgumentBuilderService>();
+        services.AddSingleton<IInstanceStarterService, InstanceStarterService>();
+        services.AddSingleton<IFileSystem, FileSystem>();
+        services.AddSingleton<IWorkStationSecurityService, WorkStationSecurityService>();
+        services.AddSingleton<IAuthorizationHandler, LocalhostOrAuthenticatedHandler>();
+        services.AddSingleton(new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
+
+        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        var publicKeyPath = Path.Combine(programDataPath, "RemoteMaster", "Security", "JWT", "public_key.der");
+
+        if (File.Exists(publicKeyPath))
+        {
+            var publicKey = File.ReadAllBytesAsync(publicKeyPath).Result;
+
+#pragma warning disable CA2000
+            var rsa = RSA.Create();
+#pragma warning restore CA2000
+            rsa.ImportRSAPublicKey(publicKey, out _);
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(jwtBearerOptions =>
+                {
+                    jwtBearerOptions.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidateLifetime = true,
+                        ValidIssuer = "RemoteMaster Server",
+                        ValidAudience = "RMServiceAPI",
+                        IssuerSigningKey = new RsaSecurityKey(rsa),
+                        RoleClaimType = ClaimTypes.Role,
+                        AuthenticationType = "JWT Security"
+                    };
+                });
+
+            services.AddAuthorizationBuilder()
+                .AddPolicy("LocalhostOrAuthenticatedPolicy", policy =>
+                    policy.Requirements.Add(new LocalhostOrAuthenticatedRequirement()))
+                .AddPolicy("MouseInputPolicy", policy =>
+                    policy.RequireClaim("Permission", "MouseInput"))
+                .AddPolicy("KeyboardInputPolicy", policy =>
+                    policy.RequireClaim("Permission", "KeyboardInput"))
+                .AddPolicy("SwitchScreenPolicy", policy =>
+                    policy.RequireClaim("Permission", "SwitchScreen"))
+                .AddPolicy("ToggleInputPolicy", policy =>
+                    policy.RequireClaim("Permission", "ToggleInput"))
+                .AddPolicy("ToggleUserInputPolicy", policy =>
+                    policy.RequireClaim("Permission", "ToggleUserInput"))
+                .AddPolicy("ChangeImageQualityPolicy", policy =>
+                    policy.RequireClaim("Permission", "ChangeImageQuality"))
+                .AddPolicy("ToggleCursorTrackingPolicy", policy =>
+                    policy.RequireClaim("Permission", "ToggleCursorTracking"))
+                .AddPolicy("TerminateHostPolicy", policy =>
+                    policy.RequireClaim("Permission", "TerminateHost"))
+                .AddPolicy("RebootComputerPolicy", policy =>
+                    policy.RequireClaim("Permission", "RebootComputer"))
+                .AddPolicy("ShutdownComputerPolicy", policy =>
+                    policy.RequireClaim("Permission", "ShutdownComputer"))
+                .AddPolicy("ChangeMonitorStatePolicy", policy =>
+                    policy.RequireClaim("Permission", "ChangeMonitorState"))
+                .AddPolicy("ExecuteScriptPolicy", policy =>
+                    policy.RequireClaim("Permission", "ExecuteScript"))
+                .AddPolicy("LockWorkStationPolicy", policy =>
+                    policy.RequireClaim("Permission", "LockWorkStation"))
+                .AddPolicy("LogOffUserPolicy", policy =>
+                    policy.RequireClaim("Permission", "LogOffUser"))
+                .AddPolicy("MovePolicy", policy =>
+                    policy.RequireClaim("Permission", "Move"))
+                .AddPolicy("RenewCertificatePolicy", policy =>
+                    policy.RequireClaim("Permission", "RenewCertificate"));
+        }
+
+        switch (launchModeInstance)
+        {
+            case UserMode:
+                services.AddHostedService<InputBackgroundService>();
+                break;
+            case ServiceMode:
+                services.AddHostedService<CertificateManagementService>();
+                services.AddHostedService<HostProcessMonitorService>();
+                services.AddHostedService<HostRegistrationMonitorService>();
+                services.AddHostedService<MessageLoopService>();
+                services.AddHostedService<CommandListenerService>();
+                break;
+            case UpdaterMode:
+                services.AddHostedService<UpdaterBackground>();
+                break;
+        }
+    }
+
     private static LaunchModeBase? ParseArguments(string[] args)
     {
         var helpRequested = args.Any(arg => arg.Equals("--help", StringComparison.OrdinalIgnoreCase));
@@ -269,7 +270,7 @@ internal class Program
         }
 
         var assembly = Assembly.GetAssembly(typeof(LaunchModeBase));
-        
+
         if (assembly == null)
         {
             return null;
@@ -349,7 +350,7 @@ internal class Program
         var suggestions = modeNames.Select(name => new
         {
             Name = name,
-            Distance = ComputeLevenshteinDistance(inputMode.ToLower(), name.ToLower())
+            Distance = LevenshteinDistanceUtility.ComputeLevenshteinDistance(inputMode.ToLower(), name.ToLower()) // Используем новый утилитарный класс
         })
             .OrderBy(x => x.Distance)
             .Take(3);
@@ -360,25 +361,6 @@ internal class Program
         {
             Console.WriteLine($"- {suggestion.Name}");
         }
-    }
-
-    private static int ComputeLevenshteinDistance(string source1, string source2)
-    {
-        var matrix = new int[source1.Length + 1, source2.Length + 1];
-
-        for (var i = 0; i <= source1.Length; matrix[i, 0] = i++) { }
-        for (var j = 0; j <= source2.Length; matrix[0, j] = j++) { }
-
-        for (var i = 1; i <= source1.Length; i++)
-        {
-            for (var j = 1; j <= source2.Length; j++)
-            {
-                var cost = (source2[j - 1] == source1[i - 1]) ? 0 : 1;
-                matrix[i, j] = Math.Min(Math.Min(matrix[i - 1, j] + 1, matrix[i, j - 1] + 1), matrix[i - 1, j - 1] + cost);
-            }
-        }
-
-        return matrix[source1.Length, source2.Length];
     }
 
     private static void PrintHelp(LaunchModeBase? specificMode)
