@@ -31,7 +31,14 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
         try
         {
-            var jwtDirectory = EnsureJwtDirectoryExists();
+            var jwtDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "RemoteMaster", "Security", "JWT");
+            
+            if (!Directory.Exists(jwtDirectory))
+            {
+                Directory.CreateDirectory(jwtDirectory);
+                
+                Log.Debug("JWT directory created at {DirectoryPath}.", jwtDirectory);
+            }
 
             await serverHubService.ConnectAsync(hostConfiguration.Server!);
 
@@ -44,7 +51,6 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
                 Log.Information("Host GUID received: {Guid}.", guid);
 
                 hostConfiguration.HostGuid = guid;
-
                 hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
 
                 tcsGuid.SetResult(guid);
@@ -68,6 +74,7 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
                 try
                 {
                     await File.WriteAllBytesAsync(publicKeyPath, publicKey);
+                    
                     Log.Information("Public key saved successfully at {Path}.", publicKeyPath);
                 }
                 catch (Exception ex)
@@ -135,6 +142,7 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
             var distinguishedName = subjectService.GetDistinguishedName(hostConfiguration.Host.Name);
 
             Log.Information("Removing existing certificates...");
+            
             RemoveExistingCertificate();
 
             var csr = certificateRequestService.GenerateSigningRequest(distinguishedName, ipAddresses, out rsaKeyPair);
@@ -145,6 +153,7 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
             serverHubService.OnReceiveCertificate(certificateBytes => ProcessCertificate(certificateBytes, rsaKeyPair, tcs));
 
             Log.Information("Attempting to issue certificate...");
+            
             await serverHubService.IssueCertificateAsync(signingRequest);
 
             var isCertificateReceived = await tcs.Task;
@@ -184,9 +193,11 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
     {
         using var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
         store.Open(OpenFlags.ReadWrite);
-        var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, Dns.GetHostName(), false);
-
-        var certificate = certificates.Cast<X509Certificate2>().FirstOrDefault(cert => cert.HasPrivateKey);
+        
+        var certificate = store.Certificates
+            .Find(X509FindType.FindBySubjectName, Dns.GetHostName(), false)
+            .Cast<X509Certificate2>()
+            .FirstOrDefault(cert => cert.HasPrivateKey);
 
         if (certificate != null)
         {
@@ -248,23 +259,6 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         }
     }
 
-    private static string EnsureJwtDirectoryExists()
-    {
-        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var directory = Path.Combine(programDataPath, "RemoteMaster", "Security", "JWT");
-
-        if (Directory.Exists(directory))
-        {
-            return directory;
-        }
-
-        Directory.CreateDirectory(directory);
-
-        Log.Debug("JWT directory created at {DirectoryPath}.", directory);
-
-        return directory;
-    }
-
     private void ProcessCertificate(byte[] certificateBytes, RSA rsaKeyPair, TaskCompletionSource<bool> tcs)
     {
         X509Certificate2? tempCertificate = null;
@@ -318,7 +312,7 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
                 using var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
                 store.Open(OpenFlags.ReadWrite);
                 store.Add(certificateWithPrivateKey);
-                
+
                 Log.Information("Certificate with private key imported successfully into the certificate store.");
             }
             else
