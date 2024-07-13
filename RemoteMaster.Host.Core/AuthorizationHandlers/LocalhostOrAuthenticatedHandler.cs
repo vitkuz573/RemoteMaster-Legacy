@@ -41,7 +41,7 @@ public class LocalhostOrAuthenticatedHandler(IHttpContextAccessor httpContextAcc
 
                 var identity = new ClaimsIdentity(claims, "RemoteMaster Security");
 
-                context.User.AddIdentity(identity);
+                context.User?.AddIdentity(identity);
             }
 
             context.Succeed(requirement);
