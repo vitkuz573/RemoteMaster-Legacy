@@ -43,7 +43,7 @@ public partial class ScriptExecutorDialog
 
             if (connection != null)
             {
-                await connection.InvokeAsync("SendScript", scriptExecutionRequest);
+                await connection.InvokeAsync("ExecuteScript", scriptExecutionRequest);
             }
         }
     }

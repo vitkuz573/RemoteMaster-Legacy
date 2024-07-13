@@ -35,7 +35,7 @@ public partial class MessageBoxDialog
 
             if (connection != null)
             {
-                await connection.InvokeAsync("SendScript", scriptExecutionRequest);
+                await connection.InvokeAsync("ExecuteScript", scriptExecutionRequest);
             }
         }
     }

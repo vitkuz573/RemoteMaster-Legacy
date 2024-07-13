@@ -207,7 +207,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     }
 
     [Authorize(Policy = "ExecuteScriptPolicy")]
-    public void SendScript(ScriptExecutionRequest scriptExecutionRequest)
+    public void ExecuteScript(ScriptExecutionRequest scriptExecutionRequest)
     {
         scriptService.Execute(scriptExecutionRequest);
     }

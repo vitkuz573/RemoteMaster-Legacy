@@ -285,7 +285,7 @@ public class ControlHubTests
         var scriptExecutionRequest = new ScriptExecutionRequest("TestContent", Shell.Cmd);
 
         // Act
-        _controlHub.SendScript(scriptExecutionRequest);
+        _controlHub.ExecuteScript(scriptExecutionRequest);
 
         // Assert
         _mockScriptService.Verify(s => s.Execute(scriptExecutionRequest), Times.Once);
