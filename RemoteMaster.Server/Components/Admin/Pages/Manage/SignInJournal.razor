@@ -2,8 +2,6 @@
 
 @rendermode InteractiveServer
 
-@namespace RemoteMaster.Server.Components.Admin.Pages.Manage
-
 @inject IServiceScopeFactory ScopeFactory
 @inject IJSRuntime JSRuntime
 
@@ -13,15 +11,15 @@
     <div class="mb-4 flex items-center justify-between">
         <div class="flex items-center">
             <label class="mr-2">Items per page:</label>
-            <select class="rounded border border-gray-300 px-2 py-1" @bind="PageSize">
+            <InputSelect @bind-Value="PageSize" class="rounded border border-gray-300 px-2 py-1">
                 <option value="5">5</option>
                 <option value="10">10</option>
                 <option value="20">20</option>
-            </select>
+            </InputSelect>
         </div>
         <div class="relative flex items-center">
             <label class="mr-2">Filter:</label>
-            <input id="filterInput" type="text" class="rounded border border-gray-300 px-2 py-1" @bind="Filter" @oninput="ApplyFilter" />
+            <InputText id="filterInput" class="rounded border border-gray-300 px-2 py-1" @bind-Value="Filter" @oninput="ApplyFilter" />
             <div id="filterInput-autocomplete-list" class="autocomplete-items"></div>
             <button class="ml-2 rounded bg-blue-500 px-4 py-2 text-white" @onclick="ShowFilterHelp">Help</button>
         </div>
