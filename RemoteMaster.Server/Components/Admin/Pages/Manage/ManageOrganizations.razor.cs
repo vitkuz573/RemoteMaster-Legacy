@@ -31,63 +31,85 @@ public partial class ManageOrganizations
 
     private async Task OnValidSubmitAsync()
     {
-        Organization? organization;
-
         using var scope = ScopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
         if (Input.Id.HasValue)
         {
-            organization = await dbContext.Organizations.FindAsync(Input.Id.Value);
-
-            if (organization == null)
+            if (await UpdateOrganizationAsync(dbContext))
             {
-                _message = "Error: Organization not found.";
-
-                return;
+                OnOrganizationSaved();
             }
-
-            if (await dbContext.Organizations.AnyAsync(o => o.Name == Input.Name && o.NodeId != Input.Id.Value))
-            {
-                _message = "Error: Organization with this name already exists.";
-
-                return;
-            }
-
-            organization.Name = Input.Name;
-            organization.Locality = Input.Locality;
-            organization.State = Input.State;
-            organization.Country = Input.Country;
         }
         else
         {
-            if (await OrganizationNameExists(Input.Name))
+            if (await CreateOrganizationAsync(dbContext))
             {
-                _message = "Error: Organization with this name already exists.";
-
-                return;
+                OnOrganizationSaved();
             }
-
-            organization = CreateOrganization(Input.Name, Input.Locality, Input.State, Input.Country);
-            await dbContext.Organizations.AddAsync(organization);
         }
+    }
 
-        await dbContext.SaveChangesAsync();
-
+    private void OnOrganizationSaved()
+    {
         LoadOrganizations();
 
         NavigationManager.Refresh();
-
         Input = new InputModel();
 
         _message = "Organization saved successfully.";
+    }
+
+    private async Task<bool> UpdateOrganizationAsync(ApplicationDbContext dbContext)
+    {
+        var organization = await dbContext.Organizations.FindAsync(Input.Id.Value);
+
+        if (organization == null)
+        {
+            _message = "Error: Organization not found.";
+
+            return false;
+        }
+
+        if (await dbContext.Organizations.AnyAsync(o => o.Name == Input.Name && o.NodeId != Input.Id.Value))
+        {
+            _message = "Error: Organization with this name already exists.";
+
+            return false;
+        }
+
+        organization.Name = Input.Name;
+        organization.Locality = Input.Locality;
+        organization.State = Input.State;
+        organization.Country = Input.Country;
+
+        await dbContext.SaveChangesAsync();
+
+        return true;
+    }
+
+    private async Task<bool> CreateOrganizationAsync(ApplicationDbContext dbContext)
+    {
+        if (await OrganizationNameExists(Input.Name))
+        {
+            _message = "Error: Organization with this name already exists.";
+
+            return false;
+        }
+
+        var organization = CreateOrganization(Input.Name, Input.Locality, Input.State, Input.Country);
+        
+        await dbContext.Organizations.AddAsync(organization);
+        await dbContext.SaveChangesAsync();
+        
+        return true;
     }
 
     private async Task<bool> OrganizationNameExists(string name)
     {
         using var scope = ScopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
+        
         return await dbContext.Organizations.AnyAsync(o => o.Name == name);
     }
 
@@ -95,7 +117,7 @@ public partial class ManageOrganizations
     {
         using var scope = ScopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
+        
         _organizations = [.. dbContext.Organizations];
     }
 
@@ -119,6 +141,7 @@ public partial class ManageOrganizations
         await dbContext.SaveChangesAsync();
 
         LoadOrganizations();
+        _message = "Organization deleted successfully.";
     }
 
     private void EditOrganization(Organization organization)
@@ -150,6 +173,7 @@ public partial class ManageOrganizations
         if (confirmed && _organizationToDelete != null)
         {
             await DeleteOrganization(_organizationToDelete);
+
             _organizationToDelete = null;
         }
     }
