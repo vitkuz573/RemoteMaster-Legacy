@@ -18,7 +18,7 @@ internal class InputBackgroundService(IInputService inputService) : IHostedServi
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        inputService.Stop();
+        inputService.Dispose();
 
         return Task.CompletedTask;
     }

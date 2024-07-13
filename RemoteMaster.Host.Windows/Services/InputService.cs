@@ -58,11 +58,6 @@ public sealed class InputService(IDesktopService desktopService) : IInputService
         _workerThread.Start();
     }
 
-    public void Stop()
-    {
-        Dispose();
-    }
-
     private static PointF GetAbsolutePercentFromRelativePercent(PointF? position, IScreenCapturerService screenCapturer)
     {
         var absoluteX = screenCapturer.CurrentScreenBounds.Width * position.GetValueOrDefault().X + screenCapturer.CurrentScreenBounds.Left - screenCapturer.VirtualScreenBounds.Left;
@@ -411,8 +406,6 @@ public sealed class InputService(IDesktopService desktopService) : IInputService
             return;
         }
 
-        _disposed = true;
-
         if (!disposing)
         {
             return;
@@ -428,6 +421,8 @@ public sealed class InputService(IDesktopService desktopService) : IInputService
 
         _cts.Dispose();
         _queueEvent.Dispose();
+
+        _disposed = true;
     }
 
     ~InputService()
