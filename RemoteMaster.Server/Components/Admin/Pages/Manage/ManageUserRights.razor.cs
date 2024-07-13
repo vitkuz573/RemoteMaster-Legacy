@@ -115,6 +115,8 @@ public partial class ManageUserRights
 
         UpdateInitialSelections();
 
+        await HideSuccessMessageAfterDelay();
+
         NavigationManager.Refresh();
     }
 
@@ -332,6 +334,14 @@ public partial class ManageUserRights
         _initialIsLockedOut = SelectedUserModel.IsLockedOut;
         _initialIsPermanentLockout = SelectedUserModel.IsPermanentLockout;
         _initialLockoutEndDateTime = SelectedUserModel.LockoutEndDateTime;
+    }
+
+    private async Task HideSuccessMessageAfterDelay()
+    {
+        await Task.Delay(3000);
+        _message = null;
+
+        await InvokeAsync(StateHasChanged);
     }
 
     public class UserViewModel

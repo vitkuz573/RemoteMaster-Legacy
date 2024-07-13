@@ -19,11 +19,11 @@ public partial class ManageRoleClaims
 
     private RoleClaimEditModel SelectedRoleModel { get; set; } = new();
 
-    private bool ShowSuccessMessage { get; set; } = false;
-
     private bool HasChanges => HasChangesInClaims();
 
     private List<Claim> _initialRoleClaims = [];
+
+    private string? _message;
 
     protected async override Task OnInitializedAsync()
     {
@@ -74,6 +74,8 @@ public partial class ManageRoleClaims
     {
         if (string.IsNullOrEmpty(SelectedRoleId))
         {
+            _message = "Error: No role selected.";
+
             return;
         }
 
@@ -98,8 +100,8 @@ public partial class ManageRoleClaims
 
         await dbContext.SaveChangesAsync();
 
-        ShowSuccessMessage = true;
-
+        _message = "Role claims updated successfully.";
+        
         _initialRoleClaims = _claimTypes
             .SelectMany(ct => ct.Values.Where(v => v.IsSelected).Select(v => new Claim(ct.Type, v.Value)))
             .ToList();
@@ -157,7 +159,7 @@ public partial class ManageRoleClaims
     private async Task HideSuccessMessageAfterDelay()
     {
         await Task.Delay(3000);
-        ShowSuccessMessage = false;
+        _message = null;
 
         await InvokeAsync(StateHasChanged);
     }

@@ -16,6 +16,8 @@
 
 <PageTitle>Manage Role Claims</PageTitle>
 
+<StatusMessage UseHttpContext="false" Message="@_message" />
+
 <div class="mb-4">
     <label for="selectedRole" class="block text-sm font-medium text-gray-700">Select Role</label>
     <InputSelect id="selectedRole" Value="SelectedRoleId" ValueChanged="@(async (string roleId) => await OnRoleChanged(roleId))" ValueExpression="@(() => SelectedRoleId)" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm">
@@ -32,13 +34,6 @@
     <EditForm Model="SelectedRoleModel" OnValidSubmit="OnValidSubmitAsync" class="space-y-6">
         <DataAnnotationsValidator />
         <ValidationSummary class="text-red-500" role="alert" />
-
-        @if (ShowSuccessMessage)
-        {
-            <div class="text-sm text-green-600">
-                Changes have been successfully saved.
-            </div>
-        }
 
         <div>
             @foreach (var claimType in _claimTypes)
