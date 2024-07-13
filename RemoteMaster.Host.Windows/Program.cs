@@ -206,16 +206,16 @@ internal class Program
             services.AddAuthorizationBuilder()
                 .AddPolicy("LocalhostOrAuthenticatedPolicy", policy =>
                     policy.Requirements.Add(new LocalhostOrAuthenticatedRequirement()))
-                .AddPolicy("MouseInputPolicy", policy =>
-                    policy.RequireClaim("Mouse", "Input"))
-                .AddPolicy("KeyboardInputPolicy", policy =>
-                    policy.RequireClaim("Keyboard", "Input"))
                 .AddPolicy("ChangeSelectedScreenPolicy", policy =>
                     policy.RequireClaim("Screen", "ChangeSelectedScreen"))
                 .AddPolicy("SetImageQualityPolicy", policy =>
                     policy.RequireClaim("Screen", "SetImageQuality"))
                 .AddPolicy("ToggleDrawCursorPolicy", policy =>
                     policy.RequireClaim("Screen", "ToggleDrawCursor"))
+                .AddPolicy("MouseInputPolicy", policy =>
+                    policy.RequireClaim("Input", "MouseInput"))
+                .AddPolicy("KeyboardInputPolicy", policy =>
+                    policy.RequireClaim("Input", "KeyboardInput"))
                 .AddPolicy("ToggleInputPolicy", policy =>
                     policy.RequireClaim("Input", "ToggleInput"))
                 .AddPolicy("BlockUserInputPolicy", policy =>

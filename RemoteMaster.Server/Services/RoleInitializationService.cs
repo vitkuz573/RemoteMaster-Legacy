@@ -14,16 +14,16 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
 
     private readonly Dictionary<string, List<Claim>> _roleClaims = new()
     {
-        { "Administrator", AdminClaims },
+        { "Administrator", AdministratorClaims },
         { "Viewer", ViewerClaims }
     };
 
-    private static readonly List<Claim> AdminClaims =
+    private static readonly List<Claim> AdministratorClaims =
     [
-        new Claim("Mouse", "Input"),
-        new Claim("Keyboard", "Input"),
         new Claim("Screen", "ToggleDrawCursor"),
         new Claim("Screen", "ChangeSelectedScreen"),
+        new Claim("Input", "MouseInput"),
+        new Claim("Input", "KeyboardInput"),
         new Claim("Input", "ToggleInput"),
         new Claim("Input", "BlockUserInput"),
         new Claim("Screen", "SetImageQuality"),
