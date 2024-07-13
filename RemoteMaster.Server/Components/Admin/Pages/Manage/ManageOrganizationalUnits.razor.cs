@@ -18,7 +18,7 @@ public partial class ManageOrganizationalUnits
 
     private List<Organization> _organizations = [];
     private List<OrganizationalUnit> _organizationalUnits = [];
-
+    private string? _message;
     private ConfirmationDialog? _confirmationDialog;
     private OrganizationalUnit? _organizationalUnitToDelete;
 
@@ -32,46 +32,70 @@ public partial class ManageOrganizationalUnits
     {
         if (Input.OrganizationId == Guid.Empty)
         {
+            _message = "Error: Please select a valid organization.";
+            
             return;
         }
-
-        OrganizationalUnit organizationalUnit;
 
         using var scope = ScopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
         if (Input.Id.HasValue)
         {
-            organizationalUnit = dbContext.OrganizationalUnits.Find(Input.Id.Value);
-
-            if (organizationalUnit == null)
+            if (await UpdateOrganizationalUnitAsync(dbContext))
             {
-                return;
+                OnOrganizationalUnitSaved("Organizational unit updated successfully.");
             }
-
-            organizationalUnit.Name = Input.Name;
-            organizationalUnit.OrganizationId = Input.OrganizationId;
         }
         else
         {
-            organizationalUnit = CreateOrganizationalUnit(Input.Name, Input.OrganizationId);
-            await dbContext.OrganizationalUnits.AddAsync(organizationalUnit);
+            if (await CreateOrganizationalUnitAsync(dbContext))
+            {
+                OnOrganizationalUnitSaved("Organizational unit created successfully.");
+            }
+        }
+    }
+
+    private void OnOrganizationalUnitSaved(string message)
+    {
+        LoadOrganizationalUnitsAsync();
+        NavigationManager.Refresh();
+        Input = new InputModel();
+        _message = message;
+    }
+
+    private async Task<bool> UpdateOrganizationalUnitAsync(ApplicationDbContext dbContext)
+    {
+        var organizationalUnit = await dbContext.OrganizationalUnits.FindAsync(Input.Id.Value);
+
+        if (organizationalUnit == null)
+        {
+            _message = "Error: Organizational unit not found.";
+            
+            return false;
         }
 
+        organizationalUnit.Name = Input.Name;
+        organizationalUnit.OrganizationId = Input.OrganizationId;
+
         await dbContext.SaveChangesAsync();
+        
+        return true;
+    }
 
-        await LoadOrganizationalUnitsAsync();
-
-        NavigationManager.Refresh();
-
-        Input = new InputModel();
+    private async Task<bool> CreateOrganizationalUnitAsync(ApplicationDbContext dbContext)
+    {
+        var organizationalUnit = CreateOrganizationalUnit(Input.Name, Input.OrganizationId);
+        await dbContext.OrganizationalUnits.AddAsync(organizationalUnit);
+        await dbContext.SaveChangesAsync();
+        return true;
     }
 
     private async Task LoadOrganizationsAsync()
     {
         using var scope = ScopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
+        
         _organizations = await dbContext.Organizations.ToListAsync();
     }
 
@@ -79,7 +103,7 @@ public partial class ManageOrganizationalUnits
     {
         using var scope = ScopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
+        
         _organizationalUnits = await dbContext.OrganizationalUnits
                                               .Include(ou => ou.Organization)
                                               .ToListAsync();
@@ -101,8 +125,9 @@ public partial class ManageOrganizationalUnits
 
         dbContext.OrganizationalUnits.Remove(organizationalUnit);
         await dbContext.SaveChangesAsync();
-
+        
         await LoadOrganizationalUnitsAsync();
+        _message = "Organizational unit deleted successfully.";
     }
 
     private void EditOrganizationalUnit(OrganizationalUnit organizationalUnit)
