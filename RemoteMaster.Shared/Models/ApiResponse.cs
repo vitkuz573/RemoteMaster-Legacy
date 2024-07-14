@@ -10,7 +10,7 @@ namespace RemoteMaster.Shared.Models;
 /// Represents a uniform API response with a status code, message, and optional data payload.
 /// Enhances client-server communication by ensuring consistency, predictability, and simplicity.
 /// </summary>
-public record ApiResponse<TData>(int StatusCode, string Message, [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] TData? Data)
+public record ApiResponse<TData>(int StatusCode, string Message, TData Data)
 {
     /// <summary>
     /// Factory method to create a success response with standard message and status code.
@@ -22,7 +22,7 @@ public record ApiResponse<TData>(int StatusCode, string Message, [property: Json
     /// Factory method to create a failure response with a custom message and status code.
     /// </summary>
     public static ApiResponse<T> Failure<T>(string message, int statusCode = StatusCodes.Status400BadRequest)
-        => new(statusCode, message, default);
+        => new(statusCode, message, default!);  // Используем default! для значения по умолчанию
 
     /// <summary>
     /// Hypermedia links to support HATEOAS, allowing clients to navigate related resources dynamically.

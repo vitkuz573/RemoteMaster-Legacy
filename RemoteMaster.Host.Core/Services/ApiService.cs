@@ -32,12 +32,20 @@ public class ApiService(IHttpClientFactory httpClientFactory) : IApiService
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
-        using var client = CreateClient(hostConfiguration.Server);
-        using var request = new HttpRequestMessage(HttpMethod.Delete, "/api/hostregistration/unregister")
+        var request = new HostUnregisterRequest
         {
-            Content = JsonContent.Create(hostConfiguration)
+            MacAddress = hostConfiguration.Host.MacAddress,
+            Organization = hostConfiguration.Subject.Organization,
+            OrganizationalUnit = [.. hostConfiguration.Subject.OrganizationalUnit],
+            Name = hostConfiguration.Host.Name
         };
-        var response = await client.SendAsync(request);
+
+        using var client = CreateClient(hostConfiguration.Server);
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Delete, "/api/hostregistration/unregister")
+        {
+            Content = JsonContent.Create(request)
+        };
+        var response = await client.SendAsync(httpRequest);
 
         return await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
     }
@@ -46,8 +54,17 @@ public class ApiService(IHttpClientFactory httpClientFactory) : IApiService
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
+        var request = new HostUpdateRequest
+        {
+            MacAddress = hostConfiguration.Host.MacAddress,
+            Organization = hostConfiguration.Subject.Organization,
+            OrganizationalUnit = [.. hostConfiguration.Subject.OrganizationalUnit],
+            IpAddress = hostConfiguration.Host.IpAddress,
+            Name = hostConfiguration.Host.Name
+        };
+
         using var client = CreateClient(hostConfiguration.Server);
-        var response = await client.PutAsJsonAsync("/api/hostregistration/update", hostConfiguration);
+        var response = await client.PutAsJsonAsync("/api/hostregistration/update", request);
 
         return await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
     }

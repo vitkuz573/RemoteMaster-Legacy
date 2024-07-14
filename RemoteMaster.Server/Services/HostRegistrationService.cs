@@ -65,29 +65,24 @@ public class HostRegistrationService(IDatabaseService databaseService, INotifica
     }
 
     /// <summary>
-    /// Checks if a host with the specified configuration is registered.
+    /// Checks if a host with the specified MAC address is registered.
     /// </summary>
-    /// <param name="hostConfiguration">The host configuration.</param>
+    /// <param name="macAddress">The MAC address of the host.</param>
     /// <returns>True if the host is registered, otherwise false.</returns>
-    public async Task<bool> IsHostRegisteredAsync(HostConfiguration hostConfiguration)
+    public async Task<bool> IsHostRegisteredAsync(string macAddress)
     {
-        ArgumentNullException.ThrowIfNull(hostConfiguration);
-
-        if (string.IsNullOrWhiteSpace(hostConfiguration.Host.MacAddress))
-        {
-            throw new ArgumentNullException(hostConfiguration.Host.MacAddress);
-        }
+        ArgumentNullException.ThrowIfNull(macAddress);
 
         try
         {
-            var computers = await databaseService.GetNodesAsync<Computer>(n => n.MacAddress == hostConfiguration.Host.MacAddress);
-
+            var computers = await databaseService.GetNodesAsync<Computer>(n => n.MacAddress == macAddress);
+            
             return computers.Any();
         }
         catch (Exception ex)
         {
-            await notificationService.SendNotificationAsync($"Error while checking registration of the host {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`): {ex.Message}");
-
+            await notificationService.SendNotificationAsync($"Error while checking registration of the host with MAC address `{macAddress}`: {ex.Message}");
+            
             return false;
         }
     }
@@ -144,18 +139,18 @@ public class HostRegistrationService(IDatabaseService databaseService, INotifica
     }
 
     /// <summary>
-    /// Unregisters a host with the specified configuration.
+    /// Unregisters a host with the specified request.
     /// </summary>
-    /// <param name="hostConfiguration">The host configuration.</param>
+    /// <param name="request">The host unregister request containing the necessary configuration.</param>
     /// <returns>True if unregistration is successful, otherwise false.</returns>
-    /// <exception cref="ArgumentException">Thrown if the host configuration is invalid.</exception>
-    public async Task<bool> UnregisterHostAsync(HostConfiguration hostConfiguration)
+    /// <exception cref="ArgumentException">Thrown if the host unregister request is invalid.</exception>
+    public async Task<bool> UnregisterHostAsync(HostUnregisterRequest request)
     {
-        ArgumentNullException.ThrowIfNull(hostConfiguration);
+        ArgumentNullException.ThrowIfNull(request);
 
-        if (string.IsNullOrWhiteSpace(hostConfiguration.Host.MacAddress))
+        if (string.IsNullOrWhiteSpace(request.MacAddress))
         {
-            throw new ArgumentException("Host configuration must have a non-null Host property with a valid MAC address.", nameof(hostConfiguration));
+            throw new ArgumentException("Request must have a valid MAC address.", nameof(request));
         }
 
         Organization organizationEntity;
@@ -163,70 +158,70 @@ public class HostRegistrationService(IDatabaseService databaseService, INotifica
 
         try
         {
-            organizationEntity = await GetOrganizationAsync(hostConfiguration.Subject.Organization);
-            lastOu = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, organizationEntity.NodeId);
+            organizationEntity = await GetOrganizationAsync(request.Organization);
+            lastOu = await ResolveOrganizationalUnitHierarchyAsync(request.OrganizationalUnit, organizationEntity.NodeId);
         }
         catch (InvalidOperationException ex)
         {
-            await notificationService.SendNotificationAsync($"Host unregistration failed: {ex.Message} for host {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
+            await notificationService.SendNotificationAsync($"Host unregistration failed: {ex.Message} for host {request.Name} (`{request.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'");
             
             return false;
         }
 
         try
         {
-            var existingComputer = await GetComputerByMacAddressAsync(hostConfiguration.Host.MacAddress, lastOu.NodeId);
+            var existingComputer = await GetComputerByMacAddressAsync(request.MacAddress, lastOu.NodeId);
             await databaseService.RemoveNodeAsync(existingComputer);
 
-            await notificationService.SendNotificationAsync($"Host unregistered: {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) from organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' in organization '{hostConfiguration.Subject.Organization}'");
-
+            await notificationService.SendNotificationAsync($"Host unregistered: {request.Name} (`{request.MacAddress}`) from organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' in organization '{request.Organization}'");
+            
             return true;
         }
         catch (InvalidOperationException ex)
         {
-            await notificationService.SendNotificationAsync($"Host unregistration failed: {ex.Message} for host {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) from organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' in organization '{hostConfiguration.Subject.Organization}'");
-
+            await notificationService.SendNotificationAsync($"Host unregistration failed: {ex.Message} for host {request.Name} (`{request.MacAddress}`) from organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' in organization '{request.Organization}'");
+            
             return false;
         }
     }
 
     /// <summary>
-    /// Updates the information of a host with the specified configuration.
+    /// Updates the information of a host with the specified request.
     /// </summary>
-    /// <param name="hostConfiguration">The host configuration.</param>
+    /// <param name="request">The host update request containing the necessary configuration.</param>
     /// <returns>True if the update is successful, otherwise false.</returns>
-    public async Task<bool> UpdateHostInformationAsync(HostConfiguration hostConfiguration)
+    public async Task<bool> UpdateHostInformationAsync(HostUpdateRequest request)
     {
-        ArgumentNullException.ThrowIfNull(hostConfiguration);
+        ArgumentNullException.ThrowIfNull(request);
 
         Organization organization;
         OrganizationalUnit? lastOu;
 
         try
         {
-            organization = await GetOrganizationAsync(hostConfiguration.Subject.Organization);
-            lastOu = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, organization.NodeId);
+            organization = await GetOrganizationAsync(request.Organization);
+            lastOu = await ResolveOrganizationalUnitHierarchyAsync(request.OrganizationalUnit, organization.NodeId);
         }
         catch (InvalidOperationException ex)
         {
-            await notificationService.SendNotificationAsync($"Host information update failed: {ex.Message} for host {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
+            await notificationService.SendNotificationAsync($"Host information update failed: {ex.Message} for host {request.Name} (`{request.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'");
             
             return false;
         }
 
         try
         {
-            var computer = await GetComputerByMacAddressAsync(hostConfiguration.Host.MacAddress, lastOu.NodeId);
-            await databaseService.UpdateComputerAsync(computer, hostConfiguration.Host.IpAddress, hostConfiguration.Host.Name);
+            var computer = await GetComputerByMacAddressAsync(request.MacAddress, lastOu.NodeId);
+            await databaseService.UpdateComputerAsync(computer, request.IpAddress, request.Name);
 
-            await notificationService.SendNotificationAsync($"Host information updated: {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
-
+            await notificationService.SendNotificationAsync($"Host information updated: {request.Name} (`{request.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'");
+            
             return true;
         }
         catch (InvalidOperationException ex)
         {
-            await notificationService.SendNotificationAsync($"Host information update failed: {ex.Message} for host {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
-
+            await notificationService.SendNotificationAsync($"Host information update failed: {ex.Message} for host {request.Name} (`{request.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'");
+            
             return false;
         }
     }

@@ -30,37 +30,44 @@ public class HostRegistrationController(IHostRegistrationService registrationSer
             return Ok(response);
         }
 
-        var errorResponse = ApiResponse<Guid?>.Failure<Guid?>("Host registration failed.");
+        var errorResponse = ApiResponse<bool>.Failure<bool>("Host registration failed.");
         
         return BadRequest(errorResponse);
     }
 
     [HttpGet("check")]
-    [SwaggerOperation(Summary = "Checks if a host is registered", Description = "Checks the registration status of a host with the given configuration.")]
+    [SwaggerOperation(Summary = "Checks if a host is registered", Description = "Checks the registration status of a host with the given MAC address.")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [Produces("application/json")]
-    public async Task<IActionResult> CheckHostRegistration([FromQuery] HostConfiguration hostConfiguration)
+    public async Task<IActionResult> CheckHostRegistration([FromQuery] string macAddress)
     {
-        var isRegistered = await registrationService.IsHostRegisteredAsync(hostConfiguration);
-        var response = ApiResponse<bool>.Success(isRegistered, "Host registration status retrieved.");
+        if (string.IsNullOrWhiteSpace(macAddress))
+        {
+            var errorResponse = ApiResponse<bool>.Failure<bool>("Invalid MAC address.");
+            
+            return BadRequest(errorResponse);
+        }
 
+        var isRegistered = await registrationService.IsHostRegisteredAsync(macAddress);
+        var response = ApiResponse<bool>.Success(isRegistered, "Host registration status retrieved.");
+        
         return Ok(response);
     }
 
     [HttpDelete("unregister")]
-    [SwaggerOperation(Summary = "Unregisters a host", Description = "Unregisters a host with the given configuration.")]
+    [SwaggerOperation(Summary = "Unregisters a host", Description = "Unregisters a host with the given MAC address, organization details, and host name.")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<bool>), 400)]
     [Produces("application/json")]
     [Consumes("application/json")]
-    public async Task<IActionResult> UnregisterHost([FromBody] HostConfiguration hostConfiguration)
+    public async Task<IActionResult> UnregisterHost([FromBody] HostUnregisterRequest request)
     {
-        var result = await registrationService.UnregisterHostAsync(hostConfiguration);
+        var result = await registrationService.UnregisterHostAsync(request);
 
         if (result)
         {
             var response = ApiResponse<bool>.Success(result, "Host unregistration successful.");
-
+            
             return Ok(response);
         }
 
@@ -75,9 +82,9 @@ public class HostRegistrationController(IHostRegistrationService registrationSer
     [ProducesResponseType(typeof(ApiResponse<bool>), 400)]
     [Produces("application/json")]
     [Consumes("application/json")]
-    public async Task<IActionResult> UpdateHost([FromBody] HostConfiguration hostConfiguration)
+    public async Task<IActionResult> UpdateHost([FromBody] HostUpdateRequest request)
     {
-        var result = await registrationService.UpdateHostInformationAsync(hostConfiguration);
+        var result = await registrationService.UpdateHostInformationAsync(request);
 
         if (result)
         {
@@ -91,3 +98,4 @@ public class HostRegistrationController(IHostRegistrationService registrationSer
         return BadRequest(errorResponse);
     }
 }
+

@@ -10,9 +10,9 @@ public interface IHostRegistrationService
 {
     Task<bool> RegisterHostAsync(HostConfiguration hostConfiguration);
 
-    Task<bool> IsHostRegisteredAsync(HostConfiguration hostConfiguration);
+    Task<bool> IsHostRegisteredAsync(string macAddress);
 
-    Task<bool> UnregisterHostAsync(HostConfiguration hostConfiguration);
+    Task<bool> UnregisterHostAsync(HostUnregisterRequest request);
 
-    Task<bool> UpdateHostInformationAsync(HostConfiguration hostConfiguration);
+    Task<bool> UpdateHostInformationAsync(HostUpdateRequest request);
 }
