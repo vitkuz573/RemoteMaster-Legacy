@@ -46,26 +46,6 @@ public class ServerHubService : IServerHubService
         return await _hubConnection.InvokeAsync<bool>("IssueCertificateAsync", signingRequest);
     }
 
-    public async Task<bool> RegisterHostAsync(HostConfiguration hostConfiguration)
-    {
-        return await _hubConnection.InvokeAsync<bool>("RegisterHostAsync", hostConfiguration);
-    }
-
-    public async Task<bool> UnregisterHostAsync(HostConfiguration hostConfiguration)
-    {
-        return await _hubConnection.InvokeAsync<bool>("UnregisterHostAsync", hostConfiguration);
-    }
-
-    public async Task<bool> UpdateHostInformationAsync(HostConfiguration hostConfiguration)
-    {
-        return await _hubConnection.InvokeAsync<bool>("UpdateHostInformationAsync", hostConfiguration);
-    }
-
-    public async Task<bool> IsHostRegisteredAsync(HostConfiguration hostConfiguration)
-    {
-        return await _hubConnection.InvokeAsync<bool>("IsHostRegisteredAsync", hostConfiguration);
-    }
-
     public async Task<byte[]> GetPublicKeyAsync()
     {
         return await _hubConnection.InvokeAsync<byte[]>("GetPublicKey");

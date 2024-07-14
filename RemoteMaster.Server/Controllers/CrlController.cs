@@ -6,7 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Shared.Models;
 using Serilog;
+using StatusCodes = Microsoft.AspNetCore.Http.StatusCodes;
 
 namespace RemoteMaster.Server.Controllers;
 

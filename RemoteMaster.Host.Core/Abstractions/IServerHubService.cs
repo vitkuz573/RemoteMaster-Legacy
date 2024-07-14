@@ -16,14 +16,6 @@ public interface IServerHubService
 
     Task<bool> IssueCertificateAsync(byte[] signingRequest);
 
-    Task<bool> RegisterHostAsync(HostConfiguration hostConfiguration);
-
-    Task<bool> UnregisterHostAsync(HostConfiguration hostConfiguration);
-
-    Task<bool> UpdateHostInformationAsync(HostConfiguration hostConfiguration);
-
-    Task<bool> IsHostRegisteredAsync(HostConfiguration hostConfiguration);
-
     void OnReceiveCertificate(Action<byte[]> onReceiveCertificate);
 
     void OnReceiveHostGuid(Action<Guid> onReceiveHostGuid);

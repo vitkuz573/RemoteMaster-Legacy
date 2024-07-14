@@ -13,7 +13,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostLifecycleService(IServerHubService serverHubService, ICertificateRequestService certificateRequestService, ISubjectService subjectService, IHostConfigurationService hostConfigurationService, ICertificateLoaderService certificateLoaderService) : IHostLifecycleService
+public class HostLifecycleService(IServerHubService serverHubService, ICertificateRequestService certificateRequestService, ISubjectService subjectService, IHostConfigurationService hostConfigurationService, ICertificateLoaderService certificateLoaderService, IApiService apiService) : IHostLifecycleService
 {
     private volatile bool _isRegistrationInvoked;
     private bool _isRenewalProcess;
@@ -39,20 +39,13 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
             Log.Information("Attempting to register host...");
 
-            var tcsGuid = new TaskCompletionSource<Guid>();
+            var result = await apiService.RegisterHostAsync(hostConfiguration);
 
-            serverHubService.OnReceiveHostGuid(guid =>
+            if (result.StatusCode == (int)HttpStatusCode.OK && result.Data != null)
             {
-                Log.Information("Host GUID received: {Guid}.", guid);
+                hostConfiguration.HostGuid = result.Data;
+                await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
 
-                hostConfiguration.HostGuid = guid;
-                hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
-
-                tcsGuid.SetResult(guid);
-            });
-
-            if (await serverHubService.RegisterHostAsync(hostConfiguration))
-            {
                 _isRegistrationInvoked = true;
 
                 Log.Information("Host registration invoked successfully. Waiting for the certificate...");
@@ -100,11 +93,11 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
         try
         {
-            await serverHubService.ConnectAsync(hostConfiguration.Server!);
-
             Log.Information("Attempting to unregister host...");
 
-            if (await serverHubService.UnregisterHostAsync(hostConfiguration))
+            var result = await apiService.UnregisterHostAsync(hostConfiguration);
+
+            if (result.StatusCode == (int)HttpStatusCode.OK && result.Data)
             {
                 Log.Information("Host unregistration successful.");
             }
@@ -212,9 +205,9 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
         try
         {
-            await serverHubService.ConnectAsync(hostConfiguration.Server!);
+            var result = await apiService.UpdateHostInformationAsync(hostConfiguration);
 
-            if (await serverHubService.UpdateHostInformationAsync(hostConfiguration))
+            if (result.StatusCode == (int)HttpStatusCode.OK && result.Data)
             {
                 Log.Information("Host information updated successful.");
             }
@@ -235,10 +228,16 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
         try
         {
-            await serverHubService.ConnectAsync(hostConfiguration.Server!);
-            var isRegistered = await serverHubService.IsHostRegisteredAsync(hostConfiguration);
+            var result = await apiService.IsHostRegisteredAsync(hostConfiguration);
 
-            return isRegistered;
+            if (result.StatusCode == (int)HttpStatusCode.OK)
+            {
+                return result.Data;
+            }
+            else
+            {
+                throw new InvalidOperationException("Failed to check host registration status.");
+            }
         }
         catch (HttpRequestException ex) when (ex.InnerException is SocketException { SocketErrorCode: SocketError.NetworkUnreachable })
         {

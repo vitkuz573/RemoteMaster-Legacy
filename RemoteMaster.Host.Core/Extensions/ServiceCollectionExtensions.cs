@@ -50,6 +50,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ICertificateLoaderService, CertificateLoaderService>();
         services.AddSingleton<ICertificateStoreService, CertificateStoreService>();
         services.AddSingleton<IScreenCastingService, ScreenCastingService>();
+        services.AddSingleton<IApiService, ApiService>();
+
+        services.AddHttpClient();
 
         services.AddSignalR().AddMessagePackProtocol();
     }

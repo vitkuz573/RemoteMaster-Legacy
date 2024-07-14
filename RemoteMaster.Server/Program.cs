@@ -34,6 +34,7 @@ using RemoteMaster.Shared.Models;
 using RemoteMaster.Shared.Services;
 using Serilog;
 using Serilog.Events;
+using StatusCodes = Microsoft.AspNetCore.Http.StatusCodes;
 
 namespace RemoteMaster.Server;
 
@@ -161,6 +162,7 @@ public static class Program
         services.AddScoped<IClaimsService, ClaimsService>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<ICertificateProvider, CertificateProvider>();
+        services.AddScoped<IHostRegistrationService, HostRegistrationService>();
         services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<ITokenStorageService, InMemoryTokenStorageService>();
         services.AddSingleton<IBrandingService, BrandingService>();

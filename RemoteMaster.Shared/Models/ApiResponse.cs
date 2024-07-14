@@ -4,7 +4,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace RemoteMaster.Server.Models;
+namespace RemoteMaster.Shared.Models;
 
 /// <summary>
 /// Represents a uniform API response with a status code, message, and optional data payload.
