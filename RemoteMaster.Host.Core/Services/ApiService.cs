@@ -34,7 +34,6 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
 
         var response = await _client.PostAsJsonAsync("/api/hostregistration/register", hostConfiguration);
-        var responseContent = await response.Content.ReadAsStringAsync();
 
         return await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
     }
