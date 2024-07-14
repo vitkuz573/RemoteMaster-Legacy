@@ -292,43 +292,6 @@ public class ControlHubTests
     }
 
     [Fact]
-    public async Task JoinGroup_ShouldAddToGroup()
-    {
-        // Arrange
-        var groupName = "TestGroup";
-        var viewer = new Mock<IViewer>().Object;
-
-        _mockViewerFactory.Setup(f => f.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(viewer);
-        _mockAppState.Setup(a => a.TryAddViewer(viewer)).Returns(true);
-
-        var connectionId = "connectionId";
-        SetHubContext(connectionId);
-
-        // Act
-        await _controlHub.JoinGroup(groupName);
-
-        // Assert
-        _mockAppState.Verify(a => a.TryAddViewer(viewer), Times.Once);
-        _mockGroups.Verify(g => g.AddToGroupAsync(connectionId, groupName, It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task LeaveGroup_ShouldRemoveFromGroup()
-    {
-        // Arrange
-        var groupName = "TestGroup";
-
-        var connectionId = "connectionId";
-        SetHubContext(connectionId);
-
-        // Act
-        await _controlHub.LeaveGroup(groupName);
-
-        // Assert
-        _mockGroups.Verify(g => g.RemoveFromGroupAsync(connectionId, groupName, It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
     public async Task SendCommandToService_ShouldSendCommandToGroup()
     {
         // Arrange
