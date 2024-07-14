@@ -8,7 +8,7 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IServerHubService
 {
-    Task ConnectAsync(string serverIp);
+    Task ConnectAsync(string server);
 
     Task<HostMoveRequest?> GetHostMoveRequest(string macAddress);
 

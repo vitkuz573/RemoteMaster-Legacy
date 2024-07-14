@@ -59,7 +59,7 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
 
         try
         {
-            await serverHubService.ConnectAsync(hostConfiguration.Server);
+            await serverHubService.ConnectAsync(hostConfiguration.Server!);
             var hostMoveRequest = await serverHubService.GetHostMoveRequest(hostConfiguration.Host.MacAddress);
 
             if (hostMoveRequest != null)

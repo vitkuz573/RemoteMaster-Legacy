@@ -11,7 +11,7 @@ namespace RemoteMaster.Host.Core.Tests;
 public class CertificateRequestServiceTests : IDisposable
 {
     private readonly CertificateRequestService _certificateRequestService;
-    private RSA _rsaKeyPair;
+    private RSA? _rsaKeyPair;
 
     public CertificateRequestServiceTests()
     {
@@ -31,19 +31,19 @@ public class CertificateRequestServiceTests : IDisposable
         // Assert
         Assert.NotNull(csr);
         Assert.NotNull(_rsaKeyPair);
-        Assert.Contains(csr.CertificateExtensions, ext => ext.Oid.Value == "2.5.29.17"); // SAN extension
-        Assert.Contains(csr.CertificateExtensions, ext => ext.Oid.Value == "2.5.29.37"); // Enhanced key usage extension
+        Assert.Contains(csr.CertificateExtensions, ext => ext.Oid!.Value == "2.5.29.17"); // SAN extension
+        Assert.Contains(csr.CertificateExtensions, ext => ext.Oid!.Value == "2.5.29.37"); // Enhanced key usage extension
     }
 
     [Fact]
     public void GenerateSigningRequest_NullSubjectName_ThrowsArgumentNullException()
     {
         // Arrange
-        X500DistinguishedName subjectName = null;
+        X500DistinguishedName? subjectName = null;
         var ipAddresses = new List<string> { "192.168.0.1", "10.0.0.1" };
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => _certificateRequestService.GenerateSigningRequest(subjectName, ipAddresses, out _rsaKeyPair));
+        Assert.Throws<ArgumentNullException>(() => _certificateRequestService.GenerateSigningRequest(subjectName!, ipAddresses, out _rsaKeyPair));
     }
 
     [Fact]
@@ -51,10 +51,10 @@ public class CertificateRequestServiceTests : IDisposable
     {
         // Arrange
         var subjectName = new X500DistinguishedName("CN=Test");
-        List<string> ipAddresses = null;
+        List<string>? ipAddresses = null;
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => _certificateRequestService.GenerateSigningRequest(subjectName, ipAddresses, out _rsaKeyPair));
+        Assert.Throws<ArgumentNullException>(() => _certificateRequestService.GenerateSigningRequest(subjectName, ipAddresses!, out _rsaKeyPair));
     }
 
     [Fact]
@@ -70,7 +70,7 @@ public class CertificateRequestServiceTests : IDisposable
         // Assert
         Assert.NotNull(csr);
         Assert.NotNull(_rsaKeyPair);
-        Assert.Contains(csr.CertificateExtensions, ext => ext.Oid.Value == "2.5.29.17"); // SAN extension
+        Assert.Contains(csr.CertificateExtensions, ext => ext.Oid!.Value == "2.5.29.17"); // SAN extension
     }
 
     public void Dispose()

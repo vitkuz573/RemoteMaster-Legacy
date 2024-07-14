@@ -37,8 +37,8 @@ public partial class ManageRoleClaims
         var allClaims = await dbContext.RoleClaims
             .GroupBy(rc => rc.ClaimType)
             .Select(g => new ClaimTypeViewModel(
-                g.Key,
-                g.Select(rc => new ClaimValueViewModel { Value = rc.ClaimValue }).Distinct().ToList()
+                g.Key ?? string.Empty,
+                g.Select(rc => new ClaimValueViewModel { Value = rc.ClaimValue ?? string.Empty }).Distinct().ToList()
             ))
             .ToListAsync();
 
@@ -64,7 +64,7 @@ public partial class ManageRoleClaims
         }
 
         _initialRoleClaims = _roleClaims
-            .Select(rc => new Claim(rc.ClaimType, rc.ClaimValue))
+            .Select(rc => new Claim(rc.ClaimType ?? string.Empty, rc.ClaimValue ?? string.Empty))
             .ToList();
 
         StateHasChanged();
@@ -101,7 +101,7 @@ public partial class ManageRoleClaims
         await dbContext.SaveChangesAsync();
 
         _message = "Role claims updated successfully.";
-        
+
         _initialRoleClaims = _claimTypes
             .SelectMany(ct => ct.Values.Where(v => v.IsSelected).Select(v => new Claim(ct.Type, v.Value)))
             .ToList();
@@ -169,7 +169,7 @@ public partial class ManageRoleClaims
         public string? Role { get; set; }
     }
 
-    public class ClaimTypeViewModel(string type, List<ClaimValueViewModel> values)
+    public class ClaimTypeViewModel(string type, List<ManageRoleClaims.ClaimValueViewModel> values)
     {
         public string Type { get; set; } = type;
 
