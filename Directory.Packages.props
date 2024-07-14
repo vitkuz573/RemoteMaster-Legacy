@@ -29,6 +29,7 @@
     <PackageVersion Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="8.0.7" />
     <PackageVersion Include="Microsoft.Windows.CsWin32" Version="0.3.123" />
     <PackageVersion Include="Microsoft.Windows.SDK.Win32Metadata" Version="61.0.15-preview" />
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageVersion Include="System.IO.Abstractions" Version="21.0.26" />
     <PackageVersion Include="System.IO.Abstractions.TestingHelpers" Version="21.0.26" />
     <PackageVersion Include="System.Management" Version="8.0.0" />
@@ -39,6 +40,5 @@
     <PackageVersion Include="xunit" Version="2.9.0" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="8.0.5" />
-    <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
 </Project>

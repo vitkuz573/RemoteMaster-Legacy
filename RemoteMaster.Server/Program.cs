@@ -199,6 +199,8 @@ public static class Program
         services.AddMudServices();
 
         services.AddControllers();
+        services.AddEndpointsApiExplorer();
+        services.AddSwaggerGen();
 
         services.AddHealthChecks()
             .AddSqlServer(
@@ -319,6 +321,8 @@ public static class Program
         if (app.Environment.IsDevelopment())
         {
             app.UseMigrationsEndPoint();
+            app.UseSwagger();
+            app.UseSwaggerUI();
         }
         else
         {

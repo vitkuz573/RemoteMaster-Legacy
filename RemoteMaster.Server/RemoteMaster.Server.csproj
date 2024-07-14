@@ -44,6 +44,7 @@
 		<PackageReference Include="Serilog" />
 		<PackageReference Include="Serilog.AspNetCore" />
 		<PackageReference Include="Serilog.Extensions.Logging" />
+		<PackageReference Include="Swashbuckle.AspNetCore" />
 		<PackageReference Include="System.IO.Abstractions" />
 		<PackageReference Include="Telegram.Bot" />
 	</ItemGroup>
