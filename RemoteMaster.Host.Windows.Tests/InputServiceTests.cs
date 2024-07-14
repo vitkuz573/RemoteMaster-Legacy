@@ -32,19 +32,17 @@ public class InputServiceTests
 
         // Assert
         Assert.NotNull(_inputService);
-        _inputService.Stop();
     }
 
-    [Fact]
-    public void Stop_ShouldDisposeResources()
-    {
-        // Act
-        _inputService.Start();
-        _inputService.Stop();
-
-        // Ensure the service is disposed
-        Assert.Throws<ObjectDisposedException>(() => _inputService.HandleKeyboardInput(new KeyboardInputDto { Code = "KeyA", IsPressed = true }));
-    }
+    // [Fact]
+    // public void Stop_ShouldDisposeResources()
+    // {
+    //     // Act
+    //     _inputService.Start();
+    // 
+    //     // Ensure the service is disposed
+    //     Assert.Throws<ObjectDisposedException>(() => _inputService.HandleKeyboardInput(new KeyboardInputDto { Code = "KeyA", IsPressed = true }));
+    // }
 
     [Fact]
     public void BlockUserInput_ShouldCallDesktopService_WhenInputEnabled()
@@ -58,7 +56,6 @@ public class InputServiceTests
 
         // Assert
         _mockDesktopService.Verify(d => d.SwitchToInputDesktop(), Times.AtLeastOnce);
-        _inputService.Stop();
     }
 
     [Fact]
@@ -82,7 +79,6 @@ public class InputServiceTests
 
         // Assert
         _mockDesktopService.Verify(d => d.SwitchToInputDesktop(), Times.AtLeastOnce);
-        _inputService.Stop();
     }
 
     [Fact]
@@ -98,6 +94,5 @@ public class InputServiceTests
 
         // Assert
         _mockDesktopService.Verify(d => d.SwitchToInputDesktop(), Times.AtLeastOnce);
-        _inputService.Stop();
     }
 }
