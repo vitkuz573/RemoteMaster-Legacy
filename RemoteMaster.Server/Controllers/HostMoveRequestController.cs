@@ -13,18 +13,7 @@ namespace RemoteMaster.Server.Controllers;
 [Route("api/[controller]")]
 public class HostMoveRequestController(IHostMoveRequestService hostMoveRequestService) : ControllerBase
 {
-    [HttpGet("moveRequests")]
-    [SwaggerOperation(Summary = "Retrieves the list of host move requests", Description = "Retrieves the list of host move requests.")]
-    [ProducesResponseType(typeof(ApiResponse<List<HostMoveRequest>>), 200)]
-    [Produces("application/json")]
-    public async Task<IActionResult> GetHostMoveRequests()
-    {
-        var hostMoveRequests = await hostMoveRequestService.GetHostMoveRequestsAsync();
-        
-        return Ok(ApiResponse<List<HostMoveRequest>>.Success(hostMoveRequests, "Host move requests retrieved successfully."));
-    }
-
-    [HttpGet("moveRequest")]
+    [HttpGet]
     [SwaggerOperation(Summary = "Retrieves a host move request", Description = "Retrieves a host move request by MAC address.")]
     [ProducesResponseType(typeof(ApiResponse<HostMoveRequest>), 200)]
     [Produces("application/json")]
@@ -40,7 +29,7 @@ public class HostMoveRequestController(IHostMoveRequestService hostMoveRequestSe
         return BadRequest(ApiResponse<HostMoveRequest>.Failure<HostMoveRequest>("Failed to retrieve host move request."));
     }
 
-    [HttpPost("acknowledgeMoveRequest")]
+    [HttpPost("acknowledge")]
     [SwaggerOperation(Summary = "Acknowledges a host move request", Description = "Acknowledges a host move request by removing it from the list.")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<bool>), 400)]
