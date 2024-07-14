@@ -37,6 +37,25 @@ public class JwtSecurityService : IJwtSecurityService
         }
     }
 
+    public async Task<byte[]?> GetPublicKeyAsync()
+    {
+        try
+        {
+            if (_fileSystem.File.Exists(_publicKeyPath))
+            {
+                return await _fileSystem.File.ReadAllBytesAsync(_publicKeyPath);
+            }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error while reading public key file.");
+
+            return null;
+        }
+    }
+
     public async Task EnsureKeysExistAsync()
     {
         Log.Debug("Checking existence of JWT keys.");

@@ -11,7 +11,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostInformationMonitorService(IServerHubService serverHubService, IHostConfigurationService hostConfigurationService, IHostInformationService hostInformationService) : IHostInformationMonitorService
+public class HostInformationMonitorService(IHostConfigurationService hostConfigurationService, IHostInformationService hostInformationService) : IHostInformationMonitorService
 {
     public async Task<bool> UpdateHostConfigurationAsync()
     {
@@ -59,22 +59,21 @@ public class HostInformationMonitorService(IServerHubService serverHubService, I
 
         try
         {
-            await serverHubService.ConnectAsync(hostConfiguration.Server!);
-            var hostMoveRequest = await serverHubService.GetHostMoveRequest(hostConfiguration.Host.MacAddress);
+            // var hostMoveRequest = await serverHubService.GetHostMoveRequest(hostConfiguration.Host.MacAddress);
 
-            if (hostMoveRequest != null)
-            {
-                hostConfiguration.Subject.Organization = hostMoveRequest.NewOrganization;
-                hostConfiguration.Subject.OrganizationalUnit = hostMoveRequest.NewOrganizationalUnit;
-
-                await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
-
-                Log.Information("HostMoveRequest applied: Organization changed to {Organization} and Organizational Unit changed to {OrganizationalUnit}.", hostMoveRequest.NewOrganization, string.Join("/", hostMoveRequest.NewOrganizationalUnit));
-
-                await serverHubService.AcknowledgeMoveRequest(hostConfiguration.Host.MacAddress);
-
-                hasChanges = true;
-            }
+            // if (hostMoveRequest != null)
+            // {
+            //     hostConfiguration.Subject.Organization = hostMoveRequest.NewOrganization;
+            //     hostConfiguration.Subject.OrganizationalUnit = hostMoveRequest.NewOrganizationalUnit;
+            // 
+            //     await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
+            // 
+            //     Log.Information("HostMoveRequest applied: Organization changed to {Organization} and Organizational Unit changed to {OrganizationalUnit}.", hostMoveRequest.NewOrganization, string.Join("/", hostMoveRequest.NewOrganizationalUnit));
+            // 
+            //     await serverHubService.AcknowledgeMoveRequest(hostConfiguration.Host.MacAddress);
+            // 
+            //     hasChanges = true;
+            // }
         }
         catch (Exception ex)
         {

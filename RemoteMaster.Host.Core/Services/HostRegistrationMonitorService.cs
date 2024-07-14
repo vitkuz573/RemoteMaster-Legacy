@@ -40,13 +40,13 @@ public class HostRegistrationMonitorService : IHostedService
         {
             var configurationChanged = await _hostInformationMonitorService.UpdateHostConfigurationAsync();
             var hostConfiguration = await _hostConfigurationService.LoadConfigurationAsync(false);
-            var isHostRegistered = await _hostLifecycleService.IsHostRegisteredAsync(hostConfiguration);
+            var isHostRegistered = await _hostLifecycleService.IsHostRegisteredAsync();
 
             if (configurationChanged)
             {
                 if (isHostRegistered)
                 {
-                    await _hostLifecycleService.UpdateHostInformationAsync(hostConfiguration);
+                    await _hostLifecycleService.UpdateHostInformationAsync();
                     
                     Log.Information("Host information updated and certificate renewed due to configuration change.");
                 }
@@ -54,7 +54,7 @@ public class HostRegistrationMonitorService : IHostedService
                 {
                     Log.Warning("Host is not registered and configuration has changed. Registering and renewing certificate...");
                     
-                    await _hostLifecycleService.RegisterAsync(hostConfiguration);
+                    await _hostLifecycleService.RegisterAsync();
                 }
 
                 await _hostLifecycleService.RenewCertificateAsync(hostConfiguration);
@@ -72,7 +72,7 @@ public class HostRegistrationMonitorService : IHostedService
             {
                 Log.Warning("Host is not registered and configuration has not changed. Registering and issuing a new certificate...");
                 
-                await _hostLifecycleService.RegisterAsync(hostConfiguration);
+                await _hostLifecycleService.RegisterAsync();
                 await _hostLifecycleService.IssueCertificateAsync(hostConfiguration);
 
                 _userInstanceService.Stop();

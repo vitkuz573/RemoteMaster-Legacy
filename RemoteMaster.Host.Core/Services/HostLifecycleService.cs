@@ -13,15 +13,13 @@ using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostLifecycleService(IServerHubService serverHubService, ICertificateRequestService certificateRequestService, ISubjectService subjectService, IHostConfigurationService hostConfigurationService, ICertificateLoaderService certificateLoaderService, IApiService apiService) : IHostLifecycleService
+public class HostLifecycleService(ICertificateRequestService certificateRequestService, ISubjectService subjectService, ICertificateLoaderService certificateLoaderService, IApiService apiService) : IHostLifecycleService
 {
     private volatile bool _isRegistrationInvoked;
     private bool _isRenewalProcess;
 
-    public async Task RegisterAsync(HostConfiguration hostConfiguration)
+    public async Task RegisterAsync()
     {
-        ArgumentNullException.ThrowIfNull(hostConfiguration);
-
         RSA? rsaKeyPair = null;
 
         try
@@ -35,23 +33,19 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
                 Log.Debug("JWT directory created at {DirectoryPath}.", jwtDirectory);
             }
 
-            await serverHubService.ConnectAsync(hostConfiguration.Server!);
-
             Log.Information("Attempting to register host...");
 
-            var result = await apiService.RegisterHostAsync(hostConfiguration);
+            var result = await apiService.RegisterHostAsync();
 
             if (result.StatusCode == (int)HttpStatusCode.OK && result.Data)
             {
-                await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
-
                 _isRegistrationInvoked = true;
 
                 Log.Information("Host registration invoked successfully. Waiting for the certificate...");
 
-                var publicKey = await serverHubService.GetPublicKeyAsync();
+                var response = await apiService.GetJwtPublicKeyAsync();
 
-                if (publicKey.Length == 0)
+                if (response.Data.Length == 0)
                 {
                     throw new InvalidOperationException("Failed to obtain JWT public key.");
                 }
@@ -60,7 +54,7 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
                 try
                 {
-                    await File.WriteAllBytesAsync(publicKeyPath, publicKey);
+                    await File.WriteAllBytesAsync(publicKeyPath, response.Data);
                     
                     Log.Information("Public key saved successfully at {Path}.", publicKeyPath);
                 }
@@ -86,15 +80,13 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         }
     }
 
-    public async Task UnregisterAsync(HostConfiguration hostConfiguration)
+    public async Task UnregisterAsync()
     {
-        ArgumentNullException.ThrowIfNull(hostConfiguration);
-
         try
         {
             Log.Information("Attempting to unregister host...");
 
-            var result = await apiService.UnregisterHostAsync(hostConfiguration);
+            var result = await apiService.UnregisterHostAsync();
 
             if (result.StatusCode == (int)HttpStatusCode.OK && result.Data)
             {
@@ -119,8 +111,6 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
         try
         {
-            await serverHubService.ConnectAsync(hostConfiguration.Server!);
-
             var ipAddresses = new List<string>
             {
                 hostConfiguration.Host!.IpAddress
@@ -129,26 +119,22 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
             var distinguishedName = subjectService.GetDistinguishedName(hostConfiguration.Host.Name);
 
             Log.Information("Removing existing certificates...");
-            
+
             RemoveExistingCertificate();
 
             var csr = certificateRequestService.GenerateSigningRequest(distinguishedName, ipAddresses, out rsaKeyPair);
             var signingRequest = csr.CreateSigningRequest();
 
-            var tcs = new TaskCompletionSource<bool>();
-
-            serverHubService.OnReceiveCertificate(certificateBytes => ProcessCertificate(certificateBytes, rsaKeyPair, tcs));
-
             Log.Information("Attempting to issue certificate...");
-            
-            await serverHubService.IssueCertificateAsync(signingRequest);
 
-            var isCertificateReceived = await tcs.Task;
+            var response = await apiService.IssueCertificateAsync(signingRequest);
 
-            if (!isCertificateReceived)
+            if (response.Data == null)
             {
                 throw new InvalidOperationException("Certificate processing failed.");
             }
+
+            ProcessCertificate(response.Data, rsaKeyPair);
 
             Log.Information("Certificate issued and processed successfully.");
         }
@@ -198,13 +184,11 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         }
     }
 
-    public async Task UpdateHostInformationAsync(HostConfiguration hostConfiguration)
+    public async Task UpdateHostInformationAsync()
     {
-        ArgumentNullException.ThrowIfNull(hostConfiguration);
-
         try
         {
-            var result = await apiService.UpdateHostInformationAsync(hostConfiguration);
+            var result = await apiService.UpdateHostInformationAsync();
 
             if (result.StatusCode == (int)HttpStatusCode.OK && result.Data)
             {
@@ -221,13 +205,11 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         }
     }
 
-    public async Task<bool> IsHostRegisteredAsync(HostConfiguration hostConfiguration)
+    public async Task<bool> IsHostRegisteredAsync()
     {
-        ArgumentNullException.ThrowIfNull(hostConfiguration);
-
         try
         {
-            var result = await apiService.IsHostRegisteredAsync(hostConfiguration);
+            var result = await apiService.IsHostRegisteredAsync();
 
             if (result.StatusCode == (int)HttpStatusCode.OK)
             {
@@ -252,7 +234,7 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         }
     }
 
-    private void ProcessCertificate(byte[] certificateBytes, RSA rsaKeyPair, TaskCompletionSource<bool> tcs)
+    private void ProcessCertificate(byte[] certificateBytes, RSA rsaKeyPair)
     {
         X509Certificate2? tempCertificate = null;
 
@@ -266,7 +248,6 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
             if (certificateBytes == null || certificateBytes.Length == 0)
             {
                 Log.Error("Certificate bytes are null or empty.");
-                tcs.SetResult(false);
 
                 return;
             }
@@ -311,18 +292,15 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
             else
             {
                 Log.Error("Failed to create a certificate with private key.");
-                tcs.SetResult(false);
 
                 return;
             }
 
-            tcs.SetResult(true);
             certificateLoaderService.LoadCertificate();
         }
         catch (Exception ex)
         {
             Log.Error("An error occurred while processing the certificate: {ErrorMessage}.", ex.Message);
-            tcs.SetResult(false);
         }
         finally
         {
@@ -349,48 +327,32 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         {
             Log.Information("Requesting CA certificate's public part...");
 
-            var tcs = new TaskCompletionSource<bool>();
+            var response = await apiService.GetCaCertificateAsync();
 
-            serverHubService.OnReceiveCertificate(caCertificateBytes =>
+            if (response.Data == null || response.Data.Length == 0)
             {
-                if (caCertificateBytes == null || caCertificateBytes.Length == 0)
-                {
-                    Log.Error("Received CA certificate is null or empty.");
-                    tcs.SetResult(false);
-                }
-                else
-                {
-                    try
-                    {
-                        using var caCertificate = new X509Certificate2(caCertificateBytes);
-
-                        LogCertificateDetails(caCertificate);
-
-                        var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
-
-                        store.Open(OpenFlags.ReadWrite);
-                        store.Add(caCertificate);
-                        store.Close();
-
-                        Log.Information("CA certificate imported successfully into the certificate store.");
-                        tcs.SetResult(true);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error("An error occurred while importing the CA certificate: {ErrorMessage}.", ex.Message);
-                        tcs.SetResult(false);
-                    }
-                }
-            });
-
-            var success = await serverHubService.GetCaCertificateAsync();
-
-            if (!success)
-            {
+                Log.Error("Received CA certificate is null or empty.");
                 throw new InvalidOperationException("Failed to request or process CA certificate.");
             }
 
-            await tcs.Task;
+            try
+            {
+                using var caCertificate = new X509Certificate2(response.Data);
+
+                LogCertificateDetails(caCertificate);
+
+                var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
+                store.Open(OpenFlags.ReadWrite);
+                store.Add(caCertificate);
+                store.Close();
+
+                Log.Information("CA certificate imported successfully into the certificate store.");
+            }
+            catch (Exception ex)
+            {
+                Log.Error("An error occurred while importing the CA certificate: {ErrorMessage}.", ex.Message);
+                throw;
+            }
 
             Log.Information("CA certificate's public part received and processed successfully.");
         }

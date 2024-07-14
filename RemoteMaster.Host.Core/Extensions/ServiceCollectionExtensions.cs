@@ -44,7 +44,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IHostConfigurationService, HostConfigurationService>();
         services.AddSingleton<IAppState, AppState>();
         services.AddSingleton<IShutdownService, ShutdownService>();
-        services.AddSingleton<IServerHubService, ServerHubService>();
         services.AddSingleton<IScreenRecorderService, ScreenRecorderService>();
         services.AddTransient<IViewerFactory, ViewerFactory>();
         services.AddSingleton<ICertificateLoaderService, CertificateLoaderService>();

@@ -22,7 +22,6 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Components;
 using RemoteMaster.Server.Components.Account;
 using RemoteMaster.Server.Data;
-using RemoteMaster.Server.Hubs;
 using RemoteMaster.Server.Middlewares;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Requirements;
@@ -178,6 +177,7 @@ public static class Program
         services.AddSingleton<INotificationService, TelegramNotificationService>();
         services.AddSingleton<ICertificateStoreService, CertificateStoreService>();
         services.AddSingleton<IValidateOptions<JwtOptions>, JwtOptionsValidator>();
+        services.AddSingleton<IHostMoveRequestService, HostMoveRequestService>();
 
         services.AddSingleton(new JsonSerializerOptions
         {
@@ -355,7 +355,5 @@ public static class Program
         app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
         app.MapAdditionalIdentityEndpoints();
-
-        app.MapHub<ManagementHub>("/hubs/management").RequireHost("*:5254");
     }
 }

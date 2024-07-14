@@ -22,7 +22,7 @@ public record ApiResponse<TData>(int StatusCode, string Message, TData Data)
     /// Factory method to create a failure response with a custom message and status code.
     /// </summary>
     public static ApiResponse<T> Failure<T>(string message, int statusCode = StatusCodes.Status400BadRequest)
-        => new(statusCode, message, default!);  // Используем default! для значения по умолчанию
+        => new(statusCode, message, default!);
 
     /// <summary>
     /// Hypermedia links to support HATEOAS, allowing clients to navigate related resources dynamically.
