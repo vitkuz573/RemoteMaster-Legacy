@@ -45,6 +45,6 @@ public class ClaimsService(UserManager<ApplicationUser> userManager, RoleManager
 
         var roleClaims = await roleManager.GetClaimsAsync(role);
 
-        return roleClaims.Where(c => c.Type == "Permission");
+        return roleClaims;
     }
 }
