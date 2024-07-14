@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.ComponentModel.DataAnnotations;
+using System.Net;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Identity;
@@ -29,7 +30,7 @@ public partial class Register
     public async Task RegisterUser(EditContext editContext)
     {
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-        var isLocalhost = ipAddress == "127.0.0.1" || ipAddress == "::1" || ipAddress == "::ffff:127.0.0.1";
+        var isLocalhost = IPAddress.IsLoopback(IPAddress.Parse(ipAddress));
 
         if (!isLocalhost)
         {
