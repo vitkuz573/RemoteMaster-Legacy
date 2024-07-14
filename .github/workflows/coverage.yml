@@ -1,56 +1,42 @@
-name: .NET CI
+name: CI Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
-  build-and-test:
+  build:
     runs-on: windows-latest
 
     steps:
-    - name: Checkout repository
+    - name: Checkout code
       uses: actions/checkout@v4
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0'
+        dotnet-version: '8.0.x'
 
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
         node-version: '20'
 
-    - name: Install npm packages for RemoteMaster.Server
-      working-directory: RemoteMaster.Server
-      run: npm install
+    - name: Install npm dependencies for RemoteMaster.Server
+      run: |
+        cd RemoteMaster.Server
+        npm install
+        cd ..
 
-    - name: Restore dependencies
+    - name: Install .NET dependencies
       run: dotnet restore
 
-    - name: Build solution excluding Windows-specific projects
-      run: |
-        dotnet sln remove RemoteMaster.Host.Windows/RemoteMaster.Host.Windows.csproj
-        dotnet sln remove RemoteMaster.Host.Windows.Tests/RemoteMaster.Host.Windows.Tests.csproj
-        dotnet build --configuration Release --no-restore
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
 
-    - name: Test with coverage for non-Windows projects
-      run: dotnet test --configuration Release --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=./TestResults/NonWindows/
-
-    - name: Setup MSBuild for Windows projects
-      uses: microsoft/setup-msbuild@v1
-
-    - name: Build and test Windows-specific projects
-      run: |
-        msbuild RemoteMaster.sln /t:Restore,Build /p:Configuration=Release /p:Platform="Any CPU"
-        dotnet test RemoteMaster.Host.Windows.Tests/RemoteMaster.Host.Windows.Tests.csproj --configuration Release --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=./TestResults/Windows/
-
-    - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        files: ./TestResults/**/*.cobertura.xml
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    - name: Run tests
+      run: dotnet test --configuration Release --no-build --verbosity normal
