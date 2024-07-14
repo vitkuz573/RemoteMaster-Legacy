@@ -9,17 +9,17 @@ namespace RemoteMaster.Shared.Models;
 public class SubjectOptions
 {
     [JsonPropertyName("organization")]
-    public string Organization { get; set; }
+    public string Organization { get; set; } = string.Empty;
 
     [JsonPropertyName("organizationalUnit")]
-    public string[] OrganizationalUnit { get; set; }
+    public string[] OrganizationalUnit { get; set; } = Array.Empty<string>();
 
     [JsonPropertyName("locality")]
-    public string Locality { get; set; }
+    public string Locality { get; set; } = string.Empty;
 
     [JsonPropertyName("state")]
-    public string State { get; set; }
+    public string State { get; set; } = string.Empty;
 
     [JsonPropertyName("country")]
-    public string Country { get; set; }
+    public string Country { get; set; } = string.Empty;
 }
