@@ -97,7 +97,7 @@ public class HostRegistrationService(IDatabaseService databaseService, INotifica
     /// </summary>
     /// <param name="hostConfiguration">The host configuration.</param>
     /// <returns>True if registration is successful, otherwise false.</returns>
-    public async Task<Guid?> RegisterHostAsync(HostConfiguration hostConfiguration)
+    public async Task<bool> RegisterHostAsync(HostConfiguration hostConfiguration)
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
@@ -113,7 +113,7 @@ public class HostRegistrationService(IDatabaseService databaseService, INotifica
         {            
             await notificationService.SendNotificationAsync($"Host registration failed: {ex.Message} for host {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
             
-            return null;
+            return false;
         }
 
         try
@@ -123,7 +123,7 @@ public class HostRegistrationService(IDatabaseService databaseService, INotifica
             await databaseService.UpdateComputerAsync(existingComputer, hostConfiguration.Host.IpAddress, hostConfiguration.Host.Name);
             await notificationService.SendNotificationAsync($"Host registration successful: {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
 
-            return existingComputer.NodeId;
+            return true;
         }
         catch (InvalidOperationException)
         {
@@ -137,7 +137,9 @@ public class HostRegistrationService(IDatabaseService databaseService, INotifica
 
             await notificationService.SendNotificationAsync($"New host registered: {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
 
-            return await databaseService.AddNodeAsync(computer);
+            await databaseService.AddNodeAsync(computer);
+
+            return true;
         }
     }
 

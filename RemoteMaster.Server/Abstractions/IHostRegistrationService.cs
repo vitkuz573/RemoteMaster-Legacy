@@ -8,7 +8,7 @@ namespace RemoteMaster.Server.Abstractions;
 
 public interface IHostRegistrationService
 {
-    Task<Guid?> RegisterHostAsync(HostConfiguration hostConfiguration);
+    Task<bool> RegisterHostAsync(HostConfiguration hostConfiguration);
 
     Task<bool> IsHostRegisteredAsync(HostConfiguration hostConfiguration);
 

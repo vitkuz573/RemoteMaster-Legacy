@@ -5,6 +5,7 @@
 using Microsoft.AspNetCore.Mvc;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Models;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace RemoteMaster.Server.Controllers;
 
@@ -13,32 +14,45 @@ namespace RemoteMaster.Server.Controllers;
 public class HostRegistrationController(IHostRegistrationService registrationService) : ControllerBase
 {
     [HttpPost("register")]
+    [SwaggerOperation(Summary = "Registers a new host", Description = "Registers a new host with the given configuration.")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), 400)]
+    [Produces("application/json")]
+    [Consumes("application/json")]
     public async Task<IActionResult> RegisterHost([FromBody] HostConfiguration hostConfiguration)
     {
         var result = await registrationService.RegisterHostAsync(hostConfiguration);
 
-        if (result != null)
+        if (result)
         {
-            var response = ApiResponse<Guid?>.Success(result, "Host registration successful.");
+            var response = ApiResponse<bool>.Success(result, "Host registration successful.");
             
             return Ok(response);
         }
 
         var errorResponse = ApiResponse<Guid?>.Failure<Guid?>("Host registration failed.");
-
+        
         return BadRequest(errorResponse);
     }
 
     [HttpGet("check")]
+    [SwaggerOperation(Summary = "Checks if a host is registered", Description = "Checks the registration status of a host with the given configuration.")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
+    [Produces("application/json")]
     public async Task<IActionResult> CheckHostRegistration([FromQuery] HostConfiguration hostConfiguration)
     {
         var isRegistered = await registrationService.IsHostRegisteredAsync(hostConfiguration);
         var response = ApiResponse<bool>.Success(isRegistered, "Host registration status retrieved.");
-        
+
         return Ok(response);
     }
 
-    [HttpPost("unregister")]
+    [HttpDelete("unregister")]
+    [SwaggerOperation(Summary = "Unregisters a host", Description = "Unregisters a host with the given configuration.")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), 400)]
+    [Produces("application/json")]
+    [Consumes("application/json")]
     public async Task<IActionResult> UnregisterHost([FromBody] HostConfiguration hostConfiguration)
     {
         var result = await registrationService.UnregisterHostAsync(hostConfiguration);
@@ -46,16 +60,21 @@ public class HostRegistrationController(IHostRegistrationService registrationSer
         if (result)
         {
             var response = ApiResponse<bool>.Success(result, "Host unregistration successful.");
-            
+
             return Ok(response);
         }
 
         var errorResponse = ApiResponse<bool>.Failure<bool>("Host unregistration failed.");
-        
+
         return BadRequest(errorResponse);
     }
 
-    [HttpPost("update")]
+    [HttpPut("update")]
+    [SwaggerOperation(Summary = "Updates host information", Description = "Updates the information of a host with the given configuration.")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), 400)]
+    [Produces("application/json")]
+    [Consumes("application/json")]
     public async Task<IActionResult> UpdateHost([FromBody] HostConfiguration hostConfiguration)
     {
         var result = await registrationService.UpdateHostInformationAsync(hostConfiguration);

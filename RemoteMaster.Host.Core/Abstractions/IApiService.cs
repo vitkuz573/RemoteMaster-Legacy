@@ -8,7 +8,7 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IApiService
 {
-    Task<ApiResponse<Guid?>> RegisterHostAsync(HostConfiguration hostConfiguration);
+    Task<ApiResponse<bool>> RegisterHostAsync(HostConfiguration hostConfiguration);
 
     Task<ApiResponse<bool>> UnregisterHostAsync(HostConfiguration hostConfiguration);
 

@@ -41,9 +41,8 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
             var result = await apiService.RegisterHostAsync(hostConfiguration);
 
-            if (result.StatusCode == (int)HttpStatusCode.OK && result.Data != null)
+            if (result.StatusCode == (int)HttpStatusCode.OK && result.Data)
             {
-                hostConfiguration.HostGuid = result.Data;
                 await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
 
                 _isRegistrationInvoked = true;

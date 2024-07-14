@@ -11,9 +11,6 @@ public class HostConfiguration
     [JsonPropertyName("server")]
     public string? Server { get; set; }
 
-    [JsonPropertyName("hostGuid")]
-    public Guid? HostGuid { get; set; }
-
     [JsonPropertyName("subject")]
     public SubjectOptions Subject { get; set; }
 

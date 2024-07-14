@@ -14,18 +14,18 @@ public class ApiService(IHttpClientFactory httpClientFactory) : IApiService
     {
         var client = httpClientFactory.CreateClient();
         client.BaseAddress = new Uri($"http://{server}");
-        
+
         return client;
     }
 
-    public async Task<ApiResponse<Guid?>> RegisterHostAsync(HostConfiguration hostConfiguration)
+    public async Task<ApiResponse<bool>> RegisterHostAsync(HostConfiguration hostConfiguration)
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
         using var client = CreateClient(hostConfiguration.Server);
         var response = await client.PostAsJsonAsync("/api/hostregistration/register", hostConfiguration);
-        
-        return await response.Content.ReadFromJsonAsync<ApiResponse<Guid?>>();
+
+        return await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
     }
 
     public async Task<ApiResponse<bool>> UnregisterHostAsync(HostConfiguration hostConfiguration)
@@ -33,8 +33,12 @@ public class ApiService(IHttpClientFactory httpClientFactory) : IApiService
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
         using var client = CreateClient(hostConfiguration.Server);
-        var response = await client.PostAsJsonAsync("/api/hostregistration/unregister", hostConfiguration);
-        
+        using var request = new HttpRequestMessage(HttpMethod.Delete, "/api/hostregistration/unregister")
+        {
+            Content = JsonContent.Create(hostConfiguration)
+        };
+        var response = await client.SendAsync(request);
+
         return await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
     }
 
@@ -43,8 +47,8 @@ public class ApiService(IHttpClientFactory httpClientFactory) : IApiService
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
         using var client = CreateClient(hostConfiguration.Server);
-        var response = await client.PostAsJsonAsync("/api/hostregistration/update", hostConfiguration);
-        
+        var response = await client.PutAsJsonAsync("/api/hostregistration/update", hostConfiguration);
+
         return await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
     }
 
@@ -54,7 +58,7 @@ public class ApiService(IHttpClientFactory httpClientFactory) : IApiService
 
         using var client = CreateClient(hostConfiguration.Server);
         var response = await client.GetAsync($"/api/hostregistration/check?macAddress={hostConfiguration.Host.MacAddress}");
-        
+
         return await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
     }
 }
