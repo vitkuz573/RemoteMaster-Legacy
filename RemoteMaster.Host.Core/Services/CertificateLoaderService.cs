@@ -16,16 +16,11 @@ public class CertificateLoaderService : ICertificateLoaderService
     public CertificateLoaderService()
     {
         LoadCertificate();
-
-        if (_currentCertificate == null)
-        {
-            throw new InvalidOperationException("No valid certificate found during initialization.");
-        }
     }
 
     public X509Certificate2 GetCurrentCertificate()
     {
-        return _currentCertificate ?? throw new InvalidOperationException("No valid certificate loaded.");
+        return _currentCertificate;
     }
 
     public void LoadCertificate()
@@ -60,15 +55,11 @@ public class CertificateLoaderService : ICertificateLoaderService
             else
             {
                 Log.Warning("No valid certificates with private key were found.");
-                
-                throw new InvalidOperationException("No valid certificate with a private key found.");
             }
         }
         catch (Exception ex)
         {
             Log.Error("An error occurred while loading the certificate: {ExceptionMessage}", ex.Message);
-            
-            throw;
         }
     }
 }
