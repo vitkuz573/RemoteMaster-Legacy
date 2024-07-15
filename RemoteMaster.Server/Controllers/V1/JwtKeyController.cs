@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Models;
@@ -11,12 +12,15 @@ namespace RemoteMaster.Server.Controllers.V1;
 
 [ApiController]
 [Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Consumes("application/vnd.remotemaster.v1+json")]
+[Produces("application/vnd.remotemaster.v1+json")]
 public class JwtKeyController(IJwtSecurityService jwtSecurityService) : ControllerBase
 {
     [HttpGet]
     [SwaggerOperation(Summary = "Retrieves the public key", Description = "Retrieves the public key used for JWT.")]
     [ProducesResponseType(typeof(ApiResponse<byte[]>), 200)]
-    [Produces("application/json")]
+    [ProducesResponseType(typeof(ApiResponse<byte[]>), 400)]
     public async Task<IActionResult> GetPublicKey()
     {
         var publicKey = await jwtSecurityService.GetPublicKeyAsync();
