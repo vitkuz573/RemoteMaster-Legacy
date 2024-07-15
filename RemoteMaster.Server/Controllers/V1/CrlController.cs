@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using RemoteMaster.Server.Abstractions;
@@ -14,10 +15,15 @@ namespace RemoteMaster.Server.Controllers.V1;
 
 [ApiController]
 [Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Consumes("application/vnd.remotemaster.v1+json")]
+[Produces("application/vnd.remotemaster.v1+json")]
 [EnableRateLimiting("CrlPolicy")]
 public class CrlController(ICrlService crlService) : ControllerBase
 {
     [HttpGet(Name = "GetCrl")]
+    [ProducesResponseType(typeof(FileResult), 200)]
+    [ProducesResponseType(typeof(ApiResponse<string>), 500)]
     public async Task<IActionResult> GetCrlAsync()
     {
         try
@@ -29,12 +35,14 @@ public class CrlController(ICrlService crlService) : ControllerBase
         catch (Exception ex)
         {
             Log.Error(ex, "Error generating CRL");
-
+            
             return StatusCode(StatusCodes.Status500InternalServerError, ApiResponse<byte[]>.Failure<string>("Internal Server Error. Please try again later.", StatusCodes.Status500InternalServerError));
         }
     }
 
     [HttpGet("metadata", Name = "GetCrlMetadata")]
+    [ProducesResponseType(typeof(ApiResponse<CrlMetadata>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<string>), 500)]
     public async Task<IActionResult> GetCrlMetadataAsync()
     {
         try
@@ -56,9 +64,8 @@ public class CrlController(ICrlService crlService) : ControllerBase
         catch (Exception ex)
         {
             Log.Error(ex, "Error retrieving CRL metadata");
-
+            
             return StatusCode(StatusCodes.Status500InternalServerError, ApiResponse<CrlMetadata>.Failure<string>("Internal Server Error. Please try again later.", StatusCodes.Status500InternalServerError));
         }
     }
 }
-
