@@ -59,7 +59,7 @@ public class HostRegistrationMonitorService : IHostedService
                     await _hostLifecycleService.RegisterAsync();
                 }
 
-                await _hostLifecycleService.RenewCertificateAsync(hostConfiguration);
+                await _hostLifecycleService.IssueCertificateAsync(hostConfiguration);
                 await RestartUserInstance();
             }
             else if (!isHostRegistered)

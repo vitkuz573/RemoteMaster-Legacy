@@ -15,9 +15,6 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class HostLifecycleService(ICertificateRequestService certificateRequestService, ISubjectService subjectService, ICertificateLoaderService certificateLoaderService, IApiService apiService) : IHostLifecycleService
 {
-    private volatile bool _isRegistrationInvoked;
-    private bool _isRenewalProcess;
-
     public async Task RegisterAsync()
     {
         RSA? rsaKeyPair = null;
@@ -39,8 +36,6 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
 
             if (result.StatusCode == (int)HttpStatusCode.OK && result.Data)
             {
-                _isRegistrationInvoked = true;
-
                 Log.Information("Host registration invoked successfully. Waiting for the certificate...");
 
                 var response = await apiService.GetJwtPublicKeyAsync();
@@ -90,11 +85,11 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
 
             if (result.StatusCode == (int)HttpStatusCode.OK && result.Data)
             {
-                Log.Information("Host unregistration successful.");
+                Log.Information("Host unregister successful.");
             }
             else
             {
-                Log.Warning("Host unregistration was not successful.");
+                Log.Warning("Host unregister was not successful.");
             }
         }
         catch (Exception ex)
@@ -145,20 +140,6 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         finally
         {
             rsaKeyPair?.Dispose();
-        }
-    }
-
-    public async Task RenewCertificateAsync(HostConfiguration hostConfiguration)
-    {
-        _isRenewalProcess = true;
-
-        try
-        {
-            await IssueCertificateAsync(hostConfiguration);
-        }
-        finally
-        {
-            _isRenewalProcess = false;
         }
     }
 
@@ -240,11 +221,6 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
 
         try
         {
-            if (!_isRenewalProcess)
-            {
-                SpinWait.SpinUntil(() => _isRegistrationInvoked);
-            }
-
             if (certificateBytes == null || certificateBytes.Length == 0)
             {
                 Log.Error("Certificate bytes are null or empty.");

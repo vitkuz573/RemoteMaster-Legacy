@@ -14,8 +14,6 @@ public interface IHostLifecycleService
 
     Task IssueCertificateAsync(HostConfiguration hostConfiguration);
 
-    Task RenewCertificateAsync(HostConfiguration hostConfiguration);
-
     void RemoveCertificate();
 
     Task UpdateHostInformationAsync();
