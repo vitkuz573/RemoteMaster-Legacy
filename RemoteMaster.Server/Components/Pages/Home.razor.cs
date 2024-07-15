@@ -37,6 +37,8 @@ public partial class Home
     private ClaimsPrincipal? _user;
     private ApplicationUser? _currentUser;
 
+    private IDictionary<NotificationMessage, bool>? _messages = null;
+
     protected async override Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateTask;
