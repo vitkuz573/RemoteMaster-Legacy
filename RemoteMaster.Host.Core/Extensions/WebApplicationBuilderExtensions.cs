@@ -64,6 +64,7 @@ public static class WebApplicationBuilderExtensions
 
             configuration.MinimumLevel.Override("Microsoft", LogEventLevel.Warning);
             configuration.MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning);
+            configuration.MinimumLevel.Override("System.Net.Http.HttpClient", LogEventLevel.Warning);
 #endif
             configuration.WriteTo.Console();
             // configuration.WriteTo.Seq("http://192.168.0.103:5341");
