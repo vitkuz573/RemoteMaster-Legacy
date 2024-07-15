@@ -72,7 +72,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         {
             MacAddress = hostConfiguration.Host.MacAddress,
             Organization = hostConfiguration.Subject.Organization,
-            OrganizationalUnit = hostConfiguration.Subject.OrganizationalUnit.ToList(),
+            OrganizationalUnit = [..hostConfiguration.Subject.OrganizationalUnit],
             Name = hostConfiguration.Host.Name
         };
 
@@ -94,7 +94,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         {
             MacAddress = hostConfiguration.Host.MacAddress,
             Organization = hostConfiguration.Subject.Organization,
-            OrganizationalUnit = hostConfiguration.Subject.OrganizationalUnit.ToList(),
+            OrganizationalUnit = [..hostConfiguration.Subject.OrganizationalUnit],
             IpAddress = hostConfiguration.Host.IpAddress,
             Name = hostConfiguration.Host.Name
         };
