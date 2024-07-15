@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Hosting;
 using RemoteMaster.Host.Core.Abstractions;
 using Serilog;
@@ -78,11 +77,8 @@ public class HostRegistrationMonitorService : IHostedService
         }
     }
 
-    private async Task StopAndRestartUserInstance([CallerMemberName] string callerMemberName = "", [CallerFilePath] string callerFilePath = "")
+    private async Task StopAndRestartUserInstance()
     {
-        var callerClassName = Path.GetFileNameWithoutExtension(callerFilePath);
-        Log.Information("StopAndRestartUserInstance method called by {CallerClassName}.{CallerMemberName}", callerClassName, callerMemberName);
-
         Log.Information("Stopping user instance...");
         _userInstanceService.Stop();
 
