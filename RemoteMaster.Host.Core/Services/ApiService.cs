@@ -57,7 +57,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
 
-        var response = await _client.PostAsJsonAsync("/api/host/register", hostConfiguration);
+        var response = await _client.PostAsJsonAsync("/api/Host/register", hostConfiguration);
 
         return await ProcessResponse<bool>(response);
     }
@@ -99,7 +99,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
             Name = hostConfiguration.Host.Name
         };
 
-        var response = await _client.PutAsJsonAsync("/api/host/update", request);
+        var response = await _client.PutAsJsonAsync("/api/Host/update", request);
 
         return await ProcessResponse<bool>(response);
     }
@@ -110,7 +110,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
 
-        var response = await _client.GetAsync($"/api/host/check?macAddress={hostConfiguration.Host.MacAddress}");
+        var response = await _client.GetAsync($"/api/Host/status?macAddress={hostConfiguration.Host.MacAddress}");
 
         return await ProcessResponse<bool>(response);
     }

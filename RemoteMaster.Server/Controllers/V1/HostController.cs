@@ -37,7 +37,7 @@ public class HostController(IHostRegistrationService registrationService) : Cont
         return BadRequest(errorResponse);
     }
 
-    [HttpGet("check")]
+    [HttpGet("status")]
     [SwaggerOperation(Summary = "Checks if a host is registered", Description = "Checks the registration status of a host with the given MAC address.")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     public async Task<IActionResult> CheckHostRegistration([FromQuery] string macAddress)
@@ -59,18 +59,18 @@ public class HostController(IHostRegistrationService registrationService) : Cont
     [SwaggerOperation(Summary = "Unregisters a host", Description = "Unregisters a host with the given MAC address, organization details, and host name.")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<bool>), 400)]
-    public async Task<IActionResult> UnregisterHost([FromBody] HostUnregisterRequest request)
+    public async Task<IActionResult> DeregisterHost([FromBody] HostUnregisterRequest request)
     {
         var result = await registrationService.UnregisterHostAsync(request);
 
         if (result)
         {
-            var response = ApiResponse<bool>.Success(result, "Host unregistration successful.");
+            var response = ApiResponse<bool>.Success(result, "Host unregister successful.");
 
             return Ok(response);
         }
 
-        var errorResponse = ApiResponse<bool>.Failure<bool>("Host unregistration failed.");
+        var errorResponse = ApiResponse<bool>.Failure<bool>("Host unregister failed.");
 
         return BadRequest(errorResponse);
     }
