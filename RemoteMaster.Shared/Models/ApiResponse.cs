@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Http;
 
 namespace RemoteMaster.Shared.Models;
 
