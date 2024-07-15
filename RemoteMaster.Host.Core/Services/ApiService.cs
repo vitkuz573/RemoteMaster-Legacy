@@ -16,7 +16,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
     {
         if (_client.BaseAddress == null)
         {
-            var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
+            var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
             
             if (hostConfiguration == null || string.IsNullOrEmpty(hostConfiguration.Server))
             {
@@ -27,7 +27,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         }
     }
 
-    public async Task<ApiResponse<bool>> RegisterHostAsync()
+    public async Task<ApiResponse<bool>?> RegisterHostAsync()
     {
         await EnsureClientInitializedAsync();
 
@@ -38,7 +38,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         return await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
     }
 
-    public async Task<ApiResponse<bool>> UnregisterHostAsync()
+    public async Task<ApiResponse<bool>?> UnregisterHostAsync()
     {
         await EnsureClientInitializedAsync();
 
@@ -52,21 +52,19 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
             Name = hostConfiguration.Host.Name
         };
 
-        using var httpRequest = new HttpRequestMessage(HttpMethod.Delete, "/api/hostregistration/unregister")
-        {
-            Content = JsonContent.Create(request)
-        };
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Delete, "/api/hostregistration/unregister");
+        httpRequest.Content = JsonContent.Create(request);
 
         var response = await _client.SendAsync(httpRequest);
 
         return await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
     }
 
-    public async Task<ApiResponse<bool>> UpdateHostInformationAsync()
+    public async Task<ApiResponse<bool>?> UpdateHostInformationAsync()
     {
         await EnsureClientInitializedAsync();
 
-        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
+        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
 
         var request = new HostUpdateRequest
         {
@@ -82,18 +80,18 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         return await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
     }
 
-    public async Task<ApiResponse<bool>> IsHostRegisteredAsync()
+    public async Task<ApiResponse<bool>?> IsHostRegisteredAsync()
     {
         await EnsureClientInitializedAsync();
 
-        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
+        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
 
         var response = await _client.GetAsync($"/api/hostregistration/check?macAddress={hostConfiguration.Host.MacAddress}");
 
         return await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
     }
 
-    public async Task<ApiResponse<byte[]>> GetJwtPublicKeyAsync()
+    public async Task<ApiResponse<byte[]>?> GetJwtPublicKeyAsync()
     {
         await EnsureClientInitializedAsync();
 
@@ -102,7 +100,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         return await response.Content.ReadFromJsonAsync<ApiResponse<byte[]>>();
     }
 
-    public async Task<ApiResponse<byte[]>> GetCaCertificateAsync()
+    public async Task<ApiResponse<byte[]>?> GetCaCertificateAsync()
     {
         await EnsureClientInitializedAsync();
 
@@ -111,7 +109,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         return await response.Content.ReadFromJsonAsync<ApiResponse<byte[]>>();
     }
 
-    public async Task<ApiResponse<byte[]>> IssueCertificateAsync(byte[] csrBytes)
+    public async Task<ApiResponse<byte[]>?> IssueCertificateAsync(byte[] csrBytes)
     {
         await EnsureClientInitializedAsync();
 

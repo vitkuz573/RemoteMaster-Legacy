@@ -8,17 +8,17 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IApiService
 {
-    Task<ApiResponse<bool>> RegisterHostAsync();
+    Task<ApiResponse<bool>?> RegisterHostAsync();
 
-    Task<ApiResponse<bool>> UnregisterHostAsync();
+    Task<ApiResponse<bool>?> UnregisterHostAsync();
 
-    Task<ApiResponse<bool>> UpdateHostInformationAsync();
+    Task<ApiResponse<bool>?> UpdateHostInformationAsync();
 
-    Task<ApiResponse<bool>> IsHostRegisteredAsync();
+    Task<ApiResponse<bool>?> IsHostRegisteredAsync();
 
-    Task<ApiResponse<byte[]>> GetJwtPublicKeyAsync();
+    Task<ApiResponse<byte[]>?> GetJwtPublicKeyAsync();
 
-    Task<ApiResponse<byte[]>> GetCaCertificateAsync();
+    Task<ApiResponse<byte[]>?> GetCaCertificateAsync();
 
-    Task<ApiResponse<byte[]>> IssueCertificateAsync(byte[] csrBytes);
+    Task<ApiResponse<byte[]>?> IssueCertificateAsync(byte[] csrBytes);
 }
