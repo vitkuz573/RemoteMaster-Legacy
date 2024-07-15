@@ -7,7 +7,7 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Models;
 using Swashbuckle.AspNetCore.Annotations;
 
-namespace RemoteMaster.Server.Controllers;
+namespace RemoteMaster.Server.Controllers.V1;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -20,7 +20,7 @@ public class HostMoveRequestController(IHostMoveRequestService hostMoveRequestSe
     public async Task<IActionResult> GetHostMoveRequest([FromQuery] string macAddress)
     {
         var hostMoveRequest = await hostMoveRequestService.GetHostMoveRequestAsync(macAddress);
-        
+
         if (hostMoveRequest != null)
         {
             return Ok(ApiResponse<HostMoveRequest>.Success(hostMoveRequest, "Host move request retrieved successfully."));
@@ -39,7 +39,7 @@ public class HostMoveRequestController(IHostMoveRequestService hostMoveRequestSe
         try
         {
             await hostMoveRequestService.AcknowledgeMoveRequestAsync(macAddress);
-            
+
             return Ok(ApiResponse<bool>.Success(true, "Host move request acknowledged successfully."));
         }
         catch (Exception ex)

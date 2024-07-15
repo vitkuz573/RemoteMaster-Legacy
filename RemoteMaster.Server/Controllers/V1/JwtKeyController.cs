@@ -7,7 +7,7 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Models;
 using Swashbuckle.AspNetCore.Annotations;
 
-namespace RemoteMaster.Server.Controllers;
+namespace RemoteMaster.Server.Controllers.V1;
 
 [ApiController]
 [Route("api/[controller]")]

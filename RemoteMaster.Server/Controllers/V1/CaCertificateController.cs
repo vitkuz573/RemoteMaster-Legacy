@@ -8,7 +8,7 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Models;
 using Swashbuckle.AspNetCore.Annotations;
 
-namespace RemoteMaster.Server.Controllers;
+namespace RemoteMaster.Server.Controllers.V1;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -23,7 +23,7 @@ public class CaCertificateController(ICaCertificateService caCertificateService)
         try
         {
             var caCertificate = caCertificateService.GetCaCertificate(X509ContentType.Cert);
-            
+
             return Ok(ApiResponse<byte[]>.Success(caCertificate.Export(X509ContentType.Cert), "CA certificate retrieved successfully."));
         }
         catch (Exception ex)

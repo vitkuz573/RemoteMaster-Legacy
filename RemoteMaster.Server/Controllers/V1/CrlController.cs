@@ -10,7 +10,7 @@ using RemoteMaster.Shared.Models;
 using Serilog;
 using StatusCodes = Microsoft.AspNetCore.Http.StatusCodes;
 
-namespace RemoteMaster.Server.Controllers;
+namespace RemoteMaster.Server.Controllers.V1;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -23,13 +23,13 @@ public class CrlController(ICrlService crlService) : ControllerBase
         try
         {
             var crlData = await crlService.GenerateCrlAsync();
-           
+
             return File(crlData, "application/pkix-crl", "list.crl");
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Error generating CRL");
-           
+
             return StatusCode(StatusCodes.Status500InternalServerError, ApiResponse<byte[]>.Failure<string>("Internal Server Error. Please try again later.", StatusCodes.Status500InternalServerError));
         }
     }

@@ -9,7 +9,7 @@ using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 using StatusCodes = Microsoft.AspNetCore.Http.StatusCodes;
 
-namespace RemoteMaster.Server.Controllers;
+namespace RemoteMaster.Server.Controllers.V1;
 
 [Route("api/[controller]")]
 [ApiController]
