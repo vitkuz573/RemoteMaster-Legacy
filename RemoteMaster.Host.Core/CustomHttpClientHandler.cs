@@ -11,13 +11,20 @@ public class CustomHttpClientHandler : DelegatingHandler
     protected async override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        
+
         if (!request.Headers.Accept.Any(h => h.MediaType == "application/vnd.remotemaster.v1+json"))
         {
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.remotemaster.v1+json"));
         }
 
-        if (request.Content != null && !request.Content.Headers.ContentType.MediaType.Equals("application/vnd.remotemaster.v1+json", StringComparison.OrdinalIgnoreCase))
+        if (request.Content == null)
+        {
+            return await base.SendAsync(request, cancellationToken);
+        }
+
+        var contentType = request.Content.Headers.ContentType;
+
+        if (contentType == null || !string.Equals(contentType.MediaType, "application/vnd.remotemaster.v1+json", StringComparison.OrdinalIgnoreCase))
         {
             request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/vnd.remotemaster.v1+json");
         }
