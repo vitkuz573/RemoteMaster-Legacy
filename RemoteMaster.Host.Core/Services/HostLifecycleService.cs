@@ -192,10 +192,8 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
             {
                 return statusResponse.Data;
             }
-            else
-            {
-                throw new InvalidOperationException("Failed to check host registration status.");
-            }
+
+            throw new InvalidOperationException("Failed to check host registration status.");
         }
         catch (HttpRequestException ex) when (ex.InnerException is SocketException { SocketErrorCode: SocketError.NetworkUnreachable })
         {
