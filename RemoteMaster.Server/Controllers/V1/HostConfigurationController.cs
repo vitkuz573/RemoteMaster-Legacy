@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
@@ -11,14 +12,20 @@ using StatusCodes = Microsoft.AspNetCore.Http.StatusCodes;
 
 namespace RemoteMaster.Server.Controllers.V1;
 
-[Route("api/[controller]")]
 [ApiController]
+[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Consumes("application/vnd.remotemaster.v1+json")]
+[Produces("application/vnd.remotemaster.v1+json")]
 public class HostConfigurationController(IOptions<ApplicationSettings> options) : ControllerBase
 {
     private static readonly object FileLock = new();
 
     [HttpGet("download-host")]
     [EnableRateLimiting("HostDownloadPolicy")]
+    [ProducesResponseType(typeof(FileStreamResult), 200)]
+    [ProducesResponseType(typeof(ApiResponse<string>), 404)]
+    [ProducesResponseType(typeof(ApiResponse<string>), 500)]
     public IActionResult DownloadHost()
     {
         var filePath = Path.Combine(options.Value.ExecutablesRoot, "Host", "RemoteMaster.Host.exe");
