@@ -39,8 +39,7 @@ public class HostConfigurationController(IOptions<ApplicationSettings> options) 
                 Status = StatusCodes.Status404NotFound
             };
 
-            var errorResponse = new ApiResponse<string>("File not found.", "The requested file does not exist on the server.", StatusCodes.Status404NotFound);
-            errorResponse.SetError(problemDetails);
+            var errorResponse = ApiResponse<string>.Failure(problemDetails, StatusCodes.Status404NotFound);
 
             return NotFound(errorResponse);
         }
@@ -63,8 +62,7 @@ public class HostConfigurationController(IOptions<ApplicationSettings> options) 
                     Status = StatusCodes.Status500InternalServerError
                 };
 
-                var errorResponse = new ApiResponse<string>($"File access error: {ex.Message}", $"An error occurred while accessing the file: {ex.Message}", StatusCodes.Status500InternalServerError);
-                errorResponse.SetError(problemDetails);
+                var errorResponse = ApiResponse<string>.Failure(problemDetails, StatusCodes.Status500InternalServerError);
 
                 return StatusCode(StatusCodes.Status500InternalServerError, errorResponse);
             }
@@ -92,8 +90,7 @@ public class HostConfigurationController(IOptions<ApplicationSettings> options) 
                 Status = StatusCodes.Status400BadRequest
             };
 
-            var errorResponse = new ApiResponse<string>("Invalid request.", "The provided request is invalid.", StatusCodes.Status400BadRequest);
-            errorResponse.SetError(problemDetails);
+            var errorResponse = ApiResponse<string>.Failure(problemDetails);
 
             return BadRequest(errorResponse);
         }

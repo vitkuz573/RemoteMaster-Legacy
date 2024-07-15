@@ -22,7 +22,7 @@ public class ApiResponse<TData>
     /// <summary>
     /// Message describing the outcome of the operation.
     /// </summary>
-    public string Message { get; }
+    public string? Message { get; }
 
     /// <summary>
     /// Data payload of the response.
@@ -54,11 +54,22 @@ public class ApiResponse<TData>
     /// Constructor for success response.
     /// </summary>
     [JsonConstructor]
-    public ApiResponse(TData data, string message, int statusCode)
+    public ApiResponse(TData data, string? message, int statusCode)
     {
         Data = data;
         Message = message;
         StatusCode = statusCode;
+    }
+
+    /// <summary>
+    /// Constructor for failure response.
+    /// </summary>
+    public ApiResponse(ProblemDetails error, int statusCode)
+    {
+        Error = error;
+        StatusCode = statusCode;
+        Message = null;
+        Data = default;
     }
 
     /// <summary>
@@ -70,8 +81,8 @@ public class ApiResponse<TData>
     /// <summary>
     /// Creates a failure response.
     /// </summary>
-    public static ApiResponse<T> Failure<T>(string message, int statusCode = StatusCodes.Status400BadRequest)
-        => new(default!, message, statusCode);
+    public static ApiResponse<TData> Failure(ProblemDetails error, int statusCode = StatusCodes.Status400BadRequest)
+        => new(error, statusCode);
 
     /// <summary>
     /// Sets hypermedia links for the API response, adhering to HATEOAS principles.
@@ -80,14 +91,5 @@ public class ApiResponse<TData>
     public void SetLinks(Dictionary<string, string> links)
     {
         Links = links;
-    }
-
-    /// <summary>
-    /// Adds an error object to the response, used primarily for failure responses to provide additional error details.
-    /// </summary>
-    /// <param name="error">The error object containing error details.</param>
-    public void SetError(ProblemDetails error)
-    {
-        Error = error;
     }
 }

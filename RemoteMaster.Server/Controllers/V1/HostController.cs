@@ -1,4 +1,8 @@
-﻿using Asp.Versioning;
+﻿// Copyright © 2023 Vitaly Kuzyaев. All rights reserved.
+// This file is part of the RemoteMaster project.
+// Licensed under the GNU Affero General Public License v3.0.
+
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Models;
@@ -28,8 +32,7 @@ public class HostController(IHostRegistrationService registrationService) : Cont
                 Status = StatusCodes.Status400BadRequest
             };
 
-            var errorResponse = new ApiResponse<bool>(false, "Invalid host configuration.", StatusCodes.Status400BadRequest);
-            errorResponse.SetError(problemDetails);
+            var errorResponse = ApiResponse<bool>.Failure(problemDetails, StatusCodes.Status400BadRequest);
 
             return BadRequest(errorResponse);
         }
@@ -38,12 +41,19 @@ public class HostController(IHostRegistrationService registrationService) : Cont
 
         if (result)
         {
-            var response = new ApiResponse<bool>(result, "Host registration successful.", StatusCodes.Status200OK);
+            var response = ApiResponse<bool>.Success(result, "Host registration successful.", StatusCodes.Status200OK);
 
             return Ok(response);
         }
 
-        var failureResponse = new ApiResponse<bool>(false, "Host registration failed.", StatusCodes.Status400BadRequest);
+        var failureProblemDetails = new ProblemDetails
+        {
+            Title = "Host registration failed",
+            Detail = "The registration of the host failed.",
+            Status = StatusCodes.Status400BadRequest
+        };
+
+        var failureResponse = ApiResponse<bool>.Failure(failureProblemDetails, StatusCodes.Status400BadRequest);
 
         return BadRequest(failureResponse);
     }
@@ -63,14 +73,13 @@ public class HostController(IHostRegistrationService registrationService) : Cont
                 Status = StatusCodes.Status400BadRequest
             };
 
-            var errorResponse = new ApiResponse<bool>(false, "Invalid MAC address.", StatusCodes.Status400BadRequest);
-            errorResponse.SetError(problemDetails);
+            var errorResponse = ApiResponse<bool>.Failure(problemDetails, StatusCodes.Status400BadRequest);
 
             return BadRequest(errorResponse);
         }
 
         var isRegistered = await registrationService.IsHostRegisteredAsync(macAddress);
-        var response = new ApiResponse<bool>(isRegistered, "Host registration status retrieved.", StatusCodes.Status200OK);
+        var response = ApiResponse<bool>.Success(isRegistered, "Host registration status retrieved.", StatusCodes.Status200OK);
 
         return Ok(response);
     }
@@ -90,8 +99,7 @@ public class HostController(IHostRegistrationService registrationService) : Cont
                 Status = StatusCodes.Status400BadRequest
             };
 
-            var errorResponse = new ApiResponse<bool>(false, "Invalid request.", StatusCodes.Status400BadRequest);
-            errorResponse.SetError(problemDetails);
+            var errorResponse = ApiResponse<bool>.Failure(problemDetails, StatusCodes.Status400BadRequest);
 
             return BadRequest(errorResponse);
         }
@@ -100,12 +108,19 @@ public class HostController(IHostRegistrationService registrationService) : Cont
 
         if (result)
         {
-            var response = new ApiResponse<bool>(result, "Host unregister successful.", StatusCodes.Status200OK);
+            var response = ApiResponse<bool>.Success(result, "Host unregister successful.", StatusCodes.Status200OK);
 
             return Ok(response);
         }
 
-        var failureResponse = new ApiResponse<bool>(false, "Host unregister failed.", StatusCodes.Status400BadRequest);
+        var failureProblemDetails = new ProblemDetails
+        {
+            Title = "Host unregister failed",
+            Detail = "The unregister of the host failed.",
+            Status = StatusCodes.Status400BadRequest
+        };
+
+        var failureResponse = ApiResponse<bool>.Failure(failureProblemDetails, StatusCodes.Status400BadRequest);
 
         return BadRequest(failureResponse);
     }
@@ -125,8 +140,7 @@ public class HostController(IHostRegistrationService registrationService) : Cont
                 Status = StatusCodes.Status400BadRequest
             };
 
-            var errorResponse = new ApiResponse<bool>(false, "Invalid request.", StatusCodes.Status400BadRequest);
-            errorResponse.SetError(problemDetails);
+            var errorResponse = ApiResponse<bool>.Failure(problemDetails, StatusCodes.Status400BadRequest);
 
             return BadRequest(errorResponse);
         }
@@ -135,12 +149,19 @@ public class HostController(IHostRegistrationService registrationService) : Cont
 
         if (result)
         {
-            var response = new ApiResponse<bool>(result, "Host update successful.", StatusCodes.Status200OK);
+            var response = ApiResponse<bool>.Success(result, "Host update successful.", StatusCodes.Status200OK);
 
             return Ok(response);
         }
 
-        var failureResponse = new ApiResponse<bool>(false, "Host update failed.", StatusCodes.Status400BadRequest);
+        var failureProblemDetails = new ProblemDetails
+        {
+            Title = "Host update failed",
+            Detail = "The update of the host information failed.",
+            Status = StatusCodes.Status400BadRequest
+        };
+
+        var failureResponse = ApiResponse<bool>.Failure(failureProblemDetails, StatusCodes.Status400BadRequest);
 
         return BadRequest(failureResponse);
     }

@@ -32,8 +32,7 @@ public class HostMoveController(IHostMoveRequestService hostMoveRequestService) 
                 Status = StatusCodes.Status400BadRequest
             };
 
-            var errorResponse = new ApiResponse<HostMoveRequest>(default!, "Invalid MAC address.", StatusCodes.Status400BadRequest);
-            errorResponse.SetError(problemDetails);
+            var errorResponse = ApiResponse<HostMoveRequest>.Failure(problemDetails);
 
             return BadRequest(errorResponse);
         }
@@ -42,12 +41,19 @@ public class HostMoveController(IHostMoveRequestService hostMoveRequestService) 
 
         if (hostMoveRequest != null)
         {
-            var response = new ApiResponse<HostMoveRequest>(hostMoveRequest, "Host move request retrieved successfully.", StatusCodes.Status200OK);
+            var response = ApiResponse<HostMoveRequest>.Success(hostMoveRequest, "Host move request retrieved successfully.");
 
             return Ok(response);
         }
 
-        var failureResponse = new ApiResponse<HostMoveRequest>(default, "Failed to retrieve host move request.", StatusCodes.Status400BadRequest);
+        var failureProblemDetails = new ProblemDetails
+        {
+            Title = "Failed to retrieve host move request",
+            Detail = "No host move request found for the provided MAC address.",
+            Status = StatusCodes.Status400BadRequest
+        };
+
+        var failureResponse = ApiResponse<HostMoveRequest>.Failure(failureProblemDetails);
 
         return BadRequest(failureResponse);
     }
@@ -67,8 +73,7 @@ public class HostMoveController(IHostMoveRequestService hostMoveRequestService) 
                 Status = StatusCodes.Status400BadRequest
             };
 
-            var errorResponse = new ApiResponse<bool>(false, "Invalid MAC address.", StatusCodes.Status400BadRequest);
-            errorResponse.SetError(problemDetails);
+            var errorResponse = ApiResponse<bool>.Failure(problemDetails);
 
             return BadRequest(errorResponse);
         }
@@ -76,7 +81,7 @@ public class HostMoveController(IHostMoveRequestService hostMoveRequestService) 
         try
         {
             await hostMoveRequestService.AcknowledgeMoveRequestAsync(macAddress);
-            var response = new ApiResponse<bool>(true, "Host move request acknowledged successfully.", StatusCodes.Status200OK);
+            var response = ApiResponse<bool>.Success(true, "Host move request acknowledged successfully.");
 
             return Ok(response);
         }
@@ -89,8 +94,7 @@ public class HostMoveController(IHostMoveRequestService hostMoveRequestService) 
                 Status = StatusCodes.Status400BadRequest
             };
 
-            var errorResponse = new ApiResponse<bool>(false, $"Failed to acknowledge host move request: {ex.Message}", StatusCodes.Status400BadRequest);
-            errorResponse.SetError(problemDetails);
+            var errorResponse = ApiResponse<bool>.Failure(problemDetails);
 
             return BadRequest(errorResponse);
         }

@@ -29,12 +29,19 @@ public class JwtController(IJwtSecurityService jwtSecurityService) : ControllerB
 
             if (publicKey != null)
             {
-                var response = new ApiResponse<byte[]>(publicKey, "Public key retrieved successfully.", StatusCodes.Status200OK);
+                var response = ApiResponse<byte[]>.Success(publicKey, "Public key retrieved successfully.", StatusCodes.Status200OK);
 
                 return Ok(response);
             }
 
-            var failureResponse = new ApiResponse<byte[]>(default!, "Failed to retrieve public key.", StatusCodes.Status400BadRequest);
+            var failureProblemDetails = new ProblemDetails
+            {
+                Title = "Failed to retrieve public key",
+                Detail = "The public key could not be retrieved.",
+                Status = StatusCodes.Status400BadRequest
+            };
+
+            var failureResponse = ApiResponse<byte[]>.Failure(failureProblemDetails, StatusCodes.Status400BadRequest);
 
             return BadRequest(failureResponse);
         }
@@ -47,8 +54,7 @@ public class JwtController(IJwtSecurityService jwtSecurityService) : ControllerB
                 Status = StatusCodes.Status500InternalServerError
             };
 
-            var errorResponse = new ApiResponse<byte[]>(default, "Internal Server Error. Please try again later.", StatusCodes.Status500InternalServerError);
-            errorResponse.SetError(problemDetails);
+            var errorResponse = ApiResponse<byte[]>.Failure(problemDetails, StatusCodes.Status500InternalServerError);
 
             return StatusCode(StatusCodes.Status500InternalServerError, errorResponse);
         }

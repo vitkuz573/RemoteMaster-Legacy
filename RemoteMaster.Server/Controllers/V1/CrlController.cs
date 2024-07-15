@@ -42,8 +42,7 @@ public class CrlController(ICrlService crlService) : ControllerBase
                 Status = StatusCodes.Status500InternalServerError
             };
 
-            var errorResponse = new ApiResponse<string>(default!, "Internal Server Error. Please try again later.", StatusCodes.Status500InternalServerError);
-            errorResponse.SetError(problemDetails);
+            var errorResponse = ApiResponse<string>.Failure(problemDetails, StatusCodes.Status500InternalServerError);
 
             return StatusCode(StatusCodes.Status500InternalServerError, errorResponse);
         }
@@ -57,7 +56,7 @@ public class CrlController(ICrlService crlService) : ControllerBase
         try
         {
             var metadata = await crlService.GetCrlMetadataAsync();
-            var response = new ApiResponse<CrlMetadata>(metadata, "CRL metadata retrieved successfully.", StatusCodes.Status200OK);
+            var response = ApiResponse<CrlMetadata>.Success(metadata, "CRL metadata retrieved successfully.");
 
             var selfUrl = Url.Action("GetCrlMetadata");
             var downloadUrl = Url.Action("GetCrl");
@@ -81,8 +80,7 @@ public class CrlController(ICrlService crlService) : ControllerBase
                 Status = StatusCodes.Status500InternalServerError
             };
 
-            var errorResponse = new ApiResponse<string>(default!, "Internal Server Error. Please try again later.", StatusCodes.Status500InternalServerError);
-            errorResponse.SetError(problemDetails);
+            var errorResponse = ApiResponse<string>.Failure(problemDetails, StatusCodes.Status500InternalServerError);
 
             return StatusCode(StatusCodes.Status500InternalServerError, errorResponse);
         }
