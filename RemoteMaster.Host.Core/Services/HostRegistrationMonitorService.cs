@@ -60,7 +60,7 @@ public class HostRegistrationMonitorService : IHostedService
                 }
 
                 await _hostLifecycleService.RenewCertificateAsync(hostConfiguration);
-                await StopAndRestartUserInstance();
+                await RestartUserInstance();
             }
             else if (!isHostRegistered)
             {
@@ -68,7 +68,7 @@ public class HostRegistrationMonitorService : IHostedService
 
                 await _hostLifecycleService.RegisterAsync();
                 await _hostLifecycleService.IssueCertificateAsync(hostConfiguration);
-                await StopAndRestartUserInstance();
+                await RestartUserInstance();
             }
         }
         catch (Exception ex)
@@ -77,7 +77,7 @@ public class HostRegistrationMonitorService : IHostedService
         }
     }
 
-    private async Task StopAndRestartUserInstance()
+    private async Task RestartUserInstance()
     {
         Log.Information("Stopping user instance...");
         _userInstanceService.Stop();
