@@ -12,7 +12,7 @@ public class CustomHttpClientHandler : DelegatingHandler
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        if (!request.Headers.Accept.Any(h => h.MediaType == "application/vnd.remotemaster.v1+json"))
+        if (request.Headers.Accept.All(h => h.MediaType != "application/vnd.remotemaster.v1+json"))
         {
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.remotemaster.v1+json"));
         }
