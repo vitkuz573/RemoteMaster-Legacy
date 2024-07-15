@@ -29,7 +29,7 @@ public class JwtController(IJwtSecurityService jwtSecurityService) : ControllerB
 
             if (publicKey != null)
             {
-                var response = ApiResponse<byte[]>.Success(publicKey, "Public key retrieved successfully.", StatusCodes.Status200OK);
+                var response = ApiResponse<byte[]>.Success(publicKey, "Public key retrieved successfully.");
 
                 return Ok(response);
             }
@@ -41,7 +41,7 @@ public class JwtController(IJwtSecurityService jwtSecurityService) : ControllerB
                 Status = StatusCodes.Status400BadRequest
             };
 
-            var failureResponse = ApiResponse<byte[]>.Failure(failureProblemDetails, StatusCodes.Status400BadRequest);
+            var failureResponse = ApiResponse<byte[]>.Failure(failureProblemDetails);
 
             return BadRequest(failureResponse);
         }

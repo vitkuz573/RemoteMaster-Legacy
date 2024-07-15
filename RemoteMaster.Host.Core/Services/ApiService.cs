@@ -26,7 +26,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
                 throw new ArgumentNullException(nameof(hostConfiguration.Server), "Server configuration is required");
             }
 
-            _client.BaseAddress = new Uri($"http://{hostConfiguration.Server}");
+            _client.BaseAddress = new Uri($"http://{hostConfiguration.Server}:5254");
         }
     }
 

@@ -32,7 +32,7 @@ public class HostController(IHostRegistrationService registrationService) : Cont
                 Status = StatusCodes.Status400BadRequest
             };
 
-            var errorResponse = ApiResponse<bool>.Failure(problemDetails, StatusCodes.Status400BadRequest);
+            var errorResponse = ApiResponse<bool>.Failure(problemDetails);
 
             return BadRequest(errorResponse);
         }
@@ -41,7 +41,7 @@ public class HostController(IHostRegistrationService registrationService) : Cont
 
         if (result)
         {
-            var response = ApiResponse<bool>.Success(result, "Host registration successful.", StatusCodes.Status200OK);
+            var response = ApiResponse<bool>.Success(result, "Host registration successful.");
 
             return Ok(response);
         }
@@ -53,7 +53,7 @@ public class HostController(IHostRegistrationService registrationService) : Cont
             Status = StatusCodes.Status400BadRequest
         };
 
-        var failureResponse = ApiResponse<bool>.Failure(failureProblemDetails, StatusCodes.Status400BadRequest);
+        var failureResponse = ApiResponse<bool>.Failure(failureProblemDetails);
 
         return BadRequest(failureResponse);
     }
@@ -73,13 +73,13 @@ public class HostController(IHostRegistrationService registrationService) : Cont
                 Status = StatusCodes.Status400BadRequest
             };
 
-            var errorResponse = ApiResponse<bool>.Failure(problemDetails, StatusCodes.Status400BadRequest);
+            var errorResponse = ApiResponse<bool>.Failure(problemDetails);
 
             return BadRequest(errorResponse);
         }
 
         var isRegistered = await registrationService.IsHostRegisteredAsync(macAddress);
-        var response = ApiResponse<bool>.Success(isRegistered, "Host registration status retrieved.", StatusCodes.Status200OK);
+        var response = ApiResponse<bool>.Success(isRegistered, "Host registration status retrieved.");
 
         return Ok(response);
     }
@@ -99,7 +99,7 @@ public class HostController(IHostRegistrationService registrationService) : Cont
                 Status = StatusCodes.Status400BadRequest
             };
 
-            var errorResponse = ApiResponse<bool>.Failure(problemDetails, StatusCodes.Status400BadRequest);
+            var errorResponse = ApiResponse<bool>.Failure(problemDetails);
 
             return BadRequest(errorResponse);
         }
@@ -108,7 +108,7 @@ public class HostController(IHostRegistrationService registrationService) : Cont
 
         if (result)
         {
-            var response = ApiResponse<bool>.Success(result, "Host unregister successful.", StatusCodes.Status200OK);
+            var response = ApiResponse<bool>.Success(result, "Host unregister successful.");
 
             return Ok(response);
         }
@@ -120,7 +120,7 @@ public class HostController(IHostRegistrationService registrationService) : Cont
             Status = StatusCodes.Status400BadRequest
         };
 
-        var failureResponse = ApiResponse<bool>.Failure(failureProblemDetails, StatusCodes.Status400BadRequest);
+        var failureResponse = ApiResponse<bool>.Failure(failureProblemDetails);
 
         return BadRequest(failureResponse);
     }
@@ -140,7 +140,7 @@ public class HostController(IHostRegistrationService registrationService) : Cont
                 Status = StatusCodes.Status400BadRequest
             };
 
-            var errorResponse = ApiResponse<bool>.Failure(problemDetails, StatusCodes.Status400BadRequest);
+            var errorResponse = ApiResponse<bool>.Failure(problemDetails);
 
             return BadRequest(errorResponse);
         }
@@ -149,7 +149,7 @@ public class HostController(IHostRegistrationService registrationService) : Cont
 
         if (result)
         {
-            var response = ApiResponse<bool>.Success(result, "Host update successful.", StatusCodes.Status200OK);
+            var response = ApiResponse<bool>.Success(result, "Host update successful.");
 
             return Ok(response);
         }
@@ -161,7 +161,7 @@ public class HostController(IHostRegistrationService registrationService) : Cont
             Status = StatusCodes.Status400BadRequest
         };
 
-        var failureResponse = ApiResponse<bool>.Failure(failureProblemDetails, StatusCodes.Status400BadRequest);
+        var failureResponse = ApiResponse<bool>.Failure(failureProblemDetails);
 
         return BadRequest(failureResponse);
     }
