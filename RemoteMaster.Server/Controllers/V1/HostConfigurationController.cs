@@ -2,6 +2,8 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Text;
+using System.Text.Json;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -21,7 +23,7 @@ public class HostConfigurationController(IOptions<ApplicationSettings> options) 
 {
     private static readonly object FileLock = new();
 
-    [HttpGet("download-host")]
+    [HttpGet("downloadHost")]
     [EnableRateLimiting("HostDownloadPolicy")]
     [ProducesResponseType(typeof(FileStreamResult), 200)]
     [ProducesResponseType(typeof(ApiResponse<string>), 404)]
@@ -54,5 +56,37 @@ public class HostConfigurationController(IOptions<ApplicationSettings> options) 
         memoryStream.Position = 0;
 
         return File(memoryStream, "application/octet-stream", fileName);
+    }
+
+    [HttpPost("generate")]
+    [ProducesResponseType(typeof(FileContentResult), 200)]
+    [ProducesResponseType(typeof(ApiResponse<string>), 400)]
+    [ProducesResponseType(typeof(ApiResponse<string>), 500)]
+    public IActionResult GenerateConfig([FromBody] HostConfigurationRequest request)
+    {
+        if (request == null || !ModelState.IsValid)
+        {
+            return BadRequest(ApiResponse<string>.Failure<string>("Invalid request."));
+        }
+
+        var config = new HostConfiguration
+        {
+            Server = request.Server,
+            Subject = new SubjectOptions()
+            {
+                Organization = request.Organization,
+                OrganizationalUnit = [request.OrganizationalUnit],
+                Locality = request.Locality,
+                State = request.State,
+                Country = request.Country
+            }
+        };
+
+        var jsonContent = JsonSerializer.Serialize(config, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+
+        return File(Encoding.UTF8.GetBytes(jsonContent), "application/json", "RemoteMaster.Host.json");
     }
 }
