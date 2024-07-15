@@ -275,6 +275,16 @@ public static class Program
                 return ValueTask.CompletedTask;
             };
         });
+
+        services.AddCors(options =>
+        {
+            options.AddPolicy("AllowAll", builder =>
+            {
+                builder.AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            });
+        });
     }
 
     private static void ConfigurePipeline(WebApplication app)
@@ -338,6 +348,8 @@ public static class Program
             }
         }
 
+        app.UseCors("AllowAll");
+
         if (app.Environment.IsDevelopment())
         {
             app.UseMigrationsEndPoint();
@@ -350,8 +362,8 @@ public static class Program
                 {
                     var url = $"/swagger/{description.GroupName}/swagger.json";
                     var name = description.GroupName.ToUpperInvariant();
-                    
-                    options.SwaggerEndpoint(url, name);
+
+                    options.SwaggerEndpoint($"http://localhost:5254{url}", name);
                 }
             });
         }
@@ -365,7 +377,7 @@ public static class Program
 
         app.Use(async (context, next) =>
         {
-            if (context.Connection.LocalPort == 5254 && !context.Request.Path.StartsWithSegments("/hubs"))
+            if (context.Connection.LocalPort == 5254 && !context.Request.Path.StartsWithSegments("/api"))
             {
                 context.Response.StatusCode = 404;
 
@@ -380,7 +392,7 @@ public static class Program
         app.UseStaticFiles();
         app.UseAntiforgery();
 
-        app.MapControllers();
+        app.MapControllers().RequireHost($"*:{5254}");
         app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
         app.MapAdditionalIdentityEndpoints();

@@ -21,7 +21,7 @@ public class HostConfigurationController(IOptions<ApplicationSettings> options) 
 {
     private static readonly object FileLock = new();
 
-    [HttpGet("download-host")]
+    [HttpGet("downloadHost")]
     [ProducesResponseType(typeof(FileStreamResult), 200)]
     [ProducesResponseType(typeof(ApiResponse<string>), 404)]
     [ProducesResponseType(typeof(ApiResponse<string>), 500)]
@@ -73,7 +73,7 @@ public class HostConfigurationController(IOptions<ApplicationSettings> options) 
         return File(memoryStream, "application/octet-stream", fileName);
     }
 
-    [HttpPost("generateConfig")]
+    [HttpPost("generate")]
     [ProducesResponseType(typeof(FileContentResult), 200)]
     [ProducesResponseType(typeof(ApiResponse<string>), 400)]
     [ProducesResponseType(typeof(ApiResponse<string>), 500)]
