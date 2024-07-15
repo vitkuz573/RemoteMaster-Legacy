@@ -37,6 +37,7 @@ public static class ServiceCollectionExtensions
         });
 
         services.AddSharedServices();
+        services.AddTransient<CustomHttpClientHandler>();
         services.AddSingleton<IHostInformationMonitorService, HostInformationMonitorService>();
         services.AddSingleton<IFileManagerService, FileManagerService>();
         services.AddSingleton<ICertificateRequestService, CertificateRequestService>();
@@ -51,7 +52,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IScreenCastingService, ScreenCastingService>();
         services.AddSingleton<IApiService, ApiService>();
 
-        services.AddHttpClient();
+        services.AddHttpClient<ApiService>().AddHttpMessageHandler<CustomHttpClientHandler>();
 
         services.AddSignalR().AddMessagePackProtocol();
     }

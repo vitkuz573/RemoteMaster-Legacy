@@ -6,6 +6,8 @@ using System.Globalization;
 using System.IO.Abstractions;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -33,6 +35,7 @@ using RemoteMaster.Shared.Models;
 using RemoteMaster.Shared.Services;
 using Serilog;
 using Serilog.Events;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using StatusCodes = Microsoft.AspNetCore.Http.StatusCodes;
 
 namespace RemoteMaster.Server;
@@ -151,8 +154,9 @@ public static class Program
 
         services.AddSharedServices();
 
+        services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
         services.AddTransient<IUdpClient, UdpClientWrapper>();
-        services.AddTransient<Func<IUdpClient>>(provider => () => provider.GetRequiredService<IUdpClient>());
+        services.AddTransient<Func<IUdpClient>>(provider => provider.GetRequiredService<IUdpClient>);
         services.AddScoped<IQueryParameterService, QueryParameterService>();
         services.AddScoped<IDatabaseService, DatabaseService>();
         services.AddScoped<IComputerCommandService, ComputerCommandService>();
@@ -199,6 +203,20 @@ public static class Program
         services.AddMudServices();
 
         services.AddControllers();
+
+        services.AddApiVersioning(options =>
+        {
+            options.ReportApiVersions = true;
+            options.AssumeDefaultVersionWhenUnspecified = true;
+            options.DefaultApiVersion = new ApiVersion(1, 0);
+            options.ApiVersionReader = new MediaTypeApiVersionReader("v");
+        }).AddMvc().AddApiExplorer(options =>
+        {
+            options.GroupNameFormat = "'v'VVV";
+            options.SubstituteApiVersionInUrl = true;
+            options.DefaultApiVersion = new ApiVersion(1, 0);
+        });
+
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
 
@@ -322,15 +340,24 @@ public static class Program
         {
             app.UseMigrationsEndPoint();
             app.UseSwagger();
-            app.UseSwaggerUI();
+            app.UseSwaggerUI(options =>
+            {
+                var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+
+                foreach (var description in provider.ApiVersionDescriptions)
+                {
+                    var url = $"/swagger/{description.GroupName}/swagger.json";
+                    var name = description.GroupName.ToUpperInvariant();
+                    
+                    options.SwaggerEndpoint(url, name);
+                }
+            });
         }
         else
         {
             app.UseExceptionHandler("/Error", createScopeForErrors: true);
             app.UseHsts();
         }
-
-        var applicationSettings = app.Services.GetRequiredService<IOptions<ApplicationSettings>>().Value;
 
         app.UseRequestLocalization();
 

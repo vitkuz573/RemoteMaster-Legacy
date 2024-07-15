@@ -5,25 +5,49 @@
 using System.Net.Http.Json;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Models;
+using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
 public class ApiService(IHttpClientFactory httpClientFactory, IHostConfigurationService hostConfigurationService) : IApiService
 {
-    private readonly HttpClient _client = httpClientFactory.CreateClient();
+    private readonly HttpClient _client = httpClientFactory.CreateClient(nameof(ApiService));
 
     private async Task EnsureClientInitializedAsync()
     {
         if (_client.BaseAddress == null)
         {
             var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
-            
+
             if (hostConfiguration == null || string.IsNullOrEmpty(hostConfiguration.Server))
             {
+                Log.Error("Server configuration is required");
+
                 throw new ArgumentNullException(nameof(hostConfiguration.Server), "Server configuration is required");
             }
-            
+
             _client.BaseAddress = new Uri($"http://{hostConfiguration.Server}");
+        }
+    }
+
+    private static async Task<ApiResponse<T>?> ProcessResponse<T>(HttpResponseMessage response)
+    {
+        if (!response.IsSuccessStatusCode)
+        {
+            Log.Error("Request failed with status code {StatusCode}", response.StatusCode);
+
+            return null;
+        }
+
+        try
+        {
+            return await response.Content.ReadFromJsonAsync<ApiResponse<T>>();
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Failed to read response as JSON: {Message}", ex.Message);
+
+            return null;
         }
     }
 
@@ -35,7 +59,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var response = await _client.PostAsJsonAsync("/api/hostregistration/register", hostConfiguration);
 
-        return await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+        return await ProcessResponse<bool>(response);
     }
 
     public async Task<ApiResponse<bool>?> UnregisterHostAsync()
@@ -48,7 +72,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         {
             MacAddress = hostConfiguration.Host.MacAddress,
             Organization = hostConfiguration.Subject.Organization,
-            OrganizationalUnit = [.. hostConfiguration.Subject.OrganizationalUnit],
+            OrganizationalUnit = hostConfiguration.Subject.OrganizationalUnit.ToList(),
             Name = hostConfiguration.Host.Name
         };
 
@@ -57,7 +81,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var response = await _client.SendAsync(httpRequest);
 
-        return await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+        return await ProcessResponse<bool>(response);
     }
 
     public async Task<ApiResponse<bool>?> UpdateHostInformationAsync()
@@ -70,14 +94,14 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         {
             MacAddress = hostConfiguration.Host.MacAddress,
             Organization = hostConfiguration.Subject.Organization,
-            OrganizationalUnit = [.. hostConfiguration.Subject.OrganizationalUnit],
+            OrganizationalUnit = hostConfiguration.Subject.OrganizationalUnit.ToList(),
             IpAddress = hostConfiguration.Host.IpAddress,
             Name = hostConfiguration.Host.Name
         };
 
         var response = await _client.PutAsJsonAsync("/api/hostregistration/update", request);
 
-        return await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+        return await ProcessResponse<bool>(response);
     }
 
     public async Task<ApiResponse<bool>?> IsHostRegisteredAsync()
@@ -88,7 +112,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var response = await _client.GetAsync($"/api/hostregistration/check?macAddress={hostConfiguration.Host.MacAddress}");
 
-        return await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+        return await ProcessResponse<bool>(response);
     }
 
     public async Task<ApiResponse<byte[]>?> GetJwtPublicKeyAsync()
@@ -97,7 +121,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var response = await _client.GetAsync("/api/jwtkey");
 
-        return await response.Content.ReadFromJsonAsync<ApiResponse<byte[]>>();
+        return await ProcessResponse<byte[]>(response);
     }
 
     public async Task<ApiResponse<byte[]>?> GetCaCertificateAsync()
@@ -106,7 +130,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var response = await _client.GetAsync("/api/cacertificate");
 
-        return await response.Content.ReadFromJsonAsync<ApiResponse<byte[]>>();
+        return await ProcessResponse<byte[]>(response);
     }
 
     public async Task<ApiResponse<byte[]>?> IssueCertificateAsync(byte[] csrBytes)
@@ -115,7 +139,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var response = await _client.PostAsJsonAsync("/api/certificate/issue", csrBytes);
 
-        return await response.Content.ReadFromJsonAsync<ApiResponse<byte[]>>();
+        return await ProcessResponse<byte[]>(response);
     }
 
     public async Task<ApiResponse<HostMoveRequest>?> GetHostMoveRequestAsync(string macAddress)
@@ -124,7 +148,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var response = await _client.GetAsync($"/api/hostmoverequest?macAddress={macAddress}");
 
-        return await response.Content.ReadFromJsonAsync<ApiResponse<HostMoveRequest>>();
+        return await ProcessResponse<HostMoveRequest>(response);
     }
 
     public async Task<ApiResponse<bool>?> AcknowledgeMoveRequestAsync(string macAddress)
@@ -133,6 +157,6 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var response = await _client.PostAsJsonAsync("/api/hostmoverequest/acknowledge", macAddress);
 
-        return await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+        return await ProcessResponse<bool>(response);
     }
 }
