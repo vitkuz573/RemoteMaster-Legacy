@@ -117,4 +117,22 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         return await response.Content.ReadFromJsonAsync<ApiResponse<byte[]>>();
     }
+
+    public async Task<ApiResponse<HostMoveRequest>?> GetHostMoveRequestAsync(string macAddress)
+    {
+        await EnsureClientInitializedAsync();
+
+        var response = await _client.GetAsync($"/api/hostmoverequest?macAddress={macAddress}");
+
+        return await response.Content.ReadFromJsonAsync<ApiResponse<HostMoveRequest>>();
+    }
+
+    public async Task<ApiResponse<bool>?> AcknowledgeMoveRequestAsync(string macAddress)
+    {
+        await EnsureClientInitializedAsync();
+
+        var response = await _client.PostAsJsonAsync("/api/hostmoverequest/acknowledge", macAddress);
+
+        return await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+    }
 }

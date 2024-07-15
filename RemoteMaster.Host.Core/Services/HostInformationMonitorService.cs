@@ -11,7 +11,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostInformationMonitorService(IHostConfigurationService hostConfigurationService, IHostInformationService hostInformationService) : IHostInformationMonitorService
+public class HostInformationMonitorService(IHostConfigurationService hostConfigurationService, IHostInformationService hostInformationService, IApiService apiService) : IHostInformationMonitorService
 {
     public async Task<bool> UpdateHostConfigurationAsync()
     {
@@ -59,21 +59,32 @@ public class HostInformationMonitorService(IHostConfigurationService hostConfigu
 
         try
         {
-            // var hostMoveRequest = await serverHubService.GetHostMoveRequest(hostConfiguration.Host.MacAddress);
+            var response = await apiService.GetHostMoveRequestAsync(hostConfiguration.Host.MacAddress);
 
-            // if (hostMoveRequest != null)
-            // {
-            //     hostConfiguration.Subject.Organization = hostMoveRequest.NewOrganization;
-            //     hostConfiguration.Subject.OrganizationalUnit = hostMoveRequest.NewOrganizationalUnit;
-            // 
-            //     await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
-            // 
-            //     Log.Information("HostMoveRequest applied: Organization changed to {Organization} and Organizational Unit changed to {OrganizationalUnit}.", hostMoveRequest.NewOrganization, string.Join("/", hostMoveRequest.NewOrganizationalUnit));
-            // 
-            //     await serverHubService.AcknowledgeMoveRequest(hostConfiguration.Host.MacAddress);
-            // 
-            //     hasChanges = true;
-            // }
+            if (response is { StatusCode: StatusCodes.Status200OK, Data: not null })
+            {
+                var hostMoveRequest = response.Data;
+
+                hostConfiguration.Subject.Organization = hostMoveRequest.NewOrganization;
+                hostConfiguration.Subject.OrganizationalUnit = hostMoveRequest.NewOrganizationalUnit;
+            
+                await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
+            
+                Log.Information("HostMoveRequest applied: Organization changed to {Organization} and Organizational Unit changed to {OrganizationalUnit}.", hostMoveRequest.NewOrganization, string.Join("/", hostMoveRequest.NewOrganizationalUnit));
+
+                var acknowledgeResponse = await apiService.AcknowledgeMoveRequestAsync(hostConfiguration.Host.MacAddress);
+
+                if (acknowledgeResponse is { StatusCode: StatusCodes.Status200OK })
+                {
+                    Log.Information("Host move request acknowledged");
+                }
+                else
+                {
+                    Log.Warning("Failed to acknowledge host move request");
+                }
+            
+                hasChanges = true;
+            }
         }
         catch (Exception ex)
         {
@@ -85,7 +96,7 @@ public class HostInformationMonitorService(IHostConfigurationService hostConfigu
     
     public bool CheckCertificateExpiration()
     {
-        X509Certificate2? сertificate = null;
+        X509Certificate2? certificate = null;
 
         using (var store = new X509Store(StoreName.My, StoreLocation.LocalMachine))
         {
@@ -95,11 +106,11 @@ public class HostInformationMonitorService(IHostConfigurationService hostConfigu
 
             foreach (var cert in certificates.Where(cert => cert.HasPrivateKey))
             {
-                сertificate = cert;
+                certificate = cert;
                 break;
             }
         }
 
-        return сertificate == null || DateTime.Now > сertificate.NotAfter;
+        return certificate == null || DateTime.Now > certificate.NotAfter;
     }
 }

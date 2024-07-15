@@ -21,4 +21,8 @@ public interface IApiService
     Task<ApiResponse<byte[]>?> GetCaCertificateAsync();
 
     Task<ApiResponse<byte[]>?> IssueCertificateAsync(byte[] csrBytes);
+
+    Task<ApiResponse<HostMoveRequest>?> GetHostMoveRequestAsync(string macAddress);
+
+    Task<ApiResponse<bool>?> AcknowledgeMoveRequestAsync(string macAddress);
 }
