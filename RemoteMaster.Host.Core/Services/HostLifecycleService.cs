@@ -150,7 +150,6 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         
         var certificate = store.Certificates
             .Find(X509FindType.FindBySubjectName, Dns.GetHostName(), false)
-            .Cast<X509Certificate2>()
             .FirstOrDefault(cert => cert.HasPrivateKey);
 
         if (certificate != null)
@@ -221,9 +220,9 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
 
         try
         {
-            if (certificateBytes == null || certificateBytes.Length == 0)
+            if (certificateBytes.Length == 0)
             {
-                Log.Error("Certificate bytes are null or empty.");
+                Log.Error("Certificate bytes are empty.");
 
                 return;
             }
