@@ -6,7 +6,6 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Models;
-using Swashbuckle.AspNetCore.Annotations;
 
 namespace RemoteMaster.Server.Controllers.V1;
 
@@ -18,7 +17,6 @@ namespace RemoteMaster.Server.Controllers.V1;
 public class HostMoveController(IHostMoveRequestService hostMoveRequestService) : ControllerBase
 {
     [HttpGet]
-    [SwaggerOperation(Summary = "Retrieves a host move request", Description = "Retrieves a host move request by MAC address.")]
     [ProducesResponseType(typeof(ApiResponse<HostMoveRequest>), 200)]
     [ProducesResponseType(typeof(ApiResponse<HostMoveRequest>), 400)]
     public async Task<IActionResult> GetHostMoveRequest([FromQuery] string macAddress)
@@ -59,7 +57,6 @@ public class HostMoveController(IHostMoveRequestService hostMoveRequestService) 
     }
 
     [HttpPost("acknowledge")]
-    [SwaggerOperation(Summary = "Acknowledges a host move request", Description = "Acknowledges a host move request by removing it from the list.")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<bool>), 400)]
     public async Task<IActionResult> AcknowledgeMoveRequest([FromBody] string macAddress)

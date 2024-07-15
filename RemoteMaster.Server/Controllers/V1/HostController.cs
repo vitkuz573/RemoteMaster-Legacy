@@ -6,7 +6,6 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Models;
-using Swashbuckle.AspNetCore.Annotations;
 
 namespace RemoteMaster.Server.Controllers.V1;
 
@@ -18,7 +17,6 @@ namespace RemoteMaster.Server.Controllers.V1;
 public class HostController(IHostRegistrationService registrationService) : ControllerBase
 {
     [HttpPost("register")]
-    [SwaggerOperation(Summary = "Registers a new host", Description = "Registers a new host with the given configuration.")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<bool>), 400)]
     public async Task<IActionResult> RegisterHost([FromBody] HostConfiguration hostConfiguration)
@@ -59,7 +57,6 @@ public class HostController(IHostRegistrationService registrationService) : Cont
     }
 
     [HttpGet("status")]
-    [SwaggerOperation(Summary = "Checks if a host is registered", Description = "Checks the registration status of a host with the given MAC address.")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<bool>), 400)]
     public async Task<IActionResult> CheckHostRegistration([FromQuery] string macAddress)
@@ -85,7 +82,6 @@ public class HostController(IHostRegistrationService registrationService) : Cont
     }
 
     [HttpDelete("unregister")]
-    [SwaggerOperation(Summary = "Unregisters a host", Description = "Unregisters a host with the given MAC address, organization details, and host name.")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<bool>), 400)]
     public async Task<IActionResult> UnregisterHost([FromBody] HostUnregisterRequest request)
@@ -126,7 +122,6 @@ public class HostController(IHostRegistrationService registrationService) : Cont
     }
 
     [HttpPut("update")]
-    [SwaggerOperation(Summary = "Updates host information", Description = "Updates the information of a host with the given configuration.")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<bool>), 400)]
     public async Task<IActionResult> UpdateHost([FromBody] HostUpdateRequest request)

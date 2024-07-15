@@ -108,7 +108,10 @@ public class HostConfigurationController(IOptions<ApplicationSettings> options) 
             }
         };
 
-        var jsonContent = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
+        var jsonContent = JsonSerializer.Serialize(config, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
 
         return File(Encoding.UTF8.GetBytes(jsonContent), "application/json", "RemoteMaster.Host.json");
     }

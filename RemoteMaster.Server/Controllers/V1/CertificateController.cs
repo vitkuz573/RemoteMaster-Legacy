@@ -7,7 +7,6 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Models;
-using Swashbuckle.AspNetCore.Annotations;
 
 namespace RemoteMaster.Server.Controllers.V1;
 
@@ -19,7 +18,6 @@ namespace RemoteMaster.Server.Controllers.V1;
 public class CertificateController(ICaCertificateService caCertificateService, ICertificateService certificateService) : ControllerBase
 {
     [HttpGet("ca")]
-    [SwaggerOperation(Summary = "Retrieves the CA certificate", Description = "Retrieves the CA certificate used for host registration.")]
     [ProducesResponseType(typeof(ApiResponse<byte[]>), 200)]
     [ProducesResponseType(typeof(ApiResponse<byte[]>), 400)]
     public IActionResult GetCaCertificate()
@@ -47,7 +45,6 @@ public class CertificateController(ICaCertificateService caCertificateService, I
     }
 
     [HttpPost("issue")]
-    [SwaggerOperation(Summary = "Issues a certificate", Description = "Issues a certificate based on the provided CSR bytes.")]
     [ProducesResponseType(typeof(ApiResponse<byte[]>), 200)]
     [ProducesResponseType(typeof(ApiResponse<byte[]>), 400)]
     public IActionResult IssueCertificate([FromBody] byte[] csrBytes)

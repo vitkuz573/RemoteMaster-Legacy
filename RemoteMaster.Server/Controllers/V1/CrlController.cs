@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.RateLimiting;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
-using Serilog;
 
 namespace RemoteMaster.Server.Controllers.V1;
 
@@ -33,8 +32,6 @@ public class CrlController(ICrlService crlService) : ControllerBase
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error generating CRL");
-
             var problemDetails = new ProblemDetails
             {
                 Title = "Internal Server Error",
@@ -69,10 +66,8 @@ public class CrlController(ICrlService crlService) : ControllerBase
 
             return Ok(response);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Log.Error(ex, "Error retrieving CRL metadata");
-
             var problemDetails = new ProblemDetails
             {
                 Title = "Internal Server Error",

@@ -6,7 +6,6 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Models;
-using Swashbuckle.AspNetCore.Annotations;
 
 namespace RemoteMaster.Server.Controllers.V1;
 
@@ -18,7 +17,6 @@ namespace RemoteMaster.Server.Controllers.V1;
 public class JwtController(IJwtSecurityService jwtSecurityService) : ControllerBase
 {
     [HttpGet("publicKey")]
-    [SwaggerOperation(Summary = "Retrieves the public key", Description = "Retrieves the public key used for JWT.")]
     [ProducesResponseType(typeof(ApiResponse<byte[]>), 200)]
     [ProducesResponseType(typeof(ApiResponse<byte[]>), 400)]
     public async Task<IActionResult> GetPublicKey()
