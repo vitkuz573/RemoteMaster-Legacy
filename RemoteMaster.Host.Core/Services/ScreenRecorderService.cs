@@ -12,7 +12,7 @@ using RemoteMaster.Shared.Dtos;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class ScreenRecorderService(IScreenCapturerService screenCapturerService) : IScreenRecorderService
+public class ScreenRecorderService(IScreenCapturingService screenCapturingService) : IScreenRecorderService
 {
     private CancellationTokenSource _cancellationTokenSource = new();
     private Task _recordingTask = Task.CompletedTask;
@@ -60,7 +60,7 @@ public class ScreenRecorderService(IScreenCapturerService screenCapturerService)
     {
         while (!cancellationToken.IsCancellationRequested)
         {
-            var frameData = screenCapturerService.GetNextFrame();
+            var frameData = screenCapturingService.GetNextFrame();
 
             if (frameData == null)
             {

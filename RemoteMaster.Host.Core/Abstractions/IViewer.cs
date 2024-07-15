@@ -6,7 +6,7 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IViewer : IDisposable
 {
-    IScreenCapturerService ScreenCapturer { get; }
+    IScreenCapturingService ScreenCapturing { get; }
 
     string ConnectionId { get; }
 

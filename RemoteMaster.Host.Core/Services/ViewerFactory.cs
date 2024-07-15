@@ -7,10 +7,10 @@ using RemoteMaster.Host.Core.Models;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class ViewerFactory(IScreenCapturerService screenCapturerService) : IViewerFactory
+public class ViewerFactory(IScreenCapturingService screenCapturingService) : IViewerFactory
 {
     public IViewer Create(string connectionId, string group, string userName, string role, string ipAddress, string authenticationType)
     {
-        return new Viewer(screenCapturerService, connectionId, group, userName, role, ipAddress, authenticationType);
+        return new Viewer(screenCapturingService, connectionId, group, userName, role, ipAddress, authenticationType);
     }
 }

@@ -8,21 +8,21 @@ using RemoteMaster.Host.Windows.Abstractions;
 
 namespace RemoteMaster.Host.Windows.Tests;
 
-public class ScreenCapturerServiceTests : IDisposable
+public class ScreenCapturingServiceTests : IDisposable
 {
     private readonly Mock<IDesktopService> _mockDesktopService;
-    private readonly TestScreenCapturerService _screenCapturerService;
+    private readonly TestScreenCapturingService _screenCapturingService;
 
-    public ScreenCapturerServiceTests()
+    public ScreenCapturingServiceTests()
     {
         _mockDesktopService = new Mock<IDesktopService>();
-        _screenCapturerService = new TestScreenCapturerService(_mockDesktopService.Object);
+        _screenCapturingService = new TestScreenCapturingService(_mockDesktopService.Object);
     }
 
     [Fact]
     public void GetDisplays_ShouldReturnDisplays()
     {
-        var displays = _screenCapturerService.GetDisplays();
+        var displays = _screenCapturingService.GetDisplays();
 
         Assert.NotNull(displays);
         var display = displays.First();
@@ -34,9 +34,9 @@ public class ScreenCapturerServiceTests : IDisposable
     [Fact]
     public void SetSelectedScreen_ShouldSetSelectedScreen()
     {
-        _screenCapturerService.SetSelectedScreen("New Display");
+        _screenCapturingService.SetSelectedScreen("New Display");
 
-        Assert.Equal("New Display", _screenCapturerService.SelectedScreen);
+        Assert.Equal("New Display", _screenCapturingService.SelectedScreen);
     }
 
     [Fact]
@@ -44,7 +44,7 @@ public class ScreenCapturerServiceTests : IDisposable
     {
         _mockDesktopService.Setup(ds => ds.SwitchToInputDesktop()).Returns(true);
 
-        var frame = _screenCapturerService.GetNextFrame();
+        var frame = _screenCapturingService.GetNextFrame();
 
         Assert.NotNull(frame);
     }
@@ -54,13 +54,13 @@ public class ScreenCapturerServiceTests : IDisposable
     {
         _mockDesktopService.Setup(ds => ds.SwitchToInputDesktop()).Returns(true);
 
-        var thumbnail = _screenCapturerService.GetThumbnail(100, 100);
+        var thumbnail = _screenCapturingService.GetThumbnail(100, 100);
 
         Assert.NotNull(thumbnail);
     }
 
     public void Dispose()
     {
-        _screenCapturerService?.Dispose();
+        _screenCapturingService?.Dispose();
     }
 }

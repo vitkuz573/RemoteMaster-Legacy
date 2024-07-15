@@ -14,13 +14,13 @@ namespace RemoteMaster.Host.Windows.Tests;
 public class InputServiceTests
 {
     private readonly Mock<IDesktopService> _mockDesktopService;
-    private readonly Mock<IScreenCapturerService> _mockScreenCapturerService;
+    private readonly Mock<IScreenCapturingService> _mockScreenCapturerService;
     private readonly InputService _inputService;
 
     public InputServiceTests()
     {
         _mockDesktopService = new Mock<IDesktopService>();
-        _mockScreenCapturerService = new Mock<IScreenCapturerService>();
+        _mockScreenCapturerService = new Mock<IScreenCapturingService>();
         _inputService = new InputService(_mockDesktopService.Object);
     }
 

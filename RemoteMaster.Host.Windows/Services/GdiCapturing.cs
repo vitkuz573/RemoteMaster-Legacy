@@ -14,7 +14,7 @@ using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class GdiCapturer : ScreenCapturerService
+public class GdiCapturing : ScreenCapturingService
 {
     private Bitmap _bitmap;
     private Graphics _memoryGraphics;
@@ -28,7 +28,7 @@ public class GdiCapturer : ScreenCapturerService
 
     protected override bool HasMultipleScreens => Screen.AllScreens.Length > 1;
 
-    public GdiCapturer(ICursorRenderService cursorRenderService, IDesktopService desktopService) : base(desktopService)
+    public GdiCapturing(ICursorRenderService cursorRenderService, IDesktopService desktopService) : base(desktopService)
     {
         _cursorRenderService = cursorRenderService;
         _bitmap = new Bitmap(CurrentScreenBounds.Width, CurrentScreenBounds.Height, PixelFormat.Format32bppArgb);

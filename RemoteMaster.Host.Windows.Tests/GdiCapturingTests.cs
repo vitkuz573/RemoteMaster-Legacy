@@ -10,13 +10,13 @@ using RemoteMaster.Host.Windows.Services;
 
 namespace RemoteMaster.Host.Windows.Tests;
 
-public class GdiCapturerTests : IDisposable
+public class GdiCapturingTests : IDisposable
 {
     private readonly Mock<ICursorRenderService> _mockCursorRenderService;
     private readonly Mock<IDesktopService> _mockDesktopService;
-    private readonly GdiCapturer _gdiCapturer;
+    private readonly GdiCapturing _gdiCapturing;
 
-    public GdiCapturerTests()
+    public GdiCapturingTests()
     {
         _mockCursorRenderService = new Mock<ICursorRenderService>();
         _mockDesktopService = new Mock<IDesktopService>();
@@ -24,13 +24,13 @@ public class GdiCapturerTests : IDisposable
         _mockCursorRenderService.Setup(crs => crs.DrawCursor(It.IsAny<Graphics>(), It.IsAny<Rectangle>()));
         _mockCursorRenderService.Setup(crs => crs.ClearCache());
 
-        _gdiCapturer = new GdiCapturer(_mockCursorRenderService.Object, _mockDesktopService.Object);
+        _gdiCapturing = new GdiCapturing(_mockCursorRenderService.Object, _mockDesktopService.Object);
     }
 
     [Fact]
     public void GetDisplays_ShouldReturnDisplays()
     {
-        var displays = _gdiCapturer.GetDisplays();
+        var displays = _gdiCapturing.GetDisplays();
 
         Assert.NotNull(displays);
         var displayList = displays.ToList();
@@ -44,12 +44,12 @@ public class GdiCapturerTests : IDisposable
     [Fact]
     public void SetSelectedScreen_ShouldSetSelectedScreen()
     {
-        var displays = _gdiCapturer.GetDisplays().ToList();
+        var displays = _gdiCapturing.GetDisplays().ToList();
         var newDisplay = displays.FirstOrDefault(d => !d.IsPrimary)?.Name ?? displays.First().Name;
 
-        _gdiCapturer.SetSelectedScreen(newDisplay);
+        _gdiCapturing.SetSelectedScreen(newDisplay);
 
-        Assert.Equal(newDisplay, _gdiCapturer.SelectedScreen);
+        Assert.Equal(newDisplay, _gdiCapturing.SelectedScreen);
     }
 
     [Fact]
@@ -57,7 +57,7 @@ public class GdiCapturerTests : IDisposable
     {
         _mockDesktopService.Setup(ds => ds.SwitchToInputDesktop()).Returns(true);
 
-        var frame = _gdiCapturer.GetNextFrame();
+        var frame = _gdiCapturing.GetNextFrame();
 
         Assert.NotNull(frame);
     }
@@ -67,13 +67,13 @@ public class GdiCapturerTests : IDisposable
     {
         _mockDesktopService.Setup(ds => ds.SwitchToInputDesktop()).Returns(true);
 
-        var thumbnail = _gdiCapturer.GetThumbnail(100, 100);
+        var thumbnail = _gdiCapturing.GetThumbnail(100, 100);
 
         Assert.NotNull(thumbnail);
     }
 
     public void Dispose()
     {
-        _gdiCapturer?.Dispose();
+        _gdiCapturing?.Dispose();
     }
 }

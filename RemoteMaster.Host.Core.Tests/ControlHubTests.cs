@@ -23,7 +23,7 @@ public class ControlHubTests
     private readonly Mock<IPowerService> _mockPowerService;
     private readonly Mock<IHardwareService> _mockHardwareService;
     private readonly Mock<IShutdownService> _mockShutdownService;
-    private readonly Mock<IScreenCapturerService> _mockScreenCapturerService;
+    private readonly Mock<IScreenCapturingService> _mockScreenCapturerService;
     private readonly Mock<IHostConfigurationService> _mockHostConfigurationService;
     private readonly Mock<IHostLifecycleService> _mockHostLifecycleService;
     private readonly Mock<ICertificateStoreService> _mockCertificateStoreService;
@@ -44,7 +44,7 @@ public class ControlHubTests
         _mockPowerService = new Mock<IPowerService>();
         _mockHardwareService = new Mock<IHardwareService>();
         _mockShutdownService = new Mock<IShutdownService>();
-        _mockScreenCapturerService = new Mock<IScreenCapturerService>();
+        _mockScreenCapturerService = new Mock<IScreenCapturingService>();
         _mockHostConfigurationService = new Mock<IHostConfigurationService>();
         _mockHostLifecycleService = new Mock<IHostLifecycleService>();
         _mockCertificateStoreService = new Mock<ICertificateStoreService>();
@@ -116,8 +116,8 @@ public class ControlHubTests
         // Arrange
         var dto = new MouseInputDto();
         var viewer = new Mock<IViewer>();
-        var screenCapturer = new Mock<IScreenCapturerService>().Object;
-        viewer.Setup(v => v.ScreenCapturer).Returns(screenCapturer);
+        var screenCapturer = new Mock<IScreenCapturingService>().Object;
+        viewer.Setup(v => v.ScreenCapturing).Returns(screenCapturer);
 
         var connectionId = "testConnectionId";
         SetHubContext(connectionId);
@@ -149,8 +149,8 @@ public class ControlHubTests
         // Arrange
         var displayName = "Display1";
         var viewer = new Mock<IViewer>();
-        var screenCapturer = new Mock<IScreenCapturerService>().Object;
-        viewer.Setup(v => v.ScreenCapturer).Returns(screenCapturer);
+        var screenCapturer = new Mock<IScreenCapturingService>().Object;
+        viewer.Setup(v => v.ScreenCapturing).Returns(screenCapturer);
 
         var connectionId = "testConnectionId";
         SetHubContext(connectionId);
@@ -195,8 +195,8 @@ public class ControlHubTests
         // Arrange
         var quality = 80;
         var viewer = new Mock<IViewer>();
-        var screenCapturer = new Mock<IScreenCapturerService>().Object;
-        viewer.Setup(v => v.ScreenCapturer).Returns(screenCapturer);
+        var screenCapturer = new Mock<IScreenCapturingService>().Object;
+        viewer.Setup(v => v.ScreenCapturing).Returns(screenCapturer);
 
         var connectionId = "testConnectionId";
         SetHubContext(connectionId);
@@ -215,8 +215,8 @@ public class ControlHubTests
         // Arrange
         var trackCursor = true;
         var viewer = new Mock<IViewer>();
-        var screenCapturer = new Mock<IScreenCapturerService>().Object;
-        viewer.Setup(v => v.ScreenCapturer).Returns(screenCapturer);
+        var screenCapturer = new Mock<IScreenCapturingService>().Object;
+        viewer.Setup(v => v.ScreenCapturing).Returns(screenCapturer);
 
         var connectionId = "testConnectionId";
         SetHubContext(connectionId);

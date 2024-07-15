@@ -142,7 +142,7 @@ internal class Program
         services.AddSingleton<IUpdaterInstanceService, UpdaterInstanceService>();
         services.AddSingleton<IHostInstaller, HostInstaller>();
         services.AddSingleton<IHostUninstaller, HostUninstaller>();
-        services.AddSingleton<IScreenCapturerService, GdiCapturer>();
+        services.AddSingleton<IScreenCapturingService, GdiCapturing>();
         services.AddSingleton<IScreenRecorderService, ScreenRecorderService>();
         services.AddSingleton<ICursorRenderService, CursorRenderService>();
         services.AddSingleton<IInputService, InputService>();
