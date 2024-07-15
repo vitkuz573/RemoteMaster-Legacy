@@ -119,7 +119,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
     {
         await EnsureClientInitializedAsync();
 
-        var response = await _client.GetAsync("/api/jwtkey");
+        var response = await _client.GetAsync("/api/Jwt");
 
         return await ProcessResponse<byte[]>(response);
     }
@@ -128,7 +128,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
     {
         await EnsureClientInitializedAsync();
 
-        var response = await _client.GetAsync("/api/certificate/ca");
+        var response = await _client.GetAsync("/api/Certificate/ca");
 
         return await ProcessResponse<byte[]>(response);
     }
@@ -137,7 +137,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
     {
         await EnsureClientInitializedAsync();
 
-        var response = await _client.PostAsJsonAsync("/api/certificate/issue", csrBytes);
+        var response = await _client.PostAsJsonAsync("/api/Certificate/issue", csrBytes);
 
         return await ProcessResponse<byte[]>(response);
     }
@@ -146,7 +146,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
     {
         await EnsureClientInitializedAsync();
 
-        var response = await _client.GetAsync($"/api/hostmoverequest?macAddress={macAddress}");
+        var response = await _client.GetAsync($"/api/HostMove?macAddress={macAddress}");
 
         return await ProcessResponse<HostMoveRequest>(response);
     }
@@ -155,7 +155,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
     {
         await EnsureClientInitializedAsync();
 
-        var response = await _client.PostAsJsonAsync("/api/hostmoverequest/acknowledge", macAddress);
+        var response = await _client.PostAsJsonAsync("/api/HostMove/acknowledge", macAddress);
 
         return await ProcessResponse<bool>(response);
     }

@@ -15,7 +15,7 @@ namespace RemoteMaster.Server.Controllers.V1;
 [ApiVersion("1.0")]
 [Consumes("application/vnd.remotemaster.v1+json")]
 [Produces("application/vnd.remotemaster.v1+json")]
-public class HostMoveRequestController(IHostMoveRequestService hostMoveRequestService) : ControllerBase
+public class HostMoveController(IHostMoveRequestService hostMoveRequestService) : ControllerBase
 {
     [HttpGet]
     [SwaggerOperation(Summary = "Retrieves a host move request", Description = "Retrieves a host move request by MAC address.")]
