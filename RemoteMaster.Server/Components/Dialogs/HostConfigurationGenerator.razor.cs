@@ -66,7 +66,9 @@ public partial class HostConfigurationGenerator
         if (response.IsSuccessStatusCode)
         {
             var content = await response.Content.ReadAsByteArrayAsync();
-            var fileName = "RemoteMaster.Host.exe"; // Or extract from content disposition header if available
+
+            var contentDisposition = response.Content.Headers.ContentDisposition;
+            var fileName = contentDisposition?.FileName?.Trim('\"') ?? "RemoteMaster.Host.exe";
 
             var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/fileUtils.js");
 
