@@ -128,7 +128,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
     {
         await EnsureClientInitializedAsync();
 
-        var response = await _client.GetAsync("/api/cacertificate");
+        var response = await _client.GetAsync("/api/certificate/ca");
 
         return await ProcessResponse<byte[]>(response);
     }

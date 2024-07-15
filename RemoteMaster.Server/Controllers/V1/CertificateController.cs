@@ -16,8 +16,26 @@ namespace RemoteMaster.Server.Controllers.V1;
 [ApiVersion("1.0")]
 [Consumes("application/vnd.remotemaster.v1+json")]
 [Produces("application/vnd.remotemaster.v1+json")]
-public class CertificateController(ICertificateService certificateService) : ControllerBase
+public class CertificateController(ICaCertificateService caCertificateService, ICertificateService certificateService) : ControllerBase
 {
+    [HttpGet("ca")]
+    [SwaggerOperation(Summary = "Retrieves the CA certificate", Description = "Retrieves the CA certificate used for host registration.")]
+    [ProducesResponseType(typeof(ApiResponse<byte[]>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<byte[]>), 400)]
+    public IActionResult GetCaCertificate()
+    {
+        try
+        {
+            var caCertificate = caCertificateService.GetCaCertificate(X509ContentType.Cert);
+
+            return Ok(ApiResponse<byte[]>.Success(caCertificate.Export(X509ContentType.Cert), "CA certificate retrieved successfully."));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse<byte[]>.Failure<byte[]>(ex.Message));
+        }
+    }
+
     [HttpPost("issue")]
     [SwaggerOperation(Summary = "Issues a certificate", Description = "Issues a certificate based on the provided CSR bytes.")]
     [ProducesResponseType(typeof(ApiResponse<byte[]>), 200)]
