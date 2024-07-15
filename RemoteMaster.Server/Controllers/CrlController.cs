@@ -13,7 +13,7 @@ using StatusCodes = Microsoft.AspNetCore.Http.StatusCodes;
 namespace RemoteMaster.Server.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("api/[controller]")]
 [EnableRateLimiting("CrlPolicy")]
 public class CrlController(ICrlService crlService) : ControllerBase
 {
