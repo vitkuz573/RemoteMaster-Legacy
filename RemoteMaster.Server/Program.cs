@@ -297,10 +297,12 @@ public static class Program
                     duration: entry.Value.Duration.ToString(),
                     description: entry.Value.Description,
                     exception: entry.Value.Exception?.Message,
-                    data: entry.Value.Data.ToDictionary(kv => kv.Key, kv => kv.Value.ToString())
+                    data: entry.Value.Data.ToDictionary(kv => kv.Key, kv => kv.Value?.ToString())
                 )).ToList();
 
-                var responseModel = ApiResponse<List<HealthCheck>>.Success(healthCheckResults, "Health checks completed");
+                var overallStatus = report.Status == HealthStatus.Healthy ? StatusCodes.Status200OK : StatusCodes.Status503ServiceUnavailable;
+                var responseModel = new ApiResponse<List<HealthCheck>>(healthCheckResults, "Health checks completed", overallStatus);
+
                 var jsonResponse = JsonSerializer.Serialize(responseModel, new JsonSerializerOptions
                 {
                     WriteIndented = true

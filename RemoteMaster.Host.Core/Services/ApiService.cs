@@ -36,6 +36,13 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         {
             Log.Error("Request failed with status code {StatusCode}", response.StatusCode);
 
+            var errorResponse = await response.Content.ReadFromJsonAsync<ApiResponse<T>>();
+
+            if (errorResponse?.Error != null)
+            {
+                Log.Error("Error details: {Error}", errorResponse.Error.ToString());
+            }
+
             return null;
         }
 

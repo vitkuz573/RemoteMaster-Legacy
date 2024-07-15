@@ -23,13 +23,34 @@ public class JwtController(IJwtSecurityService jwtSecurityService) : ControllerB
     [ProducesResponseType(typeof(ApiResponse<byte[]>), 400)]
     public async Task<IActionResult> GetPublicKey()
     {
-        var publicKey = await jwtSecurityService.GetPublicKeyAsync();
-
-        if (publicKey != null)
+        try
         {
-            return Ok(ApiResponse<byte[]>.Success(publicKey, "Public key retrieved successfully."));
-        }
+            var publicKey = await jwtSecurityService.GetPublicKeyAsync();
 
-        return BadRequest(ApiResponse<byte[]>.Failure<byte[]>("Failed to retrieve public key."));
+            if (publicKey != null)
+            {
+                var response = new ApiResponse<byte[]>(publicKey, "Public key retrieved successfully.", StatusCodes.Status200OK);
+
+                return Ok(response);
+            }
+
+            var failureResponse = new ApiResponse<byte[]>(default!, "Failed to retrieve public key.", StatusCodes.Status400BadRequest);
+
+            return BadRequest(failureResponse);
+        }
+        catch (Exception ex)
+        {
+            var problemDetails = new ProblemDetails
+            {
+                Title = "Error retrieving public key",
+                Detail = ex.Message,
+                Status = StatusCodes.Status500InternalServerError
+            };
+
+            var errorResponse = new ApiResponse<byte[]>(default, "Internal Server Error. Please try again later.", StatusCodes.Status500InternalServerError);
+            errorResponse.SetError(problemDetails);
+
+            return StatusCode(StatusCodes.Status500InternalServerError, errorResponse);
+        }
     }
 }

@@ -9,7 +9,6 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 using Serilog;
-using StatusCodes = Microsoft.AspNetCore.Http.StatusCodes;
 
 namespace RemoteMaster.Server.Controllers.V1;
 
@@ -35,8 +34,18 @@ public class CrlController(ICrlService crlService) : ControllerBase
         catch (Exception ex)
         {
             Log.Error(ex, "Error generating CRL");
-            
-            return StatusCode(StatusCodes.Status500InternalServerError, ApiResponse<byte[]>.Failure<string>("Internal Server Error. Please try again later.", StatusCodes.Status500InternalServerError));
+
+            var problemDetails = new ProblemDetails
+            {
+                Title = "Internal Server Error",
+                Detail = "An error occurred while generating the CRL. Please try again later.",
+                Status = StatusCodes.Status500InternalServerError
+            };
+
+            var errorResponse = new ApiResponse<string>(default!, "Internal Server Error. Please try again later.", StatusCodes.Status500InternalServerError);
+            errorResponse.SetError(problemDetails);
+
+            return StatusCode(StatusCodes.Status500InternalServerError, errorResponse);
         }
     }
 
@@ -48,15 +57,15 @@ public class CrlController(ICrlService crlService) : ControllerBase
         try
         {
             var metadata = await crlService.GetCrlMetadataAsync();
-            var response = ApiResponse<CrlMetadata>.Success(metadata);
+            var response = new ApiResponse<CrlMetadata>(metadata, "CRL metadata retrieved successfully.", StatusCodes.Status200OK);
 
             var selfUrl = Url.Action("GetCrlMetadata");
             var downloadUrl = Url.Action("GetCrl");
 
             response.SetLinks(new Dictionary<string, string>
             {
-                { "self", selfUrl },
-                { "downloadCRL", downloadUrl }
+                { "self", selfUrl! },
+                { "downloadCRL", downloadUrl! }
             });
 
             return Ok(response);
@@ -64,8 +73,18 @@ public class CrlController(ICrlService crlService) : ControllerBase
         catch (Exception ex)
         {
             Log.Error(ex, "Error retrieving CRL metadata");
-            
-            return StatusCode(StatusCodes.Status500InternalServerError, ApiResponse<CrlMetadata>.Failure<string>("Internal Server Error. Please try again later.", StatusCodes.Status500InternalServerError));
+
+            var problemDetails = new ProblemDetails
+            {
+                Title = "Internal Server Error",
+                Detail = "An error occurred while retrieving the CRL metadata. Please try again later.",
+                Status = StatusCodes.Status500InternalServerError
+            };
+
+            var errorResponse = new ApiResponse<string>(default!, "Internal Server Error. Please try again later.", StatusCodes.Status500InternalServerError);
+            errorResponse.SetError(problemDetails);
+
+            return StatusCode(StatusCodes.Status500InternalServerError, errorResponse);
         }
     }
 }

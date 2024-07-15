@@ -4,6 +4,7 @@
 
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace RemoteMaster.Shared.Models;
 
@@ -11,19 +12,22 @@ namespace RemoteMaster.Shared.Models;
 /// Represents a uniform API response with a status code, message, and optional data payload.
 /// Enhances client-server communication by ensuring consistency, predictability, and simplicity.
 /// </summary>
-public record ApiResponse<TData>(int StatusCode, string Message, TData Data)
+public class ApiResponse<TData>
 {
     /// <summary>
-    /// Factory method to create a success response with standard message and status code.
+    /// Status code of the response.
     /// </summary>
-    public static ApiResponse<TData> Success(TData data, string message = "Operation successful.")
-        => new(StatusCodes.Status200OK, message, data);
+    public int StatusCode { get; }
 
     /// <summary>
-    /// Factory method to create a failure response with a custom message and status code.
+    /// Message describing the outcome of the operation.
     /// </summary>
-    public static ApiResponse<T> Failure<T>(string message, int statusCode = StatusCodes.Status400BadRequest)
-        => new(statusCode, message, default!);
+    public string Message { get; }
+
+    /// <summary>
+    /// Data payload of the response.
+    /// </summary>
+    public TData? Data { get; }
 
     /// <summary>
     /// Hypermedia links to support HATEOAS, allowing clients to navigate related resources dynamically.
@@ -31,6 +35,43 @@ public record ApiResponse<TData>(int StatusCode, string Message, TData Data)
     [JsonPropertyName("_links")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public Dictionary<string, string>? Links { get; private set; }
+
+    /// <summary>
+    /// Includes a standardized error format for failure scenarios, facilitating error handling in client applications.
+    /// </summary>
+    [JsonPropertyName("error")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public ProblemDetails? Error { get; private set; }
+
+    /// <summary>
+    /// Parameterless constructor for deserialization.
+    /// </summary>
+    public ApiResponse()
+    {
+    }
+
+    /// <summary>
+    /// Constructor for success response.
+    /// </summary>
+    [JsonConstructor]
+    public ApiResponse(TData data, string message, int statusCode)
+    {
+        Data = data;
+        Message = message;
+        StatusCode = statusCode;
+    }
+
+    /// <summary>
+    /// Creates a success response.
+    /// </summary>
+    public static ApiResponse<TData> Success(TData data, string message = "Operation successful.", int statusCode = StatusCodes.Status200OK)
+        => new(data, message, statusCode);
+
+    /// <summary>
+    /// Creates a failure response.
+    /// </summary>
+    public static ApiResponse<T> Failure<T>(string message, int statusCode = StatusCodes.Status400BadRequest)
+        => new(default!, message, statusCode);
 
     /// <summary>
     /// Sets hypermedia links for the API response, adhering to HATEOAS principles.
@@ -42,17 +83,10 @@ public record ApiResponse<TData>(int StatusCode, string Message, TData Data)
     }
 
     /// <summary>
-    /// Includes a standardized error format for failure scenarios, facilitating error handling in client applications.
-    /// </summary>
-    [JsonPropertyName("error")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public object? Error { get; private set; }
-
-    /// <summary>
     /// Adds an error object to the response, used primarily for failure responses to provide additional error details.
     /// </summary>
     /// <param name="error">The error object containing error details.</param>
-    public void SetError(object error)
+    public void SetError(ProblemDetails error)
     {
         Error = error;
     }

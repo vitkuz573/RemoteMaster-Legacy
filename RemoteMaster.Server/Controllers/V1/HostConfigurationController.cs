@@ -6,11 +6,9 @@ using System.Text;
 using System.Text.Json;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
-using StatusCodes = Microsoft.AspNetCore.Http.StatusCodes;
 
 namespace RemoteMaster.Server.Controllers.V1;
 
@@ -23,8 +21,7 @@ public class HostConfigurationController(IOptions<ApplicationSettings> options) 
 {
     private static readonly object FileLock = new();
 
-    [HttpGet("downloadHost")]
-    [EnableRateLimiting("HostDownloadPolicy")]
+    [HttpGet("download-host")]
     [ProducesResponseType(typeof(FileStreamResult), 200)]
     [ProducesResponseType(typeof(ApiResponse<string>), 404)]
     [ProducesResponseType(typeof(ApiResponse<string>), 500)]
@@ -35,7 +32,17 @@ public class HostConfigurationController(IOptions<ApplicationSettings> options) 
 
         if (!System.IO.File.Exists(filePath))
         {
-            return NotFound(ApiResponse<string>.Failure<string>("File not found.", StatusCodes.Status404NotFound));
+            var problemDetails = new ProblemDetails
+            {
+                Title = "File not found",
+                Detail = "The requested file does not exist on the server.",
+                Status = StatusCodes.Status404NotFound
+            };
+
+            var errorResponse = new ApiResponse<string>("File not found.", "The requested file does not exist on the server.", StatusCodes.Status404NotFound);
+            errorResponse.SetError(problemDetails);
+
+            return NotFound(errorResponse);
         }
 
         var memoryStream = new MemoryStream();
@@ -49,7 +56,17 @@ public class HostConfigurationController(IOptions<ApplicationSettings> options) 
             }
             catch (IOException ex)
             {
-                return StatusCode(500, ApiResponse<string>.Failure<string>($"File access error: {ex.Message}", StatusCodes.Status500InternalServerError));
+                var problemDetails = new ProblemDetails
+                {
+                    Title = "File access error",
+                    Detail = $"An error occurred while accessing the file: {ex.Message}",
+                    Status = StatusCodes.Status500InternalServerError
+                };
+
+                var errorResponse = new ApiResponse<string>($"File access error: {ex.Message}", $"An error occurred while accessing the file: {ex.Message}", StatusCodes.Status500InternalServerError);
+                errorResponse.SetError(problemDetails);
+
+                return StatusCode(StatusCodes.Status500InternalServerError, errorResponse);
             }
         }
 
@@ -58,21 +75,33 @@ public class HostConfigurationController(IOptions<ApplicationSettings> options) 
         return File(memoryStream, "application/octet-stream", fileName);
     }
 
-    [HttpPost("generate")]
+    [HttpPost("generateConfig")]
     [ProducesResponseType(typeof(FileContentResult), 200)]
     [ProducesResponseType(typeof(ApiResponse<string>), 400)]
     [ProducesResponseType(typeof(ApiResponse<string>), 500)]
     public IActionResult GenerateConfig([FromBody] HostConfigurationRequest request)
     {
-        if (request == null || !ModelState.IsValid)
+        ArgumentNullException.ThrowIfNull(request);
+
+        if (!ModelState.IsValid)
         {
-            return BadRequest(ApiResponse<string>.Failure<string>("Invalid request."));
+            var problemDetails = new ProblemDetails
+            {
+                Title = "Invalid request",
+                Detail = "The provided request is invalid.",
+                Status = StatusCodes.Status400BadRequest
+            };
+
+            var errorResponse = new ApiResponse<string>("Invalid request.", "The provided request is invalid.", StatusCodes.Status400BadRequest);
+            errorResponse.SetError(problemDetails);
+
+            return BadRequest(errorResponse);
         }
 
         var config = new HostConfiguration
         {
             Server = request.Server,
-            Subject = new SubjectOptions()
+            Subject = new SubjectOptions
             {
                 Organization = request.Organization,
                 OrganizationalUnit = [request.OrganizationalUnit],
@@ -82,10 +111,7 @@ public class HostConfigurationController(IOptions<ApplicationSettings> options) 
             }
         };
 
-        var jsonContent = JsonSerializer.Serialize(config, new JsonSerializerOptions
-        {
-            WriteIndented = true
-        });
+        var jsonContent = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
 
         return File(Encoding.UTF8.GetBytes(jsonContent), "application/json", "RemoteMaster.Host.json");
     }

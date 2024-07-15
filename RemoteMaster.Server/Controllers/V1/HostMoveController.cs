@@ -23,14 +23,33 @@ public class HostMoveController(IHostMoveRequestService hostMoveRequestService) 
     [ProducesResponseType(typeof(ApiResponse<HostMoveRequest>), 400)]
     public async Task<IActionResult> GetHostMoveRequest([FromQuery] string macAddress)
     {
+        if (string.IsNullOrWhiteSpace(macAddress))
+        {
+            var problemDetails = new ProblemDetails
+            {
+                Title = "Invalid MAC address",
+                Detail = "The provided MAC address is invalid.",
+                Status = StatusCodes.Status400BadRequest
+            };
+
+            var errorResponse = new ApiResponse<HostMoveRequest>(default!, "Invalid MAC address.", StatusCodes.Status400BadRequest);
+            errorResponse.SetError(problemDetails);
+
+            return BadRequest(errorResponse);
+        }
+
         var hostMoveRequest = await hostMoveRequestService.GetHostMoveRequestAsync(macAddress);
 
         if (hostMoveRequest != null)
         {
-            return Ok(ApiResponse<HostMoveRequest>.Success(hostMoveRequest, "Host move request retrieved successfully."));
+            var response = new ApiResponse<HostMoveRequest>(hostMoveRequest, "Host move request retrieved successfully.", StatusCodes.Status200OK);
+
+            return Ok(response);
         }
 
-        return BadRequest(ApiResponse<HostMoveRequest>.Failure<HostMoveRequest>("Failed to retrieve host move request."));
+        var failureResponse = new ApiResponse<HostMoveRequest>(default, "Failed to retrieve host move request.", StatusCodes.Status400BadRequest);
+
+        return BadRequest(failureResponse);
     }
 
     [HttpPost("acknowledge")]
@@ -39,15 +58,41 @@ public class HostMoveController(IHostMoveRequestService hostMoveRequestService) 
     [ProducesResponseType(typeof(ApiResponse<bool>), 400)]
     public async Task<IActionResult> AcknowledgeMoveRequest([FromBody] string macAddress)
     {
+        if (string.IsNullOrWhiteSpace(macAddress))
+        {
+            var problemDetails = new ProblemDetails
+            {
+                Title = "Invalid MAC address",
+                Detail = "The provided MAC address is invalid.",
+                Status = StatusCodes.Status400BadRequest
+            };
+
+            var errorResponse = new ApiResponse<bool>(false, "Invalid MAC address.", StatusCodes.Status400BadRequest);
+            errorResponse.SetError(problemDetails);
+
+            return BadRequest(errorResponse);
+        }
+
         try
         {
             await hostMoveRequestService.AcknowledgeMoveRequestAsync(macAddress);
-            
-            return Ok(ApiResponse<bool>.Success(true, "Host move request acknowledged successfully."));
+            var response = new ApiResponse<bool>(true, "Host move request acknowledged successfully.", StatusCodes.Status200OK);
+
+            return Ok(response);
         }
         catch (Exception ex)
         {
-            return BadRequest(ApiResponse<bool>.Failure<bool>($"Failed to acknowledge host move request: {ex.Message}"));
+            var problemDetails = new ProblemDetails
+            {
+                Title = "Failed to acknowledge host move request",
+                Detail = ex.Message,
+                Status = StatusCodes.Status400BadRequest
+            };
+
+            var errorResponse = new ApiResponse<bool>(false, $"Failed to acknowledge host move request: {ex.Message}", StatusCodes.Status400BadRequest);
+            errorResponse.SetError(problemDetails);
+
+            return BadRequest(errorResponse);
         }
     }
 }

@@ -27,12 +27,23 @@ public class CertificateController(ICaCertificateService caCertificateService, I
         try
         {
             var caCertificate = caCertificateService.GetCaCertificate(X509ContentType.Cert);
+            var response = new ApiResponse<byte[]>(caCertificate.Export(X509ContentType.Cert), "CA certificate retrieved successfully.", StatusCodes.Status200OK);
 
-            return Ok(ApiResponse<byte[]>.Success(caCertificate.Export(X509ContentType.Cert), "CA certificate retrieved successfully."));
+            return Ok(response);
         }
         catch (Exception ex)
         {
-            return BadRequest(ApiResponse<byte[]>.Failure<byte[]>(ex.Message));
+            var problemDetails = new ProblemDetails
+            {
+                Title = "Error retrieving CA certificate",
+                Detail = ex.Message,
+                Status = StatusCodes.Status400BadRequest
+            };
+
+            var errorResponse = new ApiResponse<byte[]>(default!, "Failed to retrieve CA certificate.", StatusCodes.Status400BadRequest);
+            errorResponse.SetError(problemDetails);
+
+            return BadRequest(errorResponse);
         }
     }
 
@@ -45,12 +56,23 @@ public class CertificateController(ICaCertificateService caCertificateService, I
         try
         {
             var certificate = certificateService.IssueCertificate(csrBytes);
+            var response = new ApiResponse<byte[]>(certificate.Export(X509ContentType.Pfx), "Certificate issued successfully.", StatusCodes.Status200OK);
 
-            return Ok(ApiResponse<byte[]>.Success(certificate.Export(X509ContentType.Pfx), "Certificate issued successfully."));
+            return Ok(response);
         }
         catch (Exception ex)
         {
-            return BadRequest(ApiResponse<byte[]>.Failure<byte[]>($"Failed to issue certificate: {ex.Message}"));
+            var problemDetails = new ProblemDetails
+            {
+                Title = "Error issuing certificate",
+                Detail = ex.Message,
+                Status = StatusCodes.Status400BadRequest
+            };
+
+            var errorResponse = new ApiResponse<byte[]>(default!, "Failed to issue certificate.", StatusCodes.Status400BadRequest);
+            errorResponse.SetError(problemDetails);
+
+            return BadRequest(errorResponse);
         }
     }
 }

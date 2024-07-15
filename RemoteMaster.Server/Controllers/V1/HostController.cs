@@ -1,8 +1,4 @@
-﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
-// This file is part of the RemoteMaster project.
-// Licensed under the GNU Affero General Public License v3.0.
-
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Models;
@@ -23,34 +19,58 @@ public class HostController(IHostRegistrationService registrationService) : Cont
     [ProducesResponseType(typeof(ApiResponse<bool>), 400)]
     public async Task<IActionResult> RegisterHost([FromBody] HostConfiguration hostConfiguration)
     {
+        if (!ModelState.IsValid)
+        {
+            var problemDetails = new ProblemDetails
+            {
+                Title = "Invalid model state",
+                Detail = "The provided host configuration is invalid.",
+                Status = StatusCodes.Status400BadRequest
+            };
+
+            var errorResponse = new ApiResponse<bool>(false, "Invalid host configuration.", StatusCodes.Status400BadRequest);
+            errorResponse.SetError(problemDetails);
+
+            return BadRequest(errorResponse);
+        }
+
         var result = await registrationService.RegisterHostAsync(hostConfiguration);
 
         if (result)
         {
-            var response = ApiResponse<bool>.Success(result, "Host registration successful.");
+            var response = new ApiResponse<bool>(result, "Host registration successful.", StatusCodes.Status200OK);
 
             return Ok(response);
         }
 
-        var errorResponse = ApiResponse<bool>.Failure<bool>("Host registration failed.");
+        var failureResponse = new ApiResponse<bool>(false, "Host registration failed.", StatusCodes.Status400BadRequest);
 
-        return BadRequest(errorResponse);
+        return BadRequest(failureResponse);
     }
 
     [HttpGet("status")]
     [SwaggerOperation(Summary = "Checks if a host is registered", Description = "Checks the registration status of a host with the given MAC address.")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), 400)]
     public async Task<IActionResult> CheckHostRegistration([FromQuery] string macAddress)
     {
         if (string.IsNullOrWhiteSpace(macAddress))
         {
-            var errorResponse = ApiResponse<bool>.Failure<bool>("Invalid MAC address.");
+            var problemDetails = new ProblemDetails
+            {
+                Title = "Invalid MAC address",
+                Detail = "The provided MAC address is invalid.",
+                Status = StatusCodes.Status400BadRequest
+            };
+
+            var errorResponse = new ApiResponse<bool>(false, "Invalid MAC address.", StatusCodes.Status400BadRequest);
+            errorResponse.SetError(problemDetails);
 
             return BadRequest(errorResponse);
         }
 
         var isRegistered = await registrationService.IsHostRegisteredAsync(macAddress);
-        var response = ApiResponse<bool>.Success(isRegistered, "Host registration status retrieved.");
+        var response = new ApiResponse<bool>(isRegistered, "Host registration status retrieved.", StatusCodes.Status200OK);
 
         return Ok(response);
     }
@@ -59,20 +79,35 @@ public class HostController(IHostRegistrationService registrationService) : Cont
     [SwaggerOperation(Summary = "Unregisters a host", Description = "Unregisters a host with the given MAC address, organization details, and host name.")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<bool>), 400)]
-    public async Task<IActionResult> DeregisterHost([FromBody] HostUnregisterRequest request)
+    public async Task<IActionResult> UnregisterHost([FromBody] HostUnregisterRequest request)
     {
+        if (!ModelState.IsValid)
+        {
+            var problemDetails = new ProblemDetails
+            {
+                Title = "Invalid model state",
+                Detail = "The provided request is invalid.",
+                Status = StatusCodes.Status400BadRequest
+            };
+
+            var errorResponse = new ApiResponse<bool>(false, "Invalid request.", StatusCodes.Status400BadRequest);
+            errorResponse.SetError(problemDetails);
+
+            return BadRequest(errorResponse);
+        }
+
         var result = await registrationService.UnregisterHostAsync(request);
 
         if (result)
         {
-            var response = ApiResponse<bool>.Success(result, "Host unregister successful.");
+            var response = new ApiResponse<bool>(result, "Host unregister successful.", StatusCodes.Status200OK);
 
             return Ok(response);
         }
 
-        var errorResponse = ApiResponse<bool>.Failure<bool>("Host unregister failed.");
+        var failureResponse = new ApiResponse<bool>(false, "Host unregister failed.", StatusCodes.Status400BadRequest);
 
-        return BadRequest(errorResponse);
+        return BadRequest(failureResponse);
     }
 
     [HttpPut("update")]
@@ -81,17 +116,32 @@ public class HostController(IHostRegistrationService registrationService) : Cont
     [ProducesResponseType(typeof(ApiResponse<bool>), 400)]
     public async Task<IActionResult> UpdateHost([FromBody] HostUpdateRequest request)
     {
+        if (!ModelState.IsValid)
+        {
+            var problemDetails = new ProblemDetails
+            {
+                Title = "Invalid model state",
+                Detail = "The provided host update request is invalid.",
+                Status = StatusCodes.Status400BadRequest
+            };
+
+            var errorResponse = new ApiResponse<bool>(false, "Invalid request.", StatusCodes.Status400BadRequest);
+            errorResponse.SetError(problemDetails);
+
+            return BadRequest(errorResponse);
+        }
+
         var result = await registrationService.UpdateHostInformationAsync(request);
 
         if (result)
         {
-            var response = ApiResponse<bool>.Success(result, "Host update successful.");
+            var response = new ApiResponse<bool>(result, "Host update successful.", StatusCodes.Status200OK);
 
             return Ok(response);
         }
 
-        var errorResponse = ApiResponse<bool>.Failure<bool>("Host update failed.");
+        var failureResponse = new ApiResponse<bool>(false, "Host update failed.", StatusCodes.Status400BadRequest);
 
-        return BadRequest(errorResponse);
+        return BadRequest(failureResponse);
     }
 }
