@@ -15,7 +15,7 @@ namespace RemoteMaster.Server.Controllers.V1;
 [ApiVersion("1.0")]
 [Consumes("application/vnd.remotemaster.v1+json")]
 [Produces("application/vnd.remotemaster.v1+json")]
-public class HostRegistrationController(IHostRegistrationService registrationService) : ControllerBase
+public class HostController(IHostRegistrationService registrationService) : ControllerBase
 {
     [HttpPost("register")]
     [SwaggerOperation(Summary = "Registers a new host", Description = "Registers a new host with the given configuration.")]

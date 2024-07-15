@@ -57,7 +57,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
 
-        var response = await _client.PostAsJsonAsync("/api/hostregistration/register", hostConfiguration);
+        var response = await _client.PostAsJsonAsync("/api/host/register", hostConfiguration);
 
         return await ProcessResponse<bool>(response);
     }
@@ -76,7 +76,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
             Name = hostConfiguration.Host.Name
         };
 
-        using var httpRequest = new HttpRequestMessage(HttpMethod.Delete, "/api/hostregistration/unregister");
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Delete, "/api/Host/unregister");
         httpRequest.Content = JsonContent.Create(request);
 
         var response = await _client.SendAsync(httpRequest);
@@ -99,7 +99,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
             Name = hostConfiguration.Host.Name
         };
 
-        var response = await _client.PutAsJsonAsync("/api/hostregistration/update", request);
+        var response = await _client.PutAsJsonAsync("/api/host/update", request);
 
         return await ProcessResponse<bool>(response);
     }
@@ -110,7 +110,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
 
-        var response = await _client.GetAsync($"/api/hostregistration/check?macAddress={hostConfiguration.Host.MacAddress}");
+        var response = await _client.GetAsync($"/api/host/check?macAddress={hostConfiguration.Host.MacAddress}");
 
         return await ProcessResponse<bool>(response);
     }
