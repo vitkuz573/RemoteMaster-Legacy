@@ -26,21 +26,17 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
             if (!Directory.Exists(jwtDirectory))
             {
                 Directory.CreateDirectory(jwtDirectory);
-                
-                Log.Debug("JWT directory created at {DirectoryPath}.", jwtDirectory);
             }
 
             Log.Information("Attempting to register host...");
 
-            var result = await apiService.RegisterHostAsync();
+            var registerResponse = await apiService.RegisterHostAsync();
 
-            if (result.StatusCode == (int)HttpStatusCode.OK && result.Data)
+            if (registerResponse is { StatusCode: (int)HttpStatusCode.OK, Data: true })
             {
-                Log.Information("Host registration invoked successfully. Waiting for the certificate...");
+                var jwtResponse = await apiService.GetJwtPublicKeyAsync();
 
-                var response = await apiService.GetJwtPublicKeyAsync();
-
-                if (response.Data.Length == 0)
+                if (jwtResponse.Data.Length == 0)
                 {
                     throw new InvalidOperationException("Failed to obtain JWT public key.");
                 }
@@ -49,13 +45,14 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
 
                 try
                 {
-                    await File.WriteAllBytesAsync(publicKeyPath, response.Data);
+                    await File.WriteAllBytesAsync(publicKeyPath, jwtResponse.Data);
                     
                     Log.Information("Public key saved successfully at {Path}.", publicKeyPath);
                 }
                 catch (Exception ex)
                 {
                     Log.Error("Failed to save public key: {ErrorMessage}.", ex.Message);
+                    throw;
                 }
 
                 Log.Information("Host registration successful with certificate received.");
@@ -83,7 +80,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
 
             var result = await apiService.UnregisterHostAsync();
 
-            if (result.StatusCode == (int)HttpStatusCode.OK && result.Data)
+            if (result is { StatusCode: (int)HttpStatusCode.OK, Data: true })
             {
                 Log.Information("Host unregister successful.");
             }
@@ -124,7 +121,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
 
             var response = await apiService.IssueCertificateAsync(signingRequest);
 
-            if (response.Data == null)
+            if (response is { Data: null })
             {
                 throw new InvalidOperationException("Certificate processing failed.");
             }
@@ -170,7 +167,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         {
             var result = await apiService.UpdateHostInformationAsync();
 
-            if (result.StatusCode == (int)HttpStatusCode.OK && result.Data)
+            if (result is { StatusCode: (int)HttpStatusCode.OK, Data: true })
             {
                 Log.Information("Host information updated successful.");
             }
@@ -191,7 +188,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         {
             var result = await apiService.IsHostRegisteredAsync();
 
-            if (result.StatusCode == (int)HttpStatusCode.OK)
+            if (result is { StatusCode: (int)HttpStatusCode.OK })
             {
                 return result.Data;
             }
