@@ -17,7 +17,7 @@ namespace RemoteMaster.Server.Controllers.V1;
 [Produces("application/vnd.remotemaster.v1+json")]
 public class JwtController(IJwtSecurityService jwtSecurityService) : ControllerBase
 {
-    [HttpGet]
+    [HttpGet("publicKey")]
     [SwaggerOperation(Summary = "Retrieves the public key", Description = "Retrieves the public key used for JWT.")]
     [ProducesResponseType(typeof(ApiResponse<byte[]>), 200)]
     [ProducesResponseType(typeof(ApiResponse<byte[]>), 400)]

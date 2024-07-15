@@ -126,7 +126,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
     {
         await EnsureClientInitializedAsync();
 
-        var response = await _client.GetAsync("/api/Jwt");
+        var response = await _client.GetAsync("/api/Jwt/publicKey");
 
         return await ProcessResponse<byte[]>(response);
     }
