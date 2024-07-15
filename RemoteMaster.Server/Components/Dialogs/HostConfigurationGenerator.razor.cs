@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net.Http.Headers;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -10,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
+using Serilog;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
@@ -35,6 +37,8 @@ public partial class HostConfigurationGenerator
         await LoadUserOrganizationsAsync();
 
         _countries = CountryProvider.GetCountries();
+
+        HttpClient.BaseAddress = new Uri("http://127.0.0.1:5254");
     }
 
     private async Task OnValidSubmit(EditContext context)
@@ -52,10 +56,28 @@ public partial class HostConfigurationGenerator
         await module.InvokeVoidAsync("downloadDataAsFile", jsonContent, "RemoteMaster.Host.json", "application/json");
     }
 
-    public void DownloadHost()
+    public async Task DownloadHost()
     {
-        NavigationManager.NavigateTo("api/HostConfiguration/download-host", true);
+        using var request = new HttpRequestMessage(HttpMethod.Get, "api/HostConfiguration/downloadHost");
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.remotemaster.v1+json"));
+
+        var response = await HttpClient.SendAsync(request);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var content = await response.Content.ReadAsByteArrayAsync();
+            var fileName = "RemoteMaster.Host.exe"; // Or extract from content disposition header if available
+
+            var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/fileUtils.js");
+
+            await module.InvokeVoidAsync("downloadDataAsFile", Convert.ToBase64String(content), fileName, "application/octet-stream;base64");
+        }
+        else
+        {
+            // Handle error response
+        }
     }
+
 
     private async Task LoadUserOrganizationsAsync()
     {
