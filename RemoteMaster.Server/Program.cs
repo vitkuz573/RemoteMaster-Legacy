@@ -194,7 +194,10 @@ public static class Program
 
         services.AddMudServices();
 
-        services.AddControllers();
+        services.AddControllers(options =>
+        {
+            options.Filters.Add(new ValidateMediaTypeAttribute());
+        });
 
         services.AddApiVersioning(options =>
         {
