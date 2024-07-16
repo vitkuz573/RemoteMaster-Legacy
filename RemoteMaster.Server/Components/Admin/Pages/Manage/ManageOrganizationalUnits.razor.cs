@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Components.Admin.Dialogs;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
+using Serilog;
 
 namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 
@@ -129,22 +130,36 @@ public partial class ManageOrganizationalUnits
         FilterOrganizationalUnits();
     }
 
-    private void OnOrganizationChanged(ChangeEventArgs e)
+    private async Task OnOrganizationChanged(Guid organizationId)
     {
-        if (!Guid.TryParse(e.Value?.ToString(), out var organizationId))
+        try
         {
-            return;
-        }
+            Log.Information("Organization changed to {OrganizationId}", organizationId);
 
-        Input.OrganizationId = organizationId;
-        FilterOrganizationalUnits();
+            Input.OrganizationId = organizationId;
+            FilterOrganizationalUnits();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An error occurred while changing the organization");
+        }
     }
 
     private void FilterOrganizationalUnits()
     {
-        _filteredOrganizationalUnits = _organizationalUnits
-            .Where(ou => ou.OrganizationId == Input.OrganizationId)
-            .ToList();
+        try
+        {
+            _filteredOrganizationalUnits = _organizationalUnits
+                .Where(ou => ou.OrganizationId == Input.OrganizationId)
+                .ToList();
+
+            Log.Information("Filtered organizational units for organization {OrganizationId}. Count: {Count}", Input.OrganizationId, _filteredOrganizationalUnits.Count);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An error occurred while filtering organizational units");
+        }
     }
 
     private static OrganizationalUnit CreateOrganizationalUnit(string name, Guid organizationId, Guid? parentId)
