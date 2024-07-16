@@ -11,7 +11,7 @@ namespace RemoteMaster.Server.Controllers.V1;
 
 [ApiController]
 [Route("api/[controller]")]
-[ApiVersion("1.0")]
+[ApiVersion("1.0", Deprecated = true)]
 [Consumes("application/vnd.remotemaster.v1+json")]
 [Produces("application/vnd.remotemaster.v1+json")]
 public class HostController(IHostRegistrationService registrationService) : ControllerBase

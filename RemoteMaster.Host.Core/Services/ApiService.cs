@@ -12,6 +12,7 @@ namespace RemoteMaster.Host.Core.Services;
 public class ApiService(IHttpClientFactory httpClientFactory, IHostConfigurationService hostConfigurationService) : IApiService
 {
     private readonly HttpClient _client = httpClientFactory.CreateClient(nameof(ApiService));
+    private const string CurrentApiVersion = "1.0"; // Константа для текущей версии API
 
     private async Task EnsureClientInitializedAsync()
     {
@@ -30,8 +31,30 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         }
     }
 
-    private static async Task<ApiResponse<T>?> ProcessResponse<T>(HttpResponseMessage response)
+    private async Task NotifyDeprecatedVersionAsync()
     {
+        var message = new NotificationMessage(Guid.NewGuid().ToString(), "Deprecated API Version", "Warning", DateTime.UtcNow, "System");
+
+        await AddNotificationAsync(message);
+    }
+
+    private async Task CheckDeprecatedVersionAsync(HttpResponseMessage response)
+    {
+        if (response.Headers.Contains("api-deprecated-versions"))
+        {
+            var deprecatedVersions = response.Headers.GetValues("api-deprecated-versions");
+
+            if (deprecatedVersions.Contains(CurrentApiVersion))
+            {
+                await NotifyDeprecatedVersionAsync();
+            }
+        }
+    }
+
+    private async Task<ApiResponse<T>?> ProcessResponse<T>(HttpResponseMessage response)
+    {
+        await CheckDeprecatedVersionAsync(response);
+
         if (!response.IsSuccessStatusCode)
         {
             Log.Error("Request failed with status code {StatusCode}", response.StatusCode);
@@ -79,7 +102,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         {
             MacAddress = hostConfiguration.Host.MacAddress,
             Organization = hostConfiguration.Subject.Organization,
-            OrganizationalUnit = [..hostConfiguration.Subject.OrganizationalUnit],
+            OrganizationalUnit = [.. hostConfiguration.Subject.OrganizationalUnit],
             Name = hostConfiguration.Host.Name
         };
 
@@ -101,7 +124,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         {
             MacAddress = hostConfiguration.Host.MacAddress,
             Organization = hostConfiguration.Subject.Organization,
-            OrganizationalUnit = [..hostConfiguration.Subject.OrganizationalUnit],
+            OrganizationalUnit = [.. hostConfiguration.Subject.OrganizationalUnit],
             IpAddress = hostConfiguration.Host.IpAddress,
             Name = hostConfiguration.Host.Name
         };
@@ -165,5 +188,14 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         var response = await _client.PostAsJsonAsync("/api/HostMove/acknowledge", macAddress);
 
         return await ProcessResponse<bool>(response);
+    }
+
+    private async Task AddNotificationAsync(NotificationMessage message)
+    {
+        await EnsureClientInitializedAsync();
+
+        var response = await _client.PostAsJsonAsync("/api/Notification", message);
+
+        await ProcessResponse<string>(response);
     }
 }

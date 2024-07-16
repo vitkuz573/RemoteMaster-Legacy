@@ -4,7 +4,7 @@
 
 using System.Collections.Concurrent;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Models;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
 
