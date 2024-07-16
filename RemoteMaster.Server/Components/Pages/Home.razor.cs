@@ -98,7 +98,7 @@ public partial class Home
         {
             Log.Warning("Current user not found");
 
-            return [];
+            return Enumerable.Empty<INode>();
         }
 
         var accessibleOrganizations = _currentUser.AccessibleOrganizations.Select(org => org.NodeId).ToList();
@@ -114,7 +114,13 @@ public partial class Home
 
             foreach (var organization in organizations)
             {
-                organization.OrganizationalUnits = (await LoadNodes(organization.NodeId)).OfType<OrganizationalUnit>().ToList();
+                var organizationalUnits = (await LoadNodes(organization.NodeId)).OfType<OrganizationalUnit>().ToList();
+                organization.OrganizationalUnits.Clear();
+                
+                foreach (var unit in organizationalUnits)
+                {
+                    organization.OrganizationalUnits.Add(unit);
+                }
             }
         }
         else
@@ -131,8 +137,22 @@ public partial class Home
 
             foreach (var unit in organizationalUnits)
             {
-                unit.Children = (await LoadNodes(unit.OrganizationId, unit.NodeId)).OfType<OrganizationalUnit>().ToList();
-                unit.Computers = (await LoadNodes(unit.OrganizationId, unit.NodeId)).OfType<Computer>().ToList();
+                var childrenUnits = (await LoadNodes(unit.OrganizationId, unit.NodeId)).OfType<OrganizationalUnit>().ToList();
+                var unitComputers = (await LoadNodes(unit.OrganizationId, unit.NodeId)).OfType<Computer>().ToList();
+
+                unit.Children.Clear();
+
+                foreach (var child in childrenUnits)
+                {
+                    unit.Children.Add(child);
+                }
+
+                unit.Computers.Clear();
+
+                foreach (var computer in unitComputers)
+                {
+                    unit.Computers.Add(computer);
+                }
             }
         }
 
