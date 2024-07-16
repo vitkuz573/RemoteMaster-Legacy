@@ -43,7 +43,7 @@
                 {
                     <MudMenuItem Class="rounded px-2 py-0">
                         <MudText Typo="Typo.subtitle2">@message.Title</MudText>
-                        <MudText Typo="Typo.body2">@message.Author • {message.PublishDate:MM/dd/yyyy}")</MudText>
+                        <MudText Typo="Typo.body2">@($"{message.Author} • {message.PublishDate:MM/dd/yyyy}")</MudText>
                     </MudMenuItem>
                     <MudDivider Class="my-2" />
                 }
