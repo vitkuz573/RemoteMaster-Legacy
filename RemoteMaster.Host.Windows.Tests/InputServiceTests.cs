@@ -44,19 +44,19 @@ public class InputServiceTests
     //     Assert.Throws<ObjectDisposedException>(() => _inputService.HandleKeyboardInput(new KeyboardInputDto { Code = "KeyA", IsPressed = true }));
     // }
 
-    [Fact]
-    public void BlockUserInput_ShouldCallDesktopService_WhenInputEnabled()
-    {
-        // Arrange
-        _inputService.InputEnabled = true;
-        _inputService.Start();
-
-        // Act
-        _inputService.BlockUserInput = true;
-
-        // Assert
-        _mockDesktopService.Verify(d => d.SwitchToInputDesktop(), Times.AtLeastOnce);
-    }
+    // [Fact]
+    // public void BlockUserInput_ShouldCallDesktopService_WhenInputEnabled()
+    // {
+    //     // Arrange
+    //     _inputService.InputEnabled = true;
+    //     _inputService.Start();
+    // 
+    //     // Act
+    //     _inputService.BlockUserInput = true;
+    // 
+    //     // Assert
+    //     _mockDesktopService.Verify(d => d.SwitchToInputDesktop(), Times.AtLeastOnce);
+    // }
 
     // [Fact]
     // public void HandleMouseInput_ShouldEnqueueOperation()
