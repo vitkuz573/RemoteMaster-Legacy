@@ -4,4 +4,4 @@
 
 namespace RemoteMaster.Shared.Models;
 
-public record NotificationMessage(string Id, string Title, string Category, DateTime PublishDate, string Author);
+public record NotificationMessage(string Id, string Title, string Text, string Category, DateTime PublishDate, string Author);

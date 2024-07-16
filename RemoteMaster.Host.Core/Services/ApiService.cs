@@ -38,7 +38,14 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
     {
         var hostInformation = hostInformationService.GetHostInformation();
 
-        var message = new NotificationMessage(Guid.NewGuid().ToString(), "Deprecated API Version", "Warning", DateTime.UtcNow, hostInformation.IpAddress);
+        var message = new NotificationMessage(
+            Id: Guid.NewGuid().ToString(),
+            Title: "Deprecated API Version",
+            Text: $"The current API version {CurrentApiVersion} is deprecated and will soon be unsupported. Please update to the latest version.",
+            Category: "Warning",
+            PublishDate: DateTime.UtcNow,
+            Author: hostInformation.IpAddress
+        );
 
         await AddNotificationAsync(message);
     }
