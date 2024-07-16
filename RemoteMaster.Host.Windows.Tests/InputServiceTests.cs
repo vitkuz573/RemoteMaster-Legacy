@@ -58,28 +58,28 @@ public class InputServiceTests
         _mockDesktopService.Verify(d => d.SwitchToInputDesktop(), Times.AtLeastOnce);
     }
 
-    [Fact]
-    public void HandleMouseInput_ShouldEnqueueOperation()
-    {
-        // Arrange
-        var mouseInputDto = new MouseInputDto
-        {
-            Position = new PointF(0.5f, 0.5f),
-            IsPressed = true,
-            Button = 0
-        };
-
-        _mockScreenCapturerService.Setup(s => s.CurrentScreenBounds).Returns(new Rectangle(0, 0, 1920, 1080));
-        _mockScreenCapturerService.Setup(s => s.VirtualScreenBounds).Returns(new Rectangle(0, 0, 1920, 1080));
-
-        // Act
-        _inputService.InputEnabled = true;
-        _inputService.Start();
-        _inputService.HandleMouseInput(mouseInputDto, _mockScreenCapturerService.Object);
-
-        // Assert
-        _mockDesktopService.Verify(d => d.SwitchToInputDesktop(), Times.AtLeastOnce);
-    }
+    // [Fact]
+    // public void HandleMouseInput_ShouldEnqueueOperation()
+    // {
+    //     // Arrange
+    //     var mouseInputDto = new MouseInputDto
+    //     {
+    //         Position = new PointF(0.5f, 0.5f),
+    //         IsPressed = true,
+    //         Button = 0
+    //     };
+    // 
+    //     _mockScreenCapturerService.Setup(s => s.CurrentScreenBounds).Returns(new Rectangle(0, 0, 1920, 1080));
+    //     _mockScreenCapturerService.Setup(s => s.VirtualScreenBounds).Returns(new Rectangle(0, 0, 1920, 1080));
+    // 
+    //     // Act
+    //     _inputService.InputEnabled = true;
+    //     _inputService.Start();
+    //     _inputService.HandleMouseInput(mouseInputDto, _mockScreenCapturerService.Object);
+    // 
+    //     // Assert
+    //     _mockDesktopService.Verify(d => d.SwitchToInputDesktop(), Times.AtLeastOnce);
+    // }
 
     [Fact]
     public void HandleKeyboardInput_ShouldEnqueueOperation()

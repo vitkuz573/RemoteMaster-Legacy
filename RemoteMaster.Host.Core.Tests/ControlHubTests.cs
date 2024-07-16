@@ -335,7 +335,7 @@ public class ControlHubTests
             hc.Subject.Organization == hostMoveRequest.NewOrganization &&
             hc.Subject.OrganizationalUnit.SequenceEqual(hostMoveRequest.NewOrganizationalUnit)
         )), Times.Once);
-        _mockHostLifecycleService.Verify(h => h.RenewCertificateAsync(hostConfiguration), Times.Once);
+        _mockHostLifecycleService.Verify(h => h.IssueCertificateAsync(hostConfiguration), Times.Once);
     }
 
     [Fact]
@@ -357,7 +357,7 @@ public class ControlHubTests
         await _controlHub.RenewCertificate();
 
         // Assert
-        _mockHostLifecycleService.Verify(h => h.RenewCertificateAsync(hostConfiguration), Times.Once);
+        _mockHostLifecycleService.Verify(h => h.IssueCertificateAsync(hostConfiguration), Times.Once);
     }
 
     [Fact]
