@@ -108,18 +108,36 @@
                     <MudTabPanel Text="@Localizer["MainTab"]" Icon="@Icons.Material.Filled.Api">
                         <AuthorizeView>
                             <Authorized>
-                                @if (context.User.IsInRole("Administrator"))
+                                @if (context.User.HasClaim("Power", "RebootComputer") || context.User.HasClaim("Power", "ShutdownComputer"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Power" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["Power"]</MudButton>
+                                }             
+
+                                @if (context.User.HasClaim("Power", "WakeUpComputer"))
+                                {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="WakeUp" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">@Localizer["WakeUp"]</MudButton>
                                 }
-                                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Connect" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["Connect"]</MudButton>
-                                @if (context.User.IsInRole("Administrator"))
+                                
+                                @if (context.User.HasClaim("Connection", "View") || context.User.HasClaim("Connection", "Control"))
+                                {
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Connect" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["Connect"]</MudButton>
+                                }      
+
+                                @if (context.User.HasClaim("Security", "LockWorkStation"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Lock" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Lock</MudButton>
+                                }
+
+                                @if (context.User.HasClaim("Execution", "OpenShell"))
+                                {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenShell" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">@Localizer["OpenShell"]</MudButton>
+                                }
+
+                                @if (context.User.HasClaim("Execution", "Scripts"))
+                                {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ExecuteScript" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["ExecuteScript"]</MudButton>
                                 }
+
                                 <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="LogonComputers" Disabled="@(_selectedComputers.Count == 0 || _selectedComputers.Any(c => _availableComputers.ContainsKey(c.IpAddress) || _unavailableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["Logon"]</MudButton>
                                 <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="LogoffComputers" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.Any(c => _availableComputers.ContainsKey(c.IpAddress) || _unavailableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["Logoff"]</MudButton>
                                 <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Refresh" Class="ml-auto">Refresh</MudButton>

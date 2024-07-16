@@ -33,6 +33,7 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
         new("Screen", "Recording"),
         new("Power", "RebootComputer"),
         new("Power", "ShutdownComputer"),
+        new("Power", "WakeUpComputer"),
         new("Hardware", "SetMonitorState"),
         new("Security", "LockWorkStation"),
         new("Security", "LogOffUser"),
@@ -42,6 +43,7 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
         new("HostManagement", "RenewCertificate"),
         new("Execution", "Scripts"),
         new("Execution", "ManagePsExecRules"),
+        new("Execution", "OpenShell"),
         new("HostManagement", "Update"),
         new("Domain", "Membership"),
         new("Communication", "MessageBox"),
@@ -49,6 +51,8 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
         new("FileManagement", "OpenFileManager"),
         new("FileManagement", "FileUpload"),
         new("HostInformation", "View"),
+        new("Connection", "Control"),
+        new("Connection", "View"),
     ];
 
     private static readonly List<Claim> ViewerClaims =
