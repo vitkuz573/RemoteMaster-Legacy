@@ -4,15 +4,27 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Data;
 
-public class CertificateDbContext(DbContextOptions<CertificateDbContext> options) : DbContext(options)
+public class CertificateDbContext(IConfiguration configuration) : DbContext
 {
     public DbSet<RevokedCertificate> RevokedCertificates { get; set; }
 
     public DbSet<CrlInfo> CrlInfos { get; set; }
+
+    [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "DbContextOptionsBuilder will not be null.")]
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        optionsBuilder.UseSqlServer(configuration.GetConnectionString("DefaultConnection"), options =>
+        {
+            options.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+        });
+
+        optionsBuilder.ConfigureWarnings(warnings => warnings.Throw(RelationalEventId.MultipleCollectionIncludeWarning));
+    }
 
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "ModelBuilder will not be null.")]
     protected override void OnModelCreating(ModelBuilder builder)

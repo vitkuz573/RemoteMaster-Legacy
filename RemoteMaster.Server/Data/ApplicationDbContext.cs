@@ -5,12 +5,13 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Data;
 
-public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser>(options)
+public class ApplicationDbContext(IConfiguration configuration) : IdentityDbContext<ApplicationUser>
 {
     public DbSet<RefreshToken> RefreshTokens { get; set; }
 
@@ -23,6 +24,17 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<SignInEntry> SignInEntries { get; set; }
 
     public DbSet<ApplicationClaim> ApplicationClaims { get; set; }
+
+    [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "DbContextOptionsBuilder will not be null.")]
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        optionsBuilder.UseSqlServer(configuration.GetConnectionString("DefaultConnection"), options =>
+        {
+            options.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+        });
+
+        optionsBuilder.ConfigureWarnings(warnings => warnings.Throw(RelationalEventId.MultipleCollectionIncludeWarning));
+    }
 
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "ModelBuilder will not be null.")]
     protected override void OnModelCreating(ModelBuilder builder)

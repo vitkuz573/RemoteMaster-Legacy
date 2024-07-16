@@ -16,7 +16,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using MudBlazor.Services;
@@ -111,9 +110,9 @@ public static class Program
             throw new InvalidOperationException("Could not find a connection string named 'DefaultConnection'.");
         }
 
-        services.AddDbContext<ApplicationDbContext>(DbContextOptions);
-        services.AddDbContextFactory<CertificateDbContext>(DbContextOptions);
-        services.AddDbContextFactory<TokenDbContext>(DbContextOptions);
+        services.AddDbContext<ApplicationDbContext>();
+        services.AddDbContextFactory<CertificateDbContext>();
+        services.AddDbContextFactory<TokenDbContext>();
 
         services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -281,15 +280,6 @@ public static class Program
             });
         });
         return;
-
-        void DbContextOptions(DbContextOptionsBuilder options)
-        {
-            options.UseSqlServer(connectionString, sqlServerOptions =>
-                {
-                    sqlServerOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                })
-                .ConfigureWarnings(warnings => warnings.Throw(RelationalEventId.MultipleCollectionIncludeWarning));
-        }
     }
 
     private static void ConfigurePipeline(WebApplication app)
