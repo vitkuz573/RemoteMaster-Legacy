@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using RemoteMaster.Server.Configurations;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 
@@ -41,100 +42,10 @@ public class ApplicationDbContext(IConfiguration configuration) : IdentityDbCont
     {
         base.OnModelCreating(builder);
 
-        builder.Entity<Organization>()
-            .HasIndex(o => o.Name)
-            .IsUnique();
-
-        builder.Entity<RefreshToken>()
-            .Property(rt => rt.RevocationReason)
-            .HasConversion<string>();
-
-        builder.Entity<RefreshToken>()
-            .HasIndex(rt => rt.UserId);
-
-        builder.Entity<RefreshToken>()
-            .HasIndex(rt => rt.Expires);
-
-        builder.Entity<RefreshToken>()
-            .HasIndex(rt => rt.Revoked);
-
-        builder.Entity<OrganizationalUnit>()
-            .HasKey(ou => ou.NodeId);
-
-        builder.Entity<OrganizationalUnit>()
-            .HasIndex(ou => new { ou.Name, ou.OrganizationId })
-            .IsUnique();
-
-        builder.Entity<OrganizationalUnit>()
-            .HasMany(ou => ou.Children)
-            .WithOne(c => (OrganizationalUnit?)c.Parent)
-            .HasForeignKey(c => c.ParentId)
-            .IsRequired(false)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.Entity<OrganizationalUnit>()
-            .HasOne(ou => ou.Organization)
-            .WithMany(o => o.OrganizationalUnits)
-            .HasForeignKey(ou => ou.OrganizationId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Entity<OrganizationalUnit>()
-            .HasMany(ou => ou.Computers)
-            .WithOne(c => (OrganizationalUnit?)c.Parent)
-            .HasForeignKey(c => c.ParentId)
-            .IsRequired()
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Entity<ApplicationUser>()
-            .HasMany(u => u.AccessibleOrganizations)
-            .WithMany(o => o.AccessibleUsers)
-            .UsingEntity<Dictionary<string, object>>(
-                "UserOrganizations",
-                j => j.HasOne<Organization>().WithMany().HasForeignKey("OrganizationId"),
-                j => j.HasOne<ApplicationUser>().WithMany().HasForeignKey("UserId"),
-                j =>
-                {
-                    j.HasKey("OrganizationId", "UserId");
-                    j.ToTable("UserOrganizations");
-                    j.Property<Guid>("OrganizationId").HasColumnName("OrganizationId");
-                    j.Property<string>("UserId").HasColumnName("UserId");
-                });
-
-        builder.Entity<ApplicationUser>()
-            .HasMany(u => u.AccessibleOrganizationalUnits)
-            .WithMany(ou => ou.AccessibleUsers)
-            .UsingEntity<Dictionary<string, object>>(
-                "UserOrganizationalUnits",
-                j => j.HasOne<OrganizationalUnit>().WithMany().HasForeignKey("OrganizationalUnitId"),
-                j => j.HasOne<ApplicationUser>().WithMany().HasForeignKey("UserId"),
-                j =>
-                {
-                    j.HasKey("OrganizationalUnitId", "UserId");
-                    j.ToTable("UserOrganizationalUnits");
-                    j.Property<Guid>("OrganizationalUnitId").HasColumnName("OrganizationalUnitId");
-                    j.Property<string>("UserId").HasColumnName("UserId");
-                });
-
-        builder.Entity<SignInEntry>()
-            .HasKey(s => s.Id);
-
-        builder.Entity<SignInEntry>()
-            .HasIndex(s => s.UserId);
-
-        builder.Entity<SignInEntry>()
-            .Property(s => s.SignInTime)
-            .IsRequired();
-
-        builder.Entity<SignInEntry>()
-            .Property(s => s.IsSuccessful)
-            .IsRequired();
-
-        builder.Entity<SignInEntry>()
-            .Property(s => s.IpAddress)
-            .HasMaxLength(45)
-            .IsRequired();
-
-        builder.Entity<ApplicationUser>()
-            .ToTable(tb => tb.HasTrigger("AspNetUsers_Trigger"));
+        builder.ApplyConfiguration(new OrganizationConfiguration());
+        builder.ApplyConfiguration(new RefreshTokenConfiguration());
+        builder.ApplyConfiguration(new OrganizationalUnitConfiguration());
+        builder.ApplyConfiguration(new ApplicationUserConfiguration());
+        builder.ApplyConfiguration(new SignInEntryConfiguration());
     }
 }

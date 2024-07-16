@@ -1,0 +1,57 @@
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+// This file is part of the RemoteMaster project.
+// Licensed under the GNU Affero General Public License v3.0.
+
+using System.Diagnostics.CodeAnalysis;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using RemoteMaster.Server.Models;
+
+namespace RemoteMaster.Server.Configurations;
+
+public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
+{
+    [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "EntityTypeBuilder will not be null.")]
+    public void Configure(EntityTypeBuilder<RefreshToken> builder)
+    {
+        builder.HasKey(rt => rt.Id);
+
+        builder.Property(rt => rt.UserId)
+            .IsRequired()
+            .HasMaxLength(450);
+
+        builder.Property(rt => rt.Token)
+            .IsRequired()
+            .HasMaxLength(256);
+
+        builder.Property(rt => rt.Expires)
+            .IsRequired();
+
+        builder.Property(rt => rt.Created)
+            .IsRequired();
+
+        builder.Property(rt => rt.CreatedByIp)
+            .IsRequired()
+            .HasMaxLength(45);
+
+        builder.Property(rt => rt.RevokedByIp)
+            .HasMaxLength(45);
+
+        builder.Property(rt => rt.RevocationReason)
+            .HasConversion<string>()
+            .IsRequired();
+
+        builder.HasIndex(rt => rt.UserId);
+        builder.HasIndex(rt => rt.Expires);
+        builder.HasIndex(rt => rt.Revoked);
+
+        builder.HasOne(rt => rt.User)
+            .WithMany(u => u.RefreshTokens)
+            .HasForeignKey(rt => rt.UserId);
+
+        builder.HasOne(rt => rt.ReplacedByToken)
+            .WithOne()
+            .HasForeignKey<RefreshToken>(rt => rt.ReplacedByTokenId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}

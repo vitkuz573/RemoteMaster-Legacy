@@ -9,10 +9,9 @@ namespace RemoteMaster.Server.Data;
 
 public class ApplicationUser : IdentityUser
 {
-#pragma warning disable CA2227
-    public ICollection<Organization> AccessibleOrganizations { get; set; } = [];
+    public ICollection<Organization> AccessibleOrganizations { get; } = [];
 
-    public ICollection<OrganizationalUnit> AccessibleOrganizationalUnits { get; set; } = [];
-#pragma warning restore CA2227
+    public ICollection<OrganizationalUnit> AccessibleOrganizationalUnits { get; } = [];
+
+    public ICollection<RefreshToken> RefreshTokens { get; } = [];
 }
-
