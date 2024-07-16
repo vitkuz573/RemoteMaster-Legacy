@@ -40,6 +40,17 @@
                 </InputSelect>
                 <ValidationMessage For="() => Input.OrganizationId" class="text-red-500 mt-1" />
             </div>
+            <div>
+                <label for="parentOU" class="block text-sm font-medium text-gray-700">Parent Organizational Unit</label>
+                <InputSelect @bind-Value="Input.ParentId" id="parentOU" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="@Guid.Empty">Select a parent organizational unit (optional)</option>
+                    @foreach (var ou in _organizationalUnits)
+                    {
+                        <option value="@ou.NodeId">@ou.Name</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => Input.ParentId" class="text-red-500 mt-1" />
+            </div>
 
             <button type="submit" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-lg text-white hover:bg-indigo-700 focus:outline-none">
                 @(Input.Id.HasValue ? "Save" : "Create")
@@ -61,6 +72,9 @@
                                 Organization
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                Parent OU
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                 Actions
                             </th>
                         </tr>
@@ -74,6 +88,9 @@
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                                     @_organizations.FirstOrDefault(o => o.NodeId == organizationalUnit.OrganizationId)?.Name
+                                </td>
+                                <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                                    @(_organizationalUnits.FirstOrDefault(ou => ou.NodeId == organizationalUnit.ParentId)?.Name ?? "N/A")
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
                                     <button class="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 focus:outline-none" @onclick="() => EditOrganizationalUnit(organizationalUnit)">
