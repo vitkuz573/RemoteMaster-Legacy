@@ -12,7 +12,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Data;
 
-public class ApplicationDbContext(IConfiguration configuration) : IdentityDbContext<ApplicationUser>
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IConfiguration? configuration = null) : IdentityDbContext<ApplicationUser>(options)
 {
     public DbSet<RefreshToken> RefreshTokens { get; set; }
 
@@ -29,12 +29,15 @@ public class ApplicationDbContext(IConfiguration configuration) : IdentityDbCont
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "DbContextOptionsBuilder will not be null.")]
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlServer(configuration.GetConnectionString("DefaultConnection"), options =>
+        if (configuration != null)
         {
-            options.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-        });
+            optionsBuilder.UseSqlServer(configuration.GetConnectionString("DefaultConnection"), options =>
+            {
+                options.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+            });
 
-        optionsBuilder.ConfigureWarnings(warnings => warnings.Throw(RelationalEventId.MultipleCollectionIncludeWarning));
+            optionsBuilder.ConfigureWarnings(warnings => warnings.Throw(RelationalEventId.MultipleCollectionIncludeWarning));
+        }
     }
 
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "ModelBuilder will not be null.")]

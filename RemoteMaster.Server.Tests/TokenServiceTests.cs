@@ -10,7 +10,6 @@ using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Moq;
 using RemoteMaster.Server.Abstractions;
@@ -48,14 +47,11 @@ public class TokenServiceTests
         _mockOptions = new Mock<IOptions<JwtOptions>>();
         _mockOptions.Setup(o => o.Value).Returns(_options);
 
-        var configurationMock = new Mock<IConfiguration>();
-        configurationMock.Setup(c => c.GetConnectionString("DefaultConnection")).Returns("Data Source=:memory:");
-
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseSqlServer(configurationMock.Object.GetConnectionString("DefaultConnection"))
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
-        _context = new ApplicationDbContext(configurationMock.Object);
+        _context = new ApplicationDbContext(options);
 
         using var rsa = RSA.Create(2048);
         var privateKey = rsa.ExportEncryptedPkcs8PrivateKey(Encoding.UTF8.GetBytes("TestPassword"), new PbeParameters(PbeEncryptionAlgorithm.Aes256Cbc, HashAlgorithmName.SHA256, 100000));
@@ -107,10 +103,18 @@ public class TokenServiceTests
     public async Task RevokeAllRefreshTokensAsync_RevokesTokensSuccessfully()
     {
         // Arrange
-        var userId = "test-user-id";
+        var user = new ApplicationUser
+        {
+            Id = "test-user-id",
+            UserName = "testuser"
+        };
+
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
         var refreshToken = new RefreshToken
         {
-            UserId = userId,
+            UserId = user.Id,
             Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
             Expires = DateTime.UtcNow.AddDays(1),
             Created = DateTime.UtcNow,
@@ -120,8 +124,10 @@ public class TokenServiceTests
         _context.RefreshTokens.Add(refreshToken);
         await _context.SaveChangesAsync();
 
+        _mockUserManager.Setup(um => um.FindByIdAsync(It.IsAny<string>())).ReturnsAsync(user);
+
         // Act
-        await _tokenService.RevokeAllRefreshTokensAsync(userId, TokenRevocationReason.UserLoggedOut);
+        await _tokenService.RevokeAllRefreshTokensAsync(user.Id, TokenRevocationReason.UserLoggedOut);
 
         // Assert
         var revokedToken = await _context.RefreshTokens.FirstOrDefaultAsync(rt => rt.Token == refreshToken.Token);

@@ -26,12 +26,12 @@ public class HostAccessHandlerTests
     public HostAccessHandlerTests()
     {
         var configurationMock = new Mock<IConfiguration>();
-        configurationMock.Setup(c => c.GetConnectionString("DefaultConnection")).Returns("Data Source=:memory:");
+        configurationMock.Setup(c => c["ConnectionStrings:DefaultConnection"]).Returns("Data Source=:memory:"); // Corrected usage
 
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseSqlServer(configurationMock.Object.GetConnectionString("DefaultConnection"))
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
-        _dbContext = new ApplicationDbContext(configurationMock.Object);
+        _dbContext = new ApplicationDbContext(options);
 
         _mockScopeFactory = new Mock<IServiceScopeFactory>();
         _mockScope = new Mock<IServiceScope>();
