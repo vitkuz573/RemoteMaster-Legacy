@@ -36,6 +36,7 @@ public class HomeTests
     private readonly Mock<IAuthorizationPolicyProvider> _mockAuthorizationPolicyProvider;
     private readonly Mock<AuthenticationStateProvider> _mockAuthStateProvider;
     private readonly Mock<IAuthorizationService> _mockAuthorizationService;
+    private readonly Mock<INotificationService> _mockNotificationService;
 
     public HomeTests()
     {
@@ -51,6 +52,7 @@ public class HomeTests
         _mockAuthorizationPolicyProvider = new Mock<IAuthorizationPolicyProvider>();
         _mockAuthStateProvider = new Mock<AuthenticationStateProvider>();
         _mockAuthorizationService = new Mock<IAuthorizationService>();
+        _mockNotificationService = new Mock<INotificationService>();
 
         SetupServices();
     }
@@ -69,6 +71,7 @@ public class HomeTests
         _testContext.Services.AddSingleton(_mockAuthorizationPolicyProvider.Object);
         _testContext.Services.AddSingleton(_mockAuthStateProvider.Object);
         _testContext.Services.AddSingleton(_mockAuthorizationService.Object);
+        _testContext.Services.AddSingleton(_mockNotificationService.Object);
 
         _testContext.JSInterop.Mode = JSRuntimeMode.Loose;
         _testContext.JSInterop.SetupVoid("mudPopover.initialize", "mudblazor-main-content", 0);
