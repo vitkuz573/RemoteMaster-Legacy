@@ -17,9 +17,13 @@ public partial class ManageRoles
         Name = string.Empty
     };
     
-    private string? _message;
     private IdentityRole? _roleToDelete;
     private ConfirmationDialog? _confirmationDialog;
+
+    private IEnumerable<IdentityError>? _identityErrors;
+    private string? _message;
+
+    private string? Message => _identityErrors is null ? _message : $"Error: {string.Join(", ", _identityErrors.Select(error => error.Description))}";
 
     protected async override Task OnInitializedAsync()
     {
@@ -78,28 +82,31 @@ public partial class ManageRoles
         _confirmationDialog?.Show(parameters);
     }
 
-    private async Task OnConfirmDelete()
+    private async Task OnConfirmDelete(bool confirmed)
     {
-        if (_roleToDelete == null)
+        if (confirmed && _roleToDelete != null)
         {
-            return;
+            await DeleteRoleAsync(_roleToDelete);
+            _roleToDelete = null;
         }
+    }
 
+    private async Task DeleteRoleAsync(IdentityRole role)
+    {
         using var scope = ScopeFactory.CreateScope();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-        var result = await roleManager.DeleteAsync(_roleToDelete);
+        var result = await roleManager.DeleteAsync(role);
 
         if (result.Succeeded)
         {
-            _message = "Role deleted successfully.";
-            _roleToDelete = null;
-
             await LoadRolesAsync();
+
+            _message = "Role deleted successfully.";
         }
         else
         {
-            _message = $"Error deleting role: {string.Join(", ", result.Errors.Select(e => e.Description))}";
+            _identityErrors = result.Errors;
         }
     }
 }
