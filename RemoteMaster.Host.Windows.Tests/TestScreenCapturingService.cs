@@ -10,7 +10,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Windows.Tests;
 
-public class TestScreenCapturerService(IDesktopService desktopService) : ScreenCapturerService(desktopService)
+public class TestScreenCapturingService(IDesktopService desktopService) : ScreenCapturingService(desktopService)
 {
     protected override void Init()
     {

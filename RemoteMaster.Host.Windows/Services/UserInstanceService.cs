@@ -51,7 +51,9 @@ public sealed class UserInstanceService : IUserInstanceService
 
     public void Stop()
     {
-        foreach (var process in _processService.FindProcessesByName(Path.GetFileNameWithoutExtension(_currentExecutablePath)))
+        var processes = _processService.FindProcessesByName(Path.GetFileNameWithoutExtension(_currentExecutablePath));
+
+        foreach (var process in processes)
         {
             if (!_processService.HasProcessArgument(process, Argument))
             {
@@ -60,13 +62,13 @@ public sealed class UserInstanceService : IUserInstanceService
 
             try
             {
+                Log.Information("Attempting to kill process with ID: {ProcessId}.", process.Id);
                 process.Kill();
-
                 Log.Information("Successfully stopped an instance of the host. Process ID: {ProcessId}", process.Id);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Error stopping instances of the host. Message: {Message}", ex.Message);
+                Log.Error(ex, "Error stopping instance of the host. Process ID: {ProcessId}. Message: {Message}", process.Id, ex.Message);
             }
         }
     }

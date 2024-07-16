@@ -7,7 +7,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface IScreenCapturerService : IDisposable
+public interface IScreenCapturingService : IDisposable
 {
     bool DrawCursor { get; set; }
 

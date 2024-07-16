@@ -1,9 +1,12 @@
-﻿// Copyright © 2023 Vitaly Kuzyaев. All rights reserved.
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using RemoteMaster.Server.Data;
+using RemoteMaster.Server.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;
@@ -20,40 +23,56 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
 
     private static readonly List<Claim> AdministratorClaims =
     [
-        new Claim("Screen", "ToggleDrawCursor"),
-        new Claim("Screen", "ChangeSelectedScreen"),
-        new Claim("Input", "MouseInput"),
-        new Claim("Input", "KeyboardInput"),
-        new Claim("Input", "ToggleInput"),
-        new Claim("Input", "BlockUserInput"),
-        new Claim("Screen", "SetImageQuality"),
-        new Claim("Power", "RebootComputer"),
-        new Claim("Power", "ShutdownComputer"),
-        new Claim("Hardware", "SetMonitorState"),
-        new Claim("Script", "Execute"),
-        new Claim("Security", "LockWorkStation"),
-        new Claim("Security", "LogOffUser"),
-        new Claim("HostManagement", "TerminateHost"),
-        new Claim("HostManagement", "MoveHost"),
-        new Claim("HostManagement", "RenewCertificate")
+        new("Screen", "ToggleDrawCursor"),
+        new("Screen", "ChangeSelectedScreen"),
+        new("Input", "MouseInput"),
+        new("Input", "KeyboardInput"),
+        new("Input", "ToggleInput"),
+        new("Input", "BlockUserInput"),
+        new("Screen", "SetImageQuality"),
+        new("Screen", "Recording"),
+        new("Power", "RebootComputer"),
+        new("Power", "ShutdownComputer"),
+        new("Power", "WakeUpComputer"),
+        new("Hardware", "SetMonitorState"),
+        new("Security", "LockWorkStation"),
+        new("Security", "LogOffUser"),
+        new("HostManagement", "TerminateHost"),
+        new("HostManagement", "Move"),
+        new("HostManagement", "Remove"),
+        new("HostManagement", "RenewCertificate"),
+        new("Execution", "Scripts"),
+        new("Execution", "ManagePsExecRules"),
+        new("Execution", "OpenShell"),
+        new("HostManagement", "Update"),
+        new("Domain", "Membership"),
+        new("Communication", "MessageBox"),
+        new("TaskManagement", "OpenTaskManager"),
+        new("FileManagement", "OpenFileManager"),
+        new("FileManagement", "FileUpload"),
+        new("HostInformation", "View"),
+        new("Connection", "Control"),
+        new("Connection", "View"),
     ];
 
     private static readonly List<Claim> ViewerClaims =
     [
-        new Claim("Screen", "ToggleDrawCursor"),
-        new Claim("Screen", "ChangeSelectedScreen")
+        new("Screen", "ToggleDrawCursor"),
+        new("Screen", "ChangeSelectedScreen")
     ];
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         using var scope = serviceProvider.CreateScope();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
         foreach (var role in _roles)
         {
             await EnsureRoleExists(roleManager, role);
         }
 
+        await EnsureClaimsExist(dbContext);
         await AssignClaimsToRoles(roleManager);
     }
 
@@ -61,7 +80,7 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
     {
         if (!await roleManager.RoleExistsAsync(roleName))
         {
-            var result = await roleManager.CreateAsync(new IdentityRole(roleName));
+            var result = await roleManager.CreateAsync(new(roleName));
 
             if (result.Succeeded)
             {
@@ -76,6 +95,25 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
         {
             Log.Information("Role {RoleName} already exists.", roleName);
         }
+    }
+
+    private async Task EnsureClaimsExist(ApplicationDbContext dbContext)
+    {
+        var claims = _roleClaims.SelectMany(rc => rc.Value).Distinct().ToList();
+
+        foreach (var claim in claims)
+        {
+            if (!await dbContext.ApplicationClaims.AnyAsync(ac => ac.ClaimType == claim.Type && ac.ClaimValue == claim.Value))
+            {
+                dbContext.ApplicationClaims.Add(new()
+                {
+                    ClaimType = claim.Type,
+                    ClaimValue = claim.Value
+                });
+            }
+        }
+
+        await dbContext.SaveChangesAsync();
     }
 
     private async Task AssignClaimsToRoles(RoleManager<IdentityRole> roleManager)

@@ -15,7 +15,7 @@ using SkiaSharp.Views.Desktop;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public abstract class ScreenCapturerService : IScreenCapturerService
+public abstract class ScreenCapturingService : IScreenCapturingService
 {
     protected const string VirtualScreen = "VIRTUAL_SCREEN";
 
@@ -41,7 +41,7 @@ public abstract class ScreenCapturerService : IScreenCapturerService
 
     public event EventHandler<Rectangle>? ScreenChanged;
 
-    protected ScreenCapturerService(IDesktopService desktopService)
+    protected ScreenCapturingService(IDesktopService desktopService)
     {
         _desktopService = desktopService;
 

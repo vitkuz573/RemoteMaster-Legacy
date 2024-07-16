@@ -16,6 +16,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Asp.Versioning.Mvc" />
+		<PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" />
 		<PackageReference Include="AspNetCore.HealthChecks.SqlServer" />
 		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" />
 		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
@@ -44,6 +46,7 @@
 		<PackageReference Include="Serilog" />
 		<PackageReference Include="Serilog.AspNetCore" />
 		<PackageReference Include="Serilog.Extensions.Logging" />
+		<PackageReference Include="Swashbuckle.AspNetCore" />
 		<PackageReference Include="System.IO.Abstractions" />
 		<PackageReference Include="Telegram.Bot" />
 	</ItemGroup>

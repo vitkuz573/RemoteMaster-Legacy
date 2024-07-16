@@ -18,6 +18,7 @@ public partial class ManageOrganizationalUnits
 
     private List<Organization> _organizations = [];
     private List<OrganizationalUnit> _organizationalUnits = [];
+    private List<OrganizationalUnit> _filteredOrganizationalUnits = [];
     private string? _message;
     private ConfirmationDialog? _confirmationDialog;
     private OrganizationalUnit? _organizationalUnitToDelete;
@@ -78,12 +79,13 @@ public partial class ManageOrganizationalUnits
         if (await dbContext.OrganizationalUnits.AnyAsync(ou => ou.Name == Input.Name && ou.OrganizationId == Input.OrganizationId && ou.NodeId != Input.Id.Value))
         {
             _message = "Error: Organizational unit with this name already exists in the selected organization.";
-            
+           
             return false;
         }
 
         organizationalUnit.Name = Input.Name;
         organizationalUnit.OrganizationId = Input.OrganizationId;
+        organizationalUnit.ParentId = Input.ParentId;
 
         await dbContext.SaveChangesAsync();
 
@@ -99,7 +101,7 @@ public partial class ManageOrganizationalUnits
             return false;
         }
 
-        var organizationalUnit = CreateOrganizationalUnit(Input.Name, Input.OrganizationId);
+        var organizationalUnit = CreateOrganizationalUnit(Input.Name, Input.OrganizationId, Input.ParentId);
         await dbContext.OrganizationalUnits.AddAsync(organizationalUnit);
 
         await dbContext.SaveChangesAsync();
@@ -111,7 +113,7 @@ public partial class ManageOrganizationalUnits
     {
         using var scope = ScopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        
+
         _organizations = await dbContext.Organizations.ToListAsync();
     }
 
@@ -119,18 +121,35 @@ public partial class ManageOrganizationalUnits
     {
         using var scope = ScopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        
+
         _organizationalUnits = await dbContext.OrganizationalUnits
                                               .Include(ou => ou.Organization)
                                               .ToListAsync();
+        
+        FilterOrganizationalUnits();
     }
 
-    private static OrganizationalUnit CreateOrganizationalUnit(string name, Guid organizationId)
+    private async Task OnOrganizationChanged(Guid organizationId)
+    {
+        Input.OrganizationId = organizationId;
+        FilterOrganizationalUnits();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void FilterOrganizationalUnits()
+    {
+        _filteredOrganizationalUnits = _organizationalUnits
+            .Where(ou => ou.OrganizationId == Input.OrganizationId)
+            .ToList();
+    }
+
+    private static OrganizationalUnit CreateOrganizationalUnit(string name, Guid organizationId, Guid? parentId)
     {
         return new OrganizationalUnit
         {
             Name = name,
-            OrganizationId = organizationId
+            OrganizationId = organizationId,
+            ParentId = parentId
         };
     }
 
@@ -141,7 +160,7 @@ public partial class ManageOrganizationalUnits
 
         dbContext.OrganizationalUnits.Remove(organizationalUnit);
         await dbContext.SaveChangesAsync();
-        
+
         await LoadOrganizationalUnitsAsync();
         _message = "Organizational unit deleted successfully.";
     }
@@ -152,7 +171,8 @@ public partial class ManageOrganizationalUnits
         {
             Id = organizationalUnit.NodeId,
             Name = organizationalUnit.Name,
-            OrganizationId = organizationalUnit.OrganizationId
+            OrganizationId = organizationalUnit.OrganizationId,
+            ParentId = organizationalUnit.ParentId
         };
     }
 
@@ -192,23 +212,22 @@ public partial class ManageOrganizationalUnits
         [CustomValidation(typeof(InputModel), nameof(ValidateOrganizationId))]
         public Guid OrganizationId { get; set; }
 
+        [Display(Name = "Parent Organizational Unit")]
+        [CustomValidation(typeof(InputModel), nameof(ValidateParentId))]
+        public Guid? ParentId { get; set; }
+
         public static ValidationResult? ValidateOrganizationId(Guid organizationId, ValidationContext _)
         {
-            if (organizationId == Guid.Empty)
-            {
-                return new ValidationResult("Please select a valid organization.", [nameof(OrganizationId)]);
-            }
-
-            return ValidationResult.Success;
+            return organizationId == Guid.Empty
+                ? new ValidationResult("Please select a valid organization.", new[] { nameof(OrganizationId) })
+                : ValidationResult.Success;
         }
-    }
 
-    private sealed class UserViewModel
-    {
-        public string UserId { get; set; }
-
-        public string UserName { get; set; }
-
-        public bool IsSelected { get; set; }
+        public static ValidationResult? ValidateParentId(Guid? parentId, ValidationContext _)
+        {
+            return parentId == Guid.Empty
+                ? new ValidationResult("Please select a valid parent organizational unit.", new[] { nameof(ParentId) })
+                : ValidationResult.Success;
+        }
     }
 }

@@ -34,15 +34,20 @@ public partial class ManageRoleClaims
             .ToListAsync();
 
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var allClaims = await dbContext.RoleClaims
-            .GroupBy(rc => rc.ClaimType)
-            .Select(g => new ClaimTypeViewModel(
-                g.Key ?? string.Empty,
-                g.Select(rc => new ClaimValueViewModel { Value = rc.ClaimValue ?? string.Empty }).Distinct().ToList()
-            ))
+
+        var allClaims = await dbContext.ApplicationClaims
+            .GroupBy(ac => ac.ClaimType)
+            .Select(g => new
+            {
+                ClaimType = g.Key,
+                Values = g.Select(ac => ac.ClaimValue).Distinct().ToList()
+            })
             .ToListAsync();
 
-        _claimTypes = allClaims;
+        _claimTypes = allClaims.Select(c => new ClaimTypeViewModel(
+            c.ClaimType,
+            c.Values.Select(v => new ClaimValueViewModel { Value = v }).ToList()
+        )).ToList();
     }
 
     private async Task OnRoleChanged(string roleId)
@@ -82,29 +87,34 @@ public partial class ManageRoleClaims
         using var scope = ScopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-        var roleClaims = await dbContext.RoleClaims.Where(rc => rc.RoleId == SelectedRoleId).ToListAsync();
-        dbContext.RoleClaims.RemoveRange(roleClaims);
+        var existingRoleClaims = await dbContext.RoleClaims.Where(rc => rc.RoleId == SelectedRoleId).ToListAsync();
 
-        foreach (var claimType in _claimTypes)
-        {
-            foreach (var value in claimType.Values.Where(v => v.IsSelected))
+        var selectedClaims = _claimTypes
+            .SelectMany(ct => ct.Values.Where(v => v.IsSelected).Select(v => new Claim(ct.Type, v.Value)))
+            .ToList();
+
+        var claimsToRemove = existingRoleClaims
+            .Where(rc => !selectedClaims.Any(c => c.Type == rc.ClaimType && c.Value == rc.ClaimValue))
+            .ToList();
+
+        var claimsToAdd = selectedClaims
+            .Where(sc => !existingRoleClaims.Any(rc => rc.ClaimType == sc.Type && rc.ClaimValue == sc.Value))
+            .Select(sc => new IdentityRoleClaim<string>
             {
-                dbContext.RoleClaims.Add(new IdentityRoleClaim<string>
-                {
-                    RoleId = SelectedRoleId,
-                    ClaimType = claimType.Type,
-                    ClaimValue = value.Value
-                });
-            }
-        }
+                RoleId = SelectedRoleId,
+                ClaimType = sc.Type,
+                ClaimValue = sc.Value
+            })
+            .ToList();
+
+        dbContext.RoleClaims.RemoveRange(claimsToRemove);
+        dbContext.RoleClaims.AddRange(claimsToAdd);
 
         await dbContext.SaveChangesAsync();
 
         _message = "Role claims updated successfully.";
 
-        _initialRoleClaims = _claimTypes
-            .SelectMany(ct => ct.Values.Where(v => v.IsSelected).Select(v => new Claim(ct.Type, v.Value)))
-            .ToList();
+        _initialRoleClaims = selectedClaims;
 
         StateHasChanged();
 

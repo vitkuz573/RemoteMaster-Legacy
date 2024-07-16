@@ -37,6 +37,8 @@ public partial class Home
     private ClaimsPrincipal? _user;
     private ApplicationUser? _currentUser;
 
+    private IDictionary<NotificationMessage, bool>? _messages = null;
+
     protected async override Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateTask;
@@ -79,6 +81,8 @@ public partial class Home
         _treeItems = nodes.Select(node => new UnifiedTreeItemData(node)).Cast<TreeItemData<INode>>().ToList();
 
         await AccessTokenProvider.GetAccessTokenAsync(_currentUser.Id);
+
+        _messages = await NotificationService.GetNotifications();
     }
 
     public List<TreeItemData<INode>> GetTreeItems()

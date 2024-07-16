@@ -58,12 +58,12 @@ public sealed class InputService(IDesktopService desktopService) : IInputService
         _workerThread.Start();
     }
 
-    private static PointF GetAbsolutePercentFromRelativePercent(PointF? position, IScreenCapturerService screenCapturer)
+    private static PointF GetAbsolutePercentFromRelativePercent(PointF? position, IScreenCapturingService screenCapturing)
     {
-        var absoluteX = screenCapturer.CurrentScreenBounds.Width * position.GetValueOrDefault().X + screenCapturer.CurrentScreenBounds.Left - screenCapturer.VirtualScreenBounds.Left;
-        var absoluteY = screenCapturer.CurrentScreenBounds.Height * position.GetValueOrDefault().Y + screenCapturer.CurrentScreenBounds.Top - screenCapturer.VirtualScreenBounds.Top;
+        var absoluteX = screenCapturing.CurrentScreenBounds.Width * position.GetValueOrDefault().X + screenCapturing.CurrentScreenBounds.Left - screenCapturing.VirtualScreenBounds.Left;
+        var absoluteY = screenCapturing.CurrentScreenBounds.Height * position.GetValueOrDefault().Y + screenCapturing.CurrentScreenBounds.Top - screenCapturing.VirtualScreenBounds.Top;
 
-        return new PointF(absoluteX / screenCapturer.VirtualScreenBounds.Width, absoluteY / screenCapturer.VirtualScreenBounds.Height);
+        return new PointF(absoluteX / screenCapturing.VirtualScreenBounds.Width, absoluteY / screenCapturing.VirtualScreenBounds.Height);
     }
 
     private void HandleBlockInput(bool block)
@@ -146,7 +146,7 @@ public sealed class InputService(IDesktopService desktopService) : IInputService
         ReturnInput(input);
     }
 
-    public void HandleMouseInput(MouseInputDto dto, IScreenCapturerService screenCapturer)
+    public void HandleMouseInput(MouseInputDto dto, IScreenCapturingService screenCapturing)
     {
         ObjectDisposedException.ThrowIf(_disposed, nameof(InputService));
 
@@ -166,7 +166,7 @@ public sealed class InputService(IDesktopService desktopService) : IInputService
             }
             else
             {
-                var xyPercent = GetAbsolutePercentFromRelativePercent(dto.Position, screenCapturer);
+                var xyPercent = GetAbsolutePercentFromRelativePercent(dto.Position, screenCapturing);
 
                 dx = (int)(xyPercent.X * 65535F);
                 dy = (int)(xyPercent.Y * 65535F);

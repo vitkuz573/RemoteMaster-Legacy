@@ -37,6 +37,7 @@ public static class ServiceCollectionExtensions
         });
 
         services.AddSharedServices();
+        services.AddTransient<CustomHttpClientHandler>();
         services.AddSingleton<IHostInformationMonitorService, HostInformationMonitorService>();
         services.AddSingleton<IFileManagerService, FileManagerService>();
         services.AddSingleton<ICertificateRequestService, CertificateRequestService>();
@@ -44,12 +45,14 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IHostConfigurationService, HostConfigurationService>();
         services.AddSingleton<IAppState, AppState>();
         services.AddSingleton<IShutdownService, ShutdownService>();
-        services.AddSingleton<IServerHubService, ServerHubService>();
         services.AddSingleton<IScreenRecorderService, ScreenRecorderService>();
         services.AddTransient<IViewerFactory, ViewerFactory>();
         services.AddSingleton<ICertificateLoaderService, CertificateLoaderService>();
         services.AddSingleton<ICertificateStoreService, CertificateStoreService>();
         services.AddSingleton<IScreenCastingService, ScreenCastingService>();
+        services.AddSingleton<IApiService, ApiService>();
+
+        services.AddHttpClient<ApiService>().AddHttpMessageHandler<CustomHttpClientHandler>();
 
         services.AddSignalR().AddMessagePackProtocol();
     }

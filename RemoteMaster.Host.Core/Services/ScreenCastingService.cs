@@ -17,7 +17,7 @@ public class ScreenCastingService(IHubContext<ControlHub, IControlClient> hubCon
     {
         ArgumentNullException.ThrowIfNull(viewer);
 
-        viewer.ScreenCapturer.ScreenChanged += async (_, bounds) => await SendScreenSize(viewer, bounds.Width, bounds.Height);
+        viewer.ScreenCapturing.ScreenChanged += async (_, bounds) => await SendScreenSize(viewer, bounds.Width, bounds.Height);
 
         Log.Information("Starting screen streaming for connection ID {ConnectionId}, User: {UserName}", viewer.ConnectionId, viewer.UserName);
 
@@ -33,7 +33,7 @@ public class ScreenCastingService(IHubContext<ControlHub, IControlClient> hubCon
 
     private async Task SendDisplays(IViewer viewer)
     {
-        var displays = viewer.ScreenCapturer.GetDisplays();
+        var displays = viewer.ScreenCapturing.GetDisplays();
 
         await hubContext.Clients.Client(viewer.ConnectionId).ReceiveDisplays(displays);
     }
@@ -49,7 +49,7 @@ public class ScreenCastingService(IHubContext<ControlHub, IControlClient> hubCon
 
         try
         {
-            await foreach (var screenData in StreamScreenDataAsync(viewer.ScreenCapturer, cancellationToken))
+            await foreach (var screenData in StreamScreenDataAsync(viewer.ScreenCapturing, cancellationToken))
             {
                 await hubContext.Clients.Client(viewer.ConnectionId).ReceiveScreenUpdate(screenData);
             }
@@ -64,11 +64,11 @@ public class ScreenCastingService(IHubContext<ControlHub, IControlClient> hubCon
         }
     }
 
-    private static async IAsyncEnumerable<byte[]> StreamScreenDataAsync(IScreenCapturerService screenCapturer, [EnumeratorCancellation] CancellationToken cancellationToken)
+    private static async IAsyncEnumerable<byte[]> StreamScreenDataAsync(IScreenCapturingService screenCapturing, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
         {
-            var screenData = screenCapturer.GetNextFrame();
+            var screenData = screenCapturing.GetNextFrame();
 
             if (screenData != null)
             {

@@ -8,19 +8,17 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IHostLifecycleService
 {
-    Task RegisterAsync(HostConfiguration hostConfiguration);
+    Task RegisterAsync();
 
-    Task UnregisterAsync(HostConfiguration hostConfiguration);
+    Task UnregisterAsync();
 
     Task IssueCertificateAsync(HostConfiguration hostConfiguration);
 
-    Task RenewCertificateAsync(HostConfiguration hostConfiguration);
-
     void RemoveCertificate();
 
-    Task UpdateHostInformationAsync(HostConfiguration hostConfiguration);
+    Task UpdateHostInformationAsync();
 
-    Task<bool> IsHostRegisteredAsync(HostConfiguration hostConfiguration);
+    Task<bool> IsHostRegisteredAsync();
 
     Task GetCaCertificateAsync();
 }

@@ -11,13 +11,13 @@ using Telegram.Bot.Types.Enums;
 
 namespace RemoteMaster.Server.Services;
 
-public class TelegramNotificationService : INotificationService
+public class TelegramEventNotificationService : IEventNotificationService
 {
     private readonly ITelegramBotClient? _botClient;
     private readonly List<string>? _chatIds;
     private readonly bool _isConfigured;
 
-    public TelegramNotificationService(IOptions<TelegramBotOptions> options)
+    public TelegramEventNotificationService(IOptions<TelegramBotOptions> options)
     {
         ArgumentNullException.ThrowIfNull(options);
 

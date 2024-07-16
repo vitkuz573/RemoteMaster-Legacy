@@ -17,7 +17,7 @@ public class CertificateManagementService(IHostConfigurationService hostConfigur
 
         if (hostConfiguration != null && !IsCertificateValid())
         {
-            await hostLifecycleService.RenewCertificateAsync(hostConfiguration);
+            await hostLifecycleService.IssueCertificateAsync(hostConfiguration);
         }
     }
 
@@ -50,6 +50,6 @@ public class CertificateManagementService(IHostConfigurationService hostConfigur
 
         var currentTime = DateTime.Now;
 
-        return (currentTime >= certificate.NotBefore) && (currentTime <= certificate.NotAfter);
+        return currentTime >= certificate.NotBefore && currentTime <= certificate.NotAfter;
     }
 }

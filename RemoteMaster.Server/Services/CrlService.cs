@@ -49,7 +49,7 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
 
         await using var context = await contextFactory.CreateDbContextAsync();
 
-        var crlInfo = context.CrlInfos.FirstOrDefault() ?? new CrlInfo
+        var crlInfo = context.CrlInfos.OrderBy(ci => ci.CrlNumber).FirstOrDefault() ?? new CrlInfo
         {
             CrlNumber = BigInteger.Zero.ToString()
         };
@@ -127,7 +127,7 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
     {
         await using var context = await contextFactory.CreateDbContextAsync();
 
-        var crlInfo = await context.CrlInfos.FirstOrDefaultAsync();
+        var crlInfo = await context.CrlInfos.OrderBy(ci => ci.CrlNumber).FirstOrDefaultAsync();
         var revokedCertificatesCount = await context.RevokedCertificates.CountAsync();
 
         if (crlInfo != null)

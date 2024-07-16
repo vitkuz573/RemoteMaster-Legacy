@@ -40,55 +40,57 @@ public class HostRegistrationMonitorService : IHostedService
         {
             var configurationChanged = await _hostInformationMonitorService.UpdateHostConfigurationAsync();
             var hostConfiguration = await _hostConfigurationService.LoadConfigurationAsync(false);
-            var isHostRegistered = await _hostLifecycleService.IsHostRegisteredAsync(hostConfiguration);
+            var isHostRegistered = await _hostLifecycleService.IsHostRegisteredAsync();
+
+            Log.Information("Configuration changed: {ConfigurationChanged}, Is host registered: {IsHostRegistered}", configurationChanged, isHostRegistered);
 
             if (configurationChanged)
             {
                 if (isHostRegistered)
                 {
-                    await _hostLifecycleService.UpdateHostInformationAsync(hostConfiguration);
-                    
-                    Log.Information("Host information updated and certificate renewed due to configuration change.");
+                    Log.Information("Updating host information and renewing certificate due to configuration change.");
+                    await _hostLifecycleService.UpdateHostInformationAsync();
+
+                    Log.Information("Host information updated and certificate renewed.");
                 }
                 else
                 {
                     Log.Warning("Host is not registered and configuration has changed. Registering and renewing certificate...");
-                    
-                    await _hostLifecycleService.RegisterAsync(hostConfiguration);
+                    await _hostLifecycleService.RegisterAsync();
                 }
 
-                await _hostLifecycleService.RenewCertificateAsync(hostConfiguration);
-
-                _userInstanceService.Stop();
-
-                while (_userInstanceService.IsRunning)
-                {
-                    await Task.Delay(50);
-                }
-
-                _userInstanceService.Start();
+                await _hostLifecycleService.IssueCertificateAsync(hostConfiguration);
+                await RestartUserInstance();
             }
             else if (!isHostRegistered)
             {
                 Log.Warning("Host is not registered and configuration has not changed. Registering and issuing a new certificate...");
-                
-                await _hostLifecycleService.RegisterAsync(hostConfiguration);
+
+                await _hostLifecycleService.RegisterAsync();
                 await _hostLifecycleService.IssueCertificateAsync(hostConfiguration);
-
-                _userInstanceService.Stop();
-
-                while (_userInstanceService.IsRunning)
-                {
-                    await Task.Delay(50);
-                }
-
-                _userInstanceService.Start();
+                await RestartUserInstance();
             }
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Error during host registration check.");
         }
+    }
+
+    private async Task RestartUserInstance()
+    {
+        Log.Information("Stopping user instance...");
+        _userInstanceService.Stop();
+
+        while (_userInstanceService.IsRunning)
+        {
+            Log.Information("Waiting for user instance to stop...");
+            await Task.Delay(50);
+        }
+
+        Log.Information("User instance stopped. Starting a new instance...");
+        _userInstanceService.Start();
+        Log.Information("New user instance started.");
     }
 
     public Task StopAsync(CancellationToken cancellationToken)

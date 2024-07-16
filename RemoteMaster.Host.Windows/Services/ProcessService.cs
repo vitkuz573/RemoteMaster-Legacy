@@ -31,8 +31,10 @@ public class ProcessService(IProcessWrapperFactory processWrapperFactory) : IPro
     public IProcessWrapper[] FindProcessesByName(string processName)
     {
         var processes = Process.GetProcessesByName(processName);
-
-        return processes.Select(p => new ProcessWrapper(p)).ToArray();
+        
+        return processes.Where(p => !p.HasExited)
+            .Select(p => new ProcessWrapper(p))
+            .ToArray();
     }
 
     public bool HasProcessArgument(IProcessWrapper process, string argument)

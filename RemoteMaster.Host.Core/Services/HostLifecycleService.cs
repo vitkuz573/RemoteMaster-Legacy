@@ -13,15 +13,10 @@ using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostLifecycleService(IServerHubService serverHubService, ICertificateRequestService certificateRequestService, ISubjectService subjectService, IHostConfigurationService hostConfigurationService, ICertificateLoaderService certificateLoaderService) : IHostLifecycleService
+public class HostLifecycleService(ICertificateRequestService certificateRequestService, ISubjectService subjectService, ICertificateLoaderService certificateLoaderService, IApiService apiService) : IHostLifecycleService
 {
-    private volatile bool _isRegistrationInvoked;
-    private bool _isRenewalProcess;
-
-    public async Task RegisterAsync(HostConfiguration hostConfiguration)
+    public async Task RegisterAsync()
     {
-        ArgumentNullException.ThrowIfNull(hostConfiguration);
-
         RSA? rsaKeyPair = null;
 
         try
@@ -31,35 +26,17 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
             if (!Directory.Exists(jwtDirectory))
             {
                 Directory.CreateDirectory(jwtDirectory);
-                
-                Log.Debug("JWT directory created at {DirectoryPath}.", jwtDirectory);
             }
-
-            await serverHubService.ConnectAsync(hostConfiguration.Server!);
 
             Log.Information("Attempting to register host...");
 
-            var tcsGuid = new TaskCompletionSource<Guid>();
+            var registerResponse = await apiService.RegisterHostAsync();
 
-            serverHubService.OnReceiveHostGuid(guid =>
+            if (registerResponse is { StatusCode: (int)HttpStatusCode.OK, Data: true })
             {
-                Log.Information("Host GUID received: {Guid}.", guid);
+                var jwtResponse = await apiService.GetJwtPublicKeyAsync();
 
-                hostConfiguration.HostGuid = guid;
-                hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
-
-                tcsGuid.SetResult(guid);
-            });
-
-            if (await serverHubService.RegisterHostAsync(hostConfiguration))
-            {
-                _isRegistrationInvoked = true;
-
-                Log.Information("Host registration invoked successfully. Waiting for the certificate...");
-
-                var publicKey = await serverHubService.GetPublicKeyAsync();
-
-                if (publicKey.Length == 0)
+                if (jwtResponse.Data.Length == 0)
                 {
                     throw new InvalidOperationException("Failed to obtain JWT public key.");
                 }
@@ -68,13 +45,14 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
                 try
                 {
-                    await File.WriteAllBytesAsync(publicKeyPath, publicKey);
+                    await File.WriteAllBytesAsync(publicKeyPath, jwtResponse.Data);
                     
                     Log.Information("Public key saved successfully at {Path}.", publicKeyPath);
                 }
                 catch (Exception ex)
                 {
                     Log.Error("Failed to save public key: {ErrorMessage}.", ex.Message);
+                    throw;
                 }
 
                 Log.Information("Host registration successful with certificate received.");
@@ -94,23 +72,21 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         }
     }
 
-    public async Task UnregisterAsync(HostConfiguration hostConfiguration)
+    public async Task UnregisterAsync()
     {
-        ArgumentNullException.ThrowIfNull(hostConfiguration);
-
         try
         {
-            await serverHubService.ConnectAsync(hostConfiguration.Server!);
-
             Log.Information("Attempting to unregister host...");
 
-            if (await serverHubService.UnregisterHostAsync(hostConfiguration))
+            var unregisterResponse = await apiService.UnregisterHostAsync();
+
+            if (unregisterResponse is { StatusCode: (int)HttpStatusCode.OK, Data: true })
             {
-                Log.Information("Host unregistration successful.");
+                Log.Information("Host unregister successful.");
             }
             else
             {
-                Log.Warning("Host unregistration was not successful.");
+                Log.Warning("Host unregister was not successful.");
             }
         }
         catch (Exception ex)
@@ -127,8 +103,6 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
 
         try
         {
-            await serverHubService.ConnectAsync(hostConfiguration.Server!);
-
             var ipAddresses = new List<string>
             {
                 hostConfiguration.Host!.IpAddress
@@ -137,26 +111,22 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
             var distinguishedName = subjectService.GetDistinguishedName(hostConfiguration.Host.Name);
 
             Log.Information("Removing existing certificates...");
-            
+
             RemoveExistingCertificate();
 
             var csr = certificateRequestService.GenerateSigningRequest(distinguishedName, ipAddresses, out rsaKeyPair);
             var signingRequest = csr.CreateSigningRequest();
 
-            var tcs = new TaskCompletionSource<bool>();
-
-            serverHubService.OnReceiveCertificate(certificateBytes => ProcessCertificate(certificateBytes, rsaKeyPair, tcs));
-
             Log.Information("Attempting to issue certificate...");
-            
-            await serverHubService.IssueCertificateAsync(signingRequest);
 
-            var isCertificateReceived = await tcs.Task;
+            var certificateResponse = await apiService.IssueCertificateAsync(signingRequest);
 
-            if (!isCertificateReceived)
+            if (certificateResponse is { Data: null })
             {
                 throw new InvalidOperationException("Certificate processing failed.");
             }
+
+            ProcessCertificate(certificateResponse.Data, rsaKeyPair);
 
             Log.Information("Certificate issued and processed successfully.");
         }
@@ -170,20 +140,6 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         }
     }
 
-    public async Task RenewCertificateAsync(HostConfiguration hostConfiguration)
-    {
-        _isRenewalProcess = true;
-
-        try
-        {
-            await IssueCertificateAsync(hostConfiguration);
-        }
-        finally
-        {
-            _isRenewalProcess = false;
-        }
-    }
-
     public void RemoveCertificate()
     {
         using var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
@@ -191,7 +147,6 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         
         var certificate = store.Certificates
             .Find(X509FindType.FindBySubjectName, Dns.GetHostName(), false)
-            .Cast<X509Certificate2>()
             .FirstOrDefault(cert => cert.HasPrivateKey);
 
         if (certificate != null)
@@ -206,15 +161,13 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         }
     }
 
-    public async Task UpdateHostInformationAsync(HostConfiguration hostConfiguration)
+    public async Task UpdateHostInformationAsync()
     {
-        ArgumentNullException.ThrowIfNull(hostConfiguration);
-
         try
         {
-            await serverHubService.ConnectAsync(hostConfiguration.Server!);
+            var updateResponse = await apiService.UpdateHostInformationAsync();
 
-            if (await serverHubService.UpdateHostInformationAsync(hostConfiguration))
+            if (updateResponse is { StatusCode: (int)HttpStatusCode.OK, Data: true })
             {
                 Log.Information("Host information updated successful.");
             }
@@ -229,16 +182,18 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         }
     }
 
-    public async Task<bool> IsHostRegisteredAsync(HostConfiguration hostConfiguration)
+    public async Task<bool> IsHostRegisteredAsync()
     {
-        ArgumentNullException.ThrowIfNull(hostConfiguration);
-
         try
         {
-            await serverHubService.ConnectAsync(hostConfiguration.Server!);
-            var isRegistered = await serverHubService.IsHostRegisteredAsync(hostConfiguration);
+            var statusResponse = await apiService.IsHostRegisteredAsync();
 
-            return isRegistered;
+            if (statusResponse is { StatusCode: (int)HttpStatusCode.OK })
+            {
+                return statusResponse.Data;
+            }
+
+            throw new InvalidOperationException("Failed to check host registration status.");
         }
         catch (HttpRequestException ex) when (ex.InnerException is SocketException { SocketErrorCode: SocketError.NetworkUnreachable })
         {
@@ -254,21 +209,15 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         }
     }
 
-    private void ProcessCertificate(byte[] certificateBytes, RSA rsaKeyPair, TaskCompletionSource<bool> tcs)
+    private void ProcessCertificate(byte[] certificateBytes, RSA rsaKeyPair)
     {
         X509Certificate2? tempCertificate = null;
 
         try
         {
-            if (!_isRenewalProcess)
+            if (certificateBytes.Length == 0)
             {
-                SpinWait.SpinUntil(() => _isRegistrationInvoked);
-            }
-
-            if (certificateBytes == null || certificateBytes.Length == 0)
-            {
-                Log.Error("Certificate bytes are null or empty.");
-                tcs.SetResult(false);
+                Log.Error("Certificate bytes are empty.");
 
                 return;
             }
@@ -313,18 +262,15 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
             else
             {
                 Log.Error("Failed to create a certificate with private key.");
-                tcs.SetResult(false);
 
                 return;
             }
 
-            tcs.SetResult(true);
             certificateLoaderService.LoadCertificate();
         }
         catch (Exception ex)
         {
             Log.Error("An error occurred while processing the certificate: {ErrorMessage}.", ex.Message);
-            tcs.SetResult(false);
         }
         finally
         {
@@ -351,48 +297,32 @@ public class HostLifecycleService(IServerHubService serverHubService, ICertifica
         {
             Log.Information("Requesting CA certificate's public part...");
 
-            var tcs = new TaskCompletionSource<bool>();
+            var caCertificateResponse = await apiService.GetCaCertificateAsync();
 
-            serverHubService.OnReceiveCertificate(caCertificateBytes =>
+            if (caCertificateResponse.Data == null || caCertificateResponse.Data.Length == 0)
             {
-                if (caCertificateBytes == null || caCertificateBytes.Length == 0)
-                {
-                    Log.Error("Received CA certificate is null or empty.");
-                    tcs.SetResult(false);
-                }
-                else
-                {
-                    try
-                    {
-                        using var caCertificate = new X509Certificate2(caCertificateBytes);
-
-                        LogCertificateDetails(caCertificate);
-
-                        var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
-
-                        store.Open(OpenFlags.ReadWrite);
-                        store.Add(caCertificate);
-                        store.Close();
-
-                        Log.Information("CA certificate imported successfully into the certificate store.");
-                        tcs.SetResult(true);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error("An error occurred while importing the CA certificate: {ErrorMessage}.", ex.Message);
-                        tcs.SetResult(false);
-                    }
-                }
-            });
-
-            var success = await serverHubService.GetCaCertificateAsync();
-
-            if (!success)
-            {
+                Log.Error("Received CA certificate is null or empty.");
                 throw new InvalidOperationException("Failed to request or process CA certificate.");
             }
 
-            await tcs.Task;
+            try
+            {
+                using var caCertificate = new X509Certificate2(caCertificateResponse.Data);
+
+                LogCertificateDetails(caCertificate);
+
+                var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
+                store.Open(OpenFlags.ReadWrite);
+                store.Add(caCertificate);
+                store.Close();
+
+                Log.Information("CA certificate imported successfully into the certificate store.");
+            }
+            catch (Exception ex)
+            {
+                Log.Error("An error occurred while importing the CA certificate: {ErrorMessage}.", ex.Message);
+                throw;
+            }
 
             Log.Information("CA certificate's public part received and processed successfully.");
         }

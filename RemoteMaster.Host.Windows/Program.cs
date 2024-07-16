@@ -142,7 +142,7 @@ internal class Program
         services.AddSingleton<IUpdaterInstanceService, UpdaterInstanceService>();
         services.AddSingleton<IHostInstaller, HostInstaller>();
         services.AddSingleton<IHostUninstaller, HostUninstaller>();
-        services.AddSingleton<IScreenCapturerService, GdiCapturer>();
+        services.AddSingleton<IScreenCapturingService, GdiCapturing>();
         services.AddSingleton<IScreenRecorderService, ScreenRecorderService>();
         services.AddSingleton<ICursorRenderService, CursorRenderService>();
         services.AddSingleton<IInputService, InputService>();
@@ -227,7 +227,7 @@ internal class Program
                 .AddPolicy("SetMonitorStatePolicy", policy =>
                     policy.RequireClaim("Hardware", "SetMonitorState"))
                 .AddPolicy("ExecuteScriptPolicy", policy =>
-                    policy.RequireClaim("Script", "Execute"))
+                    policy.RequireClaim("Execution", "Scripts"))
                 .AddPolicy("LockWorkStationPolicy", policy =>
                     policy.RequireClaim("Security", "LockWorkStation"))
                 .AddPolicy("LogOffUserPolicy", policy =>
@@ -235,7 +235,7 @@ internal class Program
                 .AddPolicy("TerminateHostPolicy", policy =>
                     policy.RequireClaim("HostManagement", "TerminateHost"))
                 .AddPolicy("MoveHostPolicy", policy =>
-                    policy.RequireClaim("HostManagement", "MoveHost"))
+                    policy.RequireClaim("HostManagement", "Move"))
                 .AddPolicy("RenewCertificatePolicy", policy =>
                     policy.RequireClaim("HostManagement", "RenewCertificate"));
         }

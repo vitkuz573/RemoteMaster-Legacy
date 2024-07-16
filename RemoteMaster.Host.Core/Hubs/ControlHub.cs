@@ -19,7 +19,7 @@ using Serilog;
 namespace RemoteMaster.Host.Core.Hubs;
 
 [Authorize(Policy = "LocalhostOrAuthenticatedPolicy")]
-public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturerService screenCapturerService, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService, ICertificateStoreService certificateStoreService, IWorkStationSecurityService workStationSecurityService, IScreenCastingService screenCastingService) : Hub<IControlClient>
+public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturingService screenCapturingService, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService, ICertificateStoreService certificateStoreService, IWorkStationSecurityService workStationSecurityService, IScreenCastingService screenCastingService) : Hub<IControlClient>
 {
     public async override Task OnConnectedAsync()
     {
@@ -79,7 +79,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     private async Task HandleThumbnailRequest()
     {
-        var thumbnail = screenCapturerService.GetThumbnail(500, 300);
+        var thumbnail = screenCapturingService.GetThumbnail(500, 300);
 
         if (thumbnail != null)
         {
@@ -121,7 +121,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     [Authorize(Policy = "MouseInputPolicy")]
     public void HandleMouseInput(MouseInputDto dto)
     {
-        ExecuteActionForViewer(viewer => inputService.HandleMouseInput(dto, viewer.ScreenCapturer));
+        ExecuteActionForViewer(viewer => inputService.HandleMouseInput(dto, viewer.ScreenCapturing));
     }
 
     [Authorize(Policy = "KeyboardInputPolicy")]
@@ -135,7 +135,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     {
         if (appState.TryGetViewer(Context.ConnectionId, out var viewer))
         {
-            viewer?.ScreenCapturer.SetSelectedScreen(displayName);
+            viewer?.ScreenCapturing.SetSelectedScreen(displayName);
         }
         else
         {
@@ -158,13 +158,13 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     [Authorize(Policy = "SetImageQualityPolicy")]
     public void SetImageQuality(int quality)
     {
-        ExecuteActionForViewer(viewer => viewer.ScreenCapturer.ImageQuality = quality);
+        ExecuteActionForViewer(viewer => viewer.ScreenCapturing.ImageQuality = quality);
     }
 
     [Authorize(Policy = "ToggleDrawCursorPolicy")]
     public void ToggleDrawCursor(bool trackCursor)
     {
-        ExecuteActionForViewer(viewer => viewer.ScreenCapturer.DrawCursor = trackCursor);
+        ExecuteActionForViewer(viewer => viewer.ScreenCapturing.DrawCursor = trackCursor);
     }
 
     [Authorize(Policy = "TerminateHostPolicy")]
@@ -242,7 +242,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         hostConfiguration.Subject.OrganizationalUnit = hostMoveRequest.NewOrganizationalUnit;
 
         await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
-        await hostLifecycleService.RenewCertificateAsync(hostConfiguration);
+        await hostLifecycleService.IssueCertificateAsync(hostConfiguration);
     }
 
     [Authorize(Policy = "RenewCertificatePolicy")]
@@ -250,7 +250,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     {
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
 
-        await hostLifecycleService.RenewCertificateAsync(hostConfiguration);
+        await hostLifecycleService.IssueCertificateAsync(hostConfiguration);
     }
 
     public string? GetCertificateSerialNumber()

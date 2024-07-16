@@ -1,0 +1,76 @@
+﻿@page "/Admin/Roles"
+
+@namespace RemoteMaster.Server.Components.Admin.Pages.Manage
+
+@rendermode InteractiveServer
+
+@using RemoteMaster.Server.Components.Account.Shared
+@using RemoteMaster.Server.Components.Admin.Dialogs
+
+@inject IServiceScopeFactory ScopeFactory
+
+<PageTitle>Manage Roles</PageTitle>
+
+<StatusMessage UseHttpContext="false" Message="@Message" />
+
+<div class="space-y-6">
+    <!-- Form -->
+    <div class="w-full">
+        <EditForm Model="_newRole" OnValidSubmit="CreateRole" class="space-y-6">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-red-500" role="alert" />
+
+            <div>
+                <label for="roleName" class="block text-sm font-medium text-gray-700">Role Name</label>
+                <InputText @bind-Value="_newRole.Name" id="roleName" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm" />
+                <ValidationMessage For="() => _newRole.Name" class="text-red-500 mt-1" />
+            </div>
+
+            <button type="submit" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-lg text-white hover:bg-indigo-700 focus:outline-none">
+                Create Role
+            </button>
+        </EditForm>
+    </div>
+
+    <!-- Roles Table -->
+    <div class="w-full">
+        <div class="mt-4">
+            <div class="overflow-hidden border-b border-gray-200 shadow sm:rounded-lg">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                Role Name
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 bg-white">
+                        @foreach (var role in _roles)
+                        {
+                            <tr>
+                                <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
+                                    @role.Name
+                                </td>
+                                <td class="whitespace-nowrap px-6 py-4 text-center">
+                                    <div class="flex items-center justify-center">
+                                        @if (role.Name != "RootAdministrator")
+                                        {
+                                            <button class="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 focus:outline-none" @onclick="() => ShowDeleteConfirmation(role)">
+                                                Delete
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ConfirmationDialog @ref="_confirmationDialog" Title="Confirm Delete" Message="Are you sure you want to delete this role?" OnConfirm="OnConfirmDelete" />

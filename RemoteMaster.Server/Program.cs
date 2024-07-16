@@ -6,6 +6,8 @@ using System.Globalization;
 using System.IO.Abstractions;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -22,7 +24,6 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Components;
 using RemoteMaster.Server.Components.Account;
 using RemoteMaster.Server.Data;
-using RemoteMaster.Server.Hubs;
 using RemoteMaster.Server.Middlewares;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Requirements;
@@ -34,6 +35,8 @@ using RemoteMaster.Shared.Models;
 using RemoteMaster.Shared.Services;
 using Serilog;
 using Serilog.Events;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using StatusCodes = Microsoft.AspNetCore.Http.StatusCodes;
 
 namespace RemoteMaster.Server;
 
@@ -108,18 +111,9 @@ public static class Program
             throw new InvalidOperationException("Could not find a connection string named 'DefaultConnection'.");
         }
 
-        void dbContextOptions(DbContextOptionsBuilder options)
-        {
-            options.UseSqlServer(connectionString, sqlServerOptions =>
-            {
-                sqlServerOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-            })
-            .ConfigureWarnings(warnings => warnings.Throw(RelationalEventId.MultipleCollectionIncludeWarning));
-        }
-
-        services.AddDbContext<ApplicationDbContext>(dbContextOptions);
-        services.AddDbContextFactory<CertificateDbContext>(dbContextOptions);
-        services.AddDbContextFactory<TokenDbContext>(dbContextOptions);
+        services.AddDbContext<ApplicationDbContext>(DbContextOptions);
+        services.AddDbContextFactory<CertificateDbContext>(DbContextOptions);
+        services.AddDbContextFactory<TokenDbContext>(DbContextOptions);
 
         services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -151,8 +145,9 @@ public static class Program
 
         services.AddSharedServices();
 
+        services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
         services.AddTransient<IUdpClient, UdpClientWrapper>();
-        services.AddTransient<Func<IUdpClient>>(provider => () => provider.GetRequiredService<IUdpClient>());
+        services.AddTransient<Func<IUdpClient>>(provider => provider.GetRequiredService<IUdpClient>);
         services.AddScoped<IQueryParameterService, QueryParameterService>();
         services.AddScoped<IDatabaseService, DatabaseService>();
         services.AddScoped<IComputerCommandService, ComputerCommandService>();
@@ -161,6 +156,7 @@ public static class Program
         services.AddScoped<IClaimsService, ClaimsService>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<ICertificateProvider, CertificateProvider>();
+        services.AddScoped<IHostRegistrationService, HostRegistrationService>();
         services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<ITokenStorageService, InMemoryTokenStorageService>();
         services.AddSingleton<IBrandingService, BrandingService>();
@@ -173,9 +169,11 @@ public static class Program
         services.AddSingleton<IRemoteSchtasksService, RemoteSchtasksService>();
         services.AddSingleton<INetworkDriveService, NetworkDriveService>();
         services.AddSingleton<ICountryProvider, CountryProvider>();
-        services.AddSingleton<INotificationService, TelegramNotificationService>();
+        services.AddSingleton<IEventNotificationService, TelegramEventNotificationService>();
         services.AddSingleton<ICertificateStoreService, CertificateStoreService>();
         services.AddSingleton<IValidateOptions<JwtOptions>, JwtOptionsValidator>();
+        services.AddSingleton<IHostMoveRequestService, HostMoveRequestService>();
+        services.AddSingleton<INotificationService, InMemoryNotificationService>();
 
         services.AddSingleton(new JsonSerializerOptions
         {
@@ -196,7 +194,26 @@ public static class Program
 
         services.AddMudServices();
 
-        services.AddControllers();
+        services.AddControllers(options =>
+        {
+            options.Filters.Add(new ValidateMediaTypeAttribute());
+        });
+
+        services.AddApiVersioning(options =>
+        {
+            options.ReportApiVersions = true;
+            options.AssumeDefaultVersionWhenUnspecified = true;
+            options.DefaultApiVersion = new ApiVersion(1, 0);
+            options.ApiVersionReader = new MediaTypeApiVersionReader("v");
+        }).AddMvc().AddApiExplorer(options =>
+        {
+            options.GroupNameFormat = "'v'VVV";
+            options.SubstituteApiVersionInUrl = true;
+            options.DefaultApiVersion = new ApiVersion(1, 0);
+        });
+
+        services.AddEndpointsApiExplorer();
+        services.AddSwaggerGen();
 
         services.AddHealthChecks()
             .AddSqlServer(
@@ -253,6 +270,26 @@ public static class Program
                 return ValueTask.CompletedTask;
             };
         });
+
+        services.AddCors(options =>
+        {
+            options.AddPolicy("AllowAll", builder =>
+            {
+                builder.AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            });
+        });
+        return;
+
+        void DbContextOptions(DbContextOptionsBuilder options)
+        {
+            options.UseSqlServer(connectionString, sqlServerOptions =>
+                {
+                    sqlServerOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                })
+                .ConfigureWarnings(warnings => warnings.Throw(RelationalEventId.MultipleCollectionIncludeWarning));
+        }
     }
 
     private static void ConfigurePipeline(WebApplication app)
@@ -278,7 +315,9 @@ public static class Program
                     data: entry.Value.Data.ToDictionary(kv => kv.Key, kv => kv.Value.ToString())
                 )).ToList();
 
-                var responseModel = ApiResponse<List<HealthCheck>>.Success(healthCheckResults, "Health checks completed");
+                var overallStatus = report.Status == HealthStatus.Healthy ? StatusCodes.Status200OK : StatusCodes.Status503ServiceUnavailable;
+                var responseModel = new ApiResponse<List<HealthCheck>>(healthCheckResults, "Health checks completed", overallStatus);
+
                 var jsonResponse = JsonSerializer.Serialize(responseModel, new JsonSerializerOptions
                 {
                     WriteIndented = true
@@ -314,9 +353,24 @@ public static class Program
             }
         }
 
+        app.UseCors("AllowAll");
+
         if (app.Environment.IsDevelopment())
         {
             app.UseMigrationsEndPoint();
+            app.UseSwagger();
+            app.UseSwaggerUI(options =>
+            {
+                var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+
+                foreach (var description in provider.ApiVersionDescriptions)
+                {
+                    var url = $"/swagger/{description.GroupName}/swagger.json";
+                    var name = description.GroupName.ToUpperInvariant();
+
+                    options.SwaggerEndpoint($"http://localhost:5254{url}", name);
+                }
+            });
         }
         else
         {
@@ -324,13 +378,11 @@ public static class Program
             app.UseHsts();
         }
 
-        var applicationSettings = app.Services.GetRequiredService<IOptions<ApplicationSettings>>().Value;
-
         app.UseRequestLocalization();
 
         app.Use(async (context, next) =>
         {
-            if (context.Connection.LocalPort == 5254 && !context.Request.Path.StartsWithSegments("/hubs"))
+            if (context.Connection.LocalPort == 5254 && !context.Request.Path.StartsWithSegments("/api"))
             {
                 context.Response.StatusCode = 404;
 
@@ -345,11 +397,9 @@ public static class Program
         app.UseStaticFiles();
         app.UseAntiforgery();
 
-        app.MapControllers();
+        app.MapControllers().RequireHost($"*:{5254}");
         app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
         app.MapAdditionalIdentityEndpoints();
-
-        app.MapHub<ManagementHub>("/hubs/management").RequireHost("*:5254");
     }
 }
