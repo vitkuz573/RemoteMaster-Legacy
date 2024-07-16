@@ -18,6 +18,7 @@ public partial class ManageOrganizationalUnits
 
     private List<Organization> _organizations = [];
     private List<OrganizationalUnit> _organizationalUnits = [];
+    private List<OrganizationalUnit> _filteredOrganizationalUnits = [];
     private string? _message;
     private ConfirmationDialog? _confirmationDialog;
     private OrganizationalUnit? _organizationalUnitToDelete;
@@ -33,7 +34,7 @@ public partial class ManageOrganizationalUnits
         if (Input.OrganizationId == Guid.Empty)
         {
             _message = "Error: Please select a valid organization.";
-           
+            
             return;
         }
 
@@ -124,6 +125,26 @@ public partial class ManageOrganizationalUnits
         _organizationalUnits = await dbContext.OrganizationalUnits
                                               .Include(ou => ou.Organization)
                                               .ToListAsync();
+        
+        FilterOrganizationalUnits();
+    }
+
+    private void OnOrganizationChanged(ChangeEventArgs e)
+    {
+        if (!Guid.TryParse(e.Value?.ToString(), out var organizationId))
+        {
+            return;
+        }
+
+        Input.OrganizationId = organizationId;
+        FilterOrganizationalUnits();
+    }
+
+    private void FilterOrganizationalUnits()
+    {
+        _filteredOrganizationalUnits = _organizationalUnits
+            .Where(ou => ou.OrganizationId == Input.OrganizationId)
+            .ToList();
     }
 
     private static OrganizationalUnit CreateOrganizationalUnit(string name, Guid organizationId, Guid? parentId)
@@ -196,11 +217,21 @@ public partial class ManageOrganizationalUnits
         public Guid OrganizationId { get; set; }
 
         [Display(Name = "Parent Organizational Unit")]
+        [CustomValidation(typeof(InputModel), nameof(ValidateParentId))]
         public Guid? ParentId { get; set; }
 
         public static ValidationResult? ValidateOrganizationId(Guid organizationId, ValidationContext _)
         {
-            return organizationId == Guid.Empty ? new ValidationResult("Please select a valid organization.", [nameof(OrganizationId)]) : ValidationResult.Success;
+            return organizationId == Guid.Empty
+                ? new ValidationResult("Please select a valid organization.", new[] { nameof(OrganizationId) })
+                : ValidationResult.Success;
+        }
+
+        public static ValidationResult? ValidateParentId(Guid? parentId, ValidationContext _)
+        {
+            return parentId == Guid.Empty
+                ? new ValidationResult("Please select a valid parent organizational unit.", new[] { nameof(ParentId) })
+                : ValidationResult.Success;
         }
     }
 }
