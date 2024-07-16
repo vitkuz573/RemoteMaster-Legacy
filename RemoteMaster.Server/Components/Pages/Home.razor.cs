@@ -98,7 +98,7 @@ public partial class Home
         {
             Log.Warning("Current user not found");
 
-            return Enumerable.Empty<INode>();
+            return [];
         }
 
         var accessibleOrganizations = _currentUser.AccessibleOrganizations.Select(org => org.NodeId).ToList();
