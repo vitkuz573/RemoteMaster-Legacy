@@ -7,6 +7,7 @@ using Moq;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
 using RemoteMaster.Host.Core.Services;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Tests;
 
@@ -120,8 +121,71 @@ public class AppStateTests : IDisposable
         Assert.Contains(_viewerMock.Object, viewers);
     }
 
+    [Fact]
+    public void NotifyViewersChanged_IsCalledOnAddAndRemoveViewer()
+    {
+        // Arrange
+        _appState.TryAddViewer(_viewerMock.Object);
+
+        // Act
+        _appState.TryRemoveViewer(_viewerMock.Object.ConnectionId);
+
+        // Assert
+        _controlClientMock.Verify(client => client.ReceiveAllViewers(It.IsAny<List<ViewerDto>>()), Times.Exactly(2));
+    }
+
+    [Fact]
+    public void NotifyViewersChanged_CorrectlyFormsViewerList()
+    {
+        // Arrange
+        _viewerMock.Setup(v => v.Group).Returns("testGroup");
+        _viewerMock.Setup(v => v.UserName).Returns("testUser");
+        _viewerMock.Setup(v => v.Role).Returns("testRole");
+        _viewerMock.Setup(v => v.ConnectedTime).Returns(DateTime.UtcNow);
+        _viewerMock.Setup(v => v.IpAddress).Returns("127.0.0.1");
+        _viewerMock.Setup(v => v.AuthenticationType).Returns("testAuth");
+
+        _appState.TryAddViewer(_viewerMock.Object);
+
+        // Act
+        _appState.TryRemoveViewer(_viewerMock.Object.ConnectionId);
+
+        // Assert
+        _controlClientMock.Verify(client => client.ReceiveAllViewers(It.Is<List<ViewerDto>>(v => v.Count == 1 && v[0].UserName == "testUser")), Times.Once);
+        _controlClientMock.Verify(client => client.ReceiveAllViewers(It.Is<List<ViewerDto>>(v => v.Count == 0)), Times.Once);
+    }
+
+    [Fact]
+    public void ViewerEvents_MultipleSubscribers_AllReceiveNotifications()
+    {
+        // Arrange
+        var secondViewerAddedEventTriggered = false;
+        var secondViewerRemovedEventTriggered = false;
+
+        _appState.ViewerAdded += (_, _) => secondViewerAddedEventTriggered = true;
+        _appState.ViewerRemoved += (_, _) => secondViewerRemovedEventTriggered = true;
+
+        // Act
+        _appState.TryAddViewer(_viewerMock.Object);
+        _appState.TryRemoveViewer(_viewerMock.Object.ConnectionId);
+
+        // Assert
+        Assert.True(_viewerAddedEventTriggered);
+        Assert.True(secondViewerAddedEventTriggered);
+        Assert.True(_viewerRemovedEventTriggered);
+        Assert.True(secondViewerRemovedEventTriggered);
+    }
+
+    [Fact]
+    public void TryRemoveViewer_NonExistingViewer_DoesNotThrow()
+    {
+        // Act & Assert
+        var exception = Record.Exception(() => _appState.TryRemoveViewer("nonExistingConnectionId"));
+        Assert.Null(exception);
+    }
+
     public void Dispose()
     {
-        _viewerMock?.Object.Dispose();
+        _viewerMock.Object.Dispose();
     }
 }
