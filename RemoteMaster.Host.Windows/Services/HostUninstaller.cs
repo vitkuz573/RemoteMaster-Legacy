@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Diagnostics;
 using System.IO.Abstractions;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
@@ -38,9 +39,20 @@ public class HostUninstaller(IServiceFactory serviceFactory, IUserInstanceServic
 
             await hostLifecycleService.UnregisterAsync();
 
-            DeleteFiles(_applicationDirectory);
+            var currentDirectory = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule?.FileName);
+
+            if (!string.Equals(currentDirectory, _applicationDirectory, StringComparison.OrdinalIgnoreCase))
+            {
+                DeleteFiles(_applicationDirectory);
+            }
+            else
+            {
+                Log.Information("Current process is running from the application directory. Skipping deletion of files and directory.");
+            }
 
             hostLifecycleService.RemoveCertificate();
+
+            Log.Information("Uninstallation process completed successfully.");
         }
         catch (Exception ex)
         {
