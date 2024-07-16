@@ -42,7 +42,7 @@
                 {
                     <MudMenuItem Class="rounded px-2 py-0" Href="@($"/announcements/{message.Id}")">
                         <MudText Typo="Typo.subtitle2">@message.Title</MudText>
-                        <MudText Typo="Typo.body2">@($"{message.Authors.FirstOrDefault()?.DisplayName} • {message.PublishDate.ToString("MM/dd/yyyy")}")</MudText>
+                        <MudText Typo="Typo.body2">@($"{message.Authors.FirstOrDefault()?.DisplayName} • {message.PublishDate:MM/dd/yyyy}")</MudText>
                     </MudMenuItem>
                     <MudDivider Class="my-2" />
                 }
