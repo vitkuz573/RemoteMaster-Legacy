@@ -56,7 +56,7 @@
         </MudMenu>
         <AuthorizeView>
             <Authorized>
-                <MudText>@context.User.Identity.Name (@context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value)</MudText>
+                <MudText>@context.User.Identity.Name (@context.User.FindFirst(ClaimTypes.Role)?.Value)</MudText>
             </Authorized>
         </AuthorizeView>
     </MudAppBar>
