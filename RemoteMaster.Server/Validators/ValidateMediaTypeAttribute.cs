@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -24,7 +25,7 @@ public class ValidateMediaTypeAttribute : ActionFilterAttribute
         {
             var mediaType = acceptHeader.FirstOrDefault();
 
-            if (!_supportedMediaTypes.Contains(mediaType))
+            if (mediaType == null || !_supportedMediaTypes.Contains(mediaType))
             {
                 context.HttpContext.Response.StatusCode = StatusCodes.Status415UnsupportedMediaType;
                 context.HttpContext.Response.ContentType = "application/json";
@@ -38,7 +39,7 @@ public class ValidateMediaTypeAttribute : ActionFilterAttribute
                 var jsonResponse = JsonSerializer.Serialize(response, new JsonSerializerOptions
                 {
                     WriteIndented = true,
-                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                    Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
                 });
 
                 context.HttpContext.Response.WriteAsync(jsonResponse);
