@@ -5,6 +5,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using RemoteMaster.Server.Data;
@@ -24,14 +25,17 @@ public class HostAccessHandlerTests
 
     public HostAccessHandlerTests()
     {
+        var configurationMock = new Mock<IConfiguration>();
+        configurationMock.Setup(c => c.GetConnectionString("DefaultConnection")).Returns("Data Source=:memory:");
+
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseSqlServer(configurationMock.Object.GetConnectionString("DefaultConnection"))
+            .Options;
+        _dbContext = new ApplicationDbContext(configurationMock.Object);
+
         _mockScopeFactory = new Mock<IServiceScopeFactory>();
         _mockScope = new Mock<IServiceScope>();
         _mockServiceProvider = new Mock<IServiceProvider>();
-
-        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .Options;
-        _dbContext = new ApplicationDbContext(options);
 
         _mockScopeFactory.Setup(x => x.CreateScope()).Returns(_mockScope.Object);
         _mockScope.Setup(x => x.ServiceProvider).Returns(_mockServiceProvider.Object);
@@ -46,7 +50,7 @@ public class HostAccessHandlerTests
         // Arrange
         var requirement = new HostAccessRequirement("host");
         var user = new ClaimsPrincipal(new ClaimsIdentity());
-        var context = new AuthorizationHandlerContext([requirement], user, null);
+        var context = new AuthorizationHandlerContext(new[] { requirement }, user, null);
 
         // Act
         await _handler.HandleAsync(context);
@@ -60,8 +64,8 @@ public class HostAccessHandlerTests
     {
         // Arrange
         var requirement = new HostAccessRequirement("nonexistentHost");
-        var user = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user1")]));
-        var context = new AuthorizationHandlerContext([requirement], user, null);
+        var user = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, "user1") }));
+        var context = new AuthorizationHandlerContext(new[] { requirement }, user, null);
 
         // Act
         await _handler.HandleAsync(context);
@@ -75,8 +79,8 @@ public class HostAccessHandlerTests
     {
         // Arrange
         var requirement = new HostAccessRequirement("host");
-        var user = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user1")]));
-        var context = new AuthorizationHandlerContext([requirement], user, null);
+        var user = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, "user1") }));
+        var context = new AuthorizationHandlerContext(new[] { requirement }, user, null);
 
         var computer = new Computer
         {
@@ -92,8 +96,8 @@ public class HostAccessHandlerTests
             NodeId = computer.ParentId.Value,
             Name = "Test OU",
             OrganizationId = Guid.NewGuid(),
-            AccessibleUsers = [new() { Id = "user1" }]
         };
+        organizationalUnit.AccessibleUsers.Add(new ApplicationUser { Id = "user1" });
 
         _dbContext.Computers.Add(computer);
         _dbContext.OrganizationalUnits.Add(organizationalUnit);
@@ -111,8 +115,8 @@ public class HostAccessHandlerTests
     {
         // Arrange
         var requirement = new HostAccessRequirement("host");
-        var user = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user1")]));
-        var context = new AuthorizationHandlerContext([requirement], user, null);
+        var user = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, "user1") }));
+        var context = new AuthorizationHandlerContext(new[] { requirement }, user, null);
 
         var computer = new Computer
         {
@@ -128,8 +132,8 @@ public class HostAccessHandlerTests
             NodeId = computer.ParentId.Value,
             Name = "Test OU",
             OrganizationId = Guid.NewGuid(),
-            AccessibleUsers = [new() { Id = "user2" }]
         };
+        organizationalUnit.AccessibleUsers.Add(new ApplicationUser { Id = "user2" });
 
         _dbContext.Computers.Add(computer);
         _dbContext.OrganizationalUnits.Add(organizationalUnit);
@@ -147,8 +151,8 @@ public class HostAccessHandlerTests
     {
         // Arrange
         var requirement = new HostAccessRequirement("sharedHost");
-        var user = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user1")]));
-        var context = new AuthorizationHandlerContext([requirement], user, null);
+        var user = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, "user1") }));
+        var context = new AuthorizationHandlerContext(new[] { requirement }, user, null);
 
         var applicationUser = new ApplicationUser
         {
@@ -179,16 +183,16 @@ public class HostAccessHandlerTests
             NodeId = computer1.ParentId.Value,
             Name = "Unit 1",
             OrganizationId = Guid.NewGuid(),
-            AccessibleUsers = [applicationUser]
         };
+        organizationalUnit1.AccessibleUsers.Add(applicationUser);
 
         var organizationalUnit2 = new OrganizationalUnit
         {
             NodeId = computer2.ParentId.Value,
             Name = "Unit 2",
             OrganizationId = Guid.NewGuid(),
-            AccessibleUsers = [new() { Id = "user2" }]
         };
+        organizationalUnit2.AccessibleUsers.Add(new ApplicationUser { Id = "user2" });
 
         _dbContext.Users.Add(applicationUser);
         _dbContext.Computers.AddRange(computer1, computer2);
@@ -207,8 +211,8 @@ public class HostAccessHandlerTests
     {
         // Arrange
         var requirement = new HostAccessRequirement("sharedHost");
-        var user = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user1")]));
-        var context = new AuthorizationHandlerContext([requirement], user, null);
+        var user = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, "user1") }));
+        var context = new AuthorizationHandlerContext(new[] { requirement }, user, null);
 
         var applicationUser = new ApplicationUser
         {
@@ -239,16 +243,16 @@ public class HostAccessHandlerTests
             NodeId = computer1.ParentId.Value,
             Name = "Unit 1",
             OrganizationId = Guid.NewGuid(),
-            AccessibleUsers = [new() { Id = "user2" }]
         };
+        organizationalUnit1.AccessibleUsers.Add(new ApplicationUser { Id = "user2" });
 
         var organizationalUnit2 = new OrganizationalUnit
         {
             NodeId = computer2.ParentId.Value,
             Name = "Unit 2",
             OrganizationId = Guid.NewGuid(),
-            AccessibleUsers = [applicationUser]
         };
+        organizationalUnit2.AccessibleUsers.Add(applicationUser);
 
         _dbContext.Users.Add(applicationUser);
         _dbContext.Computers.AddRange(computer1, computer2);

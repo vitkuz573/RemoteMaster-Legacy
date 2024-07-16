@@ -7,6 +7,8 @@ using System.IO.Abstractions.TestingHelpers;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Moq;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
@@ -25,14 +27,17 @@ public class CrlServiceTests : IDisposable
 
     public CrlServiceTests()
     {
-        var options = new DbContextOptionsBuilder<CertificateDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .Options;
+        var configurationMock = new Mock<IConfiguration>();
+        configurationMock.Setup(c => c.GetConnectionString("DefaultConnection")).Returns("Data Source=:memory:");
 
-        _context = new CertificateDbContext(options);
+        var options = Options.Create(new DbContextOptionsBuilder<CertificateDbContext>()
+            .UseSqlServer(configurationMock.Object.GetConnectionString("DefaultConnection"))
+            .Options);
+
+        _context = new CertificateDbContext(configurationMock.Object);
         _contextFactoryMock = new Mock<IDbContextFactory<CertificateDbContext>>();
         _contextFactoryMock.Setup(factory => factory.CreateDbContextAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(() => new CertificateDbContext(options));
+            .ReturnsAsync(() => new CertificateDbContext(configurationMock.Object));
 
         _certificateProviderMock = new Mock<ICertificateProvider>();
         _fileSystem = new MockFileSystem();

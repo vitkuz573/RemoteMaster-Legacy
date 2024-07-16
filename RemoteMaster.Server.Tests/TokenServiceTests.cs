@@ -10,6 +10,7 @@ using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Moq;
 using RemoteMaster.Server.Abstractions;
@@ -47,11 +48,14 @@ public class TokenServiceTests
         _mockOptions = new Mock<IOptions<JwtOptions>>();
         _mockOptions.Setup(o => o.Value).Returns(_options);
 
+        var configurationMock = new Mock<IConfiguration>();
+        configurationMock.Setup(c => c.GetConnectionString("DefaultConnection")).Returns("Data Source=:memory:");
+
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .UseSqlServer(configurationMock.Object.GetConnectionString("DefaultConnection"))
             .Options;
 
-        _context = new ApplicationDbContext(options);
+        _context = new ApplicationDbContext(configurationMock.Object);
 
         using var rsa = RSA.Create(2048);
         var privateKey = rsa.ExportEncryptedPkcs8PrivateKey(Encoding.UTF8.GetBytes("TestPassword"), new PbeParameters(PbeEncryptionAlgorithm.Aes256Cbc, HashAlgorithmName.SHA256, 100000));
@@ -77,14 +81,14 @@ public class TokenServiceTests
         };
 
         _mockUserManager.Setup(um => um.FindByIdAsync(It.IsAny<string>())).ReturnsAsync(user);
-        _mockUserManager.Setup(um => um.GetRolesAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(["User"]);
+        _mockUserManager.Setup(um => um.GetRolesAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(new List<string> { "User" });
 
-        _mockClaimsService.Setup(cs => cs.GetClaimsForUserAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(
-        [
-            new(ClaimTypes.Name, user.UserName),
-            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.Role, "User")
-        ]);
+        _mockClaimsService.Setup(cs => cs.GetClaimsForUserAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(new List<Claim>
+        {
+            new Claim(ClaimTypes.Name, user.UserName),
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Role, "User")
+        });
 
         var httpContext = new DefaultHttpContext();
         httpContext.Connection.RemoteIpAddress = IPAddress.Parse("127.0.0.1");
@@ -113,7 +117,7 @@ public class TokenServiceTests
             CreatedByIp = "127.0.0.1"
         };
 
-        await _context.RefreshTokens.AddAsync(refreshToken);
+        _context.RefreshTokens.Add(refreshToken);
         await _context.SaveChangesAsync();
 
         // Act
