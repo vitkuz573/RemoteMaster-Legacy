@@ -8,7 +8,6 @@ using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Components.Admin.Dialogs;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
-using Serilog;
 
 namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 
@@ -132,34 +131,16 @@ public partial class ManageOrganizationalUnits
 
     private async Task OnOrganizationChanged(Guid organizationId)
     {
-        try
-        {
-            Log.Information("Organization changed to {OrganizationId}", organizationId);
-
-            Input.OrganizationId = organizationId;
-            FilterOrganizationalUnits();
-            await InvokeAsync(StateHasChanged);
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "An error occurred while changing the organization");
-        }
+        Input.OrganizationId = organizationId;
+        FilterOrganizationalUnits();
+        await InvokeAsync(StateHasChanged);
     }
 
     private void FilterOrganizationalUnits()
     {
-        try
-        {
-            _filteredOrganizationalUnits = _organizationalUnits
-                .Where(ou => ou.OrganizationId == Input.OrganizationId)
-                .ToList();
-
-            Log.Information("Filtered organizational units for organization {OrganizationId}. Count: {Count}", Input.OrganizationId, _filteredOrganizationalUnits.Count);
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "An error occurred while filtering organizational units");
-        }
+        _filteredOrganizationalUnits = _organizationalUnits
+            .Where(ou => ou.OrganizationId == Input.OrganizationId)
+            .ToList();
     }
 
     private static OrganizationalUnit CreateOrganizationalUnit(string name, Guid organizationId, Guid? parentId)
