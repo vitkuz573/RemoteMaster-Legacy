@@ -82,21 +82,6 @@ public partial class Home
 
         await AccessTokenProvider.GetAccessTokenAsync(_currentUser.Id);
 
-        await LoadNotificationsAsync();
-    }
-
-    private async Task LoadNotificationsAsync()
-    {
-        var newNotification = new NotificationMessage(
-            Id: Guid.NewGuid().ToString(),
-            Title: "New Notification",
-            Category: "General",
-            PublishDate: DateTime.Now,
-            Author: "System"
-        );
-
-        await NotificationService.AddNotification(newNotification);
-
         _messages = await NotificationService.GetNotifications();
     }
 
