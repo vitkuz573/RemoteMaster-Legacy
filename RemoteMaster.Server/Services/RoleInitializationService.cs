@@ -30,15 +30,25 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
         new("Input", "ToggleInput"),
         new("Input", "BlockUserInput"),
         new("Screen", "SetImageQuality"),
+        new("Screen", "Recording"),
         new("Power", "RebootComputer"),
         new("Power", "ShutdownComputer"),
         new("Hardware", "SetMonitorState"),
-        new("Script", "Execute"),
         new("Security", "LockWorkStation"),
         new("Security", "LogOffUser"),
         new("HostManagement", "TerminateHost"),
-        new("HostManagement", "MoveHost"),
-        new("HostManagement", "RenewCertificate")
+        new("HostManagement", "Move"),
+        new("HostManagement", "Remove"),
+        new("HostManagement", "RenewCertificate"),
+        new("Execution", "Scripts"),
+        new("Execution", "ManagePsExecRules"),
+        new("HostManagement", "Update"),
+        new("Domain", "Membership"),
+        new("Communication", "MessageBox"),
+        new("TaskManagement", "OpenTaskManager"),
+        new("FileManagement", "OpenFileManager"),
+        new("FileManagement", "FileUpload"),
+        new("HostInformation", "View"),
     ];
 
     private static readonly List<Claim> ViewerClaims =
