@@ -194,21 +194,7 @@ public partial class ManageOrganizationalUnits
 
         public static ValidationResult? ValidateOrganizationId(Guid organizationId, ValidationContext _)
         {
-            if (organizationId == Guid.Empty)
-            {
-                return new ValidationResult("Please select a valid organization.", [nameof(OrganizationId)]);
-            }
-
-            return ValidationResult.Success;
+            return organizationId == Guid.Empty ? new ValidationResult("Please select a valid organization.", [nameof(OrganizationId)]) : ValidationResult.Success;
         }
-    }
-
-    private sealed class UserViewModel
-    {
-        public string UserId { get; set; }
-
-        public string UserName { get; set; }
-
-        public bool IsSelected { get; set; }
     }
 }
