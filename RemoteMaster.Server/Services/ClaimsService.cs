@@ -25,26 +25,19 @@ public class ClaimsService(UserManager<ApplicationUser> userManager, RoleManager
 
         foreach (var role in userRoles)
         {
+            var identityRole = await roleManager.FindByNameAsync(role);
+
+            if (identityRole == null)
+            {
+                continue;
+            }
+
             claims.Add(new Claim(ClaimTypes.Role, role));
 
-            var roleClaims = await GetClaimsForRoleAsync(role);
+            var roleClaims = await roleManager.GetClaimsAsync(identityRole);
             claims.AddRange(roleClaims);
         }
 
         return claims;
-    }
-
-    private async Task<IEnumerable<Claim>> GetClaimsForRoleAsync(string roleName)
-    {
-        var role = await roleManager.FindByNameAsync(roleName);
-
-        if (role == null)
-        {
-            return [];
-        }
-
-        var roleClaims = await roleManager.GetClaimsAsync(role);
-
-        return roleClaims;
     }
 }

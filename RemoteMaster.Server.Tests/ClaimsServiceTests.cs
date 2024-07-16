@@ -39,15 +39,75 @@ public class ClaimsServiceTests
         // Assert
         Assert.Contains(claims, c => c.Type == ClaimTypes.Name && c.Value == user.UserName);
         Assert.Contains(claims, c => c.Type == ClaimTypes.NameIdentifier && c.Value == user.Id);
-        Assert.Contains(claims, c => c.Type == ClaimTypes.Role && c.Value == "Admin");
-        Assert.Contains(claims, c => c.Type == "Permission" && c.Value == "CanView");
+        Assert.Contains(claims, c => c is { Type: ClaimTypes.Role, Value: "Admin" });
+        Assert.Contains(claims, c => c is { Type: "Permission", Value: "CanView" });
+    }
+
+    [Fact]
+    public async Task GetClaimsForUserAsync_UserIsNull_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentNullException>(() => _claimsService.GetClaimsForUserAsync(null!));
+    }
+
+    [Fact]
+    public async Task GetClaimsForUserAsync_UserHasNoRoles_ReturnsBasicClaims()
+    {
+        // Arrange
+        var user = new ApplicationUser { Id = "test-user-id", UserName = "testuser" };
+        _mockUserManager.Setup(um => um.GetRolesAsync(It.IsAny<ApplicationUser>())).ReturnsAsync([]);
+
+        // Act
+        var claims = await _claimsService.GetClaimsForUserAsync(user);
+
+        // Assert
+        Assert.Contains(claims, c => c.Type == ClaimTypes.Name && c.Value == user.UserName);
+        Assert.Contains(claims, c => c.Type == ClaimTypes.NameIdentifier && c.Value == user.Id);
+        Assert.DoesNotContain(claims, c => c.Type == ClaimTypes.Role);
+    }
+
+    [Fact]
+    public async Task GetClaimsForUserAsync_RoleDoesNotExist_ReturnsBasicClaims()
+    {
+        // Arrange
+        var user = new ApplicationUser { Id = "test-user-id", UserName = "testuser" };
+        _mockUserManager.Setup(um => um.GetRolesAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(["NonExistentRole"]);
+        _mockRoleManager.Setup(rm => rm.FindByNameAsync("NonExistentRole")).ReturnsAsync((IdentityRole)null!);
+        _mockRoleManager.Setup(rm => rm.GetClaimsAsync(It.IsAny<IdentityRole>())).ReturnsAsync([]);
+
+        // Act
+        var claims = await _claimsService.GetClaimsForUserAsync(user);
+
+        // Assert
+        Assert.Contains(claims, c => c.Type == ClaimTypes.Name && c.Value == user.UserName);
+        Assert.Contains(claims, c => c.Type == ClaimTypes.NameIdentifier && c.Value == user.Id);
+        Assert.DoesNotContain(claims, c => c is { Type: ClaimTypes.Role, Value: "NonExistentRole" });
+    }
+
+    [Fact]
+    public async Task GetClaimsForUserAsync_RoleHasNoClaims_ReturnsBasicClaimsWithRole()
+    {
+        // Arrange
+        var user = new ApplicationUser { Id = "test-user-id", UserName = "testuser" };
+        _mockUserManager.Setup(um => um.GetRolesAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(["Admin"]);
+        _mockRoleManager.Setup(rm => rm.FindByNameAsync(It.IsAny<string>())).ReturnsAsync(new IdentityRole("Admin"));
+        _mockRoleManager.Setup(rm => rm.GetClaimsAsync(It.IsAny<IdentityRole>())).ReturnsAsync([]);
+
+        // Act
+        var claims = await _claimsService.GetClaimsForUserAsync(user);
+
+        // Assert
+        Assert.Contains(claims, c => c.Type == ClaimTypes.Name && c.Value == user.UserName);
+        Assert.Contains(claims, c => c.Type == ClaimTypes.NameIdentifier && c.Value == user.Id);
+        Assert.Contains(claims, c => c is { Type: ClaimTypes.Role, Value: "Admin" });
+        Assert.DoesNotContain(claims, c => c.Type == "Permission");
     }
 
     private static Mock<UserManager<TUser>> MockUserManager<TUser>() where TUser : class
     {
         var store = new Mock<IUserStore<TUser>>();
 
-        return new Mock<UserManager<TUser>>(store.Object, null, null, null, null, null, null, null, null);
+        return new Mock<UserManager<TUser>>(store.Object, null!, null!, null!, null!, null!, null!, null!, null!);
     }
 
     private static Mock<RoleManager<TRole>> MockRoleManager<TRole>() where TRole : class
@@ -55,7 +115,7 @@ public class ClaimsServiceTests
         var store = new Mock<IRoleStore<TRole>>();
         var roles = new List<IRoleValidator<TRole>> { new RoleValidator<TRole>() };
 
-        return new Mock<RoleManager<TRole>>(store.Object, roles, null, null, null);
+        return new Mock<RoleManager<TRole>>(store.Object, roles, null!, null!, null!);
     }
 }
 
