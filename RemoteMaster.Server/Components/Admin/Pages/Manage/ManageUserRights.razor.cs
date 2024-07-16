@@ -250,7 +250,7 @@ public partial class ManageUserRights
         StateHasChanged();
     }
 
-    private async Task OnUserChanged(string userId)
+    private async Task OnUserChanged(string? userId)
     {
         SelectedUserId = userId;
 
@@ -319,11 +319,13 @@ public partial class ManageUserRights
 
     private void ToggleLockoutDateTimeInputs(ChangeEventArgs e)
     {
-        if (!(bool)e.Value)
+        if ((bool)e.Value)
         {
-            SelectedUserModel.IsPermanentLockout = false;
-            SelectedUserModel.LockoutEndDateTime = DateTime.Now;
+            return;
         }
+
+        SelectedUserModel.IsPermanentLockout = false;
+        SelectedUserModel.LockoutEndDateTime = DateTime.Now;
     }
 
     private void UpdateInitialSelections()
@@ -360,7 +362,6 @@ public partial class ManageUserRights
         public string Name { get; set; } = name;
 
         private bool _isSelected;
-        private bool _isExpanded;
 
         public bool IsSelected
         {
@@ -369,21 +370,19 @@ public partial class ManageUserRights
             {
                 _isSelected = value;
 
-                if (!_isSelected)
+                if (_isSelected)
                 {
-                    foreach (var unit in OrganizationalUnits)
-                    {
-                        unit.IsSelected = false;
-                    }
+                    return;
+                }
+
+                foreach (var unit in OrganizationalUnits)
+                {
+                    unit.IsSelected = false;
                 }
             }
         }
 
-        public bool IsExpanded
-        {
-            get => _isExpanded;
-            set => _isExpanded = value;
-        }
+        public bool IsExpanded { get; set; }
 
         public List<OrganizationalUnitViewModel> OrganizationalUnits { get; } = organizationalUnits;
     }
