@@ -8,7 +8,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class HostMoveRequestService(INotificationService notificationService) : IHostMoveRequestService
+public class HostMoveRequestService(IEventNotificationService eventNotificationService) : IHostMoveRequestService
 {
     private static readonly string ProgramDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
     private static readonly string HostMoveRequestsFilePath = Path.Combine(ProgramDataPath, "RemoteMaster", "Server", "HostMoveRequests.json");
@@ -49,7 +49,7 @@ public class HostMoveRequestService(INotificationService notificationService) : 
             hostMoveRequests.Remove(requestToRemove);
             
             await SaveHostMoveRequestsAsync(hostMoveRequests);
-            await notificationService.SendNotificationAsync($"Acknowledged move request for host with MAC address: {macAddress}");
+            await eventNotificationService.SendNotificationAsync($"Acknowledged move request for host with MAC address: {macAddress}");
         }
     }
 }

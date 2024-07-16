@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Server.Abstractions;
 
-public interface INotificationService
+public interface IEventNotificationService
 {
     Task SendNotificationAsync(string message);
 }

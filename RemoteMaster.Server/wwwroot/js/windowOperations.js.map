@@ -1,1 +1,0 @@
-{"version":3,"file":"windowOperations.js","sourceRoot":"","sources":["../../src/ts/windowOperations.ts"],"names":[],"mappings":"AAAA,MAAM,UAAU,aAAa,CAAC,GAAW,EAAE,KAAa,EAAE,MAAc;IACpE,MAAM,cAAc,GAAG,kFAAkF,KAAK,WAAW,MAAM,EAAE,CAAC;IAClI,OAAO,MAAM,CAAC,IAAI,CAAC,GAAG,EAAE,QAAQ,EAAE,cAAc,CAAC,CAAC;AACtD,CAAC"}

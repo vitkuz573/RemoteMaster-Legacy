@@ -178,7 +178,7 @@ public static class Program
         services.AddSingleton<IRemoteSchtasksService, RemoteSchtasksService>();
         services.AddSingleton<INetworkDriveService, NetworkDriveService>();
         services.AddSingleton<ICountryProvider, CountryProvider>();
-        services.AddSingleton<INotificationService, TelegramNotificationService>();
+        services.AddSingleton<IEventNotificationService, TelegramEventNotificationService>();
         services.AddSingleton<ICertificateStoreService, CertificateStoreService>();
         services.AddSingleton<IValidateOptions<JwtOptions>, JwtOptionsValidator>();
         services.AddSingleton<IHostMoveRequestService, HostMoveRequestService>();
