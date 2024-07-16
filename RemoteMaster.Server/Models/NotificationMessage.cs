@@ -4,4 +4,4 @@
 
 namespace RemoteMaster.Server.Models;
 
-public record NotificationMessage(string Id, string Title, string Except, string Category, DateTime PublishDate, string ImgUrl, IEnumerable<NotificationAuthor> Authors, Type ContentComponent);
+public record NotificationMessage(string Id, string Title, string Category, DateTime PublishDate, string Author);

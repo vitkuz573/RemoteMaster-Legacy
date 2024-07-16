@@ -111,18 +111,9 @@ public static class Program
             throw new InvalidOperationException("Could not find a connection string named 'DefaultConnection'.");
         }
 
-        void dbContextOptions(DbContextOptionsBuilder options)
-        {
-            options.UseSqlServer(connectionString, sqlServerOptions =>
-            {
-                sqlServerOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-            })
-            .ConfigureWarnings(warnings => warnings.Throw(RelationalEventId.MultipleCollectionIncludeWarning));
-        }
-
-        services.AddDbContext<ApplicationDbContext>(dbContextOptions);
-        services.AddDbContextFactory<CertificateDbContext>(dbContextOptions);
-        services.AddDbContextFactory<TokenDbContext>(dbContextOptions);
+        services.AddDbContext<ApplicationDbContext>(DbContextOptions);
+        services.AddDbContextFactory<CertificateDbContext>(DbContextOptions);
+        services.AddDbContextFactory<TokenDbContext>(DbContextOptions);
 
         services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -182,6 +173,7 @@ public static class Program
         services.AddSingleton<ICertificateStoreService, CertificateStoreService>();
         services.AddSingleton<IValidateOptions<JwtOptions>, JwtOptionsValidator>();
         services.AddSingleton<IHostMoveRequestService, HostMoveRequestService>();
+        services.AddSingleton<INotificationService, InMemoryNotificationService>();
 
         services.AddSingleton(new JsonSerializerOptions
         {
@@ -285,6 +277,16 @@ public static class Program
                     .AllowAnyHeader();
             });
         });
+        return;
+
+        void DbContextOptions(DbContextOptionsBuilder options)
+        {
+            options.UseSqlServer(connectionString, sqlServerOptions =>
+                {
+                    sqlServerOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                })
+                .ConfigureWarnings(warnings => warnings.Throw(RelationalEventId.MultipleCollectionIncludeWarning));
+        }
     }
 
     private static void ConfigurePipeline(WebApplication app)
@@ -307,7 +309,7 @@ public static class Program
                     duration: entry.Value.Duration.ToString(),
                     description: entry.Value.Description,
                     exception: entry.Value.Exception?.Message,
-                    data: entry.Value.Data.ToDictionary(kv => kv.Key, kv => kv.Value?.ToString())
+                    data: entry.Value.Data.ToDictionary(kv => kv.Key, kv => kv.Value.ToString())
                 )).ToList();
 
                 var overallStatus = report.Status == HealthStatus.Healthy ? StatusCodes.Status200OK : StatusCodes.Status503ServiceUnavailable;

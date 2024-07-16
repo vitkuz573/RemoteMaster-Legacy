@@ -81,6 +81,23 @@ public partial class Home
         _treeItems = nodes.Select(node => new UnifiedTreeItemData(node)).Cast<TreeItemData<INode>>().ToList();
 
         await AccessTokenProvider.GetAccessTokenAsync(_currentUser.Id);
+
+        await LoadNotificationsAsync();
+    }
+
+    private async Task LoadNotificationsAsync()
+    {
+        var newNotification = new NotificationMessage(
+            Id: Guid.NewGuid().ToString(),
+            Title: "New Notification",
+            Category: "General",
+            PublishDate: DateTime.Now,
+            Author: "System"
+        );
+
+        await NotificationService.AddNotification(newNotification);
+
+        _messages = await NotificationService.GetNotifications();
     }
 
     public List<TreeItemData<INode>> GetTreeItems()

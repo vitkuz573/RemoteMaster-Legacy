@@ -24,6 +24,7 @@
 @inject IAccessTokenProvider AccessTokenProvider
 @inject UserManager<ApplicationUser> UserManager
 @inject IStringLocalizer<Home> Localizer
+@inject INotificationService NotificationService
 
 <PageTitle>@Localizer["PageTitle"]</PageTitle>
 
@@ -40,9 +41,9 @@
             {
                 @foreach (var (message, isRead) in _messages.Take(5))
                 {
-                    <MudMenuItem Class="rounded px-2 py-0" Href="@($"/announcements/{message.Id}")">
+                    <MudMenuItem Class="rounded px-2 py-0">
                         <MudText Typo="Typo.subtitle2">@message.Title</MudText>
-                        <MudText Typo="Typo.body2">@($"{message.Authors.FirstOrDefault()?.DisplayName} • {message.PublishDate:MM/dd/yyyy}")</MudText>
+                        <MudText Typo="Typo.body2">@message.Author • {message.PublishDate:MM/dd/yyyy}")</MudText>
                     </MudMenuItem>
                     <MudDivider Class="my-2" />
                 }
