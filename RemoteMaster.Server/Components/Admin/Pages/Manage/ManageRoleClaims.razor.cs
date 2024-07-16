@@ -34,15 +34,20 @@ public partial class ManageRoleClaims
             .ToListAsync();
 
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
         var allClaims = await dbContext.RoleClaims
             .GroupBy(rc => rc.ClaimType)
-            .Select(g => new ClaimTypeViewModel(
-                g.Key ?? string.Empty,
-                g.Select(rc => new ClaimValueViewModel { Value = rc.ClaimValue ?? string.Empty }).Distinct().ToList()
-            ))
+            .Select(g => new
+            {
+                ClaimType = g.Key,
+                Values = g.Select(rc => rc.ClaimValue).Distinct().ToList()
+            })
             .ToListAsync();
 
-        _claimTypes = allClaims;
+        _claimTypes = allClaims.Select(c => new ClaimTypeViewModel(
+            c.ClaimType ?? string.Empty,
+            c.Values.Select(v => new ClaimValueViewModel { Value = v ?? string.Empty }).ToList()
+        )).ToList();
     }
 
     private async Task OnRoleChanged(string roleId)
