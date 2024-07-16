@@ -96,12 +96,11 @@ public class HostRegistrationService(IDatabaseService databaseService, INotifica
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
-        Organization organization;
         OrganizationalUnit? parentOu;
 
         try
         {
-            organization = await GetOrganizationAsync(hostConfiguration.Subject.Organization);
+            var organization = await GetOrganizationAsync(hostConfiguration.Subject.Organization);
             parentOu = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, organization.NodeId);
         }
         catch (InvalidOperationException ex)
@@ -142,7 +141,7 @@ public class HostRegistrationService(IDatabaseService databaseService, INotifica
     /// Unregisters a host with the specified request.
     /// </summary>
     /// <param name="request">The host unregister request containing the necessary configuration.</param>
-    /// <returns>True if unregistration is successful, otherwise false.</returns>
+    /// <returns>True if unregister is successful, otherwise false.</returns>
     /// <exception cref="ArgumentException">Thrown if the host unregister request is invalid.</exception>
     public async Task<bool> UnregisterHostAsync(HostUnregisterRequest request)
     {
@@ -153,17 +152,16 @@ public class HostRegistrationService(IDatabaseService databaseService, INotifica
             throw new ArgumentException("Request must have a valid MAC address.", nameof(request));
         }
 
-        Organization organizationEntity;
         OrganizationalUnit? lastOu;
 
         try
         {
-            organizationEntity = await GetOrganizationAsync(request.Organization);
+            var organizationEntity = await GetOrganizationAsync(request.Organization);
             lastOu = await ResolveOrganizationalUnitHierarchyAsync(request.OrganizationalUnit, organizationEntity.NodeId);
         }
         catch (InvalidOperationException ex)
         {
-            await notificationService.SendNotificationAsync($"Host unregistration failed: {ex.Message} for host {request.Name} (`{request.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'");
+            await notificationService.SendNotificationAsync($"Host unregister failed: {ex.Message} for host {request.Name} (`{request.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'");
             
             return false;
         }
@@ -179,7 +177,7 @@ public class HostRegistrationService(IDatabaseService databaseService, INotifica
         }
         catch (InvalidOperationException ex)
         {
-            await notificationService.SendNotificationAsync($"Host unregistration failed: {ex.Message} for host {request.Name} (`{request.MacAddress}`) from organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' in organization '{request.Organization}'");
+            await notificationService.SendNotificationAsync($"Host unregister failed: {ex.Message} for host {request.Name} (`{request.MacAddress}`) from organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' in organization '{request.Organization}'");
             
             return false;
         }
@@ -194,12 +192,11 @@ public class HostRegistrationService(IDatabaseService databaseService, INotifica
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        Organization organization;
         OrganizationalUnit? lastOu;
 
         try
         {
-            organization = await GetOrganizationAsync(request.Organization);
+            var organization = await GetOrganizationAsync(request.Organization);
             lastOu = await ResolveOrganizationalUnitHierarchyAsync(request.OrganizationalUnit, organization.NodeId);
         }
         catch (InvalidOperationException ex)
