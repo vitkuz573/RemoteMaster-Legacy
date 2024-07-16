@@ -12,7 +12,8 @@ namespace RemoteMaster.Host.Core.Services;
 public class ApiService(IHttpClientFactory httpClientFactory, IHostConfigurationService hostConfigurationService) : IApiService
 {
     private readonly HttpClient _client = httpClientFactory.CreateClient(nameof(ApiService));
-    private const string CurrentApiVersion = "1.0"; // Константа для текущей версии API
+
+    private const string CurrentApiVersion = "1.0";
 
     private async Task EnsureClientInitializedAsync()
     {
