@@ -90,7 +90,7 @@
                     <ItemTemplate>
                         <MudTreeViewItem Text="@context.Text" Value="@context.Value" Icon="@context.Icon">
                             <ChildContent>
-                                @if (context.Children != null && context.Children.Count > 0)
+                                @if (context.Children is { Count: > 0 })
                                 {
                                     @foreach (var child in context.Children)
                                     {
