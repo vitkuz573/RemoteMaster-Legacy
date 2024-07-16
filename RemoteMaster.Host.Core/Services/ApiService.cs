@@ -2,14 +2,16 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net;
 using System.Net.Http.Json;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;
 using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class ApiService(IHttpClientFactory httpClientFactory, IHostConfigurationService hostConfigurationService) : IApiService
+public class ApiService(IHttpClientFactory httpClientFactory, IHostConfigurationService hostConfigurationService, IHostInformationService hostInformationService) : IApiService
 {
     private readonly HttpClient _client = httpClientFactory.CreateClient(nameof(ApiService));
 
@@ -34,7 +36,9 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
     private async Task NotifyDeprecatedVersionAsync()
     {
-        var message = new NotificationMessage(Guid.NewGuid().ToString(), "Deprecated API Version", "Warning", DateTime.UtcNow, "System");
+        var hostInformation = hostInformationService.GetHostInformation();
+
+        var message = new NotificationMessage(Guid.NewGuid().ToString(), "Deprecated API Version", "Warning", DateTime.UtcNow, hostInformation.IpAddress);
 
         await AddNotificationAsync(message);
     }
