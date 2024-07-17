@@ -5,6 +5,7 @@
 using System.Drawing.Imaging;
 using System.Net;
 using System.Reflection;
+using System.Runtime.Versioning;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authorization;
@@ -71,15 +72,9 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         await base.OnConnectedAsync();
     }
 
+    [SupportedOSPlatform("windows")]
     private static List<string> GetAvailableCodecs()
     {
-        if (!OperatingSystem.IsWindows())
-        {
-            Log.Warning("GetAvailableCodecs is only supported on Windows. Returning an empty list.");
-
-            return [];
-        }
-
         var codecs = ImageCodecInfo.GetImageEncoders();
 
         return codecs.Where(codec => codec.MimeType != null && !ExcludedCodecs.Contains(codec.MimeType))
