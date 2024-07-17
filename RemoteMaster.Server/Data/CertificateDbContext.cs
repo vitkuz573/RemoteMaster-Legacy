@@ -5,6 +5,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using RemoteMaster.Server.Configurations;
 using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Data;
@@ -36,13 +37,8 @@ public class CertificateDbContext(DbContextOptions<CertificateDbContext> options
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "ModelBuilder will not be null.")]
     protected override void OnModelCreating(ModelBuilder builder)
     {
-        builder.Entity<RevokedCertificate>()
-            .ToTable("RevokedCertificates")
-            .HasIndex(r => r.SerialNumber)
-            .IsUnique();
+        base.OnModelCreating(builder);
 
-        builder.Entity<RevokedCertificate>()
-            .Property(r => r.Reason)
-            .HasConversion<string>();
+        builder.ApplyConfiguration(new RevokedCertificateConfiguration());
     }
 }

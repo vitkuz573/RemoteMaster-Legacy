@@ -16,30 +16,41 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
     {
         builder.HasKey(rt => rt.Id);
 
+        builder.Property(rt => rt.Id)
+            .ValueGeneratedOnAdd()
+            .HasColumnOrder(0);
+
         builder.Property(rt => rt.UserId)
             .IsRequired()
-            .HasMaxLength(450);
+            .HasMaxLength(450)
+            .HasColumnOrder(1);
 
         builder.Property(rt => rt.Token)
             .IsRequired()
-            .HasMaxLength(256);
+            .HasMaxLength(256)
+            .HasColumnOrder(2);
 
         builder.Property(rt => rt.Expires)
-            .IsRequired();
+            .IsRequired()
+            .HasColumnOrder(3);
 
         builder.Property(rt => rt.Created)
-            .IsRequired();
+            .IsRequired()
+            .HasColumnOrder(4);
 
         builder.Property(rt => rt.CreatedByIp)
             .IsRequired()
-            .HasMaxLength(45);
+            .HasMaxLength(45)
+            .HasColumnOrder(5);
 
         builder.Property(rt => rt.RevokedByIp)
-            .HasMaxLength(45);
+            .HasMaxLength(45)
+            .HasColumnOrder(6);
 
         builder.Property(rt => rt.RevocationReason)
             .HasConversion<string>()
-            .IsRequired();
+            .IsRequired()
+            .HasColumnOrder(7);
 
         builder.HasIndex(rt => rt.UserId);
         builder.HasIndex(rt => rt.Expires);
