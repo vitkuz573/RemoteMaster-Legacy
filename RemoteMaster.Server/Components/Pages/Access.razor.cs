@@ -131,8 +131,9 @@ public partial class Access : IAsyncDisposable
         var uri = new Uri(NavigationManager.Uri);
         var newUri = uri.ToString();
 
+        _frameRate = QueryParameterService.GetParameter("frameRate", 60);
         _imageQuality = QueryParameterService.GetParameter("imageQuality", 25);
-        _drawCursor = QueryParameterService.GetParameter("cursorTracking", false);
+        _drawCursor = QueryParameterService.GetParameter("drawCursor", false);
         _inputEnabled = QueryParameterService.GetParameter("inputEnabled", true);
 
         if (newUri != uri.ToString())
@@ -150,6 +151,7 @@ public partial class Access : IAsyncDisposable
     {
         if (!_disposed && _connection is { State: HubConnectionState.Connected })
         {
+            await _connection.InvokeAsync("SetFrameRate", _frameRate);
             await _connection.InvokeAsync("SetImageQuality", _imageQuality);
             await _connection.InvokeAsync("ToggleDrawCursor", _drawCursor);
 
@@ -421,7 +423,7 @@ public partial class Access : IAsyncDisposable
         _drawCursor = value;
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("ToggleDrawCursor", value));
-        QueryParameterService.UpdateParameter("cursorTracking", value.ToString());
+        QueryParameterService.UpdateParameter("drawCursor", value.ToString());
     }
 
     private async Task ToggleUseSkia(bool value)
@@ -437,6 +439,7 @@ public partial class Access : IAsyncDisposable
         _frameRate = frameRate;
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("SetFrameRate", frameRate));
+        QueryParameterService.UpdateParameter("frameRate", frameRate.ToString());
     }
 
     private async Task ChangeQuality(int quality)

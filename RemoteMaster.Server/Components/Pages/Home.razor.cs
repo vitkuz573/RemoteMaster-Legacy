@@ -529,7 +529,7 @@ public partial class Home
         foreach (var computer in computers)
         {
             var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/windowOperations.js");
-            await module.InvokeVoidAsync("openNewWindow", $"/{computer.IpAddress}/access?imageQuality=25&cursorTracking=true&inputEnabled=false", 600, 400);
+            await module.InvokeVoidAsync("openNewWindow", $"/{computer.IpAddress}/access?frameRate=60&imageQuality=25&cursorTracking=true&inputEnabled=false", 600, 400);
         }
     }
 
