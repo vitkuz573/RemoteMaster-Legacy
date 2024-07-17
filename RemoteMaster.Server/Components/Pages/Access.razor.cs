@@ -37,7 +37,8 @@ public partial class Access : IAsyncDisposable
     private HubConnection _connection = null!;
     private bool _inputEnabled;
     private bool _blockUserInput;
-    private bool _cursorTracking;
+    private bool _drawCursor;
+    private bool _useSkia;
     private int _imageQuality;
     private string _hostVersion = string.Empty;
     private List<Display> _displays = [];
@@ -128,7 +129,7 @@ public partial class Access : IAsyncDisposable
         var newUri = uri.ToString();
 
         _imageQuality = QueryParameterService.GetParameter("imageQuality", 25);
-        _cursorTracking = QueryParameterService.GetParameter("cursorTracking", false);
+        _drawCursor = QueryParameterService.GetParameter("cursorTracking", false);
         _inputEnabled = QueryParameterService.GetParameter("inputEnabled", true);
 
         if (newUri != uri.ToString())
@@ -147,7 +148,7 @@ public partial class Access : IAsyncDisposable
         if (!_disposed && _connection is { State: HubConnectionState.Connected })
         {
             await _connection.InvokeAsync("SetImageQuality", _imageQuality);
-            await _connection.InvokeAsync("ToggleDrawCursor", _cursorTracking);
+            await _connection.InvokeAsync("ToggleDrawCursor", _drawCursor);
 
             if (await IsPolicyPermittedAsync("ToggleInputPolicy"))
             {
@@ -405,12 +406,20 @@ public partial class Access : IAsyncDisposable
         await SafeInvokeAsync(() => _connection.InvokeAsync("BlockUserInput", value), true);
     }
 
-    private async Task ToggleCursorTracking(bool value)
+    private async Task ToggleDrawCursor(bool value)
     {
-        _cursorTracking = value;
+        _drawCursor = value;
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("ToggleDrawCursor", value));
         QueryParameterService.UpdateParameter("cursorTracking", value.ToString());
+    }
+
+    private async Task ToggleUseSkia(bool value)
+    {
+        _useSkia = value;
+
+        await SafeInvokeAsync(() => _connection.InvokeAsync("ToggleUseSkia", value));
+        QueryParameterService.UpdateParameter("useSkia", value.ToString());
     }
 
     private async Task ChangeQuality(int quality)

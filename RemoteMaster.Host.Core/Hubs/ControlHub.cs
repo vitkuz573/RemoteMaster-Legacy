@@ -161,6 +161,12 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         ExecuteActionForViewer(viewer => viewer.ScreenCapturing.ImageQuality = quality);
     }
 
+    [Authorize(Policy = "ToggleUseSkiaPolicy")]
+    public void ToggleUseSkia(bool useSkia)
+    {
+        ExecuteActionForViewer(viewer => viewer.ScreenCapturing.UseSkia = useSkia);
+    }
+
     [Authorize(Policy = "ToggleDrawCursorPolicy")]
     public void ToggleDrawCursor(bool trackCursor)
     {

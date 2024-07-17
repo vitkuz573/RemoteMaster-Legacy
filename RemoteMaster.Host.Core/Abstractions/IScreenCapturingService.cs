@@ -13,6 +13,8 @@ public interface IScreenCapturingService : IDisposable
 
     int ImageQuality { get; set; }
 
+    bool UseSkia { get; set; }
+
     event EventHandler<Rectangle> ScreenChanged;
 
     Rectangle CurrentScreenBounds { get; }

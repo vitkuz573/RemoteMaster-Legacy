@@ -212,6 +212,8 @@ internal class Program
                     policy.RequireClaim("Screen", "SetImageQuality"))
                 .AddPolicy("ToggleDrawCursorPolicy", policy =>
                     policy.RequireClaim("Screen", "ToggleDrawCursor"))
+                .AddPolicy("ToggleUseSkiaPolicy", policy =>
+                    policy.RequireClaim("Screen", "ToggleUseSkia"))
                 .AddPolicy("MouseInputPolicy", policy =>
                     policy.RequireClaim("Input", "MouseInput"))
                 .AddPolicy("KeyboardInputPolicy", policy =>

@@ -23,14 +23,15 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
 
     private static readonly List<Claim> AdministratorClaims =
     [
-        new("Screen", "ToggleDrawCursor"),
-        new("Screen", "ChangeSelectedScreen"),
         new("Input", "MouseInput"),
         new("Input", "KeyboardInput"),
         new("Input", "ToggleInput"),
         new("Input", "BlockUserInput"),
         new("Screen", "SetImageQuality"),
         new("Screen", "Recording"),
+        new("Screen", "ToggleDrawCursor"),
+        new("Screen", "ChangeSelectedScreen"),
+        new("Screen", "ToggleUseSkia"),
         new("Power", "RebootComputer"),
         new("Power", "ShutdownComputer"),
         new("Power", "WakeUpComputer"),

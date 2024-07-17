@@ -29,6 +29,8 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
     public int ImageQuality { get; set; } = 25;
 
+    public bool UseSkia { get; set; } = true;
+
     protected Dictionary<string, int> Screens { get; } = [];
 
     public abstract Rectangle CurrentScreenBounds { get; protected set; }
@@ -100,6 +102,11 @@ public abstract class ScreenCapturingService : IScreenCapturingService
             return null;
         }
 
+        if (!UseSkia)
+        {
+            return frame;
+        }
+
         using var fullImage = SKBitmap.Decode(frame);
         var scale = Math.Min((float)maxWidth / fullImage.Width, (float)maxHeight / fullImage.Height);
         var thumbWidth = (int)(fullImage.Width * scale);
@@ -128,7 +135,7 @@ public abstract class ScreenCapturingService : IScreenCapturingService
             while (totalBytesRead < data.Size)
             {
                 var bytesRead = dataStream.Read(buffer, totalBytesRead, (int)data.Size - totalBytesRead);
-                
+
                 if (bytesRead == 0)
                 {
                     break;

@@ -82,7 +82,7 @@ public class GdiCapturing : ScreenCapturingService
             _cursorRenderService.DrawCursor(_memoryGraphics, CurrentScreenBounds);
         }
 
-        return SaveBitmap(_bitmap);
+        return UseSkia ? SaveBitmap(_bitmap) : BitmapToByteArray(_bitmap);
     }
 
     private byte[] GetVirtualScreenFrame()
@@ -148,5 +148,13 @@ public class GdiCapturing : ScreenCapturingService
         base.Dispose();
         _bitmap.Dispose();
         _memoryGraphics.Dispose();
+    }
+
+    private static byte[] BitmapToByteArray(Bitmap bitmap)
+    {
+        using var memoryStream = new MemoryStream();
+        bitmap.Save(memoryStream, ImageFormat.Png);
+
+        return memoryStream.ToArray();
     }
 }

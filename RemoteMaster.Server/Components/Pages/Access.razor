@@ -44,8 +44,13 @@
             </MudNavLink>
 
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.ControlPoint">
-                <MudText>Cursor Tracking</MudText>
-                <MudSwitch T="bool" Value="_cursorTracking" ValueChanged="ToggleCursorTracking" />
+                <MudText>Draw Cursor</MudText>
+                <MudSwitch T="bool" Value="_drawCursor" ValueChanged="ToggleDrawCursor" />
+            </MudNavLink>
+            
+            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Brush">
+                <MudText>Use Skia</MudText>
+                <MudSwitch T="bool" Value="_useSkia" ValueChanged="ToggleUseSkia" />
             </MudNavLink>
 
             <AuthorizeView Roles="Administrator">
