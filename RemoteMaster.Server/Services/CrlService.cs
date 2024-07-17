@@ -18,14 +18,14 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
 {
     public async Task RevokeCertificateAsync(string serialNumber, X509RevocationReason reason)
     {
-        await using var context = await contextFactory.CreateDbContextAsync();
+        var context = await contextFactory.CreateDbContextAsync();
 
         var existingRevokedCertificate = await context.RevokedCertificates.FirstOrDefaultAsync(rc => rc.SerialNumber == serialNumber);
 
         if (existingRevokedCertificate != null)
         {
             Log.Information($"Certificate with serial number {serialNumber} has already been revoked.");
-
+            
             return;
         }
 
@@ -37,9 +37,16 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
         };
 
         context.RevokedCertificates.Add(revokedCertificate);
-        await context.SaveChangesAsync();
+        var result = await context.SaveChangesAsync();
 
-        Log.Information($"Certificate with serial number {serialNumber} has been successfully revoked.");
+        if (result > 0)
+        {
+            Log.Information($"Certificate with serial number {serialNumber} has been successfully revoked.");
+        }
+        else
+        {
+            Log.Error($"Failed to revoke certificate with serial number {serialNumber}.");
+        }
     }
 
     public async Task<byte[]> GenerateCrlAsync()
@@ -47,7 +54,7 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
         var issuerCertificate = certificateProvider.GetIssuerCertificate();
         var crlBuilder = new CertificateRevocationListBuilder();
 
-        await using var context = await contextFactory.CreateDbContextAsync();
+        var context = await contextFactory.CreateDbContextAsync();
 
         var crlInfo = context.CrlInfos.OrderBy(ci => ci.CrlNumber).FirstOrDefault() ?? new CrlInfo
         {
@@ -125,7 +132,7 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
 
     public async Task<CrlMetadata> GetCrlMetadataAsync()
     {
-        await using var context = await contextFactory.CreateDbContextAsync();
+        var context = await contextFactory.CreateDbContextAsync();
 
         var crlInfo = await context.CrlInfos.OrderBy(ci => ci.CrlNumber).FirstOrDefaultAsync();
         var revokedCertificatesCount = await context.RevokedCertificates.CountAsync();

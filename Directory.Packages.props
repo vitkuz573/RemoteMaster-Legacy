@@ -26,6 +26,7 @@
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageVersion Include="Serilog.Sinks.Seq" Version="8.0.0" />
     <PackageVersion Include="Serilog.Sinks.TestCorrelator" Version="4.0.0" />
+    <PackageVersion Include="Serilog.Sinks.XUnit" Version="3.0.5" />
     <PackageVersion Include="SkiaSharp.Views.Desktop.Common" Version="2.88.8" />
     <PackageVersion Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
     <PackageVersion Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="8.0.7" />
