@@ -28,7 +28,9 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
     public async Task<TokenData> GenerateTokensAsync(string userId, string? oldRefreshToken = null)
     {
-        var user = await userManager.FindByIdAsync(userId) ?? throw new ArgumentNullException(nameof(userId), "User not found");
+        var user = await userManager.Users
+            .Include(u => u.RefreshTokens)
+            .SingleOrDefaultAsync(u => u.Id == userId) ?? throw new ArgumentNullException(nameof(userId), "User not found");
 
         var ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
 
@@ -143,7 +145,9 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
     public async Task RevokeAllRefreshTokensAsync(string userId, TokenRevocationReason revocationReason)
     {
-        var user = await userManager.FindByIdAsync(userId) ?? throw new ArgumentNullException(nameof(userId), "User not found");
+        var user = await userManager.Users
+            .Include(u => u.RefreshTokens)
+            .SingleOrDefaultAsync(u => u.Id == userId) ?? throw new ArgumentNullException(nameof(userId), "User not found");
 
         var now = DateTime.UtcNow;
         var refreshTokens = user.RefreshTokens
