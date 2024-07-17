@@ -22,6 +22,8 @@ namespace RemoteMaster.Host.Core.Hubs;
 [Authorize(Policy = "LocalhostOrAuthenticatedPolicy")]
 public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturingService screenCapturingService, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService, ICertificateStoreService certificateStoreService, IWorkStationSecurityService workStationSecurityService, IScreenCastingService screenCastingService) : Hub<IControlClient>
 {
+    private static readonly List<string> ExcludedCodecs = ["image/tiff"];
+
     public async override Task OnConnectedAsync()
     {
         var user = Context.User;
@@ -72,8 +74,10 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     private static List<string> GetAvailableCodecs()
     {
         var codecs = ImageCodecInfo.GetImageEncoders();
-
-        return codecs.Select(codec => codec.MimeType).ToList();
+        
+        return codecs.Where(codec => codec.MimeType != null && !ExcludedCodecs.Contains(codec.MimeType))
+            .Select(codec => codec.MimeType!)
+            .ToList();
     }
 
     private static string GetAuthenticationType(ClaimsPrincipal user)
