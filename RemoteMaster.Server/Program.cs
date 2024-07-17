@@ -112,7 +112,6 @@ public static class Program
 
         services.AddDbContext<ApplicationDbContext>();
         services.AddDbContextFactory<CertificateDbContext>();
-        services.AddDbContextFactory<TokenDbContext>();
 
         services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -329,7 +328,6 @@ public static class Program
                 {
                     services.GetRequiredService<ApplicationDbContext>(),
                     services.GetRequiredService<CertificateDbContext>(),
-                    services.GetRequiredService<TokenDbContext>(),
                 };
 
                 foreach (var dbContext in dbContexts)

@@ -29,15 +29,19 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "DbContextOptionsBuilder will not be null.")]
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        if (configuration != null)
+        if (configuration == null)
         {
-            optionsBuilder.UseSqlServer(configuration.GetConnectionString("DefaultConnection"), options =>
-            {
-                options.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-            });
-
-            optionsBuilder.ConfigureWarnings(warnings => warnings.Throw(RelationalEventId.MultipleCollectionIncludeWarning));
+            return;
         }
+
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+        optionsBuilder.UseSqlServer(connectionString, options =>
+        {
+            options.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+        });
+
+        optionsBuilder.ConfigureWarnings(warnings => warnings.Throw(RelationalEventId.MultipleCollectionIncludeWarning));
     }
 
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "ModelBuilder will not be null.")]
