@@ -67,6 +67,12 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
     {
         await CheckDeprecatedVersionAsync(response);
 
+#if DEBUG
+        var responseBody = await response.Content.ReadAsStringAsync();
+
+        Log.Information("Response Body: {ResponseBody}", responseBody);
+#endif
+
         if (!response.IsSuccessStatusCode)
         {
             Log.Error("Request failed with status code {StatusCode}", response.StatusCode);

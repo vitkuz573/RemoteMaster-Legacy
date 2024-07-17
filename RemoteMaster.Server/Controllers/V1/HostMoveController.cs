@@ -44,16 +44,9 @@ public class HostMoveController(IHostMoveRequestService hostMoveRequestService) 
             return Ok(response);
         }
 
-        var failureProblemDetails = new ProblemDetails
-        {
-            Title = "Failed to retrieve host move request",
-            Detail = "No host move request found for the provided MAC address.",
-            Status = StatusCodes.Status400BadRequest
-        };
+        var responseWithMessage = ApiResponse<HostMoveRequest>.Success(null!, "No host move request found for the provided MAC address.");
 
-        var failureResponse = ApiResponse<HostMoveRequest>.Failure(failureProblemDetails);
-
-        return BadRequest(failureResponse);
+        return Ok(responseWithMessage);
     }
 
     [HttpPost("acknowledge")]
