@@ -24,7 +24,7 @@ public class UdpPacketSenderTests
     public void Send_NullPacket_ThrowsArgumentNullException()
     {
         // Arrange
-        byte[] packet = null;
+        byte[] packet = null!;
         var endPoint = new IPEndPoint(IPAddress.Loopback, 12345);
 
         // Act & Assert

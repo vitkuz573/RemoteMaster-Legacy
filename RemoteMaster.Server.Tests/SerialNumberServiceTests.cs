@@ -10,12 +10,7 @@ namespace RemoteMaster.Server.Tests;
 
 public class SerialNumberServiceTests
 {
-    private readonly ISerialNumberService _serialNumberService;
-
-    public SerialNumberServiceTests()
-    {
-        _serialNumberService = new SerialNumberService();
-    }
+    private readonly ISerialNumberService _serialNumberService = new SerialNumberService();
 
     [Fact]
     public void GenerateSerialNumber_ReturnsUniqueSerialNumbers()

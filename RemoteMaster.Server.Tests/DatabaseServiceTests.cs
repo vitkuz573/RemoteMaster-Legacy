@@ -220,7 +220,7 @@ public class DatabaseServiceTests : IDisposable
         await context.SaveChangesAsync();
 
         // Act
-        await databaseService.MoveNodesAsync(new[] { childOu.NodeId }, newParent.NodeId);
+        await databaseService.MoveNodesAsync([childOu.NodeId], newParent.NodeId);
 
         // Assert
         var movedNode = await context.OrganizationalUnits.FindAsync(childOu.NodeId);
@@ -234,7 +234,7 @@ public class DatabaseServiceTests : IDisposable
 
     private class UnknownNode : INode
     {
-        public Guid NodeId { get; set; }
+        public Guid NodeId { get; init; }
 
         public string Name { get; set; }
 

@@ -35,7 +35,7 @@ public class CertificateServiceTests
     [Fact]
     public void IssueCertificate_WithNullCsrBytes_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => _certificateService.IssueCertificate(null));
+        Assert.Throws<ArgumentNullException>(() => _certificateService.IssueCertificate(null!));
     }
 
     [Fact]

@@ -26,6 +26,6 @@ public class FakeNavigationManager : NavigationManager
         ForceLoad = forceLoad;
     }
 
-    public bool ForceLoad { get; private set; } = false;
+    public bool ForceLoad { get; private set; }
 }
 

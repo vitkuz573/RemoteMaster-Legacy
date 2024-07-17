@@ -20,18 +20,23 @@ public class RegistrationRestrictionMiddlewareTests
     public RegistrationRestrictionMiddlewareTests()
     {
         var store = new Mock<IUserStore<ApplicationUser>>();
-        _mockUserManager = new Mock<UserManager<ApplicationUser>>(store.Object, null, null, null, null, null, null, null, null);
+        _mockUserManager = new Mock<UserManager<ApplicationUser>>(store.Object, null!, null!, null!, null!, null!, null!, null!, null!);
 
         var roleStore = new Mock<IRoleStore<IdentityRole>>();
-        _mockRoleManager = new Mock<RoleManager<IdentityRole>>(roleStore.Object, null, null, null, null);
+        _mockRoleManager = new Mock<RoleManager<IdentityRole>>(roleStore.Object, null!, null!, null!, null!);
 
         _next = new RequestDelegate((innerHttpContext) => Task.CompletedTask);
     }
 
     private HttpContext CreateHttpContext(string path)
     {
-        var context = new DefaultHttpContext();
-        context.Request.Path = path;
+        var context = new DefaultHttpContext
+        {
+            Request =
+            {
+                Path = path
+            }
+        };
 
         var services = new ServiceCollection();
         services.AddSingleton(_mockUserManager.Object);

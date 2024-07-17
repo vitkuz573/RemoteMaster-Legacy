@@ -11,23 +11,16 @@ namespace RemoteMaster.Server.Tests;
 
 public class AccessTokenProviderTests
 {
-    private readonly Mock<ITokenService> _mockTokenService;
-    private readonly Mock<ITokenStorageService> _mockTokenStorageService;
-    private readonly FakeNavigationManager _fakeNavigationManager;
-
-    public AccessTokenProviderTests()
-    {
-        _mockTokenService = new Mock<ITokenService>();
-        _mockTokenStorageService = new Mock<ITokenStorageService>();
-        _fakeNavigationManager = new FakeNavigationManager("http://localhost/", "http://localhost/");
-    }
+    private readonly Mock<ITokenService> _mockTokenService = new();
+    private readonly Mock<ITokenStorageService> _mockTokenStorageService = new();
+    private readonly FakeNavigationManager _fakeNavigationManager = new("http://localhost/", "http://localhost/");
 
     [Fact]
     public async Task GetAccessTokenAsync_ValidAccessToken_ReturnsAccessToken()
     {
         // Arrange
-        var userId = "user1";
-        var accessToken = "validAccessToken";
+        const string userId = "user1";
+        const string accessToken = "validAccessToken";
 
         _mockTokenStorageService.Setup(s => s.GetAccessTokenAsync(userId)).ReturnsAsync(accessToken);
         _mockTokenService.Setup(s => s.IsTokenValid(accessToken)).Returns(true);
@@ -45,10 +38,10 @@ public class AccessTokenProviderTests
     public async Task GetAccessTokenAsync_InvalidAccessToken_ValidRefreshToken_ReturnsNewAccessToken()
     {
         // Arrange
-        var userId = "user1";
-        var invalidAccessToken = "invalidAccessToken";
-        var validRefreshToken = "validRefreshToken";
-        var newAccessToken = "newAccessToken";
+        const string userId = "user1";
+        const string invalidAccessToken = "invalidAccessToken";
+        const string validRefreshToken = "validRefreshToken";
+        const string newAccessToken = "newAccessToken";
         var tokenData = new TokenData { AccessToken = newAccessToken };
 
         _mockTokenStorageService.Setup(s => s.GetAccessTokenAsync(userId)).ReturnsAsync(invalidAccessToken);
@@ -71,9 +64,9 @@ public class AccessTokenProviderTests
     public async Task GetAccessTokenAsync_InvalidAccessToken_InvalidRefreshToken_ClearsTokensAndRedirects()
     {
         // Arrange
-        var userId = "user1";
-        var invalidAccessToken = "invalidAccessToken";
-        var invalidRefreshToken = "invalidRefreshToken";
+        const string userId = "user1";
+        const string invalidAccessToken = "invalidAccessToken";
+        const string invalidRefreshToken = "invalidRefreshToken";
 
         _mockTokenStorageService.Setup(s => s.GetAccessTokenAsync(userId)).ReturnsAsync(invalidAccessToken);
         _mockTokenService.Setup(s => s.IsTokenValid(invalidAccessToken)).Returns(false);

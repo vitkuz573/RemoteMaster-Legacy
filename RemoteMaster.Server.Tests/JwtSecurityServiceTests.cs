@@ -60,7 +60,7 @@ public class JwtSecurityServiceTests
         await _jwtSecurityService.EnsureKeysExistAsync();
 
         // Assert
-        Assert.Equal("dummy", _mockFileSystem.File.ReadAllText(Path.Combine(_options.KeysDirectory, "private_key.der")));
-        Assert.Equal("dummy", _mockFileSystem.File.ReadAllText(Path.Combine(_options.KeysDirectory, "public_key.der")));
+        Assert.Equal("dummy", await _mockFileSystem.File.ReadAllTextAsync(Path.Combine(_options.KeysDirectory, "private_key.der")));
+        Assert.Equal("dummy", await _mockFileSystem.File.ReadAllTextAsync(Path.Combine(_options.KeysDirectory, "public_key.der")));
     }
 }

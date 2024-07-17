@@ -31,7 +31,7 @@ public class CertificateProviderTests
         var provider = new CertificateProvider(optionsMock.Object, certificateStoreServiceMock.Object);
 
         // Act
-        var result = provider.GetIssuerCertificate();
+        provider.GetIssuerCertificate();
 
         // Assert
         certMock.Verify(c => c.HasPrivateKey, Times.Once);
@@ -44,11 +44,9 @@ public class CertificateProviderTests
         var optionsMock = new Mock<IOptions<CertificateOptions>>();
         optionsMock.Setup(o => o.Value).Returns(new CertificateOptions { CommonName = "NonExistentCA" });
 
-        var certificates = new List<ICertificateWrapper>();
-
         var certificateStoreServiceMock = new Mock<ICertificateStoreService>();
         certificateStoreServiceMock.Setup(s => s.GetCertificates(StoreName.Root, StoreLocation.LocalMachine, X509FindType.FindBySubjectName, "NonExistentCA"))
-                                   .Returns(certificates);
+                                   .Returns([]);
 
         var provider = new CertificateProvider(optionsMock.Object, certificateStoreServiceMock.Object);
 
