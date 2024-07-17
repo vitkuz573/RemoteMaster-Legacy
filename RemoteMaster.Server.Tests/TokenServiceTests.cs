@@ -6,7 +6,6 @@ using System.IO.Abstractions.TestingHelpers;
 using System.Net;
 using System.Security.Claims;
 using System.Security.Cryptography;
-using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -24,12 +23,9 @@ public class TokenServiceTests
 {
     private readonly Mock<UserManager<ApplicationUser>> _mockUserManager;
     private readonly Mock<IHttpContextAccessor> _mockHttpContextAccessor;
-    private readonly Mock<IOptions<JwtOptions>> _mockOptions;
     private readonly Mock<IClaimsService> _mockClaimsService;
     private readonly ApplicationDbContext _context;
-    private readonly JwtOptions _options;
     private readonly TokenService _tokenService;
-    private readonly MockFileSystem _mockFileSystem;
 
     public TokenServiceTests()
     {
@@ -37,15 +33,15 @@ public class TokenServiceTests
         _mockHttpContextAccessor = new Mock<IHttpContextAccessor>();
         _mockClaimsService = new Mock<IClaimsService>();
 
-        _options = new JwtOptions
+        var options1 = new JwtOptions
         {
             KeysDirectory = "TestKeys",
             KeySize = 2048,
             KeyPassword = "TestPassword"
         };
 
-        _mockOptions = new Mock<IOptions<JwtOptions>>();
-        _mockOptions.Setup(o => o.Value).Returns(_options);
+        Mock<IOptions<JwtOptions>> mockOptions = new();
+        mockOptions.Setup(o => o.Value).Returns(options1);
 
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -54,16 +50,16 @@ public class TokenServiceTests
         _context = new ApplicationDbContext(options);
 
         using var rsa = RSA.Create(2048);
-        var privateKey = rsa.ExportEncryptedPkcs8PrivateKey(Encoding.UTF8.GetBytes("TestPassword"), new PbeParameters(PbeEncryptionAlgorithm.Aes256Cbc, HashAlgorithmName.SHA256, 100000));
+        var privateKey = rsa.ExportEncryptedPkcs8PrivateKey("TestPassword"u8, new PbeParameters(PbeEncryptionAlgorithm.Aes256Cbc, HashAlgorithmName.SHA256, 100000));
         var publicKey = rsa.ExportRSAPublicKey();
 
-        _mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
+        var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
         {
             { "TestKeys/private_key.der", new MockFileData(privateKey) },
             { "TestKeys/public_key.der", new MockFileData(publicKey) }
         });
 
-        _tokenService = new TokenService(_mockOptions.Object, _context, _mockHttpContextAccessor.Object, _mockUserManager.Object, _mockClaimsService.Object, _mockFileSystem);
+        _tokenService = new TokenService(mockOptions.Object, _context, _mockHttpContextAccessor.Object, _mockUserManager.Object, _mockClaimsService.Object, mockFileSystem);
     }
 
     [Fact]
@@ -77,17 +73,21 @@ public class TokenServiceTests
         };
 
         _mockUserManager.Setup(um => um.FindByIdAsync(It.IsAny<string>())).ReturnsAsync(user);
-        _mockUserManager.Setup(um => um.GetRolesAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(new List<string> { "User" });
+        _mockUserManager.Setup(um => um.GetRolesAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(["User"]);
 
-        _mockClaimsService.Setup(cs => cs.GetClaimsForUserAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(new List<Claim>
+        _mockClaimsService.Setup(cs => cs.GetClaimsForUserAsync(It.IsAny<ApplicationUser>())).ReturnsAsync([
+            new(ClaimTypes.Name, user.UserName),
+            new(ClaimTypes.NameIdentifier, user.Id),
+            new(ClaimTypes.Role, "User")
+        ]);
+
+        var httpContext = new DefaultHttpContext
         {
-            new Claim(ClaimTypes.Name, user.UserName),
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Role, "User")
-        });
-
-        var httpContext = new DefaultHttpContext();
-        httpContext.Connection.RemoteIpAddress = IPAddress.Parse("127.0.0.1");
+            Connection =
+            {
+                RemoteIpAddress = IPAddress.Parse("127.0.0.1")
+            }
+        };
 
         _mockHttpContextAccessor.Setup(h => h.HttpContext).Returns(httpContext);
 
@@ -140,6 +140,6 @@ public class TokenServiceTests
     {
         var store = new Mock<IUserStore<TUser>>();
 
-        return new Mock<UserManager<TUser>>(store.Object, null, null, null, null, null, null, null, null);
+        return new Mock<UserManager<TUser>>(store.Object, null!, null!, null!, null!, null!, null!, null!, null!);
     }
 }
