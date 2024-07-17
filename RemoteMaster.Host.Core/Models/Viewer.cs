@@ -11,6 +11,8 @@ public class Viewer(IScreenCapturingService screenCapturing, string connectionId
 {
     public IScreenCapturingService ScreenCapturing { get; } = screenCapturing;
 
+    public int FrameRate { get; set; }
+
     public string Group { get; } = group;
 
     public string ConnectionId { get; } = connectionId;

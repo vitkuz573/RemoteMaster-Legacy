@@ -10,6 +10,8 @@ public interface IViewer : IDisposable
 
     string ConnectionId { get; }
 
+    int FrameRate { get; set; }
+
     string Group { get; }
 
     string UserName { get; }

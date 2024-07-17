@@ -208,6 +208,8 @@ internal class Program
                     policy.Requirements.Add(new LocalhostOrAuthenticatedRequirement()))
                 .AddPolicy("ChangeSelectedScreenPolicy", policy =>
                     policy.RequireClaim("Screen", "ChangeSelectedScreen"))
+                .AddPolicy("SetFrameRatePolicy", policy =>
+                    policy.RequireClaim("Screen", "SetFrameRate"))
                 .AddPolicy("SetImageQualityPolicy", policy =>
                     policy.RequireClaim("Screen", "SetImageQuality"))
                 .AddPolicy("ToggleDrawCursorPolicy", policy =>

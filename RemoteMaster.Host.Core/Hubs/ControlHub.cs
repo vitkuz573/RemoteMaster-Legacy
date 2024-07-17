@@ -112,7 +112,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         var viewer = viewerFactory.Create(Context.ConnectionId, "Users", userName, role, ipAddress, authenticationType);
         appState.TryAddViewer(viewer);
 
-        screenCastingService.StartStreaming(viewer);
+        screenCastingService.StartStreaming(viewer, 60);
 
         var transportFeature = Context.Features.Get<IHttpTransportFeature>();
         var transportType = transportFeature?.TransportType.ToString() ?? "Unknown";
@@ -171,6 +171,12 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     public void BlockUserInput(bool blockInput)
     {
         inputService.BlockUserInput = blockInput;
+    }
+
+    [Authorize(Policy = "SetFrameRatePolicy")]
+    public void SetFrameRate(int frameRate)
+    {
+        ExecuteActionForViewer(viewer => viewer.FrameRate = frameRate);
     }
 
     [Authorize(Policy = "SetImageQualityPolicy")]

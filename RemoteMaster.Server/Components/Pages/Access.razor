@@ -46,6 +46,11 @@
                     }
                 </MudSelect>
             </MudNavLink>
+            
+            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Speed">
+                <MudText>Frame Rate</MudText>
+                <MudSlider T="int" Value="@_frameRate" Min="10" Max="100" ValueChanged="ChangeFrameRate" />
+            </MudNavLink>
 
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.HighQuality">
                 <MudText>Image Quality</MudText>

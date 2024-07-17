@@ -39,6 +39,7 @@ public partial class Access : IAsyncDisposable
     private bool _blockUserInput;
     private bool _drawCursor;
     private bool _useSkia;
+    private int _frameRate;
     private int _imageQuality;
     private string _hostVersion = string.Empty;
     private List<Display> _displays = [];
@@ -429,6 +430,13 @@ public partial class Access : IAsyncDisposable
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("ToggleUseSkia", value));
         QueryParameterService.UpdateParameter("useSkia", value.ToString());
+    }
+
+    private async Task ChangeFrameRate(int frameRate)
+    {
+        _frameRate = frameRate;
+
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SetFrameRate", frameRate));
     }
 
     private async Task ChangeQuality(int quality)

@@ -27,6 +27,7 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
         new("Input", "KeyboardInput"),
         new("Input", "ToggleInput"),
         new("Input", "BlockUserInput"),
+        new("Screen", "SetFrameRate"),
         new("Screen", "SetImageQuality"),
         new("Screen", "Recording"),
         new("Screen", "ToggleDrawCursor"),

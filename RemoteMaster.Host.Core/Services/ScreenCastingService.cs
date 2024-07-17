@@ -13,13 +13,14 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class ScreenCastingService(IHubContext<ControlHub, IControlClient> hubContext) : IScreenCastingService
 {
-    public void StartStreaming(IViewer viewer)
+    public void StartStreaming(IViewer viewer, int frameRate)
     {
         ArgumentNullException.ThrowIfNull(viewer);
 
+        viewer.FrameRate = frameRate;
         viewer.ScreenCapturing.ScreenChanged += async (_, bounds) => await SendScreenSize(viewer, bounds.Width, bounds.Height);
 
-        Log.Information("Starting screen streaming for connection ID {ConnectionId}, User: {UserName}", viewer.ConnectionId, viewer.UserName);
+        Log.Information("Starting screen streaming for connection ID {ConnectionId}, User: {UserName} at {FrameRate} FPS", viewer.ConnectionId, viewer.UserName, frameRate);
 
         Task.Run(async () => await StreamScreenDataAsync(viewer, viewer.CancellationTokenSource.Token), viewer.CancellationTokenSource.Token);
     }
@@ -43,13 +44,29 @@ public class ScreenCastingService(IHubContext<ControlHub, IControlClient> hubCon
         await hubContext.Clients.Client(viewer.ConnectionId).ReceiveScreenSize(new Size(width, height));
     }
 
+    private static async IAsyncEnumerable<byte[]> StreamScreenDataAsync(IScreenCapturingService screenCapturing, IViewer viewer, [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            var delay = 1000 / viewer.FrameRate;
+            var screenData = screenCapturing.GetNextFrame();
+
+            if (screenData != null)
+            {
+                yield return screenData;
+            }
+
+            await Task.Delay(delay, cancellationToken);
+        }
+    }
+
     private async Task StreamScreenDataAsync(IViewer viewer, CancellationToken cancellationToken)
     {
         await SendDisplays(viewer);
 
         try
         {
-            await foreach (var screenData in StreamScreenDataAsync(viewer.ScreenCapturing, cancellationToken))
+            await foreach (var screenData in StreamScreenDataAsync(viewer.ScreenCapturing, viewer, cancellationToken))
             {
                 await hubContext.Clients.Client(viewer.ConnectionId).ReceiveScreenUpdate(screenData);
             }
@@ -61,21 +78,6 @@ public class ScreenCastingService(IHubContext<ControlHub, IControlClient> hubCon
         catch (Exception ex)
         {
             Log.Error("An error occurred during streaming: {Message}", ex.Message);
-        }
-    }
-
-    private static async IAsyncEnumerable<byte[]> StreamScreenDataAsync(IScreenCapturingService screenCapturing, [EnumeratorCancellation] CancellationToken cancellationToken)
-    {
-        while (!cancellationToken.IsCancellationRequested)
-        {
-            var screenData = screenCapturing.GetNextFrame();
-
-            if (screenData != null)
-            {
-                yield return screenData;
-            }
-
-            await Task.Delay(16, cancellationToken);
         }
     }
 }
