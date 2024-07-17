@@ -14,8 +14,6 @@ namespace RemoteMaster.Server.Data;
 
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IConfiguration? configuration = null) : IdentityDbContext<ApplicationUser>(options)
 {
-    public DbSet<RefreshToken> RefreshTokens { get; set; }
-
     public DbSet<Organization> Organizations { get; set; }
 
     public DbSet<OrganizationalUnit> OrganizationalUnits { get; set; }

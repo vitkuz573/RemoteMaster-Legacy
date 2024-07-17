@@ -132,7 +132,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         return newRefreshTokenEntity;
     }
 
-    private void RevokeToken(RefreshToken token, TokenRevocationReason reason)
+    private async Task RevokeToken(RefreshToken token, TokenRevocationReason reason)
     {
         var ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
 
@@ -140,7 +140,23 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         token.RevokedByIp = ipAddress;
         token.RevocationReason = reason;
 
-        context.RefreshTokens.Update(token);
+        var user = context.Users
+            .Include(u => u.RefreshTokens)
+            .SingleOrDefault(u => u.RefreshTokens.Any(rt => rt.Token == token.Token));
+
+        if (user != null)
+        {
+            var refreshTokenEntity = user.RefreshTokens.SingleOrDefault(rt => rt.Token == token.Token);
+            
+            if (refreshTokenEntity != null)
+            {
+                refreshTokenEntity.Revoked = DateTime.UtcNow;
+                refreshTokenEntity.RevokedByIp = ipAddress;
+                refreshTokenEntity.RevocationReason = reason;
+            }
+        }
+
+        await context.SaveChangesAsync();
     }
 
     public async Task RevokeAllRefreshTokensAsync(string userId, TokenRevocationReason revocationReason)
@@ -158,7 +174,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         {
             foreach (var token in refreshTokens)
             {
-                RevokeToken(token, revocationReason);
+                await RevokeToken(token, revocationReason);
             }
 
             await context.SaveChangesAsync();
@@ -175,27 +191,31 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
     {
         Log.Debug("Starting cleanup of expired and revoked refresh tokens.");
 
-        var expiredTokens = await context.RefreshTokens
-            .Where(rt => rt.Expires < DateTime.UtcNow || rt.Revoked.HasValue)
+        var usersWithExpiredTokens = await context.Users
+            .Include(u => u.RefreshTokens)
+            .Where(u => u.RefreshTokens.Any(rt => rt.Expires < DateTime.UtcNow || rt.Revoked.HasValue))
             .ToListAsync();
 
-        if (expiredTokens.Count != 0)
+        foreach (var user in usersWithExpiredTokens)
         {
-            context.RefreshTokens.RemoveRange(expiredTokens);
+            var expiredTokens = user.RefreshTokens
+                .Where(rt => rt.Expires < DateTime.UtcNow || rt.Revoked.HasValue)
+                .ToList();
 
-            await context.SaveChangesAsync();
-
-            foreach (var token in expiredTokens)
+            if (expiredTokens.Count != 0)
             {
-                Log.Debug($"Removed token: {token.Token}, User ID: {token.UserId}, Expired at: {token.Expires}, Revoked at: {token.Revoked}");
-            }
+                context.RemoveRange(expiredTokens);
 
-            Log.Information($"Cleaned up {expiredTokens.Count} expired or revoked refresh tokens.");
+                foreach (var token in expiredTokens)
+                {
+                    Log.Debug($"Removed token: {token.Token}, User ID: {token.UserId}, Expired at: {token.Expires}, Revoked at: {token.Revoked}");
+                }
+            }
         }
-        else
-        {
-            Log.Information("No expired or revoked refresh tokens found to clean up.");
-        }
+
+        await context.SaveChangesAsync();
+
+        Log.Information($"Cleaned up expired or revoked refresh tokens.");
     }
 
     public bool IsTokenValid(string accessToken)
@@ -251,9 +271,11 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
             return false;
         }
 
-        var tokenEntity = context.RefreshTokens
-            .AsNoTracking()
-            .SingleOrDefault(rt => rt.Token == refreshToken);
+        var user = context.Users
+            .Include(u => u.RefreshTokens)
+            .SingleOrDefault(u => u.RefreshTokens.Any(rt => rt.Token == refreshToken));
+
+        var tokenEntity = user?.RefreshTokens.SingleOrDefault(rt => rt.Token == refreshToken);
 
         return tokenEntity?.IsActive ?? false;
     }
