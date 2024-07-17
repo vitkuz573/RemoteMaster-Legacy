@@ -73,8 +73,15 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     private static List<string> GetAvailableCodecs()
     {
+        if (!OperatingSystem.IsWindows())
+        {
+            Log.Warning("GetAvailableCodecs is only supported on Windows. Returning an empty list.");
+
+            return [];
+        }
+
         var codecs = ImageCodecInfo.GetImageEncoders();
-        
+
         return codecs.Where(codec => codec.MimeType != null && !ExcludedCodecs.Contains(codec.MimeType))
             .Select(codec => codec.MimeType!)
             .ToList();
