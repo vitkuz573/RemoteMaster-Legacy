@@ -10,8 +10,19 @@ using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Data;
 
-public class CertificateDbContext(DbContextOptions<CertificateDbContext> options, IConfiguration? configuration = null) : DbContext(options)
+public class CertificateDbContext : DbContext
 {
+    private readonly IConfiguration? _configuration;
+
+    public CertificateDbContext(DbContextOptions<CertificateDbContext> options) : base(options)
+    {
+    }
+
+    public CertificateDbContext(IConfiguration configuration)
+    {
+        _configuration = configuration;
+    }
+
     public DbSet<RevokedCertificate> RevokedCertificates { get; set; }
 
     public DbSet<CrlInfo> CrlInfos { get; set; }
@@ -19,12 +30,12 @@ public class CertificateDbContext(DbContextOptions<CertificateDbContext> options
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "DbContextOptionsBuilder will not be null.")]
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        if (configuration == null)
+        if (_configuration == null)
         {
             return;
         }
 
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var connectionString = _configuration.GetConnectionString("DefaultConnection");
 
         optionsBuilder.UseSqlServer(connectionString, options =>
         {

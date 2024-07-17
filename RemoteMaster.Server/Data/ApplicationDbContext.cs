@@ -12,8 +12,19 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Data;
 
-public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IConfiguration? configuration = null) : IdentityDbContext<ApplicationUser>(options)
+public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 {
+    private readonly IConfiguration? _configuration;
+
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+    {
+    }
+
+    public ApplicationDbContext(IConfiguration configuration)
+    {
+        _configuration = configuration;
+    }
+
     public DbSet<RefreshToken> RefreshTokens { get; set; }
 
     public DbSet<Organization> Organizations { get; set; }
@@ -29,12 +40,12 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "DbContextOptionsBuilder will not be null.")]
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        if (configuration == null)
+        if (_configuration == null)
         {
             return;
         }
 
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var connectionString = _configuration.GetConnectionString("DefaultConnection");
 
         optionsBuilder.UseSqlServer(connectionString, options =>
         {
