@@ -28,24 +28,26 @@ public class LocalhostOrAuthenticatedHandler(IHttpContextAccessor httpContextAcc
 
         var hasServiceFlagHeader = httpContext.Request.Headers.TryGetValue("X-Service-Flag", out var headerValue) && bool.TryParse(headerValue, out var flagValue) && flagValue;
 
-        if ((isLocal && hasServiceFlagHeader) || (context.User?.Identity?.IsAuthenticated ?? false))
+        if ((!isLocal || !hasServiceFlagHeader) && (!(context.User?.Identity?.IsAuthenticated ?? false)))
         {
-            if (isLocal && !(context.User?.Identity?.IsAuthenticated ?? false))
-            {
-                var claims = new List<Claim>
-                {
-                    new(ClaimTypes.Name, "RCHost"),
-                    new(ClaimTypes.Role, "Windows Service"),
-                    new("authType", "RemoteMaster Security")
-                };
-
-                var identity = new ClaimsIdentity(claims, "RemoteMaster Security");
-
-                context.User?.AddIdentity(identity);
-            }
-
-            context.Succeed(requirement);
+            return Task.CompletedTask;
         }
+
+        if (isLocal && !(context.User?.Identity?.IsAuthenticated ?? false))
+        {
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.Name, "RCHost"),
+                new(ClaimTypes.Role, "Windows Service"),
+                new("authType", "RemoteMaster Security")
+            };
+
+            var identity = new ClaimsIdentity(claims, "RemoteMaster Security");
+
+            context.User?.AddIdentity(identity);
+        }
+
+        context.Succeed(requirement);
 
         return Task.CompletedTask;
     }
