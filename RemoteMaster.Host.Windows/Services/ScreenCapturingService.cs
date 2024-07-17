@@ -29,7 +29,7 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
     public int ImageQuality { get; set; } = 25;
 
-    public bool UseSkia { get; set; } = true;
+    public bool UseSkia { get; set; } = false;
 
     protected Dictionary<string, int> Screens { get; } = [];
 

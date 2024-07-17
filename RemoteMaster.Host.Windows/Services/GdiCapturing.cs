@@ -53,7 +53,7 @@ public class GdiCapturing : ScreenCapturingService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Capturer error in GetFrame.");
+            Log.Error(ex, "Capturing error in GetFrame.");
 
             return null;
         }
@@ -82,7 +82,7 @@ public class GdiCapturing : ScreenCapturingService
             _cursorRenderService.DrawCursor(_memoryGraphics, CurrentScreenBounds);
         }
 
-        return UseSkia ? SaveBitmap(_bitmap) : BitmapToByteArray(_bitmap);
+        return UseSkia ? SaveBitmap(_bitmap) : BitmapToByteArray(_bitmap, ImageQuality);
     }
 
     private byte[] GetVirtualScreenFrame()
@@ -150,11 +150,21 @@ public class GdiCapturing : ScreenCapturingService
         _memoryGraphics.Dispose();
     }
 
-    private static byte[] BitmapToByteArray(Bitmap bitmap)
+    private static byte[] BitmapToByteArray(Bitmap bitmap, int quality)
     {
         using var memoryStream = new MemoryStream();
-        bitmap.Save(memoryStream, ImageFormat.Png);
+        using var encoderParameters = new EncoderParameters(1);
+        encoderParameters.Param[0] = new EncoderParameter(Encoder.Quality, quality);
+        var jpegCodec = GetEncoderInfo("image/jpeg");
+
+        bitmap.Save(memoryStream, jpegCodec, encoderParameters);
 
         return memoryStream.ToArray();
+    }
+
+    private static ImageCodecInfo? GetEncoderInfo(string mimeType)
+    {
+        var codecs = ImageCodecInfo.GetImageEncoders();
+        return codecs.FirstOrDefault(codec => codec.MimeType == mimeType);
     }
 }
