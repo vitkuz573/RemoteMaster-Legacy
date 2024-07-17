@@ -31,6 +31,8 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
     public bool UseSkia { get; set; } = false;
 
+    public string? SelectedCodec { get; set; } = "image/jpeg";
+
     protected Dictionary<string, int> Screens { get; } = [];
 
     public abstract Rectangle CurrentScreenBounds { get; protected set; }

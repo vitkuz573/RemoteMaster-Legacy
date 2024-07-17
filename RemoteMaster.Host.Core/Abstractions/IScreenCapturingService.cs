@@ -15,6 +15,8 @@ public interface IScreenCapturingService : IDisposable
 
     bool UseSkia { get; set; }
 
+    string? SelectedCodec { get; set; }
+
     event EventHandler<Rectangle> ScreenChanged;
 
     Rectangle CurrentScreenBounds { get; }

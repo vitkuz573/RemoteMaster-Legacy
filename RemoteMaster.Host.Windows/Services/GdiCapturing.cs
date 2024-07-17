@@ -82,7 +82,7 @@ public class GdiCapturing : ScreenCapturingService
             _cursorRenderService.DrawCursor(_memoryGraphics, CurrentScreenBounds);
         }
 
-        return UseSkia ? SaveBitmap(_bitmap) : BitmapToByteArray(_bitmap, ImageQuality);
+        return UseSkia ? SaveBitmap(_bitmap) : BitmapToByteArray(_bitmap, ImageQuality, SelectedCodec);
     }
 
     private byte[] GetVirtualScreenFrame()
@@ -150,21 +150,39 @@ public class GdiCapturing : ScreenCapturingService
         _memoryGraphics.Dispose();
     }
 
-    private static byte[] BitmapToByteArray(Bitmap bitmap, int quality)
+    private static byte[] BitmapToByteArray(Bitmap bitmap, int quality, string? codec)
     {
         using var memoryStream = new MemoryStream();
         using var encoderParameters = new EncoderParameters(1);
         encoderParameters.Param[0] = new EncoderParameter(Encoder.Quality, quality);
-        var jpegCodec = GetEncoderInfo("image/jpeg");
+        
+        var imageCodec = GetEncoderInfo(codec);
 
-        bitmap.Save(memoryStream, jpegCodec, encoderParameters);
+        if (imageCodec != null)
+        {
+            bitmap.Save(memoryStream, imageCodec, encoderParameters);
+        }
+        else
+        {
+            var pngCodec = GetEncoderInfo("image/png");
+
+            if (pngCodec != null)
+            {
+                bitmap.Save(memoryStream, pngCodec, null);
+            }
+            else
+            {
+                throw new InvalidOperationException("No suitable codec found");
+            }
+        }
 
         return memoryStream.ToArray();
     }
 
-    private static ImageCodecInfo? GetEncoderInfo(string mimeType)
+    private static ImageCodecInfo? GetEncoderInfo(string? mimeType)
     {
         var codecs = ImageCodecInfo.GetImageEncoders();
+
         return codecs.FirstOrDefault(codec => codec.MimeType == mimeType);
     }
 }

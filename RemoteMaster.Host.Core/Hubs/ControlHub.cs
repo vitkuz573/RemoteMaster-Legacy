@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Drawing.Imaging;
 using System.Net;
 using System.Reflection;
 using System.Security.Claims;
@@ -42,7 +43,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
                 if (query.ContainsKey("thumbnail") && query["thumbnail"] == "true")
                 {
                     await HandleThumbnailRequest();
-                    
+
                     return;
                 }
 
@@ -58,10 +59,21 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
                     await Groups.AddToGroupAsync(Context.ConnectionId, "Services");
                 }
+
+                var codecs = GetAvailableCodecs();
+
+                await Clients.Caller.ReceiveAvailableCodecs(codecs);
             }
         }
 
         await base.OnConnectedAsync();
+    }
+
+    private static List<string> GetAvailableCodecs()
+    {
+        var codecs = ImageCodecInfo.GetImageEncoders();
+
+        return codecs.Select(codec => codec.MimeType).ToList();
     }
 
     private static string GetAuthenticationType(ClaimsPrincipal user)
@@ -167,10 +179,16 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         ExecuteActionForViewer(viewer => viewer.ScreenCapturing.UseSkia = useSkia);
     }
 
-    [Authorize(Policy = "ToggleDrawCursorPolicy")]
-    public void ToggleDrawCursor(bool trackCursor)
+    [Authorize(Policy = "SetCodecPolicy")]
+    public void SetCodec(string codec)
     {
-        ExecuteActionForViewer(viewer => viewer.ScreenCapturing.DrawCursor = trackCursor);
+        ExecuteActionForViewer(viewer => viewer.ScreenCapturing.SelectedCodec = codec);
+    }
+
+    [Authorize(Policy = "ToggleDrawCursorPolicy")]
+    public void ToggleDrawCursor(bool drawCursor)
+    {
+        ExecuteActionForViewer(viewer => viewer.ScreenCapturing.DrawCursor = drawCursor);
     }
 
     [Authorize(Policy = "TerminateHostPolicy")]

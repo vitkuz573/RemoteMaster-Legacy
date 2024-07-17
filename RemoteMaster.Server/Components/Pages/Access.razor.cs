@@ -42,7 +42,9 @@ public partial class Access : IAsyncDisposable
     private int _imageQuality;
     private string _hostVersion = string.Empty;
     private List<Display> _displays = [];
+    private List<string> _codecs = [];
     private string _selectedDisplay = string.Empty;
+    private string _selectedCodec = string.Empty;
     private ElementReference _screenImageElement;
     private string? _accessToken;
     private List<ViewerDto> _viewers = [];
@@ -276,7 +278,7 @@ public partial class Access : IAsyncDisposable
                 .AddMessagePackProtocol()
                 .Build();
 
-            _connection.On<IEnumerable<Display>>("ReceiveDisplays", (displays) =>
+            _connection.On<IEnumerable<Display>>("ReceiveDisplays", displays =>
             {
                 _displays = displays.ToList();
 
@@ -286,6 +288,13 @@ public partial class Access : IAsyncDisposable
                 {
                     _selectedDisplay = primaryDisplay.Name;
                 }
+            });
+
+            _connection.On<IEnumerable<string>>("ReceiveAvailableCodecs", codecs =>
+            {
+                _codecs = codecs.ToList();
+
+                _selectedCodec = _codecs.FirstOrDefault();
             });
 
             _connection.On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate);
@@ -435,6 +444,13 @@ public partial class Access : IAsyncDisposable
         _selectedDisplay = display;
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("ChangeSelectedScreen", display));
+    }
+
+    private async void OnChangeCodec(string codec)
+    {
+        _selectedCodec = codec;
+
+        await SafeInvokeAsync(() => _connection.InvokeAsync("SetCodec", codec));
     }
 
     private async Task<bool> IsPolicyPermittedAsync(string policyName)

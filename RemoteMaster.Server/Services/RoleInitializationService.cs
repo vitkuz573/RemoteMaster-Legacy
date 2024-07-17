@@ -32,6 +32,7 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
         new("Screen", "ToggleDrawCursor"),
         new("Screen", "ChangeSelectedScreen"),
         new("Screen", "ToggleUseSkia"),
+        new("Screen", "SetCodec"),
         new("Power", "RebootComputer"),
         new("Power", "ShutdownComputer"),
         new("Power", "WakeUpComputer"),

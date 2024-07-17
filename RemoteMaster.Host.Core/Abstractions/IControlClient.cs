@@ -30,4 +30,6 @@ public interface IControlClient
     Task ReceiveAllViewers(List<ViewerDto> viewers);
 
     Task ReceiveError(string message);
+
+    Task ReceiveAvailableCodecs(IEnumerable<string> codecs);
 }

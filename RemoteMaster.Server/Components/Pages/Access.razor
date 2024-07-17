@@ -37,6 +37,15 @@
                     }
                 </MudSelect>
             </MudNavLink>
+            
+            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.DisplaySettings">
+                <MudSelect Value="@_selectedCodec" ValueChanged="OnChangeCodec" Label="Codec" T="string" Dense="true">
+                    @foreach (var codecItem in _codecs)
+                    {
+                        <MudSelectItem Value="@codecItem">@codecItem</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudNavLink>
 
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.HighQuality">
                 <MudText>Image Quality</MudText>
