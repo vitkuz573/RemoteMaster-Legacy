@@ -68,7 +68,7 @@
                     <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.DeleteSweep" OnClick="KillHost">Kill Host</MudNavLink>
                     <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Lock" OnClick="LockWorkStation">Lock Workstation</MudNavLink>
                     <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Logout" OnClick="LogOffUser">Logoff User</MudNavLink>
-                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.ControlPoint" OnClick="SendCtrlAltDel" Disabled="@(!_viewers.Any(v => v.Group == "Services" && v.UserName == "RCHost"))">Send Ctrl+Alt+Del</MudNavLink>
+                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.ControlPoint" OnClick="SendCtrlAltDel" Disabled="@(_viewers.All(v => v.AuthenticationType != "RemoteMaster Security"))">Send Ctrl+Alt+Del</MudNavLink>
                     <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.History" OnClick="RebootComputer">Reboot Computer</MudNavLink>
                     <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.PowerOff" OnClick="ShutdownComputer">Shutdown Computer</MudNavLink>
                 </Authorized>
