@@ -4,6 +4,7 @@
 
 using Asp.Versioning.ApiExplorer;
 using Microsoft.Extensions.Options;
+using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace RemoteMaster.Server.Models;
@@ -16,7 +17,7 @@ public class ConfigureSwaggerOptions(IApiVersionDescriptionProvider provider) : 
         {
             options.SwaggerDoc(
                 description.GroupName,
-                new Microsoft.OpenApi.Models.OpenApiInfo
+                new OpenApiInfo
                 {
                     Title = $"RemoteMaster Server API {description.ApiVersion}",
                     Version = description.ApiVersion.ToString(),
