@@ -19,8 +19,14 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
             .WithMany(o => o.AccessibleUsers)
             .UsingEntity<Dictionary<string, object>>(
                 "UserOrganizations",
-                j => j.HasOne<Organization>().WithMany().HasForeignKey("OrganizationId"),
-                j => j.HasOne<ApplicationUser>().WithMany().HasForeignKey("UserId"),
+                j => j.HasOne<Organization>()
+                      .WithMany()
+                      .HasForeignKey("OrganizationId")
+                      .OnDelete(DeleteBehavior.Cascade),
+                j => j.HasOne<ApplicationUser>()
+                      .WithMany()
+                      .HasForeignKey("UserId")
+                      .OnDelete(DeleteBehavior.Cascade),
                 j =>
                 {
                     j.HasKey("OrganizationId", "UserId");
@@ -33,8 +39,14 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
             .WithMany(ou => ou.AccessibleUsers)
             .UsingEntity<Dictionary<string, object>>(
                 "UserOrganizationalUnits",
-                j => j.HasOne<OrganizationalUnit>().WithMany().HasForeignKey("OrganizationalUnitId"),
-                j => j.HasOne<ApplicationUser>().WithMany().HasForeignKey("UserId"),
+                j => j.HasOne<OrganizationalUnit>()
+                      .WithMany()
+                      .HasForeignKey("OrganizationalUnitId")
+                      .OnDelete(DeleteBehavior.Cascade),
+                j => j.HasOne<ApplicationUser>()
+                      .WithMany()
+                      .HasForeignKey("UserId")
+                      .OnDelete(DeleteBehavior.Cascade),
                 j =>
                 {
                     j.HasKey("OrganizationalUnitId", "UserId");
