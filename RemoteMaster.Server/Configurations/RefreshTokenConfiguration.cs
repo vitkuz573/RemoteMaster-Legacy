@@ -5,6 +5,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using RemoteMaster.Server.Enums;
 using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Configurations;
@@ -50,6 +51,7 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
         builder.Property(rt => rt.RevocationReason)
             .HasConversion<string>()
             .IsRequired()
+            .HasDefaultValue(TokenRevocationReason.None)
             .HasColumnOrder(7);
 
         builder.HasIndex(rt => rt.UserId);
@@ -62,7 +64,6 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
 
         builder.HasOne(rt => rt.ReplacedByToken)
             .WithOne()
-            .HasForeignKey<RefreshToken>(rt => rt.ReplacedByTokenId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.ToTable("RefreshTokens");
