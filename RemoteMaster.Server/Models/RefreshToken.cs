@@ -90,7 +90,7 @@ public class RefreshToken : IValidatableObject
     {
         if (RevocationReason == TokenRevocationReason.Replaced && ReplacedByToken == null)
         {
-            yield return new ValidationResult("ReplacedByToken must be specified if the RevocationReason is Replaced.", new[] { "ReplacedByToken" });
+            yield return new ValidationResult("ReplacedByToken must be specified if the RevocationReason is Replaced.", ["ReplacedByToken"]);
         }
     }
 }
