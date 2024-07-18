@@ -47,6 +47,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     {
         base.OnModelCreating(builder);
 
+        builder.ApplyConfiguration(new ComputerConfiguration());
         builder.ApplyConfiguration(new OrganizationConfiguration());
         builder.ApplyConfiguration(new RefreshTokenConfiguration());
         builder.ApplyConfiguration(new OrganizationalUnitConfiguration());

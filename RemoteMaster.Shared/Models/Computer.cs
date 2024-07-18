@@ -2,9 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Net.NetworkInformation;
 using System.Text.Json.Serialization;
 using RemoteMaster.Shared.Abstractions;
 
@@ -12,7 +9,6 @@ namespace RemoteMaster.Shared.Models;
 
 public class Computer : INode, IEquatable<Computer>
 {
-    [Key]
     [JsonIgnore]
     public Guid NodeId { get; set; }
 
@@ -26,13 +22,11 @@ public class Computer : INode, IEquatable<Computer>
     public required string MacAddress { get; set; }
 
     [JsonIgnore]
-    [NotMapped]
     public byte[]? Thumbnail { get; set; }
 
     [JsonIgnore]
     public Guid? ParentId { get; set; }
 
-    [ForeignKey(nameof(ParentId))]
     [JsonIgnore]
     public INode? Parent { get; set; }
 
