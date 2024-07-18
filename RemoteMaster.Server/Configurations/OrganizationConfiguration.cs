@@ -39,6 +39,11 @@ public class OrganizationConfiguration : IEntityTypeConfiguration<Organization>
         builder.HasIndex(o => o.Name)
             .IsUnique();
 
+        builder.HasMany(o => o.OrganizationalUnits)
+            .WithOne(ou => ou.Organization)
+            .HasForeignKey(ou => ou.OrganizationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.Ignore(o => o.ParentId);
         builder.Ignore(o => o.Parent);
     }
