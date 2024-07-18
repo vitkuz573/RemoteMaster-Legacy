@@ -22,18 +22,22 @@ public class OrganizationConfiguration : IEntityTypeConfiguration<Organization>
 
         builder.Property(o => o.Name)
             .IsRequired()
+            .HasMaxLength(50)
             .HasColumnOrder(1);
 
         builder.Property(o => o.Locality)
             .IsRequired()
+            .HasMaxLength(100)
             .HasColumnOrder(2);
 
         builder.Property(o => o.State)
             .IsRequired()
+            .HasMaxLength(100)
             .HasColumnOrder(3);
 
         builder.Property(o => o.Country)
             .IsRequired()
+            .HasMaxLength(100)
             .HasColumnOrder(4);
 
         builder.HasIndex(o => o.Name)

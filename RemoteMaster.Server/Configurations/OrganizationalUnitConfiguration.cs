@@ -22,6 +22,7 @@ public class OrganizationalUnitConfiguration : IEntityTypeConfiguration<Organiza
 
         builder.Property(ou => ou.Name)
             .IsRequired()
+            .HasMaxLength(50)
             .HasColumnOrder(1);
 
         builder.Property(ou => ou.ParentId)
