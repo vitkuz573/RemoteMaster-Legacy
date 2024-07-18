@@ -124,7 +124,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         refreshTokenEntity.Revoked = DateTime.UtcNow;
         refreshTokenEntity.RevokedByIp = ipAddress;
-        refreshTokenEntity.RevocationReason = TokenRevocationReason.ReplacedDuringRefresh;
+        refreshTokenEntity.RevocationReason = TokenRevocationReason.Replaced;
         refreshTokenEntity.ReplacedByToken = newRefreshTokenEntity;
 
         await context.SaveChangesAsync();

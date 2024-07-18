@@ -86,7 +86,7 @@ public partial class Login
                 return;
             }
 
-            await TokenService.RevokeAllRefreshTokensAsync(user.Id, TokenRevocationReason.PreemptiveSecurity);
+            await TokenService.RevokeAllRefreshTokensAsync(user.Id, TokenRevocationReason.PreemptiveRevocation);
 
             Log.Information("User logged in. All previous refresh tokens revoked.");
 

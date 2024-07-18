@@ -43,7 +43,7 @@ public class RefreshToken : IValidatableObject
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        if (RevocationReason == TokenRevocationReason.ReplacedDuringRefresh && ReplacedByTokenId == null)
+        if (RevocationReason == TokenRevocationReason.Replaced && ReplacedByTokenId == null)
         {
             yield return new ValidationResult("ReplacedByToken must be specified if the RevocationReason is ReplacedDuringRefresh.", new[] { "ReplacedByTokenId" });
         }
