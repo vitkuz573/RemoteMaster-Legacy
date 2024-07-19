@@ -34,7 +34,7 @@ public partial class Access : IAsyncDisposable
     private string _transportType = string.Empty;
     private string? _screenDataUrl;
     private bool _drawerOpen;
-    private HubConnection _connection = null!;
+    private HubConnection? _connection;
     private bool _inputEnabled;
     private bool _blockUserInput;
     private bool _drawCursor;
@@ -45,7 +45,7 @@ public partial class Access : IAsyncDisposable
     private List<Display> _displays = [];
     private List<string> _codecs = [];
     private string _selectedDisplay = string.Empty;
-    private string _selectedCodec = string.Empty;
+    private string? _selectedCodec = string.Empty;
     private ElementReference _screenImageElement;
     private string? _accessToken;
     private List<ViewerDto> _viewers = [];
@@ -210,26 +210,51 @@ public partial class Access : IAsyncDisposable
 
     private async Task KillHost()
     {
+        if (_connection == null)
+        {
+            return;
+        }
+
         await SafeInvokeAsync(() => _connection.InvokeAsync("TerminateHost"), true);
     }
 
     private async Task LockWorkStation()
     {
+        if (_connection == null)
+        {
+            return;
+        }
+
         await SafeInvokeAsync(() => _connection.InvokeAsync("LockWorkStation"), true);
     }
 
     private async Task LogOffUser()
     {
+        if (_connection == null)
+        {
+            return;
+        }
+
         await SafeInvokeAsync(() => _connection.InvokeAsync("LogOffUser", true), true);
     }
 
     private async Task SendCtrlAltDel()
     {
+        if (_connection == null)
+        {
+            return;
+        }
+
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendCommandToService", "CtrlAltDel"), true);
     }
 
     private async Task RebootComputer()
     {
+        if (_connection == null)
+        {
+            return;
+        }
+
         var powerActionRequest = new PowerActionRequest
         {
             Message = string.Empty,
@@ -242,6 +267,11 @@ public partial class Access : IAsyncDisposable
 
     private async Task ShutdownComputer()
     {
+        if (_connection == null)
+        {
+            return;
+        }
+
         var powerActionRequest = new PowerActionRequest
         {
             Message = string.Empty,
@@ -349,6 +379,11 @@ public partial class Access : IAsyncDisposable
 
     private async Task TryStartConnectionAsync()
     {
+        if (_connection == null)
+        {
+            return;
+        }
+
         try
         {
             await _connection.StartAsync();
@@ -405,6 +440,11 @@ public partial class Access : IAsyncDisposable
 
     private async Task ToggleInputEnabled(bool value)
     {
+        if (_connection == null)
+        {
+            return;
+        }
+
         _inputEnabled = value;
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("ToggleInput", value), true);
@@ -413,6 +453,11 @@ public partial class Access : IAsyncDisposable
 
     private async Task ToggleBlockUserInput(bool value)
     {
+        if (_connection == null)
+        {
+            return;
+        }
+
         _blockUserInput = value;
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("BlockUserInput", value), true);
@@ -420,6 +465,11 @@ public partial class Access : IAsyncDisposable
 
     private async Task ToggleDrawCursor(bool value)
     {
+        if (_connection == null)
+        {
+            return;
+        }
+
         _drawCursor = value;
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("ToggleDrawCursor", value));
@@ -428,6 +478,11 @@ public partial class Access : IAsyncDisposable
 
     private async Task ToggleUseSkia(bool value)
     {
+        if (_connection == null)
+        {
+            return;
+        }
+
         _useSkia = value;
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("ToggleUseSkia", value));
@@ -436,6 +491,11 @@ public partial class Access : IAsyncDisposable
 
     private async Task ChangeFrameRate(int frameRate)
     {
+        if (_connection == null)
+        {
+            return;
+        }
+
         _frameRate = frameRate;
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("SetFrameRate", frameRate));
@@ -444,6 +504,11 @@ public partial class Access : IAsyncDisposable
 
     private async Task ChangeQuality(int quality)
     {
+        if (_connection == null)
+        {
+            return;
+        }
+
         _imageQuality = quality;
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("SetImageQuality", quality));
@@ -452,6 +517,11 @@ public partial class Access : IAsyncDisposable
 
     private async void OnChangeScreen(string display)
     {
+        if (_connection == null)
+        {
+            return;
+        }
+
         _selectedDisplay = display;
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("ChangeSelectedScreen", display));
@@ -459,6 +529,11 @@ public partial class Access : IAsyncDisposable
 
     private async void OnChangeCodec(string codec)
     {
+        if (_connection == null)
+        {
+            return;
+        }
+
         _selectedCodec = codec;
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("SetCodec", codec));

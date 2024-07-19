@@ -51,7 +51,7 @@ public static class Program
         {
             var minimumLevelOverrides = new Dictionary<string, LogEventLevel>
             {
-                { "Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning },
+                // { "Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning },
                 { "Microsoft.AspNetCore", LogEventLevel.Warning }
             };
 
