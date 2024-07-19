@@ -227,6 +227,31 @@ public class DatabaseServiceTests : IDisposable
         Assert.Equal(newParent.NodeId, movedNode.ParentId);
     }
 
+    [Fact]
+    public async Task GetNodesAsync_WithPredicate_ReturnsFilteredNodes()
+    {
+        using var scope = CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+
+        // Arrange
+        context.OrganizationalUnits.RemoveRange(context.OrganizationalUnits);
+        var nodes = new List<OrganizationalUnit>
+        {
+            new() { NodeId = Guid.NewGuid(), Name = "OU1" },
+            new() { NodeId = Guid.NewGuid(), Name = "OU2" }
+        };
+        context.OrganizationalUnits.AddRange(nodes);
+        await context.SaveChangesAsync();
+
+        // Act
+        var result = await databaseService.GetNodesAsync<OrganizationalUnit>(ou => ou.Name == "OU1");
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal("OU1", result[0].Name);
+    }
+
     public void Dispose()
     {
         _serviceProvider.Dispose();
