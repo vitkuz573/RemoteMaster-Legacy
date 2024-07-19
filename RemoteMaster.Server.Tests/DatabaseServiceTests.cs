@@ -282,7 +282,7 @@ public class DatabaseServiceTests : IDisposable
         };
 
         // Act & Assert
-        await Assert.ThrowsAsync<DbUpdateConcurrencyException>(async () =>
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
             await databaseService.UpdateComputerAsync(nonExistentComputer, "192.168.0.1", "NewName"));
     }
 
