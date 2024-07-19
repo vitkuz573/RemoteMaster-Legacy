@@ -37,7 +37,7 @@ public partial class Home
     private ClaimsPrincipal? _user;
     private ApplicationUser? _currentUser;
 
-    private IDictionary<NotificationMessage, bool>? _messages = null;
+    private IDictionary<NotificationMessage, bool>? _messages;
 
     protected async override Task OnInitializedAsync()
     {
@@ -68,7 +68,7 @@ public partial class Home
         await InitializeAsync();
     }
 
-    public async Task InitializeAsync()
+    private async Task InitializeAsync()
     {
         if (_currentUser == null)
         {
@@ -85,12 +85,7 @@ public partial class Home
         _messages = await NotificationService.GetNotifications();
     }
 
-    public List<TreeItemData<INode>> GetTreeItems()
-    {
-        return _treeItems;
-    }
-
-    public bool DrawerOpen { get; private set; }
+    private bool DrawerOpen { get; set; }
 
     private async Task<IEnumerable<INode>> LoadNodes(Guid? organizationId = null, Guid? parentId = null)
     {
@@ -159,7 +154,7 @@ public partial class Home
         return units;
     }
 
-    public void ToggleDrawer() => DrawerOpen = !DrawerOpen;
+    private void ToggleDrawer() => DrawerOpen = !DrawerOpen;
 
     [Authorize(Roles = "Administrator")]
     private async Task OpenHostConfig()
