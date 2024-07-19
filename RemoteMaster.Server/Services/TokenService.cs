@@ -191,31 +191,24 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
     {
         Log.Debug("Starting cleanup of expired and revoked refresh tokens.");
 
-        var usersWithExpiredTokens = await context.Users
-            .Include(u => u.RefreshTokens)
-            .Where(u => u.RefreshTokens.Any(rt => rt.Expires < DateTime.UtcNow || rt.Revoked.HasValue))
+        var expiredTokens = await context.Users
+            .SelectMany(u => u.RefreshTokens)
+            .Where(rt => rt.Expires < DateTime.UtcNow || rt.Revoked.HasValue)
             .ToListAsync();
 
-        foreach (var user in usersWithExpiredTokens)
+        if (expiredTokens.Count != 0)
         {
-            var expiredTokens = user.RefreshTokens
-                .Where(rt => rt.Expires < DateTime.UtcNow || rt.Revoked.HasValue)
-                .ToList();
+            context.RemoveRange(expiredTokens);
 
-            if (expiredTokens.Count != 0)
+            foreach (var token in expiredTokens)
             {
-                context.RemoveRange(expiredTokens);
-
-                foreach (var token in expiredTokens)
-                {
-                    Log.Debug($"Removed token: {token.Token}, User ID: {token.UserId}, Expired at: {token.Expires}, Revoked at: {token.Revoked}");
-                }
+                Log.Debug($"Removed token: {token.Token}, User ID: {token.UserId}, Expired at: {token.Expires}, Revoked at: {token.Revoked}");
             }
+
+            await context.SaveChangesAsync();
         }
 
-        await context.SaveChangesAsync();
-
-        Log.Information($"Cleaned up expired or revoked refresh tokens.");
+        Log.Information("Cleaned up expired or revoked refresh tokens.");
     }
 
     public bool IsTokenValid(string accessToken)
