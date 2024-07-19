@@ -311,35 +311,39 @@ internal class Program
 
         foreach (var arg in args)
         {
-            if (arg.StartsWith("--"))
+            if (!arg.StartsWith("--"))
             {
-                var equalIndex = arg.IndexOf('=');
-                string key;
-                var value = "";
+                continue;
+            }
 
-                if (equalIndex >= 0)
-                {
-                    key = arg[2..equalIndex];
-                    value = arg[(equalIndex + 1)..];
-                }
-                else
-                {
-                    key = arg[2..];
-                    value = "true";
-                }
+            var equalIndex = arg.IndexOf('=');
+            string key;
+            var value = "";
 
-                if (launchModeInstance.Parameters.ContainsKey(key))
-                {
-                    launchModeInstance.Parameters[key].Value = value;
-                }
+            if (equalIndex >= 0)
+            {
+                key = arg[2..equalIndex];
+                value = arg[(equalIndex + 1)..];
+            }
+            else
+            {
+                key = arg[2..];
+                value = "true";
+            }
+
+            if (launchModeInstance.Parameters.ContainsKey(key))
+            {
+                launchModeInstance.Parameters[key].Value = value;
             }
         }
 
-        if (helpRequested)
+        if (!helpRequested)
         {
-            PrintHelp(launchModeInstance);
-            Environment.Exit(0);
+            return launchModeInstance;
         }
+
+        PrintHelp(launchModeInstance);
+        Environment.Exit(0);
 
         return launchModeInstance;
     }
@@ -407,15 +411,17 @@ internal class Program
 
             foreach (var mode in launchModes)
             {
-                if (mode != null)
+                if (mode == null)
                 {
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine($"{mode.Name} Mode:");
-                    Console.ResetColor();
-
-                    Console.WriteLine($"  {mode.Description}");
-                    Console.WriteLine();
+                    continue;
                 }
+
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine($"{mode.Name} Mode:");
+                Console.ResetColor();
+
+                Console.WriteLine($"  {mode.Description}");
+                Console.WriteLine();
             }
 
             Console.ForegroundColor = ConsoleColor.Yellow;
