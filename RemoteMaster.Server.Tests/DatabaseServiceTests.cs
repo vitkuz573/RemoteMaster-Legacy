@@ -252,6 +252,61 @@ public class DatabaseServiceTests : IDisposable
         Assert.Equal("OU1", result[0].Name);
     }
 
+    [Fact]
+    public async Task MoveNodesAsync_WithEmptyNodeIds_DoesNothing()
+    {
+        using var scope = CreateScope();
+        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+
+        // Act
+        await databaseService.MoveNodesAsync([], Guid.NewGuid());
+
+        // Assert
+        // No exception should be thrown and method should complete
+    }
+
+    [Fact]
+    public async Task UpdateComputerAsync_ThrowsException_IfComputerNotFound()
+    {
+        using var scope = CreateScope();
+        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+
+        // Arrange
+        var nonExistentComputer = new Computer
+        {
+            NodeId = Guid.NewGuid(),
+            IpAddress = "127.0.0.1",
+            Name = "NonExistent",
+            MacAddress = "00:00:00:00:00:00",
+            ParentId = Guid.NewGuid()
+        };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<DbUpdateConcurrencyException>(async () =>
+            await databaseService.UpdateComputerAsync(nonExistentComputer, "192.168.0.1", "NewName"));
+    }
+
+    [Fact]
+    public async Task MoveNodesAsync_DoesNotChangeParentId_ForSameNodeAndParent()
+    {
+        using var scope = CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+
+        // Arrange
+        var parentNode = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "Parent" };
+        var childNode = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "Child", ParentId = parentNode.NodeId };
+        context.OrganizationalUnits.AddRange(parentNode, childNode);
+        await context.SaveChangesAsync();
+
+        // Act
+        await databaseService.MoveNodesAsync([childNode.NodeId, parentNode.NodeId], parentNode.NodeId);
+
+        // Assert
+        var unchangedNode = await context.OrganizationalUnits.FindAsync(childNode.NodeId);
+        Assert.Equal(parentNode.NodeId, unchangedNode.ParentId);
+    }
+
     public void Dispose()
     {
         _serviceProvider.Dispose();
