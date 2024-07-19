@@ -50,6 +50,6 @@ public class OrganizationalUnitConfiguration : IEntityTypeConfiguration<Organiza
             .WithOne(c => (OrganizationalUnit?)c.Parent)
             .HasForeignKey(c => c.ParentId)
             .IsRequired()
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
