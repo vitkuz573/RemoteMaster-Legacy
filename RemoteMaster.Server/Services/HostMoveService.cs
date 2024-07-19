@@ -8,21 +8,22 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class HostMoveRequestService(IEventNotificationService eventNotificationService) : IHostMoveRequestService
+public class HostMoveService(IEventNotificationService eventNotificationService) : IHostMoveRequestService
 {
     private static readonly string ProgramDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
     private static readonly string HostMoveRequestsFilePath = Path.Combine(ProgramDataPath, "RemoteMaster", "Server", "HostMoveRequests.json");
 
     public async Task<List<HostMoveRequest>> GetHostMoveRequestsAsync()
     {
-        if (File.Exists(HostMoveRequestsFilePath))
+        if (!File.Exists(HostMoveRequestsFilePath))
         {
-            var json = await File.ReadAllTextAsync(HostMoveRequestsFilePath);
-
-            return JsonSerializer.Deserialize<List<HostMoveRequest>>(json) ?? [];
+            return [];
         }
 
-        return [];
+        var json = await File.ReadAllTextAsync(HostMoveRequestsFilePath);
+
+        return JsonSerializer.Deserialize<List<HostMoveRequest>>(json) ?? [];
+
     }
 
     public async Task SaveHostMoveRequestsAsync(List<HostMoveRequest> hostMoveRequests)

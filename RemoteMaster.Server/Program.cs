@@ -170,7 +170,7 @@ public static class Program
         services.AddSingleton<IEventNotificationService, TelegramEventNotificationService>();
         services.AddSingleton<ICertificateStoreService, CertificateStoreService>();
         services.AddSingleton<IValidateOptions<JwtOptions>, JwtOptionsValidator>();
-        services.AddSingleton<IHostMoveRequestService, HostMoveRequestService>();
+        services.AddSingleton<IHostMoveRequestService, HostMoveService>();
         services.AddSingleton<INotificationService, InMemoryNotificationService>();
 
         services.AddSingleton(new JsonSerializerOptions
