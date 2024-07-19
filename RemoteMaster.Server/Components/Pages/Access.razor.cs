@@ -17,6 +17,7 @@ using Polly.Wrap;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Requirements;
 using RemoteMaster.Shared.Dtos;
+using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
 using Serilog;
 
@@ -537,6 +538,18 @@ public partial class Access : IAsyncDisposable
         _selectedCodec = codec;
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("SetCodec", codec));
+    }
+
+    private async Task DisconnectViewer(string connectionId)
+    {
+        if (_connection == null)
+        {
+            return;
+        }
+
+        const DisconnectReason reason = DisconnectReason.AdminInitiated;
+
+        await SafeInvokeAsync(() => _connection.InvokeAsync("DisconnectClient", connectionId, reason));
     }
 
     private async Task<bool> IsPolicyPermittedAsync(string policyName)

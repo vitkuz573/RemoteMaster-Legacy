@@ -243,7 +243,9 @@ internal class Program
                 .AddPolicy("MoveHostPolicy", policy =>
                     policy.RequireClaim("HostManagement", "Move"))
                 .AddPolicy("RenewCertificatePolicy", policy =>
-                    policy.RequireClaim("HostManagement", "RenewCertificate"));
+                    policy.RequireClaim("HostManagement", "RenewCertificate"))
+                .AddPolicy("DisconnectClientPolicy", policy =>
+                    policy.RequireClaim("Service", "DisconnectClient"));
         }
 
         switch (launchModeInstance)
@@ -400,7 +402,7 @@ internal class Program
             }
 
             var launchModes = assembly.GetTypes()
-                .Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(LaunchModeBase)))
+                .Where(t => t is { IsClass: true, IsAbstract: false } && t.IsSubclassOf(typeof(LaunchModeBase)))
                 .Select(t => Activator.CreateInstance(t) as LaunchModeBase)
                 .Where(instance => instance != null);
 

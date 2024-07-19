@@ -6,7 +6,6 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Data;
-using RemoteMaster.Server.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;
@@ -56,6 +55,7 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
         new("HostInformation", "View"),
         new("Connection", "Control"),
         new("Connection", "View"),
+        new("Service", "DisconnectClient"),
     ];
 
     private static readonly List<Claim> ViewerClaims =

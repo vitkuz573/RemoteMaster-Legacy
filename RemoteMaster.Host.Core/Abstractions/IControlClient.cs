@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Drawing;
+using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Abstractions;
@@ -32,4 +33,6 @@ public interface IControlClient
     Task ReceiveError(string message);
 
     Task ReceiveAvailableCodecs(IEnumerable<string> codecs);
+
+    Task ReceiveDisconnected(DisconnectReason reason);
 }

@@ -136,6 +136,21 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         await base.OnDisconnectedAsync(exception);
     }
 
+    [Authorize(Policy = "DisconnectClientPolicy")]
+    public async Task DisconnectClient(string connectionId, DisconnectReason reason)
+    {
+        if (appState.TryGetViewer(connectionId, out var viewer) && viewer != null)
+        {
+            screenCastingService.StopStreaming(viewer);
+            appState.TryRemoveViewer(connectionId);
+            await Clients.Client(connectionId).ReceiveDisconnected(reason);
+        }
+        else
+        {
+            Log.Error("Failed to find a viewer for connection ID {ConnectionId}", connectionId);
+        }
+    }
+
     [Authorize(Policy = "MouseInputPolicy")]
     public void HandleMouseInput(MouseInputDto dto)
     {
