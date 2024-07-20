@@ -11,8 +11,6 @@ public interface IDatabaseService
 {
     Task<IList<T>> GetNodesAsync<T>(Expression<Func<T, bool>>? predicate = null) where T : class, INode;
     
-    Task<IList<T>> GetChildrenByParentIdAsync<T>(Guid parentId) where T : class, INode;
-
     Task<Guid> AddNodeAsync<T>(T node) where T : class, INode;
 
     Task RemoveNodeAsync<T>(T node) where T : class, INode;

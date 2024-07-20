@@ -58,7 +58,7 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
     /// <exception cref="InvalidOperationException">Thrown if the computer is not found.</exception>
     private async Task<Computer> GetComputerByMacAddressAsync(string macAddress, Guid parentOuId)
     {
-        var existingComputers = await databaseService.GetChildrenByParentIdAsync<Computer>(parentOuId);
+        var existingComputers = await databaseService.GetNodesAsync<Computer>(c => c.ParentId == parentOuId);
         var computer = existingComputers.FirstOrDefault(c => c.MacAddress == macAddress) ?? throw new InvalidOperationException($"Computer with MAC address '{macAddress}' not found.");
 
         return computer;

@@ -47,16 +47,6 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
     }
 
     /// <summary>
-    /// Gets the list of children nodes for the specified parent ID.
-    /// </summary>
-    public async Task<IList<T>> GetChildrenByParentIdAsync<T>(Guid parentId) where T : class, INode
-    {
-        return await GetQueryForType<T>()
-            .Where(node => node.ParentId == parentId)
-            .ToListAsync();
-    }
-
-    /// <summary>
     /// Adds a new node to the database.
     /// </summary>
     public async Task<Guid> AddNodeAsync<T>(T node) where T : class, INode

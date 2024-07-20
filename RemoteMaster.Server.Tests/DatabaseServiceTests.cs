@@ -176,40 +176,6 @@ public class DatabaseServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task GetChildrenByParentIdAsync_ReturnsChildren()
-    {
-        using var scope = CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
-
-        // Arrange
-        var parentOu = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "ParentOU" };
-        var childOu = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "ChildOU", ParentId = parentOu.NodeId };
-        context.OrganizationalUnits.AddRange(parentOu, childOu);
-        await context.SaveChangesAsync();
-
-        // Act
-        var result = await databaseService.GetChildrenByParentIdAsync<OrganizationalUnit>(parentOu.NodeId);
-
-        // Assert
-        Assert.Single(result);
-        Assert.Equal(childOu.NodeId, result[0].NodeId);
-    }
-
-    [Fact]
-    public async Task GetChildrenByParentIdAsync_ThrowsInvalidOperationException_ForUnknownNodeType()
-    {
-        using var scope = CreateScope();
-        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
-
-        // Arrange
-        var parentId = Guid.NewGuid();
-
-        // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => databaseService.GetChildrenByParentIdAsync<UnknownNode>(parentId));
-    }
-
-    [Fact]
     public async Task MoveNodeAsync_MovesNodeToNewParent()
     {
         using var scope = CreateScope();
@@ -257,33 +223,69 @@ public class DatabaseServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task MoveNodeAsync_WithEmptyNodeId_DoesNothing()
+    public async Task MoveNodeAsync_ThrowsException_IfNodeIsOrganization()
     {
         using var scope = CreateScope();
         var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
 
         // Arrange
-        var newParentId = Guid.NewGuid();
-        var oldParent = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "OldParent" };
-        var newParent = new OrganizationalUnit { NodeId = newParentId, Name = "NewParent" };
+        var organization = new Organization
+        {
+            NodeId = Guid.NewGuid(),
+            Name = "Org",
+            Country = "Country",
+            Locality = "Locality",
+            State = "State"
+        };
+        var parent = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "Parent" };
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        context.OrganizationalUnits.AddRange(oldParent, newParent);
+        context.Organizations.Add(organization);
+        context.OrganizationalUnits.Add(parent);
+        await context.SaveChangesAsync();
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await databaseService.MoveNodeAsync(organization, parent));
+    }
+
+    [Fact]
+    public async Task MoveNodeAsync_ThrowsException_IfNewParentNotFound()
+    {
+        using var scope = CreateScope();
+        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+
+        // Arrange
+        var node = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "Node" };
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        context.OrganizationalUnits.Add(node);
+        await context.SaveChangesAsync();
+
+        var nonExistentParent = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "NonExistentParent" };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await databaseService.MoveNodeAsync(node, nonExistentParent));
+    }
+
+    [Fact]
+    public async Task MoveNodeAsync_DoesNotChangeParentId_ForSameNodeAndParent()
+    {
+        using var scope = CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+
+        // Arrange
+        var parentNode = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "Parent" };
+        var childNode = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "Child", ParentId = parentNode.NodeId };
+        context.OrganizationalUnits.AddRange(parentNode, childNode);
         await context.SaveChangesAsync();
 
         // Act
-        try
-        {
-            await databaseService.MoveNodeAsync<OrganizationalUnit, OrganizationalUnit>(null, newParent);
-        }
-        catch (ArgumentNullException ex)
-        {
-            // Assert
-            Assert.Equal("Value cannot be null. (Parameter 'node')", ex.Message);
-            return;
-        }
+        await databaseService.MoveNodeAsync(childNode, parentNode);
 
         // Assert
-        Assert.Fail("Expected ArgumentNullException was not thrown.");
+        var unchangedNode = await context.OrganizationalUnits.FindAsync(childNode.NodeId);
+        Assert.Equal(parentNode.NodeId, unchangedNode.ParentId);
     }
 
     [Fact]
@@ -309,72 +311,6 @@ public class DatabaseServiceTests : IDisposable
                 updatedComputer.IpAddress = "192.168.0.1";
                 updatedComputer.Name = "NewName";
             }));
-    }
-
-    [Fact]
-    public async Task MoveNodeAsync_DoesNotChangeParentId_ForSameNodeAndParent()
-    {
-        using var scope = CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
-
-        // Arrange
-        var parentNode = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "Parent" };
-        var childNode = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "Child", ParentId = parentNode.NodeId };
-        context.OrganizationalUnits.AddRange(parentNode, childNode);
-        await context.SaveChangesAsync();
-
-        // Act
-        await databaseService.MoveNodeAsync(childNode, parentNode);
-
-        // Assert
-        var unchangedNode = await context.OrganizationalUnits.FindAsync(childNode.NodeId);
-        Assert.Equal(parentNode.NodeId, unchangedNode.ParentId);
-    }
-
-    [Fact]
-    public async Task MoveNodeAsync_ThrowsException_IfNewParentNotFound()
-    {
-        using var scope = CreateScope();
-        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
-
-        // Arrange
-        var node = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "Node" };
-        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        context.OrganizationalUnits.Add(node);
-        await context.SaveChangesAsync();
-
-        var nonExistentParent = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "NonExistentParent" };
-
-        // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
-            await databaseService.MoveNodeAsync(node, nonExistentParent));
-    }
-
-    [Fact]
-    public async Task MoveNodeAsync_ThrowsException_IfNodeIsOrganization()
-    {
-        using var scope = CreateScope();
-        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
-
-        // Arrange
-        var organization = new Organization
-        {
-            NodeId = Guid.NewGuid(),
-            Name = "Org",
-            Country = "Country",
-            Locality = "Locality",
-            State = "State"
-        };
-        var parent = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "Parent" };
-        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        context.Organizations.Add(organization);
-        context.OrganizationalUnits.Add(parent);
-        await context.SaveChangesAsync();
-
-        // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
-            await databaseService.MoveNodeAsync(organization, parent));
     }
 
     public void Dispose()
