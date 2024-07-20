@@ -136,7 +136,7 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
 
             await eventNotificationService.SendNotificationAsync($"New host registered: {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
 
-            await databaseService.AddNodeAsync(computer);
+            await databaseService.AddNodesAsync(new List<Computer> { computer });
 
             return true;
         }
@@ -167,23 +167,23 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
         catch (InvalidOperationException ex)
         {
             await eventNotificationService.SendNotificationAsync($"Host unregister failed: {ex.Message} for host {request.Name} (`{request.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'");
-            
+
             return false;
         }
 
         try
         {
             var existingComputer = await GetComputerByMacAddressAsync(request.MacAddress, lastOu.NodeId);
-            await databaseService.RemoveNodeAsync(existingComputer);
+            await databaseService.RemoveNodesAsync(new List<Computer> { existingComputer });
 
             await eventNotificationService.SendNotificationAsync($"Host unregistered: {request.Name} (`{request.MacAddress}`) from organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' in organization '{request.Organization}'");
-            
+
             return true;
         }
         catch (InvalidOperationException ex)
         {
             await eventNotificationService.SendNotificationAsync($"Host unregister failed: {ex.Message} for host {request.Name} (`{request.MacAddress}`) from organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' in organization '{request.Organization}'");
-            
+
             return false;
         }
     }

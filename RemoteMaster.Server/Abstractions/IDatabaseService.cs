@@ -21,19 +21,19 @@ public interface IDatabaseService
     Task<IList<T>> GetNodesAsync<T>(Expression<Func<T, bool>>? predicate = null) where T : class, INode;
 
     /// <summary>
-    /// Adds a new node to the database.
+    /// Adds multiple new nodes to the database.
     /// </summary>
-    /// <typeparam name="T">The type of node.</typeparam>
-    /// <param name="node">The node to add.</param>
-    /// <returns>The ID of the added node.</returns>
-    Task<T> AddNodeAsync<T>(T node) where T : class, INode;
+    /// <typeparam name="T">The type of nodes.</typeparam>
+    /// <param name="nodes">The nodes to add.</param>
+    /// <returns>The added nodes.</returns>
+    Task<IList<T>> AddNodesAsync<T>(IEnumerable<T> nodes) where T : class, INode;
 
     /// <summary>
-    /// Removes the specified node from the database.
+    /// Removes multiple nodes from the database.
     /// </summary>
-    /// <typeparam name="T">The type of node.</typeparam>
-    /// <param name="node">The node to remove.</param>
-    Task RemoveNodeAsync<T>(T node) where T : class, INode;
+    /// <typeparam name="T">The type of nodes.</typeparam>
+    /// <param name="nodes">The nodes to remove.</param>
+    Task RemoveNodesAsync<T>(IEnumerable<T> nodes) where T : class, INode;
 
     /// <summary>
     /// Updates the specified node with the given update action.

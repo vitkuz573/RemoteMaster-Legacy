@@ -616,16 +616,21 @@ public partial class Home
 
         if (confirmation.HasValue && confirmation.Value)
         {
-            foreach (var computer in _selectedComputers.ToList())
+            var computersToRemove = _selectedComputers.ToList();
+
+            if (computersToRemove.Any())
             {
-                await DatabaseService.RemoveNodeAsync(computer);
+                await DatabaseService.RemoveNodesAsync(computersToRemove);
 
-                _availableComputers.TryRemove(computer.IpAddress, out _);
-                _unavailableComputers.TryRemove(computer.IpAddress, out _);
-                _pendingComputers.TryRemove(computer.IpAddress, out _);
+                foreach (var computer in computersToRemove)
+                {
+                    _availableComputers.TryRemove(computer.IpAddress, out _);
+                    _unavailableComputers.TryRemove(computer.IpAddress, out _);
+                    _pendingComputers.TryRemove(computer.IpAddress, out _);
+                }
+
+                _selectedComputers.Clear();
             }
-
-            _selectedComputers.Clear();
         }
     }
 

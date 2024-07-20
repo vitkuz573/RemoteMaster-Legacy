@@ -45,23 +45,22 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
     }
 
     /// <inheritdoc />
-    public async Task<T> AddNodeAsync<T>(T node) where T : class, INode
+    public async Task<IList<T>> AddNodesAsync<T>(IEnumerable<T> nodes) where T : class, INode
     {
-        ArgumentNullException.ThrowIfNull(node);
+        ArgumentNullException.ThrowIfNull(nodes);
 
-        await applicationDbContext.Set<T>().AddAsync(node);
+        await applicationDbContext.Set<T>().AddRangeAsync(nodes);
         await applicationDbContext.SaveChangesAsync();
 
-        return node;
+        return nodes.ToList();
     }
 
     /// <inheritdoc />
-    public async Task RemoveNodeAsync<T>(T node) where T : class, INode
+    public async Task RemoveNodesAsync<T>(IEnumerable<T> nodes) where T : class, INode
     {
-        ArgumentNullException.ThrowIfNull(node);
+        ArgumentNullException.ThrowIfNull(nodes);
 
-        applicationDbContext.Set<T>().Remove(node);
-
+        applicationDbContext.Set<T>().RemoveRange(nodes);
         await applicationDbContext.SaveChangesAsync();
     }
 

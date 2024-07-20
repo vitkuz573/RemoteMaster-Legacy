@@ -57,68 +57,90 @@ public class DatabaseServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task AddNodeAsync_AddsNode()
+    public async Task AddNodesAsync_AddsNodes()
     {
         using var scope = CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
 
         // Arrange
-        var organizationalUnit = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "OU" };
+        var organizationalUnits = new List<OrganizationalUnit>
+        {
+            new() { NodeId = Guid.NewGuid(), Name = "OU1" },
+            new() { NodeId = Guid.NewGuid(), Name = "OU2" }
+        };
 
         // Act
-        var addedNode = await databaseService.AddNodeAsync(organizationalUnit);
+        var addedNodes = await databaseService.AddNodesAsync(organizationalUnits);
 
         // Assert
-        var fetchedNode = await context.OrganizationalUnits.FindAsync(addedNode.NodeId);
-        Assert.NotNull(fetchedNode);
-        Assert.Equal(organizationalUnit.Name, fetchedNode.Name);
+        foreach (var addedNode in addedNodes)
+        {
+            var fetchedNode = await context.OrganizationalUnits.FindAsync(addedNode.NodeId);
+            Assert.NotNull(fetchedNode);
+            Assert.Equal(addedNode.Name, fetchedNode.Name);
+        }
     }
 
     [Fact]
-    public async Task AddNodeAsync_ThrowsInvalidOperationException_ForUnknownNodeType()
+    public async Task AddNodesAsync_ThrowsInvalidOperationException_ForUnknownNodeType()
     {
         using var scope = CreateScope();
         var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
 
         // Arrange
-        var unknownNode = new UnknownNode { NodeId = Guid.NewGuid(), Name = "Unknown" };
+        var unknownNodes = new List<UnknownNode>
+        {
+            new() { NodeId = Guid.NewGuid(), Name = "Unknown1" },
+            new() { NodeId = Guid.NewGuid(), Name = "Unknown2" }
+        };
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => databaseService.AddNodeAsync(unknownNode));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => databaseService.AddNodesAsync(unknownNodes));
     }
 
     [Fact]
-    public async Task RemoveNodeAsync_RemovesNode()
+    public async Task RemoveNodesAsync_RemovesNodes()
     {
         using var scope = CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
 
         // Arrange
-        var organizationalUnit = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "OU" };
-        context.OrganizationalUnits.Add(organizationalUnit);
+        var organizationalUnits = new List<OrganizationalUnit>
+        {
+            new() { NodeId = Guid.NewGuid(), Name = "OU1" },
+            new() { NodeId = Guid.NewGuid(), Name = "OU2" }
+        };
+        context.OrganizationalUnits.AddRange(organizationalUnits);
         await context.SaveChangesAsync();
 
         // Act
-        await databaseService.RemoveNodeAsync(organizationalUnit);
+        await databaseService.RemoveNodesAsync(organizationalUnits);
 
         // Assert
-        var removedNode = await context.OrganizationalUnits.FindAsync(organizationalUnit.NodeId);
-        Assert.Null(removedNode);
+        foreach (var organizationalUnit in organizationalUnits)
+        {
+            var removedNode = await context.OrganizationalUnits.FindAsync(organizationalUnit.NodeId);
+            Assert.Null(removedNode);
+        }
     }
 
     [Fact]
-    public async Task RemoveNodeAsync_ThrowsInvalidOperationException_ForUnknownNodeType()
+    public async Task RemoveNodesAsync_ThrowsInvalidOperationException_ForUnknownNodeType()
     {
         using var scope = CreateScope();
         var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
 
         // Arrange
-        var unknownNode = new UnknownNode { NodeId = Guid.NewGuid(), Name = "Unknown" };
+        var unknownNodes = new List<UnknownNode>
+        {
+            new() { NodeId = Guid.NewGuid(), Name = "Unknown1" },
+            new() { NodeId = Guid.NewGuid(), Name = "Unknown2" }
+        };
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => databaseService.RemoveNodeAsync(unknownNode));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => databaseService.RemoveNodesAsync(unknownNodes));
     }
 
     [Fact]
@@ -329,4 +351,3 @@ public class DatabaseServiceTests : IDisposable
         public INode? Parent { get; set; }
     }
 }
-
