@@ -31,12 +31,7 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         };
     }
 
-    /// <summary>
-    /// Retrieves nodes based on the specified predicate.
-    /// </summary>
-    /// <typeparam name="T">The type of node.</typeparam>
-    /// <param name="predicate">The predicate to filter nodes.</param>
-    /// <returns>A list of nodes that match the predicate.</returns>
+    /// <inheritdoc />
     public async Task<IList<T>> GetNodesAsync<T>(Expression<Func<T, bool>>? predicate = null) where T : class, INode
     {
         var query = GetQueryForType<T>();
@@ -49,12 +44,7 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         return await query.ToListAsync();
     }
 
-    /// <summary>
-    /// Adds a new node to the database.
-    /// </summary>
-    /// <typeparam name="T">The type of node.</typeparam>
-    /// <param name="node">The node to add.</param>
-    /// <returns>The ID of the added node.</returns>
+    /// <inheritdoc />
     public async Task<Guid> AddNodeAsync<T>(T node) where T : class, INode
     {
         ArgumentNullException.ThrowIfNull(node);
@@ -65,11 +55,7 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         return node.NodeId;
     }
 
-    /// <summary>
-    /// Removes the specified node from the database.
-    /// </summary>
-    /// <typeparam name="T">The type of node.</typeparam>
-    /// <param name="node">The node to remove.</param>
+    /// <inheritdoc />
     public async Task RemoveNodeAsync<T>(T node) where T : class, INode
     {
         ArgumentNullException.ThrowIfNull(node);
@@ -79,12 +65,7 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         await applicationDbContext.SaveChangesAsync();
     }
 
-    /// <summary>
-    /// Updates the specified node with the given update action.
-    /// </summary>
-    /// <typeparam name="T">The type of node.</typeparam>
-    /// <param name="node">The node to update.</param>
-    /// <param name="updateAction">The action to perform on the node for updating.</param>
+    /// <inheritdoc />
     public async Task UpdateNodeAsync<T>(T node, Action<T> updateAction) where T : class, INode
     {
         ArgumentNullException.ThrowIfNull(node);
@@ -97,13 +78,7 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         await applicationDbContext.SaveChangesAsync();
     }
 
-    /// <summary>
-    /// Moves the specified node to a new parent.
-    /// </summary>
-    /// <typeparam name="TNode">The type of the node.</typeparam>
-    /// <typeparam name="TParent">The type of the new parent node.</typeparam>
-    /// <param name="node">The node to move.</param>
-    /// <param name="newParent">The new parent node.</param>
+    /// <inheritdoc />
     public async Task MoveNodeAsync<TNode, TParent>(TNode node, TParent newParent) where TNode : class, INode where TParent : class, INode
     {
         ArgumentNullException.ThrowIfNull(node);
@@ -141,12 +116,7 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         await applicationDbContext.SaveChangesAsync();
     }
 
-    /// <summary>
-    /// Gets the full path for the specified node.
-    /// </summary>
-    /// <typeparam name="T">The type of the node.</typeparam>
-    /// <param name="node">The node to get the path for.</param>
-    /// <returns>The full path of the node as an array of strings.</returns>
+    /// <inheritdoc />
     public async Task<string[]> GetFullPathAsync<T>(T node) where T : class, INode
     {
         ArgumentNullException.ThrowIfNull(node);
