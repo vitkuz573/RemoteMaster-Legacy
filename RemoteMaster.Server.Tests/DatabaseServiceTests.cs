@@ -67,12 +67,12 @@ public class DatabaseServiceTests : IDisposable
         var organizationalUnit = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "OU" };
 
         // Act
-        var nodeId = await databaseService.AddNodeAsync(organizationalUnit);
+        var addedNode = await databaseService.AddNodeAsync(organizationalUnit);
 
         // Assert
-        var addedNode = await context.OrganizationalUnits.FindAsync(nodeId);
-        Assert.NotNull(addedNode);
-        Assert.Equal(organizationalUnit.Name, addedNode.Name);
+        var fetchedNode = await context.OrganizationalUnits.FindAsync(addedNode.NodeId);
+        Assert.NotNull(fetchedNode);
+        Assert.Equal(organizationalUnit.Name, fetchedNode.Name);
     }
 
     [Fact]
@@ -329,3 +329,4 @@ public class DatabaseServiceTests : IDisposable
         public INode? Parent { get; set; }
     }
 }
+

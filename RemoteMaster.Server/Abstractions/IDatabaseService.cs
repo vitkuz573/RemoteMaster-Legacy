@@ -26,7 +26,7 @@ public interface IDatabaseService
     /// <typeparam name="T">The type of node.</typeparam>
     /// <param name="node">The node to add.</param>
     /// <returns>The ID of the added node.</returns>
-    Task<Guid> AddNodeAsync<T>(T node) where T : class, INode;
+    Task<T> AddNodeAsync<T>(T node) where T : class, INode;
 
     /// <summary>
     /// Removes the specified node from the database.

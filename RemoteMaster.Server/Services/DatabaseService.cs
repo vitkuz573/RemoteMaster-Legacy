@@ -45,14 +45,14 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
     }
 
     /// <inheritdoc />
-    public async Task<Guid> AddNodeAsync<T>(T node) where T : class, INode
+    public async Task<T> AddNodeAsync<T>(T node) where T : class, INode
     {
         ArgumentNullException.ThrowIfNull(node);
 
         await applicationDbContext.Set<T>().AddAsync(node);
         await applicationDbContext.SaveChangesAsync();
 
-        return node.NodeId;
+        return node;
     }
 
     /// <inheritdoc />
