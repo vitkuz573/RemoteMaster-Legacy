@@ -21,18 +21,18 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
             return applicationDbContext.OrganizationalUnits
                                         .Include(ou => ou.Children)
                                         .Include(ou => ou.Computers)
-                                        .AsQueryable().Cast<T>();
+                                        .Cast<T>();
         }
         if (typeof(T) == typeof(Computer))
         {
-            return applicationDbContext.Computers.AsQueryable().Cast<T>();
+            return applicationDbContext.Computers.Cast<T>();
         }
         if (typeof(T) == typeof(Organization))
         {
             return applicationDbContext.Organizations
                                         .Include(o => o.OrganizationalUnits)
                                         .ThenInclude(ou => ou.Computers)
-                                        .AsQueryable().Cast<T>();
+                                        .Cast<T>();
         }
 
         throw new InvalidOperationException($"Cannot create a DbSet for '{typeof(T)}' because this type is not included in the model for the context.");
