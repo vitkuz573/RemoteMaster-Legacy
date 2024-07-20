@@ -129,19 +129,21 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
     /// <summary>
     /// Gets the full path for the specified node.
     /// </summary>
-    public async Task<string[]> GetFullPathAsync<T>(Guid nodeId) where T : class, INode
+    public async Task<string[]> GetFullPathAsync<T>(T node) where T : class, INode
     {
+        ArgumentNullException.ThrowIfNull(node);
+
         var nodes = await applicationDbContext.Set<T>()
             .AsNoTracking()
             .ToListAsync();
 
         var path = new List<string>();
-        var currentNode = nodes.FirstOrDefault(node => node.NodeId == nodeId);
+        var currentNode = nodes.FirstOrDefault(n => n.NodeId == node.NodeId);
 
         while (currentNode != null)
         {
             path.Insert(0, currentNode.Name);
-            currentNode = nodes.FirstOrDefault(node => node.NodeId == currentNode.ParentId);
+            currentNode = nodes.FirstOrDefault(n => n.NodeId == currentNode.ParentId);
         }
 
         return [.. path];

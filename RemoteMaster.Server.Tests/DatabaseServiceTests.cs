@@ -169,7 +169,7 @@ public class DatabaseServiceTests : IDisposable
         await context.SaveChangesAsync();
 
         // Act
-        var result = await databaseService.GetFullPathAsync<OrganizationalUnit>(childOu.NodeId);
+        var result = await databaseService.GetFullPathAsync(childOu);
 
         // Assert
         Assert.Equal(new[] { "ParentOU", "ChildOU" }, result);

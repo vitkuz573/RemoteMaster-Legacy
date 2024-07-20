@@ -112,7 +112,8 @@ public partial class MoveDialog
         if (_selectedOrganizationalUnitId != Guid.Empty)
         {
             var targetOrganization = (await DatabaseService.GetNodesAsync<Organization>(o => o.NodeId == _selectedOrganizationId)).First().Name;
-            var targetOrganizationalUnitsPath = await DatabaseService.GetFullPathAsync<OrganizationalUnit>(_selectedOrganizationalUnitId);
+            var newParent = (await DatabaseService.GetNodesAsync<OrganizationalUnit>(ou => ou.NodeId == _selectedOrganizationalUnitId)).FirstOrDefault() ?? throw new InvalidOperationException("New parent Organizational Unit not found.");
+            var targetOrganizationalUnitsPath = await DatabaseService.GetFullPathAsync(newParent);
 
             if (targetOrganizationalUnitsPath.Length > 0)
             {
@@ -124,7 +125,7 @@ public partial class MoveDialog
                     if (host.Value != null)
                     {
                         var hostMoveRequest = new HostMoveRequest(host.Key.MacAddress, targetOrganization, targetOrganizationalUnitsPath);
-
+                        
                         await host.Value.InvokeAsync("MoveHost", hostMoveRequest);
                     }
                     else
@@ -138,28 +139,19 @@ public partial class MoveDialog
                     await AppendHostMoveRequests(unavailableHosts, targetOrganization, targetOrganizationalUnitsPath);
                 }
 
-                var newParent = await DatabaseService.GetNodesAsync<OrganizationalUnit>(ou => ou.NodeId == _selectedOrganizationalUnitId);
-                
-                if (!newParent.Any())
-                {
-                    throw new InvalidOperationException("New parent Organizational Unit not found.");
-                }
-
-                var newParentNode = newParent.First();
-
                 foreach (var nodeId in nodeIds)
                 {
                     var node = await DatabaseService.GetNodesAsync<Computer>(c => c.NodeId == nodeId);
                     
                     if (node.Any())
                     {
-                        await DatabaseService.MoveNodeAsync(node.First(), newParentNode);
+                        await DatabaseService.MoveNodeAsync(node.First(), newParent);
                     }
                 }
             }
 
             await OnNodesMoved.InvokeAsync(Hosts.Keys);
-
+            
             MudDialog.Close(DialogResult.Ok(true));
         }
     }
