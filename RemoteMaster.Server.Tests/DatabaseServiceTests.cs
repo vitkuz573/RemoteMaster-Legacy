@@ -224,7 +224,7 @@ public class DatabaseServiceTests : IDisposable
         await context.SaveChangesAsync();
 
         // Act
-        await databaseService.MoveNodeAsync<OrganizationalUnit>(childOu.NodeId, newParent.NodeId);
+        await databaseService.MoveNodeAsync(childOu, newParent);
 
         // Assert
         var movedNode = await context.OrganizationalUnits.FindAsync(childOu.NodeId);
@@ -273,17 +273,17 @@ public class DatabaseServiceTests : IDisposable
         // Act
         try
         {
-            await databaseService.MoveNodeAsync<OrganizationalUnit>(Guid.Empty, newParentId);
+            await databaseService.MoveNodeAsync<OrganizationalUnit, OrganizationalUnit>(null, newParent);
         }
-        catch (InvalidOperationException ex)
+        catch (ArgumentNullException ex)
         {
             // Assert
-            Assert.Equal("OrganizationalUnit not found.", ex.Message);
+            Assert.Equal("Value cannot be null. (Parameter 'node')", ex.Message);
             return;
         }
 
         // Assert
-        Assert.Fail("Expected InvalidOperationException was not thrown.");
+        Assert.Fail("Expected ArgumentNullException was not thrown.");
     }
 
     [Fact]
@@ -325,11 +325,56 @@ public class DatabaseServiceTests : IDisposable
         await context.SaveChangesAsync();
 
         // Act
-        await databaseService.MoveNodeAsync<OrganizationalUnit>(childNode.NodeId, parentNode.NodeId);
+        await databaseService.MoveNodeAsync(childNode, parentNode);
 
         // Assert
         var unchangedNode = await context.OrganizationalUnits.FindAsync(childNode.NodeId);
         Assert.Equal(parentNode.NodeId, unchangedNode.ParentId);
+    }
+
+    [Fact]
+    public async Task MoveNodeAsync_ThrowsException_IfNewParentNotFound()
+    {
+        using var scope = CreateScope();
+        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+
+        // Arrange
+        var node = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "Node" };
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        context.OrganizationalUnits.Add(node);
+        await context.SaveChangesAsync();
+
+        var nonExistentParent = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "NonExistentParent" };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await databaseService.MoveNodeAsync(node, nonExistentParent));
+    }
+
+    [Fact]
+    public async Task MoveNodeAsync_ThrowsException_IfNodeIsOrganization()
+    {
+        using var scope = CreateScope();
+        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+
+        // Arrange
+        var organization = new Organization
+        {
+            NodeId = Guid.NewGuid(),
+            Name = "Org",
+            Country = "Country",
+            Locality = "Locality",
+            State = "State"
+        };
+        var parent = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "Parent" };
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        context.Organizations.Add(organization);
+        context.OrganizationalUnits.Add(parent);
+        await context.SaveChangesAsync();
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await databaseService.MoveNodeAsync(organization, parent));
     }
 
     public void Dispose()

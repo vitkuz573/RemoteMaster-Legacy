@@ -31,6 +31,9 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         };
     }
 
+    /// <summary>
+    /// Gets the list of nodes matching the specified predicate.
+    /// </summary>
     public async Task<IList<T>> GetNodesAsync<T>(Expression<Func<T, bool>>? predicate = null) where T : class, INode
     {
         var query = GetQueryForType<T>();
@@ -43,6 +46,9 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         return await query.ToListAsync();
     }
 
+    /// <summary>
+    /// Gets the list of children nodes for the specified parent ID.
+    /// </summary>
     public async Task<IList<T>> GetChildrenByParentIdAsync<T>(Guid parentId) where T : class, INode
     {
         return await GetQueryForType<T>()
@@ -50,6 +56,9 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
             .ToListAsync();
     }
 
+    /// <summary>
+    /// Adds a new node to the database.
+    /// </summary>
     public async Task<Guid> AddNodeAsync<T>(T node) where T : class, INode
     {
         ArgumentNullException.ThrowIfNull(node);
@@ -60,6 +69,9 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         return node.NodeId;
     }
 
+    /// <summary>
+    /// Removes the specified node from the database.
+    /// </summary>
     public async Task RemoveNodeAsync<T>(T node) where T : class, INode
     {
         ArgumentNullException.ThrowIfNull(node);
@@ -69,6 +81,9 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         await applicationDbContext.SaveChangesAsync();
     }
 
+    /// <summary>
+    /// Updates the specified node with the given update action.
+    /// </summary>
     public async Task UpdateNodeAsync<T>(T node, Action<T> updateAction) where T : class, INode
     {
         ArgumentNullException.ThrowIfNull(node);
@@ -81,18 +96,49 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         await applicationDbContext.SaveChangesAsync();
     }
 
-    public async Task MoveNodeAsync<T>(Guid nodeId, Guid newParentId) where T : class, INode
+    /// <summary>
+    /// Moves the specified node to a new parent.
+    /// </summary>
+    public async Task MoveNodeAsync<TNode, TParent>(TNode node, TParent newParent) where TNode : class, INode where TParent : class, INode
     {
-        var node = await applicationDbContext.Set<T>().FindAsync(nodeId) ?? throw new InvalidOperationException($"{typeof(T).Name} not found.");
+        ArgumentNullException.ThrowIfNull(node);
+        ArgumentNullException.ThrowIfNull(newParent);
 
-        if (node.NodeId != newParentId)
+        if (node is Organization)
         {
-            node.ParentId = newParentId;
+            throw new InvalidOperationException("Organizations cannot be moved.");
+        }
+
+        if (newParent is Computer)
+        {
+            throw new InvalidOperationException("Cannot move a node to a Computer as the new parent.");
+        }
+
+        if (node is Computer && newParent is not OrganizationalUnit)
+        {
+            throw new InvalidOperationException("Computers can only be moved to OrganizationalUnits.");
+        }
+
+        var trackedNode = await applicationDbContext.Set<TNode>().FindAsync(node.NodeId) ?? throw new InvalidOperationException($"{typeof(TNode).Name} not found.");
+
+        var trackedParentExists = await applicationDbContext.Set<TParent>().FindAsync(newParent.NodeId) != null;
+        
+        if (!trackedParentExists)
+        {
+            throw new InvalidOperationException("New parent not found or is invalid.");
+        }
+
+        if (trackedNode.NodeId != newParent.NodeId)
+        {
+            trackedNode.ParentId = newParent.NodeId;
         }
 
         await applicationDbContext.SaveChangesAsync();
     }
 
+    /// <summary>
+    /// Gets the full path for the specified node.
+    /// </summary>
     public async Task<string[]> GetFullPathAsync<T>(Guid nodeId) where T : class, INode
     {
         var nodes = await applicationDbContext.Set<T>()

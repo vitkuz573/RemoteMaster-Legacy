@@ -138,9 +138,23 @@ public partial class MoveDialog
                     await AppendHostMoveRequests(unavailableHosts, targetOrganization, targetOrganizationalUnitsPath);
                 }
 
+                var newParent = await DatabaseService.GetNodesAsync<OrganizationalUnit>(ou => ou.NodeId == _selectedOrganizationalUnitId);
+                
+                if (!newParent.Any())
+                {
+                    throw new InvalidOperationException("New parent Organizational Unit not found.");
+                }
+
+                var newParentNode = newParent.First();
+
                 foreach (var nodeId in nodeIds)
                 {
-                    await DatabaseService.MoveNodeAsync<Computer>(nodeId, _selectedOrganizationalUnitId);
+                    var node = await DatabaseService.GetNodesAsync<Computer>(c => c.NodeId == nodeId);
+                    
+                    if (node.Any())
+                    {
+                        await DatabaseService.MoveNodeAsync(node.First(), newParentNode);
+                    }
                 }
             }
 

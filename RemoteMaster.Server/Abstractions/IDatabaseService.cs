@@ -19,7 +19,7 @@ public interface IDatabaseService
 
     Task UpdateNodeAsync<T>(T node, Action<T> updateAction) where T : class, INode;
 
-    Task MoveNodeAsync<T>(Guid nodeId, Guid newParentId) where T : class, INode;
+    Task MoveNodeAsync<TNode, TParent>(TNode node, TParent newParent) where TNode : class, INode where TParent : class, INode;
 
     Task<string[]> GetFullPathAsync<T>(Guid nodeId) where T : class, INode;
 }
