@@ -39,6 +39,8 @@ public class TelegramEventNotificationService : IEventNotificationService
 
     public async Task SendNotificationAsync(string message)
     {
+        ArgumentNullException.ThrowIfNull(message);
+
         if (!_isConfigured)
         {
             return;
@@ -48,9 +50,11 @@ public class TelegramEventNotificationService : IEventNotificationService
         {
             if (_botClient != null && _chatIds != null)
             {
+                var escapedMessage = EscapeMarkdownV2(message);
+
                 foreach (var chatId in _chatIds)
                 {
-                    await _botClient.SendTextMessageAsync(chatId, message, parseMode: ParseMode.MarkdownV2);
+                    await _botClient.SendTextMessageAsync(chatId, escapedMessage, parseMode: ParseMode.MarkdownV2);
                 }
             }
         }
@@ -58,5 +62,28 @@ public class TelegramEventNotificationService : IEventNotificationService
         {
             Log.Error(ex, "Error sending Telegram message");
         }
+    }
+
+    private static string EscapeMarkdownV2(string message)
+    {
+        return message
+            .Replace("_", "\\_")
+            .Replace("*", "\\*")
+            .Replace("[", "\\[")
+            .Replace("]", "\\]")
+            .Replace("(", "\\(")
+            .Replace(")", "\\)")
+            .Replace("~", "\\~")
+            .Replace("`", "\\`")
+            .Replace(">", "\\>")
+            .Replace("#", "\\#")
+            .Replace("+", "\\+")
+            .Replace("-", "\\-")
+            .Replace("=", "\\=")
+            .Replace("|", "\\|")
+            .Replace("{", "\\{")
+            .Replace("}", "\\}")
+            .Replace(".", "\\.")
+            .Replace("!", "\\!");
     }
 }
