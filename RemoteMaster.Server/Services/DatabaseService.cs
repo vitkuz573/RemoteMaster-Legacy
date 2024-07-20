@@ -16,26 +16,19 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
 {
     private IQueryable<T> GetQueryForType<T>() where T : class, INode
     {
-        if (typeof(T) == typeof(OrganizationalUnit))
+        return typeof(T) switch
         {
-            return applicationDbContext.OrganizationalUnits
-                                        .Include(ou => ou.Children)
-                                        .Include(ou => ou.Computers)
-                                        .Cast<T>();
-        }
-        if (typeof(T) == typeof(Computer))
-        {
-            return applicationDbContext.Computers.Cast<T>();
-        }
-        if (typeof(T) == typeof(Organization))
-        {
-            return applicationDbContext.Organizations
-                                        .Include(o => o.OrganizationalUnits)
-                                        .ThenInclude(ou => ou.Computers)
-                                        .Cast<T>();
-        }
-
-        throw new InvalidOperationException($"Cannot create a DbSet for '{typeof(T)}' because this type is not included in the model for the context.");
+            Type t when t == typeof(OrganizationalUnit) => applicationDbContext.OrganizationalUnits
+                .Include(ou => ou.Children)
+                .Include(ou => ou.Computers)
+                .Cast<T>(),
+            Type t when t == typeof(Computer) => applicationDbContext.Computers.Cast<T>(),
+            Type t when t == typeof(Organization) => applicationDbContext.Organizations
+                .Include(o => o.OrganizationalUnits)
+                .ThenInclude(ou => ou.Computers)
+                .Cast<T>(),
+            _ => throw new InvalidOperationException($"Cannot create a DbSet for '{typeof(T)}' because this type is not included in the model for the context.")
+        };
     }
 
     public async Task<IList<T>> GetNodesAsync<T>(Expression<Func<T, bool>>? predicate = null) where T : class, INode
@@ -52,9 +45,9 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
 
     public async Task<IList<T>> GetChildrenByParentIdAsync<T>(Guid parentId) where T : class, INode
     {
-        var query = GetQueryForType<T>().Where(node => node.ParentId == parentId);
-
-        return await query.ToListAsync();
+        return await GetQueryForType<T>()
+            .Where(node => node.ParentId == parentId)
+            .ToListAsync();
     }
 
     public async Task<Guid> AddNodeAsync<T>(T node) where T : class, INode
@@ -72,7 +65,7 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         ArgumentNullException.ThrowIfNull(node);
 
         applicationDbContext.Set<T>().Remove(node);
-
+        
         await applicationDbContext.SaveChangesAsync();
     }
 
@@ -81,7 +74,7 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         ArgumentNullException.ThrowIfNull(computer);
 
         var trackedComputer = await applicationDbContext.Computers.FindAsync(computer.NodeId) ?? throw new InvalidOperationException("Computer not found.");
-        
+
         trackedComputer.IpAddress = ipAddress;
         trackedComputer.Name = hostName;
 
@@ -98,11 +91,19 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
             .Where(c => nodeIds.Contains(c.NodeId))
             .ToListAsync();
 
-        foreach (var node in organizationalUnits.Cast<INode>().Concat(computers))
+        foreach (var ou in organizationalUnits)
         {
-            if (node.NodeId != newParentId)
+            if (ou.NodeId != newParentId)
             {
-                node.ParentId = newParentId;
+                ou.ParentId = newParentId;
+            }
+        }
+
+        foreach (var computer in computers)
+        {
+            if (computer.NodeId != newParentId)
+            {
+                computer.ParentId = newParentId;
             }
         }
 
@@ -111,25 +112,17 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
 
     public async Task<string[]> GetFullPathForOrganizationalUnitAsync(Guid ouId)
     {
-        var path = new List<string>();
-        var currentOu = await applicationDbContext.OrganizationalUnits
+        var organizationalUnits = await applicationDbContext.OrganizationalUnits
             .AsNoTracking()
-            .FirstOrDefaultAsync(ou => ou.NodeId == ouId);
+            .ToListAsync();
+
+        var path = new List<string>();
+        var currentOu = organizationalUnits.FirstOrDefault(ou => ou.NodeId == ouId);
 
         while (currentOu != null)
         {
             path.Insert(0, currentOu.Name);
-
-            if (currentOu.ParentId.HasValue)
-            {
-                currentOu = await applicationDbContext.OrganizationalUnits
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(ou => ou.NodeId == currentOu.ParentId.Value);
-            }
-            else
-            {
-                break;
-            }
+            currentOu = organizationalUnits.FirstOrDefault(ou => ou.NodeId == currentOu.ParentId);
         }
 
         return [.. path];
