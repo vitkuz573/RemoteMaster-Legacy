@@ -122,7 +122,7 @@ public class DatabaseServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task UpdateComputerAsync_UpdatesComputer()
+    public async Task UpdateNodeAsync_UpdatesComputer()
     {
         using var scope = CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -141,7 +141,11 @@ public class DatabaseServiceTests : IDisposable
         await context.SaveChangesAsync();
 
         // Act
-        await databaseService.UpdateComputerAsync(computer, "192.168.0.1", "NewName");
+        await databaseService.UpdateNodeAsync(computer, updatedComputer =>
+        {
+            updatedComputer.IpAddress = "192.168.0.1";
+            updatedComputer.Name = "NewName";
+        });
 
         // Assert
         var updatedComputer = await context.Computers.FindAsync(computer.NodeId);
@@ -151,7 +155,7 @@ public class DatabaseServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task GetFullPathForOrganizationalUnitAsync_ReturnsFullPath()
+    public async Task GetFullPathAsync_ReturnsFullPath()
     {
         using var scope = CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -165,7 +169,7 @@ public class DatabaseServiceTests : IDisposable
         await context.SaveChangesAsync();
 
         // Act
-        var result = await databaseService.GetFullPathForOrganizationalUnitAsync(childOu.NodeId);
+        var result = await databaseService.GetFullPathAsync<OrganizationalUnit>(childOu.NodeId);
 
         // Assert
         Assert.Equal(new[] { "ParentOU", "ChildOU" }, result);
@@ -206,7 +210,7 @@ public class DatabaseServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task MoveNodesAsync_MovesNodesToNewParent()
+    public async Task MoveNodeAsync_MovesNodeToNewParent()
     {
         using var scope = CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -220,7 +224,7 @@ public class DatabaseServiceTests : IDisposable
         await context.SaveChangesAsync();
 
         // Act
-        await databaseService.MoveNodesAsync([childOu.NodeId], newParent.NodeId);
+        await databaseService.MoveNodeAsync<OrganizationalUnit>(childOu.NodeId, newParent.NodeId);
 
         // Assert
         var movedNode = await context.OrganizationalUnits.FindAsync(childOu.NodeId);
@@ -253,20 +257,37 @@ public class DatabaseServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task MoveNodesAsync_WithEmptyNodeIds_DoesNothing()
+    public async Task MoveNodeAsync_WithEmptyNodeId_DoesNothing()
     {
         using var scope = CreateScope();
         var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
 
+        // Arrange
+        var newParentId = Guid.NewGuid();
+        var oldParent = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "OldParent" };
+        var newParent = new OrganizationalUnit { NodeId = newParentId, Name = "NewParent" };
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        context.OrganizationalUnits.AddRange(oldParent, newParent);
+        await context.SaveChangesAsync();
+
         // Act
-        await databaseService.MoveNodesAsync([], Guid.NewGuid());
+        try
+        {
+            await databaseService.MoveNodeAsync<OrganizationalUnit>(Guid.Empty, newParentId);
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Assert
+            Assert.Equal("OrganizationalUnit not found.", ex.Message);
+            return;
+        }
 
         // Assert
-        // No exception should be thrown and method should complete
+        Assert.Fail("Expected InvalidOperationException was not thrown.");
     }
 
     [Fact]
-    public async Task UpdateComputerAsync_ThrowsException_IfComputerNotFound()
+    public async Task UpdateNodeAsync_ThrowsException_IfNodeNotFound()
     {
         using var scope = CreateScope();
         var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
@@ -283,11 +304,15 @@ public class DatabaseServiceTests : IDisposable
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(async () =>
-            await databaseService.UpdateComputerAsync(nonExistentComputer, "192.168.0.1", "NewName"));
+            await databaseService.UpdateNodeAsync(nonExistentComputer, updatedComputer =>
+            {
+                updatedComputer.IpAddress = "192.168.0.1";
+                updatedComputer.Name = "NewName";
+            }));
     }
 
     [Fact]
-    public async Task MoveNodesAsync_DoesNotChangeParentId_ForSameNodeAndParent()
+    public async Task MoveNodeAsync_DoesNotChangeParentId_ForSameNodeAndParent()
     {
         using var scope = CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -300,7 +325,7 @@ public class DatabaseServiceTests : IDisposable
         await context.SaveChangesAsync();
 
         // Act
-        await databaseService.MoveNodesAsync([childNode.NodeId, parentNode.NodeId], parentNode.NodeId);
+        await databaseService.MoveNodeAsync<OrganizationalUnit>(childNode.NodeId, parentNode.NodeId);
 
         // Assert
         var unchangedNode = await context.OrganizationalUnits.FindAsync(childNode.NodeId);

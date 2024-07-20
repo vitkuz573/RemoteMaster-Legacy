@@ -65,64 +65,47 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         ArgumentNullException.ThrowIfNull(node);
 
         applicationDbContext.Set<T>().Remove(node);
-        
-        await applicationDbContext.SaveChangesAsync();
-    }
-
-    public async Task UpdateComputerAsync(Computer computer, string ipAddress, string hostName)
-    {
-        ArgumentNullException.ThrowIfNull(computer);
-
-        var trackedComputer = await applicationDbContext.Computers.FindAsync(computer.NodeId) ?? throw new InvalidOperationException("Computer not found.");
-
-        trackedComputer.IpAddress = ipAddress;
-        trackedComputer.Name = hostName;
 
         await applicationDbContext.SaveChangesAsync();
     }
 
-    public async Task MoveNodesAsync(IEnumerable<Guid> nodeIds, Guid newParentId)
+    public async Task UpdateNodeAsync<T>(T node, Action<T> updateAction) where T : class, INode
     {
-        var organizationalUnits = await applicationDbContext.OrganizationalUnits
-            .Where(ou => nodeIds.Contains(ou.NodeId))
-            .ToListAsync();
+        ArgumentNullException.ThrowIfNull(node);
+        ArgumentNullException.ThrowIfNull(updateAction);
 
-        var computers = await applicationDbContext.Computers
-            .Where(c => nodeIds.Contains(c.NodeId))
-            .ToListAsync();
+        var trackedNode = await applicationDbContext.Set<T>().FindAsync(node.NodeId) ?? throw new InvalidOperationException($"{typeof(T).Name} not found.");
 
-        foreach (var ou in organizationalUnits)
+        updateAction(trackedNode);
+
+        await applicationDbContext.SaveChangesAsync();
+    }
+
+    public async Task MoveNodeAsync<T>(Guid nodeId, Guid newParentId) where T : class, INode
+    {
+        var node = await applicationDbContext.Set<T>().FindAsync(nodeId) ?? throw new InvalidOperationException($"{typeof(T).Name} not found.");
+
+        if (node.NodeId != newParentId)
         {
-            if (ou.NodeId != newParentId)
-            {
-                ou.ParentId = newParentId;
-            }
-        }
-
-        foreach (var computer in computers)
-        {
-            if (computer.NodeId != newParentId)
-            {
-                computer.ParentId = newParentId;
-            }
+            node.ParentId = newParentId;
         }
 
         await applicationDbContext.SaveChangesAsync();
     }
 
-    public async Task<string[]> GetFullPathForOrganizationalUnitAsync(Guid ouId)
+    public async Task<string[]> GetFullPathAsync<T>(Guid nodeId) where T : class, INode
     {
-        var organizationalUnits = await applicationDbContext.OrganizationalUnits
+        var nodes = await applicationDbContext.Set<T>()
             .AsNoTracking()
             .ToListAsync();
 
         var path = new List<string>();
-        var currentOu = organizationalUnits.FirstOrDefault(ou => ou.NodeId == ouId);
+        var currentNode = nodes.FirstOrDefault(node => node.NodeId == nodeId);
 
-        while (currentOu != null)
+        while (currentNode != null)
         {
-            path.Insert(0, currentOu.Name);
-            currentOu = organizationalUnits.FirstOrDefault(ou => ou.NodeId == currentOu.ParentId);
+            path.Insert(0, currentNode.Name);
+            currentNode = nodes.FirstOrDefault(node => node.NodeId == currentNode.ParentId);
         }
 
         return [.. path];

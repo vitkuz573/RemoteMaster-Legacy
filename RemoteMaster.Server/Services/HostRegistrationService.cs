@@ -104,17 +104,22 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
             parentOu = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, organization.NodeId);
         }
         catch (InvalidOperationException ex)
-        {            
+        {
             await eventNotificationService.SendNotificationAsync($"Host registration failed: {ex.Message} for host {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
-            
+
             return false;
         }
 
         try
         {
             var existingComputer = await GetComputerByMacAddressAsync(hostConfiguration.Host.MacAddress, parentOu.NodeId);
-            
-            await databaseService.UpdateComputerAsync(existingComputer, hostConfiguration.Host.IpAddress, hostConfiguration.Host.Name);
+
+            await databaseService.UpdateNodeAsync(existingComputer, computer =>
+            {
+                computer.IpAddress = hostConfiguration.Host.IpAddress;
+                computer.Name = hostConfiguration.Host.Name;
+            });
+
             await eventNotificationService.SendNotificationAsync($"Host registration successful: {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
 
             return true;
@@ -126,7 +131,7 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
                 Name = hostConfiguration.Host.Name,
                 IpAddress = hostConfiguration.Host.IpAddress,
                 MacAddress = hostConfiguration.Host.MacAddress,
-                Parent = parentOu
+                ParentId = parentOu.NodeId
             };
 
             await eventNotificationService.SendNotificationAsync($"New host registered: {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
@@ -202,23 +207,28 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
         catch (InvalidOperationException ex)
         {
             await eventNotificationService.SendNotificationAsync($"Host information update failed: {ex.Message} for host {request.Name} (`{request.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'");
-            
+
             return false;
         }
 
         try
         {
             var computer = await GetComputerByMacAddressAsync(request.MacAddress, lastOu.NodeId);
-            await databaseService.UpdateComputerAsync(computer, request.IpAddress, request.Name);
+            
+            await databaseService.UpdateNodeAsync(computer, updatedComputer =>
+            {
+                updatedComputer.IpAddress = request.IpAddress;
+                updatedComputer.Name = request.Name;
+            });
 
             await eventNotificationService.SendNotificationAsync($"Host information updated: {request.Name} (`{request.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'");
-            
+
             return true;
         }
         catch (InvalidOperationException ex)
         {
             await eventNotificationService.SendNotificationAsync($"Host information update failed: {ex.Message} for host {request.Name} (`{request.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'");
-            
+
             return false;
         }
     }

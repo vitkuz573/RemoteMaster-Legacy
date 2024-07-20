@@ -112,7 +112,7 @@ public partial class MoveDialog
         if (_selectedOrganizationalUnitId != Guid.Empty)
         {
             var targetOrganization = (await DatabaseService.GetNodesAsync<Organization>(o => o.NodeId == _selectedOrganizationId)).First().Name;
-            var targetOrganizationalUnitsPath = await DatabaseService.GetFullPathForOrganizationalUnitAsync(_selectedOrganizationalUnitId);
+            var targetOrganizationalUnitsPath = await DatabaseService.GetFullPathAsync<OrganizationalUnit>(_selectedOrganizationalUnitId);
 
             if (targetOrganizationalUnitsPath.Length > 0)
             {
@@ -138,7 +138,10 @@ public partial class MoveDialog
                     await AppendHostMoveRequests(unavailableHosts, targetOrganization, targetOrganizationalUnitsPath);
                 }
 
-                await DatabaseService.MoveNodesAsync(nodeIds, _selectedOrganizationalUnitId);
+                foreach (var nodeId in nodeIds)
+                {
+                    await DatabaseService.MoveNodeAsync<Computer>(nodeId, _selectedOrganizationalUnitId);
+                }
             }
 
             await OnNodesMoved.InvokeAsync(Hosts.Keys);

@@ -4,7 +4,6 @@
 
 using System.Linq.Expressions;
 using RemoteMaster.Shared.Abstractions;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Abstractions;
 
@@ -18,9 +17,9 @@ public interface IDatabaseService
 
     Task RemoveNodeAsync<T>(T node) where T : class, INode;
 
-    Task UpdateComputerAsync(Computer computer, string ipAddress, string hostName);
+    Task UpdateNodeAsync<T>(T node, Action<T> updateAction) where T : class, INode;
 
-    Task MoveNodesAsync(IEnumerable<Guid> nodeIds, Guid newParentId);
+    Task MoveNodeAsync<T>(Guid nodeId, Guid newParentId) where T : class, INode;
 
-    Task<string[]> GetFullPathForOrganizationalUnitAsync(Guid ouId);
+    Task<string[]> GetFullPathAsync<T>(Guid nodeId) where T : class, INode;
 }
