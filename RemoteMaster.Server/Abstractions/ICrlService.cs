@@ -4,16 +4,40 @@
 
 using System.Security.Cryptography.X509Certificates;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Abstractions;
 
+/// <summary>
+/// Defines the contract for managing Certificate Revocation Lists (CRLs).
+/// </summary>
 public interface ICrlService
 {
-    Task RevokeCertificateAsync(string serialNumber, X509RevocationReason reason);
+    /// <summary>
+    /// Revokes a certificate asynchronously.
+    /// </summary>
+    /// <param name="serialNumber">The serial number of the certificate to revoke.</param>
+    /// <param name="reason">The reason for revocation.</param>
+    /// <returns>A result indicating success or failure.</returns>
+    Task<Result> RevokeCertificateAsync(string serialNumber, X509RevocationReason reason);
 
-    Task<byte[]> GenerateCrlAsync();
+    /// <summary>
+    /// Generates a CRL asynchronously.
+    /// </summary>
+    /// <returns>A result containing the CRL data or an error.</returns>
+    Task<Result<byte[]>> GenerateCrlAsync();
 
-    Task<bool> PublishCrlAsync(byte[] crlData, string? customPath = null);
+    /// <summary>
+    /// Publishes a CRL asynchronously.
+    /// </summary>
+    /// <param name="crlData">The CRL data to publish.</param>
+    /// <param name="customPath">An optional custom path for publishing the CRL.</param>
+    /// <returns>A result indicating success or failure.</returns>
+    Task<Result> PublishCrlAsync(byte[] crlData, string? customPath = null);
 
-    Task<CrlMetadata> GetCrlMetadataAsync();
+    /// <summary>
+    /// Gets CRL metadata asynchronously.
+    /// </summary>
+    /// <returns>A result containing the CRL metadata or an error.</returns>
+    Task<Result<CrlMetadata>> GetCrlMetadataAsync();
 }

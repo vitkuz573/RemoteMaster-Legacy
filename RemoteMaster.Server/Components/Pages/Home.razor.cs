@@ -192,10 +192,27 @@ public partial class Home
     [Authorize(Roles = "Administrator")]
     private async Task PublishCrl()
     {
-        var crl = await CrlService.GenerateCrlAsync();
-        var result = await CrlService.PublishCrlAsync(crl);
+        var crlResult = await CrlService.GenerateCrlAsync();
 
-        Snackbar.Add(result ? "CRL successfully published" : "Failed to publish CRL", result ? Severity.Success : Severity.Error);
+        if (!crlResult.IsSuccess)
+        {
+            Log.Error("Failed to generate CRL: {Message}", crlResult.Errors.FirstOrDefault()?.Message);
+            Snackbar.Add("Failed to generate CRL", Severity.Error);
+            
+            return;
+        }
+
+        var publishResult = await CrlService.PublishCrlAsync(crlResult.Value);
+
+        if (publishResult.IsSuccess)
+        {
+            Snackbar.Add("CRL successfully published", Severity.Success);
+        }
+        else
+        {
+            Log.Error("Failed to publish CRL: {Message}", publishResult.Errors.FirstOrDefault()?.Message);
+            Snackbar.Add("Failed to publish CRL", Severity.Error);
+        }
     }
 
     private void ManageProfile() => NavigationManager.NavigateTo("/Account/Manage");

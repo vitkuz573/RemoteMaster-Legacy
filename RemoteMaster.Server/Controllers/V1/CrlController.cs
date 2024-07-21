@@ -24,25 +24,23 @@ public class CrlController(ICrlService crlService) : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<string>), 500)]
     public async Task<IActionResult> GetCrlAsync()
     {
-        try
+        var crlResult = await crlService.GenerateCrlAsync();
+
+        if (crlResult.IsSuccess)
         {
-            var crlData = await crlService.GenerateCrlAsync();
-
-            return File(crlData, "application/pkix-crl", "list.crl");
+            return File(crlResult.Value, "application/pkix-crl", "list.crl");
         }
-        catch (Exception ex)
+
+        var problemDetails = new ProblemDetails
         {
-            var problemDetails = new ProblemDetails
-            {
-                Title = "Internal Server Error",
-                Detail = "An error occurred while generating the CRL. Please try again later.",
-                Status = StatusCodes.Status500InternalServerError
-            };
+            Title = "Internal Server Error",
+            Detail = crlResult.Errors.FirstOrDefault()?.Message ?? "An error occurred while generating the CRL. Please try again later.",
+            Status = StatusCodes.Status500InternalServerError
+        };
 
-            var errorResponse = ApiResponse<string>.Failure(problemDetails, StatusCodes.Status500InternalServerError);
+        var errorResponse = ApiResponse<string>.Failure(problemDetails, StatusCodes.Status500InternalServerError);
 
-            return StatusCode(StatusCodes.Status500InternalServerError, errorResponse);
-        }
+        return StatusCode(StatusCodes.Status500InternalServerError, errorResponse);
     }
 
     [HttpGet("metadata", Name = "GetCrlMetadata")]
@@ -50,10 +48,11 @@ public class CrlController(ICrlService crlService) : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<string>), 500)]
     public async Task<IActionResult> GetCrlMetadataAsync()
     {
-        try
+        var metadataResult = await crlService.GetCrlMetadataAsync();
+
+        if (metadataResult.IsSuccess)
         {
-            var metadata = await crlService.GetCrlMetadataAsync();
-            var response = ApiResponse<CrlMetadata>.Success(metadata, "CRL metadata retrieved successfully.");
+            var response = ApiResponse<CrlMetadata>.Success(metadataResult.Value, "CRL metadata retrieved successfully.");
 
             var selfUrl = Url.Action("GetCrlMetadata");
             var downloadUrl = Url.Action("GetCrl");
@@ -66,18 +65,16 @@ public class CrlController(ICrlService crlService) : ControllerBase
 
             return Ok(response);
         }
-        catch (Exception)
+
+        var problemDetails = new ProblemDetails
         {
-            var problemDetails = new ProblemDetails
-            {
-                Title = "Internal Server Error",
-                Detail = "An error occurred while retrieving the CRL metadata. Please try again later.",
-                Status = StatusCodes.Status500InternalServerError
-            };
+            Title = "Internal Server Error",
+            Detail = metadataResult.Errors.FirstOrDefault()?.Message ?? "An error occurred while retrieving the CRL metadata. Please try again later.",
+            Status = StatusCodes.Status500InternalServerError
+        };
 
-            var errorResponse = ApiResponse<string>.Failure(problemDetails, StatusCodes.Status500InternalServerError);
+        var errorResponse = ApiResponse<string>.Failure(problemDetails, StatusCodes.Status500InternalServerError);
 
-            return StatusCode(StatusCodes.Status500InternalServerError, errorResponse);
-        }
+        return StatusCode(StatusCodes.Status500InternalServerError, errorResponse);
     }
 }

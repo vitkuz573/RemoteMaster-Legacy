@@ -10,94 +10,117 @@ using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Shared.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
 public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, ICertificateProvider certificateProvider, IFileSystem fileSystem) : ICrlService
 {
-    public async Task RevokeCertificateAsync(string serialNumber, X509RevocationReason reason)
+    public async Task<Result> RevokeCertificateAsync(string serialNumber, X509RevocationReason reason)
     {
-        var context = await contextFactory.CreateDbContextAsync();
-
-        var existingRevokedCertificate = await context.RevokedCertificates.FirstOrDefaultAsync(rc => rc.SerialNumber == serialNumber);
-
-        if (existingRevokedCertificate != null)
+        try
         {
-            Log.Information($"Certificate with serial number {serialNumber} has already been revoked.");
+            var context = await contextFactory.CreateDbContextAsync();
+
+            var existingRevokedCertificate = await context.RevokedCertificates.FirstOrDefaultAsync(rc => rc.SerialNumber == serialNumber);
+
+            if (existingRevokedCertificate != null)
+            {
+                Log.Information($"Certificate with serial number {serialNumber} has already been revoked.");
+
+                return Result.Success();
+            }
+
+            var revokedCertificate = new RevokedCertificate
+            {
+                SerialNumber = serialNumber,
+                Reason = reason,
+                RevocationDate = DateTimeOffset.UtcNow
+            };
+
+            context.RevokedCertificates.Add(revokedCertificate);
+            var result = await context.SaveChangesAsync();
+
+            if (result > 0)
+            {
+                Log.Information($"Certificate with serial number {serialNumber} has been successfully revoked.");
+                
+                return Result.Success();
+            }
+            else
+            {
+                Log.Error($"Failed to revoke certificate with serial number {serialNumber}.");
+                
+                return Result.Failure($"Failed to revoke certificate with serial number {serialNumber}.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, $"Error revoking certificate with serial number {serialNumber}");
             
-            return;
-        }
-
-        var revokedCertificate = new RevokedCertificate
-        {
-            SerialNumber = serialNumber,
-            Reason = reason,
-            RevocationDate = DateTimeOffset.UtcNow
-        };
-
-        context.RevokedCertificates.Add(revokedCertificate);
-        var result = await context.SaveChangesAsync();
-
-        if (result > 0)
-        {
-            Log.Information($"Certificate with serial number {serialNumber} has been successfully revoked.");
-        }
-        else
-        {
-            Log.Error($"Failed to revoke certificate with serial number {serialNumber}.");
+            return Result.Failure($"Error revoking certificate with serial number {serialNumber}", exception: ex);
         }
     }
 
-    public async Task<byte[]> GenerateCrlAsync()
+    public async Task<Result<byte[]>> GenerateCrlAsync()
     {
-        var issuerCertificate = certificateProvider.GetIssuerCertificate();
-        var crlBuilder = new CertificateRevocationListBuilder();
-
-        var context = await contextFactory.CreateDbContextAsync();
-
-        var crlInfo = context.CrlInfos.OrderBy(ci => ci.CrlNumber).FirstOrDefault() ?? new CrlInfo
+        try
         {
-            CrlNumber = BigInteger.Zero.ToString()
-        };
+            var issuerCertificate = certificateProvider.GetIssuerCertificate();
+            var crlBuilder = new CertificateRevocationListBuilder();
 
-        var currentCrlNumber = BigInteger.Parse(crlInfo.CrlNumber) + 1;
-        var nextUpdate = DateTimeOffset.UtcNow.AddDays(30);
+            var context = await contextFactory.CreateDbContextAsync();
 
-        var revokedCertificates = context.RevokedCertificates.ToList();
+            var crlInfo = context.CrlInfos.OrderBy(ci => ci.CrlNumber).FirstOrDefault() ?? new CrlInfo
+            {
+                CrlNumber = BigInteger.Zero.ToString()
+            };
 
-        foreach (var revoked in revokedCertificates)
-        {
-            var serialNumberBytes = Enumerable.Range(0, revoked.SerialNumber.Length)
-                .Where(x => x % 2 == 0)
-                .Select(x => Convert.ToByte(revoked.SerialNumber.Substring(x, 2), 16))
-                .ToArray();
+            var currentCrlNumber = BigInteger.Parse(crlInfo.CrlNumber) + 1;
+            var nextUpdate = DateTimeOffset.UtcNow.AddDays(30);
 
-            crlBuilder.AddEntry(serialNumberBytes, revoked.RevocationDate, revoked.Reason);
+            var revokedCertificates = context.RevokedCertificates.ToList();
+
+            foreach (var revoked in revokedCertificates)
+            {
+                var serialNumberBytes = Enumerable.Range(0, revoked.SerialNumber.Length)
+                    .Where(x => x % 2 == 0)
+                    .Select(x => Convert.ToByte(revoked.SerialNumber.Substring(x, 2), 16))
+                    .ToArray();
+
+                crlBuilder.AddEntry(serialNumberBytes, revoked.RevocationDate, revoked.Reason);
+            }
+
+            var crlData = crlBuilder.Build(issuerCertificate, currentCrlNumber, nextUpdate, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+            var crlHash = BitConverter.ToString(SHA256.HashData(crlData)).Replace("-", "").ToLowerInvariant();
+
+            crlInfo.CrlNumber = currentCrlNumber.ToString();
+            crlInfo.NextUpdate = nextUpdate;
+            crlInfo.CrlHash = crlHash;
+
+            if (context.CrlInfos.Any())
+            {
+                context.CrlInfos.Update(crlInfo);
+            }
+            else
+            {
+                context.CrlInfos.Add(crlInfo);
+            }
+
+            await context.SaveChangesAsync();
+
+            return Result<byte[]>.Success(crlData);
         }
-
-        var crlData = crlBuilder.Build(issuerCertificate, currentCrlNumber, nextUpdate, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-        var crlHash = BitConverter.ToString(SHA256.HashData(crlData)).Replace("-", "").ToLowerInvariant();
-
-        crlInfo.CrlNumber = currentCrlNumber.ToString();
-        crlInfo.NextUpdate = nextUpdate;
-        crlInfo.CrlHash = crlHash;
-
-        if (context.CrlInfos.Any())
+        catch (Exception ex)
         {
-            context.CrlInfos.Update(crlInfo);
+            Log.Error(ex, "Error generating CRL");
+            
+            return Result<byte[]>.Failure("Error generating CRL", exception: ex);
         }
-        else
-        {
-            context.CrlInfos.Add(crlInfo);
-        }
-
-        await context.SaveChangesAsync();
-
-        return crlData;
     }
 
-    public async Task<bool> PublishCrlAsync(byte[] crlData, string? customPath = null)
+    public async Task<Result> PublishCrlAsync(byte[] crlData, string? customPath = null)
     {
         try
         {
@@ -120,32 +143,43 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
 
             Log.Information($"CRL published to {crlFilePath}");
 
-            return true;
+            return Result.Success();
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Failed to publish CRL");
-
-            return false;
+            
+            return Result.Failure("Failed to publish CRL", exception: ex);
         }
     }
 
-    public async Task<CrlMetadata> GetCrlMetadataAsync()
+    public async Task<Result<CrlMetadata>> GetCrlMetadataAsync()
     {
-        var context = await contextFactory.CreateDbContextAsync();
-
-        var crlInfo = await context.CrlInfos.OrderBy(ci => ci.CrlNumber).FirstOrDefaultAsync();
-        var revokedCertificatesCount = await context.RevokedCertificates.CountAsync();
-
-        if (crlInfo != null)
+        try
         {
-            return new CrlMetadata
-            {
-                CrlInfo = crlInfo,
-                RevokedCertificatesCount = revokedCertificatesCount
-            };
-        }
+            var context = await contextFactory.CreateDbContextAsync();
 
-        throw new InvalidOperationException("CRL Metadata is not available.");
+            var crlInfo = await context.CrlInfos.OrderBy(ci => ci.CrlNumber).FirstOrDefaultAsync();
+            var revokedCertificatesCount = await context.RevokedCertificates.CountAsync();
+
+            if (crlInfo != null)
+            {
+                var metadata = new CrlMetadata
+                {
+                    CrlInfo = crlInfo,
+                    RevokedCertificatesCount = revokedCertificatesCount
+                };
+
+                return Result<CrlMetadata>.Success(metadata);
+            }
+
+            return Result<CrlMetadata>.Failure("CRL Metadata is not available.");
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error retrieving CRL metadata");
+            
+            return Result<CrlMetadata>.Failure("Error retrieving CRL metadata", exception: ex);
+        }
     }
 }
