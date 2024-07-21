@@ -67,7 +67,15 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
     {
         try
         {
-            var issuerCertificate = certificateProvider.GetIssuerCertificate();
+            var issuerCertificateResult = certificateProvider.GetIssuerCertificate();
+
+            if (!issuerCertificateResult.IsSuccess)
+            {
+                return Result<byte[]>.Failure("Error retrieving issuer certificate.", exception: issuerCertificateResult.Errors.FirstOrDefault()?.Exception);
+            }
+
+            var issuerCertificate = issuerCertificateResult.Value;
+
             var crlBuilder = new CertificateRevocationListBuilder();
 
             var context = await contextFactory.CreateDbContextAsync();
@@ -115,7 +123,7 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
         catch (Exception ex)
         {
             Log.Error(ex, "Error generating CRL");
-            
+
             return Result<byte[]>.Failure("Error generating CRL", exception: ex);
         }
     }

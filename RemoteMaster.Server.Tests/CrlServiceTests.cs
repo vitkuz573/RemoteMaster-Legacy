@@ -14,6 +14,7 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
+using RemoteMaster.Shared.Models;
 using Serilog;
 using Xunit.Abstractions;
 
@@ -88,7 +89,8 @@ public class CrlServiceTests : IDisposable
 
         // Arrange
         using var certificate = CreateTestCertificateWithBasicConstraints();
-        _certificateProviderMock.Setup(cp => cp.GetIssuerCertificate()).Returns(certificate);
+        var certificateResult = Result<X509Certificate2>.Success(certificate);
+        _certificateProviderMock.Setup(cp => cp.GetIssuerCertificate()).Returns(certificateResult);
 
         var contextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<CertificateDbContext>>();
         var context = await contextFactory.CreateDbContextAsync();

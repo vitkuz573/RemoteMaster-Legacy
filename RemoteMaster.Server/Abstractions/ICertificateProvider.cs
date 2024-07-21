@@ -3,10 +3,24 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Cryptography.X509Certificates;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Abstractions;
 
+/// <summary>
+/// Defines the contract for certificate providers.
+/// </summary>
 public interface ICertificateProvider
 {
-    X509Certificate2 GetIssuerCertificate();
+    /// <summary>
+    /// Retrieves the issuer certificate based on the provided common name.
+    /// </summary>
+    /// <returns>
+    /// A <see cref="Result{X509Certificate2}"/> that represents:
+    /// <list type="bullet">
+    ///     <item><description>If the certificate is found and accessible, it returns <see cref="Result{X509Certificate2}.Success"/> with the found certificate.</description></item>
+    ///     <item><description>If the certificate is not found or an error occurs while retrieving it, it returns <see cref="Result{X509Certificate2}.Failure"/> with an appropriate error message.</description></item>
+    /// </list>
+    /// </returns>
+    Result<X509Certificate2> GetIssuerCertificate();
 }

@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Abstractions;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
 
@@ -14,14 +15,24 @@ public class CertificateProvider(IOptions<CertificateOptions> options, ICertific
 {
     private readonly CertificateOptions _settings = options.Value;
 
-    public X509Certificate2 GetIssuerCertificate()
+    public Result<X509Certificate2> GetIssuerCertificate()
     {
-        var certificates = certificateStoreService.GetCertificates(StoreName.Root, StoreLocation.LocalMachine, X509FindType.FindBySubjectName, _settings.CommonName);
+        try
+        {
+            var certificates = certificateStoreService.GetCertificates(StoreName.Root, StoreLocation.LocalMachine, X509FindType.FindBySubjectName, _settings.CommonName);
 
-        var caCertificate = certificates.FirstOrDefault(cert => cert.HasPrivateKey);
+            var caCertificate = certificates.FirstOrDefault(cert => cert.HasPrivateKey);
 
-        return caCertificate == null
-            ? throw new InvalidOperationException($"CA certificate with CommonName '{_settings.CommonName}' not found.")
-            : caCertificate.GetUnderlyingCertificate();
+            if (caCertificate == null)
+            {
+                return Result<X509Certificate2>.Failure($"CA certificate with CommonName '{_settings.CommonName}' not found.");
+            }
+
+            return Result<X509Certificate2>.Success(caCertificate.GetUnderlyingCertificate());
+        }
+        catch (Exception ex)
+        {
+            return Result<X509Certificate2>.Failure("Error while retrieving CA certificate.", exception: ex);
+        }
     }
 }

@@ -2,12 +2,14 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Options;
 using Moq;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
 using RemoteMaster.Shared.Abstractions;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Tests;
 
@@ -20,9 +22,10 @@ public class CertificateProviderTests
         var optionsMock = new Mock<IOptions<CertificateOptions>>();
         optionsMock.Setup(o => o.Value).Returns(new CertificateOptions { CommonName = "TestCA" });
 
-        var certMock = new Mock<ICertificateWrapper>();
-        certMock.Setup(c => c.HasPrivateKey).Returns(true);
-        var certificates = new List<ICertificateWrapper> { certMock.Object };
+        using var certificate = CreateTestCertificateWithPrivateKey();
+        var certWrapper = new CertificateWrapper(certificate);
+
+        var certificates = new List<ICertificateWrapper> { certWrapper };
 
         var certificateStoreServiceMock = new Mock<ICertificateStoreService>();
         certificateStoreServiceMock.Setup(s => s.GetCertificates(StoreName.Root, StoreLocation.LocalMachine, X509FindType.FindBySubjectName, "TestCA"))
@@ -31,14 +34,16 @@ public class CertificateProviderTests
         var provider = new CertificateProvider(optionsMock.Object, certificateStoreServiceMock.Object);
 
         // Act
-        provider.GetIssuerCertificate();
+        var result = provider.GetIssuerCertificate();
 
         // Assert
-        certMock.Verify(c => c.HasPrivateKey, Times.Once);
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Value);
+        Assert.True(result.Value.HasPrivateKey);
     }
 
     [Fact]
-    public void GetIssuerCertificate_ThrowsInvalidOperationExceptionWhenCertificateNotFound()
+    public void GetIssuerCertificate_ReturnsFailureResultWhenCertificateNotFound()
     {
         // Arrange
         var optionsMock = new Mock<IOptions<CertificateOptions>>();
@@ -50,8 +55,45 @@ public class CertificateProviderTests
 
         var provider = new CertificateProvider(optionsMock.Object, certificateStoreServiceMock.Object);
 
-        // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => provider.GetIssuerCertificate());
-        Assert.Equal("CA certificate with CommonName 'NonExistentCA' not found.", exception.Message);
+        // Act
+        var result = provider.GetIssuerCertificate();
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        var errorDetails = result.Errors.FirstOrDefault();
+        Assert.NotNull(errorDetails);
+        Assert.Equal("CA certificate with CommonName 'NonExistentCA' not found.", errorDetails.Message);
+    }
+
+    [Fact]
+    public void GetIssuerCertificate_ReturnsFailureResultOnException()
+    {
+        // Arrange
+        var optionsMock = new Mock<IOptions<CertificateOptions>>();
+        optionsMock.Setup(o => o.Value).Returns(new CertificateOptions { CommonName = "TestCA" });
+
+        var certificateStoreServiceMock = new Mock<ICertificateStoreService>();
+        certificateStoreServiceMock.Setup(s => s.GetCertificates(StoreName.Root, StoreLocation.LocalMachine, X509FindType.FindBySubjectName, "TestCA"))
+                                   .Throws(new Exception("Test exception"));
+
+        var provider = new CertificateProvider(optionsMock.Object, certificateStoreServiceMock.Object);
+
+        // Act
+        var result = provider.GetIssuerCertificate();
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        var errorDetails = result.Errors.FirstOrDefault();
+        Assert.NotNull(errorDetails);
+        Assert.Equal("Error while retrieving CA certificate.", errorDetails.Message);
+        Assert.Equal("Test exception", errorDetails.Exception?.Message);
+    }
+
+    private static X509Certificate2 CreateTestCertificateWithPrivateKey()
+    {
+        using var rsa = RSA.Create(2048);
+        var request = new CertificateRequest("cn=TestCertificate", rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        request.CertificateExtensions.Add(new X509BasicConstraintsExtension(true, false, 0, true));
+        return request.CreateSelfSigned(DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(1));
     }
 }
