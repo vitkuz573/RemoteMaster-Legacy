@@ -6,5 +6,5 @@ namespace RemoteMaster.Shared.Claims;
 
 public static class CustomClaimTypes
 {
-    public const string AuthType = "http://schemas.remotemastersoftware.com/ws/2023/07/identity/claims/authtype";
+    public const string AuthType = "http://schemas.remotemastersoftware.com/ws/2024/07/identity/claims/authtype";
 }
