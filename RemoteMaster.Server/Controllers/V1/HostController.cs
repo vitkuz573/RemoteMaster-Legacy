@@ -1,4 +1,4 @@
-﻿// Copyright © 2023 Vitaly Kuzyaев. All rights reserved.
+﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
@@ -37,9 +37,9 @@ public class HostController(IHostRegistrationService registrationService) : Cont
 
         var result = await registrationService.RegisterHostAsync(hostConfiguration);
 
-        if (result)
+        if (result.IsSuccess)
         {
-            var response = ApiResponse<bool>.Success(result, "Host registration successful.");
+            var response = ApiResponse<bool>.Success(result.Value, "Host registration successful.");
 
             return Ok(response);
         }
@@ -47,7 +47,7 @@ public class HostController(IHostRegistrationService registrationService) : Cont
         var failureProblemDetails = new ProblemDetails
         {
             Title = "Host registration failed",
-            Detail = "The registration of the host failed.",
+            Detail = result.Errors.FirstOrDefault()?.Message ?? "The registration of the host failed.",
             Status = StatusCodes.Status400BadRequest
         };
 
@@ -75,10 +75,25 @@ public class HostController(IHostRegistrationService registrationService) : Cont
             return BadRequest(errorResponse);
         }
 
-        var isRegistered = await registrationService.IsHostRegisteredAsync(macAddress);
-        var response = ApiResponse<bool>.Success(isRegistered, "Host registration status retrieved.");
+        var result = await registrationService.IsHostRegisteredAsync(macAddress);
 
-        return Ok(response);
+        if (result.IsSuccess)
+        {
+            var response = ApiResponse<bool>.Success(result.Value, "Host registration status retrieved.");
+
+            return Ok(response);
+        }
+
+        var failureProblemDetails = new ProblemDetails
+        {
+            Title = "Failed to retrieve host registration status",
+            Detail = result.Errors.FirstOrDefault()?.Message ?? "An error occurred while retrieving the host registration status.",
+            Status = StatusCodes.Status400BadRequest
+        };
+
+        var failureResponse = ApiResponse<bool>.Failure(failureProblemDetails);
+
+        return BadRequest(failureResponse);
     }
 
     [HttpDelete("unregister")]
@@ -102,9 +117,9 @@ public class HostController(IHostRegistrationService registrationService) : Cont
 
         var result = await registrationService.UnregisterHostAsync(request);
 
-        if (result)
+        if (result.IsSuccess)
         {
-            var response = ApiResponse<bool>.Success(result, "Host unregister successful.");
+            var response = ApiResponse<bool>.Success(result.Value, "Host unregister successful.");
 
             return Ok(response);
         }
@@ -112,7 +127,7 @@ public class HostController(IHostRegistrationService registrationService) : Cont
         var failureProblemDetails = new ProblemDetails
         {
             Title = "Host unregister failed",
-            Detail = "The unregister of the host failed.",
+            Detail = result.Errors.FirstOrDefault()?.Message ?? "The unregister of the host failed.",
             Status = StatusCodes.Status400BadRequest
         };
 
@@ -142,9 +157,9 @@ public class HostController(IHostRegistrationService registrationService) : Cont
 
         var result = await registrationService.UpdateHostInformationAsync(request);
 
-        if (result)
+        if (result.IsSuccess)
         {
-            var response = ApiResponse<bool>.Success(result, "Host update successful.");
+            var response = ApiResponse<bool>.Success(result.Value, "Host update successful.");
 
             return Ok(response);
         }
@@ -152,7 +167,7 @@ public class HostController(IHostRegistrationService registrationService) : Cont
         var failureProblemDetails = new ProblemDetails
         {
             Title = "Host update failed",
-            Detail = "The update of the host information failed.",
+            Detail = result.Errors.FirstOrDefault()?.Message ?? "The update of the host information failed.",
             Status = StatusCodes.Status400BadRequest
         };
 

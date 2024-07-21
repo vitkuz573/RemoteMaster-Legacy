@@ -10,12 +10,6 @@ namespace RemoteMaster.Server.Services;
 
 public class HostRegistrationService(IDatabaseService databaseService, IEventNotificationService eventNotificationService) : IHostRegistrationService
 {
-    /// <summary>
-    /// Retrieves an organization by name from the database.
-    /// </summary>
-    /// <param name="organizationName">The name of the organization.</param>
-    /// <returns>The organization object if found.</returns>
-    /// <exception cref="InvalidOperationException">Thrown if the organization is not found.</exception>
     private async Task<Organization> GetOrganizationAsync(string organizationName)
     {
         var organizationsResult = await databaseService.GetNodesAsync<Organization>(n => n.Name == organizationName);
@@ -30,13 +24,6 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
         return organization ?? throw new InvalidOperationException($"Organization '{organizationName}' not found.");
     }
 
-    /// <summary>
-    /// Resolves the hierarchy of organizational units.
-    /// </summary>
-    /// <param name="ouNames">The list of organizational unit names.</param>
-    /// <param name="organizationId">The ID of the organization.</param>
-    /// <returns>The resolved organizational unit.</returns>
-    /// <exception cref="InvalidOperationException">Thrown if any organizational unit is not found.</exception>
     private async Task<OrganizationalUnit?> ResolveOrganizationalUnitHierarchyAsync(IEnumerable<string> ouNames, Guid organizationId)
     {
         OrganizationalUnit? parentOu = null;
@@ -67,13 +54,6 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
         return parentOu;
     }
 
-    /// <summary>
-    /// Retrieves a computer by its MAC address.
-    /// </summary>
-    /// <param name="macAddress">The MAC address of the computer.</param>
-    /// <param name="parentOuId">The ID of the parent organizational unit.</param>
-    /// <returns>The computer object if found.</returns>
-    /// <exception cref="InvalidOperationException">Thrown if the computer is not found.</exception>
     private async Task<Computer> GetComputerByMacAddressAsync(string macAddress, Guid parentOuId)
     {
         var existingComputersResult = await databaseService.GetNodesAsync<Computer>(c => c.ParentId == parentOuId);
@@ -88,12 +68,7 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
         return computer;
     }
 
-    /// <summary>
-    /// Checks if a host with the specified MAC address is registered.
-    /// </summary>
-    /// <param name="macAddress">The MAC address of the host.</param>
-    /// <returns>True if the host is registered, otherwise false.</returns>
-    public async Task<bool> IsHostRegisteredAsync(string macAddress)
+    public async Task<Result<bool>> IsHostRegisteredAsync(string macAddress)
     {
         ArgumentNullException.ThrowIfNull(macAddress);
 
@@ -105,25 +80,20 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
             {
                 await eventNotificationService.SendNotificationAsync($"Error while checking registration of the host with MAC address `{macAddress}`: {computersResult.Errors.FirstOrDefault()?.Message}");
                 
-                return false;
+                return Result<bool>.Failure($"Error while checking registration of the host with MAC address `{macAddress}`: {computersResult.Errors.FirstOrDefault()?.Message}");
             }
 
-            return computersResult.Value.Any();
+            return Result<bool>.Success(computersResult.Value.Any());
         }
         catch (Exception ex)
         {
             await eventNotificationService.SendNotificationAsync($"Error while checking registration of the host with MAC address `{macAddress}`: {ex.Message}");
             
-            return false;
+            return Result<bool>.Failure($"Error while checking registration of the host with MAC address `{macAddress}`: {ex.Message}");
         }
     }
 
-    /// <summary>
-    /// Registers a host with the specified configuration.
-    /// </summary>
-    /// <param name="hostConfiguration">The host configuration.</param>
-    /// <returns>True if registration is successful, otherwise false.</returns>
-    public async Task<bool> RegisterHostAsync(HostConfiguration hostConfiguration)
+    public async Task<Result<bool>> RegisterHostAsync(HostConfiguration hostConfiguration)
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
 
@@ -138,22 +108,29 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
         {
             await eventNotificationService.SendNotificationAsync($"Host registration failed: {ex.Message} for host {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
             
-            return false;
+            return Result<bool>.Failure($"Host registration failed: {ex.Message}");
         }
 
         try
         {
             var existingComputer = await GetComputerByMacAddressAsync(hostConfiguration.Host.MacAddress, parentOu.NodeId);
 
-            await databaseService.UpdateNodeAsync(existingComputer, computer =>
+            var updateResult = await databaseService.UpdateNodeAsync(existingComputer, computer =>
             {
                 computer.IpAddress = hostConfiguration.Host.IpAddress;
                 computer.Name = hostConfiguration.Host.Name;
             });
 
+            if (!updateResult.IsSuccess)
+            {
+                await eventNotificationService.SendNotificationAsync($"Failed to update existing computer: {updateResult.Errors.FirstOrDefault()?.Message}");
+                
+                return Result<bool>.Failure($"Failed to update existing computer: {updateResult.Errors.FirstOrDefault()?.Message}");
+            }
+
             await eventNotificationService.SendNotificationAsync($"Host registration successful: {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
             
-            return true;
+            return Result<bool>.Success(true);
         }
         catch (InvalidOperationException)
         {
@@ -165,21 +142,22 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
                 ParentId = parentOu.NodeId
             };
 
+            var addResult = await databaseService.AddNodesAsync(new List<Computer> { computer });
+
+            if (!addResult.IsSuccess)
+            {
+                await eventNotificationService.SendNotificationAsync($"Failed to add new computer: {addResult.Errors.FirstOrDefault()?.Message}");
+                
+                return Result<bool>.Failure($"Failed to add new computer: {addResult.Errors.FirstOrDefault()?.Message}");
+            }
+
             await eventNotificationService.SendNotificationAsync($"New host registered: {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
-
-            await databaseService.AddNodesAsync(new List<Computer> { computer });
-
-            return true;
+            
+            return Result<bool>.Success(true);
         }
     }
 
-    /// <summary>
-    /// Unregisters a host with the specified request.
-    /// </summary>
-    /// <param name="request">The host unregister request containing the necessary configuration.</param>
-    /// <returns>True if unregister is successful, otherwise false.</returns>
-    /// <exception cref="ArgumentException">Thrown if the host unregister request is invalid.</exception>
-    public async Task<bool> UnregisterHostAsync(HostUnregisterRequest request)
+    public async Task<Result<bool>> UnregisterHostAsync(HostUnregisterRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -198,32 +176,35 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
         catch (InvalidOperationException ex)
         {
             await eventNotificationService.SendNotificationAsync($"Host unregister failed: {ex.Message} for host {request.Name} (`{request.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'");
-           
-            return false;
+            
+            return Result<bool>.Failure($"Host unregister failed: {ex.Message}");
         }
 
         try
         {
             var existingComputer = await GetComputerByMacAddressAsync(request.MacAddress, lastOu.NodeId);
-            await databaseService.RemoveNodesAsync(new List<Computer> { existingComputer });
+            var removeResult = await databaseService.RemoveNodesAsync(new List<Computer> { existingComputer });
+
+            if (!removeResult.IsSuccess)
+            {
+                await eventNotificationService.SendNotificationAsync($"Failed to remove existing computer: {removeResult.Errors.FirstOrDefault()?.Message}");
+                
+                return Result<bool>.Failure($"Failed to remove existing computer: {removeResult.Errors.FirstOrDefault()?.Message}");
+            }
+
             await eventNotificationService.SendNotificationAsync($"Host unregistered: {request.Name} (`{request.MacAddress}`) from organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' in organization '{request.Organization}'");
             
-            return true;
+            return Result<bool>.Success(true);
         }
         catch (InvalidOperationException ex)
         {
             await eventNotificationService.SendNotificationAsync($"Host unregister failed: {ex.Message} for host {request.Name} (`{request.MacAddress}`) from organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' in organization '{request.Organization}'");
             
-            return false;
+            return Result<bool>.Failure($"Host unregister failed: {ex.Message}");
         }
     }
 
-    /// <summary>
-    /// Updates the information of a host with the specified request.
-    /// </summary>
-    /// <param name="request">The host update request containing the necessary configuration.</param>
-    /// <returns>True if the update is successful, otherwise false.</returns>
-    public async Task<bool> UpdateHostInformationAsync(HostUpdateRequest request)
+    public async Task<Result<bool>> UpdateHostInformationAsync(HostUpdateRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -238,28 +219,35 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
         {
             await eventNotificationService.SendNotificationAsync($"Host information update failed: {ex.Message} for host {request.Name} (`{request.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'");
             
-            return false;
+            return Result<bool>.Failure($"Host information update failed: {ex.Message}");
         }
 
         try
         {
             var computer = await GetComputerByMacAddressAsync(request.MacAddress, lastOu.NodeId);
 
-            await databaseService.UpdateNodeAsync(computer, updatedComputer =>
+            var updateResult = await databaseService.UpdateNodeAsync(computer, updatedComputer =>
             {
                 updatedComputer.IpAddress = request.IpAddress;
                 updatedComputer.Name = request.Name;
             });
 
+            if (!updateResult.IsSuccess)
+            {
+                await eventNotificationService.SendNotificationAsync($"Failed to update existing computer: {updateResult.Errors.FirstOrDefault()?.Message}");
+                
+                return Result<bool>.Failure($"Failed to update existing computer: {updateResult.Errors.FirstOrDefault()?.Message}");
+            }
+
             await eventNotificationService.SendNotificationAsync($"Host information updated: {request.Name} (`{request.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'");
             
-            return true;
+            return Result<bool>.Success(true);
         }
         catch (InvalidOperationException ex)
         {
             await eventNotificationService.SendNotificationAsync($"Host information update failed: {ex.Message} for host {request.Name} (`{request.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'");
             
-            return false;
+            return Result<bool>.Failure($"Host information update failed: {ex.Message}");
         }
     }
 }
