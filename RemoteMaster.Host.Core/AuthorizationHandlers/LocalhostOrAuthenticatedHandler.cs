@@ -7,6 +7,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using RemoteMaster.Host.Core.Requirements;
+using RemoteMaster.Shared.Claims;
 
 namespace RemoteMaster.Host.Core.AuthorizationHandlers;
 
@@ -39,7 +40,7 @@ public class LocalhostOrAuthenticatedHandler(IHttpContextAccessor httpContextAcc
             {
                 new(ClaimTypes.Name, "RCHost"),
                 new(ClaimTypes.Role, "Windows Service"),
-                new("authType", "RemoteMaster Security")
+                new(CustomClaimTypes.AuthType, "RemoteMaster Security")
             };
 
             var identity = new ClaimsIdentity(claims, "RemoteMaster Security");

@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Http.Connections.Features;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Abstractions;
+using RemoteMaster.Shared.Claims;
 using RemoteMaster.Shared.Dtos;
 using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
@@ -31,8 +32,8 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
         if (user != null)
         {
-            var userName = user.FindFirst(ClaimTypes.Name)?.Value;
-            var role = user.FindFirst(ClaimTypes.Role)?.Value;
+            var userName = user.FindFirstValue(ClaimTypes.Name);
+            var role = user.FindFirstValue(ClaimTypes.Role);
 
             var authenticationType = GetAuthenticationType(user);
 
@@ -100,7 +101,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
         if (string.IsNullOrEmpty(authenticationType))
         {
-            authenticationType = user.FindFirst("authType")?.Value;
+            authenticationType = user.FindFirstValue(CustomClaimTypes.AuthType);
         }
 
         return authenticationType ?? "Unknown";
