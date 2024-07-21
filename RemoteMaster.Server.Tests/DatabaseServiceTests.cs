@@ -335,6 +335,125 @@ public class DatabaseServiceTests : IDisposable
             }));
     }
 
+    [Fact]
+    public async Task MoveNodeAsync_ThrowsException_IfMovingNodeToItself()
+    {
+        using var scope = CreateScope();
+        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+
+        // Arrange
+        var node = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "Node" };
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        context.OrganizationalUnits.Add(node);
+        await context.SaveChangesAsync();
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await databaseService.MoveNodeAsync(node, node));
+    }
+
+    [Fact]
+    public async Task GetFullPathAsync_ThrowsException_IfNodeNotFound()
+    {
+        using var scope = CreateScope();
+        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+
+        // Arrange
+        var nonExistentNode = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "NonExistentNode" };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await databaseService.GetFullPathAsync(nonExistentNode));
+    }
+
+    [Fact]
+    public async Task AddNodesAsync_AddsOrganizations()
+    {
+        using var scope = CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+
+        // Arrange
+        var organizations = new List<Organization>
+        {
+            new() { NodeId = Guid.NewGuid(), Name = "Org1", Country = "Country1", Locality = "Locality1", State = "State1" },
+            new() { NodeId = Guid.NewGuid(), Name = "Org2", Country = "Country2", Locality = "Locality2", State = "State2" }
+        };
+
+        // Act
+        var addedNodes = await databaseService.AddNodesAsync(organizations);
+
+        // Assert
+        foreach (var addedNode in addedNodes)
+        {
+            var fetchedNode = await context.Organizations.FindAsync(addedNode.NodeId);
+            Assert.NotNull(fetchedNode);
+            Assert.Equal(addedNode.Name, fetchedNode.Name);
+        }
+    }
+
+    [Fact]
+    public async Task AddNodesAsync_AddsComputers()
+    {
+        using var scope = CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+
+        // Arrange
+        var computers = new List<Computer>
+        {
+            new() { NodeId = Guid.NewGuid(), Name = "Comp1", IpAddress = "192.168.0.1", MacAddress = "00:00:00:00:00:01", ParentId = Guid.NewGuid() },
+            new() { NodeId = Guid.NewGuid(), Name = "Comp2", IpAddress = "192.168.0.2", MacAddress = "00:00:00:00:00:02", ParentId = Guid.NewGuid() }
+        };
+
+        // Act
+        var addedNodes = await databaseService.AddNodesAsync(computers);
+
+        // Assert
+        foreach (var addedNode in addedNodes)
+        {
+            var fetchedNode = await context.Computers.FindAsync(addedNode.NodeId);
+            Assert.NotNull(fetchedNode);
+            Assert.Equal(addedNode.Name, fetchedNode.Name);
+        }
+    }
+
+    [Fact]
+    public async Task GetNodesAsync_WithEmptyDatabase_ReturnsEmptyList()
+    {
+        using var scope = CreateScope();
+        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+
+        // Act
+        var result = await databaseService.GetNodesAsync<OrganizationalUnit>();
+
+        // Assert
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task GetNodesAsync_WithLargeDataSet_ReturnsAllNodes()
+    {
+        using var scope = CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+
+        // Arrange
+        var largeNumberOfNodes = new List<OrganizationalUnit>();
+        for (int i = 0; i < 1000; i++)
+        {
+            largeNumberOfNodes.Add(new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = $"OU{i}" });
+        }
+        context.OrganizationalUnits.AddRange(largeNumberOfNodes);
+        await context.SaveChangesAsync();
+
+        // Act
+        var result = await databaseService.GetNodesAsync<OrganizationalUnit>();
+
+        // Assert
+        Assert.Equal(1000, result.Count);
+    }
+
     public void Dispose()
     {
         _serviceProvider.Dispose();

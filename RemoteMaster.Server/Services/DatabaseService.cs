@@ -99,6 +99,11 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
             throw new InvalidOperationException("Computers can only be moved to OrganizationalUnits.");
         }
 
+        if (node.NodeId == newParent.NodeId)
+        {
+            throw new InvalidOperationException("Cannot move a node to itself.");
+        }
+
         var trackedNode = await applicationDbContext.Set<TNode>().FindAsync(node.NodeId) ?? throw new InvalidOperationException($"{typeof(TNode).Name} not found.");
 
         var trackedParentExists = await applicationDbContext.Set<TParent>().FindAsync(newParent.NodeId) != null;
@@ -108,7 +113,7 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
             throw new InvalidOperationException("New parent not found or is invalid.");
         }
 
-        if (trackedNode.NodeId != newParent.NodeId)
+        if (trackedNode.ParentId != newParent.NodeId)
         {
             trackedNode.ParentId = newParent.NodeId;
         }
@@ -121,6 +126,8 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
     {
         ArgumentNullException.ThrowIfNull(node);
 
+        var trackedNode = await applicationDbContext.Set<T>().FindAsync(node.NodeId) ?? throw new InvalidOperationException($"{typeof(T).Name} not found.");
+        
         var nodes = await applicationDbContext.Set<T>()
             .AsNoTracking()
             .ToListAsync();
