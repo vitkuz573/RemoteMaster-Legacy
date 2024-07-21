@@ -4,37 +4,51 @@
 
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
 
 public class AccessTokenProvider(ITokenService tokenService, ITokenStorageService tokenStorageService, NavigationManager navigationManager) : IAccessTokenProvider
 {
-    public async Task<string?> GetAccessTokenAsync(string userId)
+    public async Task<Result<string?>> GetAccessTokenAsync(string userId)
     {
-        var accessToken = await tokenStorageService.GetAccessTokenAsync(userId);
+        var accessTokenResult = await tokenStorageService.GetAccessTokenAsync(userId);
 
-        if (!string.IsNullOrEmpty(accessToken) && tokenService.IsTokenValid(accessToken))
+        if (accessTokenResult.IsSuccess && !string.IsNullOrEmpty(accessTokenResult.Value))
         {
-            return accessToken;
+            var tokenValidResult = tokenService.IsTokenValid(accessTokenResult.Value);
+
+            if (tokenValidResult.IsSuccess && tokenValidResult.Value)
+            {
+                return Result<string?>.Success(accessTokenResult.Value);
+            }
         }
 
-        var refreshToken = await tokenStorageService.GetRefreshTokenAsync(userId);
+        var refreshTokenResult = await tokenStorageService.GetRefreshTokenAsync(userId);
 
-        if (!string.IsNullOrEmpty(refreshToken) && tokenService.IsRefreshTokenValid(refreshToken))
+        if (refreshTokenResult.IsSuccess && !string.IsNullOrEmpty(refreshTokenResult.Value))
         {
-            var tokenData = await tokenService.GenerateTokensAsync(userId, refreshToken);
+            var refreshTokenValidResult = tokenService.IsRefreshTokenValid(refreshTokenResult.Value);
 
-            if (!string.IsNullOrEmpty(tokenData.AccessToken))
+            if (refreshTokenValidResult.IsSuccess && refreshTokenValidResult.Value)
             {
-                await tokenStorageService.StoreTokensAsync(userId, tokenData);
+                var tokenDataResult = await tokenService.GenerateTokensAsync(userId, refreshTokenResult.Value);
 
-                return tokenData.AccessToken;
+                if (tokenDataResult.IsSuccess && !string.IsNullOrEmpty(tokenDataResult.Value.AccessToken))
+                {
+                    var storeTokensResult = await tokenStorageService.StoreTokensAsync(userId, tokenDataResult.Value);
+
+                    if (storeTokensResult.IsSuccess)
+                    {
+                        return Result<string?>.Success(tokenDataResult.Value.AccessToken);
+                    }
+                }
             }
         }
 
         await tokenStorageService.ClearTokensAsync(userId);
         navigationManager.NavigateTo("/Account/Logout", true);
 
-        return null;
+        return Result<string?>.Failure("Failed to retrieve or refresh access token.");
     }
 }

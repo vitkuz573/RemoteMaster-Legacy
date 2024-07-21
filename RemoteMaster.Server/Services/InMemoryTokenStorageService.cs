@@ -5,6 +5,7 @@
 using System.Collections.Concurrent;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
 
@@ -12,37 +13,37 @@ public class InMemoryTokenStorageService : ITokenStorageService
 {
     private readonly ConcurrentDictionary<string, TokenData> _tokenStorage = new();
 
-    public Task<string?> GetAccessTokenAsync(string userId)
+    public Task<Result<string?>> GetAccessTokenAsync(string userId)
     {
         if (_tokenStorage.TryGetValue(userId, out var tokens) && tokens.AccessTokenExpiresAt > DateTime.UtcNow)
         {
-            return Task.FromResult<string?>(tokens.AccessToken);
+            return Task.FromResult(Result<string?>.Success(tokens.AccessToken));
         }
-        
-        return Task.FromResult<string?>(null);
+
+        return Task.FromResult(Result<string?>.Success(null));
     }
 
-    public Task<string?> GetRefreshTokenAsync(string userId)
+    public Task<Result<string?>> GetRefreshTokenAsync(string userId)
     {
         if (_tokenStorage.TryGetValue(userId, out var tokens) && tokens.RefreshTokenExpiresAt > DateTime.UtcNow)
-        {            
-            return Task.FromResult<string?>(tokens.RefreshToken);
+        {
+            return Task.FromResult(Result<string?>.Success(tokens.RefreshToken));
         }
-        
-        return Task.FromResult<string?>(null);
+
+        return Task.FromResult(Result<string?>.Success(null));
     }
 
-    public Task StoreTokensAsync(string userId, TokenData tokenData)
+    public Task<Result> StoreTokensAsync(string userId, TokenData tokenData)
     {
         _tokenStorage[userId] = tokenData;
 
-        return Task.CompletedTask;
+        return Task.FromResult(Result.Success());
     }
 
-    public Task ClearTokensAsync(string userId)
+    public Task<Result> ClearTokensAsync(string userId)
     {
         _tokenStorage.TryRemove(userId, out _);
 
-        return Task.CompletedTask;
+        return Task.FromResult(Result.Success());
     }
 }

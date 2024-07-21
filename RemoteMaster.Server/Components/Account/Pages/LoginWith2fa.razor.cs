@@ -52,11 +52,28 @@ public partial class LoginWith2fa
         {
             Log.Information("User with ID '{UserId}' logged in with 2fa.", userId);
 
-            var tokenData = await TokenService.GenerateTokensAsync(userId);
+            var tokenDataResult = await TokenService.GenerateTokensAsync(userId);
 
-            await TokenStorageService.StoreTokensAsync(userId, tokenData);
-            await LogSignInAttempt(userId, true, ipAddress);
-            RedirectManager.RedirectTo(ReturnUrl);
+            if (tokenDataResult.IsSuccess)
+            {
+                var storeTokensResult = await TokenStorageService.StoreTokensAsync(userId, tokenDataResult.Value);
+
+                if (storeTokensResult.IsSuccess)
+                {
+                    await LogSignInAttempt(userId, true, ipAddress);
+                    RedirectManager.RedirectTo(ReturnUrl);
+                }
+                else
+                {
+                    _message = "Error: Failed to store tokens.";
+                    await LogSignInAttempt(userId, false, ipAddress);
+                }
+            }
+            else
+            {
+                _message = "Error: Failed to generate tokens.";
+                await LogSignInAttempt(userId, false, ipAddress);
+            }
         }
         else if (result.IsLockedOut)
         {

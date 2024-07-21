@@ -6,38 +6,46 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
 
 public class ClaimsService(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager) : IClaimsService
 {
-    public async Task<List<Claim>> GetClaimsForUserAsync(ApplicationUser user)
+    public async Task<Result<List<Claim>>> GetClaimsForUserAsync(ApplicationUser user)
     {
-        ArgumentNullException.ThrowIfNull(user);
-
-        var claims = new List<Claim>
+        try
         {
-            new(ClaimTypes.Name, user.UserName ?? string.Empty),
-            new(ClaimTypes.NameIdentifier, user.Id)
-        };
+            ArgumentNullException.ThrowIfNull(user);
 
-        var userRoles = await userManager.GetRolesAsync(user);
-
-        foreach (var role in userRoles)
-        {
-            var identityRole = await roleManager.FindByNameAsync(role);
-
-            if (identityRole == null)
+            var claims = new List<Claim>
             {
-                continue;
+                new(ClaimTypes.Name, user.UserName ?? string.Empty),
+                new(ClaimTypes.NameIdentifier, user.Id)
+            };
+
+            var userRoles = await userManager.GetRolesAsync(user);
+
+            foreach (var role in userRoles)
+            {
+                var identityRole = await roleManager.FindByNameAsync(role);
+
+                if (identityRole == null)
+                {
+                    continue;
+                }
+
+                claims.Add(new Claim(ClaimTypes.Role, role));
+
+                var roleClaims = await roleManager.GetClaimsAsync(identityRole);
+                claims.AddRange(roleClaims);
             }
 
-            claims.Add(new Claim(ClaimTypes.Role, role));
-
-            var roleClaims = await roleManager.GetClaimsAsync(identityRole);
-            claims.AddRange(roleClaims);
+            return Result<List<Claim>>.Success(claims);
         }
-
-        return claims;
+        catch (Exception ex)
+        {
+            return Result<List<Claim>>.Failure("Failed to retrieve claims for user.", exception: ex);
+        }
     }
 }

@@ -3,16 +3,41 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Server.Models;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Abstractions;
 
+/// <summary>
+/// Provides methods for storing and retrieving tokens.
+/// </summary>
 public interface ITokenStorageService
 {
-    Task<string?> GetAccessTokenAsync(string userId);
+    /// <summary>
+    /// Retrieves the access token for the specified user.
+    /// </summary>
+    /// <param name="userId">The ID of the user.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the access token or null if not available.</returns>
+    Task<Result<string?>> GetAccessTokenAsync(string userId);
 
-    Task<string?> GetRefreshTokenAsync(string userId);
+    /// <summary>
+    /// Retrieves the refresh token for the specified user.
+    /// </summary>
+    /// <param name="userId">The ID of the user.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the refresh token or null if not available.</returns>
+    Task<Result<string?>> GetRefreshTokenAsync(string userId);
 
-    Task StoreTokensAsync(string userId, TokenData tokenData);
+    /// <summary>
+    /// Stores the specified token data for the user.
+    /// </summary>
+    /// <param name="userId">The ID of the user.</param>
+    /// <param name="tokenData">The token data to store.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    Task<Result> StoreTokensAsync(string userId, TokenData tokenData);
 
-    Task ClearTokensAsync(string userId);
+    /// <summary>
+    /// Clears the tokens for the specified user.
+    /// </summary>
+    /// <param name="userId">The ID of the user.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    Task<Result> ClearTokensAsync(string userId);
 }

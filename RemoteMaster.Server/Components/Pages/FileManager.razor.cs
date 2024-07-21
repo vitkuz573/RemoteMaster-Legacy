@@ -78,7 +78,7 @@ public partial class FileManager : IAsyncDisposable
             var stream = _selectedFile.OpenReadStream(_selectedFile.Size);
             int bytesRead, totalBytesRead = 0;
 
-            while (totalBytesRead < data.Length && (bytesRead = await stream.ReadAsync(data, totalBytesRead, data.Length - totalBytesRead)) > 0)
+            while (totalBytesRead < data.Length && (bytesRead = await stream.ReadAsync(data.AsMemory(totalBytesRead, data.Length - totalBytesRead))) > 0)
             {
                 totalBytesRead += bytesRead;
             }
@@ -123,7 +123,11 @@ public partial class FileManager : IAsyncDisposable
             _connection = new HubConnectionBuilder()
                 .WithUrl($"https://{Host}:5001/hubs/filemanager", options =>
                 {
-                    options.AccessTokenProvider = async () => await AccessTokenProvider.GetAccessTokenAsync(userId);
+                    options.AccessTokenProvider = async () =>
+                    {
+                        var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(userId);
+                        return accessTokenResult.IsSuccess ? accessTokenResult.Value : null;
+                    };
                 })
                 .AddMessagePackProtocol()
                 .Build();
@@ -250,7 +254,7 @@ public partial class FileManager : IAsyncDisposable
     {
         if (string.IsNullOrWhiteSpace(_searchQuery))
         {
-            _fileSystemItems = [.._allFileSystemItems];
+            _allFileSystemItems = [.._fileSystemItems];
         }
         else
         {

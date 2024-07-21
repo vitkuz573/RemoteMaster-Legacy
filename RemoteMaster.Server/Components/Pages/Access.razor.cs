@@ -48,7 +48,6 @@ public partial class Access : IAsyncDisposable
     private string _selectedDisplay = string.Empty;
     private string? _selectedCodec = string.Empty;
     private ElementReference _screenImageElement;
-    private string? _accessToken;
     private List<ViewerDto> _viewers = [];
     private bool _isAccessDenied = true;
     private readonly AsyncPolicyWrap _combinedPolicy;
@@ -302,12 +301,14 @@ public partial class Access : IAsyncDisposable
                 throw new InvalidOperationException("User ID is missing.");
             }
 
-            _accessToken = await AccessTokenProvider.GetAccessTokenAsync(userId);
-
             _connection = new HubConnectionBuilder()
                 .WithUrl($"https://{Host}:5001/hubs/control?screencast=true", options =>
                 {
-                    options.AccessTokenProvider = async () => await Task.FromResult(_accessToken);
+                    options.AccessTokenProvider = async () =>
+                    {
+                        var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(userId);
+                        return accessTokenResult.IsSuccess ? accessTokenResult.Value : null;
+                    };
                 })
                 .AddMessagePackProtocol()
                 .Build();

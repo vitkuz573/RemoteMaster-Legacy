@@ -44,7 +44,11 @@ public partial class UpdateDialog
                 var updaterConnection = new HubConnectionBuilder()
                 .WithUrl($"https://{computer.IpAddress}:6001/hubs/updater", options =>
                 {
-                    options.AccessTokenProvider = async () => await AccessTokenProvider.GetAccessTokenAsync(userId);
+                    options.AccessTokenProvider = async () =>
+                    {
+                        var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(userId);
+                        return accessTokenResult.IsSuccess ? accessTokenResult.Value : null;
+                    };
                 })
                 .AddMessagePackProtocol()
                 .Build();

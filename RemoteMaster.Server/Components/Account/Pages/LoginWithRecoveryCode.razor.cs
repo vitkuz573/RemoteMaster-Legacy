@@ -1,4 +1,4 @@
-﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
+﻿// Copyright © 2023 Vitaly Kuzyaев. All rights reserved.
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
@@ -51,11 +51,28 @@ public partial class LoginWithRecoveryCode
         {
             Log.Information("User with ID '{UserId}' logged in with a recovery code.", userId);
 
-            var tokenData = await TokenService.GenerateTokensAsync(userId);
+            var tokenDataResult = await TokenService.GenerateTokensAsync(userId);
 
-            await TokenStorageService.StoreTokensAsync(userId, tokenData);
-            await LogSignInAttempt(userId, true, ipAddress);
-            RedirectManager.RedirectTo(ReturnUrl);
+            if (tokenDataResult.IsSuccess)
+            {
+                var storeTokensResult = await TokenStorageService.StoreTokensAsync(userId, tokenDataResult.Value);
+
+                if (storeTokensResult.IsSuccess)
+                {
+                    await LogSignInAttempt(userId, true, ipAddress);
+                    RedirectManager.RedirectTo(ReturnUrl);
+                }
+                else
+                {
+                    _message = "Error: Failed to store tokens.";
+                    await LogSignInAttempt(userId, false, ipAddress);
+                }
+            }
+            else
+            {
+                _message = "Error: Failed to generate tokens.";
+                await LogSignInAttempt(userId, false, ipAddress);
+            }
         }
         else if (result.IsLockedOut)
         {
@@ -65,7 +82,7 @@ public partial class LoginWithRecoveryCode
         }
         else
         {
-            Log.Warning("Invalid recovery code entered for user with ID '{UserId}' ", userId);
+            Log.Warning("Invalid recovery code entered for user with ID '{UserId}'.", userId);
             _message = "Error: Invalid recovery code entered.";
             await LogSignInAttempt(userId, false, ipAddress);
         }

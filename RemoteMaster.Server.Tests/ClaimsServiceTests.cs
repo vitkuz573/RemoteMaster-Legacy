@@ -31,12 +31,14 @@ public class ClaimsServiceTests
         var user = new ApplicationUser { Id = "test-user-id", UserName = "testuser" };
         _mockUserManager.Setup(um => um.GetRolesAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(["Admin"]);
         _mockRoleManager.Setup(rm => rm.FindByNameAsync(It.IsAny<string>())).ReturnsAsync(new IdentityRole("Admin"));
-        _mockRoleManager.Setup(rm => rm.GetClaimsAsync(It.IsAny<IdentityRole>())).ReturnsAsync([new Claim("Permission", "CanView")]);
+        _mockRoleManager.Setup(rm => rm.GetClaimsAsync(It.IsAny<IdentityRole>())).ReturnsAsync([new("Permission", "CanView")]);
 
         // Act
-        var claims = await _claimsService.GetClaimsForUserAsync(user);
+        var result = await _claimsService.GetClaimsForUserAsync(user);
 
         // Assert
+        Assert.True(result.IsSuccess);
+        var claims = result.Value;
         Assert.Contains(claims, c => c.Type == ClaimTypes.Name && c.Value == user.UserName);
         Assert.Contains(claims, c => c.Type == ClaimTypes.NameIdentifier && c.Value == user.Id);
         Assert.Contains(claims, c => c is { Type: ClaimTypes.Role, Value: "Admin" });
@@ -46,8 +48,13 @@ public class ClaimsServiceTests
     [Fact]
     public async Task GetClaimsForUserAsync_UserIsNull_ThrowsArgumentNullException()
     {
-        // Act & Assert
-        await Assert.ThrowsAsync<ArgumentNullException>(() => _claimsService.GetClaimsForUserAsync(null!));
+        // Act
+        var result = await _claimsService.GetClaimsForUserAsync(null!);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal("Failed to retrieve claims for user.", result.Errors.First().Message);
+        Assert.IsType<ArgumentNullException>(result.Errors.First().Exception);
     }
 
     [Fact]
@@ -58,9 +65,11 @@ public class ClaimsServiceTests
         _mockUserManager.Setup(um => um.GetRolesAsync(It.IsAny<ApplicationUser>())).ReturnsAsync([]);
 
         // Act
-        var claims = await _claimsService.GetClaimsForUserAsync(user);
+        var result = await _claimsService.GetClaimsForUserAsync(user);
 
         // Assert
+        Assert.True(result.IsSuccess);
+        var claims = result.Value;
         Assert.Contains(claims, c => c.Type == ClaimTypes.Name && c.Value == user.UserName);
         Assert.Contains(claims, c => c.Type == ClaimTypes.NameIdentifier && c.Value == user.Id);
         Assert.DoesNotContain(claims, c => c.Type == ClaimTypes.Role);
@@ -76,9 +85,11 @@ public class ClaimsServiceTests
         _mockRoleManager.Setup(rm => rm.GetClaimsAsync(It.IsAny<IdentityRole>())).ReturnsAsync([]);
 
         // Act
-        var claims = await _claimsService.GetClaimsForUserAsync(user);
+        var result = await _claimsService.GetClaimsForUserAsync(user);
 
         // Assert
+        Assert.True(result.IsSuccess);
+        var claims = result.Value;
         Assert.Contains(claims, c => c.Type == ClaimTypes.Name && c.Value == user.UserName);
         Assert.Contains(claims, c => c.Type == ClaimTypes.NameIdentifier && c.Value == user.Id);
         Assert.DoesNotContain(claims, c => c is { Type: ClaimTypes.Role, Value: "NonExistentRole" });
@@ -94,9 +105,11 @@ public class ClaimsServiceTests
         _mockRoleManager.Setup(rm => rm.GetClaimsAsync(It.IsAny<IdentityRole>())).ReturnsAsync([]);
 
         // Act
-        var claims = await _claimsService.GetClaimsForUserAsync(user);
+        var result = await _claimsService.GetClaimsForUserAsync(user);
 
         // Assert
+        Assert.True(result.IsSuccess);
+        var claims = result.Value;
         Assert.Contains(claims, c => c.Type == ClaimTypes.Name && c.Value == user.UserName);
         Assert.Contains(claims, c => c.Type == ClaimTypes.NameIdentifier && c.Value == user.Id);
         Assert.Contains(claims, c => c is { Type: ClaimTypes.Role, Value: "Admin" });
@@ -118,4 +131,3 @@ public class ClaimsServiceTests
         return new Mock<RoleManager<TRole>>(store.Object, roles, null!, null!, null!);
     }
 }
-

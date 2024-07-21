@@ -4,10 +4,16 @@
 
 using System.Security.Claims;
 using RemoteMaster.Server.Data;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Abstractions;
 
 public interface IClaimsService
 {
-    Task<List<Claim>> GetClaimsForUserAsync(ApplicationUser user);
+    /// <summary>
+    /// Retrieves claims for a specified user.
+    /// </summary>
+    /// <param name="user">The user for whom to retrieve claims.</param>
+    /// <returns>A result containing the list of claims or an error message.</returns>
+    Task<Result<List<Claim>>> GetClaimsForUserAsync(ApplicationUser user);
 }

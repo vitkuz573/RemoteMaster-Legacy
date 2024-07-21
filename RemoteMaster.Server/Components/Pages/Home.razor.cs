@@ -424,7 +424,11 @@ public partial class Home
         var connection = new HubConnectionBuilder()
             .WithUrl($"https://{computer.IpAddress}:5001/{hubPath}", options =>
             {
-                options.AccessTokenProvider = async () => await AccessTokenProvider.GetAccessTokenAsync(userId);
+                options.AccessTokenProvider = async () =>
+                {
+                    var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(userId);
+                    return accessTokenResult.IsSuccess ? accessTokenResult.Value : null;
+                };
             })
             .AddMessagePackProtocol()
             .Build();

@@ -90,15 +90,29 @@ public partial class Login
 
             Log.Information("User logged in. All previous refresh tokens revoked.");
 
-            var tokenData = await TokenService.GenerateTokensAsync(user.Id);
+            var tokenDataResult = await TokenService.GenerateTokensAsync(user.Id);
 
-            await TokenStorageService.StoreTokensAsync(user.Id, tokenData);
+            if (tokenDataResult.IsSuccess)
+            {
+                var storeTokensResult = await TokenStorageService.StoreTokensAsync(user.Id, tokenDataResult.Value);
 
-            Log.Information("User {Username} logged in from IP {IPAddress} at {LoginTime}.", Input.Username, ipAddress, DateTime.UtcNow.ToLocalTime());
-
-            await LogSignInAttempt(user.Id, true, ipAddress);
-
-            RedirectManager.RedirectTo(ReturnUrl);
+                if (storeTokensResult.IsSuccess)
+                {
+                    Log.Information("User {Username} logged in from IP {IPAddress} at {LoginTime}.", Input.Username, ipAddress, DateTime.UtcNow.ToLocalTime());
+                    await LogSignInAttempt(user.Id, true, ipAddress);
+                    RedirectManager.RedirectTo(ReturnUrl);
+                }
+                else
+                {
+                    errorMessage = "Error: Failed to store tokens.";
+                    await LogSignInAttempt(user.Id, false, ipAddress);
+                }
+            }
+            else
+            {
+                errorMessage = "Error: Failed to generate tokens.";
+                await LogSignInAttempt(user.Id, false, ipAddress);
+            }
         }
         else if (result.RequiresTwoFactor)
         {
