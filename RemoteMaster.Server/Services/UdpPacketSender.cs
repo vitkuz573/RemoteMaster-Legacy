@@ -4,18 +4,32 @@
 
 using System.Net;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Shared.Models;
+using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
 public class UdpPacketSender(Func<IUdpClient> udpClientFactory) : IPacketSender
 {
-    public void Send(byte[] packet, IPEndPoint endPoint)
+    /// <inheritdoc />
+    public Result Send(byte[] packet, IPEndPoint endPoint)
     {
-        ArgumentNullException.ThrowIfNull(packet);
+        try
+        {
+            ArgumentNullException.ThrowIfNull(packet);
 
-        using var client = udpClientFactory();
-        client.EnableBroadcast = true;
+            using var client = udpClientFactory();
+            client.EnableBroadcast = true;
 
-        client.Send(packet, packet.Length, endPoint);
+            client.Send(packet, packet.Length, endPoint);
+
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An error occurred while sending a UDP packet.");
+            
+            return Result.Failure("An error occurred while sending a UDP packet.", exception: ex);
+        }
     }
 }

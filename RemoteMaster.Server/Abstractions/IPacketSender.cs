@@ -3,10 +3,20 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Net;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Abstractions;
 
+/// <summary>
+/// Interface for sending packets to a specified endpoint.
+/// </summary>
 public interface IPacketSender
 {
-    void Send(byte[] packet, IPEndPoint endPoint);
+    /// <summary>
+    /// Sends a packet to the specified endpoint.
+    /// </summary>
+    /// <param name="packet">The packet to be sent.</param>
+    /// <param name="endPoint">The endpoint to which the packet is sent.</param>
+    /// <returns>A result indicating success or failure.</returns>
+    Result Send(byte[] packet, IPEndPoint endPoint);
 }

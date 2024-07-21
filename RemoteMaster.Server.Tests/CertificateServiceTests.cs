@@ -9,7 +9,6 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Services;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;
-using Xunit;
 
 namespace RemoteMaster.Server.Tests;
 

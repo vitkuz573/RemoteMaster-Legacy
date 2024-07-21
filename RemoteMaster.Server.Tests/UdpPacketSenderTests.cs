@@ -21,14 +21,20 @@ public class UdpPacketSenderTests
     }
 
     [Fact]
-    public void Send_NullPacket_ThrowsArgumentNullException()
+    public void Send_NullPacket_ReturnsArgumentNullExceptionResult()
     {
         // Arrange
         byte[] packet = null!;
         var endPoint = new IPEndPoint(IPAddress.Loopback, 12345);
 
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => _udpPacketSender.Send(packet, endPoint));
+        // Act
+        var result = _udpPacketSender.Send(packet, endPoint);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        var errorDetails = result.Errors.FirstOrDefault();
+        Assert.NotNull(errorDetails);
+        Assert.IsType<ArgumentNullException>(errorDetails.Exception);
     }
 
     [Fact]
@@ -39,9 +45,10 @@ public class UdpPacketSenderTests
         var endPoint = new IPEndPoint(IPAddress.Loopback, 12345);
 
         // Act
-        _udpPacketSender.Send(packet, endPoint);
+        var result = _udpPacketSender.Send(packet, endPoint);
 
         // Assert
+        Assert.True(result.IsSuccess);
         _udpClientMock.Verify(client => client.Send(packet, packet.Length, endPoint), Times.Once);
     }
 }
