@@ -63,9 +63,12 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
                     await Groups.AddToGroupAsync(Context.ConnectionId, "Services");
                 }
 
-                var codecs = GetAvailableCodecs();
+                if (OperatingSystem.IsWindows())
+                {
+                    var codecs = GetAvailableCodecs();
 
-                await Clients.Caller.ReceiveAvailableCodecs(codecs);
+                    await Clients.Caller.ReceiveAvailableCodecs(codecs);
+                }
             }
         }
 
@@ -76,10 +79,19 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     private static List<string> GetAvailableCodecs()
     {
         var codecs = ImageCodecInfo.GetImageEncoders();
+        var jpegCodec = codecs.FirstOrDefault(codec => codec.MimeType == "image/jpeg");
 
-        return codecs.Where(codec => codec.MimeType != null && !ExcludedCodecs.Contains(codec.MimeType))
-            .Select(codec => codec.MimeType!)
-            .ToList();
+        var availableCodecs = codecs.Where(codec => codec.MimeType != null && !ExcludedCodecs.Contains(codec.MimeType))
+                                     .Select(codec => codec.MimeType!)
+                                     .ToList();
+
+        if (jpegCodec?.MimeType != null)
+        {
+            availableCodecs.Remove(jpegCodec.MimeType);
+            availableCodecs.Insert(0, jpegCodec.MimeType);
+        }
+
+        return availableCodecs;
     }
 
     private static string GetAuthenticationType(ClaimsPrincipal user)
