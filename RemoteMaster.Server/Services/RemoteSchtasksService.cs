@@ -25,9 +25,11 @@ public class RemoteSchtasksService(INetworkDriveService networkDriveService) : I
 
             var remoteSharePath = $@"\\{remoteMachineName}\C$";
 
-            if (!networkDriveService.MapNetworkDrive(remoteSharePath, username, password))
+            var mapResult = networkDriveService.MapNetworkDrive(remoteSharePath, username, password);
+            
+            if (!mapResult.IsSuccess)
             {
-                throw new Exception("Failed to map network drive.");
+                throw new Exception($"Failed to map network drive. {mapResult.Errors.First().Message}");
             }
 
             var fullRemoteFilePath = Path.Combine(remoteSharePath, destinationFolderPath, Path.GetFileName(sourceFilePath));
@@ -35,14 +37,19 @@ public class RemoteSchtasksService(INetworkDriveService networkDriveService) : I
 
             ExecuteRemoteFile(remoteMachineName, fullRemoteFilePath, username, password, arguments);
 
-            networkDriveService.CancelNetworkDrive(remoteSharePath);
+            var cancelResult = networkDriveService.CancelNetworkDrive(remoteSharePath);
+            
+            if (!cancelResult.IsSuccess)
+            {
+                throw new Exception($"Failed to cancel network drive. {cancelResult.Errors.First().Message}");
+            }
 
             return true;
         }
         catch (Exception ex)
         {
             Log.Error($"Error: {ex.Message}");
-
+            
             return false;
         }
     }
@@ -53,12 +60,19 @@ public class RemoteSchtasksService(INetworkDriveService networkDriveService) : I
         {
             var sharePath = $@"\\{remoteMachineName}\C$";
 
-            if (!networkDriveService.MapNetworkDrive(sharePath, username, password))
+            var mapResult = networkDriveService.MapNetworkDrive(sharePath, username, password);
+            
+            if (!mapResult.IsSuccess)
             {
                 return false;
             }
 
-            networkDriveService.CancelNetworkDrive(sharePath);
+            var cancelResult = networkDriveService.CancelNetworkDrive(sharePath);
+            
+            if (!cancelResult.IsSuccess)
+            {
+                return false;
+            }
 
             return true;
         }
