@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.IO.Abstractions.TestingHelpers;
+using System.Text;
 using Microsoft.Extensions.Options;
 using Moq;
 using RemoteMaster.Server.Models;
@@ -41,9 +42,10 @@ public class JwtSecurityServiceTests
         _mockFileSystem.AddDirectory(_options.KeysDirectory);
 
         // Act
-        await _jwtSecurityService.EnsureKeysExistAsync();
+        var result = await _jwtSecurityService.EnsureKeysExistAsync();
 
         // Assert
+        Assert.True(result.IsSuccess);
         Assert.True(_mockFileSystem.FileExists(Path.Combine(_options.KeysDirectory, "private_key.der")));
         Assert.True(_mockFileSystem.FileExists(Path.Combine(_options.KeysDirectory, "public_key.der")));
     }
@@ -57,10 +59,39 @@ public class JwtSecurityServiceTests
         _mockFileSystem.AddFile(Path.Combine(_options.KeysDirectory, "public_key.der"), new MockFileData("dummy"));
 
         // Act
-        await _jwtSecurityService.EnsureKeysExistAsync();
+        var result = await _jwtSecurityService.EnsureKeysExistAsync();
 
         // Assert
+        Assert.True(result.IsSuccess);
         Assert.Equal("dummy", await _mockFileSystem.File.ReadAllTextAsync(Path.Combine(_options.KeysDirectory, "private_key.der")));
         Assert.Equal("dummy", await _mockFileSystem.File.ReadAllTextAsync(Path.Combine(_options.KeysDirectory, "public_key.der")));
+    }
+
+    [Fact]
+    public async Task GetPublicKeyAsync_ReturnsPublicKeyWhenExists()
+    {
+        // Arrange
+        var publicKeyPath = Path.Combine(_options.KeysDirectory, "public_key.der");
+        _mockFileSystem.AddFile(publicKeyPath, new MockFileData("publickey"));
+
+        // Act
+        var result = await _jwtSecurityService.GetPublicKeyAsync();
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal("publickey", Encoding.UTF8.GetString(result.Value));
+    }
+
+    [Fact]
+    public async Task GetPublicKeyAsync_ReturnsFailureWhenPublicKeyDoesNotExist()
+    {
+        // Act
+        var result = await _jwtSecurityService.GetPublicKeyAsync();
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        var errorDetails = result.Errors.FirstOrDefault();
+        Assert.NotNull(errorDetails);
+        Assert.Equal("Public key file does not exist.", errorDetails.Message);
     }
 }

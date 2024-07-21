@@ -23,12 +23,12 @@ public class JwtController(IJwtSecurityService jwtSecurityService) : ControllerB
     {
         try
         {
-            var publicKey = await jwtSecurityService.GetPublicKeyAsync();
+            var result = await jwtSecurityService.GetPublicKeyAsync();
 
-            if (publicKey != null)
+            if (result.IsSuccess)
             {
-                var response = ApiResponse<byte[]>.Success(publicKey, "Public key retrieved successfully.");
-
+                var response = ApiResponse<byte[]>.Success(result.Value, "Public key retrieved successfully.");
+                
                 return Ok(response);
             }
 
