@@ -42,8 +42,6 @@ public class HostRegistrationMonitorService : IHostedService
             var hostConfiguration = await _hostConfigurationService.LoadConfigurationAsync(false);
             var isHostRegistered = await _hostLifecycleService.IsHostRegisteredAsync();
 
-            Log.Information("Configuration changed: {ConfigurationChanged}, Is host registered: {IsHostRegistered}", configurationChanged, isHostRegistered);
-
             if (configurationChanged)
             {
                 if (isHostRegistered)
