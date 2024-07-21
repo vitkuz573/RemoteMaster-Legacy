@@ -6,21 +6,33 @@ namespace RemoteMaster.Shared.Models;
 
 public class Result<T> : Result
 {
-    public T? Value { get; }
+    public T Value { get; }
 
-    private Result(T? value, bool isSuccess, List<ErrorDetails>? errors) : base(isSuccess, errors)
+    private Result(T value) : base(true, null)
     {
-        Value = value;
+        Value = value ?? throw new ArgumentNullException(nameof(value), "Value cannot be null for a successful result.");
     }
 
-    public static Result<T> Success(T value) => new(value, true, null);
-
-    public static new Result<T> Failure(params ErrorDetails[] errors) => new(default, false, new List<ErrorDetails>(errors));
-
-    public static new Result<T> Failure(string message, string? code = null, Exception? exception = null) => new(default, false, new List<ErrorDetails> { new ErrorDetails(message, code, exception) });
-
-    public new void AddError(string message, string? code = null, Exception? exception = null)
+    private Result(List<ErrorDetails> errors) : base(false, errors)
     {
+        Value = default!;
+    }
+
+    public static Result<T> Success(T value) => new(value);
+
+    public static new Result<T> Failure(params ErrorDetails[] errors) => new(new List<ErrorDetails>(errors));
+
+    public static new Result<T> Failure(string message, string? code = null, Exception? exception = null) => new(new List<ErrorDetails> { new ErrorDetails(message, code, exception) });
+
+    public new Result<T> AddError(string message, string? code = null, Exception? exception = null)
+    {
+        if (IsSuccess)
+        {
+            throw new InvalidOperationException("Cannot add errors to a successful result.");
+        }
+
         Errors.Add(new ErrorDetails(message, code, exception));
+
+        return this;
     }
 }

@@ -65,10 +65,12 @@ public class CrlServiceTests : IDisposable
 
         // Act
         Log.Information("RevokeCertificateAsync: Revoking certificate with serial number {SerialNumber}", serialNumber);
-        await service.RevokeCertificateAsync(serialNumber, reason);
+        var result = await service.RevokeCertificateAsync(serialNumber, reason);
         Log.Information("RevokeCertificateAsync: Certificate with serial number {SerialNumber} revoked", serialNumber);
 
         // Assert
+        Assert.True(result.IsSuccess, result.Errors.FirstOrDefault()?.Message);
+
         var contextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<CertificateDbContext>>();
         var context = await contextFactory.CreateDbContextAsync();
         var revokedCertificate = await context.RevokedCertificates.FirstOrDefaultAsync(rc => rc.SerialNumber == serialNumber);
@@ -100,9 +102,11 @@ public class CrlServiceTests : IDisposable
         await context.SaveChangesAsync();
 
         // Act
-        var crlData = await service.GenerateCrlAsync();
+        var result = await service.GenerateCrlAsync();
 
         // Assert
+        Assert.True(result.IsSuccess, result.Errors.FirstOrDefault()?.Message);
+        var crlData = result.Value;
         Assert.NotNull(crlData);
         Assert.NotEmpty(crlData);
     }
@@ -121,7 +125,7 @@ public class CrlServiceTests : IDisposable
         var result = await service.PublishCrlAsync(crlData);
 
         // Assert
-        Assert.True(result);
+        Assert.True(result.IsSuccess, result.Errors.FirstOrDefault()?.Message);
         Assert.True(_mockFileSystem.File.Exists(crlFilePath));
         Assert.Equal(crlData, await _mockFileSystem.File.ReadAllBytesAsync(crlFilePath));
     }
@@ -151,9 +155,11 @@ public class CrlServiceTests : IDisposable
         await context.SaveChangesAsync();
 
         // Act
-        var metadata = await service.GetCrlMetadataAsync();
+        var result = await service.GetCrlMetadataAsync();
 
         // Assert
+        Assert.True(result.IsSuccess, result.Errors.FirstOrDefault()?.Message);
+        var metadata = result.Value;
         Assert.NotNull(metadata);
         Assert.Equal(crlInfo.CrlNumber, metadata.CrlInfo.CrlNumber);
         Assert.Equal(1, metadata.RevokedCertificatesCount);
@@ -170,7 +176,7 @@ public class CrlServiceTests : IDisposable
         var request = new CertificateRequest("cn=TestCertificate", rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
         request.CertificateExtensions.Add(new X509BasicConstraintsExtension(true, false, 0, true));
         var certificate = request.CreateSelfSigned(DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(1));
-        
+
         return certificate;
     }
 }
