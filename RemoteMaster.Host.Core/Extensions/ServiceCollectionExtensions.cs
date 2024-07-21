@@ -38,7 +38,7 @@ public static class ServiceCollectionExtensions
 
         services.AddSharedServices();
         services.AddTransient<CustomHttpClientHandler>();
-        services.AddSingleton<IHostInformationMonitorService, HostInformationMonitorService>();
+        services.AddSingleton<IHostInformationMonitorService, HostInformationUpdaterService>();
         services.AddSingleton<IFileManagerService, FileManagerService>();
         services.AddSingleton<ICertificateRequestService, CertificateRequestService>();
         services.AddSingleton<IHostLifecycleService, HostLifecycleService>();
