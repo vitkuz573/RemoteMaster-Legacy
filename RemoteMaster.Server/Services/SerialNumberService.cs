@@ -31,6 +31,7 @@ public class SerialNumberService : ISerialNumberService
             Array.Copy(randomBytes, 0, combinedBytes, 8 + uuid.Length, randomBytes.Length);
 
             var hashedBytes = SHA3_256.IsSupported ? SHA3_256.HashData(combinedBytes) : SHA256.HashData(combinedBytes);
+            
             return Result<byte[]>.Success(hashedBytes);
         }
         catch (Exception ex)
