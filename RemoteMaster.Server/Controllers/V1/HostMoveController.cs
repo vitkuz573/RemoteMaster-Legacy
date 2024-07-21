@@ -35,18 +35,25 @@ public class HostMoveController(IHostMoveRequestService hostMoveRequestService) 
             return BadRequest(errorResponse);
         }
 
-        var hostMoveRequest = await hostMoveRequestService.GetHostMoveRequestAsync(macAddress);
+        var hostMoveRequestResult = await hostMoveRequestService.GetHostMoveRequestAsync(macAddress);
 
-        if (hostMoveRequest != null)
+        if (hostMoveRequestResult.IsSuccess)
         {
-            var response = ApiResponse<HostMoveRequest>.Success(hostMoveRequest, "Host move request retrieved successfully.");
-
+            var response = ApiResponse<HostMoveRequest>.Success(hostMoveRequestResult.Value, "Host move request retrieved successfully.");
+            
             return Ok(response);
         }
 
-        var responseWithMessage = ApiResponse<HostMoveRequest>.Success(null!, "No host move request found for the provided MAC address.");
+        var problemDetailsForFailure = new ProblemDetails
+        {
+            Title = "Failed to retrieve host move request",
+            Detail = hostMoveRequestResult.Errors.FirstOrDefault()?.Message,
+            Status = StatusCodes.Status400BadRequest
+        };
 
-        return Ok(responseWithMessage);
+        var errorResponseWithDetails = ApiResponse<HostMoveRequest>.Failure(problemDetailsForFailure);
+        
+        return BadRequest(errorResponseWithDetails);
     }
 
     [HttpPost("acknowledge")]
@@ -68,25 +75,24 @@ public class HostMoveController(IHostMoveRequestService hostMoveRequestService) 
             return BadRequest(errorResponse);
         }
 
-        try
-        {
-            await hostMoveRequestService.AcknowledgeMoveRequestAsync(macAddress);
-            var response = ApiResponse<bool>.Success(true, "Host move request acknowledged successfully.");
+        var result = await hostMoveRequestService.AcknowledgeMoveRequestAsync(macAddress);
 
+        if (result.IsSuccess)
+        {
+            var response = ApiResponse<bool>.Success(true, "Host move request acknowledged successfully.");
+            
             return Ok(response);
         }
-        catch (Exception ex)
+
+        var problemDetailsForFailure = new ProblemDetails
         {
-            var problemDetails = new ProblemDetails
-            {
-                Title = "Failed to acknowledge host move request",
-                Detail = ex.Message,
-                Status = StatusCodes.Status400BadRequest
-            };
+            Title = "Failed to acknowledge host move request",
+            Detail = result.Errors.FirstOrDefault()?.Message,
+            Status = StatusCodes.Status400BadRequest
+        };
 
-            var errorResponse = ApiResponse<bool>.Failure(problemDetails);
-
-            return BadRequest(errorResponse);
-        }
+        var errorResponseWithDetails = ApiResponse<bool>.Failure(problemDetailsForFailure);
+        
+        return BadRequest(errorResponseWithDetails);
     }
 }
