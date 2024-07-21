@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Components.Admin.Dialogs;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Shared.Models;
+using Serilog;
 
 namespace RemoteMaster.Server.Components.Admin.Pages;
 
@@ -26,7 +28,16 @@ public partial class ManageOrganizations
     {
         LoadOrganizations();
 
-        _countries = CountryProvider.GetCountries();
+        var countriesResult = CountryProvider.GetCountries();
+
+        if (countriesResult.IsSuccess)
+        {
+            _countries = countriesResult.Value;
+        }
+        else
+        {
+            Log.Error("Failed to load countries: {Message}", countriesResult.Errors.FirstOrDefault()?.Message);
+        }
     }
 
     private async Task OnValidSubmitAsync()
@@ -98,10 +109,10 @@ public partial class ManageOrganizations
         }
 
         var organization = CreateOrganization(Input.Name, Input.Locality, Input.State, Input.Country);
-        
+
         await dbContext.Organizations.AddAsync(organization);
         await dbContext.SaveChangesAsync();
-        
+
         return true;
     }
 
@@ -109,7 +120,7 @@ public partial class ManageOrganizations
     {
         using var scope = ScopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        
+
         return await dbContext.Organizations.AnyAsync(o => o.Name == name);
     }
 
@@ -117,7 +128,7 @@ public partial class ManageOrganizations
     {
         using var scope = ScopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        
+
         _organizations = [.. dbContext.Organizations];
     }
 

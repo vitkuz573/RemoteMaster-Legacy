@@ -3,10 +3,18 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Server.Models;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Abstractions;
 
+/// <summary>
+/// Provides country data.
+/// </summary>
 public interface ICountryProvider
 {
-    List<Country> GetCountries();
+    /// <summary>
+    /// Gets the list of countries.
+    /// </summary>
+    /// <returns>A result containing a list of countries.</returns>
+    Result<List<Country>> GetCountries();
 }

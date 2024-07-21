@@ -4,15 +4,16 @@
 
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
 
 public class CountryProvider : ICountryProvider
 {
-    public List<Country> GetCountries()
+    public Result<List<Country>> GetCountries()
     {
-        return
-        [
+        var countries = new List<Country>
+        {
             new("Afghanistan", "AF"),
             new("Albania", "AL"),
             new("Algeria", "DZ"),
@@ -262,6 +263,8 @@ public class CountryProvider : ICountryProvider
             new("Zambia", "ZM"),
             new("Zimbabwe", "ZW"),
             new("Åland Islands", "AX")
-        ];
+        };
+
+        return Result<List<Country>>.Success(countries);
     }
 }

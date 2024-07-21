@@ -36,7 +36,16 @@ public partial class HostConfigurationGenerator
 
         await LoadUserOrganizationsAsync();
 
-        _countries = CountryProvider.GetCountries();
+        var countriesResult = CountryProvider.GetCountries();
+
+        if (countriesResult.IsSuccess)
+        {
+            _countries = countriesResult.Value;
+        }
+        else
+        {
+            Log.Error("Failed to load countries: {Message}", countriesResult.Errors.FirstOrDefault()?.Message);
+        }
 
         HttpClient.BaseAddress = new Uri("http://127.0.0.1:5254");
     }
@@ -80,7 +89,6 @@ public partial class HostConfigurationGenerator
         }
     }
 
-
     private async Task LoadUserOrganizationsAsync()
     {
         var authState = await AuthenticationStateTask;
@@ -105,7 +113,7 @@ public partial class HostConfigurationGenerator
         if (!string.IsNullOrEmpty(_selectedOrganization))
         {
             var organization = _organizations.FirstOrDefault(o => o.Name == _selectedOrganization);
-            
+
             if (organization != null)
             {
                 var authState = await AuthenticationStateTask;
