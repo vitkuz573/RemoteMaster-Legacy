@@ -5,6 +5,7 @@
 using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Shared.Models;
 using Serilog;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
@@ -37,13 +38,13 @@ public class TelegramEventNotificationService : IEventNotificationService
         }
     }
 
-    public async Task SendNotificationAsync(string message)
+    public async Task<Result> SendNotificationAsync(string message)
     {
         ArgumentNullException.ThrowIfNull(message);
 
         if (!_isConfigured)
         {
-            return;
+            return Result.Failure("Telegram bot is not configured.");
         }
 
         try
@@ -57,10 +58,14 @@ public class TelegramEventNotificationService : IEventNotificationService
                     await _botClient.SendTextMessageAsync(chatId, escapedMessage, parseMode: ParseMode.MarkdownV2);
                 }
             }
+
+            return Result.Success();
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Error sending Telegram message");
+
+            return Result.Failure("Error sending Telegram message.", exception: ex);
         }
     }
 
