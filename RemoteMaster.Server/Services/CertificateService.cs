@@ -6,64 +6,76 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Abstractions;
+using RemoteMaster.Shared.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
 public class CertificateService(IHostInformationService hostInformationService, ICaCertificateService caCertificateService, ISerialNumberService serialNumberService) : ICertificateService
 {
-    public X509Certificate2 IssueCertificate(byte[] csrBytes)
+    /// <inheritdoc />
+    public Result<X509Certificate2> IssueCertificate(byte[] csrBytes)
     {
-        ArgumentNullException.ThrowIfNull(csrBytes);
-
-        var caCertificate = caCertificateService.GetCaCertificate(X509ContentType.Pfx);
-
-        var csr = CertificateRequest.LoadSigningRequest(csrBytes, HashAlgorithmName.SHA256, CertificateRequestLoadOptions.UnsafeLoadCertificateExtensions);
-        var basicConstraints = csr.CertificateExtensions.OfType<X509BasicConstraintsExtension>().FirstOrDefault();
-
-        if (basicConstraints?.CertificateAuthority == true)
+        try
         {
-            Log.Error("CSR for CA certificates are not allowed.");
+            ArgumentNullException.ThrowIfNull(csrBytes);
 
-            throw new InvalidOperationException("CSR for CA certificates are not allowed.");
+            var caCertificate = caCertificateService.GetCaCertificate(X509ContentType.Pfx);
+
+            var csr = CertificateRequest.LoadSigningRequest(csrBytes, HashAlgorithmName.SHA256, CertificateRequestLoadOptions.UnsafeLoadCertificateExtensions);
+            var basicConstraints = csr.CertificateExtensions.OfType<X509BasicConstraintsExtension>().FirstOrDefault();
+
+            if (basicConstraints?.CertificateAuthority == true)
+            {
+                Log.Error("CSR for CA certificates are not allowed.");
+                return Result<X509Certificate2>.Failure("CSR for CA certificates are not allowed.", exception: new InvalidOperationException("CSR for CA certificates are not allowed."));
+            }
+
+            var rsaPrivateKey = caCertificate.GetRSAPrivateKey();
+
+            if (rsaPrivateKey == null)
+            {
+                Log.Error("The RSA private key for the CA certificate could not be retrieved.");
+                
+                return Result<X509Certificate2>.Failure("The RSA private key for the CA certificate could not be retrieved.", exception: new InvalidOperationException("The RSA private key for the CA certificate could not be retrieved."));
+            }
+
+            var signatureGenerator = X509SignatureGenerator.CreateForRSA(rsaPrivateKey, RSASignaturePadding.Pkcs1);
+
+            var notBefore = DateTimeOffset.UtcNow;
+            var notAfter = DateTimeOffset.UtcNow.AddYears(1);
+
+            var serialNumberResult = serialNumberService.GenerateSerialNumber();
+
+            if (!serialNumberResult.IsSuccess)
+            {
+                Log.Error("Failed to generate serial number: {Message}", serialNumberResult.Errors.FirstOrDefault()?.Message);
+                
+                return Result<X509Certificate2>.Failure("Failed to generate serial number.", exception: new InvalidOperationException("Failed to generate serial number."));
+            }
+
+            var serialNumber = serialNumberResult.Value;
+
+            var hostInformation = hostInformationService.GetHostInformation();
+
+            var crlDistributionPoints = new List<string>
+            {
+                $"http://{hostInformation.Name}/crl"
+            };
+
+            var crlDistributionPointExtension = CertificateRevocationListBuilder.BuildCrlDistributionPointExtension(crlDistributionPoints);
+
+            csr.CertificateExtensions.Add(crlDistributionPointExtension);
+
+            var certificate = csr.Create(caCertificate.SubjectName, signatureGenerator, notBefore, notAfter, serialNumber);
+
+            return Result<X509Certificate2>.Success(certificate);
         }
-
-        var rsaPrivateKey = caCertificate.GetRSAPrivateKey();
-
-        if (rsaPrivateKey == null)
+        catch (Exception ex)
         {
-            Log.Error("The RSA private key for the CA certificate could not be retrieved.");
-            
-            throw new InvalidOperationException("The RSA private key for the CA certificate could not be retrieved.");
+            Log.Error(ex, "An error occurred while issuing a certificate.");
+
+            return Result<X509Certificate2>.Failure("An error occurred while issuing a certificate.", exception: ex);
         }
-
-        var signatureGenerator = X509SignatureGenerator.CreateForRSA(rsaPrivateKey, RSASignaturePadding.Pkcs1);
-
-        var notBefore = DateTimeOffset.UtcNow;
-        var notAfter = DateTimeOffset.UtcNow.AddYears(1);
-
-        var serialNumberResult = serialNumberService.GenerateSerialNumber();
-        
-        if (!serialNumberResult.IsSuccess)
-        {
-            Log.Error("Failed to generate serial number: {Message}", serialNumberResult.Errors.FirstOrDefault()?.Message);
-            
-            throw new InvalidOperationException("Failed to generate serial number.");
-        }
-
-        var serialNumber = serialNumberResult.Value;
-
-        var hostInformation = hostInformationService.GetHostInformation();
-
-        var crlDistributionPoints = new List<string>
-        {
-            $"http://{hostInformation.Name}/crl"
-        };
-
-        var crlDistributionPointExtension = CertificateRevocationListBuilder.BuildCrlDistributionPointExtension(crlDistributionPoints);
-
-        csr.CertificateExtensions.Add(crlDistributionPointExtension);
-
-        return csr.Create(caCertificate.SubjectName, signatureGenerator, notBefore, notAfter, serialNumber);
     }
 }

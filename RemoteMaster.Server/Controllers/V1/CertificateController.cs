@@ -49,19 +49,20 @@ public class CertificateController(ICaCertificateService caCertificateService, I
     [ProducesResponseType(typeof(ApiResponse<byte[]>), 400)]
     public IActionResult IssueCertificate([FromBody] byte[] csrBytes)
     {
-        try
-        {
-            var certificate = certificateService.IssueCertificate(csrBytes);
-            var response = ApiResponse<byte[]>.Success(certificate.Export(X509ContentType.Pfx), "Certificate issued successfully.");
+        var certificateResult = certificateService.IssueCertificate(csrBytes);
 
+        if (certificateResult.IsSuccess)
+        {
+            var response = ApiResponse<byte[]>.Success(certificateResult.Value.Export(X509ContentType.Pfx), "Certificate issued successfully.");
+            
             return Ok(response);
         }
-        catch (Exception ex)
+        else
         {
             var problemDetails = new ProblemDetails
             {
                 Title = "Error issuing certificate",
-                Detail = ex.Message,
+                Detail = certificateResult.Errors.FirstOrDefault()?.Message ?? "Unknown error",
                 Status = StatusCodes.Status400BadRequest
             };
 

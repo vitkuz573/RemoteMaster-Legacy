@@ -3,10 +3,19 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Cryptography.X509Certificates;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Abstractions;
 
+/// <summary>
+/// Defines the contract for certificate services.
+/// </summary>
 public interface ICertificateService
 {
-    X509Certificate2 IssueCertificate(byte[] csrBytes);
+    /// <summary>
+    /// Issues a certificate based on the provided CSR (Certificate Signing Request) bytes.
+    /// </summary>
+    /// <param name="csrBytes">The CSR bytes.</param>
+    /// <returns>A result containing the issued certificate or an error.</returns>
+    Result<X509Certificate2> IssueCertificate(byte[] csrBytes);
 }

@@ -9,6 +9,7 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Services;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;
+using Xunit;
 
 namespace RemoteMaster.Server.Tests;
 
@@ -33,13 +34,20 @@ public class CertificateServiceTests
     }
 
     [Fact]
-    public void IssueCertificate_WithNullCsrBytes_ThrowsArgumentNullException()
+    public void IssueCertificate_WithNullCsrBytes_ReturnsArgumentNullExceptionResult()
     {
-        Assert.Throws<ArgumentNullException>(() => _certificateService.IssueCertificate(null!));
+        // Act
+        var result = _certificateService.IssueCertificate(null!);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        var errorDetails = result.Errors.FirstOrDefault();
+        Assert.NotNull(errorDetails);
+        Assert.IsType<ArgumentNullException>(errorDetails.Exception);
     }
 
     [Fact]
-    public void IssueCertificate_WithCaCsr_ThrowsInvalidOperationException()
+    public void IssueCertificate_WithCaCsr_ReturnsInvalidOperationExceptionResult()
     {
         // Arrange
         var csrBytes = GenerateCsrBytes(true);
@@ -47,72 +55,81 @@ public class CertificateServiceTests
 
         _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(caCertificate);
 
-        // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => _certificateService.IssueCertificate(csrBytes));
-        Assert.Equal("CSR for CA certificates are not allowed.", exception.Message);
+        // Act
+        var result = _certificateService.IssueCertificate(csrBytes);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        var errorDetails = result.Errors.FirstOrDefault();
+        Assert.NotNull(errorDetails);
+        Assert.IsType<InvalidOperationException>(errorDetails.Exception);
+        Assert.Equal("CSR for CA certificates are not allowed.", errorDetails.Exception.Message);
     }
 
     [Fact]
-    public void IssueCertificate_WithValidCsr_ReturnsCertificate()
+    public void IssueCertificate_WithValidCsr_ReturnsSuccessResult()
     {
         // Arrange
         var csrBytes = GenerateCsrBytes(false);
         using var caCertificate = GenerateCaCertificate();
         var computer = new Computer { Name = "localhost", IpAddress = "127.0.0.1", MacAddress = "00-14-22-01-23-45" };
-        var serialNumber = Result<byte[]>.Success(new byte[] { 0x01, 0x02, 0x03, 0x04 });
+        var serialNumber = Result<byte[]>.Success([0x01, 0x02, 0x03, 0x04]);
 
         _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(caCertificate);
         _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(computer);
         _serialNumberServiceMock.Setup(x => x.GenerateSerialNumber()).Returns(serialNumber);
 
         // Act
-        var certificate = _certificateService.IssueCertificate(csrBytes);
+        var result = _certificateService.IssueCertificate(csrBytes);
 
         // Assert
-        Assert.NotNull(certificate);
-        Assert.Equal(caCertificate.SubjectName.Name, certificate.Issuer);
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Value);
+        Assert.Equal(caCertificate.SubjectName.Name, result.Value.Issuer);
     }
 
     [Fact]
-    public void IssueCertificate_WithMinimalValidCsr_ReturnsCertificate()
+    public void IssueCertificate_WithMinimalValidCsr_ReturnsSuccessResult()
     {
         // Arrange
         var csrBytes = GenerateMinimalValidCsrBytes();
         using var caCertificate = GenerateCaCertificate();
         var computer = new Computer { Name = "localhost", IpAddress = "127.0.0.1", MacAddress = "00-14-22-01-23-45" };
-        var serialNumber = Result<byte[]>.Success(new byte[] { 0x01, 0x02, 0x03, 0x04 });
+        var serialNumber = Result<byte[]>.Success([0x01, 0x02, 0x03, 0x04]);
 
         _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(caCertificate);
         _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(computer);
         _serialNumberServiceMock.Setup(x => x.GenerateSerialNumber()).Returns(serialNumber);
 
         // Act
-        var certificate = _certificateService.IssueCertificate(csrBytes);
+        var result = _certificateService.IssueCertificate(csrBytes);
 
         // Assert
-        Assert.NotNull(certificate);
-        Assert.Equal(caCertificate.SubjectName.Name, certificate.Issuer);
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Value);
+        Assert.Equal(caCertificate.SubjectName.Name, result.Value.Issuer);
     }
 
     [Fact]
-    public void IssueCertificate_WithCsrContainingExtensions_ReturnsCertificate()
+    public void IssueCertificate_WithCsrContainingExtensions_ReturnsSuccessResult()
     {
         // Arrange
         var csrBytes = GenerateCsrBytesWithExtensions();
         using var caCertificate = GenerateCaCertificate();
         var computer = new Computer { Name = "localhost", IpAddress = "127.0.0.1", MacAddress = "00-14-22-01-23-45" };
-        var serialNumber = Result<byte[]>.Success(new byte[] { 0x01, 0x02, 0x03, 0x04 });
+        var serialNumber = Result<byte[]>.Success([0x01, 0x02, 0x03, 0x04]);
 
         _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(caCertificate);
         _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(computer);
         _serialNumberServiceMock.Setup(x => x.GenerateSerialNumber()).Returns(serialNumber);
 
         // Act
-        var certificate = _certificateService.IssueCertificate(csrBytes);
+        var result = _certificateService.IssueCertificate(csrBytes);
 
         // Assert
-        Assert.NotNull(certificate);
-        Assert.Equal(caCertificate.SubjectName.Name, certificate.Issuer);
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Value);
+        Assert.Equal(caCertificate.SubjectName.Name, result.Value.Issuer);
     }
 
     [Fact]
@@ -143,13 +160,15 @@ public class CertificateServiceTests
         );
 
         // Act
-        var certificate1 = certificateService1.IssueCertificate(csrBytes);
-        var certificate2 = certificateService2.IssueCertificate(csrBytes);
+        var result1 = certificateService1.IssueCertificate(csrBytes);
+        var result2 = certificateService2.IssueCertificate(csrBytes);
 
         // Assert
-        Assert.NotNull(certificate1);
-        Assert.NotNull(certificate2);
-        Assert.NotEqual(certificate1.SerialNumber, certificate2.SerialNumber);
+        Assert.True(result1.IsSuccess);
+        Assert.True(result2.IsSuccess);
+        Assert.NotNull(result1.Value);
+        Assert.NotNull(result2.Value);
+        Assert.NotEqual(result1.Value.SerialNumber, result2.Value.SerialNumber);
     }
 
     private static byte[] GenerateCsrBytes(bool isCa)
