@@ -41,14 +41,24 @@ public class CertificateService(IHostInformationService hostInformationService, 
 
         var notBefore = DateTimeOffset.UtcNow;
         var notAfter = DateTimeOffset.UtcNow.AddYears(1);
-        var serialNumber = serialNumberService.GenerateSerialNumber();
+
+        var serialNumberResult = serialNumberService.GenerateSerialNumber();
+        
+        if (!serialNumberResult.IsSuccess)
+        {
+            Log.Error("Failed to generate serial number: {Message}", serialNumberResult.Errors.FirstOrDefault()?.Message);
+            
+            throw new InvalidOperationException("Failed to generate serial number.");
+        }
+
+        var serialNumber = serialNumberResult.Value;
 
         var hostInformation = hostInformationService.GetHostInformation();
 
         var crlDistributionPoints = new List<string>
-            {
-                $"http://{hostInformation.Name}/crl"
-            };
+        {
+            $"http://{hostInformation.Name}/crl"
+        };
 
         var crlDistributionPointExtension = CertificateRevocationListBuilder.BuildCrlDistributionPointExtension(crlDistributionPoints);
 

@@ -12,7 +12,6 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
 
-/// <inheritdoc />
 public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatabaseService
 {
     private IQueryable<T> GetQueryForType<T>() where T : class, INode

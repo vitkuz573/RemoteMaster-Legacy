@@ -17,7 +17,7 @@ public class CertificateServiceTests
     private readonly Mock<ICaCertificateService> _caCertificateServiceMock;
     private readonly Mock<IHostInformationService> _hostInformationServiceMock;
     private readonly Mock<ISerialNumberService> _serialNumberServiceMock;
-    private readonly ICertificateService _certificateService;
+    private readonly CertificateService _certificateService;
 
     public CertificateServiceTests()
     {
@@ -59,7 +59,7 @@ public class CertificateServiceTests
         var csrBytes = GenerateCsrBytes(false);
         using var caCertificate = GenerateCaCertificate();
         var computer = new Computer { Name = "localhost", IpAddress = "127.0.0.1", MacAddress = "00-14-22-01-23-45" };
-        var serialNumber = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+        var serialNumber = Result<byte[]>.Success(new byte[] { 0x01, 0x02, 0x03, 0x04 });
 
         _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(caCertificate);
         _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(computer);
@@ -80,7 +80,7 @@ public class CertificateServiceTests
         var csrBytes = GenerateMinimalValidCsrBytes();
         using var caCertificate = GenerateCaCertificate();
         var computer = new Computer { Name = "localhost", IpAddress = "127.0.0.1", MacAddress = "00-14-22-01-23-45" };
-        var serialNumber = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+        var serialNumber = Result<byte[]>.Success(new byte[] { 0x01, 0x02, 0x03, 0x04 });
 
         _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(caCertificate);
         _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(computer);
@@ -101,7 +101,7 @@ public class CertificateServiceTests
         var csrBytes = GenerateCsrBytesWithExtensions();
         using var caCertificate = GenerateCaCertificate();
         var computer = new Computer { Name = "localhost", IpAddress = "127.0.0.1", MacAddress = "00-14-22-01-23-45" };
-        var serialNumber = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+        var serialNumber = Result<byte[]>.Success(new byte[] { 0x01, 0x02, 0x03, 0x04 });
 
         _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(caCertificate);
         _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(computer);
@@ -127,8 +127,8 @@ public class CertificateServiceTests
         _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(computer);
 
         _serialNumberServiceMock.SetupSequence(s => s.GenerateSerialNumber())
-            .Returns(Guid.NewGuid().ToByteArray())
-            .Returns(Guid.NewGuid().ToByteArray());
+            .Returns(Result<byte[]>.Success(Guid.NewGuid().ToByteArray()))
+            .Returns(Result<byte[]>.Success(Guid.NewGuid().ToByteArray()));
 
         var certificateService1 = new CertificateService(
             _hostInformationServiceMock.Object,
@@ -192,5 +192,3 @@ public class CertificateServiceTests
         return new X509Certificate2(caCertificate.Export(X509ContentType.Pfx));
     }
 }
-
-
