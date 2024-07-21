@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Host.Core.Abstractions;
 
-public interface IHostInformationMonitorService
+public interface IHostInformationUpdaterService
 {
     Task<bool> UpdateHostConfigurationAsync();
 

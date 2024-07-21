@@ -12,7 +12,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
-public class HostInformationUpdaterService(IHostConfigurationService hostConfigurationService, IHostInformationService hostInformationService, IApiService apiService) : IHostInformationMonitorService
+public class HostInformationUpdaterService(IHostConfigurationService hostConfigurationService, IHostInformationService hostInformationService, IApiService apiService) : IHostInformationUpdaterService
 {
     public async Task<bool> UpdateHostConfigurationAsync()
     {

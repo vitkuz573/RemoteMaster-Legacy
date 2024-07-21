@@ -12,16 +12,16 @@ public class HostRegistrationMonitorService : IHostedService
 {
     private readonly IHostLifecycleService _hostLifecycleService;
     private readonly IHostConfigurationService _hostConfigurationService;
-    private readonly IHostInformationMonitorService _hostInformationMonitorService;
+    private readonly IHostInformationUpdaterService _hostInformationMonitorService;
     private readonly IUserInstanceService _userInstanceService;
 
     private readonly Timer _timer;
 
-    public HostRegistrationMonitorService(IHostLifecycleService hostLifecycleService, IHostConfigurationService hostConfigurationService, IHostInformationMonitorService hostInformationMonitorService, IUserInstanceService userInstanceService)
+    public HostRegistrationMonitorService(IHostLifecycleService hostLifecycleService, IHostConfigurationService hostConfigurationService, IHostInformationUpdaterService hostInformationUpdaterService, IUserInstanceService userInstanceService)
     {
         _hostLifecycleService = hostLifecycleService;
         _hostConfigurationService = hostConfigurationService;
-        _hostInformationMonitorService = hostInformationMonitorService;
+        _hostInformationMonitorService = hostInformationUpdaterService;
         _userInstanceService = userInstanceService;
 
         _timer = new Timer(CheckHostRegistration, null, Timeout.Infinite, 0);
