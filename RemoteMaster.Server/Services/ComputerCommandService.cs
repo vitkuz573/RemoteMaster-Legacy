@@ -10,6 +10,7 @@ using Polly;
 using Polly.Retry;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Models;
+using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
@@ -24,26 +25,38 @@ public class ComputerCommandService(IJSRuntime jsRuntime) : IComputerCommandServ
             TimeSpan.FromSeconds(10),
         ]);
 
-    public async Task Execute(ConcurrentDictionary<Computer, HubConnection?> hosts, Func<Computer, HubConnection, Task> action)
+    /// <inheritdoc />
+    public async Task<Result> Execute(ConcurrentDictionary<Computer, HubConnection?> hosts, Func<Computer, HubConnection, Task> action)
     {
-        ArgumentNullException.ThrowIfNull(hosts);
-
-        foreach (var (computer, connection) in hosts)
+        try
         {
-            await _retryPolicy.ExecuteAsync(async () =>
+            ArgumentNullException.ThrowIfNull(hosts);
+
+            foreach (var (computer, connection) in hosts)
             {
-                if (connection?.State == HubConnectionState.Connected)
+                await _retryPolicy.ExecuteAsync(async () =>
                 {
-                    try
+                    if (connection?.State == HubConnectionState.Connected)
                     {
-                        await action(computer, connection);
+                        try
+                        {
+                            await action(computer, connection);
+                        }
+                        catch (HubException ex) when (ex.Message.Contains("Method does not exist"))
+                        {
+                            await jsRuntime.InvokeVoidAsync("alert", $"Host: {computer.Name}.\nThis function is not available in the current host version. Please update your host.");
+                        }
                     }
-                    catch (HubException ex) when (ex.Message.Contains("Method does not exist"))
-                    {
-                        await jsRuntime.InvokeVoidAsync("alert", $"Host: {computer.Name}.\nThis function is not available in the current host version. Please update your host.");
-                    }
-                }
-            });
+                });
+            }
+
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An error occurred while executing a command on computers.");
+            
+            return Result.Failure("An error occurred while executing a command on computers.", exception: ex);
         }
     }
 }
