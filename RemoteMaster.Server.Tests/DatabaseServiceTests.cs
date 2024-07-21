@@ -53,7 +53,8 @@ public class DatabaseServiceTests : IDisposable
         var result = await databaseService.GetNodesAsync<OrganizationalUnit>();
 
         // Assert
-        Assert.Equal(2, result.Count);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, result.Value.Count);
     }
 
     [Fact]
@@ -71,10 +72,11 @@ public class DatabaseServiceTests : IDisposable
         };
 
         // Act
-        var addedNodes = await databaseService.AddNodesAsync(organizationalUnits);
+        var result = await databaseService.AddNodesAsync(organizationalUnits);
 
         // Assert
-        foreach (var addedNode in addedNodes)
+        Assert.True(result.IsSuccess);
+        foreach (var addedNode in result.Value)
         {
             var fetchedNode = await context.OrganizationalUnits.FindAsync(addedNode.NodeId);
             Assert.NotNull(fetchedNode);
@@ -95,8 +97,12 @@ public class DatabaseServiceTests : IDisposable
             new() { NodeId = Guid.NewGuid(), Name = "Unknown2" }
         };
 
-        // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => databaseService.AddNodesAsync(unknownNodes));
+        // Act
+        var result = await databaseService.AddNodesAsync(unknownNodes);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Contains("Failed to add nodes of type UnknownNode.", result.Errors.First().Message);
     }
 
     [Fact]
@@ -116,9 +122,10 @@ public class DatabaseServiceTests : IDisposable
         await context.SaveChangesAsync();
 
         // Act
-        await databaseService.RemoveNodesAsync(organizationalUnits);
+        var result = await databaseService.RemoveNodesAsync(organizationalUnits);
 
         // Assert
+        Assert.True(result.IsSuccess);
         foreach (var organizationalUnit in organizationalUnits)
         {
             var removedNode = await context.OrganizationalUnits.FindAsync(organizationalUnit.NodeId);
@@ -139,8 +146,12 @@ public class DatabaseServiceTests : IDisposable
             new() { NodeId = Guid.NewGuid(), Name = "Unknown2" }
         };
 
-        // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => databaseService.RemoveNodesAsync(unknownNodes));
+        // Act
+        var result = await databaseService.RemoveNodesAsync(unknownNodes);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Contains("Failed to remove nodes of type UnknownNode.", result.Errors.First().Message);
     }
 
     [Fact]
@@ -163,13 +174,14 @@ public class DatabaseServiceTests : IDisposable
         await context.SaveChangesAsync();
 
         // Act
-        await databaseService.UpdateNodeAsync(computer, updatedComputer =>
+        var result = await databaseService.UpdateNodeAsync(computer, updatedComputer =>
         {
             updatedComputer.IpAddress = "192.168.0.1";
             updatedComputer.Name = "NewName";
         });
 
         // Assert
+        Assert.True(result.IsSuccess);
         var updatedComputer = await context.Computers.FindAsync(computer.NodeId);
         Assert.NotNull(updatedComputer);
         Assert.Equal("192.168.0.1", updatedComputer.IpAddress);
@@ -194,7 +206,8 @@ public class DatabaseServiceTests : IDisposable
         var result = await databaseService.GetFullPathAsync(childOu);
 
         // Assert
-        Assert.Equal(new[] { "ParentOU", "ChildOU" }, result);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(new[] { "ParentOU", "ChildOU" }, result.Value);
     }
 
     [Fact]
@@ -212,9 +225,10 @@ public class DatabaseServiceTests : IDisposable
         await context.SaveChangesAsync();
 
         // Act
-        await databaseService.MoveNodeAsync(childOu, newParent);
+        var result = await databaseService.MoveNodeAsync(childOu, newParent);
 
         // Assert
+        Assert.True(result.IsSuccess);
         var movedNode = await context.OrganizationalUnits.FindAsync(childOu.NodeId);
         Assert.Equal(newParent.NodeId, movedNode.ParentId);
     }
@@ -240,8 +254,9 @@ public class DatabaseServiceTests : IDisposable
         var result = await databaseService.GetNodesAsync<OrganizationalUnit>(ou => ou.Name == "OU1");
 
         // Assert
-        Assert.Single(result);
-        Assert.Equal("OU1", result[0].Name);
+        Assert.True(result.IsSuccess);
+        Assert.Single(result.Value);
+        Assert.Equal("OU1", result.Value.First().Name);
     }
 
     [Fact]
@@ -266,8 +281,9 @@ public class DatabaseServiceTests : IDisposable
         await context.SaveChangesAsync();
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
-            await databaseService.MoveNodeAsync(organization, parent));
+        var result = await databaseService.MoveNodeAsync(organization, parent);
+        Assert.False(result.IsSuccess);
+        Assert.Contains("Organizations cannot be moved.", result.Errors.First().Exception.Message);
     }
 
     [Fact]
@@ -285,8 +301,9 @@ public class DatabaseServiceTests : IDisposable
         var nonExistentParent = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "NonExistentParent" };
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
-            await databaseService.MoveNodeAsync(node, nonExistentParent));
+        var result = await databaseService.MoveNodeAsync(node, nonExistentParent);
+        Assert.False(result.IsSuccess);
+        Assert.Contains("New parent not found or is invalid.", result.Errors.First().Exception.Message);
     }
 
     [Fact]
@@ -303,9 +320,10 @@ public class DatabaseServiceTests : IDisposable
         await context.SaveChangesAsync();
 
         // Act
-        await databaseService.MoveNodeAsync(childNode, parentNode);
+        var result = await databaseService.MoveNodeAsync(childNode, parentNode);
 
         // Assert
+        Assert.True(result.IsSuccess);
         var unchangedNode = await context.OrganizationalUnits.FindAsync(childNode.NodeId);
         Assert.Equal(parentNode.NodeId, unchangedNode.ParentId);
     }
@@ -327,12 +345,14 @@ public class DatabaseServiceTests : IDisposable
         };
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
-            await databaseService.UpdateNodeAsync(nonExistentComputer, updatedComputer =>
-            {
-                updatedComputer.IpAddress = "192.168.0.1";
-                updatedComputer.Name = "NewName";
-            }));
+        var result = await databaseService.UpdateNodeAsync(nonExistentComputer, updatedComputer =>
+        {
+            updatedComputer.IpAddress = "192.168.0.1";
+            updatedComputer.Name = "NewName";
+        });
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains("Failed to update node of type Computer.", result.Errors.First().Message);
     }
 
     [Fact]
@@ -348,8 +368,9 @@ public class DatabaseServiceTests : IDisposable
         await context.SaveChangesAsync();
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
-            await databaseService.MoveNodeAsync(node, node));
+        var result = await databaseService.MoveNodeAsync(node, node);
+        Assert.False(result.IsSuccess);
+        Assert.Contains("Cannot move a node to itself.", result.Errors.First().Exception.Message);
     }
 
     [Fact]
@@ -362,8 +383,9 @@ public class DatabaseServiceTests : IDisposable
         var nonExistentNode = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "NonExistentNode" };
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
-            await databaseService.GetFullPathAsync(nonExistentNode));
+        var result = await databaseService.GetFullPathAsync(nonExistentNode);
+        Assert.False(result.IsSuccess);
+        Assert.Contains("Failed to get full path for node of type OrganizationalUnit.", result.Errors.First().Message);
     }
 
     [Fact]
@@ -381,10 +403,11 @@ public class DatabaseServiceTests : IDisposable
         };
 
         // Act
-        var addedNodes = await databaseService.AddNodesAsync(organizations);
+        var result = await databaseService.AddNodesAsync(organizations);
 
         // Assert
-        foreach (var addedNode in addedNodes)
+        Assert.True(result.IsSuccess);
+        foreach (var addedNode in result.Value)
         {
             var fetchedNode = await context.Organizations.FindAsync(addedNode.NodeId);
             Assert.NotNull(fetchedNode);
@@ -407,10 +430,11 @@ public class DatabaseServiceTests : IDisposable
         };
 
         // Act
-        var addedNodes = await databaseService.AddNodesAsync(computers);
+        var result = await databaseService.AddNodesAsync(computers);
 
         // Assert
-        foreach (var addedNode in addedNodes)
+        Assert.True(result.IsSuccess);
+        foreach (var addedNode in result.Value)
         {
             var fetchedNode = await context.Computers.FindAsync(addedNode.NodeId);
             Assert.NotNull(fetchedNode);
@@ -428,7 +452,8 @@ public class DatabaseServiceTests : IDisposable
         var result = await databaseService.GetNodesAsync<OrganizationalUnit>();
 
         // Assert
-        Assert.Empty(result);
+        Assert.True(result.IsSuccess);
+        Assert.Empty(result.Value);
     }
 
     [Fact]
@@ -451,7 +476,8 @@ public class DatabaseServiceTests : IDisposable
         var result = await databaseService.GetNodesAsync<OrganizationalUnit>();
 
         // Assert
-        Assert.Equal(1000, result.Count);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(1000, result.Value.Count);
     }
 
     public void Dispose()

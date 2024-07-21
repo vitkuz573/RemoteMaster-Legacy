@@ -92,7 +92,6 @@ public partial class Home
         if (_currentUser == null)
         {
             Log.Warning("Current user not found");
-
             return [];
         }
 
@@ -103,15 +102,22 @@ public partial class Home
 
         if (organizationId == null)
         {
-            var organizations = (await DatabaseService.GetNodesAsync<Organization>(o => accessibleOrganizations.Contains(o.NodeId))).ToList();
+            var organizationsResult = await DatabaseService.GetNodesAsync<Organization>(o => accessibleOrganizations.Contains(o.NodeId));
 
+            if (!organizationsResult.IsSuccess)
+            {
+                Log.Error("Failed to load organizations: {Message}", organizationsResult.Errors.FirstOrDefault()?.Message);
+                return units;
+            }
+
+            var organizations = organizationsResult.Value.ToList();
             units.AddRange(organizations);
 
             foreach (var organization in organizations)
             {
                 var organizationalUnits = (await LoadNodes(organization.NodeId)).OfType<OrganizationalUnit>().ToList();
                 organization.OrganizationalUnits.Clear();
-                
+
                 foreach (var unit in organizationalUnits)
                 {
                     organization.OrganizationalUnits.Add(unit);
@@ -120,14 +126,30 @@ public partial class Home
         }
         else
         {
-            var organizationalUnits = await DatabaseService.GetNodesAsync<OrganizationalUnit>(ou =>
+            var organizationalUnitsResult = await DatabaseService.GetNodesAsync<OrganizationalUnit>(ou =>
                 ou.OrganizationId == organizationId &&
                 (parentId == null || ou.ParentId == parentId) &&
                 accessibleOrganizationalUnits.Contains(ou.NodeId));
 
-            var computers = await DatabaseService.GetNodesAsync<Computer>(c => c.ParentId == parentId);
+            if (!organizationalUnitsResult.IsSuccess)
+            {
+                Log.Error("Failed to load organizational units: {Message}", organizationalUnitsResult.Errors.FirstOrDefault()?.Message);
+                return units;
+            }
 
+            var organizationalUnits = organizationalUnitsResult.Value;
             units.AddRange(organizationalUnits);
+
+            var computersResult = await DatabaseService.GetNodesAsync<Computer>(c => c.ParentId == parentId);
+
+            if (!computersResult.IsSuccess)
+            {
+                Log.Error("Failed to load computers: {Message}", computersResult.Errors.FirstOrDefault()?.Message);
+                
+                return units;
+            }
+
+            var computers = computersResult.Value;
             units.AddRange(computers);
 
             foreach (var unit in organizationalUnits)

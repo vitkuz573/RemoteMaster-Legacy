@@ -18,8 +18,14 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
     /// <exception cref="InvalidOperationException">Thrown if the organization is not found.</exception>
     private async Task<Organization> GetOrganizationAsync(string organizationName)
     {
-        var organizations = await databaseService.GetNodesAsync<Organization>(n => n.Name == organizationName);
-        var organization = organizations.FirstOrDefault();
+        var organizationsResult = await databaseService.GetNodesAsync<Organization>(n => n.Name == organizationName);
+
+        if (!organizationsResult.IsSuccess)
+        {
+            throw new InvalidOperationException($"Failed to retrieve organizations: {organizationsResult.Errors.FirstOrDefault()?.Message}");
+        }
+
+        var organization = organizationsResult.Value.FirstOrDefault();
 
         return organization ?? throw new InvalidOperationException($"Organization '{organizationName}' not found.");
     }
@@ -35,13 +41,25 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
     {
         OrganizationalUnit? parentOu = null;
 
-        var organizations = await databaseService.GetNodesAsync<Organization>(n => n.NodeId == organizationId);
-        var organizationName = organizations.FirstOrDefault()?.Name ?? "Unknown";
+        var organizationResult = await databaseService.GetNodesAsync<Organization>(n => n.NodeId == organizationId);
+
+        if (!organizationResult.IsSuccess)
+        {
+            throw new InvalidOperationException($"Failed to retrieve organization: {organizationResult.Errors.FirstOrDefault()?.Message}");
+        }
+
+        var organizationName = organizationResult.Value.FirstOrDefault()?.Name ?? "Unknown";
 
         foreach (var ouName in ouNames)
         {
-            var ous = await databaseService.GetNodesAsync<OrganizationalUnit>(n => n.Name == ouName && n.OrganizationId == organizationId);
-            var ou = ous.FirstOrDefault(o => parentOu == null || o.ParentId == parentOu.NodeId) ?? throw new InvalidOperationException($"Organizational Unit '{ouName}' not found in organization '{organizationName}'.");
+            var ousResult = await databaseService.GetNodesAsync<OrganizationalUnit>(n => n.Name == ouName && n.OrganizationId == organizationId);
+
+            if (!ousResult.IsSuccess)
+            {
+                throw new InvalidOperationException($"Failed to retrieve organizational units: {ousResult.Errors.FirstOrDefault()?.Message}");
+            }
+
+            var ou = ousResult.Value.FirstOrDefault(o => parentOu == null || o.ParentId == parentOu.NodeId) ?? throw new InvalidOperationException($"Organizational Unit '{ouName}' not found in organization '{organizationName}'.");
 
             parentOu = ou;
         }
@@ -58,8 +76,14 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
     /// <exception cref="InvalidOperationException">Thrown if the computer is not found.</exception>
     private async Task<Computer> GetComputerByMacAddressAsync(string macAddress, Guid parentOuId)
     {
-        var existingComputers = await databaseService.GetNodesAsync<Computer>(c => c.ParentId == parentOuId);
-        var computer = existingComputers.FirstOrDefault(c => c.MacAddress == macAddress) ?? throw new InvalidOperationException($"Computer with MAC address '{macAddress}' not found.");
+        var existingComputersResult = await databaseService.GetNodesAsync<Computer>(c => c.ParentId == parentOuId);
+
+        if (!existingComputersResult.IsSuccess)
+        {
+            throw new InvalidOperationException($"Failed to retrieve computers: {existingComputersResult.Errors.FirstOrDefault()?.Message}");
+        }
+
+        var computer = existingComputersResult.Value.FirstOrDefault(c => c.MacAddress == macAddress) ?? throw new InvalidOperationException($"Computer with MAC address '{macAddress}' not found.");
 
         return computer;
     }
@@ -75,9 +99,16 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
 
         try
         {
-            var computers = await databaseService.GetNodesAsync<Computer>(n => n.MacAddress == macAddress);
-            
-            return computers.Any();
+            var computersResult = await databaseService.GetNodesAsync<Computer>(n => n.MacAddress == macAddress);
+
+            if (!computersResult.IsSuccess)
+            {
+                await eventNotificationService.SendNotificationAsync($"Error while checking registration of the host with MAC address `{macAddress}`: {computersResult.Errors.FirstOrDefault()?.Message}");
+                
+                return false;
+            }
+
+            return computersResult.Value.Any();
         }
         catch (Exception ex)
         {
@@ -106,7 +137,7 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
         catch (InvalidOperationException ex)
         {
             await eventNotificationService.SendNotificationAsync($"Host registration failed: {ex.Message} for host {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
-
+            
             return false;
         }
 
@@ -121,7 +152,7 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
             });
 
             await eventNotificationService.SendNotificationAsync($"Host registration successful: {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'");
-
+            
             return true;
         }
         catch (InvalidOperationException)
@@ -167,7 +198,7 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
         catch (InvalidOperationException ex)
         {
             await eventNotificationService.SendNotificationAsync($"Host unregister failed: {ex.Message} for host {request.Name} (`{request.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'");
-
+           
             return false;
         }
 
@@ -175,15 +206,14 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
         {
             var existingComputer = await GetComputerByMacAddressAsync(request.MacAddress, lastOu.NodeId);
             await databaseService.RemoveNodesAsync(new List<Computer> { existingComputer });
-
             await eventNotificationService.SendNotificationAsync($"Host unregistered: {request.Name} (`{request.MacAddress}`) from organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' in organization '{request.Organization}'");
-
+            
             return true;
         }
         catch (InvalidOperationException ex)
         {
             await eventNotificationService.SendNotificationAsync($"Host unregister failed: {ex.Message} for host {request.Name} (`{request.MacAddress}`) from organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' in organization '{request.Organization}'");
-
+            
             return false;
         }
     }
@@ -207,14 +237,14 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
         catch (InvalidOperationException ex)
         {
             await eventNotificationService.SendNotificationAsync($"Host information update failed: {ex.Message} for host {request.Name} (`{request.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'");
-
+            
             return false;
         }
 
         try
         {
             var computer = await GetComputerByMacAddressAsync(request.MacAddress, lastOu.NodeId);
-            
+
             await databaseService.UpdateNodeAsync(computer, updatedComputer =>
             {
                 updatedComputer.IpAddress = request.IpAddress;
@@ -222,13 +252,13 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
             });
 
             await eventNotificationService.SendNotificationAsync($"Host information updated: {request.Name} (`{request.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'");
-
+            
             return true;
         }
         catch (InvalidOperationException ex)
         {
             await eventNotificationService.SendNotificationAsync($"Host information update failed: {ex.Message} for host {request.Name} (`{request.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'");
-
+            
             return false;
         }
     }

@@ -30,7 +30,7 @@ public class NodeController(IDatabaseService databaseService, UserManager<Applic
     public async Task<IActionResult> GetNodes([FromQuery] Guid? organizationId = null, [FromQuery] Guid? parentId = null)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        
+
         if (userId == null)
         {
             var problemDetails = new ProblemDetails
@@ -63,7 +63,7 @@ public class NodeController(IDatabaseService databaseService, UserManager<Applic
         try
         {
             var nodes = await LoadNodes(user, organizationId, parentId);
-            
+
             return Ok(ApiResponse<IEnumerable<INode>>.Success(nodes, "Nodes retrieved successfully."));
         }
         catch (Exception ex)
@@ -88,7 +88,14 @@ public class NodeController(IDatabaseService databaseService, UserManager<Applic
 
         if (organizationId == null)
         {
-            var organizations = (await databaseService.GetNodesAsync<Organization>(o => accessibleOrganizations.Contains(o.NodeId))).ToList();
+            var organizationsResult = await databaseService.GetNodesAsync<Organization>(o => accessibleOrganizations.Contains(o.NodeId));
+
+            if (!organizationsResult.IsSuccess)
+            {
+                throw new InvalidOperationException($"Failed to load organizations: {organizationsResult.Errors.FirstOrDefault()?.Message}");
+            }
+
+            var organizations = organizationsResult.Value.ToList();
             units.AddRange(organizations);
 
             foreach (var organization in organizations)
@@ -104,12 +111,26 @@ public class NodeController(IDatabaseService databaseService, UserManager<Applic
         }
         else
         {
-            var organizationalUnits = await databaseService.GetNodesAsync<OrganizationalUnit>(ou =>
+            var organizationalUnitsResult = await databaseService.GetNodesAsync<OrganizationalUnit>(ou =>
                 ou.OrganizationId == organizationId &&
                 (parentId == null || ou.ParentId == parentId) &&
                 accessibleOrganizationalUnits.Contains(ou.NodeId));
 
-            var computers = await databaseService.GetNodesAsync<Computer>(c => c.ParentId == parentId);
+            if (!organizationalUnitsResult.IsSuccess)
+            {
+                throw new InvalidOperationException($"Failed to load organizational units: {organizationalUnitsResult.Errors.FirstOrDefault()?.Message}");
+            }
+
+            var organizationalUnits = organizationalUnitsResult.Value;
+
+            var computersResult = await databaseService.GetNodesAsync<Computer>(c => c.ParentId == parentId);
+
+            if (!computersResult.IsSuccess)
+            {
+                throw new InvalidOperationException($"Failed to load computers: {computersResult.Errors.FirstOrDefault()?.Message}");
+            }
+
+            var computers = computersResult.Value;
 
             units.AddRange(organizationalUnits);
             units.AddRange(computers);

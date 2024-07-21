@@ -4,6 +4,7 @@
 
 using System.Linq.Expressions;
 using RemoteMaster.Shared.Abstractions;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Abstractions;
 
@@ -18,7 +19,7 @@ public interface IDatabaseService
     /// <typeparam name="T">The type of node.</typeparam>
     /// <param name="predicate">The predicate to filter nodes.</param>
     /// <returns>A list of nodes that match the predicate.</returns>
-    Task<IList<T>> GetNodesAsync<T>(Expression<Func<T, bool>>? predicate = null) where T : class, INode;
+    Task<Result<IList<T>>> GetNodesAsync<T>(Expression<Func<T, bool>>? predicate = null) where T : class, INode;
 
     /// <summary>
     /// Adds multiple new nodes to the database.
@@ -26,14 +27,14 @@ public interface IDatabaseService
     /// <typeparam name="T">The type of nodes.</typeparam>
     /// <param name="nodes">The nodes to add.</param>
     /// <returns>The added nodes.</returns>
-    Task<IList<T>> AddNodesAsync<T>(IEnumerable<T> nodes) where T : class, INode;
+    Task<Result<IList<T>>> AddNodesAsync<T>(IEnumerable<T> nodes) where T : class, INode;
 
     /// <summary>
     /// Removes multiple nodes from the database.
     /// </summary>
     /// <typeparam name="T">The type of nodes.</typeparam>
     /// <param name="nodes">The nodes to remove.</param>
-    Task RemoveNodesAsync<T>(IEnumerable<T> nodes) where T : class, INode;
+    Task<Result> RemoveNodesAsync<T>(IEnumerable<T> nodes) where T : class, INode;
 
     /// <summary>
     /// Updates the specified node with the given update action.
@@ -41,7 +42,7 @@ public interface IDatabaseService
     /// <typeparam name="T">The type of node.</typeparam>
     /// <param name="node">The node to update.</param>
     /// <param name="updateAction">The action to perform on the node for updating.</param>
-    Task UpdateNodeAsync<T>(T node, Action<T> updateAction) where T : class, INode;
+    Task<Result> UpdateNodeAsync<T>(T node, Action<T> updateAction) where T : class, INode;
 
     /// <summary>
     /// Moves the specified node to a new parent.
@@ -50,7 +51,7 @@ public interface IDatabaseService
     /// <typeparam name="TParent">The type of the new parent node.</typeparam>
     /// <param name="node">The node to move.</param>
     /// <param name="newParent">The new parent node.</param>
-    Task MoveNodeAsync<TNode, TParent>(TNode node, TParent newParent) where TNode : class, INode where TParent : class, INode;
+    Task<Result> MoveNodeAsync<TNode, TParent>(TNode node, TParent newParent) where TNode : class, INode where TParent : class, INode;
 
     /// <summary>
     /// Gets the full path for the specified node.
@@ -58,5 +59,5 @@ public interface IDatabaseService
     /// <typeparam name="T">The type of the node.</typeparam>
     /// <param name="node">The node to get the path for.</param>
     /// <returns>The full path of the node as an array of strings.</returns>
-    Task<string[]> GetFullPathAsync<T>(T node) where T : class, INode;
+    Task<Result<string[]>> GetFullPathAsync<T>(T node) where T : class, INode;
 }
