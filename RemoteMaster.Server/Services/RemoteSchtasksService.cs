@@ -69,12 +69,7 @@ public class RemoteSchtasksService(INetworkDriveService networkDriveService) : I
 
             var cancelResult = networkDriveService.CancelNetworkDrive(sharePath);
             
-            if (!cancelResult.IsSuccess)
-            {
-                return false;
-            }
-
-            return true;
+            return cancelResult.IsSuccess;
         }
         catch
         {

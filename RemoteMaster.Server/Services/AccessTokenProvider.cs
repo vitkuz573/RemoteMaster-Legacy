@@ -18,7 +18,7 @@ public class AccessTokenProvider(ITokenService tokenService, ITokenStorageServic
         {
             var tokenValidResult = tokenService.IsTokenValid(accessTokenResult.Value);
 
-            if (tokenValidResult.IsSuccess && tokenValidResult.Value)
+            if (tokenValidResult is { IsSuccess: true, Value: true })
             {
                 return Result<string?>.Success(accessTokenResult.Value);
             }
@@ -30,7 +30,7 @@ public class AccessTokenProvider(ITokenService tokenService, ITokenStorageServic
         {
             var refreshTokenValidResult = tokenService.IsRefreshTokenValid(refreshTokenResult.Value);
 
-            if (refreshTokenValidResult.IsSuccess && refreshTokenValidResult.Value)
+            if (refreshTokenValidResult is { IsSuccess: true, Value: true })
             {
                 var tokenDataResult = await tokenService.GenerateTokensAsync(userId, refreshTokenResult.Value);
 

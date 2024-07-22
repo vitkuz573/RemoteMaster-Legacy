@@ -58,12 +58,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
             ? await GenerateRefreshTokenAsync(user, ipAddress)
             : await ReplaceRefreshToken(oldRefreshToken, user, ipAddress);
 
-        if (!refreshTokenResult.IsSuccess)
-        {
-            return Result<TokenData>.Failure([.. refreshTokenResult.Errors]);
-        }
-
-        return Result<TokenData>.Success(CreateTokenData(accessTokenResult.Value, refreshTokenResult.Value.Token));
+        return !refreshTokenResult.IsSuccess ? Result<TokenData>.Failure([.. refreshTokenResult.Errors]) : Result<TokenData>.Success(CreateTokenData(accessTokenResult.Value, refreshTokenResult.Value.Token));
     }
 
     private static TokenData CreateTokenData(string accessToken, string refreshToken)
@@ -173,16 +168,13 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
             .Include(u => u.RefreshTokens)
             .SingleOrDefault(u => u.RefreshTokens.Any(rt => rt.Token == token.Token));
 
-        if (user != null)
-        {
-            var refreshTokenEntity = user.RefreshTokens.SingleOrDefault(rt => rt.Token == token.Token);
+        var refreshTokenEntity = user?.RefreshTokens.SingleOrDefault(rt => rt.Token == token.Token);
 
-            if (refreshTokenEntity != null)
-            {
-                refreshTokenEntity.Revoked = DateTime.UtcNow;
-                refreshTokenEntity.RevokedByIp = ipAddress;
-                refreshTokenEntity.RevocationReason = reason;
-            }
+        if (refreshTokenEntity != null)
+        {
+            refreshTokenEntity.Revoked = DateTime.UtcNow;
+            refreshTokenEntity.RevokedByIp = ipAddress;
+            refreshTokenEntity.RevocationReason = reason;
         }
 
         await context.SaveChangesAsync();

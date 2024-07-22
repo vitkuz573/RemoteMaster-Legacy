@@ -82,19 +82,21 @@ public class HostMoveService(IEventNotificationService eventNotificationService)
 
             var requestToRemove = hostMoveRequests.Value.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
 
-            if (requestToRemove != null)
+            if (requestToRemove == null)
             {
-                hostMoveRequests.Value.Remove(requestToRemove);
-
-                var saveResult = await SaveHostMoveRequestsAsync(hostMoveRequests.Value);
-
-                if (!saveResult.IsSuccess)
-                {
-                    return Result.Failure([.. saveResult.Errors]);
-                }
-
-                await eventNotificationService.SendNotificationAsync($"Acknowledged move request for host with MAC address: {macAddress}");
+                return Result.Success();
             }
+
+            hostMoveRequests.Value.Remove(requestToRemove);
+
+            var saveResult = await SaveHostMoveRequestsAsync(hostMoveRequests.Value);
+
+            if (!saveResult.IsSuccess)
+            {
+                return Result.Failure([.. saveResult.Errors]);
+            }
+
+            await eventNotificationService.SendNotificationAsync($"Acknowledged move request for host with MAC address: {macAddress}");
 
             return Result.Success();
         }

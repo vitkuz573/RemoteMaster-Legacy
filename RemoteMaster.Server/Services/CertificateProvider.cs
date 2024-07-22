@@ -23,12 +23,7 @@ public class CertificateProvider(IOptions<CertificateOptions> options, ICertific
 
             var caCertificate = certificates.FirstOrDefault(cert => cert.HasPrivateKey);
 
-            if (caCertificate == null)
-            {
-                return Result<X509Certificate2>.Failure($"CA certificate with CommonName '{_settings.CommonName}' not found.");
-            }
-
-            return Result<X509Certificate2>.Success(caCertificate.GetUnderlyingCertificate());
+            return caCertificate == null ? Result<X509Certificate2>.Failure($"CA certificate with CommonName '{_settings.CommonName}' not found.") : Result<X509Certificate2>.Success(caCertificate.GetUnderlyingCertificate());
         }
         catch (Exception ex)
         {

@@ -49,14 +49,16 @@ public class TelegramEventNotificationService : IEventNotificationService
 
         try
         {
-            if (_botClient != null && _chatIds != null)
+            if (_botClient == null || _chatIds == null)
             {
-                var escapedMessage = EscapeMarkdownV2(message);
+                return Result.Success();
+            }
 
-                foreach (var chatId in _chatIds)
-                {
-                    await _botClient.SendTextMessageAsync(chatId, escapedMessage, parseMode: ParseMode.MarkdownV2);
-                }
+            var escapedMessage = EscapeMarkdownV2(message);
+
+            foreach (var chatId in _chatIds)
+            {
+                await _botClient.SendTextMessageAsync(chatId, escapedMessage, parseMode: ParseMode.MarkdownV2);
             }
 
             return Result.Success();

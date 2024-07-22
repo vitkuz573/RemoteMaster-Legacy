@@ -42,14 +42,15 @@ public class JwtSecurityService : IJwtSecurityService
     {
         try
         {
-            if (_fileSystem.File.Exists(_publicKeyPath))
+            if (!_fileSystem.File.Exists(_publicKeyPath))
             {
-                var publicKey = await _fileSystem.File.ReadAllBytesAsync(_publicKeyPath);
-
-                return Result<byte[]?>.Success(publicKey);
+                return Result<byte[]?>.Failure("Public key file does not exist.");
             }
 
-            return Result<byte[]?>.Failure("Public key file does not exist.");
+            var publicKey = await _fileSystem.File.ReadAllBytesAsync(_publicKeyPath);
+
+            return Result<byte[]?>.Success(publicKey);
+
         }
         catch (Exception ex)
         {
