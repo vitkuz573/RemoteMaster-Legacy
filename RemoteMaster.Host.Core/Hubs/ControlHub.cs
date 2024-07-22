@@ -109,7 +109,6 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         return authenticationType ?? "Unknown";
     }
 
-
     private async Task HandleThumbnailRequest()
     {
         var thumbnail = screenCapturingService.GetThumbnail(500, 300);
