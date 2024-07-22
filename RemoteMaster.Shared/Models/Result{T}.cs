@@ -20,9 +20,9 @@ public class Result<T> : Result
 
     public static Result<T> Success(T value) => new(value);
 
-    public static new Result<T> Failure(params ErrorDetails[] errors) => new(new List<ErrorDetails>(errors));
+    public static new Result<T> Failure(params ErrorDetails[] errors) => new([..errors]);
 
-    public static new Result<T> Failure(string message, string? code = null, Exception? exception = null) => new(new List<ErrorDetails> { new ErrorDetails(message, code, exception) });
+    public static new Result<T> Failure(string message, string? code = null, Exception? exception = null) => new([new(message, code, exception)]);
 
     public new Result<T> AddError(string message, string? code = null, Exception? exception = null)
     {
