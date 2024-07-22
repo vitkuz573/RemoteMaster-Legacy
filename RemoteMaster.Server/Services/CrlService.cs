@@ -170,18 +170,19 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
             var crlInfo = await context.CrlInfos.OrderBy(ci => ci.CrlNumber).FirstOrDefaultAsync();
             var revokedCertificatesCount = await context.RevokedCertificates.CountAsync();
 
-            if (crlInfo != null)
+            if (crlInfo == null)
             {
-                var metadata = new CrlMetadata
-                {
-                    CrlInfo = crlInfo,
-                    RevokedCertificatesCount = revokedCertificatesCount
-                };
-
-                return Result<CrlMetadata>.Success(metadata);
+                return Result<CrlMetadata>.Failure("CRL Metadata is not available.");
             }
 
-            return Result<CrlMetadata>.Failure("CRL Metadata is not available.");
+            var metadata = new CrlMetadata
+            {
+                CrlInfo = crlInfo,
+                RevokedCertificatesCount = revokedCertificatesCount
+            };
+
+            return Result<CrlMetadata>.Success(metadata);
+
         }
         catch (Exception ex)
         {

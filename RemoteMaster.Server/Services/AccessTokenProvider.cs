@@ -10,6 +10,7 @@ namespace RemoteMaster.Server.Services;
 
 public class AccessTokenProvider(ITokenService tokenService, ITokenStorageService tokenStorageService, NavigationManager navigationManager) : IAccessTokenProvider
 {
+    /// <inheritdoc />
     public async Task<Result<string?>> GetAccessTokenAsync(string userId)
     {
         var accessTokenResult = await tokenStorageService.GetAccessTokenAsync(userId);

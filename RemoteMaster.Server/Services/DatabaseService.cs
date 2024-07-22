@@ -18,15 +18,15 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
     {
         return typeof(T) switch
         {
-            Type t when t == typeof(Organization) => applicationDbContext.Organizations
+            { } t when t == typeof(Organization) => applicationDbContext.Organizations
                 .Include(o => o.OrganizationalUnits)
                 .ThenInclude(ou => ou.Computers)
                 .Cast<T>(),
-            Type t when t == typeof(OrganizationalUnit) => applicationDbContext.OrganizationalUnits
+            { } t when t == typeof(OrganizationalUnit) => applicationDbContext.OrganizationalUnits
                 .Include(ou => ou.Children)
                 .Include(ou => ou.Computers)
                 .Cast<T>(),
-            Type t when t == typeof(Computer) => applicationDbContext.Computers
+            { } t when t == typeof(Computer) => applicationDbContext.Computers
                 .Cast<T>(),
             _ => throw new InvalidOperationException($"Cannot create a DbSet for '{typeof(T).Name}' because this type is not included in the model for the context.")
         };
