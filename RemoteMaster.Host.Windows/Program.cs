@@ -26,6 +26,7 @@ using RemoteMaster.Host.Windows.Enums;
 using RemoteMaster.Host.Windows.Helpers;
 using RemoteMaster.Host.Windows.Hubs;
 using RemoteMaster.Host.Windows.Services;
+using Serilog;
 
 namespace RemoteMaster.Host.Windows;
 
@@ -80,11 +81,18 @@ internal class Program
 
         if (launchModeInstance != null)
         {
-            var secureAttentionSequenceService = app.Services.GetRequiredService<ISecureAttentionSequenceService>();
-
-            if (secureAttentionSequenceService.SasOption != SoftwareSasOption.ServicesAndEaseOfAccessApplications)
+            try
             {
-                secureAttentionSequenceService.SasOption = SoftwareSasOption.ServicesAndEaseOfAccessApplications;
+                var secureAttentionSequenceService = app.Services.GetRequiredService<ISecureAttentionSequenceService>();
+
+                if (secureAttentionSequenceService.SasOption != SoftwareSasOption.ServicesAndEaseOfAccessApplications)
+                {
+                    secureAttentionSequenceService.SasOption = SoftwareSasOption.ServicesAndEaseOfAccessApplications;
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error(e.Message);
             }
 
             var firewallService = app.Services.GetRequiredService<IFirewallService>();
@@ -97,11 +105,18 @@ internal class Program
             firewallService.AddRule("Remote Master Host", hostApplicationPath);
             firewallService.AddRule("Remote Master Host Updater", hostUpdaterApplicationPath);
 
-            var wolConfiguratorService = app.Services.GetRequiredService<IWoLConfiguratorService>();
+            try
+            {
+                var wolConfiguratorService = app.Services.GetRequiredService<IWoLConfiguratorService>();
 
-            wolConfiguratorService.DisableFastStartup();
-            wolConfiguratorService.DisablePnPEnergySaving();
-            await wolConfiguratorService.EnableWakeOnLanForAllAdaptersAsync();
+                wolConfiguratorService.DisableFastStartup();
+                wolConfiguratorService.DisablePnPEnergySaving();
+                await wolConfiguratorService.EnableWakeOnLanForAllAdaptersAsync();
+            }
+            catch (Exception e)
+            {
+                Log.Error(e.Message);
+            }
         }
 
         if (!app.Environment.IsDevelopment())
