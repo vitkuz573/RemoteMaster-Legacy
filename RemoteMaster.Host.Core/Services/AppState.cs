@@ -72,6 +72,7 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext) : IApp
 
             try
             {
+                viewer?.Context.Abort();
                 ViewerRemoved?.Invoke(this, viewer);
                 NotifyViewersChanged();
             }

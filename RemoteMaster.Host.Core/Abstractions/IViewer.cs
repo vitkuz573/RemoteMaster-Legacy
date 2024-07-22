@@ -2,6 +2,8 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Microsoft.AspNetCore.SignalR;
+
 namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IViewer : IDisposable
@@ -9,6 +11,8 @@ public interface IViewer : IDisposable
     IScreenCapturingService ScreenCapturing { get; }
 
     string ConnectionId { get; }
+
+    HubCallerContext Context { get; }
 
     int FrameRate { get; set; }
 

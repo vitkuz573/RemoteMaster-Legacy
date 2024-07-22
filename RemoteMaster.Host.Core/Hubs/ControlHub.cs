@@ -58,7 +58,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
                 if (role == "Windows Service" && userName == "RCHost")
                 {
-                    var viewer = viewerFactory.Create(Context.ConnectionId, "Services", userName, role, ipAddress, authenticationType);
+                    var viewer = viewerFactory.Create(Context.ConnectionId, Context, "Services", userName, role, ipAddress, authenticationType);
                     appState.TryAddViewer(viewer);
 
                     await Groups.AddToGroupAsync(Context.ConnectionId, "Services");
@@ -124,7 +124,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
     private async Task HandleScreenCastRequest(string userName, string role, string ipAddress, string authenticationType)
     {
-        var viewer = viewerFactory.Create(Context.ConnectionId, "Users", userName, role, ipAddress, authenticationType);
+        var viewer = viewerFactory.Create(Context.ConnectionId, Context, "Users", userName, role, ipAddress, authenticationType);
         appState.TryAddViewer(viewer);
 
         screenCastingService.StartStreaming(viewer, 60);

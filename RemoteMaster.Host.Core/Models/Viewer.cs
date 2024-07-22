@@ -2,12 +2,12 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Net;
+using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
 
 namespace RemoteMaster.Host.Core.Models;
 
-public class Viewer(IScreenCapturingService screenCapturing, string connectionId, string group, string userName, string role, string ipAddress, string authenticationType) : IViewer
+public class Viewer(IScreenCapturingService screenCapturing, string connectionId, HubCallerContext context, string group, string userName, string role, string ipAddress, string authenticationType) : IViewer
 {
     public IScreenCapturingService ScreenCapturing { get; } = screenCapturing;
 
@@ -16,6 +16,8 @@ public class Viewer(IScreenCapturingService screenCapturing, string connectionId
     public string Group { get; } = group;
 
     public string ConnectionId { get; } = connectionId;
+
+    public HubCallerContext Context { get; } = context;
 
     public string UserName { get; } = userName;
 
