@@ -10,7 +10,7 @@ public class Result<T> : Result
 
     private Result(T value) : base(true, null)
     {
-        Value = value ?? throw new ArgumentNullException(nameof(value), "Value cannot be null for a successful result.");
+        Value = value;
     }
 
     private Result(List<ErrorDetails> errors) : base(false, errors)
