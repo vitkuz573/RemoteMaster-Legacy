@@ -94,11 +94,8 @@ public static class Program
         services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
         services.AddScoped<IAuthorizationHandler, HostAccessHandler>();
 
-        services.AddAuthentication(options =>
-        {
-            options.DefaultScheme = IdentityConstants.ApplicationScheme;
-            options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
-        }).AddIdentityCookies();
+        services.AddAuthentication(IdentityConstants.ApplicationScheme)
+            .AddIdentityCookies();
 
         services.AddAuthorizationBuilder()
             .AddPolicy("ToggleInputPolicy", policy => policy.RequireClaim("Permission", "ToggleInput"));
