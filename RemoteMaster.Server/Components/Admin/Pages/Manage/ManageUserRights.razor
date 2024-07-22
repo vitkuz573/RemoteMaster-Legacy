@@ -64,6 +64,11 @@
                 </div>
             }
         }
+        
+        <div class="mt-4">
+            <InputCheckbox @bind-Value="SelectedUserModel.CanAccessUnregisteredHosts" class="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out" @onchange="StateHasChanged" />
+            <label class="ml-2 text-sm font-medium text-gray-700">Allow access to unregistered hosts</label>
+        </div>
 
         <div>
             @foreach (var organization in _organizations)

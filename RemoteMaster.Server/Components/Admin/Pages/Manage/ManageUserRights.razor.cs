@@ -24,7 +24,7 @@ public partial class ManageUserRights
 
     private UserEditModel SelectedUserModel { get; set; } = new();
 
-    private bool HasChanges => HasChangesInRole() || HasChangesInOrganizations() || HasChangesInUnits() || HasChangesInLockout();
+    private bool HasChanges => HasChangesInRole() || HasChangesInOrganizations() || HasChangesInUnits() || HasChangesInLockout() || HasChangesInAccessToUnregisteredHosts();
 
     private const string RootAdminRoleName = "RootAdministrator";
 
@@ -91,13 +91,14 @@ public partial class ManageUserRights
         if (user == null)
         {
             _message = "Error: User not found.";
-            
             return;
         }
 
         await UpdateUserRoleAsync(dbContext, user);
         await UpdateUserAccessAsync(dbContext, user);
         await UpdateUserLockoutStatusAsync(user);
+
+        user.CanAccessUnregisteredHosts = SelectedUserModel.CanAccessUnregisteredHosts;
 
         await dbContext.SaveChangesAsync();
 
@@ -167,11 +168,13 @@ public partial class ManageUserRights
         {
             var unit = await dbContext.OrganizationalUnits.FindAsync(unitId);
 
-            if (unit != null)
+            if (unit == null)
             {
-                user.AccessibleOrganizationalUnits.Add(unit);
-                SelectedUserModel.SelectedOrganizationalUnits.Add(unitId);
+                continue;
             }
+
+            user.AccessibleOrganizationalUnits.Add(unit);
+            SelectedUserModel.SelectedOrganizationalUnits.Add(unitId);
         }
     }
 
@@ -206,7 +209,6 @@ public partial class ManageUserRights
         if (user == null)
         {
             _message = "Error: User not found.";
-            
             return;
         }
 
@@ -218,11 +220,13 @@ public partial class ManageUserRights
             Role = userRole,
             IsLockedOut = user.LockoutEnd != null && user.LockoutEnd > DateTime.UtcNow,
             IsPermanentLockout = user.LockoutEnd == DateTimeOffset.MaxValue,
-            LockoutEndDateTime = (user.LockoutEnd != null && user.LockoutEnd < DateTimeOffset.MaxValue) ? user.LockoutEnd.Value.DateTime : DateTime.Now
+            LockoutEndDateTime = (user.LockoutEnd != null && user.LockoutEnd < DateTimeOffset.MaxValue) ? user.LockoutEnd.Value.DateTime : DateTime.Now,
+            CanAccessUnregisteredHosts = user.CanAccessUnregisteredHosts
         };
 
         _initialSelectedRole = userRole;
         _initialIsLockedOut = SelectedUserModel.IsLockedOut;
+        _initialCanAccessUnregisteredHosts = SelectedUserModel.CanAccessUnregisteredHosts;
 
         _initialSelectedOrganizationIds = user.AccessibleOrganizations.Select(ao => ao.NodeId).ToList();
         _initialSelectedUnitIds = user.AccessibleOrganizationalUnits.Select(aou => aou.NodeId).ToList();
@@ -300,6 +304,11 @@ public partial class ManageUserRights
                 _initialLockoutEndDateTime != SelectedUserModel.LockoutEndDateTime);
     }
 
+    private bool HasChangesInAccessToUnregisteredHosts()
+    {
+        return _initialCanAccessUnregisteredHosts != SelectedUserModel.CanAccessUnregisteredHosts;
+    }
+
     private void OnOrganizationChanged(OrganizationViewModel organization)
     {
         if (!organization.IsSelected)
@@ -336,6 +345,7 @@ public partial class ManageUserRights
         _initialIsLockedOut = SelectedUserModel.IsLockedOut;
         _initialIsPermanentLockout = SelectedUserModel.IsPermanentLockout;
         _initialLockoutEndDateTime = SelectedUserModel.LockoutEndDateTime;
+        _initialCanAccessUnregisteredHosts = SelectedUserModel.CanAccessUnregisteredHosts;
     }
 
     private async Task HideSuccessMessageAfterDelay()
@@ -409,6 +419,8 @@ public partial class ManageUserRights
         [Required]
         public DateTime LockoutEndDateTime { get; set; } = DateTime.Now;
 
+        public bool CanAccessUnregisteredHosts { get; set; }
+
         public List<Guid> SelectedOrganizations { get; } = [];
 
         public List<Guid> SelectedOrganizationalUnits { get; } = [];
@@ -418,4 +430,5 @@ public partial class ManageUserRights
     private bool _initialIsLockedOut;
     private bool _initialIsPermanentLockout;
     private DateTime _initialLockoutEndDateTime;
+    private bool _initialCanAccessUnregisteredHosts;
 }

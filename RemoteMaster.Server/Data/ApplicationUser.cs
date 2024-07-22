@@ -14,4 +14,6 @@ public class ApplicationUser : IdentityUser
     public ICollection<OrganizationalUnit> AccessibleOrganizationalUnits { get; } = [];
 
     public ICollection<RefreshToken> RefreshTokens { get; } = [];
+
+    public bool CanAccessUnregisteredHosts { get; set; }
 }
