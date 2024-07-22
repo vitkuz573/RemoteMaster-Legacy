@@ -86,11 +86,13 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
                                      .Select(codec => codec.MimeType!)
                                      .ToList();
 
-        if (jpegCodec?.MimeType != null)
+        if (jpegCodec?.MimeType == null)
         {
-            availableCodecs.Remove(jpegCodec.MimeType);
-            availableCodecs.Insert(0, jpegCodec.MimeType);
+            return availableCodecs;
         }
+
+        availableCodecs.Remove(jpegCodec.MimeType);
+        availableCodecs.Insert(0, jpegCodec.MimeType);
 
         return availableCodecs;
     }
