@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using Microsoft.IO;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Host.Windows.Helpers.ScreenHelper;
 using RemoteMaster.Shared.Models;
 using Serilog;
 using SkiaSharp;
@@ -35,13 +36,13 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
     protected Dictionary<string, int> Screens { get; } = [];
 
-    public abstract Rectangle CurrentScreenBounds { get; protected set; }
+    public Rectangle CurrentScreenBounds { get; protected set; } = Screen.PrimaryScreen?.Bounds ?? Rectangle.Empty;
 
-    public abstract Rectangle VirtualScreenBounds { get; }
+    public Rectangle VirtualScreenBounds { get; } = SystemInformation.VirtualScreen;
 
-    public abstract string SelectedScreen { get; protected set; }
+    public string SelectedScreen { get; protected set; } = Screen.PrimaryScreen?.DeviceName ?? string.Empty;
 
-    protected abstract bool HasMultipleScreens { get; }
+    private static bool HasMultipleScreens => Screen.AllScreens.Length > 1;
 
     public event EventHandler<Rectangle>? ScreenChanged;
 
@@ -56,7 +57,27 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
     protected abstract byte[]? GetFrame();
 
-    public abstract IEnumerable<Display> GetDisplays();
+    public IEnumerable<Display> GetDisplays()
+    {
+        var screens = Screen.AllScreens.Select(screen => new Display
+        {
+            Name = screen.DeviceName,
+            IsPrimary = screen.Primary,
+            Resolution = screen.Bounds.Size,
+        }).ToList();
+
+        if (Screen.AllScreens.Length > 1)
+        {
+            screens.Add(new Display
+            {
+                Name = VirtualScreen,
+                IsPrimary = false,
+                Resolution = new Size(VirtualScreenBounds.Width, VirtualScreenBounds.Height),
+            });
+        }
+
+        return screens;
+    }
 
     public abstract void SetSelectedScreen(string displayName);
 

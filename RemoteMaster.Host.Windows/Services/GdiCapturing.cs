@@ -6,7 +6,6 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Helpers.ScreenHelper;
-using RemoteMaster.Shared.Models;
 using Serilog;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
@@ -19,14 +18,6 @@ public class GdiCapturing : ScreenCapturingService
     private Bitmap _bitmap;
     private Graphics _memoryGraphics;
     private readonly ICursorRenderService _cursorRenderService;
-
-    public override Rectangle CurrentScreenBounds { get; protected set; } = Screen.PrimaryScreen?.Bounds ?? Rectangle.Empty;
-
-    public override Rectangle VirtualScreenBounds { get; } = SystemInformation.VirtualScreen;
-
-    public override string SelectedScreen { get; protected set; } = Screen.PrimaryScreen?.DeviceName ?? string.Empty;
-
-    protected override bool HasMultipleScreens => Screen.AllScreens.Length > 1;
 
     public GdiCapturing(ICursorRenderService cursorRenderService, IDesktopService desktopService) : base(desktopService)
     {
@@ -93,28 +84,6 @@ public class GdiCapturing : ScreenCapturingService
     private byte[] GetSingleScreenFrame()
     {
         return CaptureScreen(CurrentScreenBounds.Width, CurrentScreenBounds.Height, CurrentScreenBounds.Left, CurrentScreenBounds.Top);
-    }
-
-    public override IEnumerable<Display> GetDisplays()
-    {
-        var screens = Screen.AllScreens.Select(screen => new Display
-        {
-            Name = screen.DeviceName,
-            IsPrimary = screen.Primary,
-            Resolution = screen.Bounds.Size,
-        }).ToList();
-
-        if (Screen.AllScreens.Length > 1)
-        {
-            screens.Add(new Display
-            {
-                Name = VirtualScreen,
-                IsPrimary = false,
-                Resolution = new Size(VirtualScreenBounds.Width, VirtualScreenBounds.Height),
-            });
-        }
-
-        return screens;
     }
 
     public override void SetSelectedScreen(string displayName)

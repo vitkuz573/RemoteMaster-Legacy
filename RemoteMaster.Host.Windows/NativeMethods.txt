@@ -91,3 +91,14 @@ NET_FW_IP_PROTOCOL
 
 LockWorkStation
 ExitWindowsEx
+
+IDXGIAdapter1
+ID3D11Device
+IDXGIOutputDuplication
+ID3D11Texture2D
+DXGI_ERROR_NOT_FOUND 
+IDXGIFactory1
+CreateDXGIFactory1
+D3D11CreateDevice 
+IDXGIOutput1
+D3D11_SDK_VERSION

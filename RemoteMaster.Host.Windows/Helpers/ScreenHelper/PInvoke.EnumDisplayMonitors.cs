@@ -11,7 +11,7 @@ using Windows.Win32.Graphics.Gdi;
 
 namespace Windows.Win32;
 
-internal static unsafe partial class PInvoke
+public static unsafe partial class PInvoke
 {
     public delegate bool EnumDisplayMonitorsCallback(HMONITOR monitor, HDC hdc);
 
