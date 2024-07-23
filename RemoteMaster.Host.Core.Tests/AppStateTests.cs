@@ -13,7 +13,6 @@ namespace RemoteMaster.Host.Core.Tests;
 
 public class AppStateTests : IDisposable
 {
-    private readonly Mock<IHubContext<ControlHub, IControlClient>> _hubContextMock;
     private readonly Mock<IControlClient> _controlClientMock;
     private readonly AppState _appState;
     private readonly Mock<IViewer> _viewerMock;
@@ -22,19 +21,22 @@ public class AppStateTests : IDisposable
 
     public AppStateTests()
     {
-        _hubContextMock = new Mock<IHubContext<ControlHub, IControlClient>>();
+        Mock<IHubContext<ControlHub, IControlClient>> hubContextMock = new();
         _controlClientMock = new Mock<IControlClient>();
         var clientsMock = new Mock<IHubClients<IControlClient>>();
         clientsMock.Setup(clients => clients.All).Returns(_controlClientMock.Object);
 
-        _hubContextMock.Setup(hub => hub.Clients).Returns(clientsMock.Object);
-        _appState = new AppState(_hubContextMock.Object);
+        hubContextMock.Setup(hub => hub.Clients).Returns(clientsMock.Object);
+        _appState = new AppState(hubContextMock.Object);
+
+        Mock<HubCallerContext> contextMock = new();
 
         _viewerMock = new Mock<IViewer>();
         _viewerMock.Setup(v => v.ConnectionId).Returns("testConnectionId");
+        _viewerMock.Setup(v => v.Context).Returns(contextMock.Object);
 
-        _appState.ViewerAdded += (sender, viewer) => _viewerAddedEventTriggered = true;
-        _appState.ViewerRemoved += (sender, viewer) => _viewerRemovedEventTriggered = true;
+        _appState.ViewerAdded += (_, _) => _viewerAddedEventTriggered = true;
+        _appState.ViewerRemoved += (_, _) => _viewerRemovedEventTriggered = true;
     }
 
     [Fact]
@@ -53,7 +55,7 @@ public class AppStateTests : IDisposable
     public void TryAddViewer_NullViewer_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => _appState.TryAddViewer(null));
+        Assert.Throws<ArgumentNullException>(() => _appState.TryAddViewer(null!));
     }
 
     [Fact]
