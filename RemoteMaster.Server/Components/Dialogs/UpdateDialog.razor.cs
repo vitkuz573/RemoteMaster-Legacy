@@ -2,7 +2,9 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.IO.Compression;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.JSInterop;
 using MudBlazor;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Dtos;
@@ -125,5 +127,36 @@ public partial class UpdateDialog
             _passwordInputIcon = Icons.Material.Filled.Visibility;
             _passwordInput = InputType.Text;
         }
+    }
+
+    private void CleanResults()
+    {
+        _resultsPerComputer.Clear();
+    }
+
+    private async Task ExportResults()
+    {
+        var zipMemoryStream = new MemoryStream();
+
+        using (var archive = new ZipArchive(zipMemoryStream, ZipArchiveMode.Create, true))
+        {
+            foreach (var (computer, results) in _resultsPerComputer)
+            {
+                var fileName = $"results_{computer.Name}_{computer.IpAddress}.txt";
+                var fileContent = results.ToString();
+
+                var zipEntry = archive.CreateEntry(fileName, CompressionLevel.Fastest);
+                await using var entryStream = zipEntry.Open();
+                await using var streamWriter = new StreamWriter(entryStream);
+                await streamWriter.WriteAsync(fileContent);
+            }
+        }
+
+        zipMemoryStream.Position = 0;
+        var base64Zip = Convert.ToBase64String(zipMemoryStream.ToArray());
+
+        var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/fileUtils.js");
+
+        await module.InvokeVoidAsync("downloadDataAsFile", base64Zip, "RemoteMaster_Results.zip", "application/zip;base64");
     }
 }

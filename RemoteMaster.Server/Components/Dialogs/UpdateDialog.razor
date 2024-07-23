@@ -10,6 +10,7 @@
 @inject IAccessTokenProvider AccessTokenProvider
 @inject IHttpContextAccessor HttpContextAccessor
 @inject UserManager<ApplicationUser> UserManager
+@inject IJSRuntime JsRuntime
 
 <CommonDialog>
     <Content>
@@ -20,6 +21,11 @@
                 <MudTextField T="string" Label="Password" @bind-Value="@_password" InputType="@_passwordInput" Adornment="Adornment.End" AdornmentIcon="@_passwordInputIcon" OnAdornmentClick="TogglePasswordVisibility" AdornmentAriaLabel="Show Password" />
                 <MudCheckBox @bind-Value="@_forceUpdate" Label="Force Update" />
                 <MudCheckBox @bind-Value="@_allowDowngrade" Label="Allow Downgrade" />
+                
+                <MudStack Spacing="2">
+                    <MudButton OnClick="CleanResults" Variant="Variant.Filled" Color="Color.Error" Disabled="!_resultsPerComputer.Any()">Clear results</MudButton>
+                    <MudButton OnClick="ExportResults" Variant="Variant.Filled" Color="Color.Surface" Disabled="!_resultsPerComputer.Any()">Export Results</MudButton>
+                </MudStack>
             </MudItem>
             
             <MudItem xs="9">
