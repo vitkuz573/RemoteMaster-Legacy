@@ -425,32 +425,34 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         await Notify($"Current version: {currentVersion}", MessageType.Information);
         await Notify($"Update version: {updateVersion}", MessageType.Information);
 
-        if (force)
-        {
-            await Notify("Forcing update regardless of version check due to force flag being set.", MessageType.Information);
-
-            return true;
-        }
-
         if (updateVersion > currentVersion)
         {
             return true;
         }
 
-        if (updateVersion < currentVersion && allowDowngrade)
+        if (updateVersion < currentVersion)
         {
+            if (allowDowngrade)
+            {
+                await Notify("Allowing downgrade as per the allow-downgrade flag.", MessageType.Information);
+                
+                return true;
+            }
+
+            await Notify($"Current version {currentVersion} is newer than update version {updateVersion}. To allow downgrades, use the --allow-downgrade=true option.", MessageType.Information);
+            
+            return false;
+        }
+
+        if (force)
+        {
+            await Notify("Forcing update despite versions being the same due to force flag being set.", MessageType.Information);
+            
             return true;
         }
 
-        if (updateVersion == currentVersion)
-        {
-            await Notify($"Current version {currentVersion} is the same as the update version {updateVersion}. To force an update, use the --force=true option.", MessageType.Information);
-        }
-        else
-        {
-            await Notify($"Current version {currentVersion} is up to date or newer than update version {updateVersion}. To allow downgrades, use the --allow-downgrade=true option.", MessageType.Information);
-        }
-
+        await Notify($"Current version {currentVersion} is the same as the update version {updateVersion}. No update needed. To force an update, use the --force=true option.", MessageType.Information);
+        
         return false;
     }
 
