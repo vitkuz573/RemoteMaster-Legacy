@@ -51,10 +51,8 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
     
                     return;
                 }
-                else
-                {
-                    await Notify($"Successfully mapped network drive with remote path: {folderPath}", MessageType.Information);
-                }
+
+                await Notify($"Successfully mapped network drive with remote path: {folderPath}", MessageType.Information);
             }
 
             if (!Directory.Exists(_updateFolderPath))
@@ -445,11 +443,13 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         {
             try
             {
-                if (Directory.Exists(directory))
+                if (!Directory.Exists(directory))
                 {
-                    Directory.Delete(directory, true);
-                    await Notify($"Successfully deleted directory: {directory}", MessageType.Information);
+                    continue;
                 }
+
+                Directory.Delete(directory, true);
+                await Notify($"Successfully deleted directory: {directory}", MessageType.Information);
             }
             catch (Exception ex)
             {

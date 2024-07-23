@@ -36,7 +36,6 @@ public class CertificateLoaderService : ICertificateLoaderService
             Log.Information("Found {Count} certificates with hostname {Hostname}.", certificates.Count, Dns.GetHostName());
 
             var newCertificate = certificates
-                .OfType<X509Certificate2>()
                 .FirstOrDefault(cert => cert.HasPrivateKey);
 
             if (newCertificate != null)

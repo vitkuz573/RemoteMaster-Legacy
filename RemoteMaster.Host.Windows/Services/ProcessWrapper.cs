@@ -45,6 +45,6 @@ public class ProcessWrapper : IProcessWrapper
 
     public void Dispose()
     {
-        _process?.Dispose();
+        _process.Dispose();
     }
 }

@@ -12,7 +12,11 @@ public class UpdaterBackground(IConfiguration configuration, IHostApplicationLif
 {
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        hostApplicationLifetime.ApplicationStarted.Register(async () =>
+        hostApplicationLifetime.ApplicationStarted.Register(Callback);
+
+        return Task.CompletedTask;
+
+        async void Callback()
         {
             var folderPath = configuration["folder-path"];
 
@@ -32,9 +36,7 @@ public class UpdaterBackground(IConfiguration configuration, IHostApplicationLif
             await hostUpdater.UpdateAsync(folderPath, username, password, force, allowDowngrade);
 
             Environment.Exit(0);
-        });
-
-        return Task.CompletedTask;
+        }
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
