@@ -85,7 +85,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
                 return;
             }
 
-            if (!await CheckForUpdateVersion(allowDowngrade))
+            if (!await CheckForUpdateVersion(allowDowngrade, force))
             {
                 await Notify("Update aborted due to version check.", MessageType.Error);
 
@@ -380,13 +380,20 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         return false;
     }
 
-    private async Task<bool> CheckForUpdateVersion(bool allowDowngrade)
+    private async Task<bool> CheckForUpdateVersion(bool allowDowngrade, bool force)
     {
         var currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
         var updateVersion = GetVersionFromExecutable(Path.Combine(_updateFolderPath, "RemoteMaster.Host.exe"));
 
         await Notify($"Current version: {currentVersion}", MessageType.Information);
         await Notify($"Update version: {updateVersion}", MessageType.Information);
+
+        if (force)
+        {
+            await Notify("Forcing update regardless of version check due to force flag being set.", MessageType.Information);
+            
+            return true;
+        }
 
         if (updateVersion > currentVersion)
         {
@@ -398,8 +405,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             return true;
         }
 
-        await Notify($"Current version {currentVersion} is up to date or newer than update version {updateVersion}. To allow downgrades, use the --allow-downgrade=true option. If you wish to force an update regardless, you can use --force=true.", MessageType.Information);
-
+        await Notify($"Current version {currentVersion} is up to date or newer than update version {updateVersion}. To allow downgrades, use the --allow-downgrade=true option.", MessageType.Information);
         return false;
     }
 
