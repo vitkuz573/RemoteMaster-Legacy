@@ -643,6 +643,11 @@ public partial class Home
         await OpenComputerWindow("filemanager");
     }
 
+    private async Task OpenLogsViewer()
+    {
+        await OpenComputerWindow("logs");
+    }
+
     private async Task OpenComputerWindow(string path, uint width = 800, uint height = 800)
     {
         var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/windowOperations.js");

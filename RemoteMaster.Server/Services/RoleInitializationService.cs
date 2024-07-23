@@ -56,6 +56,7 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
         new("Connection", "Control"),
         new("Connection", "View"),
         new("Service", "DisconnectClient"),
+        new("Logs", "View")
     ];
 
     private static readonly List<Claim> ViewerClaims =

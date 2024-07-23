@@ -1,0 +1,31 @@
+﻿@page "/{Host}/logs"
+
+@using RemoteMaster.Server.Abstractions
+
+@rendermode InteractiveServer
+
+@inject IAccessTokenProvider AccessTokenProvider
+
+<PageTitle>Logs Viewer</PageTitle>
+
+<div class="min-h-screen bg-gray-100 p-4 sm:p-6">
+    <div class="mx-auto max-w-7xl">
+        <div class="mb-4 flex flex-col space-y-4 sm:flex-row sm:justify-between sm:space-y-0">
+            <div class="flex flex-col items-center space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4">
+                <select @onchange="OnLogSelected" class="h-10 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    @foreach (var log in _logFiles)
+                    {
+                        <option value="@log">@log</option>
+                    }
+                </select>
+                <button @onclick="FetchLogs" class="h-10 w-32 rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none sm:w-auto">
+                    Fetch Logs
+                </button>
+            </div>
+        </div>
+
+        <div class="overflow-auto rounded-md bg-white p-4 shadow" style="max-height: 75vh;">
+            <pre class="whitespace-pre-wrap">@_logContent</pre>
+        </div>
+    </div>
+</div>

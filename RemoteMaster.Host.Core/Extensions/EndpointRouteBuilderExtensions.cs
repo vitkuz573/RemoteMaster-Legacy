@@ -21,6 +21,7 @@ public static class EndpointRouteBuilderExtensions
             endpoints.MapHub<TaskManagerHub>("/hubs/taskmanager");
             endpoints.MapHub<ScreenRecorderHub>("/hubs/screenrecorder");
             endpoints.MapHub<DomainMembershipHub>("/hubs/domainmembership");
+            endpoints.MapHub<LogHub>("/hubs/log");
         }
 
         if (launchModeBase is UserMode or UpdaterMode)
