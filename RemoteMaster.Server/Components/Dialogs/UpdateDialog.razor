@@ -26,7 +26,7 @@
                 <MudExpansionPanels Class="max-h-[340px] overflow-y-auto" MultiExpansion="true">
                     @foreach (var (computer, results) in _resultsPerComputer)
                     {
-                        <MudExpansionPanel Text="@($"Results for {computer.Name} ({computer.IpAddress}) - PID: {results.LastPid}")">
+                        <MudExpansionPanel Text="@($"Results for {computer.Name} ({computer.IpAddress}) - PID: {results.LastPid}")" Class="select-text">
                             @foreach (var line in results.Messages.ToString().Split([Environment.NewLine], StringSplitOptions.None))
                             {
                                 <div>@line</div>
