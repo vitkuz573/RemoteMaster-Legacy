@@ -29,6 +29,9 @@ public partial class LogsViewer : IAsyncDisposable
     private DateTime? _startDate;
     private DateTime? _endDate;
 
+    [GeneratedRegex(@"(?<date>[\d-]+\s[\d:.,]+)\s\+\d+:\d+\s\[(?<level>[A-Z]+)\]\s(?<message>.*)")]
+    private static partial Regex LogEntryRegex();
+
     protected async override Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateTask;
@@ -69,6 +72,16 @@ public partial class LogsViewer : IAsyncDisposable
                 InvokeAsync(StateHasChanged);
             });
 
+            _connection.On<string>("ReceiveMessage", (message) =>
+            {
+                // Handle messages (e.g., file deletion success)
+            });
+
+            _connection.On<string>("ReceiveError", (error) =>
+            {
+                // Handle errors
+            });
+
             await _connection.StartAsync();
         }
     }
@@ -76,8 +89,9 @@ public partial class LogsViewer : IAsyncDisposable
     private void ParseLogContent(string logContent)
     {
         var logLines = logContent.Split(Environment.NewLine);
-        _logEntries = logLines.Select(line => {
-            var match = Regex.Match(line, @"(?<date>[\d-]+\s[\d:.,]+)\s\+\d+:\d+\s\[(?<level>[A-Z]+)\]\s(?<message>.*)");
+        _logEntries = logLines.Select(line =>
+        {
+            var match = LogEntryRegex().Match(line);
             return new LogEntry
             {
                 Date = match.Groups["date"].Value,
@@ -115,6 +129,26 @@ public partial class LogsViewer : IAsyncDisposable
         if (!string.IsNullOrEmpty(_selectedLogFile) && _connection != null)
         {
             await _connection.InvokeAsync("GetFilteredLog", _selectedLogFile, _selectedLogLevel, _startDate, _endDate);
+        }
+    }
+
+    private async Task DeleteSelectedLog()
+    {
+        if (!string.IsNullOrEmpty(_selectedLogFile) && _connection != null)
+        {
+            await _connection.InvokeAsync("DeleteLog", _selectedLogFile);
+            _logEntries.Clear();
+            await FetchLogFiles();
+        }
+    }
+
+    private async Task DeleteAllLogs()
+    {
+        if (_connection != null)
+        {
+            await _connection.InvokeAsync("DeleteAllLogs");
+            _logEntries.Clear();
+            await FetchLogFiles();
         }
     }
 

@@ -2,17 +2,20 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
-using System.Text.RegularExpressions;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
 [Authorize(Roles = "Administrator")]
-public class LogHub : Hub<ILogClient>
+public partial class LogHub : Hub<ILogClient>
 {
     private readonly string _logDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "RemoteMaster", "Host");
+
+    [GeneratedRegex(@"(?<date>[\d-]+\s[\d:.,]+)\s\+\d+:\d+\s\[(?<level>[A-Z]+)\]\s(?<message>.*)")]
+    private static partial Regex LogEntryRegex();
 
     public async Task GetLogFiles()
     {
@@ -58,7 +61,7 @@ public class LogHub : Hub<ILogClient>
         var logContent = await File.ReadAllLinesAsync(filePath);
         var filteredContent = logContent.Where(line =>
         {
-            var match = Regex.Match(line, @"(?<date>[\d-]+\s[\d:.,]+)\s\+\d+:\d+\s\[(?<level>[A-Z]+)\]\s(?<message>.*)");
+            var match = LogEntryRegex().Match(line);
 
             if (!match.Success)
             {
@@ -75,5 +78,46 @@ public class LogHub : Hub<ILogClient>
         });
 
         await Clients.Caller.ReceiveLog(string.Join(Environment.NewLine, filteredContent));
+    }
+
+    public async Task DeleteLog(string fileName)
+    {
+        var filePath = Path.Combine(_logDirectory, fileName);
+
+        try
+        {
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+                await Clients.Caller.ReceiveMessage($"{fileName} deleted successfully.");
+            }
+            else
+            {
+                await Clients.Caller.ReceiveError("Log file not found.");
+            }
+        }
+        catch (IOException)
+        {
+            await Clients.Caller.ReceiveError("Log file is currently in use and cannot be deleted.");
+        }
+    }
+
+    public async Task DeleteAllLogs()
+    {
+        var logFiles = Directory.GetFiles(_logDirectory, "RemoteMaster_Host*.log");
+        
+        foreach (var logFile in logFiles)
+        {
+            try
+            {
+                File.Delete(logFile);
+            }
+            catch (IOException)
+            {
+                // Ignore files that are currently in use
+            }
+        }
+
+        await Clients.Caller.ReceiveMessage("All deletable log files have been removed.");
     }
 }

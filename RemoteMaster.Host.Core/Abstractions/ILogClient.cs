@@ -10,5 +10,7 @@ public interface ILogClient
 
     Task ReceiveError(string message);
 
+    Task ReceiveMessage(string message);
+
     Task ReceiveLogFiles(List<string> logFiles);
 }
