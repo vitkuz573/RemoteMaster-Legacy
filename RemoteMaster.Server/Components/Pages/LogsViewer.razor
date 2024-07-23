@@ -13,12 +13,24 @@
         <div class="mb-4 flex flex-col space-y-4 sm:flex-row sm:justify-between sm:space-y-0">
             <div class="flex flex-col items-center space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4">
                 <select @onchange="OnLogSelected" class="h-10 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="" disabled selected>Select a log file</option>
                     @foreach (var log in _logFiles)
                     {
                         <option value="@log">@log</option>
                     }
                 </select>
-                <button @onclick="FetchLogs" class="h-10 w-32 rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none sm:w-auto">
+                <select @bind="_selectedLogLevel" class="h-10 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="">All Levels</option>
+                    <option value="VER">Verbose</option>
+                    <option value="DBG">Debug</option>
+                    <option value="INF">Information</option>
+                    <option value="WRN">Warning</option>
+                    <option value="ERR">Error</option>
+                    <option value="FAT">Fatal</option>
+                </select>
+                <InputDate @bind-Value="_startDate" class="h-10 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                <InputDate @bind-Value="_endDate" class="h-10 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                <button @onclick="FetchFilteredLogs" class="h-10 w-32 rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none sm:w-auto">
                     Fetch Logs
                 </button>
             </div>

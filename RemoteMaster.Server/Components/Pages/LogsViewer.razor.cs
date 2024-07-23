@@ -20,9 +20,12 @@ public partial class LogsViewer : IAsyncDisposable
 
     private HubConnection? _connection;
     private ClaimsPrincipal? _user;
-    private List<string> _logFiles = [];
-    private string _selectedLogFile = string.Empty;
+    private List<string> _logFiles = new();
+    private string? _selectedLogFile;
     private string _logContent = string.Empty;
+    private string _selectedLogLevel = string.Empty;
+    private DateTime? _startDate;
+    private DateTime? _endDate;
 
     protected async override Task OnInitializedAsync()
     {
@@ -78,12 +81,10 @@ public partial class LogsViewer : IAsyncDisposable
 
     private async Task OnLogSelected(ChangeEventArgs e)
     {
-        _selectedLogFile = e.Value?.ToString() ?? string.Empty;
+        _selectedLogFile = e.Value?.ToString();
+        _logContent = string.Empty;
 
-        if (!string.IsNullOrEmpty(_selectedLogFile) && _connection != null)
-        {
-            await _connection.InvokeAsync("GetLog", _selectedLogFile);
-        }
+        await FetchLogs();
     }
 
     private async Task FetchLogs()
@@ -91,6 +92,14 @@ public partial class LogsViewer : IAsyncDisposable
         if (!string.IsNullOrEmpty(_selectedLogFile) && _connection != null)
         {
             await _connection.InvokeAsync("GetLog", _selectedLogFile);
+        }
+    }
+
+    private async Task FetchFilteredLogs()
+    {
+        if (!string.IsNullOrEmpty(_selectedLogFile) && _connection != null)
+        {
+            await _connection.InvokeAsync("GetFilteredLog", _selectedLogFile, _selectedLogLevel, _startDate, _endDate);
         }
     }
 
