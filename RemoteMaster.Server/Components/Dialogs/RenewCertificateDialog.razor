@@ -8,7 +8,7 @@
 <CommonDialog>
     <Content>
         <MudSelect T="X509RevocationReason" Label="Select revocation reason" @bind-Value="_selectedRevocationReason" Dense="true">
-            @foreach (var reason in revocationReasons)
+            @foreach (var reason in _revocationReasons)
             {
                 <MudSelectItem Value="@reason" />
             }

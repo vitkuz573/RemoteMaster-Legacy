@@ -26,7 +26,7 @@ public partial class ConnectDialog : CommonDialogBase
         MudDialog.Close(DialogResult.Ok(true));
     }
 
-    protected async Task OpenWindow(string url)
+    private async Task OpenWindow(string url)
     {
         var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/windowOperations.js");
 

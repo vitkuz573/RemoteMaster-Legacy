@@ -24,7 +24,7 @@ public partial class MessageBoxDialog
             var content = new StringBuilder();
             
             content.Append("Add-Type -AssemblyName System.Windows.Forms;");
-            content.AppendFormat("$text = \"{0}\"; $caption = \"{1}\";", _text.Replace("\"", "`\""), _caption.Replace("\"", "`\""));
+            content.Append($"$text = \"{_text.Replace("\"", "`\"")}\"; $caption = \"{_caption.Replace("\"", "`\"")}\";");
 
             var messageBoxIcon = $"[System.Windows.Forms.MessageBoxIcon]::{_selectedType}";
             var messageBoxButtons = $"[System.Windows.Forms.MessageBoxButtons]::{_selectedButtons}";
