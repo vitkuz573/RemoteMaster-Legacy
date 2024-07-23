@@ -17,23 +17,30 @@ public class UnifiedTreeItemData : TreeItemData<INode>
         Text = node.Name;
         Children = [];
 
-        if (node is OrganizationalUnit unit)
+        switch (node)
         {
-            if (unit.Computers != null)
+            case OrganizationalUnit unit:
             {
-                Children.AddRange(unit.Computers.Select(computer => new UnifiedTreeItemData(computer) as TreeItemData<INode>));
-            }
+                if (unit.Computers != null)
+                {
+                    Children.AddRange(unit.Computers.Select(computer => new UnifiedTreeItemData(computer) as TreeItemData<INode>));
+                }
 
-            if (unit.Children != null)
-            {
-                Children.AddRange(unit.Children.Select(child => new UnifiedTreeItemData(child) as TreeItemData<INode>));
+                if (unit.Children != null)
+                {
+                    Children.AddRange(unit.Children.Select(child => new UnifiedTreeItemData(child) as TreeItemData<INode>));
+                }
+
+                break;
             }
-        }
-        else if (node is Organization organization)
-        {
-            if (organization.OrganizationalUnits != null)
+            case Organization organization:
             {
-                Children.AddRange(organization.OrganizationalUnits.Select(unit => new UnifiedTreeItemData(unit) as TreeItemData<INode>));
+                if (organization.OrganizationalUnits != null)
+                {
+                    Children.AddRange(organization.OrganizationalUnits.Select(unit => new UnifiedTreeItemData(unit) as TreeItemData<INode>));
+                }
+
+                break;
             }
         }
     }
