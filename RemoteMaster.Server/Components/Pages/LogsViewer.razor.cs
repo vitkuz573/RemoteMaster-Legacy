@@ -3,9 +3,11 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.SignalR.Client;
+using RemoteMaster.Server.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Components.Pages;
@@ -21,8 +23,8 @@ public partial class LogsViewer : IAsyncDisposable
     private HubConnection? _connection;
     private ClaimsPrincipal? _user;
     private List<string> _logFiles = new();
+    private List<LogEntry> _logEntries = new();
     private string? _selectedLogFile;
-    private string _logContent = string.Empty;
     private string _selectedLogLevel = string.Empty;
     private DateTime? _startDate;
     private DateTime? _endDate;
@@ -63,12 +65,26 @@ public partial class LogsViewer : IAsyncDisposable
 
             _connection.On<string>("ReceiveLog", (logContent) =>
             {
-                _logContent = logContent;
+                ParseLogContent(logContent);
                 InvokeAsync(StateHasChanged);
             });
 
             await _connection.StartAsync();
         }
+    }
+
+    private void ParseLogContent(string logContent)
+    {
+        var logLines = logContent.Split(Environment.NewLine);
+        _logEntries = logLines.Select(line => {
+            var match = Regex.Match(line, @"(?<date>[\d-]+\s[\d:.,]+)\s\+\d+:\d+\s\[(?<level>[A-Z]+)\]\s(?<message>.*)");
+            return new LogEntry
+            {
+                Date = match.Groups["date"].Value,
+                Level = match.Groups["level"].Value,
+                Message = match.Groups["message"].Value
+            };
+        }).ToList();
     }
 
     private async Task FetchLogFiles()
@@ -82,8 +98,7 @@ public partial class LogsViewer : IAsyncDisposable
     private async Task OnLogSelected(ChangeEventArgs e)
     {
         _selectedLogFile = e.Value?.ToString();
-        _logContent = string.Empty;
-
+        _logEntries.Clear();
         await FetchLogs();
     }
 

@@ -51,14 +51,14 @@ public class LogHub : Hub<ILogClient>
         if (!File.Exists(filePath))
         {
             await Clients.Caller.ReceiveError("Log file not found.");
-
+            
             return;
         }
 
         var logContent = await File.ReadAllLinesAsync(filePath);
         var filteredContent = logContent.Where(line =>
         {
-            var match = Regex.Match(line, @"(?<date>[\d-]+\s[\d:.,]+)\s\+\d+:\d+\s\[(?<level>[A-Z]+)\]");
+            var match = Regex.Match(line, @"(?<date>[\d-]+\s[\d:.,]+)\s\+\d+:\d+\s\[(?<level>[A-Z]+)\]\s(?<message>.*)");
 
             if (!match.Success)
             {
