@@ -66,18 +66,21 @@ public partial class ScriptExecutorDialog
         }
     }
 
-    private async Task UploadFiles(IBrowserFile file)
+    private async Task UploadFiles(IBrowserFile? file)
     {
-        using var reader = new StreamReader(file.OpenReadStream());
-        _content = await reader.ReadToEndAsync();
-
-        _shell = Path.GetExtension(file.Name) switch
+        if (file != null)
         {
-            ".bat" => Shell.Cmd,
-            ".cmd" => Shell.Cmd,
-            ".ps1" => Shell.PowerShell,
-            _ => _shell
-        };
+            using var reader = new StreamReader(file.OpenReadStream());
+            _content = await reader.ReadToEndAsync();
+
+            _shell = Path.GetExtension(file.Name) switch
+            {
+                ".bat" => Shell.Cmd,
+                ".cmd" => Shell.Cmd,
+                ".ps1" => Shell.PowerShell,
+                _ => _shell
+            };
+        }
     }
 
     private void CleanResults()
