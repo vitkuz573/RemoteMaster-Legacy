@@ -30,32 +30,19 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
         try
         {
-            await Notify($"Force update flag: {force}", MessageType.Information);
-            await Notify($"Allow downgrade flag: {allowDowngrade}", MessageType.Information);
-
-            await hubContext.Clients.All.ReceiveMessage(new Message(Environment.ProcessId.ToString(), MessageType.Service)
-            {
-                Meta = "pid"
-            });
+            await NotifyFlags(force, allowDowngrade);
+            await NotifyProcessId();
 
             var sourceFolderPath = Path.Combine(folderPath, "Host");
             var isNetworkPath = folderPath.StartsWith(@"\\");
 
             if (isNetworkPath)
             {
-                await Notify($"Attempting to map network drive with remote path: {folderPath}", MessageType.Information);
-
-                var isMapped = networkDriveService.MapNetworkDrive(folderPath, username, password);
-
-                if (!isMapped)
+                if (!await MapNetworkDriveAsync(folderPath, username, password))
                 {
-                    await Notify($"Failed to map network drive with remote path {folderPath}. Details can be found in the log files.", MessageType.Error);
-                    await Notify("Unable to map network drive with the provided credentials. Update aborted.", MessageType.Error);
-
+                    await Notify("Update aborted.", MessageType.Error);
                     return;
                 }
-
-                await Notify($"Successfully mapped network drive with remote path: {folderPath}", MessageType.Information);
             }
 
             if (!Directory.Exists(_updateFolderPath))
@@ -65,70 +52,123 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             var isDownloaded = await CopyDirectoryAsync(sourceFolderPath, _updateFolderPath, true);
 
-            await Notify($"Attempting to unmap network drive with remote path: {folderPath}", MessageType.Information);
-
-            var isCancelled = networkDriveService.CancelNetworkDrive(folderPath);
-
-            if (!isCancelled)
+            if (isNetworkPath)
             {
-                await Notify($"Failed to unmap network drive with remote path {folderPath}. Details can be found in the log files.", MessageType.Error);
-            }
-            else
-            {
-                await Notify($"Successfully unmapped network drive with remote path: {folderPath}", MessageType.Information);
+                await UnmapNetworkDriveAsync(folderPath);
             }
 
             if (!isDownloaded)
             {
                 await Notify("Download or copy failed. Update aborted.", MessageType.Error);
-
                 return;
             }
 
             if (!await CheckForUpdateVersion(allowDowngrade, force))
             {
                 await Notify("Update aborted due to version check.", MessageType.Error);
-
                 return;
             }
 
             if (!await NeedUpdate() && !force)
             {
-                await Notify("No update required. Files are identical.", MessageType.Information);
-                await Notify("If you wish to force an update regardless, you can use --force=true to override this check.", MessageType.Information);
-
+                await NotifyNoUpdateNeeded();
                 return;
             }
 
-            var hostService = serviceFactory.GetService("RCHost");
-
-            hostService.Stop();
-            userInstanceService.Stop();
-
-            await WaitForFileRelease(BaseFolderPath);
-            await CopyDirectoryAsync(_updateFolderPath, BaseFolderPath, true);
-
-            hostService.Start();
-            await EnsureServicesRunning([hostService, userInstanceService], 5, 5);
-
-            if (!_emergencyRecoveryApplied)
-            {
-                await Notify("Update completed successfully.", MessageType.Information);
-            }
-            else
-            {
-                await Notify("Emergency recovery was applied. Please check the system's integrity.", MessageType.Warning);
-            }
-
-            await Notify("Starting cleanup...", MessageType.Information);
-            await DeleteDirectoriesAsync(Path.Combine(BaseFolderPath, "Update"));
-            await Notify("Cleanup completed.", MessageType.Information);
+            await PerformUpdate();
         }
         catch (Exception ex)
         {
             await Notify($"Error while updating host: {ex.Message}", MessageType.Error);
             await AttemptEmergencyRecovery();
         }
+    }
+
+    private async Task PerformUpdate()
+    {
+        var hostService = serviceFactory.GetService("RCHost");
+
+        hostService.Stop();
+        userInstanceService.Stop();
+
+        await WaitForFileRelease(BaseFolderPath);
+        await CopyDirectoryAsync(_updateFolderPath, BaseFolderPath, true);
+
+        hostService.Start();
+        await EnsureServicesRunning([hostService, userInstanceService], 5, 5);
+
+        if (!_emergencyRecoveryApplied)
+        {
+            await Notify("Update completed successfully.", MessageType.Information);
+        }
+        else
+        {
+            await Notify("Emergency recovery was applied. Please check the system's integrity.", MessageType.Warning);
+        }
+
+        await CleanupUpdateFolder();
+    }
+
+    private async Task NotifyFlags(bool force, bool allowDowngrade)
+    {
+        await Notify($"Force update flag: {force}", MessageType.Information);
+        await Notify($"Allow downgrade flag: {allowDowngrade}", MessageType.Information);
+    }
+
+    private async Task NotifyProcessId()
+    {
+        await hubContext.Clients.All.ReceiveMessage(new Message(Environment.ProcessId.ToString(), MessageType.Service)
+        {
+            Meta = "pid"
+        });
+    }
+
+    private async Task<bool> MapNetworkDriveAsync(string folderPath, string? username, string? password)
+    {
+        await Notify($"Attempting to map network drive with remote path: {folderPath}", MessageType.Information);
+
+        var isMapped = networkDriveService.MapNetworkDrive(folderPath, username, password);
+
+        if (!isMapped)
+        {
+            await Notify($"Failed to map network drive with remote path {folderPath}. Details can be found in the log files.", MessageType.Error);
+            await Notify("Unable to map network drive with the provided credentials.", MessageType.Error);
+        }
+        else
+        {
+            await Notify($"Successfully mapped network drive with remote path: {folderPath}", MessageType.Information);
+        }
+
+        return isMapped;
+    }
+
+    private async Task UnmapNetworkDriveAsync(string folderPath)
+    {
+        await Notify($"Attempting to unmap network drive with remote path: {folderPath}", MessageType.Information);
+
+        var isCancelled = networkDriveService.CancelNetworkDrive(folderPath);
+
+        if (!isCancelled)
+        {
+            await Notify($"Failed to unmap network drive with remote path {folderPath}. Details can be found in the log files.", MessageType.Error);
+        }
+        else
+        {
+            await Notify($"Successfully unmapped network drive with remote path: {folderPath}", MessageType.Information);
+        }
+    }
+
+    private async Task CleanupUpdateFolder()
+    {
+        await Notify("Starting cleanup...", MessageType.Information);
+        await DeleteDirectoriesAsync(Path.Combine(BaseFolderPath, "Update"));
+        await Notify("Cleanup completed.", MessageType.Information);
+    }
+
+    private async Task NotifyNoUpdateNeeded()
+    {
+        await Notify("No update required. Files are identical.", MessageType.Information);
+        await Notify("If you wish to force an update regardless, you can use --force=true to override this check.", MessageType.Information);
     }
 
     private async Task<bool> CopyDirectoryAsync(string sourceDir, string destDir, bool overwrite = false)
@@ -184,7 +224,6 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         catch (Exception ex)
         {
             await Notify($"Failed to copy directory {sourceDir} to {destDir}: {ex.Message}", MessageType.Error);
-
             return false;
         }
     }
@@ -238,7 +277,6 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
                 else
                 {
                     await Notify($"Checksum verification failed for file {sourceFile}.", MessageType.Error);
-
                     return false;
                 }
             }
@@ -318,7 +356,6 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         if (!allServicesRunning)
         {
             await Notify($"Failed to start all services after {attempts} attempts. Initiating emergency recovery...", MessageType.Information);
-
             await AttemptEmergencyRecovery();
         }
     }
@@ -391,7 +428,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         if (force)
         {
             await Notify("Forcing update regardless of version check due to force flag being set.", MessageType.Information);
-            
+
             return true;
         }
 
