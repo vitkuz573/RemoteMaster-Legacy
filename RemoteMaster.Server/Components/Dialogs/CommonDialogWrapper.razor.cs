@@ -11,8 +11,10 @@ namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class CommonDialogWrapper<TDialog> where TDialog : ComponentBase
 {
+#pragma warning disable CA2227
     [Parameter]
     public ConcurrentDictionary<Computer, HubConnection?> Hosts { get; set; } = default!;
+#pragma warning restore CA2227
 
     [Parameter]
     public string HubPath { get; set; } = default!;
