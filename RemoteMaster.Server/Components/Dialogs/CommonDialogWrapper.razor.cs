@@ -23,6 +23,8 @@ public partial class CommonDialogWrapper<TDialog> where TDialog : ComponentBase
     [Parameter]
     public bool RequireConnections { get; set; }
 
+#pragma warning disable CA2227
     [Parameter]
     public IDictionary<string, object> AdditionalParameters { get; set; } = new Dictionary<string, object>();
+#pragma warning restore CA2227
 }
