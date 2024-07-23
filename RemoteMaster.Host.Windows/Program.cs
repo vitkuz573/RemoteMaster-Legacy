@@ -182,6 +182,7 @@ internal class Program
         services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<IWorkStationSecurityService, WorkStationSecurityService>();
         services.AddSingleton<IAuthorizationHandler, LocalhostOrAuthenticatedHandler>();
+        services.AddSingleton<ICommandExecutor, CommandExecutor>();
         services.AddSingleton(new JsonSerializerOptions
         {
             WriteIndented = true,

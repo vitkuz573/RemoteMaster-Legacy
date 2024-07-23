@@ -3,22 +3,26 @@
 <CommonDialog>
     <Content>
         <MudGrid>
-            <MudRadioGroup T="bool" @bind-Value="@_selectedOption">
-                <MudRadio Value="true">Enable</MudRadio>
-                <MudRadio Value="false">Disable</MudRadio>
-            </MudRadioGroup>
-
-            <MudExpansionPanels Class="max-h-[340px] overflow-y-auto" MultiExpansion="true">
-                @foreach (var (computer, results) in _resultsPerComputer)
-                {
-                    <MudExpansionPanel Text="@($"Results for {computer.Name} ({computer.IpAddress}) - PID: {results.LastPid}")">
-                        @foreach (var line in results.Messages.ToString().Split([Environment.NewLine], StringSplitOptions.None))
-                        {
-                            <div>@line</div>
-                        }
-                    </MudExpansionPanel>
-                }
-            </MudExpansionPanels>
+            <MudItem xs="3">
+                <MudRadioGroup T="bool" @bind-Value="@_selectedOption">
+                    <MudRadio Value="true">Enable</MudRadio>
+                    <MudRadio Value="false">Disable</MudRadio>
+                </MudRadioGroup>
+            </MudItem>
+            
+            <MudItem xs="9">
+                <MudExpansionPanels Class="max-h-[340px] overflow-y-auto" MultiExpansion="true">
+                    @foreach (var (computer, results) in _resultsPerComputer)
+                    {
+                        <MudExpansionPanel Text="@($"Results for {computer.Name} ({computer.IpAddress}) - PID: {results.LastPid}")" Class="select-text">
+                            @foreach (var line in results.Messages.ToString().Split([Environment.NewLine], StringSplitOptions.None))
+                            {
+                                <div>@line</div>
+                            }
+                        </MudExpansionPanel>
+                    }
+                </MudExpansionPanels>
+            </MudItem>
         </MudGrid>
     </Content>
     <Actions>
