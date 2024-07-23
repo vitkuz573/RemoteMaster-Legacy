@@ -1,9 +1,4 @@
-﻿@using System.Collections.Concurrent
-@using Microsoft.AspNetCore.SignalR.Client
-@using RemoteMaster.Shared.Models
-@using Microsoft.AspNetCore.Components
-
-@typeparam TDialog where TDialog : ComponentBase
+﻿@typeparam TDialog where TDialog : ComponentBase
 
 <CascadingValue Value="Hosts">
     <CascadingValue Value="HubPath">
@@ -14,11 +9,3 @@
         </CascadingValue>
     </CascadingValue>
 </CascadingValue>
-
-@code {
-    [Parameter] public ConcurrentDictionary<Computer, HubConnection?> Hosts { get; set; } = default!;
-    [Parameter] public string HubPath { get; set; } = default!;
-    [Parameter] public bool StartConnection { get; set; } = default!;
-    [Parameter] public bool RequireConnections { get; set; } = default!;
-    [Parameter] public IDictionary<string, object> AdditionalParameters { get; set; } = new Dictionary<string, object>();
-}
