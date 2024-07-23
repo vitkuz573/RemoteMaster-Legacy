@@ -30,6 +30,9 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
         try
         {
+            await Notify($"Force update flag: {force}", MessageType.Information);
+            await Notify($"Allow downgrade flag: {allowDowngrade}", MessageType.Information);
+
             await hubContext.Clients.All.ReceiveMessage(new Message(Environment.ProcessId.ToString(), MessageType.Service)
             {
                 Meta = "pid"
@@ -48,7 +51,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
                 {
                     await Notify($"Failed to map network drive with remote path {folderPath}. Details can be found in the log files.", MessageType.Error);
                     await Notify("Unable to map network drive with the provided credentials. Update aborted.", MessageType.Error);
-    
+
                     return;
                 }
 
@@ -78,14 +81,14 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             if (!isDownloaded)
             {
                 await Notify("Download or copy failed. Update aborted.", MessageType.Error);
-  
+
                 return;
             }
 
             if (!await CheckForUpdateVersion(allowDowngrade))
             {
                 await Notify("Update aborted due to version check.", MessageType.Error);
-                
+
                 return;
             }
 
@@ -93,7 +96,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             {
                 await Notify("No update required. Files are identical.", MessageType.Information);
                 await Notify("If you wish to force an update regardless, you can use --force=true to override this check.", MessageType.Information);
-  
+
                 return;
             }
 
@@ -181,7 +184,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         catch (Exception ex)
         {
             await Notify($"Failed to copy directory {sourceDir} to {destDir}: {ex.Message}", MessageType.Error);
-    
+
             return false;
         }
     }
@@ -235,7 +238,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
                 else
                 {
                     await Notify($"Checksum verification failed for file {sourceFile}.", MessageType.Error);
-    
+
                     return false;
                 }
             }
@@ -266,7 +269,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             foreach (var file in new DirectoryInfo(directory).GetFiles("*", SearchOption.AllDirectories))
             {
                 var directoryName = file.DirectoryName;
-                
+
                 if (directoryName == null || excludedFolders.Any(folder => directoryName.Contains(folder)))
                 {
                     continue;
@@ -315,7 +318,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         if (!allServicesRunning)
         {
             await Notify($"Failed to start all services after {attempts} attempts. Initiating emergency recovery...", MessageType.Information);
-   
+
             await AttemptEmergencyRecovery();
         }
     }
@@ -385,15 +388,19 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         await Notify($"Current version: {currentVersion}", MessageType.Information);
         await Notify($"Update version: {updateVersion}", MessageType.Information);
 
-        if (updateVersion > currentVersion || allowDowngrade)
+        if (updateVersion > currentVersion)
+        {
+            return true;
+        }
+
+        if (updateVersion < currentVersion && allowDowngrade)
         {
             return true;
         }
 
         await Notify($"Current version {currentVersion} is up to date or newer than update version {updateVersion}. To allow downgrades, use the --allow-downgrade=true option. If you wish to force an update regardless, you can use --force=true.", MessageType.Information);
-  
-        return false;
 
+        return false;
     }
 
     private static Version GetVersionFromExecutable(string filePath)
@@ -411,7 +418,20 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             throw new InvalidOperationException("The file version information is missing or invalid.");
         }
 
-        return new Version(fileVersion);
+        return new Version(NormalizeVersionString(fileVersion));
+    }
+
+    private static string NormalizeVersionString(string version)
+    {
+        var parts = version.Split('.');
+        
+        while (parts.Length < 4)
+        {
+            version += ".0";
+            parts = version.Split('.');
+        }
+
+        return version;
     }
 
     private async Task Notify(string message, MessageType messageType)

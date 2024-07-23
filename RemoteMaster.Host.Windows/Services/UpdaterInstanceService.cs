@@ -23,8 +23,8 @@ public class UpdaterInstanceService(IArgumentBuilderService argumentBuilderServi
         {
             { "launch-mode", "updater" },
             { "folder-path", updateRequest.FolderPath },
-            { "force", updateRequest.ForceUpdate },
-            { "allow-downgrade", updateRequest.AllowDowngrade }
+            { "force", updateRequest.ForceUpdate.ToString().ToLower() },
+            { "allow-downgrade", updateRequest.AllowDowngrade.ToString().ToLower() }
         };
 
         if (updateRequest.UserCredentials != null)

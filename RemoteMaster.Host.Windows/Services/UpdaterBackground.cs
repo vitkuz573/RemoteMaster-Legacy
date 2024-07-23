@@ -28,8 +28,8 @@ public class UpdaterBackground(IConfiguration configuration, IHostApplicationLif
             var username = configuration["username"];
             var password = configuration["password"];
 
-            var force = configuration["force"] != null;
-            var allowDowngrade = configuration["allow-downgrade"] != null;
+            var force = bool.TryParse(configuration["force"], out var forceUpdate) && forceUpdate;
+            var allowDowngrade = bool.TryParse(configuration["allow-downgrade"], out var allow) && allow;
 
             await Task.Delay(2000, cancellationToken);
 

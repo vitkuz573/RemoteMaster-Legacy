@@ -300,7 +300,7 @@ internal class Program
         }
 
         var launchModes = assembly.GetTypes()
-            .Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(LaunchModeBase)))
+            .Where(t => t is { IsClass: true, IsAbstract: false } && t.IsSubclassOf(typeof(LaunchModeBase)))
             .ToArray();
 
         var launchModeType = launchModes.FirstOrDefault(t => string.Equals(t.Name, $"{modeArgument}Mode", StringComparison.OrdinalIgnoreCase));
@@ -335,7 +335,7 @@ internal class Program
 
             var equalIndex = arg.IndexOf('=');
             string key;
-            var value = "";
+            string value;
 
             if (equalIndex >= 0)
             {
@@ -348,9 +348,9 @@ internal class Program
                 value = "true";
             }
 
-            if (launchModeInstance.Parameters.ContainsKey(key))
+            if (launchModeInstance.Parameters.TryGetValue(key, out var parameter))
             {
-                launchModeInstance.Parameters[key].Value = value;
+                parameter.Value = value;
             }
         }
 
