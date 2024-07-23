@@ -49,7 +49,7 @@ public partial class Access : IAsyncDisposable
     private string? _selectedCodec = string.Empty;
     private ElementReference _screenImageElement;
     private List<ViewerDto> _viewers = [];
-    private bool _isAccessDenied = true;
+    private bool _isAccessDenied;
     private readonly AsyncPolicyWrap _combinedPolicy;
 
     private string? _title;
