@@ -405,7 +405,15 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             return true;
         }
 
-        await Notify($"Current version {currentVersion} is up to date or newer than update version {updateVersion}. To allow downgrades, use the --allow-downgrade=true option.", MessageType.Information);
+        if (updateVersion == currentVersion)
+        {
+            await Notify($"Current version {currentVersion} is the same as the update version {updateVersion}. To force an update, use the --force=true option.", MessageType.Information);
+        }
+        else
+        {
+            await Notify($"Current version {currentVersion} is up to date or newer than update version {updateVersion}. To allow downgrades, use the --allow-downgrade=true option.", MessageType.Information);
+        }
+
         return false;
     }
 
@@ -430,7 +438,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
     private static string NormalizeVersionString(string version)
     {
         var parts = version.Split('.');
-        
+
         while (parts.Length < 4)
         {
             version += ".0";
