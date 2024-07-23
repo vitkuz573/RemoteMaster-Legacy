@@ -100,7 +100,7 @@ public class CommandListenerService : IHostedService
             SendSAS(false);
         });
 
-        _connection.Closed += async (error) =>
+        _connection.Closed += async error =>
         {
             Log.Warning("Connection closed: {Error} at {Time}", error?.Message, DateTimeOffset.Now);
 
