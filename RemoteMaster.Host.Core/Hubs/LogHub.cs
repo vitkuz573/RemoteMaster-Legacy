@@ -22,7 +22,7 @@ public partial class LogHub : Hub<ILogClient>
         if (!Directory.Exists(_logDirectory))
         {
             await Clients.Caller.ReceiveError("Log directory not found.");
-            
+
             return;
         }
 
@@ -38,8 +38,17 @@ public partial class LogHub : Hub<ILogClient>
 
         if (File.Exists(filePath))
         {
-            var logContent = await File.ReadAllTextAsync(filePath);
-            await Clients.Caller.ReceiveLog(logContent);
+            try
+            {
+                await using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                using var reader = new StreamReader(fileStream);
+                var logContent = await reader.ReadToEndAsync();
+                await Clients.Caller.ReceiveLog(logContent);
+            }
+            catch (IOException ex)
+            {
+                await Clients.Caller.ReceiveError($"Error reading log file: {ex.Message}");
+            }
         }
         else
         {
@@ -54,30 +63,40 @@ public partial class LogHub : Hub<ILogClient>
         if (!File.Exists(filePath))
         {
             await Clients.Caller.ReceiveError("Log file not found.");
-            
+
             return;
         }
 
-        var logContent = await File.ReadAllLinesAsync(filePath);
-        var filteredContent = logContent.Where(line =>
+        try
         {
-            var match = LogEntryRegex().Match(line);
-
-            if (!match.Success)
+            await using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var reader = new StreamReader(fileStream);
+            var logContent = await reader.ReadToEndAsync();
+            var logLines = logContent.Split(Environment.NewLine);
+            var filteredContent = logLines.Where(line =>
             {
-                return false;
-            }
+                var match = LogEntryRegex().Match(line);
 
-            var logDate = DateTime.Parse(match.Groups["date"].Value);
-            var logLevel = match.Groups["level"].Value;
+                if (!match.Success)
+                {
+                    return false;
+                }
 
-            var levelMatch = string.IsNullOrEmpty(level) || logLevel.Equals(level, StringComparison.OrdinalIgnoreCase);
-            var dateMatch = (!startDate.HasValue || logDate >= startDate) && (!endDate.HasValue || logDate <= endDate);
+                var logDate = DateTime.Parse(match.Groups["date"].Value);
+                var logLevel = match.Groups["level"].Value;
 
-            return levelMatch && dateMatch;
-        });
+                var levelMatch = string.IsNullOrEmpty(level) || logLevel.Equals(level, StringComparison.OrdinalIgnoreCase);
+                var dateMatch = (!startDate.HasValue || logDate >= startDate) && (!endDate.HasValue || logDate <= endDate);
 
-        await Clients.Caller.ReceiveLog(string.Join(Environment.NewLine, filteredContent));
+                return levelMatch && dateMatch;
+            });
+
+            await Clients.Caller.ReceiveLog(string.Join(Environment.NewLine, filteredContent));
+        }
+        catch (IOException ex)
+        {
+            await Clients.Caller.ReceiveError($"Error reading log file: {ex.Message}");
+        }
     }
 
     public async Task DeleteLog(string fileName)
@@ -105,7 +124,7 @@ public partial class LogHub : Hub<ILogClient>
     public async Task DeleteAllLogs()
     {
         var logFiles = Directory.GetFiles(_logDirectory, "RemoteMaster_Host*.log");
-        
+
         foreach (var logFile in logFiles)
         {
             try
