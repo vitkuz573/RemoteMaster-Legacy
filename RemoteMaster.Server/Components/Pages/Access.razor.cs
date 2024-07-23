@@ -345,7 +345,7 @@ public partial class Access : IAsyncDisposable
             var userIdentity = _user?.Identity as ClaimsIdentity ?? throw new InvalidOperationException("User identity is not a ClaimsIdentity.");
 
             var userName = userIdentity.Name;
-            var role = userIdentity.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+            var role = userIdentity.FindFirst(ClaimTypes.Role)?.Value;
 
             if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(role))
             {

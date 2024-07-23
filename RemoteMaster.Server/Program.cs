@@ -35,7 +35,6 @@ using RemoteMaster.Shared.Services;
 using Serilog;
 using Serilog.Events;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using StatusCodes = Microsoft.AspNetCore.Http.StatusCodes;
 
 namespace RemoteMaster.Server;
 
@@ -98,7 +97,7 @@ public static class Program
             .AddIdentityCookies();
 
         services.AddAuthorizationBuilder()
-            .AddPolicy("ToggleInputPolicy", policy => policy.RequireClaim("Permission", "ToggleInput"));
+            .AddPolicy("ToggleInputPolicy", policy => policy.RequireClaim("Input", "MouseInput"));
 
         var connectionString = configurationManager.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
