@@ -71,7 +71,7 @@ public class CommandListenerService : IHostedService
         };
 #pragma warning restore CA2000
 
-        Log.Information("Creating HubConnection.", DateTimeOffset.Now);
+        Log.Information("Creating HubConnection.");
 
         lock (_connectionLock)
         {
@@ -108,14 +108,14 @@ public class CommandListenerService : IHostedService
             await StartConnectionAsync();
         };
 
-        _connection.Reconnecting += (error) =>
+        _connection.Reconnecting += error =>
         {
             Log.Warning("Connection reconnecting: {Error}.", error?.Message);
 
             return Task.CompletedTask;
         };
 
-        _connection.Reconnected += (connectionId) =>
+        _connection.Reconnected += connectionId =>
         {
             Log.Information("Connection reconnected: {ConnectionId}.", connectionId);
 
