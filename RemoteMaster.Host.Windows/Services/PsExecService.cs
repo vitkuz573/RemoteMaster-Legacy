@@ -3,12 +3,15 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Globalization;
+using System.Net;
+using System.Net.Sockets;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
+using Windows.Win32.NetworkManagement.WindowsFirewall;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class PsExecService(IHostConfigurationService hostConfigurationService, ICommandExecutor commandExecutor) : IPsExecService
+public class PsExecService(IHostConfigurationService hostConfigurationService, ICommandExecutor commandExecutor, IFirewallService firewallService) : IPsExecService
 {
     private readonly Dictionary<string, string> _ruleGroupNames = new()
     {
@@ -19,20 +22,25 @@ public class PsExecService(IHostConfigurationService hostConfigurationService, I
     public async Task EnableAsync()
     {
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
+        var ipv4Addrs = await ResolveRemoteAddrsAsync(hostConfiguration.Server);
 
         await commandExecutor.ExecuteCommandAsync("winrm qc -force");
-        await commandExecutor.ExecuteCommandAsync($"\"netsh AdvFirewall firewall add rule name=PSExec dir=In action=allow protocol=TCP localport=RPC profile=domain,private program=\"%WinDir%\\system32\\services.exe\" service=any remoteip={hostConfiguration.Server}\"");
+
+        if (!string.IsNullOrEmpty(ipv4Addrs))
+        {
+            firewallService.AddRule("PSExec IPv4", NET_FW_ACTION.NET_FW_ACTION_ALLOW, NET_FW_IP_PROTOCOL.NET_FW_IP_PROTOCOL_TCP, NET_FW_PROFILE_TYPE2.NET_FW_PROFILE2_DOMAIN | NET_FW_PROFILE_TYPE2.NET_FW_PROFILE2_PRIVATE, "Allow PSExec", @"%WinDir%\system32\services.exe", "RPC", ipv4Addrs);
+        }
 
         var localizedRuleGroupName = GetLocalizedRuleGroupName();
-        await commandExecutor.ExecuteCommandAsync($"\"netsh AdvFirewall firewall set rule group=\"{localizedRuleGroupName}\" new enable=yes\"");
+        firewallService.EnableRuleGroup(localizedRuleGroupName);
     }
 
-    public async Task DisableAsync()
+    public void Disable()
     {
-        await commandExecutor.ExecuteCommandAsync("netsh AdvFirewall firewall delete rule name=PSExec");
+        firewallService.RemoveRule("PSExec IPv4");
 
         var localizedRuleGroupName = GetLocalizedRuleGroupName();
-        await commandExecutor.ExecuteCommandAsync($"\"netsh AdvFirewall firewall set rule group=\"{localizedRuleGroupName}\" new enable=no\"");
+        firewallService.DisableRuleGroup(localizedRuleGroupName);
     }
 
     private string GetLocalizedRuleGroupName()
@@ -40,5 +48,48 @@ public class PsExecService(IHostConfigurationService hostConfigurationService, I
         var currentCulture = CultureInfo.CurrentCulture.Name;
 
         return _ruleGroupNames.TryGetValue(currentCulture, out var localizedGroupName) ? localizedGroupName : _ruleGroupNames["en-US"];
+    }
+
+    private static async Task<string> ResolveRemoteAddrsAsync(string server)
+    {
+        if (string.IsNullOrEmpty(server))
+        {
+            throw new ArgumentException("Server address cannot be null or empty.", nameof(server));
+        }
+
+        if (IsValidIpAddress(server))
+        {
+            return ConvertToCidrNotation(server);
+        }
+
+        if (!IsValidDomainName(server))
+        {
+            throw new ArgumentException($"Invalid server address format: {server}", nameof(server));
+        }
+
+        var addresses = await Dns.GetHostAddressesAsync(server);
+        var ipv4Addrs = string.Join(",", addresses.Where(addr => addr.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).Select(addr => ConvertToCidrNotation(addr.ToString())));
+
+        return ipv4Addrs;
+    }
+
+    private static bool IsValidIpAddress(string address)
+    {
+        return IPAddress.TryParse(address, out _);
+    }
+
+    private static bool IsValidDomainName(string domainName)
+    {
+        return Uri.CheckHostName(domainName) == UriHostNameType.Dns;
+    }
+
+    private static string ConvertToCidrNotation(string ipAddress)
+    {
+        if (!IPAddress.TryParse(ipAddress, out var address))
+        {
+            return ipAddress;
+        }
+
+        return address.AddressFamily == AddressFamily.InterNetwork ? $"{ipAddress}/32" : ipAddress;
     }
 }

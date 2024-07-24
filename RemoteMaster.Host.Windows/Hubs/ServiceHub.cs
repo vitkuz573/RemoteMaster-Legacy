@@ -13,7 +13,7 @@ public class ServiceHub(IPsExecService psExecService) : Hub<IServiceClient>
 {
     public async Task SetPsExecRules(bool enable)
     {
-        await psExecService.DisableAsync();
+        psExecService.Disable();
 
         if (enable)
         {

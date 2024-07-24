@@ -51,7 +51,7 @@ public class PsExecServiceTests
         var service = new PsExecService(_mockHostConfigurationService.Object, _mockCommandExecutor.Object);
 
         // Act
-        await service.DisableAsync();
+        await service.Disable();
 
         // Assert
         _mockCommandExecutor.Verify(e => e.ExecuteCommandAsync(It.IsAny<string>()), Times.AtLeastOnce);

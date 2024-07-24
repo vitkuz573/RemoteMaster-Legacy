@@ -27,6 +27,7 @@ using RemoteMaster.Host.Windows.Helpers;
 using RemoteMaster.Host.Windows.Hubs;
 using RemoteMaster.Host.Windows.Services;
 using Serilog;
+using Windows.Win32.NetworkManagement.WindowsFirewall;
 
 namespace RemoteMaster.Host.Windows;
 
@@ -102,8 +103,8 @@ internal class Program
             var hostApplicationPath = Path.Combine(hostRootPath, "RemoteMaster.Host.exe");
             var hostUpdaterApplicationPath = Path.Combine(hostRootPath, "Updater", "RemoteMaster.Host.exe");
 
-            firewallService.AddRule("Remote Master Host", hostApplicationPath);
-            firewallService.AddRule("Remote Master Host Updater", hostUpdaterApplicationPath);
+            firewallService.AddRule("Remote Master Host", NET_FW_ACTION.NET_FW_ACTION_ALLOW, NET_FW_IP_PROTOCOL.NET_FW_IP_PROTOCOL_ANY, NET_FW_PROFILE_TYPE2.NET_FW_PROFILE2_ALL, "Allow all traffic for RemoteMaster Host", hostApplicationPath);
+            firewallService.AddRule("Remote Master Host Updater", NET_FW_ACTION.NET_FW_ACTION_ALLOW, NET_FW_IP_PROTOCOL.NET_FW_IP_PROTOCOL_ANY, NET_FW_PROFILE_TYPE2.NET_FW_PROFILE2_ALL, "Allow all traffic for RemoteMaster Host", hostUpdaterApplicationPath);
 
             try
             {

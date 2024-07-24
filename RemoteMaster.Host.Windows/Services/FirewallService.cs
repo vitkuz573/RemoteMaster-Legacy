@@ -3,7 +3,8 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Runtime.InteropServices;
-using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Host.Windows.Enums;
 using Windows.Win32.Foundation;
 using Windows.Win32.NetworkManagement.WindowsFirewall;
 
@@ -11,51 +12,204 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class FirewallService : IFirewallService
 {
-    public void AddRule(string name, string applicationPath)
+    public void AddRule(string name, NET_FW_ACTION action, NET_FW_IP_PROTOCOL protocol, NET_FW_PROFILE_TYPE2 profiles, string? description = null, string? applicationPath = null, string? localPort = null, string? remoteIp = null, string? service = null, InterfaceType interfaceTypes = InterfaceType.All)
     {
         var fwPolicy2 = CreateInstance<INetFwPolicy2>("E2B3C97F-6AE1-41AC-817A-F6F92166D7DD") ?? throw new InvalidOperationException("Failed to get firewall policy.");
         var existingRule = GetRule(fwPolicy2, name);
 
         var bstrName = (BSTR)Marshal.StringToBSTR(name);
-        var bstrAppPath = (BSTR)Marshal.StringToBSTR(applicationPath);
-        var bstrDescription = (BSTR)Marshal.StringToBSTR($"Allow {name}");
-        var bstrAll = (BSTR)Marshal.StringToBSTR("All");
+        var bstrDescription = description != null ? (BSTR)Marshal.StringToBSTR(description) : default;
+        var bstrAppPath = applicationPath != null ? (BSTR)Marshal.StringToBSTR(applicationPath) : default;
+        var bstrRemoteIp = remoteIp != null && !string.IsNullOrEmpty(remoteIp) ? (BSTR)Marshal.StringToBSTR(remoteIp) : default;
+        var bstrLocalPort = localPort != null && !string.IsNullOrEmpty(localPort) ? (BSTR)Marshal.StringToBSTR(localPort) : default;
+        var bstrService = service != null ? (BSTR)Marshal.StringToBSTR(service) : default;
+        var bstrInterfaceTypes = (BSTR)Marshal.StringToBSTR(interfaceTypes.ToString());
 
         try
         {
             if (existingRule != null)
             {
-                if (existingRule.Action == NET_FW_ACTION.NET_FW_ACTION_ALLOW)
-                {
-                    return;
-                }
-
-                existingRule.Action = NET_FW_ACTION.NET_FW_ACTION_ALLOW;
-                existingRule.Enabled = true;
-                existingRule.ApplicationName = bstrAppPath;
-
+                UpdateExistingRule(existingRule, action, protocol, profiles, bstrAppPath, bstrRemoteIp, bstrLocalPort, bstrService, bstrDescription, bstrInterfaceTypes);
                 return;
             }
 
             var newRule = CreateInstance<INetFwRule>("2C5BC43E-3369-4C33-AB0C-BE9469677AF4") ?? throw new InvalidOperationException("Failed to create new firewall rule.");
 
             newRule.Name = bstrName;
-            newRule.Description = bstrDescription;
-            newRule.ApplicationName = bstrAppPath;
-            newRule.Action = NET_FW_ACTION.NET_FW_ACTION_ALLOW;
-            newRule.Enabled = true;
+
+            if (description != null)
+            {
+                newRule.Description = bstrDescription;
+            }
+
+            if (applicationPath != null)
+            {
+                newRule.ApplicationName = bstrAppPath;
+            }
+
+            newRule.Action = action;
+            newRule.Enabled = action == NET_FW_ACTION.NET_FW_ACTION_ALLOW;
             newRule.Direction = NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_IN;
-            newRule.Protocol = (int)NET_FW_IP_PROTOCOL.NET_FW_IP_PROTOCOL_ANY;
-            newRule.InterfaceTypes = bstrAll;
+            newRule.Protocol = (int)protocol;
+            newRule.InterfaceTypes = bstrInterfaceTypes;
+
+            unsafe
+            {
+                if (bstrRemoteIp != default && (nint)bstrRemoteIp.Value != nint.Zero && !string.IsNullOrEmpty(Marshal.PtrToStringBSTR((nint)bstrRemoteIp.Value)))
+                {
+                    newRule.RemoteAddresses = bstrRemoteIp;
+                }
+            }
+
+            newRule.Profiles = (int)profiles;
+
+            unsafe
+            {
+                if (bstrLocalPort != default && (nint)bstrLocalPort.Value != nint.Zero && !string.IsNullOrEmpty(Marshal.PtrToStringBSTR((nint)bstrLocalPort.Value)))
+                {
+                    newRule.LocalPorts = bstrLocalPort;
+                }
+            }
+
+            if (service != null)
+            {
+                newRule.ServiceName = bstrService;
+            }
 
             fwPolicy2.Rules.Add(newRule);
         }
         finally
         {
             Marshal.FreeBSTR(bstrName);
-            Marshal.FreeBSTR(bstrAppPath);
-            Marshal.FreeBSTR(bstrDescription);
-            Marshal.FreeBSTR(bstrAll);
+
+            if (bstrDescription != default)
+            {
+                Marshal.FreeBSTR(bstrDescription);
+            }
+
+            if (bstrAppPath != default)
+            {
+                Marshal.FreeBSTR(bstrAppPath);
+            }
+
+            if (bstrRemoteIp != default)
+            {
+                Marshal.FreeBSTR(bstrRemoteIp);
+            }
+
+            if (bstrLocalPort != default)
+            {
+                Marshal.FreeBSTR(bstrLocalPort);
+            }
+
+            if (bstrService != default)
+            {
+                Marshal.FreeBSTR(bstrService);
+            }
+
+            Marshal.FreeBSTR(bstrInterfaceTypes);
+        }
+    }
+
+    public void RemoveRule(string name)
+    {
+        var fwPolicy2 = CreateInstance<INetFwPolicy2>("E2B3C97F-6AE1-41AC-817A-F6F92166D7DD") ?? throw new InvalidOperationException("Failed to get firewall policy.");
+
+        var bstrName = (BSTR)Marshal.StringToBSTR(name);
+
+        try
+        {
+            var rule = GetRule(fwPolicy2, name);
+
+            if (rule != null)
+            {
+                fwPolicy2.Rules.Remove(bstrName);
+            }
+        }
+        finally
+        {
+            Marshal.FreeBSTR(bstrName);
+        }
+    }
+
+    public void EnableRuleGroup(string groupName)
+    {
+        var fwPolicy2 = CreateInstance<INetFwPolicy2>("E2B3C97F-6AE1-41AC-817A-F6F92166D7DD") ?? throw new InvalidOperationException("Failed to get firewall policy.");
+        var bstrGroupName = (BSTR)Marshal.StringToBSTR(groupName);
+
+        try
+        {
+            var profileTypesBitmask = fwPolicy2.CurrentProfileTypes;
+            fwPolicy2.EnableRuleGroup(profileTypesBitmask, bstrGroupName, VARIANT_BOOL.VARIANT_TRUE);
+        }
+        finally
+        {
+            Marshal.FreeBSTR(bstrGroupName);
+        }
+    }
+
+    public void DisableRuleGroup(string groupName)
+    {
+        var fwPolicy2 = CreateInstance<INetFwPolicy2>("E2B3C97F-6AE1-41AC-817A-F6F92166D7DD") ?? throw new InvalidOperationException("Failed to get firewall policy.");
+        var bstrGroupName = (BSTR)Marshal.StringToBSTR(groupName);
+
+        try
+        {
+            var profileTypesBitmask = fwPolicy2.CurrentProfileTypes;
+            fwPolicy2.EnableRuleGroup(profileTypesBitmask, bstrGroupName, VARIANT_BOOL.VARIANT_FALSE);
+        }
+        finally
+        {
+            Marshal.FreeBSTR(bstrGroupName);
+        }
+    }
+
+    public bool RuleExists(string name)
+    {
+        var fwPolicy2 = CreateInstance<INetFwPolicy2>("E2B3C97F-6AE1-41AC-817A-F6F92166D7DD") ?? throw new InvalidOperationException("Failed to get firewall policy.");
+        var bstrName = (BSTR)Marshal.StringToBSTR(name);
+
+        try
+        {
+            return GetRule(fwPolicy2, name) != null;
+        }
+        finally
+        {
+            Marshal.FreeBSTR(bstrName);
+        }
+    }
+
+    private static void UpdateExistingRule(INetFwRule existingRule, NET_FW_ACTION action, NET_FW_IP_PROTOCOL protocol, NET_FW_PROFILE_TYPE2 profiles, BSTR? bstrAppPath, BSTR? bstrRemoteIp, BSTR? bstrLocalPort, BSTR? bstrService, BSTR? bstrDescription, BSTR bstrInterfaceTypes)
+    {
+        existingRule.Action = action;
+        existingRule.Enabled = action == NET_FW_ACTION.NET_FW_ACTION_ALLOW;
+        existingRule.Protocol = (int)protocol;
+        existingRule.Profiles = (int)profiles;
+        existingRule.InterfaceTypes = bstrInterfaceTypes;
+
+        if (bstrAppPath.HasValue)
+        {
+            existingRule.ApplicationName = (BSTR)bstrAppPath;
+        }
+
+        if (bstrRemoteIp.HasValue && bstrRemoteIp.Value != IntPtr.Zero && !string.IsNullOrEmpty(Marshal.PtrToStringBSTR(bstrRemoteIp.Value)))
+        {
+            existingRule.RemoteAddresses = (BSTR)bstrRemoteIp;
+        }
+
+        if (bstrLocalPort.HasValue && bstrLocalPort.Value != IntPtr.Zero && !string.IsNullOrEmpty(Marshal.PtrToStringBSTR(bstrLocalPort.Value)))
+        {
+            existingRule.LocalPorts = (BSTR)bstrLocalPort;
+        }
+
+        if (bstrService.HasValue)
+        {
+            existingRule.ServiceName = (BSTR)bstrService;
+        }
+
+        if (bstrDescription.HasValue)
+        {
+            existingRule.Description = (BSTR)bstrDescription;
         }
     }
 

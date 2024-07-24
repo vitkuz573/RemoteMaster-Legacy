@@ -257,7 +257,7 @@ public static class Program
                 opts.TokensPerPeriod = 10;
             });
 
-            options.OnRejected = (ctx, token) =>
+            options.OnRejected = (ctx, _) =>
             {
                 ctx.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
 
@@ -274,7 +274,6 @@ public static class Program
                     .AllowAnyHeader();
             });
         });
-        return;
     }
 
     private static void ConfigurePipeline(WebApplication app)
