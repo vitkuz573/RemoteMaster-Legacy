@@ -33,41 +33,11 @@
                 <button @onclick="FetchFilteredLogs" class="h-10 w-32 rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none sm:w-auto">
                     Fetch Logs
                 </button>
-                <button @onclick="DeleteSelectedLog" class="h-10 w-32 rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700 focus:outline-none sm:w-auto">
-                    Delete Selected
-                </button>
-                <button @onclick="DeleteAllLogs" class="h-10 w-32 rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700 focus:outline-none sm:w-auto">
-                    Delete All
-                </button>
             </div>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="min-w-full overflow-hidden rounded-md bg-white shadow">
-                <thead>
-                    <tr class="bg-gray-50">
-                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                            Date
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                            Level
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                            Message
-                        </th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 bg-white">
-                    @foreach (var logEntry in _logEntries)
-                    {
-                        <tr>
-                            <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">@logEntry.Date</td>
-                            <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">@logEntry.Level</td>
-                            <td class="whitespace-pre-wrap break-words px-6 py-4 text-sm text-gray-900">@logEntry.Message</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+        <div class="overflow-auto rounded-md bg-white p-4 shadow" style="max-height: 75vh;">
+            <pre class="select-text whitespace-pre-wrap">@_logContent</pre>
         </div>
     </div>
 </div>

@@ -3,11 +3,9 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Claims;
-using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.SignalR.Client;
-using RemoteMaster.Server.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Components.Pages;
@@ -23,14 +21,11 @@ public partial class LogsViewer : IAsyncDisposable
     private HubConnection? _connection;
     private ClaimsPrincipal? _user;
     private List<string> _logFiles = new();
-    private List<LogEntry> _logEntries = new();
     private string? _selectedLogFile;
+    private string _logContent = string.Empty;
     private string _selectedLogLevel = string.Empty;
     private DateTime? _startDate;
     private DateTime? _endDate;
-
-    [GeneratedRegex(@"(?<date>[\d-]+\s[\d:.,]+)\s\+\d+:\d+\s\[(?<level>[A-Z]+)\]\s(?<message>.*)")]
-    private static partial Regex LogEntryRegex();
 
     protected async override Task OnInitializedAsync()
     {
@@ -68,37 +63,12 @@ public partial class LogsViewer : IAsyncDisposable
 
             _connection.On<string>("ReceiveLog", (logContent) =>
             {
-                ParseLogContent(logContent);
+                _logContent = logContent;
                 InvokeAsync(StateHasChanged);
-            });
-
-            _connection.On<string>("ReceiveMessage", (message) =>
-            {
-                // Handle messages (e.g., file deletion success)
-            });
-
-            _connection.On<string>("ReceiveError", (error) =>
-            {
-                // Handle errors
             });
 
             await _connection.StartAsync();
         }
-    }
-
-    private void ParseLogContent(string logContent)
-    {
-        var logLines = logContent.Split(Environment.NewLine);
-        _logEntries = logLines.Select(line =>
-        {
-            var match = LogEntryRegex().Match(line);
-            return new LogEntry
-            {
-                Date = match.Groups["date"].Value,
-                Level = match.Groups["level"].Value,
-                Message = match.Groups["message"].Value
-            };
-        }).ToList();
     }
 
     private async Task FetchLogFiles()
@@ -112,7 +82,8 @@ public partial class LogsViewer : IAsyncDisposable
     private async Task OnLogSelected(ChangeEventArgs e)
     {
         _selectedLogFile = e.Value?.ToString();
-        _logEntries.Clear();
+        _logContent = string.Empty;
+
         await FetchLogs();
     }
 
@@ -129,26 +100,6 @@ public partial class LogsViewer : IAsyncDisposable
         if (!string.IsNullOrEmpty(_selectedLogFile) && _connection != null)
         {
             await _connection.InvokeAsync("GetFilteredLog", _selectedLogFile, _selectedLogLevel, _startDate, _endDate);
-        }
-    }
-
-    private async Task DeleteSelectedLog()
-    {
-        if (!string.IsNullOrEmpty(_selectedLogFile) && _connection != null)
-        {
-            await _connection.InvokeAsync("DeleteLog", _selectedLogFile);
-            _logEntries.Clear();
-            await FetchLogFiles();
-        }
-    }
-
-    private async Task DeleteAllLogs()
-    {
-        if (_connection != null)
-        {
-            await _connection.InvokeAsync("DeleteAllLogs");
-            _logEntries.Clear();
-            await FetchLogFiles();
         }
     }
 
