@@ -9,12 +9,7 @@ namespace RemoteMaster.Host.Core.Tests;
 
 public class FileManagerServiceTests
 {
-    private readonly FileManagerService _fileManagerService;
-
-    public FileManagerServiceTests()
-    {
-        _fileManagerService = new FileManagerService();
-    }
+    private readonly FileManagerService _fileManagerService = new();
 
     [Fact]
     public async Task UploadFileAsync_CreatesFileAtPath()
@@ -80,7 +75,7 @@ public class FileManagerServiceTests
         var result = _fileManagerService.GetFilesAndDirectories(tempDir);
 
         // Assert
-        Assert.Contains(result, item => item.Name == ".." && item.Type == FileSystemItem.FileSystemItemType.Directory);
+        Assert.Contains(result, item => item is { Name: "..", Type: FileSystemItem.FileSystemItemType.Directory });
         Assert.Contains(result, item => item.Name == Path.GetFileName(tempFile) && item.Type == FileSystemItem.FileSystemItemType.File);
         Assert.Contains(result, item => item.Name == Path.GetFileName(subDir) && item.Type == FileSystemItem.FileSystemItemType.Directory);
 

@@ -17,63 +17,57 @@ namespace RemoteMaster.Host.Core.Tests;
 public class ControlHubTests
 {
     private readonly Mock<IAppState> _mockAppState;
-    private readonly Mock<IViewerFactory> _mockViewerFactory;
     private readonly Mock<IScriptService> _mockScriptService;
     private readonly Mock<IInputService> _mockInputService;
     private readonly Mock<IPowerService> _mockPowerService;
     private readonly Mock<IHardwareService> _mockHardwareService;
     private readonly Mock<IShutdownService> _mockShutdownService;
-    private readonly Mock<IScreenCapturingService> _mockScreenCapturerService;
     private readonly Mock<IHostConfigurationService> _mockHostConfigurationService;
     private readonly Mock<IHostLifecycleService> _mockHostLifecycleService;
     private readonly Mock<ICertificateStoreService> _mockCertificateStoreService;
-    private readonly Mock<IWorkStationSecurityService> _mockWorkStationSecurityService;
-    private readonly Mock<IScreenCastingService> _mockScreenCastingService;
     private readonly Mock<IHubCallerClients<IControlClient>> _mockClients;
-    private readonly Mock<IGroupManager> _mockGroups;
-    private readonly Mock<IControlClient> _mockClientProxy;
     private readonly Mock<HubCallerContext> _mockHubCallerContext;
     private readonly ControlHub _controlHub;
 
     public ControlHubTests()
     {
         _mockAppState = new Mock<IAppState>();
-        _mockViewerFactory = new Mock<IViewerFactory>();
+        Mock<IViewerFactory> mockViewerFactory = new();
         _mockScriptService = new Mock<IScriptService>();
         _mockInputService = new Mock<IInputService>();
         _mockPowerService = new Mock<IPowerService>();
         _mockHardwareService = new Mock<IHardwareService>();
         _mockShutdownService = new Mock<IShutdownService>();
-        _mockScreenCapturerService = new Mock<IScreenCapturingService>();
+        Mock<IScreenCapturingService> mockScreenCapturingService = new();
         _mockHostConfigurationService = new Mock<IHostConfigurationService>();
         _mockHostLifecycleService = new Mock<IHostLifecycleService>();
         _mockCertificateStoreService = new Mock<ICertificateStoreService>();
-        _mockWorkStationSecurityService = new Mock<IWorkStationSecurityService>();
-        _mockScreenCastingService = new Mock<IScreenCastingService>();
+        Mock<IWorkStationSecurityService> mockWorkStationSecurityService = new();
+        Mock<IScreenCastingService> mockScreenCastingService = new();
         _mockClients = new Mock<IHubCallerClients<IControlClient>>();
-        _mockGroups = new Mock<IGroupManager>();
-        _mockClientProxy = new Mock<IControlClient>();
+        Mock<IGroupManager> mockGroups = new();
+        Mock<IControlClient> mockClientProxy = new();
         _mockHubCallerContext = new Mock<HubCallerContext>();
 
-        _mockClients.Setup(clients => clients.Caller).Returns(_mockClientProxy.Object);
+        _mockClients.Setup(clients => clients.Caller).Returns(mockClientProxy.Object);
 
         _controlHub = new ControlHub(
             _mockAppState.Object,
-            _mockViewerFactory.Object,
+            mockViewerFactory.Object,
             _mockScriptService.Object,
             _mockInputService.Object,
             _mockPowerService.Object,
             _mockHardwareService.Object,
             _mockShutdownService.Object,
-            _mockScreenCapturerService.Object,
+            mockScreenCapturingService.Object,
             _mockHostConfigurationService.Object,
             _mockHostLifecycleService.Object,
             _mockCertificateStoreService.Object,
-            _mockWorkStationSecurityService.Object,
-            _mockScreenCastingService.Object)
+            mockWorkStationSecurityService.Object,
+            mockScreenCastingService.Object)
         {
             Clients = _mockClients.Object,
-            Groups = _mockGroups.Object,
+            Groups = mockGroups.Object,
             Context = _mockHubCallerContext.Object
         };
     }
@@ -116,10 +110,10 @@ public class ControlHubTests
         // Arrange
         var dto = new MouseInputDto();
         var viewer = new Mock<IViewer>();
-        var screenCapturer = new Mock<IScreenCapturingService>().Object;
-        viewer.Setup(v => v.ScreenCapturing).Returns(screenCapturer);
+        var screenCapturing = new Mock<IScreenCapturingService>().Object;
+        viewer.Setup(v => v.ScreenCapturing).Returns(screenCapturing);
 
-        var connectionId = "testConnectionId";
+        const string connectionId = "testConnectionId";
         SetHubContext(connectionId);
         SetupAppState(connectionId, viewer.Object);
 
@@ -127,7 +121,7 @@ public class ControlHubTests
         _controlHub.HandleMouseInput(dto);
 
         // Assert
-        _mockInputService.Verify(i => i.HandleMouseInput(dto, screenCapturer), Times.Once);
+        _mockInputService.Verify(i => i.HandleMouseInput(dto, screenCapturing), Times.Once);
     }
 
     [Fact]
@@ -147,12 +141,12 @@ public class ControlHubTests
     public void SendSelectedScreen_ShouldSetSelectedScreen_WhenViewerExists()
     {
         // Arrange
-        var displayName = "Display1";
+        const string displayName = "Display1";
         var viewer = new Mock<IViewer>();
-        var screenCapturer = new Mock<IScreenCapturingService>().Object;
-        viewer.Setup(v => v.ScreenCapturing).Returns(screenCapturer);
+        var screenCapturing = new Mock<IScreenCapturingService>().Object;
+        viewer.Setup(v => v.ScreenCapturing).Returns(screenCapturing);
 
-        var connectionId = "testConnectionId";
+        const string connectionId = "testConnectionId";
         SetHubContext(connectionId);
         SetupAppState(connectionId, viewer.Object);
 
@@ -160,14 +154,14 @@ public class ControlHubTests
         _controlHub.ChangeSelectedScreen(displayName);
 
         // Assert
-        Mock.Get(screenCapturer).Verify(s => s.SetSelectedScreen(displayName), Times.Once);
+        Mock.Get(screenCapturing).Verify(s => s.SetSelectedScreen(displayName), Times.Once);
     }
 
     [Fact]
     public void SendToggleInput_ShouldToggleInput()
     {
         // Arrange
-        var inputEnabled = true;
+        const bool inputEnabled = true;
 
         // Act
         _controlHub.ToggleInput(inputEnabled);
@@ -180,7 +174,7 @@ public class ControlHubTests
     public void SendBlockUserInput_ShouldBlockUserInput()
     {
         // Arrange
-        var blockInput = true;
+        const bool blockInput = true;
 
         // Act
         _controlHub.BlockUserInput(blockInput);
@@ -193,12 +187,12 @@ public class ControlHubTests
     public void SendImageQuality_ShouldSetImageQuality_WhenViewerExists()
     {
         // Arrange
-        var quality = 80;
+        const int quality = 80;
         var viewer = new Mock<IViewer>();
-        var screenCapturer = new Mock<IScreenCapturingService>().Object;
-        viewer.Setup(v => v.ScreenCapturing).Returns(screenCapturer);
+        var screenCapturing = new Mock<IScreenCapturingService>().Object;
+        viewer.Setup(v => v.ScreenCapturing).Returns(screenCapturing);
 
-        var connectionId = "testConnectionId";
+        const string connectionId = "testConnectionId";
         SetHubContext(connectionId);
         SetupAppState(connectionId, viewer.Object);
 
@@ -206,19 +200,19 @@ public class ControlHubTests
         _controlHub.SetImageQuality(quality);
 
         // Assert
-        Mock.Get(screenCapturer).VerifySet(s => s.ImageQuality = quality, Times.Once);
+        Mock.Get(screenCapturing).VerifySet(s => s.ImageQuality = quality, Times.Once);
     }
 
     [Fact]
     public void SendToggleCursorTracking_ShouldSetTrackCursor_WhenViewerExists()
     {
         // Arrange
-        var trackCursor = true;
+        const bool trackCursor = true;
         var viewer = new Mock<IViewer>();
-        var screenCapturer = new Mock<IScreenCapturingService>().Object;
-        viewer.Setup(v => v.ScreenCapturing).Returns(screenCapturer);
+        var screenCapturing = new Mock<IScreenCapturingService>().Object;
+        viewer.Setup(v => v.ScreenCapturing).Returns(screenCapturing);
 
-        var connectionId = "testConnectionId";
+        const string connectionId = "testConnectionId";
         SetHubContext(connectionId);
         SetupAppState(connectionId, viewer.Object);
 
@@ -226,7 +220,7 @@ public class ControlHubTests
         _controlHub.ToggleDrawCursor(trackCursor);
 
         // Assert
-        Mock.Get(screenCapturer).VerifySet(s => s.DrawCursor = trackCursor, Times.Once);
+        Mock.Get(screenCapturing).VerifySet(s => s.DrawCursor = trackCursor, Times.Once);
     }
 
     [Fact]
@@ -269,7 +263,7 @@ public class ControlHubTests
     public void SendMonitorState_ShouldSetMonitorState()
     {
         // Arrange
-        var state = MonitorState.On;
+        const MonitorState state = MonitorState.On;
 
         // Act
         _controlHub.SetMonitorState(state);
@@ -295,8 +289,8 @@ public class ControlHubTests
     public async Task SendCommandToService_ShouldSendCommandToGroup()
     {
         // Arrange
-        var command = "TestCommand";
-        var connectionId = "testConnectionId";
+        const string command = "TestCommand";
+        const string connectionId = "testConnectionId";
 
         SetHubContext(connectionId);
 
@@ -364,7 +358,7 @@ public class ControlHubTests
     public void GetCertificateSerialNumber_ShouldReturnSerialNumber()
     {
         // Arrange
-        var expectedSerialNumber = "123456";
+        const string expectedSerialNumber = "123456";
         var mockCertificate = new Mock<ICertificateWrapper>();
         mockCertificate.Setup(c => c.HasPrivateKey).Returns(true);
         mockCertificate.Setup(c => c.GetSerialNumberString()).Returns(expectedSerialNumber);

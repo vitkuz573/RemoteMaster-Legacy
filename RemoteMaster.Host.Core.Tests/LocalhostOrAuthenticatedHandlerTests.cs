@@ -14,19 +14,18 @@ namespace RemoteMaster.Host.Core.Tests;
 
 public class LocalhostOrAuthenticatedHandlerTests
 {
-    private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
     private readonly DefaultHttpContext _httpContext;
     private readonly LocalhostOrAuthenticatedRequirement _requirement;
     private readonly LocalhostOrAuthenticatedHandler _handler;
 
     public LocalhostOrAuthenticatedHandlerTests()
     {
-        _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
+        Mock<IHttpContextAccessor> httpContextAccessorMock = new();
         _httpContext = new DefaultHttpContext();
-        _httpContextAccessorMock.Setup(_ => _.HttpContext).Returns(_httpContext);
+        httpContextAccessorMock.Setup(h => h.HttpContext).Returns(_httpContext);
 
         _requirement = new LocalhostOrAuthenticatedRequirement();
-        _handler = new LocalhostOrAuthenticatedHandler(_httpContextAccessorMock.Object);
+        _handler = new LocalhostOrAuthenticatedHandler(httpContextAccessorMock.Object);
     }
 
     [Fact]
@@ -112,9 +111,9 @@ public class LocalhostOrAuthenticatedHandlerTests
 
         // Assert
         Assert.True(authorizationHandlerContext.HasSucceeded);
-        var identity = authorizationHandlerContext.User?.Identities.FirstOrDefault(i => i.AuthenticationType == "RemoteMaster Security");
+        var identity = authorizationHandlerContext.User.Identities.FirstOrDefault(i => i.AuthenticationType == "RemoteMaster Security");
         Assert.NotNull(identity);
-        Assert.Contains(identity.Claims, c => c.Type == ClaimTypes.Name && c.Value == "RCHost");
-        Assert.Contains(identity.Claims, c => c.Type == ClaimTypes.Role && c.Value == "Windows Service");
+        Assert.Contains(identity.Claims, c => c is { Type: ClaimTypes.Name, Value: "RCHost" });
+        Assert.Contains(identity.Claims, c => c is { Type: ClaimTypes.Role, Value: "Windows Service" });
     }
 }
