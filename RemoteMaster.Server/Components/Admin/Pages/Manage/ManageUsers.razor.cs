@@ -9,14 +9,12 @@ using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Components.Admin.Dialogs;
 using RemoteMaster.Server.Data;
 
-namespace RemoteMaster.Server.Components.Admin.Pages;
+namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 
 public partial class ManageUsers
 {
     [SupplyParameterFromForm(FormName = "CreateUser")]
     private InputModel Input { get; set; } = new();
-
-    private readonly Dictionary<string, PlaceholderInputModel> _userPlaceholderModels = [];
 
     private IEnumerable<IdentityError>? _identityErrors;
     private List<ApplicationUser> _users = [];
@@ -123,7 +121,6 @@ public partial class ManageUsers
 
         if (result.Succeeded)
         {
-            _userPlaceholderModels.Remove(user.UserName);
             _users.Remove(user);
 
             await LoadUsersAsync();
@@ -144,7 +141,6 @@ public partial class ManageUsers
 
         var sortedUsers = new List<ApplicationUser>();
 
-        _userPlaceholderModels.Clear();
         _userRoles.Clear();
         _userTwoFactorStatus.Clear();
 
@@ -153,13 +149,8 @@ public partial class ManageUsers
             var roles = await userManager.GetRolesAsync(user);
             var isTwoFactorEnabled = await userManager.GetTwoFactorEnabledAsync(user);
 
-            _userRoles[user] = new List<string>(roles);
+            _userRoles[user] = [.. roles];
             _userTwoFactorStatus[user] = isTwoFactorEnabled;
-
-            _userPlaceholderModels[user.UserName] = new PlaceholderInputModel
-            {
-                Username = user.UserName
-            };
 
             if (roles.Contains("RootAdministrator"))
             {

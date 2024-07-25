@@ -8,10 +8,9 @@ using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Components.Admin.Dialogs;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
-using RemoteMaster.Shared.Models;
 using Serilog;
 
-namespace RemoteMaster.Server.Components.Admin.Pages;
+namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 
 public partial class ManageOrganizations
 {
@@ -212,14 +211,5 @@ public partial class ManageOrganizations
         [DataType(DataType.Text)]
         [Display(Name = "Country")]
         public string Country { get; set; }
-    }
-
-    private sealed class UserViewModel
-    {
-        public string UserId { get; set; }
-
-        public string UserName { get; set; }
-
-        public bool IsSelected { get; set; }
     }
 }

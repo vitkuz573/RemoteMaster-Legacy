@@ -1,18 +1,10 @@
 ﻿@page "/Admin/RoleClaims"
 
-@namespace RemoteMaster.Server.Components.Admin.Pages.Manage
-
 @rendermode InteractiveServer
 
 @using RemoteMaster.Server.Components.Account.Shared
-@using RemoteMaster.Server.Data
-@using RemoteMaster.Server.Models
-@using RemoteMaster.Server.Abstractions
-@using Microsoft.EntityFrameworkCore
-@using Microsoft.AspNetCore.Identity
 
 @inject IServiceScopeFactory ScopeFactory
-@inject NavigationManager NavigationManager
 
 <PageTitle>Manage Role Claims</PageTitle>
 
@@ -20,7 +12,7 @@
 
 <div class="mb-4">
     <label for="selectedRole" class="block text-sm font-medium text-gray-700">Select Role</label>
-    <InputSelect id="selectedRole" Value="SelectedRoleId" ValueChanged="@(async (string roleId) => await OnRoleChanged(roleId))" ValueExpression="@(() => SelectedRoleId)" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm">
+    <InputSelect id="selectedRole" Value="SelectedRoleId" ValueChanged="@(async (string? roleId) => await OnRoleChanged(roleId))" ValueExpression="@(() => SelectedRoleId)" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm">
         <option value="">Select a role</option>
         @foreach (var role in _roles)
         {

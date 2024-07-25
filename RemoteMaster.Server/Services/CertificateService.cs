@@ -28,6 +28,7 @@ public class CertificateService(IHostInformationService hostInformationService, 
             if (basicConstraints?.CertificateAuthority == true)
             {
                 Log.Error("CSR for CA certificates are not allowed.");
+                
                 return Result<X509Certificate2>.Failure("CSR for CA certificates are not allowed.", exception: new InvalidOperationException("CSR for CA certificates are not allowed."));
             }
 

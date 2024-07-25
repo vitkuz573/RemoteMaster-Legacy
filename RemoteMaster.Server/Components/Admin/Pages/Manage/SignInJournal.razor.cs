@@ -63,7 +63,7 @@ public partial class SignInJournal
     {
         if (firstRender)
         {
-            await JSRuntime.InvokeVoidAsync("setupAutocomplete", "filterInput", Columns);
+            await JsRuntime.InvokeVoidAsync("setupAutocomplete", "filterInput", Columns);
         }
     }
 
