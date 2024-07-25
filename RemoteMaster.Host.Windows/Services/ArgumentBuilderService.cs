@@ -20,11 +20,11 @@ public class ArgumentBuilderService : IArgumentBuilderService
             switch (argument.Value)
             {
                 case string strValue:
-                {
-                    var escapedValue = "\"" + strValue.Replace("\"", "\\\"") + "\"";
-                    argumentsString.Append($" --{argument.Key}={escapedValue}");
-                    break;
-                }
+                    {
+                        var escapedValue = "\"" + strValue.Replace("\"", "\\\"") + "\"";
+                        argumentsString.Append($" --{argument.Key}={escapedValue}");
+                        break;
+                    }
                 case bool boolValue:
                     argumentsString.Append($" --{argument.Key}={boolValue.ToString().ToLower()}");
                     break;

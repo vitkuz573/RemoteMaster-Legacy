@@ -124,7 +124,7 @@ public class GdiCapturing : ScreenCapturingService
         using var memoryStream = new MemoryStream();
         using var encoderParameters = new EncoderParameters(1);
         encoderParameters.Param[0] = new EncoderParameter(Encoder.Quality, quality);
-        
+
         var imageCodec = GetEncoderInfo(codec);
 
         if (imageCodec != null)

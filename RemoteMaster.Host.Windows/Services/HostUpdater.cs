@@ -435,24 +435,24 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             if (allowDowngrade)
             {
                 await Notify("Allowing downgrade as per the allow-downgrade flag.", MessageType.Information);
-                
+
                 return true;
             }
 
             await Notify($"Current version {currentVersion} is newer than update version {updateVersion}. To allow downgrades, use the --allow-downgrade=true option.", MessageType.Information);
-            
+
             return false;
         }
 
         if (force)
         {
             await Notify("Forcing update despite versions being the same due to force flag being set.", MessageType.Information);
-            
+
             return true;
         }
 
         await Notify($"Current version {currentVersion} is the same as the update version {updateVersion}. No update needed. To force an update, use the --force=true option.", MessageType.Information);
-        
+
         return false;
     }
 

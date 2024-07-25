@@ -5,9 +5,9 @@
 namespace RemoteMaster.Host.Windows.Enums;
 
 public enum InterfaceType
-{ 
-    RemoteAccess, 
-    Wireless, 
-    Lan, 
+{
+    RemoteAccess,
+    Wireless,
+    Lan,
     All
 }

@@ -45,7 +45,7 @@ public class FirewallService : IFirewallService
             var newRule = CreateInstance<INetFwRule>("2C5BC43E-3369-4C33-AB0C-BE9469677AF4") ?? throw new InvalidOperationException("Failed to create new firewall rule.");
 
             newRule.Name = bstrName;
-            
+
             if (description != null)
             {
                 newRule.Description = bstrDescription;
@@ -61,7 +61,7 @@ public class FirewallService : IFirewallService
             newRule.Direction = direction;
             newRule.Protocol = (int)protocol;
             newRule.InterfaceTypes = bstrInterfaceTypes;
-            
+
             if (icmpTypesAndCodes != null)
             {
                 newRule.IcmpTypesAndCodes = bstrIcmpTypesAndCodes;
@@ -113,7 +113,7 @@ public class FirewallService : IFirewallService
         finally
         {
             Marshal.FreeBSTR(bstrName);
-            
+
             if (bstrDescription != default)
             {
                 Marshal.FreeBSTR(bstrDescription);
@@ -150,7 +150,7 @@ public class FirewallService : IFirewallService
             }
 
             Marshal.FreeBSTR(bstrInterfaceTypes);
-            
+
             if (bstrIcmpTypesAndCodes != default)
             {
                 Marshal.FreeBSTR(bstrIcmpTypesAndCodes);

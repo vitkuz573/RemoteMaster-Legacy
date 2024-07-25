@@ -50,7 +50,7 @@ public abstract class AbstractService : IRunnable
             try
             {
                 using var serviceController = new ServiceController(Name);
-                
+
                 return serviceController.Status == ServiceControllerStatus.Running;
             }
             catch
@@ -143,7 +143,7 @@ public abstract class AbstractService : IRunnable
         process.WaitForExit();
     }
 
-    
+
     protected enum ServiceStartType
     {
         Boot,
