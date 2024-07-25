@@ -45,6 +45,7 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
             }
 
             var nodes = await query.ToListAsync();
+
             return Result<IList<T>>.Success(nodes);
         }
         catch (Exception ex)
