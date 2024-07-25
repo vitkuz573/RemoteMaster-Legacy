@@ -35,4 +35,8 @@ public interface IControlClient
     Task ReceiveAvailableCodecs(IEnumerable<string> codecs);
 
     Task ReceiveDisconnected(DisconnectReason reason);
+
+    Task ReceiveDotNetVersion(Version version);
+
+    Task ReceiveOperatingSystemVersion(string version);
 }

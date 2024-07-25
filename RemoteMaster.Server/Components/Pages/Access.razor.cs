@@ -43,6 +43,8 @@ public partial class Access : IAsyncDisposable
     private bool _useSkia;
     private int _frameRate;
     private int _imageQuality;
+    private string _operatingSystem = string.Empty;
+    private string _dotNetVersion = string.Empty;
     private string _hostVersion = string.Empty;
     private List<Display> _displays = [];
     private List<string> _codecs = [];
@@ -370,6 +372,8 @@ public partial class Access : IAsyncDisposable
             });
 
             _connection.On<byte[]>("ReceiveScreenUpdate", HandleScreenUpdate);
+            _connection.On<string>("ReceiveOperatingSystemVersion", version => _operatingSystem = version);
+            _connection.On<Version>("ReceiveDotNetVersion", version => _dotNetVersion = version.ToString());
             _connection.On<Version>("ReceiveHostVersion", version => _hostVersion = version.ToString());
             _connection.On<string>("ReceiveTransportType", transportType => _transportType = transportType);
 

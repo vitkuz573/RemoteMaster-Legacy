@@ -138,6 +138,8 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         var transportType = transportFeature?.TransportType.ToString() ?? "Unknown";
 
         await Clients.Caller.ReceiveTransportType(transportType);
+        await Clients.Caller.ReceiveDotNetVersion(Environment.Version);
+        await Clients.Caller.ReceiveOperatingSystemVersion(Environment.OSVersion.VersionString);
 
         var assembly = Assembly.GetEntryAssembly();
         var version = assembly?.GetName().Version ?? new Version();
