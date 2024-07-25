@@ -29,7 +29,7 @@ public class PsExecService(IHostConfigurationService hostConfigurationService, I
 
         if (!string.IsNullOrEmpty(ipv4Addrs))
         {
-            firewallService.AddRule("PSExec IPv4", NET_FW_ACTION.NET_FW_ACTION_ALLOW, NET_FW_IP_PROTOCOL.NET_FW_IP_PROTOCOL_TCP, NET_FW_PROFILE_TYPE2.NET_FW_PROFILE2_DOMAIN | NET_FW_PROFILE_TYPE2.NET_FW_PROFILE2_PRIVATE, NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_IN, InterfaceType.All, "Allow PSExec", @"%WinDir%\system32\services.exe", null, null, ipv4Addrs, "RPC");
+            firewallService.AddRule("PSExec IPv4", NET_FW_ACTION.NET_FW_ACTION_ALLOW, NET_FW_IP_PROTOCOL.NET_FW_IP_PROTOCOL_TCP, NET_FW_PROFILE_TYPE2.NET_FW_PROFILE2_DOMAIN | NET_FW_PROFILE_TYPE2.NET_FW_PROFILE2_PRIVATE, NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_IN, InterfaceType.All, "Allow PSExec", @"%WinDir%\system32\services.exe", null, "RPC", ipv4Addrs);
         }
 
         var localizedRuleGroupName = GetLocalizedRuleGroupName();
