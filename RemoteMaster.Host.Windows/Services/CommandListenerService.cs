@@ -62,7 +62,7 @@ public class CommandListenerService : IHostedService
             }
         }
 
-        await Task.Delay(3000);
+        await Task.Delay(5000);
 
 #pragma warning disable CA2000
         var httpClientHandler = new HttpClientHandler
