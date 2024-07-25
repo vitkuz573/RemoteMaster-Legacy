@@ -96,7 +96,7 @@
 
             <MudExpansionPanels>
                 <MudExpansionPanel Text="@($"Viewers ({_viewers.Count})")">
-                    @if (_viewers != null && _viewers.Any())
+                    @if (_viewers.Any())
                     {
                         <MudList T="string">
                             @foreach (var viewer in _viewers)
