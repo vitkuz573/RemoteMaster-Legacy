@@ -447,36 +447,34 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             return false;
         }
 
-        if (await VerifyChecksum(updateExecutablePath, currentExecutablePath, true))
+        var checksumsMatch = await VerifyChecksum(updateExecutablePath, currentExecutablePath, true);
+
+        if (checksumsMatch)
         {
+            if (allowDowngrade && force)
+            {
+                await Notify("Checksum match detected with same version. Update needed due to both allow-downgrade and force flags.", MessageType.Information);
+                
+                return true;
+            }
+
             await Notify($"Current version {currentVersion} is the same as the update version {updateVersion}. No update needed. To force an update, use the --force=true option.", MessageType.Information);
             
             return false;
         }
 
-        switch (allowDowngrade)
+        if (force)
         {
-            case true when force:
-                await Notify("Checksum mismatch detected despite the same version. Update needed due to allow-downgrade and force flags.", MessageType.Information);
+            await Notify("Checksum mismatch detected with same version. Update needed due to force flag.", MessageType.Information);
 
-                return true;
-            case false:
-                await Notify("Checksum mismatch detected but downgrade is not allowed.", MessageType.Error);
-
-                return false;
+            return true;
         }
 
-        if (!force)
-        {
-            await Notify("Checksum mismatch detected but force flag is not set.", MessageType.Error);
+        await Notify("Checksum mismatch detected but force flag is not set.", MessageType.Error);
 
-            return false;
-        }
-
-        await Notify("Forcing update despite versions being the same due to force flag being set.", MessageType.Information);
-
-        return true;
+        return false;
     }
+
 
     private static Version GetVersionFromExecutable(string filePath)
     {
