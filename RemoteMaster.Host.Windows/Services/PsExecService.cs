@@ -69,7 +69,7 @@ public class PsExecService(IHostConfigurationService hostConfigurationService, I
         }
 
         var addresses = await Dns.GetHostAddressesAsync(server);
-        var ipv4Addrs = string.Join(",", addresses.Where(addr => addr.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).Select(addr => ConvertToCidrNotation(addr.ToString())));
+        var ipv4Addrs = string.Join(",", addresses.Where(addr => addr.AddressFamily == AddressFamily.InterNetwork).Select(addr => ConvertToCidrNotation(addr.ToString())));
 
         return ipv4Addrs;
     }
