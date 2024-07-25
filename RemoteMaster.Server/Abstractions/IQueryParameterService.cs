@@ -2,11 +2,13 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using RemoteMaster.Shared.Models;
+
 namespace RemoteMaster.Server.Abstractions;
 
 public interface IQueryParameterService
 {
-    T? GetParameter<T>(string key, T? defaultValue);
+    Result<T> GetParameter<T>(string key, T defaultValue);
 
-    void UpdateParameter(string key, object value);
+    Result UpdateParameter(string key, object value);
 }

@@ -6,22 +6,30 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
 
 public class QueryParameterService(NavigationManager navigationManager) : IQueryParameterService
 {
-    public T? GetParameter<T>(string key, T? defaultValue)
+    public Result<T> GetParameter<T>(string key, T defaultValue)
     {
-        var uri = new Uri(navigationManager.Uri);
-        var queryParameters = QueryHelpers.ParseQuery(uri.Query);
-
-        if (queryParameters.TryGetValue(key, out var valueString) && TryConvertValue(valueString, out T? value))
+        try
         {
-            return value;
-        }
+            var uri = new Uri(navigationManager.Uri);
+            var queryParameters = QueryHelpers.ParseQuery(uri.Query);
 
-        return defaultValue;
+            if (queryParameters.TryGetValue(key, out var valueString) && TryConvertValue(valueString, out T? value))
+            {
+                return Result<T>.Success(value);
+            }
+
+            return Result<T>.Success(defaultValue);
+        }
+        catch (Exception ex)
+        {
+            return Result<T>.Failure($"Error retrieving query parameter '{key}': {ex.Message}");
+        }
     }
 
     private static bool TryConvertValue<T>(StringValues stringValue, out T? result)
@@ -40,15 +48,24 @@ public class QueryParameterService(NavigationManager navigationManager) : IQuery
         }
     }
 
-    public void UpdateParameter(string key, object value)
+    public Result UpdateParameter(string key, object value)
     {
-        ArgumentNullException.ThrowIfNull(value);
+        try
+        {
+            ArgumentNullException.ThrowIfNull(value);
 
-        var uri = new Uri(navigationManager.Uri);
-        var queryParameters = QueryHelpers.ParseQuery(uri.Query);
-        queryParameters[key] = value.ToString();
+            var uri = new Uri(navigationManager.Uri);
+            var queryParameters = QueryHelpers.ParseQuery(uri.Query);
+            queryParameters[key] = value.ToString();
 
-        var newUri = QueryHelpers.AddQueryString(uri.GetLeftPart(UriPartial.Path), queryParameters);
-        navigationManager.NavigateTo(newUri);
+            var newUri = QueryHelpers.AddQueryString(uri.GetLeftPart(UriPartial.Path), queryParameters);
+            navigationManager.NavigateTo(newUri);
+
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure($"Error updating query parameter '{key}': {ex.Message}");
+        }
     }
 }

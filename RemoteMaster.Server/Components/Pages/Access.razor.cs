@@ -131,10 +131,46 @@ public partial class Access : IAsyncDisposable
         var uri = new Uri(NavigationManager.Uri);
         var newUri = uri.ToString();
 
-        _frameRate = QueryParameterService.GetParameter("frameRate", 60);
-        _imageQuality = QueryParameterService.GetParameter("imageQuality", 25);
-        _drawCursor = QueryParameterService.GetParameter("drawCursor", false);
-        _inputEnabled = QueryParameterService.GetParameter("inputEnabled", true);
+        var frameRateResult = QueryParameterService.GetParameter("frameRate", 60);
+        var imageQualityResult = QueryParameterService.GetParameter("imageQuality", 25);
+        var drawCursorResult = QueryParameterService.GetParameter("drawCursor", false);
+        var inputEnabledResult = QueryParameterService.GetParameter("inputEnabled", true);
+
+        if (frameRateResult.IsSuccess)
+        {
+            _frameRate = frameRateResult.Value;
+        }
+        else
+        {
+            Log.Error("Error getting frame rate parameter: {Error}", frameRateResult.Errors.First().Message);
+        }
+
+        if (imageQualityResult.IsSuccess)
+        {
+            _imageQuality = imageQualityResult.Value;
+        }
+        else
+        {
+            Log.Error("Error getting image quality parameter: {Error}", imageQualityResult.Errors.First().Message);
+        }
+
+        if (drawCursorResult.IsSuccess)
+        {
+            _drawCursor = drawCursorResult.Value;
+        }
+        else
+        {
+            Log.Error("Error getting draw cursor parameter: {Error}", drawCursorResult.Errors.First().Message);
+        }
+
+        if (inputEnabledResult.IsSuccess)
+        {
+            _inputEnabled = inputEnabledResult.Value;
+        }
+        else
+        {
+            Log.Error("Error getting input enabled parameter: {Error}", inputEnabledResult.Errors.First().Message);
+        }
 
         if (newUri != uri.ToString())
         {
