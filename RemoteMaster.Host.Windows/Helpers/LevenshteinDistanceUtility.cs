@@ -28,7 +28,7 @@ public static class LevenshteinDistanceUtility
 
             for (var j = 1; j <= len2; j++)
             {
-                var cost = (source1[i - 1] == source2[j - 1]) ? 0 : 1;
+                var cost = source1[i - 1] == source2[j - 1] ? 0 : 1;
 
                 currentRow[j] = Math.Min(Math.Min(prevRow[j] + 1, currentRow[j - 1] + 1), prevRow[j - 1] + cost);
             }
