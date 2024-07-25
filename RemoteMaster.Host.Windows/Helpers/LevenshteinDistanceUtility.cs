@@ -11,20 +11,31 @@ public static class LevenshteinDistanceUtility
         ArgumentNullException.ThrowIfNull(source1);
         ArgumentNullException.ThrowIfNull(source2);
 
-        var matrix = new int[source1.Length + 1, source2.Length + 1];
+        var len1 = source1.Length;
+        var len2 = source2.Length;
 
-        for (var i = 0; i <= source1.Length; matrix[i, 0] = i++) { }
-        for (var j = 0; j <= source2.Length; matrix[0, j] = j++) { }
+        var prevRow = new int[len2 + 1];
+        var currentRow = new int[len2 + 1];
 
-        for (var i = 1; i <= source1.Length; i++)
+        for (var j = 0; j <= len2; j++)
         {
-            for (var j = 1; j <= source2.Length; j++)
-            {
-                var cost = (source2[j - 1] == source1[i - 1]) ? 0 : 1;
-                matrix[i, j] = Math.Min(Math.Min(matrix[i - 1, j] + 1, matrix[i, j - 1] + 1), matrix[i - 1, j - 1] + cost);
-            }
+            prevRow[j] = j;
         }
 
-        return matrix[source1.Length, source2.Length];
+        for (var i = 1; i <= len1; i++)
+        {
+            currentRow[0] = i;
+
+            for (var j = 1; j <= len2; j++)
+            {
+                var cost = (source1[i - 1] == source2[j - 1]) ? 0 : 1;
+
+                currentRow[j] = Math.Min(Math.Min(prevRow[j] + 1, currentRow[j - 1] + 1), prevRow[j - 1] + cost);
+            }
+
+            (prevRow, currentRow) = (currentRow, prevRow);
+        }
+
+        return prevRow[len2];
     }
 }
