@@ -82,27 +82,25 @@ public class ControlHubTests
         _mockAppState.Setup(a => a.TryGetViewer(connectionId, out viewer)).Returns(true);
     }
 
-    // [Fact]
-    // public async Task OnDisconnectedAsync_ShouldRemoveViewer_WhenViewerExists()
-    // {
-    //     // Arrange
-    //     using var cancellationTokenSource = new CancellationTokenSource();
-    //     var viewerMock = new Mock<IViewer>();
-    //     viewerMock.Setup(v => v.CancellationTokenSource).Returns(cancellationTokenSource);
-    //     var viewer = viewerMock.Object;
-    // 
-    //     SetHubContext("connectionId");
-    //     SetupAppState("connectionId", viewer);
-    // 
-    //     _mockAppState.Setup(a => a.TryRemoveViewer("connectionId")).Returns(true);
-    // 
-    //     // Act
-    //     await _controlHub.OnDisconnectedAsync(null);
-    // 
-    //     // Assert
-    //     Assert.True(cancellationTokenSource.IsCancellationRequested);
-    //     _mockAppState.Verify(a => a.TryRemoveViewer("connectionId"), Times.Once);
-    // }
+    [Fact]
+    public async Task OnDisconnectedAsync_ShouldRemoveViewer_WhenViewerExists()
+    {
+        // Arrange
+        var viewer = new Mock<IViewer>();
+
+        SetHubContext("connectionId");
+        SetupAppState("connectionId", viewer.Object);
+
+        _mockAppState.Setup(a => a.TryRemoveViewer("connectionId")).Callback(() => viewer.Object.Dispose()).Returns(true);
+
+        // Act
+        await _controlHub.OnDisconnectedAsync(null);
+
+        // Assert
+        viewer.Verify(v => v.Dispose(), Times.Once, "Viewer.Dispose was not called once");
+        _mockAppState.Verify(a => a.TryRemoveViewer("connectionId"), Times.Once, "TryRemoveViewer was not called once");
+        _mockAppState.Verify(a => a.TryRemoveViewer(It.IsAny<string>()), Times.Once);
+    }
 
     [Fact]
     public void HandleMouseInput_ShouldCallHandleMouseInput()
