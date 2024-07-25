@@ -178,12 +178,7 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
                 .ToListAsync();
 
             var path = new List<string>();
-            var currentNode = nodes.FirstOrDefault(n => n.NodeId == node.NodeId);
-
-            if (currentNode == null)
-            {
-                throw new InvalidOperationException($"{typeof(T).Name} not found.");
-            }
+            var currentNode = nodes.FirstOrDefault(n => n.NodeId == node.NodeId) ?? throw new InvalidOperationException($"{typeof(T).Name} not found.");
 
             while (currentNode != null)
             {
