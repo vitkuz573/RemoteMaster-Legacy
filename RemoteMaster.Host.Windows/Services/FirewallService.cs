@@ -27,9 +27,14 @@ public class FirewallService : IFirewallService
 
         try
         {
+            if (existingRule != null && RulePropertiesChanged(existingRule, action, protocol, profiles, bstrAppPath, bstrRemoteIp, bstrLocalPort, bstrService, bstrDescription, bstrInterfaceTypes))
+            {
+                fwPolicy2.Rules.Remove(bstrName);
+                existingRule = null;
+            }
+
             if (existingRule != null)
             {
-                UpdateExistingRule(existingRule, action, protocol, profiles, bstrAppPath, bstrRemoteIp, bstrLocalPort, bstrService, bstrDescription, bstrInterfaceTypes);
                 return;
             }
 
@@ -111,6 +116,36 @@ public class FirewallService : IFirewallService
         }
     }
 
+    private static bool RulePropertiesChanged(INetFwRule existingRule, NET_FW_ACTION action, NET_FW_IP_PROTOCOL protocol, NET_FW_PROFILE_TYPE2 profiles, BSTR? bstrAppPath, BSTR? bstrRemoteIp, BSTR? bstrLocalPort, BSTR? bstrService, BSTR? bstrDescription, BSTR bstrInterfaceTypes)
+    {
+        if (existingRule.Action != action || existingRule.Protocol != (int)protocol || existingRule.Profiles != (int)profiles || existingRule.InterfaceTypes != bstrInterfaceTypes)
+        {
+            return true;
+        }
+
+        if (bstrAppPath.HasValue && existingRule.ApplicationName != bstrAppPath.Value)
+        {
+            return true;
+        }
+
+        if (bstrRemoteIp.HasValue && existingRule.RemoteAddresses != bstrRemoteIp.Value)
+        {
+            return true;
+        }
+
+        if (bstrLocalPort.HasValue && existingRule.LocalPorts != bstrLocalPort.Value)
+        {
+            return true;
+        }
+
+        if (bstrService.HasValue && existingRule.ServiceName != bstrService.Value)
+        {
+            return true;
+        }
+
+        return bstrDescription.HasValue && existingRule.Description != bstrDescription.Value;
+    }
+
     public void RemoveRule(string name)
     {
         var fwPolicy2 = CreateInstance<INetFwPolicy2>("E2B3C97F-6AE1-41AC-817A-F6F92166D7DD") ?? throw new InvalidOperationException("Failed to get firewall policy.");
@@ -176,40 +211,6 @@ public class FirewallService : IFirewallService
         finally
         {
             Marshal.FreeBSTR(bstrName);
-        }
-    }
-
-    private static void UpdateExistingRule(INetFwRule existingRule, NET_FW_ACTION action, NET_FW_IP_PROTOCOL protocol, NET_FW_PROFILE_TYPE2 profiles, BSTR? bstrAppPath, BSTR? bstrRemoteIp, BSTR? bstrLocalPort, BSTR? bstrService, BSTR? bstrDescription, BSTR bstrInterfaceTypes)
-    {
-        existingRule.Action = action;
-        existingRule.Enabled = action == NET_FW_ACTION.NET_FW_ACTION_ALLOW;
-        existingRule.Protocol = (int)protocol;
-        existingRule.Profiles = (int)profiles;
-        existingRule.InterfaceTypes = bstrInterfaceTypes;
-
-        if (bstrAppPath.HasValue)
-        {
-            existingRule.ApplicationName = (BSTR)bstrAppPath;
-        }
-
-        if (bstrRemoteIp.HasValue && bstrRemoteIp.Value != IntPtr.Zero && !string.IsNullOrEmpty(Marshal.PtrToStringBSTR(bstrRemoteIp.Value)))
-        {
-            existingRule.RemoteAddresses = (BSTR)bstrRemoteIp;
-        }
-
-        if (bstrLocalPort.HasValue && bstrLocalPort.Value != IntPtr.Zero && !string.IsNullOrEmpty(Marshal.PtrToStringBSTR(bstrLocalPort.Value)))
-        {
-            existingRule.LocalPorts = (BSTR)bstrLocalPort;
-        }
-
-        if (bstrService.HasValue)
-        {
-            existingRule.ServiceName = (BSTR)bstrService;
-        }
-
-        if (bstrDescription.HasValue)
-        {
-            existingRule.Description = (BSTR)bstrDescription;
         }
     }
 

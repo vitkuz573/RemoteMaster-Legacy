@@ -379,7 +379,7 @@ internal class Program
         var suggestions = modeNames.Select(name => new
         {
             Name = name,
-            Distance = LevenshteinDistanceUtility.ComputeLevenshteinDistance(inputMode.ToLower(), name.ToLower()) // Используем новый утилитарный класс
+            Distance = LevenshteinDistanceUtility.ComputeLevenshteinDistance(inputMode.ToLower(), name.ToLower())
         })
             .OrderBy(x => x.Distance)
             .Take(3);
