@@ -570,7 +570,7 @@ public partial class Access : IAsyncDisposable
         await SafeInvokeAsync(() => _connection.InvokeAsync("ChangeSelectedScreen", display));
     }
 
-    private async void OnChangeCodec(string codec)
+    private async void OnChangeCodec(string? codec)
     {
         if (_connection == null)
         {
