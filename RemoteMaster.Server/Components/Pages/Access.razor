@@ -57,24 +57,24 @@
 
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.ControlPoint">
                 <MudText>Draw Cursor</MudText>
-                <MudSwitch T="bool" Value="_drawCursor" ValueChanged="ToggleDrawCursor" />
+                <MudSwitch T="bool" Value="@_drawCursor" ValueChanged="ToggleDrawCursor" />
             </MudNavLink>
             
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Brush">
                 <MudText>Use Skia</MudText>
-                <MudSwitch T="bool" Value="_useSkia" ValueChanged="ToggleUseSkia" />
+                <MudSwitch T="bool" Value="@_useSkia" ValueChanged="ToggleUseSkia" />
             </MudNavLink>
 
             <AuthorizeView Roles="Administrator">
                 <Authorized>
                     <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Keyboard">
                         <MudText>Input Toggle</MudText>
-                        <MudSwitch T="bool" Value="_inputEnabled" ValueChanged="ToggleInputEnabled" />
+                        <MudSwitch T="bool" Value="@_inputEnabled" ValueChanged="ToggleInputEnabled" />
                     </MudNavLink>
 
                     <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.KeyboardHide">
                         <MudText>Block User Input Toggle</MudText>
-                        <MudSwitch T="bool" Value="_blockUserInput" ValueChanged="ToggleBlockUserInput" />
+                        <MudSwitch T="bool" Value="@_blockUserInput" ValueChanged="ToggleBlockUserInput" />
                     </MudNavLink>
 
                     <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.DeleteSweep" OnClick="KillHost">Kill Host</MudNavLink>
