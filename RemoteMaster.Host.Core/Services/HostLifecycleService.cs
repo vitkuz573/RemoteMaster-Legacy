@@ -22,7 +22,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         try
         {
             var jwtDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "RemoteMaster", "Security", "JWT");
-            
+
             if (!Directory.Exists(jwtDirectory))
             {
                 Directory.CreateDirectory(jwtDirectory);
@@ -46,7 +46,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
                 try
                 {
                     await File.WriteAllBytesAsync(publicKeyPath, jwtResponse.Data);
-                    
+
                     Log.Information("Public key saved successfully at {Path}.", publicKeyPath);
                 }
                 catch (Exception ex)
@@ -144,7 +144,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
     {
         using var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
         store.Open(OpenFlags.ReadWrite);
-        
+
         var certificate = store.Certificates
             .Find(X509FindType.FindBySubjectName, Dns.GetHostName(), false)
             .FirstOrDefault(cert => cert.HasPrivateKey);

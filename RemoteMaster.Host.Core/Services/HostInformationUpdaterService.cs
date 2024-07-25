@@ -68,9 +68,9 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
 
                 hostConfiguration.Subject.Organization = hostMoveRequest.NewOrganization;
                 hostConfiguration.Subject.OrganizationalUnit = hostMoveRequest.NewOrganizationalUnit;
-            
+
                 await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
-            
+
                 Log.Information("HostMoveRequest applied: Organization changed to {Organization} and Organizational Unit changed to {OrganizationalUnit}.", hostMoveRequest.NewOrganization, string.Join("/", hostMoveRequest.NewOrganizationalUnit));
 
                 var acknowledgeResponse = await apiService.AcknowledgeMoveRequestAsync(hostConfiguration.Host.MacAddress);
@@ -83,7 +83,7 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
                 {
                     Log.Warning("Failed to acknowledge host move request");
                 }
-            
+
                 hasChanges = true;
             }
         }
@@ -94,7 +94,7 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
 
         return hasChanges;
     }
-    
+
     public bool CheckCertificateExpiration()
     {
         X509Certificate2? certificate = null;

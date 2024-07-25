@@ -28,7 +28,7 @@ public class ScreenCastingService(IHubContext<ControlHub, IControlClient> hubCon
     public void StopStreaming(IViewer viewer)
     {
         ArgumentNullException.ThrowIfNull(viewer);
-        
+
         viewer.Dispose();
     }
 
