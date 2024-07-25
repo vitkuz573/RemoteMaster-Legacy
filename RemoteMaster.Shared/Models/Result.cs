@@ -20,7 +20,7 @@ public class Result
 
     public static Result Failure(params ErrorDetails[] errors) => new(false, new List<ErrorDetails>(errors));
 
-    public static Result Failure(string message, string? code = null, Exception? exception = null) => new(false, new List<ErrorDetails> { new ErrorDetails(message, code, exception) });
+    public static Result Failure(string message, string? code = null, Exception? exception = null) => new(false, [new(message, code, exception)]);
 
     public Result AddError(string message, string? code = null, Exception? exception = null)
     {
