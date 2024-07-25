@@ -15,33 +15,45 @@ public class AccessTokenProvider(ITokenService tokenService, ITokenStorageServic
     {
         var accessTokenResult = await tokenStorageService.GetAccessTokenAsync(userId);
 
-        if (accessTokenResult.IsSuccess && !string.IsNullOrEmpty(accessTokenResult.Value))
+        if (accessTokenResult.IsSuccess)
         {
-            var tokenValidResult = tokenService.IsTokenValid(accessTokenResult.Value);
+            var accessToken = accessTokenResult.Value;
 
-            if (tokenValidResult is { IsSuccess: true, Value: true })
+            if (!string.IsNullOrEmpty(accessToken))
             {
-                return Result<string?>.Success(accessTokenResult.Value);
+                var tokenValidResult = tokenService.IsTokenValid(accessToken);
+
+                if (tokenValidResult.IsSuccess)
+                {
+                    return Result<string?>.Success(accessToken);
+                }
             }
         }
 
         var refreshTokenResult = await tokenStorageService.GetRefreshTokenAsync(userId);
 
-        if (refreshTokenResult.IsSuccess && !string.IsNullOrEmpty(refreshTokenResult.Value))
+        if (refreshTokenResult.IsSuccess)
         {
-            var refreshTokenValidResult = tokenService.IsRefreshTokenValid(refreshTokenResult.Value);
+            var refreshToken = refreshTokenResult.Value;
 
-            if (refreshTokenValidResult is { IsSuccess: true, Value: true })
+            if (!string.IsNullOrEmpty(refreshToken))
             {
-                var tokenDataResult = await tokenService.GenerateTokensAsync(userId, refreshTokenResult.Value);
+                var refreshTokenValidResult = tokenService.IsRefreshTokenValid(refreshToken);
 
-                if (tokenDataResult.IsSuccess && !string.IsNullOrEmpty(tokenDataResult.Value.AccessToken))
+                if (refreshTokenValidResult.IsSuccess)
                 {
-                    var storeTokensResult = await tokenStorageService.StoreTokensAsync(userId, tokenDataResult.Value);
+                    var tokenDataResult = await tokenService.GenerateTokensAsync(userId, refreshToken);
 
-                    if (storeTokensResult.IsSuccess)
+                    if (tokenDataResult.IsSuccess)
                     {
-                        return Result<string?>.Success(tokenDataResult.Value.AccessToken);
+                        var tokenData = tokenDataResult.Value;
+
+                        var storeTokensResult = await tokenStorageService.StoreTokensAsync(userId, tokenData);
+
+                        if (storeTokensResult.IsSuccess)
+                        {
+                            return Result<string?>.Success(tokenData.AccessToken);
+                        }
                     }
                 }
             }

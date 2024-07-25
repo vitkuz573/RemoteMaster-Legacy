@@ -248,11 +248,11 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         return Result.Success();
     }
 
-    public Result<bool> IsTokenValid(string accessToken)
+    public Result IsTokenValid(string accessToken)
     {
         if (string.IsNullOrEmpty(accessToken))
         {
-            return Result<bool>.Failure("Access token cannot be null or empty");
+            return Result.Failure("Access token cannot be null or empty");
         }
 
         var tokenHandler = new JwtSecurityTokenHandler();
@@ -274,13 +274,13 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         {
             tokenHandler.ValidateToken(accessToken, validationParameters, out var validatedToken);
 
-            return Result<bool>.Success(validatedToken != null);
+            return validatedToken == null ? Result.Failure("Invalid token") : Result.Success();
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Token validation failed");
-            
-            return Result<bool>.Failure("Token validation failed", exception: ex);
+
+            return Result.Failure("Token validation failed", exception: ex);
         }
     }
 
@@ -296,11 +296,11 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         return rsa;
     }
 
-    public Result<bool> IsRefreshTokenValid(string refreshToken)
+    public Result IsRefreshTokenValid(string refreshToken)
     {
         if (string.IsNullOrEmpty(refreshToken))
         {
-            return Result<bool>.Failure("Refresh token cannot be null or empty");
+            return Result.Failure("Refresh token cannot be null or empty");
         }
 
         var user = context.Users
@@ -309,6 +309,6 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         var tokenEntity = user?.RefreshTokens.SingleOrDefault(rt => rt.Token == refreshToken);
 
-        return Result<bool>.Success(tokenEntity?.IsActive ?? false);
+        return tokenEntity is not { IsActive: true } ? Result.Failure("Invalid or inactive refresh token") : Result.Success();
     }
 }

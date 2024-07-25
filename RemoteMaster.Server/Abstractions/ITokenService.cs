@@ -23,14 +23,14 @@ public interface ITokenService
     /// </summary>
     /// <param name="accessToken">The access token to validate.</param>
     /// <returns>A result indicating whether the access token is valid.</returns>
-    Result<bool> IsTokenValid(string accessToken);
+    Result IsTokenValid(string accessToken);
 
     /// <summary>
     /// Validates the provided refresh token.
     /// </summary>
     /// <param name="refreshToken">The refresh token to validate.</param>
     /// <returns>A result indicating whether the refresh token is valid.</returns>
-    Result<bool> IsRefreshTokenValid(string refreshToken);
+    Result IsRefreshTokenValid(string refreshToken);
 
     /// <summary>
     /// Revokes all active refresh tokens for a user.
