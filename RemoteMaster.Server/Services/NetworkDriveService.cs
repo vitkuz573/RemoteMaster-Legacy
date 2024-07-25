@@ -13,7 +13,7 @@ namespace RemoteMaster.Server.Services;
 
 public class NetworkDriveService : INetworkDriveService
 {
-    public Result<bool> MapNetworkDrive(string remotePath, string? username, string? password)
+    public Result MapNetworkDrive(string remotePath, string? username, string? password)
     {
         Log.Information("Attempting to map network drive with remote path: {RemotePath}", remotePath);
 
@@ -37,21 +37,21 @@ public class NetworkDriveService : INetworkDriveService
             if (result == WIN32_ERROR.ERROR_ALREADY_ASSIGNED)
             {
                 Log.Warning("Network drive with remote path {RemotePath} is already assigned.", remotePath);
-
-                return Result<bool>.Success(true);
+                
+                return Result.Success();
             }
 
             Log.Error("Failed to map network drive with remote path {RemotePath}. Error code: {ErrorValue} ({ErrorCode})", remotePath, result.ToString(), (int)result);
-
-            return Result<bool>.Failure($"Failed to map network drive with remote path {remotePath}. Error code: {result} ({(int)result})");
+            
+            return Result.Failure($"Failed to map network drive with remote path {remotePath}. Error code: {result} ({(int)result})");
         }
 
         Log.Information("Successfully mapped network drive with remote path: {RemotePath}", remotePath);
-
-        return Result<bool>.Success(true);
+        
+        return Result.Success();
     }
 
-    public Result<bool> CancelNetworkDrive(string remotePath)
+    public Result CancelNetworkDrive(string remotePath)
     {
         Log.Information("Attempting to cancel network drive with remote path: {RemotePath}", remotePath);
 
@@ -68,12 +68,12 @@ public class NetworkDriveService : INetworkDriveService
         if (result != WIN32_ERROR.NO_ERROR)
         {
             Log.Error("Failed to cancel network drive with remote path {RemotePath}. Error code: {ErrorValue} ({ErrorCode})", remotePath, result.ToString(), (int)result);
-
-            return Result<bool>.Failure($"Failed to cancel network drive with remote path {remotePath}. Error code: {result} ({(int)result})");
+            
+            return Result.Failure($"Failed to cancel network drive with remote path {remotePath}. Error code: {result} ({(int)result})");
         }
 
         Log.Information("Successfully canceled network drive with remote path: {RemotePath}", remotePath);
 
-        return Result<bool>.Success(true);
+        return Result.Success();
     }
 }

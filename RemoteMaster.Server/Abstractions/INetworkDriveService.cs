@@ -17,13 +17,13 @@ public interface INetworkDriveService
     /// <param name="remotePath">The remote path to map the network drive to.</param>
     /// <param name="username">The username for authentication, if required.</param>
     /// <param name="password">The password for authentication, if required.</param>
-    /// <returns>A <see cref="Result{bool}"/> indicating the success or failure of the operation.</returns>
-    Result<bool> MapNetworkDrive(string remotePath, string? username, string? password);
+    /// <returns>A <see cref="Result"/> indicating the success or failure of the operation.</returns>
+    Result MapNetworkDrive(string remotePath, string? username, string? password);
 
     /// <summary>
     /// Cancels a mapped network drive for a specified remote path.
     /// </summary>
     /// <param name="remotePath">The remote path to cancel the network drive mapping for.</param>
-    /// <returns>A <see cref="Result{bool}"/> indicating the success or failure of the operation.</returns>
-    Result<bool> CancelNetworkDrive(string remotePath);
+    /// <returns>A <see cref="Result"/> indicating the success or failure of the operation.</returns>
+    Result CancelNetworkDrive(string remotePath);
 }
