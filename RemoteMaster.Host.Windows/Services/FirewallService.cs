@@ -12,7 +12,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class FirewallService : IFirewallService
 {
-    public void AddRule(string name, NET_FW_ACTION action, NET_FW_IP_PROTOCOL protocol, NET_FW_PROFILE_TYPE2 profiles, string? description = null, string? applicationPath = null, string? localPort = null, string? remoteIp = null, string? service = null, InterfaceType interfaceTypes = InterfaceType.All)
+    public void AddRule(string name, NET_FW_ACTION action, NET_FW_IP_PROTOCOL protocol, NET_FW_PROFILE_TYPE2 profiles, NET_FW_RULE_DIRECTION direction, InterfaceType interfaceTypes, string? description = null, string? applicationPath = null, string? localAddress = null, string? localPort = null, string? remoteAddress = null, string? remotePort = null, string? service = null, bool edgeTraversal = false)
     {
         var fwPolicy2 = CreateInstance<INetFwPolicy2>("E2B3C97F-6AE1-41AC-817A-F6F92166D7DD") ?? throw new InvalidOperationException("Failed to get firewall policy.");
         var existingRule = GetRule(fwPolicy2, name);
@@ -20,14 +20,16 @@ public class FirewallService : IFirewallService
         var bstrName = (BSTR)Marshal.StringToBSTR(name);
         var bstrDescription = description != null ? (BSTR)Marshal.StringToBSTR(description) : default;
         var bstrAppPath = applicationPath != null ? (BSTR)Marshal.StringToBSTR(applicationPath) : default;
-        var bstrRemoteIp = remoteIp != null && !string.IsNullOrEmpty(remoteIp) ? (BSTR)Marshal.StringToBSTR(remoteIp) : default;
+        var bstrLocalAddress = localAddress != null && !string.IsNullOrEmpty(localAddress) ? (BSTR)Marshal.StringToBSTR(localAddress) : default;
         var bstrLocalPort = localPort != null && !string.IsNullOrEmpty(localPort) ? (BSTR)Marshal.StringToBSTR(localPort) : default;
+        var bstrRemoteAddress = remoteAddress != null && !string.IsNullOrEmpty(remoteAddress) ? (BSTR)Marshal.StringToBSTR(remoteAddress) : default;
+        var bstrRemotePort = remotePort != null && !string.IsNullOrEmpty(remotePort) ? (BSTR)Marshal.StringToBSTR(remotePort) : default;
         var bstrService = service != null ? (BSTR)Marshal.StringToBSTR(service) : default;
         var bstrInterfaceTypes = (BSTR)Marshal.StringToBSTR(interfaceTypes.ToString());
 
         try
         {
-            if (existingRule != null && RulePropertiesChanged(existingRule, action, protocol, profiles, bstrAppPath, bstrRemoteIp, bstrLocalPort, bstrService, bstrDescription, bstrInterfaceTypes))
+            if (existingRule != null && RulePropertiesChanged(existingRule, action, protocol, profiles, direction, bstrAppPath, bstrLocalAddress, bstrLocalPort, bstrRemoteAddress, bstrRemotePort, bstrService, bstrDescription, bstrInterfaceTypes, edgeTraversal))
             {
                 fwPolicy2.Rules.Remove(bstrName);
                 existingRule = null;
@@ -54,25 +56,30 @@ public class FirewallService : IFirewallService
 
             newRule.Action = action;
             newRule.Enabled = action == NET_FW_ACTION.NET_FW_ACTION_ALLOW;
-            newRule.Direction = NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_IN;
+            newRule.Direction = direction;
             newRule.Protocol = (int)protocol;
             newRule.InterfaceTypes = bstrInterfaceTypes;
 
             unsafe
             {
-                if (bstrRemoteIp != default && (nint)bstrRemoteIp.Value != nint.Zero && !string.IsNullOrEmpty(Marshal.PtrToStringBSTR((nint)bstrRemoteIp.Value)))
+                if (bstrLocalAddress != default && (nint)bstrLocalAddress.Value != nint.Zero && !string.IsNullOrEmpty(Marshal.PtrToStringBSTR((nint)bstrLocalAddress.Value)))
                 {
-                    newRule.RemoteAddresses = bstrRemoteIp;
+                    newRule.LocalAddresses = bstrLocalAddress;
                 }
-            }
 
-            newRule.Profiles = (int)profiles;
-
-            unsafe
-            {
                 if (bstrLocalPort != default && (nint)bstrLocalPort.Value != nint.Zero && !string.IsNullOrEmpty(Marshal.PtrToStringBSTR((nint)bstrLocalPort.Value)))
                 {
                     newRule.LocalPorts = bstrLocalPort;
+                }
+
+                if (bstrRemoteAddress != default && (nint)bstrRemoteAddress.Value != nint.Zero && !string.IsNullOrEmpty(Marshal.PtrToStringBSTR((nint)bstrRemoteAddress.Value)))
+                {
+                    newRule.RemoteAddresses = bstrRemoteAddress;
+                }
+
+                if (bstrRemotePort != default && (nint)bstrRemotePort.Value != nint.Zero && !string.IsNullOrEmpty(Marshal.PtrToStringBSTR((nint)bstrRemotePort.Value)))
+                {
+                    newRule.RemotePorts = bstrRemotePort;
                 }
             }
 
@@ -80,6 +87,9 @@ public class FirewallService : IFirewallService
             {
                 newRule.ServiceName = bstrService;
             }
+
+            newRule.Profiles = (int)profiles;
+            newRule.EdgeTraversal = edgeTraversal;
 
             fwPolicy2.Rules.Add(newRule);
         }
@@ -97,14 +107,24 @@ public class FirewallService : IFirewallService
                 Marshal.FreeBSTR(bstrAppPath);
             }
 
-            if (bstrRemoteIp != default)
+            if (bstrLocalAddress != default)
             {
-                Marshal.FreeBSTR(bstrRemoteIp);
+                Marshal.FreeBSTR(bstrLocalAddress);
             }
 
             if (bstrLocalPort != default)
             {
                 Marshal.FreeBSTR(bstrLocalPort);
+            }
+
+            if (bstrRemoteAddress != default)
+            {
+                Marshal.FreeBSTR(bstrRemoteAddress);
+            }
+
+            if (bstrRemotePort != default)
+            {
+                Marshal.FreeBSTR(bstrRemotePort);
             }
 
             if (bstrService != default)
@@ -116,9 +136,9 @@ public class FirewallService : IFirewallService
         }
     }
 
-    private static bool RulePropertiesChanged(INetFwRule existingRule, NET_FW_ACTION action, NET_FW_IP_PROTOCOL protocol, NET_FW_PROFILE_TYPE2 profiles, BSTR? bstrAppPath, BSTR? bstrRemoteIp, BSTR? bstrLocalPort, BSTR? bstrService, BSTR? bstrDescription, BSTR bstrInterfaceTypes)
+    private static bool RulePropertiesChanged(INetFwRule existingRule, NET_FW_ACTION action, NET_FW_IP_PROTOCOL protocol, NET_FW_PROFILE_TYPE2 profiles, NET_FW_RULE_DIRECTION direction, BSTR? bstrAppPath, BSTR? bstrLocalAddress, BSTR? bstrLocalPort, BSTR? bstrRemoteAddress, BSTR? bstrRemotePort, BSTR? bstrService, BSTR? bstrDescription, BSTR bstrInterfaceTypes, bool edgeTraversal)
     {
-        if (existingRule.Action != action || existingRule.Protocol != (int)protocol || existingRule.Profiles != (int)profiles || existingRule.InterfaceTypes != bstrInterfaceTypes)
+        if (existingRule.Action != action || existingRule.Protocol != (int)protocol || existingRule.Profiles != (int)profiles || existingRule.Direction != direction || existingRule.InterfaceTypes != bstrInterfaceTypes || existingRule.EdgeTraversal != edgeTraversal)
         {
             return true;
         }
@@ -128,12 +148,22 @@ public class FirewallService : IFirewallService
             return true;
         }
 
-        if (bstrRemoteIp.HasValue && existingRule.RemoteAddresses != bstrRemoteIp.Value)
+        if (bstrLocalAddress.HasValue && existingRule.LocalAddresses != bstrLocalAddress.Value)
         {
             return true;
         }
 
         if (bstrLocalPort.HasValue && existingRule.LocalPorts != bstrLocalPort.Value)
+        {
+            return true;
+        }
+
+        if (bstrRemoteAddress.HasValue && existingRule.RemoteAddresses != bstrRemoteAddress.Value)
+        {
+            return true;
+        }
+
+        if (bstrRemotePort.HasValue && existingRule.RemotePorts != bstrRemotePort.Value)
         {
             return true;
         }
