@@ -30,13 +30,13 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
 
             Log.Information("Attempting to register host...");
 
-            var registerResponse = await apiService.RegisterHostAsync();
+            var isRegistered = await apiService.RegisterHostAsync();
 
-            if (registerResponse is { StatusCode: (int)HttpStatusCode.OK, Data: true })
+            if (isRegistered)
             {
-                var jwtResponse = await apiService.GetJwtPublicKeyAsync();
+                var jwtPublicKey = await apiService.GetJwtPublicKeyAsync();
 
-                if (jwtResponse.Data.Length == 0)
+                if (jwtPublicKey == null || jwtPublicKey.Length == 0)
                 {
                     throw new InvalidOperationException("Failed to obtain JWT public key.");
                 }
@@ -45,7 +45,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
 
                 try
                 {
-                    await File.WriteAllBytesAsync(publicKeyPath, jwtResponse.Data);
+                    await File.WriteAllBytesAsync(publicKeyPath, jwtPublicKey);
 
                     Log.Information("Public key saved successfully at {Path}.", publicKeyPath);
                 }
@@ -78,9 +78,9 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         {
             Log.Information("Attempting to unregister host...");
 
-            var unregisterResponse = await apiService.UnregisterHostAsync();
+            var isUnregistered = await apiService.UnregisterHostAsync();
 
-            if (unregisterResponse is { StatusCode: (int)HttpStatusCode.OK, Data: true })
+            if (isUnregistered)
             {
                 Log.Information("Host unregister successful.");
             }
@@ -119,14 +119,14 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
 
             Log.Information("Attempting to issue certificate...");
 
-            var certificateResponse = await apiService.IssueCertificateAsync(signingRequest);
+            var certificate = await apiService.IssueCertificateAsync(signingRequest);
 
-            if (certificateResponse is { Data: null })
+            if (certificate == null || certificate.Length == 0)
             {
                 throw new InvalidOperationException("Certificate processing failed.");
             }
 
-            ProcessCertificate(certificateResponse.Data, rsaKeyPair);
+            ProcessCertificate(certificate, rsaKeyPair);
 
             Log.Information("Certificate issued and processed successfully.");
         }
@@ -165,11 +165,11 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
     {
         try
         {
-            var updateResponse = await apiService.UpdateHostInformationAsync();
+            var isUpdated = await apiService.UpdateHostInformationAsync();
 
-            if (updateResponse is { StatusCode: (int)HttpStatusCode.OK, Data: true })
+            if (isUpdated)
             {
-                Log.Information("Host information updated successful.");
+                Log.Information("Host information updated successfully.");
             }
             else
             {
@@ -186,11 +186,11 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
     {
         try
         {
-            var statusResponse = await apiService.IsHostRegisteredAsync();
+            var isRegistered = await apiService.IsHostRegisteredAsync();
 
-            if (statusResponse is { StatusCode: (int)HttpStatusCode.OK })
+            if (isRegistered)
             {
-                return statusResponse.Data;
+                return true;
             }
 
             throw new InvalidOperationException("Failed to check host registration status.");
@@ -297,9 +297,9 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         {
             Log.Information("Requesting CA certificate's public part...");
 
-            var caCertificateResponse = await apiService.GetCaCertificateAsync();
+            var caCertificateData = await apiService.GetCaCertificateAsync();
 
-            if (caCertificateResponse.Data == null || caCertificateResponse.Data.Length == 0)
+            if (caCertificateData == null || caCertificateData.Length == 0)
             {
                 Log.Error("Received CA certificate is null or empty.");
                 throw new InvalidOperationException("Failed to request or process CA certificate.");
@@ -307,7 +307,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
 
             try
             {
-                using var caCertificate = new X509Certificate2(caCertificateResponse.Data);
+                using var caCertificate = new X509Certificate2(caCertificateData);
 
                 LogCertificateDetails(caCertificate);
 

@@ -16,26 +16,26 @@ public interface IHostRegistrationService
     /// </summary>
     /// <param name="hostConfiguration">The configuration of the host to register.</param>
     /// <returns>A <see cref="Result{T}"/> indicating the success or failure of the operation.</returns>
-    Task<Result<bool>> RegisterHostAsync(HostConfiguration hostConfiguration);
+    Task<Result> RegisterHostAsync(HostConfiguration hostConfiguration);
 
     /// <summary>
     /// Checks if a host is registered based on its MAC address.
     /// </summary>
     /// <param name="macAddress">The MAC address of the host to check.</param>
     /// <returns>A <see cref="Result{T}"/> indicating the success or failure of the operation.</returns>
-    Task<Result<bool>> IsHostRegisteredAsync(string macAddress);
+    Task<Result> IsHostRegisteredAsync(string macAddress);
 
     /// <summary>
     /// Unregisters a host based on the provided request.
     /// </summary>
     /// <param name="request">The request containing the details of the host to unregister.</param>
     /// <returns>A <see cref="Result{T}"/> indicating the success or failure of the operation.</returns>
-    Task<Result<bool>> UnregisterHostAsync(HostUnregisterRequest request);
+    Task<Result> UnregisterHostAsync(HostUnregisterRequest request);
 
     /// <summary>
     /// Updates the information of an existing host based on the provided request.
     /// </summary>
     /// <param name="request">The request containing the updated details of the host.</param>
     /// <returns>A <see cref="Result{T}"/> indicating the success or failure of the operation.</returns>
-    Task<Result<bool>> UpdateHostInformationAsync(HostUpdateRequest request);
+    Task<Result> UpdateHostInformationAsync(HostUpdateRequest request);
 }

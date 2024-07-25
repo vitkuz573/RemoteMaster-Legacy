@@ -62,7 +62,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         }
     }
 
-    private async Task<ApiResponse<T>?> ProcessResponse<T>(HttpResponseMessage response)
+    private async Task<T?> ProcessResponse<T>(HttpResponseMessage response) where T : class
     {
         await CheckDeprecatedVersionAsync(response);
 
@@ -88,17 +88,45 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         try
         {
-            return await response.Content.ReadFromJsonAsync<ApiResponse<T>>();
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<T>>();
+            return apiResponse?.IsSuccess == true ? apiResponse.Data : null;
         }
         catch (Exception ex)
         {
             Log.Error("Failed to read response as JSON: {Message}", ex.Message);
-
             return null;
         }
     }
 
-    public async Task<ApiResponse<bool>?> RegisterHostAsync()
+    private async Task<bool> ProcessSimpleResponse(HttpResponseMessage response)
+    {
+        await CheckDeprecatedVersionAsync(response);
+
+#if DEBUG
+        var responseBody = await response.Content.ReadAsStringAsync();
+
+        Log.Information("Response Body: {ResponseBody}", responseBody);
+#endif
+
+        if (response.IsSuccessStatusCode)
+        {
+            return true;
+        }
+
+        Log.Error("Request failed with status code {StatusCode}", response.StatusCode);
+
+        var errorResponse = await response.Content.ReadFromJsonAsync<ApiResponse>();
+
+        if (errorResponse?.Error != null)
+        {
+            Log.Error("Error details: {Error}", errorResponse.Error.ToString());
+        }
+
+        return false;
+
+    }
+
+    public async Task<bool> RegisterHostAsync()
     {
         await EnsureClientInitializedAsync();
 
@@ -106,10 +134,10 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var response = await _client.PostAsJsonAsync("/api/Host/register", hostConfiguration);
 
-        return await ProcessResponse<bool>(response);
+        return await ProcessSimpleResponse(response);
     }
 
-    public async Task<ApiResponse<bool>?> UnregisterHostAsync()
+    public async Task<bool> UnregisterHostAsync()
     {
         await EnsureClientInitializedAsync();
 
@@ -128,10 +156,10 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var response = await _client.SendAsync(httpRequest);
 
-        return await ProcessResponse<bool>(response);
+        return await ProcessSimpleResponse(response);
     }
 
-    public async Task<ApiResponse<bool>?> UpdateHostInformationAsync()
+    public async Task<bool> UpdateHostInformationAsync()
     {
         await EnsureClientInitializedAsync();
 
@@ -148,10 +176,10 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var response = await _client.PutAsJsonAsync("/api/Host/update", request);
 
-        return await ProcessResponse<bool>(response);
+        return await ProcessSimpleResponse(response);
     }
 
-    public async Task<ApiResponse<bool>?> IsHostRegisteredAsync()
+    public async Task<bool> IsHostRegisteredAsync()
     {
         await EnsureClientInitializedAsync();
 
@@ -159,10 +187,10 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var response = await _client.GetAsync($"/api/Host/status?macAddress={hostConfiguration.Host.MacAddress}");
 
-        return await ProcessResponse<bool>(response);
+        return await ProcessSimpleResponse(response);
     }
 
-    public async Task<ApiResponse<byte[]>?> GetJwtPublicKeyAsync()
+    public async Task<byte[]?> GetJwtPublicKeyAsync()
     {
         await EnsureClientInitializedAsync();
 
@@ -171,7 +199,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         return await ProcessResponse<byte[]>(response);
     }
 
-    public async Task<ApiResponse<byte[]>?> GetCaCertificateAsync()
+    public async Task<byte[]?> GetCaCertificateAsync()
     {
         await EnsureClientInitializedAsync();
 
@@ -180,7 +208,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         return await ProcessResponse<byte[]>(response);
     }
 
-    public async Task<ApiResponse<byte[]>?> IssueCertificateAsync(byte[] csrBytes)
+    public async Task<byte[]?> IssueCertificateAsync(byte[] csrBytes)
     {
         await EnsureClientInitializedAsync();
 
@@ -189,7 +217,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         return await ProcessResponse<byte[]>(response);
     }
 
-    public async Task<ApiResponse<HostMoveRequest>?> GetHostMoveRequestAsync(string macAddress)
+    public async Task<HostMoveRequest?> GetHostMoveRequestAsync(string macAddress)
     {
         await EnsureClientInitializedAsync();
 
@@ -198,13 +226,13 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         return await ProcessResponse<HostMoveRequest>(response);
     }
 
-    public async Task<ApiResponse<bool>?> AcknowledgeMoveRequestAsync(string macAddress)
+    public async Task<bool> AcknowledgeMoveRequestAsync(string macAddress)
     {
         await EnsureClientInitializedAsync();
 
         var response = await _client.PostAsJsonAsync("/api/HostMove/acknowledge", macAddress);
 
-        return await ProcessResponse<bool>(response);
+        return await ProcessSimpleResponse(response);
     }
 
     private async Task AddNotificationAsync(NotificationMessage message)
@@ -213,6 +241,6 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
 
         var response = await _client.PostAsJsonAsync("/api/Notification", message);
 
-        await ProcessResponse<string>(response);
+        await ProcessSimpleResponse(response);
     }
 }

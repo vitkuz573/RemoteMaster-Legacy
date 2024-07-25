@@ -17,8 +17,8 @@ namespace RemoteMaster.Server.Controllers.V1;
 public class HostController(IHostRegistrationService registrationService) : ControllerBase
 {
     [HttpPost("register")]
-    [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
-    [ProducesResponseType(typeof(ApiResponse<bool>), 400)]
+    [ProducesResponseType(typeof(ApiResponse), 200)]
+    [ProducesResponseType(typeof(ApiResponse), 400)]
     public async Task<IActionResult> RegisterHost([FromBody] HostConfiguration hostConfiguration)
     {
         if (!ModelState.IsValid)
@@ -30,7 +30,7 @@ public class HostController(IHostRegistrationService registrationService) : Cont
                 Status = StatusCodes.Status400BadRequest
             };
 
-            var errorResponse = ApiResponse<bool>.Failure(problemDetails);
+            var errorResponse = ApiResponse.Failure(problemDetails);
 
             return BadRequest(errorResponse);
         }
@@ -39,7 +39,7 @@ public class HostController(IHostRegistrationService registrationService) : Cont
 
         if (result.IsSuccess)
         {
-            var response = ApiResponse<bool>.Success(result.Value, "Host registration successful.");
+            var response = ApiResponse.Success("Host registration successful.");
 
             return Ok(response);
         }
@@ -51,14 +51,14 @@ public class HostController(IHostRegistrationService registrationService) : Cont
             Status = StatusCodes.Status400BadRequest
         };
 
-        var failureResponse = ApiResponse<bool>.Failure(failureProblemDetails);
+        var failureResponse = ApiResponse.Failure(failureProblemDetails);
 
         return BadRequest(failureResponse);
     }
 
     [HttpGet("status")]
-    [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
-    [ProducesResponseType(typeof(ApiResponse<bool>), 400)]
+    [ProducesResponseType(typeof(ApiResponse), 200)]
+    [ProducesResponseType(typeof(ApiResponse), 400)]
     public async Task<IActionResult> CheckHostRegistration([FromQuery] string macAddress)
     {
         if (string.IsNullOrWhiteSpace(macAddress))
@@ -70,7 +70,7 @@ public class HostController(IHostRegistrationService registrationService) : Cont
                 Status = StatusCodes.Status400BadRequest
             };
 
-            var errorResponse = ApiResponse<bool>.Failure(problemDetails);
+            var errorResponse = ApiResponse.Failure(problemDetails);
 
             return BadRequest(errorResponse);
         }
@@ -79,7 +79,7 @@ public class HostController(IHostRegistrationService registrationService) : Cont
 
         if (result.IsSuccess)
         {
-            var response = ApiResponse<bool>.Success(result.Value, "Host registration status retrieved.");
+            var response = ApiResponse.Success("Host registration status retrieved.");
 
             return Ok(response);
         }
@@ -91,14 +91,14 @@ public class HostController(IHostRegistrationService registrationService) : Cont
             Status = StatusCodes.Status400BadRequest
         };
 
-        var failureResponse = ApiResponse<bool>.Failure(failureProblemDetails);
+        var failureResponse = ApiResponse.Failure(failureProblemDetails);
 
         return BadRequest(failureResponse);
     }
 
     [HttpDelete("unregister")]
-    [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
-    [ProducesResponseType(typeof(ApiResponse<bool>), 400)]
+    [ProducesResponseType(typeof(ApiResponse), 200)]
+    [ProducesResponseType(typeof(ApiResponse), 400)]
     public async Task<IActionResult> UnregisterHost([FromBody] HostUnregisterRequest request)
     {
         if (!ModelState.IsValid)
@@ -110,7 +110,7 @@ public class HostController(IHostRegistrationService registrationService) : Cont
                 Status = StatusCodes.Status400BadRequest
             };
 
-            var errorResponse = ApiResponse<bool>.Failure(problemDetails);
+            var errorResponse = ApiResponse.Failure(problemDetails);
 
             return BadRequest(errorResponse);
         }
@@ -119,7 +119,7 @@ public class HostController(IHostRegistrationService registrationService) : Cont
 
         if (result.IsSuccess)
         {
-            var response = ApiResponse<bool>.Success(result.Value, "Host unregister successful.");
+            var response = ApiResponse.Success("Host unregister successful.");
 
             return Ok(response);
         }
@@ -131,14 +131,14 @@ public class HostController(IHostRegistrationService registrationService) : Cont
             Status = StatusCodes.Status400BadRequest
         };
 
-        var failureResponse = ApiResponse<bool>.Failure(failureProblemDetails);
+        var failureResponse = ApiResponse.Failure(failureProblemDetails);
 
         return BadRequest(failureResponse);
     }
 
     [HttpPut("update")]
-    [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
-    [ProducesResponseType(typeof(ApiResponse<bool>), 400)]
+    [ProducesResponseType(typeof(ApiResponse), 200)]
+    [ProducesResponseType(typeof(ApiResponse), 400)]
     public async Task<IActionResult> UpdateHost([FromBody] HostUpdateRequest request)
     {
         if (!ModelState.IsValid)
@@ -150,7 +150,7 @@ public class HostController(IHostRegistrationService registrationService) : Cont
                 Status = StatusCodes.Status400BadRequest
             };
 
-            var errorResponse = ApiResponse<bool>.Failure(problemDetails);
+            var errorResponse = ApiResponse.Failure(problemDetails);
 
             return BadRequest(errorResponse);
         }
@@ -159,7 +159,7 @@ public class HostController(IHostRegistrationService registrationService) : Cont
 
         if (result.IsSuccess)
         {
-            var response = ApiResponse<bool>.Success(result.Value, "Host update successful.");
+            var response = ApiResponse.Success("Host update successful.");
 
             return Ok(response);
         }
@@ -171,7 +171,7 @@ public class HostController(IHostRegistrationService registrationService) : Cont
             Status = StatusCodes.Status400BadRequest
         };
 
-        var failureResponse = ApiResponse<bool>.Failure(failureProblemDetails);
+        var failureResponse = ApiResponse.Failure(failureProblemDetails);
 
         return BadRequest(failureResponse);
     }

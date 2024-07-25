@@ -4,7 +4,6 @@
 
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
-using Microsoft.AspNetCore.Http;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;
@@ -60,12 +59,10 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
 
         try
         {
-            var response = await apiService.GetHostMoveRequestAsync(hostConfiguration.Host.MacAddress);
+            var hostMoveRequest = await apiService.GetHostMoveRequestAsync(hostConfiguration.Host.MacAddress);
 
-            if (response is { StatusCode: StatusCodes.Status200OK, Data: not null })
+            if (hostMoveRequest != null)
             {
-                var hostMoveRequest = response.Data;
-
                 hostConfiguration.Subject.Organization = hostMoveRequest.NewOrganization;
                 hostConfiguration.Subject.OrganizationalUnit = hostMoveRequest.NewOrganizationalUnit;
 
@@ -73,9 +70,9 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
 
                 Log.Information("HostMoveRequest applied: Organization changed to {Organization} and Organizational Unit changed to {OrganizationalUnit}.", hostMoveRequest.NewOrganization, string.Join("/", hostMoveRequest.NewOrganizationalUnit));
 
-                var acknowledgeResponse = await apiService.AcknowledgeMoveRequestAsync(hostConfiguration.Host.MacAddress);
+                var acknowledgeResult = await apiService.AcknowledgeMoveRequestAsync(hostConfiguration.Host.MacAddress);
 
-                if (acknowledgeResponse is { StatusCode: StatusCodes.Status200OK })
+                if (acknowledgeResult)
                 {
                     Log.Information("Host move request acknowledged");
                 }
