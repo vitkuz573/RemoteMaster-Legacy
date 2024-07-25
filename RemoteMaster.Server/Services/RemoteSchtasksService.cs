@@ -4,13 +4,14 @@
 
 using System.Diagnostics;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Shared.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
 public class RemoteSchtasksService(INetworkDriveService networkDriveService) : IRemoteSchtasksService
 {
-    public bool CopyAndExecuteRemoteFile(string sourceFilePath, string remoteMachineName, string destinationFolderPath, string? username = null, string? password = null, string? arguments = null)
+    public Result CopyAndExecuteRemoteFile(string sourceFilePath, string remoteMachineName, string destinationFolderPath, string? username = null, string? password = null, string? arguments = null)
     {
         ArgumentNullException.ThrowIfNull(sourceFilePath);
         ArgumentNullException.ThrowIfNull(remoteMachineName);
@@ -18,18 +19,18 @@ public class RemoteSchtasksService(INetworkDriveService networkDriveService) : I
 
         try
         {
-            if (!IsAdministrativeShareAvailable(remoteMachineName, username, password))
+            if (!IsAdministrativeShareAvailable(remoteMachineName, username, password).IsSuccess)
             {
-                throw new Exception($"Administrative share C$ on {remoteMachineName} is not available.");
+                return Result.Failure($"Administrative share C$ on {remoteMachineName} is not available.");
             }
 
             var remoteSharePath = $@"\\{remoteMachineName}\C$";
 
             var mapResult = networkDriveService.MapNetworkDrive(remoteSharePath, username, password);
-            
+                
             if (!mapResult.IsSuccess)
             {
-                throw new Exception($"Failed to map network drive. {mapResult.Errors.First().Message}");
+                return Result.Failure($"Failed to map network drive. {mapResult.Errors.First().Message}");
             }
 
             var fullRemoteFilePath = Path.Combine(remoteSharePath, destinationFolderPath, Path.GetFileName(sourceFilePath));
@@ -38,42 +39,37 @@ public class RemoteSchtasksService(INetworkDriveService networkDriveService) : I
             ExecuteRemoteFile(remoteMachineName, fullRemoteFilePath, username, password, arguments);
 
             var cancelResult = networkDriveService.CancelNetworkDrive(remoteSharePath);
-            
-            if (!cancelResult.IsSuccess)
-            {
-                throw new Exception($"Failed to cancel network drive. {cancelResult.Errors.First().Message}");
-            }
-
-            return true;
+                
+            return !cancelResult.IsSuccess ? Result.Failure($"Failed to cancel network drive. {cancelResult.Errors.First().Message}") : Result.Success();
         }
         catch (Exception ex)
         {
-            Log.Error($"Error: {ex.Message}");
-            
-            return false;
+            Log.Error(ex, "Error: {Message}", ex.Message);
+
+            return Result.Failure($"Error: {ex.Message}");
         }
     }
 
-    private bool IsAdministrativeShareAvailable(string remoteMachineName, string? username, string? password)
+    private Result IsAdministrativeShareAvailable(string remoteMachineName, string? username, string? password)
     {
         try
         {
             var sharePath = $@"\\{remoteMachineName}\C$";
 
             var mapResult = networkDriveService.MapNetworkDrive(sharePath, username, password);
-            
+
             if (!mapResult.IsSuccess)
             {
-                return false;
+                return Result.Failure("Failed to map network drive.");
             }
 
             var cancelResult = networkDriveService.CancelNetworkDrive(sharePath);
-            
-            return cancelResult.IsSuccess;
+
+            return !cancelResult.IsSuccess ? Result.Failure("Failed to cancel network drive.") : Result.Success();
         }
-        catch
+        catch (Exception ex)
         {
-            return false;
+            return Result.Failure($"Error checking administrative share: {ex.Message}");
         }
     }
 

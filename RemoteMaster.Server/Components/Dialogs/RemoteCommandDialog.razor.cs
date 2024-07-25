@@ -25,7 +25,18 @@ public partial class RemoteCommandDialog
 
     private void Confirm()
     {
-        RemoteSchtasksService.CopyAndExecuteRemoteFile(_localFilePath, _host, _remoteFilePath, _username, _password, $"--launch-mode={_launchMode}");
+        var result = RemoteSchtasksService.CopyAndExecuteRemoteFile(_localFilePath, _host, _remoteFilePath, _username, _password, $"--launch-mode={_launchMode}");
+
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Remote command executed successfully.", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        else
+        {
+            var errorMessage = result.Errors.FirstOrDefault()?.Message ?? "Unknown error occurred.";
+            Snackbar.Add($"Failed to execute remote command: {errorMessage}", Severity.Error);
+        }
     }
 
     private void TogglePasswordVisibility()
