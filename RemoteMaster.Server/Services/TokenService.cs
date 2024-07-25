@@ -74,7 +74,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
     private async Task<Result<string>> GenerateAccessTokenAsync(List<Claim> claims)
     {
-        if (claims == null || claims.Count == 0)
+        if (claims.IsNullOrEmpty())
         {
             return Result<string>.Failure("Claims cannot be null or empty");
         }
