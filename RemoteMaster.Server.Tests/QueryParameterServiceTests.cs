@@ -28,7 +28,7 @@ public class QueryParameterServiceTests
         var result = _queryParameterService.GetParameter("param1", "defaultValue");
 
         // Assert
-        Assert.Equal("value1", result);
+        Assert.Equal("value1", result.Value);
     }
 
     [Fact]
@@ -41,7 +41,7 @@ public class QueryParameterServiceTests
         var result = _queryParameterService.GetParameter("param1", "defaultValue");
 
         // Assert
-        Assert.Equal("defaultValue", result);
+        Assert.Equal("defaultValue", result.Value);
     }
 
     [Fact]

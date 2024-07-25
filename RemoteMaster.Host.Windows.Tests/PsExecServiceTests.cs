@@ -15,25 +15,25 @@ namespace RemoteMaster.Host.Windows.Tests;
 public class PsExecServiceTests
 {
     private readonly Mock<IHostConfigurationService> _mockHostConfigurationService;
-    private readonly Mock<IHubContext<ServiceHub, IServiceClient>> _mockHubContext;
-    private readonly Mock<IServiceClient> _mockServiceClient;
     private readonly Mock<ICommandExecutor> _mockCommandExecutor;
+    private readonly Mock<IFirewallService> _mockFirewallService;
 
     public PsExecServiceTests()
     {
         _mockHostConfigurationService = new Mock<IHostConfigurationService>();
-        _mockHubContext = new Mock<IHubContext<ServiceHub, IServiceClient>>();
-        _mockServiceClient = new Mock<IServiceClient>();
+        Mock<IHubContext<ServiceHub, IServiceClient>> mockHubContext = new();
+        Mock<IServiceClient> mockServiceClient = new();
         _mockCommandExecutor = new Mock<ICommandExecutor>();
+        _mockFirewallService = new Mock<IFirewallService>();
 
-        _mockHubContext.Setup(h => h.Clients.All).Returns(_mockServiceClient.Object);
+        mockHubContext.Setup(h => h.Clients.All).Returns(mockServiceClient.Object);
     }
 
     [Fact]
     public async Task EnableAsync_ShouldExecuteCommands()
     {
         // Arrange
-        var service = new PsExecService(_mockHostConfigurationService.Object, _mockCommandExecutor.Object);
+        var service = new PsExecService(_mockHostConfigurationService.Object, _mockCommandExecutor.Object, _mockFirewallService.Object);
         _mockHostConfigurationService.Setup(s => s.LoadConfigurationAsync(It.IsAny<bool>())).ReturnsAsync(new HostConfiguration { Server = "192.168.1.1" });
 
         // Act
@@ -45,13 +45,13 @@ public class PsExecServiceTests
     }
 
     [Fact]
-    public async Task DisableAsync_ShouldExecuteCommands()
+    public void DisableAsync_ShouldExecuteCommands()
     {
         // Arrange
-        var service = new PsExecService(_mockHostConfigurationService.Object, _mockCommandExecutor.Object);
+        var service = new PsExecService(_mockHostConfigurationService.Object, _mockCommandExecutor.Object, _mockFirewallService.Object);
 
         // Act
-        await service.Disable();
+        service.Disable();
 
         // Assert
         _mockCommandExecutor.Verify(e => e.ExecuteCommandAsync(It.IsAny<string>()), Times.AtLeastOnce);
