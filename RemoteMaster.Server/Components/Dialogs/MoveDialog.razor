@@ -19,7 +19,7 @@
             <MudText Typo="Typo.body1">Current Organizational Unit: @_currentOrganizationalUnitName</MudText>
         }
 
-        <MudSelect Label="Select target organization" Value="_selectedOrganizationId" T="Guid" ValueChanged="OrganizationChanged">
+        <MudSelect Label="Select target organization" Value="_selectedOrganizationId" T="Guid" ValueChanged="OrganizationChanged" Dense="true">
             @foreach (var organization in _organizations)
             {
                 <MudSelectItem Value="@organization.NodeId">@organization.Name</MudSelectItem>
@@ -28,7 +28,7 @@
 
         @if (_organizationalUnits.Any())
         {
-            <MudSelect Label="Select target organizational unit" @bind-Value="_selectedOrganizationalUnitId" T="Guid">
+            <MudSelect Label="Select target organizational unit" @bind-Value="_selectedOrganizationalUnitId" T="Guid" Dense="true">
                 @foreach (var organizationalUnit in _organizationalUnits)
                 {
                     <MudSelectItem Value="@organizationalUnit.NodeId">
