@@ -41,6 +41,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
                 if (!await MapNetworkDriveAsync(folderPath, username, password))
                 {
                     await Notify("Update aborted.", MessageType.Error);
+
                     return;
                 }
             }
@@ -60,18 +61,21 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             if (!isDownloaded)
             {
                 await Notify("Download or copy failed. Update aborted.", MessageType.Error);
+
                 return;
             }
 
             if (!await CheckForUpdateVersion(allowDowngrade, force))
             {
                 await Notify("Update aborted due to version check.", MessageType.Error);
+
                 return;
             }
 
             if (!await NeedUpdate() && !force)
             {
                 await NotifyNoUpdateNeeded();
+
                 return;
             }
 
@@ -224,6 +228,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         catch (Exception ex)
         {
             await Notify($"Failed to copy directory {sourceDir} to {destDir}: {ex.Message}", MessageType.Error);
+
             return false;
         }
     }
@@ -274,11 +279,10 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
                 {
                     break;
                 }
-                else
-                {
-                    await Notify($"Checksum verification failed for file {sourceFile}.", MessageType.Error);
-                    return false;
-                }
+
+                await Notify($"Checksum verification failed for file {sourceFile}.", MessageType.Error);
+
+                return false;
             }
             catch (IOException ex) when (ex.HResult == (int)WIN32_ERROR.ERROR_SHARING_VIOLATION)
             {
