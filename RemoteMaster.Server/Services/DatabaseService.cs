@@ -60,10 +60,12 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         {
             ArgumentNullException.ThrowIfNull(nodes);
 
-            await applicationDbContext.Set<T>().AddRangeAsync(nodes);
+            var nodesList = nodes.ToList();
+
+            await applicationDbContext.Set<T>().AddRangeAsync(nodesList);
             await applicationDbContext.SaveChangesAsync();
 
-            return Result<IList<T>>.Success(nodes.ToList());
+            return Result<IList<T>>.Success(nodesList);
         }
         catch (Exception ex)
         {
@@ -170,14 +172,17 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         {
             ArgumentNullException.ThrowIfNull(node);
 
-            var trackedNode = await applicationDbContext.Set<T>().FindAsync(node.NodeId) ?? throw new InvalidOperationException($"{typeof(T).Name} not found.");
-
             var nodes = await applicationDbContext.Set<T>()
                 .AsNoTracking()
                 .ToListAsync();
 
             var path = new List<string>();
             var currentNode = nodes.FirstOrDefault(n => n.NodeId == node.NodeId);
+
+            if (currentNode == null)
+            {
+                throw new InvalidOperationException($"{typeof(T).Name} not found.");
+            }
 
             while (currentNode != null)
             {
