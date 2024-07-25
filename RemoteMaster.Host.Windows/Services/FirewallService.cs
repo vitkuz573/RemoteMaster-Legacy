@@ -175,7 +175,7 @@ public class FirewallService : IFirewallService
         try
         {
             var profileTypesBitmask = fwPolicy2.CurrentProfileTypes;
-            fwPolicy2.EnableRuleGroup(profileTypesBitmask, bstrGroupName, VARIANT_BOOL.VARIANT_TRUE);
+            fwPolicy2.EnableRuleGroup(profileTypesBitmask, bstrGroupName, true);
         }
         finally
         {
@@ -191,7 +191,7 @@ public class FirewallService : IFirewallService
         try
         {
             var profileTypesBitmask = fwPolicy2.CurrentProfileTypes;
-            fwPolicy2.EnableRuleGroup(profileTypesBitmask, bstrGroupName, VARIANT_BOOL.VARIANT_FALSE);
+            fwPolicy2.EnableRuleGroup(profileTypesBitmask, bstrGroupName, false);
         }
         finally
         {
