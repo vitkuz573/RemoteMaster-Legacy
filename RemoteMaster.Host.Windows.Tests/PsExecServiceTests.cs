@@ -45,7 +45,7 @@ public class PsExecServiceTests
     }
 
     [Fact]
-    public void DisableAsync_ShouldExecuteCommands()
+    public void Disable_ShouldExecuteCommands()
     {
         // Arrange
         var service = new PsExecService(_mockHostConfigurationService.Object, _mockCommandExecutor.Object, _mockFirewallService.Object);
@@ -54,6 +54,7 @@ public class PsExecServiceTests
         service.Disable();
 
         // Assert
-        _mockCommandExecutor.Verify(e => e.ExecuteCommandAsync(It.IsAny<string>()), Times.AtLeastOnce);
+        _mockFirewallService.Verify(e => e.RemoveRule(It.IsAny<string>()), Times.Once);
+        _mockFirewallService.Verify(e => e.DisableRuleGroup(It.IsAny<string>()), Times.Once);
     }
 }
