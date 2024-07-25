@@ -21,6 +21,7 @@ using Serilog;
 
 namespace RemoteMaster.Server.Components.Pages;
 
+[Authorize]
 public partial class Home
 {
     [CascadingParameter]
