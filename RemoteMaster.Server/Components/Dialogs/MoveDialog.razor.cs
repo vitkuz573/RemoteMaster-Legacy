@@ -26,7 +26,7 @@ public partial class MoveDialog
     private List<Organization> _organizations = [];
     private List<OrganizationalUnit> _organizationalUnits = [];
     private Guid _selectedOrganizationId = Guid.Empty;
-    private Guid _selectedOrganizationalUnitId = Guid.Empty;
+    private Guid? _selectedOrganizationalUnitId;
 
     protected async override Task OnInitializedAsync()
     {
@@ -100,7 +100,7 @@ public partial class MoveDialog
     private async Task OrganizationChanged(Guid organizationId)
     {
         _selectedOrganizationId = organizationId;
-        _selectedOrganizationalUnitId = Guid.Empty;
+        _selectedOrganizationalUnitId = null;
 
         await LoadOrganizationalUnits(organizationId);
 
@@ -122,6 +122,7 @@ public partial class MoveDialog
             var targetOrganization = targetOrganizationResult.Value.First().Name;
 
             var newParentResult = await DatabaseService.GetNodesAsync<OrganizationalUnit>(ou => ou.NodeId == _selectedOrganizationalUnitId);
+            
             if (!newParentResult.IsSuccess || !newParentResult.Value.Any())
             {
                 throw new InvalidOperationException("New parent Organizational Unit not found.");
@@ -129,6 +130,7 @@ public partial class MoveDialog
 
             var newParent = newParentResult.Value.First();
             var targetOrganizationalUnitsPathResult = await DatabaseService.GetFullPathAsync(newParent);
+            
             if (!targetOrganizationalUnitsPathResult.IsSuccess)
             {
                 throw new InvalidOperationException("Failed to get full path of the new parent.");
@@ -164,13 +166,16 @@ public partial class MoveDialog
                 {
                     var nodeResult = await DatabaseService.GetNodesAsync<Computer>(c => c.NodeId == nodeId);
 
-                    if (nodeResult.IsSuccess && nodeResult.Value.Any())
+                    if (!nodeResult.IsSuccess || !nodeResult.Value.Any())
                     {
-                        var moveNodeResult = await DatabaseService.MoveNodeAsync(nodeResult.Value.First(), newParent);
-                        if (!moveNodeResult.IsSuccess)
-                        {
-                            throw new InvalidOperationException("Failed to move node.");
-                        }
+                        continue;
+                    }
+
+                    var moveNodeResult = await DatabaseService.MoveNodeAsync(nodeResult.Value.First(), newParent);
+                    
+                    if (!moveNodeResult.IsSuccess)
+                    {
+                        throw new InvalidOperationException("Failed to move node.");
                     }
                 }
             }
