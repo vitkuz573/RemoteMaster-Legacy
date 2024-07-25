@@ -9,7 +9,7 @@ namespace RemoteMaster.Host.Windows.Abstractions;
 
 public interface IFirewallService
 {
-    void AddRule(string name, NET_FW_ACTION action, NET_FW_IP_PROTOCOL protocol, NET_FW_PROFILE_TYPE2 profiles, NET_FW_RULE_DIRECTION direction, InterfaceType interfaceTypes, string? description = null, string? applicationPath = null, string? localAddress = null, string? localPort = null, string? remoteAddress = null, string? remotePort = null, string? service = null, bool edgeTraversal = false);
+    void AddRule(string name, NET_FW_ACTION action, NET_FW_IP_PROTOCOL protocol, NET_FW_PROFILE_TYPE2 profiles, NET_FW_RULE_DIRECTION direction, InterfaceType interfaceTypes, string? description = null, string? applicationPath = null, string? localAddress = null, string? localPort = null, string? remoteAddress = null, string? remotePort = null, string? service = null, bool edgeTraversal = false, string? icmpTypesAndCodes = null, object? interfaces = null, string? grouping = null);
 
     void RemoveRule(string name);
 

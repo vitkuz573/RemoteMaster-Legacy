@@ -12,7 +12,7 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class FirewallService : IFirewallService
 {
-    public void AddRule(string name, NET_FW_ACTION action, NET_FW_IP_PROTOCOL protocol, NET_FW_PROFILE_TYPE2 profiles, NET_FW_RULE_DIRECTION direction, InterfaceType interfaceTypes, string? description = null, string? applicationPath = null, string? localAddress = null, string? localPort = null, string? remoteAddress = null, string? remotePort = null, string? service = null, bool edgeTraversal = false)
+    public void AddRule(string name, NET_FW_ACTION action, NET_FW_IP_PROTOCOL protocol, NET_FW_PROFILE_TYPE2 profiles, NET_FW_RULE_DIRECTION direction, InterfaceType interfaceTypes, string? description = null, string? applicationPath = null, string? localAddress = null, string? localPort = null, string? remoteAddress = null, string? remotePort = null, string? service = null, bool edgeTraversal = false, string? icmpTypesAndCodes = null, object? interfaces = null, string? grouping = null)
     {
         var fwPolicy2 = CreateInstance<INetFwPolicy2>("E2B3C97F-6AE1-41AC-817A-F6F92166D7DD") ?? throw new InvalidOperationException("Failed to get firewall policy.");
         var existingRule = GetRule(fwPolicy2, name);
@@ -26,10 +26,12 @@ public class FirewallService : IFirewallService
         var bstrRemotePort = remotePort != null && !string.IsNullOrEmpty(remotePort) ? (BSTR)Marshal.StringToBSTR(remotePort) : default;
         var bstrService = service != null ? (BSTR)Marshal.StringToBSTR(service) : default;
         var bstrInterfaceTypes = (BSTR)Marshal.StringToBSTR(interfaceTypes.ToString());
+        var bstrIcmpTypesAndCodes = icmpTypesAndCodes != null ? (BSTR)Marshal.StringToBSTR(icmpTypesAndCodes) : default;
+        var bstrGrouping = grouping != null ? (BSTR)Marshal.StringToBSTR(grouping) : default;
 
         try
         {
-            if (existingRule != null && RulePropertiesChanged(existingRule, action, protocol, profiles, direction, bstrAppPath, bstrLocalAddress, bstrLocalPort, bstrRemoteAddress, bstrRemotePort, bstrService, bstrDescription, bstrInterfaceTypes, edgeTraversal))
+            if (existingRule != null && RulePropertiesChanged(existingRule, action, protocol, profiles, direction, bstrAppPath, bstrLocalAddress, bstrLocalPort, bstrRemoteAddress, bstrRemotePort, bstrService, bstrDescription, bstrInterfaceTypes, edgeTraversal, bstrIcmpTypesAndCodes, interfaces, bstrGrouping))
             {
                 fwPolicy2.Rules.Remove(bstrName);
                 existingRule = null;
@@ -43,7 +45,7 @@ public class FirewallService : IFirewallService
             var newRule = CreateInstance<INetFwRule>("2C5BC43E-3369-4C33-AB0C-BE9469677AF4") ?? throw new InvalidOperationException("Failed to create new firewall rule.");
 
             newRule.Name = bstrName;
-
+            
             if (description != null)
             {
                 newRule.Description = bstrDescription;
@@ -59,6 +61,21 @@ public class FirewallService : IFirewallService
             newRule.Direction = direction;
             newRule.Protocol = (int)protocol;
             newRule.InterfaceTypes = bstrInterfaceTypes;
+            
+            if (icmpTypesAndCodes != null)
+            {
+                newRule.IcmpTypesAndCodes = bstrIcmpTypesAndCodes;
+            }
+
+            if (interfaces != null)
+            {
+                newRule.Interfaces = interfaces;
+            }
+
+            if (grouping != null)
+            {
+                newRule.Grouping = bstrGrouping;
+            }
 
             unsafe
             {
@@ -96,7 +113,7 @@ public class FirewallService : IFirewallService
         finally
         {
             Marshal.FreeBSTR(bstrName);
-
+            
             if (bstrDescription != default)
             {
                 Marshal.FreeBSTR(bstrDescription);
@@ -133,10 +150,20 @@ public class FirewallService : IFirewallService
             }
 
             Marshal.FreeBSTR(bstrInterfaceTypes);
+            
+            if (bstrIcmpTypesAndCodes != default)
+            {
+                Marshal.FreeBSTR(bstrIcmpTypesAndCodes);
+            }
+
+            if (bstrGrouping != default)
+            {
+                Marshal.FreeBSTR(bstrGrouping);
+            }
         }
     }
 
-    private static bool RulePropertiesChanged(INetFwRule existingRule, NET_FW_ACTION action, NET_FW_IP_PROTOCOL protocol, NET_FW_PROFILE_TYPE2 profiles, NET_FW_RULE_DIRECTION direction, BSTR? bstrAppPath, BSTR? bstrLocalAddress, BSTR? bstrLocalPort, BSTR? bstrRemoteAddress, BSTR? bstrRemotePort, BSTR? bstrService, BSTR? bstrDescription, BSTR bstrInterfaceTypes, bool edgeTraversal)
+    private static bool RulePropertiesChanged(INetFwRule existingRule, NET_FW_ACTION action, NET_FW_IP_PROTOCOL protocol, NET_FW_PROFILE_TYPE2 profiles, NET_FW_RULE_DIRECTION direction, BSTR? bstrAppPath, BSTR? bstrLocalAddress, BSTR? bstrLocalPort, BSTR? bstrRemoteAddress, BSTR? bstrRemotePort, BSTR? bstrService, BSTR? bstrDescription, BSTR bstrInterfaceTypes, bool edgeTraversal, BSTR? bstrIcmpTypesAndCodes, object? interfaces, BSTR? bstrGrouping)
     {
         if (existingRule.Action != action || existingRule.Protocol != (int)protocol || existingRule.Profiles != (int)profiles || existingRule.Direction != direction || existingRule.InterfaceTypes != bstrInterfaceTypes || existingRule.EdgeTraversal != edgeTraversal)
         {
@@ -173,7 +200,22 @@ public class FirewallService : IFirewallService
             return true;
         }
 
-        return bstrDescription.HasValue && existingRule.Description != bstrDescription.Value;
+        if (bstrDescription.HasValue && existingRule.Description != bstrDescription.Value)
+        {
+            return true;
+        }
+
+        if (bstrIcmpTypesAndCodes.HasValue && existingRule.IcmpTypesAndCodes != bstrIcmpTypesAndCodes.Value)
+        {
+            return true;
+        }
+
+        if (interfaces != null && !existingRule.Interfaces.Equals(interfaces))
+        {
+            return true;
+        }
+
+        return bstrGrouping.HasValue && existingRule.Grouping != bstrGrouping.Value;
     }
 
     public void RemoveRule(string name)
