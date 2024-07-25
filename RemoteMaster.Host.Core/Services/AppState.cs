@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
 using RemoteMaster.Shared.Models;
+using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
 
@@ -47,11 +48,14 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext) : IApp
 
             if (!result)
             {
+                Log.Error("Failed to add viewer with connection ID {ConnectionId}.", viewer.ConnectionId);
                 return result;
             }
 
             ViewerAdded?.Invoke(this, viewer);
             NotifyViewersChanged();
+
+            Log.Information("Viewer with connection ID {ConnectionId} added successfully.", viewer.ConnectionId);
 
             return result;
         }
@@ -67,6 +71,7 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext) : IApp
 
             if (!result)
             {
+                Log.Error("Failed to remove viewer with connection ID {ConnectionId}.", connectionId);
                 return result;
             }
 
@@ -80,6 +85,8 @@ public class AppState(IHubContext<ControlHub, IControlClient> hubContext) : IApp
             {
                 viewer?.Dispose();
             }
+
+            Log.Information("Viewer with connection ID {ConnectionId} removed successfully.", connectionId);
 
             return result;
         }
