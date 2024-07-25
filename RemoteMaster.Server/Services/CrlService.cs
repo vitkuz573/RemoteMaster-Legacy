@@ -40,6 +40,7 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
             };
 
             context.RevokedCertificates.Add(revokedCertificate);
+
             var result = await context.SaveChangesAsync();
 
             if (result > 0)
@@ -48,12 +49,10 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
                 
                 return Result.Success();
             }
-            else
-            {
-                Log.Error($"Failed to revoke certificate with serial number {serialNumber}.");
+
+            Log.Error($"Failed to revoke certificate with serial number {serialNumber}.");
                 
-                return Result.Failure($"Failed to revoke certificate with serial number {serialNumber}.");
-            }
+            return Result.Failure($"Failed to revoke certificate with serial number {serialNumber}.");
         }
         catch (Exception ex)
         {

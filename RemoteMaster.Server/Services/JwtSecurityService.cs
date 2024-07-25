@@ -89,11 +89,9 @@ public class JwtSecurityService : IJwtSecurityService
                 return Result.Failure("Failed to generate JWT keys.", exception: ex);
             }
         }
-        else
-        {
-            Log.Information("JWT keys already exist.");
 
-            return Result.Success();
-        }
+        Log.Information("JWT keys already exist.");
+
+        return Result.Success();
     }
 }

@@ -94,6 +94,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         catch (CryptographicException ex)
         {
             Log.Error(ex, "Failed to decrypt or import the private key.");
+
             return Result<string>.Failure("Failed to decrypt or import the private key.", exception: ex);
         }
 
@@ -124,6 +125,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         };
 
         user.RefreshTokens.Add(refreshToken);
+
         await context.SaveChangesAsync();
 
         return Result<RefreshToken>.Success(refreshToken);
@@ -136,6 +138,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         if (refreshTokenEntity is not { Revoked: null } || refreshTokenEntity.IsExpired)
         {
             Log.Warning("Refresh token is invalid, revoked, or expired.");
+
             return Result<RefreshToken>.Failure("Invalid refresh token.");
         }
 
@@ -201,12 +204,14 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         if (refreshTokens.Count == 0)
         {
             Log.Information("No active refresh tokens found for revocation.");
+
             return Result.Failure("No active refresh tokens found for revocation.");
         }
 
         foreach (var token in refreshTokens)
         {
             var result = await RevokeToken(token, revocationReason);
+
             if (!result.IsSuccess)
             {
                 return result;
@@ -214,6 +219,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         }
 
         await context.SaveChangesAsync();
+
         Log.Information($"All refresh tokens for user {userId} have been revoked. Reason: {revocationReason}");
 
         return Result.Success();
@@ -231,6 +237,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         if (expiredTokens.Count == 0)
         {
             Log.Information("No expired or revoked tokens found for cleanup.");
+
             return Result.Failure("No expired or revoked tokens found for cleanup.");
         }
 

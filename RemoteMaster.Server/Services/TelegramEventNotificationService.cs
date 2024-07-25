@@ -24,7 +24,7 @@ public class TelegramEventNotificationService : IEventNotificationService
 
         var telegramOptions = options.Value;
 
-        if (string.IsNullOrWhiteSpace(telegramOptions.BotToken) || telegramOptions.ChatIds == null || telegramOptions.ChatIds.Count == 0)
+        if (string.IsNullOrWhiteSpace(telegramOptions.BotToken) || telegramOptions.ChatIds.Count == 0)
         {
             _isConfigured = false;
 
