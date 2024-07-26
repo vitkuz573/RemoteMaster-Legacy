@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using RemoteMaster.Server.Data;
 
 namespace RemoteMaster.Server.Components.Account;
+
 internal sealed class IdentityUserAccessor(UserManager<ApplicationUser> userManager, IdentityRedirectManager redirectManager)
 {
     public async Task<ApplicationUser> GetRequiredUserAsync(HttpContext context)
