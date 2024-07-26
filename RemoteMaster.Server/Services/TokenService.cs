@@ -93,7 +93,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         }
         catch (CryptographicException ex)
         {
-            Log.Error(ex, "Failed to decrypt or import the private key.");
+            Log.Error("Failed to decrypt or import the private key: {Message}.", ex.Message);
 
             return Result<string>.Failure("Failed to decrypt or import the private key.", exception: ex);
         }
@@ -146,7 +146,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         if (!newRefreshTokenResult.IsSuccess)
         {
-            return Result<RefreshToken>.Failure(newRefreshTokenResult.Errors.ToArray());
+            return Result<RefreshToken>.Failure([.. newRefreshTokenResult.Errors]);
         }
 
         refreshTokenEntity.Revoked = DateTime.UtcNow;
@@ -285,7 +285,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Token validation failed");
+            Log.Error("Token validation failed: {Message}.", ex.Message);
 
             return Result.Failure("Token validation failed", exception: ex);
         }
