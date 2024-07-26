@@ -3,11 +3,9 @@
 @using RemoteMaster.Shared.Abstractions
 @using RemoteMaster.Server.Abstractions
 
-@inject NavigationManager NavigationManager
 @inject IHostInformationService HostInformationService
 @inject IJSRuntime JsRuntime
 @inject UserManager<ApplicationUser> UserManager
-@inject ApplicationDbContext DbContext
 @inject ICountryProvider CountryProvider
 @inject HttpClient HttpClient
 
@@ -22,13 +20,13 @@
                     </MudExpansionPanel>
 
                     <MudExpansionPanel Text="Subject Parameters">
-                        <MudSelect Label="Organization" Value="_selectedOrganization" T="string" ValueChanged="OrganizationChanged" Dense>
+                        <MudSelect Label="Organization" Value="_selectedOrganization" T="string?" ValueChanged="OrganizationChanged" Dense>
                             @foreach (var organization in _organizations)
                             {
                                 <MudSelectItem Value="@organization.Name">@organization.Name</MudSelectItem>
                             }
                         </MudSelect>
-                        <MudSelect Label="Organizational Unit" Value="_selectedOrganizationalUnit" T="string" ValueChanged="OrganizationalUnitChanged" Dense Disabled="@string.IsNullOrEmpty(_selectedOrganization)">
+                        <MudSelect Label="Organizational Unit" Value="_selectedOrganizationalUnit" T="string?" ValueChanged="OrganizationalUnitChanged" Dense Disabled="@string.IsNullOrEmpty(_selectedOrganization)">
                             @foreach (var unit in _organizationalUnits)
                             {
                                 <MudSelectItem Value="@unit.Name">@unit.Name</MudSelectItem>

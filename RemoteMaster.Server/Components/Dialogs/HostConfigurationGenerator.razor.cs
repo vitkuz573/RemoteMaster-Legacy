@@ -137,7 +137,7 @@ public partial class HostConfigurationGenerator
         }
     }
 
-    private async Task OrganizationChanged(string value)
+    private async Task OrganizationChanged(string? value)
     {
         _selectedOrganization = value;
         _selectedOrganizationalUnit = null;
@@ -156,7 +156,7 @@ public partial class HostConfigurationGenerator
         }
     }
 
-    private void OrganizationalUnitChanged(string value)
+    private void OrganizationalUnitChanged(string? value)
     {
         _selectedOrganizationalUnit = value;
 
