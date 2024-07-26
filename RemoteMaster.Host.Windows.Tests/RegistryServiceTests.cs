@@ -26,8 +26,8 @@ public class RegistryServiceTests
     public void OpenSubKey_ValidKey_ReturnsRegistryKeyWrapper()
     {
         // Arrange
-        var hive = RegistryHive.CurrentUser;
-        var keyPath = @"Software\MyApp";
+        const RegistryHive hive = RegistryHive.CurrentUser;
+        const string keyPath = @"Software\MyApp";
         _mockRegistryKeyFactory.Setup(f => f.Create(hive, keyPath, false)).Returns(_mockRegistryKey.Object);
 
         // Act
@@ -42,11 +42,11 @@ public class RegistryServiceTests
     public void SetValue_ValidParameters_SetsRegistryValue()
     {
         // Arrange
-        var hive = RegistryHive.CurrentUser;
-        var keyPath = @"Software\MyApp";
-        var valueName = "TestValue";
-        var value = "Test";
-        var valueKind = RegistryValueKind.String;
+        const RegistryHive hive = RegistryHive.CurrentUser;
+        const string keyPath = @"Software\MyApp";
+        const string valueName = "TestValue";
+        const string value = "Test";
+        const RegistryValueKind valueKind = RegistryValueKind.String;
 
         _mockRegistryKeyFactory.Setup(f => f.Create(hive, keyPath, true)).Returns(_mockRegistryKey.Object);
 
@@ -61,16 +61,16 @@ public class RegistryServiceTests
     public void GetValue_KeyExists_ReturnsValue()
     {
         // Arrange
-        var hive = RegistryHive.CurrentUser;
-        var keyPath = @"Software\MyApp";
-        var valueName = "TestValue";
-        var expectedValue = "Test";
+        const RegistryHive hive = RegistryHive.CurrentUser;
+        const string keyPath = @"Software\MyApp";
+        const string valueName = "TestValue";
+        const string expectedValue = "Test";
 
         _mockRegistryKey.Setup(k => k.GetValue(valueName, It.IsAny<object>())).Returns(expectedValue);
         _mockRegistryKeyFactory.Setup(f => f.Create(hive, keyPath, false)).Returns(_mockRegistryKey.Object);
 
         // Act
-        var result = _registryService.GetValue(hive, keyPath, valueName, null);
+        var result = _registryService.GetValue(hive, keyPath, valueName, null!);
 
         // Assert
         Assert.Equal(expectedValue, result);
@@ -80,10 +80,10 @@ public class RegistryServiceTests
     public void GetValue_KeyDoesNotExist_ReturnsDefaultValue()
     {
         // Arrange
-        var hive = RegistryHive.CurrentUser;
-        var keyPath = @"Software\NonExistent";
-        var valueName = "TestValue";
-        var defaultValue = "Default";
+        const RegistryHive hive = RegistryHive.CurrentUser;
+        const string keyPath = @"Software\NonExistent";
+        const string valueName = "TestValue";
+        const string defaultValue = "Default";
 
         _mockRegistryKey.Setup(k => k.GetValue(valueName, It.IsAny<object>())).Returns(defaultValue);
         _mockRegistryKeyFactory.Setup(f => f.Create(hive, keyPath, false)).Returns(_mockRegistryKey.Object);

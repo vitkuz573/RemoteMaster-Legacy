@@ -35,16 +35,6 @@ public class UpdaterInstanceServiceTests
             AllowDowngrade = true
         };
 
-        var arguments = new Dictionary<string, object>
-        {
-            { "launch-mode", "updater" },
-            { "folder-path", updateRequest.FolderPath },
-            { "username", updateRequest.UserCredentials.UserName },
-            { "password", updateRequest.UserCredentials.Password },
-            { "force", updateRequest.ForceUpdate },
-            { "allow-downgrade", updateRequest.AllowDowngrade }
-        };
-
         _mockArgumentBuilderService
             .Setup(service => service.BuildArguments(It.IsAny<Dictionary<string, object>>()))
             .Returns("--launch-mode=\"updater\" --folder-path=\"C:\\TestPath\" --username=\"testuser\" --password=\"testpassword\" --force=true --allow-downgrade=true");
@@ -65,7 +55,7 @@ public class UpdaterInstanceServiceTests
     public void Start_NullUpdateRequest_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => _service.Start(null));
+        Assert.Throws<ArgumentNullException>(() => _service.Start(null!));
     }
 
     [Fact]
@@ -73,14 +63,14 @@ public class UpdaterInstanceServiceTests
     {
         // Arrange
         var arguments = new Dictionary<string, object>
-            {
-                { "launch-mode", "updater" },
-                { "folder-path", @"C:\TestPath" },
-                { "username", "testuser" },
-                { "password", "testpassword" },
-                { "force", true },
-                { "allow-downgrade", true }
-            };
+        {
+            { "launch-mode", "updater" },
+            { "folder-path", @"C:\TestPath" },
+            { "username", "testuser" },
+            { "password", "testpassword" },
+            { "force", true },
+            { "allow-downgrade", true }
+        };
 
         _mockArgumentBuilderService
             .Setup(service => service.BuildArguments(It.IsAny<Dictionary<string, object>>()))
@@ -135,17 +125,7 @@ public class UpdaterInstanceServiceTests
             AllowDowngrade = true
         };
 
-        var arguments = new Dictionary<string, object>
-        {
-            { "launch-mode", "updater" },
-            { "folder-path", updateRequest.FolderPath },
-            { "username", updateRequest.UserCredentials.UserName },
-            { "password", updateRequest.UserCredentials.Password },
-            { "force", updateRequest.ForceUpdate },
-            { "allow-downgrade", updateRequest.AllowDowngrade }
-        };
-
-        var additionalArguments = "--launch-mode=\"updater\" --folder-path=\"C:\\TestPath\" --username=\"testuser\" --password=\"testpassword\" --force=true --allow-downgrade=true";
+        const string additionalArguments = "--launch-mode=\"updater\" --folder-path=\"C:\\TestPath\" --username=\"testuser\" --password=\"testpassword\" --force=true --allow-downgrade=true";
 
         _mockArgumentBuilderService
             .Setup(service => service.BuildArguments(It.IsAny<Dictionary<string, object>>()))

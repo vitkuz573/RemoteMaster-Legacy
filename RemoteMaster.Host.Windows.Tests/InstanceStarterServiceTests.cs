@@ -39,15 +39,15 @@ public class InstanceStarterServiceTests
     public void StartNewInstance_ShouldThrowArgumentNullException_WhenStartInfoIsNull()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => _instanceStarterService.StartNewInstance("executablePath", "destinationPath", null));
+        Assert.Throws<ArgumentNullException>(() => _instanceStarterService.StartNewInstance("executablePath", "destinationPath", null!));
     }
 
     [Fact]
     public void StartNewInstance_ShouldCopyExecutable_WhenDestinationPathIsProvided()
     {
         // Arrange
-        var executablePath = "C:\\sourcePath\\executable.exe";
-        var destinationPath = "C:\\destinationPath\\executable.exe";
+        const string executablePath = @"C:\sourcePath\executable.exe";
+        const string destinationPath = @"C:\destinationPath\executable.exe";
         var destinationDirectory = _mockFileSystem.Path.GetDirectoryName(destinationPath);
         var startInfo = new NativeProcessStartInfo { FileName = executablePath };
 
@@ -65,8 +65,8 @@ public class InstanceStarterServiceTests
     public void StartNewInstance_ShouldLogAndRethrowIOException_WhenIOExceptionOccurs()
     {
         // Arrange
-        var executablePath = "C:\\sourcePath\\executable.exe";
-        var destinationPath = "C:\\destinationPath\\executable.exe";
+        const string executablePath = @"C:\sourcePath\executable.exe";
+        const string destinationPath = @"C:\destinationPath\executable.exe";
         var startInfo = new NativeProcessStartInfo { FileName = executablePath };
 
         var fileMock = new Mock<IFile>();
@@ -82,7 +82,7 @@ public class InstanceStarterServiceTests
         // Act & Assert
         using (TestCorrelator.CreateContext())
         {
-            var ex = Assert.Throws<IOException>(() => instanceStarterService.StartNewInstance(executablePath, destinationPath, startInfo));
+            Assert.Throws<IOException>(() => instanceStarterService.StartNewInstance(executablePath, destinationPath, startInfo));
 
             var logEvents = TestCorrelator.GetLogEventsFromCurrentContext().ToList();
 
@@ -94,8 +94,8 @@ public class InstanceStarterServiceTests
     public void StartNewInstance_ShouldLogAndRethrowException_WhenExceptionOccurs()
     {
         // Arrange
-        var executablePath = "C:\\sourcePath\\executable.exe";
-        var destinationPath = "C:\\destinationPath\\executable.exe";
+        const string executablePath = @"C:\sourcePath\executable.exe";
+        const string destinationPath = @"C:\destinationPath\executable.exe";
         var startInfo = new NativeProcessStartInfo { FileName = executablePath };
 
         var fileMock = new Mock<IFile>();
@@ -111,7 +111,7 @@ public class InstanceStarterServiceTests
         // Act & Assert
         using (TestCorrelator.CreateContext())
         {
-            var ex = Assert.Throws<Exception>(() => instanceStarterService.StartNewInstance(executablePath, destinationPath, startInfo));
+            Assert.Throws<Exception>(() => instanceStarterService.StartNewInstance(executablePath, destinationPath, startInfo));
 
             var logEvents = TestCorrelator.GetLogEventsFromCurrentContext().ToList();
 
@@ -123,7 +123,7 @@ public class InstanceStarterServiceTests
     public void StartNewInstance_ShouldStartProcess_WithCorrectStartInfo()
     {
         // Arrange
-        var executablePath = "C:\\sourcePath\\executable.exe";
+        const string executablePath = @"C:\sourcePath\executable.exe";
         var startInfo = new NativeProcessStartInfo { FileName = executablePath };
 
         _nativeProcessMock.Setup(x => x.Start()).Verifiable();

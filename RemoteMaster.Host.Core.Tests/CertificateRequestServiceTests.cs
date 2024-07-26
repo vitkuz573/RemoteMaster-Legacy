@@ -10,13 +10,8 @@ namespace RemoteMaster.Host.Core.Tests;
 
 public class CertificateRequestServiceTests : IDisposable
 {
-    private readonly CertificateRequestService _certificateRequestService;
+    private readonly CertificateRequestService _certificateRequestService = new();
     private RSA? _rsaKeyPair;
-
-    public CertificateRequestServiceTests()
-    {
-        _certificateRequestService = new CertificateRequestService();
-    }
 
     [Fact]
     public void GenerateSigningRequest_ValidParameters_ReturnsCsr()

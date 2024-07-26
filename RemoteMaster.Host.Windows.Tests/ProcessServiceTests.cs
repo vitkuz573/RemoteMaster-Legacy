@@ -59,7 +59,7 @@ public class ProcessServiceTests
     public async Task ReadStandardOutput_ValidProcess_ReturnsOutput()
     {
         // Arrange
-        var expectedOutput = "Test output";
+        const string expectedOutput = "Test output";
         var mockStreamReader = new Mock<StreamReader>(new MemoryStream());
         mockStreamReader.Setup(s => s.ReadToEndAsync()).ReturnsAsync(expectedOutput);
 

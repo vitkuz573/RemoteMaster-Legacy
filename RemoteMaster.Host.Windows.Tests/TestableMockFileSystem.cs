@@ -7,19 +7,7 @@ using System.IO.Abstractions.TestingHelpers;
 
 namespace RemoteMaster.Host.Windows.Tests;
 
-public class TestableMockFileSystem : MockFileSystem
+public class TestableMockFileSystem(IFile file, IDictionary<string, MockFileData> files) : MockFileSystem(files)
 {
-    private readonly IFile _file;
-
-    public TestableMockFileSystem(IFile file)
-    {
-        _file = file;
-    }
-
-    public TestableMockFileSystem(IFile file, IDictionary<string, MockFileData> files) : base(files)
-    {
-        _file = file;
-    }
-
-    public override IFile File => _file;
+    public override IFile File { get; } = file;
 }

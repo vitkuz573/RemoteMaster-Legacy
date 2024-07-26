@@ -12,19 +12,18 @@ namespace RemoteMaster.Host.Windows.Tests;
 
 public class GdiCapturingTests : IDisposable
 {
-    private readonly Mock<ICursorRenderService> _mockCursorRenderService;
     private readonly Mock<IDesktopService> _mockDesktopService;
     private readonly GdiCapturing _gdiCapturing;
 
     public GdiCapturingTests()
     {
-        _mockCursorRenderService = new Mock<ICursorRenderService>();
+        Mock<ICursorRenderService> mockCursorRenderService = new();
         _mockDesktopService = new Mock<IDesktopService>();
 
-        _mockCursorRenderService.Setup(crs => crs.DrawCursor(It.IsAny<Graphics>(), It.IsAny<Rectangle>()));
-        _mockCursorRenderService.Setup(crs => crs.ClearCache());
+        mockCursorRenderService.Setup(crs => crs.DrawCursor(It.IsAny<Graphics>(), It.IsAny<Rectangle>()));
+        mockCursorRenderService.Setup(crs => crs.ClearCache());
 
-        _gdiCapturing = new GdiCapturing(_mockCursorRenderService.Object, _mockDesktopService.Object);
+        _gdiCapturing = new GdiCapturing(mockCursorRenderService.Object, _mockDesktopService.Object);
     }
 
     [Fact]

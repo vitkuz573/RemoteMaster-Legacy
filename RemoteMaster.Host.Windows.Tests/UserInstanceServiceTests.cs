@@ -11,17 +11,16 @@ namespace RemoteMaster.Host.Windows.Tests;
 
 public class UserInstanceServiceTests
 {
-    private readonly Mock<ISessionChangeEventService> _sessionChangeEventServiceMock;
     private readonly Mock<IInstanceStarterService> _instanceStarterServiceMock;
     private readonly Mock<IProcessService> _processServiceMock;
     private readonly UserInstanceService _userInstanceService;
 
     public UserInstanceServiceTests()
     {
-        _sessionChangeEventServiceMock = new Mock<ISessionChangeEventService>();
+        Mock<ISessionChangeEventService> sessionChangeEventServiceMock = new();
         _instanceStarterServiceMock = new Mock<IInstanceStarterService>();
         _processServiceMock = new Mock<IProcessService>();
-        _userInstanceService = new UserInstanceService(_sessionChangeEventServiceMock.Object, _instanceStarterServiceMock.Object, _processServiceMock.Object);
+        _userInstanceService = new UserInstanceService(sessionChangeEventServiceMock.Object, _instanceStarterServiceMock.Object, _processServiceMock.Object);
     }
 
     [Fact]

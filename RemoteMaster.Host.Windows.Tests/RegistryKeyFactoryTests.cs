@@ -10,20 +10,15 @@ namespace RemoteMaster.Host.Windows.Tests;
 
 public class RegistryKeyFactoryTests
 {
-    private readonly IRegistryKeyFactory _registryKeyFactory;
-
-    public RegistryKeyFactoryTests()
-    {
-        _registryKeyFactory = new RegistryKeyFactory();
-    }
+    private readonly RegistryKeyFactory _registryKeyFactory = new();
 
     [Fact]
     public void OpenSubKey_ValidKey_ReturnsRegistryKeyWrapper()
     {
         // Arrange
-        var hive = RegistryHive.CurrentUser;
-        var keyPath = @"Software\Microsoft";
-        var writable = false;
+        const RegistryHive hive = RegistryHive.CurrentUser;
+        const string keyPath = @"Software\Microsoft";
+        const bool writable = false;
 
         // Act
         var result = _registryKeyFactory.Create(hive, keyPath, writable);
@@ -37,9 +32,9 @@ public class RegistryKeyFactoryTests
     public void OpenSubKey_InvalidKey_ReturnsNull()
     {
         // Arrange
-        var hive = RegistryHive.CurrentUser;
-        var keyPath = @"Software\NonExistentKey";
-        var writable = false;
+        const RegistryHive hive = RegistryHive.CurrentUser;
+        const string keyPath = @"Software\NonExistentKey";
+        const bool writable = false;
 
         // Act
         var result = _registryKeyFactory.Create(hive, keyPath, writable);
