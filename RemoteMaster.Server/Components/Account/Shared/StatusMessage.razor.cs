@@ -23,14 +23,16 @@ public partial class StatusMessage
 
     protected override void OnInitialized()
     {
-        if (UseHttpContext)
+        if (!UseHttpContext)
         {
-            _messageFromCookie = HttpContext.Request.Cookies[IdentityRedirectManager.StatusCookieName];
+            return;
+        }
 
-            if (_messageFromCookie is not null)
-            {
-                HttpContext.Response.Cookies.Delete(IdentityRedirectManager.StatusCookieName);
-            }
+        _messageFromCookie = HttpContext.Request.Cookies[IdentityRedirectManager.StatusCookieName];
+
+        if (_messageFromCookie is not null)
+        {
+            HttpContext.Response.Cookies.Delete(IdentityRedirectManager.StatusCookieName);
         }
     }
 }

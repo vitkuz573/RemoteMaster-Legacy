@@ -1,19 +1,11 @@
 ﻿@page "/Account/Register"
 
-@using System.ComponentModel.DataAnnotations
-@using System.Text
-@using System.Text.Encodings.Web
 @using Microsoft.AspNetCore.Identity
-@using Microsoft.AspNetCore.WebUtilities
 @using RemoteMaster.Server.Data
 
 @inject UserManager<ApplicationUser> UserManager
 @inject IUserStore<ApplicationUser> UserStore
-@inject SignInManager<ApplicationUser> SignInManager
-@inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
-@inject ApplicationDbContext ApplicationDbContext
-@inject RoleManager<IdentityRole> RoleManager
 
 <PageTitle>Register - RemoteMaster Server</PageTitle>
 
