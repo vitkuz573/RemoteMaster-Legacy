@@ -166,6 +166,8 @@ public static class Program
         services.AddSingleton<IEventNotificationService, TelegramEventNotificationService>();
         services.AddSingleton<ICertificateStoreService, CertificateStoreService>();
         services.AddSingleton<IValidateOptions<JwtOptions>, JwtOptionsValidator>();
+        services.AddSingleton<IValidateOptions<CertificateOptions>, CertificateOptionsValidator>();
+        services.AddSingleton<IValidateOptions<SubjectOptions>, SubjectOptionsValidator>();
         services.AddSingleton<IHostMoveRequestService, HostMoveService>();
         services.AddSingleton<INotificationService, InMemoryNotificationService>();
 
