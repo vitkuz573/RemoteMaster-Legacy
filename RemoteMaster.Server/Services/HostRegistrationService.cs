@@ -121,11 +121,7 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
         {
             var existingComputer = await GetComputerByMacAddressAsync(hostConfiguration.Host.MacAddress, parentOu.NodeId);
 
-            var updateResult = await databaseService.UpdateNodeAsync(existingComputer, computer =>
-            {
-                computer.IpAddress = hostConfiguration.Host.IpAddress;
-                computer.Name = hostConfiguration.Host.Name;
-            });
+            var updateResult = await databaseService.UpdateNodeAsync(existingComputer, computer => computer.With(hostConfiguration.Host.Name, hostConfiguration.Host.IpAddress));
 
             if (!updateResult.IsSuccess)
             {
@@ -142,11 +138,8 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
         }
         catch (InvalidOperationException)
         {
-            var computer = new Computer
+            var computer = new Computer(hostConfiguration.Host.Name, hostConfiguration.Host.IpAddress, hostConfiguration.Host.MacAddress)
             {
-                Name = hostConfiguration.Host.Name,
-                IpAddress = hostConfiguration.Host.IpAddress,
-                MacAddress = hostConfiguration.Host.MacAddress,
                 ParentId = parentOu.NodeId
             };
 
@@ -241,11 +234,7 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
         {
             var computer = await GetComputerByMacAddressAsync(request.MacAddress, lastOu.NodeId);
 
-            var updateResult = await databaseService.UpdateNodeAsync(computer, updatedComputer =>
-            {
-                updatedComputer.IpAddress = request.IpAddress;
-                updatedComputer.Name = request.Name;
-            });
+            var updateResult = await databaseService.UpdateNodeAsync(computer, updatedComputer => updatedComputer.With(request.Name, request.IpAddress));
 
             if (!updateResult.IsSuccess)
             {

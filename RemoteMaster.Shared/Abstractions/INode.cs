@@ -8,7 +8,7 @@ public interface INode
 {
     Guid NodeId { get; }
 
-    string Name { get; set; }
+    string Name { get; }
 
     Guid? ParentId { get; set; }
 

@@ -2,9 +2,9 @@
     <DialogContent>
         <EditForm Model="_model" OnValidSubmit="OnValidSubmit">
             <DataAnnotationsValidator />
-            <MudTextField Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)" />
-            <MudTextField Label="IP Address" @bind-Value="_model.IpAddress" For="@(() => _model.IpAddress)" />
-            <MudTextField Label="MAC Address" @bind-Value="_model.MacAddress" For="@(() => _model.MacAddress)" />
+            <MudTextField Label="Name" Value="_model.Name" For="@(() => _model.Name)" />
+            <MudTextField Label="IP Address" Value="_model.IpAddress" For="@(() => _model.IpAddress)" />
+            <MudTextField Label="MAC Address" Value="_model.MacAddress" For="@(() => _model.MacAddress)" />
         </EditForm>
     </DialogContent>
     <DialogActions>

@@ -49,11 +49,11 @@ public interface IDatabaseService
     /// </summary>
     /// <typeparam name="T">The type of node. Must implement <see cref="INode"/>.</typeparam>
     /// <param name="node">The node to update.</param>
-    /// <param name="updateAction">The action to perform on the node for updating.</param>
+    /// <param name="updateFunction">The function to perform on the node for updating.</param>
     /// <returns>
     /// A <see cref="Task{TResult}"/> representing the asynchronous operation, with a <see cref="Result"/> indicating the success or failure of the operation.
     /// </returns>
-    Task<Result> UpdateNodeAsync<T>(T node, Action<T> updateAction) where T : class, INode;
+    Task<Result> UpdateNodeAsync<T>(T node, Func<T, T> updateFunction) where T : class, INode;
 
     /// <summary>
     /// Moves the specified node to a new parent.

@@ -17,6 +17,6 @@ public class CertificateStoreService : ICertificateStoreService
 
         var certificates = store.Certificates.Find(findType, findValue, false);
 
-        return certificates.Cast<X509Certificate2>().Select(cert => new CertificateWrapper(cert)).ToList();
+        return certificates.Select(cert => new CertificateWrapper(cert)).ToList();
     }
 }

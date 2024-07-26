@@ -7,19 +7,19 @@ using RemoteMaster.Shared.Abstractions;
 
 namespace RemoteMaster.Shared.Models;
 
-public class Computer : INode, IEquatable<Computer>
+public class Computer(string name, string ipAddress, string macAddress) : INode, IEquatable<Computer>
 {
     [JsonIgnore]
     public Guid NodeId { get; set; }
 
     [JsonPropertyName("name")]
-    public required string Name { get; set; }
+    public string Name { get; } = name;
 
     [JsonPropertyName("ipAddress")]
-    public required string IpAddress { get; set; }
+    public string IpAddress { get; } = ipAddress;
 
     [JsonPropertyName("macAddress")]
-    public required string MacAddress { get; set; }
+    public string MacAddress { get; } = macAddress;
 
     [JsonIgnore]
     public byte[]? Thumbnail { get; set; }
@@ -38,6 +38,17 @@ public class Computer : INode, IEquatable<Computer>
         }
 
         return IpAddress == other.IpAddress && MacAddress == other.MacAddress && Name == other.Name;
+    }
+
+    public Computer With(string? name = null, string? ipAddress = null, string? macAddress = null)
+    {
+        return new Computer(name ?? Name, ipAddress ?? IpAddress, macAddress ?? MacAddress)
+        {
+            NodeId = NodeId,
+            Thumbnail = Thumbnail,
+            ParentId = ParentId,
+            Parent = Parent
+        };
     }
 
     public override bool Equals(object? obj) => Equals(obj as Computer);

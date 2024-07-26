@@ -21,6 +21,8 @@ public class HostController(IHostRegistrationService registrationService) : Cont
     [ProducesResponseType(typeof(ApiResponse), 400)]
     public async Task<IActionResult> RegisterHost([FromBody] HostConfiguration hostConfiguration)
     {
+        ArgumentNullException.ThrowIfNull(hostConfiguration);
+
         if (!ModelState.IsValid)
         {
             var problemDetails = new ProblemDetails

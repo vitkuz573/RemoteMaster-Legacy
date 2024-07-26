@@ -14,23 +14,15 @@ public partial class HostDialog
     [Parameter]
     public Computer Host { get; set; } = default!;
 
-    private readonly HostInfo _model = new()
-    {
-        Name = string.Empty,
-        IpAddress = string.Empty,
-        MacAddress = string.Empty
-    };
+    private HostInfo? _model;
 
     protected override void OnInitialized()
     {
-        _model.Name = Host.Name;
-        _model.IpAddress = Host.IpAddress;
-        _model.MacAddress = Host.MacAddress;
+        _model = new HostInfo(Host.Name, Host.IpAddress, Host.MacAddress);
     }
 
 #pragma warning disable
     private async Task OnValidSubmit(EditContext context)
     {
-
     }
 }

@@ -19,12 +19,7 @@ public class HostInformationService : IHostInformationService
         var ipv4Address = GetIPv4Address(preferredInterface);
         var macAddress = GetMacAddress(preferredInterface);
 
-        return new Computer
-        {
-            Name = hostName,
-            IpAddress = ipv4Address,
-            MacAddress = macAddress
-        };
+        return new Computer(hostName, ipv4Address, macAddress);
     }
 
     private static NetworkInterface GetPreferredNetworkInterface()

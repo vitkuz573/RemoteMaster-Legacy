@@ -93,16 +93,18 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
     }
 
     /// <inheritdoc />
-    public async Task<Result> UpdateNodeAsync<T>(T node, Action<T> updateAction) where T : class, INode
+    public async Task<Result> UpdateNodeAsync<T>(T node, Func<T, T> updateFunction) where T : class, INode
     {
         try
         {
             ArgumentNullException.ThrowIfNull(node);
-            ArgumentNullException.ThrowIfNull(updateAction);
+            ArgumentNullException.ThrowIfNull(updateFunction);
 
             var trackedNode = await applicationDbContext.Set<T>().FindAsync(node.NodeId) ?? throw new InvalidOperationException($"{typeof(T).Name} not found.");
 
-            updateAction(trackedNode);
+            var updatedNode = updateFunction(trackedNode);
+
+            applicationDbContext.Entry(trackedNode).CurrentValues.SetValues(updatedNode);
 
             await applicationDbContext.SaveChangesAsync();
 
