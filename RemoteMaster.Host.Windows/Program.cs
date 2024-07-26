@@ -61,10 +61,7 @@ internal class Program
 
         await builder.ConfigureSerilog();
 
-        if (launchModeInstance != null)
-        {
-            builder.ConfigureCoreUrls(launchModeInstance);
-        }
+        builder.ConfigureCoreUrls(launchModeInstance);
 
         var app = builder.Build();
 
@@ -80,44 +77,41 @@ internal class Program
                 return;
         }
 
-        if (launchModeInstance != null)
+        try
         {
-            try
+            var secureAttentionSequenceService = app.Services.GetRequiredService<ISecureAttentionSequenceService>();
+
+            if (secureAttentionSequenceService.SasOption != SoftwareSasOption.ServicesAndEaseOfAccessApplications)
             {
-                var secureAttentionSequenceService = app.Services.GetRequiredService<ISecureAttentionSequenceService>();
-
-                if (secureAttentionSequenceService.SasOption != SoftwareSasOption.ServicesAndEaseOfAccessApplications)
-                {
-                    secureAttentionSequenceService.SasOption = SoftwareSasOption.ServicesAndEaseOfAccessApplications;
-                }
+                secureAttentionSequenceService.SasOption = SoftwareSasOption.ServicesAndEaseOfAccessApplications;
             }
-            catch (Exception e)
-            {
-                Log.Error(e.Message);
-            }
+        }
+        catch (Exception e)
+        {
+            Log.Error(e.Message);
+        }
 
-            var firewallService = app.Services.GetRequiredService<IFirewallService>();
+        var firewallService = app.Services.GetRequiredService<IFirewallService>();
 
-            var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-            var hostRootPath = Path.Combine(programFilesPath, "RemoteMaster", "Host");
-            var hostApplicationPath = Path.Combine(hostRootPath, "RemoteMaster.Host.exe");
-            var hostUpdaterApplicationPath = Path.Combine(hostRootPath, "Updater", "RemoteMaster.Host.exe");
+        var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+        var hostRootPath = Path.Combine(programFilesPath, "RemoteMaster", "Host");
+        var hostApplicationPath = Path.Combine(hostRootPath, "RemoteMaster.Host.exe");
+        var hostUpdaterApplicationPath = Path.Combine(hostRootPath, "Updater", "RemoteMaster.Host.exe");
 
-            firewallService.AddRule("Remote Master Host", NET_FW_ACTION.NET_FW_ACTION_ALLOW, NET_FW_IP_PROTOCOL.NET_FW_IP_PROTOCOL_ANY, NET_FW_PROFILE_TYPE2.NET_FW_PROFILE2_ALL, NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_IN, InterfaceType.All, "Allow all traffic for RemoteMaster Host", hostApplicationPath);
-            firewallService.AddRule("Remote Master Host Updater", NET_FW_ACTION.NET_FW_ACTION_ALLOW, NET_FW_IP_PROTOCOL.NET_FW_IP_PROTOCOL_ANY, NET_FW_PROFILE_TYPE2.NET_FW_PROFILE2_ALL, NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_IN, InterfaceType.All, "Allow all traffic for RemoteMaster Host Updater", hostUpdaterApplicationPath);
+        firewallService.AddRule("Remote Master Host", NET_FW_ACTION.NET_FW_ACTION_ALLOW, NET_FW_IP_PROTOCOL.NET_FW_IP_PROTOCOL_ANY, NET_FW_PROFILE_TYPE2.NET_FW_PROFILE2_ALL, NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_IN, InterfaceType.All, "Allow all traffic for RemoteMaster Host", hostApplicationPath);
+        firewallService.AddRule("Remote Master Host Updater", NET_FW_ACTION.NET_FW_ACTION_ALLOW, NET_FW_IP_PROTOCOL.NET_FW_IP_PROTOCOL_ANY, NET_FW_PROFILE_TYPE2.NET_FW_PROFILE2_ALL, NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_IN, InterfaceType.All, "Allow all traffic for RemoteMaster Host Updater", hostUpdaterApplicationPath);
 
-            try
-            {
-                var wolConfiguratorService = app.Services.GetRequiredService<IWoLConfiguratorService>();
+        try
+        {
+            var wolConfiguratorService = app.Services.GetRequiredService<IWoLConfiguratorService>();
 
-                wolConfiguratorService.DisableFastStartup();
-                wolConfiguratorService.DisablePnPEnergySaving();
-                await wolConfiguratorService.EnableWakeOnLanForAllAdaptersAsync();
-            }
-            catch (Exception e)
-            {
-                Log.Error(e.Message);
-            }
+            wolConfiguratorService.DisableFastStartup();
+            wolConfiguratorService.DisablePnPEnergySaving();
+            await wolConfiguratorService.EnableWakeOnLanForAllAdaptersAsync();
+        }
+        catch (Exception e)
+        {
+            Log.Error(e.Message);
         }
 
         if (!app.Environment.IsDevelopment())
@@ -128,10 +122,7 @@ internal class Program
         app.UseAuthentication();
         app.UseAuthorization();
 
-        if (launchModeInstance != null)
-        {
-            app.MapCoreHubs(launchModeInstance);
-        }
+        app.MapCoreHubs(launchModeInstance);
 
         if (launchModeInstance is UserMode)
         {
@@ -145,11 +136,7 @@ internal class Program
     {
         services.AddHttpContextAccessor();
 
-        if (launchModeInstance != null)
-        {
-            services.AddCoreServices(launchModeInstance);
-        }
-
+        services.AddCoreServices(launchModeInstance);
         services.AddTransient<IServiceFactory, ServiceFactory>();
         services.AddTransient<IRegistryKeyFactory, RegistryKeyFactory>();
         services.AddTransient<IProcessWrapperFactory, ProcessWrapperFactory>();
@@ -283,7 +270,7 @@ internal class Program
         }
     }
 
-    private static LaunchModeBase? ParseArguments(string[] args)
+    private static LaunchModeBase ParseArguments(string[] args)
     {
         var helpRequested = args.Any(arg => arg.Equals("--help", StringComparison.OrdinalIgnoreCase));
         var modeArgument = args.FirstOrDefault(arg => arg.StartsWith("--launch-mode="))?.Split('=')[1];
@@ -294,13 +281,7 @@ internal class Program
             Environment.Exit(0);
         }
 
-        var assembly = Assembly.GetAssembly(typeof(LaunchModeBase));
-
-        if (assembly == null)
-        {
-            return null;
-        }
-
+        var assembly = Assembly.GetAssembly(typeof(LaunchModeBase)) ?? throw new InvalidOperationException("The assembly containing the type 'LaunchModeBase' could not be found.");
         var launchModes = assembly.GetTypes()
             .Where(t => t is { IsClass: true, IsAbstract: false } && t.IsSubclassOf(typeof(LaunchModeBase)))
             .ToArray();
@@ -321,13 +302,8 @@ internal class Program
             Environment.Exit(1);
         }
 
-        var launchModeInstance = (LaunchModeBase?)Activator.CreateInstance(launchModeType);
-
-        if (launchModeInstance == null)
-        {
-            return null;
-        }
-
+        var launchModeInstance = (LaunchModeBase?)Activator.CreateInstance(launchModeType) ?? throw new InvalidOperationException("Failed to create an instance of the type 'LaunchModeBase'.");
+        
         foreach (var arg in args)
         {
             if (!arg.StartsWith("--"))
