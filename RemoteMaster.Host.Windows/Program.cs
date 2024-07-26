@@ -28,6 +28,7 @@ using RemoteMaster.Host.Windows.Hubs;
 using RemoteMaster.Host.Windows.Services;
 using Serilog;
 using Windows.Win32.NetworkManagement.WindowsFirewall;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Windows;
 
@@ -59,7 +60,20 @@ internal class Program
 
         ConfigureServices(builder.Services, launchModeInstance);
 
-        builder.ConfigureSerilog();
+        var hostConfigurationService = builder.Services.BuildServiceProvider().GetRequiredService<IHostConfigurationService>();
+
+        HostConfiguration hostConfiguration;
+
+        try
+        {
+            hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
+        }
+        catch (InvalidDataException ex) when (ex.Message.Contains("does not exist"))
+        {
+            hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
+        }
+
+        builder.ConfigureSerilog(hostConfiguration.Server);
 
         if (launchModeInstance != null)
         {

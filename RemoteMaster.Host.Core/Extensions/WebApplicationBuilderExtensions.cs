@@ -47,7 +47,7 @@ public static class WebApplicationBuilderExtensions
         });
     }
 
-    public static void ConfigureSerilog(this WebApplicationBuilder builder)
+    public static void ConfigureSerilog(this WebApplicationBuilder builder, string server)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
@@ -58,7 +58,7 @@ public static class WebApplicationBuilderExtensions
         {
             configuration.Enrich.With(new HostInfoEnricher());
 #if DEBUG
-            configuration.MinimumLevel.Debug();
+        configuration.MinimumLevel.Debug();
 #else
             configuration.MinimumLevel.Information();
 
@@ -67,7 +67,7 @@ public static class WebApplicationBuilderExtensions
             configuration.MinimumLevel.Override("System.Net.Http.HttpClient", LogEventLevel.Warning);
 #endif
             configuration.WriteTo.Console();
-            // configuration.WriteTo.Seq("http://192.168.0.103:5341");
+            configuration.WriteTo.Seq($"http://{server}:5341");
             configuration.WriteTo.File(fileLog, rollingInterval: RollingInterval.Day);
             configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Received hub invocation"));
             configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Successfully switched to input desktop"));
