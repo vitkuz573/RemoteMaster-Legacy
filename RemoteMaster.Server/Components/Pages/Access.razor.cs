@@ -77,7 +77,7 @@ public partial class Access : IAsyncDisposable
 
         var noRetryPolicy = Policy
             .Handle<HubException>(ex => ex.Message.Contains("Method does not exist"))
-            .FallbackAsync(async (_) =>
+            .FallbackAsync(async _ =>
             {
                 if (_firstRenderCompleted)
                 {
@@ -99,6 +99,7 @@ public partial class Access : IAsyncDisposable
     protected async override Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateTask;
+
         _user = authState.User;
         _isAccessDenied = _user == null || !await HasAccessAsync();
     }
@@ -398,6 +399,7 @@ public partial class Access : IAsyncDisposable
                 if (!_disposed && _retryCount < 3)
                 {
                     _retryCount++;
+
                     await Task.Delay(TimeSpan.FromSeconds(5));
                     await TryStartConnectionAsync();
                 }
