@@ -37,8 +37,8 @@ public partial class Access : IAsyncDisposable
     private string? _screenDataUrl;
     private bool _drawerOpen;
     private HubConnection? _connection;
-    private bool _inputEnabled;
-    private bool _blockUserInput;
+    private bool _isInputEnabled;
+    private bool _isUserInputBlocked;
     private bool _drawCursor;
     private bool _useSkia;
     private int _frameRate;
@@ -169,7 +169,7 @@ public partial class Access : IAsyncDisposable
 
         if (inputEnabledResult.IsSuccess)
         {
-            _inputEnabled = inputEnabledResult.Value;
+            _isInputEnabled = inputEnabledResult.Value;
         }
         else
         {
@@ -197,7 +197,7 @@ public partial class Access : IAsyncDisposable
 
             if (await IsPolicyPermittedAsync("ToggleInputPolicy"))
             {
-                await _connection.InvokeAsync("ToggleInput", _inputEnabled);
+                await _connection.InvokeAsync("ToggleInput", _isInputEnabled);
             }
         }
     }
@@ -248,7 +248,7 @@ public partial class Access : IAsyncDisposable
         return displayItems;
     }
 
-    private async Task KillHost()
+    private async Task TerminateHost()
     {
         if (_connection == null)
         {
@@ -483,27 +483,27 @@ public partial class Access : IAsyncDisposable
         }
     }
 
-    private async Task ToggleInputEnabled(bool value)
+    private async Task EnableInput(bool value)
     {
         if (_connection == null)
         {
             return;
         }
 
-        _inputEnabled = value;
+        _isInputEnabled = value;
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("ToggleInput", value), true);
         QueryParameterService.UpdateParameter("inputEnabled", value.ToString());
     }
 
-    private async Task ToggleBlockUserInput(bool value)
+    private async Task BlockUserInput(bool value)
     {
         if (_connection == null)
         {
             return;
         }
 
-        _blockUserInput = value;
+        _isUserInputBlocked = value;
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("BlockUserInput", value), true);
     }

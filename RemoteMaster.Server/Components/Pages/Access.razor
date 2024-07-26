@@ -36,7 +36,7 @@
                 </MudSelect>
             </MudNavLink>
             
-            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.DisplaySettings">
+            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Hd">
                 <MudSelect Value="@_selectedCodec" ValueChanged="OnChangeCodec" Label="Codec" T="string?" Dense="true">
                     @foreach (var codecItem in _codecs)
                     {
@@ -68,16 +68,16 @@
             <AuthorizeView Roles="Administrator">
                 <Authorized>
                     <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Keyboard">
-                        <MudText>Input Toggle</MudText>
-                        <MudSwitch T="bool" Value="@_inputEnabled" ValueChanged="ToggleInputEnabled" />
+                        <MudText>Input</MudText>
+                        <MudSwitch T="bool" Value="@_isInputEnabled" ValueChanged="EnableInput" />
                     </MudNavLink>
 
                     <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.KeyboardHide">
-                        <MudText>Block User Input Toggle</MudText>
-                        <MudSwitch T="bool" Value="@_blockUserInput" ValueChanged="ToggleBlockUserInput" />
+                        <MudText>User Input</MudText>
+                        <MudSwitch T="bool" Value="@_isUserInputBlocked" ValueChanged="BlockUserInput" />
                     </MudNavLink>
 
-                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.DeleteSweep" OnClick="KillHost">Kill Host</MudNavLink>
+                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.DeleteSweep" OnClick="TerminateHost">Terminate Host</MudNavLink>
                     <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Lock" OnClick="LockWorkStation">Lock Workstation</MudNavLink>
                     <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Logout" OnClick="LogOffUser">Logoff User</MudNavLink>
                     <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.ControlPoint" OnClick="SendCtrlAltDel" Disabled="@(_viewers.All(v => v.AuthenticationType != "RemoteMaster Security"))">Send Ctrl+Alt+Del</MudNavLink>
