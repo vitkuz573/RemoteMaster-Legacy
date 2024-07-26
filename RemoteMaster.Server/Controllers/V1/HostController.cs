@@ -35,6 +35,22 @@ public class HostController(IHostRegistrationService registrationService) : Cont
             return BadRequest(errorResponse);
         }
 
+        var checkResult = await registrationService.IsHostRegisteredAsync(hostConfiguration.Host.MacAddress);
+
+        if (checkResult.IsSuccess)
+        {
+            var alreadyRegisteredProblemDetails = new ProblemDetails
+            {
+                Title = "Host already registered",
+                Detail = "The host is already registered.",
+                Status = StatusCodes.Status400BadRequest
+            };
+
+            var alreadyRegisteredResponse = ApiResponse.Failure(alreadyRegisteredProblemDetails);
+
+            return BadRequest(alreadyRegisteredResponse);
+        }
+
         var result = await registrationService.RegisterHostAsync(hostConfiguration);
 
         if (result.IsSuccess)
