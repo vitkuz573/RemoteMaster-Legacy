@@ -21,6 +21,7 @@ public class PowerService(ITokenPrivilegeService tokenPrivilegeService) : IPower
         if (!tokenPrivilegeService.AdjustPrivilege(SE_SHUTDOWN_NAME))
         {
             Log.Error("Failed to adjust privileges for system reboot.");
+
             return;
         }
 
@@ -53,6 +54,7 @@ public class PowerService(ITokenPrivilegeService tokenPrivilegeService) : IPower
         if (!tokenPrivilegeService.AdjustPrivilege(SE_SHUTDOWN_NAME))
         {
             Log.Error("Failed to adjust privileges for system shutdown.");
+
             return;
         }
 
