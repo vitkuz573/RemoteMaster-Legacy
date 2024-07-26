@@ -139,7 +139,10 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
         await Clients.Caller.ReceiveTransportType(transportType);
         await Clients.Caller.ReceiveDotNetVersion(Environment.Version);
-        await Clients.Caller.ReceiveOperatingSystemVersion(Environment.OSVersion.VersionString);
+
+        var osBitness = Environment.Is64BitOperatingSystem ? "64-bit" : "32-bit";
+
+        await Clients.Caller.ReceiveOperatingSystemVersion($"{Environment.OSVersion.VersionString} ({osBitness})");
 
         var assembly = Assembly.GetEntryAssembly();
         var version = assembly?.GetName().Version ?? new Version();
