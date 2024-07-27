@@ -2,9 +2,12 @@
 
 @rendermode InteractiveServer
 
+@using Microsoft.AspNetCore.Identity
 @using RemoteMaster.Server.Components.Account.Shared
+@using RemoteMaster.Server.Data
 
-@inject IServiceScopeFactory ScopeFactory
+@inject RoleManager<IdentityRole> RoleManager
+@inject ApplicationDbContext DbContext
 
 <PageTitle>Manage Role Claims</PageTitle>
 

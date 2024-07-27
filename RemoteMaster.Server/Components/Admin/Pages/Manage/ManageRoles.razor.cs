@@ -11,12 +11,12 @@ namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 public partial class ManageRoles
 {
     private List<IdentityRole> _roles = [];
-    
+
     private readonly IdentityRole _newRole = new()
     {
         Name = string.Empty
     };
-    
+
     private IdentityRole? _roleToDelete;
     private ConfirmationDialog? _confirmationDialog;
 
@@ -32,15 +32,11 @@ public partial class ManageRoles
 
     private async Task LoadRolesAsync()
     {
-        using var scope = ScopeFactory.CreateScope();
-        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        var roles = await RoleManager.Roles.ToListAsync();
 
-        var roles = await roleManager.Roles.ToListAsync();
-
-        _roles = roles
+        _roles = [.. roles
             .OrderByDescending(r => r.Name == "RootAdministrator")
-            .ThenBy(r => r.Name)
-            .ToList();
+            .ThenBy(r => r.Name)];
     }
 
     private async Task CreateRole()
@@ -52,10 +48,7 @@ public partial class ManageRoles
             return;
         }
 
-        using var scope = ScopeFactory.CreateScope();
-        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-
-        var result = await roleManager.CreateAsync(new IdentityRole(_newRole.Name));
+        var result = await RoleManager.CreateAsync(new IdentityRole(_newRole.Name));
 
         if (result.Succeeded)
         {
@@ -87,16 +80,14 @@ public partial class ManageRoles
         if (confirmed && _roleToDelete != null)
         {
             await DeleteRoleAsync(_roleToDelete);
+
             _roleToDelete = null;
         }
     }
 
     private async Task DeleteRoleAsync(IdentityRole role)
     {
-        using var scope = ScopeFactory.CreateScope();
-        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-
-        var result = await roleManager.DeleteAsync(role);
+        var result = await RoleManager.DeleteAsync(role);
 
         if (result.Succeeded)
         {
