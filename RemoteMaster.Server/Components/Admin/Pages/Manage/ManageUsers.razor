@@ -2,11 +2,14 @@
 
 @rendermode InteractiveServer
 
+@using Microsoft.AspNetCore.Identity
 @using RemoteMaster.Server.Components.Account.Shared
 @using RemoteMaster.Server.Components.Admin.Dialogs
+@using RemoteMaster.Server.Data
 
 @inject NavigationManager NavigationManager
-@inject IServiceScopeFactory ScopeFactory
+@inject UserManager<ApplicationUser> UserManager
+@inject IUserStore<ApplicationUser> UserStore
 
 <PageTitle>Manage Users</PageTitle>
 

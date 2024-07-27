@@ -22,7 +22,6 @@ public partial class ManageUsers
     private readonly Dictionary<ApplicationUser, bool> _userTwoFactorStatus = [];
     private ApplicationUser? _userToDelete;
     private ConfirmationDialog? _confirmationDialog;
-
     private string? _message;
 
     private string? Message => _identityErrors is null ? _message : $"Error: {string.Join(", ", _identityErrors.Select(error => error.Description))}";
@@ -34,32 +33,28 @@ public partial class ManageUsers
 
     private async Task OnValidSubmitAsync()
     {
-        using var scope = ScopeFactory.CreateScope();
-        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        var userStore = scope.ServiceProvider.GetRequiredService<IUserStore<ApplicationUser>>();
-
         ApplicationUser? user;
 
         if (Input.Id != null)
         {
-            user = await userManager.FindByIdAsync(Input.Id);
+            user = await UserManager.FindByIdAsync(Input.Id);
 
             if (user == null)
             {
                 _message = "Error: User not found.";
-
+                
                 return;
             }
 
             user.UserName = Input.Username;
 
-            var updateResult = await userManager.UpdateAsync(user);
+            var updateResult = await UserManager.UpdateAsync(user);
 
             if (!updateResult.Succeeded)
             {
                 _identityErrors = updateResult.Errors;
                 StateHasChanged();
-
+                
                 return;
             }
 
@@ -69,15 +64,15 @@ public partial class ManageUsers
         {
             user = CreateUser();
 
-            await userStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
+            await UserStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
 
-            var result = await userManager.CreateAsync(user, Input.Password);
+            var result = await UserManager.CreateAsync(user, Input.Password);
 
             if (!result.Succeeded)
             {
                 _identityErrors = result.Errors;
                 StateHasChanged();
-
+                
                 return;
             }
 
@@ -85,9 +80,9 @@ public partial class ManageUsers
         }
 
         await LoadUsersAsync();
-
+        
         Input = new InputModel();
-
+        
         NavigationManager.Refresh();
     }
 
@@ -114,17 +109,14 @@ public partial class ManageUsers
 
     private async Task DeleteUserAsync(ApplicationUser user)
     {
-        using var scope = ScopeFactory.CreateScope();
-        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-
-        var result = await userManager.DeleteAsync(user);
+        var result = await UserManager.DeleteAsync(user);
 
         if (result.Succeeded)
         {
             _users.Remove(user);
-
+            
             await LoadUsersAsync();
-
+            
             _message = "User deleted successfully.";
         }
         else
@@ -135,9 +127,7 @@ public partial class ManageUsers
 
     private async Task LoadUsersAsync()
     {
-        using var scope = ScopeFactory.CreateScope();
-        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        var users = await userManager.Users.ToListAsync();
+        var users = await UserManager.Users.ToListAsync();
 
         var sortedUsers = new List<ApplicationUser>();
 
@@ -146,8 +136,8 @@ public partial class ManageUsers
 
         foreach (var user in users)
         {
-            var roles = await userManager.GetRolesAsync(user);
-            var isTwoFactorEnabled = await userManager.GetTwoFactorEnabledAsync(user);
+            var roles = await UserManager.GetRolesAsync(user);
+            var isTwoFactorEnabled = await UserManager.GetTwoFactorEnabledAsync(user);
 
             _userRoles[user] = [.. roles];
             _userTwoFactorStatus[user] = isTwoFactorEnabled;
@@ -170,7 +160,7 @@ public partial class ManageUsers
         try
         {
             var user = Activator.CreateInstance<ApplicationUser>();
-
+            
             return user;
         }
         catch (Exception)
@@ -193,12 +183,12 @@ public partial class ManageUsers
         [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
         [DataType(DataType.Password)]
         [Display(Name = "Password")]
-        public string Password { get; set; } = "";
+        public string Password { get; set; } = string.Empty;
 
         [DataType(DataType.Password)]
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
-        public string ConfirmPassword { get; set; } = "";
+        public string ConfirmPassword { get; set; } = string.Empty;
     }
 
     private sealed class PlaceholderInputModel
