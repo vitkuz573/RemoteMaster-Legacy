@@ -59,13 +59,29 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
 
         if (await query.AnyAsync(predicate))
         {
-            var conflictMessage = node switch
+            string conflictMessage;
+
+            switch (node)
             {
-                OrganizationalUnit ouNode => $"Error: An Organizational Unit with the name '{ouNode.Name}' already exists in organization '{ouNode.OrganizationId}'.",
-                Computer compNode => $"Error: A Computer with the MAC address '{compNode.MacAddress}' already exists.",
-                Organization orgNode => $"Error: An Organization with the name '{orgNode.Name}' already exists.",
-                _ => throw new InvalidOperationException("Unknown node type.")
-            };
+                case OrganizationalUnit ouNode:
+                    var organization = await applicationDbContext.Organizations
+                        .FirstOrDefaultAsync(o => o.Id == ouNode.OrganizationId);
+
+                    var organizationName = organization?.Name ?? "Unknown Organization";
+                    conflictMessage = $"Error: An Organizational Unit with the name '{ouNode.Name}' already exists in organization '{organizationName}'.";
+                    break;
+
+                case Computer compNode:
+                    conflictMessage = $"Error: A Computer with the MAC address '{compNode.MacAddress}' already exists.";
+                    break;
+
+                case Organization orgNode:
+                    conflictMessage = $"Error: An Organization with the name '{orgNode.Name}' already exists.";
+                    break;
+
+                default:
+                    throw new InvalidOperationException("Unknown node type.");
+            }
 
             return Result.Failure(conflictMessage);
         }
