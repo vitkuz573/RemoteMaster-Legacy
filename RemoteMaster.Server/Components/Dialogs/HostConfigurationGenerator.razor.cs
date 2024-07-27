@@ -129,7 +129,7 @@ public partial class HostConfigurationGenerator
                     if (appUser != null)
                     {
                         _organizationalUnits = appUser.AccessibleOrganizationalUnits
-                                                      .Where(ou => ou.OrganizationId == organization.NodeId)
+                                                      .Where(ou => ou.OrganizationId == organization.Id)
                                                       .ToList();
                     }
                 }

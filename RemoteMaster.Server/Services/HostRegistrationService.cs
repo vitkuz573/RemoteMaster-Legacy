@@ -28,7 +28,7 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
     {
         OrganizationalUnit? parentOu = null;
 
-        var organizationResult = await databaseService.GetNodesAsync<Organization>(n => n.NodeId == organizationId);
+        var organizationResult = await databaseService.GetNodesAsync<Organization>(n => n.Id == organizationId);
 
         if (!organizationResult.IsSuccess)
         {
@@ -46,7 +46,7 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
                 throw new InvalidOperationException($"Failed to retrieve organizational units: {ousResult.Errors.FirstOrDefault()?.Message}");
             }
 
-            var ou = ousResult.Value.FirstOrDefault(o => parentOu == null || o.ParentId == parentOu.NodeId) ?? throw new InvalidOperationException($"Organizational Unit '{ouName}' not found in organization '{organizationName}'.");
+            var ou = ousResult.Value.FirstOrDefault(o => parentOu == null || o.ParentId == parentOu.Id) ?? throw new InvalidOperationException($"Organizational Unit '{ouName}' not found in organization '{organizationName}'.");
 
             parentOu = ou;
         }
@@ -107,7 +107,7 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
         try
         {
             var organization = await GetOrganizationAsync(hostConfiguration.Subject.Organization);
-            parentOu = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, organization.NodeId);
+            parentOu = await ResolveOrganizationalUnitHierarchyAsync(hostConfiguration.Subject.OrganizationalUnit, organization.Id);
         }
         catch (InvalidOperationException ex)
         {
@@ -119,7 +119,7 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
 
         try
         {
-            var existingComputer = await GetComputerByMacAddressAsync(hostConfiguration.Host.MacAddress, parentOu.NodeId);
+            var existingComputer = await GetComputerByMacAddressAsync(hostConfiguration.Host.MacAddress, parentOu.Id);
 
             var updateResult = await databaseService.UpdateNodeAsync(existingComputer, computer => computer.With(hostConfiguration.Host.Name, hostConfiguration.Host.IpAddress));
 
@@ -140,7 +140,7 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
         {
             var computer = new Computer(hostConfiguration.Host.Name, hostConfiguration.Host.IpAddress, hostConfiguration.Host.MacAddress)
             {
-                ParentId = parentOu.NodeId
+                ParentId = parentOu.Id
             };
 
             var addResult = await databaseService.AddNodesAsync(new List<Computer> { computer });
@@ -174,7 +174,7 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
         try
         {
             var organizationEntity = await GetOrganizationAsync(request.Organization);
-            lastOu = await ResolveOrganizationalUnitHierarchyAsync(request.OrganizationalUnit, organizationEntity.NodeId);
+            lastOu = await ResolveOrganizationalUnitHierarchyAsync(request.OrganizationalUnit, organizationEntity.Id);
         }
         catch (InvalidOperationException ex)
         {
@@ -186,7 +186,7 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
 
         try
         {
-            var existingComputer = await GetComputerByMacAddressAsync(request.MacAddress, lastOu.NodeId);
+            var existingComputer = await GetComputerByMacAddressAsync(request.MacAddress, lastOu.Id);
             var removeResult = await databaseService.RemoveNodesAsync(new List<Computer> { existingComputer });
 
             if (!removeResult.IsSuccess)
@@ -220,7 +220,7 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
         try
         {
             var organization = await GetOrganizationAsync(request.Organization);
-            lastOu = await ResolveOrganizationalUnitHierarchyAsync(request.OrganizationalUnit, organization.NodeId);
+            lastOu = await ResolveOrganizationalUnitHierarchyAsync(request.OrganizationalUnit, organization.Id);
         }
         catch (InvalidOperationException ex)
         {
@@ -232,7 +232,7 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
 
         try
         {
-            var computer = await GetComputerByMacAddressAsync(request.MacAddress, lastOu.NodeId);
+            var computer = await GetComputerByMacAddressAsync(request.MacAddress, lastOu.Id);
 
             var updateResult = await databaseService.UpdateNodeAsync(computer, updatedComputer => updatedComputer.With(request.Name, request.IpAddress));
 

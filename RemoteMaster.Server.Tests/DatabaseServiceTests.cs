@@ -43,8 +43,8 @@ public class DatabaseServiceTests : IDisposable
         context.OrganizationalUnits.RemoveRange(context.OrganizationalUnits);
         var nodes = new List<OrganizationalUnit>
         {
-            new() { NodeId = Guid.NewGuid(), Name = "OU1" },
-            new() { NodeId = Guid.NewGuid(), Name = "OU2" }
+            new() { Id = Guid.NewGuid(), Name = "OU1" },
+            new() { Id = Guid.NewGuid(), Name = "OU2" }
         };
         context.OrganizationalUnits.AddRange(nodes);
         await context.SaveChangesAsync();
@@ -67,8 +67,8 @@ public class DatabaseServiceTests : IDisposable
         // Arrange
         var organizationalUnits = new List<OrganizationalUnit>
         {
-            new() { NodeId = Guid.NewGuid(), Name = "OU1" },
-            new() { NodeId = Guid.NewGuid(), Name = "OU2" }
+            new() { Id = Guid.NewGuid(), Name = "OU1" },
+            new() { Id = Guid.NewGuid(), Name = "OU2" }
         };
 
         // Act
@@ -78,7 +78,7 @@ public class DatabaseServiceTests : IDisposable
         Assert.True(result.IsSuccess);
         foreach (var addedNode in result.Value)
         {
-            var fetchedNode = await context.OrganizationalUnits.FindAsync(addedNode.NodeId);
+            var fetchedNode = await context.OrganizationalUnits.FindAsync(addedNode.Id);
             Assert.NotNull(fetchedNode);
             Assert.Equal(addedNode.Name, fetchedNode.Name);
         }
@@ -93,8 +93,8 @@ public class DatabaseServiceTests : IDisposable
         // Arrange
         var unknownNodes = new List<UnknownNode>
         {
-            new() { NodeId = Guid.NewGuid(), Name = "Unknown1" },
-            new() { NodeId = Guid.NewGuid(), Name = "Unknown2" }
+            new() { Id = Guid.NewGuid(), Name = "Unknown1" },
+            new() { Id = Guid.NewGuid(), Name = "Unknown2" }
         };
 
         // Act
@@ -115,8 +115,8 @@ public class DatabaseServiceTests : IDisposable
         // Arrange
         var organizationalUnits = new List<OrganizationalUnit>
         {
-            new() { NodeId = Guid.NewGuid(), Name = "OU1" },
-            new() { NodeId = Guid.NewGuid(), Name = "OU2" }
+            new() { Id = Guid.NewGuid(), Name = "OU1" },
+            new() { Id = Guid.NewGuid(), Name = "OU2" }
         };
         context.OrganizationalUnits.AddRange(organizationalUnits);
         await context.SaveChangesAsync();
@@ -128,7 +128,7 @@ public class DatabaseServiceTests : IDisposable
         Assert.True(result.IsSuccess);
         foreach (var organizationalUnit in organizationalUnits)
         {
-            var removedNode = await context.OrganizationalUnits.FindAsync(organizationalUnit.NodeId);
+            var removedNode = await context.OrganizationalUnits.FindAsync(organizationalUnit.Id);
             Assert.Null(removedNode);
         }
     }
@@ -142,8 +142,8 @@ public class DatabaseServiceTests : IDisposable
         // Arrange
         var unknownNodes = new List<UnknownNode>
         {
-            new() { NodeId = Guid.NewGuid(), Name = "Unknown1" },
-            new() { NodeId = Guid.NewGuid(), Name = "Unknown2" }
+            new() { Id = Guid.NewGuid(), Name = "Unknown1" },
+            new() { Id = Guid.NewGuid(), Name = "Unknown2" }
         };
 
         // Act
@@ -162,27 +162,20 @@ public class DatabaseServiceTests : IDisposable
         var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
 
         // Arrange
-        var computer = new Computer
+        var computer = new Computer("OldName", "127.0.0.1", "00:00:00:00:00:00")
         {
-            NodeId = Guid.NewGuid(),
-            IpAddress = "127.0.0.1",
-            Name = "OldName",
-            MacAddress = "00:00:00:00:00:00",
+            Id = Guid.NewGuid(),
             ParentId = Guid.NewGuid()
         };
         context.Computers.Add(computer);
         await context.SaveChangesAsync();
 
         // Act
-        var result = await databaseService.UpdateNodeAsync(computer, updatedComputer =>
-        {
-            updatedComputer.IpAddress = "192.168.0.1";
-            updatedComputer.Name = "NewName";
-        });
+        var result = await databaseService.UpdateNodeAsync(computer, updatedComputer => updatedComputer.With("NewName", "192.168.0.1"));
 
         // Assert
         Assert.True(result.IsSuccess);
-        var updatedComputer = await context.Computers.FindAsync(computer.NodeId);
+        var updatedComputer = await context.Computers.FindAsync(computer.Id);
         Assert.NotNull(updatedComputer);
         Assert.Equal("192.168.0.1", updatedComputer.IpAddress);
         Assert.Equal("NewName", updatedComputer.Name);
@@ -197,8 +190,8 @@ public class DatabaseServiceTests : IDisposable
 
         // Arrange
         context.OrganizationalUnits.RemoveRange(context.OrganizationalUnits);
-        var parentOu = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "ParentOU", ParentId = null };
-        var childOu = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "ChildOU", ParentId = parentOu.NodeId };
+        var parentOu = new OrganizationalUnit { Id = Guid.NewGuid(), Name = "ParentOU", ParentId = null };
+        var childOu = new OrganizationalUnit { Id = Guid.NewGuid(), Name = "ChildOU", ParentId = parentOu.Id };
         context.OrganizationalUnits.AddRange(parentOu, childOu);
         await context.SaveChangesAsync();
 
@@ -218,9 +211,9 @@ public class DatabaseServiceTests : IDisposable
         var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
 
         // Arrange
-        var oldParent = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "OldParent" };
-        var newParent = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "NewParent" };
-        var childOu = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "ChildOU", ParentId = oldParent.NodeId };
+        var oldParent = new OrganizationalUnit { Id = Guid.NewGuid(), Name = "OldParent" };
+        var newParent = new OrganizationalUnit { Id = Guid.NewGuid(), Name = "NewParent" };
+        var childOu = new OrganizationalUnit { Id = Guid.NewGuid(), Name = "ChildOU", ParentId = oldParent.Id };
         context.OrganizationalUnits.AddRange(oldParent, newParent, childOu);
         await context.SaveChangesAsync();
 
@@ -229,8 +222,8 @@ public class DatabaseServiceTests : IDisposable
 
         // Assert
         Assert.True(result.IsSuccess);
-        var movedNode = await context.OrganizationalUnits.FindAsync(childOu.NodeId);
-        Assert.Equal(newParent.NodeId, movedNode.ParentId);
+        var movedNode = await context.OrganizationalUnits.FindAsync(childOu.Id);
+        Assert.Equal(newParent.Id, movedNode.ParentId);
     }
 
     [Fact]
@@ -244,8 +237,8 @@ public class DatabaseServiceTests : IDisposable
         context.OrganizationalUnits.RemoveRange(context.OrganizationalUnits);
         var nodes = new List<OrganizationalUnit>
         {
-            new() { NodeId = Guid.NewGuid(), Name = "OU1" },
-            new() { NodeId = Guid.NewGuid(), Name = "OU2" }
+            new() { Id = Guid.NewGuid(), Name = "OU1" },
+            new() { Id = Guid.NewGuid(), Name = "OU2" }
         };
         context.OrganizationalUnits.AddRange(nodes);
         await context.SaveChangesAsync();
@@ -268,13 +261,13 @@ public class DatabaseServiceTests : IDisposable
         // Arrange
         var organization = new Organization
         {
-            NodeId = Guid.NewGuid(),
+            Id = Guid.NewGuid(),
             Name = "Org",
             Country = "Country",
             Locality = "Locality",
             State = "State"
         };
-        var parent = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "Parent" };
+        var parent = new OrganizationalUnit { Id = Guid.NewGuid(), Name = "Parent" };
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         context.Organizations.Add(organization);
         context.OrganizationalUnits.Add(parent);
@@ -293,12 +286,12 @@ public class DatabaseServiceTests : IDisposable
         var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
 
         // Arrange
-        var node = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "Node" };
+        var node = new OrganizationalUnit { Id = Guid.NewGuid(), Name = "Node" };
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         context.OrganizationalUnits.Add(node);
         await context.SaveChangesAsync();
 
-        var nonExistentParent = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "NonExistentParent" };
+        var nonExistentParent = new OrganizationalUnit { Id = Guid.NewGuid(), Name = "NonExistentParent" };
 
         // Act & Assert
         var result = await databaseService.MoveNodeAsync(node, nonExistentParent);
@@ -314,8 +307,8 @@ public class DatabaseServiceTests : IDisposable
         var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
 
         // Arrange
-        var parentNode = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "Parent" };
-        var childNode = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "Child", ParentId = parentNode.NodeId };
+        var parentNode = new OrganizationalUnit { Id = Guid.NewGuid(), Name = "Parent" };
+        var childNode = new OrganizationalUnit { Id = Guid.NewGuid(), Name = "Child", ParentId = parentNode.Id };
         context.OrganizationalUnits.AddRange(parentNode, childNode);
         await context.SaveChangesAsync();
 
@@ -324,8 +317,8 @@ public class DatabaseServiceTests : IDisposable
 
         // Assert
         Assert.True(result.IsSuccess);
-        var unchangedNode = await context.OrganizationalUnits.FindAsync(childNode.NodeId);
-        Assert.Equal(parentNode.NodeId, unchangedNode.ParentId);
+        var unchangedNode = await context.OrganizationalUnits.FindAsync(childNode.Id);
+        Assert.Equal(parentNode.Id, unchangedNode.ParentId);
     }
 
     [Fact]
@@ -335,21 +328,14 @@ public class DatabaseServiceTests : IDisposable
         var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
 
         // Arrange
-        var nonExistentComputer = new Computer
+        var nonExistentComputer = new Computer("NonExistent", "127.0.0.1", "00:00:00:00:00:00")
         {
-            NodeId = Guid.NewGuid(),
-            IpAddress = "127.0.0.1",
-            Name = "NonExistent",
-            MacAddress = "00:00:00:00:00:00",
+            Id = Guid.NewGuid(),
             ParentId = Guid.NewGuid()
         };
 
         // Act & Assert
-        var result = await databaseService.UpdateNodeAsync(nonExistentComputer, updatedComputer =>
-        {
-            updatedComputer.IpAddress = "192.168.0.1";
-            updatedComputer.Name = "NewName";
-        });
+        var result = await databaseService.UpdateNodeAsync(nonExistentComputer, updatedComputer => updatedComputer.With("NewName", "192.168.0.1"));
 
         Assert.False(result.IsSuccess);
         Assert.Contains("Failed to update node of type Computer.", result.Errors.First().Message);
@@ -362,7 +348,7 @@ public class DatabaseServiceTests : IDisposable
         var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
 
         // Arrange
-        var node = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "Node" };
+        var node = new OrganizationalUnit { Id = Guid.NewGuid(), Name = "Node" };
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         context.OrganizationalUnits.Add(node);
         await context.SaveChangesAsync();
@@ -380,7 +366,7 @@ public class DatabaseServiceTests : IDisposable
         var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
 
         // Arrange
-        var nonExistentNode = new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = "NonExistentNode" };
+        var nonExistentNode = new OrganizationalUnit { Id = Guid.NewGuid(), Name = "NonExistentNode" };
 
         // Act & Assert
         var result = await databaseService.GetFullPathAsync(nonExistentNode);
@@ -398,8 +384,8 @@ public class DatabaseServiceTests : IDisposable
         // Arrange
         var organizations = new List<Organization>
         {
-            new() { NodeId = Guid.NewGuid(), Name = "Org1", Country = "Country1", Locality = "Locality1", State = "State1" },
-            new() { NodeId = Guid.NewGuid(), Name = "Org2", Country = "Country2", Locality = "Locality2", State = "State2" }
+            new() { Id = Guid.NewGuid(), Name = "Org1", Country = "Country1", Locality = "Locality1", State = "State1" },
+            new() { Id = Guid.NewGuid(), Name = "Org2", Country = "Country2", Locality = "Locality2", State = "State2" }
         };
 
         // Act
@@ -409,7 +395,7 @@ public class DatabaseServiceTests : IDisposable
         Assert.True(result.IsSuccess);
         foreach (var addedNode in result.Value)
         {
-            var fetchedNode = await context.Organizations.FindAsync(addedNode.NodeId);
+            var fetchedNode = await context.Organizations.FindAsync(addedNode.Id);
             Assert.NotNull(fetchedNode);
             Assert.Equal(addedNode.Name, fetchedNode.Name);
         }
@@ -425,8 +411,8 @@ public class DatabaseServiceTests : IDisposable
         // Arrange
         var computers = new List<Computer>
         {
-            new() { NodeId = Guid.NewGuid(), Name = "Comp1", IpAddress = "192.168.0.1", MacAddress = "00:00:00:00:00:01", ParentId = Guid.NewGuid() },
-            new() { NodeId = Guid.NewGuid(), Name = "Comp2", IpAddress = "192.168.0.2", MacAddress = "00:00:00:00:00:02", ParentId = Guid.NewGuid() }
+            new("Comp1", "192.168.0.1", "00:00:00:00:00:01") { Id = Guid.NewGuid(), ParentId = Guid.NewGuid() },
+            new("Comp2", "192.168.0.2", "00:00:00:00:00:02") { Id = Guid.NewGuid(), ParentId = Guid.NewGuid() }
         };
 
         // Act
@@ -436,7 +422,7 @@ public class DatabaseServiceTests : IDisposable
         Assert.True(result.IsSuccess);
         foreach (var addedNode in result.Value)
         {
-            var fetchedNode = await context.Computers.FindAsync(addedNode.NodeId);
+            var fetchedNode = await context.Computers.FindAsync(addedNode.Id);
             Assert.NotNull(fetchedNode);
             Assert.Equal(addedNode.Name, fetchedNode.Name);
         }
@@ -467,7 +453,7 @@ public class DatabaseServiceTests : IDisposable
         var largeNumberOfNodes = new List<OrganizationalUnit>();
         for (int i = 0; i < 1000; i++)
         {
-            largeNumberOfNodes.Add(new OrganizationalUnit { NodeId = Guid.NewGuid(), Name = $"OU{i}" });
+            largeNumberOfNodes.Add(new OrganizationalUnit { Id = Guid.NewGuid(), Name = $"OU{i}" });
         }
         context.OrganizationalUnits.AddRange(largeNumberOfNodes);
         await context.SaveChangesAsync();
@@ -487,7 +473,7 @@ public class DatabaseServiceTests : IDisposable
 
     private class UnknownNode : INode
     {
-        public Guid NodeId { get; init; }
+        public Guid Id { get; init; }
 
         public string Name { get; set; }
 

@@ -30,7 +30,7 @@
                     <option value="@Guid.Empty">Select an organization</option>
                     @foreach (var organization in _organizations)
                     {
-                        <option value="@organization.NodeId">@organization.Name</option>
+                        <option value="@organization.Id">@organization.Name</option>
                     }
                 </InputSelect>
                 <ValidationMessage For="() => Input.OrganizationId" class="text-red-500 mt-1" />
@@ -41,7 +41,7 @@
                     <option value="@Guid.Empty">Select a parent organizational unit (optional)</option>
                     @foreach (var ou in _filteredOrganizationalUnits)
                     {
-                        <option value="@ou.NodeId">@ou.Name</option>
+                        <option value="@ou.Id">@ou.Name</option>
                     }
                 </InputSelect>
                 <ValidationMessage For="() => Input.ParentId" class="text-red-500 mt-1" />
@@ -82,10 +82,10 @@
                                     @organizationalUnit.Name
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                                    @_organizations.FirstOrDefault(o => o.NodeId == organizationalUnit.OrganizationId)?.Name
+                                    @_organizations.FirstOrDefault(o => o.Id == organizationalUnit.OrganizationId)?.Name
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                                    @(_organizationalUnits.FirstOrDefault(ou => ou.NodeId == organizationalUnit.ParentId)?.Name ?? "N/A")
+                                    @(_organizationalUnits.FirstOrDefault(ou => ou.Id == organizationalUnit.ParentId)?.Name ?? "N/A")
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
                                     <button class="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 focus:outline-none" @onclick="() => EditOrganizationalUnit(organizationalUnit)">

@@ -81,14 +81,14 @@ public class NodeController(IDatabaseService databaseService, UserManager<Applic
 
     private async Task<IEnumerable<INode>> LoadNodes(ApplicationUser user, Guid? organizationId = null, Guid? parentId = null)
     {
-        var accessibleOrganizations = user.AccessibleOrganizations.Select(org => org.NodeId).ToList();
-        var accessibleOrganizationalUnits = user.AccessibleOrganizationalUnits.Select(ou => ou.NodeId).ToList();
+        var accessibleOrganizations = user.AccessibleOrganizations.Select(org => org.Id).ToList();
+        var accessibleOrganizationalUnits = user.AccessibleOrganizationalUnits.Select(ou => ou.Id).ToList();
 
         var units = new List<INode>();
 
         if (organizationId == null)
         {
-            var organizationsResult = await databaseService.GetNodesAsync<Organization>(o => accessibleOrganizations.Contains(o.NodeId));
+            var organizationsResult = await databaseService.GetNodesAsync<Organization>(o => accessibleOrganizations.Contains(o.Id));
 
             if (!organizationsResult.IsSuccess)
             {
@@ -100,7 +100,7 @@ public class NodeController(IDatabaseService databaseService, UserManager<Applic
 
             foreach (var organization in organizations)
             {
-                var organizationalUnits = (await LoadNodes(user, organization.NodeId)).OfType<OrganizationalUnit>().ToList();
+                var organizationalUnits = (await LoadNodes(user, organization.Id)).OfType<OrganizationalUnit>().ToList();
                 organization.OrganizationalUnits.Clear();
 
                 foreach (var unit in organizationalUnits)
@@ -114,7 +114,7 @@ public class NodeController(IDatabaseService databaseService, UserManager<Applic
             var organizationalUnitsResult = await databaseService.GetNodesAsync<OrganizationalUnit>(ou =>
                 ou.OrganizationId == organizationId &&
                 (parentId == null || ou.ParentId == parentId) &&
-                accessibleOrganizationalUnits.Contains(ou.NodeId));
+                accessibleOrganizationalUnits.Contains(ou.Id));
 
             if (!organizationalUnitsResult.IsSuccess)
             {
@@ -137,8 +137,8 @@ public class NodeController(IDatabaseService databaseService, UserManager<Applic
 
             foreach (var unit in organizationalUnits)
             {
-                var childrenUnits = (await LoadNodes(user, unit.OrganizationId, unit.NodeId)).OfType<OrganizationalUnit>().ToList();
-                var unitComputers = (await LoadNodes(user, unit.OrganizationId, unit.NodeId)).OfType<Computer>().ToList();
+                var childrenUnits = (await LoadNodes(user, unit.OrganizationId, unit.Id)).OfType<OrganizationalUnit>().ToList();
+                var unitComputers = (await LoadNodes(user, unit.OrganizationId, unit.Id)).OfType<Computer>().ToList();
 
                 unit.Children.Clear();
 

@@ -81,7 +81,7 @@ public partial class ManageOrganizations
             return false;
         }
 
-        if (await dbContext.Organizations.AnyAsync(o => o.Name == Input.Name && o.NodeId != Input.Id.Value))
+        if (await dbContext.Organizations.AnyAsync(o => o.Name == Input.Name && o.Id != Input.Id.Value))
         {
             _message = "Error: Organization with this name already exists.";
 
@@ -158,7 +158,7 @@ public partial class ManageOrganizations
     {
         Input = new InputModel
         {
-            Id = organization.NodeId,
+            Id = organization.Id,
             Name = organization.Name,
             Locality = organization.Locality,
             State = organization.State,

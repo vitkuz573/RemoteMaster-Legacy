@@ -62,7 +62,7 @@ public class HostAccessHandler(IServiceScopeFactory scopeFactory) : Authorizatio
 
         var organizationalUnit = await dbContext.OrganizationalUnits
             .Include(ou => ou.AccessibleUsers)
-            .FirstOrDefaultAsync(ou => ou.NodeId == computer.ParentId.Value);
+            .FirstOrDefaultAsync(ou => ou.Id == computer.ParentId.Value);
 
         if (organizationalUnit == null || organizationalUnit.AccessibleUsers.All(u => u.Id != userId))
         {

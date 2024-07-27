@@ -15,9 +15,9 @@ public class ComputerConfiguration : IEntityTypeConfiguration<Computer>
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "EntityTypeBuilder will not be null.")]
     public void Configure(EntityTypeBuilder<Computer> builder)
     {
-        builder.HasKey(c => c.NodeId);
+        builder.HasKey(c => c.Id);
 
-        builder.Property(c => c.NodeId)
+        builder.Property(c => c.Id)
             .ValueGeneratedOnAdd()
             .HasColumnOrder(0);
 

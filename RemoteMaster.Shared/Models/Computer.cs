@@ -10,7 +10,7 @@ namespace RemoteMaster.Shared.Models;
 public class Computer(string name, string ipAddress, string macAddress) : INode, IEquatable<Computer>
 {
     [JsonIgnore]
-    public Guid NodeId { get; set; }
+    public Guid Id { get; set; }
 
     [JsonPropertyName("name")]
     public string Name { get; } = name;
@@ -44,7 +44,7 @@ public class Computer(string name, string ipAddress, string macAddress) : INode,
     {
         return new Computer(name ?? Name, ipAddress ?? IpAddress, macAddress ?? MacAddress)
         {
-            NodeId = NodeId,
+            Id = Id,
             Thumbnail = Thumbnail,
             ParentId = ParentId,
             Parent = Parent

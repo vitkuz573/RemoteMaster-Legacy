@@ -14,9 +14,9 @@ public class OrganizationConfiguration : IEntityTypeConfiguration<Organization>
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "EntityTypeBuilder will not be null.")]
     public void Configure(EntityTypeBuilder<Organization> builder)
     {
-        builder.HasKey(o => o.NodeId);
+        builder.HasKey(o => o.Id);
 
-        builder.Property(o => o.NodeId)
+        builder.Property(o => o.Id)
             .ValueGeneratedOnAdd()
             .HasColumnOrder(0);
 

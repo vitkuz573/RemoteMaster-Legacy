@@ -35,23 +35,23 @@ public partial class MoveDialog
         if (!Hosts.IsEmpty)
         {
             var firstHostParentId = Hosts.First().Key.ParentId;
-            var currentOrganizationalUnitResult = await DatabaseService.GetNodesAsync<OrganizationalUnit>(node => node.NodeId == firstHostParentId);
+            var currentOrganizationalUnitResult = await DatabaseService.GetNodesAsync<OrganizationalUnit>(node => node.Id == firstHostParentId);
 
             if (currentOrganizationalUnitResult.IsSuccess && currentOrganizationalUnitResult.Value.Any())
             {
                 var currentOU = currentOrganizationalUnitResult.Value.First();
 
-                _selectedOrganizationalUnitId = currentOU.NodeId;
+                _selectedOrganizationalUnitId = currentOU.Id;
                 _currentOrganizationalUnitName = currentOU.Name;
 
-                var currentOrganization = _organizations.FirstOrDefault(org => org.NodeId == currentOU.OrganizationId);
+                var currentOrganization = _organizations.FirstOrDefault(org => org.Id == currentOU.OrganizationId);
 
                 if (currentOrganization != null)
                 {
                     _currentOrganizationName = currentOrganization.Name;
-                    _selectedOrganizationId = currentOrganization.NodeId;
+                    _selectedOrganizationId = currentOrganization.Id;
 
-                    await LoadOrganizationalUnits(currentOrganization.NodeId);
+                    await LoadOrganizationalUnits(currentOrganization.Id);
                 }
             }
         }
@@ -111,7 +111,7 @@ public partial class MoveDialog
     {
         if (_selectedOrganizationalUnitId != Guid.Empty)
         {
-            var targetOrganizationResult = await DatabaseService.GetNodesAsync<Organization>(o => o.NodeId == _selectedOrganizationId);
+            var targetOrganizationResult = await DatabaseService.GetNodesAsync<Organization>(o => o.Id == _selectedOrganizationId);
 
             if (!targetOrganizationResult.IsSuccess || !targetOrganizationResult.Value.Any())
             {
@@ -121,7 +121,7 @@ public partial class MoveDialog
 
             var targetOrganization = targetOrganizationResult.Value.First().Name;
 
-            var newParentResult = await DatabaseService.GetNodesAsync<OrganizationalUnit>(ou => ou.NodeId == _selectedOrganizationalUnitId);
+            var newParentResult = await DatabaseService.GetNodesAsync<OrganizationalUnit>(ou => ou.Id == _selectedOrganizationalUnitId);
             
             if (!newParentResult.IsSuccess || !newParentResult.Value.Any())
             {
@@ -140,7 +140,7 @@ public partial class MoveDialog
 
             if (targetOrganizationalUnitsPath.Length > 0)
             {
-                var nodeIds = Hosts.Select(host => host.Key.NodeId);
+                var nodeIds = Hosts.Select(host => host.Key.Id);
                 var unavailableHosts = new List<Computer>();
 
                 foreach (var host in Hosts)
@@ -164,7 +164,7 @@ public partial class MoveDialog
 
                 foreach (var nodeId in nodeIds)
                 {
-                    var nodeResult = await DatabaseService.GetNodesAsync<Computer>(c => c.NodeId == nodeId);
+                    var nodeResult = await DatabaseService.GetNodesAsync<Computer>(c => c.Id == nodeId);
 
                     if (!nodeResult.IsSuccess || !nodeResult.Value.Any())
                     {

@@ -96,14 +96,14 @@ public partial class Home
             return [];
         }
 
-        var accessibleOrganizations = _currentUser.AccessibleOrganizations.Select(org => org.NodeId).ToList();
-        var accessibleOrganizationalUnits = _currentUser.AccessibleOrganizationalUnits.Select(ou => ou.NodeId).ToList();
+        var accessibleOrganizations = _currentUser.AccessibleOrganizations.Select(org => org.Id).ToList();
+        var accessibleOrganizationalUnits = _currentUser.AccessibleOrganizationalUnits.Select(ou => ou.Id).ToList();
 
         var units = new List<INode>();
 
         if (organizationId == null)
         {
-            var organizationsResult = await DatabaseService.GetNodesAsync<Organization>(o => accessibleOrganizations.Contains(o.NodeId));
+            var organizationsResult = await DatabaseService.GetNodesAsync<Organization>(o => accessibleOrganizations.Contains(o.Id));
 
             if (!organizationsResult.IsSuccess)
             {
@@ -116,7 +116,7 @@ public partial class Home
 
             foreach (var organization in organizations)
             {
-                var organizationalUnits = (await LoadNodes(organization.NodeId)).OfType<OrganizationalUnit>().ToList();
+                var organizationalUnits = (await LoadNodes(organization.Id)).OfType<OrganizationalUnit>().ToList();
                 organization.OrganizationalUnits.Clear();
 
                 foreach (var unit in organizationalUnits)
@@ -130,7 +130,7 @@ public partial class Home
             var organizationalUnitsResult = await DatabaseService.GetNodesAsync<OrganizationalUnit>(ou =>
                 ou.OrganizationId == organizationId &&
                 (parentId == null || ou.ParentId == parentId) &&
-                accessibleOrganizationalUnits.Contains(ou.NodeId));
+                accessibleOrganizationalUnits.Contains(ou.Id));
 
             if (!organizationalUnitsResult.IsSuccess)
             {
@@ -155,8 +155,8 @@ public partial class Home
 
             foreach (var unit in organizationalUnits)
             {
-                var childrenUnits = (await LoadNodes(unit.OrganizationId, unit.NodeId)).OfType<OrganizationalUnit>().ToList();
-                var unitComputers = (await LoadNodes(unit.OrganizationId, unit.NodeId)).OfType<Computer>().ToList();
+                var childrenUnits = (await LoadNodes(unit.OrganizationId, unit.Id)).OfType<OrganizationalUnit>().ToList();
+                var unitComputers = (await LoadNodes(unit.OrganizationId, unit.Id)).OfType<Computer>().ToList();
 
                 unit.Children.Clear();
 
@@ -742,7 +742,7 @@ public partial class Home
     {
         foreach (var movedNode in movedNodes)
         {
-            _selectedComputers.RemoveAll(c => c.NodeId == movedNode.NodeId);
+            _selectedComputers.RemoveAll(c => c.Id == movedNode.Id);
             _availableComputers.TryRemove(movedNode.IpAddress, out _);
             _unavailableComputers.TryRemove(movedNode.IpAddress, out _);
             _pendingComputers.TryRemove(movedNode.IpAddress, out _);

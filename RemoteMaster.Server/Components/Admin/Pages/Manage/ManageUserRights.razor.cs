@@ -68,11 +68,11 @@ public partial class ManageUserRights
         _organizations = await dbContext.Organizations
             .Include(o => o.OrganizationalUnits)
             .Select(o => new OrganizationViewModel(
-                o.NodeId,
+                o.Id,
                 o.Name,
                 o.OrganizationalUnits.Select(ou => new OrganizationalUnitViewModel
                 {
-                    Id = ou.NodeId,
+                    Id = ou.Id,
                     Name = ou.Name
                 }).ToList()
             )).ToListAsync();
@@ -228,8 +228,8 @@ public partial class ManageUserRights
         _initialIsLockedOut = SelectedUserModel.IsLockedOut;
         _initialCanAccessUnregisteredHosts = SelectedUserModel.CanAccessUnregisteredHosts;
 
-        _initialSelectedOrganizationIds = user.AccessibleOrganizations.Select(ao => ao.NodeId).ToList();
-        _initialSelectedUnitIds = user.AccessibleOrganizationalUnits.Select(aou => aou.NodeId).ToList();
+        _initialSelectedOrganizationIds = user.AccessibleOrganizations.Select(ao => ao.Id).ToList();
+        _initialSelectedUnitIds = user.AccessibleOrganizationalUnits.Select(aou => aou.Id).ToList();
 
         foreach (var organization in _organizations)
         {

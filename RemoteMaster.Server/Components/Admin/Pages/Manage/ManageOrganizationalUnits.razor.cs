@@ -76,7 +76,7 @@ public partial class ManageOrganizationalUnits
             return false;
         }
 
-        if (await dbContext.OrganizationalUnits.AnyAsync(ou => ou.Name == Input.Name && ou.OrganizationId == Input.OrganizationId && ou.NodeId != Input.Id.Value))
+        if (await dbContext.OrganizationalUnits.AnyAsync(ou => ou.Name == Input.Name && ou.OrganizationId == Input.OrganizationId && ou.Id != Input.Id.Value))
         {
             _message = "Error: Organizational unit with this name already exists in the selected organization.";
            
@@ -169,7 +169,7 @@ public partial class ManageOrganizationalUnits
     {
         Input = new InputModel
         {
-            Id = organizationalUnit.NodeId,
+            Id = organizationalUnit.Id,
             Name = organizationalUnit.Name,
             OrganizationId = organizationalUnit.OrganizationId,
             ParentId = organizationalUnit.ParentId

@@ -6,7 +6,7 @@ namespace RemoteMaster.Shared.Abstractions;
 
 public interface INode
 {
-    Guid NodeId { get; }
+    Guid Id { get; }
 
     string Name { get; }
 

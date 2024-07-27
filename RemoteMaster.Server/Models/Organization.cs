@@ -9,7 +9,7 @@ namespace RemoteMaster.Server.Models;
 
 public class Organization : INode
 {
-    public Guid NodeId { get; set; }
+    public Guid Id { get; set; }
     
     public string Name { get; set; }
     

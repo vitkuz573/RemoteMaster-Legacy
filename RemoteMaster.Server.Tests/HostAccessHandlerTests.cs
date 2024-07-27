@@ -79,18 +79,15 @@ public class HostAccessHandlerTests
         var user = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user1")]));
         var context = new AuthorizationHandlerContext([requirement], user, null);
 
-        var computer = new Computer
+        var computer = new Computer("host", "127.0.0.1", "00-14-22-01-23-45")
         {
-            NodeId = Guid.NewGuid(),
-            Name = "host",
-            IpAddress = "127.0.0.1",
-            MacAddress = "00-14-22-01-23-45",
+            Id = Guid.NewGuid(),
             ParentId = Guid.NewGuid()
         };
 
         var organizationalUnit = new OrganizationalUnit
         {
-            NodeId = computer.ParentId.Value,
+            Id = computer.ParentId.Value,
             Name = "Test OU",
             OrganizationId = Guid.NewGuid(),
         };
@@ -115,18 +112,15 @@ public class HostAccessHandlerTests
         var user = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user1")]));
         var context = new AuthorizationHandlerContext([requirement], user, null);
 
-        var computer = new Computer
+        var computer = new Computer("host", "127.0.0.1", "00-14-22-01-23-45")
         {
-            NodeId = Guid.NewGuid(),
-            Name = "host",
-            IpAddress = "127.0.0.1",
-            MacAddress = "00-14-22-01-23-45",
+            Id = Guid.NewGuid(),
             ParentId = Guid.NewGuid()
         };
 
         var organizationalUnit = new OrganizationalUnit
         {
-            NodeId = computer.ParentId.Value,
+            Id = computer.ParentId.Value,
             Name = "Test OU",
             OrganizationId = Guid.NewGuid(),
         };
@@ -157,27 +151,21 @@ public class HostAccessHandlerTests
             UserName = "user1"
         };
 
-        var computer1 = new Computer
+        var computer1 = new Computer("sharedHost", "127.0.0.1", "00-14-22-01-23-45")
         {
-            NodeId = Guid.NewGuid(),
-            Name = "sharedHost",
-            IpAddress = "127.0.0.1",
-            MacAddress = "00-14-22-01-23-45",
+            Id = Guid.NewGuid(),
             ParentId = Guid.NewGuid()
         };
 
-        var computer2 = new Computer
+        var computer2 = new Computer("sharedHost", "127.0.0.2", "00-14-22-01-23-46")
         {
-            NodeId = Guid.NewGuid(),
-            Name = "sharedHost",
-            IpAddress = "127.0.0.2",
-            MacAddress = "00-14-22-01-23-46",
+            Id = Guid.NewGuid(),
             ParentId = Guid.NewGuid()
         };
 
         var organizationalUnit1 = new OrganizationalUnit
         {
-            NodeId = computer1.ParentId.Value,
+            Id = computer1.ParentId.Value,
             Name = "Unit 1",
             OrganizationId = Guid.NewGuid(),
         };
@@ -185,7 +173,7 @@ public class HostAccessHandlerTests
 
         var organizationalUnit2 = new OrganizationalUnit
         {
-            NodeId = computer2.ParentId.Value,
+            Id = computer2.ParentId.Value,
             Name = "Unit 2",
             OrganizationId = Guid.NewGuid(),
         };
@@ -217,27 +205,21 @@ public class HostAccessHandlerTests
             UserName = "user1"
         };
 
-        var computer1 = new Computer
+        var computer1 = new Computer("sharedHost", "127.0.0.1", "00-14-22-01-23-45")
         {
-            NodeId = Guid.NewGuid(),
-            Name = "sharedHost",
-            IpAddress = "127.0.0.1",
-            MacAddress = "00-14-22-01-23-45",
+            Id = Guid.NewGuid(),
             ParentId = Guid.NewGuid()
         };
 
-        var computer2 = new Computer
+        var computer2 = new Computer("sharedHost", "127.0.0.2", "00-14-22-01-23-46")
         {
-            NodeId = Guid.NewGuid(),
-            Name = "sharedHost",
-            IpAddress = "127.0.0.2",
-            MacAddress = "00-14-22-01-23-46",
+            Id = Guid.NewGuid(),
             ParentId = Guid.NewGuid()
         };
 
         var organizationalUnit1 = new OrganizationalUnit
         {
-            NodeId = computer1.ParentId.Value,
+            Id = computer1.ParentId.Value,
             Name = "Unit 1",
             OrganizationId = Guid.NewGuid(),
         };
@@ -245,7 +227,7 @@ public class HostAccessHandlerTests
 
         var organizationalUnit2 = new OrganizationalUnit
         {
-            NodeId = computer2.ParentId.Value,
+            Id = computer2.ParentId.Value,
             Name = "Unit 2",
             OrganizationId = Guid.NewGuid(),
         };
