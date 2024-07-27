@@ -43,5 +43,8 @@ public class ComputerConfiguration : IEntityTypeConfiguration<Computer>
             .HasForeignKey(c => c.ParentId)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(c => c.MacAddress)
+            .IsUnique();
     }
 }
