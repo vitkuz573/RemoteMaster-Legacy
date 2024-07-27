@@ -4,10 +4,10 @@
 
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Components;
-using Microsoft.EntityFrameworkCore;
+using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Components.Admin.Dialogs;
-using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 
@@ -34,25 +34,42 @@ public partial class ManageOrganizationalUnits
         if (Input.OrganizationId == Guid.Empty)
         {
             _message = "Error: Please select a valid organization.";
-            
             return;
         }
 
-        using var scope = ScopeFactory.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
         if (Input.Id.HasValue)
         {
-            if (await UpdateOrganizationalUnitAsync(dbContext))
+            var result = await DatabaseService.UpdateNodeAsync(
+                new OrganizationalUnit { Id = Input.Id.Value, Name = Input.Name, OrganizationId = Input.OrganizationId, ParentId = Input.ParentId },
+                ou =>
+                {
+                    ou.Name = Input.Name;
+                    ou.OrganizationId = Input.OrganizationId;
+                    ou.ParentId = Input.ParentId;
+                    return ou;
+                });
+
+            if (result.IsSuccess)
             {
                 await OnOrganizationalUnitSaved("Organizational unit updated successfully.");
+            }
+            else
+            {
+                _message = string.Join("; ", result.Errors.Select(e => e.Message));
             }
         }
         else
         {
-            if (await CreateOrganizationalUnitAsync(dbContext))
+            var newUnit = new OrganizationalUnit { Name = Input.Name, OrganizationId = Input.OrganizationId, ParentId = Input.ParentId };
+            var result = await DatabaseService.AddNodesAsync(new List<OrganizationalUnit> { newUnit });
+
+            if (result.IsSuccess)
             {
                 await OnOrganizationalUnitSaved("Organizational unit created successfully.");
+            }
+            else
+            {
+                _message = string.Join("; ", result.Errors.Select(e => e.Message));
             }
         }
     }
@@ -65,68 +82,33 @@ public partial class ManageOrganizationalUnits
         _message = message;
     }
 
-    private async Task<bool> UpdateOrganizationalUnitAsync(ApplicationDbContext dbContext)
-    {
-        var organizationalUnit = await dbContext.OrganizationalUnits.FindAsync(Input.Id.Value);
-
-        if (organizationalUnit == null)
-        {
-            _message = "Error: Organizational unit not found.";
-            
-            return false;
-        }
-
-        if (await dbContext.OrganizationalUnits.AnyAsync(ou => ou.Name == Input.Name && ou.OrganizationId == Input.OrganizationId && ou.Id != Input.Id.Value))
-        {
-            _message = "Error: Organizational unit with this name already exists in the selected organization.";
-           
-            return false;
-        }
-
-        organizationalUnit.Name = Input.Name;
-        organizationalUnit.OrganizationId = Input.OrganizationId;
-        organizationalUnit.ParentId = Input.ParentId;
-
-        await dbContext.SaveChangesAsync();
-
-        return true;
-    }
-
-    private async Task<bool> CreateOrganizationalUnitAsync(ApplicationDbContext dbContext)
-    {
-        if (await dbContext.OrganizationalUnits.AnyAsync(ou => ou.Name == Input.Name && ou.OrganizationId == Input.OrganizationId))
-        {
-            _message = "Error: Organizational unit with this name already exists in the selected organization.";
-            
-            return false;
-        }
-
-        var organizationalUnit = CreateOrganizationalUnit(Input.Name, Input.OrganizationId, Input.ParentId);
-        await dbContext.OrganizationalUnits.AddAsync(organizationalUnit);
-
-        await dbContext.SaveChangesAsync();
-
-        return true;
-    }
-
     private async Task LoadOrganizationsAsync()
     {
-        using var scope = ScopeFactory.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var result = await DatabaseService.GetNodesAsync<Organization>();
 
-        _organizations = await dbContext.Organizations.ToListAsync();
+        if (result.IsSuccess)
+        {
+            _organizations = result.Value.ToList();
+        }
+        else
+        {
+            _message = string.Join("; ", result.Errors.Select(e => e.Message));
+        }
     }
 
     private async Task LoadOrganizationalUnitsAsync()
     {
-        using var scope = ScopeFactory.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var result = await DatabaseService.GetNodesAsync<OrganizationalUnit>();
 
-        _organizationalUnits = await dbContext.OrganizationalUnits
-                                              .Include(ou => ou.Organization)
-                                              .ToListAsync();
-        
-        FilterOrganizationalUnits();
+        if (result.IsSuccess)
+        {
+            _organizationalUnits = result.Value.ToList();
+            FilterOrganizationalUnits();
+        }
+        else
+        {
+            _message = string.Join("; ", result.Errors.Select(e => e.Message));
+        }
     }
 
     private async Task OnOrganizationChanged(Guid organizationId)
@@ -143,26 +125,19 @@ public partial class ManageOrganizationalUnits
             .ToList();
     }
 
-    private static OrganizationalUnit CreateOrganizationalUnit(string name, Guid organizationId, Guid? parentId)
-    {
-        return new OrganizationalUnit
-        {
-            Name = name,
-            OrganizationId = organizationId,
-            ParentId = parentId
-        };
-    }
-
     private async Task DeleteOrganizationalUnit(OrganizationalUnit organizationalUnit)
     {
-        using var scope = ScopeFactory.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var result = await DatabaseService.RemoveNodesAsync(new List<OrganizationalUnit> { organizationalUnit });
 
-        dbContext.OrganizationalUnits.Remove(organizationalUnit);
-        await dbContext.SaveChangesAsync();
-
-        await LoadOrganizationalUnitsAsync();
-        _message = "Organizational unit deleted successfully.";
+        if (result.IsSuccess)
+        {
+            await LoadOrganizationalUnitsAsync();
+            _message = "Organizational unit deleted successfully.";
+        }
+        else
+        {
+            _message = string.Join("; ", result.Errors.Select(e => e.Message));
+        }
     }
 
     private void EditOrganizationalUnit(OrganizationalUnit organizationalUnit)

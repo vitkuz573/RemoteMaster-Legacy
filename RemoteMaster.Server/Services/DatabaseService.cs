@@ -32,7 +32,6 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         };
     }
 
-    /// <inheritdoc />
     public async Task<Result<IList<T>>> GetNodesAsync<T>(Expression<Func<T, bool>>? predicate = null) where T : class, INode
     {
         try
@@ -50,11 +49,10 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         }
         catch (Exception ex)
         {
-            return Result<IList<T>>.Failure($"Failed to retrieve nodes of type {typeof(T).Name}.", exception: ex);
+            return Result<IList<T>>.Failure($"Error: Failed to retrieve {typeof(T).Name} nodes.", exception: ex);
         }
     }
 
-    /// <inheritdoc />
     public async Task<Result<IList<T>>> AddNodesAsync<T>(IEnumerable<T> nodes) where T : class, INode
     {
         try
@@ -63,6 +61,39 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
 
             var nodesList = nodes.ToList();
 
+            foreach (var node in nodesList)
+            {
+                if (typeof(T) == typeof(OrganizationalUnit))
+                {
+                    var ouNode = (OrganizationalUnit)(object)node;
+                    
+                    if (await applicationDbContext.Set<T>().AnyAsync(n => ((OrganizationalUnit)(object)n!).Name == ouNode.Name && ((OrganizationalUnit)(object)n!).OrganizationId == ouNode.OrganizationId))
+                    {
+                        var organization = await applicationDbContext.Organizations.FindAsync(ouNode.OrganizationId);
+                        
+                        return Result<IList<T>>.Failure($"Error: An Organizational Unit with the name '{ouNode.Name}' already exists in the organization '{organization?.Name}'.");
+                    }
+                }
+                else if (typeof(T) == typeof(Computer))
+                {
+                    var compNode = (Computer)(object)node;
+                    
+                    if (await applicationDbContext.Set<T>().AnyAsync(n => ((Computer)(object)n!).Name == compNode.Name))
+                    {
+                        return Result<IList<T>>.Failure($"Error: A Computer with the name '{compNode.Name}' already exists.");
+                    }
+                }
+                else if (typeof(T) == typeof(Organization))
+                {
+                    var orgNode = (Organization)(object)node;
+                    
+                    if (await applicationDbContext.Set<T>().AnyAsync(n => ((Organization)(object)n!).Name == orgNode.Name))
+                    {
+                        return Result<IList<T>>.Failure($"Error: An Organization with the name '{orgNode.Name}' already exists.");
+                    }
+                }
+            }
+
             await applicationDbContext.Set<T>().AddRangeAsync(nodesList);
             await applicationDbContext.SaveChangesAsync();
 
@@ -70,16 +101,23 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         }
         catch (Exception ex)
         {
-            return Result<IList<T>>.Failure($"Failed to add nodes of type {typeof(T).Name}.", exception: ex);
+            return Result<IList<T>>.Failure($"Error: Failed to add {typeof(T).Name} nodes.", exception: ex);
         }
     }
 
-    /// <inheritdoc />
     public async Task<Result> RemoveNodesAsync<T>(IEnumerable<T> nodes) where T : class, INode
     {
         try
         {
             ArgumentNullException.ThrowIfNull(nodes);
+
+            foreach (var node in nodes)
+            {
+                if (!await applicationDbContext.Set<T>().AnyAsync(n => n.Id == node.Id))
+                {
+                    return Result.Failure($"Error: {typeof(T).Name} with the name '{node.Name}' does not exist.");
+                }
+            }
 
             applicationDbContext.Set<T>().RemoveRange(nodes);
             await applicationDbContext.SaveChangesAsync();
@@ -88,11 +126,10 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         }
         catch (Exception ex)
         {
-            return Result.Failure($"Failed to remove nodes of type {typeof(T).Name}.", exception: ex);
+            return Result.Failure($"Error: Failed to remove {typeof(T).Name} nodes.", exception: ex);
         }
     }
 
-    /// <inheritdoc />
     public async Task<Result> UpdateNodeAsync<T>(T node, Func<T, T> updateFunction) where T : class, INode
     {
         try
@@ -100,9 +137,44 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
             ArgumentNullException.ThrowIfNull(node);
             ArgumentNullException.ThrowIfNull(updateFunction);
 
-            var trackedNode = await applicationDbContext.Set<T>().FindAsync(node.Id) ?? throw new InvalidOperationException($"{typeof(T).Name} not found.");
+            var trackedNode = await applicationDbContext.Set<T>().FindAsync(node.Id);
+            
+            if (trackedNode == null)
+            {
+                return Result.Failure($"Error: {typeof(T).Name} with the name '{node.Name}' not found.");
+            }
 
             var updatedNode = updateFunction(trackedNode);
+
+            if (typeof(T) == typeof(OrganizationalUnit))
+            {
+                var ouNode = (OrganizationalUnit)(object)updatedNode;
+                
+                if (await applicationDbContext.Set<T>().AnyAsync(n => ((OrganizationalUnit)(object)n!).Name == ouNode.Name && ((OrganizationalUnit)(object)n!).OrganizationId == ouNode.OrganizationId && ((OrganizationalUnit)(object)n!).Id != ouNode.Id))
+                {
+                    var organization = await applicationDbContext.Organizations.FindAsync(ouNode.OrganizationId);
+                    
+                    return Result.Failure($"Error: An Organizational Unit with the name '{ouNode.Name}' already exists in the organization '{organization?.Name}'.");
+                }
+            }
+            else if (typeof(T) == typeof(Computer))
+            {
+                var compNode = (Computer)(object)updatedNode;
+                
+                if (await applicationDbContext.Set<T>().AnyAsync(n => ((Computer)(object)n!).Name == compNode.Name && ((Computer)(object)n!).Id != compNode.Id))
+                {
+                    return Result.Failure($"Error: A Computer with the name '{compNode.Name}' already exists.");
+                }
+            }
+            else if (typeof(T) == typeof(Organization))
+            {
+                var orgNode = (Organization)(object)updatedNode;
+                
+                if (await applicationDbContext.Set<T>().AnyAsync(n => ((Organization)(object)n!).Name == orgNode.Name && ((Organization)(object)n!).Id != orgNode.Id))
+                {
+                    return Result.Failure($"Error: An Organization with the name '{orgNode.Name}' already exists.");
+                }
+            }
 
             applicationDbContext.Entry(trackedNode).CurrentValues.SetValues(updatedNode);
 
@@ -112,11 +184,10 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         }
         catch (Exception ex)
         {
-            return Result.Failure($"Failed to update node of type {typeof(T).Name}.", exception: ex);
+            return Result.Failure($"Error: Failed to update {typeof(T).Name} node.", exception: ex);
         }
     }
 
-    /// <inheritdoc />
     public async Task<Result> MoveNodeAsync<TNode, TParent>(TNode node, TParent newParent) where TNode : class, INode where TParent : class, INode
     {
         try
@@ -164,11 +235,10 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         }
         catch (Exception ex)
         {
-            return Result.Failure($"Failed to move node of type {typeof(TNode).Name}.", exception: ex);
+            return Result.Failure($"Error: Failed to move {typeof(TNode).Name} node to new parent.", exception: ex);
         }
     }
 
-    /// <inheritdoc />
     public async Task<Result<string[]>> GetFullPathAsync<T>(T node) where T : class, INode
     {
         try
@@ -192,7 +262,7 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         }
         catch (Exception ex)
         {
-            return Result<string[]>.Failure($"Failed to get full path for node of type {typeof(T).Name}.", exception: ex);
+            return Result<string[]>.Failure($"Error: Failed to get full path for {typeof(T).Name} node.", exception: ex);
         }
     }
 }

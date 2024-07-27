@@ -2,11 +2,12 @@
 
 @rendermode InteractiveServer
 
+@using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Server.Components.Account.Shared
 @using RemoteMaster.Server.Components.Admin.Dialogs
 
 @inject NavigationManager NavigationManager
-@inject IServiceScopeFactory ScopeFactory
+@inject IDatabaseService DatabaseService
 
 <PageTitle>Manage Organizational Units</PageTitle>
 
