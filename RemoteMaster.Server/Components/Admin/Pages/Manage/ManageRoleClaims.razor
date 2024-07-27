@@ -3,11 +3,11 @@
 @rendermode InteractiveServer
 
 @using Microsoft.AspNetCore.Identity
+@using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Server.Components.Account.Shared
-@using RemoteMaster.Server.Data
 
 @inject RoleManager<IdentityRole> RoleManager
-@inject ApplicationDbContext DbContext
+@inject IApplicationClaimsService ApplicationClaimsService
 
 <PageTitle>Manage Role Claims</PageTitle>
 

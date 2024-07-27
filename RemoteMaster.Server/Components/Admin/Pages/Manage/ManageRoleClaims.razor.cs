@@ -12,7 +12,7 @@ public partial class ManageRoleClaims
 {
     private List<IdentityRole> _roles = [];
     private List<ClaimTypeViewModel> _claimTypes = [];
-    private List<IdentityRoleClaim<string>> _roleClaims = [];
+    private List<Claim> _roleClaims = [];
     private List<Claim> _initialRoleClaims = [];
     private string? _message;
 
@@ -28,19 +28,28 @@ public partial class ManageRoleClaims
             .Where(role => role.Name != "RootAdministrator")
             .ToListAsync();
 
-        var allClaims = await DbContext.ApplicationClaims
-            .GroupBy(ac => ac.ClaimType)
-            .Select(g => new
-            {
-                ClaimType = g.Key,
-                Values = g.Select(ac => ac.ClaimValue).Distinct().ToList()
-            })
-            .ToListAsync();
+        var allClaimsResult = await ApplicationClaimsService.GetClaimsAsync();
 
-        _claimTypes = allClaims.Select(c => new ClaimTypeViewModel(
-            c.ClaimType,
-            c.Values.Select(v => new ClaimValueViewModel { Value = v }).ToList()
-        )).ToList();
+        if (allClaimsResult.IsSuccess)
+        {
+            var groupedClaims = allClaimsResult.Value
+                .GroupBy(ac => ac.ClaimType)
+                .Select(g => new
+                {
+                    ClaimType = g.Key,
+                    Values = g.Select(ac => ac.ClaimValue).Distinct().ToList()
+                })
+                .ToList();
+
+            _claimTypes = groupedClaims.Select(c => new ClaimTypeViewModel(
+                c.ClaimType,
+                c.Values.Select(v => new ClaimValueViewModel { Value = v }).ToList()
+            )).ToList();
+        }
+        else
+        {
+            _message = "Error: Failed to load claims.";
+        }
     }
 
     private async Task OnRoleChanged(string? roleId)
@@ -48,21 +57,25 @@ public partial class ManageRoleClaims
         SelectedRoleId = roleId;
         SelectedRoleModel.Role = _roles.FirstOrDefault(r => r.Id == roleId)?.Name;
 
-        _roleClaims = await DbContext.RoleClaims.Where(rc => rc.RoleId == SelectedRoleId).ToListAsync();
-
-        foreach (var claimType in _claimTypes)
+        if (SelectedRoleId != null)
         {
-            foreach (var value in claimType.Values)
+            var role = await RoleManager.FindByIdAsync(SelectedRoleId);
+            var roleClaims = await RoleManager.GetClaimsAsync(role);
+
+            _roleClaims = [.. roleClaims];
+
+            foreach (var claimType in _claimTypes)
             {
-                value.IsSelected = _roleClaims.Any(rc => rc.ClaimType == claimType.Type && rc.ClaimValue == value.Value);
+                foreach (var value in claimType.Values)
+                {
+                    value.IsSelected = _roleClaims.Any(rc => rc.Type == claimType.Type && rc.Value == value.Value);
+                }
             }
+
+            _initialRoleClaims = new List<Claim>(_roleClaims);
+
+            StateHasChanged();
         }
-
-        _initialRoleClaims = _roleClaims
-            .Select(rc => new Claim(rc.ClaimType ?? string.Empty, rc.ClaimValue ?? string.Empty))
-            .ToList();
-
-        StateHasChanged();
     }
 
     private async Task OnValidSubmitAsync()
@@ -74,38 +87,50 @@ public partial class ManageRoleClaims
             return;
         }
 
-        var existingRoleClaims = await DbContext.RoleClaims.Where(rc => rc.RoleId == SelectedRoleId).ToListAsync();
+        var role = await RoleManager.FindByIdAsync(SelectedRoleId);
+        var existingRoleClaims = await RoleManager.GetClaimsAsync(role);
 
         var selectedClaims = _claimTypes
             .SelectMany(ct => ct.Values.Where(v => v.IsSelected).Select(v => new Claim(ct.Type, v.Value)))
             .ToList();
 
         var claimsToRemove = existingRoleClaims
-            .Where(rc => !selectedClaims.Any(c => c.Type == rc.ClaimType && c.Value == rc.ClaimValue))
+            .Where(rc => !selectedClaims.Any(c => c.Type == rc.Type && c.Value == rc.Value))
             .ToList();
 
         var claimsToAdd = selectedClaims
-            .Where(sc => !existingRoleClaims.Any(rc => rc.ClaimType == sc.Type && rc.ClaimValue == sc.Value))
-            .Select(sc => new IdentityRoleClaim<string>
-            {
-                RoleId = SelectedRoleId,
-                ClaimType = sc.Type,
-                ClaimValue = sc.Value
-            })
+            .Where(sc => !existingRoleClaims.Any(rc => rc.Type == sc.Type && rc.Value == sc.Value))
             .ToList();
 
-        DbContext.RoleClaims.RemoveRange(claimsToRemove);
-        DbContext.RoleClaims.AddRange(claimsToAdd);
+        foreach (var claim in claimsToRemove)
+        {
+            var result = await RoleManager.RemoveClaimAsync(role, claim);
+            
+            if (!result.Succeeded)
+            {
+                _message = $"Error: Failed to remove claim {claim.Type}:{claim.Value} from role {role.Name}.";
+                
+                return;
+            }
+        }
 
-        await DbContext.SaveChangesAsync();
+        foreach (var claim in claimsToAdd)
+        {
+            var result = await RoleManager.AddClaimAsync(role, claim);
+
+            if (!result.Succeeded)
+            {
+                _message = $"Error: Failed to add claim {claim.Type}:{claim.Value} to role {role.Name}.";
+
+                return;
+            }
+        }
 
         _message = "Role claims updated successfully.";
 
         _initialRoleClaims = selectedClaims;
 
         StateHasChanged();
-
-        await HideSuccessMessageAfterDelay();
     }
 
     private void ToggleClaimTypeExpansion(ClaimTypeViewModel claimType)
@@ -151,14 +176,6 @@ public partial class ManageRoleClaims
         }
 
         return false;
-    }
-
-    private async Task HideSuccessMessageAfterDelay()
-    {
-        await Task.Delay(3000);
-        _message = null;
-
-        await InvokeAsync(StateHasChanged);
     }
 
     public class RoleClaimEditModel

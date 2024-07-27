@@ -144,6 +144,7 @@ public static class Program
         services.AddTransient<Func<IUdpClient>>(provider => provider.GetRequiredService<IUdpClient>);
         services.AddScoped<IQueryParameterService, QueryParameterService>();
         services.AddScoped<IDatabaseService, DatabaseService>();
+        services.AddScoped<IApplicationClaimsService, ApplicationClaimsService>();
         services.AddScoped<IComputerCommandService, ComputerCommandService>();
         services.AddScoped<ICrlService, CrlService>();
         services.AddScoped<IAccessTokenProvider, AccessTokenProvider>();

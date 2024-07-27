@@ -4,8 +4,8 @@
 
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using RemoteMaster.Server.Data;
+using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;
@@ -69,14 +69,14 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
     {
         using var scope = serviceProvider.CreateScope();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var applicationClaimsService = scope.ServiceProvider.GetRequiredService<IApplicationClaimsService>();
 
         foreach (var role in _roles)
         {
             await EnsureRoleExists(roleManager, role);
         }
 
-        await EnsureClaimsExist(dbContext);
+        await EnsureClaimsExist(applicationClaimsService);
         await AssignClaimsToRoles(roleManager);
     }
 
@@ -84,7 +84,7 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
     {
         if (!await roleManager.RoleExistsAsync(roleName))
         {
-            var result = await roleManager.CreateAsync(new(roleName));
+            var result = await roleManager.CreateAsync(new IdentityRole(roleName));
 
             if (result.Succeeded)
             {
@@ -101,23 +101,23 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
         }
     }
 
-    private async Task EnsureClaimsExist(ApplicationDbContext dbContext)
+    private async Task EnsureClaimsExist(IApplicationClaimsService applicationClaimsService)
     {
         var claims = _roleClaims.SelectMany(rc => rc.Value).Distinct().ToList();
 
         foreach (var claim in claims)
         {
-            if (!await dbContext.ApplicationClaims.AnyAsync(ac => ac.ClaimType == claim.Type && ac.ClaimValue == claim.Value))
+            var existingClaims = await applicationClaimsService.GetClaimsAsync(c => c.ClaimType == claim.Type && c.ClaimValue == claim.Value);
+
+            if (!existingClaims.Value.Any())
             {
-                dbContext.ApplicationClaims.Add(new()
+                await applicationClaimsService.AddClaimAsync(new ApplicationClaim
                 {
                     ClaimType = claim.Type,
                     ClaimValue = claim.Value
                 });
             }
         }
-
-        await dbContext.SaveChangesAsync();
     }
 
     private async Task AssignClaimsToRoles(RoleManager<IdentityRole> roleManager)
