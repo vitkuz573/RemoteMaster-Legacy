@@ -57,6 +57,7 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
                 return Result<IList<T>>.Failure($"Error: An Organization with the name '{orgNode.Name}' already exists.");
             }
         }
+
         return null;
     }
 
@@ -115,6 +116,7 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
             foreach (var node in nodesList)
             {
                 var conflict = await CheckForConflictsAsync(node);
+
                 if (conflict != null)
                 {
                     return conflict;
