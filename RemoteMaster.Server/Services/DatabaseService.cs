@@ -244,7 +244,7 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
                 currentNode = nodes.FirstOrDefault(n => n.Id == currentNode.ParentId);
             }
 
-            return Result<string[]>.Success(path.ToArray());
+            return Result<string[]>.Success([.. path]);
         }
         catch (Exception ex)
         {
