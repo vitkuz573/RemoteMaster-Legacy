@@ -50,7 +50,7 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
             OrganizationalUnit ouNode => n => ((OrganizationalUnit)(object)n!).Name == ouNode.Name &&
                                                ((OrganizationalUnit)(object)n!).OrganizationId == ouNode.OrganizationId &&
                                                (!nodeId.HasValue || ((OrganizationalUnit)(object)n!).Id != nodeId.Value),
-            Computer compNode => n => ((Computer)(object)n!).Name == compNode.Name &&
+            Computer compNode => n => ((Computer)(object)n!).MacAddress == compNode.MacAddress &&
                                       (!nodeId.HasValue || ((Computer)(object)n!).Id != nodeId.Value),
             Organization orgNode => n => ((Organization)(object)n!).Name == orgNode.Name &&
                                          (!nodeId.HasValue || ((Organization)(object)n!).Id != nodeId.Value),
@@ -61,8 +61,8 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         {
             var conflictMessage = node switch
             {
-                OrganizationalUnit ouNode => $"Error: An Organizational Unit with the name '{ouNode.Name}' already exists.",
-                Computer compNode => $"Error: A Computer with the name '{compNode.Name}' already exists.",
+                OrganizationalUnit ouNode => $"Error: An Organizational Unit with the name '{ouNode.Name}' already exists in organization '{ouNode.OrganizationId}'.",
+                Computer compNode => $"Error: A Computer with the MAC address '{compNode.MacAddress}' already exists.",
                 Organization orgNode => $"Error: An Organization with the name '{orgNode.Name}' already exists.",
                 _ => throw new InvalidOperationException("Unknown node type.")
             };
