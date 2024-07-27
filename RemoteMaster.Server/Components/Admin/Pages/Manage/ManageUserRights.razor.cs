@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Enums;
+using RemoteMaster.Server.Models;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 
@@ -30,90 +32,107 @@ public partial class ManageUserRights
 
     protected async override Task OnInitializedAsync()
     {
-        using var scope = ScopeFactory.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-        await LoadRolesAsync(scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>());
-        await LoadUsersAsync(dbContext);
-        await LoadOrganizationsAsync(dbContext);
+        await LoadRolesAsync();
+        await LoadUsersAsync();
+        await LoadOrganizationsAsync();
     }
 
-    private async Task LoadRolesAsync(RoleManager<IdentityRole> roleManager)
+    private async Task LoadRolesAsync()
     {
-        _roles = await roleManager.Roles
+        _roles = await RoleManager.Roles
             .Where(role => role.Name != RootAdminRoleName)
             .ToListAsync();
     }
 
-    private async Task LoadUsersAsync(ApplicationDbContext dbContext)
+    private async Task LoadUsersAsync()
     {
-        var rootAdminRoleId = await dbContext.Roles
-            .Where(r => r.Name == RootAdminRoleName)
-            .Select(r => r.Id)
-            .FirstOrDefaultAsync();
+        var users = await UserManager.Users.ToListAsync();
 
-        _users = await dbContext.Users
-            .Where(u => !dbContext.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == rootAdminRoleId))
-            .Select(u => new UserViewModel
+        _users = new List<UserViewModel>();
+
+        foreach (var user in users)
+        {
+            if (!await UserManager.IsInRoleAsync(user, RootAdminRoleName))
             {
-                Id = u.Id,
-                UserName = u.UserName!,
-                IsLockedOut = u.LockoutEnd != null && u.LockoutEnd > DateTime.UtcNow
-            })
-            .ToListAsync();
+                _users.Add(new UserViewModel
+                {
+                    Id = user.Id,
+                    UserName = user.UserName!,
+                    IsLockedOut = user.LockoutEnd != null && user.LockoutEnd > DateTime.UtcNow
+                });
+            }
+        }
     }
 
-    private async Task LoadOrganizationsAsync(ApplicationDbContext dbContext)
+    private async Task LoadOrganizationsAsync()
     {
-        _organizations = await dbContext.Organizations
-            .Include(o => o.OrganizationalUnits)
-            .Select(o => new OrganizationViewModel(
-                o.Id,
-                o.Name,
-                o.OrganizationalUnits.Select(ou => new OrganizationalUnitViewModel
-                {
-                    Id = ou.Id,
-                    Name = ou.Name
-                }).ToList()
-            )).ToListAsync();
+        var result = await DatabaseService.GetNodesAsync<Organization>();
+
+        if (result.IsSuccess)
+        {
+            _organizations = result.Value
+                .Select(o => new OrganizationViewModel(
+                    o.Id,
+                    o.Name,
+                    o.OrganizationalUnits.Select(ou => new OrganizationalUnitViewModel
+                    {
+                        Id = ou.Id,
+                        Name = ou.Name
+                    }).ToList()
+                ))
+                .ToList();
+        }
+        else
+        {
+            _message = string.Join("; ", result.Errors.Select(e => e.Message));
+        }
     }
 
     private async Task OnValidSubmitAsync()
     {
-        using var scope = ScopeFactory.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        if (string.IsNullOrEmpty(SelectedUserId))
+        {
+            _message = "Error: No user selected.";
 
-        var user = await dbContext.Users
-            .Include(u => u.AccessibleOrganizations)
-            .Include(u => u.AccessibleOrganizationalUnits)
-            .FirstOrDefaultAsync(u => u.Id == SelectedUserId);
+            return;
+        }
+
+        var user = await UserManager.FindByIdAsync(SelectedUserId);
 
         if (user == null)
         {
             _message = "Error: User not found.";
+
             return;
         }
 
-        await UpdateUserRoleAsync(dbContext, user);
-        await UpdateUserAccessAsync(dbContext, user);
+        await UpdateUserRoleAsync(user);
+        await UpdateUserAccessAsync(user);
         await UpdateUserLockoutStatusAsync(user);
 
         user.CanAccessUnregisteredHosts = SelectedUserModel.CanAccessUnregisteredHosts;
 
-        await dbContext.SaveChangesAsync();
+        var result = await UserManager.UpdateAsync(user);
 
-        if (_initialSelectedRole != SelectedUserModel.Role)
+        if (result.Succeeded)
         {
-            await TokenService.RevokeAllRefreshTokensAsync(user.Id, TokenRevocationReason.RoleChanged);
-            _message = "User role updated successfully.";
+            if (_initialSelectedRole != SelectedUserModel.Role)
+            {
+                await TokenService.RevokeAllRefreshTokensAsync(user.Id, TokenRevocationReason.RoleChanged);
+
+                _message = "User role updated successfully.";
+            }
+            else
+            {
+                _message = "User access updated successfully.";
+            }
         }
         else
         {
-            _message = "User access updated successfully.";
+            _message = string.Join("; ", result.Errors.Select(e => e.Description));
         }
 
         StateHasChanged();
-
         UpdateInitialSelections();
 
         await HideSuccessMessageAfterDelay();
@@ -121,28 +140,19 @@ public partial class ManageUserRights
         NavigationManager.Refresh();
     }
 
-    private async Task UpdateUserRoleAsync(ApplicationDbContext dbContext, ApplicationUser user)
+    private async Task UpdateUserRoleAsync(ApplicationUser user)
     {
-        var userRole = await dbContext.UserRoles.FirstOrDefaultAsync(ur => ur.UserId == user.Id);
+        var currentRoles = await UserManager.GetRolesAsync(user);
 
-        if (userRole != null)
+        await UserManager.RemoveFromRolesAsync(user, currentRoles);
+
+        if (!string.IsNullOrEmpty(SelectedUserModel.Role))
         {
-            dbContext.UserRoles.Remove(userRole);
-        }
-
-        var role = await dbContext.Roles.FirstOrDefaultAsync(r => r.Name == SelectedUserModel.Role);
-
-        if (role != null)
-        {
-            dbContext.UserRoles.Add(new IdentityUserRole<string>
-            {
-                UserId = user.Id,
-                RoleId = role.Id
-            });
+            await UserManager.AddToRoleAsync(user, SelectedUserModel.Role);
         }
     }
 
-    private async Task UpdateUserAccessAsync(ApplicationDbContext dbContext, ApplicationUser user)
+    private async Task UpdateUserAccessAsync(ApplicationUser user)
     {
         var selectedOrganizationIds = _organizations.Where(o => o.IsSelected).Select(o => o.Id).ToList();
         var selectedUnitIds = _organizations.SelectMany(o => o.OrganizationalUnits).Where(ou => ou.IsSelected).Select(ou => ou.Id).ToList();
@@ -155,10 +165,11 @@ public partial class ManageUserRights
 
         foreach (var orgId in selectedOrganizationIds)
         {
-            var organization = await dbContext.Organizations.FindAsync(orgId);
+            var organizationResult = await DatabaseService.GetNodesAsync<Organization>(o => o.Id == orgId);
 
-            if (organization != null)
+            if (organizationResult.IsSuccess && organizationResult.Value.Any())
             {
+                var organization = organizationResult.Value.First();
                 user.AccessibleOrganizations.Add(organization);
                 SelectedUserModel.SelectedOrganizations.Add(orgId);
             }
@@ -166,15 +177,14 @@ public partial class ManageUserRights
 
         foreach (var unitId in selectedUnitIds)
         {
-            var unit = await dbContext.OrganizationalUnits.FindAsync(unitId);
+            var unitResult = await DatabaseService.GetNodesAsync<OrganizationalUnit>(ou => ou.Id == unitId);
 
-            if (unit == null)
+            if (unitResult.IsSuccess && unitResult.Value.Any())
             {
-                continue;
+                var unit = unitResult.Value.First();
+                user.AccessibleOrganizationalUnits.Add(unit);
+                SelectedUserModel.SelectedOrganizationalUnits.Add(unitId);
             }
-
-            user.AccessibleOrganizationalUnits.Add(unit);
-            SelectedUserModel.SelectedOrganizationalUnits.Add(unitId);
         }
     }
 
@@ -194,14 +204,14 @@ public partial class ManageUserRights
         return Task.CompletedTask;
     }
 
-    private async Task LoadCurrentUserAccess(ApplicationDbContext dbContext)
+    private async Task LoadCurrentUserAccess()
     {
         if (string.IsNullOrEmpty(SelectedUserId))
         {
             return;
         }
 
-        var user = await dbContext.Users
+        var user = await UserManager.Users
             .Include(u => u.AccessibleOrganizations)
             .Include(u => u.AccessibleOrganizationalUnits)
             .FirstOrDefaultAsync(u => u.Id == SelectedUserId);
@@ -212,9 +222,9 @@ public partial class ManageUserRights
             return;
         }
 
-        var userRole = await dbContext.UserRoles.Where(ur => ur.UserId == user.Id)
-                                                .Join(dbContext.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r.Name)
-                                                .FirstOrDefaultAsync();
+        var userRoles = await UserManager.GetRolesAsync(user);
+        var userRole = userRoles.FirstOrDefault();
+
         SelectedUserModel = new UserEditModel
         {
             Role = userRole,
@@ -226,6 +236,8 @@ public partial class ManageUserRights
 
         _initialSelectedRole = userRole;
         _initialIsLockedOut = SelectedUserModel.IsLockedOut;
+        _initialIsPermanentLockout = SelectedUserModel.IsPermanentLockout;
+        _initialLockoutEndDateTime = SelectedUserModel.LockoutEndDateTime;
         _initialCanAccessUnregisteredHosts = SelectedUserModel.CanAccessUnregisteredHosts;
 
         _initialSelectedOrganizationIds = user.AccessibleOrganizations.Select(ao => ao.Id).ToList();
@@ -258,9 +270,7 @@ public partial class ManageUserRights
     {
         SelectedUserId = userId;
 
-        using var scope = ScopeFactory.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        await LoadCurrentUserAccess(dbContext);
+        await LoadCurrentUserAccess();
     }
 
     private static void SelectAllOrganizationalUnits(OrganizationViewModel organization)
@@ -291,7 +301,7 @@ public partial class ManageUserRights
     private bool HasChangesInUnits()
     {
         var currentSelectedUnitIds = _organizations.SelectMany(o => o.OrganizationalUnits).Where(ou => ou.IsSelected).Select(ou => ou.Id).ToList();
-
+        
         return !_initialSelectedUnitIds.SequenceEqual(currentSelectedUnitIds);
     }
 
@@ -322,13 +332,12 @@ public partial class ManageUserRights
     private void ToggleOrganizationExpansion(OrganizationViewModel organization)
     {
         organization.IsExpanded = !organization.IsExpanded;
-
         StateHasChanged();
     }
 
     private void ToggleLockoutDateTimeInputs(ChangeEventArgs e)
     {
-        if ((bool)e.Value)
+        if (e.Value is bool isPermanentLockout && isPermanentLockout)
         {
             return;
         }
@@ -352,7 +361,6 @@ public partial class ManageUserRights
     {
         await Task.Delay(3000);
         _message = null;
-
         await InvokeAsync(StateHasChanged);
     }
 
@@ -379,15 +387,12 @@ public partial class ManageUserRights
             set
             {
                 _isSelected = value;
-
-                if (_isSelected)
+                if (!_isSelected)
                 {
-                    return;
-                }
-
-                foreach (var unit in OrganizationalUnits)
-                {
-                    unit.IsSelected = false;
+                    foreach (var unit in OrganizationalUnits)
+                    {
+                        unit.IsSelected = false;
+                    }
                 }
             }
         }
