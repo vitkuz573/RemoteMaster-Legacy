@@ -48,7 +48,7 @@ public partial class ManageUserRights
     {
         var users = await UserManager.Users.ToListAsync();
 
-        _users = new List<UserViewModel>();
+        _users = [];
 
         foreach (var user in users)
         {
