@@ -102,7 +102,7 @@ public class DatabaseServiceTests : IDisposable
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains("Failed to add nodes of type UnknownNode.", result.Errors.First().Message);
+        Assert.Contains("Error: Failed to add UnknownNode nodes.", result.Errors.First().Message);
     }
 
     [Fact]
@@ -151,7 +151,7 @@ public class DatabaseServiceTests : IDisposable
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains("Failed to remove nodes of type UnknownNode.", result.Errors.First().Message);
+        Assert.Contains("Error: Failed to remove UnknownNode nodes.", result.Errors.First().Message);
     }
 
     [Fact]
@@ -338,7 +338,7 @@ public class DatabaseServiceTests : IDisposable
         var result = await databaseService.UpdateNodeAsync(nonExistentComputer, updatedComputer => updatedComputer.With("NewName", "192.168.0.1"));
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("Failed to update node of type Computer.", result.Errors.First().Message);
+        Assert.Contains("Error: Computer with the name 'NonExistent' not found.", result.Errors.First().Message);
     }
 
     [Fact]
@@ -371,7 +371,7 @@ public class DatabaseServiceTests : IDisposable
         // Act & Assert
         var result = await databaseService.GetFullPathAsync(nonExistentNode);
         Assert.False(result.IsSuccess);
-        Assert.Contains("Failed to get full path for node of type OrganizationalUnit.", result.Errors.First().Message);
+        Assert.Contains("Error: Failed to get full path for OrganizationalUnit node.", result.Errors.First().Message);
     }
 
     [Fact]
