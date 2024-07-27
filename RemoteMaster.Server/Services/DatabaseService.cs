@@ -14,51 +14,63 @@ namespace RemoteMaster.Server.Services;
 
 public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatabaseService
 {
-    private IQueryable<T> GetQueryForType<T>() where T : class, INode
+    private Result<IQueryable<T>> GetQueryForType<T>() where T : class, INode
     {
-        return typeof(T) switch
+        try
         {
-            { } t when t == typeof(Organization) => applicationDbContext.Organizations
-                .Include(o => o.OrganizationalUnits)
-                .ThenInclude(ou => ou.Computers)
-                .Cast<T>(),
-            { } t when t == typeof(OrganizationalUnit) => applicationDbContext.OrganizationalUnits
-                .Include(ou => ou.Children)
-                .Include(ou => ou.Computers)
-                .Cast<T>(),
-            { } t when t == typeof(Computer) => applicationDbContext.Computers
-                .Cast<T>(),
-            _ => throw new InvalidOperationException($"Cannot create a DbSet for '{typeof(T).Name}' because this type is not included in the model for the context.")
-        };
+            var query = typeof(T) switch
+            {
+                { } t when t == typeof(Organization) => applicationDbContext.Organizations
+                    .Include(o => o.OrganizationalUnits)
+                    .ThenInclude(ou => ou.Computers)
+                    .Cast<T>(),
+                { } t when t == typeof(OrganizationalUnit) => applicationDbContext.OrganizationalUnits
+                    .Include(ou => ou.Children)
+                    .Include(ou => ou.Computers)
+                    .Cast<T>(),
+                { } t when t == typeof(Computer) => applicationDbContext.Computers
+                    .Cast<T>(),
+                _ => throw new InvalidOperationException($"Cannot create a DbSet for '{typeof(T).Name}' because this type is not included in the model for the context.")
+            };
+
+            return Result<IQueryable<T>>.Success(query);
+        }
+        catch (Exception ex)
+        {
+            return Result<IQueryable<T>>.Failure("Error: Failed to create query.", exception: ex);
+        }
     }
 
-    private async Task<Result<IList<T>>?> CheckForConflictsAsync<T>(T node, Guid? nodeId = null) where T : class, INode
+    private async Task<Result> CheckForConflictsAsync<T>(T node, Guid? nodeId = null) where T : class, INode
     {
-        if (node is OrganizationalUnit ouNode)
+        var query = applicationDbContext.Set<T>().AsQueryable();
+
+        Expression<Func<T, bool>> predicate = node switch
         {
-            if (await applicationDbContext.Set<T>().AnyAsync(n => ((OrganizationalUnit)(object)n!).Name == ouNode.Name && ((OrganizationalUnit)(object)n!).OrganizationId == ouNode.OrganizationId && (!nodeId.HasValue || ((OrganizationalUnit)(object)n!).Id != nodeId.Value)))
-            {
-                var organization = await applicationDbContext.Organizations.FindAsync(ouNode.OrganizationId);
-                
-                return Result<IList<T>>.Failure($"Error: An Organizational Unit with the name '{ouNode.Name}' already exists in the organization '{organization?.Name}'.");
-            }
-        }
-        else if (node is Computer compNode)
+            OrganizationalUnit ouNode => n => ((OrganizationalUnit)(object)n!).Name == ouNode.Name &&
+                                               ((OrganizationalUnit)(object)n!).OrganizationId == ouNode.OrganizationId &&
+                                               (!nodeId.HasValue || ((OrganizationalUnit)(object)n!).Id != nodeId.Value),
+            Computer compNode => n => ((Computer)(object)n!).Name == compNode.Name &&
+                                      (!nodeId.HasValue || ((Computer)(object)n!).Id != nodeId.Value),
+            Organization orgNode => n => ((Organization)(object)n!).Name == orgNode.Name &&
+                                         (!nodeId.HasValue || ((Organization)(object)n!).Id != nodeId.Value),
+            _ => _ => false
+        };
+
+        if (await query.AnyAsync(predicate))
         {
-            if (await applicationDbContext.Set<T>().AnyAsync(n => ((Computer)(object)n!).Name == compNode.Name && (!nodeId.HasValue || ((Computer)(object)n!).Id != nodeId.Value)))
+            var conflictMessage = node switch
             {
-                return Result<IList<T>>.Failure($"Error: A Computer with the name '{compNode.Name}' already exists.");
-            }
-        }
-        else if (node is Organization orgNode)
-        {
-            if (await applicationDbContext.Set<T>().AnyAsync(n => ((Organization)(object)n!).Name == orgNode.Name && (!nodeId.HasValue || ((Organization)(object)n!).Id != nodeId.Value)))
-            {
-                return Result<IList<T>>.Failure($"Error: An Organization with the name '{orgNode.Name}' already exists.");
-            }
+                OrganizationalUnit ouNode => $"Error: An Organizational Unit with the name '{ouNode.Name}' already exists.",
+                Computer compNode => $"Error: A Computer with the name '{compNode.Name}' already exists.",
+                Organization orgNode => $"Error: An Organization with the name '{orgNode.Name}' already exists.",
+                _ => throw new InvalidOperationException("Unknown node type.")
+            };
+
+            return Result.Failure(conflictMessage);
         }
 
-        return null;
+        return Result.Success();
     }
 
     private static void ValidateMoveOperation<TNode, TParent>(TNode node, TParent newParent) where TNode : class, INode where TParent : class, INode
@@ -88,13 +100,19 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
     {
         try
         {
-            var query = GetQueryForType<T>();
+            var queryResult = GetQueryForType<T>();
+
+            if (!queryResult.IsSuccess)
+            {
+                return Result<IList<T>>.Failure([.. queryResult.Errors]);
+            }
+
+            var query = queryResult.Value;
 
             if (predicate != null)
             {
                 query = query.Where(predicate);
             }
-
             var nodes = await query.ToListAsync();
 
             return Result<IList<T>>.Success(nodes);
@@ -116,10 +134,10 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
             foreach (var node in nodesList)
             {
                 var conflict = await CheckForConflictsAsync(node);
-
-                if (conflict != null)
+                
+                if (!conflict.IsSuccess)
                 {
-                    return conflict;
+                    return Result<IList<T>>.Failure([.. conflict.Errors]);
                 }
             }
 
@@ -140,17 +158,18 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         {
             ArgumentNullException.ThrowIfNull(nodes);
 
-            foreach (var node in nodes)
+            var nodeIds = nodes.Select(n => n.Id).ToList();
+            var existingNodes = await applicationDbContext.Set<T>().Where(n => nodeIds.Contains(n.Id)).ToListAsync();
+
+            if (existingNodes.Count != nodeIds.Count)
             {
-                if (!await applicationDbContext.Set<T>().AnyAsync(n => n.Id == node.Id))
-                {
-                    return Result.Failure($"Error: The {typeof(T).Name} with the name '{node.Name}' does not exist.");
-                }
+                return Result.Failure($"Error: Some {typeof(T).Name} nodes do not exist.");
             }
 
-            applicationDbContext.Set<T>().RemoveRange(nodes);
+            applicationDbContext.Set<T>().RemoveRange(existingNodes);
+            
             await applicationDbContext.SaveChangesAsync();
-
+            
             return Result.Success();
         }
         catch (Exception ex)
@@ -167,24 +186,24 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
             ArgumentNullException.ThrowIfNull(updateFunction);
 
             var trackedNode = await applicationDbContext.Set<T>().FindAsync(node.Id);
-
+            
             if (trackedNode == null)
             {
                 return Result.Failure($"Error: The {typeof(T).Name} with the name '{node.Name}' not found.");
             }
 
             var updatedNode = updateFunction(trackedNode);
-
             var conflict = await CheckForConflictsAsync(updatedNode, node.Id);
-            if (conflict != null)
+            
+            if (!conflict.IsSuccess)
             {
-                return conflict;
+                return Result.Failure([.. conflict.Errors]);
             }
 
             applicationDbContext.Entry(trackedNode).CurrentValues.SetValues(updatedNode);
-
+            
             await applicationDbContext.SaveChangesAsync();
-
+            
             return Result.Success();
         }
         catch (Exception ex)
@@ -204,7 +223,7 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
 
             var trackedNode = await applicationDbContext.Set<TNode>().FindAsync(node.Id) ?? throw new InvalidOperationException($"{typeof(TNode).Name} not found.");
             var trackedParentExists = await applicationDbContext.Set<TParent>().FindAsync(newParent.Id) != null;
-
+            
             if (!trackedParentExists)
             {
                 throw new InvalidOperationException("New parent not found or is invalid.");
@@ -216,7 +235,7 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
             }
 
             await applicationDbContext.SaveChangesAsync();
-
+            
             return Result.Success();
         }
         catch (Exception ex)
