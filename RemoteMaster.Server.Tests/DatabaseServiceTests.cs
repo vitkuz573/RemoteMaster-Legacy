@@ -151,7 +151,7 @@ public class DatabaseServiceTests : IDisposable
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains("Error: Failed to remove UnknownNode nodes.", result.Errors.First().Message);
+        Assert.Contains("Error: Failed to remove the UnknownNode nodes.", result.Errors.First().Message);
     }
 
     [Fact]
@@ -338,7 +338,7 @@ public class DatabaseServiceTests : IDisposable
         var result = await databaseService.UpdateNodeAsync(nonExistentComputer, updatedComputer => updatedComputer.With("NewName", "192.168.0.1"));
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("Error: Computer with the name 'NonExistent' not found.", result.Errors.First().Message);
+        Assert.Contains("Error: The Computer with the name 'NonExistent' not found.", result.Errors.First().Message);
     }
 
     [Fact]

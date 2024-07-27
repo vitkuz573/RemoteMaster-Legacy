@@ -115,7 +115,7 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
             {
                 if (!await applicationDbContext.Set<T>().AnyAsync(n => n.Id == node.Id))
                 {
-                    return Result.Failure($"Error: {typeof(T).Name} with the name '{node.Name}' does not exist.");
+                    return Result.Failure($"Error: The {typeof(T).Name} with the name '{node.Name}' does not exist.");
                 }
             }
 
@@ -126,7 +126,7 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         }
         catch (Exception ex)
         {
-            return Result.Failure($"Error: Failed to remove {typeof(T).Name} nodes.", exception: ex);
+            return Result.Failure($"Error: Failed to remove the {typeof(T).Name} nodes.", exception: ex);
         }
     }
 
@@ -138,10 +138,10 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
             ArgumentNullException.ThrowIfNull(updateFunction);
 
             var trackedNode = await applicationDbContext.Set<T>().FindAsync(node.Id);
-            
+
             if (trackedNode == null)
             {
-                return Result.Failure($"Error: {typeof(T).Name} with the name '{node.Name}' not found.");
+                return Result.Failure($"Error: The {typeof(T).Name} with the name '{node.Name}' not found.");
             }
 
             var updatedNode = updateFunction(trackedNode);
@@ -149,18 +149,18 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
             if (typeof(T) == typeof(OrganizationalUnit))
             {
                 var ouNode = (OrganizationalUnit)(object)updatedNode;
-                
+
                 if (await applicationDbContext.Set<T>().AnyAsync(n => ((OrganizationalUnit)(object)n!).Name == ouNode.Name && ((OrganizationalUnit)(object)n!).OrganizationId == ouNode.OrganizationId && ((OrganizationalUnit)(object)n!).Id != ouNode.Id))
                 {
                     var organization = await applicationDbContext.Organizations.FindAsync(ouNode.OrganizationId);
-                    
+
                     return Result.Failure($"Error: An Organizational Unit with the name '{ouNode.Name}' already exists in the organization '{organization?.Name}'.");
                 }
             }
             else if (typeof(T) == typeof(Computer))
             {
                 var compNode = (Computer)(object)updatedNode;
-                
+
                 if (await applicationDbContext.Set<T>().AnyAsync(n => ((Computer)(object)n!).Name == compNode.Name && ((Computer)(object)n!).Id != compNode.Id))
                 {
                     return Result.Failure($"Error: A Computer with the name '{compNode.Name}' already exists.");
@@ -169,7 +169,7 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
             else if (typeof(T) == typeof(Organization))
             {
                 var orgNode = (Organization)(object)updatedNode;
-                
+
                 if (await applicationDbContext.Set<T>().AnyAsync(n => ((Organization)(object)n!).Name == orgNode.Name && ((Organization)(object)n!).Id != orgNode.Id))
                 {
                     return Result.Failure($"Error: An Organization with the name '{orgNode.Name}' already exists.");
@@ -184,7 +184,7 @@ public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatab
         }
         catch (Exception ex)
         {
-            return Result.Failure($"Error: Failed to update {typeof(T).Name} node.", exception: ex);
+            return Result.Failure($"Error: Failed to update the {typeof(T).Name} node.", exception: ex);
         }
     }
 
