@@ -13,16 +13,16 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Tests;
 
-public class DatabaseServiceTests : IDisposable
+public class NodesServiceTests : IDisposable
 {
     private readonly ServiceProvider _serviceProvider;
 
-    public DatabaseServiceTests()
+    public NodesServiceTests()
     {
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddDbContext<ApplicationDbContext>(options =>
             options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
-        serviceCollection.AddScoped<IDatabaseService, DatabaseService>();
+        serviceCollection.AddScoped<INodesService, NodesService>();
 
         _serviceProvider = serviceCollection.BuildServiceProvider();
     }
@@ -37,7 +37,7 @@ public class DatabaseServiceTests : IDisposable
     {
         using var scope = CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+        var databaseService = scope.ServiceProvider.GetRequiredService<INodesService>();
 
         // Arrange
         context.OrganizationalUnits.RemoveRange(context.OrganizationalUnits);
@@ -62,7 +62,7 @@ public class DatabaseServiceTests : IDisposable
     {
         using var scope = CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+        var databaseService = scope.ServiceProvider.GetRequiredService<INodesService>();
 
         // Arrange
         var organizationalUnits = new List<OrganizationalUnit>
@@ -88,7 +88,7 @@ public class DatabaseServiceTests : IDisposable
     public async Task AddNodesAsync_ThrowsInvalidOperationException_ForUnknownNodeType()
     {
         using var scope = CreateScope();
-        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+        var databaseService = scope.ServiceProvider.GetRequiredService<INodesService>();
 
         // Arrange
         var unknownNodes = new List<UnknownNode>
@@ -110,7 +110,7 @@ public class DatabaseServiceTests : IDisposable
     {
         using var scope = CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+        var databaseService = scope.ServiceProvider.GetRequiredService<INodesService>();
 
         // Arrange
         var organizationalUnits = new List<OrganizationalUnit>
@@ -137,7 +137,7 @@ public class DatabaseServiceTests : IDisposable
     public async Task RemoveNodesAsync_ThrowsInvalidOperationException_ForUnknownNodeType()
     {
         using var scope = CreateScope();
-        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+        var databaseService = scope.ServiceProvider.GetRequiredService<INodesService>();
 
         // Arrange
         var unknownNodes = new List<UnknownNode>
@@ -159,7 +159,7 @@ public class DatabaseServiceTests : IDisposable
     {
         using var scope = CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+        var databaseService = scope.ServiceProvider.GetRequiredService<INodesService>();
 
         // Arrange
         var computer = new Computer("OldName", "127.0.0.1", "00:00:00:00:00:00")
@@ -186,7 +186,7 @@ public class DatabaseServiceTests : IDisposable
     {
         using var scope = CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+        var databaseService = scope.ServiceProvider.GetRequiredService<INodesService>();
 
         // Arrange
         context.OrganizationalUnits.RemoveRange(context.OrganizationalUnits);
@@ -208,7 +208,7 @@ public class DatabaseServiceTests : IDisposable
     {
         using var scope = CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+        var databaseService = scope.ServiceProvider.GetRequiredService<INodesService>();
 
         // Arrange
         var oldParent = new OrganizationalUnit { Id = Guid.NewGuid(), Name = "OldParent" };
@@ -231,7 +231,7 @@ public class DatabaseServiceTests : IDisposable
     {
         using var scope = CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+        var databaseService = scope.ServiceProvider.GetRequiredService<INodesService>();
 
         // Arrange
         context.OrganizationalUnits.RemoveRange(context.OrganizationalUnits);
@@ -256,7 +256,7 @@ public class DatabaseServiceTests : IDisposable
     public async Task MoveNodeAsync_ThrowsException_IfNodeIsOrganization()
     {
         using var scope = CreateScope();
-        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+        var databaseService = scope.ServiceProvider.GetRequiredService<INodesService>();
 
         // Arrange
         var organization = new Organization
@@ -283,7 +283,7 @@ public class DatabaseServiceTests : IDisposable
     public async Task MoveNodeAsync_ThrowsException_IfNewParentNotFound()
     {
         using var scope = CreateScope();
-        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+        var databaseService = scope.ServiceProvider.GetRequiredService<INodesService>();
 
         // Arrange
         var node = new OrganizationalUnit { Id = Guid.NewGuid(), Name = "Node" };
@@ -304,7 +304,7 @@ public class DatabaseServiceTests : IDisposable
     {
         using var scope = CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+        var databaseService = scope.ServiceProvider.GetRequiredService<INodesService>();
 
         // Arrange
         var parentNode = new OrganizationalUnit { Id = Guid.NewGuid(), Name = "Parent" };
@@ -325,7 +325,7 @@ public class DatabaseServiceTests : IDisposable
     public async Task UpdateNodeAsync_ThrowsException_IfNodeNotFound()
     {
         using var scope = CreateScope();
-        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+        var databaseService = scope.ServiceProvider.GetRequiredService<INodesService>();
 
         // Arrange
         var nonExistentComputer = new Computer("NonExistent", "127.0.0.1", "00:00:00:00:00:00")
@@ -345,7 +345,7 @@ public class DatabaseServiceTests : IDisposable
     public async Task MoveNodeAsync_ThrowsException_IfMovingNodeToItself()
     {
         using var scope = CreateScope();
-        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+        var databaseService = scope.ServiceProvider.GetRequiredService<INodesService>();
 
         // Arrange
         var node = new OrganizationalUnit { Id = Guid.NewGuid(), Name = "Node" };
@@ -363,7 +363,7 @@ public class DatabaseServiceTests : IDisposable
     public async Task GetFullPathAsync_ThrowsException_IfNodeNotFound()
     {
         using var scope = CreateScope();
-        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+        var databaseService = scope.ServiceProvider.GetRequiredService<INodesService>();
 
         // Arrange
         var nonExistentNode = new OrganizationalUnit { Id = Guid.NewGuid(), Name = "NonExistentNode" };
@@ -379,7 +379,7 @@ public class DatabaseServiceTests : IDisposable
     {
         using var scope = CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+        var databaseService = scope.ServiceProvider.GetRequiredService<INodesService>();
 
         // Arrange
         var organizations = new List<Organization>
@@ -406,7 +406,7 @@ public class DatabaseServiceTests : IDisposable
     {
         using var scope = CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+        var databaseService = scope.ServiceProvider.GetRequiredService<INodesService>();
 
         // Arrange
         var computers = new List<Computer>
@@ -432,7 +432,7 @@ public class DatabaseServiceTests : IDisposable
     public async Task GetNodesAsync_WithEmptyDatabase_ReturnsEmptyList()
     {
         using var scope = CreateScope();
-        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+        var databaseService = scope.ServiceProvider.GetRequiredService<INodesService>();
 
         // Act
         var result = await databaseService.GetNodesAsync<OrganizationalUnit>();
@@ -447,7 +447,7 @@ public class DatabaseServiceTests : IDisposable
     {
         using var scope = CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var databaseService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+        var databaseService = scope.ServiceProvider.GetRequiredService<INodesService>();
 
         // Arrange
         var largeNumberOfNodes = new List<OrganizationalUnit>();

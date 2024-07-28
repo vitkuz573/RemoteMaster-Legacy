@@ -8,11 +8,11 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class HostRegistrationService(IDatabaseService databaseService, IEventNotificationService eventNotificationService) : IHostRegistrationService
+public class HostRegistrationService(INodesService nodesService, IEventNotificationService eventNotificationService) : IHostRegistrationService
 {
     private async Task<Organization> GetOrganizationAsync(string organizationName)
     {
-        var organizationsResult = await databaseService.GetNodesAsync<Organization>(n => n.Name == organizationName);
+        var organizationsResult = await nodesService.GetNodesAsync<Organization>(n => n.Name == organizationName);
 
         if (!organizationsResult.IsSuccess)
         {
@@ -28,7 +28,7 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
     {
         OrganizationalUnit? parentOu = null;
 
-        var organizationResult = await databaseService.GetNodesAsync<Organization>(n => n.Id == organizationId);
+        var organizationResult = await nodesService.GetNodesAsync<Organization>(n => n.Id == organizationId);
 
         if (!organizationResult.IsSuccess)
         {
@@ -39,7 +39,7 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
 
         foreach (var ouName in ouNames)
         {
-            var ousResult = await databaseService.GetNodesAsync<OrganizationalUnit>(n => n.Name == ouName && n.OrganizationId == organizationId);
+            var ousResult = await nodesService.GetNodesAsync<OrganizationalUnit>(n => n.Name == ouName && n.OrganizationId == organizationId);
 
             if (!ousResult.IsSuccess)
             {
@@ -56,7 +56,7 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
 
     private async Task<Computer> GetComputerByMacAddressAsync(string macAddress, Guid parentOuId)
     {
-        var existingComputersResult = await databaseService.GetNodesAsync<Computer>(c => c.ParentId == parentOuId);
+        var existingComputersResult = await nodesService.GetNodesAsync<Computer>(c => c.ParentId == parentOuId);
 
         if (!existingComputersResult.IsSuccess)
         {
@@ -74,7 +74,7 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
 
         try
         {
-            var computersResult = await databaseService.GetNodesAsync<Computer>(n => n.MacAddress == macAddress);
+            var computersResult = await nodesService.GetNodesAsync<Computer>(n => n.MacAddress == macAddress);
 
             if (computersResult.IsSuccess)
             {
@@ -121,7 +121,7 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
         {
             var existingComputer = await GetComputerByMacAddressAsync(hostConfiguration.Host.MacAddress, parentOu.Id);
 
-            var updateResult = await databaseService.UpdateNodeAsync(existingComputer, computer => computer.With(hostConfiguration.Host.Name, hostConfiguration.Host.IpAddress));
+            var updateResult = await nodesService.UpdateNodeAsync(existingComputer, computer => computer.With(hostConfiguration.Host.Name, hostConfiguration.Host.IpAddress));
 
             if (!updateResult.IsSuccess)
             {
@@ -143,7 +143,7 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
                 ParentId = parentOu.Id
             };
 
-            var addResult = await databaseService.AddNodesAsync(new List<Computer> { computer });
+            var addResult = await nodesService.AddNodesAsync(new List<Computer> { computer });
 
             if (!addResult.IsSuccess)
             {
@@ -187,7 +187,7 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
         try
         {
             var existingComputer = await GetComputerByMacAddressAsync(request.MacAddress, lastOu.Id);
-            var removeResult = await databaseService.RemoveNodesAsync(new List<Computer> { existingComputer });
+            var removeResult = await nodesService.RemoveNodesAsync(new List<Computer> { existingComputer });
 
             if (!removeResult.IsSuccess)
             {
@@ -234,7 +234,7 @@ public class HostRegistrationService(IDatabaseService databaseService, IEventNot
         {
             var computer = await GetComputerByMacAddressAsync(request.MacAddress, lastOu.Id);
 
-            var updateResult = await databaseService.UpdateNodeAsync(computer, updatedComputer => updatedComputer.With(request.Name, request.IpAddress));
+            var updateResult = await nodesService.UpdateNodeAsync(computer, updatedComputer => updatedComputer.With(request.Name, request.IpAddress));
 
             if (!updateResult.IsSuccess)
             {

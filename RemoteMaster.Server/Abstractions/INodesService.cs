@@ -12,7 +12,7 @@ namespace RemoteMaster.Server.Abstractions;
 /// Defines a contract for database operations related to node entities,
 /// including CRUD operations, moving nodes, and retrieving their full path.
 /// </summary>
-public interface IDatabaseService
+public interface INodesService
 {
     /// <summary>
     /// Retrieves nodes based on the specified predicate.

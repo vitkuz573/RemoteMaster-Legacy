@@ -39,7 +39,7 @@ public partial class ManageOrganizationalUnits
 
         if (Input.Id.HasValue)
         {
-            var result = await DatabaseService.UpdateNodeAsync(
+            var result = await NodesService.UpdateNodeAsync(
                 new OrganizationalUnit { Id = Input.Id.Value, Name = Input.Name, OrganizationId = Input.OrganizationId, ParentId = Input.ParentId },
                 ou =>
                 {
@@ -61,7 +61,7 @@ public partial class ManageOrganizationalUnits
         else
         {
             var newUnit = new OrganizationalUnit { Name = Input.Name, OrganizationId = Input.OrganizationId, ParentId = Input.ParentId };
-            var result = await DatabaseService.AddNodesAsync(new List<OrganizationalUnit> { newUnit });
+            var result = await NodesService.AddNodesAsync(new List<OrganizationalUnit> { newUnit });
 
             if (result.IsSuccess)
             {
@@ -84,7 +84,7 @@ public partial class ManageOrganizationalUnits
 
     private async Task LoadOrganizationsAsync()
     {
-        var result = await DatabaseService.GetNodesAsync<Organization>();
+        var result = await NodesService.GetNodesAsync<Organization>();
 
         if (result.IsSuccess)
         {
@@ -98,7 +98,7 @@ public partial class ManageOrganizationalUnits
 
     private async Task LoadOrganizationalUnitsAsync()
     {
-        var result = await DatabaseService.GetNodesAsync<OrganizationalUnit>();
+        var result = await NodesService.GetNodesAsync<OrganizationalUnit>();
 
         if (result.IsSuccess)
         {
@@ -127,7 +127,7 @@ public partial class ManageOrganizationalUnits
 
     private async Task DeleteOrganizationalUnit(OrganizationalUnit organizationalUnit)
     {
-        var result = await DatabaseService.RemoveNodesAsync(new List<OrganizationalUnit> { organizationalUnit });
+        var result = await NodesService.RemoveNodesAsync(new List<OrganizationalUnit> { organizationalUnit });
 
         if (result.IsSuccess)
         {

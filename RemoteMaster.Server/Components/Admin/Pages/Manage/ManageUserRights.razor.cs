@@ -66,7 +66,7 @@ public partial class ManageUserRights
 
     private async Task LoadOrganizationsAsync()
     {
-        var result = await DatabaseService.GetNodesAsync<Organization>();
+        var result = await NodesService.GetNodesAsync<Organization>();
 
         if (result.IsSuccess)
         {
@@ -163,7 +163,7 @@ public partial class ManageUserRights
 
         foreach (var orgId in selectedOrganizationIds)
         {
-            var organizationResult = await DatabaseService.GetNodesAsync<Organization>(o => o.Id == orgId);
+            var organizationResult = await NodesService.GetNodesAsync<Organization>(o => o.Id == orgId);
 
             if (organizationResult.IsSuccess && organizationResult.Value.Any())
             {
@@ -175,7 +175,7 @@ public partial class ManageUserRights
 
         foreach (var unitId in selectedUnitIds)
         {
-            var unitResult = await DatabaseService.GetNodesAsync<OrganizationalUnit>(ou => ou.Id == unitId);
+            var unitResult = await NodesService.GetNodesAsync<OrganizationalUnit>(ou => ou.Id == unitId);
 
             if (unitResult.IsSuccess && unitResult.Value.Any())
             {

@@ -21,7 +21,7 @@ namespace RemoteMaster.Server.Controllers.V1;
 [ApiVersion("1.0")]
 [Consumes("application/vnd.remotemaster.v1+json")]
 [Produces("application/vnd.remotemaster.v1+json")]
-public class NodeController(IDatabaseService databaseService, UserManager<ApplicationUser> userManager) : ControllerBase
+public class NodeController(INodesService nodesService, UserManager<ApplicationUser> userManager) : ControllerBase
 {
     [HttpGet("nodes")]
     [Authorize]
@@ -88,7 +88,7 @@ public class NodeController(IDatabaseService databaseService, UserManager<Applic
 
         if (organizationId == null)
         {
-            var organizationsResult = await databaseService.GetNodesAsync<Organization>(o => accessibleOrganizations.Contains(o.Id));
+            var organizationsResult = await nodesService.GetNodesAsync<Organization>(o => accessibleOrganizations.Contains(o.Id));
 
             if (!organizationsResult.IsSuccess)
             {
@@ -111,7 +111,7 @@ public class NodeController(IDatabaseService databaseService, UserManager<Applic
         }
         else
         {
-            var organizationalUnitsResult = await databaseService.GetNodesAsync<OrganizationalUnit>(ou =>
+            var organizationalUnitsResult = await nodesService.GetNodesAsync<OrganizationalUnit>(ou =>
                 ou.OrganizationId == organizationId &&
                 (parentId == null || ou.ParentId == parentId) &&
                 accessibleOrganizationalUnits.Contains(ou.Id));
@@ -123,7 +123,7 @@ public class NodeController(IDatabaseService databaseService, UserManager<Applic
 
             var organizationalUnits = organizationalUnitsResult.Value;
 
-            var computersResult = await databaseService.GetNodesAsync<Computer>(c => c.ParentId == parentId);
+            var computersResult = await nodesService.GetNodesAsync<Computer>(c => c.ParentId == parentId);
 
             if (!computersResult.IsSuccess)
             {

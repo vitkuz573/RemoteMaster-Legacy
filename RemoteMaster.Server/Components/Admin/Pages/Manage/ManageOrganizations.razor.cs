@@ -41,7 +41,7 @@ public partial class ManageOrganizations
     {
         if (Input.Id.HasValue)
         {
-            var result = await DatabaseService.UpdateNodeAsync(
+            var result = await NodesService.UpdateNodeAsync(
                 new Organization { Id = Input.Id.Value, Name = Input.Name, Locality = Input.Locality, State = Input.State, Country = Input.Country },
                 org =>
                 {
@@ -64,7 +64,7 @@ public partial class ManageOrganizations
         else
         {
             var newOrganization = new Organization { Name = Input.Name, Locality = Input.Locality, State = Input.State, Country = Input.Country };
-            var result = await DatabaseService.AddNodesAsync(new List<Organization> { newOrganization });
+            var result = await NodesService.AddNodesAsync(new List<Organization> { newOrganization });
 
             if (result.IsSuccess)
             {
@@ -89,7 +89,7 @@ public partial class ManageOrganizations
 
     private async Task LoadOrganizationsAsync()
     {
-        var result = await DatabaseService.GetNodesAsync<Organization>();
+        var result = await NodesService.GetNodesAsync<Organization>();
 
         if (result.IsSuccess)
         {
@@ -103,7 +103,7 @@ public partial class ManageOrganizations
 
     private async Task DeleteOrganization(Organization organization)
     {
-        var result = await DatabaseService.RemoveNodesAsync(new List<Organization> { organization });
+        var result = await NodesService.RemoveNodesAsync(new List<Organization> { organization });
 
         if (result.IsSuccess)
         {

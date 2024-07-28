@@ -143,7 +143,7 @@ public static class Program
         services.AddTransient<IUdpClient, UdpClientWrapper>();
         services.AddTransient<Func<IUdpClient>>(provider => provider.GetRequiredService<IUdpClient>);
         services.AddScoped<IQueryParameterService, QueryParameterService>();
-        services.AddScoped<IDatabaseService, DatabaseService>();
+        services.AddScoped<INodesService, NodesService>();
         services.AddScoped<IApplicationClaimsService, ApplicationClaimsService>();
         services.AddScoped<IComputerCommandService, ComputerCommandService>();
         services.AddScoped<ICrlService, CrlService>();

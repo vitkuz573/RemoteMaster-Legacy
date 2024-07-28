@@ -103,7 +103,7 @@ public partial class Home
 
         if (organizationId == null)
         {
-            var organizationsResult = await DatabaseService.GetNodesAsync<Organization>(o => accessibleOrganizations.Contains(o.Id));
+            var organizationsResult = await NodesService.GetNodesAsync<Organization>(o => accessibleOrganizations.Contains(o.Id));
 
             if (!organizationsResult.IsSuccess)
             {
@@ -127,7 +127,7 @@ public partial class Home
         }
         else
         {
-            var organizationalUnitsResult = await DatabaseService.GetNodesAsync<OrganizationalUnit>(ou =>
+            var organizationalUnitsResult = await NodesService.GetNodesAsync<OrganizationalUnit>(ou =>
                 ou.OrganizationId == organizationId &&
                 (parentId == null || ou.ParentId == parentId) &&
                 accessibleOrganizationalUnits.Contains(ou.Id));
@@ -141,7 +141,7 @@ public partial class Home
             var organizationalUnits = organizationalUnitsResult.Value;
             units.AddRange(organizationalUnits);
 
-            var computersResult = await DatabaseService.GetNodesAsync<Computer>(c => c.ParentId == parentId);
+            var computersResult = await NodesService.GetNodesAsync<Computer>(c => c.ParentId == parentId);
 
             if (!computersResult.IsSuccess)
             {
@@ -669,7 +669,7 @@ public partial class Home
 
             if (computersToRemove.Any())
             {
-                await DatabaseService.RemoveNodesAsync(computersToRemove);
+                await NodesService.RemoveNodesAsync(computersToRemove);
 
                 foreach (var computer in computersToRemove)
                 {

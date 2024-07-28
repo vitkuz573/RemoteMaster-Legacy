@@ -35,7 +35,7 @@ public partial class MoveDialog
         if (!Hosts.IsEmpty)
         {
             var firstHostParentId = Hosts.First().Key.ParentId;
-            var currentOrganizationalUnitResult = await DatabaseService.GetNodesAsync<OrganizationalUnit>(node => node.Id == firstHostParentId);
+            var currentOrganizationalUnitResult = await NodesService.GetNodesAsync<OrganizationalUnit>(node => node.Id == firstHostParentId);
 
             if (currentOrganizationalUnitResult.IsSuccess && currentOrganizationalUnitResult.Value.Any())
             {
@@ -111,7 +111,7 @@ public partial class MoveDialog
     {
         if (_selectedOrganizationalUnitId != Guid.Empty)
         {
-            var targetOrganizationResult = await DatabaseService.GetNodesAsync<Organization>(o => o.Id == _selectedOrganizationId);
+            var targetOrganizationResult = await NodesService.GetNodesAsync<Organization>(o => o.Id == _selectedOrganizationId);
 
             if (!targetOrganizationResult.IsSuccess || !targetOrganizationResult.Value.Any())
             {
@@ -121,7 +121,7 @@ public partial class MoveDialog
 
             var targetOrganization = targetOrganizationResult.Value.First().Name;
 
-            var newParentResult = await DatabaseService.GetNodesAsync<OrganizationalUnit>(ou => ou.Id == _selectedOrganizationalUnitId);
+            var newParentResult = await NodesService.GetNodesAsync<OrganizationalUnit>(ou => ou.Id == _selectedOrganizationalUnitId);
             
             if (!newParentResult.IsSuccess || !newParentResult.Value.Any())
             {
@@ -129,7 +129,7 @@ public partial class MoveDialog
             }
 
             var newParent = newParentResult.Value.First();
-            var targetOrganizationalUnitsPathResult = await DatabaseService.GetFullPathAsync(newParent);
+            var targetOrganizationalUnitsPathResult = await NodesService.GetFullPathAsync(newParent);
             
             if (!targetOrganizationalUnitsPathResult.IsSuccess)
             {
@@ -164,14 +164,14 @@ public partial class MoveDialog
 
                 foreach (var nodeId in nodeIds)
                 {
-                    var nodeResult = await DatabaseService.GetNodesAsync<Computer>(c => c.Id == nodeId);
+                    var nodeResult = await NodesService.GetNodesAsync<Computer>(c => c.Id == nodeId);
 
                     if (!nodeResult.IsSuccess || !nodeResult.Value.Any())
                     {
                         continue;
                     }
 
-                    var moveNodeResult = await DatabaseService.MoveNodeAsync(nodeResult.Value.First(), newParent);
+                    var moveNodeResult = await NodesService.MoveNodeAsync(nodeResult.Value.First(), newParent);
                     
                     if (!moveNodeResult.IsSuccess)
                     {

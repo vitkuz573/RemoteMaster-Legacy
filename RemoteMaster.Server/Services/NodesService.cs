@@ -12,7 +12,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class DatabaseService(ApplicationDbContext applicationDbContext) : IDatabaseService
+public class NodesService(ApplicationDbContext applicationDbContext) : INodesService
 {
     private Result<IQueryable<T>> GetQueryForType<T>() where T : class, INode
     {
