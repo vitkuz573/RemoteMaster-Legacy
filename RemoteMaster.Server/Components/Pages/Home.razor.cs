@@ -14,6 +14,7 @@ using Microsoft.JSInterop;
 using MudBlazor;
 using RemoteMaster.Server.Components.Dialogs;
 using RemoteMaster.Server.Data;
+using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;

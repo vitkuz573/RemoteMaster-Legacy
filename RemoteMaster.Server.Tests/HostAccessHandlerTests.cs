@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using RemoteMaster.Server.Data;
+using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Requirements;
 using RemoteMaster.Shared.Models;

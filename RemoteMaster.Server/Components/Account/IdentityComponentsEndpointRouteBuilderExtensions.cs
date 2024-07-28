@@ -6,6 +6,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using RemoteMaster.Server.Data;
+using RemoteMaster.Server.Entities;
 
 namespace Microsoft.AspNetCore.Routing;
 

@@ -5,7 +5,7 @@
 using Microsoft.AspNetCore.Identity;
 using RemoteMaster.Server.Models;
 
-namespace RemoteMaster.Server.Data;
+namespace RemoteMaster.Server.Entities;
 
 public class ApplicationUser : IdentityUser
 {

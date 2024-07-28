@@ -23,6 +23,7 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Components;
 using RemoteMaster.Server.Components.Account;
 using RemoteMaster.Server.Data;
+using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Middlewares;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Requirements;

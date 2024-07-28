@@ -4,6 +4,7 @@
 
 using System.Security.Claims;
 using RemoteMaster.Server.Data;
+using RemoteMaster.Server.Entities;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Abstractions;

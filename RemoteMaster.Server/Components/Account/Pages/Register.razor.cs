@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Identity;
 using RemoteMaster.Server.Data;
+using RemoteMaster.Server.Entities;
 using Serilog;
 
 namespace RemoteMaster.Server.Components.Account.Pages;

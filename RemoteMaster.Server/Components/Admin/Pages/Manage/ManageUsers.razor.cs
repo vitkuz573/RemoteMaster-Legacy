@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Components.Admin.Dialogs;
 using RemoteMaster.Server.Data;
+using RemoteMaster.Server.Entities;
 
 namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 

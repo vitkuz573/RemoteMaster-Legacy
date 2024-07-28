@@ -5,6 +5,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using RemoteMaster.Server.Data;
+using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Enums;
 
 namespace RemoteMaster.Server.Models;
