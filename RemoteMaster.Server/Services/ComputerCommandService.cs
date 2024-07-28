@@ -9,6 +9,7 @@ using Microsoft.JSInterop;
 using Polly;
 using Polly.Retry;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Entities;
 using RemoteMaster.Shared.Models;
 using Serilog;
 

@@ -5,7 +5,7 @@
 using System.Text.Json.Serialization;
 using RemoteMaster.Shared.Abstractions;
 
-namespace RemoteMaster.Shared.Models;
+namespace RemoteMaster.Server.Entities;
 
 public class Computer(string name, string ipAddress, string macAddress) : INode, IEquatable<Computer>
 {

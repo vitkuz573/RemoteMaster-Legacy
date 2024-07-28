@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Moq;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Services;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;

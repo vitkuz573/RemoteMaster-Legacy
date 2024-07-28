@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Components;
+using RemoteMaster.Server.Entities;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components;
