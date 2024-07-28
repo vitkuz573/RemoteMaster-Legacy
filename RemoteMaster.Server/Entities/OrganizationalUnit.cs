@@ -3,8 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Shared.Abstractions;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Entities;
 

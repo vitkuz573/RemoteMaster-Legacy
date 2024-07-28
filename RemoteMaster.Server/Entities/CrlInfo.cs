@@ -2,13 +2,10 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Text.Json.Serialization;
-
 namespace RemoteMaster.Server.Entities;
 
 public class CrlInfo
 {
-    [JsonIgnore]
     public int Id { get; set; }
 
     public string CrlNumber { get; set; }
