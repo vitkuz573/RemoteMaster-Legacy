@@ -56,5 +56,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         builder.ApplyConfiguration(new OrganizationalUnitConfiguration());
         builder.ApplyConfiguration(new ApplicationUserConfiguration());
         builder.ApplyConfiguration(new SignInEntryConfiguration());
+        builder.ApplyConfiguration(new ApplicationClaimConfiguration());
     }
 }
