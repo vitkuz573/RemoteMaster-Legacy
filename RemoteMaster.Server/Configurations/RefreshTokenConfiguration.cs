@@ -67,6 +67,6 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
             .WithOne()
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.ToTable("RefreshTokens");
+        builder.ToTable("RefreshTokens", t => t.HasCheckConstraint("CK_RefreshTokens_ReplacedByTokenId_Required", "[RevocationReason] <> 'Replaced' OR [ReplacedByTokenId] IS NOT NULL"));
     }
 }
