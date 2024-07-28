@@ -4,11 +4,9 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using RemoteMaster.Server.Data;
-using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Enums;
 
-namespace RemoteMaster.Server.Models;
+namespace RemoteMaster.Server.Entities;
 
 /// <summary>
 /// Represents a refresh token used for authentication in the RemoteMaster project.
