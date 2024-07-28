@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
+using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
 using RemoteMaster.Shared.Models;

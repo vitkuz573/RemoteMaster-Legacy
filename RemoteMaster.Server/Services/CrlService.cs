@@ -9,6 +9,7 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
+using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 using Serilog;
