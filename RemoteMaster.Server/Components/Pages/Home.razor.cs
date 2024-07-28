@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
 using MudBlazor;
+using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Components.Dialogs;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;

@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using MudBlazor;
+using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Entities;
 using RemoteMaster.Shared.Abstractions;
 

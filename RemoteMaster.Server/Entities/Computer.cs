@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Text.Json.Serialization;
+using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Abstractions;
 
 namespace RemoteMaster.Server.Entities;
