@@ -4,7 +4,7 @@
 
 using System.Security.Cryptography.X509Certificates;
 
-namespace RemoteMaster.Server.Models;
+namespace RemoteMaster.Server.Entities;
 
 public class RevokedCertificate
 {
