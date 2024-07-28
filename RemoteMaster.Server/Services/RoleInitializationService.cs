@@ -5,6 +5,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Models;
 using Serilog;
 
