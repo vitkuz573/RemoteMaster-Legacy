@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Text.Json.Serialization;
+using RemoteMaster.Shared.Dtos;
 
 namespace RemoteMaster.Shared.Models;
 
@@ -15,5 +16,5 @@ public class HostConfiguration
     public SubjectOptions Subject { get; set; }
 
     [JsonPropertyName("host")]
-    public Computer? Host { get; set; }
+    public ComputerDto? Host { get; set; }
 }

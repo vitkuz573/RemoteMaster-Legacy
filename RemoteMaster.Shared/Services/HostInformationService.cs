@@ -6,20 +6,25 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using RemoteMaster.Shared.Abstractions;
-using RemoteMaster.Shared.Models;
+using RemoteMaster.Shared.Dtos;
 
 namespace RemoteMaster.Shared.Services;
 
 public class HostInformationService : IHostInformationService
 {
-    public Computer GetHostInformation()
+    public ComputerDto GetHostInformation()
     {
         var hostName = Dns.GetHostName();
         var preferredInterface = GetPreferredNetworkInterface();
         var ipv4Address = GetIPv4Address(preferredInterface);
         var macAddress = GetMacAddress(preferredInterface);
 
-        return new Computer(hostName, ipv4Address, macAddress);
+        return new ComputerDto
+        {
+            Name = hostName,
+            IpAddress = ipv4Address,
+            MacAddress = macAddress
+        };
     }
 
     private static NetworkInterface GetPreferredNetworkInterface()
