@@ -2,33 +2,24 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Text.Json.Serialization;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Shared.Abstractions;
 
 namespace RemoteMaster.Server.Entities;
 
 public class Computer(string name, string ipAddress, string macAddress) : INode, IEquatable<Computer>
 {
-    [JsonIgnore]
     public Guid Id { get; set; }
 
-    [JsonPropertyName("name")]
     public string Name { get; } = name;
 
-    [JsonPropertyName("ipAddress")]
     public string IpAddress { get; } = ipAddress;
 
-    [JsonPropertyName("macAddress")]
     public string MacAddress { get; } = macAddress;
 
-    [JsonIgnore]
     public byte[]? Thumbnail { get; set; }
 
-    [JsonIgnore]
     public Guid? ParentId { get; set; }
 
-    [JsonIgnore]
     public INode? Parent { get; set; }
 
     public bool Equals(Computer? other)
