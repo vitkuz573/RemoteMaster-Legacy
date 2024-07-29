@@ -5,7 +5,6 @@
 @using Microsoft.AspNetCore.Identity
 @using RemoteMaster.Server.Components.Account.Shared
 @using RemoteMaster.Server.Components.Admin.Dialogs
-@using RemoteMaster.Server.Data
 @using RemoteMaster.Server.Entities
 
 @inject NavigationManager NavigationManager
@@ -80,7 +79,7 @@
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
                                     <div class="flex items-center">
-                                        @(_userRoles.ContainsKey(user) ? string.Join(", ", _userRoles[user]) : "No Roles")
+                                        @(_userRoles.TryGetValue(user, out var role) ? string.Join(", ", role) : "No Roles")
                                     </div>
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">

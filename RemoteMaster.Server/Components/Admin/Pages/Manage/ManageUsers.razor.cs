@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Components.Admin.Dialogs;
-using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
 
 namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
@@ -156,7 +155,7 @@ public partial class ManageUsers
         _users = sortedUsers;
     }
 
-    private ApplicationUser CreateUser()
+    private static ApplicationUser CreateUser()
     {
         try
         {
@@ -190,13 +189,5 @@ public partial class ManageUsers
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; } = string.Empty;
-    }
-
-    private sealed class PlaceholderInputModel
-    {
-        [Required]
-        [DataType(DataType.Text)]
-        [Display(Name = "Username")]
-        public string Username { get; set; }
     }
 }
