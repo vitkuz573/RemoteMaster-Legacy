@@ -6,9 +6,9 @@ namespace RemoteMaster.Server.Abstractions;
 
 public interface INode
 {
-    Guid Id { get; }
+    Guid Id { get; set; }
 
-    string Name { get; }
+    string Name { get; set; }
 
     Guid? ParentId { get; set; }
 

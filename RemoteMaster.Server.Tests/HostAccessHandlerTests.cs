@@ -10,9 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
-using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Requirements;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Tests;
 
@@ -80,9 +78,12 @@ public class HostAccessHandlerTests
         var user = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user1")]));
         var context = new AuthorizationHandlerContext([requirement], user, null);
 
-        var computer = new Computer("host", "127.0.0.1", "00-14-22-01-23-45")
+        var computer = new Computer
         {
             Id = Guid.NewGuid(),
+            Name = "host",
+            IpAddress = "127.0.0.1",
+            MacAddress = "00-14-22-01-23-45",
             ParentId = Guid.NewGuid()
         };
 
@@ -113,8 +114,11 @@ public class HostAccessHandlerTests
         var user = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user1")]));
         var context = new AuthorizationHandlerContext([requirement], user, null);
 
-        var computer = new Computer("host", "127.0.0.1", "00-14-22-01-23-45")
+        var computer = new Computer
         {
+            Name = "host",
+            IpAddress = "127.0.0.1",
+            MacAddress = "00-14-22-01-23-45",
             Id = Guid.NewGuid(),
             ParentId = Guid.NewGuid()
         };
@@ -152,15 +156,21 @@ public class HostAccessHandlerTests
             UserName = "user1"
         };
 
-        var computer1 = new Computer("sharedHost", "127.0.0.1", "00-14-22-01-23-45")
+        var computer1 = new Computer
         {
+            Name = "sharedHost",
+            IpAddress = "127.0.0.1",
+            MacAddress = "00-14-22-01-23-45",
             Id = Guid.NewGuid(),
             ParentId = Guid.NewGuid()
         };
 
-        var computer2 = new Computer("sharedHost", "127.0.0.2", "00-14-22-01-23-46")
+        var computer2 = new Computer
         {
             Id = Guid.NewGuid(),
+            Name = "sharedHost",
+            IpAddress = "127.0.0.2",
+            MacAddress = "00-14-22-01-23-46",
             ParentId = Guid.NewGuid()
         };
 
@@ -206,14 +216,20 @@ public class HostAccessHandlerTests
             UserName = "user1"
         };
 
-        var computer1 = new Computer("sharedHost", "127.0.0.1", "00-14-22-01-23-45")
+        var computer1 = new Computer
         {
+            Name = "sharedHost",
+            IpAddress = "127.0.0.1",
+            MacAddress = "00-14-22-01-23-45",
             Id = Guid.NewGuid(),
             ParentId = Guid.NewGuid()
         };
 
-        var computer2 = new Computer("sharedHost", "127.0.0.2", "00-14-22-01-23-46")
+        var computer2 = new Computer
         {
+            Name = "sharedHost",
+            IpAddress = "127.0.0.2",
+            MacAddress = "00-14-22-01-23-46",
             Id = Guid.NewGuid(),
             ParentId = Guid.NewGuid()
         };

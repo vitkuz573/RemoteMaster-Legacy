@@ -7,10 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
-using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
-using RemoteMaster.Shared.Abstractions;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Tests;
 
@@ -163,16 +160,23 @@ public class NodesServiceTests : IDisposable
         var databaseService = scope.ServiceProvider.GetRequiredService<INodesService>();
 
         // Arrange
-        var computer = new Computer("OldName", "127.0.0.1", "00:00:00:00:00:00")
+        var computer = new Computer
         {
             Id = Guid.NewGuid(),
+            Name = "OldName",
+            IpAddress = "127.0.0.1",
+            MacAddress = "00:00:00:00:00:00",
             ParentId = Guid.NewGuid()
         };
         context.Computers.Add(computer);
         await context.SaveChangesAsync();
 
         // Act
-        var result = await databaseService.UpdateNodeAsync(computer, updatedComputer => updatedComputer.With("NewName", "192.168.0.1"));
+        var result = await databaseService.UpdateNodeAsync(computer, updatedComputer =>
+        {
+            updatedComputer.Name = "NewName";
+            updatedComputer.IpAddress = "192.168.0.1";
+        });
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -329,14 +333,21 @@ public class NodesServiceTests : IDisposable
         var databaseService = scope.ServiceProvider.GetRequiredService<INodesService>();
 
         // Arrange
-        var nonExistentComputer = new Computer("NonExistent", "127.0.0.1", "00:00:00:00:00:00")
+        var nonExistentComputer = new Computer
         {
             Id = Guid.NewGuid(),
+            Name = "NonExistent",
+            IpAddress = "127.0.0.1",
+            MacAddress = "00:00:00:00:00:00",
             ParentId = Guid.NewGuid()
         };
 
         // Act & Assert
-        var result = await databaseService.UpdateNodeAsync(nonExistentComputer, updatedComputer => updatedComputer.With("NewName", "192.168.0.1"));
+        var result = await databaseService.UpdateNodeAsync(nonExistentComputer, updatedComputer =>
+        {
+            updatedComputer.Name = "NewName";
+            updatedComputer.IpAddress = "192.168.0.1";
+        });
 
         Assert.False(result.IsSuccess);
         Assert.Contains("Error: The Computer with the name 'NonExistent' not found.", result.Errors.First().Message);
@@ -412,8 +423,8 @@ public class NodesServiceTests : IDisposable
         // Arrange
         var computers = new List<Computer>
         {
-            new("Comp1", "192.168.0.1", "00:00:00:00:00:01") { Id = Guid.NewGuid(), ParentId = Guid.NewGuid() },
-            new("Comp2", "192.168.0.2", "00:00:00:00:00:02") { Id = Guid.NewGuid(), ParentId = Guid.NewGuid() }
+            new() { Id = Guid.NewGuid(), Name = "Comp1", IpAddress = "192.168.0.1", MacAddress = "00:00:00:00:00:01", ParentId = Guid.NewGuid() },
+            new() { Id = Guid.NewGuid(), Name = "Comp2", IpAddress = "192.168.0.2", MacAddress = "00:00:00:00:00:02", ParentId = Guid.NewGuid() }
         };
 
         // Act
@@ -474,7 +485,7 @@ public class NodesServiceTests : IDisposable
 
     private class UnknownNode : INode
     {
-        public Guid Id { get; init; }
+        public Guid Id { get; set; }
 
         public string Name { get; set; }
 
