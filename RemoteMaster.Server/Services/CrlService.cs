@@ -9,6 +9,7 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
+using RemoteMaster.Server.DTOs;
 using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
@@ -167,17 +168,26 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
         {
             var context = await contextFactory.CreateDbContextAsync();
 
-            var crlInfo = await context.CrlInfos.OrderBy(ci => ci.CrlNumber).FirstOrDefaultAsync();
+            var crlInfoDto = await context.CrlInfos
+                .OrderBy(ci => ci.CrlNumber)
+                .Select(ci => new CrlInfoDto
+                {
+                    CrlNumber = ci.CrlNumber,
+                    NextUpdate = ci.NextUpdate,
+                    CrlHash = ci.CrlHash
+                })
+                .FirstOrDefaultAsync();
+
             var revokedCertificatesCount = await context.RevokedCertificates.CountAsync();
 
-            if (crlInfo == null)
+            if (crlInfoDto == null)
             {
                 return Result<CrlMetadata>.Failure("CRL Metadata is not available.");
             }
 
             var metadata = new CrlMetadata
             {
-                CrlInfo = crlInfo,
+                CrlInfo = crlInfoDto,
                 RevokedCertificatesCount = revokedCertificatesCount
             };
 
@@ -187,7 +197,7 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
         catch (Exception ex)
         {
             Log.Error(ex, "Error retrieving CRL metadata");
-            
+
             return Result<CrlMetadata>.Failure("Error retrieving CRL metadata", exception: ex);
         }
     }
