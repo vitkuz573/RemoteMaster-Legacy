@@ -6,16 +6,16 @@ using System.Text.Json.Serialization;
 
 namespace RemoteMaster.Shared.DTOs;
 
-public class ComputerDto
+public class ComputerDto(string name, string ipAddress, string macAddress)
 {
     [JsonPropertyName("name")]
-    public string Name { get; set; } = string.Empty;
+    public string Name { get; } = name;
 
     [JsonPropertyName("ipAddress")]
-    public string IpAddress { get; set; } = string.Empty;
+    public string IpAddress { get; } = ipAddress;
 
     [JsonPropertyName("macAddress")]
-    public string MacAddress { get; set; } = string.Empty;
+    public string MacAddress { get; } = macAddress;
 
     [JsonIgnore]
     public byte[]? Thumbnail { get; set; }
