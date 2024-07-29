@@ -17,15 +17,6 @@ public class ComputerDto(string name, string ipAddress, string macAddress) : IEq
     [JsonPropertyName("macAddress")]
     public string MacAddress { get; } = macAddress;
 
-    [JsonIgnore]
-    public byte[]? Thumbnail { get; set; }
-
-    [JsonIgnore]
-    public Guid? ParentId { get; set; }
-
-    [JsonIgnore]
-    public ComputerDto? Parent { get; set; }
-
     public bool Equals(ComputerDto? other)
     {
         if (other == null)
