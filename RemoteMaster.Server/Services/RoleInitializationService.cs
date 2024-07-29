@@ -6,7 +6,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Entities;
-using RemoteMaster.Server.Models;
+using RemoteMaster.Server.Repositories;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;
@@ -23,47 +23,47 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
 
     private static readonly List<Claim> AdministratorClaims =
     [
-        new("Input", "MouseInput"),
-        new("Input", "KeyboardInput"),
-        new("Input", "ToggleInput"),
-        new("Input", "BlockUserInput"),
-        new("Screen", "SetFrameRate"),
-        new("Screen", "SetImageQuality"),
-        new("Screen", "Recording"),
-        new("Screen", "ToggleDrawCursor"),
-        new("Screen", "ChangeSelectedScreen"),
-        new("Screen", "ToggleUseSkia"),
-        new("Screen", "SetCodec"),
-        new("Power", "RebootComputer"),
-        new("Power", "ShutdownComputer"),
-        new("Power", "WakeUpComputer"),
-        new("Hardware", "SetMonitorState"),
-        new("Security", "LockWorkStation"),
-        new("Security", "LogOffUser"),
-        new("HostManagement", "TerminateHost"),
-        new("HostManagement", "Move"),
-        new("HostManagement", "Remove"),
-        new("HostManagement", "RenewCertificate"),
-        new("Execution", "Scripts"),
-        new("Execution", "ManagePsExecRules"),
-        new("Execution", "OpenShell"),
-        new("HostManagement", "Update"),
-        new("Domain", "Membership"),
-        new("Communication", "MessageBox"),
-        new("TaskManagement", "OpenTaskManager"),
-        new("FileManagement", "OpenFileManager"),
-        new("FileManagement", "FileUpload"),
-        new("HostInformation", "View"),
-        new("Connection", "Control"),
-        new("Connection", "View"),
-        new("Service", "DisconnectClient"),
-        new("Logs", "View")
+        new Claim("Input", "MouseInput"),
+        new Claim("Input", "KeyboardInput"),
+        new Claim("Input", "ToggleInput"),
+        new Claim("Input", "BlockUserInput"),
+        new Claim("Screen", "SetFrameRate"),
+        new Claim("Screen", "SetImageQuality"),
+        new Claim("Screen", "Recording"),
+        new Claim("Screen", "ToggleDrawCursor"),
+        new Claim("Screen", "ChangeSelectedScreen"),
+        new Claim("Screen", "ToggleUseSkia"),
+        new Claim("Screen", "SetCodec"),
+        new Claim("Power", "RebootComputer"),
+        new Claim("Power", "ShutdownComputer"),
+        new Claim("Power", "WakeUpComputer"),
+        new Claim("Hardware", "SetMonitorState"),
+        new Claim("Security", "LockWorkStation"),
+        new Claim("Security", "LogOffUser"),
+        new Claim("HostManagement", "TerminateHost"),
+        new Claim("HostManagement", "Move"),
+        new Claim("HostManagement", "Remove"),
+        new Claim("HostManagement", "RenewCertificate"),
+        new Claim("Execution", "Scripts"),
+        new Claim("Execution", "ManagePsExecRules"),
+        new Claim("Execution", "OpenShell"),
+        new Claim("HostManagement", "Update"),
+        new Claim("Domain", "Membership"),
+        new Claim("Communication", "MessageBox"),
+        new Claim("TaskManagement", "OpenTaskManager"),
+        new Claim("FileManagement", "OpenFileManager"),
+        new Claim("FileManagement", "FileUpload"),
+        new Claim("HostInformation", "View"),
+        new Claim("Connection", "Control"),
+        new Claim("Connection", "View"),
+        new Claim("Service", "DisconnectClient"),
+        new Claim("Logs", "View")
     ];
 
     private static readonly List<Claim> ViewerClaims =
     [
-        new("Screen", "ToggleDrawCursor"),
-        new("Screen", "ChangeSelectedScreen")
+        new Claim("Screen", "ToggleDrawCursor"),
+        new Claim("Screen", "ChangeSelectedScreen")
     ];
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -110,14 +110,24 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
         {
             var existingClaims = await applicationClaimsService.GetClaimsAsync(c => c.ClaimType == claim.Type && c.ClaimValue == claim.Value);
 
-            if (!existingClaims.Value.Any())
+            if (existingClaims.Value.Any())
             {
-                await applicationClaimsService.AddClaimAsync(new ApplicationClaim
-                {
-                    ClaimType = claim.Type,
-                    ClaimValue = claim.Value
-                });
+                continue;
             }
+
+            var matchingClaim = ClaimRepository.AllClaims.FirstOrDefault(c => c.ClaimType == claim.Type && c.ClaimValue == claim.Value);
+
+            if (matchingClaim == null)
+            {
+                throw new InvalidOperationException($"Claim '{claim.Type}:{claim.Value}' is assigned to a role but does not exist in the central repository.");
+            }
+
+            await applicationClaimsService.AddClaimAsync(new ApplicationClaim
+            {
+                ClaimType = claim.Type,
+                ClaimValue = claim.Value,
+                Description = matchingClaim.Description
+            });
         }
     }
 
@@ -128,7 +138,7 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
             var roleIdentity = await roleManager.FindByNameAsync(roleName);
             var existingClaims = await roleManager.GetClaimsAsync(roleIdentity);
 
-            foreach (var claim in claims.Where(claim => !existingClaims.Any(c => c.Type == claim.Type && c.Value == claim.Value)))
+            foreach (var claim in claims.Where(cl => !existingClaims.Any(c => c.Type == cl.Type && c.Value == cl.Value)))
             {
                 var result = await roleManager.AddClaimAsync(roleIdentity, claim);
 

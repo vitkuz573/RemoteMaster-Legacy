@@ -11,4 +11,6 @@ public class ApplicationClaim
     public string ClaimType { get; set; }
 
     public string ClaimValue { get; set; }
+
+    public string Description { get; set; }
 }

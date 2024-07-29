@@ -37,13 +37,17 @@ public partial class ManageRoleClaims
                 .Select(g => new
                 {
                     ClaimType = g.Key,
-                    Values = g.Select(ac => ac.ClaimValue).Distinct().ToList()
+                    Values = g.Select(ac => new ClaimValueViewModel
+                    {
+                        Value = ac.ClaimValue,
+                        Description = ac.Description
+                    }).Distinct().ToList()
                 })
                 .ToList();
 
             _claimTypes = groupedClaims.Select(c => new ClaimTypeViewModel(
                 c.ClaimType,
-                c.Values.Select(v => new ClaimValueViewModel { Value = v }).ToList()
+                c.Values
             )).ToList();
         }
         else
@@ -186,6 +190,8 @@ public partial class ManageRoleClaims
     public class ClaimValueViewModel
     {
         public string Value { get; set; } = string.Empty;
+
+        public string Description { get; set; } = string.Empty;
 
         public bool IsSelected { get; set; }
     }
