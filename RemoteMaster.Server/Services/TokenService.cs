@@ -16,6 +16,7 @@ using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Enums;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Server.Options;
 using RemoteMaster.Shared.Models;
 using Serilog;
 

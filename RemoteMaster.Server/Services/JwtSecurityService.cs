@@ -8,6 +8,7 @@ using System.Text;
 using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Server.Options;
 using RemoteMaster.Shared.Models;
 using Serilog;
 

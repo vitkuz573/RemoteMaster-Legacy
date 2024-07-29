@@ -7,6 +7,7 @@ using System.Text;
 using Microsoft.Extensions.Options;
 using Moq;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Server.Options;
 using RemoteMaster.Server.Services;
 
 namespace RemoteMaster.Server.Tests;

@@ -6,6 +6,7 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Server.Options;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;
 

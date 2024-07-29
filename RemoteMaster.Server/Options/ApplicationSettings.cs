@@ -4,7 +4,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace RemoteMaster.Server.Models;
+namespace RemoteMaster.Server.Options;
 
 public class ApplicationSettings
 {

@@ -5,7 +5,7 @@
 using System.Text.Json.Serialization;
 using RemoteMaster.Shared.Models;
 
-namespace RemoteMaster.Server.Models;
+namespace RemoteMaster.Server.Options;
 
 public class CertificateOptions
 {

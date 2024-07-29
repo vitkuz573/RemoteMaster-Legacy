@@ -26,6 +26,7 @@ using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Middlewares;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Server.Options;
 using RemoteMaster.Server.Requirements;
 using RemoteMaster.Server.Services;
 using RemoteMaster.Server.Validators;

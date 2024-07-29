@@ -8,6 +8,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Server.Options;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Controllers.V1;
