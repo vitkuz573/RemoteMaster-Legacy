@@ -17,7 +17,7 @@ namespace RemoteMaster.Server.Components.Account.Pages;
 
 public partial class Login
 {
-    private string? errorMessage;
+    private string? _errorMessage;
 
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
@@ -51,7 +51,7 @@ public partial class Login
 
         if (user == null)
         {
-            errorMessage = "Error: Invalid login attempt.";
+            _errorMessage = "Error: Invalid login attempt.";
             return;
         }
 
@@ -59,7 +59,7 @@ public partial class Login
 
         if (!userRoles.Any())
         {
-            errorMessage = "Error: User does not belong to any roles.";
+            _errorMessage = "Error: User does not belong to any roles.";
             await LogSignInAttempt(user.Id, false, ipAddress);
             return;
         }
@@ -70,7 +70,7 @@ public partial class Login
         if (isRootAdmin && !isLocalhost)
         {
             Log.Warning("Attempt to login as RootAdministrator from non-localhost IP.");
-            errorMessage = "Error: RootAdministrator access is restricted to localhost.";
+            _errorMessage = "Error: RootAdministrator access is restricted to localhost.";
             await LogSignInAttempt(user.Id, false, ipAddress);
             return;
         }
@@ -105,13 +105,13 @@ public partial class Login
                 }
                 else
                 {
-                    errorMessage = "Error: Failed to store tokens.";
+                    _errorMessage = "Error: Failed to store tokens.";
                     await LogSignInAttempt(user.Id, false, ipAddress);
                 }
             }
             else
             {
-                errorMessage = "Error: Failed to generate tokens.";
+                _errorMessage = "Error: Failed to generate tokens.";
                 await LogSignInAttempt(user.Id, false, ipAddress);
             }
         }
@@ -130,7 +130,7 @@ public partial class Login
         }
         else
         {
-            errorMessage = "Error: Invalid login attempt.";
+            _errorMessage = "Error: Invalid login attempt.";
             await LogSignInAttempt(user.Id, false, ipAddress);
         }
     }

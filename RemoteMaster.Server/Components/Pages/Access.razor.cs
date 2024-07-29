@@ -394,7 +394,7 @@ public partial class Access : IAsyncDisposable
                 throw new InvalidOperationException("User name or role is missing.");
             }
 
-            _connection.Closed += async (_) =>
+            _connection.Closed += async _ =>
             {
                 if (!_disposed && _retryCount < 3)
                 {

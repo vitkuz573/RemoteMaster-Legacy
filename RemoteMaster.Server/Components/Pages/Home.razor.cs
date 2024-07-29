@@ -434,12 +434,7 @@ public partial class Home
             throw new InvalidOperationException("User is not initialized.");
         }
 
-        var userId = _user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (userId == null)
-        {
-            throw new InvalidOperationException("User ID is not found.");
-        }
+        var userId = _user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new InvalidOperationException("User ID is not found.");
 
         var connection = new HubConnectionBuilder()
             .WithUrl($"https://{computer.IpAddress}:5001/{hubPath}", options =>

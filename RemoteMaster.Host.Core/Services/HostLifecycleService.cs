@@ -186,14 +186,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
     {
         try
         {
-            var isRegistered = await apiService.IsHostRegisteredAsync();
-
-            if (isRegistered)
-            {
-                return true;
-            }
-
-            throw new InvalidOperationException("Failed to check host registration status.");
+            return await apiService.IsHostRegisteredAsync();
         }
         catch (HttpRequestException ex) when (ex.InnerException is SocketException { SocketErrorCode: SocketError.NetworkUnreachable })
         {

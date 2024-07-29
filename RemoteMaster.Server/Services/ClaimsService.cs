@@ -5,7 +5,6 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
 using RemoteMaster.Shared.Models;
 

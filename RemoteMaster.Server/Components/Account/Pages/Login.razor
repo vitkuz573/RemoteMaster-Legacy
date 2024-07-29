@@ -25,7 +25,7 @@
             <h1 class="mt-6 text-center text-3xl font-bold text-gray-900">RemoteMaster Server</h1>
             <h2 class="mt-2 text-center text-xl font-medium text-gray-700">@Localizer["LoginHeader"]</h2>
         </div>
-        <StatusMessage Message="@errorMessage" />
+        <StatusMessage Message="@_errorMessage" />
         <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login" class="mt-8 space-y-6">
             <DataAnnotationsValidator />
             <div class="rounded-md shadow-sm">

@@ -6,7 +6,7 @@ using RemoteMaster.Server.Abstractions;
 
 namespace RemoteMaster.Server.Entities;
 
-public class Computer(string name, string ipAddress, string macAddress) : INode, IEquatable<Computer>
+public class Computer(string name, string ipAddress, string macAddress) : INode
 {
     public Guid Id { get; set; }
 
@@ -22,16 +22,6 @@ public class Computer(string name, string ipAddress, string macAddress) : INode,
 
     public INode? Parent { get; set; }
 
-    public bool Equals(Computer? other)
-    {
-        if (other == null)
-        {
-            return false;
-        }
-
-        return IpAddress == other.IpAddress && MacAddress == other.MacAddress && Name == other.Name;
-    }
-
     public Computer With(string? name = null, string? ipAddress = null, string? macAddress = null)
     {
         return new Computer(name ?? Name, ipAddress ?? IpAddress, macAddress ?? MacAddress)
@@ -42,8 +32,4 @@ public class Computer(string name, string ipAddress, string macAddress) : INode,
             Parent = Parent
         };
     }
-
-    public override bool Equals(object? obj) => Equals(obj as Computer);
-
-    public override int GetHashCode() => HashCode.Combine(IpAddress, MacAddress, Name);
 }

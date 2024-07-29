@@ -37,6 +37,13 @@ public class ApiResponse
     public ProblemDetails? Error { get; }
 
     /// <summary>
+    /// Parameterless constructor for deserialization
+    /// </summary>
+    public ApiResponse()
+    {
+    }
+
+    /// <summary>
     /// Constructor for success response.
     /// </summary>
     public ApiResponse(string? message = "Operation successful.", int statusCode = StatusCodes.Status200OK)

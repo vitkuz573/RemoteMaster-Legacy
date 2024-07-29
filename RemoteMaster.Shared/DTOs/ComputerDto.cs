@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace RemoteMaster.Shared.DTOs;
 
-public class ComputerDto(string name, string ipAddress, string macAddress)
+public class ComputerDto(string name, string ipAddress, string macAddress) : IEquatable<ComputerDto>
 {
     [JsonPropertyName("name")]
     public string Name { get; } = name;
@@ -25,4 +25,18 @@ public class ComputerDto(string name, string ipAddress, string macAddress)
 
     [JsonIgnore]
     public ComputerDto? Parent { get; set; }
+
+    public bool Equals(ComputerDto? other)
+    {
+        if (other == null)
+        {
+            return false;
+        }
+
+        return IpAddress == other.IpAddress && MacAddress == other.MacAddress && Name == other.Name;
+    }
+
+    public override bool Equals(object? obj) => Equals(obj as ComputerDto);
+
+    public override int GetHashCode() => HashCode.Combine(IpAddress, MacAddress, Name);
 }
