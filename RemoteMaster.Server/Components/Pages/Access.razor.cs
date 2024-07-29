@@ -14,7 +14,7 @@ using Microsoft.JSInterop;
 using MudBlazor;
 using Polly;
 using Polly.Wrap;
-using RemoteMaster.Server.Models;
+using RemoteMaster.Server.DTOs;
 using RemoteMaster.Server.Requirements;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Enums;
@@ -227,9 +227,9 @@ public partial class Access : IAsyncDisposable
         });
     }
 
-    private List<DisplayItem> GetDisplayItems()
+    private List<DisplayDto> GetDisplayItems()
     {
-        var displayItems = new List<DisplayItem>();
+        var displayItems = new List<DisplayDto>();
 
         for (var i = 0; i < _displays.Count; i++)
         {
@@ -238,7 +238,7 @@ public partial class Access : IAsyncDisposable
                 ? $"Virtual Screen ({resolution})"
                 : $"Screen {i + 1} ({resolution})";
 
-            displayItems.Add(new DisplayItem
+            displayItems.Add(new DisplayDto
             {
                 Name = _displays[i].Name,
                 DisplayName = displayName
