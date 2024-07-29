@@ -4,7 +4,6 @@
 
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Entities;
-using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
@@ -122,7 +121,11 @@ public class HostRegistrationService(INodesService nodesService, IEventNotificat
         {
             var existingComputer = await GetComputerByMacAddressAsync(hostConfiguration.Host.MacAddress, parentOu.Id);
 
-            var updateResult = await nodesService.UpdateNodeAsync(existingComputer, computer => computer.With(hostConfiguration.Host.Name, hostConfiguration.Host.IpAddress));
+            var updateResult = await nodesService.UpdateNodeAsync(existingComputer, computer =>
+            {
+                computer.Name = hostConfiguration.Host.Name;
+                computer.IpAddress = hostConfiguration.Host.IpAddress;
+            });
 
             if (!updateResult.IsSuccess)
             {
@@ -139,8 +142,11 @@ public class HostRegistrationService(INodesService nodesService, IEventNotificat
         }
         catch (InvalidOperationException)
         {
-            var computer = new Computer(hostConfiguration.Host.Name, hostConfiguration.Host.IpAddress, hostConfiguration.Host.MacAddress)
+            var computer = new Computer
             {
+                Name = hostConfiguration.Host.Name,
+                IpAddress = hostConfiguration.Host.IpAddress,
+                MacAddress = hostConfiguration.Host.MacAddress,
                 ParentId = parentOu.Id
             };
 
@@ -235,7 +241,11 @@ public class HostRegistrationService(INodesService nodesService, IEventNotificat
         {
             var computer = await GetComputerByMacAddressAsync(request.MacAddress, lastOu.Id);
 
-            var updateResult = await nodesService.UpdateNodeAsync(computer, updatedComputer => updatedComputer.With(request.Name, request.IpAddress));
+            var updateResult = await nodesService.UpdateNodeAsync(computer, updatedComputer =>
+            {
+                updatedComputer.Name = request.Name;
+                updatedComputer.IpAddress = request.IpAddress;
+            });
 
             if (!updateResult.IsSuccess)
             {

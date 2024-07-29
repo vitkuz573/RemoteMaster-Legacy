@@ -193,32 +193,31 @@ public class NodesService(ApplicationDbContext applicationDbContext) : INodesSer
         }
     }
 
-    public async Task<Result> UpdateNodeAsync<T>(T node, Func<T, T> updateFunction) where T : class, INode
+    public async Task<Result> UpdateNodeAsync<T>(T node, Action<T> updateAction) where T : class, INode
     {
         try
         {
             ArgumentNullException.ThrowIfNull(node);
-            ArgumentNullException.ThrowIfNull(updateFunction);
+            ArgumentNullException.ThrowIfNull(updateAction);
 
             var trackedNode = await applicationDbContext.Set<T>().FindAsync(node.Id);
-            
+
             if (trackedNode == null)
             {
                 return Result.Failure($"Error: The {typeof(T).Name} with the name '{node.Name}' not found.");
             }
 
-            var updatedNode = updateFunction(trackedNode);
-            var conflict = await CheckForConflictsAsync(updatedNode, node.Id);
-            
+            updateAction(trackedNode);
+
+            var conflict = await CheckForConflictsAsync(trackedNode, node.Id);
+
             if (!conflict.IsSuccess)
             {
                 return Result.Failure([.. conflict.Errors]);
             }
 
-            applicationDbContext.Entry(trackedNode).CurrentValues.SetValues(updatedNode);
-            
             await applicationDbContext.SaveChangesAsync();
-            
+
             return Result.Success();
         }
         catch (Exception ex)

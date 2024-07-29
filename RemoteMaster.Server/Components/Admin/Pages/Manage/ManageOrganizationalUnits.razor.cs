@@ -44,7 +44,6 @@ public partial class ManageOrganizationalUnits
                     ou.Name = Input.Name;
                     ou.OrganizationId = Input.OrganizationId;
                     ou.ParentId = Input.ParentId;
-                    return ou;
                 });
 
             if (result.IsSuccess)

@@ -3,8 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Server.Entities;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Models;
 
-public class HostInfo(string name, string ipAddress, string macAddress) : Computer(name, ipAddress, macAddress);
+public class HostInfo : Computer;

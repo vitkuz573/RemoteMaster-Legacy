@@ -50,7 +50,6 @@ public partial class ManageOrganizations
                     org.Locality = Input.Locality;
                     org.State = Input.State;
                     org.Country = Input.Country;
-                    return org;
                 });
 
             if (result.IsSuccess)
