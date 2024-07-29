@@ -9,6 +9,7 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Services;
 using RemoteMaster.Shared.Abstractions;
+using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Tests;
@@ -72,7 +73,7 @@ public class CertificateServiceTests
         // Arrange
         var csrBytes = GenerateCsrBytes(false);
         using var caCertificate = GenerateCaCertificate();
-        var computer = new Computer("localhost", "127.0.0.1", "00-14-22-01-23-45");
+        var computer = new ComputerDto("localhost", "127.0.0.1", "00-14-22-01-23-45");
         var serialNumber = Result<byte[]>.Success([0x01, 0x02, 0x03, 0x04]);
 
         _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(caCertificate);
@@ -94,7 +95,7 @@ public class CertificateServiceTests
         // Arrange
         var csrBytes = GenerateMinimalValidCsrBytes();
         using var caCertificate = GenerateCaCertificate();
-        var computer = new Computer("localhost", "127.0.0.1", "00-14-22-01-23-45");
+        var computer = new ComputerDto("localhost", "127.0.0.1", "00-14-22-01-23-45");
         var serialNumber = Result<byte[]>.Success([0x01, 0x02, 0x03, 0x04]);
 
         _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(caCertificate);
@@ -116,7 +117,7 @@ public class CertificateServiceTests
         // Arrange
         var csrBytes = GenerateCsrBytesWithExtensions();
         using var caCertificate = GenerateCaCertificate();
-        var computer = new Computer("localhost", "127.0.0.1", "00-14-22-01-23-45");
+        var computer = new ComputerDto("localhost", "127.0.0.1", "00-14-22-01-23-45");
         var serialNumber = Result<byte[]>.Success([0x01, 0x02, 0x03, 0x04]);
 
         _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(caCertificate);
@@ -138,7 +139,7 @@ public class CertificateServiceTests
         // Arrange
         var csrBytes = GenerateCsrBytes(false);
         using var caCertificate = GenerateCaCertificate();
-        var computer = new Computer("localhost", "127.0.0.1", "00-14-22-01-23-45");
+        var computer = new ComputerDto("localhost", "127.0.0.1", "00-14-22-01-23-45");
 
         _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(caCertificate);
         _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(computer);
