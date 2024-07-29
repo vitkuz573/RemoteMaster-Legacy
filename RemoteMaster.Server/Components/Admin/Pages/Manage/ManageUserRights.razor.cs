@@ -6,11 +6,8 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Enums;
-using RemoteMaster.Server.Models;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 
@@ -166,24 +163,28 @@ public partial class ManageUserRights
         {
             var organizationResult = await NodesService.GetNodesAsync<Organization>(o => o.Id == orgId);
 
-            if (organizationResult.IsSuccess && organizationResult.Value.Any())
+            if (!organizationResult.IsSuccess || !organizationResult.Value.Any())
             {
-                var organization = organizationResult.Value.First();
-                user.AccessibleOrganizations.Add(organization);
-                SelectedUserModel.SelectedOrganizations.Add(orgId);
+                continue;
             }
+
+            var organization = organizationResult.Value.First();
+            user.AccessibleOrganizations.Add(organization);
+            SelectedUserModel.SelectedOrganizations.Add(orgId);
         }
 
         foreach (var unitId in selectedUnitIds)
         {
             var unitResult = await NodesService.GetNodesAsync<OrganizationalUnit>(ou => ou.Id == unitId);
 
-            if (unitResult.IsSuccess && unitResult.Value.Any())
+            if (!unitResult.IsSuccess || !unitResult.Value.Any())
             {
-                var unit = unitResult.Value.First();
-                user.AccessibleOrganizationalUnits.Add(unit);
-                SelectedUserModel.SelectedOrganizationalUnits.Add(unitId);
+                continue;
             }
+
+            var unit = unitResult.Value.First();
+            user.AccessibleOrganizationalUnits.Add(unit);
+            SelectedUserModel.SelectedOrganizationalUnits.Add(unitId);
         }
     }
 
@@ -336,7 +337,7 @@ public partial class ManageUserRights
 
     private void ToggleLockoutDateTimeInputs(ChangeEventArgs e)
     {
-        if (e.Value is bool isPermanentLockout && isPermanentLockout)
+        if (e.Value is true)
         {
             return;
         }
@@ -379,12 +380,15 @@ public partial class ManageUserRights
             set
             {
                 _isSelected = value;
-                if (!_isSelected)
+
+                if (_isSelected)
                 {
-                    foreach (var unit in OrganizationalUnits)
-                    {
-                        unit.IsSelected = false;
-                    }
+                    return;
+                }
+
+                foreach (var unit in OrganizationalUnits)
+                {
+                    unit.IsSelected = false;
                 }
             }
         }

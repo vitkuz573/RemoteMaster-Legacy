@@ -36,8 +36,8 @@ public partial class ManageJwt
                 var filePath = Path.Combine(_keysDirectory, file);
                 var entry = archive.CreateEntry(file, CompressionLevel.Fastest);
 
-                using var fileStream = new FileStream(filePath, FileMode.Open);
-                using var entryStream = entry.Open();
+                await using var fileStream = new FileStream(filePath, FileMode.Open);
+                await using var entryStream = entry.Open();
 
                 await fileStream.CopyToAsync(entryStream);
             }

@@ -72,7 +72,7 @@ public partial class ManageRoleClaims
                 }
             }
 
-            _initialRoleClaims = new List<Claim>(_roleClaims);
+            _initialRoleClaims = [.._roleClaims];
 
             StateHasChanged();
         }
@@ -105,25 +105,29 @@ public partial class ManageRoleClaims
         foreach (var claim in claimsToRemove)
         {
             var result = await RoleManager.RemoveClaimAsync(role, claim);
-            
-            if (!result.Succeeded)
+
+            if (result.Succeeded)
             {
-                _message = $"Error: Failed to remove claim {claim.Type}:{claim.Value} from role {role.Name}.";
-                
-                return;
+                continue;
             }
+
+            _message = $"Error: Failed to remove claim {claim.Type}:{claim.Value} from role {role.Name}.";
+                
+            return;
         }
 
         foreach (var claim in claimsToAdd)
         {
             var result = await RoleManager.AddClaimAsync(role, claim);
 
-            if (!result.Succeeded)
+            if (result.Succeeded)
             {
-                _message = $"Error: Failed to add claim {claim.Type}:{claim.Value} to role {role.Name}.";
-
-                return;
+                continue;
             }
+
+            _message = $"Error: Failed to add claim {claim.Type}:{claim.Value} to role {role.Name}.";
+
+            return;
         }
 
         _message = "Role claims updated successfully.";
@@ -162,20 +166,7 @@ public partial class ManageRoleClaims
             .SelectMany(ct => ct.Values.Where(v => v.IsSelected).Select(v => new Claim(ct.Type, v.Value)))
             .ToList();
 
-        if (_initialRoleClaims.Count != selectedRoleClaims.Count)
-        {
-            return true;
-        }
-
-        foreach (var claim in _initialRoleClaims)
-        {
-            if (!selectedRoleClaims.Any(c => c.Type == claim.Type && c.Value == claim.Value))
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return _initialRoleClaims.Count != selectedRoleClaims.Count || _initialRoleClaims.Any(claim => !selectedRoleClaims.Any(c => c.Type == claim.Type && c.Value == claim.Value));
     }
 
     public class RoleClaimEditModel
