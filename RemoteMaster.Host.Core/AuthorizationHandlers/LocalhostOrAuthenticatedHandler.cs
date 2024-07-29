@@ -34,7 +34,7 @@ public class LocalhostOrAuthenticatedHandler(IHttpContextAccessor httpContextAcc
             return Task.CompletedTask;
         }
 
-        if (isLocal && !(context.User?.Identity?.IsAuthenticated ?? false))
+        if (isLocal && !(context.User.Identity?.IsAuthenticated ?? false))
         {
             var claims = new List<Claim>
             {
@@ -45,7 +45,7 @@ public class LocalhostOrAuthenticatedHandler(IHttpContextAccessor httpContextAcc
 
             var identity = new ClaimsIdentity(claims, "RemoteMaster Security");
 
-            context.User?.AddIdentity(identity);
+            context.User.AddIdentity(identity);
         }
 
         context.Succeed(requirement);
