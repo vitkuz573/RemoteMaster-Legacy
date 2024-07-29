@@ -8,9 +8,6 @@ namespace RemoteMaster.Shared.Dtos;
 
 public class ComputerDto
 {
-    [JsonPropertyName("id")]
-    public Guid Id { get; set; }
-
     [JsonPropertyName("name")]
     public string Name { get; set; } = string.Empty;
 
