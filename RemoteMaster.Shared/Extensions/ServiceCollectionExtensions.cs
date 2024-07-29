@@ -14,5 +14,6 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<ISubjectService, SubjectService>();
         services.AddSingleton<IHostInformationService, HostInformationService>();
+        services.AddSingleton<ICertificateStoreService, CertificateStoreService>();
     }
 }

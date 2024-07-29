@@ -9,10 +9,8 @@ using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Core.Services;
-using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Extensions;
 using RemoteMaster.Shared.Models;
-using RemoteMaster.Shared.Services;
 
 namespace RemoteMaster.Host.Core.Extensions;
 
@@ -48,7 +46,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IScreenRecorderService, ScreenRecorderService>();
         services.AddTransient<IViewerFactory, ViewerFactory>();
         services.AddSingleton<ICertificateLoaderService, CertificateLoaderService>();
-        services.AddSingleton<ICertificateStoreService, CertificateStoreService>();
         services.AddSingleton<IScreenCastingService, ScreenCastingService>();
         services.AddSingleton<IApiService, ApiService>();
 

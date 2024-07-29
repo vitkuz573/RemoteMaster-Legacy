@@ -29,10 +29,8 @@ using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Requirements;
 using RemoteMaster.Server.Services;
 using RemoteMaster.Server.Validators;
-using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Extensions;
 using RemoteMaster.Shared.Models;
-using RemoteMaster.Shared.Services;
 using Serilog;
 using Serilog.Events;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -166,7 +164,6 @@ public static class Program
         services.AddSingleton<INetworkDriveService, NetworkDriveService>();
         services.AddSingleton<ICountryProvider, CountryProvider>();
         services.AddSingleton<IEventNotificationService, TelegramEventNotificationService>();
-        services.AddSingleton<ICertificateStoreService, CertificateStoreService>();
         services.AddSingleton<IValidateOptions<JwtOptions>, JwtOptionsValidator>();
         services.AddSingleton<IValidateOptions<CertificateOptions>, CertificateOptionsValidator>();
         services.AddSingleton<IValidateOptions<SubjectOptions>, SubjectOptionsValidator>();
