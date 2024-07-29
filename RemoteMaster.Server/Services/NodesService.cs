@@ -7,8 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
-using RemoteMaster.Server.Models;
-using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
@@ -48,46 +46,46 @@ public class NodesService(ApplicationDbContext applicationDbContext) : INodesSer
 
         Expression<Func<T, bool>> predicate = node switch
         {
-            OrganizationalUnit ouNode => n => ((OrganizationalUnit)(object)n!).Name == ouNode.Name &&
-                                               ((OrganizationalUnit)(object)n!).OrganizationId == ouNode.OrganizationId &&
-                                               (!nodeId.HasValue || ((OrganizationalUnit)(object)n!).Id != nodeId.Value),
-            Computer compNode => n => ((Computer)(object)n!).MacAddress == compNode.MacAddress &&
-                                      (!nodeId.HasValue || ((Computer)(object)n!).Id != nodeId.Value),
-            Organization orgNode => n => ((Organization)(object)n!).Name == orgNode.Name &&
-                                         (!nodeId.HasValue || ((Organization)(object)n!).Id != nodeId.Value),
+            OrganizationalUnit ouNode => n => ((OrganizationalUnit)(object)n).Name == ouNode.Name &&
+                                               ((OrganizationalUnit)(object)n).OrganizationId == ouNode.OrganizationId &&
+                                               (!nodeId.HasValue || ((OrganizationalUnit)(object)n).Id != nodeId.Value),
+            Computer compNode => n => ((Computer)(object)n).MacAddress == compNode.MacAddress &&
+                                      (!nodeId.HasValue || ((Computer)(object)n).Id != nodeId.Value),
+            Organization orgNode => n => ((Organization)(object)n).Name == orgNode.Name &&
+                                         (!nodeId.HasValue || ((Organization)(object)n).Id != nodeId.Value),
             _ => _ => false
         };
 
-        if (await query.AnyAsync(predicate))
+        if (!await query.AnyAsync(predicate))
         {
-            string conflictMessage;
-
-            switch (node)
-            {
-                case OrganizationalUnit ouNode:
-                    var organization = await applicationDbContext.Organizations
-                        .FirstOrDefaultAsync(o => o.Id == ouNode.OrganizationId);
-
-                    var organizationName = organization?.Name ?? "Unknown Organization";
-                    conflictMessage = $"Error: An Organizational Unit with the name '{ouNode.Name}' already exists in organization '{organizationName}'.";
-                    break;
-
-                case Computer compNode:
-                    conflictMessage = $"Error: A Computer with the MAC address '{compNode.MacAddress}' already exists.";
-                    break;
-
-                case Organization orgNode:
-                    conflictMessage = $"Error: An Organization with the name '{orgNode.Name}' already exists.";
-                    break;
-
-                default:
-                    throw new InvalidOperationException("Unknown node type.");
-            }
-
-            return Result.Failure(conflictMessage);
+            return Result.Success();
         }
 
-        return Result.Success();
+        string conflictMessage;
+
+        switch (node)
+        {
+            case OrganizationalUnit ouNode:
+                var organization = await applicationDbContext.Organizations
+                    .FirstOrDefaultAsync(o => o.Id == ouNode.OrganizationId);
+
+                var organizationName = organization?.Name ?? "Unknown Organization";
+                conflictMessage = $"Error: An Organizational Unit with the name '{ouNode.Name}' already exists in organization '{organizationName}'.";
+                break;
+
+            case Computer compNode:
+                conflictMessage = $"Error: A Computer with the MAC address '{compNode.MacAddress}' already exists.";
+                break;
+
+            case Organization orgNode:
+                conflictMessage = $"Error: An Organization with the name '{orgNode.Name}' already exists.";
+                break;
+
+            default:
+                throw new InvalidOperationException("Unknown node type.");
+        }
+
+        return Result.Failure(conflictMessage);
     }
 
     private static void ValidateMoveOperation<TNode, TParent>(TNode node, TParent newParent) where TNode : class, INode where TParent : class, INode
