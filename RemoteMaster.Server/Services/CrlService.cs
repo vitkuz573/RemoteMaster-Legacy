@@ -185,11 +185,7 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
                 return Result<CrlMetadata>.Failure("CRL Metadata is not available.");
             }
 
-            var metadata = new CrlMetadata
-            {
-                CrlInfo = crlInfoDto,
-                RevokedCertificatesCount = revokedCertificatesCount
-            };
+            var metadata = new CrlMetadata(crlInfoDto, revokedCertificatesCount);
 
             return Result<CrlMetadata>.Success(metadata);
 

@@ -18,6 +18,6 @@ public class HealthCheck(string name, string status, int statusCode, string dura
 
     public string? Exception { get; set; } = exception;
 
-    public Dictionary<string, string?> Data { get; } = new Dictionary<string, string?>(data);
+    public Dictionary<string, string?> Data { get; } = new(data);
 }
 

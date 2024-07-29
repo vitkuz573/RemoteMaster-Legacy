@@ -6,9 +6,9 @@ using RemoteMaster.Server.DTOs;
 
 namespace RemoteMaster.Server.Models;
 
-public class CrlMetadata
+public class CrlMetadata(CrlInfoDto crlInfo, int revokedCertificatesCount)
 {
-    public CrlInfoDto CrlInfo { get; set; }
+    public CrlInfoDto CrlInfo { get; } = crlInfo;
 
-    public int RevokedCertificatesCount { get; set; }
+    public int RevokedCertificatesCount { get; } = revokedCertificatesCount;
 }
