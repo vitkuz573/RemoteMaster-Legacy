@@ -4,7 +4,7 @@
 
 using RemoteMaster.Shared.Enums;
 
-namespace RemoteMaster.Shared.Dtos;
+namespace RemoteMaster.Shared.DTOs;
 
 public class ScriptExecutionRequest(string content, Shell shell)
 {

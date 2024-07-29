@@ -4,7 +4,7 @@
 
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
-using RemoteMaster.Shared.Dtos;
+using RemoteMaster.Shared.DTOs;
 using Serilog;
 using static Windows.Win32.PInvoke;
 

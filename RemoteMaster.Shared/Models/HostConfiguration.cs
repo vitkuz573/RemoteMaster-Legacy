@@ -3,7 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Text.Json.Serialization;
-using RemoteMaster.Shared.Dtos;
+using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Shared.Models;
 

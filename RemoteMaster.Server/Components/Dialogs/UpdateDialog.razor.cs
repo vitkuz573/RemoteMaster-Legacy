@@ -8,7 +8,7 @@ using Microsoft.JSInterop;
 using MudBlazor;
 using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Models;
-using RemoteMaster.Shared.Dtos;
+using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Dialogs;

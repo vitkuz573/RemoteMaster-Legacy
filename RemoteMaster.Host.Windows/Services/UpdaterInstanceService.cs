@@ -5,7 +5,7 @@
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Models;
-using RemoteMaster.Shared.Dtos;
+using RemoteMaster.Shared.DTOs;
 using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;

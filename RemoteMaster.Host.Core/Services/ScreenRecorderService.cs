@@ -8,7 +8,7 @@ using FFMpegCore.Enums;
 using FFMpegCore.Extensions.System.Drawing.Common;
 using FFMpegCore.Pipes;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Shared.Dtos;
+using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Host.Core.Services;
 

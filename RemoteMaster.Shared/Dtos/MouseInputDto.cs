@@ -4,7 +4,7 @@
 
 using System.Drawing;
 
-namespace RemoteMaster.Shared.Dtos;
+namespace RemoteMaster.Shared.DTOs;
 
 public class MouseInputDto
 {

@@ -16,7 +16,7 @@ using Polly;
 using Polly.Wrap;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Requirements;
-using RemoteMaster.Shared.Dtos;
+using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
 using Serilog;

@@ -5,7 +5,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Shared.Dtos;
+using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Host.Core.Hubs;
 

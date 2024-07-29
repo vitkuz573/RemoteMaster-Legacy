@@ -6,7 +6,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using RemoteMaster.Shared.Abstractions;
-using RemoteMaster.Shared.Dtos;
+using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Shared.Services;
 

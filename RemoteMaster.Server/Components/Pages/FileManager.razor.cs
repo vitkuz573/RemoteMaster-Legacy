@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using Polly;
 using Polly.Retry;
-using RemoteMaster.Shared.Dtos;
+using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
 using Serilog;
 

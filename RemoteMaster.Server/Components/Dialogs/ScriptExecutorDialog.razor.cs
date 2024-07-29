@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Models;
-using RemoteMaster.Shared.Dtos;
+using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
 

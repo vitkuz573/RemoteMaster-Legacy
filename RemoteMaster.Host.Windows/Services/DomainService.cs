@@ -6,7 +6,7 @@ using System.ComponentModel;
 using System.Security.Principal;
 using Microsoft.Win32;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Shared.Dtos;
+using RemoteMaster.Shared.DTOs;
 using Serilog;
 using Windows.Win32.NetworkManagement.NetManagement;
 using static Windows.Win32.PInvoke;

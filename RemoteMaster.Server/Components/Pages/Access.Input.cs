@@ -6,7 +6,7 @@ using System.Drawing;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
-using RemoteMaster.Shared.Dtos;
+using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Server.Components.Pages;
 

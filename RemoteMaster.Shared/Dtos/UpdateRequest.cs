@@ -4,7 +4,7 @@
 
 using RemoteMaster.Shared.Models;
 
-namespace RemoteMaster.Shared.Dtos;
+namespace RemoteMaster.Shared.DTOs;
 
 public class UpdateRequest(string folderPath)
 {

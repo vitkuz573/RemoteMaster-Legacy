@@ -4,7 +4,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace RemoteMaster.Shared.Dtos;
+namespace RemoteMaster.Shared.DTOs;
 
 public class ComputerDto
 {
