@@ -46,15 +46,18 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
             hasChanges = true;
         }
 
-        try
+        if (hasChanges)
         {
-            await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Error saving updated configuration.");
+            try
+            {
+                await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error saving updated configuration.");
 
-            return false;
+                return false;
+            }
         }
 
         try
@@ -63,25 +66,31 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
 
             if (hostMoveRequest != null)
             {
-                hostConfiguration.Subject.Organization = hostMoveRequest.NewOrganization;
-                hostConfiguration.Subject.OrganizationalUnit = hostMoveRequest.NewOrganizationalUnit;
+                var isOrganizationChanged = hostConfiguration.Subject.Organization != hostMoveRequest.NewOrganization;
+                var isOrganizationalUnitChanged = !hostConfiguration.Subject.OrganizationalUnit.SequenceEqual(hostMoveRequest.NewOrganizationalUnit);
 
-                await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
-
-                Log.Information("HostMoveRequest applied: Organization changed to {Organization} and Organizational Unit changed to {OrganizationalUnit}.", hostMoveRequest.NewOrganization, string.Join("/", hostMoveRequest.NewOrganizationalUnit));
-
-                var acknowledgeResult = await apiService.AcknowledgeMoveRequestAsync(hostConfiguration.Host.MacAddress);
-
-                if (acknowledgeResult)
+                if (isOrganizationChanged || isOrganizationalUnitChanged)
                 {
-                    Log.Information("Host move request acknowledged");
-                }
-                else
-                {
-                    Log.Warning("Failed to acknowledge host move request");
-                }
+                    hostConfiguration.Subject.Organization = hostMoveRequest.NewOrganization;
+                    hostConfiguration.Subject.OrganizationalUnit = hostMoveRequest.NewOrganizationalUnit;
 
-                hasChanges = true;
+                    await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
+
+                    Log.Information("HostMoveRequest applied: Organization changed to {Organization} and Organizational Unit changed to {OrganizationalUnit}.", hostMoveRequest.NewOrganization, string.Join("/", hostMoveRequest.NewOrganizationalUnit));
+
+                    var acknowledgeResult = await apiService.AcknowledgeMoveRequestAsync(hostConfiguration.Host.MacAddress);
+
+                    if (acknowledgeResult)
+                    {
+                        Log.Information("Host move request acknowledged");
+                    }
+                    else
+                    {
+                        Log.Warning("Failed to acknowledge host move request");
+                    }
+
+                    hasChanges = true;
+                }
             }
         }
         catch (Exception ex)
