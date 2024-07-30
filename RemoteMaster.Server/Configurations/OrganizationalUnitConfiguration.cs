@@ -6,7 +6,6 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using RemoteMaster.Server.Entities;
-using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Configurations;
 
@@ -52,5 +51,25 @@ public class OrganizationalUnitConfiguration : IEntityTypeConfiguration<Organiza
             .HasForeignKey(c => c.ParentId)
             .IsRequired()
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(ou => ou.AccessibleUsers)
+            .WithMany(u => u.AccessibleOrganizationalUnits)
+            .UsingEntity<Dictionary<string, object>>(
+                "UserOrganizationalUnits",
+                j => j.HasOne<ApplicationUser>()
+                      .WithMany()
+                      .HasForeignKey("UserId")
+                      .OnDelete(DeleteBehavior.Cascade),
+                j => j.HasOne<OrganizationalUnit>()
+                      .WithMany()
+                      .HasForeignKey("OrganizationalUnitId")
+                      .OnDelete(DeleteBehavior.Cascade),
+                j =>
+                {
+                    j.HasKey("OrganizationalUnitId", "UserId");
+                    j.ToTable("UserOrganizationalUnits");
+                    j.Property<Guid>("OrganizationalUnitId").HasColumnName("OrganizationalUnitId");
+                    j.Property<string>("UserId").HasColumnName("UserId");
+                });
     }
 }
