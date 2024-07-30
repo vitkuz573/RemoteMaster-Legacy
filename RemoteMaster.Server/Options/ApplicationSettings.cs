@@ -9,12 +9,15 @@ namespace RemoteMaster.Server.Options;
 public class ApplicationSettings
 {
     [JsonPropertyName("executablesRoot")]
-    public string ExecutablesRoot { get; init; }
+    public string ExecutablesRoot { get; set; }
 
     [JsonPropertyName("jwt")]
-    public JwtOptions Jwt { get; init; }
+    public JwtOptions Jwt { get; set; }
 
     [JsonPropertyName("caSettings")]
-    public CertificateOptions CASettings { get; init; }
+    public CertificateOptions CASettings { get; set; }
+
+    [JsonPropertyName("telegramBot")]
+    public TelegramBotOptions TelegramBot { get; set; }
 }
 

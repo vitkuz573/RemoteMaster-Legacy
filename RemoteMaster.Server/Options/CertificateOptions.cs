@@ -10,14 +10,14 @@ namespace RemoteMaster.Server.Options;
 public class CertificateOptions
 {
     [JsonPropertyName("keySize")]
-    public int KeySize { get; init; }
+    public int KeySize { get; set; }
 
     [JsonPropertyName("validityPeriod")]
-    public int ValidityPeriod { get; init; }
+    public int ValidityPeriod { get; set; }
 
     [JsonPropertyName("commonName")]
-    public string CommonName { get; init; }
+    public string CommonName { get; set; }
 
     [JsonPropertyName("subject")]
-    public SubjectOptions Subject { get; init; }
+    public SubjectOptions Subject { get; set; }
 }

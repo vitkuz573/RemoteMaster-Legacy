@@ -9,10 +9,10 @@ namespace RemoteMaster.Server.Options;
 public class JwtOptions
 {
     [JsonPropertyName("keysDirectory")]
-    public string? KeysDirectory { get; init; }
+    public string? KeysDirectory { get; set; }
 
     [JsonPropertyName("keySize")]
-    public int? KeySize { get; init; }
+    public int? KeySize { get; set; }
 
     [JsonPropertyName("keyPassword")]
     public string? KeyPassword { get; set; }
