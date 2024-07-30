@@ -238,11 +238,7 @@ public partial class Access : IAsyncDisposable
                 ? $"Virtual Screen ({resolution})"
                 : $"Screen {i + 1} ({resolution})";
 
-            displayItems.Add(new DisplayDto
-            {
-                Name = _displays[i].Name,
-                DisplayName = displayName
-            });
+            displayItems.Add(new DisplayDto(_displays[i].Name, displayName));
         }
 
         return displayItems;

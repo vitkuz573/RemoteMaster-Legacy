@@ -4,9 +4,9 @@
 
 namespace RemoteMaster.Server.DTOs;
 
-public class DisplayDto
+public class DisplayDto(string name, string displayName)
 {
-    public string Name { get; set; }
+    public string Name { get; } = name;
 
-    public string DisplayName { get; set; }
+    public string DisplayName { get; } = displayName;
 }
