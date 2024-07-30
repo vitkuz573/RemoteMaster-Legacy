@@ -80,11 +80,12 @@ public static class WebApplicationBuilderExtensions
             configuration.MinimumLevel.Override("Microsoft", LogEventLevel.Warning);
             configuration.MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning);
             configuration.MinimumLevel.Override("System.Net.Http.HttpClient", LogEventLevel.Warning);
+            // configuration.MinimumLevel.Override("Microsoft.AspNetCore.SignalR", LogEventLevel.Warning);
+            // configuration.MinimumLevel.Override("Microsoft.AspNetCore.Http.Connections", LogEventLevel.Warning);
 #endif
             configuration.WriteTo.Console();
             configuration.WriteTo.Seq($"http://{hostConfiguration.Server}:5341");
             configuration.WriteTo.File(fileLog, rollingInterval: RollingInterval.Day);
-            configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Received hub invocation"));
             configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Successfully switched to input desktop"));
         });
     }

@@ -36,7 +36,7 @@ public static class ServiceCollectionExtensions
         });
 
         services.AddSharedServices();
-        services.AddTransient<ILogEventEnricher, HostInfoEnricher>();
+        services.AddTransient<HostInfoEnricher>();
         services.AddTransient<CustomHttpClientHandler>();
         services.AddSingleton<IHostInformationUpdaterService, HostInformationUpdaterService>();
         services.AddSingleton<IFileManagerService, FileManagerService>();
