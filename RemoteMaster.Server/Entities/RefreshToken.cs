@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
 using RemoteMaster.Server.Enums;
 
 namespace RemoteMaster.Server.Entities;
@@ -36,7 +35,6 @@ public class RefreshToken : IValidatableObject
     /// <summary>
     /// Gets a value indicating whether the token is expired.
     /// </summary>
-    [JsonIgnore]
     public bool IsExpired => DateTime.UtcNow >= Expires;
 
     /// <summary>
@@ -72,7 +70,6 @@ public class RefreshToken : IValidatableObject
     /// <summary>
     /// Gets a value indicating whether the token is currently active.
     /// </summary>
-    [JsonIgnore]
     public bool IsActive => Revoked == null && !IsExpired;
 
     /// <summary>
