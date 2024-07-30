@@ -11,6 +11,7 @@ using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Shared.Extensions;
 using RemoteMaster.Shared.Models;
+using Serilog.Core;
 
 namespace RemoteMaster.Host.Core.Extensions;
 
@@ -35,6 +36,7 @@ public static class ServiceCollectionExtensions
         });
 
         services.AddSharedServices();
+        services.AddTransient<ILogEventEnricher, HostInfoEnricher>();
         services.AddTransient<CustomHttpClientHandler>();
         services.AddSingleton<IHostInformationUpdaterService, HostInformationUpdaterService>();
         services.AddSingleton<IFileManagerService, FileManagerService>();

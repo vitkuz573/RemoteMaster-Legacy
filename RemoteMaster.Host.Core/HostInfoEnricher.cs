@@ -2,42 +2,23 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Net;
-using System.Net.Sockets;
+using RemoteMaster.Shared.Abstractions;
 using Serilog.Core;
 using Serilog.Events;
 
 namespace RemoteMaster.Host.Core;
 
-public class HostInfoEnricher : ILogEventEnricher
+public class HostInfoEnricher(IHostInformationService hostInformationService) : ILogEventEnricher
 {
-    private LogEventProperty? _cachedIpProperty;
-    private LogEventProperty? _cachedHostProperty;
-
     public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
     {
         ArgumentNullException.ThrowIfNull(logEvent);
         ArgumentNullException.ThrowIfNull(propertyFactory);
 
-        _cachedIpProperty ??= CreateIpProperty(propertyFactory);
-        _cachedHostProperty ??= CreateHostProperty(propertyFactory);
+        var hostInfo = hostInformationService.GetHostInformation();
 
-        logEvent.AddPropertyIfAbsent(_cachedIpProperty);
-        logEvent.AddPropertyIfAbsent(_cachedHostProperty);
-    }
-
-    private static LogEventProperty CreateIpProperty(ILogEventPropertyFactory propertyFactory)
-    {
-        var host = Dns.GetHostEntry(Dns.GetHostName());
-        var ipAddress = host.AddressList.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork)?.ToString();
-
-        return propertyFactory.CreateProperty("HostIpAddress", ipAddress);
-    }
-
-    private static LogEventProperty CreateHostProperty(ILogEventPropertyFactory propertyFactory)
-    {
-        var hostName = Dns.GetHostName();
-
-        return propertyFactory.CreateProperty("HostName", hostName);
+        logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("HostIpAddress", hostInfo.IpAddress));
+        logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("HostName", hostInfo.Name));
+        logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("MacAddress", hostInfo.MacAddress));
     }
 }

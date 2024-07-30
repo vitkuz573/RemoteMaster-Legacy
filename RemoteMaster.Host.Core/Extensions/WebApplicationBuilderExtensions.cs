@@ -71,7 +71,7 @@ public static class WebApplicationBuilderExtensions
 
         builder.Host.UseSerilog((_, configuration) =>
         {
-            configuration.Enrich.With(new HostInfoEnricher());
+            configuration.Enrich.With(serviceProvider.GetRequiredService<HostInfoEnricher>());
 #if DEBUG
         configuration.MinimumLevel.Debug();
 #else
