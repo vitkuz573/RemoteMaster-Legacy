@@ -6,7 +6,6 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using RemoteMaster.Server.Entities;
-using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Configurations;
 
@@ -44,10 +43,32 @@ public class OrganizationConfiguration : IEntityTypeConfiguration<Organization>
         builder.HasIndex(o => o.Name)
             .IsUnique();
 
+        builder.HasIndex(o => new { o.Locality, o.State, o.Country });
+
         builder.HasMany(o => o.OrganizationalUnits)
             .WithOne(ou => ou.Organization)
             .HasForeignKey(ou => ou.OrganizationId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(o => o.AccessibleUsers)
+            .WithMany(u => u.AccessibleOrganizations)
+            .UsingEntity<Dictionary<string, object>>(
+                "UserOrganizations",
+                j => j.HasOne<ApplicationUser>()
+                      .WithMany()
+                      .HasForeignKey("UserId")
+                      .OnDelete(DeleteBehavior.Cascade),
+                j => j.HasOne<Organization>()
+                      .WithMany()
+                      .HasForeignKey("OrganizationId")
+                      .OnDelete(DeleteBehavior.Cascade),
+                j =>
+                {
+                    j.HasKey("OrganizationId", "UserId");
+                    j.ToTable("UserOrganizations");
+                    j.Property<Guid>("OrganizationId").HasColumnName("OrganizationId");
+                    j.Property<string>("UserId").HasColumnName("UserId");
+                });
 
         builder.Ignore(o => o.ParentId);
         builder.Ignore(o => o.Parent);
