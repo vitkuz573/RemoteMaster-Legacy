@@ -26,8 +26,11 @@ public class CertificateRequestServiceTests : IDisposable
         // Assert
         Assert.NotNull(csr);
         Assert.NotNull(_rsaKeyPair);
-        Assert.Contains(csr.CertificateExtensions, ext => ext.Oid!.Value == "2.5.29.17"); // SAN extension
-        Assert.Contains(csr.CertificateExtensions, ext => ext.Oid!.Value == "2.5.29.37"); // Enhanced key usage extension
+
+        // Decode CSR to verify its contents
+        var certificateRequest = CertificateRequest.LoadSigningRequest(csr, HashAlgorithmName.SHA256, CertificateRequestLoadOptions.UnsafeLoadCertificateExtensions, RSASignaturePadding.Pkcs1);
+        Assert.Contains(certificateRequest.CertificateExtensions, ext => ext.Oid!.Value == "2.5.29.17"); // SAN extension
+        Assert.Contains(certificateRequest.CertificateExtensions, ext => ext.Oid!.Value == "2.5.29.37"); // Enhanced key usage extension
     }
 
     [Fact]
@@ -65,7 +68,10 @@ public class CertificateRequestServiceTests : IDisposable
         // Assert
         Assert.NotNull(csr);
         Assert.NotNull(_rsaKeyPair);
-        Assert.Contains(csr.CertificateExtensions, ext => ext.Oid!.Value == "2.5.29.17"); // SAN extension
+
+        // Decode CSR to verify its contents
+        var certificateRequest = CertificateRequest.LoadSigningRequest(csr, HashAlgorithmName.SHA256, CertificateRequestLoadOptions.UnsafeLoadCertificateExtensions, RSASignaturePadding.Pkcs1);
+        Assert.Contains(certificateRequest.CertificateExtensions, ext => ext.Oid!.Value == "2.5.29.17"); // SAN extension
     }
 
     public void Dispose()

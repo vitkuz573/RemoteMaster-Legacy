@@ -114,8 +114,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
 
             RemoveExistingCertificate();
 
-            var csr = certificateRequestService.GenerateSigningRequest(distinguishedName, ipAddresses, out rsaKeyPair);
-            var signingRequest = csr.CreateSigningRequest();
+            var signingRequest = certificateRequestService.GenerateSigningRequest(distinguishedName, ipAddresses, out rsaKeyPair);
 
             Log.Information("Attempting to issue certificate...");
 

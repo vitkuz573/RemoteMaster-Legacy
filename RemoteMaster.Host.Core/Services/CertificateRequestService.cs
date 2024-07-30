@@ -12,7 +12,7 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class CertificateRequestService : ICertificateRequestService
 {
-    public CertificateRequest GenerateSigningRequest(X500DistinguishedName subjectName, List<string> ipAddresses, out RSA rsaKeyPair)
+    public byte[] GenerateSigningRequest(X500DistinguishedName subjectName, List<string> ipAddresses, out RSA rsaKeyPair)
     {
         ArgumentNullException.ThrowIfNull(subjectName);
         ArgumentNullException.ThrowIfNull(ipAddresses);
@@ -21,7 +21,7 @@ public class CertificateRequestService : ICertificateRequestService
 
         rsaKeyPair = RSA.Create(4096);
 
-        var csr = new CertificateRequest(subjectName, rsaKeyPair, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        var certificateRequest = new CertificateRequest(subjectName, rsaKeyPair, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
         var sanBuilder = new SubjectAlternativeNameBuilder();
 
         foreach (var ipAddress in ipAddresses)
@@ -29,17 +29,19 @@ public class CertificateRequestService : ICertificateRequestService
             sanBuilder.AddIpAddress(IPAddress.Parse(ipAddress));
         }
 
-        csr.CertificateExtensions.Add(sanBuilder.Build(true));
+        certificateRequest.CertificateExtensions.Add(sanBuilder.Build(true));
 
         var enhancedKeyUsages = new OidCollection
         {
             new("1.3.6.1.5.5.7.3.1")
         };
 
-        csr.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(enhancedKeyUsages, true));
+        certificateRequest.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(enhancedKeyUsages, true));
 
         Log.Debug("CSR with {SANCount} SAN entries and {OIDCount} OIDs generated.", ipAddresses.Count, enhancedKeyUsages.Count);
 
-        return csr;
+        var signingRequest = certificateRequest.CreateSigningRequest();
+
+        return signingRequest;
     }
 }
