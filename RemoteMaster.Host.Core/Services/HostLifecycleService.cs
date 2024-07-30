@@ -103,7 +103,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
 
         try
         {
-            var ipAddresses = new string[]
+            var ipAddresses = new List<string>
             {
                 hostConfiguration.Host!.IpAddress
             };
