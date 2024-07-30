@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Enums;
-using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Configurations;
 

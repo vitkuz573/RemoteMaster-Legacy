@@ -170,12 +170,7 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
 
             var crlInfoDto = await context.CrlInfos
                 .OrderBy(ci => ci.CrlNumber)
-                .Select(ci => new CrlInfoDto
-                {
-                    CrlNumber = ci.CrlNumber,
-                    NextUpdate = ci.NextUpdate,
-                    CrlHash = ci.CrlHash
-                })
+                .Select(ci => new CrlInfoDto(ci.CrlNumber, ci.NextUpdate, ci.CrlHash))
                 .FirstOrDefaultAsync();
 
             var revokedCertificatesCount = await context.RevokedCertificates.CountAsync();
