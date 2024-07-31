@@ -4,8 +4,18 @@
 
 namespace RemoteMaster.Host.Windows.Helpers;
 
+/// <summary>
+/// Provides a method to compute the Levenshtein distance between two strings.
+/// </summary>
 public static class LevenshteinDistanceUtility
 {
+    /// <summary>
+    /// Computes the Levenshtein distance between two strings.
+    /// </summary>
+    /// <param name="source1">The first string to compare.</param>
+    /// <param name="source2">The second string to compare.</param>
+    /// <returns>The Levenshtein distance between the two strings.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when either source1 or source2 is null.</exception>
     public static int ComputeLevenshteinDistance(string source1, string source2)
     {
         ArgumentNullException.ThrowIfNull(source1);
@@ -14,28 +24,38 @@ public static class LevenshteinDistanceUtility
         var len1 = source1.Length;
         var len2 = source2.Length;
 
-        var prevRow = new int[len2 + 1];
-        var currentRow = new int[len2 + 1];
+        if (len1 == 0)
+        {
+            return len2;
+        }
+
+        if (len2 == 0)
+        {
+            return len1;
+        }
+
+        var previousDistances = new int[len2 + 1];
 
         for (var j = 0; j <= len2; j++)
         {
-            prevRow[j] = j;
+            previousDistances[j] = j;
         }
 
         for (var i = 1; i <= len1; i++)
         {
-            currentRow[0] = i;
+            var currentDistances = new int[len2 + 1];
+            currentDistances[0] = i;
 
             for (var j = 1; j <= len2; j++)
             {
                 var cost = source1[i - 1] == source2[j - 1] ? 0 : 1;
 
-                currentRow[j] = Math.Min(Math.Min(prevRow[j] + 1, currentRow[j - 1] + 1), prevRow[j - 1] + cost);
+                currentDistances[j] = Math.Min(Math.Min(previousDistances[j] + 1, currentDistances[j - 1] + 1), previousDistances[j - 1] + cost);
             }
 
-            (prevRow, currentRow) = (currentRow, prevRow);
+            previousDistances = currentDistances;
         }
 
-        return prevRow[len2];
+        return previousDistances[len2];
     }
 }
