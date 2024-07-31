@@ -24,7 +24,6 @@ using Microsoft.Extensions.Options;
 using MudBlazor.Services;
 using Polly;
 using Polly.Fallback;
-using Polly.Registry;
 using Polly.Retry;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Components;
@@ -58,7 +57,8 @@ public static class Program
             var minimumLevelOverrides = new Dictionary<string, LogEventLevel>
             {
                 { "Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning },
-                { "Microsoft.AspNetCore", LogEventLevel.Warning }
+                { "Microsoft.AspNetCore", LogEventLevel.Warning },
+                { "Polly", LogEventLevel.Warning }
             };
 
             configuration.MinimumLevel.Information()
