@@ -49,6 +49,7 @@ public class MessageLoopService : IHostedService
         if (!TryRegisterClass())
         {
             Log.Error("Failed to register the window class.");
+
             return;
         }
 
@@ -57,6 +58,7 @@ public class MessageLoopService : IHostedService
         if (_hwnd.IsNull)
         {
             Log.Error("Failed to create hidden window.");
+
             return;
         }
 
