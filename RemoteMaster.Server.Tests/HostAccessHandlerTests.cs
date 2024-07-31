@@ -78,6 +78,12 @@ public class HostAccessHandlerTests
         var user = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user1")]));
         var context = new AuthorizationHandlerContext([requirement], user, null);
 
+        var applicationUser = new ApplicationUser
+        {
+            Id = "user1",
+            UserName = "user1"
+        };
+
         var computer = new Computer
         {
             Id = Guid.NewGuid(),
@@ -93,8 +99,9 @@ public class HostAccessHandlerTests
             Name = "Test OU",
             OrganizationId = Guid.NewGuid(),
         };
-        organizationalUnit.UserOrganizationalUnits.Add(new ApplicationUser { Id = "user1" });
+        organizationalUnit.UserOrganizationalUnits.Add(new UserOrganizationalUnit { UserId = applicationUser.Id, OrganizationalUnitId = organizationalUnit.Id });
 
+        _dbContext.Users.Add(applicationUser);
         _dbContext.Computers.Add(computer);
         _dbContext.OrganizationalUnits.Add(organizationalUnit);
         await _dbContext.SaveChangesAsync();
@@ -129,7 +136,7 @@ public class HostAccessHandlerTests
             Name = "Test OU",
             OrganizationId = Guid.NewGuid(),
         };
-        organizationalUnit.UserOrganizationalUnits.Add(new ApplicationUser { Id = "user2" });
+        organizationalUnit.UserOrganizationalUnits.Add(new UserOrganizationalUnit { UserId = "user2", OrganizationalUnitId = organizationalUnit.Id });
 
         _dbContext.Computers.Add(computer);
         _dbContext.OrganizationalUnits.Add(organizationalUnit);
@@ -180,7 +187,7 @@ public class HostAccessHandlerTests
             Name = "Unit 1",
             OrganizationId = Guid.NewGuid(),
         };
-        organizationalUnit1.UserOrganizationalUnits.Add(applicationUser);
+        organizationalUnit1.UserOrganizationalUnits.Add(new UserOrganizationalUnit { UserId = applicationUser.Id, OrganizationalUnitId = organizationalUnit1.Id });
 
         var organizationalUnit2 = new OrganizationalUnit
         {
@@ -188,7 +195,7 @@ public class HostAccessHandlerTests
             Name = "Unit 2",
             OrganizationId = Guid.NewGuid(),
         };
-        organizationalUnit2.UserOrganizationalUnits.Add(new ApplicationUser { Id = "user2" });
+        organizationalUnit2.UserOrganizationalUnits.Add(new UserOrganizationalUnit { UserId = "user2", OrganizationalUnitId = organizationalUnit2.Id });
 
         _dbContext.Users.Add(applicationUser);
         _dbContext.Computers.AddRange(computer1, computer2);
@@ -240,7 +247,7 @@ public class HostAccessHandlerTests
             Name = "Unit 1",
             OrganizationId = Guid.NewGuid(),
         };
-        organizationalUnit1.UserOrganizationalUnits.Add(new ApplicationUser { Id = "user2" });
+        organizationalUnit1.UserOrganizationalUnits.Add(new UserOrganizationalUnit { UserId = "user2", OrganizationalUnitId = organizationalUnit1.Id });
 
         var organizationalUnit2 = new OrganizationalUnit
         {
@@ -248,11 +255,12 @@ public class HostAccessHandlerTests
             Name = "Unit 2",
             OrganizationId = Guid.NewGuid(),
         };
-        organizationalUnit2.UserOrganizationalUnits.Add(applicationUser);
+        organizationalUnit2.UserOrganizationalUnits.Add(new UserOrganizationalUnit { UserId = applicationUser.Id, OrganizationalUnitId = organizationalUnit2.Id });
 
         _dbContext.Users.Add(applicationUser);
         _dbContext.Computers.AddRange(computer1, computer2);
         _dbContext.OrganizationalUnits.AddRange(organizationalUnit1, organizationalUnit2);
+
         await _dbContext.SaveChangesAsync();
 
         // Act
