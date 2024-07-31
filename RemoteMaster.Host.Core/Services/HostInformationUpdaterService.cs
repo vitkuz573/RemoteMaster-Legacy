@@ -67,7 +67,8 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
             if (hostMoveRequest != null)
             {
                 var isOrganizationChanged = hostConfiguration.Subject.Organization != hostMoveRequest.NewOrganization;
-                var isOrganizationalUnitChanged = !hostConfiguration.Subject.OrganizationalUnit.SequenceEqual(hostMoveRequest.NewOrganizationalUnit);
+                var isOrganizationalUnitChanged =
+                    !hostConfiguration.Subject.OrganizationalUnit.SequenceEqual(hostMoveRequest.NewOrganizationalUnit);
 
                 if (isOrganizationChanged || isOrganizationalUnitChanged)
                 {
@@ -76,9 +77,12 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
 
                     await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
 
-                    Log.Information("HostMoveRequest applied: Organization changed to {Organization} and Organizational Unit changed to {OrganizationalUnit}.", hostMoveRequest.NewOrganization, string.Join("/", hostMoveRequest.NewOrganizationalUnit));
+                    Log.Information(
+                        "HostMoveRequest applied: Organization changed to {Organization} and Organizational Unit changed to {OrganizationalUnit}.",
+                        hostMoveRequest.NewOrganization, string.Join("/", hostMoveRequest.NewOrganizationalUnit));
 
-                    var acknowledgeResult = await apiService.AcknowledgeMoveRequestAsync(hostConfiguration.Host.MacAddress);
+                    var acknowledgeResult =
+                        await apiService.AcknowledgeMoveRequestAsync(hostConfiguration.Host.MacAddress);
 
                     if (acknowledgeResult)
                     {
@@ -93,9 +97,9 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
                 }
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Log.Error(ex, "Error processing HostMoveRequest for organizational unit and organization changes.");
+            // ignored
         }
 
         return hasChanges;

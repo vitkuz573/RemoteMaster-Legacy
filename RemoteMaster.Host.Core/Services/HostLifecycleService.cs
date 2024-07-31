@@ -193,10 +193,8 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
 
             return true;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Log.Error("Error checking host registration status: {Message}", ex.Message);
-
             return true;
         }
     }
