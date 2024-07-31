@@ -121,6 +121,7 @@ public partial class MoveDialog
             if (!targetOrganizationResult.IsSuccess || !targetOrganizationResult.Value.Any())
             {
                 MudDialog.Close(DialogResult.Cancel());
+
                 return;
             }
 

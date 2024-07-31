@@ -249,7 +249,7 @@ public partial class ManageUserRights
             Role = userRole,
             IsLockedOut = user.LockoutEnd != null && user.LockoutEnd > DateTime.UtcNow,
             IsPermanentLockout = user.LockoutEnd == DateTimeOffset.MaxValue,
-            LockoutEndDateTime = (user.LockoutEnd != null && user.LockoutEnd < DateTimeOffset.MaxValue) ? user.LockoutEnd.Value.DateTime : DateTime.Now,
+            LockoutEndDateTime = user.LockoutEnd != null && user.LockoutEnd < DateTimeOffset.MaxValue ? user.LockoutEnd.Value.DateTime : DateTime.Now,
             CanAccessUnregisteredHosts = user.CanAccessUnregisteredHosts
         };
 
@@ -328,8 +328,7 @@ public partial class ManageUserRights
     {
         return _initialIsLockedOut != SelectedUserModel.IsLockedOut ||
                _initialIsPermanentLockout != SelectedUserModel.IsPermanentLockout ||
-               (SelectedUserModel.IsLockedOut &&
-                !SelectedUserModel.IsPermanentLockout &&
+               (SelectedUserModel is { IsLockedOut: true, IsPermanentLockout: false } &&
                 _initialLockoutEndDateTime != SelectedUserModel.LockoutEndDateTime);
     }
 
