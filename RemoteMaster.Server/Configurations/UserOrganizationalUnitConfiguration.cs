@@ -9,21 +9,23 @@ using RemoteMaster.Server.Entities;
 
 namespace RemoteMaster.Server.Configurations;
 
-public class ApplicationUserConfiguration : IEntityTypeConfiguration<ApplicationUser>
+public class UserOrganizationalUnitConfiguration : IEntityTypeConfiguration<UserOrganizationalUnit>
 {
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "EntityTypeBuilder will not be null.")]
-    public void Configure(EntityTypeBuilder<ApplicationUser> builder)
+    public void Configure(EntityTypeBuilder<UserOrganizationalUnit> builder)
     {
-        builder.HasMany(u => u.UserOrganizations)
-            .WithOne(uo => uo.ApplicationUser)
-            .HasForeignKey(uo => uo.UserId)
+        builder.HasKey(uou => new { uou.OrganizationalUnitId, uou.UserId });
+
+        builder.HasOne(uou => uou.OrganizationalUnit)
+            .WithMany(ou => ou.UserOrganizationalUnits)
+            .HasForeignKey(uou => uou.OrganizationalUnitId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(u => u.UserOrganizationalUnits)
-            .WithOne(uou => uou.ApplicationUser)
+        builder.HasOne(uou => uou.ApplicationUser)
+            .WithMany(u => u.UserOrganizationalUnits)
             .HasForeignKey(uou => uou.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.ToTable(tb => tb.HasTrigger("AspNetUsers_Trigger"));
+        builder.ToTable("UserOrganizationalUnits");
     }
 }

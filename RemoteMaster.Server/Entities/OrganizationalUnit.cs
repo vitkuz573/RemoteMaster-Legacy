@@ -24,5 +24,5 @@ public class OrganizationalUnit : INode
 
     public ICollection<Computer> Computers { get; } = [];
 
-    public ICollection<ApplicationUser> AccessibleUsers { get; } = [];
+    public ICollection<UserOrganizationalUnit> UserOrganizationalUnits { get; } = [];
 }

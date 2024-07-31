@@ -153,8 +153,8 @@ public partial class ManageUserRights
         var selectedOrganizationIds = _organizations.Where(o => o.IsSelected).Select(o => o.Id).ToList();
         var selectedUnitIds = _organizations.SelectMany(o => o.OrganizationalUnits).Where(ou => ou.IsSelected).Select(ou => ou.Id).ToList();
 
-        user.AccessibleOrganizations.Clear();
-        user.AccessibleOrganizationalUnits.Clear();
+        user.UserOrganizations.Clear();
+        user.UserOrganizationalUnits.Clear();
 
         SelectedUserModel.SelectedOrganizations.Clear();
         SelectedUserModel.SelectedOrganizationalUnits.Clear();
@@ -169,7 +169,15 @@ public partial class ManageUserRights
             }
 
             var organization = organizationResult.Value.First();
-            user.AccessibleOrganizations.Add(organization);
+
+            user.UserOrganizations.Add(new UserOrganization
+            {
+                OrganizationId = orgId,
+                Organization = organization,
+                UserId = user.Id,
+                ApplicationUser = user
+            });
+
             SelectedUserModel.SelectedOrganizations.Add(orgId);
         }
 
@@ -183,7 +191,15 @@ public partial class ManageUserRights
             }
 
             var unit = unitResult.Value.First();
-            user.AccessibleOrganizationalUnits.Add(unit);
+
+            user.UserOrganizationalUnits.Add(new UserOrganizationalUnit
+            {
+                OrganizationalUnitId = unitId,
+                OrganizationalUnit = unit,
+                UserId = user.Id,
+                ApplicationUser = user
+            });
+
             SelectedUserModel.SelectedOrganizationalUnits.Add(unitId);
         }
     }
@@ -212,13 +228,16 @@ public partial class ManageUserRights
         }
 
         var user = await UserManager.Users
-            .Include(u => u.AccessibleOrganizations)
-            .Include(u => u.AccessibleOrganizationalUnits)
+            .Include(u => u.UserOrganizations)
+            .ThenInclude(uo => uo.Organization)
+            .Include(u => u.UserOrganizationalUnits)
+            .ThenInclude(uou => uou.OrganizationalUnit)
             .FirstOrDefaultAsync(u => u.Id == SelectedUserId);
 
         if (user == null)
         {
             _message = "Error: User not found.";
+
             return;
         }
 
@@ -240,8 +259,8 @@ public partial class ManageUserRights
         _initialLockoutEndDateTime = SelectedUserModel.LockoutEndDateTime;
         _initialCanAccessUnregisteredHosts = SelectedUserModel.CanAccessUnregisteredHosts;
 
-        _initialSelectedOrganizationIds = user.AccessibleOrganizations.Select(ao => ao.Id).ToList();
-        _initialSelectedUnitIds = user.AccessibleOrganizationalUnits.Select(aou => aou.Id).ToList();
+        _initialSelectedOrganizationIds = user.UserOrganizations.Select(ao => ao.OrganizationId).ToList();
+        _initialSelectedUnitIds = user.UserOrganizationalUnits.Select(aou => aou.OrganizationalUnitId).ToList();
 
         foreach (var organization in _organizations)
         {

@@ -28,7 +28,7 @@ public class HostAccessHandler(IServiceScopeFactory scopeFactory) : Authorizatio
         }
 
         var user = await dbContext.Users.FindAsync(userId);
-        
+
         if (user == null)
         {
             context.Fail();
@@ -38,8 +38,7 @@ public class HostAccessHandler(IServiceScopeFactory scopeFactory) : Authorizatio
 
         if (user.CanAccessUnregisteredHosts)
         {
-            var isHostRegistered = await dbContext.Computers
-                .AnyAsync(c => c.Name == requirement.Host || c.IpAddress == requirement.Host);
+            var isHostRegistered = await dbContext.Computers.AnyAsync(c => c.Name == requirement.Host || c.IpAddress == requirement.Host);
 
             if (!isHostRegistered)
             {
@@ -61,10 +60,10 @@ public class HostAccessHandler(IServiceScopeFactory scopeFactory) : Authorizatio
         }
 
         var organizationalUnit = await dbContext.OrganizationalUnits
-            .Include(ou => ou.AccessibleUsers)
+            .Include(ou => ou.UserOrganizationalUnits)
             .FirstOrDefaultAsync(ou => ou.Id == computer.ParentId.Value);
 
-        if (organizationalUnit == null || organizationalUnit.AccessibleUsers.All(u => u.Id != userId))
+        if (organizationalUnit == null || organizationalUnit.UserOrganizationalUnits.All(uou => uou.UserId != userId))
         {
             context.Fail();
 

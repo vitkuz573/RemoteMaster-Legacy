@@ -14,10 +14,8 @@ using Microsoft.JSInterop;
 using MudBlazor;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Components.Dialogs;
-using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Models;
-using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Models;
 using Serilog;
 
@@ -45,6 +43,7 @@ public partial class Home
     protected async override Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateTask;
+
         _user = authState.User;
 
         var userId = _user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -57,8 +56,10 @@ public partial class Home
         }
 
         _currentUser = await UserManager.Users
-            .Include(u => u.AccessibleOrganizations)
-            .Include(u => u.AccessibleOrganizationalUnits)
+            .Include(u => u.UserOrganizations)
+            .ThenInclude(uo => uo.Organization)
+            .Include(u => u.UserOrganizationalUnits)
+            .ThenInclude(uou => uou.OrganizationalUnit)
             .FirstOrDefaultAsync(u => u.Id == userId);
 
         if (_currentUser == null)
@@ -95,11 +96,12 @@ public partial class Home
         if (_currentUser == null)
         {
             Log.Warning("Current user not found");
+
             return [];
         }
 
-        var accessibleOrganizations = _currentUser.AccessibleOrganizations.Select(org => org.Id).ToList();
-        var accessibleOrganizationalUnits = _currentUser.AccessibleOrganizationalUnits.Select(ou => ou.Id).ToList();
+        var accessibleOrganizations = _currentUser.UserOrganizations.Select(uo => uo.OrganizationId).ToList();
+        var accessibleOrganizationalUnits = _currentUser.UserOrganizationalUnits.Select(uou => uou.OrganizationalUnitId).ToList();
 
         var units = new List<INode>();
 
@@ -110,6 +112,7 @@ public partial class Home
             if (!organizationsResult.IsSuccess)
             {
                 Log.Error("Failed to load organizations: {Message}", organizationsResult.Errors.FirstOrDefault()?.Message);
+
                 return units;
             }
 
@@ -137,6 +140,7 @@ public partial class Home
             if (!organizationalUnitsResult.IsSuccess)
             {
                 Log.Error("Failed to load organizational units: {Message}", organizationalUnitsResult.Errors.FirstOrDefault()?.Message);
+
                 return units;
             }
 
@@ -148,7 +152,7 @@ public partial class Home
             if (!computersResult.IsSuccess)
             {
                 Log.Error("Failed to load computers: {Message}", computersResult.Errors.FirstOrDefault()?.Message);
-                
+
                 return units;
             }
 

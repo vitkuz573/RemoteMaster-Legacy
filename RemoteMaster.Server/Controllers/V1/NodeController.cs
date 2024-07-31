@@ -42,8 +42,8 @@ public class NodeController(INodesService nodesService, UserManager<ApplicationU
         }
 
         var user = await userManager.Users
-            .Include(u => u.AccessibleOrganizations)
-            .Include(u => u.AccessibleOrganizationalUnits)
+            .Include(u => u.UserOrganizations)
+            .Include(u => u.UserOrganizationalUnits)
             .FirstOrDefaultAsync(u => u.Id == userId);
 
         if (user == null)
@@ -79,8 +79,8 @@ public class NodeController(INodesService nodesService, UserManager<ApplicationU
 
     private async Task<IEnumerable<INode>> LoadNodes(ApplicationUser user, Guid? organizationId = null, Guid? parentId = null)
     {
-        var accessibleOrganizations = user.AccessibleOrganizations.Select(org => org.Id).ToList();
-        var accessibleOrganizationalUnits = user.AccessibleOrganizationalUnits.Select(ou => ou.Id).ToList();
+        var accessibleOrganizations = user.UserOrganizations.Select(uo => uo.OrganizationId).ToList();
+        var accessibleOrganizationalUnits = user.UserOrganizationalUnits.Select(uou => uou.OrganizationalUnitId).ToList();
 
         var units = new List<INode>();
 

@@ -52,24 +52,9 @@ public class OrganizationalUnitConfiguration : IEntityTypeConfiguration<Organiza
             .IsRequired()
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasMany(ou => ou.AccessibleUsers)
-            .WithMany(u => u.AccessibleOrganizationalUnits)
-            .UsingEntity<Dictionary<string, object>>(
-                "UserOrganizationalUnits",
-                j => j.HasOne<ApplicationUser>()
-                      .WithMany()
-                      .HasForeignKey("UserId")
-                      .OnDelete(DeleteBehavior.Cascade),
-                j => j.HasOne<OrganizationalUnit>()
-                      .WithMany()
-                      .HasForeignKey("OrganizationalUnitId")
-                      .OnDelete(DeleteBehavior.Cascade),
-                j =>
-                {
-                    j.HasKey("OrganizationalUnitId", "UserId");
-                    j.ToTable("UserOrganizationalUnits");
-                    j.Property<Guid>("OrganizationalUnitId").HasColumnName("OrganizationalUnitId");
-                    j.Property<string>("UserId").HasColumnName("UserId");
-                });
+        builder.HasMany(ou => ou.UserOrganizationalUnits)
+            .WithOne(uou => uou.OrganizationalUnit)
+            .HasForeignKey(uou => uou.OrganizationalUnitId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

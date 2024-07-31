@@ -8,9 +8,9 @@ namespace RemoteMaster.Server.Entities;
 
 public class ApplicationUser : IdentityUser
 {
-    public ICollection<Organization> AccessibleOrganizations { get; } = [];
+    public ICollection<UserOrganization> UserOrganizations { get; } = [];
 
-    public ICollection<OrganizationalUnit> AccessibleOrganizationalUnits { get; } = [];
+    public ICollection<UserOrganizationalUnit> UserOrganizationalUnits { get; } = [];
 
     public ICollection<RefreshToken> RefreshTokens { get; } = [];
 

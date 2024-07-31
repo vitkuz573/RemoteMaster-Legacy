@@ -50,25 +50,10 @@ public class OrganizationConfiguration : IEntityTypeConfiguration<Organization>
             .HasForeignKey(ou => ou.OrganizationId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(o => o.AccessibleUsers)
-            .WithMany(u => u.AccessibleOrganizations)
-            .UsingEntity<Dictionary<string, object>>(
-                "UserOrganizations",
-                j => j.HasOne<ApplicationUser>()
-                      .WithMany()
-                      .HasForeignKey("UserId")
-                      .OnDelete(DeleteBehavior.Cascade),
-                j => j.HasOne<Organization>()
-                      .WithMany()
-                      .HasForeignKey("OrganizationId")
-                      .OnDelete(DeleteBehavior.Cascade),
-                j =>
-                {
-                    j.HasKey("OrganizationId", "UserId");
-                    j.ToTable("UserOrganizations");
-                    j.Property<Guid>("OrganizationId").HasColumnName("OrganizationId");
-                    j.Property<string>("UserId").HasColumnName("UserId");
-                });
+        builder.HasMany(o => o.UserOrganizations)
+            .WithOne(uo => uo.Organization)
+            .HasForeignKey(uo => uo.OrganizationId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.Ignore(o => o.ParentId);
         builder.Ignore(o => o.Parent);

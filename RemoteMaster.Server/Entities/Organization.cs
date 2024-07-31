@@ -24,5 +24,5 @@ public class Organization : INode
 
     public ICollection<OrganizationalUnit> OrganizationalUnits { get; } = [];
 
-    public ICollection<ApplicationUser> AccessibleUsers { get; } = [];
+    public ICollection<UserOrganization> UserOrganizations { get; } = [];
 }

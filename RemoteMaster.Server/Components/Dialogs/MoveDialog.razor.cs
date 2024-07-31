@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor;
 using RemoteMaster.Server.Entities;
-using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Dialogs;
@@ -67,12 +66,15 @@ public partial class MoveDialog
         {
             var username = user.Identity.Name;
             var appUser = await UserManager.Users
-                                           .Include(u => u.AccessibleOrganizations)
-                                           .FirstOrDefaultAsync(u => u.UserName == username);
+                .Include(u => u.UserOrganizations)
+                .ThenInclude(uo => uo.Organization)
+                .FirstOrDefaultAsync(u => u.UserName == username);
 
             if (appUser != null)
             {
-                _organizations = [.. appUser.AccessibleOrganizations];
+                _organizations = appUser.UserOrganizations
+                    .Select(uo => uo.Organization)
+                    .ToList();
             }
         }
     }
@@ -86,14 +88,16 @@ public partial class MoveDialog
         {
             var username = user.Identity.Name;
             var appUser = await UserManager.Users
-                                           .Include(u => u.AccessibleOrganizationalUnits)
-                                           .FirstOrDefaultAsync(u => u.UserName == username);
+                .Include(u => u.UserOrganizationalUnits)
+                .ThenInclude(uou => uou.OrganizationalUnit)
+                .FirstOrDefaultAsync(u => u.UserName == username);
 
             if (appUser != null)
             {
-                _organizationalUnits = appUser.AccessibleOrganizationalUnits
-                                               .Where(ou => ou.OrganizationId == organizationId)
-                                               .ToList();
+                _organizationalUnits = appUser.UserOrganizationalUnits
+                    .Where(uou => uou.OrganizationalUnit.OrganizationId == organizationId)
+                    .Select(uou => uou.OrganizationalUnit)
+                    .ToList();
             }
         }
     }

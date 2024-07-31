@@ -93,7 +93,7 @@ public class HostAccessHandlerTests
             Name = "Test OU",
             OrganizationId = Guid.NewGuid(),
         };
-        organizationalUnit.AccessibleUsers.Add(new ApplicationUser { Id = "user1" });
+        organizationalUnit.UserOrganizationalUnits.Add(new ApplicationUser { Id = "user1" });
 
         _dbContext.Computers.Add(computer);
         _dbContext.OrganizationalUnits.Add(organizationalUnit);
@@ -129,7 +129,7 @@ public class HostAccessHandlerTests
             Name = "Test OU",
             OrganizationId = Guid.NewGuid(),
         };
-        organizationalUnit.AccessibleUsers.Add(new ApplicationUser { Id = "user2" });
+        organizationalUnit.UserOrganizationalUnits.Add(new ApplicationUser { Id = "user2" });
 
         _dbContext.Computers.Add(computer);
         _dbContext.OrganizationalUnits.Add(organizationalUnit);
@@ -180,7 +180,7 @@ public class HostAccessHandlerTests
             Name = "Unit 1",
             OrganizationId = Guid.NewGuid(),
         };
-        organizationalUnit1.AccessibleUsers.Add(applicationUser);
+        organizationalUnit1.UserOrganizationalUnits.Add(applicationUser);
 
         var organizationalUnit2 = new OrganizationalUnit
         {
@@ -188,7 +188,7 @@ public class HostAccessHandlerTests
             Name = "Unit 2",
             OrganizationId = Guid.NewGuid(),
         };
-        organizationalUnit2.AccessibleUsers.Add(new ApplicationUser { Id = "user2" });
+        organizationalUnit2.UserOrganizationalUnits.Add(new ApplicationUser { Id = "user2" });
 
         _dbContext.Users.Add(applicationUser);
         _dbContext.Computers.AddRange(computer1, computer2);
@@ -240,7 +240,7 @@ public class HostAccessHandlerTests
             Name = "Unit 1",
             OrganizationId = Guid.NewGuid(),
         };
-        organizationalUnit1.AccessibleUsers.Add(new ApplicationUser { Id = "user2" });
+        organizationalUnit1.UserOrganizationalUnits.Add(new ApplicationUser { Id = "user2" });
 
         var organizationalUnit2 = new OrganizationalUnit
         {
@@ -248,7 +248,7 @@ public class HostAccessHandlerTests
             Name = "Unit 2",
             OrganizationId = Guid.NewGuid(),
         };
-        organizationalUnit2.AccessibleUsers.Add(applicationUser);
+        organizationalUnit2.UserOrganizationalUnits.Add(applicationUser);
 
         _dbContext.Users.Add(applicationUser);
         _dbContext.Computers.AddRange(computer1, computer2);

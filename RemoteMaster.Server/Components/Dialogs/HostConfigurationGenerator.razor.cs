@@ -99,12 +99,15 @@ public partial class HostConfigurationGenerator
         {
             var username = user.Identity.Name;
             var appUser = await UserManager.Users
-                                           .Include(u => u.AccessibleOrganizations)
-                                           .FirstOrDefaultAsync(u => u.UserName == username);
+                .Include(u => u.UserOrganizations)
+                .ThenInclude(uo => uo.Organization)
+                .FirstOrDefaultAsync(u => u.UserName == username);
 
             if (appUser != null)
             {
-                _organizations = [.. appUser.AccessibleOrganizations];
+                _organizations = appUser.UserOrganizations
+                    .Select(uo => uo.Organization)
+                    .ToList();
             }
         }
     }
@@ -124,14 +127,16 @@ public partial class HostConfigurationGenerator
                 {
                     var username = user.Identity.Name;
                     var appUser = await UserManager.Users
-                                                   .Include(u => u.AccessibleOrganizationalUnits)
-                                                   .FirstOrDefaultAsync(u => u.UserName == username);
+                        .Include(u => u.UserOrganizationalUnits)
+                        .ThenInclude(uou => uou.OrganizationalUnit)
+                        .FirstOrDefaultAsync(u => u.UserName == username);
 
                     if (appUser != null)
                     {
-                        _organizationalUnits = appUser.AccessibleOrganizationalUnits
-                                                      .Where(ou => ou.OrganizationId == organization.Id)
-                                                      .ToList();
+                        _organizationalUnits = appUser.UserOrganizationalUnits
+                            .Where(uou => uou.OrganizationalUnit.OrganizationId == organization.Id)
+                            .Select(uou => uou.OrganizationalUnit)
+                            .ToList();
                     }
                 }
             }
