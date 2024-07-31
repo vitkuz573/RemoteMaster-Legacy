@@ -15,11 +15,12 @@ namespace RemoteMaster.Host.Windows.Helpers.ScreenHelper;
 public partial class Screen
 {
     private readonly HMONITOR _hmonitor;
+
     private readonly Rectangle _bounds;
     private readonly bool _primary;
     private readonly string _deviceName;
 
-    private static readonly HMONITOR PRIMARY_MONITOR = (HMONITOR)unchecked((nint)0xBAADF00D);
+    private static readonly HMONITOR s_primaryMonitor = (HMONITOR)unchecked((nint)0xBAADF00D);
 
     private static Screen[]? s_screens;
 
@@ -31,7 +32,7 @@ public partial class Screen
     {
         var screenDC = hdc;
 
-        if (!SystemInformation.MultiMonitorSupport || monitor == PRIMARY_MONITOR)
+        if (!SystemInformation.MultiMonitorSupport || monitor == s_primaryMonitor)
         {
             _bounds = SystemInformation.VirtualScreen;
             _primary = true;
@@ -72,7 +73,7 @@ public partial class Screen
             {
                 if (SystemInformation.MultiMonitorSupport)
                 {
-                    List<Screen> screens = new();
+                    List<Screen> screens = [];
 
                     PInvoke.EnumDisplayMonitors((HMONITOR hmonitor, HDC hdc) =>
                     {
@@ -80,11 +81,11 @@ public partial class Screen
                         return true;
                     });
 
-                    s_screens = screens.Count > 0 ? screens.ToArray() : new Screen[] { new(PRIMARY_MONITOR) };
+                    s_screens = screens.Count > 0 ? [.. screens] : [new(s_primaryMonitor)];
                 }
                 else
                 {
-                    s_screens = new Screen[] { PrimaryScreen! };
+                    s_screens = [PrimaryScreen!];
                 }
 
                 SystemEvents.DisplaySettingsChanging += OnDisplaySettingsChanging;
@@ -120,7 +121,7 @@ public partial class Screen
             }
             else
             {
-                return new Screen(PRIMARY_MONITOR, default);
+                return new Screen(s_primaryMonitor, default);
             }
         }
     }
