@@ -4,6 +4,8 @@
 
 using System.Globalization;
 using System.IO.Abstractions;
+using System.Net.Sockets;
+using System.Net.WebSockets;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Asp.Versioning;
@@ -15,10 +17,15 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using MudBlazor.Services;
+using Polly;
+using Polly.Fallback;
+using Polly.Registry;
+using Polly.Retry;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Components;
 using RemoteMaster.Server.Components.Account;
@@ -80,6 +87,33 @@ public static class Program
 
     private static void ConfigureServices(IServiceCollection services, ConfigurationManager configurationManager)
     {
+        services.AddResilienceEnricher();
+
+        services.AddResiliencePipeline<string, string>("Resilience-Pipeline", builder =>
+        {
+            builder.AddRetry(new RetryStrategyOptions<string>
+            {
+                ShouldHandle = new PredicateBuilder<string>().Handle<WebSocketException>()
+                    .Handle<IOException>()
+                    .Handle<SocketException>()
+                    .Handle<InvalidOperationException>(),
+                MaxRetryAttempts = 3,
+                Delay = TimeSpan.FromSeconds(5),
+                BackoffType = DelayBackoffType.Exponential
+            });
+
+            builder.AddFallback(new FallbackStrategyOptions<string>
+            {
+                ShouldHandle = new PredicateBuilder<string>().Handle<HubException>(ex => ex.Message.Contains("Method does not exist")),
+                FallbackAction = async context =>
+                {
+                    await Task.CompletedTask;
+
+                    return Outcome.FromResult("This function is not available in the current host version. Please update your host.");
+                }
+            });
+        });
+
         services.AddLogging(loggingBuilder =>
         {
             loggingBuilder.ClearProviders();

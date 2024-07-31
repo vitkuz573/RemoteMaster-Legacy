@@ -3,11 +3,9 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Collections.Concurrent;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using Polly;
-using Polly.Retry;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Entities;
 using RemoteMaster.Shared.Models;
@@ -15,17 +13,8 @@ using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class ComputerCommandService(IJSRuntime jsRuntime) : IComputerCommandService
+public class ComputerCommandService(IJSRuntime jsRuntime, [FromKeyedServices("Resilience-Pipeline")] ResiliencePipeline<string> resiliencePipeline) : IComputerCommandService
 {
-    private readonly AsyncRetryPolicy _retryPolicy = Policy
-        .Handle<Exception>()
-        .WaitAndRetryAsync(
-        [
-            TimeSpan.FromSeconds(5),
-            TimeSpan.FromSeconds(7),
-            TimeSpan.FromSeconds(10),
-        ]);
-
     /// <inheritdoc />
     public async Task<Result> Execute(ConcurrentDictionary<Computer, HubConnection?> hosts, Func<Computer, HubConnection, Task> action)
     {
@@ -35,20 +24,24 @@ public class ComputerCommandService(IJSRuntime jsRuntime) : IComputerCommandServ
 
             foreach (var (computer, connection) in hosts)
             {
-                await _retryPolicy.ExecuteAsync(async () =>
+                var result = await resiliencePipeline.ExecuteAsync(async cancellationToken =>
                 {
-                    if (connection?.State == HubConnectionState.Connected)
+                    if (connection is not { State: HubConnectionState.Connected })
                     {
-                        try
-                        {
-                            await action(computer, connection);
-                        }
-                        catch (HubException ex) when (ex.Message.Contains("Method does not exist"))
-                        {
-                            await jsRuntime.InvokeVoidAsync("alert", $"Host: {computer.Name}.\nThis function is not available in the current host version. Please update your host.");
-                        }
+                        throw new InvalidOperationException("Connection is not active");
                     }
-                });
+
+                    await action(computer, connection);
+
+                    await Task.CompletedTask;
+
+                    return "Success";
+                }, CancellationToken.None);
+
+                if (result == "This function is not available in the current host version. Please update your host.")
+                {
+                    await jsRuntime.InvokeVoidAsync("alert", result);
+                }
             }
 
             return Result.Success();

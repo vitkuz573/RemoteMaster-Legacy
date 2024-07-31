@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using Polly;
-using Polly.Retry;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
 using Serilog;
@@ -27,6 +26,9 @@ public partial class FileManager : IAsyncDisposable
     [CascadingParameter]
     private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
 
+    [Inject(Key = "Resilience-Pipeline")]
+    public ResiliencePipeline<string> ResiliencePipeline { get; set; }
+
     private HubConnection? _connection;
     private ClaimsPrincipal? _user;
     private string _searchQuery = string.Empty;
@@ -36,15 +38,15 @@ public partial class FileManager : IAsyncDisposable
     private List<string> _availableDrives = [];
     private string _selectedDrive = string.Empty;
     private IBrowserFile? _selectedFile;
+    private bool _firstRenderCompleted;
 
-    private readonly AsyncRetryPolicy _retryPolicy = Policy
-        .Handle<Exception>()
-        .WaitAndRetryAsync(
-        [
-            TimeSpan.FromSeconds(5),
-            TimeSpan.FromSeconds(7),
-            TimeSpan.FromSeconds(10),
-        ]);
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _firstRenderCompleted = true;
+        }
+    }
 
     protected async override Task OnInitializedAsync()
     {
@@ -168,24 +170,27 @@ public partial class FileManager : IAsyncDisposable
 
     private async Task SafeInvokeAsync(Func<Task> action)
     {
-        await _retryPolicy.ExecuteAsync(async () =>
+        var result = await ResiliencePipeline.ExecuteAsync(async cancellationToken =>
         {
-            if (_connection?.State == HubConnectionState.Connected)
-            {
-                try
-                {
-                    await action();
-                }
-                catch (HubException ex) when (ex.Message.Contains("Method does not exist"))
-                {
-                    await JsRuntime.InvokeVoidAsync("alert", "This function is not available in the current host version. Please update your host.");
-                }
-            }
-            else
+            if (_connection is not { State: HubConnectionState.Connected })
             {
                 throw new InvalidOperationException("Connection is not active");
             }
-        });
+
+            await action();
+            await Task.CompletedTask;
+
+            return "Success";
+
+        }, CancellationToken.None);
+
+        if (result == "This function is not available in the current host version. Please update your host.")
+        {
+            if (_firstRenderCompleted)
+            {
+                await JsRuntime.InvokeVoidAsync("alert", result);
+            }
+        }
     }
 
     private async Task DownloadFile(string fileName)

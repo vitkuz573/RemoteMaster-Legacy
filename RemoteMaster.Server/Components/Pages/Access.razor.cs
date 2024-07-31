@@ -2,8 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Net.Sockets;
-using System.Net.WebSockets;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
@@ -13,7 +11,6 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using MudBlazor;
 using Polly;
-using Polly.Wrap;
 using RemoteMaster.Server.DTOs;
 using RemoteMaster.Server.Requirements;
 using RemoteMaster.Shared.DTOs;
@@ -31,6 +28,9 @@ public partial class Access : IAsyncDisposable
 
     [CascadingParameter]
     private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
+
+    [Inject(Key = "Resilience-Pipeline")]
+    public ResiliencePipeline<string> ResiliencePipeline { get; set; }
 
     private ClaimsPrincipal? _user;
     private string _transportType = string.Empty;
@@ -53,40 +53,12 @@ public partial class Access : IAsyncDisposable
     private ElementReference _screenImageElement;
     private List<ViewerDto> _viewers = [];
     private bool _isAccessDenied;
-    private readonly AsyncPolicyWrap _combinedPolicy;
 
     private string? _title;
     private bool _isConnecting;
     private int _retryCount;
     private bool _firstRenderCompleted;
     private bool _disposed;
-
-    public Access()
-    {
-        var retryPolicy = Policy
-            .Handle<WebSocketException>()
-            .Or<IOException>()
-            .Or<SocketException>()
-            .Or<InvalidOperationException>()
-            .WaitAndRetryAsync(
-            [
-                TimeSpan.FromSeconds(5),
-                TimeSpan.FromSeconds(7),
-                TimeSpan.FromSeconds(10)
-            ]);
-
-        var noRetryPolicy = Policy
-            .Handle<HubException>(ex => ex.Message.Contains("Method does not exist"))
-            .FallbackAsync(async _ =>
-            {
-                if (_firstRenderCompleted)
-                {
-                    await JsRuntime.InvokeVoidAsync("alert", "This function is not available in the current host version. Please update your host.");
-                }
-            });
-
-        _combinedPolicy = Policy.WrapAsync(noRetryPolicy, retryPolicy);
-    }
 
     protected override void OnParametersSet()
     {
@@ -209,22 +181,34 @@ public partial class Access : IAsyncDisposable
 
     private async Task SafeInvokeAsync(Func<Task> action, bool requireAdmin = false)
     {
-        await _combinedPolicy.ExecuteAsync(async () =>
+        var result = await ResiliencePipeline.ExecuteAsync(async token =>
         {
-            if (_connection is { State: HubConnectionState.Connected })
-            {
-                if (requireAdmin && (_user == null || !_user.IsInRole("Administrator")))
-                {
-                    return;
-                }
-
-                await action();
-            }
-            else
+            if (_connection is not { State: HubConnectionState.Connected })
             {
                 throw new InvalidOperationException("Connection is not active");
             }
-        });
+
+            if (requireAdmin && (_user == null || !_user.IsInRole("Administrator")))
+            {
+                await Task.CompletedTask;
+
+                return "Failed";
+            }
+
+            await action();
+            await Task.CompletedTask;
+
+            return "Success";
+
+        }, CancellationToken.None);
+
+        if (result == "This function is not available in the current host version. Please update your host.")
+        {
+            if (_firstRenderCompleted)
+            {
+                await JsRuntime.InvokeVoidAsync("alert", result);
+            }
+        }
     }
 
     private List<DisplayDto> GetDisplayItems()
