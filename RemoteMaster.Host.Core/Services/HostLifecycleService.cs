@@ -187,14 +187,16 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         {
             return await apiService.IsHostRegisteredAsync();
         }
-        catch (HttpRequestException ex) when (ex.InnerException is SocketException { SocketErrorCode: SocketError.NetworkUnreachable })
+        catch (HttpRequestException ex) when (ex.InnerException is SocketException { SocketErrorCode: SocketError.NetworkUnreachable or SocketError.ConnectionRefused })
         {
-            Log.Warning("Network is unreachable. Assuming host is still registered based on previous state.");
+            Log.Warning("Network error (unreachable or connection refused). Assuming host is still registered based on previous state.");
 
             return true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Log.Error("Error checking host registration status: {Message}", ex.Message);
+
             return true;
         }
     }
