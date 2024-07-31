@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Identity;
-using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
 
 namespace RemoteMaster.Server.Middlewares;
