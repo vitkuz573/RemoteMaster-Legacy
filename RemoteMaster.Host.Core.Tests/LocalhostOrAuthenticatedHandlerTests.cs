@@ -36,7 +36,7 @@ public class LocalhostOrAuthenticatedHandlerTests
         _httpContext.Request.Headers["X-Service-Flag"] = "true";
 
         var user = new ClaimsPrincipal(new ClaimsIdentity());
-        var authorizationHandlerContext = new AuthorizationHandlerContext([_requirement], user, null);
+        var authorizationHandlerContext = new AuthorizationHandlerContext(new[] { _requirement }, user, null);
 
         // Act
         await _handler.HandleAsync(authorizationHandlerContext);
@@ -50,12 +50,13 @@ public class LocalhostOrAuthenticatedHandlerTests
     {
         // Arrange
         var user = new ClaimsPrincipal(new ClaimsIdentity(
-        [
-            new(ClaimTypes.Name, "testuser"),
-            new(ClaimTypes.Role, "User"),
-        ], "TestAuthType"));
+        new[]
+        {
+            new Claim(ClaimTypes.Name, "testuser"),
+            new Claim(ClaimTypes.Role, "User"),
+        }, "TestAuthType"));
 
-        var authorizationHandlerContext = new AuthorizationHandlerContext([_requirement], user, null);
+        var authorizationHandlerContext = new AuthorizationHandlerContext(new[] { _requirement }, user, null);
 
         // Act
         await _handler.HandleAsync(authorizationHandlerContext);
@@ -71,7 +72,7 @@ public class LocalhostOrAuthenticatedHandlerTests
         _httpContext.Connection.RemoteIpAddress = IPAddress.Loopback;
 
         var user = new ClaimsPrincipal(new ClaimsIdentity());
-        var authorizationHandlerContext = new AuthorizationHandlerContext([_requirement], user, null);
+        var authorizationHandlerContext = new AuthorizationHandlerContext(new[] { _requirement }, user, null);
 
         // Act
         await _handler.HandleAsync(authorizationHandlerContext);
@@ -87,7 +88,7 @@ public class LocalhostOrAuthenticatedHandlerTests
         _httpContext.Connection.RemoteIpAddress = IPAddress.Parse("192.168.1.1");
 
         var user = new ClaimsPrincipal(new ClaimsIdentity());
-        var authorizationHandlerContext = new AuthorizationHandlerContext([_requirement], user, null);
+        var authorizationHandlerContext = new AuthorizationHandlerContext(new[] { _requirement }, user, null);
 
         // Act
         await _handler.HandleAsync(authorizationHandlerContext);
@@ -104,7 +105,7 @@ public class LocalhostOrAuthenticatedHandlerTests
         _httpContext.Request.Headers["X-Service-Flag"] = "true";
 
         var user = new ClaimsPrincipal(new ClaimsIdentity());
-        var authorizationHandlerContext = new AuthorizationHandlerContext([_requirement], user, null);
+        var authorizationHandlerContext = new AuthorizationHandlerContext(new[] { _requirement }, user, null);
 
         // Act
         await _handler.HandleAsync(authorizationHandlerContext);
@@ -115,5 +116,73 @@ public class LocalhostOrAuthenticatedHandlerTests
         Assert.NotNull(identity);
         Assert.Contains(identity.Claims, c => c is { Type: ClaimTypes.Name, Value: "RCHost" });
         Assert.Contains(identity.Claims, c => c is { Type: ClaimTypes.Role, Value: "Windows Service" });
+    }
+
+    [Fact]
+    public async Task HandleRequirementAsync_RequestFromNonLocalhostAndUserAuthenticated_Succeeds()
+    {
+        // Arrange
+        _httpContext.Connection.RemoteIpAddress = IPAddress.Parse("192.168.1.1");
+        var user = new ClaimsPrincipal(new ClaimsIdentity(
+        new[]
+        {
+            new Claim(ClaimTypes.Name, "testuser"),
+            new Claim(ClaimTypes.Role, "User"),
+        }, "TestAuthType"));
+        var authorizationHandlerContext = new AuthorizationHandlerContext(new[] { _requirement }, user, null);
+
+        // Act
+        await _handler.HandleAsync(authorizationHandlerContext);
+
+        // Assert
+        Assert.True(authorizationHandlerContext.HasSucceeded);
+    }
+
+    [Fact]
+    public async Task HandleRequirementAsync_RequestFromNonLocalhostWithServiceFlag_Fails()
+    {
+        // Arrange
+        _httpContext.Connection.RemoteIpAddress = IPAddress.Parse("192.168.1.1");
+        _httpContext.Request.Headers["X-Service-Flag"] = "true";
+
+        var user = new ClaimsPrincipal(new ClaimsIdentity());
+        var authorizationHandlerContext = new AuthorizationHandlerContext(new[] { _requirement }, user, null);
+
+        // Act
+        await _handler.HandleAsync(authorizationHandlerContext);
+
+        // Assert
+        Assert.False(authorizationHandlerContext.HasSucceeded);
+    }
+
+    [Fact]
+    public async Task HandleRequirementAsync_RequestFromLocalhostWithInvalidServiceFlag_Fails()
+    {
+        // Arrange
+        _httpContext.Connection.RemoteIpAddress = IPAddress.Loopback;
+        _httpContext.Request.Headers["X-Service-Flag"] = "invalid";
+
+        var user = new ClaimsPrincipal(new ClaimsIdentity());
+        var authorizationHandlerContext = new AuthorizationHandlerContext(new[] { _requirement }, user, null);
+
+        // Act
+        await _handler.HandleAsync(authorizationHandlerContext);
+
+        // Assert
+        Assert.False(authorizationHandlerContext.HasSucceeded);
+    }
+
+    [Fact]
+    public async Task HandleRequirementAsync_AuthenticatedUserWithEmptyClaims_Succeeds()
+    {
+        // Arrange
+        var user = new ClaimsPrincipal(new ClaimsIdentity(new List<Claim>(), "TestAuthType"));
+        var authorizationHandlerContext = new AuthorizationHandlerContext(new[] { _requirement }, user, null);
+
+        // Act
+        await _handler.HandleAsync(authorizationHandlerContext);
+
+        // Assert
+        Assert.True(authorizationHandlerContext.HasSucceeded);
     }
 }
