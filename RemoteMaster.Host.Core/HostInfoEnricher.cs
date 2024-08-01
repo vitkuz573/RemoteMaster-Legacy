@@ -8,17 +8,30 @@ using Serilog.Events;
 
 namespace RemoteMaster.Host.Core;
 
-public class HostInfoEnricher(IHostInformationService hostInformationService) : ILogEventEnricher
+public class HostInfoEnricher : ILogEventEnricher
 {
+    private readonly Lazy<LogEventProperty> _hostIpAddress;
+    private readonly Lazy<LogEventProperty> _hostName;
+    private readonly Lazy<LogEventProperty> _macAddress;
+
+    public HostInfoEnricher(IHostInformationService hostInformationService)
+    {
+        ArgumentNullException.ThrowIfNull(hostInformationService);
+
+        var hostInfo = hostInformationService.GetHostInformation();
+
+        _hostIpAddress = new Lazy<LogEventProperty>(() => new LogEventProperty("HostIpAddress", new ScalarValue(hostInfo.IpAddress)), LazyThreadSafetyMode.ExecutionAndPublication);
+        _hostName = new Lazy<LogEventProperty>(() => new LogEventProperty("HostName", new ScalarValue(hostInfo.Name)), LazyThreadSafetyMode.ExecutionAndPublication);
+        _macAddress = new Lazy<LogEventProperty>(() => new LogEventProperty("MacAddress", new ScalarValue(hostInfo.MacAddress)), LazyThreadSafetyMode.ExecutionAndPublication);
+    }
+
     public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
     {
         ArgumentNullException.ThrowIfNull(logEvent);
         ArgumentNullException.ThrowIfNull(propertyFactory);
 
-        var hostInfo = hostInformationService.GetHostInformation();
-
-        logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("HostIpAddress", hostInfo.IpAddress));
-        logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("HostName", hostInfo.Name));
-        logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("MacAddress", hostInfo.MacAddress));
+        logEvent.AddPropertyIfAbsent(_hostIpAddress.Value);
+        logEvent.AddPropertyIfAbsent(_hostName.Value);
+        logEvent.AddPropertyIfAbsent(_macAddress.Value);
     }
 }
