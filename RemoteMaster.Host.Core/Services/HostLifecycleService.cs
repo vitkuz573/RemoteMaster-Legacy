@@ -189,7 +189,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         }
         catch (HttpRequestException ex) when (ex.InnerException is SocketException { SocketErrorCode: SocketError.NetworkUnreachable or SocketError.ConnectionRefused })
         {
-            Log.Warning("Network error (unreachable or connection refused). Assuming host is still registered based on previous state.");
+            // Log.Warning("Network error (unreachable or connection refused). Assuming host is still registered based on previous state.");
 
             return true;
         }
