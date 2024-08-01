@@ -5,7 +5,6 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Moq;
-using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Services;
 

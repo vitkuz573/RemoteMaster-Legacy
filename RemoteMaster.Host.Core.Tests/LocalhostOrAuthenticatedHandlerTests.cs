@@ -50,11 +50,10 @@ public class LocalhostOrAuthenticatedHandlerTests
     {
         // Arrange
         var user = new ClaimsPrincipal(new ClaimsIdentity(
-        new[]
-        {
+        [
             new Claim(ClaimTypes.Name, "testuser"),
             new Claim(ClaimTypes.Role, "User"),
-        }, "TestAuthType"));
+        ], "TestAuthType"));
 
         var authorizationHandlerContext = new AuthorizationHandlerContext([_requirement], user, null);
 
@@ -124,11 +123,10 @@ public class LocalhostOrAuthenticatedHandlerTests
         // Arrange
         _httpContext.Connection.RemoteIpAddress = IPAddress.Parse("192.168.1.1");
         var user = new ClaimsPrincipal(new ClaimsIdentity(
-        new[]
-        {
+        [
             new Claim(ClaimTypes.Name, "testuser"),
             new Claim(ClaimTypes.Role, "User"),
-        }, "TestAuthType"));
+        ], "TestAuthType"));
         var authorizationHandlerContext = new AuthorizationHandlerContext([_requirement], user, null);
 
         // Act
@@ -176,7 +174,7 @@ public class LocalhostOrAuthenticatedHandlerTests
     public async Task HandleRequirementAsync_AuthenticatedUserWithEmptyClaims_Succeeds()
     {
         // Arrange
-        var user = new ClaimsPrincipal(new ClaimsIdentity(new List<Claim>(), "TestAuthType"));
+        var user = new ClaimsPrincipal(new ClaimsIdentity([], "TestAuthType"));
         var authorizationHandlerContext = new AuthorizationHandlerContext([_requirement], user, null);
 
         // Act
