@@ -36,7 +36,7 @@ public class LocalhostOrAuthenticatedHandlerTests
         _httpContext.Request.Headers["X-Service-Flag"] = "true";
 
         var user = new ClaimsPrincipal(new ClaimsIdentity());
-        var authorizationHandlerContext = new AuthorizationHandlerContext(new[] { _requirement }, user, null);
+        var authorizationHandlerContext = new AuthorizationHandlerContext([_requirement], user, null);
 
         // Act
         await _handler.HandleAsync(authorizationHandlerContext);
@@ -56,7 +56,7 @@ public class LocalhostOrAuthenticatedHandlerTests
             new Claim(ClaimTypes.Role, "User"),
         }, "TestAuthType"));
 
-        var authorizationHandlerContext = new AuthorizationHandlerContext(new[] { _requirement }, user, null);
+        var authorizationHandlerContext = new AuthorizationHandlerContext([_requirement], user, null);
 
         // Act
         await _handler.HandleAsync(authorizationHandlerContext);
@@ -72,7 +72,7 @@ public class LocalhostOrAuthenticatedHandlerTests
         _httpContext.Connection.RemoteIpAddress = IPAddress.Loopback;
 
         var user = new ClaimsPrincipal(new ClaimsIdentity());
-        var authorizationHandlerContext = new AuthorizationHandlerContext(new[] { _requirement }, user, null);
+        var authorizationHandlerContext = new AuthorizationHandlerContext([_requirement], user, null);
 
         // Act
         await _handler.HandleAsync(authorizationHandlerContext);
@@ -88,7 +88,7 @@ public class LocalhostOrAuthenticatedHandlerTests
         _httpContext.Connection.RemoteIpAddress = IPAddress.Parse("192.168.1.1");
 
         var user = new ClaimsPrincipal(new ClaimsIdentity());
-        var authorizationHandlerContext = new AuthorizationHandlerContext(new[] { _requirement }, user, null);
+        var authorizationHandlerContext = new AuthorizationHandlerContext([_requirement], user, null);
 
         // Act
         await _handler.HandleAsync(authorizationHandlerContext);
@@ -105,7 +105,7 @@ public class LocalhostOrAuthenticatedHandlerTests
         _httpContext.Request.Headers["X-Service-Flag"] = "true";
 
         var user = new ClaimsPrincipal(new ClaimsIdentity());
-        var authorizationHandlerContext = new AuthorizationHandlerContext(new[] { _requirement }, user, null);
+        var authorizationHandlerContext = new AuthorizationHandlerContext([_requirement], user, null);
 
         // Act
         await _handler.HandleAsync(authorizationHandlerContext);
@@ -129,7 +129,7 @@ public class LocalhostOrAuthenticatedHandlerTests
             new Claim(ClaimTypes.Name, "testuser"),
             new Claim(ClaimTypes.Role, "User"),
         }, "TestAuthType"));
-        var authorizationHandlerContext = new AuthorizationHandlerContext(new[] { _requirement }, user, null);
+        var authorizationHandlerContext = new AuthorizationHandlerContext([_requirement], user, null);
 
         // Act
         await _handler.HandleAsync(authorizationHandlerContext);
@@ -146,7 +146,7 @@ public class LocalhostOrAuthenticatedHandlerTests
         _httpContext.Request.Headers["X-Service-Flag"] = "true";
 
         var user = new ClaimsPrincipal(new ClaimsIdentity());
-        var authorizationHandlerContext = new AuthorizationHandlerContext(new[] { _requirement }, user, null);
+        var authorizationHandlerContext = new AuthorizationHandlerContext([_requirement], user, null);
 
         // Act
         await _handler.HandleAsync(authorizationHandlerContext);
@@ -163,7 +163,7 @@ public class LocalhostOrAuthenticatedHandlerTests
         _httpContext.Request.Headers["X-Service-Flag"] = "invalid";
 
         var user = new ClaimsPrincipal(new ClaimsIdentity());
-        var authorizationHandlerContext = new AuthorizationHandlerContext(new[] { _requirement }, user, null);
+        var authorizationHandlerContext = new AuthorizationHandlerContext([_requirement], user, null);
 
         // Act
         await _handler.HandleAsync(authorizationHandlerContext);
@@ -177,7 +177,7 @@ public class LocalhostOrAuthenticatedHandlerTests
     {
         // Arrange
         var user = new ClaimsPrincipal(new ClaimsIdentity(new List<Claim>(), "TestAuthType"));
-        var authorizationHandlerContext = new AuthorizationHandlerContext(new[] { _requirement }, user, null);
+        var authorizationHandlerContext = new AuthorizationHandlerContext([_requirement], user, null);
 
         // Act
         await _handler.HandleAsync(authorizationHandlerContext);
