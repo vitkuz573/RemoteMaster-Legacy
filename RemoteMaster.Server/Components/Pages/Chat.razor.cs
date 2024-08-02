@@ -22,7 +22,7 @@ public partial class Chat : IAsyncDisposable
 
     private HubConnection? _connection;
     private string _message = string.Empty;
-    private readonly List<(string Id, string User, string Message)> _messages = new();
+    private readonly List<(string Id, string User, string Message)> _messages = [];
 
     private ClaimsPrincipal? _user;
 
@@ -70,7 +70,7 @@ public partial class Chat : IAsyncDisposable
 
     private async Task Delete(string id)
     {
-        await _connection.SendAsync("DeleteMessage", id);
+        await _connection.SendAsync("DeleteMessage", id, _user.FindFirstValue(ClaimTypes.Name));
     }
 
     public async ValueTask DisposeAsync()

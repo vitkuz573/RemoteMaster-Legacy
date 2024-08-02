@@ -24,10 +24,10 @@ public class ChatHub : Hub
         await Clients.All.SendAsync("ReceiveMessage", id, user, message);
     }
 
-    public async Task DeleteMessage(string id)
+    public async Task DeleteMessage(string id, string user)
     {
         var messagesList = Messages.ToList();
-        var messageToRemove = messagesList.FirstOrDefault(m => m.Id == id);
+        var messageToRemove = messagesList.FirstOrDefault(m => m.Id == id && m.User == user);
 
         if (messageToRemove != default)
         {

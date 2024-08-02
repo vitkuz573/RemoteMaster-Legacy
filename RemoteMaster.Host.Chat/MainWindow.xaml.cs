@@ -18,6 +18,8 @@ public partial class MainWindow : Window
 
     public ICommand DeleteCommand { get; }
 
+    private string _currentUser = "User"; // Замените на фактическое имя пользователя
+
     public MainWindow()
     {
         InitializeComponent();
@@ -73,7 +75,7 @@ public partial class MainWindow : Window
 
         if (_connection.State == HubConnectionState.Connected)
         {
-            await _connection.SendAsync("SendMessage", "User", message);
+            await _connection.SendAsync("SendMessage", _currentUser, message);
             MessageTextBox.Clear();
         }
         else
@@ -86,7 +88,7 @@ public partial class MainWindow : Window
     {
         if (_connection.State == HubConnectionState.Connected)
         {
-            await _connection.SendAsync("DeleteMessage", id);
+            await _connection.SendAsync("DeleteMessage", id, _currentUser);
         }
         else
         {
@@ -98,24 +100,19 @@ public partial class MainWindow : Window
 public class ChatMessage
 {
     public string Id { get; set; }
+
     public string User { get; set; }
+
     public string Message { get; set; }
 }
 
-public class RelayCommand<T> : ICommand
+public class RelayCommand<T>(Action<T> execute, Func<T, bool> canExecute = null) : ICommand
 {
-    private readonly Action<T> _execute;
-    private readonly Func<T, bool> _canExecute;
-
-    public RelayCommand(Action<T> execute, Func<T, bool> canExecute = null)
-    {
-        _execute = execute ?? throw new ArgumentNullException(nameof(execute));
-        _canExecute = canExecute;
-    }
+    private readonly Action<T> _execute = execute ?? throw new ArgumentNullException(nameof(execute));
 
     public bool CanExecute(object parameter)
     {
-        return _canExecute == null || _canExecute((T)parameter);
+        return canExecute == null || canExecute((T)parameter);
     }
 
     public void Execute(object parameter)
