@@ -645,7 +645,7 @@ public partial class Home
         await OpenComputerWindow("filemanager");
     }
 
-    private async Task OpenLogsViewer()
+    private async Task OpenLogsManager()
     {
         await OpenComputerWindow("logs");
     }

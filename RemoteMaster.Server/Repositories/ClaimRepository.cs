@@ -16,7 +16,7 @@ public static class ClaimRepository
         new ApplicationClaim { ClaimType = "Input", ClaimValue = "BlockUserInput", Description = "Block user input" },
         new ApplicationClaim { ClaimType = "Screen", ClaimValue = "SetFrameRate", Description = "Set screen frame rate" },
         new ApplicationClaim { ClaimType = "Screen", ClaimValue = "SetImageQuality", Description = "Set screen image quality" },
-        new ApplicationClaim { ClaimType = "Screen", ClaimValue = "Recording", Description = "Allow screen recording" },
+        new ApplicationClaim { ClaimType = "Screen", ClaimValue = "Recording", Description = "Screen recording" },
         new ApplicationClaim { ClaimType = "Screen", ClaimValue = "ToggleDrawCursor", Description = "Toggle drawing cursor" },
         new ApplicationClaim { ClaimType = "Screen", ClaimValue = "ChangeSelectedScreen", Description = "Change selected screen" },
         new ApplicationClaim { ClaimType = "Screen", ClaimValue = "ToggleUseSkia", Description = "Toggle use of Skia" },
@@ -37,13 +37,13 @@ public static class ClaimRepository
         new ApplicationClaim { ClaimType = "HostManagement", ClaimValue = "Update", Description = "Update the host" },
         new ApplicationClaim { ClaimType = "Domain", ClaimValue = "Membership", Description = "Manage domain membership" },
         new ApplicationClaim { ClaimType = "Communication", ClaimValue = "MessageBox", Description = "Show message box" },
-        new ApplicationClaim { ClaimType = "TaskManagement", ClaimValue = "OpenTaskManager", Description = "Open task manager" },
-        new ApplicationClaim { ClaimType = "FileManagement", ClaimValue = "OpenFileManager", Description = "Open file manager" },
-        new ApplicationClaim { ClaimType = "FileManagement", ClaimValue = "FileUpload", Description = "Upload files" },
+        new ApplicationClaim { ClaimType = "Tasks", ClaimValue = "Manager", Description = "Open task manager" },
+        new ApplicationClaim { ClaimType = "Files", ClaimValue = "Manager", Description = "Open file manager" },
+        new ApplicationClaim { ClaimType = "Files", ClaimValue = "Upload", Description = "Upload files" },
         new ApplicationClaim { ClaimType = "HostInformation", ClaimValue = "View", Description = "View host information" },
-        new ApplicationClaim { ClaimType = "Connection", ClaimValue = "Control", Description = "Control connection" },
-        new ApplicationClaim { ClaimType = "Connection", ClaimValue = "View", Description = "View connection" },
+        new ApplicationClaim { ClaimType = "Connect", ClaimValue = "Control", Description = "Control connection" },
+        new ApplicationClaim { ClaimType = "Connect", ClaimValue = "View", Description = "View connection" },
         new ApplicationClaim { ClaimType = "Service", ClaimValue = "DisconnectClient", Description = "Disconnect any client" },
-        new ApplicationClaim { ClaimType = "Logs", ClaimValue = "View", Description = "View logs" }
+        new ApplicationClaim { ClaimType = "Logs", ClaimValue = "Manager", Description = "Open logs manager" }
     ];
 }

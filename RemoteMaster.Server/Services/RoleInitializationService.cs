@@ -50,14 +50,14 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
         new Claim("HostManagement", "Update"),
         new Claim("Domain", "Membership"),
         new Claim("Communication", "MessageBox"),
-        new Claim("TaskManagement", "OpenTaskManager"),
-        new Claim("FileManagement", "OpenFileManager"),
-        new Claim("FileManagement", "FileUpload"),
+        new Claim("Tasks", "Manager"),
+        new Claim("Files", "Manager"),
+        new Claim("Files", "Upload"),
         new Claim("HostInformation", "View"),
-        new Claim("Connection", "Control"),
-        new Claim("Connection", "View"),
+        new Claim("Connect", "Control"),
+        new Claim("Connect", "View"),
         new Claim("Service", "DisconnectClient"),
-        new Claim("Logs", "View")
+        new Claim("Logs", "Manager"),
     ];
 
     private static readonly List<Claim> ViewerClaims =

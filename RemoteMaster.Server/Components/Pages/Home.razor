@@ -174,17 +174,17 @@
                             </MudTabPanel>
 
                             <MudTabPanel Text="@Localizer["ToolsTab"]" Icon="@Icons.Material.Filled.MiscellaneousServices">
-                                @if (context.User.HasClaim("TaskManagement", "OpenTaskManager"))
+                                @if (context.User.HasClaim("Tasks", "Manager"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenTaskManager" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["TaskManager"]</MudButton>
                                 }
                                 
-                                @if (context.User.HasClaim("FileManagement", "OpenFileManager"))
+                                @if (context.User.HasClaim("Files", "Manager"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenFileManager" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["FileManager"]</MudButton>
                                 }
                                 
-                                @if (context.User.HasClaim("FileManagement", "FileUpload"))
+                                @if (context.User.HasClaim("Files", "Upload"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="FileUpload" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["UploadFile"]</MudButton>
                                 }
@@ -194,9 +194,9 @@
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="MessageBox" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["MessageBox"]</MudButton>
                                 }
                                 
-                                @if (context.User.HasClaim("Logs", "View"))
+                                @if (context.User.HasClaim("Logs", "Manager"))
                                 {
-                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenLogsViewer" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Logs Viewer</MudButton>
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenLogsManager" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Logs Viewer</MudButton>
                                 }
                             </MudTabPanel>
 
