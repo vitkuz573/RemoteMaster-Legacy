@@ -1,0 +1,15 @@
+﻿@page "/{Host}/chat"
+
+@rendermode InteractiveServer
+
+<div>
+    <h3>Chat</h3>
+    <input @bind="_message" placeholder="Enter message" />
+    <button @onclick="Send">Send</button>
+    <ul>
+        @foreach (var msg in _messages)
+        {
+            <li>@msg</li>
+        }
+    </ul>
+</div>

@@ -21,7 +21,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Server.Tests",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Host.Windows.Tests", "RemoteMaster.Host.Windows.Tests\RemoteMaster.Host.Windows.Tests.csproj", "{A7D22341-D9D5-40E5-91E4-7091058644F4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteMaster.Host.Core.Tests", "RemoteMaster.Host.Core.Tests\RemoteMaster.Host.Core.Tests.csproj", "{AECF3498-87FB-43B4-8EF6-4139B7C85CB6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Host.Core.Tests", "RemoteMaster.Host.Core.Tests\RemoteMaster.Host.Core.Tests.csproj", "{AECF3498-87FB-43B4-8EF6-4139B7C85CB6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteMaster.Host.Chat", "RemoteMaster.Host.Chat\RemoteMaster.Host.Chat.csproj", "{37E96745-94D4-4A9D-A479-3CB6F7C1B2CE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -147,6 +149,22 @@ Global
 		{AECF3498-87FB-43B4-8EF6-4139B7C85CB6}.Release|x64.Build.0 = Release|Any CPU
 		{AECF3498-87FB-43B4-8EF6-4139B7C85CB6}.Release|x86.ActiveCfg = Release|Any CPU
 		{AECF3498-87FB-43B4-8EF6-4139B7C85CB6}.Release|x86.Build.0 = Release|Any CPU
+		{37E96745-94D4-4A9D-A479-3CB6F7C1B2CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37E96745-94D4-4A9D-A479-3CB6F7C1B2CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37E96745-94D4-4A9D-A479-3CB6F7C1B2CE}.Debug|arm64.ActiveCfg = Debug|Any CPU
+		{37E96745-94D4-4A9D-A479-3CB6F7C1B2CE}.Debug|arm64.Build.0 = Debug|Any CPU
+		{37E96745-94D4-4A9D-A479-3CB6F7C1B2CE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{37E96745-94D4-4A9D-A479-3CB6F7C1B2CE}.Debug|x64.Build.0 = Debug|Any CPU
+		{37E96745-94D4-4A9D-A479-3CB6F7C1B2CE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{37E96745-94D4-4A9D-A479-3CB6F7C1B2CE}.Debug|x86.Build.0 = Debug|Any CPU
+		{37E96745-94D4-4A9D-A479-3CB6F7C1B2CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37E96745-94D4-4A9D-A479-3CB6F7C1B2CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37E96745-94D4-4A9D-A479-3CB6F7C1B2CE}.Release|arm64.ActiveCfg = Release|Any CPU
+		{37E96745-94D4-4A9D-A479-3CB6F7C1B2CE}.Release|arm64.Build.0 = Release|Any CPU
+		{37E96745-94D4-4A9D-A479-3CB6F7C1B2CE}.Release|x64.ActiveCfg = Release|Any CPU
+		{37E96745-94D4-4A9D-A479-3CB6F7C1B2CE}.Release|x64.Build.0 = Release|Any CPU
+		{37E96745-94D4-4A9D-A479-3CB6F7C1B2CE}.Release|x86.ActiveCfg = Release|Any CPU
+		{37E96745-94D4-4A9D-A479-3CB6F7C1B2CE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
