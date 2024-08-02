@@ -28,10 +28,12 @@
                                 <TextBlock Text="{Binding User}" FontWeight="Bold" Margin="0,0,0,5" />
                                 <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Margin="0,0,0,5" />
                             </StackPanel>
-                            <Button Content="Delete" Command="{Binding DataContext.DeleteCommand, ElementName=ChatListBox}" CommandParameter="{Binding Id}" Margin="5,0,0,0" Grid.Column="1" HorizontalAlignment="Right">
+                            <Button Content="✖" Command="{Binding DataContext.DeleteCommand, ElementName=ChatListBox}" CommandParameter="{Binding Id}" Margin="5,0,0,0" Grid.Column="1" HorizontalAlignment="Right" Width="25" Height="25" Background="Transparent" BorderBrush="Transparent" Foreground="Red">
                                 <Button.Style>
                                     <Style TargetType="Button">
                                         <Setter Property="Visibility" Value="Collapsed" />
+                                        <Setter Property="Cursor" Value="Hand"/>
+                                        <Setter Property="ToolTip" Value="Delete this message"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding User}" Value="{x:Static local:MainWindow.CurrentUser}">
                                                 <Setter Property="Visibility" Value="Visible" />
@@ -46,7 +48,7 @@
             </ListBox.ItemTemplate>
         </ListBox>
 
-        <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
+        <Grid Grid.Row="1" Grid.Column="0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
