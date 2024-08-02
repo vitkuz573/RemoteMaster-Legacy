@@ -2,19 +2,28 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Collections.ObjectModel;
 using System.Net.Http;
 using System.Windows;
+using System.Windows.Input;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace RemoteMaster.Host.Chat;
 
-public partial class MainWindow
+public partial class MainWindow : Window
 {
     private HubConnection _connection;
+
+    public ObservableCollection<ChatMessage> Messages { get; } = [];
+
+    public ICommand DeleteCommand { get; }
 
     public MainWindow()
     {
         InitializeComponent();
+        DataContext = this;
+
+        DeleteCommand = new RelayCommand<string>(DeleteMessage);
 
         InitializeConnection();
     }
@@ -35,11 +44,23 @@ public partial class MainWindow
             })
             .Build();
 
-        _connection.On<string, string>("ReceiveMessage", (user, message) =>
+        _connection.On<string, string, string>("ReceiveMessage", (id, user, message) =>
         {
             Dispatcher.Invoke(() =>
             {
-                ChatTextBox.AppendText($"{user}: {message}\n");
+                Messages.Add(new ChatMessage { Id = id, User = user, Message = message });
+            });
+        });
+
+        _connection.On<string>("MessageDeleted", id =>
+        {
+            Dispatcher.Invoke(() =>
+            {
+                var messageToRemove = Messages.FirstOrDefault(m => m.Id == id);
+                if (messageToRemove != null)
+                {
+                    Messages.Remove(messageToRemove);
+                }
             });
         });
 
@@ -54,14 +75,15 @@ public partial class MainWindow
             {
                 Dispatcher.Invoke(() =>
                 {
-                    ChatTextBox.AppendText("Connected to the chat hub.\n");
+                    ChatListBox.ItemsSource = Messages;
+                    Messages.Add(new ChatMessage { Message = "Connected to the chat hub." });
                 });
             }
             else
             {
                 Dispatcher.Invoke(() =>
                 {
-                    ChatTextBox.AppendText($"Failed to connect: {task.Exception?.GetBaseException().Message}\n");
+                    Messages.Add(new ChatMessage { Message = $"Failed to connect: {task.Exception?.GetBaseException().Message}" });
                 });
             }
         });
@@ -92,5 +114,45 @@ public partial class MainWindow
         {
             MessageBox.Show("Already connected.");
         }
+    }
+
+    private async void DeleteMessage(string id)
+    {
+        if (_connection.State == HubConnectionState.Connected)
+        {
+            await _connection.SendAsync("DeleteMessage", id);
+        }
+        else
+        {
+            MessageBox.Show("Connection is not established. Please reconnect.");
+        }
+    }
+}
+
+public class ChatMessage
+{
+    public string Id { get; set; }
+    public string User { get; set; }
+    public string Message { get; set; }
+}
+
+public class RelayCommand<T>(Action<T> execute, Func<T, bool> canExecute = null) : ICommand
+{
+    private readonly Action<T> _execute = execute ?? throw new ArgumentNullException(nameof(execute));
+
+    public bool CanExecute(object parameter)
+    {
+        return canExecute == null || canExecute((T)parameter);
+    }
+
+    public void Execute(object parameter)
+    {
+        _execute((T)parameter);
+    }
+
+    public event EventHandler CanExecuteChanged
+    {
+        add { CommandManager.RequerySuggested += value; }
+        remove { CommandManager.RequerySuggested -= value; }
     }
 }

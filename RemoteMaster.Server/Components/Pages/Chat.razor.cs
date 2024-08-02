@@ -22,13 +22,13 @@ public partial class Chat : IAsyncDisposable
 
     private HubConnection? _connection;
     private string _message = string.Empty;
-    private readonly List<(string User, string Message)> _messages = [];
+    private readonly List<(string Id, string User, string Message)> _messages = new();
 
     private ClaimsPrincipal? _user;
 
     private bool _disposed;
 
-    protected async override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateTask;
 
@@ -38,9 +38,22 @@ public partial class Chat : IAsyncDisposable
             .WithUrl($"https://{Host}:5001/hubs/chat")
             .Build();
 
-        _connection.On<string, string>("ReceiveMessage", (user, message) =>
+        _connection.On<string, string, string>("ReceiveMessage", (id, user, message) =>
         {
-            _messages.Add((user, message));
+            _messages.Add((id, user, message));
+            InvokeAsync(StateHasChanged);
+        });
+
+        _connection.On<string>("MessageDeleted", id =>
+        {
+            var messageToRemove = _messages.FirstOrDefault(m => m.Id == id);
+
+            if (messageToRemove == default)
+            {
+                return;
+            }
+
+            _messages.Remove(messageToRemove);
 
             InvokeAsync(StateHasChanged);
         });
@@ -53,6 +66,11 @@ public partial class Chat : IAsyncDisposable
         await _connection.SendAsync("SendMessage", _user.FindFirstValue(ClaimTypes.Name), _message);
 
         _message = string.Empty;
+    }
+
+    private async Task Delete(string id)
+    {
+        await _connection.SendAsync("DeleteMessage", id);
     }
 
     public async ValueTask DisposeAsync()

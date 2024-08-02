@@ -7,7 +7,16 @@
         mc:Ignorable="d"
         Title="Chat" Height="350" Width="525">
     <Grid>
-        <TextBox x:Name="ChatTextBox" HorizontalAlignment="Left" Height="250" Margin="10,10,0,0" VerticalAlignment="Top" Width="490" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
+        <ListBox x:Name="ChatListBox" HorizontalAlignment="Left" Height="250" Margin="10,10,0,0" VerticalAlignment="Top" Width="490">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Message}" Width="400" TextWrapping="Wrap" />
+                        <Button Content="Delete" Command="{Binding DataContext.DeleteCommand, ElementName=ChatListBox}" CommandParameter="{Binding Id}" Width="60" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
         <TextBox x:Name="MessageTextBox" HorizontalAlignment="Left" Height="30" Margin="10,270,0,0" VerticalAlignment="Top" Width="300"/>
         <Button Content="Send" HorizontalAlignment="Left" Margin="320,270,0,0" VerticalAlignment="Top" Width="80" Click="SendButton_Click"/>
         <Button Content="Reconnect" HorizontalAlignment="Left" Margin="410,270,0,0" VerticalAlignment="Top" Width="90" Click="ReconnectButton_Click"/>
