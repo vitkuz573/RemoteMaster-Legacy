@@ -290,6 +290,8 @@ public partial class Home
         await Task.WhenAll(logonTasks);
         channel.Writer.Complete();
         await readTask;
+
+        ResetSelections();
     }
 
     private async Task LogonComputer(Computer computer)
@@ -350,6 +352,8 @@ public partial class Home
             .Select(LogoffComputer);
 
         await Task.WhenAll(tasks);
+
+        ResetSelections();
     }
 
     private async Task LogoffComputer(Computer computer)
@@ -765,5 +769,13 @@ public partial class Home
     private bool CanDeselectAll(ConcurrentDictionary<string, Computer> computers)
     {
         return computers.Any(computer => _selectedComputers.Contains(computer.Value));
+    }
+
+    private void ResetSelections()
+    {
+        foreach (var computer in _selectedComputers.ToList())
+        {
+            SelectComputer(computer, false);
+        }
     }
 }
