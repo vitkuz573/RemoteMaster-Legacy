@@ -2,14 +2,16 @@
 
 @rendermode InteractiveServer
 
-<div>
-    <h3>Chat</h3>
-    <input @bind="_message" placeholder="Enter message" />
-    <button @onclick="Send">Send</button>
-    <ul>
+<div class="container mx-auto p-4">
+    <h3 class="mb-4 text-xl font-semibold">Chat</h3>
+    <div class="mb-4">
+        <input @bind="_message" placeholder="Enter message" class="mb-2 w-full rounded border p-2" />
+        <button @onclick="Send" class="rounded bg-blue-500 px-4 py-2 text-white transition duration-200 hover:bg-blue-700">Send</button>
+    </div>
+    <ul class="list-disc pl-5">
         @foreach (var msg in _messages)
         {
-            <li>@msg</li>
+            <li class="mb-1">@msg</li>
         }
     </ul>
 </div>
