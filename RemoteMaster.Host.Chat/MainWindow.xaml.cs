@@ -18,7 +18,7 @@ public partial class MainWindow : Window
 
     public ICommand DeleteCommand { get; }
 
-    private string _currentUser = "User"; // Замените на фактическое имя пользователя
+    public static string CurrentUser { get; } = "User"; // Замените на фактическое имя пользователя
 
     public MainWindow()
     {
@@ -75,7 +75,7 @@ public partial class MainWindow : Window
 
         if (_connection.State == HubConnectionState.Connected)
         {
-            await _connection.SendAsync("SendMessage", _currentUser, message);
+            await _connection.SendAsync("SendMessage", CurrentUser, message);
             MessageTextBox.Clear();
         }
         else
@@ -88,7 +88,7 @@ public partial class MainWindow : Window
     {
         if (_connection.State == HubConnectionState.Connected)
         {
-            await _connection.SendAsync("DeleteMessage", id, _currentUser);
+            await _connection.SendAsync("DeleteMessage", id, CurrentUser);
         }
         else
         {
@@ -122,7 +122,7 @@ public class RelayCommand<T>(Action<T> execute, Func<T, bool> canExecute = null)
 
     public event EventHandler CanExecuteChanged
     {
-        add { CommandManager.RequerySuggested += value; }
-        remove { CommandManager.RequerySuggested -= value; }
+        add => CommandManager.RequerySuggested += value;
+        remove => CommandManager.RequerySuggested -= value;
     }
 }

@@ -1,5 +1,7 @@
 ﻿@page "/{Host}/chat"
 
+@using System.Security.Claims
+
 @rendermode InteractiveServer
 
 <div class="flex min-h-screen flex-col items-center justify-center bg-gray-100">
@@ -22,7 +24,10 @@
                                 <div class="text-sm font-semibold text-gray-700">@user</div>
                                 <div class="text-sm text-gray-600">@message</div>
                             </div>
-                            <button @onclick="() => Delete(id)" class="text-red-500 hover:text-red-700">Delete</button>
+                            @if (user == _user?.FindFirstValue(ClaimTypes.Name))
+                            {
+                                <button @onclick="() => Delete(id)" class="text-red-500 hover:text-red-700">Delete</button>
+                            }
                         </li>
                     }
                 </ul>
