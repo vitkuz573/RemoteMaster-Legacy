@@ -116,7 +116,7 @@
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="WakeUp" Disabled="@(_selectedComputers.Count == 0)" Class="mr-2">@Localizer["WakeUp"]</MudButton>
                                 }
                                 
-                                @if (context.User.HasClaim("Connection", "View") || context.User.HasClaim("Connection", "Control"))
+                                @if (context.User.HasClaim("Connect", "View") || context.User.HasClaim("Connect", "Control"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Connect" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["Connect"]</MudButton>
                                 }      
