@@ -35,7 +35,7 @@ public partial class Chat : IAsyncDisposable
         _user = authState.User;
 
         _connection = new HubConnectionBuilder()
-            .WithUrl($"http://{Host}:5555/hubs/chat")
+            .WithUrl($"https://{Host}:5001/hubs/chat")
             .Build();
 
         _connection.On<string, string>("ReceiveMessage", (user, message) =>

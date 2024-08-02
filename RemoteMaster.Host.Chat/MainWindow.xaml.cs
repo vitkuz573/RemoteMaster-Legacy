@@ -2,12 +2,13 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net.Http;
 using System.Windows;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace RemoteMaster.Host.Chat;
 
-public partial class MainWindow : Window
+public partial class MainWindow
 {
     private HubConnection _connection;
 
@@ -20,8 +21,18 @@ public partial class MainWindow : Window
 
     private void InitializeConnection()
     {
+#pragma warning disable CA2000
+        var httpClientHandler = new HttpClientHandler
+        {
+            ServerCertificateCustomValidationCallback = (_, _, _, _) => true
+        };
+#pragma warning restore CA2000
+
         _connection = new HubConnectionBuilder()
-            .WithUrl("http://127.0.0.1:5555/hubs/chat")
+            .WithUrl("https://127.0.0.1:5001/hubs/chat", options =>
+            {
+                options.HttpMessageHandlerFactory = _ => httpClientHandler;
+            })
             .Build();
 
         _connection.On<string, string>("ReceiveMessage", (user, message) =>

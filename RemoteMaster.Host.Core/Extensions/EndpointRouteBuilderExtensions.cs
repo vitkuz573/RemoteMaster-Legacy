@@ -22,6 +22,7 @@ public static class EndpointRouteBuilderExtensions
             endpoints.MapHub<ScreenRecorderHub>("/hubs/screenrecorder");
             endpoints.MapHub<DomainMembershipHub>("/hubs/domainmembership");
             endpoints.MapHub<LogHub>("/hubs/log");
+            endpoints.MapHub<ChatHub>("/hubs/chat");
         }
 
         if (launchModeBase is UserMode or UpdaterMode)

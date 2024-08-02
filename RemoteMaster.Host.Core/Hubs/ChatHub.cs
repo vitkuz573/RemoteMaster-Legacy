@@ -4,7 +4,7 @@
 
 using Microsoft.AspNetCore.SignalR;
 
-namespace RemoteMaster.Host.Chat.Hubs;
+namespace RemoteMaster.Host.Core.Hubs;
 
 public class ChatHub : Hub
 {
