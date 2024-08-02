@@ -22,7 +22,7 @@ public partial class Chat : IAsyncDisposable
 
     private HubConnection? _connection;
     private string _message = string.Empty;
-    private readonly List<string> _messages = [];
+    private readonly List<(string User, string Message)> _messages = [];
 
     private ClaimsPrincipal? _user;
 
@@ -40,9 +40,7 @@ public partial class Chat : IAsyncDisposable
 
         _connection.On<string, string>("ReceiveMessage", (user, message) =>
         {
-            var encodedMsg = $"{user}: {message}";
-
-            _messages.Add(encodedMsg);
+            _messages.Add((user, message));
 
             InvokeAsync(StateHasChanged);
         });
