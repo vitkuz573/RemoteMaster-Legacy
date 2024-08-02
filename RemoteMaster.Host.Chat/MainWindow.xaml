@@ -7,7 +7,8 @@
         mc:Ignorable="d"
         Title="Chat" Height="350" Width="525">
     <Grid>
-        <ListBox x:Name="ChatListBox" HorizontalAlignment="Left" Height="250" Margin="10,10,0,0" VerticalAlignment="Top" Width="490">
+        <ListBox x:Name="ChatListBox" HorizontalAlignment="Left" Height="250" Margin="10,10,0,0" VerticalAlignment="Top" Width="490"
+                 ItemsSource="{Binding Messages}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
@@ -19,6 +20,5 @@
         </ListBox>
         <TextBox x:Name="MessageTextBox" HorizontalAlignment="Left" Height="30" Margin="10,270,0,0" VerticalAlignment="Top" Width="300"/>
         <Button Content="Send" HorizontalAlignment="Left" Margin="320,270,0,0" VerticalAlignment="Top" Width="80" Click="SendButton_Click"/>
-        <Button Content="Reconnect" HorizontalAlignment="Left" Margin="410,270,0,0" VerticalAlignment="Top" Width="90" Click="ReconnectButton_Click"/>
     </Grid>
 </Window>

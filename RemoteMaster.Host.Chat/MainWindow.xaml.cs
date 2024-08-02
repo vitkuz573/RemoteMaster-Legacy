@@ -14,7 +14,7 @@ public partial class MainWindow : Window
 {
     private HubConnection _connection;
 
-    public ObservableCollection<ChatMessage> Messages { get; } = [];
+    public ObservableCollection<ChatMessage> Messages { get; } = new();
 
     public ICommand DeleteCommand { get; }
 
@@ -64,29 +64,7 @@ public partial class MainWindow : Window
             });
         });
 
-        ConnectToHub();
-    }
-
-    private void ConnectToHub()
-    {
-        _connection.StartAsync().ContinueWith(task =>
-        {
-            if (task.IsCompletedSuccessfully)
-            {
-                Dispatcher.Invoke(() =>
-                {
-                    ChatListBox.ItemsSource = Messages;
-                    Messages.Add(new ChatMessage { Message = "Connected to the chat hub." });
-                });
-            }
-            else
-            {
-                Dispatcher.Invoke(() =>
-                {
-                    Messages.Add(new ChatMessage { Message = $"Failed to connect: {task.Exception?.GetBaseException().Message}" });
-                });
-            }
-        });
+        _connection.StartAsync();
     }
 
     private async void SendButton_Click(object sender, RoutedEventArgs e)
@@ -101,18 +79,6 @@ public partial class MainWindow : Window
         else
         {
             MessageBox.Show("Connection is not established. Please reconnect.");
-        }
-    }
-
-    private void ReconnectButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (_connection.State != HubConnectionState.Connected)
-        {
-            ConnectToHub();
-        }
-        else
-        {
-            MessageBox.Show("Already connected.");
         }
     }
 
@@ -136,13 +102,20 @@ public class ChatMessage
     public string Message { get; set; }
 }
 
-public class RelayCommand<T>(Action<T> execute, Func<T, bool> canExecute = null) : ICommand
+public class RelayCommand<T> : ICommand
 {
-    private readonly Action<T> _execute = execute ?? throw new ArgumentNullException(nameof(execute));
+    private readonly Action<T> _execute;
+    private readonly Func<T, bool> _canExecute;
+
+    public RelayCommand(Action<T> execute, Func<T, bool> canExecute = null)
+    {
+        _execute = execute ?? throw new ArgumentNullException(nameof(execute));
+        _canExecute = canExecute;
+    }
 
     public bool CanExecute(object parameter)
     {
-        return canExecute == null || canExecute((T)parameter);
+        return _canExecute == null || _canExecute((T)parameter);
     }
 
     public void Execute(object parameter)
