@@ -12,18 +12,18 @@
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="{Binding Message}" Width="400" TextWrapping="Wrap" />
+                        <StackPanel Orientation="Vertical" Width="400">
+                            <TextBlock Text="{Binding User}" FontWeight="Bold" />
+                            <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
+                        </StackPanel>
                         <Button Content="Delete" Command="{Binding DataContext.DeleteCommand, ElementName=ChatListBox}" CommandParameter="{Binding Id}" Width="60">
                             <Button.Style>
                                 <Style TargetType="Button">
                                     <Setter Property="Visibility" Value="Collapsed" />
                                     <Style.Triggers>
-                                        <MultiDataTrigger>
-                                            <MultiDataTrigger.Conditions>
-                                                <Condition Binding="{Binding User}" Value="{x:Static local:MainWindow.CurrentUser}" />
-                                            </MultiDataTrigger.Conditions>
+                                        <DataTrigger Binding="{Binding User}" Value="{x:Static local:MainWindow.CurrentUser}">
                                             <Setter Property="Visibility" Value="Visible" />
-                                        </MultiDataTrigger>
+                                        </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
                             </Button.Style>

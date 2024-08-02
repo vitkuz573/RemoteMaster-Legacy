@@ -7,6 +7,8 @@ using System.Net.Http;
 using System.Windows;
 using System.Windows.Input;
 using Microsoft.AspNetCore.SignalR.Client;
+using RemoteMaster.Host.Chat.Commands;
+using RemoteMaster.Host.Chat.Models;
 
 namespace RemoteMaster.Host.Chat;
 
@@ -18,11 +20,12 @@ public partial class MainWindow : Window
 
     public ICommand DeleteCommand { get; }
 
-    public static string CurrentUser { get; } = "User"; // Замените на фактическое имя пользователя
+    public static string CurrentUser => "User";
 
     public MainWindow()
     {
         InitializeComponent();
+
         DataContext = this;
 
         DeleteCommand = new RelayCommand<string>(DeleteMessage);
@@ -94,35 +97,5 @@ public partial class MainWindow : Window
         {
             MessageBox.Show("Connection is not established. Please reconnect.");
         }
-    }
-}
-
-public class ChatMessage
-{
-    public string Id { get; set; }
-
-    public string User { get; set; }
-
-    public string Message { get; set; }
-}
-
-public class RelayCommand<T>(Action<T> execute, Func<T, bool> canExecute = null) : ICommand
-{
-    private readonly Action<T> _execute = execute ?? throw new ArgumentNullException(nameof(execute));
-
-    public bool CanExecute(object parameter)
-    {
-        return canExecute == null || canExecute((T)parameter);
-    }
-
-    public void Execute(object parameter)
-    {
-        _execute((T)parameter);
-    }
-
-    public event EventHandler CanExecuteChanged
-    {
-        add => CommandManager.RequerySuggested += value;
-        remove => CommandManager.RequerySuggested -= value;
     }
 }
