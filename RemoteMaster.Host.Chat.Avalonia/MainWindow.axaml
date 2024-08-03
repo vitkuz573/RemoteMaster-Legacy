@@ -13,6 +13,10 @@
         x:CompileBindings="True"
         mc:Ignorable="d">
 
+	<Window.DataContext>
+		<viewmodels:MainWindowViewModel/>
+	</Window.DataContext>
+
 	<Grid Margin="10" RowDefinitions="Auto,*" ColumnDefinitions="*">
 		<TextBlock Text="Chat" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,20" Grid.Row="0"/>
 
@@ -26,6 +30,10 @@
 									<TextBlock Text="{CompiledBinding User}" FontWeight="Bold" Foreground="DarkBlue"/>
 									<TextBlock Text="{CompiledBinding Message}" TextWrapping="Wrap" Margin="0,5,0,0"/>
 									<TextBlock Text="{CompiledBinding Timestamp}" FontSize="10" Foreground="Gray" HorizontalAlignment="Right"/>
+									<Button Content="Delete"
+                                            Command="{Binding $parent[Window].((viewmodels:MainWindowViewModel)DataContext).DeleteMessageCommand}"
+                                            CommandParameter="{CompiledBinding Id}"
+                                            HorizontalAlignment="Right"/>
 								</StackPanel>
 							</Border>
 						</DataTemplate>
@@ -39,5 +47,4 @@
 			</StackPanel>
 		</Grid>
 	</Grid>
-
 </Window>
