@@ -29,7 +29,7 @@
                                 <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Margin="0,0,0,5" />
                                 <TextBlock Text="{Binding Timestamp}" TextWrapping="Wrap" Margin="0,0,0,5" />
                             </StackPanel>
-                            <Button Content="✖" Command="{Binding DataContext.DeleteCommand, ElementName=ChatListBox}" CommandParameter="{Binding Id}" Margin="5,0,0,0" Grid.Column="1" HorizontalAlignment="Right" Width="25" Height="25" Background="Transparent" BorderBrush="Transparent" Foreground="Red">
+                            <Button Content="✖" Click="DeleteButton_Click" Tag="{Binding Id}" Margin="5,0,0,0" Grid.Column="1" HorizontalAlignment="Right" Width="25" Height="25" Background="Transparent" BorderBrush="Transparent" Foreground="Red">
                                 <Button.Style>
                                     <Style TargetType="Button">
                                         <Setter Property="Visibility" Value="Collapsed" />

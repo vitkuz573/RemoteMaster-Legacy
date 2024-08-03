@@ -5,10 +5,9 @@
 using System.Collections.ObjectModel;
 using System.Net.Http;
 using System.Windows;
-using System.Windows.Input;
+using System.Windows.Controls;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
-using RemoteMaster.Host.Chat.Commands;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Chat;
@@ -17,9 +16,7 @@ public partial class MainWindow : Window
 {
     private HubConnection _connection;
 
-    public ObservableCollection<ChatMessage> Messages { get; } = [];
-
-    public ICommand DeleteCommand { get; }
+    public ObservableCollection<ChatMessage> Messages { get; } = new ObservableCollection<ChatMessage>();
 
     public static string CurrentUser => "User";
 
@@ -28,8 +25,6 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         DataContext = this;
-
-        DeleteCommand = new RelayCommand<string>(DeleteMessage);
 
         InitializeConnection();
     }
@@ -91,9 +86,12 @@ public partial class MainWindow : Window
         }
     }
 
-    private async void DeleteMessage(string id)
+    private async void DeleteButton_Click(object sender, RoutedEventArgs e)
     {
-        if (_connection.State == HubConnectionState.Connected)
+        var button = sender as Button;
+        var id = button?.Tag as string;
+
+        if (!string.IsNullOrEmpty(id) && _connection.State == HubConnectionState.Connected)
         {
             await _connection.SendAsync("DeleteMessage", id, CurrentUser);
         }

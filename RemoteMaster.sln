@@ -25,6 +25,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteMaster.Host.Core.Test
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteMaster.Host.Chat", "RemoteMaster.Host.Chat\RemoteMaster.Host.Chat.csproj", "{37E96745-94D4-4A9D-A479-3CB6F7C1B2CE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteMaster.Host.Chat.Avalonia", "RemoteMaster.Host.Chat.Avalonia\RemoteMaster.Host.Chat.Avalonia.csproj", "{6C2BC239-C522-4CCE-AB5D-226DB6AC83EB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -165,6 +167,22 @@ Global
 		{37E96745-94D4-4A9D-A479-3CB6F7C1B2CE}.Release|x64.Build.0 = Release|Any CPU
 		{37E96745-94D4-4A9D-A479-3CB6F7C1B2CE}.Release|x86.ActiveCfg = Release|Any CPU
 		{37E96745-94D4-4A9D-A479-3CB6F7C1B2CE}.Release|x86.Build.0 = Release|Any CPU
+		{6C2BC239-C522-4CCE-AB5D-226DB6AC83EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C2BC239-C522-4CCE-AB5D-226DB6AC83EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C2BC239-C522-4CCE-AB5D-226DB6AC83EB}.Debug|arm64.ActiveCfg = Debug|Any CPU
+		{6C2BC239-C522-4CCE-AB5D-226DB6AC83EB}.Debug|arm64.Build.0 = Debug|Any CPU
+		{6C2BC239-C522-4CCE-AB5D-226DB6AC83EB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6C2BC239-C522-4CCE-AB5D-226DB6AC83EB}.Debug|x64.Build.0 = Debug|Any CPU
+		{6C2BC239-C522-4CCE-AB5D-226DB6AC83EB}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6C2BC239-C522-4CCE-AB5D-226DB6AC83EB}.Debug|x86.Build.0 = Debug|Any CPU
+		{6C2BC239-C522-4CCE-AB5D-226DB6AC83EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C2BC239-C522-4CCE-AB5D-226DB6AC83EB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C2BC239-C522-4CCE-AB5D-226DB6AC83EB}.Release|arm64.ActiveCfg = Release|Any CPU
+		{6C2BC239-C522-4CCE-AB5D-226DB6AC83EB}.Release|arm64.Build.0 = Release|Any CPU
+		{6C2BC239-C522-4CCE-AB5D-226DB6AC83EB}.Release|x64.ActiveCfg = Release|Any CPU
+		{6C2BC239-C522-4CCE-AB5D-226DB6AC83EB}.Release|x64.Build.0 = Release|Any CPU
+		{6C2BC239-C522-4CCE-AB5D-226DB6AC83EB}.Release|x86.ActiveCfg = Release|Any CPU
+		{6C2BC239-C522-4CCE-AB5D-226DB6AC83EB}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
