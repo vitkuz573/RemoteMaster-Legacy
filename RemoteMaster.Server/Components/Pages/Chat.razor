@@ -23,6 +23,7 @@
                             <div class="flex-1">
                                 <div class="text-sm font-semibold text-gray-700">@chatMessage.User</div>
                                 <div class="text-sm text-gray-600">@chatMessage.Message</div>
+                                <div class="text-sm text-gray-600">@chatMessage.Timestamp</div>
                             </div>
                             @if (chatMessage.User == _user?.FindFirstValue(ClaimTypes.Name))
                             {

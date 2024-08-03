@@ -42,8 +42,9 @@ public class ChatHub : Hub<IChatClient>
         }
 
         var id = Guid.NewGuid().ToString();
+        var timestamp = DateTime.UtcNow;
 
-        var chatMessage = new ChatMessage(id, user, message);
+        var chatMessage = new ChatMessage(id, user, message, timestamp);
 
         Messages.Enqueue(chatMessage);
 

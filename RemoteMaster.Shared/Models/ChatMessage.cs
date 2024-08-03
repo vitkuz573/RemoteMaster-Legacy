@@ -4,11 +4,13 @@
 
 namespace RemoteMaster.Shared.Models;
 
-public class ChatMessage(string id, string user, string message)
+public class ChatMessage(string id, string user, string message, DateTime timestamp)
 {
     public string Id { get; } = id;
 
     public string User { get; } = user;
 
     public string Message { get; } = message;
+
+    public DateTime Timestamp { get; } = timestamp;
 }
