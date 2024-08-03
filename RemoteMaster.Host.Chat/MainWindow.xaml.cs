@@ -7,8 +7,9 @@ using System.Net.Http;
 using System.Windows;
 using System.Windows.Input;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.DependencyInjection;
 using RemoteMaster.Host.Chat.Commands;
-using RemoteMaster.Host.Chat.Models;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Chat;
 
@@ -16,7 +17,7 @@ public partial class MainWindow : Window
 {
     private HubConnection _connection;
 
-    public ObservableCollection<ChatMessage> Messages { get; } = new();
+    public ObservableCollection<ChatMessage> Messages { get; } = [];
 
     public ICommand DeleteCommand { get; }
 
@@ -47,13 +48,14 @@ public partial class MainWindow : Window
             {
                 options.HttpMessageHandlerFactory = _ => httpClientHandler;
             })
+            .AddMessagePackProtocol()
             .Build();
 
-        _connection.On<string, string, string>("ReceiveMessage", (id, user, message) =>
+        _connection.On<ChatMessage>("ReceiveMessage", chatMessage =>
         {
             Dispatcher.Invoke(() =>
             {
-                Messages.Add(new ChatMessage { Id = id, User = user, Message = message });
+                Messages.Add(chatMessage);
             });
         });
 
@@ -62,6 +64,7 @@ public partial class MainWindow : Window
             Dispatcher.Invoke(() =>
             {
                 var messageToRemove = Messages.FirstOrDefault(m => m.Id == id);
+
                 if (messageToRemove != null)
                 {
                     Messages.Remove(messageToRemove);
@@ -79,6 +82,7 @@ public partial class MainWindow : Window
         if (_connection.State == HubConnectionState.Connected)
         {
             await _connection.SendAsync("SendMessage", CurrentUser, message);
+
             MessageTextBox.Clear();
         }
         else

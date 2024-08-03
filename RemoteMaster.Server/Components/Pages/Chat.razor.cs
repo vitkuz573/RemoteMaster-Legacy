@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.SignalR.Client;
+using RemoteMaster.Shared.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Components.Pages;
@@ -22,13 +23,13 @@ public partial class Chat : IAsyncDisposable
 
     private HubConnection? _connection;
     private string _message = string.Empty;
-    private readonly List<(string Id, string User, string Message)> _messages = [];
+    private readonly List<ChatMessage> _messages = [];
 
     private ClaimsPrincipal? _user;
 
     private bool _disposed;
 
-    protected override async Task OnInitializedAsync()
+    protected async override Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateTask;
 
@@ -38,9 +39,10 @@ public partial class Chat : IAsyncDisposable
             .WithUrl($"https://{Host}:5001/hubs/chat")
             .Build();
 
-        _connection.On<string, string, string>("ReceiveMessage", (id, user, message) =>
+        _connection.On<ChatMessage>("ReceiveMessage", chatMessage =>
         {
-            _messages.Add((id, user, message));
+            _messages.Add(chatMessage);
+
             InvokeAsync(StateHasChanged);
         });
 

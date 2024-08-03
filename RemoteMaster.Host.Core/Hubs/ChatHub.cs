@@ -5,12 +5,14 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using Microsoft.AspNetCore.SignalR;
+using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Hubs;
 
-public class ChatHub : Hub
+public class ChatHub : Hub<IChatClient>
 {
-    private static readonly ConcurrentQueue<(string Id, string User, string Message)> Messages = new();
+    private static readonly ConcurrentQueue<ChatMessage> Messages = new();
 
     public async Task SendMessage(string user, string message)
     {
@@ -41,14 +43,16 @@ public class ChatHub : Hub
 
         var id = Guid.NewGuid().ToString();
 
-        Messages.Enqueue((id, user, message));
+        var chatMessage = new ChatMessage(id, user, message);
+
+        Messages.Enqueue(chatMessage);
 
         while (Messages.Count > 100)
         {
             Messages.TryDequeue(out _);
         }
 
-        await Clients.All.SendAsync("ReceiveMessage", id, user, message);
+        await Clients.All.ReceiveMessage(chatMessage);
     }
 
     public async Task DeleteMessage(string id, string user)
@@ -66,15 +70,15 @@ public class ChatHub : Hub
                 Messages.Enqueue(message);
             }
 
-            await Clients.All.SendAsync("MessageDeleted", id);
+            await Clients.All.MessageDeleted(id);
         }
     }
 
     public async override Task OnConnectedAsync()
     {
-        foreach (var (id, user, message) in Messages)
+        foreach (var message in Messages)
         {
-            await Clients.Caller.SendAsync("ReceiveMessage", id, user, message);
+            await Clients.Caller.ReceiveMessage(message);
         }
 
         await base.OnConnectedAsync();
