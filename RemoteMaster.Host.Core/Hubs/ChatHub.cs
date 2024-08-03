@@ -42,7 +42,7 @@ public class ChatHub : Hub<IChatClient>
         }
 
         var id = Guid.NewGuid().ToString();
-        var timestamp = DateTime.UtcNow;
+        var timestamp = DateTimeOffset.Now;
 
         var chatMessage = new ChatMessage(id, user, message, timestamp);
 
