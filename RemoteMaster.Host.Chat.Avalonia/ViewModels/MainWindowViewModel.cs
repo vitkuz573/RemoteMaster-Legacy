@@ -17,7 +17,7 @@ public class MainWindowViewModel : ViewModelBase
     private HubConnection _connection;
     private string _newMessage;
 
-    public ObservableCollection<ChatMessage> Messages { get; } = new();
+    public ObservableCollection<ChatMessage> Messages { get; } = [];
 
     public string CurrentUser { get; } = "User";
 

@@ -4,6 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:models="clr-namespace:RemoteMaster.Host.Chat.Avalonia.Models"
         xmlns:viewmodels="clr-namespace:RemoteMaster.Host.Chat.Avalonia.ViewModels"
+        xmlns:converters="clr-namespace:RemoteMaster.Host.Chat.Avalonia.Converters"
         x:Class="RemoteMaster.Host.Chat.Avalonia.MainWindow"
         Title="Chat"
         Width="800"
@@ -12,6 +13,10 @@
         x:DataType="viewmodels:MainWindowViewModel"
         x:CompileBindings="True"
         mc:Ignorable="d">
+
+	<Window.Resources>
+		<converters:CurrentUserVisibilityConverter x:Key="CurrentUserVisibilityConverter"/>
+	</Window.Resources>
 
 	<Window.DataContext>
 		<viewmodels:MainWindowViewModel/>
@@ -33,7 +38,8 @@
 									<Button Content="Delete"
                                             Command="{Binding $parent[Window].((viewmodels:MainWindowViewModel)DataContext).DeleteMessageCommand}"
                                             CommandParameter="{CompiledBinding Id}"
-                                            HorizontalAlignment="Right"/>
+                                            HorizontalAlignment="Right"
+                                            IsVisible="{Binding User, Converter={StaticResource CurrentUserVisibilityConverter}, ConverterParameter=User}"/>
 								</StackPanel>
 							</Border>
 						</DataTemplate>
