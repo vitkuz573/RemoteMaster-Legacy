@@ -7,15 +7,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+	  <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\RemoteMaster.Shared\RemoteMaster.Shared.csproj" />
   </ItemGroup>
 
 </Project>

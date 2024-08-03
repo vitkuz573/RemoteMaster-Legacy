@@ -8,7 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
-using RemoteMaster.Shared.Models;
+using RemoteMaster.Host.Chat.Models;
 
 namespace RemoteMaster.Host.Chat;
 
@@ -16,7 +16,7 @@ public partial class MainWindow : Window
 {
     private HubConnection _connection;
 
-    public ObservableCollection<ChatMessage> Messages { get; } = new ObservableCollection<ChatMessage>();
+    public ObservableCollection<ChatMessage> Messages { get; } = [];
 
     public static string CurrentUser => "User";
 
