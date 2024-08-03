@@ -9,7 +9,6 @@
         Title="Chat"
         Width="800"
         Height="600"
-        RequestedThemeVariant="Light"
         x:DataType="viewmodels:MainWindowViewModel"
         x:CompileBindings="True"
         mc:Ignorable="d">
