@@ -8,6 +8,7 @@
     <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
     <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <AssemblyName>RemoteMaster.Host.Chat</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
