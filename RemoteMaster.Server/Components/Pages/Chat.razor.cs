@@ -26,10 +26,12 @@ public partial class Chat : IAsyncDisposable
     private string _replyToMessage = string.Empty;
     private string? _replyToMessageId = null;
     private readonly List<ChatMessage> _messages = new();
+    private string _typingMessage = string.Empty;
 
     private ClaimsPrincipal? _user;
 
     private bool _disposed;
+    private Timer? _typingTimer;
 
     protected async override Task OnInitializedAsync()
     {
@@ -59,6 +61,18 @@ public partial class Chat : IAsyncDisposable
 
             _messages.Remove(messageToRemove);
 
+            InvokeAsync(StateHasChanged);
+        });
+
+        _connection.On<string>("UserTyping", user =>
+        {
+            _typingMessage = $"{user} печатает...";
+            InvokeAsync(StateHasChanged);
+        });
+
+        _connection.On<string>("UserStopTyping", user =>
+        {
+            _typingMessage = string.Empty;
             InvokeAsync(StateHasChanged);
         });
 
@@ -95,6 +109,22 @@ public partial class Chat : IAsyncDisposable
     {
         var message = _messages.FirstOrDefault(m => m.Id == messageId);
         return message != null ? message.Message.Substring(0, Math.Min(30, message.Message.Length)) + "..." : string.Empty;
+    }
+
+    private void HandleInput(ChangeEventArgs e)
+    {
+        _message = e.Value?.ToString() ?? string.Empty;
+        _connection.SendAsync("Typing", _user.FindFirstValue(ClaimTypes.Name)).GetAwaiter().GetResult();
+        ResetTypingTimer();
+    }
+
+    private void ResetTypingTimer()
+    {
+        _typingTimer?.Dispose();
+        _typingTimer = new Timer(async _ =>
+        {
+            await _connection.SendAsync("StopTyping", _user.FindFirstValue(ClaimTypes.Name));
+        }, null, 1000, Timeout.Infinite);
     }
 
     public async ValueTask DisposeAsync()

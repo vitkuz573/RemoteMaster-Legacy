@@ -11,4 +11,8 @@ public interface IChatClient
     Task ReceiveMessage(ChatMessage message);
 
     Task MessageDeleted(string messageId);
+
+    Task UserTyping(string user);
+
+    Task UserStopTyping(string user);
 }

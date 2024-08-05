@@ -75,7 +75,7 @@ public class ChatHub : Hub<IChatClient>
         }
     }
 
-    public async override Task OnConnectedAsync()
+    public override async Task OnConnectedAsync()
     {
         foreach (var message in Messages)
         {
@@ -83,5 +83,15 @@ public class ChatHub : Hub<IChatClient>
         }
 
         await base.OnConnectedAsync();
+    }
+
+    public async Task Typing(string user)
+    {
+        await Clients.Others.UserTyping(user);
+    }
+
+    public async Task StopTyping(string user)
+    {
+        await Clients.Others.UserStopTyping(user);
     }
 }
