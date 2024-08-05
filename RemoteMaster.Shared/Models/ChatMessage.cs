@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Shared.Models;
 
-public class ChatMessage(string id, string user, string message, DateTimeOffset timestamp)
+public class ChatMessage(string id, string user, string message, DateTimeOffset timestamp, string? replyToId = null)
 {
     public string Id { get; } = id;
 
@@ -13,4 +13,6 @@ public class ChatMessage(string id, string user, string message, DateTimeOffset 
     public string Message { get; } = message;
 
     public DateTimeOffset Timestamp { get; } = timestamp;
+
+    public string? ReplyToId { get; } = replyToId;
 }

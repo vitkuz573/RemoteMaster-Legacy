@@ -23,7 +23,9 @@ public partial class Chat : IAsyncDisposable
 
     private HubConnection? _connection;
     private string _message = string.Empty;
-    private readonly List<ChatMessage> _messages = [];
+    private string _replyToMessage = string.Empty;
+    private string? _replyToMessageId = null;
+    private readonly List<ChatMessage> _messages = new();
 
     private ClaimsPrincipal? _user;
 
@@ -65,14 +67,34 @@ public partial class Chat : IAsyncDisposable
 
     private async Task Send()
     {
-        await _connection.SendAsync("SendMessage", _user.FindFirstValue(ClaimTypes.Name), _message);
+        await _connection.SendAsync("SendMessage", _user.FindFirstValue(ClaimTypes.Name), _message, _replyToMessageId);
 
         _message = string.Empty;
+        _replyToMessageId = null;
+        _replyToMessage = string.Empty;
     }
 
     private async Task Delete(string id)
     {
         await _connection.SendAsync("DeleteMessage", id, _user.FindFirstValue(ClaimTypes.Name));
+    }
+
+    private void SetReplyToMessage(string messageId)
+    {
+        _replyToMessageId = messageId;
+        _replyToMessage = GetReplyToMessage(messageId);
+    }
+
+    private void ClearReply()
+    {
+        _replyToMessageId = null;
+        _replyToMessage = string.Empty;
+    }
+
+    private string GetReplyToMessage(string messageId)
+    {
+        var message = _messages.FirstOrDefault(m => m.Id == messageId);
+        return message != null ? message.Message.Substring(0, Math.Min(30, message.Message.Length)) + "..." : string.Empty;
     }
 
     public async ValueTask DisposeAsync()

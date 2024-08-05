@@ -12,6 +12,13 @@
                 <input @bind="_message" placeholder="Enter your message..." class="flex-1 rounded border p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <button @onclick="Send" class="rounded bg-blue-500 px-4 py-2 font-semibold text-white transition duration-200 hover:bg-blue-700">Send</button>
             </div>
+            @if (!string.IsNullOrEmpty(_replyToMessage))
+            {
+                <div class="mb-4 rounded bg-gray-200 p-2">
+                    Replying to: @_replyToMessage
+                    <button @onclick="ClearReply" class="ml-2 text-red-500 hover:text-red-700">Cancel</button>
+                </div>
+            }
             <div class="h-80 overflow-y-auto border-t border-gray-200 pt-2">
                 <ul class="space-y-2">
                     @foreach (var chatMessage in _messages)
@@ -22,13 +29,20 @@
                             </div>
                             <div class="flex-1">
                                 <div class="text-sm font-semibold text-gray-700">@chatMessage.User</div>
+                                @if (!string.IsNullOrEmpty(chatMessage.ReplyToId))
+                                {
+                                    <div class="text-sm text-gray-500">Replying to: @GetReplyToMessage(chatMessage.ReplyToId)</div>
+                                }
                                 <div class="text-sm text-gray-600">@chatMessage.Message</div>
                                 <div class="text-sm text-gray-600">@chatMessage.Timestamp</div>
                             </div>
-                            @if (chatMessage.User == _user?.FindFirstValue(ClaimTypes.Name))
-                            {
-                                <button @onclick="() => Delete(chatMessage.Id)" class="text-red-500 hover:text-red-700">Delete</button>
-                            }
+                            <div class="flex space-x-2">
+                                <button @onclick="() => SetReplyToMessage(chatMessage.Id)" class="text-blue-500 hover:text-blue-700">Reply</button>
+                                @if (chatMessage.User == _user?.FindFirstValue(ClaimTypes.Name))
+                                {
+                                    <button @onclick="() => Delete(chatMessage.Id)" class="text-red-500 hover:text-red-700">Delete</button>
+                                }
+                            </div>
                         </li>
                     }
                 </ul>
