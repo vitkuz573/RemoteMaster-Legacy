@@ -63,7 +63,11 @@ internal class Program
 
         builder.ConfigureCoreUrls(launchModeInstance);
 
+        builder.Services.AddCors(builder => builder.AddDefaultPolicy(opts => opts.AllowCredentials().SetIsOriginAllowed(_ => true).AllowAnyHeader().AllowAnyMethod()));
+
         var app = builder.Build();
+
+        app.UseCors();
 
         switch (launchModeInstance)
         {
