@@ -14,7 +14,7 @@ public class ChatHub : Hub<IChatClient>
 {
     private static readonly ConcurrentQueue<ChatMessage> Messages = new();
 
-    public async Task SendMessage(string user, string message, string? replyToId = null)
+    public async Task SendMessage(string user, string message, string? replyToId = null, byte[]? image = null)
     {
         const string processName = "RemoteMaster.Host.Chat";
         const string processPath = @"C:\Program Files\RemoteMaster\Host\RemoteMaster.Host.Chat.exe";
@@ -44,7 +44,7 @@ public class ChatHub : Hub<IChatClient>
         var id = Guid.NewGuid().ToString();
         var timestamp = DateTimeOffset.Now;
 
-        var chatMessage = new ChatMessage(id, user, message, timestamp, replyToId);
+        var chatMessage = new ChatMessage(id, user, message, timestamp, replyToId, image);
 
         Messages.Enqueue(chatMessage);
 
@@ -75,7 +75,7 @@ public class ChatHub : Hub<IChatClient>
         }
     }
 
-    public override async Task OnConnectedAsync()
+    public async override Task OnConnectedAsync()
     {
         foreach (var message in Messages)
         {
