@@ -25,7 +25,7 @@ public partial class Chat : IAsyncDisposable
     private string _message = string.Empty;
     private string _replyToMessage = string.Empty;
     private string? _replyToMessageId = null;
-    private readonly List<ChatMessage> _messages = new();
+    private readonly List<ChatMessage> _messages = [];
     private string _typingMessage = string.Empty;
 
     private ClaimsPrincipal? _user;
@@ -66,7 +66,7 @@ public partial class Chat : IAsyncDisposable
 
         _connection.On<string>("UserTyping", user =>
         {
-            _typingMessage = $"{user} печатает...";
+            _typingMessage = $"{user} is typing...";
             InvokeAsync(StateHasChanged);
         });
 
@@ -81,7 +81,7 @@ public partial class Chat : IAsyncDisposable
 
     private async Task Send()
     {
-        await _connection.SendAsync("SendMessage", _user.FindFirstValue(ClaimTypes.Name), _message, _replyToMessageId);
+        await _connection.SendAsync("SendMessage", _user.FindFirstValue(ClaimTypes.Name), _message, _replyToMessageId, null);
 
         _message = string.Empty;
         _replyToMessageId = null;
@@ -108,7 +108,8 @@ public partial class Chat : IAsyncDisposable
     private string GetReplyToMessage(string messageId)
     {
         var message = _messages.FirstOrDefault(m => m.Id == messageId);
-        return message != null ? message.Message.Substring(0, Math.Min(30, message.Message.Length)) + "..." : string.Empty;
+
+        return message != null ? string.Concat(message.Message.AsSpan(0, Math.Min(30, message.Message.Length)), "...") : string.Empty;
     }
 
     private void HandleInput(ChangeEventArgs e)
