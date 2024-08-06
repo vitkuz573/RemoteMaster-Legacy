@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Hubs;
@@ -14,8 +15,10 @@ public class ChatHub : Hub<IChatClient>
 {
     private static readonly ConcurrentQueue<ChatMessage> Messages = new();
 
-    public async Task SendMessage(string user, string message, string? replyToId = null, byte[]? image = null)
+    public async Task SendMessage(ChatMessageDto chatMessageDto)
     {
+        ArgumentNullException.ThrowIfNull(chatMessageDto);
+
         const string processName = "RemoteMaster.Host.Chat";
         const string processPath = @"C:\Program Files\RemoteMaster\Host\RemoteMaster.Host.Chat.exe";
         const string workingDirectory = @"C:\Program Files\RemoteMaster\Host";
@@ -44,7 +47,9 @@ public class ChatHub : Hub<IChatClient>
         var id = Guid.NewGuid().ToString();
         var timestamp = DateTimeOffset.Now;
 
-        var chatMessage = new ChatMessage(id, user, message, timestamp, replyToId, image);
+        var attachments = chatMessageDto.Attachments?.Select(a => new Attachment(a.FileName, a.Data, a.MimeType)).ToList();
+
+        var chatMessage = new ChatMessage(id, chatMessageDto.User, chatMessageDto.Message, timestamp, chatMessageDto.ReplyToId, attachments);
 
         Messages.Enqueue(chatMessage);
 
@@ -53,7 +58,10 @@ public class ChatHub : Hub<IChatClient>
             Messages.TryDequeue(out _);
         }
 
-        await Clients.All.ReceiveMessage(chatMessage);
+        chatMessageDto.Id = id;
+        chatMessageDto.Timestamp = timestamp;
+
+        await Clients.All.ReceiveMessage(chatMessageDto);
     }
 
     public async Task DeleteMessage(string id, string user)
@@ -79,7 +87,22 @@ public class ChatHub : Hub<IChatClient>
     {
         foreach (var message in Messages)
         {
-            await Clients.Caller.ReceiveMessage(message);
+            var chatMessageDto = new ChatMessageDto
+            {
+                Id = message.Id,
+                User = message.User,
+                Message = message.Message,
+                Timestamp = message.Timestamp,
+                ReplyToId = message.ReplyToId,
+                Attachments = message.Attachments?.Select(a => new AttachmentDto
+                {
+                    FileName = a.FileName,
+                    Data = a.Data,
+                    MimeType = a.MimeType
+                }).ToList()
+            };
+
+            await Clients.Caller.ReceiveMessage(chatMessageDto);
         }
 
         await base.OnConnectedAsync();

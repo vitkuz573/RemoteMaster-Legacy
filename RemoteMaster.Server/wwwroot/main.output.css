@@ -1414,6 +1414,10 @@ video {
   padding-left: 0.75rem;
 }
 
+.pl-5 {
+  padding-left: 1.25rem;
+}
+
 .pt-2 {
   padding-top: 0.5rem;
 }
@@ -1692,6 +1696,11 @@ video {
 .hover\:bg-gray-200:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(229 231 235 / var(--tw-bg-opacity));
+}
+
+.hover\:bg-gray-700:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(55 65 81 / var(--tw-bg-opacity));
 }
 
 .hover\:bg-green-700:hover {

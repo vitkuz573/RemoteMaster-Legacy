@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Shared.Models;
 
-public class ChatMessage(string id, string user, string message, DateTimeOffset timestamp, string? replyToId = null, byte[]? image = null)
+public class ChatMessage(string id, string user, string message, DateTimeOffset timestamp, string? replyToId = null, List<Attachment>? attachments = null)
 {
     public string Id { get; } = id;
 
@@ -16,5 +16,5 @@ public class ChatMessage(string id, string user, string message, DateTimeOffset 
 
     public string? ReplyToId { get; } = replyToId;
 
-    public byte[]? Image { get; } = image;
+    public List<Attachment>? Attachments { get; } = attachments;
 }

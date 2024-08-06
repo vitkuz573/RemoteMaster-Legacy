@@ -2,6 +2,9 @@
 
 @using System.Security.Claims
 
+@inject NavigationManager Navigation
+@inject IJSRuntime JsRuntime
+
 @rendermode InteractiveServer
 
 <div class="flex min-h-screen flex-col items-center justify-center bg-gray-100">
@@ -10,8 +13,25 @@
         <div class="flex flex-col">
             <div class="mb-4 flex items-center space-x-2">
                 <input @bind="_message" placeholder="Enter your message..." class="flex-1 rounded border p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" @oninput="HandleInput" />
+                <InputFile OnChange="HandleFileChange" id="fileInput" class="hidden" multiple />
+                <button @onclick="OpenFileDialog" class="rounded bg-gray-500 px-4 py-2 font-semibold text-white transition duration-200 hover:bg-gray-700">Attach</button>
                 <button @onclick="Send" class="rounded bg-blue-500 px-4 py-2 font-semibold text-white transition duration-200 hover:bg-blue-700">Send</button>
             </div>
+            @if (_selectedFiles.Any())
+            {
+                <div class="mb-4 rounded bg-gray-200 p-2">
+                    <div>Selected files:</div>
+                    <ul class="list-disc pl-5">
+                        @foreach (var file in _selectedFiles)
+                        {
+                            <li>
+                                @file.Name
+                                <button @onclick="() => RemoveFile(file)" class="ml-2 text-red-500 hover:text-red-700">Remove</button>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            }
             @if (!string.IsNullOrEmpty(_replyToMessage))
             {
                 <div class="mb-4 rounded bg-gray-200 p-2">
@@ -34,17 +54,27 @@
                                     <div class="text-sm text-gray-500">Replying to: @GetReplyToMessage(chatMessage.ReplyToId)</div>
                                 }
                                 <div class="text-sm text-gray-600">@chatMessage.Message</div>
-                                @if (chatMessage.Image != null)
+                                @if (chatMessage.Attachments != null && chatMessage.Attachments.Any())
                                 {
-                                    <img src="data:image/png;base64,@Convert.ToBase64String(chatMessage.Image)" class="mt-2 max-h-40" />
+                                    @foreach (var attachment in chatMessage.Attachments)
+                                    {
+                                        @if (attachment.MimeType.StartsWith("image/"))
+                                        {
+                                            <img src="data:@(attachment.MimeType);base64,@Convert.ToBase64String(attachment.Data)" class="mt-2 max-h-40" />
+                                        }
+                                        else
+                                        {
+                                            <a href="data:@(attachment.MimeType);base64,@Convert.ToBase64String(attachment.Data)" download="@attachment.FileName" class="mt-2 text-blue-500 hover:underline">Download @attachment.FileName</a>
+                                        }
+                                    }
                                 }
                                 <div class="text-sm text-gray-600">@chatMessage.Timestamp</div>
                             </div>
                             <div class="flex space-x-2">
-                                <button @onclick="() => SetReplyToMessage(chatMessage.Id)" class="text-blue-500 hover:text-blue-700">Reply</button>
+                                <button @onclick="@(() => SetReplyToMessage(chatMessage.Id))" class="text-blue-500 hover:text-blue-700">Reply</button>
                                 @if (chatMessage.User == _user?.FindFirstValue(ClaimTypes.Name))
                                 {
-                                    <button @onclick="() => Delete(chatMessage.Id)" class="text-red-500 hover:text-red-700">Delete</button>
+                                    <button @onclick="@(() => Delete(chatMessage.Id))" class="text-red-500 hover:text-red-700">Delete</button>
                                 }
                             </div>
                         </li>

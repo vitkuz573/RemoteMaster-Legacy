@@ -6,7 +6,10 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.JSInterop;
+using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
 using Serilog;
 
@@ -25,13 +28,12 @@ public partial class Chat : IAsyncDisposable
     private string _message = string.Empty;
     private string _replyToMessage = string.Empty;
     private string? _replyToMessageId = null;
-    private readonly List<ChatMessage> _messages = [];
+    private readonly List<ChatMessageDto> _messages = [];
     private string _typingMessage = string.Empty;
-
     private ClaimsPrincipal? _user;
-
     private bool _disposed;
     private Timer? _typingTimer;
+    private List<IBrowserFile> _selectedFiles = [];
 
     protected async override Task OnInitializedAsync()
     {
@@ -43,9 +45,9 @@ public partial class Chat : IAsyncDisposable
             .WithUrl($"https://{Host}:5001/hubs/chat")
             .Build();
 
-        _connection.On<ChatMessage>("ReceiveMessage", chatMessage =>
+        _connection.On<ChatMessageDto>("ReceiveMessage", chatMessageDto =>
         {
-            _messages.Add(chatMessage);
+            _messages.Add(chatMessageDto);
 
             InvokeAsync(StateHasChanged);
         });
@@ -54,25 +56,25 @@ public partial class Chat : IAsyncDisposable
         {
             var messageToRemove = _messages.FirstOrDefault(m => m.Id == id);
 
-            if (messageToRemove == default)
+            if (messageToRemove != default)
             {
-                return;
+                _messages.Remove(messageToRemove);
+
+                InvokeAsync(StateHasChanged);
             }
-
-            _messages.Remove(messageToRemove);
-
-            InvokeAsync(StateHasChanged);
         });
 
         _connection.On<string>("UserTyping", user =>
         {
             _typingMessage = $"{user} is typing...";
+
             InvokeAsync(StateHasChanged);
         });
 
         _connection.On<string>("UserStopTyping", user =>
         {
             _typingMessage = string.Empty;
+
             InvokeAsync(StateHasChanged);
         });
 
@@ -81,11 +83,35 @@ public partial class Chat : IAsyncDisposable
 
     private async Task Send()
     {
-        await _connection.SendAsync("SendMessage", _user.FindFirstValue(ClaimTypes.Name), _message, _replyToMessageId, null);
+        var attachments = new List<AttachmentDto>();
+
+        foreach (var file in _selectedFiles)
+        {
+            var buffer = new byte[file.Size];
+            using var stream = file.OpenReadStream(file.Size);
+            await stream.ReadAsync(buffer);
+            attachments.Add(new AttachmentDto
+            {
+                FileName = file.Name,
+                Data = buffer,
+                MimeType = file.ContentType
+            });
+        }
+
+        var chatMessageDto = new ChatMessageDto
+        {
+            User = _user.FindFirstValue(ClaimTypes.Name),
+            Message = _message,
+            ReplyToId = _replyToMessage,
+            Attachments = attachments
+        };
+
+        await _connection.SendAsync("SendMessage", chatMessageDto);
 
         _message = string.Empty;
         _replyToMessageId = null;
         _replyToMessage = string.Empty;
+        _selectedFiles.Clear();
     }
 
     private async Task Delete(string id)
@@ -119,6 +145,16 @@ public partial class Chat : IAsyncDisposable
         ResetTypingTimer();
     }
 
+    private void HandleFileChange(InputFileChangeEventArgs e)
+    {
+        _selectedFiles.AddRange(e.GetMultipleFiles());
+    }
+
+    private void RemoveFile(IBrowserFile file)
+    {
+        _selectedFiles.Remove(file);
+    }
+
     private void ResetTypingTimer()
     {
         _typingTimer?.Dispose();
@@ -126,6 +162,11 @@ public partial class Chat : IAsyncDisposable
         {
             await _connection.SendAsync("StopTyping", _user.FindFirstValue(ClaimTypes.Name));
         }, null, 1000, Timeout.Infinite);
+    }
+
+    private async void OpenFileDialog()
+    {
+        await JsRuntime.InvokeVoidAsync("document.getElementById('fileInput').click");
     }
 
     public async ValueTask DisposeAsync()
