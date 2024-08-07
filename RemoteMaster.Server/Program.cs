@@ -186,6 +186,8 @@ public static class Program
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<ICertificateProvider, CertificateProvider>();
         services.AddScoped<IHostRegistrationService, HostRegistrationService>();
+        services.AddScoped<IUserPlanProvider, UserPlanProvider>();
+        services.AddScoped<ILimitChecker, LimitChecker>();
         services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<ITokenStorageService, InMemoryTokenStorageService>();
         services.AddSingleton<IBrandingService, BrandingService>();
@@ -204,6 +206,7 @@ public static class Program
         services.AddSingleton<IValidateOptions<SubjectOptions>, SubjectOptionsValidator>();
         services.AddSingleton<IHostMoveRequestService, HostMoveService>();
         services.AddSingleton<INotificationService, InMemoryNotificationService>();
+        services.AddSingleton<IPlanService, PlanService>();
 
         services.AddSingleton(new JsonSerializerOptions
         {

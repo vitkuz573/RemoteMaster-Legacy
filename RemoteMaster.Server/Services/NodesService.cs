@@ -11,7 +11,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class NodesService(ApplicationDbContext applicationDbContext) : INodesService
+public class NodesService(ApplicationDbContext applicationDbContext, ILimitChecker limitChecker) : INodesService
 {
     private Result<IQueryable<T>> GetQueryForType<T>() where T : class, INode
     {
@@ -149,10 +149,39 @@ public class NodesService(ApplicationDbContext applicationDbContext) : INodesSer
             foreach (var node in nodesList)
             {
                 var conflict = await CheckForConflictsAsync(node);
-                
+
                 if (!conflict.IsSuccess)
                 {
                     return Result<IList<T>>.Failure([.. conflict.Errors]);
+                }
+
+                if (node is Organization orgNode && !limitChecker.CanAddOrganization(applicationDbContext.Organizations))
+                {
+                    return Result<IList<T>>.Failure("Error: Organization limit reached for the current plan.");
+                }
+
+                if (node is OrganizationalUnit ouNode)
+                {
+                    var organization = await applicationDbContext.Organizations
+                        .Include(o => o.OrganizationalUnits)
+                        .FirstOrDefaultAsync(o => o.Id == ouNode.OrganizationId);
+
+                    if (organization == null || !limitChecker.CanAddOrganizationalUnit(organization))
+                    {
+                        return Result<IList<T>>.Failure("Error: Organizational Unit limit reached for the current plan.");
+                    }
+                }
+
+                if (node is Computer compNode)
+                {
+                    var organizationalUnit = await applicationDbContext.OrganizationalUnits
+                        .Include(ou => ou.Computers)
+                        .FirstOrDefaultAsync(ou => ou.Id == compNode.ParentId);
+
+                    if (organizationalUnit == null || !limitChecker.CanAddComputer(organizationalUnit))
+                    {
+                        return Result<IList<T>>.Failure("Error: Computer limit reached for the current plan.");
+                    }
                 }
             }
 
@@ -182,9 +211,9 @@ public class NodesService(ApplicationDbContext applicationDbContext) : INodesSer
             }
 
             applicationDbContext.Set<T>().RemoveRange(existingNodes);
-            
+
             await applicationDbContext.SaveChangesAsync();
-            
+
             return Result.Success();
         }
         catch (Exception ex)
@@ -237,7 +266,7 @@ public class NodesService(ApplicationDbContext applicationDbContext) : INodesSer
 
             var trackedNode = await applicationDbContext.Set<TNode>().FindAsync(node.Id) ?? throw new InvalidOperationException($"{typeof(TNode).Name} not found.");
             var trackedParentExists = await applicationDbContext.Set<TParent>().FindAsync(newParent.Id) != null;
-            
+
             if (!trackedParentExists)
             {
                 throw new InvalidOperationException("New parent not found or is invalid.");
@@ -249,7 +278,7 @@ public class NodesService(ApplicationDbContext applicationDbContext) : INodesSer
             }
 
             await applicationDbContext.SaveChangesAsync();
-            
+
             return Result.Success();
         }
         catch (Exception ex)
