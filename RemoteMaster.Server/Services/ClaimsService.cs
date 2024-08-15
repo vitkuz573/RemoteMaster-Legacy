@@ -3,10 +3,10 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Claims;
+using FluentResults;
 using Microsoft.AspNetCore.Identity;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Entities;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
 
@@ -41,11 +41,12 @@ public class ClaimsService(UserManager<ApplicationUser> userManager, RoleManager
                 claims.AddRange(roleClaims);
             }
 
-            return Result<List<Claim>>.Success(claims);
+            return Result.Ok(claims);
         }
         catch (Exception ex)
         {
-            return Result<List<Claim>>.Failure("Failed to retrieve claims for user.", exception: ex);
+            return Result.Fail<List<Claim>>("Failed to retrieve claims for user.")
+                         .WithError(ex.Message);
         }
     }
 }

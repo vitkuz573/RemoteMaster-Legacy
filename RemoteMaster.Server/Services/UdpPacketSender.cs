@@ -3,8 +3,8 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Net;
+using FluentResults;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Shared.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;
@@ -23,13 +23,13 @@ public class UdpPacketSender(Func<IUdpClient> udpClientFactory) : IPacketSender
 
             client.Send(packet, packet.Length, endPoint);
 
-            return Result.Success();
+            return Result.Ok();
         }
         catch (Exception ex)
         {
             Log.Error(ex, "An error occurred while sending a UDP packet.");
-            
-            return Result.Failure("An error occurred while sending a UDP packet.", exception: ex);
+
+            return Result.Fail("An error occurred while sending a UDP packet.").WithError(ex.Message);
         }
     }
 }

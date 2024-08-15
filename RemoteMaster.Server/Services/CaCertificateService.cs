@@ -4,9 +4,9 @@
 
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using FluentResults;
 using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Options;
 using RemoteMaster.Shared.Abstractions;
 using Serilog;
@@ -17,34 +17,48 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
 {
     private readonly CertificateOptions _settings = options.Value;
 
-    public void EnsureCaCertificateExists()
+    public Result EnsureCaCertificateExists()
     {
         Log.Debug("Starting CA certificate check.");
 
         try
         {
-            using var existingCert = GetCaCertificate(X509ContentType.Pfx);
+            var caCertResult = GetCaCertificate(X509ContentType.Pfx);
 
-            if (existingCert.NotAfter > DateTime.Now)
+            if (caCertResult.IsSuccess)
             {
-                Log.Information("Existing CA certificate for '{Name}' is valid.", _settings.CommonName);
+                var existingCert = caCertResult.Value;
 
-                return;
+                if (existingCert.NotAfter > DateTime.Now)
+                {
+                    Log.Information("Existing CA certificate for '{Name}' is valid.", _settings.CommonName);
+                    return Result.Ok();
+                }
+
+                Log.Warning("CA certificate for '{Name}' has expired. Reissuing.", _settings.CommonName);
+                var generateResult = GenerateCertificate(existingCert.GetRSAPrivateKey(), true);
+
+                return generateResult.IsFailed
+                    ? Result.Fail("Failed to reissue the expired CA certificate.")
+                    : Result.Ok();
             }
 
-            Log.Warning("CA certificate for '{Name}' has expired. Reissuing.", _settings.CommonName);
-            GenerateCertificate(existingCert.GetRSAPrivateKey(), true);
-        }
-        catch (InvalidOperationException ex)
-        {
-            Log.Warning(ex.Message);
             Log.Warning("No valid CA certificate found. Generating new certificate for '{Name}'.", _settings.CommonName);
+            var generateNewResult = GenerateCertificate(null, false);
 
-            GenerateCertificate(null, false);
+            return generateNewResult.IsFailed
+                ? Result.Fail("Failed to generate new CA certificate.")
+                : Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An unexpected error occurred during CA certificate check.");
+            
+            return Result.Fail("An unexpected error occurred during CA certificate check.").WithError(ex.Message);
         }
     }
 
-    private void GenerateCertificate(RSA? externalRsaProvider, bool reuseKey)
+    private Result GenerateCertificate(RSA? externalRsaProvider, bool reuseKey)
     {
         Log.Debug("Generating new CA certificate with reuseKey={ReuseKey}.", reuseKey);
 
@@ -73,8 +87,8 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
             if (rsaProvider == null)
             {
                 Log.Error("RSA provider is null.");
-
-                throw new InvalidOperationException("RSA provider is null.");
+                
+                return Result.Fail("RSA provider is null.");
             }
 
             var distinguishedName = subjectService.GetDistinguishedName(_settings.CommonName);
@@ -100,16 +114,17 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
             request.CertificateExtensions.Add(crlDistributionPointExtension);
 
             var caCert = request.CreateSelfSigned(DateTimeOffset.Now, DateTimeOffset.Now.AddYears(_settings.ValidityPeriod));
-
             caCert.FriendlyName = _settings.CommonName;
 
             AddCertificateToStore(caCert, StoreName.Root, StoreLocation.LocalMachine);
+
+            return Result.Ok();
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Failed to generate CA certificate.");
             
-            throw;
+            return Result.Fail("Failed to generate CA certificate.").WithError(ex.Message);
         }
         finally
         {
@@ -120,44 +135,65 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
         }
     }
 
-    private static void AddCertificateToStore(X509Certificate2 cert, StoreName storeName, StoreLocation storeLocation)
+    private static Result AddCertificateToStore(X509Certificate2 cert, StoreName storeName, StoreLocation storeLocation)
     {
-        using var store = new X509Store(storeName, storeLocation);
-
-        store.Open(OpenFlags.ReadOnly);
-
-        var isCertificateAlreadyAdded = store.Certificates
-            .Find(X509FindType.FindByThumbprint, cert.Thumbprint, false)
-            .Count > 0;
-
-        if (isCertificateAlreadyAdded)
+        try
         {
-            Log.Information("Certificate with thumbprint {Thumbprint} is already in the {StoreName} store in {StoreLocation} location.", cert.Thumbprint, storeName, storeLocation);
-        }
-        else
-        {
+            using var store = new X509Store(storeName, storeLocation);
+            store.Open(OpenFlags.ReadOnly);
+
+            var isCertificateAlreadyAdded = store.Certificates
+                .Find(X509FindType.FindByThumbprint, cert.Thumbprint, false)
+                .Count > 0;
+
+            if (isCertificateAlreadyAdded)
+            {
+                Log.Information("Certificate with thumbprint {Thumbprint} is already in the {StoreName} store in {StoreLocation} location.", cert.Thumbprint, storeName, storeLocation);
+                
+                return Result.Ok();
+            }
+
             store.Close();
             store.Open(OpenFlags.ReadWrite);
             store.Add(cert);
 
             Log.Information("Certificate with thumbprint {Thumbprint} added to the {StoreName} store in {StoreLocation} location.", cert.Thumbprint, storeName, storeLocation);
+            
+            return Result.Ok();
         }
-
-        store.Close();
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to add certificate to store.");
+            
+            return Result.Fail("Failed to add certificate to store.").WithError(ex.Message);
+        }
     }
 
-    public X509Certificate2 GetCaCertificate(X509ContentType contentType)
+    public Result<X509Certificate2> GetCaCertificate(X509ContentType contentType)
     {
-        using var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
-        store.Open(OpenFlags.ReadOnly);
-
-        var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, _settings.CommonName, false);
-
-        foreach (var cert in certificates.Where(cert => cert.HasPrivateKey))
+        try
         {
-            return contentType == X509ContentType.Cert ? new X509Certificate2(cert.Export(X509ContentType.Cert)) : cert;
-        }
+            using var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
+            store.Open(OpenFlags.ReadOnly);
 
-        throw new InvalidOperationException("No valid CA certificate with a private key found.");
+            var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, _settings.CommonName, false);
+
+            foreach (var cert in certificates.Where(cert => cert.HasPrivateKey))
+            {
+#pragma warning disable CA2000
+                return contentType == X509ContentType.Cert
+                    ? Result.Ok(new X509Certificate2(cert.Export(X509ContentType.Cert)))
+                    : Result.Ok(cert);
+#pragma warning restore CA2000
+            }
+
+            return Result.Fail<X509Certificate2>("No valid CA certificate with a private key found.");
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to retrieve CA certificate.");
+            
+            return Result.Fail<X509Certificate2>("Failed to retrieve CA certificate.").WithError(ex.Message);
+        }
     }
 }

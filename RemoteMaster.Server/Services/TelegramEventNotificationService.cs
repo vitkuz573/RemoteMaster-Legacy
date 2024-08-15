@@ -2,11 +2,10 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using FluentResults;
 using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Options;
-using RemoteMaster.Shared.Models;
 using Serilog;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
@@ -45,14 +44,14 @@ public class TelegramEventNotificationService : IEventNotificationService
 
         if (!_isConfigured)
         {
-            return Result.Failure("Telegram bot is not configured.");
+            return Result.Fail("Telegram bot is not configured.");
         }
 
         try
         {
             if (_botClient == null || _chatIds == null)
             {
-                return Result.Success();
+                return Result.Ok();
             }
 
             var escapedMessage = EscapeMarkdownV2(message);
@@ -62,13 +61,13 @@ public class TelegramEventNotificationService : IEventNotificationService
                 await _botClient.SendTextMessageAsync(chatId, escapedMessage, parseMode: ParseMode.MarkdownV2);
             }
 
-            return Result.Success();
+            return Result.Ok();
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Error sending Telegram message");
 
-            return Result.Failure("Error sending Telegram message.", exception: ex);
+            return Result.Fail("Error sending Telegram message.").WithError(ex.Message);
         }
     }
 

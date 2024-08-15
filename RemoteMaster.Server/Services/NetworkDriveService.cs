@@ -2,8 +2,8 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using FluentResults;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Shared.Models;
 using Serilog;
 using Windows.Win32.Foundation;
 using Windows.Win32.NetworkManagement.WNet;
@@ -38,17 +38,17 @@ public class NetworkDriveService : INetworkDriveService
             {
                 Log.Warning("Network drive with remote path {RemotePath} is already assigned.", remotePath);
                 
-                return Result.Success();
+                return Result.Ok();
             }
 
             Log.Error("Failed to map network drive with remote path {RemotePath}. Error code: {ErrorValue} ({ErrorCode})", remotePath, result.ToString(), (int)result);
             
-            return Result.Failure($"Failed to map network drive with remote path {remotePath}. Error code: {result} ({(int)result})");
+            return Result.Fail($"Failed to map network drive with remote path {remotePath}. Error code: {result} ({(int)result})");
         }
 
         Log.Information("Successfully mapped network drive with remote path: {RemotePath}", remotePath);
         
-        return Result.Success();
+        return Result.Ok();
     }
 
     public Result CancelNetworkDrive(string remotePath)
@@ -69,11 +69,11 @@ public class NetworkDriveService : INetworkDriveService
         {
             Log.Error("Failed to cancel network drive with remote path {RemotePath}. Error code: {ErrorValue} ({ErrorCode})", remotePath, result.ToString(), (int)result);
             
-            return Result.Failure($"Failed to cancel network drive with remote path {remotePath}. Error code: {result} ({(int)result})");
+            return Result.Fail($"Failed to cancel network drive with remote path {remotePath}. Error code: {result} ({(int)result})");
         }
 
         Log.Information("Successfully canceled network drive with remote path: {RemotePath}", remotePath);
-
-        return Result.Success();
+        
+        return Result.Ok();
     }
 }

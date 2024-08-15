@@ -3,12 +3,13 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Cryptography.X509Certificates;
+using FluentResults;
 
 namespace RemoteMaster.Server.Abstractions;
 
 public interface ICaCertificateService
 {
-    void EnsureCaCertificateExists();
+    Result EnsureCaCertificateExists();
 
-    X509Certificate2 GetCaCertificate(X509ContentType contentType);
+    Result<X509Certificate2> GetCaCertificate(X509ContentType contentType);
 }

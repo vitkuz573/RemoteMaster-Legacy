@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Text.Json;
+using FluentResults;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Models;
 
@@ -19,17 +20,18 @@ public class HostMoveService(IEventNotificationService eventNotificationService)
         {
             if (!File.Exists(HostMoveRequestsFilePath))
             {
-                return Result<List<HostMoveRequest>>.Success([]);
+                return Result.Ok(new List<HostMoveRequest>());
             }
 
             var json = await File.ReadAllTextAsync(HostMoveRequestsFilePath);
             var hostMoveRequests = JsonSerializer.Deserialize<List<HostMoveRequest>>(json) ?? [];
 
-            return Result<List<HostMoveRequest>>.Success(hostMoveRequests);
+            return Result.Ok(hostMoveRequests);
         }
         catch (Exception ex)
         {
-            return Result<List<HostMoveRequest>>.Failure("Failed to retrieve host move requests.", exception: ex);
+            return Result.Fail<List<HostMoveRequest>>("Failed to retrieve host move requests.")
+                         .WithError(ex.Message);
         }
     }
 
@@ -40,11 +42,12 @@ public class HostMoveService(IEventNotificationService eventNotificationService)
             var updatedJson = JsonSerializer.Serialize(hostMoveRequests);
             await File.WriteAllTextAsync(HostMoveRequestsFilePath, updatedJson);
 
-            return Result.Success();
+            return Result.Ok();
         }
         catch (Exception ex)
         {
-            return Result.Failure("Failed to save host move requests.", exception: ex);
+            return Result.Fail("Failed to save host move requests.")
+                         .WithError(ex.Message);
         }
     }
 
@@ -52,20 +55,21 @@ public class HostMoveService(IEventNotificationService eventNotificationService)
     {
         try
         {
-            var hostMoveRequests = await GetHostMoveRequestsAsync();
+            var hostMoveRequestsResult = await GetHostMoveRequestsAsync();
 
-            if (!hostMoveRequests.IsSuccess)
+            if (hostMoveRequestsResult.IsFailed)
             {
-                return Result<HostMoveRequest?>.Failure([.. hostMoveRequests.Errors]);
+                return Result.Fail<HostMoveRequest?>("Failed to retrieve host move requests.")
+                             .WithErrors(hostMoveRequestsResult.Errors);
             }
 
-            var request = hostMoveRequests.Value.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
-            
-            return Result<HostMoveRequest?>.Success(request);
+            var request = hostMoveRequestsResult.Value.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
+            return Result.Ok(request);
         }
         catch (Exception ex)
         {
-            return Result<HostMoveRequest?>.Failure("Failed to retrieve the host move request.", exception: ex);
+            return Result.Fail<HostMoveRequest?>("Failed to retrieve the host move request.")
+                         .WithError(ex.Message);
         }
     }
 
@@ -73,36 +77,39 @@ public class HostMoveService(IEventNotificationService eventNotificationService)
     {
         try
         {
-            var hostMoveRequests = await GetHostMoveRequestsAsync();
+            var hostMoveRequestsResult = await GetHostMoveRequestsAsync();
 
-            if (!hostMoveRequests.IsSuccess)
+            if (hostMoveRequestsResult.IsFailed)
             {
-                return Result.Failure([.. hostMoveRequests.Errors]);
+                return Result.Fail("Failed to retrieve host move requests.")
+                             .WithErrors(hostMoveRequestsResult.Errors);
             }
 
-            var requestToRemove = hostMoveRequests.Value.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
+            var requestToRemove = hostMoveRequestsResult.Value.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
 
             if (requestToRemove == null)
             {
-                return Result.Success();
+                return Result.Ok();
             }
 
-            hostMoveRequests.Value.Remove(requestToRemove);
+            hostMoveRequestsResult.Value.Remove(requestToRemove);
 
-            var saveResult = await SaveHostMoveRequestsAsync(hostMoveRequests.Value);
+            var saveResult = await SaveHostMoveRequestsAsync(hostMoveRequestsResult.Value);
 
-            if (!saveResult.IsSuccess)
+            if (saveResult.IsFailed)
             {
-                return Result.Failure([.. saveResult.Errors]);
+                return Result.Fail("Failed to save updated host move requests.")
+                             .WithErrors(saveResult.Errors);
             }
 
             await eventNotificationService.SendNotificationAsync($"Acknowledged move request for host with MAC address: {macAddress}");
 
-            return Result.Success();
+            return Result.Ok();
         }
         catch (Exception ex)
         {
-            return Result.Failure("Failed to acknowledge move request.", exception: ex);
+            return Result.Fail("Failed to acknowledge move request.")
+                         .WithError(ex.Message);
         }
     }
 }

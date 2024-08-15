@@ -22,19 +22,21 @@ public class CertificateController(ICaCertificateService caCertificateService, I
     [ProducesResponseType(typeof(ApiResponse<byte[]>), 400)]
     public IActionResult GetCaCertificate()
     {
-        try
-        {
-            var caCertificate = caCertificateService.GetCaCertificate(X509ContentType.Cert);
-            var response = ApiResponse<byte[]>.Success(caCertificate.Export(X509ContentType.Cert), "CA certificate retrieved successfully.");
+        var caCertificateResult = caCertificateService.GetCaCertificate(X509ContentType.Cert);
 
+        if (caCertificateResult.IsSuccess)
+        {
+            var caCertificate = caCertificateResult.Value;
+            var response = ApiResponse<byte[]>.Success(caCertificate.Export(X509ContentType.Cert), "CA certificate retrieved successfully.");
+            
             return Ok(response);
         }
-        catch (Exception ex)
+        else
         {
             var problemDetails = new ProblemDetails
             {
                 Title = "Error retrieving CA certificate",
-                Detail = ex.Message,
+                Detail = caCertificateResult.Errors.FirstOrDefault()?.Message ?? "Unknown error",
                 Status = StatusCodes.Status400BadRequest
             };
 

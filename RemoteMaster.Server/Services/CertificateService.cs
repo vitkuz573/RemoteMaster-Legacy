@@ -4,9 +4,9 @@
 
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using FluentResults;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Shared.Abstractions;
-using RemoteMaster.Shared.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;
@@ -20,7 +20,16 @@ public class CertificateService(IHostInformationService hostInformationService, 
         {
             ArgumentNullException.ThrowIfNull(csrBytes);
 
-            var caCertificate = caCertificateService.GetCaCertificate(X509ContentType.Pfx);
+            var caCertificateResult = caCertificateService.GetCaCertificate(X509ContentType.Pfx);
+
+            if (!caCertificateResult.IsSuccess)
+            {
+                Log.Error("Failed to retrieve the CA certificate: {Message}", caCertificateResult.Errors.FirstOrDefault()?.Message);
+                
+                return Result.Fail<X509Certificate2>("Failed to retrieve the CA certificate.");
+            }
+
+            var caCertificate = caCertificateResult.Value;
 
             var csr = CertificateRequest.LoadSigningRequest(csrBytes, HashAlgorithmName.SHA256, CertificateRequestLoadOptions.UnsafeLoadCertificateExtensions);
             var basicConstraints = csr.CertificateExtensions.OfType<X509BasicConstraintsExtension>().FirstOrDefault();
@@ -29,7 +38,7 @@ public class CertificateService(IHostInformationService hostInformationService, 
             {
                 Log.Error("CSR for CA certificates are not allowed.");
                 
-                return Result<X509Certificate2>.Failure("CSR for CA certificates are not allowed.", exception: new InvalidOperationException("CSR for CA certificates are not allowed."));
+                return Result.Fail<X509Certificate2>("CSR for CA certificates are not allowed.");
             }
 
             var rsaPrivateKey = caCertificate.GetRSAPrivateKey();
@@ -38,7 +47,7 @@ public class CertificateService(IHostInformationService hostInformationService, 
             {
                 Log.Error("The RSA private key for the CA certificate could not be retrieved.");
                 
-                return Result<X509Certificate2>.Failure("The RSA private key for the CA certificate could not be retrieved.", exception: new InvalidOperationException("The RSA private key for the CA certificate could not be retrieved."));
+                return Result.Fail<X509Certificate2>("The RSA private key for the CA certificate could not be retrieved.");
             }
 
             var signatureGenerator = X509SignatureGenerator.CreateForRSA(rsaPrivateKey, RSASignaturePadding.Pkcs1);
@@ -48,11 +57,11 @@ public class CertificateService(IHostInformationService hostInformationService, 
 
             var serialNumberResult = serialNumberService.GenerateSerialNumber();
 
-            if (!serialNumberResult.IsSuccess)
+            if (serialNumberResult.IsFailed)
             {
                 Log.Error("Failed to generate serial number: {Message}", serialNumberResult.Errors.FirstOrDefault()?.Message);
                 
-                return Result<X509Certificate2>.Failure("Failed to generate serial number.", exception: new InvalidOperationException("Failed to generate serial number."));
+                return Result.Fail<X509Certificate2>("Failed to generate serial number.");
             }
 
             var serialNumber = serialNumberResult.Value;
@@ -70,13 +79,13 @@ public class CertificateService(IHostInformationService hostInformationService, 
 
             var certificate = csr.Create(caCertificate.SubjectName, signatureGenerator, notBefore, notAfter, serialNumber);
 
-            return Result<X509Certificate2>.Success(certificate);
+            return Result.Ok(certificate);
         }
         catch (Exception ex)
         {
             Log.Error(ex, "An error occurred while issuing a certificate.");
-
-            return Result<X509Certificate2>.Failure("An error occurred while issuing a certificate.", exception: ex);
+            
+            return Result.Fail<X509Certificate2>("An error occurred while issuing a certificate.").WithError(ex.Message);
         }
     }
 }

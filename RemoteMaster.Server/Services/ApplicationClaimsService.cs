@@ -3,12 +3,11 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Linq.Expressions;
+using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
-using RemoteMaster.Server.Models;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
 
@@ -27,11 +26,12 @@ public class ApplicationClaimsService(ApplicationDbContext applicationDbContext)
 
             var claims = await query.ToListAsync();
 
-            return Result<IList<ApplicationClaim>>.Success(claims);
+            return Result.Ok<IList<ApplicationClaim>>(claims);
         }
         catch (Exception ex)
         {
-            return Result<IList<ApplicationClaim>>.Failure($"Error: Failed to retrieve ApplicationClaims.", exception: ex);
+            return Result.Fail<IList<ApplicationClaim>>("Error: Failed to retrieve ApplicationClaims.")
+                         .WithError(ex.Message);
         }
     }
 
@@ -44,11 +44,12 @@ public class ApplicationClaimsService(ApplicationDbContext applicationDbContext)
             await applicationDbContext.ApplicationClaims.AddAsync(claim);
             await applicationDbContext.SaveChangesAsync();
 
-            return Result<ApplicationClaim>.Success(claim);
+            return Result.Ok(claim);
         }
         catch (Exception ex)
         {
-            return Result<ApplicationClaim>.Failure($"Error: Failed to add ApplicationClaim.", exception: ex);
+            return Result.Fail<ApplicationClaim>("Error: Failed to add ApplicationClaim.")
+                         .WithError(ex.Message);
         }
     }
 
@@ -60,17 +61,18 @@ public class ApplicationClaimsService(ApplicationDbContext applicationDbContext)
 
             if (claim == null)
             {
-                return Result.Failure($"Error: ApplicationClaim with ID '{claimId}' not found.");
+                return Result.Fail($"Error: ApplicationClaim with ID '{claimId}' not found.");
             }
 
             applicationDbContext.ApplicationClaims.Remove(claim);
             await applicationDbContext.SaveChangesAsync();
 
-            return Result.Success();
+            return Result.Ok();
         }
         catch (Exception ex)
         {
-            return Result.Failure($"Error: Failed to remove ApplicationClaim.", exception: ex);
+            return Result.Fail($"Error: Failed to remove ApplicationClaim.")
+                         .WithError(ex.Message);
         }
     }
 
@@ -84,17 +86,19 @@ public class ApplicationClaimsService(ApplicationDbContext applicationDbContext)
 
             if (existingClaim == null)
             {
-                return Result<ApplicationClaim>.Failure($"Error: ApplicationClaim with ID '{claim.Id}' not found.");
+                return Result.Fail<ApplicationClaim>($"Error: ApplicationClaim with ID '{claim.Id}' not found.");
             }
 
             applicationDbContext.Entry(existingClaim).CurrentValues.SetValues(claim);
+
             await applicationDbContext.SaveChangesAsync();
 
-            return Result<ApplicationClaim>.Success(claim);
+            return Result.Ok(claim);
         }
         catch (Exception ex)
         {
-            return Result<ApplicationClaim>.Failure($"Error: Failed to update ApplicationClaim.", exception: ex);
+            return Result.Fail<ApplicationClaim>("Error: Failed to update ApplicationClaim.")
+                         .WithError(ex.Message);
         }
     }
 }

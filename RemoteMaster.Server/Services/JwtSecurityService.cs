@@ -5,11 +5,10 @@
 using System.IO.Abstractions;
 using System.Security.Cryptography;
 using System.Text;
+using FluentResults;
 using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Options;
-using RemoteMaster.Shared.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;
@@ -45,22 +44,20 @@ public class JwtSecurityService : IJwtSecurityService
         {
             if (!_fileSystem.File.Exists(_publicKeyPath))
             {
-                return Result<byte[]?>.Failure("Public key file does not exist.");
+                return Result.Fail<byte[]?>("Public key file does not exist.");
             }
 
             var publicKey = await _fileSystem.File.ReadAllBytesAsync(_publicKeyPath);
 
-            return Result<byte[]?>.Success(publicKey);
-
+            return Result.Ok<byte[]?>(publicKey);
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Error while reading public key file.");
 
-            return Result<byte[]?>.Failure("Error while reading public key file.", exception: ex);
+            return Result.Fail<byte[]?>("Error while reading public key file.").WithError(ex.Message);
         }
     }
-
 
     public async Task<Result> EnsureKeysExistAsync()
     {
@@ -72,7 +69,7 @@ public class JwtSecurityService : IJwtSecurityService
 
             try
             {
-                using var rsa = RSA.Create(_options.KeySize.Value);
+                using var rsa = RSA.Create(_options.KeySize ?? 2048);
                 var passwordBytes = Encoding.UTF8.GetBytes(_options.KeyPassword);
                 var encryptionAlgorithm = new PbeParameters(PbeEncryptionAlgorithm.Aes256Cbc, HashAlgorithmName.SHA256, 100000);
 
@@ -81,18 +78,18 @@ public class JwtSecurityService : IJwtSecurityService
 
                 Log.Information("JWT keys generated and saved successfully.");
 
-                return Result.Success();
+                return Result.Ok();
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "Failed to generate JWT keys.");
 
-                return Result.Failure("Failed to generate JWT keys.", exception: ex);
+                return Result.Fail("Failed to generate JWT keys.").WithError(ex.Message);
             }
         }
 
         Log.Information("JWT keys already exist.");
 
-        return Result.Success();
+        return Result.Ok();
     }
 }

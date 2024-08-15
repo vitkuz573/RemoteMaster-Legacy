@@ -2,9 +2,9 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using FluentResults;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
 
@@ -265,6 +265,6 @@ public class CountryProvider : ICountryProvider
             new("Åland Islands", "AX")
         };
 
-        return Result<List<Country>>.Success(countries);
+        return Result.Ok(countries);
     }
 }

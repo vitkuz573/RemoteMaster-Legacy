@@ -115,13 +115,8 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
                 continue;
             }
 
-            var matchingClaim = ClaimRepository.AllClaims.FirstOrDefault(c => c.ClaimType == claim.Type && c.ClaimValue == claim.Value);
-
-            if (matchingClaim == null)
-            {
-                throw new InvalidOperationException($"Claim '{claim.Type}:{claim.Value}' is assigned to a role but does not exist in the central repository.");
-            }
-
+            var matchingClaim = ClaimRepository.AllClaims.FirstOrDefault(c => c.ClaimType == claim.Type && c.ClaimValue == claim.Value) ?? throw new InvalidOperationException($"Claim '{claim.Type}:{claim.Value}' is assigned to a role but does not exist in the central repository.");
+            
             await applicationClaimsService.AddClaimAsync(new ApplicationClaim
             {
                 ClaimType = claim.Type,

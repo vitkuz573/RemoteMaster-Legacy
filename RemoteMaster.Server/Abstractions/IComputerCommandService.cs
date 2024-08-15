@@ -3,9 +3,9 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Collections.Concurrent;
+using FluentResults;
 using Microsoft.AspNetCore.SignalR.Client;
 using RemoteMaster.Server.Entities;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Abstractions;
 

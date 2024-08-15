@@ -6,13 +6,13 @@ using System.IO.Abstractions;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.DTOs;
 using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Models;
-using RemoteMaster.Shared.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;
@@ -30,8 +30,8 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
             if (existingRevokedCertificate != null)
             {
                 Log.Information($"Certificate with serial number {serialNumber} has already been revoked.");
-
-                return Result.Success();
+                
+                return Result.Ok();
             }
 
             var revokedCertificate = new RevokedCertificate
@@ -42,25 +42,25 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
             };
 
             context.RevokedCertificates.Add(revokedCertificate);
-
+            
             var result = await context.SaveChangesAsync();
 
             if (result > 0)
             {
                 Log.Information($"Certificate with serial number {serialNumber} has been successfully revoked.");
                 
-                return Result.Success();
+                return Result.Ok();
             }
 
             Log.Error($"Failed to revoke certificate with serial number {serialNumber}.");
-                
-            return Result.Failure($"Failed to revoke certificate with serial number {serialNumber}.");
+            
+            return Result.Fail($"Failed to revoke certificate with serial number {serialNumber}.");
         }
         catch (Exception ex)
         {
             Log.Error(ex, $"Error revoking certificate with serial number {serialNumber}");
             
-            return Result.Failure($"Error revoking certificate with serial number {serialNumber}", exception: ex);
+            return Result.Fail($"Error revoking certificate with serial number {serialNumber}").WithError(ex.Message);
         }
     }
 
@@ -70,17 +70,16 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
         {
             var issuerCertificateResult = certificateProvider.GetIssuerCertificate();
 
-            if (!issuerCertificateResult.IsSuccess)
+            if (issuerCertificateResult.IsFailed)
             {
-                return Result<byte[]>.Failure("Error retrieving issuer certificate.", exception: issuerCertificateResult.Errors.FirstOrDefault()?.Exception);
+                return Result.Fail<byte[]>("Error retrieving issuer certificate.")
+                             .WithError(issuerCertificateResult.Errors.FirstOrDefault()?.Message);
             }
 
             var issuerCertificate = issuerCertificateResult.Value;
-
             var crlBuilder = new CertificateRevocationListBuilder();
 
             var context = await contextFactory.CreateDbContextAsync();
-
             var crlInfo = context.CrlInfos.OrderBy(ci => ci.CrlNumber).FirstOrDefault() ?? new CrlInfo
             {
                 CrlNumber = BigInteger.Zero.ToString()
@@ -119,13 +118,13 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
 
             await context.SaveChangesAsync();
 
-            return Result<byte[]>.Success(crlData);
+            return Result.Ok(crlData);
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Error generating CRL");
 
-            return Result<byte[]>.Failure("Error generating CRL", exception: ex);
+            return Result.Fail<byte[]>("Error generating CRL").WithError(ex.Message);
         }
     }
 
@@ -152,13 +151,13 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
 
             Log.Information($"CRL published to {crlFilePath}");
 
-            return Result.Success();
+            return Result.Ok();
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Failed to publish CRL");
-            
-            return Result.Failure("Failed to publish CRL", exception: ex);
+
+            return Result.Fail("Failed to publish CRL").WithError(ex.Message);
         }
     }
 
@@ -177,19 +176,18 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
 
             if (crlInfoDto == null)
             {
-                return Result<CrlMetadata>.Failure("CRL Metadata is not available.");
+                return Result.Fail<CrlMetadata>("CRL Metadata is not available.");
             }
 
             var metadata = new CrlMetadata(crlInfoDto, revokedCertificatesCount);
 
-            return Result<CrlMetadata>.Success(metadata);
-
+            return Result.Ok(metadata);
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Error retrieving CRL metadata");
 
-            return Result<CrlMetadata>.Failure("Error retrieving CRL metadata", exception: ex);
+            return Result.Fail<CrlMetadata>("Error retrieving CRL metadata").WithError(ex.Message);
         }
     }
 }

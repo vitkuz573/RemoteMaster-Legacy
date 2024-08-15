@@ -3,11 +3,11 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Linq.Expressions;
+using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
 
@@ -32,11 +32,11 @@ public class NodesService(ApplicationDbContext applicationDbContext, ILimitCheck
                 _ => throw new InvalidOperationException($"Cannot create a DbSet for '{typeof(T).Name}' because this type is not included in the model for the context.")
             };
 
-            return Result<IQueryable<T>>.Success(query);
+            return Result.Ok(query);
         }
         catch (Exception ex)
         {
-            return Result<IQueryable<T>>.Failure("Error: Failed to create query.", exception: ex);
+            return Result.Fail<IQueryable<T>>("Error: Failed to create query.").WithError(ex.Message);
         }
     }
 
@@ -58,7 +58,7 @@ public class NodesService(ApplicationDbContext applicationDbContext, ILimitCheck
 
         if (!await query.AnyAsync(predicate))
         {
-            return Result.Success();
+            return Result.Ok();
         }
 
         string conflictMessage;
@@ -85,7 +85,7 @@ public class NodesService(ApplicationDbContext applicationDbContext, ILimitCheck
                 throw new InvalidOperationException("Unknown node type.");
         }
 
-        return Result.Failure(conflictMessage);
+        return Result.Fail(conflictMessage);
     }
 
     private static void ValidateMoveOperation<TNode, TParent>(TNode node, TParent newParent) where TNode : class, INode where TParent : class, INode
@@ -117,9 +117,9 @@ public class NodesService(ApplicationDbContext applicationDbContext, ILimitCheck
         {
             var queryResult = GetQueryForType<T>();
 
-            if (!queryResult.IsSuccess)
+            if (queryResult.IsFailed)
             {
-                return Result<IList<T>>.Failure([.. queryResult.Errors]);
+                return Result.Fail<IList<T>>(queryResult.Errors.First().Message);
             }
 
             var query = queryResult.Value;
@@ -130,11 +130,11 @@ public class NodesService(ApplicationDbContext applicationDbContext, ILimitCheck
             }
             var nodes = await query.ToListAsync();
 
-            return Result<IList<T>>.Success(nodes);
+            return Result.Ok<IList<T>>(nodes);
         }
         catch (Exception ex)
         {
-            return Result<IList<T>>.Failure($"Error: Failed to retrieve {typeof(T).Name} nodes.", exception: ex);
+            return Result.Fail<IList<T>>($"Error: Failed to retrieve {typeof(T).Name} nodes.").WithError(ex.Message);
         }
     }
 
@@ -150,14 +150,14 @@ public class NodesService(ApplicationDbContext applicationDbContext, ILimitCheck
             {
                 var conflict = await CheckForConflictsAsync(node);
 
-                if (!conflict.IsSuccess)
+                if (conflict.IsFailed)
                 {
-                    return Result<IList<T>>.Failure([.. conflict.Errors]);
+                    return Result.Fail<IList<T>>(conflict.Errors.First().Message);
                 }
 
                 if (node is Organization orgNode && !limitChecker.CanAddOrganization(applicationDbContext.Organizations))
                 {
-                    return Result<IList<T>>.Failure("Error: Organization limit reached for the current plan.");
+                    return Result.Fail<IList<T>>("Error: Organization limit reached for the current plan.");
                 }
 
                 if (node is OrganizationalUnit ouNode)
@@ -168,7 +168,7 @@ public class NodesService(ApplicationDbContext applicationDbContext, ILimitCheck
 
                     if (organization == null || !limitChecker.CanAddOrganizationalUnit(organization))
                     {
-                        return Result<IList<T>>.Failure("Error: Organizational Unit limit reached for the current plan.");
+                        return Result.Fail<IList<T>>("Error: Organizational Unit limit reached for the current plan.");
                     }
                 }
 
@@ -180,7 +180,7 @@ public class NodesService(ApplicationDbContext applicationDbContext, ILimitCheck
 
                     if (organizationalUnit == null || !limitChecker.CanAddComputer(organizationalUnit))
                     {
-                        return Result<IList<T>>.Failure("Error: Computer limit reached for the current plan.");
+                        return Result.Fail<IList<T>>("Error: Computer limit reached for the current plan.");
                     }
                 }
             }
@@ -188,11 +188,11 @@ public class NodesService(ApplicationDbContext applicationDbContext, ILimitCheck
             await applicationDbContext.Set<T>().AddRangeAsync(nodesList);
             await applicationDbContext.SaveChangesAsync();
 
-            return Result<IList<T>>.Success(nodesList);
+            return Result.Ok<IList<T>>(nodesList);
         }
         catch (Exception ex)
         {
-            return Result<IList<T>>.Failure($"Error: Failed to add {typeof(T).Name} nodes.", exception: ex);
+            return Result.Fail<IList<T>>($"Error: Failed to add {typeof(T).Name} nodes.").WithError(ex.Message);
         }
     }
 
@@ -207,18 +207,17 @@ public class NodesService(ApplicationDbContext applicationDbContext, ILimitCheck
 
             if (existingNodes.Count != nodeIds.Count)
             {
-                return Result.Failure($"Error: Some {typeof(T).Name} nodes do not exist.");
+                return Result.Fail($"Error: Some {typeof(T).Name} nodes do not exist.");
             }
 
             applicationDbContext.Set<T>().RemoveRange(existingNodes);
-
             await applicationDbContext.SaveChangesAsync();
 
-            return Result.Success();
+            return Result.Ok();
         }
         catch (Exception ex)
         {
-            return Result.Failure($"Error: Failed to remove the {typeof(T).Name} nodes.", exception: ex);
+            return Result.Fail($"Error: Failed to remove the {typeof(T).Name} nodes.").WithError(ex.Message);
         }
     }
 
@@ -233,25 +232,25 @@ public class NodesService(ApplicationDbContext applicationDbContext, ILimitCheck
 
             if (trackedNode == null)
             {
-                return Result.Failure($"Error: The {typeof(T).Name} with the name '{node.Name}' not found.");
+                return Result.Fail($"Error: The {typeof(T).Name} with the name '{node.Name}' not found.");
             }
 
             updateAction(trackedNode);
 
             var conflict = await CheckForConflictsAsync(trackedNode, node.Id);
 
-            if (!conflict.IsSuccess)
+            if (conflict.IsFailed)
             {
-                return Result.Failure([.. conflict.Errors]);
+                return Result.Fail(conflict.Errors.First().Message);
             }
 
             await applicationDbContext.SaveChangesAsync();
 
-            return Result.Success();
+            return Result.Ok();
         }
         catch (Exception ex)
         {
-            return Result.Failure($"Error: Failed to update the {typeof(T).Name} node.", exception: ex);
+            return Result.Fail($"Error: Failed to update the {typeof(T).Name} node.").WithError(ex.Message);
         }
     }
 
@@ -279,11 +278,11 @@ public class NodesService(ApplicationDbContext applicationDbContext, ILimitCheck
 
             await applicationDbContext.SaveChangesAsync();
 
-            return Result.Success();
+            return Result.Ok();
         }
         catch (Exception ex)
         {
-            return Result.Failure($"Error: Failed to move {typeof(TNode).Name} node to new parent.", exception: ex);
+            return Result.Fail($"Error: Failed to move {typeof(TNode).Name} node to new parent.").WithError(ex.Message);
         }
     }
 
@@ -306,11 +305,11 @@ public class NodesService(ApplicationDbContext applicationDbContext, ILimitCheck
                 currentNode = nodes.FirstOrDefault(n => n.Id == currentNode.ParentId);
             }
 
-            return Result<string[]>.Success([.. path]);
+            return Result.Ok(path.ToArray());
         }
         catch (Exception ex)
         {
-            return Result<string[]>.Failure($"Error: Failed to get full path for {typeof(T).Name} node.", exception: ex);
+            return Result.Fail<string[]>($"Error: Failed to get full path for {typeof(T).Name} node.").WithError(ex.Message);
         }
     }
 }

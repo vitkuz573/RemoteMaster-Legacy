@@ -3,12 +3,11 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Cryptography.X509Certificates;
+using FluentResults;
 using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Options;
 using RemoteMaster.Shared.Abstractions;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
 
@@ -24,11 +23,14 @@ public class CertificateProvider(IOptions<CertificateOptions> options, ICertific
 
             var caCertificate = certificates.FirstOrDefault(cert => cert.HasPrivateKey);
 
-            return caCertificate == null ? Result<X509Certificate2>.Failure($"CA certificate with CommonName '{_settings.CommonName}' not found.") : Result<X509Certificate2>.Success(caCertificate.GetUnderlyingCertificate());
+            return caCertificate == null
+                ? Result.Fail<X509Certificate2>($"CA certificate with CommonName '{_settings.CommonName}' not found.")
+                : Result.Ok(caCertificate.GetUnderlyingCertificate());
         }
         catch (Exception ex)
         {
-            return Result<X509Certificate2>.Failure("Error while retrieving CA certificate.", exception: ex);
+            return Result.Fail<X509Certificate2>("Error while retrieving CA certificate.")
+                         .WithError(ex.Message);
         }
     }
 }

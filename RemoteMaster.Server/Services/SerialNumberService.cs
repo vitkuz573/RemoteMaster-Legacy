@@ -3,8 +3,8 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Cryptography;
+using FluentResults;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
 
@@ -15,7 +15,7 @@ public class SerialNumberService : ISerialNumberService
     {
         try
         {
-            var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            var timestamp = BitConverter.GetBytes(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
             var uuid = Guid.NewGuid().ToByteArray();
             var randomBytes = new byte[16];
 
@@ -24,19 +24,19 @@ public class SerialNumberService : ISerialNumberService
                 rng.GetBytes(randomBytes);
             }
 
-            var combinedBytes = new byte[8 + uuid.Length + randomBytes.Length];
-
-            Array.Copy(BitConverter.GetBytes(timestamp), 0, combinedBytes, 0, 8);
-            Array.Copy(uuid, 0, combinedBytes, 8, uuid.Length);
-            Array.Copy(randomBytes, 0, combinedBytes, 8 + uuid.Length, randomBytes.Length);
+            var combinedBytes = new byte[timestamp.Length + uuid.Length + randomBytes.Length];
+            
+            Array.Copy(timestamp, 0, combinedBytes, 0, timestamp.Length);
+            Array.Copy(uuid, 0, combinedBytes, timestamp.Length, uuid.Length);
+            Array.Copy(randomBytes, 0, combinedBytes, timestamp.Length + uuid.Length, randomBytes.Length);
 
             var hashedBytes = SHA3_256.IsSupported ? SHA3_256.HashData(combinedBytes) : SHA256.HashData(combinedBytes);
-            
-            return Result<byte[]>.Success(hashedBytes);
+
+            return Result.Ok(hashedBytes);
         }
         catch (Exception ex)
         {
-            return Result<byte[]>.Failure("Failed to generate serial number.", exception: ex);
+            return Result.Fail<byte[]>("Failed to generate serial number.").WithError(ex.Message);
         }
     }
 }

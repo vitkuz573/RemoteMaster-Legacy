@@ -3,8 +3,8 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
+using FluentResults;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Shared.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;
@@ -19,34 +19,46 @@ public class RemoteSchtasksService(INetworkDriveService networkDriveService) : I
 
         try
         {
-            if (!IsAdministrativeShareAvailable(remoteMachineName, username, password).IsSuccess)
+            var adminShareResult = IsAdministrativeShareAvailable(remoteMachineName, username, password);
+            
+            if (adminShareResult.IsFailed)
             {
-                return Result.Failure($"Administrative share C$ on {remoteMachineName} is not available.");
+                return Result.Fail($"Administrative share C$ on {remoteMachineName} is not available.");
             }
 
             var remoteSharePath = $@"\\{remoteMachineName}\C$";
-
             var mapResult = networkDriveService.MapNetworkDrive(remoteSharePath, username, password);
-                
-            if (!mapResult.IsSuccess)
+
+            if (mapResult.IsFailed)
             {
-                return Result.Failure($"Failed to map network drive. {mapResult.Errors.First().Message}");
+                return Result.Fail($"Failed to map network drive. {mapResult.Errors.First().Message}");
             }
 
             var fullRemoteFilePath = Path.Combine(remoteSharePath, destinationFolderPath, Path.GetFileName(sourceFilePath));
+            
             File.Copy(sourceFilePath, fullRemoteFilePath, true);
 
-            ExecuteRemoteFile(remoteMachineName, fullRemoteFilePath, username, password, arguments);
+            var executeResult = ExecuteRemoteFile(remoteMachineName, fullRemoteFilePath, username, password, arguments);
+            
+            if (executeResult.IsFailed)
+            {
+                return executeResult;
+            }
 
             var cancelResult = networkDriveService.CancelNetworkDrive(remoteSharePath);
-                
-            return !cancelResult.IsSuccess ? Result.Failure($"Failed to cancel network drive. {cancelResult.Errors.First().Message}") : Result.Success();
+            
+            if (cancelResult.IsFailed)
+            {
+                return Result.Fail($"Failed to cancel network drive. {cancelResult.Errors.First().Message}");
+            }
+
+            return Result.Ok();
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Error: {Message}", ex.Message);
 
-            return Result.Failure($"Error: {ex.Message}");
+            return Result.Fail($"Error: {ex.Message}").WithError(ex.Message);
         }
     }
 
@@ -55,39 +67,52 @@ public class RemoteSchtasksService(INetworkDriveService networkDriveService) : I
         try
         {
             var sharePath = $@"\\{remoteMachineName}\C$";
-
             var mapResult = networkDriveService.MapNetworkDrive(sharePath, username, password);
 
-            if (!mapResult.IsSuccess)
+            if (mapResult.IsFailed)
             {
-                return Result.Failure("Failed to map network drive.");
+                return Result.Fail("Failed to map network drive.");
             }
 
             var cancelResult = networkDriveService.CancelNetworkDrive(sharePath);
+            
+            if (cancelResult.IsFailed)
+            {
+                return Result.Fail("Failed to cancel network drive.");
+            }
 
-            return !cancelResult.IsSuccess ? Result.Failure("Failed to cancel network drive.") : Result.Success();
+            return Result.Ok();
         }
         catch (Exception ex)
         {
-            return Result.Failure($"Error checking administrative share: {ex.Message}");
+            return Result.Fail($"Error checking administrative share: {ex.Message}").WithError(ex.Message);
         }
     }
 
-    private static void ExecuteRemoteFile(string remoteMachineName, string remoteFilePath, string? username, string? password, string? arguments)
+    private static Result ExecuteRemoteFile(string remoteMachineName, string remoteFilePath, string? username, string? password, string? arguments)
     {
-        const string taskName = "RunRemoteFile";
-
-        var taskCommand = $"/create /s {remoteMachineName} /tn {taskName} /tr \"{remoteFilePath} {arguments}\" /sc once /st 00:00 /ru \"SYSTEM\"";
-        var runCommand = $"/run /s {remoteMachineName} /tn {taskName}";
-
-        if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
+        try
         {
-            taskCommand += $" /u {username} /p \"{password}\"";
-            runCommand += $" /u {username} /p \"{password}\"";
-        }
+            const string taskName = "RunRemoteFile";
 
-        ExecuteCommand("schtasks", taskCommand);
-        ExecuteCommand("schtasks", runCommand);
+            var taskCommand = $"/create /s {remoteMachineName} /tn {taskName} /tr \"{remoteFilePath} {arguments}\" /sc once /st 00:00 /ru \"SYSTEM\"";
+            var runCommand = $"/run /s {remoteMachineName} /tn {taskName}";
+
+            if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
+            {
+                taskCommand += $" /u {username} /p \"{password}\"";
+                runCommand += $" /u {username} /p \"{password}\"";
+            }
+
+            ExecuteCommand("schtasks", taskCommand);
+            ExecuteCommand("schtasks", runCommand);
+
+            return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            return Result.Fail($"Failed to execute remote file. {ex.Message}").WithError(ex.Message);
+        }
     }
 
     private static void ExecuteCommand(string command, string arguments)

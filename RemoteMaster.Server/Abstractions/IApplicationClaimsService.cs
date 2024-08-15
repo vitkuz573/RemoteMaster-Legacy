@@ -3,9 +3,8 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Linq.Expressions;
+using FluentResults;
 using RemoteMaster.Server.Entities;
-using RemoteMaster.Server.Models;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Abstractions;
 

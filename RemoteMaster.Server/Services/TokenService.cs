@@ -7,6 +7,7 @@ using System.IO.Abstractions;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using FluentResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -17,7 +18,6 @@ using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Enums;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Options;
-using RemoteMaster.Shared.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;
@@ -37,30 +37,32 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         if (user == null)
         {
-            return Result<TokenData>.Failure("User not found");
+            return Result.Fail<TokenData>("User not found");
         }
 
         var ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
 
         var claimsResult = await claimsService.GetClaimsForUserAsync(user);
-        
-        if (!claimsResult.IsSuccess)
+
+        if (claimsResult.IsFailed)
         {
-            return Result<TokenData>.Failure([.. claimsResult.Errors]);
+            return Result.Fail<TokenData>(claimsResult.Errors.Select(e => e.Message).ToArray());
         }
 
         var accessTokenResult = await GenerateAccessTokenAsync(claimsResult.Value);
-        
-        if (!accessTokenResult.IsSuccess)
+
+        if (accessTokenResult.IsFailed)
         {
-            return Result<TokenData>.Failure([.. accessTokenResult.Errors]);
+            return Result.Fail<TokenData>(accessTokenResult.Errors.Select(e => e.Message).ToArray());
         }
 
         var refreshTokenResult = oldRefreshToken == null
             ? await GenerateRefreshTokenAsync(user, ipAddress)
             : await ReplaceRefreshToken(oldRefreshToken, user, ipAddress);
 
-        return !refreshTokenResult.IsSuccess ? Result<TokenData>.Failure([.. refreshTokenResult.Errors]) : Result<TokenData>.Success(CreateTokenData(accessTokenResult.Value, refreshTokenResult.Value.Token));
+        return refreshTokenResult.IsFailed
+            ? Result.Fail<TokenData>(refreshTokenResult.Errors.Select(e => e.Message).ToArray())
+            : Result.Ok(CreateTokenData(accessTokenResult.Value, refreshTokenResult.Value.Token));
     }
 
     private static TokenData CreateTokenData(string accessToken, string refreshToken)
@@ -78,7 +80,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
     {
         if (claims.IsNullOrEmpty())
         {
-            return Result<string>.Failure("Claims cannot be null or empty");
+            return Result.Fail<string>("Claims cannot be null or empty");
         }
 
 #pragma warning disable CA2000
@@ -97,7 +99,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         {
             Log.Error("Failed to decrypt or import the private key: {Message}.", ex.Message);
 
-            return Result<string>.Failure("Failed to decrypt or import the private key.", exception: ex);
+            return Result.Fail<string>("Failed to decrypt or import the private key.").WithError(ex.Message);
         }
 
         var tokenHandler = new JwtSecurityTokenHandler();
@@ -112,7 +114,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         var token = tokenHandler.CreateToken(tokenDescriptor);
 
-        return Result<string>.Success(tokenHandler.WriteToken(token));
+        return Result.Ok(tokenHandler.WriteToken(token));
     }
 
     private async Task<Result<RefreshToken>> GenerateRefreshTokenAsync(ApplicationUser user, string ipAddress)
@@ -130,7 +132,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         await context.SaveChangesAsync();
 
-        return Result<RefreshToken>.Success(refreshToken);
+        return Result.Ok(refreshToken);
     }
 
     private async Task<Result<RefreshToken>> ReplaceRefreshToken(string refreshToken, ApplicationUser user, string ipAddress)
@@ -141,14 +143,14 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         {
             Log.Warning("Refresh token is invalid, revoked, or expired.");
 
-            return Result<RefreshToken>.Failure("Invalid refresh token.");
+            return Result.Fail<RefreshToken>("Invalid refresh token.");
         }
 
         var newRefreshTokenResult = await GenerateRefreshTokenAsync(user, ipAddress);
 
-        if (!newRefreshTokenResult.IsSuccess)
+        if (newRefreshTokenResult.IsFailed)
         {
-            return Result<RefreshToken>.Failure([.. newRefreshTokenResult.Errors]);
+            return Result.Fail<RefreshToken>(newRefreshTokenResult.Errors.Select(e => e.Message).ToArray());
         }
 
         refreshTokenEntity.Revoked = DateTime.UtcNow;
@@ -158,7 +160,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         await context.SaveChangesAsync();
 
-        return Result<RefreshToken>.Success(newRefreshTokenResult.Value);
+        return Result.Ok(newRefreshTokenResult.Value);
     }
 
     private async Task<Result> RevokeToken(RefreshToken token, TokenRevocationReason reason)
@@ -183,8 +185,8 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         }
 
         await context.SaveChangesAsync();
-        
-        return Result.Success();
+
+        return Result.Ok();
     }
 
     public async Task<Result> RevokeAllRefreshTokensAsync(string userId, TokenRevocationReason revocationReason)
@@ -195,7 +197,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         if (user == null)
         {
-            return Result.Failure("User not found");
+            return Result.Fail("User not found");
         }
 
         var now = DateTime.UtcNow;
@@ -207,14 +209,14 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         {
             Log.Information("No active refresh tokens found for revocation.");
 
-            return Result.Failure("No active refresh tokens found for revocation.");
+            return Result.Fail("No active refresh tokens found for revocation.");
         }
 
         foreach (var token in refreshTokens)
         {
             var result = await RevokeToken(token, revocationReason);
 
-            if (!result.IsSuccess)
+            if (result.IsFailed)
             {
                 return result;
             }
@@ -224,7 +226,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         Log.Information($"All refresh tokens for user {userId} have been revoked. Reason: {revocationReason}");
 
-        return Result.Success();
+        return Result.Ok();
     }
 
     public async Task<Result> CleanUpExpiredRefreshTokens()
@@ -240,7 +242,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         {
             Log.Information("No expired or revoked tokens found for cleanup.");
 
-            return Result.Failure("No expired or revoked tokens found for cleanup.");
+            return Result.Fail("No expired or revoked tokens found for cleanup.");
         }
 
         context.RemoveRange(expiredTokens);
@@ -253,15 +255,15 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         await context.SaveChangesAsync();
 
         Log.Information("Cleaned up expired or revoked refresh tokens.");
-        
-        return Result.Success();
+
+        return Result.Ok();
     }
 
     public Result IsTokenValid(string accessToken)
     {
         if (string.IsNullOrEmpty(accessToken))
         {
-            return Result.Failure("Access token cannot be null or empty");
+            return Result.Fail("Access token cannot be null or empty");
         }
 
         var tokenHandler = new JwtSecurityTokenHandler();
@@ -283,13 +285,13 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         {
             tokenHandler.ValidateToken(accessToken, validationParameters, out var validatedToken);
 
-            return validatedToken == null ? Result.Failure("Invalid token") : Result.Success();
+            return validatedToken == null ? Result.Fail("Invalid token") : Result.Ok();
         }
         catch (Exception ex)
         {
             Log.Error("Token validation failed: {Message}.", ex.Message);
 
-            return Result.Failure("Token validation failed", exception: ex);
+            return Result.Fail("Token validation failed").WithError(ex.Message);
         }
     }
 
@@ -309,7 +311,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
     {
         if (string.IsNullOrEmpty(refreshToken))
         {
-            return Result.Failure("Refresh token cannot be null or empty");
+            return Result.Fail("Refresh token cannot be null or empty");
         }
 
         var user = context.Users
@@ -318,6 +320,6 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         var tokenEntity = user?.RefreshTokens.SingleOrDefault(rt => rt.Token == refreshToken);
 
-        return tokenEntity is not { IsActive: true } ? Result.Failure("Invalid or inactive refresh token") : Result.Success();
+        return tokenEntity is not { IsActive: true } ? Result.Fail("Invalid or inactive refresh token") : Result.Ok();
     }
 }

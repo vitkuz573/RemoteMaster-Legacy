@@ -10,51 +10,69 @@ namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 
 public partial class ManageCertificateAuthority
 {
-    private string _subject;
+    private string _subject = string.Empty;
     private int _keySize;
-    private string _serialNumber;
-    private string _signatureAlgorithm;
+    private string _serialNumber = string.Empty;
+    private string _signatureAlgorithm = string.Empty;
     private DateTime _issueDate;
     private DateTime _expiryDate;
-    private string _exportPassword;
+    private string _exportPassword = string.Empty;
 
     protected override void OnInitialized()
     {
-        var caCertificate = CaCertificateService.GetCaCertificate(X509ContentType.Pfx);
+        var caCertificateResult = CaCertificateService.GetCaCertificate(X509ContentType.Pfx);
 
-        var caPrivateKey = caCertificate.GetRSAPrivateKey();
+        if (caCertificateResult.IsSuccess)
+        {
+            var caCertificate = caCertificateResult.Value;
+            var caPrivateKey = caCertificate.GetRSAPrivateKey();
 
-        _subject = caCertificate.Subject;
-        _keySize = caPrivateKey.KeySize;
-        _serialNumber = caCertificate.SerialNumber;
-        _signatureAlgorithm = caCertificate.SignatureAlgorithm.FriendlyName;
-        _issueDate = caCertificate.NotBefore;
-        _expiryDate = caCertificate.NotAfter;
+            _subject = caCertificate.Subject;
+            _keySize = caPrivateKey.KeySize;
+            _serialNumber = caCertificate.SerialNumber;
+            _signatureAlgorithm = caCertificate.SignatureAlgorithm.FriendlyName;
+            _issueDate = caCertificate.NotBefore;
+            _expiryDate = caCertificate.NotAfter;
+        }
+        else
+        {
+            Log.Error($"Error retrieving CA certificate: {caCertificateResult.Errors.First().Message}");
+        }
     }
 
     private async Task ExportCaCertificateAsync()
     {
         try
         {
-            var caCertificate = CaCertificateService.GetCaCertificate(X509ContentType.Pfx);
+            var caCertificateResult = CaCertificateService.GetCaCertificate(X509ContentType.Pfx);
 
-            if (caCertificate.HasPrivateKey)
+            if (caCertificateResult.IsSuccess)
             {
-                var pfxBytes = caCertificate.Export(X509ContentType.Pfx, _exportPassword);
-                var base64Pfx = Convert.ToBase64String(pfxBytes);
+                var caCertificate = caCertificateResult.Value;
 
-                var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/fileUtils.js");
+                if (caCertificate.HasPrivateKey)
+                {
+                    var pfxBytes = caCertificate.Export(X509ContentType.Pfx, _exportPassword);
+                    var base64Pfx = Convert.ToBase64String(pfxBytes);
 
-                await module.InvokeVoidAsync("downloadDataAsFile", base64Pfx, $"{_subject}.pfx", "application/x-pkcs12;base64");
+                    var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/fileUtils.js");
+
+                    await module.InvokeVoidAsync("downloadDataAsFile", base64Pfx, $"{_subject}.pfx", "application/x-pkcs12;base64");
+                }
+                else
+                {
+                    throw new InvalidOperationException("The certificate does not contain a private key.");
+                }
             }
             else
             {
-                throw new InvalidOperationException("The certificate does not contain a private key.");
+                Log.Error($"Error retrieving CA certificate for export: {caCertificateResult.Errors.First().Message}");
             }
         }
         catch (Exception ex)
         {
             Log.Error($"Error exporting certificate: {ex.Message}");
+
             throw;
         }
     }

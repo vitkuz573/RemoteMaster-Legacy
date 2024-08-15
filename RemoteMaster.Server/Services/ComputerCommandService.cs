@@ -3,12 +3,12 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Collections.Concurrent;
+using FluentResults;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using Polly;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Entities;
-using RemoteMaster.Shared.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;
@@ -44,13 +44,13 @@ public class ComputerCommandService(IJSRuntime jsRuntime, [FromKeyedServices("Re
                 }
             }
 
-            return Result.Success();
+            return Result.Ok();
         }
         catch (Exception ex)
         {
             Log.Error(ex, "An error occurred while executing a command on computers.");
-            
-            return Result.Failure("An error occurred while executing a command on computers.", exception: ex);
+
+            return Result.Fail("An error occurred while executing a command on computers.").WithError(ex.Message);
         }
     }
 }

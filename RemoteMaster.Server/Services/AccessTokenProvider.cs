@@ -2,9 +2,9 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using FluentResults;
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
 
@@ -21,7 +21,7 @@ public class AccessTokenProvider(ITokenService tokenService, ITokenStorageServic
 
             if (tokenValidResult.IsSuccess)
             {
-                return Result<string?>.Success(accessTokenResult.Value);
+                return Result.Ok<string?>(accessTokenResult.Value);
             }
         }
 
@@ -35,7 +35,7 @@ public class AccessTokenProvider(ITokenService tokenService, ITokenStorageServic
             {
                 var tokenDataResult = await tokenService.GenerateTokensAsync(userId, refreshTokenResult.Value);
 
-                if (tokenDataResult is { IsSuccess: true, Value: not null })
+                if (tokenDataResult.IsSuccess && tokenDataResult.Value is not null)
                 {
                     var tokenData = tokenDataResult.Value;
 
@@ -43,15 +43,16 @@ public class AccessTokenProvider(ITokenService tokenService, ITokenStorageServic
 
                     if (storeTokensResult.IsSuccess)
                     {
-                        return Result<string?>.Success(tokenData.AccessToken);
+                        return Result.Ok<string?>(tokenData.AccessToken);
                     }
                 }
             }
         }
 
         await tokenStorageService.ClearTokensAsync(userId);
+
         navigationManager.NavigateTo("/Account/Logout", true);
 
-        return Result<string?>.Failure("Failed to retrieve or refresh access token.");
+        return Result.Fail<string?>("Failed to retrieve or refresh access token.");
     }
 }
