@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.VisualStudio.JavaScript.Sdk/1.0.784122">
+  <PropertyGroup>
+    <BuildCommand>npm run watch</BuildCommand>
+    <PublishCommand>npm run build</PublishCommand>
+  </PropertyGroup>
+</Project>
