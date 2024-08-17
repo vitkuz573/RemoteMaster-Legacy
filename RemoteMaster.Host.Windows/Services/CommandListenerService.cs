@@ -14,12 +14,14 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class CommandListenerService : IHostedService
 {
+    private readonly IHostConfigurationService _hostConfigurationService;
     private readonly IUserInstanceService _userInstanceService;
     private HubConnection? _connection;
     private readonly SemaphoreSlim _connectionLock = new(1, 1);
 
-    public CommandListenerService(IUserInstanceService userInstanceService)
+    public CommandListenerService(IHostConfigurationService hostConfigurationService, IUserInstanceService userInstanceService)
     {
+        _hostConfigurationService = hostConfigurationService;
         _userInstanceService = userInstanceService;
         _userInstanceService.UserInstanceCreated += OnUserInstanceCreated;
     }
@@ -73,19 +75,13 @@ public class CommandListenerService : IHostedService
 
             await Task.Delay(5000);
 
-#pragma warning disable CA2000
-            var httpClientHandler = new HttpClientHandler
-            {
-                ServerCertificateCustomValidationCallback = (_, _, _, _) => true
-            };
-#pragma warning restore CA2000
-
             Log.Information("Creating HubConnection.");
 
+            var hostConfiguration = await _hostConfigurationService.LoadConfigurationAsync(false);
+
             _connection = new HubConnectionBuilder()
-                .WithUrl("https://127.0.0.1:5001/hubs/control", options =>
+                .WithUrl($"https://{hostConfiguration.Host.IpAddress}:5001/hubs/control", options =>
                 {
-                    options.HttpMessageHandlerFactory = _ => httpClientHandler;
                     options.Headers.Add("X-Service-Flag", "true");
                 })
                 .AddMessagePackProtocol()
