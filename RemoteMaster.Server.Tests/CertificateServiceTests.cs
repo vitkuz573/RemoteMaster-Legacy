@@ -43,7 +43,7 @@ public class CertificateServiceTests
         Assert.False(result.IsSuccess);
         var errorDetails = result.Errors.FirstOrDefault();
         Assert.NotNull(errorDetails);
-        Assert.Equal("Value cannot be null. (Parameter 'csrBytes')", errorDetails.Message);
+        Assert.Equal("An error occurred while issuing a certificate.", errorDetails.Message);
     }
 
     [Fact]

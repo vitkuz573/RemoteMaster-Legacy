@@ -85,7 +85,7 @@ public class CertificateService(IHostInformationService hostInformationService, 
         {
             Log.Error(ex, "An error occurred while issuing a certificate.");
             
-            return Result.Fail<X509Certificate2>("An error occurred while issuing a certificate.").WithError(ex.Message);
+            return Result.Fail(new Error("An error occurred while issuing a certificate.").CausedBy(ex));
         }
     }
 }
