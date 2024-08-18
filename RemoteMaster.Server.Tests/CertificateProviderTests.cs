@@ -4,6 +4,7 @@
 
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using FluentResults;
 using Microsoft.Extensions.Options;
 using Moq;
 using RemoteMaster.Server.Options;
@@ -88,9 +89,9 @@ public class CertificateProviderTests
         Assert.Equal("Error while retrieving CA certificate.", errorDetails.Message);
 
         // Check if exception is included in Reasons
-        var exceptionReason = errorDetails.Metadata.Values.OfType<Exception>().FirstOrDefault();
-        Assert.NotNull(exceptionReason);
-        Assert.Contains("Test exception", exceptionReason.Message);
+        var exceptionError = errorDetails.Reasons.OfType<ExceptionalError>().FirstOrDefault();
+        Assert.NotNull(exceptionError);
+        Assert.Contains("Test exception", exceptionError.Exception.Message);
     }
 
     private static X509Certificate2 CreateTestCertificateWithPrivateKey()

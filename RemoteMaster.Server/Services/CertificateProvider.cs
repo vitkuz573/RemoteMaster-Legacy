@@ -29,8 +29,7 @@ public class CertificateProvider(IOptions<CertificateOptions> options, ICertific
         }
         catch (Exception ex)
         {
-            return Result.Fail<X509Certificate2>("Error while retrieving CA certificate.")
-                         .WithError(ex.Message);
+            return Result.Fail(new Error("Error while retrieving CA certificate.").CausedBy(ex));
         }
     }
 }
