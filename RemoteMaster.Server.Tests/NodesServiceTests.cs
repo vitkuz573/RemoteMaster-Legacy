@@ -9,7 +9,6 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Services;
-using Xunit;
 using Xunit.Abstractions;
 
 namespace RemoteMaster.Server.Tests;
@@ -348,10 +347,12 @@ public class NodesServiceTests : IDisposable
 
         var nonExistentParent = new OrganizationalUnit { Id = Guid.NewGuid(), Name = "NonExistentParent" };
 
-        // Act & Assert
+        // Act
         var result = await databaseService.MoveNodeAsync(node, nonExistentParent);
+
+        // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains("New parent not found or is invalid.", result.Errors.First().Message);
+        Assert.Contains(result.Errors, error => error.Message.Contains("New parent not found or is invalid."));
     }
 
     [Fact]
@@ -415,10 +416,12 @@ public class NodesServiceTests : IDisposable
         context.OrganizationalUnits.Add(node);
         await context.SaveChangesAsync();
 
-        // Act & Assert
+        // Act
         var result = await databaseService.MoveNodeAsync(node, node);
+
+        // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains("Cannot move a node to itself.", result.Errors.First().Message);
+        Assert.Contains(result.Errors, error => error.Message.Contains("Cannot move a node to itself."));
     }
 
     [Fact]
