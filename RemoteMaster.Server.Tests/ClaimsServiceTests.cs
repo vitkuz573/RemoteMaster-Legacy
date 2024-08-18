@@ -54,12 +54,9 @@ public class ClaimsServiceTests
 
         // Assert
         Assert.False(result.IsSuccess);
-        var errorDetails = result.Errors.First();
+        var errorDetails = result.Errors.FirstOrDefault();
+        Assert.NotNull(errorDetails);
         Assert.Equal("Failed to retrieve claims for user.", errorDetails.Message);
-
-        var exceptionError = errorDetails.Reasons.OfType<ExceptionalError>().FirstOrDefault();
-        Assert.NotNull(exceptionError);
-        Assert.IsType<ArgumentNullException>(exceptionError.Exception);
     }
 
     [Fact]

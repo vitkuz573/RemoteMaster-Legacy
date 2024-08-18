@@ -45,8 +45,7 @@ public class ClaimsService(UserManager<ApplicationUser> userManager, RoleManager
         }
         catch (Exception ex)
         {
-            return Result.Fail<List<Claim>>("Failed to retrieve claims for user.")
-                         .WithError(ex.Message);
+            return Result.Fail(new Error("Failed to retrieve claims for user.").CausedBy(ex));
         }
     }
 }
