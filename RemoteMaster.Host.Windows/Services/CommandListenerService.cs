@@ -29,7 +29,7 @@ public class CommandListenerService : IHostedService
     public Task StartAsync(CancellationToken cancellationToken)
     {
         Log.Information("CommandListenerService started.");
-
+        
         return Task.CompletedTask;
     }
 
@@ -38,14 +38,14 @@ public class CommandListenerService : IHostedService
         Log.Information("Stopping CommandListenerService.");
 
         await _connectionLock.WaitAsync(cancellationToken);
-
+        
         try
         {
             if (_connection != null)
             {
                 await _connection.StopAsync(cancellationToken);
                 await _connection.DisposeAsync();
-
+                
                 _connection = null;
             }
         }
@@ -58,7 +58,7 @@ public class CommandListenerService : IHostedService
     private async void OnUserInstanceCreated(object? sender, UserInstanceCreatedEventArgs e)
     {
         Log.Information("UserInstanceCreated event received.");
-
+        
         await StartConnectionAsync();
     }
 
@@ -75,7 +75,7 @@ public class CommandListenerService : IHostedService
 
             await Task.Delay(5000);
 
-            Log.Information("Creating HubConnection.");
+            Log.Debug("Creating HubConnection.");
 
             var hostConfiguration = await _hostConfigurationService.LoadConfigurationAsync(false);
 
@@ -87,11 +87,11 @@ public class CommandListenerService : IHostedService
                 .AddMessagePackProtocol()
                 .Build();
 
-            Log.Information("HubConnection created, setting up ReceiveCommand handler.");
+            Log.Debug("HubConnection created, setting up ReceiveCommand handler.");
 
             _connection.On<string>("ReceiveCommand", command =>
             {
-                Log.Information("Invoked with command: {Command}.", command);
+                Log.Debug("Received command: {Command}.", command);
 
                 if (command != "CtrlAltDel")
                 {
@@ -105,7 +105,7 @@ public class CommandListenerService : IHostedService
             _connection.Closed += async error =>
             {
                 Log.Warning("Connection closed: {Error}.", error?.Message);
-
+                
                 await Task.Delay(5000);
                 await StartConnectionAsync();
             };
@@ -113,22 +113,20 @@ public class CommandListenerService : IHostedService
             _connection.Reconnecting += error =>
             {
                 Log.Warning("Connection reconnecting: {Error}.", error?.Message);
-
+                
                 return Task.CompletedTask;
             };
 
             _connection.Reconnected += connectionId =>
             {
                 Log.Information("Connection reconnected: {ConnectionId}.", connectionId);
-
+                
                 return Task.CompletedTask;
             };
 
             Log.Information("Starting connection to the hub.");
 
             await _connection.StartAsync();
-
-            await Task.Delay(2000);
 
             if (_connection.State == HubConnectionState.Connected)
             {
