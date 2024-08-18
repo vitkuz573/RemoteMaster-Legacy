@@ -4,13 +4,12 @@
 
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using FluentResults;
 using Moq;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Services;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.DTOs;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Tests;
 
@@ -44,7 +43,7 @@ public class CertificateServiceTests
         Assert.False(result.IsSuccess);
         var errorDetails = result.Errors.FirstOrDefault();
         Assert.NotNull(errorDetails);
-        Assert.IsType<ArgumentNullException>(errorDetails.Exception);
+        Assert.Equal("Value cannot be null. (Parameter 'csrBytes')", errorDetails.Message);
     }
 
     [Fact]
@@ -54,7 +53,7 @@ public class CertificateServiceTests
         var csrBytes = GenerateCsrBytes(true);
         using var caCertificate = GenerateCaCertificate();
 
-        _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(caCertificate);
+        _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(Result.Ok(caCertificate));
 
         // Act
         var result = _certificateService.IssueCertificate(csrBytes);
@@ -63,8 +62,7 @@ public class CertificateServiceTests
         Assert.False(result.IsSuccess);
         var errorDetails = result.Errors.FirstOrDefault();
         Assert.NotNull(errorDetails);
-        Assert.IsType<InvalidOperationException>(errorDetails.Exception);
-        Assert.Equal("CSR for CA certificates are not allowed.", errorDetails.Exception.Message);
+        Assert.Equal("CSR for CA certificates are not allowed.", errorDetails.Message);
     }
 
     [Fact]
@@ -74,9 +72,9 @@ public class CertificateServiceTests
         var csrBytes = GenerateCsrBytes(false);
         using var caCertificate = GenerateCaCertificate();
         var computer = new ComputerDto("localhost", "127.0.0.1", "00-14-22-01-23-45");
-        var serialNumber = Result<byte[]>.Success([0x01, 0x02, 0x03, 0x04]);
+        var serialNumber = Result.Ok(new byte[] { 0x01, 0x02, 0x03, 0x04 });
 
-        _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(caCertificate);
+        _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(Result.Ok(caCertificate));
         _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(computer);
         _serialNumberServiceMock.Setup(x => x.GenerateSerialNumber()).Returns(serialNumber);
 
@@ -85,8 +83,8 @@ public class CertificateServiceTests
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Value);
-        Assert.Equal(caCertificate.SubjectName.Name, result.Value.Issuer);
+        Assert.NotNull(result.ValueOrDefault);
+        Assert.Equal(caCertificate.SubjectName.Name, result.ValueOrDefault.Issuer);
     }
 
     [Fact]
@@ -96,9 +94,9 @@ public class CertificateServiceTests
         var csrBytes = GenerateMinimalValidCsrBytes();
         using var caCertificate = GenerateCaCertificate();
         var computer = new ComputerDto("localhost", "127.0.0.1", "00-14-22-01-23-45");
-        var serialNumber = Result<byte[]>.Success([0x01, 0x02, 0x03, 0x04]);
+        var serialNumber = Result.Ok(new byte[] { 0x01, 0x02, 0x03, 0x04 });
 
-        _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(caCertificate);
+        _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(Result.Ok(caCertificate));
         _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(computer);
         _serialNumberServiceMock.Setup(x => x.GenerateSerialNumber()).Returns(serialNumber);
 
@@ -107,8 +105,8 @@ public class CertificateServiceTests
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Value);
-        Assert.Equal(caCertificate.SubjectName.Name, result.Value.Issuer);
+        Assert.NotNull(result.ValueOrDefault);
+        Assert.Equal(caCertificate.SubjectName.Name, result.ValueOrDefault.Issuer);
     }
 
     [Fact]
@@ -118,9 +116,9 @@ public class CertificateServiceTests
         var csrBytes = GenerateCsrBytesWithExtensions();
         using var caCertificate = GenerateCaCertificate();
         var computer = new ComputerDto("localhost", "127.0.0.1", "00-14-22-01-23-45");
-        var serialNumber = Result<byte[]>.Success([0x01, 0x02, 0x03, 0x04]);
+        var serialNumber = Result.Ok(new byte[] { 0x01, 0x02, 0x03, 0x04 });
 
-        _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(caCertificate);
+        _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(Result.Ok(caCertificate));
         _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(computer);
         _serialNumberServiceMock.Setup(x => x.GenerateSerialNumber()).Returns(serialNumber);
 
@@ -129,8 +127,8 @@ public class CertificateServiceTests
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Value);
-        Assert.Equal(caCertificate.SubjectName.Name, result.Value.Issuer);
+        Assert.NotNull(result.ValueOrDefault);
+        Assert.Equal(caCertificate.SubjectName.Name, result.ValueOrDefault.Issuer);
     }
 
     [Fact]
@@ -141,12 +139,12 @@ public class CertificateServiceTests
         using var caCertificate = GenerateCaCertificate();
         var computer = new ComputerDto("localhost", "127.0.0.1", "00-14-22-01-23-45");
 
-        _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(caCertificate);
+        _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(Result.Ok(caCertificate));
         _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(computer);
 
         _serialNumberServiceMock.SetupSequence(s => s.GenerateSerialNumber())
-            .Returns(Result<byte[]>.Success(Guid.NewGuid().ToByteArray()))
-            .Returns(Result<byte[]>.Success(Guid.NewGuid().ToByteArray()));
+            .Returns(Result.Ok(Guid.NewGuid().ToByteArray()))
+            .Returns(Result.Ok(Guid.NewGuid().ToByteArray()));
 
         var certificateService1 = new CertificateService(
             _hostInformationServiceMock.Object,
@@ -167,9 +165,9 @@ public class CertificateServiceTests
         // Assert
         Assert.True(result1.IsSuccess);
         Assert.True(result2.IsSuccess);
-        Assert.NotNull(result1.Value);
-        Assert.NotNull(result2.Value);
-        Assert.NotEqual(result1.Value.SerialNumber, result2.Value.SerialNumber);
+        Assert.NotNull(result1.ValueOrDefault);
+        Assert.NotNull(result2.ValueOrDefault);
+        Assert.NotEqual(result1.ValueOrDefault.SerialNumber, result2.ValueOrDefault.SerialNumber);
     }
 
     private static byte[] GenerateCsrBytes(bool isCa)

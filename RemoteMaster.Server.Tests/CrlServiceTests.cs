@@ -7,6 +7,7 @@ using System.IO.Abstractions.TestingHelpers;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -14,7 +15,6 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Services;
-using RemoteMaster.Shared.Models;
 using Serilog;
 using Xunit.Abstractions;
 
@@ -89,7 +89,7 @@ public class CrlServiceTests : IDisposable
 
         // Arrange
         using var certificate = CreateTestCertificateWithBasicConstraints();
-        var certificateResult = Result<X509Certificate2>.Success(certificate);
+        var certificateResult = Result.Ok(certificate);
         _certificateProviderMock.Setup(cp => cp.GetIssuerCertificate()).Returns(certificateResult);
 
         var contextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<CertificateDbContext>>();
@@ -108,7 +108,7 @@ public class CrlServiceTests : IDisposable
 
         // Assert
         Assert.True(result.IsSuccess, result.Errors.FirstOrDefault()?.Message);
-        var crlData = result.Value;
+        var crlData = result.ValueOrDefault;
         Assert.NotNull(crlData);
         Assert.NotEmpty(crlData);
     }
@@ -161,7 +161,7 @@ public class CrlServiceTests : IDisposable
 
         // Assert
         Assert.True(result.IsSuccess, result.Errors.FirstOrDefault()?.Message);
-        var metadata = result.Value;
+        var metadata = result.ValueOrDefault;
         Assert.NotNull(metadata);
         Assert.Equal(crlInfo.CrlNumber, metadata.CrlInfo.CrlNumber);
         Assert.Equal(1, metadata.RevokedCertificatesCount);

@@ -2,11 +2,11 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using FluentResults;
 using Moq;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Services;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Tests;
 
@@ -23,8 +23,10 @@ public class AccessTokenProviderTests
         const string userId = "user1";
         const string accessToken = "validAccessToken";
 
-        _mockTokenStorageService.Setup(s => s.GetAccessTokenAsync(userId)).ReturnsAsync(Result<string?>.Success(accessToken));
-        _mockTokenService.Setup(s => s.IsTokenValid(accessToken)).Returns(Result.Success());
+        _mockTokenStorageService.Setup(s => s.GetAccessTokenAsync(userId))
+            .ReturnsAsync(Result.Ok<string?>(accessToken));
+        _mockTokenService.Setup(s => s.IsTokenValid(accessToken))
+            .Returns(Result.Ok());
 
         var provider = new AccessTokenProvider(_mockTokenService.Object, _mockTokenStorageService.Object, _fakeNavigationManager);
 
@@ -33,7 +35,7 @@ public class AccessTokenProviderTests
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Equal(accessToken, result.Value);
+        Assert.Equal(accessToken, result.ValueOrDefault);
     }
 
     [Fact]
@@ -46,12 +48,18 @@ public class AccessTokenProviderTests
         const string newAccessToken = "newAccessToken";
         var tokenData = new TokenData { AccessToken = newAccessToken };
 
-        _mockTokenStorageService.Setup(s => s.GetAccessTokenAsync(userId)).ReturnsAsync(Result<string?>.Success(invalidAccessToken));
-        _mockTokenService.Setup(s => s.IsTokenValid(invalidAccessToken)).Returns(Result.Failure());
-        _mockTokenStorageService.Setup(s => s.GetRefreshTokenAsync(userId)).ReturnsAsync(Result<string?>.Success(validRefreshToken));
-        _mockTokenService.Setup(s => s.IsRefreshTokenValid(validRefreshToken)).Returns(Result.Success());
-        _mockTokenService.Setup(s => s.GenerateTokensAsync(userId, validRefreshToken)).ReturnsAsync(Result<TokenData>.Success(tokenData));
-        _mockTokenStorageService.Setup(s => s.StoreTokensAsync(userId, tokenData)).ReturnsAsync(Result.Success());
+        _mockTokenStorageService.Setup(s => s.GetAccessTokenAsync(userId))
+            .ReturnsAsync(Result.Ok<string?>(invalidAccessToken));
+        _mockTokenService.Setup(s => s.IsTokenValid(invalidAccessToken))
+            .Returns(Result.Fail("Invalid token"));
+        _mockTokenStorageService.Setup(s => s.GetRefreshTokenAsync(userId))
+            .ReturnsAsync(Result.Ok<string?>(validRefreshToken));
+        _mockTokenService.Setup(s => s.IsRefreshTokenValid(validRefreshToken))
+            .Returns(Result.Ok());
+        _mockTokenService.Setup(s => s.GenerateTokensAsync(userId, validRefreshToken))
+            .ReturnsAsync(Result.Ok(tokenData));
+        _mockTokenStorageService.Setup(s => s.StoreTokensAsync(userId, tokenData))
+            .ReturnsAsync(Result.Ok());
 
         var provider = new AccessTokenProvider(_mockTokenService.Object, _mockTokenStorageService.Object, _fakeNavigationManager);
 
@@ -60,7 +68,7 @@ public class AccessTokenProviderTests
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Equal(newAccessToken, result.Value);
+        Assert.Equal(newAccessToken, result.ValueOrDefault);
     }
 
     [Fact]
@@ -71,11 +79,16 @@ public class AccessTokenProviderTests
         const string invalidAccessToken = "invalidAccessToken";
         const string invalidRefreshToken = "invalidRefreshToken";
 
-        _mockTokenStorageService.Setup(s => s.GetAccessTokenAsync(userId)).ReturnsAsync(Result<string?>.Success(invalidAccessToken));
-        _mockTokenService.Setup(s => s.IsTokenValid(invalidAccessToken)).Returns(Result.Failure());
-        _mockTokenStorageService.Setup(s => s.GetRefreshTokenAsync(userId)).ReturnsAsync(Result<string?>.Success(invalidRefreshToken));
-        _mockTokenService.Setup(s => s.IsRefreshTokenValid(invalidRefreshToken)).Returns(Result.Failure());
-        _mockTokenStorageService.Setup(s => s.ClearTokensAsync(userId)).ReturnsAsync(Result.Success());
+        _mockTokenStorageService.Setup(s => s.GetAccessTokenAsync(userId))
+            .ReturnsAsync(Result.Ok<string?>(invalidAccessToken));
+        _mockTokenService.Setup(s => s.IsTokenValid(invalidAccessToken))
+            .Returns(Result.Fail("Invalid token"));
+        _mockTokenStorageService.Setup(s => s.GetRefreshTokenAsync(userId))
+            .ReturnsAsync(Result.Ok<string?>(invalidRefreshToken));
+        _mockTokenService.Setup(s => s.IsRefreshTokenValid(invalidRefreshToken))
+            .Returns(Result.Fail("Invalid refresh token"));
+        _mockTokenStorageService.Setup(s => s.ClearTokensAsync(userId))
+            .ReturnsAsync(Result.Ok());
 
         var provider = new AccessTokenProvider(_mockTokenService.Object, _mockTokenStorageService.Object, _fakeNavigationManager);
 

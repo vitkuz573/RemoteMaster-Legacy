@@ -280,6 +280,10 @@ public class NodesService(ApplicationDbContext applicationDbContext, ILimitCheck
 
             return Result.Ok();
         }
+        catch (InvalidOperationException ex)
+        {
+            return Result.Fail($"Error: Failed to move {typeof(TNode).Name} node to new parent.").WithError(new ExceptionalError(ex.Message, ex));
+        }
         catch (Exception ex)
         {
             return Result.Fail($"Error: Failed to move {typeof(TNode).Name} node to new parent.").WithError(ex.Message);

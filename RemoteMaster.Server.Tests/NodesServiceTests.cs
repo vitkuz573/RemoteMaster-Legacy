@@ -4,23 +4,36 @@
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Services;
+using Xunit;
+using Xunit.Abstractions;
 
 namespace RemoteMaster.Server.Tests;
 
 public class NodesServiceTests : IDisposable
 {
     private readonly ServiceProvider _serviceProvider;
+    private readonly Mock<ILimitChecker> _limitCheckerMock;
+    private readonly ITestOutputHelper _output;
 
-    public NodesServiceTests()
+    public NodesServiceTests(ITestOutputHelper output)
     {
+        _output = output;
+        _limitCheckerMock = new Mock<ILimitChecker>();
+
+        _limitCheckerMock.Setup(x => x.CanAddOrganization(It.IsAny<IQueryable<Organization>>())).Returns(true);
+        _limitCheckerMock.Setup(x => x.CanAddOrganizationalUnit(It.IsAny<Organization>())).Returns(true);
+        _limitCheckerMock.Setup(x => x.CanAddComputer(It.IsAny<OrganizationalUnit>())).Returns(true);
+
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddDbContext<ApplicationDbContext>(options =>
             options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
         serviceCollection.AddScoped<INodesService, NodesService>();
+        serviceCollection.AddSingleton(_limitCheckerMock.Object);
 
         _serviceProvider = serviceCollection.BuildServiceProvider();
     }
@@ -52,7 +65,7 @@ public class NodesServiceTests : IDisposable
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Equal(2, result.Value.Count);
+        Assert.Equal(2, result.ValueOrDefault.Count);
     }
 
     [Fact]
@@ -69,14 +82,49 @@ public class NodesServiceTests : IDisposable
             new() { Id = Guid.NewGuid(), Name = "OU2" }
         };
 
+        _output.WriteLine("Adding organizational units...");
+
         // Act
         var result = await databaseService.AddNodesAsync(organizationalUnits);
 
         // Assert
+        _output.WriteLine("AddNodesAsync result: {0}", result.IsSuccess);
+
         Assert.True(result.IsSuccess);
-        foreach (var addedNode in result.Value)
+        foreach (var addedNode in result.ValueOrDefault)
         {
             var fetchedNode = await context.OrganizationalUnits.FindAsync(addedNode.Id);
+            Assert.NotNull(fetchedNode);
+            Assert.Equal(addedNode.Name, fetchedNode.Name);
+        }
+    }
+
+    [Fact]
+    public async Task AddNodesAsync_AddsComputers()
+    {
+        using var scope = CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var databaseService = scope.ServiceProvider.GetRequiredService<INodesService>();
+
+        // Arrange
+        var computers = new List<Computer>
+        {
+            new() { Id = Guid.NewGuid(), Name = "Comp1", IpAddress = "192.168.0.1", MacAddress = "00:00:00:00:00:01", ParentId = Guid.NewGuid() },
+            new() { Id = Guid.NewGuid(), Name = "Comp2", IpAddress = "192.168.0.2", MacAddress = "00:00:00:00:00:02", ParentId = Guid.NewGuid() }
+        };
+
+        _output.WriteLine("Adding computers...");
+
+        // Act
+        var result = await databaseService.AddNodesAsync(computers);
+
+        // Assert
+        _output.WriteLine("AddNodesAsync result: {0}", result.IsSuccess);
+
+        Assert.True(result.IsSuccess);
+        foreach (var addedNode in result.ValueOrDefault)
+        {
+            var fetchedNode = await context.Computers.FindAsync(addedNode.Id);
             Assert.NotNull(fetchedNode);
             Assert.Equal(addedNode.Name, fetchedNode.Name);
         }
@@ -205,7 +253,7 @@ public class NodesServiceTests : IDisposable
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Equal(new[] { "ParentOU", "ChildOU" }, result.Value);
+        Assert.Equal(new[] { "ParentOU", "ChildOU" }, result.ValueOrDefault);
     }
 
     [Fact]
@@ -253,8 +301,8 @@ public class NodesServiceTests : IDisposable
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Single(result.Value);
-        Assert.Equal("OU1", result.Value.First().Name);
+        Assert.Single(result.ValueOrDefault);
+        Assert.Equal("OU1", result.ValueOrDefault.First().Name);
     }
 
     [Fact]
@@ -278,10 +326,12 @@ public class NodesServiceTests : IDisposable
         context.OrganizationalUnits.Add(parent);
         await context.SaveChangesAsync();
 
-        // Act & Assert
+        // Act
         var result = await databaseService.MoveNodeAsync(organization, parent);
+
+        // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains("Organizations cannot be moved.", result.Errors.First().Exception.Message);
+        Assert.Contains(result.Errors, error => error.Message.Contains("Organizations cannot be moved."));
     }
 
     [Fact]
@@ -301,7 +351,7 @@ public class NodesServiceTests : IDisposable
         // Act & Assert
         var result = await databaseService.MoveNodeAsync(node, nonExistentParent);
         Assert.False(result.IsSuccess);
-        Assert.Contains("New parent not found or is invalid.", result.Errors.First().Exception.Message);
+        Assert.Contains("New parent not found or is invalid.", result.Errors.First().Message);
     }
 
     [Fact]
@@ -368,7 +418,7 @@ public class NodesServiceTests : IDisposable
         // Act & Assert
         var result = await databaseService.MoveNodeAsync(node, node);
         Assert.False(result.IsSuccess);
-        Assert.Contains("Cannot move a node to itself.", result.Errors.First().Exception.Message);
+        Assert.Contains("Cannot move a node to itself.", result.Errors.First().Message);
     }
 
     [Fact]
@@ -405,36 +455,9 @@ public class NodesServiceTests : IDisposable
 
         // Assert
         Assert.True(result.IsSuccess);
-        foreach (var addedNode in result.Value)
+        foreach (var addedNode in result.ValueOrDefault)
         {
             var fetchedNode = await context.Organizations.FindAsync(addedNode.Id);
-            Assert.NotNull(fetchedNode);
-            Assert.Equal(addedNode.Name, fetchedNode.Name);
-        }
-    }
-
-    [Fact]
-    public async Task AddNodesAsync_AddsComputers()
-    {
-        using var scope = CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var databaseService = scope.ServiceProvider.GetRequiredService<INodesService>();
-
-        // Arrange
-        var computers = new List<Computer>
-        {
-            new() { Id = Guid.NewGuid(), Name = "Comp1", IpAddress = "192.168.0.1", MacAddress = "00:00:00:00:00:01", ParentId = Guid.NewGuid() },
-            new() { Id = Guid.NewGuid(), Name = "Comp2", IpAddress = "192.168.0.2", MacAddress = "00:00:00:00:00:02", ParentId = Guid.NewGuid() }
-        };
-
-        // Act
-        var result = await databaseService.AddNodesAsync(computers);
-
-        // Assert
-        Assert.True(result.IsSuccess);
-        foreach (var addedNode in result.Value)
-        {
-            var fetchedNode = await context.Computers.FindAsync(addedNode.Id);
             Assert.NotNull(fetchedNode);
             Assert.Equal(addedNode.Name, fetchedNode.Name);
         }
@@ -451,7 +474,7 @@ public class NodesServiceTests : IDisposable
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Empty(result.Value);
+        Assert.Empty(result.ValueOrDefault);
     }
 
     [Fact]
@@ -475,7 +498,7 @@ public class NodesServiceTests : IDisposable
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Equal(1000, result.Value.Count);
+        Assert.Equal(1000, result.ValueOrDefault.Count);
     }
 
     public void Dispose()

@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Claims;
+using FluentResults;
 using Microsoft.AspNetCore.Identity;
 using Moq;
 using RemoteMaster.Server.Entities;
@@ -53,8 +54,12 @@ public class ClaimsServiceTests
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Equal("Failed to retrieve claims for user.", result.Errors.First().Message);
-        Assert.IsType<ArgumentNullException>(result.Errors.First().Exception);
+        var errorDetails = result.Errors.First();
+        Assert.Equal("Failed to retrieve claims for user.", errorDetails.Message);
+
+        var exceptionError = errorDetails.Reasons.OfType<ExceptionalError>().FirstOrDefault();
+        Assert.NotNull(exceptionError);
+        Assert.IsType<ArgumentNullException>(exceptionError.Exception);
     }
 
     [Fact]

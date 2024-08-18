@@ -34,7 +34,7 @@ public class UdpPacketSenderTests
         Assert.False(result.IsSuccess);
         var errorDetails = result.Errors.FirstOrDefault();
         Assert.NotNull(errorDetails);
-        Assert.IsType<ArgumentNullException>(errorDetails.Exception);
+        Assert.Contains("packet", errorDetails.Message);
     }
 
     [Fact]

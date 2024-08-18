@@ -6,7 +6,6 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Options;
 using Moq;
-using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Options;
 using RemoteMaster.Server.Services;
 using RemoteMaster.Shared.Abstractions;
@@ -39,8 +38,8 @@ public class CertificateProviderTests
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Value);
-        Assert.True(result.Value.HasPrivateKey);
+        Assert.NotNull(result.ValueOrDefault);
+        Assert.True(result.ValueOrDefault.HasPrivateKey);
     }
 
     [Fact]
@@ -52,7 +51,7 @@ public class CertificateProviderTests
 
         var certificateStoreServiceMock = new Mock<ICertificateStoreService>();
         certificateStoreServiceMock.Setup(s => s.GetCertificates(StoreName.Root, StoreLocation.LocalMachine, X509FindType.FindBySubjectName, "NonExistentCA"))
-                                   .Returns([]);
+                                   .Returns(new List<ICertificateWrapper>());
 
         var provider = new CertificateProvider(optionsMock.Object, certificateStoreServiceMock.Object);
 
@@ -63,7 +62,7 @@ public class CertificateProviderTests
         Assert.False(result.IsSuccess);
         var errorDetails = result.Errors.FirstOrDefault();
         Assert.NotNull(errorDetails);
-        Assert.Equal("CA certificate with CommonName 'NonExistentCA' not found.", errorDetails.Message);
+        Assert.Equal($"CA certificate with CommonName 'NonExistentCA' not found.", errorDetails.Message);
     }
 
     [Fact]
@@ -87,7 +86,11 @@ public class CertificateProviderTests
         var errorDetails = result.Errors.FirstOrDefault();
         Assert.NotNull(errorDetails);
         Assert.Equal("Error while retrieving CA certificate.", errorDetails.Message);
-        Assert.Equal("Test exception", errorDetails.Exception?.Message);
+
+        // Check if exception is included in Reasons
+        var exceptionReason = errorDetails.Metadata.Values.OfType<Exception>().FirstOrDefault();
+        Assert.NotNull(exceptionReason);
+        Assert.Contains("Test exception", exceptionReason.Message);
     }
 
     private static X509Certificate2 CreateTestCertificateWithPrivateKey()
