@@ -326,7 +326,7 @@ public class NodesServiceTests : IDisposable
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, error => error.Message.Contains("Organizations cannot be moved."));
+        Assert.Contains(result.Errors, error => error.Reasons.Any(reason => reason.Message.Contains("Organizations cannot be moved.")));
     }
 
     [Fact]
@@ -348,7 +348,7 @@ public class NodesServiceTests : IDisposable
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, error => error.Message.Contains("New parent not found or is invalid."));
+        Assert.Contains(result.Errors, error => error.Reasons.Any(reason => reason.Message.Contains("New parent not found or is invalid.")));
     }
 
     [Fact]
@@ -417,7 +417,7 @@ public class NodesServiceTests : IDisposable
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, error => error.Message.Contains("Cannot move a node to itself."));
+        Assert.Contains(result.Errors, error => error.Reasons.Any(reason => reason.Message.Contains("Cannot move a node to itself.")));
     }
 
     [Fact]

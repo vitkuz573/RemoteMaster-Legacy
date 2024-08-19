@@ -36,7 +36,7 @@ public class NodesService(ApplicationDbContext applicationDbContext, ILimitCheck
         }
         catch (Exception ex)
         {
-            return Result.Fail<IQueryable<T>>("Error: Failed to create query.").WithError(ex.Message);
+            return Result.Fail<IQueryable<T>>(new Error("Error: Failed to create query.").CausedBy(ex));
         }
     }
 
@@ -134,7 +134,7 @@ public class NodesService(ApplicationDbContext applicationDbContext, ILimitCheck
         }
         catch (Exception ex)
         {
-            return Result.Fail<IList<T>>($"Error: Failed to retrieve {typeof(T).Name} nodes.").WithError(ex.Message);
+            return Result.Fail<IList<T>>(new Error($"Error: Failed to retrieve {typeof(T).Name} nodes.").CausedBy(ex));
         }
     }
 
@@ -192,7 +192,7 @@ public class NodesService(ApplicationDbContext applicationDbContext, ILimitCheck
         }
         catch (Exception ex)
         {
-            return Result.Fail<IList<T>>($"Error: Failed to add {typeof(T).Name} nodes.").WithError(ex.Message);
+            return Result.Fail<IList<T>>(new Error($"Error: Failed to add {typeof(T).Name} nodes.").CausedBy(ex));
         }
     }
 
@@ -217,7 +217,7 @@ public class NodesService(ApplicationDbContext applicationDbContext, ILimitCheck
         }
         catch (Exception ex)
         {
-            return Result.Fail($"Error: Failed to remove the {typeof(T).Name} nodes.").WithError(ex.Message);
+            return Result.Fail(new Error($"Error: Failed to remove the {typeof(T).Name} nodes.").CausedBy(ex));
         }
     }
 
@@ -250,7 +250,7 @@ public class NodesService(ApplicationDbContext applicationDbContext, ILimitCheck
         }
         catch (Exception ex)
         {
-            return Result.Fail($"Error: Failed to update the {typeof(T).Name} node.").WithError(ex.Message);
+            return Result.Fail(new Error($"Error: Failed to update the {typeof(T).Name} node.").CausedBy(ex));
         }
     }
 
@@ -282,7 +282,7 @@ public class NodesService(ApplicationDbContext applicationDbContext, ILimitCheck
         }
         catch (Exception ex)
         {
-            return Result.Fail($"Error: Failed to move {typeof(TNode).Name} node to new parent.").WithError(new ExceptionalError(ex.Message, ex));
+            return Result.Fail(new Error($"Error: Failed to move {typeof(TNode).Name} node to new parent.").CausedBy(ex));
         }
     }
 
@@ -309,7 +309,7 @@ public class NodesService(ApplicationDbContext applicationDbContext, ILimitCheck
         }
         catch (Exception ex)
         {
-            return Result.Fail<string[]>($"Error: Failed to get full path for {typeof(T).Name} node.").WithError(ex.Message);
+            return Result.Fail<string[]>(new Error($"Error: Failed to get full path for {typeof(T).Name} node.").CausedBy(ex));
         }
     }
 }
