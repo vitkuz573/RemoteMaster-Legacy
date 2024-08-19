@@ -33,10 +33,11 @@ jobs:
         cd ..
 
     - name: Install .NET dependencies
-      run: dotnet restore
+      run: dotnet restore --ignore-failed-sources --no-cache ./RemoteMaster.sln
 
     - name: Build
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build --configuration Release --no-restore ./RemoteMaster.sln -p:ExcludeProjects=RemoteMaster.Host.Chat/RemoteMaster.Host.Chat.esproj
 
     - name: Run tests
-      run: dotnet test --configuration Release --no-build --verbosity normal
+      run: dotnet test --configuration Release --no-build --verbosity normal ./RemoteMaster.sln -p:ExcludeProjects=RemoteMaster.Host.Chat/RemoteMaster.Host.Chat.esproj
+      
