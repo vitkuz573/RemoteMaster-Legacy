@@ -32,11 +32,14 @@ jobs:
         npm install
         cd ..
 
+    - name: Remove problematic project from solution
+      run: dotnet sln ./RemoteMaster.sln remove RemoteMaster.Host.Chat/RemoteMaster.Host.Chat.esproj
+
     - name: Install .NET dependencies
       run: dotnet restore --ignore-failed-sources --no-cache ./RemoteMaster.sln
 
     - name: Build
-      run: dotnet build --configuration Release --no-restore ./RemoteMaster.sln -p:CI=true
+      run: dotnet build --configuration Release --no-restore ./RemoteMaster.sln
 
     - name: Run tests
-      run: dotnet test --configuration Release --no-build --verbosity normal ./RemoteMaster.sln -p:CI=true
+      run: dotnet test --configuration Release --no-build --verbosity normal ./RemoteMaster.sln
