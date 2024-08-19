@@ -9,28 +9,26 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Services;
-using Xunit.Abstractions;
 
 namespace RemoteMaster.Server.Tests;
 
 public class NodesServiceTests : IDisposable
 {
     private readonly ServiceProvider _serviceProvider;
-    private readonly Mock<ILimitChecker> _limitCheckerMock;
 
     public NodesServiceTests()
     {
-        _limitCheckerMock = new Mock<ILimitChecker>();
+        var limitCheckerMock = new Mock<ILimitChecker>();
 
-        _limitCheckerMock.Setup(x => x.CanAddOrganization(It.IsAny<IQueryable<Organization>>())).Returns(true);
-        _limitCheckerMock.Setup(x => x.CanAddOrganizationalUnit(It.IsAny<Organization>())).Returns(true);
-        _limitCheckerMock.Setup(x => x.CanAddComputer(It.IsAny<OrganizationalUnit>())).Returns(true);
+        limitCheckerMock.Setup(x => x.CanAddOrganization(It.IsAny<IQueryable<Organization>>())).Returns(true);
+        limitCheckerMock.Setup(x => x.CanAddOrganizationalUnit(It.IsAny<Organization>())).Returns(true);
+        limitCheckerMock.Setup(x => x.CanAddComputer(It.IsAny<OrganizationalUnit>())).Returns(true);
 
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddDbContext<ApplicationDbContext>(options =>
             options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
         serviceCollection.AddScoped<INodesService, NodesService>();
-        serviceCollection.AddSingleton(_limitCheckerMock.Object);
+        serviceCollection.AddSingleton(limitCheckerMock.Object);
 
         _serviceProvider = serviceCollection.BuildServiceProvider();
     }
