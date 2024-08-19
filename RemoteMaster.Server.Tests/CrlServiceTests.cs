@@ -28,12 +28,6 @@ public class CrlServiceTests : IDisposable
 
     public CrlServiceTests(ITestOutputHelper output)
     {
-        Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Debug()
-            .WriteTo.Console()
-            .WriteTo.TestOutput(output)
-            .CreateLogger();
-
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddDbContext<CertificateDbContext>(options =>
             options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
