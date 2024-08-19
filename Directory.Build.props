@@ -10,5 +10,13 @@
     <CoverletOutputFormat>cobertura</CoverletOutputFormat>
     <CoverletOutput>./TestResults/coverage/</CoverletOutput>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <ExcludeFromBuild Condition="'$(CI)' == 'true'">True</ExcludeFromBuild>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(ExcludeFromBuild)' == 'True'">
+    <ProjectReference Remove="RemoteMaster.Host.Chat/RemoteMaster.Host.Chat.esproj" />
+  </ItemGroup>
 </Project>
 

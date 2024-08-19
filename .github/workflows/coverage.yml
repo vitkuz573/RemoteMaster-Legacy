@@ -36,8 +36,7 @@ jobs:
       run: dotnet restore --ignore-failed-sources --no-cache ./RemoteMaster.sln
 
     - name: Build
-      run: dotnet build --configuration Release --no-restore ./RemoteMaster.sln -p:ExcludeProjects=RemoteMaster.Host.Chat/RemoteMaster.Host.Chat.esproj
+      run: dotnet build --configuration Release --no-restore ./RemoteMaster.sln -p:CI=true
 
     - name: Run tests
-      run: dotnet test --configuration Release --no-build --verbosity normal ./RemoteMaster.sln -p:ExcludeProjects=RemoteMaster.Host.Chat/RemoteMaster.Host.Chat.esproj
-      
+      run: dotnet test --configuration Release --no-build --verbosity normal ./RemoteMaster.sln -p:CI=true
