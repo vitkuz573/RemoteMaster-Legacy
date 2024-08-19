@@ -17,11 +17,9 @@ public class NodesServiceTests : IDisposable
 {
     private readonly ServiceProvider _serviceProvider;
     private readonly Mock<ILimitChecker> _limitCheckerMock;
-    private readonly ITestOutputHelper _output;
 
-    public NodesServiceTests(ITestOutputHelper output)
+    public NodesServiceTests()
     {
-        _output = output;
         _limitCheckerMock = new Mock<ILimitChecker>();
 
         _limitCheckerMock.Setup(x => x.CanAddOrganization(It.IsAny<IQueryable<Organization>>())).Returns(true);
@@ -489,7 +487,7 @@ public class NodesServiceTests : IDisposable
 
         // Arrange
         var largeNumberOfNodes = new List<OrganizationalUnit>();
-        for (int i = 0; i < 1000; i++)
+        for (var i = 0; i < 1000; i++)
         {
             largeNumberOfNodes.Add(new OrganizationalUnit { Id = Guid.NewGuid(), Name = $"OU{i}" });
         }
