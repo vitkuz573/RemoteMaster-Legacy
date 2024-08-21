@@ -155,12 +155,14 @@ public class NodesService(ApplicationDbContext applicationDbContext, ILimitCheck
                     return Result.Fail<IList<T>>(conflict.Errors.First().Message);
                 }
 
-                if (node is Organization orgNode && !limitChecker.CanAddOrganization(applicationDbContext.Organizations))
+                if (node is Organization orgNode)
                 {
-                    return Result.Fail<IList<T>>("Error: Organization limit reached for the current plan.");
+                    if (!limitChecker.CanAddOrganization())
+                    {
+                        return Result.Fail<IList<T>>("Error: Organization limit reached for the current plan.");
+                    }
                 }
-
-                if (node is OrganizationalUnit ouNode)
+                else if (node is OrganizationalUnit ouNode)
                 {
                     var organization = await applicationDbContext.Organizations
                         .Include(o => o.OrganizationalUnits)
@@ -171,8 +173,7 @@ public class NodesService(ApplicationDbContext applicationDbContext, ILimitCheck
                         return Result.Fail<IList<T>>("Error: Organizational Unit limit reached for the current plan.");
                     }
                 }
-
-                if (node is Computer compNode)
+                else if (node is Computer compNode)
                 {
                     var organizationalUnit = await applicationDbContext.OrganizationalUnits
                         .Include(ou => ou.Computers)

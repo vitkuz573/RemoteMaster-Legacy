@@ -3,12 +3,13 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class LimitChecker(IPlanService planService, IUserPlanProvider userPlanProvider) : ILimitChecker
+public class LimitChecker(IPlanService planService, IUserPlanProvider userPlanProvider, ApplicationDbContext dbContext) : ILimitChecker
 {
     private PlanLimits GetCurrentPlanLimits()
     {
@@ -17,11 +18,12 @@ public class LimitChecker(IPlanService planService, IUserPlanProvider userPlanPr
         return planService.GetPlanLimits(userPlan);
     }
 
-    public bool CanAddOrganization(IEnumerable<Organization> organizations)
+    public bool CanAddOrganization()
     {
         var limits = GetCurrentPlanLimits();
+        var organizationCount = dbContext.Organizations.Count();
 
-        return organizations.Count() < limits.MaxOrganizations;
+        return organizationCount < limits.MaxOrganizations;
     }
 
     public bool CanAddOrganizationalUnit(Organization organization)
@@ -29,8 +31,9 @@ public class LimitChecker(IPlanService planService, IUserPlanProvider userPlanPr
         ArgumentNullException.ThrowIfNull(organization);
 
         var limits = GetCurrentPlanLimits();
-        
-        return organization.OrganizationalUnits.Count < limits.MaxOrganizationalUnitsPerOrganization;
+        var organizationalUnitCount = organization.OrganizationalUnits.Count;
+
+        return organizationalUnitCount < limits.MaxOrganizationalUnitsPerOrganization;
     }
 
     public bool CanAddComputer(OrganizationalUnit organizationalUnit)
@@ -38,8 +41,9 @@ public class LimitChecker(IPlanService planService, IUserPlanProvider userPlanPr
         ArgumentNullException.ThrowIfNull(organizationalUnit);
 
         var limits = GetCurrentPlanLimits();
+        var computerCount = organizationalUnit.Computers.Count;
 
-        return organizationalUnit.Computers.Count < limits.MaxComputersPerOrganizationalUnit;
+        return computerCount < limits.MaxComputersPerOrganizationalUnit;
     }
 
     public bool CanAddUserToOrganization(Organization organization)
@@ -47,8 +51,9 @@ public class LimitChecker(IPlanService planService, IUserPlanProvider userPlanPr
         ArgumentNullException.ThrowIfNull(organization);
 
         var limits = GetCurrentPlanLimits();
+        var userOrganizationCount = organization.UserOrganizations.Count;
 
-        return organization.UserOrganizations.Count < limits.MaxUsersPerOrganization;
+        return userOrganizationCount < limits.MaxUsersPerOrganization;
     }
 
     public bool CanAddUserToOrganizationalUnit(OrganizationalUnit organizationalUnit)
@@ -56,7 +61,8 @@ public class LimitChecker(IPlanService planService, IUserPlanProvider userPlanPr
         ArgumentNullException.ThrowIfNull(organizationalUnit);
 
         var limits = GetCurrentPlanLimits();
+        var userOrganizationalUnitCount = organizationalUnit.UserOrganizationalUnits.Count;
 
-        return organizationalUnit.UserOrganizationalUnits.Count < limits.MaxUsersPerOrganizationalUnit;
+        return userOrganizationalUnitCount < limits.MaxUsersPerOrganizationalUnit;
     }
 }

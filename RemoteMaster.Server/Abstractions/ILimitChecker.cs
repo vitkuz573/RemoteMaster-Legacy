@@ -8,7 +8,7 @@ namespace RemoteMaster.Server.Abstractions;
 
 public interface ILimitChecker
 {
-    bool CanAddOrganization(IEnumerable<Organization> organizations);
+    bool CanAddOrganization();
 
     bool CanAddOrganizationalUnit(Organization organization);
 
