@@ -3,23 +3,20 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.ValueObjects;
 
 namespace RemoteMaster.Server.Entities;
 
 public class Organization : INode
 {
     public Guid Id { get; set; }
-    
+
     public string Name { get; set; }
-    
-    public string Locality { get; set; }
-    
-    public string State { get; set; }
-    
-    public string Country { get; set; }
+
+    public Address Address { get; set; }
 
     public Guid? ParentId { get; set; }
-    
+
     public INode? Parent { get; set; }
 
     public ICollection<OrganizationalUnit> OrganizationalUnits { get; } = [];

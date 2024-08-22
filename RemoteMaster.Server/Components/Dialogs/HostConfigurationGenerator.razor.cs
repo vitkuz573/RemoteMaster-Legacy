@@ -154,9 +154,9 @@ public partial class HostConfigurationGenerator
 
         if (selectedOrg != null)
         {
-            _model.Subject.Locality = selectedOrg.Locality;
-            _model.Subject.State = selectedOrg.State;
-            _model.Subject.Country = selectedOrg.Country;
+            _model.Subject.Locality = selectedOrg.Address.Locality;
+            _model.Subject.State = selectedOrg.Address.State;
+            _model.Subject.Country = selectedOrg.Address.Country;
 
             StateHasChanged();
         }

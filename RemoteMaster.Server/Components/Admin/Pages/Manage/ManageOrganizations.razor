@@ -89,13 +89,13 @@
                                     @organization.Name
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
-                                    @organization.Locality
+                                    @organization.Address.Locality
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
-                                    @organization.State
+                                    @organization.Address.State
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
-                                    @organization.Country
+                                    @organization.Address.Country
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
                                     <button class="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 focus:outline-none" @onclick="() => EditOrganization(organization)">

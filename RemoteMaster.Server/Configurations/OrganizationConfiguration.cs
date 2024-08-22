@@ -25,25 +25,31 @@ public class OrganizationConfiguration : IEntityTypeConfiguration<Organization>
             .HasMaxLength(50)
             .HasColumnOrder(1);
 
-        builder.Property(o => o.Locality)
-            .IsRequired()
-            .HasMaxLength(100)
-            .HasColumnOrder(2);
+        builder.OwnsOne(o => o.Address, address =>
+        {
+            address.Property(a => a.Locality)
+                .IsRequired()
+                .HasMaxLength(100)
+                .HasColumnName("Locality")
+                .HasColumnOrder(2);
 
-        builder.Property(o => o.State)
-            .IsRequired()
-            .HasMaxLength(100)
-            .HasColumnOrder(3);
+            address.Property(a => a.State)
+                .IsRequired()
+                .HasMaxLength(100)
+                .HasColumnName("State")
+                .HasColumnOrder(3);
 
-        builder.Property(o => o.Country)
-            .IsRequired()
-            .HasMaxLength(100)
-            .HasColumnOrder(4);
+            address.Property(a => a.Country)
+                .IsRequired()
+                .HasMaxLength(100)
+                .HasColumnName("Country")
+                .HasColumnOrder(4);
+
+            address.HasIndex(a => new { a.Locality, a.State, a.Country });
+        });
 
         builder.HasIndex(o => o.Name)
             .IsUnique();
-
-        builder.HasIndex(o => new { o.Locality, o.State, o.Country });
 
         builder.HasMany(o => o.OrganizationalUnits)
             .WithOne(ou => ou.Organization)

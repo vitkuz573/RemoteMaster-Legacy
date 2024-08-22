@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Components.Admin.Dialogs;
 using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Server.ValueObjects;
 using Serilog;
 
 namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
@@ -42,14 +43,14 @@ public partial class ManageOrganizations
     {
         if (Input.Id.HasValue)
         {
+            var address = new Address(Input.Locality, Input.State, Input.Country);
+
             var result = await NodesService.UpdateNodeAsync(
-                new Organization { Id = Input.Id.Value, Name = Input.Name, Locality = Input.Locality, State = Input.State, Country = Input.Country },
+                new Organization { Id = Input.Id.Value, Name = Input.Name, Address = address },
                 org =>
                 {
                     org.Name = Input.Name;
-                    org.Locality = Input.Locality;
-                    org.State = Input.State;
-                    org.Country = Input.Country;
+                    org.Address = address;
                 });
 
             if (result.IsSuccess)
@@ -63,7 +64,9 @@ public partial class ManageOrganizations
         }
         else
         {
-            var newOrganization = new Organization { Name = Input.Name, Locality = Input.Locality, State = Input.State, Country = Input.Country };
+            var address = new Address(Input.Locality, Input.State, Input.Country);
+
+            var newOrganization = new Organization { Name = Input.Name, Address = address };
             var result = await NodesService.AddNodesAsync(new List<Organization> { newOrganization });
 
             if (result.IsSuccess)
@@ -122,9 +125,9 @@ public partial class ManageOrganizations
         {
             Id = organization.Id,
             Name = organization.Name,
-            Locality = organization.Locality,
-            State = organization.State,
-            Country = organization.Country
+            Locality = organization.Address.Locality,
+            State = organization.Address.State,
+            Country = organization.Address.Country
         };
     }
 
