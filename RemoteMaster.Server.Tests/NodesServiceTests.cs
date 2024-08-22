@@ -20,7 +20,7 @@ public class NodesServiceTests : IDisposable
     {
         var limitCheckerMock = new Mock<ILimitChecker>();
 
-        limitCheckerMock.Setup(x => x.CanAddOrganization(It.IsAny<IQueryable<Organization>>())).Returns(true);
+        limitCheckerMock.Setup(x => x.CanAddOrganization()).Returns(true);
         limitCheckerMock.Setup(x => x.CanAddOrganizationalUnit(It.IsAny<Organization>())).Returns(true);
         limitCheckerMock.Setup(x => x.CanAddComputer(It.IsAny<OrganizationalUnit>())).Returns(true);
 
