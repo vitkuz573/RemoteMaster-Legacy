@@ -76,15 +76,11 @@ public class NodesServiceTests : IDisposable
     //         new() { Id = Guid.NewGuid(), Name = "OU1" },
     //         new() { Id = Guid.NewGuid(), Name = "OU2" }
     //     };
-    // 
-    //     _output.WriteLine("Adding organizational units...");
-    // 
+    //     
     //     // Act
     //     var result = await databaseService.AddNodesAsync(organizationalUnits);
     // 
     //     // Assert
-    //     _output.WriteLine("AddNodesAsync result: {0}", result.IsSuccess);
-    // 
     //     Assert.True(result.IsSuccess);
     //     foreach (var addedNode in result.ValueOrDefault)
     //     {
@@ -107,15 +103,11 @@ public class NodesServiceTests : IDisposable
     //         new() { Id = Guid.NewGuid(), Name = "Comp1", IpAddress = "192.168.0.1", MacAddress = "00:00:00:00:00:01", ParentId = Guid.NewGuid() },
     //         new() { Id = Guid.NewGuid(), Name = "Comp2", IpAddress = "192.168.0.2", MacAddress = "00:00:00:00:00:02", ParentId = Guid.NewGuid() }
     //     };
-    // 
-    //     _output.WriteLine("Adding computers...");
-    // 
+    //     
     //     // Act
     //     var result = await databaseService.AddNodesAsync(computers);
     // 
-    //     // Assert
-    //     _output.WriteLine("AddNodesAsync result: {0}", result.IsSuccess);
-    // 
+    //     // Assert    
     //     Assert.True(result.IsSuccess);
     //     foreach (var addedNode in result.ValueOrDefault)
     //     {
