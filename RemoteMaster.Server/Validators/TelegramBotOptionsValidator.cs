@@ -9,7 +9,7 @@ namespace RemoteMaster.Server.Validators;
 
 public class TelegramBotOptionsValidator : IValidateOptions<TelegramBotOptions>
 {
-    public ValidateOptionsResult Validate(string name, TelegramBotOptions options)
+    public ValidateOptionsResult Validate(string? name, TelegramBotOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
 
