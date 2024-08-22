@@ -16,7 +16,7 @@ public class TelegramEventNotificationService : IEventNotificationService
 {
     private readonly ITelegramBotClient? _botClient;
     private readonly List<string>? _chatIds;
-    private readonly bool _isConfigured;
+    private readonly bool _isEnabled;
 
     public TelegramEventNotificationService(IOptions<TelegramBotOptions> options)
     {
@@ -24,36 +24,28 @@ public class TelegramEventNotificationService : IEventNotificationService
 
         var telegramOptions = options.Value;
 
-        if (string.IsNullOrWhiteSpace(telegramOptions.BotToken) || telegramOptions.ChatIds.Count == 0)
-        {
-            _isConfigured = false;
+        _isEnabled = telegramOptions.IsEnabled;
 
-            Log.Warning("Telegram bot configuration is missing or incomplete. Notifications will be ignored.");
-        }
-        else
+        if (!_isEnabled)
         {
-            _botClient = new TelegramBotClient(telegramOptions.BotToken);
-            _chatIds = telegramOptions.ChatIds;
-            _isConfigured = true;
+            return;
         }
+
+        _botClient = new TelegramBotClient(telegramOptions.BotToken);
+        _chatIds = telegramOptions.ChatIds;
     }
 
     public async Task<Result> SendNotificationAsync(string message)
     {
         ArgumentNullException.ThrowIfNull(message);
 
-        if (!_isConfigured)
+        if (!_isEnabled || _botClient == null || _chatIds == null)
         {
-            return Result.Fail("Telegram bot is not configured.");
+            return Result.Fail("Telegram bot is not configured or is disabled.");
         }
 
         try
         {
-            if (_botClient == null || _chatIds == null)
-            {
-                return Result.Ok();
-            }
-
             var escapedMessage = EscapeMarkdownV2(message);
 
             foreach (var chatId in _chatIds)

@@ -8,6 +8,9 @@ namespace RemoteMaster.Server.Options;
 
 public class TelegramBotOptions
 {
+    [JsonPropertyName("isEnabled")]
+    public bool IsEnabled { get; set; } = false;
+
     [JsonPropertyName("botToken")]
     public string BotToken { get; set; }
 
