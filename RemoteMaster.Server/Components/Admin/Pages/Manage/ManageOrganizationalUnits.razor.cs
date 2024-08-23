@@ -4,8 +4,9 @@
 
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Components;
+using RemoteMaster.Server.Aggregates.OrganizationAggregate;
+using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
 using RemoteMaster.Server.Components.Admin.Dialogs;
-using RemoteMaster.Server.Entities;
 
 namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 
@@ -32,43 +33,46 @@ public partial class ManageOrganizationalUnits
         if (Input.OrganizationId == Guid.Empty)
         {
             _message = "Error: Please select a valid organization.";
+
             return;
         }
 
         if (Input.Id.HasValue)
         {
-            var result = await NodesService.UpdateNodeAsync(
-                new OrganizationalUnit { Id = Input.Id.Value, Name = Input.Name, OrganizationId = Input.OrganizationId, ParentId = Input.ParentId },
-                ou =>
-                {
-                    ou.Name = Input.Name;
-                    ou.OrganizationId = Input.OrganizationId;
-                    ou.ParentId = Input.ParentId;
-                });
+            var organizationalUnit = await OrganizationalUnitRepository.GetByIdAsync(Input.Id.Value);
+            
+            if (organizationalUnit == null)
+            {
+                _message = "Error: Organizational unit not found.";
+                
+                return;
+            }
 
-            if (result.IsSuccess)
-            {
-                await OnOrganizationalUnitSaved("Organizational unit updated successfully.");
-            }
-            else
-            {
-                _message = string.Join("; ", result.Errors.Select(e => e.Message));
-            }
+            organizationalUnit.Name = Input.Name;
+            organizationalUnit.OrganizationId = Input.OrganizationId;
+            organizationalUnit.ParentId = Input.ParentId;
+
+            await OrganizationalUnitRepository.UpdateAsync(organizationalUnit);
+            
+            _message = "Organizational unit updated successfully.";
         }
         else
         {
-            var newUnit = new OrganizationalUnit { Name = Input.Name, OrganizationId = Input.OrganizationId, ParentId = Input.ParentId };
-            var result = await NodesService.AddNodesAsync(new List<OrganizationalUnit> { newUnit });
+            var newUnit = new OrganizationalUnit
+            {
+                Name = Input.Name,
+                OrganizationId = Input.OrganizationId,
+                ParentId = Input.ParentId
+            };
 
-            if (result.IsSuccess)
-            {
-                await OnOrganizationalUnitSaved("Organizational unit created successfully.");
-            }
-            else
-            {
-                _message = string.Join("; ", result.Errors.Select(e => e.Message));
-            }
+            await OrganizationalUnitRepository.AddAsync(newUnit);
+            
+            _message = "Organizational unit created successfully.";
         }
+
+        await OrganizationalUnitRepository.SaveChangesAsync();
+
+        await OnOrganizationalUnitSaved(_message);
     }
 
     private async Task OnOrganizationalUnitSaved(string message)
@@ -81,31 +85,18 @@ public partial class ManageOrganizationalUnits
 
     private async Task LoadOrganizationsAsync()
     {
-        var result = await NodesService.GetNodesAsync<Organization>();
+        var organizations = await OrganizationRepository.GetAllAsync();
 
-        if (result.IsSuccess)
-        {
-            _organizations = result.Value.ToList();
-        }
-        else
-        {
-            _message = string.Join("; ", result.Errors.Select(e => e.Message));
-        }
+        _organizations = organizations.ToList();
     }
 
     private async Task LoadOrganizationalUnitsAsync()
     {
-        var result = await NodesService.GetNodesAsync<OrganizationalUnit>();
-
-        if (result.IsSuccess)
-        {
-            _organizationalUnits = result.Value.ToList();
-            FilterOrganizationalUnits();
-        }
-        else
-        {
-            _message = string.Join("; ", result.Errors.Select(e => e.Message));
-        }
+        var organizationalUnits = await OrganizationalUnitRepository.GetAllAsync();
+        
+        _organizationalUnits = organizationalUnits.ToList();
+        
+        FilterOrganizationalUnits();
     }
 
     private async Task OnOrganizationChanged(Guid organizationId)
@@ -124,17 +115,12 @@ public partial class ManageOrganizationalUnits
 
     private async Task DeleteOrganizationalUnit(OrganizationalUnit organizationalUnit)
     {
-        var result = await NodesService.RemoveNodesAsync(new List<OrganizationalUnit> { organizationalUnit });
-
-        if (result.IsSuccess)
-        {
-            await LoadOrganizationalUnitsAsync();
-            _message = "Organizational unit deleted successfully.";
-        }
-        else
-        {
-            _message = string.Join("; ", result.Errors.Select(e => e.Message));
-        }
+        await OrganizationalUnitRepository.DeleteAsync(organizationalUnit);
+        await OrganizationalUnitRepository.SaveChangesAsync();
+        
+        await LoadOrganizationalUnitsAsync();
+        
+        _message = "Organizational unit deleted successfully.";
     }
 
     private void EditOrganizationalUnit(OrganizationalUnit organizationalUnit)
@@ -191,14 +177,14 @@ public partial class ManageOrganizationalUnits
         public static ValidationResult? ValidateOrganizationId(Guid organizationId, ValidationContext _)
         {
             return organizationId == Guid.Empty
-                ? new ValidationResult("Please select a valid organization.", new[] { nameof(OrganizationId) })
+                ? new ValidationResult("Please select a valid organization.", [nameof(OrganizationId)])
                 : ValidationResult.Success;
         }
 
         public static ValidationResult? ValidateParentId(Guid? parentId, ValidationContext _)
         {
             return parentId == Guid.Empty
-                ? new ValidationResult("Please select a valid parent organizational unit.", new[] { nameof(ParentId) })
+                ? new ValidationResult("Please select a valid parent organizational unit.", [nameof(ParentId)])
                 : ValidationResult.Success;
         }
     }

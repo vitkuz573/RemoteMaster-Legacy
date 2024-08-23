@@ -37,7 +37,7 @@ public class ComputerConfiguration : IEntityTypeConfiguration<Computer>
 
         builder.Ignore(c => c.Thumbnail);
 
-        builder.HasOne(c => (OrganizationalUnit?)c.Parent)
+        builder.HasOne(c => c.Parent)
             .WithMany(ou => ou.Computers)
             .HasForeignKey(c => c.ParentId)
             .IsRequired(false)

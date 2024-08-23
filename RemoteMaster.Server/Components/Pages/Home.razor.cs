@@ -12,7 +12,8 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
 using MudBlazor;
-using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Aggregates.OrganizationAggregate;
+using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
 using RemoteMaster.Server.Components.Dialogs;
 using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Models;
@@ -27,8 +28,8 @@ public partial class Home
     [CascadingParameter]
     private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
 
-    private INode? _selectedNode;
-    private List<TreeItemData<INode>> _treeItems = [];
+    private OrganizationalUnit? _selectedNode;
+    private List<TreeItemData<object>> _treeItems = [];
 
     private readonly List<Computer> _selectedComputers = [];
     private readonly ConcurrentDictionary<string, Computer> _availableComputers = new();
@@ -77,21 +78,28 @@ public partial class Home
         if (_currentUser == null)
         {
             Log.Warning("Current user not found");
-
+            
             return;
         }
 
         var nodes = await LoadNodes();
-        _treeItems = nodes.Select(node => new UnifiedTreeItemData(node)).Cast<TreeItemData<INode>>().ToList();
+        _treeItems = nodes.Select(node => new UnifiedTreeItemData(node)).Cast<TreeItemData<object>>().ToList();
 
-        await AccessTokenProvider.GetAccessTokenAsync(_currentUser.Id);
+        var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(_currentUser.Id);
+        
+        if (!accessTokenResult.IsSuccess)
+        {
+            Log.Error("Failed to retrieve access token for user {UserId}", _currentUser.Id);
+            
+            return;
+        }
 
         _messages = await NotificationService.GetNotifications();
     }
 
     private bool DrawerOpen { get; set; }
 
-    private async Task<IEnumerable<INode>> LoadNodes(Guid? organizationId = null, Guid? parentId = null)
+    private async Task<IEnumerable<object>> LoadNodes(Guid? organizationId = null, Guid? parentId = null)
     {
         if (_currentUser == null)
         {
@@ -103,23 +111,22 @@ public partial class Home
         var accessibleOrganizations = _currentUser.UserOrganizations.Select(uo => uo.OrganizationId).ToList();
         var accessibleOrganizationalUnits = _currentUser.UserOrganizationalUnits.Select(uou => uou.OrganizationalUnitId).ToList();
 
-        var units = new List<INode>();
+        var units = new List<object>();
 
         if (organizationId == null)
         {
-            var organizationsResult = await NodesService.GetNodesAsync<Organization>(o => accessibleOrganizations.Contains(o.Id));
+            var organizationsResult = await OrganizationRepository.GetAllAsync(o => accessibleOrganizations.Contains(o.Id));
 
-            if (!organizationsResult.IsSuccess)
+            if (organizationsResult == null)
             {
-                Log.Error("Failed to load organizations: {Message}", organizationsResult.Errors.FirstOrDefault()?.Message);
+                Log.Error("Failed to load organizations");
 
                 return units;
             }
 
-            var organizations = organizationsResult.Value.ToList();
-            units.AddRange(organizations);
+            units.AddRange(organizationsResult);
 
-            foreach (var organization in organizations)
+            foreach (var organization in organizationsResult)
             {
                 var organizationalUnits = (await LoadNodes(organization.Id)).OfType<OrganizationalUnit>().ToList();
                 organization.OrganizationalUnits.Clear();
@@ -132,34 +139,32 @@ public partial class Home
         }
         else
         {
-            var organizationalUnitsResult = await NodesService.GetNodesAsync<OrganizationalUnit>(ou =>
+            var organizationalUnitsResult = await OrganizationalUnitRepository.GetAllAsync(ou =>
                 ou.OrganizationId == organizationId &&
                 (parentId == null || ou.ParentId == parentId) &&
                 accessibleOrganizationalUnits.Contains(ou.Id));
 
-            if (!organizationalUnitsResult.IsSuccess)
+            if (organizationalUnitsResult == null)
             {
-                Log.Error("Failed to load organizational units: {Message}", organizationalUnitsResult.Errors.FirstOrDefault()?.Message);
+                Log.Error("Failed to load organizational units");
 
                 return units;
             }
 
-            var organizationalUnits = organizationalUnitsResult.Value;
-            units.AddRange(organizationalUnits);
+            units.AddRange(organizationalUnitsResult);
 
-            var computersResult = await NodesService.GetNodesAsync<Computer>(c => c.ParentId == parentId);
+            var computersResult = await ComputerRepository.GetAllAsync(c => c.ParentId == parentId);
 
-            if (!computersResult.IsSuccess)
+            if (computersResult == null)
             {
-                Log.Error("Failed to load computers: {Message}", computersResult.Errors.FirstOrDefault()?.Message);
+                Log.Error("Failed to load computers");
 
                 return units;
             }
 
-            var computers = computersResult.Value;
-            units.AddRange(computers);
+            units.AddRange(computersResult);
 
-            foreach (var unit in organizationalUnits)
+            foreach (var unit in organizationalUnitsResult)
             {
                 var childrenUnits = (await LoadNodes(unit.OrganizationId, unit.Id)).OfType<OrganizationalUnit>().ToList();
                 var unitComputers = (await LoadNodes(unit.OrganizationId, unit.Id)).OfType<Computer>().ToList();
@@ -226,22 +231,23 @@ public partial class Home
 
     private void Logout() => NavigationManager.NavigateTo("/Account/Logout");
 
-    private async Task OnNodeSelected(INode? node)
+    private async Task OnNodeSelected(object? node)
     {
-        if (node is Organization)
-        {
-            return;
-        }
-
         _selectedComputers.Clear();
         _availableComputers.Clear();
         _unavailableComputers.Clear();
         _pendingComputers.Clear();
-        _selectedNode = node;
 
-        if (node is OrganizationalUnit orgUnit)
+        switch (node)
         {
-            await LoadComputers(orgUnit);
+            case Organization organization:
+                break;
+            case OrganizationalUnit orgUnit:
+                _selectedNode = orgUnit;
+                await LoadComputers(orgUnit);
+                break;
+            case Computer computer:
+                break;
         }
 
         await InvokeAsync(StateHasChanged);
@@ -674,14 +680,16 @@ public partial class Home
 
             if (computersToRemove.Any())
             {
-                await NodesService.RemoveNodesAsync(computersToRemove);
-
                 foreach (var computer in computersToRemove)
                 {
+                    await ComputerRepository.DeleteAsync(computer);
+
                     _availableComputers.TryRemove(computer.IpAddress, out _);
                     _unavailableComputers.TryRemove(computer.IpAddress, out _);
                     _pendingComputers.TryRemove(computer.IpAddress, out _);
                 }
+
+                await ComputerRepository.SaveChangesAsync();
 
                 _selectedComputers.Clear();
             }

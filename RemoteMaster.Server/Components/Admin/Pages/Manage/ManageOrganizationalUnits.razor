@@ -3,11 +3,14 @@
 @rendermode InteractiveServer
 
 @using RemoteMaster.Server.Abstractions
+@using RemoteMaster.Server.Aggregates.OrganizationAggregate
+@using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate
 @using RemoteMaster.Server.Components.Account.Shared
 @using RemoteMaster.Server.Components.Admin.Dialogs
 
 @inject NavigationManager NavigationManager
-@inject INodesService NodesService
+@inject IRepository<Organization> OrganizationRepository
+@inject IRepository<OrganizationalUnit> OrganizationalUnitRepository
 
 <PageTitle>Manage Organizational Units</PageTitle>
 

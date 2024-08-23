@@ -4,13 +4,4 @@
 
 namespace RemoteMaster.Server.Abstractions;
 
-public interface INode
-{
-    Guid Id { get; set; }
-
-    string Name { get; set; }
-
-    Guid? ParentId { get; set; }
-
-    INode? Parent { get; set; }
-}
+public interface IAggregateRoot;

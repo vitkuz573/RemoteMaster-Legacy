@@ -3,10 +3,12 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Aggregates.OrganizationAggregate;
+using RemoteMaster.Server.Entities;
 
-namespace RemoteMaster.Server.Entities;
+namespace RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
 
-public class OrganizationalUnit : INode
+public class OrganizationalUnit : IAggregateRoot
 {
     public Guid Id { get; set; }
 
@@ -14,7 +16,7 @@ public class OrganizationalUnit : INode
 
     public Guid? ParentId { get; set; }
 
-    public INode? Parent { get; set; }
+    public OrganizationalUnit? Parent { get; set; }
 
     public Guid OrganizationId { get; set; }
 

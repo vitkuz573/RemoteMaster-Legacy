@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor;
+using RemoteMaster.Server.Aggregates.OrganizationAggregate;
+using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
 using RemoteMaster.Server.Entities;
 using RemoteMaster.Shared.Models;
 
@@ -35,16 +37,14 @@ public partial class MoveDialog
         if (!Hosts.IsEmpty)
         {
             var firstHostParentId = Hosts.First().Key.ParentId;
-            var currentOrganizationalUnitResult = await NodesService.GetNodesAsync<OrganizationalUnit>(node => node.Id == firstHostParentId);
+            var currentOrganizationalUnit = await OrganizationalUnitRepository.GetByIdAsync(firstHostParentId);
 
-            if (currentOrganizationalUnitResult.IsSuccess && currentOrganizationalUnitResult.Value.Any())
+            if (currentOrganizationalUnit != null)
             {
-                var currentOU = currentOrganizationalUnitResult.Value.First();
+                _selectedOrganizationalUnitId = currentOrganizationalUnit.Id;
+                _currentOrganizationalUnitName = currentOrganizationalUnit.Name;
 
-                _selectedOrganizationalUnitId = currentOU.Id;
-                _currentOrganizationalUnitName = currentOU.Name;
-
-                var currentOrganization = _organizations.FirstOrDefault(org => org.Id == currentOU.OrganizationId);
+                var currentOrganization = await OrganizationRepository.GetByIdAsync(currentOrganizationalUnit.OrganizationId);
 
                 if (currentOrganization != null)
                 {
@@ -114,76 +114,64 @@ public partial class MoveDialog
 
     private async Task MoveHost()
     {
-        if (_selectedOrganizationalUnitId != Guid.Empty)
+        if (_selectedOrganizationalUnitId.HasValue && _selectedOrganizationalUnitId != Guid.Empty)
         {
-            var targetOrganizationResult = await NodesService.GetNodesAsync<Organization>(o => o.Id == _selectedOrganizationId);
-
-            if (!targetOrganizationResult.IsSuccess || !targetOrganizationResult.Value.Any())
+            var targetOrganization = await OrganizationRepository.GetByIdAsync(_selectedOrganizationId);
+            
+            if (targetOrganization == null)
             {
                 MudDialog.Close(DialogResult.Cancel());
-
+                
                 return;
             }
 
-            var targetOrganization = targetOrganizationResult.Value.First().Name;
-
-            var newParentResult = await NodesService.GetNodesAsync<OrganizationalUnit>(ou => ou.Id == _selectedOrganizationalUnitId);
+            var newParentUnit = await OrganizationalUnitRepository.GetByIdAsync(_selectedOrganizationalUnitId.Value) ?? throw new InvalidOperationException("New parent Organizational Unit not found.");
+            var targetOrganizationalUnitsPath = await OrganizationalUnitRepository.GetFullPathAsync(newParentUnit.Id);
             
-            if (!newParentResult.IsSuccess || !newParentResult.Value.Any())
-            {
-                throw new InvalidOperationException("New parent Organizational Unit not found.");
-            }
-
-            var newParent = newParentResult.Value.First();
-            var targetOrganizationalUnitsPathResult = await NodesService.GetFullPathAsync(newParent);
-            
-            if (!targetOrganizationalUnitsPathResult.IsSuccess)
+            if (targetOrganizationalUnitsPath.Length == 0)
             {
                 throw new InvalidOperationException("Failed to get full path of the new parent.");
             }
 
-            var targetOrganizationalUnitsPath = targetOrganizationalUnitsPathResult.Value;
+            var nodeIds = Hosts.Select(host => host.Key.Id);
+            var unavailableHosts = new List<Computer>();
 
-            if (targetOrganizationalUnitsPath.Length > 0)
+            foreach (var host in Hosts)
             {
-                var nodeIds = Hosts.Select(host => host.Key.Id);
-                var unavailableHosts = new List<Computer>();
-
-                foreach (var host in Hosts)
+                if (host.Value != null)
                 {
-                    if (host.Value != null)
-                    {
-                        var hostMoveRequest = new HostMoveRequest(host.Key.MacAddress, targetOrganization, targetOrganizationalUnitsPath);
+                    var hostMoveRequest = new HostMoveRequest(
+                        host.Key.MacAddress,
+                        targetOrganization.Name,
+                        targetOrganizationalUnitsPath
+                    );
 
-                        await host.Value.InvokeAsync("MoveHost", hostMoveRequest);
-                    }
-                    else
-                    {
-                        unavailableHosts.Add(host.Key);
-                    }
+                    await host.Value.InvokeAsync("MoveHost", hostMoveRequest);
+                }
+                else
+                {
+                    unavailableHosts.Add(host.Key);
+                }
+            }
+
+            if (unavailableHosts.Count > 0)
+            {
+                await AppendHostMoveRequests(unavailableHosts, targetOrganization.Name, targetOrganizationalUnitsPath);
+            }
+
+            foreach (var nodeId in nodeIds)
+            {
+                var computer = await ComputerRepository.GetByIdAsync(nodeId);
+
+                if (computer == null)
+                {
+                    continue;
                 }
 
-                if (unavailableHosts.Count != 0)
-                {
-                    await AppendHostMoveRequests(unavailableHosts, targetOrganization, targetOrganizationalUnitsPath);
-                }
+                computer.ParentId = newParentUnit.Id;
 
-                foreach (var nodeId in nodeIds)
-                {
-                    var nodeResult = await NodesService.GetNodesAsync<Computer>(c => c.Id == nodeId);
-
-                    if (!nodeResult.IsSuccess || !nodeResult.Value.Any())
-                    {
-                        continue;
-                    }
-
-                    var moveNodeResult = await NodesService.MoveNodeAsync(nodeResult.Value.First(), newParent);
-                    
-                    if (!moveNodeResult.IsSuccess)
-                    {
-                        throw new InvalidOperationException("Failed to move node.");
-                    }
-                }
+                await ComputerRepository.UpdateAsync(computer);
+                await ComputerRepository.SaveChangesAsync();
             }
 
             await OnNodesMoved.InvokeAsync(Hosts.Keys);

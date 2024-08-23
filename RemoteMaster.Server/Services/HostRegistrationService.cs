@@ -4,23 +4,20 @@
 
 using FluentResults;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Aggregates.OrganizationAggregate;
+using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
 using RemoteMaster.Server.Entities;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class HostRegistrationService(INodesService nodesService, IEventNotificationService eventNotificationService) : IHostRegistrationService
+public class HostRegistrationService(IEventNotificationService eventNotificationService, IRepository<Organization> organizationRepository, IRepository<OrganizationalUnit> organizationalUnitRepository, IRepository<Computer> computerRepository) : IHostRegistrationService
 {
     private async Task<Result<Organization>> GetOrganizationAsync(string organizationName)
     {
-        var organizationsResult = await nodesService.GetNodesAsync<Organization>(n => n.Name == organizationName);
+        var organizations = await organizationRepository.GetAllAsync(n => n.Name == organizationName);
 
-        if (organizationsResult.IsFailed)
-        {
-            return Result.Fail<Organization>($"Failed to retrieve organizations: {organizationsResult.Errors.FirstOrDefault()?.Message}");
-        }
-
-        var organization = organizationsResult.Value.FirstOrDefault();
+        var organization = organizations.FirstOrDefault();
 
         return organization != null
             ? Result.Ok(organization)
@@ -33,14 +30,9 @@ public class HostRegistrationService(INodesService nodesService, IEventNotificat
 
         foreach (var ouName in ouNames)
         {
-            var ousResult = await nodesService.GetNodesAsync<OrganizationalUnit>(n => n.Name == ouName && n.OrganizationId == organizationId);
+            var ous = await organizationalUnitRepository.GetAllAsync(n => n.Name == ouName && n.OrganizationId == organizationId);
 
-            if (ousResult.IsFailed)
-            {
-                return Result.Fail<OrganizationalUnit?>($"Failed to retrieve organizational units: {ousResult.Errors.FirstOrDefault()?.Message}");
-            }
-
-            var ou = ousResult.Value.FirstOrDefault(o => parentOu == null || o.ParentId == parentOu.Id);
+            var ou = ous.FirstOrDefault(o => parentOu == null || o.ParentId == parentOu?.Id);
 
             if (ou == null)
             {
@@ -55,14 +47,9 @@ public class HostRegistrationService(INodesService nodesService, IEventNotificat
 
     private async Task<Result<Computer>> GetComputerByMacAddressAsync(string macAddress, Guid parentOuId)
     {
-        var existingComputersResult = await nodesService.GetNodesAsync<Computer>(c => c.ParentId == parentOuId);
+        var existingComputers = await computerRepository.GetAllAsync(c => c.ParentId == parentOuId && c.MacAddress == macAddress);
 
-        if (existingComputersResult.IsFailed)
-        {
-            return Result.Fail<Computer>($"Failed to retrieve computers: {existingComputersResult.Errors.FirstOrDefault()?.Message}");
-        }
-
-        var computer = existingComputersResult.Value.FirstOrDefault(c => c.MacAddress == macAddress);
+        var computer = existingComputers.FirstOrDefault();
 
         return computer != null
             ? Result.Ok(computer)
@@ -75,17 +62,15 @@ public class HostRegistrationService(INodesService nodesService, IEventNotificat
 
         try
         {
-            var computersResult = await nodesService.GetNodesAsync<Computer>(n => n.MacAddress == macAddress);
+            var computers = await computerRepository.GetAllAsync(n => n.MacAddress == macAddress);
 
-            if (computersResult.IsSuccess)
+            if (computers.Any())
             {
-                return computersResult.Value.Any()
-                    ? Result.Ok()
-                    : Result.Fail($"Host with MAC address `{macAddress}` is not registered.");
+                return Result.Ok();
             }
 
-            var errorMessage = $"Error while checking registration of the host with MAC address `{macAddress}`: {computersResult.Errors.FirstOrDefault()?.Message}";
-            
+            var errorMessage = $"Host with MAC address `{macAddress}` is not registered.";
+           
             await eventNotificationService.SendNotificationAsync(errorMessage);
 
             return Result.Fail(errorMessage);
@@ -95,7 +80,7 @@ public class HostRegistrationService(INodesService nodesService, IEventNotificat
             var errorMessage = $"Error while checking registration of the host with MAC address `{macAddress}`: {ex.Message}";
             
             await eventNotificationService.SendNotificationAsync(errorMessage);
-
+            
             return Result.Fail(errorMessage);
         }
     }
@@ -109,9 +94,9 @@ public class HostRegistrationService(INodesService nodesService, IEventNotificat
         if (organizationResult.IsFailed)
         {
             var errorMessage = $"Host registration failed: {organizationResult.Errors.FirstOrDefault()?.Message} for host {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'";
-
+            
             await eventNotificationService.SendNotificationAsync(errorMessage);
-
+            
             return Result.Fail(errorMessage);
         }
 
@@ -120,9 +105,9 @@ public class HostRegistrationService(INodesService nodesService, IEventNotificat
         if (parentOuResult.IsFailed)
         {
             var errorMessage = $"Host registration failed: {parentOuResult.Errors.FirstOrDefault()?.Message} for host {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'";
-
+            
             await eventNotificationService.SendNotificationAsync(errorMessage);
-
+            
             return Result.Fail(errorMessage);
         }
 
@@ -132,25 +117,21 @@ public class HostRegistrationService(INodesService nodesService, IEventNotificat
 
             if (computerResult.IsSuccess)
             {
-                var updateResult = await nodesService.UpdateNodeAsync(computerResult.Value, computer =>
-                {
-                    computer.Name = hostConfiguration.Host.Name;
-                    computer.IpAddress = hostConfiguration.Host.IpAddress;
-                });
+                var updateResult = await UpdateComputerAsync(computerResult.Value, hostConfiguration);
 
                 if (updateResult.IsFailed)
                 {
                     var errorMessage = $"Failed to update existing computer: {updateResult.Errors.FirstOrDefault()?.Message}";
-
+                    
                     await eventNotificationService.SendNotificationAsync(errorMessage);
-
+                    
                     return Result.Fail(errorMessage);
                 }
 
                 var updateSuccessMessage = $"Host registration successful: {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'";
-
+                
                 await eventNotificationService.SendNotificationAsync(updateSuccessMessage);
-
+                
                 return Result.Ok();
             }
 
@@ -162,19 +143,11 @@ public class HostRegistrationService(INodesService nodesService, IEventNotificat
                 ParentId = parentOuResult.Value.Id
             };
 
-            var addResult = await nodesService.AddNodesAsync(new List<Computer> { computer });
-
-            if (addResult.IsFailed)
-            {
-                var errorMessage = $"Failed to add new computer: {addResult.Errors.FirstOrDefault()?.Message}";
-                
-                await eventNotificationService.SendNotificationAsync(errorMessage);
-                
-                return Result.Fail(errorMessage);
-            }
+            await computerRepository.AddAsync(computer);
+            await computerRepository.SaveChangesAsync();
 
             var successMessage = $"New host registered: {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'";
-
+            
             await eventNotificationService.SendNotificationAsync(successMessage);
 
             return Result.Ok();
@@ -182,11 +155,22 @@ public class HostRegistrationService(INodesService nodesService, IEventNotificat
         catch (Exception ex)
         {
             var errorMessage = $"Host registration failed: {ex.Message} for host {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'";
-
+            
             await eventNotificationService.SendNotificationAsync(errorMessage);
-
+            
             return Result.Fail(errorMessage);
         }
+    }
+
+    private async Task<Result> UpdateComputerAsync(Computer computer, HostConfiguration hostConfiguration)
+    {
+        computer.Name = hostConfiguration.Host.Name;
+        computer.IpAddress = hostConfiguration.Host.IpAddress;
+
+        computerRepository.UpdateAsync(computer);
+        await computerRepository.SaveChangesAsync();
+
+        return Result.Ok();
     }
 
     public async Task<Result> UnregisterHostAsync(HostUnregisterRequest request)
@@ -199,7 +183,7 @@ public class HostRegistrationService(INodesService nodesService, IEventNotificat
         }
 
         var organizationResult = await GetOrganizationAsync(request.Organization);
-        
+
         if (organizationResult.IsFailed)
         {
             var errorMessage = $"Host unregister failed: {organizationResult.Errors.FirstOrDefault()?.Message} for host {request.Name} (`{request.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'";
@@ -210,7 +194,7 @@ public class HostRegistrationService(INodesService nodesService, IEventNotificat
         }
 
         var parentOuResult = await ResolveOrganizationalUnitHierarchyAsync(request.OrganizationalUnit, organizationResult.Value.Id);
-        
+
         if (parentOuResult.IsFailed)
         {
             var errorMessage = $"Host unregister failed: {parentOuResult.Errors.FirstOrDefault()?.Message} for host {request.Name} (`{request.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'";
@@ -233,16 +217,8 @@ public class HostRegistrationService(INodesService nodesService, IEventNotificat
                 return Result.Fail(errorMessage);
             }
 
-            var removeResult = await nodesService.RemoveNodesAsync(new List<Computer> { computerResult.Value });
-
-            if (removeResult.IsFailed)
-            {
-                var errorMessage = $"Failed to remove existing computer: {removeResult.Errors.FirstOrDefault()?.Message}";
-                
-                await eventNotificationService.SendNotificationAsync(errorMessage);
-                
-                return Result.Fail(errorMessage);
-            }
+            await computerRepository.DeleteAsync(computerResult.Value);
+            await computerRepository.SaveChangesAsync();
 
             var successMessage = $"Host unregistered: {request.Name} (`{request.MacAddress}`) from organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' in organization '{request.Organization}'";
             
@@ -265,24 +241,24 @@ public class HostRegistrationService(INodesService nodesService, IEventNotificat
         ArgumentNullException.ThrowIfNull(request);
 
         var organizationResult = await GetOrganizationAsync(request.Organization);
-        
+
         if (organizationResult.IsFailed)
         {
             var errorMessage = $"Host information update failed: {organizationResult.Errors.FirstOrDefault()?.Message} for host {request.Name} (`{request.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'";
-            
+
             await eventNotificationService.SendNotificationAsync(errorMessage);
-            
+
             return Result.Fail(errorMessage);
         }
 
         var parentOuResult = await ResolveOrganizationalUnitHierarchyAsync(request.OrganizationalUnit, organizationResult.Value.Id);
-        
+
         if (parentOuResult.IsFailed)
         {
             var errorMessage = $"Host information update failed: {parentOuResult.Errors.FirstOrDefault()?.Message} for host {request.Name} (`{request.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'";
-            
+
             await eventNotificationService.SendNotificationAsync(errorMessage);
-            
+
             return Result.Fail(errorMessage);
         }
 
@@ -293,37 +269,30 @@ public class HostRegistrationService(INodesService nodesService, IEventNotificat
             if (computerResult.IsFailed)
             {
                 var errorMessage = $"Failed to find the computer: {computerResult.Errors.FirstOrDefault()?.Message}";
-                
+
                 await eventNotificationService.SendNotificationAsync(errorMessage);
-                
+
                 return Result.Fail(errorMessage);
             }
 
-            var updateResult = await nodesService.UpdateNodeAsync(computerResult.Value, updatedComputer =>
-            {
-                updatedComputer.Name = request.Name;
-                updatedComputer.IpAddress = request.IpAddress;
-            });
+            var computer = computerResult.Value;
 
-            if (updateResult.IsFailed)
-            {
-                var errorMessage = $"Failed to update existing computer: {updateResult.Errors.FirstOrDefault()?.Message}";
-                
-                await eventNotificationService.SendNotificationAsync(errorMessage);
-                
-                return Result.Fail(errorMessage);
-            }
+            computer.IpAddress = request.IpAddress;
+            computer.MacAddress = request.MacAddress;
 
-            var successMessage = $"Host information updated: {request.Name} (`{request.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'";
-            
+            await computerRepository.UpdateAsync(computer);
+            await computerRepository.SaveChangesAsync();
+
+            var successMessage = $"Host information updated: {computer.Name} (`{computer.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'";
+
             await eventNotificationService.SendNotificationAsync(successMessage);
-            
+
             return Result.Ok();
         }
         catch (Exception ex)
         {
             var errorMessage = $"Host information update failed: {ex.Message} for host {request.Name} (`{request.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'";
-            
+
             await eventNotificationService.SendNotificationAsync(errorMessage);
 
             return Result.Fail(errorMessage);

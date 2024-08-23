@@ -3,15 +3,18 @@
 @rendermode InteractiveServer
 
 @using Microsoft.AspNetCore.Identity
+@using RemoteMaster.Server.Aggregates.OrganizationAggregate
+@using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate
 @using RemoteMaster.Server.Components.Account.Shared
 @using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Server.Entities
 
 @inject NavigationManager NavigationManager
 @inject ITokenService TokenService
-@inject INodesService NodesService
 @inject UserManager<ApplicationUser> UserManager
 @inject RoleManager<IdentityRole> RoleManager
+@inject IRepository<Organization> OrganizationRepository
+@inject IRepository<OrganizationalUnit> OrganizationalUnitRepository
 
 <PageTitle>Manage User Rights</PageTitle>
 

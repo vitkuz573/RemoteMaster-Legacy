@@ -3,21 +3,19 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
+using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.ValueObjects;
 
-namespace RemoteMaster.Server.Entities;
+namespace RemoteMaster.Server.Aggregates.OrganizationAggregate;
 
-public class Organization : INode
+public class Organization : IAggregateRoot
 {
     public Guid Id { get; set; }
 
     public string Name { get; set; }
 
     public Address Address { get; set; }
-
-    public Guid? ParentId { get; set; }
-
-    public INode? Parent { get; set; }
 
     public ICollection<OrganizationalUnit> OrganizationalUnits { get; } = [];
 

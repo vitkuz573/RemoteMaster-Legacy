@@ -4,8 +4,8 @@
 
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Components;
+using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Components.Admin.Dialogs;
-using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.ValueObjects;
 using Serilog;
@@ -41,43 +41,42 @@ public partial class ManageOrganizations
 
     private async Task OnValidSubmitAsync()
     {
+        var address = new Address(Input.Locality, Input.State, Input.Country);
+
         if (Input.Id.HasValue)
         {
-            var address = new Address(Input.Locality, Input.State, Input.Country);
-
-            var result = await NodesService.UpdateNodeAsync(
-                new Organization { Id = Input.Id.Value, Name = Input.Name, Address = address },
-                org =>
-                {
-                    org.Name = Input.Name;
-                    org.Address = address;
-                });
-
-            if (result.IsSuccess)
+            var organization = await OrganizationRepository.GetByIdAsync(Input.Id.Value);
+            
+            if (organization == null)
             {
-                await OnOrganizationSaved("Organization updated successfully.");
+                _message = "Organization not found.";
+                
+                return;
             }
-            else
-            {
-                _message = string.Join("; ", result.Errors.Select(e => e.Message));
-            }
+
+            organization.Name = Input.Name;
+            organization.Address = address;
+
+            await OrganizationRepository.UpdateAsync(organization);
+            
+            _message = "Organization updated successfully.";
         }
         else
         {
-            var address = new Address(Input.Locality, Input.State, Input.Country);
-
-            var newOrganization = new Organization { Name = Input.Name, Address = address };
-            var result = await NodesService.AddNodesAsync(new List<Organization> { newOrganization });
-
-            if (result.IsSuccess)
+            var newOrganization = new Organization
             {
-                await OnOrganizationSaved("Organization created successfully.");
-            }
-            else
-            {
-                _message = string.Join("; ", result.Errors.Select(e => e.Message));
-            }
+                Name = Input.Name,
+                Address = address
+            };
+
+            await OrganizationRepository.AddAsync(newOrganization);
+            
+            _message = "Organization created successfully.";
         }
+
+        await OrganizationRepository.SaveChangesAsync();
+
+        await OnOrganizationSaved(_message);
     }
 
     private async Task OnOrganizationSaved(string message)
@@ -92,31 +91,26 @@ public partial class ManageOrganizations
 
     private async Task LoadOrganizationsAsync()
     {
-        var result = await NodesService.GetNodesAsync<Organization>();
+        var organizations = await OrganizationRepository.GetAllAsync();
 
-        if (result.IsSuccess)
+        if (organizations != null)
         {
-            _organizations = [.. result.Value];
+            _organizations = organizations.ToList();
         }
         else
         {
-            _message = string.Join("; ", result.Errors.Select(e => e.Message));
+            _message = "Failed to load organizations.";
         }
     }
 
     private async Task DeleteOrganization(Organization organization)
     {
-        var result = await NodesService.RemoveNodesAsync(new List<Organization> { organization });
-
-        if (result.IsSuccess)
-        {
-            await LoadOrganizationsAsync();
-            _message = "Organization deleted successfully.";
-        }
-        else
-        {
-            _message = string.Join("; ", result.Errors.Select(e => e.Message));
-        }
+        await OrganizationRepository.DeleteAsync(organization);
+        await OrganizationRepository.SaveChangesAsync();
+        
+        _message = "Organization deleted successfully.";
+        
+        await LoadOrganizationsAsync();
     }
 
     private void EditOrganization(Organization organization)

@@ -6,6 +6,8 @@
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.Extensions.Localization
 @using RemoteMaster.Server.Abstractions
+@using RemoteMaster.Server.Aggregates.OrganizationAggregate
+@using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate
 @using RemoteMaster.Server.Data
 @using RemoteMaster.Shared.Abstractions
 @using System.Security.Claims
@@ -13,7 +15,6 @@
 
 @inject IBrandingService BrandingService
 @inject IDialogService DialogService
-@inject INodesService NodesService
 @inject ICrlService CrlService
 @inject ISnackbar Snackbar
 @inject IJSRuntime JsRuntime
@@ -22,6 +23,9 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject IStringLocalizer<Home> Localizer
 @inject INotificationService NotificationService
+@inject IRepository<Organization> OrganizationRepository
+@inject IRepository<OrganizationalUnit> OrganizationalUnitRepository
+@inject IRepository<Computer> ComputerRepository
 
 <PageTitle>@Localizer["PageTitle"]</PageTitle>
 
@@ -84,7 +88,7 @@
     <MudMainContent>
         <div class="flex h-full">
             <div class="w-1/5">
-                <MudTreeView Items="@_treeItems" T="INode" SelectedValueChanged="OnNodeSelected" Hover="true" Class="pa-6">
+                <MudTreeView Items="@_treeItems" T="object" SelectedValueChanged="OnNodeSelected" Hover="true" Class="pa-6">
                     <ItemTemplate>
                         <MudTreeViewItem Text="@context.Text" Value="@context.Value" Icon="@context.Icon">
                             <ChildContent>

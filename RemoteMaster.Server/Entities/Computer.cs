@@ -2,11 +2,11 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
 
 namespace RemoteMaster.Server.Entities;
 
-public class Computer : INode
+public class Computer
 {
     public Guid Id { get; set; }
 
@@ -18,7 +18,7 @@ public class Computer : INode
 
     public byte[]? Thumbnail { get; set; }
 
-    public Guid? ParentId { get; set; }
+    public Guid ParentId { get; set; }
 
-    public INode? Parent { get; set; }
+    public OrganizationalUnit Parent { get; set; }
 }

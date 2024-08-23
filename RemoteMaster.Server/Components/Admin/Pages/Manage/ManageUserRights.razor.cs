@@ -64,11 +64,11 @@ public partial class ManageUserRights
 
     private async Task LoadOrganizationsAsync()
     {
-        var result = await NodesService.GetNodesAsync<Organization>();
+        var organizations = await OrganizationRepository.GetAllAsync();
 
-        if (result.IsSuccess)
+        if (organizations != null)
         {
-            _organizations = result.Value
+            _organizations = organizations
                 .Select(o => new OrganizationViewModel(
                     o.Id,
                     o.Name,
@@ -82,7 +82,7 @@ public partial class ManageUserRights
         }
         else
         {
-            _message = string.Join("; ", result.Errors.Select(e => e.Message));
+            _message = "Failed to load organizations.";
         }
     }
 
@@ -158,47 +158,39 @@ public partial class ManageUserRights
 
         SelectedUserModel.SelectedOrganizations.Clear();
         SelectedUserModel.SelectedOrganizationalUnits.Clear();
-
+        
         foreach (var orgId in selectedOrganizationIds)
         {
-            var organizationResult = await NodesService.GetNodesAsync<Organization>(o => o.Id == orgId);
+            var organization = await OrganizationRepository.GetByIdAsync(orgId);
 
-            if (!organizationResult.IsSuccess || !organizationResult.Value.Any())
+            if (organization != null)
             {
-                continue;
+                user.UserOrganizations.Add(new UserOrganization
+                {
+                    OrganizationId = orgId,
+                    Organization = organization,
+                    UserId = user.Id,
+                    ApplicationUser = user
+                });
+
+                SelectedUserModel.SelectedOrganizations.Add(orgId);
             }
-
-            var organization = organizationResult.Value.First();
-
-            user.UserOrganizations.Add(new UserOrganization
-            {
-                OrganizationId = orgId,
-                Organization = organization,
-                UserId = user.Id,
-                ApplicationUser = user
-            });
-
-            SelectedUserModel.SelectedOrganizations.Add(orgId);
         }
 
         foreach (var unitId in selectedUnitIds)
         {
-            var unitResult = await NodesService.GetNodesAsync<OrganizationalUnit>(ou => ou.Id == unitId);
+            var unit = await OrganizationalUnitRepository.GetByIdAsync(unitId);
 
-            if (!unitResult.IsSuccess || !unitResult.Value.Any())
+            if (unit != null)
             {
-                continue;
+                user.UserOrganizationalUnits.Add(new UserOrganizationalUnit
+                {
+                    OrganizationalUnitId = unitId,
+                    OrganizationalUnit = unit,
+                    UserId = user.Id,
+                    ApplicationUser = user
+                });
             }
-
-            var unit = unitResult.Value.First();
-
-            user.UserOrganizationalUnits.Add(new UserOrganizationalUnit
-            {
-                OrganizationalUnitId = unitId,
-                OrganizationalUnit = unit,
-                UserId = user.Id,
-                ApplicationUser = user
-            });
 
             SelectedUserModel.SelectedOrganizationalUnits.Add(unitId);
         }
@@ -350,7 +342,34 @@ public partial class ManageUserRights
     private void ToggleOrganizationExpansion(OrganizationViewModel organization)
     {
         organization.IsExpanded = !organization.IsExpanded;
+
+        if (organization.IsExpanded && organization.OrganizationalUnits.Count == 0)
+        {
+            LoadOrganizationalUnitsAsync(organization.Id).ConfigureAwait(false);
+        }
+
         StateHasChanged();
+    }
+
+    private async Task LoadOrganizationalUnitsAsync(Guid organizationId)
+    {
+        var organizationalUnits = await OrganizationalUnitRepository.GetAllAsync(ou => ou.OrganizationId == organizationId);
+
+        var organization = _organizations.FirstOrDefault(org => org.Id == organizationId);
+
+        if (organization != null)
+        {
+            organization.OrganizationalUnits.Clear();
+
+            organization.OrganizationalUnits.AddRange(organizationalUnits.Select(ou => new OrganizationalUnitViewModel
+            {
+                Id = ou.Id,
+                Name = ou.Name,
+                IsSelected = _initialSelectedUnitIds.Contains(ou.Id)
+            }));
+
+            StateHasChanged();
+        }
     }
 
     private void ToggleLockoutDateTimeInputs(ChangeEventArgs e)

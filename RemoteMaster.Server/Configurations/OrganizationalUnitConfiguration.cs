@@ -5,7 +5,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using RemoteMaster.Server.Entities;
+using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
 
 namespace RemoteMaster.Server.Configurations;
 
@@ -36,7 +36,7 @@ public class OrganizationalUnitConfiguration : IEntityTypeConfiguration<Organiza
             .IsUnique();
 
         builder.HasMany(ou => ou.Children)
-            .WithOne(c => (OrganizationalUnit?)c.Parent)
+            .WithOne(c => c.Parent)
             .HasForeignKey(c => c.ParentId)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
@@ -47,7 +47,7 @@ public class OrganizationalUnitConfiguration : IEntityTypeConfiguration<Organiza
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(ou => ou.Computers)
-            .WithOne(c => (OrganizationalUnit?)c.Parent)
+            .WithOne(c => c.Parent)
             .HasForeignKey(c => c.ParentId)
             .IsRequired()
             .OnDelete(DeleteBehavior.Restrict);

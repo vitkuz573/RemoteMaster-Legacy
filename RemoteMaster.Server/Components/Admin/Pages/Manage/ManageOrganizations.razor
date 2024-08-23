@@ -2,13 +2,14 @@
 
 @rendermode InteractiveServer
 
+@using RemoteMaster.Server.Aggregates.OrganizationAggregate
 @using RemoteMaster.Server.Components.Account.Shared
 @using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Server.Components.Admin.Dialogs
 
 @inject NavigationManager NavigationManager
 @inject ICountryProvider CountryProvider
-@inject INodesService NodesService
+@inject IRepository<Organization> OrganizationRepository
 
 <PageTitle>Manage Organizations</PageTitle>
 

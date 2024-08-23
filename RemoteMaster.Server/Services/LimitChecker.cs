@@ -3,8 +3,9 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Aggregates.OrganizationAggregate;
+using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
 using RemoteMaster.Server.Data;
-using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Services;

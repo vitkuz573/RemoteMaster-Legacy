@@ -2,11 +2,17 @@
 
 @using Microsoft.AspNetCore.Identity
 @using RemoteMaster.Server.Abstractions
+@using RemoteMaster.Server.Aggregates.OrganizationAggregate
+@using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate
 @using RemoteMaster.Server.Data
 @using RemoteMaster.Server.Entities
+@using RemoteMaster.Server.Services
 
-@inject INodesService NodesService
 @inject UserManager<ApplicationUser> UserManager
+@inject IRepository<Organization> OrganizationRepository
+@inject IRepository<OrganizationalUnit> OrganizationalUnitRepository
+@inject IRepository<Computer> ComputerRepository
+@inject HostManagementService HostManagementService
 
 <CommonDialog>
     <Content>

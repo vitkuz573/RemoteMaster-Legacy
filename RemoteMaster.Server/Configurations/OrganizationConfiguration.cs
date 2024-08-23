@@ -5,7 +5,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using RemoteMaster.Server.Entities;
+using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 
 namespace RemoteMaster.Server.Configurations;
 
@@ -60,8 +60,5 @@ public class OrganizationConfiguration : IEntityTypeConfiguration<Organization>
             .WithOne(uo => uo.Organization)
             .HasForeignKey(uo => uo.OrganizationId)
             .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Ignore(o => o.ParentId);
-        builder.Ignore(o => o.Parent);
     }
 }
