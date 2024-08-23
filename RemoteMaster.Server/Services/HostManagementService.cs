@@ -3,17 +3,15 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
 using RemoteMaster.Server.Entities;
 
 namespace RemoteMaster.Server.Services;
 
-public class HostManagementService(IRepository<OrganizationalUnit> organizationalUnitRepository, IRepository<Computer> computerRepository)
+public class HostManagementService(IRepository<Computer> computerRepository)
 {
     public async Task<bool> MoveComputerToUnitAsync(Guid computerId, Guid newUnitId)
     {
         var computer = await computerRepository.GetByIdAsync(computerId) ?? throw new InvalidOperationException("Computer not found.");
-        var newUnit = await organizationalUnitRepository.GetByIdAsync(newUnitId) ?? throw new InvalidOperationException("Organizational Unit not found.");
         
         computer.ParentId = newUnitId;
         
