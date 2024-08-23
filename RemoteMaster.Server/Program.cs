@@ -180,7 +180,7 @@ public static class Program
         services.AddTransient<IUdpClient, UdpClientWrapper>();
         services.AddTransient<Func<IUdpClient>>(provider => provider.GetRequiredService<IUdpClient>);
         services.AddScoped<IRepository<Organization>, OrganizationRepository>();
-        services.AddScoped<IRepository<OrganizationalUnit>, OrganizationalUnitRepository>();
+        services.AddScoped<IOrganizationalUnitRepository, OrganizationalUnitRepository>();
         services.AddScoped<IRepository<Computer>, ComputerRepository>();
         services.AddScoped<IQueryParameterService, QueryParameterService>();
         services.AddScoped<IApplicationClaimsService, ApplicationClaimsService>();

@@ -19,6 +19,4 @@ public interface IRepository<T> where T : class
     Task DeleteAsync(T entity);
     
     Task SaveChangesAsync();
-
-    Task<string[]> GetFullPathAsync(Guid id);
 }

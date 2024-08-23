@@ -10,7 +10,7 @@ using RemoteMaster.Server.Data;
 
 namespace RemoteMaster.Server.Repositories;
 
-public class OrganizationalUnitRepository(ApplicationDbContext context) : IRepository<OrganizationalUnit>
+public class OrganizationalUnitRepository(ApplicationDbContext context) : IOrganizationalUnitRepository
 {
     public async Task<OrganizationalUnit?> GetByIdAsync(Guid id)
     {

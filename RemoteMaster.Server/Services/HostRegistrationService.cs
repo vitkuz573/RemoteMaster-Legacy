@@ -11,7 +11,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class HostRegistrationService(IEventNotificationService eventNotificationService, IRepository<Organization> organizationRepository, IRepository<OrganizationalUnit> organizationalUnitRepository, IRepository<Computer> computerRepository) : IHostRegistrationService
+public class HostRegistrationService(IEventNotificationService eventNotificationService, IRepository<Organization> organizationRepository, IOrganizationalUnitRepository organizationalUnitRepository, IRepository<Computer> computerRepository) : IHostRegistrationService
 {
     private async Task<Result<Organization>> GetOrganizationAsync(string organizationName)
     {

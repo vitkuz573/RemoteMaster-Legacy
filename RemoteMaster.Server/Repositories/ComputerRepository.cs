@@ -15,12 +15,13 @@ public class ComputerRepository(ApplicationDbContext context) : IRepository<Comp
     public async Task<Computer?> GetByIdAsync(Guid id)
     {
         return await context.Computers
+            .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == id);
     }
 
     public async Task<IEnumerable<Computer>> GetAllAsync(Expression<Func<Computer, bool>>? predicate = null)
     {
-        var query = context.Computers.AsQueryable();
+        var query = context.Computers.AsQueryable().AsNoTracking();
 
         if (predicate != null)
         {
