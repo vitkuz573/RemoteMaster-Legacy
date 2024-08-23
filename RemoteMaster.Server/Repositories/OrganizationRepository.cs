@@ -50,6 +50,4 @@ public class OrganizationRepository(ApplicationDbContext context) : IRepository<
     {
         await context.SaveChangesAsync();
     }
-
-    public Task<string[]> GetFullPathAsync(Guid id) => throw new NotImplementedException();
 }
