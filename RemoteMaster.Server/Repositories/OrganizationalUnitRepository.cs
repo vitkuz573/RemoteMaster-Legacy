@@ -57,14 +57,21 @@ public class OrganizationalUnitRepository(ApplicationDbContext context) : IOrgan
         var path = new List<string>();
 
         var unit = await context.OrganizationalUnits
-            .Where(ou => ou.Id == organizationalUnitId)
             .Include(ou => ou.Parent)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(ou => ou.Id == organizationalUnitId);
 
         while (unit != null)
         {
             path.Insert(0, unit.Name);
-            unit = unit.Parent;
+            
+            if (unit.ParentId == null)
+            {
+                break;
+            }
+
+            unit = await context.OrganizationalUnits
+                .Include(ou => ou.Parent)
+                .FirstOrDefaultAsync(ou => ou.Id == unit.ParentId);
         }
 
         return path.Count > 0 ? [.. path] : [];
