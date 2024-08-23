@@ -52,31 +52,21 @@ public class OrganizationalUnitRepository(ApplicationDbContext context) : IOrgan
         await context.SaveChangesAsync();
     }
 
-    public async Task<string[]> GetFullPathAsync(Guid id)
+    public async Task<string[]> GetFullPathAsync(Guid organizationalUnitId)
     {
+        var path = new List<string>();
+
         var unit = await context.OrganizationalUnits
+            .Where(ou => ou.Id == organizationalUnitId)
             .Include(ou => ou.Parent)
-            .FirstOrDefaultAsync(ou => ou.Id == id);
+            .FirstOrDefaultAsync();
 
-        if (unit == null)
+        while (unit != null)
         {
-            return [];
+            path.Insert(0, unit.Name);
+            unit = unit.Parent;
         }
 
-        var path = new List<string> { unit.Name };
-
-        while (unit.Parent != null)
-        {
-            unit = await context.OrganizationalUnits
-                .Include(ou => ou.Parent)
-                .FirstOrDefaultAsync(ou => ou.Id == unit.ParentId);
-
-            if (unit != null)
-            {
-                path.Insert(0, unit.Name);
-            }
-        }
-
-        return [.. path];
+        return path.Count > 0 ? [.. path] : [];
     }
 }

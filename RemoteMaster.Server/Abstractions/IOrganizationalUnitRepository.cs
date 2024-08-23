@@ -6,7 +6,7 @@ using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
 
 namespace RemoteMaster.Server.Abstractions;
 
-public interface IOrganizationalUnitRepository : IRepository<OrganizationalUnit>
+public interface IOrganizationalUnitRepository : IRepository<OrganizationalUnit, Guid>
 {
-    Task<string[]> GetFullPathAsync(Guid id);
+    Task<string[]> GetFullPathAsync(Guid organizationalUnitId);
 }

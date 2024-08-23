@@ -10,7 +10,7 @@ using RemoteMaster.Server.Entities;
 
 namespace RemoteMaster.Server.Repositories;
 
-public class ComputerRepository(ApplicationDbContext context) : IRepository<Computer>
+public class ComputerRepository(ApplicationDbContext context) : IRepository<Computer, Guid>
 {
     public async Task<Computer?> GetByIdAsync(Guid id)
     {
