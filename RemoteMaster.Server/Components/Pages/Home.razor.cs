@@ -115,7 +115,7 @@ public partial class Home
 
         if (organizationId == null)
         {
-            var organizationsResult = await OrganizationRepository.GetAllAsync(o => accessibleOrganizations.Contains(o.Id));
+            var organizationsResult = await OrganizationRepository.FindAsync(o => accessibleOrganizations.Contains(o.Id));
 
             if (organizationsResult == null)
             {
@@ -139,7 +139,7 @@ public partial class Home
         }
         else
         {
-            var organizationalUnitsResult = await OrganizationalUnitRepository.GetAllAsync(ou =>
+            var organizationalUnitsResult = await OrganizationalUnitRepository.FindAsync(ou =>
                 ou.OrganizationId == organizationId &&
                 (parentId == null || ou.ParentId == parentId) &&
                 accessibleOrganizationalUnits.Contains(ou.Id));
@@ -153,7 +153,7 @@ public partial class Home
 
             units.AddRange(organizationalUnitsResult);
 
-            var computersResult = await ComputerRepository.GetAllAsync(c => c.ParentId == parentId);
+            var computersResult = await ComputerRepository.FindAsync(c => c.ParentId == parentId);
 
             if (computersResult == null)
             {

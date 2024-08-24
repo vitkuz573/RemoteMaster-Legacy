@@ -353,7 +353,7 @@ public partial class ManageUserRights
 
     private async Task LoadOrganizationalUnitsAsync(Guid organizationId)
     {
-        var organizationalUnits = await OrganizationalUnitRepository.GetAllAsync(ou => ou.OrganizationId == organizationId);
+        var organizationalUnits = await OrganizationalUnitRepository.FindAsync(ou => ou.OrganizationId == organizationId);
 
         var organization = _organizations.FirstOrDefault(org => org.Id == organizationId);
 

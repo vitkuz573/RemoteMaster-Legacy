@@ -6,17 +6,19 @@ using System.Linq.Expressions;
 
 namespace RemoteMaster.Server.Abstractions;
 
-public interface IRepository<T, TId> where T : class
+public interface IRepository<TEntity, TId> where TEntity : class
 {
-    Task<T?> GetByIdAsync(TId id);
+    Task<TEntity?> GetByIdAsync(TId id);
 
-    Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>? predicate = null);
+    Task<IEnumerable<TEntity>> GetAllAsync();
 
-    Task AddAsync(T entity);
+    Task<IEnumerable<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate);
 
-    Task UpdateAsync(T entity);
+    Task AddAsync(TEntity entity);
 
-    Task DeleteAsync(T entity);
+    Task UpdateAsync(TEntity entity);
+
+    Task DeleteAsync(TEntity entity);
 
     Task SaveChangesAsync();
 }

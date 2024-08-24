@@ -3,11 +3,10 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Entities;
 
 namespace RemoteMaster.Server.Services;
 
-public class HostManagementService(IRepository<Computer> computerRepository)
+public class HostManagementService(IComputerRepository computerRepository)
 {
     public async Task<bool> MoveComputerToUnitAsync(Guid computerId, Guid newUnitId)
     {

@@ -11,11 +11,11 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class HostRegistrationService(IEventNotificationService eventNotificationService, IRepository<Organization> organizationRepository, IOrganizationalUnitRepository organizationalUnitRepository, IRepository<Computer> computerRepository) : IHostRegistrationService
+public class HostRegistrationService(IEventNotificationService eventNotificationService, IOrganizationRepository organizationRepository, IOrganizationalUnitRepository organizationalUnitRepository, IComputerRepository computerRepository) : IHostRegistrationService
 {
     private async Task<Result<Organization>> GetOrganizationAsync(string organizationName)
     {
-        var organizations = await organizationRepository.GetAllAsync(n => n.Name == organizationName);
+        var organizations = await organizationRepository.FindAsync(n => n.Name == organizationName);
 
         var organization = organizations.FirstOrDefault();
 
@@ -30,7 +30,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
 
         foreach (var ouName in ouNames)
         {
-            var ous = await organizationalUnitRepository.GetAllAsync(n => n.Name == ouName && n.OrganizationId == organizationId);
+            var ous = await organizationalUnitRepository.FindAsync(n => n.Name == ouName && n.OrganizationId == organizationId);
 
             var ou = ous.FirstOrDefault(o => parentOu == null || o.ParentId == parentOu?.Id);
 
@@ -47,7 +47,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
 
     private async Task<Result<Computer>> GetComputerByMacAddressAsync(string macAddress, Guid parentOuId)
     {
-        var existingComputers = await computerRepository.GetAllAsync(c => c.ParentId == parentOuId && c.MacAddress == macAddress);
+        var existingComputers = await computerRepository.FindAsync(c => c.ParentId == parentOuId && c.MacAddress == macAddress);
 
         var computer = existingComputers.FirstOrDefault();
 
@@ -62,7 +62,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
 
         try
         {
-            var computers = await computerRepository.GetAllAsync(n => n.MacAddress == macAddress);
+            var computers = await computerRepository.FindAsync(n => n.MacAddress == macAddress);
 
             if (computers.Any())
             {

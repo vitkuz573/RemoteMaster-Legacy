@@ -15,21 +15,25 @@ public class OrganizationalUnitRepository(ApplicationDbContext context) : IOrgan
     public async Task<OrganizationalUnit?> GetByIdAsync(Guid id)
     {
         return await context.OrganizationalUnits
+            .AsNoTracking()
             .Include(ou => ou.Children)
             .Include(ou => ou.Computers)
             .FirstOrDefaultAsync(ou => ou.Id == id);
     }
 
-    public async Task<IEnumerable<OrganizationalUnit>> GetAllAsync(Expression<Func<OrganizationalUnit, bool>>? predicate = null)
+    public async Task<IEnumerable<OrganizationalUnit>> GetAllAsync()
     {
-        var query = context.OrganizationalUnits.AsQueryable();
+        return await context.OrganizationalUnits
+            .AsNoTracking()
+            .ToListAsync();
+    }
 
-        if (predicate != null)
-        {
-            query = query.Where(predicate);
-        }
-
-        return await query.ToListAsync();
+    public async Task<IEnumerable<OrganizationalUnit>> FindAsync(Expression<Func<OrganizationalUnit, bool>> predicate)
+    {
+        return await context.OrganizationalUnits
+            .AsNoTracking()
+            .Where(predicate)
+            .ToListAsync();
     }
 
     public async Task AddAsync(OrganizationalUnit entity)
@@ -57,6 +61,7 @@ public class OrganizationalUnitRepository(ApplicationDbContext context) : IOrgan
         var path = new List<string>();
 
         var unit = await context.OrganizationalUnits
+            .AsNoTracking()
             .Include(ou => ou.Parent)
             .FirstOrDefaultAsync(ou => ou.Id == organizationalUnitId);
 
@@ -70,6 +75,7 @@ public class OrganizationalUnitRepository(ApplicationDbContext context) : IOrgan
             }
 
             unit = await context.OrganizationalUnits
+                .AsNoTracking()
                 .Include(ou => ou.Parent)
                 .FirstOrDefaultAsync(ou => ou.Id == unit.ParentId);
         }

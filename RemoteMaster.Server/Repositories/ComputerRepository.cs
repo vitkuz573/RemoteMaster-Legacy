@@ -10,7 +10,7 @@ using RemoteMaster.Server.Entities;
 
 namespace RemoteMaster.Server.Repositories;
 
-public class ComputerRepository(ApplicationDbContext context) : IRepository<Computer, Guid>
+public class ComputerRepository(ApplicationDbContext context) : IComputerRepository
 {
     public async Task<Computer?> GetByIdAsync(Guid id)
     {
@@ -19,16 +19,19 @@ public class ComputerRepository(ApplicationDbContext context) : IRepository<Comp
             .FirstOrDefaultAsync(c => c.Id == id);
     }
 
-    public async Task<IEnumerable<Computer>> GetAllAsync(Expression<Func<Computer, bool>>? predicate = null)
+    public async Task<IEnumerable<Computer>> GetAllAsync()
     {
-        var query = context.Computers.AsQueryable().AsNoTracking();
+        return await context.Computers
+            .AsNoTracking()
+            .ToListAsync();
+    }
 
-        if (predicate != null)
-        {
-            query = query.Where(predicate);
-        }
-
-        return await query.ToListAsync();
+    public async Task<IEnumerable<Computer>> FindAsync(Expression<Func<Computer, bool>> predicate)
+    {
+        return await context.Computers
+            .AsNoTracking()
+            .Where(predicate)
+            .ToListAsync();
     }
 
     public async Task AddAsync(Computer entity)

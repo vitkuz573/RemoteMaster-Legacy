@@ -10,7 +10,7 @@ using RemoteMaster.Server.Data;
 
 namespace RemoteMaster.Server.Repositories;
 
-public class OrganizationRepository(ApplicationDbContext context) : IRepository<Organization, Guid>
+public class OrganizationRepository(ApplicationDbContext context) : IOrganizationRepository
 {
     public async Task<Organization?> GetByIdAsync(Guid id)
     {
@@ -19,16 +19,19 @@ public class OrganizationRepository(ApplicationDbContext context) : IRepository<
             .FirstOrDefaultAsync(o => o.Id == id);
     }
 
-    public async Task<IEnumerable<Organization>> GetAllAsync(Expression<Func<Organization, bool>>? predicate = null)
+    public async Task<IEnumerable<Organization>> GetAllAsync()
     {
-        var query = context.Organizations.AsQueryable();
+        return await context.Organizations
+            .AsNoTracking()
+            .ToListAsync();
+    }
 
-        if (predicate != null)
-        {
-            query = query.Where(predicate);
-        }
-
-        return await query.ToListAsync();
+    public async Task<IEnumerable<Organization>> FindAsync(Expression<Func<Organization, bool>> predicate)
+    {
+        return await context.Organizations
+            .AsNoTracking()
+            .Where(predicate)
+            .ToListAsync();
     }
 
     public async Task AddAsync(Organization entity)
