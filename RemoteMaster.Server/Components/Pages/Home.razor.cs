@@ -129,11 +129,11 @@ public partial class Home
             foreach (var organization in organizationsResult)
             {
                 var organizationalUnits = (await LoadNodes(organization.Id)).OfType<OrganizationalUnit>().ToList();
-                organization.OrganizationalUnits.Clear();
+                organization.ClearOrganizationalUnits();
 
                 foreach (var unit in organizationalUnits)
                 {
-                    organization.OrganizationalUnits.Add(unit);
+                    organization.AddOrganizationalUnit(unit);
                 }
             }
         }
@@ -169,18 +169,18 @@ public partial class Home
                 var childrenUnits = (await LoadNodes(unit.OrganizationId, unit.Id)).OfType<OrganizationalUnit>().ToList();
                 var unitComputers = (await LoadNodes(unit.OrganizationId, unit.Id)).OfType<Computer>().ToList();
 
-                unit.Children.Clear();
+                unit.ClearChildren();
 
                 foreach (var child in childrenUnits)
                 {
-                    unit.Children.Add(child);
+                    unit.AddChildUnit(child);
                 }
 
-                unit.Computers.Clear();
+                unit.ClearComputers();
 
                 foreach (var computer in unitComputers)
                 {
-                    unit.Computers.Add(computer);
+                    unit.AddComputer(computer);
                 }
             }
         }
@@ -261,7 +261,7 @@ public partial class Home
 
         foreach (var computer in computers.Where(computer => !_availableComputers.ContainsKey(computer.IpAddress) && !_unavailableComputers.ContainsKey(computer.IpAddress)))
         {
-            computer.Thumbnail = null;
+            computer.UpdateThumbnail(null);
             newPendingComputers.TryAdd(computer.IpAddress, computer);
         }
 
@@ -316,7 +316,7 @@ public partial class Home
             {
                 if (thumbnailBytes.Length > 0)
                 {
-                    computer.Thumbnail = thumbnailBytes;
+                    computer.UpdateThumbnail(thumbnailBytes);
 
                     await MoveToAvailable(computer);
                 }
@@ -379,7 +379,7 @@ public partial class Home
                 Log.Information("Connection closed for {IPAddress}", computer.IpAddress);
             });
 
-            computer.Thumbnail = null;
+            computer.UpdateThumbnail(null);
 
             await MoveToPending(computer);
         }
@@ -407,7 +407,7 @@ public partial class Home
 
     private async Task MoveToUnavailable(Computer computer)
     {
-        computer.Thumbnail = null;
+        computer.UpdateThumbnail(null);
 
         if (_pendingComputers.ContainsKey(computer.IpAddress))
         {
@@ -425,7 +425,7 @@ public partial class Home
 
     private async Task MoveToPending(Computer computer)
     {
-        computer.Thumbnail = null;
+        computer.UpdateThumbnail(null);
 
         if (_availableComputers.ContainsKey(computer.IpAddress))
         {
@@ -609,7 +609,7 @@ public partial class Home
     {
         var computers = onlyAvailable ? _selectedComputers.Where(c => _availableComputers.ContainsKey(c.IpAddress)).ToList() : _selectedComputers.ToList();
 
-        if (!computers.Any())
+        if (computers.Count == 0)
         {
             return;
         }
@@ -678,7 +678,7 @@ public partial class Home
         {
             var computersToRemove = _selectedComputers.ToList();
 
-            if (computersToRemove.Any())
+            if (computersToRemove.Count != 0)
             {
                 foreach (var computer in computersToRemove)
                 {

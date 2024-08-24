@@ -126,7 +126,7 @@ public partial class MoveDialog
             }
 
             var newParentUnit = await OrganizationalUnitRepository.GetByIdAsync(_selectedOrganizationalUnitId.Value) ?? throw new InvalidOperationException("New parent Organizational Unit not found.");
-            var targetOrganizationalUnitsPath = await OrganizationalUnitRepository.GetFullPathAsync(newParentUnit.Id);
+            var targetOrganizationalUnitsPath = await OrganizationalUnitService.GetFullPathAsync(newParentUnit.Id);
             
             if (targetOrganizationalUnitsPath.Length == 0)
             {
@@ -168,7 +168,7 @@ public partial class MoveDialog
                     continue;
                 }
 
-                computer.ParentId = newParentUnit.Id;
+                computer.ChangeParent(newParentUnit);
 
                 await ComputerRepository.UpdateAsync(computer);
                 await ComputerRepository.SaveChangesAsync();

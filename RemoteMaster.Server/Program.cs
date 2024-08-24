@@ -192,6 +192,9 @@ public static class Program
         services.AddScoped<IUserPlanProvider, UserPlanProvider>();
         services.AddScoped<ILimitChecker, LimitChecker>();
         services.AddScoped<HostManagementService>();
+        services.AddScoped<IOrganizationService, OrganizationService>();
+        services.AddScoped<IOrganizationalUnitService, OrganizationalUnitService>();
+        services.AddScoped<IComputerService, ComputerService>();
         services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<ITokenStorageService, InMemoryTokenStorageService>();
         services.AddSingleton<IBrandingService, BrandingService>();

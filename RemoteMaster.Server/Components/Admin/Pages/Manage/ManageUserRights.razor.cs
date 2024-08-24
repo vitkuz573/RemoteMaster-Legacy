@@ -153,25 +153,36 @@ public partial class ManageUserRights
         var selectedOrganizationIds = _organizations.Where(o => o.IsSelected).Select(o => o.Id).ToList();
         var selectedUnitIds = _organizations.SelectMany(o => o.OrganizationalUnits).Where(ou => ou.IsSelected).Select(ou => ou.Id).ToList();
 
-        user.UserOrganizations.Clear();
-        user.UserOrganizationalUnits.Clear();
+        foreach (var org in user.UserOrganizations.ToList())
+        {
+            var organization = await OrganizationRepository.GetByIdAsync(org.OrganizationId);
+            organization?.RemoveUser(org);
+        }
+
+        foreach (var unit in user.UserOrganizationalUnits.ToList())
+        {
+            var organizationalUnit = await OrganizationalUnitRepository.GetByIdAsync(unit.OrganizationalUnitId);
+            organizationalUnit?.RemoveUser(unit);
+        }
 
         SelectedUserModel.SelectedOrganizations.Clear();
         SelectedUserModel.SelectedOrganizationalUnits.Clear();
-        
+
         foreach (var orgId in selectedOrganizationIds)
         {
             var organization = await OrganizationRepository.GetByIdAsync(orgId);
 
             if (organization != null)
             {
-                user.UserOrganizations.Add(new UserOrganization
+                var userOrg = new UserOrganization
                 {
                     OrganizationId = orgId,
                     Organization = organization,
                     UserId = user.Id,
                     ApplicationUser = user
-                });
+                };
+
+                organization.AddUser(userOrg);
 
                 SelectedUserModel.SelectedOrganizations.Add(orgId);
             }
@@ -183,16 +194,18 @@ public partial class ManageUserRights
 
             if (unit != null)
             {
-                user.UserOrganizationalUnits.Add(new UserOrganizationalUnit
+                var userUnit = new UserOrganizationalUnit
                 {
                     OrganizationalUnitId = unitId,
                     OrganizationalUnit = unit,
                     UserId = user.Id,
                     ApplicationUser = user
-                });
-            }
+                };
 
-            SelectedUserModel.SelectedOrganizationalUnits.Add(unitId);
+                unit.AddUser(userUnit);
+
+                SelectedUserModel.SelectedOrganizationalUnits.Add(unitId);
+            }
         }
     }
 

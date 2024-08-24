@@ -37,6 +37,21 @@ public partial class ManageOrganizationalUnits
             return;
         }
 
+        var organization = await OrganizationRepository.GetByIdAsync(Input.OrganizationId);
+        
+        if (organization == null)
+        {
+            _message = "Error: Organization not found.";
+            return;
+        }
+
+        OrganizationalUnit? parent = null;
+
+        if (Input.ParentId.HasValue)
+        {
+            parent = await OrganizationalUnitRepository.GetByIdAsync(Input.ParentId.Value);
+        }
+
         if (Input.Id.HasValue)
         {
             var organizationalUnit = await OrganizationalUnitRepository.GetByIdAsync(Input.Id.Value);
@@ -44,29 +59,27 @@ public partial class ManageOrganizationalUnits
             if (organizationalUnit == null)
             {
                 _message = "Error: Organizational unit not found.";
-                
                 return;
             }
 
-            organizationalUnit.Name = Input.Name;
-            organizationalUnit.OrganizationId = Input.OrganizationId;
-            organizationalUnit.ParentId = Input.ParentId;
+            organizationalUnit.ChangeName(Input.Name);
+
+            if (parent != null)
+            {
+                organizationalUnit.ChangeParent(parent);
+            }
 
             await OrganizationalUnitRepository.UpdateAsync(organizationalUnit);
-            
+
             _message = "Organizational unit updated successfully.";
         }
         else
         {
-            var newUnit = new OrganizationalUnit
-            {
-                Name = Input.Name,
-                OrganizationId = Input.OrganizationId,
-                ParentId = Input.ParentId
-            };
+            var newUnit = new OrganizationalUnit(Input.Name, organization, parent);
+            organization.AddOrganizationalUnit(newUnit);
 
             await OrganizationalUnitRepository.AddAsync(newUnit);
-            
+
             _message = "Organizational unit created successfully.";
         }
 

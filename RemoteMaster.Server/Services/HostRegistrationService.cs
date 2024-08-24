@@ -135,13 +135,9 @@ public class HostRegistrationService(IEventNotificationService eventNotification
                 return Result.Ok();
             }
 
-            var computer = new Computer
-            {
-                Name = hostConfiguration.Host.Name,
-                IpAddress = hostConfiguration.Host.IpAddress,
-                MacAddress = hostConfiguration.Host.MacAddress,
-                ParentId = parentOuResult.Value.Id
-            };
+            var parent = await organizationalUnitRepository.GetByIdAsync(parentOuResult.Value.Id);
+
+            var computer = new Computer(hostConfiguration.Host.Name, hostConfiguration.Host.IpAddress, hostConfiguration.Host.MacAddress, parent);
 
             await computerRepository.AddAsync(computer);
             await computerRepository.SaveChangesAsync();
@@ -164,8 +160,8 @@ public class HostRegistrationService(IEventNotificationService eventNotification
 
     private async Task<Result> UpdateComputerAsync(Computer computer, HostConfiguration hostConfiguration)
     {
-        computer.Name = hostConfiguration.Host.Name;
-        computer.IpAddress = hostConfiguration.Host.IpAddress;
+        computer.ChangeName(hostConfiguration.Host.Name);
+        computer.ChangeIpAddress(hostConfiguration.Host.IpAddress);
 
         computerRepository.UpdateAsync(computer);
         await computerRepository.SaveChangesAsync();
@@ -277,8 +273,8 @@ public class HostRegistrationService(IEventNotificationService eventNotification
 
             var computer = computerResult.Value;
 
-            computer.IpAddress = request.IpAddress;
-            computer.MacAddress = request.MacAddress;
+            computer.ChangeIpAddress(request.IpAddress);
+            computer.ChangeMacAddress(request.MacAddress);
 
             await computerRepository.UpdateAsync(computer);
             await computerRepository.SaveChangesAsync();

@@ -8,17 +8,54 @@ namespace RemoteMaster.Server.Entities;
 
 public class Computer
 {
-    public Guid Id { get; set; }
+    protected Computer() { }
 
-    public string Name { get; set; }
+    public Computer(string name, string ipAddress, string macAddress, OrganizationalUnit parent)
+    {
+        Name = name ?? throw new ArgumentNullException(nameof(name));
+        IpAddress = ipAddress ?? throw new ArgumentNullException(nameof(ipAddress));
+        MacAddress = macAddress ?? throw new ArgumentNullException(nameof(macAddress));
+        Parent = parent ?? throw new ArgumentNullException(nameof(parent));
+        ParentId = parent.Id;
+    }
 
-    public string IpAddress { get; set; }
+    public Guid Id { get; private set; }
 
-    public string MacAddress { get; set; }
+    public string Name { get; private set; }
 
-    public byte[]? Thumbnail { get; set; }
+    public string IpAddress { get; private set; }
 
-    public Guid ParentId { get; set; }
+    public string MacAddress { get; private set; }
 
-    public OrganizationalUnit Parent { get; set; }
+    public byte[]? Thumbnail { get; private set; }
+
+    public Guid ParentId { get; private set; }
+
+    public OrganizationalUnit Parent { get; private set; }
+
+    public void ChangeParent(OrganizationalUnit newParent)
+    {
+        Parent = newParent ?? throw new ArgumentNullException(nameof(newParent));
+        ParentId = newParent.Id;
+    }
+
+    public void UpdateThumbnail(byte[]? thumbnail)
+    {
+        Thumbnail = thumbnail;
+    }
+
+    public void ChangeIpAddress(string newIpAddress)
+    {
+        IpAddress = newIpAddress ?? throw new ArgumentNullException(nameof(newIpAddress));
+    }
+
+    public void ChangeMacAddress(string newMacAddress)
+    {
+        MacAddress = newMacAddress ?? throw new ArgumentNullException(nameof(newMacAddress));
+    }
+
+    public void ChangeName(string newName)
+    {
+        Name = newName ?? throw new ArgumentNullException(nameof(newName));
+    }
 }

@@ -6,13 +6,15 @@ using RemoteMaster.Server.Abstractions;
 
 namespace RemoteMaster.Server.Services;
 
-public class HostManagementService(IComputerRepository computerRepository)
+public class HostManagementService(IComputerRepository computerRepository, IOrganizationalUnitRepository organizationalUnitRepository)
 {
     public async Task<bool> MoveComputerToUnitAsync(Guid computerId, Guid newUnitId)
     {
         var computer = await computerRepository.GetByIdAsync(computerId) ?? throw new InvalidOperationException("Computer not found.");
-        
-        computer.ParentId = newUnitId;
+
+        var parent = await organizationalUnitRepository.GetByIdAsync(newUnitId);
+
+        computer.ChangeParent(parent);
         
         await computerRepository.UpdateAsync(computer);
         await computerRepository.SaveChangesAsync();

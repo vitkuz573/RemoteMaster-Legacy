@@ -15,7 +15,6 @@ public class OrganizationalUnitRepository(ApplicationDbContext context) : IOrgan
     public async Task<OrganizationalUnit?> GetByIdAsync(Guid id)
     {
         return await context.OrganizationalUnits
-            .AsNoTracking()
             .Include(ou => ou.Children)
             .Include(ou => ou.Computers)
             .FirstOrDefaultAsync(ou => ou.Id == id);
@@ -24,14 +23,12 @@ public class OrganizationalUnitRepository(ApplicationDbContext context) : IOrgan
     public async Task<IEnumerable<OrganizationalUnit>> GetAllAsync()
     {
         return await context.OrganizationalUnits
-            .AsNoTracking()
             .ToListAsync();
     }
 
     public async Task<IEnumerable<OrganizationalUnit>> FindAsync(Expression<Func<OrganizationalUnit, bool>> predicate)
     {
         return await context.OrganizationalUnits
-            .AsNoTracking()
             .Where(predicate)
             .ToListAsync();
     }
@@ -54,32 +51,5 @@ public class OrganizationalUnitRepository(ApplicationDbContext context) : IOrgan
     public async Task SaveChangesAsync()
     {
         await context.SaveChangesAsync();
-    }
-
-    public async Task<string[]> GetFullPathAsync(Guid organizationalUnitId)
-    {
-        var path = new List<string>();
-
-        var unit = await context.OrganizationalUnits
-            .AsNoTracking()
-            .Include(ou => ou.Parent)
-            .FirstOrDefaultAsync(ou => ou.Id == organizationalUnitId);
-
-        while (unit != null)
-        {
-            path.Insert(0, unit.Name);
-            
-            if (unit.ParentId == null)
-            {
-                break;
-            }
-
-            unit = await context.OrganizationalUnits
-                .AsNoTracking()
-                .Include(ou => ou.Parent)
-                .FirstOrDefaultAsync(ou => ou.Id == unit.ParentId);
-        }
-
-        return path.Count > 0 ? [.. path] : [];
     }
 }

@@ -22,14 +22,12 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
     public async Task<IEnumerable<Organization>> GetAllAsync()
     {
         return await context.Organizations
-            .AsNoTracking()
             .ToListAsync();
     }
 
     public async Task<IEnumerable<Organization>> FindAsync(Expression<Func<Organization, bool>> predicate)
     {
         return await context.Organizations
-            .AsNoTracking()
             .Where(predicate)
             .ToListAsync();
     }

@@ -54,8 +54,8 @@ public partial class ManageOrganizations
                 return;
             }
 
-            organization.Name = Input.Name;
-            organization.Address = address;
+            organization.ChangeName(Input.Name);
+            organization.ChangeAddress(address);
 
             await OrganizationRepository.UpdateAsync(organization);
             
@@ -63,11 +63,7 @@ public partial class ManageOrganizations
         }
         else
         {
-            var newOrganization = new Organization
-            {
-                Name = Input.Name,
-                Address = address
-            };
+            var newOrganization = new Organization(Input.Name, address);
 
             await OrganizationRepository.AddAsync(newOrganization);
             

@@ -15,21 +15,18 @@ public class ComputerRepository(ApplicationDbContext context) : IComputerReposit
     public async Task<Computer?> GetByIdAsync(Guid id)
     {
         return await context.Computers
-            .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == id);
     }
 
     public async Task<IEnumerable<Computer>> GetAllAsync()
     {
         return await context.Computers
-            .AsNoTracking()
             .ToListAsync();
     }
 
     public async Task<IEnumerable<Computer>> FindAsync(Expression<Func<Computer, bool>> predicate)
     {
         return await context.Computers
-            .AsNoTracking()
             .Where(predicate)
             .ToListAsync();
     }

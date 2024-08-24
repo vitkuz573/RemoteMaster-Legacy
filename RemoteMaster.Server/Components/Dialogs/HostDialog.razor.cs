@@ -18,9 +18,9 @@ public partial class HostDialog
 
     protected override void OnInitialized()
     {
-        _model.Name = Host.Name;
-        _model.IpAddress = Host.IpAddress;
-        _model.MacAddress = Host.MacAddress;
+        _model.ChangeName(Host.Name);
+        _model.ChangeIpAddress(Host.IpAddress);
+        _model.ChangeMacAddress(Host.MacAddress);
     }
 
 #pragma warning disable
