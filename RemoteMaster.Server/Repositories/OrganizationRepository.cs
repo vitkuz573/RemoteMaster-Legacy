@@ -22,6 +22,7 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
     public async Task<IEnumerable<Organization>> GetAllAsync()
     {
         return await context.Organizations
+            .Include(o => o.OrganizationalUnits)
             .ToListAsync();
     }
 

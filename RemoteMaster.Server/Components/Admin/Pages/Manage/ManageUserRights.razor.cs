@@ -155,56 +155,61 @@ public partial class ManageUserRights
 
         foreach (var org in user.UserOrganizations.ToList())
         {
-            var organization = await OrganizationRepository.GetByIdAsync(org.OrganizationId);
-            organization?.RemoveUser(org);
+            if (!selectedOrganizationIds.Contains(org.OrganizationId))
+            {
+                var organization = await OrganizationRepository.GetByIdAsync(org.OrganizationId);
+                organization?.RemoveUser(org);
+            }
         }
 
         foreach (var unit in user.UserOrganizationalUnits.ToList())
         {
-            var organizationalUnit = await OrganizationalUnitRepository.GetByIdAsync(unit.OrganizationalUnitId);
-            organizationalUnit?.RemoveUser(unit);
+            if (!selectedUnitIds.Contains(unit.OrganizationalUnitId))
+            {
+                var organizationalUnit = await OrganizationalUnitRepository.GetByIdAsync(unit.OrganizationalUnitId);
+                organizationalUnit?.RemoveUser(unit);
+            }
         }
-
-        SelectedUserModel.SelectedOrganizations.Clear();
-        SelectedUserModel.SelectedOrganizationalUnits.Clear();
 
         foreach (var orgId in selectedOrganizationIds)
         {
-            var organization = await OrganizationRepository.GetByIdAsync(orgId);
-
-            if (organization != null)
+            if (!user.UserOrganizations.Any(uo => uo.OrganizationId == orgId))
             {
-                var userOrg = new UserOrganization
+                var organization = await OrganizationRepository.GetByIdAsync(orgId);
+
+                if (organization != null)
                 {
-                    OrganizationId = orgId,
-                    Organization = organization,
-                    UserId = user.Id,
-                    ApplicationUser = user
-                };
+                    var userOrg = new UserOrganization
+                    {
+                        OrganizationId = orgId,
+                        Organization = organization,
+                        UserId = user.Id,
+                        ApplicationUser = user
+                    };
 
-                organization.AddUser(userOrg);
-
-                SelectedUserModel.SelectedOrganizations.Add(orgId);
+                    organization.AddUser(userOrg);
+                }
             }
         }
 
         foreach (var unitId in selectedUnitIds)
         {
-            var unit = await OrganizationalUnitRepository.GetByIdAsync(unitId);
-
-            if (unit != null)
+            if (!user.UserOrganizationalUnits.Any(uou => uou.OrganizationalUnitId == unitId))
             {
-                var userUnit = new UserOrganizationalUnit
+                var unit = await OrganizationalUnitRepository.GetByIdAsync(unitId);
+
+                if (unit != null)
                 {
-                    OrganizationalUnitId = unitId,
-                    OrganizationalUnit = unit,
-                    UserId = user.Id,
-                    ApplicationUser = user
-                };
+                    var userUnit = new UserOrganizationalUnit
+                    {
+                        OrganizationalUnitId = unitId,
+                        OrganizationalUnit = unit,
+                        UserId = user.Id,
+                        ApplicationUser = user
+                    };
 
-                unit.AddUser(userUnit);
-
-                SelectedUserModel.SelectedOrganizationalUnits.Add(unitId);
+                    unit.AddUser(userUnit);
+                }
             }
         }
     }
@@ -356,33 +361,7 @@ public partial class ManageUserRights
     {
         organization.IsExpanded = !organization.IsExpanded;
 
-        if (organization.IsExpanded && organization.OrganizationalUnits.Count == 0)
-        {
-            LoadOrganizationalUnitsAsync(organization.Id).ConfigureAwait(false);
-        }
-
         StateHasChanged();
-    }
-
-    private async Task LoadOrganizationalUnitsAsync(Guid organizationId)
-    {
-        var organizationalUnits = await OrganizationalUnitRepository.FindAsync(ou => ou.OrganizationId == organizationId);
-
-        var organization = _organizations.FirstOrDefault(org => org.Id == organizationId);
-
-        if (organization != null)
-        {
-            organization.OrganizationalUnits.Clear();
-
-            organization.OrganizationalUnits.AddRange(organizationalUnits.Select(ou => new OrganizationalUnitViewModel
-            {
-                Id = ou.Id,
-                Name = ou.Name,
-                IsSelected = _initialSelectedUnitIds.Contains(ou.Id)
-            }));
-
-            StateHasChanged();
-        }
     }
 
     private void ToggleLockoutDateTimeInputs(ChangeEventArgs e)
