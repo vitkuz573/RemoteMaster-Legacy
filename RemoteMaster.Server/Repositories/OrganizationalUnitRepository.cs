@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
 using RemoteMaster.Server.Data;
+using RemoteMaster.Server.Entities;
 
 namespace RemoteMaster.Server.Repositories;
 
@@ -29,6 +30,7 @@ public class OrganizationalUnitRepository(ApplicationDbContext context) : IOrgan
     public async Task<IEnumerable<OrganizationalUnit>> FindAsync(Expression<Func<OrganizationalUnit, bool>> predicate)
     {
         return await context.OrganizationalUnits
+            .Include(ou => ou.Computers)
             .Where(predicate)
             .ToListAsync();
     }
@@ -51,5 +53,23 @@ public class OrganizationalUnitRepository(ApplicationDbContext context) : IOrgan
     public async Task SaveChangesAsync()
     {
         await context.SaveChangesAsync();
+    }
+
+    public async Task<IEnumerable<Computer>> FindComputersAsync(Expression<Func<Computer, bool>> predicate)
+    {
+        return await context.OrganizationalUnits
+            .SelectMany(ou => ou.Computers)
+            .Where(predicate)
+            .ToListAsync();
+    }
+
+    public async Task RemoveComputerAsync(OrganizationalUnit organizationalUnit, Computer computer)
+    {
+        ArgumentNullException.ThrowIfNull(organizationalUnit);
+
+        organizationalUnit.RemoveComputer(computer);
+        context.Computers.Remove(computer);
+
+        await SaveChangesAsync();
     }
 }

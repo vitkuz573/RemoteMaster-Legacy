@@ -117,7 +117,7 @@ public partial class MoveDialog
         if (_selectedOrganizationalUnitId.HasValue && _selectedOrganizationalUnitId != Guid.Empty)
         {
             var targetOrganization = await OrganizationRepository.GetByIdAsync(_selectedOrganizationId);
-            
+
             if (targetOrganization == null)
             {
                 MudDialog.Close(DialogResult.Cancel());
@@ -127,13 +127,12 @@ public partial class MoveDialog
 
             var newParentUnit = await OrganizationalUnitRepository.GetByIdAsync(_selectedOrganizationalUnitId.Value) ?? throw new InvalidOperationException("New parent Organizational Unit not found.");
             var targetOrganizationalUnitsPath = await OrganizationalUnitService.GetFullPathAsync(newParentUnit.Id);
-            
+
             if (targetOrganizationalUnitsPath.Length == 0)
             {
                 throw new InvalidOperationException("Failed to get full path of the new parent.");
             }
 
-            var nodeIds = Hosts.Select(host => host.Key.Id);
             var unavailableHosts = new List<Computer>();
 
             foreach (var host in Hosts)
@@ -159,20 +158,19 @@ public partial class MoveDialog
                 await AppendHostMoveRequests(unavailableHosts, targetOrganization.Name, targetOrganizationalUnitsPath);
             }
 
-            foreach (var nodeId in nodeIds)
+            foreach (var computer in unavailableHosts)
             {
-                var computer = await ComputerRepository.GetByIdAsync(nodeId);
+                var currentParentUnit = computer.Parent;
 
-                if (computer == null)
+                if (currentParentUnit == null)
                 {
                     continue;
                 }
 
-                computer.ChangeParent(newParentUnit);
-
-                await ComputerRepository.UpdateAsync(computer);
-                await ComputerRepository.SaveChangesAsync();
+                currentParentUnit.MoveComputerToUnit(computer, newParentUnit);
             }
+
+            await OrganizationalUnitRepository.SaveChangesAsync();
 
             await OnNodesMoved.InvokeAsync(Hosts.Keys);
 

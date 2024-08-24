@@ -179,7 +179,6 @@ public static class Program
         services.AddTransient<Func<IUdpClient>>(provider => provider.GetRequiredService<IUdpClient>);
         services.AddScoped<IOrganizationRepository, OrganizationRepository>();
         services.AddScoped<IOrganizationalUnitRepository, OrganizationalUnitRepository>();
-        services.AddScoped<IComputerRepository, ComputerRepository>();
         services.AddScoped<IQueryParameterService, QueryParameterService>();
         services.AddScoped<IApplicationClaimsService, ApplicationClaimsService>();
         services.AddScoped<IComputerCommandService, ComputerCommandService>();
@@ -191,10 +190,8 @@ public static class Program
         services.AddScoped<IHostRegistrationService, HostRegistrationService>();
         services.AddScoped<IUserPlanProvider, UserPlanProvider>();
         services.AddScoped<ILimitChecker, LimitChecker>();
-        services.AddScoped<HostManagementService>();
         services.AddScoped<IOrganizationService, OrganizationService>();
         services.AddScoped<IOrganizationalUnitService, OrganizationalUnitService>();
-        services.AddScoped<IComputerService, ComputerService>();
         services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<ITokenStorageService, InMemoryTokenStorageService>();
         services.AddSingleton<IBrandingService, BrandingService>();

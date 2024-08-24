@@ -112,6 +112,20 @@ public class OrganizationalUnit : IAggregateRoot
         _computers.Remove(computer);
     }
 
+    public void MoveComputerToUnit(Computer computer, OrganizationalUnit newUnit)
+    {
+        ArgumentNullException.ThrowIfNull(computer);
+
+        if (!_computers.Contains(computer))
+        {
+            throw new InvalidOperationException("Computer does not belong to this unit.");
+        }
+
+        computer.ChangeParent(newUnit);
+        RemoveComputer(computer);
+        newUnit.AddComputer(computer);
+    }
+
     public void ClearComputers()
     {
         _computers.Clear();

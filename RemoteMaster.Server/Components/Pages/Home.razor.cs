@@ -153,22 +153,9 @@ public partial class Home
 
             units.AddRange(organizationalUnitsResult);
 
-            var computersResult = await ComputerRepository.FindAsync(c => c.ParentId == parentId);
-
-            if (computersResult == null)
-            {
-                Log.Error("Failed to load computers");
-
-                return units;
-            }
-
-            units.AddRange(computersResult);
-
             foreach (var unit in organizationalUnitsResult)
             {
                 var childrenUnits = (await LoadNodes(unit.OrganizationId, unit.Id)).OfType<OrganizationalUnit>().ToList();
-                var unitComputers = (await LoadNodes(unit.OrganizationId, unit.Id)).OfType<Computer>().ToList();
-
                 unit.ClearChildren();
 
                 foreach (var child in childrenUnits)
@@ -176,6 +163,7 @@ public partial class Home
                     unit.AddChildUnit(child);
                 }
 
+                var unitComputers = unit.Computers.ToList();
                 unit.ClearComputers();
 
                 foreach (var computer in unitComputers)
@@ -682,16 +670,17 @@ public partial class Home
             {
                 foreach (var computer in computersToRemove)
                 {
-                    await ComputerRepository.DeleteAsync(computer);
+                    var organizationalUnit = computer.Parent;
+                    await OrganizationalUnitRepository.RemoveComputerAsync(organizationalUnit, computer);
 
                     _availableComputers.TryRemove(computer.IpAddress, out _);
                     _unavailableComputers.TryRemove(computer.IpAddress, out _);
                     _pendingComputers.TryRemove(computer.IpAddress, out _);
                 }
 
-                await ComputerRepository.SaveChangesAsync();
-
                 _selectedComputers.Clear();
+
+                await InvokeAsync(StateHasChanged);
             }
         }
     }
