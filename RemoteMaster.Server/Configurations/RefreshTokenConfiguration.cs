@@ -26,37 +26,55 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
             .HasMaxLength(450)
             .HasColumnOrder(1);
 
-        builder.Property(rt => rt.Token)
-            .IsRequired()
-            .HasMaxLength(256)
-            .HasColumnOrder(2);
+        builder.OwnsOne(rt => rt.TokenValue, tokenValue =>
+        {
+            tokenValue.Property(t => t.Token)
+                .IsRequired()
+                .HasMaxLength(256)
+                .HasColumnName("Token")
+                .HasColumnOrder(2);
 
-        builder.Property(rt => rt.Expires)
-            .IsRequired()
-            .HasColumnOrder(3);
+            tokenValue.Property(t => t.Expires)
+                .IsRequired()
+                .HasColumnName("Expires")
+                .HasColumnOrder(3);
 
-        builder.Property(rt => rt.Created)
-            .IsRequired()
-            .HasColumnOrder(4);
+            tokenValue.Property(t => t.Created)
+                .IsRequired()
+                .HasColumnName("Created")
+                .HasColumnOrder(4);
 
-        builder.Property(rt => rt.CreatedByIp)
-            .IsRequired()
-            .HasMaxLength(45)
-            .HasColumnOrder(5);
+            tokenValue.Property(t => t.CreatedByIp)
+                .IsRequired()
+                .HasMaxLength(45)
+                .HasColumnName("CreatedByIp")
+                .HasColumnOrder(5);
 
-        builder.Property(rt => rt.RevokedByIp)
-            .HasMaxLength(45)
-            .HasColumnOrder(6);
+            tokenValue.HasIndex(tv => tv.Expires);
+        });
 
-        builder.Property(rt => rt.RevocationReason)
-            .HasConversion<string>()
-            .IsRequired()
-            .HasDefaultValue(TokenRevocationReason.None)
-            .HasColumnOrder(7);
+        builder.OwnsOne(rt => rt.RevocationInfo, revocationInfo =>
+        {
+            revocationInfo.Property(r => r.Revoked)
+                .HasColumnName("Revoked")
+                .HasColumnOrder(6);
+
+            revocationInfo.Property(r => r.RevokedByIp)
+                .HasMaxLength(45)
+                .HasColumnName("RevokedByIp")
+                .HasColumnOrder(7);
+
+            revocationInfo.Property(r => r.RevocationReason)
+                .HasConversion<string>()
+                .IsRequired()
+                .HasDefaultValue(TokenRevocationReason.None)
+                .HasColumnName("RevocationReason")
+                .HasColumnOrder(8);
+
+            revocationInfo.HasIndex(ri => ri.Revoked);
+        });
 
         builder.HasIndex(rt => rt.UserId);
-        builder.HasIndex(rt => rt.Expires);
-        builder.HasIndex(rt => rt.Revoked);
 
         builder.HasOne(rt => rt.User)
             .WithMany(u => u.RefreshTokens)
