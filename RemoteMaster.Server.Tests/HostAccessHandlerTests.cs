@@ -81,7 +81,7 @@ public class HostAccessHandlerTests
         var user = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user1")]));
         var context = new AuthorizationHandlerContext([requirement], user, null);
 
-        var address = new Address("City", "State", "Country");
+        var address = new Address("City", "State", "US");
         var organization = new Organization("Test Organization", address);
 
         var organizationalUnit = new OrganizationalUnit("Test OU", organization);
@@ -120,7 +120,7 @@ public class HostAccessHandlerTests
         var user = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user1")]));
         var context = new AuthorizationHandlerContext([requirement], user, null);
 
-        var address = new Address("City", "State", "Country");
+        var address = new Address("City", "State", "US");
         var organization = new Organization("Test Organization", address);
 
         var organizationalUnit = new OrganizationalUnit("Test OU", organization);
@@ -160,7 +160,7 @@ public class HostAccessHandlerTests
         var user = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user1")]));
         var context = new AuthorizationHandlerContext([requirement], user, null);
 
-        var address = new Address("City", "State", "Country");
+        var address = new Address("City", "State", "US");
         var organization1 = new Organization("Organization 1", address);
         var organization2 = new Organization("Organization 2", address);
 
@@ -215,7 +215,7 @@ public class HostAccessHandlerTests
         var user = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user1")]));
         var context = new AuthorizationHandlerContext([requirement], user, null);
 
-        var address = new Address("City", "State", "Country");
+        var address = new Address("City", "State", "US");
         var organization1 = new Organization("Organization 1", address);
         var organization2 = new Organization("Organization 2", address);
 
