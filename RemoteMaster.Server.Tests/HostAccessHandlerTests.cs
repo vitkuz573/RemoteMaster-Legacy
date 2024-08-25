@@ -8,9 +8,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using RemoteMaster.Server.Aggregates.OrganizationAggregate;
+using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Requirements;
+using RemoteMaster.Server.ValueObjects;
 
 namespace RemoteMaster.Server.Tests;
 
@@ -78,32 +81,28 @@ public class HostAccessHandlerTests
         var user = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user1")]));
         var context = new AuthorizationHandlerContext([requirement], user, null);
 
+        var address = new Address("City", "State", "Country");
+        var organization = new Organization("Test Organization", address);
+
+        var organizationalUnit = new OrganizationalUnit("Test OU", organization);
+        organization.AddOrganizationalUnit(organizationalUnit);
+
         var applicationUser = new ApplicationUser
         {
             Id = "user1",
             UserName = "user1"
         };
 
-        var computer = new Computer
-        {
-            Id = Guid.NewGuid(),
-            Name = "host",
-            IpAddress = "127.0.0.1",
-            MacAddress = "00-14-22-01-23-45",
-            ParentId = Guid.NewGuid()
-        };
+        organizationalUnit.AddUser(new UserOrganizationalUnit(organizationalUnit, applicationUser));
 
-        var organizationalUnit = new OrganizationalUnit
-        {
-            Id = computer.ParentId.Value,
-            Name = "Test OU",
-            OrganizationId = Guid.NewGuid(),
-        };
-        organizationalUnit.UserOrganizationalUnits.Add(new UserOrganizationalUnit { UserId = applicationUser.Id, OrganizationalUnitId = organizationalUnit.Id });
+        var computer = new Computer("host", "127.0.0.1", "00-14-22-01-23-45", organizationalUnit);
+        organizationalUnit.AddComputer(computer);
 
         _dbContext.Users.Add(applicationUser);
         _dbContext.Computers.Add(computer);
         _dbContext.OrganizationalUnits.Add(organizationalUnit);
+        _dbContext.Organizations.Add(organization);
+
         await _dbContext.SaveChangesAsync();
 
         // Act
@@ -121,25 +120,29 @@ public class HostAccessHandlerTests
         var user = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user1")]));
         var context = new AuthorizationHandlerContext([requirement], user, null);
 
-        var computer = new Computer
+        var address = new Address("City", "State", "Country");
+        var organization = new Organization("Test Organization", address);
+
+        var organizationalUnit = new OrganizationalUnit("Test OU", organization);
+        organization.AddOrganizationalUnit(organizationalUnit);
+
+        var computer = new Computer("host", "127.0.0.1", "00-14-22-01-23-45", organizationalUnit);
+        organizationalUnit.AddComputer(computer);
+
+        var applicationUser = new ApplicationUser
         {
-            Name = "host",
-            IpAddress = "127.0.0.1",
-            MacAddress = "00-14-22-01-23-45",
-            Id = Guid.NewGuid(),
-            ParentId = Guid.NewGuid()
+            Id = "user2",
+            UserName = "user2"
         };
 
-        var organizationalUnit = new OrganizationalUnit
-        {
-            Id = computer.ParentId.Value,
-            Name = "Test OU",
-            OrganizationId = Guid.NewGuid(),
-        };
-        organizationalUnit.UserOrganizationalUnits.Add(new UserOrganizationalUnit { UserId = "user2", OrganizationalUnitId = organizationalUnit.Id });
+        var userOrganizationalUnit = new UserOrganizationalUnit(organizationalUnit, applicationUser);
+        organizationalUnit.AddUser(userOrganizationalUnit);
 
+        _dbContext.Users.Add(applicationUser);
         _dbContext.Computers.Add(computer);
         _dbContext.OrganizationalUnits.Add(organizationalUnit);
+        _dbContext.Organizations.Add(organization);
+
         await _dbContext.SaveChangesAsync();
 
         // Act
@@ -157,49 +160,44 @@ public class HostAccessHandlerTests
         var user = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user1")]));
         var context = new AuthorizationHandlerContext([requirement], user, null);
 
+        var address = new Address("City", "State", "Country");
+        var organization1 = new Organization("Organization 1", address);
+        var organization2 = new Organization("Organization 2", address);
+
+        var organizationalUnit1 = new OrganizationalUnit("Unit 1", organization1);
+        organization1.AddOrganizationalUnit(organizationalUnit1);
+
+        var organizationalUnit2 = new OrganizationalUnit("Unit 2", organization2);
+        organization2.AddOrganizationalUnit(organizationalUnit2);
+
         var applicationUser = new ApplicationUser
         {
             Id = "user1",
             UserName = "user1"
         };
 
-        var computer1 = new Computer
+        var userOrganizationalUnit1 = new UserOrganizationalUnit(organizationalUnit1, applicationUser);
+        organizationalUnit1.AddUser(userOrganizationalUnit1);
+
+        var computer1 = new Computer("sharedHost", "127.0.0.1", "00-14-22-01-23-45", organizationalUnit1);
+        organizationalUnit1.AddComputer(computer1);
+
+        var computer2 = new Computer("sharedHost", "127.0.0.2", "00-14-22-01-23-46", organizationalUnit2);
+        organizationalUnit2.AddComputer(computer2);
+
+        var anotherUser = new ApplicationUser
         {
-            Name = "sharedHost",
-            IpAddress = "127.0.0.1",
-            MacAddress = "00-14-22-01-23-45",
-            Id = Guid.NewGuid(),
-            ParentId = Guid.NewGuid()
+            Id = "user2",
+            UserName = "user2"
         };
 
-        var computer2 = new Computer
-        {
-            Id = Guid.NewGuid(),
-            Name = "sharedHost",
-            IpAddress = "127.0.0.2",
-            MacAddress = "00-14-22-01-23-46",
-            ParentId = Guid.NewGuid()
-        };
+        var userOrganizationalUnit2 = new UserOrganizationalUnit(organizationalUnit2, anotherUser);
+        organizationalUnit2.AddUser(userOrganizationalUnit2);
 
-        var organizationalUnit1 = new OrganizationalUnit
-        {
-            Id = computer1.ParentId.Value,
-            Name = "Unit 1",
-            OrganizationId = Guid.NewGuid(),
-        };
-        organizationalUnit1.UserOrganizationalUnits.Add(new UserOrganizationalUnit { UserId = applicationUser.Id, OrganizationalUnitId = organizationalUnit1.Id });
-
-        var organizationalUnit2 = new OrganizationalUnit
-        {
-            Id = computer2.ParentId.Value,
-            Name = "Unit 2",
-            OrganizationId = Guid.NewGuid(),
-        };
-        organizationalUnit2.UserOrganizationalUnits.Add(new UserOrganizationalUnit { UserId = "user2", OrganizationalUnitId = organizationalUnit2.Id });
-
-        _dbContext.Users.Add(applicationUser);
+        _dbContext.Users.AddRange(applicationUser, anotherUser);
         _dbContext.Computers.AddRange(computer1, computer2);
         _dbContext.OrganizationalUnits.AddRange(organizationalUnit1, organizationalUnit2);
+        _dbContext.Organizations.AddRange(organization1, organization2);
         await _dbContext.SaveChangesAsync();
 
         // Act
@@ -217,49 +215,44 @@ public class HostAccessHandlerTests
         var user = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user1")]));
         var context = new AuthorizationHandlerContext([requirement], user, null);
 
+        var address = new Address("City", "State", "Country");
+        var organization1 = new Organization("Organization 1", address);
+        var organization2 = new Organization("Organization 2", address);
+
+        var organizationalUnit1 = new OrganizationalUnit("Unit 1", organization1);
+        organization1.AddOrganizationalUnit(organizationalUnit1);
+
+        var organizationalUnit2 = new OrganizationalUnit("Unit 2", organization2);
+        organization2.AddOrganizationalUnit(organizationalUnit2);
+
         var applicationUser = new ApplicationUser
         {
             Id = "user1",
             UserName = "user1"
         };
 
-        var computer1 = new Computer
+        var anotherUser = new ApplicationUser
         {
-            Name = "sharedHost",
-            IpAddress = "127.0.0.1",
-            MacAddress = "00-14-22-01-23-45",
-            Id = Guid.NewGuid(),
-            ParentId = Guid.NewGuid()
+            Id = "user2",
+            UserName = "user2"
         };
 
-        var computer2 = new Computer
-        {
-            Name = "sharedHost",
-            IpAddress = "127.0.0.2",
-            MacAddress = "00-14-22-01-23-46",
-            Id = Guid.NewGuid(),
-            ParentId = Guid.NewGuid()
-        };
+        var userOrganizationalUnit1 = new UserOrganizationalUnit(organizationalUnit1, anotherUser);
+        organizationalUnit1.AddUser(userOrganizationalUnit1);
 
-        var organizationalUnit1 = new OrganizationalUnit
-        {
-            Id = computer1.ParentId.Value,
-            Name = "Unit 1",
-            OrganizationId = Guid.NewGuid(),
-        };
-        organizationalUnit1.UserOrganizationalUnits.Add(new UserOrganizationalUnit { UserId = "user2", OrganizationalUnitId = organizationalUnit1.Id });
+        var userOrganizationalUnit2 = new UserOrganizationalUnit(organizationalUnit2, applicationUser);
+        organizationalUnit2.AddUser(userOrganizationalUnit2);
 
-        var organizationalUnit2 = new OrganizationalUnit
-        {
-            Id = computer2.ParentId.Value,
-            Name = "Unit 2",
-            OrganizationId = Guid.NewGuid(),
-        };
-        organizationalUnit2.UserOrganizationalUnits.Add(new UserOrganizationalUnit { UserId = applicationUser.Id, OrganizationalUnitId = organizationalUnit2.Id });
+        var computer1 = new Computer("sharedHost", "127.0.0.1", "00-14-22-01-23-45", organizationalUnit1);
+        organizationalUnit1.AddComputer(computer1);
 
-        _dbContext.Users.Add(applicationUser);
+        var computer2 = new Computer("sharedHost", "127.0.0.2", "00-14-22-01-23-46", organizationalUnit2);
+        organizationalUnit2.AddComputer(computer2);
+
+        _dbContext.Users.AddRange(applicationUser, anotherUser);
         _dbContext.Computers.AddRange(computer1, computer2);
         _dbContext.OrganizationalUnits.AddRange(organizationalUnit1, organizationalUnit2);
+        _dbContext.Organizations.AddRange(organization1, organization2);
 
         await _dbContext.SaveChangesAsync();
 

@@ -179,13 +179,7 @@ public partial class ManageUserRights
 
                 if (organization != null)
                 {
-                    var userOrg = new UserOrganization
-                    {
-                        OrganizationId = orgId,
-                        Organization = organization,
-                        UserId = user.Id,
-                        ApplicationUser = user
-                    };
+                    var userOrg = new UserOrganization(organization, user);
 
                     organization.AddUser(userOrg);
                 }
@@ -200,13 +194,7 @@ public partial class ManageUserRights
 
                 if (unit != null)
                 {
-                    var userUnit = new UserOrganizationalUnit
-                    {
-                        OrganizationalUnitId = unitId,
-                        OrganizationalUnit = unit,
-                        UserId = user.Id,
-                        ApplicationUser = user
-                    };
+                    var userUnit = new UserOrganizationalUnit(unit, user);
 
                     unit.AddUser(userUnit);
                 }

@@ -8,11 +8,21 @@ namespace RemoteMaster.Server.Entities;
 
 public class UserOrganization
 {
-    public Guid OrganizationId { get; set; }
+    private UserOrganization() { }
 
-    public Organization Organization { get; set; }
+    public UserOrganization(Organization organization, ApplicationUser user)
+    {
+        Organization = organization ?? throw new ArgumentNullException(nameof(organization));
+        OrganizationId = organization.Id;
+        ApplicationUser = user ?? throw new ArgumentNullException(nameof(user));
+        UserId = user.Id;
+    }
 
-    public string UserId { get; set; }
+    public Guid OrganizationId { get; private set; }
 
-    public ApplicationUser ApplicationUser { get; set; }
+    public Organization Organization { get; private set; }
+
+    public string UserId { get; private set; }
+
+    public ApplicationUser ApplicationUser { get; private set; }
 }
