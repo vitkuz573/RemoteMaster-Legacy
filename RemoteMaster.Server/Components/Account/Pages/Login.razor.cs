@@ -7,10 +7,7 @@ using System.Net;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
-using RemoteMaster.Server.Data;
-using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Enums;
-using RemoteMaster.Server.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Components.Account.Pages;
@@ -60,7 +57,7 @@ public partial class Login
         if (!userRoles.Any())
         {
             _errorMessage = "Error: User does not belong to any roles.";
-            await LogSignInAttempt(user.Id, false, ipAddress);
+            await ApplicationUserService.AddSignInEntry(user, false);
             return;
         }
 
@@ -71,7 +68,7 @@ public partial class Login
         {
             Log.Warning("Attempt to login as RootAdministrator from non-localhost IP.");
             _errorMessage = "Error: RootAdministrator access is restricted to localhost.";
-            await LogSignInAttempt(user.Id, false, ipAddress);
+            await ApplicationUserService.AddSignInEntry(user, false);
             return;
         }
 
@@ -82,7 +79,7 @@ public partial class Login
             if (isRootAdmin && isLocalhost)
             {
                 Log.Information("RootAdministrator logged in from localhost. Redirecting to Admin page.");
-                await LogSignInAttempt(user.Id, true, ipAddress);
+                await ApplicationUserService.AddSignInEntry(user, true);
                 RedirectManager.RedirectTo("Admin");
                 return;
             }
@@ -100,19 +97,19 @@ public partial class Login
                 if (storeTokensResult.IsSuccess)
                 {
                     Log.Information("User {Username} logged in from IP {IPAddress} at {LoginTime}.", Input.Username, ipAddress, DateTime.UtcNow.ToLocalTime());
-                    await LogSignInAttempt(user.Id, true, ipAddress);
+                    await ApplicationUserService.AddSignInEntry(user, true);
                     RedirectManager.RedirectTo(ReturnUrl);
                 }
                 else
                 {
                     _errorMessage = "Error: Failed to store tokens.";
-                    await LogSignInAttempt(user.Id, false, ipAddress);
+                    await ApplicationUserService.AddSignInEntry(user, false);
                 }
             }
             else
             {
                 _errorMessage = "Error: Failed to generate tokens.";
-                await LogSignInAttempt(user.Id, false, ipAddress);
+                await ApplicationUserService.AddSignInEntry(user, false);
             }
         }
         else if (result.RequiresTwoFactor)
@@ -125,31 +122,14 @@ public partial class Login
         else if (result.IsLockedOut)
         {
             Log.Warning("User account locked out.");
-            await LogSignInAttempt(user.Id, false, ipAddress);
+            await ApplicationUserService.AddSignInEntry(user, false);
             RedirectManager.RedirectTo("Account/Lockout");
         }
         else
         {
             _errorMessage = "Error: Invalid login attempt.";
-            await LogSignInAttempt(user.Id, false, ipAddress);
+            await ApplicationUserService.AddSignInEntry(user, false);
         }
-    }
-
-    private async Task LogSignInAttempt(string userId, bool isSuccess, string ipAddress)
-    {
-        using var scope = ScopeFactory.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-        var signInJournalEntry = new SignInEntry
-        {
-            UserId = userId,
-            SignInTime = DateTime.UtcNow,
-            IsSuccessful = isSuccess,
-            IpAddress = ipAddress
-        };
-
-        dbContext.SignInEntries.Add(signInJournalEntry);
-        await dbContext.SaveChangesAsync();
     }
 
     private sealed class InputModel

@@ -177,6 +177,7 @@ public static class Program
         services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
         services.AddTransient<IUdpClient, UdpClientWrapper>();
         services.AddTransient<Func<IUdpClient>>(provider => provider.GetRequiredService<IUdpClient>);
+        services.AddScoped<IApplicationUserRepository, ApplicationUserRepository>();
         services.AddScoped<IOrganizationRepository, OrganizationRepository>();
         services.AddScoped<IOrganizationalUnitRepository, OrganizationalUnitRepository>();
         services.AddScoped<IQueryParameterService, QueryParameterService>();
@@ -190,6 +191,7 @@ public static class Program
         services.AddScoped<IHostRegistrationService, HostRegistrationService>();
         services.AddScoped<IUserPlanProvider, UserPlanProvider>();
         services.AddScoped<ILimitChecker, LimitChecker>();
+        services.AddScoped<IApplicationUserService, ApplicationUserService>();
         services.AddScoped<IOrganizationService, OrganizationService>();
         services.AddScoped<IOrganizationalUnitService, OrganizationalUnitService>();
         services.AddSingleton<IFileSystem, FileSystem>();

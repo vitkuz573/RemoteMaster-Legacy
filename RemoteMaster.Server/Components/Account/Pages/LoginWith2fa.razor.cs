@@ -4,9 +4,7 @@
 
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Components;
-using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
-using RemoteMaster.Server.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Components.Account.Pages;
@@ -45,7 +43,7 @@ public partial class LoginWith2fa
         if (!userRoles.Any())
         {
             _message = "Error: User does not belong to any roles.";
-            await LogSignInAttempt(userId, false, ipAddress);
+            await ApplicationUserService.AddSignInEntry(_user, false);
             return;
         }
 
@@ -61,50 +59,33 @@ public partial class LoginWith2fa
 
                 if (storeTokensResult.IsSuccess)
                 {
-                    await LogSignInAttempt(userId, true, ipAddress);
+                    await ApplicationUserService.AddSignInEntry(_user, true);
                     RedirectManager.RedirectTo(ReturnUrl);
                 }
                 else
                 {
                     _message = "Error: Failed to store tokens.";
-                    await LogSignInAttempt(userId, false, ipAddress);
+                    await ApplicationUserService.AddSignInEntry(_user, false);
                 }
             }
             else
             {
                 _message = "Error: Failed to generate tokens.";
-                await LogSignInAttempt(userId, false, ipAddress);
+                await ApplicationUserService.AddSignInEntry(_user, false);
             }
         }
         else if (result.IsLockedOut)
         {
             Log.Warning("User with ID '{UserId}' account locked out.", userId);
-            await LogSignInAttempt(userId, false, ipAddress);
+            await ApplicationUserService.AddSignInEntry(_user, false);
             RedirectManager.RedirectTo("Account/Lockout");
         }
         else
         {
             Log.Warning("Invalid authenticator code entered for user with ID '{UserId}'.", userId);
             _message = "Error: Invalid authenticator code.";
-            await LogSignInAttempt(userId, false, ipAddress);
+            await ApplicationUserService.AddSignInEntry(_user, false);
         }
-    }
-
-    private async Task LogSignInAttempt(string userId, bool isSuccess, string ipAddress)
-    {
-        using var scope = ScopeFactory.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-        var signInJournalEntry = new SignInEntry
-        {
-            UserId = userId,
-            SignInTime = DateTime.UtcNow,
-            IsSuccessful = isSuccess,
-            IpAddress = ipAddress
-        };
-
-        dbContext.SignInEntries.Add(signInJournalEntry);
-        await dbContext.SaveChangesAsync();
     }
 
     private sealed class InputModel

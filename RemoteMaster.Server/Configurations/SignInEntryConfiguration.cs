@@ -38,5 +38,10 @@ public class SignInEntryConfiguration : IEntityTypeConfiguration<SignInEntry>
             .HasMaxLength(45)
             .IsRequired()
             .HasColumnOrder(4);
+
+        builder.HasOne(s => s.User)
+            .WithMany()
+            .HasForeignKey(s => s.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

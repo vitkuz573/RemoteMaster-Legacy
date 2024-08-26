@@ -6,15 +6,25 @@ namespace RemoteMaster.Server.Entities;
 
 public class SignInEntry
 {
-    public int Id { get; set; }
+    private SignInEntry() { }
 
-    public string UserId { get; set; }
+    public SignInEntry(string userId, DateTime signInTime, bool isSuccessful, string ipAddress)
+    {
+        UserId = userId ?? throw new ArgumentNullException(nameof(userId));
+        SignInTime = signInTime;
+        IsSuccessful = isSuccessful;
+        IpAddress = ipAddress ?? throw new ArgumentNullException(nameof(ipAddress));
+    }
 
-    public DateTime SignInTime { get; set; }
+    public int Id { get; private set; }
 
-    public bool IsSuccessful { get; set; }
+    public string UserId { get; private set; }
 
-    public string IpAddress { get; set; }
+    public DateTime SignInTime { get; private set; }
 
-    public ApplicationUser User { get; set; }
+    public bool IsSuccessful { get; private set; }
+
+    public string IpAddress { get; private set; }
+
+    public ApplicationUser User { get; private set; }
 }
