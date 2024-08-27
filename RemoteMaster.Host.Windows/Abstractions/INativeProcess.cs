@@ -12,7 +12,7 @@ public interface INativeProcess : IDisposable
 
     int Id { get; }
 
-    StreamWriter? StandartInput { get; }
+    StreamWriter? StandardInput { get; }
 
     StreamReader? StandardOutput { get; }
 

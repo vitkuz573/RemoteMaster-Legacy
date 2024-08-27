@@ -52,7 +52,7 @@ public class NativeProcess : INativeProcess
 
     public int Id => _processId;
 
-    public StreamWriter? StandartInput => _standardInput;
+    public StreamWriter? StandardInput => _standardInput;
 
     public StreamReader? StandardOutput => _standardOutput;
 
