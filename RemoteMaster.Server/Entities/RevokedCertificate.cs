@@ -8,11 +8,20 @@ namespace RemoteMaster.Server.Entities;
 
 public class RevokedCertificate
 {
-    public int Id { get; set; }
+    private RevokedCertificate() { }
 
-    public string SerialNumber { get; set; }
+    public RevokedCertificate(string serialNumber, X509RevocationReason reason)
+    {
+        SerialNumber = serialNumber ?? throw new ArgumentNullException(nameof(serialNumber));
+        Reason = reason;
+        RevocationDate = DateTimeOffset.UtcNow;
+    }
+
+    public int Id { get; private set; }
+
+    public string SerialNumber { get; private set; }
     
-    public X509RevocationReason Reason { get; set; }
+    public X509RevocationReason Reason { get; private set; }
 
-    public DateTimeOffset RevocationDate { get; set; }
+    public DateTimeOffset RevocationDate { get; private set; }
 }

@@ -34,12 +34,7 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
                 return Result.Ok();
             }
 
-            var revokedCertificate = new RevokedCertificate
-            {
-                SerialNumber = serialNumber,
-                Reason = reason,
-                RevocationDate = DateTimeOffset.UtcNow
-            };
+            var revokedCertificate = new RevokedCertificate(serialNumber, reason);
 
             context.RevokedCertificates.Add(revokedCertificate);
             
