@@ -88,12 +88,8 @@ public class CrlServiceTests : IDisposable
 
         var contextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<CertificateDbContext>>();
         var context = await contextFactory.CreateDbContextAsync();
-        var revokedCertificate = new RevokedCertificate
-        {
-            SerialNumber = "1234567890",
-            Reason = X509RevocationReason.KeyCompromise,
-            RevocationDate = DateTimeOffset.UtcNow
-        };
+        var revokedCertificate = new RevokedCertificate("1234567890", X509RevocationReason.KeyCompromise);
+
         context.RevokedCertificates.Add(revokedCertificate);
         await context.SaveChangesAsync();
 
@@ -142,12 +138,7 @@ public class CrlServiceTests : IDisposable
             CrlHash = "hash"
         };
         context.CrlInfos.Add(crlInfo);
-        context.RevokedCertificates.Add(new RevokedCertificate
-        {
-            SerialNumber = "1234567890",
-            Reason = X509RevocationReason.KeyCompromise,
-            RevocationDate = DateTimeOffset.UtcNow
-        });
+        context.RevokedCertificates.Add(new RevokedCertificate("1234567890", X509RevocationReason.KeyCompromise));
         await context.SaveChangesAsync();
 
         // Act
