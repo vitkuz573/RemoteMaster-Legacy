@@ -5,7 +5,6 @@
 using System.Security.Cryptography;
 using RemoteMaster.Server.Enums;
 using RemoteMaster.Server.ValueObjects;
-using Serilog;
 
 namespace RemoteMaster.Server.Entities;
 
@@ -20,8 +19,6 @@ public class RefreshToken
         var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
 
         TokenValue = new TokenValue(token, expires, DateTime.UtcNow, ipAddress);
-
-        Log.Information(token);
     }
 
     public int Id { get; private set; }
