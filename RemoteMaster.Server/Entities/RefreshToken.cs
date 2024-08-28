@@ -49,7 +49,7 @@ public class RefreshToken
     {
         var refreshToken = new RefreshToken(userId, expires, ipAddress);
 
-        Revoke(TokenRevocationReason.SuspiciousActivity, ipAddress);
+        Revoke(TokenRevocationReason.Replaced, ipAddress);
         ReplacedByToken = refreshToken;
 
         return refreshToken;
