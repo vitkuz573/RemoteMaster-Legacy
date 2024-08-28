@@ -36,14 +36,14 @@ public class ApplicationUser : IdentityUser, IAggregateRoot
 
     public void RevokeRefreshToken(string token, TokenRevocationReason reason, string ipAddress)
     {
-        var refreshToken = _refreshTokens.FirstOrDefault(rt => rt.TokenValue.Token == token);
+        var refreshToken = _refreshTokens.SingleOrDefault(rt => rt.TokenValue.Token == token);
 
         refreshToken.Revoke(reason, ipAddress);
     }
 
     public RefreshToken ReplaceRefreshToken(string token, DateTime expires, string ipAddress)
     {
-        var refreshToken = _refreshTokens.FirstOrDefault(rt => rt.TokenValue.Token == token);
+        var refreshToken = _refreshTokens.SingleOrDefault(rt => rt.TokenValue.Token == token);
         var newRefreshToken = refreshToken.Replace(Id, expires, ipAddress);
 
         _refreshTokens.Add(newRefreshToken);
