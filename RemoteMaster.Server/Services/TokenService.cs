@@ -260,19 +260,15 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         return rsa;
     }
 
-    public Result IsRefreshTokenValid(string refreshToken)
+    public async Task<Result> IsRefreshTokenValid(string userId, string refreshToken)
     {
         if (string.IsNullOrEmpty(refreshToken))
         {
             return Result.Fail("Refresh token cannot be null or empty");
         }
 
-        var user = context.Users
-            .Include(u => u.RefreshTokens)
-            .SingleOrDefault(u => u.RefreshTokens.Any(rt => rt.TokenValue.Token == refreshToken));
+        var user = await userManager.FindByIdAsync(userId);
 
-        var tokenEntity = user?.RefreshTokens.SingleOrDefault(rt => rt.TokenValue.Token == refreshToken);
-
-        return tokenEntity is not { IsActive: true } ? Result.Fail("Invalid or inactive refresh token") : Result.Ok();
+        return user.IsRefreshTokenValid(refreshToken) ? Result.Ok() : Result.Fail("Invalid or inactive refresh token");
     }
 }

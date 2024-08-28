@@ -50,4 +50,11 @@ public class ApplicationUser : IdentityUser, IAggregateRoot
 
         return newRefreshToken;
     }
+
+    public bool IsRefreshTokenValid(string refreshToken)
+    {
+        var token = _refreshTokens.SingleOrDefault(rt => rt.TokenValue.Token == refreshToken);
+
+        return token?.IsValid() ?? false;
+    }
 }

@@ -51,4 +51,9 @@ public class RefreshToken
 
         return refreshToken;
     }
+
+    public bool IsValid()
+    {
+        return RevocationInfo == null && !TokenValue.IsExpired;
+    }
 }

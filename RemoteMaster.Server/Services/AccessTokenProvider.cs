@@ -29,7 +29,7 @@ public class AccessTokenProvider(ITokenService tokenService, ITokenStorageServic
 
         if (refreshTokenResult.IsSuccess && !string.IsNullOrEmpty(refreshTokenResult.Value))
         {
-            var refreshTokenValidResult = tokenService.IsRefreshTokenValid(refreshTokenResult.Value);
+            var refreshTokenValidResult = await tokenService.IsRefreshTokenValid(userId, refreshTokenResult.Value);
 
             if (refreshTokenValidResult.IsSuccess)
             {
