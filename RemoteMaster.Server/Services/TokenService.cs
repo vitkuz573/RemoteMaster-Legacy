@@ -18,7 +18,6 @@ using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Enums;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Options;
-using RemoteMaster.Server.ValueObjects;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;
@@ -32,9 +31,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
     public async Task<Result<TokenData>> GenerateTokensAsync(string userId, string? oldRefreshToken = null)
     {
-        var user = await userManager.Users
-            .Include(u => u.RefreshTokens)
-            .SingleOrDefaultAsync(u => u.Id == userId);
+        var user = await userManager.FindByIdAsync(userId);
 
         if (user == null)
         {
@@ -57,9 +54,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
             return Result.Fail<TokenData>(accessTokenResult.Errors.Select(e => e.Message).ToArray());
         }
 
-        var refreshTokenResult = oldRefreshToken == null
-            ? await GenerateRefreshTokenAsync(user, ipAddress)
-            : await ReplaceRefreshToken(oldRefreshToken, user, ipAddress);
+        var refreshTokenResult = await CreateOrReplaceRefreshTokenAsync(user, ipAddress, oldRefreshToken);
 
         return refreshTokenResult.IsFailed
             ? Result.Fail<TokenData>(refreshTokenResult.Errors.Select(e => e.Message).ToArray())
@@ -118,69 +113,29 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
         return Result.Ok(tokenHandler.WriteToken(token));
     }
 
-    private async Task<Result<RefreshToken>> GenerateRefreshTokenAsync(ApplicationUser user, string ipAddress)
+    private async Task<Result<RefreshToken>> CreateOrReplaceRefreshTokenAsync(ApplicationUser user, string ipAddress, string? existingToken = null)
     {
-        var tokenValue = new TokenValue(Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)), DateTime.UtcNow.Add(RefreshTokenExpiration), DateTime.UtcNow, ipAddress);
+        RefreshToken refreshToken;
 
-        var refreshToken = new RefreshToken
+        if (existingToken != null)
         {
-            UserId = user.Id,
-            TokenValue = tokenValue
-        };
-
-        user.RefreshTokens.Add(refreshToken);
+            refreshToken = user.ReplaceRefreshToken(existingToken, DateTime.UtcNow.Add(RefreshTokenExpiration), ipAddress);
+        }
+        else
+        {
+            refreshToken = user.AddRefreshToken(DateTime.UtcNow.Add(RefreshTokenExpiration), ipAddress);
+        }
 
         await context.SaveChangesAsync();
 
         return Result.Ok(refreshToken);
     }
 
-    private async Task<Result<RefreshToken>> ReplaceRefreshToken(string refreshToken, ApplicationUser user, string ipAddress)
+    private async Task<Result> RevokeToken(string userId, string refreshToken, TokenRevocationReason reason, string ipAddress)
     {
-        var refreshTokenEntity = user.RefreshTokens.SingleOrDefault(rt => rt.TokenValue.Token == refreshToken);
+        var user = await userManager.FindByIdAsync(userId);
 
-        if (refreshTokenEntity is not { RevocationInfo.Revoked: null } || refreshTokenEntity.TokenValue.IsExpired)
-        {
-            Log.Warning("Refresh token is invalid, revoked, or expired.");
-
-            return Result.Fail<RefreshToken>("Invalid refresh token.");
-        }
-
-        var newRefreshTokenResult = await GenerateRefreshTokenAsync(user, ipAddress);
-
-        if (newRefreshTokenResult.IsFailed)
-        {
-            return Result.Fail<RefreshToken>(newRefreshTokenResult.Errors.Select(e => e.Message).ToArray());
-        }
-
-        var revocationInfo = new TokenRevocationInfo(DateTime.UtcNow, ipAddress, TokenRevocationReason.Replaced);
-
-        refreshTokenEntity.RevocationInfo = revocationInfo;
-        refreshTokenEntity.ReplacedByToken = newRefreshTokenResult.Value;
-
-        await context.SaveChangesAsync();
-
-        return Result.Ok(newRefreshTokenResult.Value);
-    }
-
-    private async Task<Result> RevokeToken(RefreshToken token, TokenRevocationReason reason)
-    {
-        var ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
-
-        var revocationInfo = new TokenRevocationInfo(DateTime.UtcNow, ipAddress, reason);
-
-        token.RevocationInfo = revocationInfo;
-
-        var user = context.Users
-            .Include(u => u.RefreshTokens)
-            .SingleOrDefault(u => u.RefreshTokens.Any(rt => rt.TokenValue.Token == token.TokenValue.Token));
-
-        var refreshTokenEntity = user?.RefreshTokens.SingleOrDefault(rt => rt.TokenValue.Token == token.TokenValue.Token);
-
-        if (refreshTokenEntity != null)
-        {
-            refreshTokenEntity.RevocationInfo = revocationInfo;
-        }
+        user.RevokeRefreshToken(refreshToken, reason, ipAddress);
 
         await context.SaveChangesAsync();
 
@@ -189,9 +144,9 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
     public async Task<Result> RevokeAllRefreshTokensAsync(string userId, TokenRevocationReason revocationReason)
     {
-        var user = await userManager.Users
-            .Include(u => u.RefreshTokens)
-            .SingleOrDefaultAsync(u => u.Id == userId);
+        var ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
+
+        var user = await userManager.FindByIdAsync(userId);
 
         if (user == null)
         {
@@ -200,7 +155,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         var now = DateTime.UtcNow;
         var refreshTokens = user.RefreshTokens
-            .Where(rt => rt.RevocationInfo.Revoked == null && rt.TokenValue.Expires > now)
+            .Where(rt => rt.RevocationInfo == null && rt.TokenValue.Expires > now)
             .ToList();
 
         if (refreshTokens.Count == 0)
@@ -212,7 +167,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         foreach (var token in refreshTokens)
         {
-            var result = await RevokeToken(token, revocationReason);
+            var result = await RevokeToken(userId, token.TokenValue.Token, revocationReason, ipAddress);
 
             if (result.IsFailed)
             {
@@ -233,7 +188,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         var expiredTokens = await context.Users
             .SelectMany(u => u.RefreshTokens)
-            .Where(rt => rt.TokenValue.Expires < DateTime.UtcNow || rt.RevocationInfo.Revoked.HasValue)
+            .Where(rt => rt.TokenValue.Expires < DateTime.UtcNow || rt.RevocationInfo != null)
             .ToListAsync();
 
         if (expiredTokens.Count == 0)

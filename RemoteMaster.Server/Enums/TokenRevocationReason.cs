@@ -10,11 +10,6 @@ namespace RemoteMaster.Server.Enums;
 public enum TokenRevocationReason
 {
     /// <summary>
-    /// No specific reason provided.
-    /// </summary>
-    None = 0,
-
-    /// <summary>
     /// Token was revoked because the user logged out.
     /// </summary>
     UserLoggedOut = 1,

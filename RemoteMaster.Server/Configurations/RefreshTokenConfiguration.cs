@@ -66,8 +66,6 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
 
             revocationInfo.Property(r => r.RevocationReason)
                 .HasConversion<string>()
-                .IsRequired()
-                .HasDefaultValue(TokenRevocationReason.None)
                 .HasColumnName("RevocationReason")
                 .HasColumnOrder(8);
 
