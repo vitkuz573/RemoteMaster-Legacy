@@ -6,11 +6,33 @@ namespace RemoteMaster.Server.Entities;
 
 public class CrlInfo
 {
-    public int Id { get; set; }
+    private CrlInfo() { }
 
-    public string CrlNumber { get; set; }
+    public CrlInfo(string crlNumber)
+    {
+        CrlNumber = crlNumber;
+    }
 
-    public DateTimeOffset NextUpdate { get; set; }
+    public int Id { get; private set; }
 
-    public string CrlHash { get; set; }
+    public string CrlNumber { get; private set; }
+
+    public DateTimeOffset NextUpdate { get; private set; }
+
+    public string CrlHash { get; private set; }
+
+    public void SetNumber(string number)
+    {
+        CrlNumber = number;
+    }
+
+    public void SetNextUpdate(DateTimeOffset nextUpdate)
+    {
+        NextUpdate = nextUpdate;
+    }
+
+    public void SetHash(string hash)
+    {
+        CrlHash = hash;
+    }
 }

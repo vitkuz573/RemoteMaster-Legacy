@@ -131,12 +131,10 @@ public class CrlServiceTests : IDisposable
         // Arrange
         var contextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<CertificateDbContext>>();
         var context = await contextFactory.CreateDbContextAsync();
-        var crlInfo = new CrlInfo
-        {
-            CrlNumber = BigInteger.Zero.ToString(),
-            NextUpdate = DateTimeOffset.UtcNow.AddDays(30),
-            CrlHash = "hash"
-        };
+        var crlInfo = new CrlInfo(BigInteger.Zero.ToString());
+        crlInfo.SetNextUpdate(DateTimeOffset.UtcNow.AddDays(30));
+        crlInfo.SetHash("hash");
+
         context.CrlInfos.Add(crlInfo);
         context.RevokedCertificates.Add(new RevokedCertificate("1234567890", X509RevocationReason.KeyCompromise));
         await context.SaveChangesAsync();
