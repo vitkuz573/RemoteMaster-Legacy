@@ -150,8 +150,8 @@ public class HostRegistrationService(IEventNotificationService eventNotification
 
     private async Task<Result> UpdateComputerAsync(Computer computer, HostConfiguration hostConfiguration)
     {
-        computer.ChangeName(hostConfiguration.Host.Name);
-        computer.ChangeIpAddress(hostConfiguration.Host.IpAddress);
+        computer.SetName(hostConfiguration.Host.Name);
+        computer.SetIpAddress(hostConfiguration.Host.IpAddress);
 
         var organizationalUnit = computer.Parent;
 
@@ -267,8 +267,8 @@ public class HostRegistrationService(IEventNotificationService eventNotification
                 return Result.Fail(errorMessage);
             }
 
-            computer.ChangeIpAddress(request.IpAddress);
-            computer.ChangeMacAddress(request.MacAddress);
+            computer.SetIpAddress(request.IpAddress);
+            computer.SetMacAddress(request.MacAddress);
 
             await organizationalUnitRepository.UpdateAsync(parentUnit);
             await organizationalUnitRepository.SaveChangesAsync();

@@ -249,7 +249,7 @@ public partial class Home
 
         foreach (var computer in computers.Where(computer => !_availableComputers.ContainsKey(computer.IpAddress) && !_unavailableComputers.ContainsKey(computer.IpAddress)))
         {
-            computer.UpdateThumbnail(null);
+            computer.SetThumbnail(null);
             newPendingComputers.TryAdd(computer.IpAddress, computer);
         }
 
@@ -304,7 +304,7 @@ public partial class Home
             {
                 if (thumbnailBytes.Length > 0)
                 {
-                    computer.UpdateThumbnail(thumbnailBytes);
+                    computer.SetThumbnail(thumbnailBytes);
 
                     await MoveToAvailable(computer);
                 }
@@ -367,7 +367,7 @@ public partial class Home
                 Log.Information("Connection closed for {IPAddress}", computer.IpAddress);
             });
 
-            computer.UpdateThumbnail(null);
+            computer.SetThumbnail(null);
 
             await MoveToPending(computer);
         }
@@ -395,7 +395,7 @@ public partial class Home
 
     private async Task MoveToUnavailable(Computer computer)
     {
-        computer.UpdateThumbnail(null);
+        computer.SetThumbnail(null);
 
         if (_pendingComputers.ContainsKey(computer.IpAddress))
         {
@@ -413,7 +413,7 @@ public partial class Home
 
     private async Task MoveToPending(Computer computer)
     {
-        computer.UpdateThumbnail(null);
+        computer.SetThumbnail(null);
 
         if (_availableComputers.ContainsKey(computer.IpAddress))
         {

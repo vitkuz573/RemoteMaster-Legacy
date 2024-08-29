@@ -33,28 +33,28 @@ public class Computer
 
     public OrganizationalUnit Parent { get; private set; }
 
-    public void ChangeParent(OrganizationalUnit newParent)
+    public void SetParent(OrganizationalUnit newParent)
     {
         Parent = newParent ?? throw new ArgumentNullException(nameof(newParent));
         ParentId = newParent.Id;
     }
 
-    public void UpdateThumbnail(byte[]? thumbnail)
+    public void SetThumbnail(byte[]? thumbnail)
     {
         Thumbnail = thumbnail;
     }
 
-    public void ChangeIpAddress(string newIpAddress)
+    public void SetIpAddress(string newIpAddress)
     {
         IpAddress = newIpAddress ?? throw new ArgumentNullException(nameof(newIpAddress));
     }
 
-    public void ChangeMacAddress(string newMacAddress)
+    public void SetMacAddress(string newMacAddress)
     {
         MacAddress = newMacAddress ?? throw new ArgumentNullException(nameof(newMacAddress));
     }
 
-    public void ChangeName(string newName)
+    public void SetName(string newName)
     {
         Name = newName ?? throw new ArgumentNullException(nameof(newName));
     }
