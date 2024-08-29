@@ -10,15 +10,22 @@ namespace RemoteMaster.Server.Entities;
 
 public class ApplicationUser : IdentityUser, IAggregateRoot
 {
+    private readonly List<UserOrganization> _userOrganizations = [];
+    private readonly List<UserOrganizationalUnit> _userOrganizationalUnits = [];
     private readonly List<RefreshToken> _refreshTokens = [];
 
-    public ICollection<UserOrganization> UserOrganizations { get; } = [];
+    public IReadOnlyCollection<UserOrganization> UserOrganizations => _userOrganizations.AsReadOnly();
 
-    public ICollection<UserOrganizationalUnit> UserOrganizationalUnits { get; } = [];
+    public IReadOnlyCollection<UserOrganizationalUnit> UserOrganizationalUnits => _userOrganizationalUnits.AsReadOnly();
 
     public IReadOnlyCollection<RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
 
-    public bool CanAccessUnregisteredHosts { get; set; }
+    public bool CanAccessUnregisteredHosts { get; private set; }
+
+    public void SetAccessToUnregisteredHosts(bool canAccess)
+    {
+        CanAccessUnregisteredHosts = canAccess;
+    }
 
     public SignInEntry AddSignInEntry(bool isSuccessful, string ipAddress)
     {

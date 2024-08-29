@@ -108,7 +108,7 @@ public partial class ManageUserRights
         await UpdateUserAccessAsync(user);
         await UpdateUserLockoutStatusAsync(user);
 
-        user.CanAccessUnregisteredHosts = SelectedUserModel.CanAccessUnregisteredHosts;
+        user.SetAccessToUnregisteredHosts(SelectedUserModel.CanAccessUnregisteredHosts);
 
         var result = await UserManager.UpdateAsync(user);
 
