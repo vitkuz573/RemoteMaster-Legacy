@@ -121,7 +121,7 @@ public class OrganizationalUnit : IAggregateRoot
             throw new InvalidOperationException("Computer does not belong to this unit.");
         }
 
-        computer.SetParent(newUnit);
+        computer.SetOrganizationalUnit(newUnit);
         RemoveComputer(computer);
         newUnit.AddComputer(computer);
     }

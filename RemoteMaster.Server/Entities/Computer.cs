@@ -33,10 +33,10 @@ public class Computer
 
     public OrganizationalUnit Parent { get; private set; }
 
-    public void SetParent(OrganizationalUnit newParent)
+    public void SetOrganizationalUnit(OrganizationalUnit organizationalUnit)
     {
-        Parent = newParent ?? throw new ArgumentNullException(nameof(newParent));
-        ParentId = newParent.Id;
+        Parent = organizationalUnit ?? throw new ArgumentNullException(nameof(organizationalUnit));
+        ParentId = organizationalUnit.Id;
     }
 
     public void SetThumbnail(byte[]? thumbnail)
@@ -44,18 +44,18 @@ public class Computer
         Thumbnail = thumbnail;
     }
 
-    public void SetIpAddress(string newIpAddress)
+    public void SetIpAddress(string ipAddress)
     {
-        IpAddress = newIpAddress ?? throw new ArgumentNullException(nameof(newIpAddress));
+        IpAddress = ipAddress ?? throw new ArgumentNullException(nameof(ipAddress));
     }
 
-    public void SetMacAddress(string newMacAddress)
+    public void SetMacAddress(string macAddress)
     {
-        MacAddress = newMacAddress ?? throw new ArgumentNullException(nameof(newMacAddress));
+        MacAddress = macAddress ?? throw new ArgumentNullException(nameof(macAddress));
     }
 
-    public void SetName(string newName)
+    public void SetName(string name)
     {
-        Name = newName ?? throw new ArgumentNullException(nameof(newName));
+        Name = name ?? throw new ArgumentNullException(nameof(name));
     }
 }
