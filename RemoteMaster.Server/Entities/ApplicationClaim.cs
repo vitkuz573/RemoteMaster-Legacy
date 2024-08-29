@@ -6,11 +6,20 @@ namespace RemoteMaster.Server.Entities;
 
 public class ApplicationClaim
 {
-    public int Id { get; set; }
+    private ApplicationClaim() { }
 
-    public string ClaimType { get; set; }
+    public ApplicationClaim(string type, string value, string description)
+    {
+        ClaimType = type;
+        ClaimValue = value;
+        Description = description;
+    }
 
-    public string ClaimValue { get; set; }
+    public int Id { get; private set; }
 
-    public string Description { get; set; }
+    public string ClaimType { get; private set; }
+
+    public string ClaimValue { get; private set; }
+
+    public string Description { get; private set; }
 }

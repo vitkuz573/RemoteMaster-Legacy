@@ -116,13 +116,8 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
             }
 
             var matchingClaim = ClaimRepository.AllClaims.FirstOrDefault(c => c.ClaimType == claim.Type && c.ClaimValue == claim.Value) ?? throw new InvalidOperationException($"Claim '{claim.Type}:{claim.Value}' is assigned to a role but does not exist in the central repository.");
-            
-            await applicationClaimsService.AddClaimAsync(new ApplicationClaim
-            {
-                ClaimType = claim.Type,
-                ClaimValue = claim.Value,
-                Description = matchingClaim.Description
-            });
+
+            await applicationClaimsService.AddClaimAsync(new ApplicationClaim(claim.Type, claim.Value, matchingClaim.Description));
         }
     }
 
