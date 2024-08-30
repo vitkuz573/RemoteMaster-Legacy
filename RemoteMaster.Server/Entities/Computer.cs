@@ -47,11 +47,6 @@ public class Computer
         IpAddress = ipAddress ?? throw new ArgumentNullException(nameof(ipAddress));
     }
 
-    public void SetMacAddress(string macAddress)
-    {
-        MacAddress = macAddress ?? throw new ArgumentNullException(nameof(macAddress));
-    }
-
     public void SetName(string name)
     {
         Name = name ?? throw new ArgumentNullException(nameof(name));

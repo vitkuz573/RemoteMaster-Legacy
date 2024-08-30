@@ -267,7 +267,6 @@ public class HostRegistrationService(IEventNotificationService eventNotification
             }
 
             computer.SetIpAddress(request.IpAddress);
-            computer.SetMacAddress(request.MacAddress);
 
             await organizationalUnitRepository.UpdateAsync(parentUnit);
             await organizationalUnitRepository.SaveChangesAsync();
