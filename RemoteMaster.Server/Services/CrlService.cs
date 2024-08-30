@@ -82,9 +82,9 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
             var crlBuilder = new CertificateRevocationListBuilder();
 
             var context = await contextFactory.CreateDbContextAsync();
-            var crlInfo = context.CertificateRevocationLists.OrderBy(ci => ci.Number).FirstOrDefault() ?? new Crl(BigInteger.Zero.ToString());
+            var crl = context.CertificateRevocationLists.OrderBy(ci => ci.Number).FirstOrDefault() ?? new Crl(BigInteger.Zero.ToString());
 
-            var currentCrlNumber = BigInteger.Parse(crlInfo.Number) + 1;
+            var currentCrlNumber = BigInteger.Parse(crl.Number) + 1;
             var nextUpdate = DateTimeOffset.UtcNow.AddDays(30);
 
             var revokedCertificates = context.RevokedCertificates.ToList();
@@ -100,17 +100,16 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
             }
 
             var crlData = crlBuilder.Build(issuerCertificate, currentCrlNumber, nextUpdate, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-            var crlHash = BitConverter.ToString(SHA256.HashData(crlData)).Replace("-", "").ToLowerInvariant();
 
-            crlInfo.SetNumber(currentCrlNumber.ToString());
+            crl.SetNumber(currentCrlNumber.ToString());
 
             if (context.CertificateRevocationLists.Any())
             {
-                context.CertificateRevocationLists.Update(crlInfo);
+                context.CertificateRevocationLists.Update(crl);
             }
             else
             {
-                context.CertificateRevocationLists.Add(crlInfo);
+                context.CertificateRevocationLists.Add(crl);
             }
 
             await context.SaveChangesAsync();
