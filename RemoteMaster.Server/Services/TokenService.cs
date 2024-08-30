@@ -186,15 +186,23 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
     {
         Log.Debug("Starting cleanup of expired and revoked refresh tokens.");
 
-        var expiredTokens = await context.Users
-            .SelectMany(u => u.RefreshTokens)
-            .Where(rt => rt.TokenValue.Expires < DateTime.UtcNow || rt.RevocationInfo != null)
-            .ToListAsync();
+        var expiredTokensQuery = context.Users?
+            .SelectMany(u => u.RefreshTokens)?
+            .Where(rt => rt.TokenValue.Expires < DateTime.UtcNow || rt.RevocationInfo != null);
+
+        if (expiredTokensQuery == null)
+        {
+            Log.Information("No expired or revoked tokens found for cleanup.");
+            
+            return Result.Fail("No expired or revoked tokens found for cleanup.");
+        }
+
+        var expiredTokens = await expiredTokensQuery.ToListAsync();
 
         if (expiredTokens.Count == 0)
         {
             Log.Information("No expired or revoked tokens found for cleanup.");
-
+            
             return Result.Fail("No expired or revoked tokens found for cleanup.");
         }
 
@@ -202,7 +210,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         foreach (var token in expiredTokens)
         {
-            Log.Debug($"Removed token: {token.TokenValue.Token}, User ID: {token.UserId}, Expired at: {token.TokenValue.Expires}, Revoked at: {token.RevocationInfo.Revoked}");
+            Log.Debug($"Removed token: {token.TokenValue.Token}, User ID: {token.UserId}, Expired at: {token.TokenValue.Expires}, Revoked at: {token.RevocationInfo?.Revoked}");
         }
 
         await context.SaveChangesAsync();
