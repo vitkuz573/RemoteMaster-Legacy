@@ -6,7 +6,6 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Controllers.V1;
@@ -35,41 +34,6 @@ public class CrlController(ICrlService crlService) : ControllerBase
         {
             Title = "Internal Server Error",
             Detail = crlResult.Errors.FirstOrDefault()?.Message ?? "An error occurred while generating the CRL. Please try again later.",
-            Status = StatusCodes.Status500InternalServerError
-        };
-
-        var errorResponse = ApiResponse<string>.Failure(problemDetails, StatusCodes.Status500InternalServerError);
-
-        return StatusCode(StatusCodes.Status500InternalServerError, errorResponse);
-    }
-
-    [HttpGet("metadata", Name = "GetCrlMetadata")]
-    [ProducesResponseType(typeof(ApiResponse<CrlMetadata>), 200)]
-    [ProducesResponseType(typeof(ApiResponse<string>), 500)]
-    public async Task<IActionResult> GetCrlMetadataAsync()
-    {
-        var metadataResult = await crlService.GetCrlMetadataAsync();
-
-        if (metadataResult.IsSuccess)
-        {
-            var response = ApiResponse<CrlMetadata>.Success(metadataResult.Value, "CRL metadata retrieved successfully.");
-
-            var selfUrl = Url.Action("GetCrlMetadata");
-            var downloadUrl = Url.Action("GetCrl");
-
-            response.SetLinks(new Dictionary<string, string>
-            {
-                { "self", selfUrl! },
-                { "downloadCRL", downloadUrl! }
-            });
-
-            return Ok(response);
-        }
-
-        var problemDetails = new ProblemDetails
-        {
-            Title = "Internal Server Error",
-            Detail = metadataResult.Errors.FirstOrDefault()?.Message ?? "An error occurred while retrieving the CRL metadata. Please try again later.",
             Status = StatusCodes.Status500InternalServerError
         };
 

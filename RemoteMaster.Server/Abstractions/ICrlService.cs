@@ -4,7 +4,6 @@
 
 using System.Security.Cryptography.X509Certificates;
 using FluentResults;
-using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Abstractions;
 
@@ -34,10 +33,4 @@ public interface ICrlService
     /// <param name="customPath">An optional custom path for publishing the CRL.</param>
     /// <returns>A result indicating success or failure.</returns>
     Task<Result> PublishCrlAsync(byte[] crlData, string? customPath = null);
-
-    /// <summary>
-    /// Gets CRL metadata asynchronously.
-    /// </summary>
-    /// <returns>A result containing the CRL metadata or an error.</returns>
-    Task<Result<CrlMetadata>> GetCrlMetadataAsync();
 }

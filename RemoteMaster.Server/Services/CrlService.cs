@@ -10,9 +10,7 @@ using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
-using RemoteMaster.Server.DTOs;
 using RemoteMaster.Server.Entities;
-using RemoteMaster.Server.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;
@@ -148,36 +146,6 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
             Log.Error(ex, "Failed to publish CRL");
 
             return Result.Fail("Failed to publish CRL").WithError(ex.Message);
-        }
-    }
-
-    public async Task<Result<CrlMetadata>> GetCrlMetadataAsync()
-    {
-        try
-        {
-            var context = await contextFactory.CreateDbContextAsync();
-
-            var crlInfoDto = await context.Crl
-                .OrderBy(ci => ci.Number)
-                .Select(ci => new CrlInfoDto(ci.Number))
-                .FirstOrDefaultAsync();
-
-            var revokedCertificatesCount = await context.RevokedCertificates.CountAsync();
-
-            if (crlInfoDto == null)
-            {
-                return Result.Fail<CrlMetadata>("CRL Metadata is not available.");
-            }
-
-            var metadata = new CrlMetadata(crlInfoDto, revokedCertificatesCount);
-
-            return Result.Ok(metadata);
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Error retrieving CRL metadata");
-
-            return Result.Fail<CrlMetadata>("Error retrieving CRL metadata").WithError(ex.Message);
         }
     }
 }

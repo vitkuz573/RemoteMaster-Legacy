@@ -4,7 +4,6 @@
 
 using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
-using System.Numerics;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using FluentResults;
@@ -120,32 +119,6 @@ public class CrlServiceTests : IDisposable
         Assert.True(result.IsSuccess, result.Errors.FirstOrDefault()?.Message);
         Assert.True(_mockFileSystem.File.Exists(crlFilePath));
         Assert.Equal(crlData, await _mockFileSystem.File.ReadAllBytesAsync(crlFilePath));
-    }
-
-    [Fact]
-    public async Task GetCrlMetadataAsync_ReturnsMetadata()
-    {
-        using var scope = CreateScope();
-        var service = scope.ServiceProvider.GetRequiredService<ICrlService>();
-
-        // Arrange
-        var contextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<CertificateDbContext>>();
-        var context = await contextFactory.CreateDbContextAsync();
-        var crlInfo = new Crl(BigInteger.Zero.ToString());
-
-        context.Crl.Add(crlInfo);
-        context.RevokedCertificates.Add(new RevokedCertificate("1234567890", X509RevocationReason.KeyCompromise));
-        await context.SaveChangesAsync();
-
-        // Act
-        var result = await service.GetCrlMetadataAsync();
-
-        // Assert
-        Assert.True(result.IsSuccess, result.Errors.FirstOrDefault()?.Message);
-        var metadata = result.ValueOrDefault;
-        Assert.NotNull(metadata);
-        Assert.Equal(crlInfo.Number, metadata.Crl.Number);
-        Assert.Equal(1, metadata.RevokedCertificatesCount);
     }
 
     public void Dispose()
