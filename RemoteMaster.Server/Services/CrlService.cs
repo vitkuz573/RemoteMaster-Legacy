@@ -75,9 +75,9 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
             var crlBuilder = new CertificateRevocationListBuilder();
 
             var context = await contextFactory.CreateDbContextAsync();
-            var crlInfo = context.CrlInfos.OrderBy(ci => ci.CrlNumber).FirstOrDefault() ?? new CrlInfo(BigInteger.Zero.ToString());
+            var crlInfo = context.Crl.OrderBy(ci => ci.Number).FirstOrDefault() ?? new Crl(BigInteger.Zero.ToString());
 
-            var currentCrlNumber = BigInteger.Parse(crlInfo.CrlNumber) + 1;
+            var currentCrlNumber = BigInteger.Parse(crlInfo.Number) + 1;
             var nextUpdate = DateTimeOffset.UtcNow.AddDays(30);
 
             var revokedCertificates = context.RevokedCertificates.ToList();
@@ -96,16 +96,14 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
             var crlHash = BitConverter.ToString(SHA256.HashData(crlData)).Replace("-", "").ToLowerInvariant();
 
             crlInfo.SetNumber(currentCrlNumber.ToString());
-            crlInfo.SetNextUpdate(nextUpdate);
-            crlInfo.SetHash(crlHash);
 
-            if (context.CrlInfos.Any())
+            if (context.Crl.Any())
             {
-                context.CrlInfos.Update(crlInfo);
+                context.Crl.Update(crlInfo);
             }
             else
             {
-                context.CrlInfos.Add(crlInfo);
+                context.Crl.Add(crlInfo);
             }
 
             await context.SaveChangesAsync();
@@ -159,9 +157,9 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
         {
             var context = await contextFactory.CreateDbContextAsync();
 
-            var crlInfoDto = await context.CrlInfos
-                .OrderBy(ci => ci.CrlNumber)
-                .Select(ci => new CrlInfoDto(ci.CrlNumber, ci.NextUpdate, ci.CrlHash))
+            var crlInfoDto = await context.Crl
+                .OrderBy(ci => ci.Number)
+                .Select(ci => new CrlInfoDto(ci.Number))
                 .FirstOrDefaultAsync();
 
             var revokedCertificatesCount = await context.RevokedCertificates.CountAsync();

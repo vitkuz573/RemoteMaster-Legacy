@@ -4,11 +4,7 @@
 
 namespace RemoteMaster.Server.DTOs;
 
-public class CrlInfoDto(string crlNumber, DateTimeOffset nextUpdate, string crlHash)
+public class CrlInfoDto(string number)
 {
-    public string CrlNumber { get; } = crlNumber;
-
-    public DateTimeOffset NextUpdate { get; } = nextUpdate;
-
-    public string CrlHash { get; } = crlHash;
+    public string Number { get; } = number;
 }
