@@ -14,8 +14,6 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Services;
-using Serilog;
-using Xunit.Abstractions;
 
 namespace RemoteMaster.Server.Tests;
 
@@ -25,7 +23,7 @@ public class CrlServiceTests : IDisposable
     private readonly Mock<ICertificateProvider> _certificateProviderMock;
     private readonly MockFileSystem _mockFileSystem;
 
-    public CrlServiceTests(ITestOutputHelper output)
+    public CrlServiceTests()
     {
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddDbContext<CertificateDbContext>(options =>
@@ -58,9 +56,7 @@ public class CrlServiceTests : IDisposable
         const X509RevocationReason reason = X509RevocationReason.KeyCompromise;
 
         // Act
-        Log.Information("RevokeCertificateAsync: Revoking certificate with serial number {SerialNumber}", serialNumber);
         var result = await service.RevokeCertificateAsync(serialNumber, reason);
-        Log.Information("RevokeCertificateAsync: Certificate with serial number {SerialNumber} revoked", serialNumber);
 
         // Assert
         Assert.True(result.IsSuccess, result.Errors.FirstOrDefault()?.Message);
@@ -68,7 +64,6 @@ public class CrlServiceTests : IDisposable
         var contextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<CertificateDbContext>>();
         var context = await contextFactory.CreateDbContextAsync();
         var revokedCertificate = await context.RevokedCertificates.FirstOrDefaultAsync(rc => rc.SerialNumber == serialNumber);
-        Log.Information("RevokeCertificateAsync: Checking if certificate with serial number {SerialNumber} is revoked", serialNumber);
 
         Assert.NotNull(revokedCertificate);
         Assert.Equal(reason, revokedCertificate.Reason);
