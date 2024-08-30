@@ -117,6 +117,26 @@ public class CrlServiceTests : IDisposable
         Assert.Equal(crlData, await _mockFileSystem.File.ReadAllBytesAsync(crlFilePath));
     }
 
+    [Fact]
+    public async Task RevokeCertificateAsync_DuplicateRevocation_ReturnsError()
+    {
+        using var scope = CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<ICrlService>();
+
+        // Arrange
+        var serialNumber = "1234567890";
+        var reason = X509RevocationReason.KeyCompromise;
+
+        // Act
+        var firstResult = await service.RevokeCertificateAsync(serialNumber, reason);
+        var secondResult = await service.RevokeCertificateAsync(serialNumber, reason);
+
+        // Assert
+        Assert.True(firstResult.IsSuccess, "First revocation should succeed.");
+        Assert.False(secondResult.IsSuccess, "Second revocation should fail.");
+        Assert.Contains("already revoked", secondResult.Errors.FirstOrDefault()?.Message);
+    }
+
     public void Dispose()
     {
         _serviceProvider.Dispose();
