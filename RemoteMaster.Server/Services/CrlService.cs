@@ -23,19 +23,28 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
         {
             var context = await contextFactory.CreateDbContextAsync();
 
-            var existingRevokedCertificate = await context.RevokedCertificates.FirstOrDefaultAsync(rc => rc.SerialNumber == serialNumber);
+            var crlInfo = await context.CertificateRevocationLists.FirstOrDefaultAsync() ?? new Crl(BigInteger.Zero.ToString());
 
-            if (existingRevokedCertificate != null)
+            try
+            {
+                crlInfo.RevokeCertificate(serialNumber, reason);
+            }
+            catch (InvalidOperationException ex)
             {
                 Log.Information($"Certificate with serial number {serialNumber} has already been revoked.");
                 
-                return Result.Ok();
+                return Result.Fail(ex.Message);
             }
 
-            var revokedCertificate = new RevokedCertificate(serialNumber, reason);
+            if (context.CertificateRevocationLists.Any())
+            {
+                context.CertificateRevocationLists.Update(crlInfo);
+            }
+            else
+            {
+                context.CertificateRevocationLists.Add(crlInfo);
+            }
 
-            context.RevokedCertificates.Add(revokedCertificate);
-            
             var result = await context.SaveChangesAsync();
 
             if (result > 0)
@@ -73,7 +82,7 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
             var crlBuilder = new CertificateRevocationListBuilder();
 
             var context = await contextFactory.CreateDbContextAsync();
-            var crlInfo = context.Crl.OrderBy(ci => ci.Number).FirstOrDefault() ?? new Crl(BigInteger.Zero.ToString());
+            var crlInfo = context.CertificateRevocationLists.OrderBy(ci => ci.Number).FirstOrDefault() ?? new Crl(BigInteger.Zero.ToString());
 
             var currentCrlNumber = BigInteger.Parse(crlInfo.Number) + 1;
             var nextUpdate = DateTimeOffset.UtcNow.AddDays(30);
@@ -95,13 +104,13 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
 
             crlInfo.SetNumber(currentCrlNumber.ToString());
 
-            if (context.Crl.Any())
+            if (context.CertificateRevocationLists.Any())
             {
-                context.Crl.Update(crlInfo);
+                context.CertificateRevocationLists.Update(crlInfo);
             }
             else
             {
-                context.Crl.Add(crlInfo);
+                context.CertificateRevocationLists.Add(crlInfo);
             }
 
             await context.SaveChangesAsync();
