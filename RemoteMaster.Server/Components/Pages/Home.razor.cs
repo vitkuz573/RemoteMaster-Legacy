@@ -103,8 +103,6 @@ public partial class Home
     {
         if (_currentUser == null)
         {
-            Log.Warning("Current user not found");
-
             return [];
         }
 
@@ -119,8 +117,6 @@ public partial class Home
 
             if (organizationsResult == null)
             {
-                Log.Error("Failed to load organizations");
-
                 return units;
             }
 
@@ -140,8 +136,6 @@ public partial class Home
 
             if (organizationalUnitsResult == null)
             {
-                Log.Error("Failed to load organizational units");
-
                 return units;
             }
 
