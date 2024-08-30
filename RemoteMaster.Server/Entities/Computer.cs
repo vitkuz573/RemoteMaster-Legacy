@@ -10,13 +10,11 @@ public class Computer
 {
     protected Computer() { }
 
-    public Computer(string name, string ipAddress, string macAddress, OrganizationalUnit parent)
+    public Computer(string name, string ipAddress, string macAddress)
     {
         Name = name ?? throw new ArgumentNullException(nameof(name));
         IpAddress = ipAddress ?? throw new ArgumentNullException(nameof(ipAddress));
         MacAddress = macAddress ?? throw new ArgumentNullException(nameof(macAddress));
-        Parent = parent ?? throw new ArgumentNullException(nameof(parent));
-        ParentId = parent.Id;
     }
 
     public Guid Id { get; private set; }
@@ -33,7 +31,7 @@ public class Computer
 
     public OrganizationalUnit Parent { get; private set; }
 
-    public void SetOrganizationalUnit(OrganizationalUnit organizationalUnit)
+    internal void SetOrganizationalUnit(OrganizationalUnit organizationalUnit)
     {
         Parent = organizationalUnit ?? throw new ArgumentNullException(nameof(organizationalUnit));
         ParentId = organizationalUnit.Id;

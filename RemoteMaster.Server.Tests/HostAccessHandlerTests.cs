@@ -95,11 +95,9 @@ public class HostAccessHandlerTests
 
         organizationalUnit.AddUser(new UserOrganizationalUnit(organizationalUnit, applicationUser));
 
-        var computer = new Computer("host", "127.0.0.1", "00-14-22-01-23-45", organizationalUnit);
-        organizationalUnit.AddComputer(computer);
+        organizationalUnit.AddComputer("host", "127.0.0.1", "00-14-22-01-23-45");
 
         _dbContext.Users.Add(applicationUser);
-        _dbContext.Computers.Add(computer);
         _dbContext.OrganizationalUnits.Add(organizationalUnit);
         _dbContext.Organizations.Add(organization);
 
@@ -126,8 +124,7 @@ public class HostAccessHandlerTests
         var organizationalUnit = new OrganizationalUnit("Test OU", organization);
         organization.AddOrganizationalUnit(organizationalUnit);
 
-        var computer = new Computer("host", "127.0.0.1", "00-14-22-01-23-45", organizationalUnit);
-        organizationalUnit.AddComputer(computer);
+        organizationalUnit.AddComputer("host", "127.0.0.1", "00-14-22-01-23-45");
 
         var applicationUser = new ApplicationUser
         {
@@ -139,7 +136,6 @@ public class HostAccessHandlerTests
         organizationalUnit.AddUser(userOrganizationalUnit);
 
         _dbContext.Users.Add(applicationUser);
-        _dbContext.Computers.Add(computer);
         _dbContext.OrganizationalUnits.Add(organizationalUnit);
         _dbContext.Organizations.Add(organization);
 
@@ -179,11 +175,8 @@ public class HostAccessHandlerTests
         var userOrganizationalUnit1 = new UserOrganizationalUnit(organizationalUnit1, applicationUser);
         organizationalUnit1.AddUser(userOrganizationalUnit1);
 
-        var computer1 = new Computer("sharedHost", "127.0.0.1", "00-14-22-01-23-45", organizationalUnit1);
-        organizationalUnit1.AddComputer(computer1);
-
-        var computer2 = new Computer("sharedHost", "127.0.0.2", "00-14-22-01-23-46", organizationalUnit2);
-        organizationalUnit2.AddComputer(computer2);
+        organizationalUnit1.AddComputer("sharedHost", "127.0.0.1", "00-14-22-01-23-45");
+        organizationalUnit2.AddComputer("sharedHost", "127.0.0.2", "00-14-22-01-23-46");
 
         var anotherUser = new ApplicationUser
         {
@@ -195,7 +188,6 @@ public class HostAccessHandlerTests
         organizationalUnit2.AddUser(userOrganizationalUnit2);
 
         _dbContext.Users.AddRange(applicationUser, anotherUser);
-        _dbContext.Computers.AddRange(computer1, computer2);
         _dbContext.OrganizationalUnits.AddRange(organizationalUnit1, organizationalUnit2);
         _dbContext.Organizations.AddRange(organization1, organization2);
         await _dbContext.SaveChangesAsync();
@@ -243,14 +235,10 @@ public class HostAccessHandlerTests
         var userOrganizationalUnit2 = new UserOrganizationalUnit(organizationalUnit2, applicationUser);
         organizationalUnit2.AddUser(userOrganizationalUnit2);
 
-        var computer1 = new Computer("sharedHost", "127.0.0.1", "00-14-22-01-23-45", organizationalUnit1);
-        organizationalUnit1.AddComputer(computer1);
-
-        var computer2 = new Computer("sharedHost", "127.0.0.2", "00-14-22-01-23-46", organizationalUnit2);
-        organizationalUnit2.AddComputer(computer2);
+        organizationalUnit1.AddComputer("sharedHost", "127.0.0.1", "00-14-22-01-23-45");
+        organizationalUnit2.AddComputer("sharedHost", "127.0.0.2", "00-14-22-01-23-46");
 
         _dbContext.Users.AddRange(applicationUser, anotherUser);
-        _dbContext.Computers.AddRange(computer1, computer2);
         _dbContext.OrganizationalUnits.AddRange(organizationalUnit1, organizationalUnit2);
         _dbContext.Organizations.AddRange(organization1, organization2);
 

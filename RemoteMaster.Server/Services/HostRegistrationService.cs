@@ -126,8 +126,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
                 return Result.Ok();
             }
 
-            computer = new Computer(hostConfiguration.Host.Name, hostConfiguration.Host.IpAddress, hostConfiguration.Host.MacAddress, parentUnit);
-            parentUnit.AddComputer(computer);
+            parentUnit.AddComputer(hostConfiguration.Host.Name, hostConfiguration.Host.IpAddress, hostConfiguration.Host.MacAddress);
 
             await organizationalUnitRepository.UpdateAsync(parentUnit);
             await organizationalUnitRepository.SaveChangesAsync();
@@ -206,7 +205,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
                 return Result.Fail(errorMessage);
             }
 
-            parentUnit.RemoveComputer(computer);
+            parentUnit.RemoveComputer(computer.Id);
 
             await organizationalUnitRepository.UpdateAsync(parentUnit);
             await organizationalUnitRepository.SaveChangesAsync();

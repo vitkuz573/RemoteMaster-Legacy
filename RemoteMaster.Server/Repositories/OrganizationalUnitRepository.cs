@@ -66,8 +66,9 @@ public class OrganizationalUnitRepository(ApplicationDbContext context) : IOrgan
     public async Task RemoveComputerAsync(OrganizationalUnit organizationalUnit, Computer computer)
     {
         ArgumentNullException.ThrowIfNull(organizationalUnit);
+        ArgumentNullException.ThrowIfNull(computer);
 
-        organizationalUnit.RemoveComputer(computer);
+        organizationalUnit.RemoveComputer(computer.Id);
         context.Computers.Remove(computer);
 
         await SaveChangesAsync();

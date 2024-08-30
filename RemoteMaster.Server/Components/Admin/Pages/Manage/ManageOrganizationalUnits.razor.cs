@@ -62,11 +62,11 @@ public partial class ManageOrganizationalUnits
                 return;
             }
 
-            organizationalUnit.ChangeName(Input.Name);
+            organizationalUnit.SetName(Input.Name);
 
             if (parent != null)
             {
-                organizationalUnit.ChangeParent(parent);
+                organizationalUnit.SetParent(parent);
             }
 
             await OrganizationalUnitRepository.UpdateAsync(organizationalUnit);

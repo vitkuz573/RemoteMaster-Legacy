@@ -45,15 +45,15 @@ public class OrganizationalUnit : IAggregateRoot
         parent?.AddChildUnit(this);
     }
 
-    public void ChangeName(string newName)
+    public void SetName(string name)
     {
-        Name = newName ?? throw new ArgumentNullException(nameof(newName));
+        Name = name ?? throw new ArgumentNullException(nameof(name));
     }
 
-    public void ChangeParent(OrganizationalUnit newParent)
+    public void SetParent(OrganizationalUnit parent)
     {
-        Parent = newParent ?? throw new ArgumentNullException(nameof(newParent));
-        ParentId = newParent.Id;
+        Parent = parent ?? throw new ArgumentNullException(nameof(parent));
+        ParentId = parent.Id;
     }
 
     public void AssignToOrganization(Organization organization)
@@ -90,40 +90,28 @@ public class OrganizationalUnit : IAggregateRoot
         _children.Clear();
     }
 
-    public void AddComputer(Computer computer)
+    public void AddComputer(string name, string ipAddress, string macAddress)
     {
-        ArgumentNullException.ThrowIfNull(computer);
-
-        if (computer.Parent != this)
-        {
-            throw new InvalidOperationException("This computer is assigned to a different organizational unit.");
-        }
+        var computer = new Computer(name, ipAddress, macAddress);
+        computer.SetOrganizationalUnit(this);
 
         _computers.Add(computer);
     }
 
-    public void RemoveComputer(Computer computer)
+    public void RemoveComputer(Guid computerId)
     {
-        if (!_computers.Contains(computer))
-        {
-            throw new InvalidOperationException("Computer not found in this unit.");
-        }
+        var computer = _computers.SingleOrDefault(c => c.Id == computerId);
 
         _computers.Remove(computer);
     }
 
-    public void MoveComputerToUnit(Computer computer, OrganizationalUnit newUnit)
+    public void MoveComputerToUnit(Guid computerId, OrganizationalUnit newUnit)
     {
-        ArgumentNullException.ThrowIfNull(computer);
-
-        if (!_computers.Contains(computer))
-        {
-            throw new InvalidOperationException("Computer does not belong to this unit.");
-        }
+        var computer = _computers.SingleOrDefault(c => c.Id == computerId);
 
         computer.SetOrganizationalUnit(newUnit);
-        RemoveComputer(computer);
-        newUnit.AddComputer(computer);
+        RemoveComputer(computerId);
+        newUnit.AddComputer(computer.Name, computer.IpAddress, computer.MacAddress);
     }
 
     public void ClearComputers()

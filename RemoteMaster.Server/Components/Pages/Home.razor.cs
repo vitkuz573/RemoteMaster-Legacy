@@ -128,13 +128,7 @@ public partial class Home
 
             foreach (var organization in organizationsResult)
             {
-                var organizationalUnits = (await LoadNodes(organization.Id)).OfType<OrganizationalUnit>().ToList();
-                organization.ClearOrganizationalUnits();
-
-                foreach (var unit in organizationalUnits)
-                {
-                    organization.AddOrganizationalUnit(unit);
-                }
+                await LoadNodes(organization.Id);
             }
         }
         else
@@ -155,21 +149,7 @@ public partial class Home
 
             foreach (var unit in organizationalUnitsResult)
             {
-                var childrenUnits = (await LoadNodes(unit.OrganizationId, unit.Id)).OfType<OrganizationalUnit>().ToList();
-                unit.ClearChildren();
-
-                foreach (var child in childrenUnits)
-                {
-                    unit.AddChildUnit(child);
-                }
-
-                var unitComputers = unit.Computers.ToList();
-                unit.ClearComputers();
-
-                foreach (var computer in unitComputers)
-                {
-                    unit.AddComputer(computer);
-                }
+                await LoadNodes(unit.OrganizationId, unit.Id);
             }
         }
 

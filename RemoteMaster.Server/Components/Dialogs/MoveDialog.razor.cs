@@ -167,7 +167,7 @@ public partial class MoveDialog
                     continue;
                 }
 
-                currentParentUnit.MoveComputerToUnit(computer, newParentUnit);
+                currentParentUnit.MoveComputerToUnit(computer.Id, newParentUnit);
             }
 
             await OrganizationalUnitRepository.SaveChangesAsync();
