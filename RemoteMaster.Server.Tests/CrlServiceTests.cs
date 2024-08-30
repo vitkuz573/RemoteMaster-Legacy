@@ -82,9 +82,11 @@ public class CrlServiceTests : IDisposable
 
         var contextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<CertificateDbContext>>();
         var context = await contextFactory.CreateDbContextAsync();
-        var revokedCertificate = new RevokedCertificate("1234567890", X509RevocationReason.KeyCompromise);
 
-        context.RevokedCertificates.Add(revokedCertificate);
+        var crl = new Crl("1");
+        crl.RevokeCertificate("1234567890", X509RevocationReason.KeyCompromise);
+
+        context.CertificateRevocationLists.Add(crl);
         await context.SaveChangesAsync();
 
         // Act
