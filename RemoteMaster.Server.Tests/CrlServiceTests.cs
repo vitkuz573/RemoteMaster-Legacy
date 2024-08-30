@@ -27,7 +27,7 @@ public class CrlServiceTests : IDisposable
     {
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddDbContext<CertificateDbContext>(options =>
-            options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
+            options.UseInMemoryDatabase(Guid.NewGuid().ToString()));
         serviceCollection.AddScoped<IDbContextFactory<CertificateDbContext>, DbContextFactory<CertificateDbContext>>();
 
         _certificateProviderMock = new Mock<ICertificateProvider>();
@@ -45,15 +45,14 @@ public class CrlServiceTests : IDisposable
         return _serviceProvider.CreateScope();
     }
 
-    [Fact]
-    public async Task RevokeCertificateAsync_RevokesCertificate()
+    [Theory]
+    [InlineData("1234567890", X509RevocationReason.KeyCompromise)]
+    [InlineData("0987654321", X509RevocationReason.CessationOfOperation)]
+    [InlineData("1122334455", X509RevocationReason.AffiliationChanged)]
+    public async Task RevokeCertificateAsync_RevokesCertificate(string serialNumber, X509RevocationReason reason)
     {
         using var scope = CreateScope();
         var service = scope.ServiceProvider.GetRequiredService<ICrlService>();
-
-        // Arrange
-        const string serialNumber = "1234567890";
-        const X509RevocationReason reason = X509RevocationReason.KeyCompromise;
 
         // Act
         var result = await service.RevokeCertificateAsync(serialNumber, reason);
