@@ -50,10 +50,10 @@ public class OrganizationalUnit : IAggregateRoot
         Name = name ?? throw new ArgumentNullException(nameof(name));
     }
 
-    public void SetParent(OrganizationalUnit parent)
+    public void SetParent(OrganizationalUnit? parent)
     {
-        Parent = parent ?? throw new ArgumentNullException(nameof(parent));
-        ParentId = parent.Id;
+        Parent = parent;
+        ParentId = parent?.Id;
     }
 
     public void AssignToOrganization(Organization organization)
