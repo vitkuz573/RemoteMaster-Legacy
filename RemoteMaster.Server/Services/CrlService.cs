@@ -23,11 +23,11 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
         {
             var context = await contextFactory.CreateDbContextAsync();
 
-            var crlInfo = await context.CertificateRevocationLists.FirstOrDefaultAsync() ?? new Crl(BigInteger.Zero.ToString());
+            var crl = await context.CertificateRevocationLists.FirstOrDefaultAsync() ?? new Crl(BigInteger.Zero.ToString());
 
             try
             {
-                crlInfo.RevokeCertificate(serialNumber, reason);
+                crl.RevokeCertificate(serialNumber, reason);
             }
             catch (InvalidOperationException ex)
             {
@@ -38,11 +38,11 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
 
             if (context.CertificateRevocationLists.Any())
             {
-                context.CertificateRevocationLists.Update(crlInfo);
+                context.CertificateRevocationLists.Update(crl);
             }
             else
             {
-                context.CertificateRevocationLists.Add(crlInfo);
+                context.CertificateRevocationLists.Add(crl);
             }
 
             var result = await context.SaveChangesAsync();
