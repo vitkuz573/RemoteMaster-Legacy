@@ -29,7 +29,7 @@ public class ApplicationUser : IdentityUser, IAggregateRoot
 
     public SignInEntry AddSignInEntry(bool isSuccessful, string ipAddress)
     {
-        return new SignInEntry(Id, DateTime.UtcNow, isSuccessful, ipAddress);
+        return new SignInEntry(Id, isSuccessful, ipAddress);
     }
 
     public RefreshToken AddRefreshToken(DateTime expires, string ipAddress)

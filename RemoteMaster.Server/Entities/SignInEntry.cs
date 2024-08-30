@@ -8,10 +8,10 @@ public class SignInEntry
 {
     private SignInEntry() { }
 
-    public SignInEntry(string userId, DateTime signInTime, bool isSuccessful, string ipAddress)
+    public SignInEntry(string userId, bool isSuccessful, string ipAddress)
     {
         UserId = userId ?? throw new ArgumentNullException(nameof(userId));
-        SignInTime = signInTime;
+        SignInTime = DateTime.UtcNow;
         IsSuccessful = isSuccessful;
         IpAddress = ipAddress ?? throw new ArgumentNullException(nameof(ipAddress));
     }
