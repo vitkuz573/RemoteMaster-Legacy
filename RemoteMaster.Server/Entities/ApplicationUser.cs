@@ -34,7 +34,7 @@ public class ApplicationUser : IdentityUser, IAggregateRoot
 
     public RefreshToken AddRefreshToken(DateTime expires, string ipAddress)
     {
-        var refreshToken = new RefreshToken(Id, expires, ipAddress);
+        var refreshToken = RefreshToken.Create(Id, expires, ipAddress);
 
         _refreshTokens.Add(refreshToken);
 
@@ -48,10 +48,10 @@ public class ApplicationUser : IdentityUser, IAggregateRoot
         refreshToken.Revoke(reason, ipAddress);
     }
 
-    public RefreshToken ReplaceRefreshToken(string token, DateTime expires, string ipAddress)
+    public RefreshToken ReplaceRefreshToken(string token, string ipAddress)
     {
-        var refreshToken = _refreshTokens.SingleOrDefault(rt => rt.TokenValue.Token == token);
-        var newRefreshToken = refreshToken.Replace(Id, expires, ipAddress);
+        var refreshToken = _refreshTokens.SingleOrDefault(rt => rt.TokenValue.Token == token) ?? throw new InvalidOperationException("The specified token does not exist.");
+        var newRefreshToken = refreshToken.Replace(ipAddress, RefreshToken.Create);
 
         _refreshTokens.Add(newRefreshToken);
 

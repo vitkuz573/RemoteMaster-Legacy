@@ -119,7 +119,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
         if (existingToken != null)
         {
-            refreshToken = user.ReplaceRefreshToken(existingToken, DateTime.UtcNow.Add(RefreshTokenExpiration), ipAddress);
+            refreshToken = user.ReplaceRefreshToken(existingToken, ipAddress);
         }
         else
         {

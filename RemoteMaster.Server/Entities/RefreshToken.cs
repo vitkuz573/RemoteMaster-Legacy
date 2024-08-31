@@ -12,48 +12,74 @@ public class RefreshToken
 {
     private RefreshToken() { }
 
-    public RefreshToken(string userId, DateTime expires, string ipAddress)
+    private RefreshToken(string userId, DateTime expires, string ipAddress, string token)
     {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            throw new ArgumentException("User ID cannot be null or empty.", nameof(userId));
+        }
+
+        if (expires <= DateTime.UtcNow)
+        {
+            throw new ArgumentException("Expiration date must be in the future.", nameof(expires));
+        }
+
         UserId = userId;
-
-        var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
-
         TokenValue = new TokenValue(token, expires, DateTime.UtcNow, ipAddress);
     }
 
     public int Id { get; private set; }
-    
+
     public string UserId { get; private set; }
-    
+
     public TokenValue TokenValue { get; private set; }
-    
+
     public TokenRevocationInfo? RevocationInfo { get; private set; }
-    
+
     public RefreshToken? ReplacedByToken { get; private set; }
-    
+
     public ApplicationUser User { get; private set; }
 
     public bool IsActive => RevocationInfo == null && !TokenValue.IsExpired;
 
     public void Revoke(TokenRevocationReason reason, string ipAddress)
     {
+        if (RevocationInfo != null)
+        {
+            throw new InvalidOperationException("Token has already been revoked.");
+        }
+
         var revocationInfo = new TokenRevocationInfo(DateTime.UtcNow, ipAddress, reason);
 
         RevocationInfo = revocationInfo;
     }
 
-    public RefreshToken Replace(string userId, DateTime expires, string ipAddress)
+    public RefreshToken Replace(string ipAddress, Func<string, DateTime, string, RefreshToken> tokenFactory)
     {
-        var refreshToken = new RefreshToken(userId, expires, ipAddress);
+        ArgumentNullException.ThrowIfNull(tokenFactory);
+
+        var newToken = tokenFactory(UserId, TokenValue.Expires, ipAddress);
 
         Revoke(TokenRevocationReason.Replaced, ipAddress);
-        ReplacedByToken = refreshToken;
+        ReplacedByToken = newToken;
 
-        return refreshToken;
+        return newToken;
     }
 
     public bool IsValid()
     {
         return RevocationInfo == null && !TokenValue.IsExpired;
+    }
+
+    public static RefreshToken Create(string userId, DateTime expires, string ipAddress)
+    {
+        var token = GenerateToken();
+
+        return new RefreshToken(userId, expires, ipAddress, token);
+    }
+
+    private static string GenerateToken()
+    {
+        return Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
     }
 }
