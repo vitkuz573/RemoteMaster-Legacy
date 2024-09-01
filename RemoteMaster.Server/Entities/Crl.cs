@@ -4,6 +4,7 @@
 
 using System.Security.Cryptography.X509Certificates;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.ValueObjects;
 
 namespace RemoteMaster.Server.Entities;
 
@@ -24,15 +25,17 @@ public class Crl : IAggregateRoot
 
     public IReadOnlyCollection<RevokedCertificate> RevokedCertificates => _revokedCertificates.AsReadOnly();
 
-    public void RevokeCertificate(string serialNumber, X509RevocationReason reason)
+    public void RevokeCertificate(SerialNumber serialNumber, X509RevocationReason reason)
     {
-        if (_revokedCertificates.Any(rc => rc.SerialNumber == serialNumber))
+        ArgumentNullException.ThrowIfNull(serialNumber);
+
+        if (_revokedCertificates.Any(rc => rc.SerialNumber.Equals(serialNumber)))
         {
-            throw new InvalidOperationException($"Certificate with serial number {serialNumber} is already revoked.");
+            throw new InvalidOperationException($"Certificate with serial number {serialNumber.Value} is already revoked.");
         }
 
         var revokedCertificate = new RevokedCertificate(serialNumber, reason);
-        
+
         _revokedCertificates.Add(revokedCertificate);
     }
 

@@ -4,6 +4,7 @@
 
 using System.Security.Cryptography.X509Certificates;
 using FluentResults;
+using RemoteMaster.Server.ValueObjects;
 
 namespace RemoteMaster.Server.Abstractions;
 
@@ -18,7 +19,7 @@ public interface ICrlService
     /// <param name="serialNumber">The serial number of the certificate to revoke.</param>
     /// <param name="reason">The reason for revocation.</param>
     /// <returns>A result indicating success or failure.</returns>
-    Task<Result> RevokeCertificateAsync(string serialNumber, X509RevocationReason reason);
+    Task<Result> RevokeCertificateAsync(SerialNumber serialNumber, X509RevocationReason reason);
 
     /// <summary>
     /// Generates a CRL asynchronously.

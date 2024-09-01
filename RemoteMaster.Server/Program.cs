@@ -198,7 +198,6 @@ public static class Program
         services.AddSingleton<ITokenStorageService, InMemoryTokenStorageService>();
         services.AddSingleton<IBrandingService, BrandingService>();
         services.AddSingleton<ICertificateService, CertificateService>();
-        services.AddSingleton<ISerialNumberService, SerialNumberService>();
         services.AddSingleton<IPacketSender, UdpPacketSender>();
         services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
         services.AddSingleton<ICaCertificateService, CaCertificateService>();

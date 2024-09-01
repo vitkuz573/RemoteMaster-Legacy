@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Cryptography.X509Certificates;
+using RemoteMaster.Server.ValueObjects;
 
 namespace RemoteMaster.Server.Entities;
 
@@ -10,7 +11,7 @@ public class RevokedCertificate
 {
     private RevokedCertificate() { }
 
-    public RevokedCertificate(string serialNumber, X509RevocationReason reason)
+    public RevokedCertificate(SerialNumber serialNumber, X509RevocationReason reason)
     {
         SerialNumber = serialNumber ?? throw new ArgumentNullException(nameof(serialNumber));
         Reason = reason;
@@ -19,7 +20,7 @@ public class RevokedCertificate
 
     public int Id { get; private set; }
 
-    public string SerialNumber { get; private set; }
+    public SerialNumber SerialNumber { get; private set; }
     
     public X509RevocationReason Reason { get; private set; }
 

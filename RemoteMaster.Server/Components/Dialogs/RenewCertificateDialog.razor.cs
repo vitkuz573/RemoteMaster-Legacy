@@ -4,6 +4,7 @@
 
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.SignalR.Client;
+using RemoteMaster.Server.ValueObjects;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
@@ -23,11 +24,17 @@ public partial class RenewCertificateDialog
 
         foreach (var (computer, connection) in Hosts)
         {
-            var serialNumber = await connection.InvokeAsync<string?>("GetCertificateSerialNumber");
+            var serialNumberString = await connection.InvokeAsync<string?>("GetCertificateSerialNumber");
 
-            if (serialNumber != null)
+            if (!string.IsNullOrEmpty(serialNumberString))
             {
-                var revokeCertificateTask = Task.Run(async () => await CrlService.RevokeCertificateAsync(serialNumber, _selectedRevocationReason));
+                var serialNumber = SerialNumber.FromExistingValue(serialNumberString);
+
+                var revokeCertificateTask = Task.Run(async () =>
+                {
+                    await CrlService.RevokeCertificateAsync(serialNumber, _selectedRevocationReason);
+                });
+
                 revokeCertificateTasks.Add(revokeCertificateTask);
             }
 

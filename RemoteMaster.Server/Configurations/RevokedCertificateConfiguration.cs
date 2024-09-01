@@ -20,10 +20,17 @@ public class RevokedCertificateConfiguration : IEntityTypeConfiguration<RevokedC
             .ValueGeneratedOnAdd()
             .HasColumnOrder(0);
 
-        builder.Property(rc => rc.SerialNumber)
-            .IsRequired()
-            .HasMaxLength(256)
-            .HasColumnOrder(1);
+        builder.OwnsOne(rc => rc.SerialNumber, serialNumber =>
+        {
+            serialNumber.Property(sn => sn.Value)
+                .IsRequired()
+                .HasMaxLength(256)
+                .HasColumnName("SerialNumber")
+                .HasColumnOrder(1);
+
+            serialNumber.HasIndex(sn => sn.Value)
+                .IsUnique();
+        });
 
         builder.Property(rc => rc.Reason)
             .IsRequired()
@@ -33,9 +40,6 @@ public class RevokedCertificateConfiguration : IEntityTypeConfiguration<RevokedC
         builder.Property(rc => rc.RevocationDate)
             .IsRequired()
             .HasColumnOrder(3);
-
-        builder.HasIndex(rc => rc.SerialNumber)
-            .IsUnique();
 
         builder.ToTable("RevokedCertificates");
     }

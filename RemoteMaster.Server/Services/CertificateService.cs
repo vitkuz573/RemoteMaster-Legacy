@@ -6,12 +6,13 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using FluentResults;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.ValueObjects;
 using RemoteMaster.Shared.Abstractions;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class CertificateService(IHostInformationService hostInformationService, ICaCertificateService caCertificateService, ISerialNumberService serialNumberService) : ICertificateService
+public class CertificateService(IHostInformationService hostInformationService, ICaCertificateService caCertificateService) : ICertificateService
 {
     /// <inheritdoc />
     public Result<X509Certificate2> IssueCertificate(byte[] csrBytes)
@@ -55,16 +56,7 @@ public class CertificateService(IHostInformationService hostInformationService, 
             var notBefore = DateTimeOffset.UtcNow;
             var notAfter = DateTimeOffset.UtcNow.AddYears(1);
 
-            var serialNumberResult = serialNumberService.GenerateSerialNumber();
-
-            if (serialNumberResult.IsFailed)
-            {
-                Log.Error("Failed to generate serial number: {Message}", serialNumberResult.Errors.FirstOrDefault()?.Message);
-                
-                return Result.Fail<X509Certificate2>("Failed to generate serial number.");
-            }
-
-            var serialNumber = serialNumberResult.Value;
+            var serialNumber = SerialNumber.Generate();
 
             var hostInformation = hostInformationService.GetHostInformation();
 
@@ -77,7 +69,7 @@ public class CertificateService(IHostInformationService hostInformationService, 
 
             csr.CertificateExtensions.Add(crlDistributionPointExtension);
 
-            var certificate = csr.Create(caCertificate.SubjectName, signatureGenerator, notBefore, notAfter, serialNumber);
+            var certificate = csr.Create(caCertificate.SubjectName, signatureGenerator, notBefore, notAfter, serialNumber.ToByteArray());
 
             return Result.Ok(certificate);
         }

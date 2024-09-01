@@ -11,13 +11,14 @@ using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
+using RemoteMaster.Server.ValueObjects;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
 public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, ICertificateProvider certificateProvider, IFileSystem fileSystem) : ICrlService
 {
-    public async Task<Result> RevokeCertificateAsync(string serialNumber, X509RevocationReason reason)
+    public async Task<Result> RevokeCertificateAsync(SerialNumber serialNumber, X509RevocationReason reason)
     {
         try
         {
@@ -91,10 +92,7 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
 
             foreach (var revoked in revokedCertificates)
             {
-                var serialNumberBytes = Enumerable.Range(0, revoked.SerialNumber.Length)
-                    .Where(x => x % 2 == 0)
-                    .Select(x => Convert.ToByte(revoked.SerialNumber.Substring(x, 2), 16))
-                    .ToArray();
+                var serialNumberBytes = revoked.SerialNumber.ToByteArray();
 
                 crlBuilder.AddEntry(serialNumberBytes, revoked.RevocationDate, revoked.Reason);
             }

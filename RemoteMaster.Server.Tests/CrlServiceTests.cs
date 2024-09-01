@@ -14,6 +14,7 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Services;
+using RemoteMaster.Server.ValueObjects;
 
 namespace RemoteMaster.Server.Tests;
 
@@ -49,10 +50,12 @@ public class CrlServiceTests : IDisposable
     [InlineData("1234567890", X509RevocationReason.KeyCompromise)]
     [InlineData("0987654321", X509RevocationReason.CessationOfOperation)]
     [InlineData("1122334455", X509RevocationReason.AffiliationChanged)]
-    public async Task RevokeCertificateAsync_RevokesCertificate(string serialNumber, X509RevocationReason reason)
+    public async Task RevokeCertificateAsync_RevokesCertificate(string serialNumberValue, X509RevocationReason reason)
     {
         using var scope = CreateScope();
         var service = scope.ServiceProvider.GetRequiredService<ICrlService>();
+
+        var serialNumber = SerialNumber.FromExistingValue(serialNumberValue);
 
         // Act
         var result = await service.RevokeCertificateAsync(serialNumber, reason);
@@ -62,7 +65,9 @@ public class CrlServiceTests : IDisposable
 
         var contextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<CertificateDbContext>>();
         var context = await contextFactory.CreateDbContextAsync();
-        var revokedCertificate = await context.RevokedCertificates.FirstOrDefaultAsync(rc => rc.SerialNumber == serialNumber);
+
+        var revokedCertificate = await context.RevokedCertificates
+            .FirstOrDefaultAsync(rc => rc.SerialNumber.Value == serialNumber.Value);
 
         Assert.NotNull(revokedCertificate);
         Assert.Equal(reason, revokedCertificate.Reason);
@@ -83,7 +88,9 @@ public class CrlServiceTests : IDisposable
         var context = await contextFactory.CreateDbContextAsync();
 
         var crl = new Crl("1");
-        crl.RevokeCertificate("1234567890", X509RevocationReason.KeyCompromise);
+
+        var serialNumber = SerialNumber.FromExistingValue("1234567890");
+        crl.RevokeCertificate(serialNumber, X509RevocationReason.KeyCompromise);
 
         context.CertificateRevocationLists.Add(crl);
         await context.SaveChangesAsync();
@@ -124,7 +131,8 @@ public class CrlServiceTests : IDisposable
         var service = scope.ServiceProvider.GetRequiredService<ICrlService>();
 
         // Arrange
-        var serialNumber = "1234567890";
+        var serialNumberString = "1234567890";
+        var serialNumber = SerialNumber.FromExistingValue(serialNumberString);
         var reason = X509RevocationReason.KeyCompromise;
 
         // Act
