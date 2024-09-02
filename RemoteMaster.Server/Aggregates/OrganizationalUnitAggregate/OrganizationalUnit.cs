@@ -62,7 +62,7 @@ public class OrganizationalUnit : IAggregateRoot
         OrganizationId = organization.Id;
     }
 
-    public void AddChildUnit(OrganizationalUnit unit)
+    private void AddChildUnit(OrganizationalUnit unit)
     {
         ArgumentNullException.ThrowIfNull(unit);
 
@@ -119,19 +119,23 @@ public class OrganizationalUnit : IAggregateRoot
         _computers.Clear();
     }
 
-    public void AddUser(UserOrganizationalUnit userOrganizationalUnit)
+    public void AddUser(string userId)
     {
-        if (_userOrganizationalUnits.Any(u => u.UserId == userOrganizationalUnit.UserId))
+        if (_userOrganizationalUnits.Any(u => u.UserId == userId))
         {
             throw new InvalidOperationException("User is already part of this unit.");
         }
 
+        var userOrganizationalUnit = new UserOrganizationalUnit(Id, userId);
+
         _userOrganizationalUnits.Add(userOrganizationalUnit);
     }
 
-    public void RemoveUser(UserOrganizationalUnit userOrganizationalUnit)
+    public void RemoveUser(string userId)
     {
-        if (!_userOrganizationalUnits.Contains(userOrganizationalUnit))
+        var userOrganizationalUnit = _userOrganizationalUnits.SingleOrDefault(u => u.UserId == userId);
+
+        if (userOrganizationalUnit == null)
         {
             throw new InvalidOperationException("User not found in this unit.");
         }

@@ -162,7 +162,7 @@ public partial class ManageUserRights
         foreach (var unit in user.UserOrganizationalUnits.ToList().Where(unit => !selectedUnitIds.Contains(unit.OrganizationalUnitId)))
         {
             var organizationalUnit = await OrganizationalUnitRepository.GetByIdAsync(unit.OrganizationalUnitId);
-            organizationalUnit?.RemoveUser(unit);
+            organizationalUnit?.RemoveUser(user.Id);
         }
 
         foreach (var orgId in selectedOrganizationIds.Where(orgId => user.UserOrganizations.All(uo => uo.OrganizationId != orgId)))
@@ -176,14 +176,7 @@ public partial class ManageUserRights
         {
             var unit = await OrganizationalUnitRepository.GetByIdAsync(unitId);
 
-            if (unit == null)
-            {
-                continue;
-            }
-
-            var userUnit = new UserOrganizationalUnit(unit, user);
-
-            unit.AddUser(userUnit);
+            unit?.AddUser(user.Id);
         }
     }
 

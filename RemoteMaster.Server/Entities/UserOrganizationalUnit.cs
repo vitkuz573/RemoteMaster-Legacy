@@ -10,12 +10,10 @@ public class UserOrganizationalUnit
 {
     private UserOrganizationalUnit() { }
 
-    public UserOrganizationalUnit(OrganizationalUnit unit, ApplicationUser user)
+    public UserOrganizationalUnit(Guid unitId, string userId)
     {
-        OrganizationalUnit = unit ?? throw new ArgumentNullException(nameof(unit));
-        OrganizationalUnitId = unit.Id;
-        ApplicationUser = user ?? throw new ArgumentNullException(nameof(user));
-        UserId = user.Id;
+        OrganizationalUnitId = unitId;
+        UserId = userId;
     }
 
     public Guid OrganizationalUnitId { get; private set; }
