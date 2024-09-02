@@ -54,8 +54,8 @@ public partial class ManageOrganizations
                 return;
             }
 
-            organization.ChangeName(Input.Name);
-            organization.ChangeAddress(address);
+            organization.SetName(Input.Name);
+            organization.SetAddress(address);
 
             await OrganizationRepository.UpdateAsync(organization);
             

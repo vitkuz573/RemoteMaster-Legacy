@@ -32,12 +32,12 @@ public class Organization : IAggregateRoot
     
     public IReadOnlyCollection<UserOrganization> UserOrganizations => _userOrganizations.AsReadOnly();
 
-    public void ChangeName(string newName)
+    public void SetName(string newName)
     {
         Name = newName ?? throw new ArgumentNullException(nameof(newName));
     }
 
-    public void ChangeAddress(Address address)
+    public void SetAddress(Address address)
     {
         Address = address ?? throw new ArgumentNullException(nameof(address));
     }
