@@ -128,12 +128,29 @@ public partial class ManageOrganizationalUnits
 
     private async Task DeleteOrganizationalUnit(OrganizationalUnit organizationalUnit)
     {
-        await OrganizationalUnitRepository.DeleteAsync(organizationalUnit);
-        await OrganizationalUnitRepository.SaveChangesAsync();
-        
-        await LoadOrganizationalUnitsAsync();
-        
-        _message = "Organizational unit deleted successfully.";
+        var organization = await OrganizationRepository.GetByIdAsync(organizationalUnit.OrganizationId);
+
+        if (organization == null)
+        {
+            _message = "Error: Organization not found.";
+            
+            return;
+        }
+
+        try
+        {
+            organization.RemoveOrganizationalUnit(organizationalUnit);
+            
+            await OrganizationRepository.UpdateAsync(organization);
+            await OrganizationalUnitRepository.SaveChangesAsync();
+
+            await LoadOrganizationalUnitsAsync();
+            _message = "Organizational unit deleted successfully.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            _message = $"Error: {ex.Message}";
+        }
     }
 
     private void EditOrganizationalUnit(OrganizationalUnit organizationalUnit)
