@@ -10,12 +10,10 @@ public class UserOrganization
 {
     private UserOrganization() { }
 
-    public UserOrganization(Organization organization, ApplicationUser user)
+    public UserOrganization(Guid organizationId, string userId)
     {
-        Organization = organization ?? throw new ArgumentNullException(nameof(organization));
-        OrganizationId = organization.Id;
-        ApplicationUser = user ?? throw new ArgumentNullException(nameof(user));
-        UserId = user.Id;
+        OrganizationId = organizationId;
+        UserId = userId;
     }
 
     public Guid OrganizationId { get; private set; }

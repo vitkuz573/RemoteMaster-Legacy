@@ -76,19 +76,23 @@ public class Organization : IAggregateRoot
         Address = newAddress;
     }
 
-    public void AddUser(UserOrganization userOrganization)
+    public void AddUser(string userId)
     {
-        if (_userOrganizations.Any(u => u.UserId == userOrganization.UserId))
+        if (_userOrganizations.Any(u => u.UserId == userId))
         {
             throw new InvalidOperationException("User is already part of this organization.");
         }
 
+        var userOrganization = new UserOrganization(Id, userId);
+
         _userOrganizations.Add(userOrganization);
     }
 
-    public void RemoveUser(UserOrganization userOrganization)
+    public void RemoveUser(string userId)
     {
-        if (!_userOrganizations.Contains(userOrganization))
+        var userOrganization = _userOrganizations.SingleOrDefault(u => u.UserId == userId);
+        
+        if (userOrganization == null)
         {
             throw new InvalidOperationException("User not found in this organization.");
         }

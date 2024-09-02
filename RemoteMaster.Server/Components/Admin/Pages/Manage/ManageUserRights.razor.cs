@@ -153,52 +153,37 @@ public partial class ManageUserRights
         var selectedOrganizationIds = _organizations.Where(o => o.IsSelected).Select(o => o.Id).ToList();
         var selectedUnitIds = _organizations.SelectMany(o => o.OrganizationalUnits).Where(ou => ou.IsSelected).Select(ou => ou.Id).ToList();
 
-        foreach (var org in user.UserOrganizations.ToList())
+        foreach (var org in user.UserOrganizations.ToList().Where(org => !selectedOrganizationIds.Contains(org.OrganizationId)))
         {
-            if (!selectedOrganizationIds.Contains(org.OrganizationId))
-            {
-                var organization = await OrganizationRepository.GetByIdAsync(org.OrganizationId);
-                organization?.RemoveUser(org);
-            }
+            var organization = await OrganizationRepository.GetByIdAsync(org.OrganizationId);
+            organization?.RemoveUser(user.Id);
         }
 
-        foreach (var unit in user.UserOrganizationalUnits.ToList())
+        foreach (var unit in user.UserOrganizationalUnits.ToList().Where(unit => !selectedUnitIds.Contains(unit.OrganizationalUnitId)))
         {
-            if (!selectedUnitIds.Contains(unit.OrganizationalUnitId))
-            {
-                var organizationalUnit = await OrganizationalUnitRepository.GetByIdAsync(unit.OrganizationalUnitId);
-                organizationalUnit?.RemoveUser(unit);
-            }
+            var organizationalUnit = await OrganizationalUnitRepository.GetByIdAsync(unit.OrganizationalUnitId);
+            organizationalUnit?.RemoveUser(unit);
         }
 
-        foreach (var orgId in selectedOrganizationIds)
+        foreach (var orgId in selectedOrganizationIds.Where(orgId => user.UserOrganizations.All(uo => uo.OrganizationId != orgId)))
         {
-            if (!user.UserOrganizations.Any(uo => uo.OrganizationId == orgId))
-            {
-                var organization = await OrganizationRepository.GetByIdAsync(orgId);
+            var organization = await OrganizationRepository.GetByIdAsync(orgId);
 
-                if (organization != null)
-                {
-                    var userOrg = new UserOrganization(organization, user);
-
-                    organization.AddUser(userOrg);
-                }
-            }
+            organization?.AddUser(user.Id);
         }
 
-        foreach (var unitId in selectedUnitIds)
+        foreach (var unitId in selectedUnitIds.Where(unitId => user.UserOrganizationalUnits.All(uou => uou.OrganizationalUnitId != unitId)))
         {
-            if (!user.UserOrganizationalUnits.Any(uou => uou.OrganizationalUnitId == unitId))
+            var unit = await OrganizationalUnitRepository.GetByIdAsync(unitId);
+
+            if (unit == null)
             {
-                var unit = await OrganizationalUnitRepository.GetByIdAsync(unitId);
-
-                if (unit != null)
-                {
-                    var userUnit = new UserOrganizationalUnit(unit, user);
-
-                    unit.AddUser(userUnit);
-                }
+                continue;
             }
+
+            var userUnit = new UserOrganizationalUnit(unit, user);
+
+            unit.AddUser(userUnit);
         }
     }
 
