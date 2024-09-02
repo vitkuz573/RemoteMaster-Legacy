@@ -93,7 +93,7 @@ public class HostAccessHandlerTests
             UserName = "user1"
         };
 
-        organizationalUnit.AddUser(new UserOrganizationalUnit(organizationalUnit, applicationUser));
+        organizationalUnit.AddUser(applicationUser.Id);
 
         organizationalUnit.AddComputer("host", "127.0.0.1", "00-14-22-01-23-45");
 
@@ -132,8 +132,7 @@ public class HostAccessHandlerTests
             UserName = "user2"
         };
 
-        var userOrganizationalUnit = new UserOrganizationalUnit(organizationalUnit, applicationUser);
-        organizationalUnit.AddUser(userOrganizationalUnit);
+        organizationalUnit.AddUser(applicationUser.Id);
 
         _dbContext.Users.Add(applicationUser);
         _dbContext.OrganizationalUnits.Add(organizationalUnit);
@@ -172,8 +171,7 @@ public class HostAccessHandlerTests
             UserName = "user1"
         };
 
-        var userOrganizationalUnit1 = new UserOrganizationalUnit(organizationalUnit1, applicationUser);
-        organizationalUnit1.AddUser(userOrganizationalUnit1);
+        organizationalUnit1.AddUser(applicationUser.Id);
 
         organizationalUnit1.AddComputer("sharedHost", "127.0.0.1", "00-14-22-01-23-45");
         organizationalUnit2.AddComputer("sharedHost", "127.0.0.2", "00-14-22-01-23-46");
@@ -184,8 +182,7 @@ public class HostAccessHandlerTests
             UserName = "user2"
         };
 
-        var userOrganizationalUnit2 = new UserOrganizationalUnit(organizationalUnit2, anotherUser);
-        organizationalUnit2.AddUser(userOrganizationalUnit2);
+        organizationalUnit2.AddUser(anotherUser.Id);
 
         _dbContext.Users.AddRange(applicationUser, anotherUser);
         _dbContext.OrganizationalUnits.AddRange(organizationalUnit1, organizationalUnit2);
@@ -229,11 +226,8 @@ public class HostAccessHandlerTests
             UserName = "user2"
         };
 
-        var userOrganizationalUnit1 = new UserOrganizationalUnit(organizationalUnit1, anotherUser);
-        organizationalUnit1.AddUser(userOrganizationalUnit1);
-
-        var userOrganizationalUnit2 = new UserOrganizationalUnit(organizationalUnit2, applicationUser);
-        organizationalUnit2.AddUser(userOrganizationalUnit2);
+        organizationalUnit1.AddUser(anotherUser.Id);
+        organizationalUnit2.AddUser(applicationUser.Id);
 
         organizationalUnit1.AddComputer("sharedHost", "127.0.0.1", "00-14-22-01-23-45");
         organizationalUnit2.AddComputer("sharedHost", "127.0.0.2", "00-14-22-01-23-46");
