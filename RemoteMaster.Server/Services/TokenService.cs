@@ -26,7 +26,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 {
     private readonly JwtOptions _options = options.Value ?? throw new ArgumentNullException(nameof(options));
 
-    private static readonly TimeSpan AccessTokenExpiration = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan AccessTokenExpiration = TimeSpan.FromMinutes(15);
     private static readonly TimeSpan RefreshTokenExpiration = TimeSpan.FromDays(1);
 
     public async Task<Result<TokenData>> GenerateTokensAsync(string userId, string? oldRefreshToken = null)
