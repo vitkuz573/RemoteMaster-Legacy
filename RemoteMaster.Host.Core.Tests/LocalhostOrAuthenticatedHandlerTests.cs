@@ -48,7 +48,7 @@ public class LocalhostOrAuthenticatedHandlerTests
         _httpContext.Request.Headers["X-Service-Flag"] = "true";
 
         var user = new ClaimsPrincipal(new ClaimsIdentity());
-        var authorizationHandlerContext = new AuthorizationHandlerContext(new[] { _requirement }, user, null);
+        var authorizationHandlerContext = new AuthorizationHandlerContext([_requirement], user, null);
 
         // Act
         await _handler.HandleAsync(authorizationHandlerContext);
@@ -125,7 +125,7 @@ public class LocalhostOrAuthenticatedHandlerTests
             new Claim(ClaimTypes.Role, "User"),
         ], "TestAuthType"));
 
-        var authorizationHandlerContext = new AuthorizationHandlerContext(new[] { _requirement }, user, null);
+        var authorizationHandlerContext = new AuthorizationHandlerContext([_requirement], user, null);
 
         // Act
         await _handler.HandleAsync(authorizationHandlerContext);
@@ -142,7 +142,7 @@ public class LocalhostOrAuthenticatedHandlerTests
         _httpContext.Request.Headers["X-Service-Flag"] = "true";
 
         var user = new ClaimsPrincipal(new ClaimsIdentity());
-        var authorizationHandlerContext = new AuthorizationHandlerContext(new[] { _requirement }, user, null);
+        var authorizationHandlerContext = new AuthorizationHandlerContext([_requirement], user, null);
 
         // Act
         await _handler.HandleAsync(authorizationHandlerContext);
