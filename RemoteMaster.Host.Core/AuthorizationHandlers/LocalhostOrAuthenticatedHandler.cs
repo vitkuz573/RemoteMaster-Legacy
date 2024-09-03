@@ -6,18 +6,32 @@ using System.Net;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Requirements;
 using RemoteMaster.Shared.Claims;
 
 namespace RemoteMaster.Host.Core.AuthorizationHandlers;
 
-public class LocalhostOrAuthenticatedHandler(IHttpContextAccessor httpContextAccessor) : AuthorizationHandler<LocalhostOrAuthenticatedRequirement>
+public class LocalhostOrAuthenticatedHandler : AuthorizationHandler<LocalhostOrAuthenticatedRequirement>
 {
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IPAddress _hostIpAddress;
+
+    public LocalhostOrAuthenticatedHandler(IHttpContextAccessor httpContextAccessor, IHostConfigurationService hostConfigurationService)
+    {
+        ArgumentNullException.ThrowIfNull(hostConfigurationService);
+
+        _httpContextAccessor = httpContextAccessor;
+
+        var hostConfiguration = hostConfigurationService.LoadConfigurationAsync(false).GetAwaiter().GetResult();
+        _hostIpAddress = IPAddress.Parse(hostConfiguration.Host.IpAddress);
+    }
+
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, LocalhostOrAuthenticatedRequirement requirement)
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        var httpContext = httpContextAccessor.HttpContext;
+        var httpContext = _httpContextAccessor.HttpContext;
 
         if (httpContext == null)
         {
@@ -25,7 +39,7 @@ public class LocalhostOrAuthenticatedHandler(IHttpContextAccessor httpContextAcc
         }
 
         var ipAddress = httpContext.Connection.RemoteIpAddress;
-        var isLocal = ipAddress != null && IPAddress.IsLoopback(ipAddress);
+        var isLocal = ipAddress != null && IsLocalIpAddress(ipAddress);
 
         var hasServiceFlagHeader = httpContext.Request.Headers.TryGetValue("X-Service-Flag", out var headerValue) && bool.TryParse(headerValue, out var flagValue) && flagValue;
 
@@ -51,5 +65,15 @@ public class LocalhostOrAuthenticatedHandler(IHttpContextAccessor httpContextAcc
         context.Succeed(requirement);
 
         return Task.CompletedTask;
+    }
+
+    private bool IsLocalIpAddress(IPAddress remoteIpAddress)
+    {
+        if (remoteIpAddress.IsIPv4MappedToIPv6)
+        {
+            remoteIpAddress = remoteIpAddress.MapToIPv4();
+        }
+
+        return remoteIpAddress.Equals(_hostIpAddress);
     }
 }
