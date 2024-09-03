@@ -26,12 +26,15 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 {
     private readonly JwtOptions _options = options.Value ?? throw new ArgumentNullException(nameof(options));
 
-    private static readonly TimeSpan AccessTokenExpiration = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan AccessTokenExpiration = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan RefreshTokenExpiration = TimeSpan.FromDays(1);
 
     public async Task<Result<TokenData>> GenerateTokensAsync(string userId, string? oldRefreshToken = null)
     {
-        var user = await userManager.FindByIdAsync(userId);
+        // Загрузка пользователя вместе с коллекцией RefreshTokens
+        var user = await userManager.Users
+            .Include(u => u.RefreshTokens)
+            .SingleOrDefaultAsync(u => u.Id == userId);
 
         if (user == null)
         {
@@ -115,16 +118,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
     private async Task<Result<RefreshToken>> CreateOrReplaceRefreshTokenAsync(ApplicationUser user, string ipAddress, string? existingToken = null)
     {
-        RefreshToken refreshToken;
-
-        if (existingToken != null)
-        {
-            refreshToken = user.ReplaceRefreshToken(existingToken, ipAddress);
-        }
-        else
-        {
-            refreshToken = user.AddRefreshToken(DateTime.UtcNow.Add(RefreshTokenExpiration), ipAddress);
-        }
+        var refreshToken = existingToken != null ? user.ReplaceRefreshToken(existingToken, ipAddress) : user.AddRefreshToken(DateTime.UtcNow.Add(RefreshTokenExpiration), ipAddress);
 
         await context.SaveChangesAsync();
 
@@ -135,7 +129,7 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
     {
         var user = await userManager.FindByIdAsync(userId);
 
-        user.RevokeRefreshToken(refreshToken, reason, ipAddress);
+        user?.RevokeRefreshToken(refreshToken, reason, ipAddress);
 
         await context.SaveChangesAsync();
 
@@ -186,16 +180,9 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
     {
         Log.Debug("Starting cleanup of expired and revoked refresh tokens.");
 
-        var expiredTokensQuery = context.Users?
-            .SelectMany(u => u.RefreshTokens)?
+        var expiredTokensQuery = context.Users
+            .SelectMany(u => u.RefreshTokens)
             .Where(rt => rt.TokenValue.Expires < DateTime.UtcNow || rt.RevocationInfo != null);
-
-        if (expiredTokensQuery == null)
-        {
-            Log.Information("No expired or revoked tokens found for cleanup.");
-            
-            return Result.Fail("No expired or revoked tokens found for cleanup.");
-        }
 
         var expiredTokens = await expiredTokensQuery.ToListAsync();
 
@@ -275,8 +262,10 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
             return Result.Fail("Refresh token cannot be null or empty");
         }
 
-        var user = await userManager.FindByIdAsync(userId);
+        var user = await userManager.Users
+            .Include(u => u.RefreshTokens)
+            .SingleOrDefaultAsync(u => u.Id == userId);
 
-        return user.IsRefreshTokenValid(refreshToken) ? Result.Ok() : Result.Fail("Invalid or inactive refresh token");
+        return user != null && user.IsRefreshTokenValid(refreshToken) ? Result.Ok() : Result.Fail("Invalid or inactive refresh token");
     }
 }
