@@ -31,7 +31,6 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
     public async Task<Result<TokenData>> GenerateTokensAsync(string userId, string? oldRefreshToken = null)
     {
-        // Загрузка пользователя вместе с коллекцией RefreshTokens
         var user = await userManager.Users
             .Include(u => u.RefreshTokens)
             .SingleOrDefaultAsync(u => u.Id == userId);
