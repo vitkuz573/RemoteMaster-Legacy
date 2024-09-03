@@ -73,7 +73,7 @@ public class GdiCapturing : ScreenCapturingService
             _cursorRenderService.DrawCursor(_memoryGraphics, CurrentScreenBounds);
         }
 
-        return UseSkia ? SaveBitmap(_bitmap) : BitmapToByteArray(_bitmap, ImageQuality, SelectedCodec);
+        return BitmapToByteArray(_bitmap, ImageQuality, SelectedCodec);
     }
 
     private byte[] GetVirtualScreenFrame()

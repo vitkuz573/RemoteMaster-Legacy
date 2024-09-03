@@ -2,17 +2,13 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Buffers;
 using System.Drawing;
 using System.Runtime.InteropServices;
-using Microsoft.IO;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Helpers.ScreenHelper;
 using RemoteMaster.Shared.Models;
 using Serilog;
-using SkiaSharp;
-using SkiaSharp.Views.Desktop;
 
 namespace RemoteMaster.Host.Windows.Services;
 
@@ -20,17 +16,12 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 {
     protected const string VirtualScreen = "VIRTUAL_SCREEN";
 
-    private static readonly ArrayPool<byte> ArrayPool = ArrayPool<byte>.Shared;
-
-    private readonly RecyclableMemoryStreamManager _recycleManager = new();
     private readonly IDesktopService _desktopService;
     private readonly object _screenBoundsLock = new();
 
     public bool DrawCursor { get; set; } = false;
 
     public int ImageQuality { get; set; } = 25;
-
-    public bool UseSkia { get; set; } = false;
 
     public string? SelectedCodec { get; set; } = "image/jpeg";
 
@@ -120,68 +111,7 @@ public abstract class ScreenCapturingService : IScreenCapturingService
 
         SetSelectedScreen(originalScreen);
 
-        if (frame == null)
-        {
-            return null;
-        }
-
-        if (!UseSkia)
-        {
-            return frame;
-        }
-
-        using var fullImage = SKBitmap.Decode(frame);
-        var scale = Math.Min((float)maxWidth / fullImage.Width, (float)maxHeight / fullImage.Height);
-        var thumbWidth = (int)(fullImage.Width * scale);
-        var thumbHeight = (int)(fullImage.Height * scale);
-
-        using var thumbnail = fullImage.Resize(new SKImageInfo(thumbWidth, thumbHeight), SKFilterQuality.High);
-
-        return EncodeBitmap(thumbnail);
-    }
-
-    private byte[] EncodeBitmap(SKBitmap bitmap)
-    {
-        ArgumentNullException.ThrowIfNull(bitmap);
-
-        using var ms = _recycleManager.GetStream();
-        using var pixmap = bitmap.PeekPixels();
-        using var data = pixmap.Encode(SKEncodedImageFormat.Jpeg, ImageQuality);
-
-        var buffer = ArrayPool.Rent((int)data.Size);
-
-        try
-        {
-            using var dataStream = data.AsStream();
-            var totalBytesRead = 0;
-
-            while (totalBytesRead < data.Size)
-            {
-                var bytesRead = dataStream.Read(buffer, totalBytesRead, (int)data.Size - totalBytesRead);
-
-                if (bytesRead == 0)
-                {
-                    break;
-                }
-
-                totalBytesRead += bytesRead;
-            }
-
-            ms.Write(buffer, 0, totalBytesRead);
-        }
-        finally
-        {
-            ArrayPool.Return(buffer);
-        }
-
-        return ms.ToArray();
-    }
-
-    protected byte[] SaveBitmap(Bitmap bitmap)
-    {
-        var skBitmap = bitmap.ToSKBitmap();
-
-        return EncodeBitmap(skBitmap);
+        return frame ?? null;
     }
 
     protected void RaiseScreenChangedEvent(Rectangle currentScreenBounds)

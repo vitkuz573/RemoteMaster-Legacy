@@ -39,7 +39,6 @@ public partial class Access : IAsyncDisposable
     private bool _isInputEnabled;
     private bool _isUserInputBlocked;
     private bool _drawCursor;
-    private bool _useSkia;
     private int _frameRate;
     private int _imageQuality;
     private string _operatingSystem = string.Empty;
@@ -498,19 +497,6 @@ public partial class Access : IAsyncDisposable
 
         await SafeInvokeAsync(() => _connection.InvokeAsync("ToggleDrawCursor", value));
         QueryParameterService.UpdateParameter("drawCursor", value.ToString());
-    }
-
-    private async Task ToggleUseSkia(bool value)
-    {
-        if (_connection == null)
-        {
-            return;
-        }
-
-        _useSkia = value;
-
-        await SafeInvokeAsync(() => _connection.InvokeAsync("ToggleUseSkia", value));
-        QueryParameterService.UpdateParameter("useSkia", value.ToString());
     }
 
     private async Task ChangeFrameRate(int frameRate)

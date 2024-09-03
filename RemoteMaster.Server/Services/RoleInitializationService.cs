@@ -32,7 +32,6 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
         new Claim("Screen", "Recording"),
         new Claim("Screen", "ToggleDrawCursor"),
         new Claim("Screen", "ChangeSelectedScreen"),
-        new Claim("Screen", "ToggleUseSkia"),
         new Claim("Screen", "SetCodec"),
         new Claim("Power", "RebootComputer"),
         new Claim("Power", "ShutdownComputer"),

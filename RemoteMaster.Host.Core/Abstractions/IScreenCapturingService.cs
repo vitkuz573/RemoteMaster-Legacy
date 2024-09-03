@@ -13,8 +13,6 @@ public interface IScreenCapturingService : IDisposable
 
     int ImageQuality { get; set; }
 
-    bool UseSkia { get; set; }
-
     string? SelectedCodec { get; set; }
 
     event EventHandler<Rectangle> ScreenChanged;

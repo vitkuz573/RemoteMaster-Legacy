@@ -19,7 +19,6 @@ public static class ClaimRepository
         new ApplicationClaim("Screen", "Recording", "Screen recording"),
         new ApplicationClaim("Screen", "ToggleDrawCursor", "Toggle drawing cursor"),
         new ApplicationClaim("Screen", "ChangeSelectedScreen", "Change selected screen"),
-        new ApplicationClaim("Screen", "ToggleUseSkia", "Toggle use of Skia"),
         new ApplicationClaim("Screen", "SetCodec", "Set screen codec"),
         new ApplicationClaim("Power", "RebootComputer", "Reboot the computer"),
         new ApplicationClaim("Power", "ShutdownComputer", "Shutdown the computer"),
