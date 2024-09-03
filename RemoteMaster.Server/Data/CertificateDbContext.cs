@@ -39,6 +39,7 @@ public class CertificateDbContext(DbContextOptions<CertificateDbContext> options
     {
         base.OnModelCreating(builder);
 
+        builder.ApplyConfiguration(new CrlConfiguration());
         builder.ApplyConfiguration(new RevokedCertificateConfiguration());
     }
 }
