@@ -109,9 +109,14 @@ public class OrganizationalUnit : IAggregateRoot
     {
         var computer = _computers.SingleOrDefault(c => c.Id == computerId);
 
-        computer.SetOrganizationalUnit(newUnit);
-        RemoveComputer(computerId);
-        newUnit.AddComputer(computer.Name, computer.IpAddress, computer.MacAddress);
+        if (computer == null)
+        {
+            throw new InvalidOperationException("Computer not found in the current unit.");
+        }
+
+        _computers.Remove(computer);
+        computer.SetParent(newUnit);
+        newUnit._computers.Add(computer);
     }
 
     public void ClearComputers()
