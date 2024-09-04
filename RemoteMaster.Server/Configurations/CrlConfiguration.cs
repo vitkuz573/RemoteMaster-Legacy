@@ -6,7 +6,6 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using RemoteMaster.Server.Aggregates.CrlAggregate;
-using RemoteMaster.Server.Entities;
 
 namespace RemoteMaster.Server.Configurations;
 
