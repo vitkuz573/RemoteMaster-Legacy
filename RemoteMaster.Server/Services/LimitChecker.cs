@@ -5,12 +5,11 @@
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
-using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class LimitChecker(IPlanService planService, IUserPlanProvider userPlanProvider, ApplicationDbContext dbContext) : ILimitChecker
+public class LimitChecker(IPlanService planService, IUserPlanProvider userPlanProvider, IOrganizationRepository organizationRepository) : ILimitChecker
 {
     private PlanLimits GetCurrentPlanLimits()
     {
@@ -19,10 +18,11 @@ public class LimitChecker(IPlanService planService, IUserPlanProvider userPlanPr
         return planService.GetPlanLimits(userPlan);
     }
 
-    public bool CanAddOrganization()
+    public async Task<bool> CanAddOrganization()
     {
         var limits = GetCurrentPlanLimits();
-        var organizationCount = dbContext.Organizations.Count();
+        var organizations = await organizationRepository.GetAllAsync();
+        var organizationCount = organizations.Count();
 
         return organizationCount < limits.MaxOrganizations;
     }
