@@ -26,6 +26,7 @@ public partial class ComputerCard : ComponentBase
         if (e.Value is bool isChecked)
         {
             IsSelected = isChecked;
+
             await IsSelectedChanged.InvokeAsync(IsSelected);
         }
     }
