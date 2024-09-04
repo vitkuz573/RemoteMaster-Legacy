@@ -13,7 +13,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Enums;
 using RemoteMaster.Server.Models;
@@ -22,7 +21,7 @@ using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext context, IHttpContextAccessor httpContextAccessor, UserManager<ApplicationUser> userManager, IClaimsService claimsService, IFileSystem fileSystem) : ITokenService
+public class TokenService(IOptions<JwtOptions> options, IHttpContextAccessor httpContextAccessor, UserManager<ApplicationUser> userManager, IClaimsService claimsService, IFileSystem fileSystem, IApplicationUserRepository applicationUserRepository) : ITokenService
 {
     private readonly JwtOptions _options = options.Value ?? throw new ArgumentNullException(nameof(options));
 
@@ -117,58 +116,45 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
 
     private async Task<Result<RefreshToken>> CreateOrReplaceRefreshTokenAsync(ApplicationUser user, string ipAddress, string? existingToken = null)
     {
-        var refreshToken = existingToken != null ? user.ReplaceRefreshToken(existingToken, ipAddress) : user.AddRefreshToken(DateTime.UtcNow.Add(RefreshTokenExpiration), ipAddress);
+        var refreshToken = existingToken != null
+            ? user.ReplaceRefreshToken(existingToken, ipAddress)
+            : user.AddRefreshToken(DateTime.UtcNow.Add(RefreshTokenExpiration), ipAddress);
 
-        await context.SaveChangesAsync();
+        await applicationUserRepository.UpdateAsync(user);
+        await applicationUserRepository.SaveChangesAsync();
 
         return Result.Ok(refreshToken);
-    }
-
-    private async Task<Result> RevokeToken(string userId, string refreshToken, TokenRevocationReason reason, string ipAddress)
-    {
-        var user = await userManager.FindByIdAsync(userId);
-
-        user?.RevokeRefreshToken(refreshToken, reason, ipAddress);
-
-        await context.SaveChangesAsync();
-
-        return Result.Ok();
     }
 
     public async Task<Result> RevokeAllRefreshTokensAsync(string userId, TokenRevocationReason revocationReason)
     {
         var ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
 
-        var user = await userManager.FindByIdAsync(userId);
+        var user = await applicationUserRepository.GetByIdAsync(userId);
 
         if (user == null)
         {
             return Result.Fail("User not found");
         }
 
-        var now = DateTime.UtcNow;
         var refreshTokens = user.RefreshTokens
-            .Where(rt => rt.RevocationInfo == null && rt.TokenValue.Expires > now)
+            .Where(rt => rt.RevocationInfo == null && rt.TokenValue.Expires > DateTime.UtcNow)
             .ToList();
 
         if (refreshTokens.Count == 0)
         {
-            Log.Information("No active refresh tokens found for revocation.");
+            Log.Information($"No active refresh tokens found for revocation for user {userId}.");
 
             return Result.Fail("No active refresh tokens found for revocation.");
         }
 
         foreach (var token in refreshTokens)
         {
-            var result = await RevokeToken(userId, token.TokenValue.Token, revocationReason, ipAddress);
-
-            if (result.IsFailed)
-            {
-                return result;
-            }
+            user.RevokeRefreshToken(token.TokenValue.Token, revocationReason, ipAddress);
         }
 
-        await context.SaveChangesAsync();
+        await applicationUserRepository.UpdateAsync(user);
+        await applicationUserRepository.SaveChangesAsync();
 
         Log.Information($"All refresh tokens for user {userId} have been revoked. Reason: {revocationReason}");
 
@@ -179,27 +165,33 @@ public class TokenService(IOptions<JwtOptions> options, ApplicationDbContext con
     {
         Log.Debug("Starting cleanup of expired and revoked refresh tokens.");
 
-        var expiredTokensQuery = context.Users
-            .SelectMany(u => u.RefreshTokens)
-            .Where(rt => rt.TokenValue.Expires < DateTime.UtcNow || rt.RevocationInfo != null);
+        var usersWithExpiredTokens = (await applicationUserRepository.FindAsync(u =>
+            u.RefreshTokens.Any(rt => rt.TokenValue.Expires < DateTime.UtcNow || rt.RevocationInfo != null))).ToList();
 
-        var expiredTokens = await expiredTokensQuery.ToListAsync();
-
-        if (expiredTokens.Count == 0)
+        if (!usersWithExpiredTokens.Any())
         {
             Log.Information("No expired or revoked tokens found for cleanup.");
-            
+
             return Result.Fail("No expired or revoked tokens found for cleanup.");
         }
 
-        context.RemoveRange(expiredTokens);
-
-        foreach (var token in expiredTokens)
+        foreach (var user in usersWithExpiredTokens)
         {
-            Log.Debug($"Removed token: {token.TokenValue.Token}, User ID: {token.UserId}, Expired at: {token.TokenValue.Expires}, Revoked at: {token.RevocationInfo?.Revoked}");
+            var expiredTokens = user.RefreshTokens
+                .Where(rt => rt.TokenValue.Expires < DateTime.UtcNow || rt.RevocationInfo != null)
+                .ToList();
+
+            foreach (var token in expiredTokens)
+            {
+                user.RemoveRefreshToken(token);
+
+                Log.Debug($"Removed token: {token.TokenValue.Token}, User ID: {user.Id}, Expired at: {token.TokenValue.Expires}, Revoked at: {token.RevocationInfo?.Revoked}");
+            }
+
+            await applicationUserRepository.UpdateAsync(user);
         }
 
-        await context.SaveChangesAsync();
+        await applicationUserRepository.SaveChangesAsync();
 
         Log.Information("Cleaned up expired or revoked refresh tokens.");
 

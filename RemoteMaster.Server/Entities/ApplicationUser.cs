@@ -63,6 +63,18 @@ public class ApplicationUser : IdentityUser, IAggregateRoot
         return newRefreshToken;
     }
 
+    public void RemoveRefreshToken(RefreshToken refreshToken)
+    {
+        if (_refreshTokens.Contains(refreshToken))
+        {
+            _refreshTokens.Remove(refreshToken);
+        }
+        else
+        {
+            throw new InvalidOperationException("The specified token does not exist.");
+        }
+    }
+
     public bool IsRefreshTokenValid(string token)
     {
         var refreshToken = _refreshTokens.SingleOrDefault(rt => rt.TokenValue.Token == token);
