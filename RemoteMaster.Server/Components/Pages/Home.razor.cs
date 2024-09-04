@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
 using MudBlazor;
+using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
 using RemoteMaster.Server.Components.Dialogs;

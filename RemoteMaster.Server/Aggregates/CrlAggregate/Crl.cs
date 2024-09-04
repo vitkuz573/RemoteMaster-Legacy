@@ -6,7 +6,7 @@ using System.Security.Cryptography.X509Certificates;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.ValueObjects;
 
-namespace RemoteMaster.Server.Entities;
+namespace RemoteMaster.Server.Aggregates.CrlAggregate;
 
 public class Crl : IAggregateRoot
 {

@@ -5,6 +5,7 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Aggregates.CrlAggregate;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
 

@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Components;
+using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
 using Serilog;

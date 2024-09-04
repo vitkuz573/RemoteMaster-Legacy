@@ -5,6 +5,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
 

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using Polly;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
 using RemoteMaster.Server.Entities;
 using Serilog;
 

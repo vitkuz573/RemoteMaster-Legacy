@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
 using RemoteMaster.Server.Data;

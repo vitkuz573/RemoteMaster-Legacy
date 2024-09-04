@@ -5,6 +5,7 @@
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
+using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
 

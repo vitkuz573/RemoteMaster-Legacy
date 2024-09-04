@@ -4,9 +4,12 @@
 
 using Microsoft.AspNetCore.Identity;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Aggregates.OrganizationAggregate;
+using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
+using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Enums;
 
-namespace RemoteMaster.Server.Entities;
+namespace RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 
 public class ApplicationUser : IdentityUser, IAggregateRoot
 {

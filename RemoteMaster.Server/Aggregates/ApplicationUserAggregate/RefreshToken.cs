@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 using RemoteMaster.Server.Enums;
 using RemoteMaster.Server.ValueObjects;
 
-namespace RemoteMaster.Server.Entities;
+namespace RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 
 public class RefreshToken
 {

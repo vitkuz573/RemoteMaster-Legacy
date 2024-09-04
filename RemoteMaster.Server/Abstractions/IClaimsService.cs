@@ -4,6 +4,7 @@
 
 using System.Security.Claims;
 using FluentResults;
+using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 using RemoteMaster.Server.Entities;
 
 namespace RemoteMaster.Server.Abstractions;

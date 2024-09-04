@@ -4,6 +4,7 @@
 
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Components;
+using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
 using Serilog;

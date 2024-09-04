@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Components;
+using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
 using Serilog;

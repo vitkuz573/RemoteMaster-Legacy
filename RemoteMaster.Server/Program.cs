@@ -26,6 +26,7 @@ using Polly;
 using Polly.Fallback;
 using Polly.Retry;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 using RemoteMaster.Server.Components;
 using RemoteMaster.Server.Components.Account;
 using RemoteMaster.Server.Data;
