@@ -3,11 +3,8 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Globalization;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
-using RemoteMaster.Server.Data;
-using RemoteMaster.Server.Entities;
 
 namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 
@@ -70,13 +67,7 @@ public partial class SignInJournal
 
     protected async override Task OnInitializedAsync()
     {
-        using var scope = ScopeFactory.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-        _signInEntries = await dbContext.SignInEntries
-            .Include(entry => entry.User)
-            .OrderByDescending(e => e.SignInTime)
-            .ToListAsync();
+        _signInEntries = (await ApplicationUserRepository.GetAllSignInEntriesAsync()).ToList();
     }
 
     private void SortByColumn(string columnName)
@@ -238,11 +229,8 @@ public partial class SignInJournal
 
     private async Task ClearJournal()
     {
-        using var scope = ScopeFactory.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-        dbContext.SignInEntries.RemoveRange(_signInEntries);
-        await dbContext.SaveChangesAsync();
+        await ApplicationUserRepository.ClearSignInEntriesAsync();
+        await ApplicationUserRepository.SaveChangesAsync();
 
         _signInEntries.Clear();
     }

@@ -1,8 +1,9 @@
 ﻿@page "/Admin/SignInJournal"
+@using RemoteMaster.Server.Abstractions
 
 @rendermode InteractiveServer
 
-@inject IServiceScopeFactory ScopeFactory
+@inject IApplicationUserRepository ApplicationUserRepository
 @inject IJSRuntime JsRuntime
 
 <PageTitle>SignIn Journal</PageTitle>

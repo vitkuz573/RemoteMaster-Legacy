@@ -59,4 +59,19 @@ public class ApplicationUserRepository(ApplicationDbContext context) : IApplicat
 
         await context.SignInEntries.AddAsync(signInEntry);
     }
+
+    public async Task<IEnumerable<SignInEntry>> GetAllSignInEntriesAsync()
+    {
+        return await context.SignInEntries
+            .Include(entry => entry.User)
+            .OrderByDescending(e => e.SignInTime)
+            .ToListAsync();
+    }
+
+    public async Task ClearSignInEntriesAsync()
+    {
+        var allEntries = context.SignInEntries;
+
+        context.SignInEntries.RemoveRange(allEntries);
+    }
 }

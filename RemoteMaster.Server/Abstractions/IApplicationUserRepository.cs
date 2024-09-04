@@ -3,11 +3,14 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
-using RemoteMaster.Server.Entities;
 
 namespace RemoteMaster.Server.Abstractions;
 
 public interface IApplicationUserRepository : IRepository<ApplicationUser, string>
 {
     Task AddSignInEntryAsync(string userId, bool isSuccessful, string ipAddress);
+
+    Task<IEnumerable<SignInEntry>> GetAllSignInEntriesAsync();
+
+    Task ClearSignInEntriesAsync();
 }
