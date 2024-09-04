@@ -22,9 +22,14 @@ public class ApplicationUser : IdentityUser, IAggregateRoot
 
     public bool CanAccessUnregisteredHosts { get; private set; }
 
-    public void SetAccessToUnregisteredHosts(bool canAccess)
+    public void GrantAccessToUnregisteredHosts()
     {
-        CanAccessUnregisteredHosts = canAccess;
+        CanAccessUnregisteredHosts = true;
+    }
+
+    public void RevokeAccessToUnregisteredHosts()
+    {
+        CanAccessUnregisteredHosts = false;
     }
 
     public SignInEntry AddSignInEntry(bool isSuccessful, string ipAddress)
