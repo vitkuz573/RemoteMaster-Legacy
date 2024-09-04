@@ -2,8 +2,8 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using RemoteMaster.Server.Aggregates.CrlAggregate;
+using RemoteMaster.Server.Aggregates.ApplicationClaimAggregate;
 
 namespace RemoteMaster.Server.Abstractions;
 
-public interface ICrlRepository : IRepository<Crl, int>;
+public interface IApplicationClaimRepository : IRepository<ApplicationClaim, int>;

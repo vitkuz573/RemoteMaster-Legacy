@@ -16,7 +16,6 @@ using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
 using RemoteMaster.Server.Components.Dialogs;
-using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 using Serilog;

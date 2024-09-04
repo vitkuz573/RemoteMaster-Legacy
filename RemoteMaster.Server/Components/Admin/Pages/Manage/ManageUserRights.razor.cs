@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
-using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Enums;
 
 namespace RemoteMaster.Server.Components.Admin.Pages.Manage;

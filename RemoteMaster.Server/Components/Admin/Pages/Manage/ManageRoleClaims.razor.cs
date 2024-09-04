@@ -28,11 +28,11 @@ public partial class ManageRoleClaims
             .Where(role => role.Name != "RootAdministrator")
             .ToListAsync();
 
-        var allClaimsResult = await ApplicationClaimsService.GetClaimsAsync();
+        var allClaims = await ApplicationClaimRepository.GetAllAsync();
 
-        if (allClaimsResult.IsSuccess)
+        if (allClaims.Any())
         {
-            var groupedClaims = allClaimsResult.Value
+            var groupedClaims = allClaims
                 .GroupBy(ac => ac.ClaimType)
                 .Select(g => new
                 {

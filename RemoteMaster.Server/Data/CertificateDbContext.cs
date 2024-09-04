@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using RemoteMaster.Server.Aggregates.CrlAggregate;
 using RemoteMaster.Server.Configurations;
-using RemoteMaster.Server.Entities;
 
 namespace RemoteMaster.Server.Data;
 

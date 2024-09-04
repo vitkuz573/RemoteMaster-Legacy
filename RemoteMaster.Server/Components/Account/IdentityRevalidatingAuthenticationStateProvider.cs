@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 using RemoteMaster.Server.Data;
-using RemoteMaster.Server.Entities;
 
 namespace RemoteMaster.Server.Components.Account;
 

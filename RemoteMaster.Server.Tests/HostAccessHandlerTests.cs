@@ -13,7 +13,6 @@ using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate.ValueObjects;
 using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
 using RemoteMaster.Server.Data;
-using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Requirements;
 
 namespace RemoteMaster.Server.Tests;

@@ -5,7 +5,6 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
-using RemoteMaster.Server.Entities;
 using Serilog;
 
 namespace RemoteMaster.Server.Components.Account.Pages;

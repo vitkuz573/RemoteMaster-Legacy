@@ -2,9 +2,11 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-namespace RemoteMaster.Server.Entities;
+using RemoteMaster.Server.Abstractions;
 
-public class ApplicationClaim
+namespace RemoteMaster.Server.Aggregates.ApplicationClaimAggregate;
+
+public class ApplicationClaim : IAggregateRoot
 {
     private ApplicationClaim() { }
 

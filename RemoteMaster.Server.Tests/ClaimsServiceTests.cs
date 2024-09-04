@@ -7,7 +7,6 @@ using FluentResults;
 using Microsoft.AspNetCore.Identity;
 using Moq;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
-using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Services;
 
 namespace RemoteMaster.Server.Tests;

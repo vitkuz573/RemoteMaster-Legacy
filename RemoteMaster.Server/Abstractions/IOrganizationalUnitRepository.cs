@@ -4,7 +4,6 @@
 
 using System.Linq.Expressions;
 using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
-using RemoteMaster.Server.Entities;
 
 namespace RemoteMaster.Server.Abstractions;
 

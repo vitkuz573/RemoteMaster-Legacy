@@ -10,7 +10,6 @@ using FluentResults;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.CrlAggregate;
 using RemoteMaster.Server.Aggregates.CrlAggregate.ValueObjects;
-using RemoteMaster.Server.Entities;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;

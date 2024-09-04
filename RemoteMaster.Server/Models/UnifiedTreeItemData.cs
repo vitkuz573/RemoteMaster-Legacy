@@ -5,7 +5,6 @@
 using MudBlazor;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
-using RemoteMaster.Server.Entities;
 
 namespace RemoteMaster.Server.Models;
 

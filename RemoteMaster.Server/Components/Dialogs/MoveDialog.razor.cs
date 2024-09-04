@@ -10,7 +10,6 @@ using Microsoft.EntityFrameworkCore;
 using MudBlazor;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
-using RemoteMaster.Server.Entities;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Dialogs;

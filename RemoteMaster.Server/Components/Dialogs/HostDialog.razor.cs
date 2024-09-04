@@ -5,7 +5,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
-using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Components.Dialogs;

@@ -4,7 +4,6 @@
 
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
-using RemoteMaster.Server.Entities;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components;

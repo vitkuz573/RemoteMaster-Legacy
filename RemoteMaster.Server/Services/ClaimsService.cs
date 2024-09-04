@@ -7,7 +7,6 @@ using FluentResults;
 using Microsoft.AspNetCore.Identity;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
-using RemoteMaster.Server.Entities;
 
 namespace RemoteMaster.Server.Services;
 

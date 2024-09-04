@@ -5,8 +5,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Entities;
-using RemoteMaster.Server.Repositories;
+using RemoteMaster.Server.Aggregates.ApplicationClaimAggregate;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;
@@ -20,6 +19,44 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
         { "Administrator", AdministratorClaims },
         { "Viewer", ViewerClaims }
     };
+
+    private static readonly List<ApplicationClaim> AllClaims =
+    [
+        new ApplicationClaim("Input", "MouseInput", "Allow mouse input control"),
+            new ApplicationClaim("Input", "KeyboardInput", "Allow keyboard input control"),
+            new ApplicationClaim("Input", "ToggleInput", "Toggle input control"),
+            new ApplicationClaim("Input", "BlockUserInput", "Block user input"),
+            new ApplicationClaim("Screen", "SetFrameRate", "Set screen frame rate"),
+            new ApplicationClaim("Screen", "SetImageQuality", "Set screen image quality"),
+            new ApplicationClaim("Screen", "Recording", "Screen recording"),
+            new ApplicationClaim("Screen", "ToggleDrawCursor", "Toggle drawing cursor"),
+            new ApplicationClaim("Screen", "ChangeSelectedScreen", "Change selected screen"),
+            new ApplicationClaim("Screen", "SetCodec", "Set screen codec"),
+            new ApplicationClaim("Power", "RebootComputer", "Reboot the computer"),
+            new ApplicationClaim("Power", "ShutdownComputer", "Shutdown the computer"),
+            new ApplicationClaim("Power", "WakeUpComputer", "Wake up the computer"),
+            new ApplicationClaim("Hardware", "SetMonitorState", "Set monitor state"),
+            new ApplicationClaim("Security", "LockWorkStation", "Lock the workstation"),
+            new ApplicationClaim("Security", "LogOffUser", "Log off the user"),
+            new ApplicationClaim("HostManagement", "TerminateHost", "Terminate the host"),
+            new ApplicationClaim("HostManagement", "Move", "Move the host"),
+            new ApplicationClaim("HostManagement", "Remove", "Remove the host"),
+            new ApplicationClaim("HostManagement", "RenewCertificate", "Renew the certificate"),
+            new ApplicationClaim("Execution", "Scripts", "Execute scripts"),
+            new ApplicationClaim("Execution", "ManagePsExecRules", "Manage PsExec rules"),
+            new ApplicationClaim("Execution", "OpenShell", "Open shell"),
+            new ApplicationClaim("HostManagement", "Update", "Update the host"),
+            new ApplicationClaim("Domain", "Membership", "Manage domain membership"),
+            new ApplicationClaim("Communication", "MessageBox", "Show message box"),
+            new ApplicationClaim("Tasks", "Manager", "Open task manager"),
+            new ApplicationClaim("Files", "Manager", "Open file manager"),
+            new ApplicationClaim("Files", "Upload", "Upload files"),
+            new ApplicationClaim("HostInformation", "View", "View host information"),
+            new ApplicationClaim("Connect", "Control", "Control connection"),
+            new ApplicationClaim("Connect", "View", "View connection"),
+            new ApplicationClaim("Service", "DisconnectClient", "Disconnect any client"),
+            new ApplicationClaim("Logs", "Manager", "Open logs manager")
+    ];
 
     private static readonly List<Claim> AdministratorClaims =
     [
@@ -69,14 +106,14 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
     {
         using var scope = serviceProvider.CreateScope();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-        var applicationClaimsService = scope.ServiceProvider.GetRequiredService<IApplicationClaimsService>();
+        var applicationClaimRepository = scope.ServiceProvider.GetRequiredService<IApplicationClaimRepository>();
 
         foreach (var role in _roles)
         {
             await EnsureRoleExists(roleManager, role);
         }
 
-        await EnsureClaimsExist(applicationClaimsService);
+        await EnsureClaimsExist(applicationClaimRepository);
         await AssignClaimsToRoles(roleManager);
     }
 
@@ -101,22 +138,24 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
         }
     }
 
-    private async Task EnsureClaimsExist(IApplicationClaimsService applicationClaimsService)
+    private async Task EnsureClaimsExist(IApplicationClaimRepository applicationClaimRepository)
     {
         var claims = _roleClaims.SelectMany(rc => rc.Value).Distinct().ToList();
 
         foreach (var claim in claims)
         {
-            var existingClaims = await applicationClaimsService.GetClaimsAsync(c => c.ClaimType == claim.Type && c.ClaimValue == claim.Value);
+            var existingClaims = await applicationClaimRepository.FindAsync(c => c.ClaimType == claim.Type && c.ClaimValue == claim.Value);
 
-            if (existingClaims.Value.Any())
+            if (existingClaims.Any())
             {
                 continue;
             }
 
-            var matchingClaim = ClaimRepository.AllClaims.FirstOrDefault(c => c.ClaimType == claim.Type && c.ClaimValue == claim.Value) ?? throw new InvalidOperationException($"Claim '{claim.Type}:{claim.Value}' is assigned to a role but does not exist in the central repository.");
+            var matchingClaim = AllClaims.FirstOrDefault(c => c.ClaimType == claim.Type && c.ClaimValue == claim.Value) ?? throw new InvalidOperationException($"Claim '{claim.Type}:{claim.Value}' is assigned to a role but does not exist in the central repository.");
 
-            await applicationClaimsService.AddClaimAsync(new ApplicationClaim(claim.Type, claim.Value, matchingClaim.Description));
+            await applicationClaimRepository.AddAsync(new ApplicationClaim(claim.Type, claim.Value, matchingClaim.Description));
+
+            await applicationClaimRepository.SaveChangesAsync();
         }
     }
 
