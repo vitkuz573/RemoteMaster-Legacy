@@ -47,12 +47,7 @@ public class RemoteSchtasksService(INetworkDriveService networkDriveService) : I
 
             var cancelResult = networkDriveService.CancelNetworkDrive(remoteSharePath);
             
-            if (cancelResult.IsFailed)
-            {
-                return Result.Fail($"Failed to cancel network drive. {cancelResult.Errors.First().Message}");
-            }
-
-            return Result.Ok();
+            return cancelResult.IsFailed ? Result.Fail($"Failed to cancel network drive. {cancelResult.Errors.First().Message}") : Result.Ok();
         }
         catch (Exception ex)
         {
@@ -76,12 +71,7 @@ public class RemoteSchtasksService(INetworkDriveService networkDriveService) : I
 
             var cancelResult = networkDriveService.CancelNetworkDrive(sharePath);
             
-            if (cancelResult.IsFailed)
-            {
-                return Result.Fail("Failed to cancel network drive.");
-            }
-
-            return Result.Ok();
+            return cancelResult.IsFailed ? Result.Fail("Failed to cancel network drive.") : Result.Ok();
         }
         catch (Exception ex)
         {

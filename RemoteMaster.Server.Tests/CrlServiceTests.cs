@@ -13,6 +13,7 @@ using Moq;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
+using RemoteMaster.Server.Repositories;
 using RemoteMaster.Server.Services;
 using RemoteMaster.Server.ValueObjects;
 
@@ -29,7 +30,6 @@ public class CrlServiceTests : IDisposable
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddDbContext<CertificateDbContext>(options =>
             options.UseInMemoryDatabase(Guid.NewGuid().ToString()));
-        serviceCollection.AddScoped<IDbContextFactory<CertificateDbContext>, DbContextFactory<CertificateDbContext>>();
 
         _certificateProviderMock = new Mock<ICertificateProvider>();
         _mockFileSystem = new MockFileSystem();
@@ -37,6 +37,7 @@ public class CrlServiceTests : IDisposable
         serviceCollection.AddSingleton(_certificateProviderMock.Object);
         serviceCollection.AddSingleton<IFileSystem>(_mockFileSystem);
         serviceCollection.AddScoped<ICrlService, CrlService>();
+        serviceCollection.AddScoped<ICrlRepository, CrlRepository>();
 
         _serviceProvider = serviceCollection.BuildServiceProvider();
     }
@@ -63,11 +64,15 @@ public class CrlServiceTests : IDisposable
         // Assert
         Assert.True(result.IsSuccess, result.Errors.FirstOrDefault()?.Message);
 
-        var contextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<CertificateDbContext>>();
-        var context = await contextFactory.CreateDbContextAsync();
+        var context = scope.ServiceProvider.GetRequiredService<CertificateDbContext>();
 
-        var revokedCertificate = await context.RevokedCertificates
-            .FirstOrDefaultAsync(rc => rc.SerialNumber.Value == serialNumber.Value);
+        var crl = await context.CertificateRevocationLists
+            .Include(c => c.RevokedCertificates)
+            .FirstOrDefaultAsync();
+
+        Assert.NotNull(crl);
+
+        var revokedCertificate = crl.RevokedCertificates.FirstOrDefault(rc => rc.SerialNumber.Value == serialNumber.Value);
 
         Assert.NotNull(revokedCertificate);
         Assert.Equal(reason, revokedCertificate.Reason);
@@ -84,8 +89,7 @@ public class CrlServiceTests : IDisposable
         var certificateResult = Result.Ok(certificate);
         _certificateProviderMock.Setup(cp => cp.GetIssuerCertificate()).Returns(certificateResult);
 
-        var contextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<CertificateDbContext>>();
-        var context = await contextFactory.CreateDbContextAsync();
+        var context = scope.ServiceProvider.GetRequiredService<CertificateDbContext>();
 
         var crl = new Crl("1");
 
@@ -158,18 +162,5 @@ public class CrlServiceTests : IDisposable
         var certificate = request.CreateSelfSigned(DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(1));
 
         return certificate;
-    }
-}
-
-public class DbContextFactory<TContext>(IServiceProvider serviceProvider) : IDbContextFactory<TContext> where TContext : DbContext
-{
-    public TContext CreateDbContext()
-    {
-        return serviceProvider.GetRequiredService<TContext>();
-    }
-
-    public Task<TContext> CreateDbContextAsync(CancellationToken cancellationToken = default)
-    {
-        return Task.FromResult(CreateDbContext());
     }
 }

@@ -7,24 +7,20 @@ using System.Numerics;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using FluentResults;
-using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Entities;
 using RemoteMaster.Server.ValueObjects;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, ICertificateProvider certificateProvider, IFileSystem fileSystem) : ICrlService
+public class CrlService(ICrlRepository crlRepository, ICertificateProvider certificateProvider, IFileSystem fileSystem) : ICrlService
 {
     public async Task<Result> RevokeCertificateAsync(SerialNumber serialNumber, X509RevocationReason reason)
     {
         try
         {
-            var context = await contextFactory.CreateDbContextAsync();
-
-            var crl = await context.CertificateRevocationLists.FirstOrDefaultAsync() ?? new Crl(BigInteger.Zero.ToString());
+            var crl = (await crlRepository.GetAllAsync()).FirstOrDefault() ?? new Crl(BigInteger.Zero.ToString());
 
             try
             {
@@ -37,27 +33,20 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
                 return Result.Fail(ex.Message);
             }
 
-            if (context.CertificateRevocationLists.Any())
+            if (crl.Id > 0)
             {
-                context.CertificateRevocationLists.Update(crl);
+                await crlRepository.UpdateAsync(crl);
             }
             else
             {
-                context.CertificateRevocationLists.Add(crl);
+                await crlRepository.AddAsync(crl);
             }
 
-            var result = await context.SaveChangesAsync();
+            await crlRepository.SaveChangesAsync();
 
-            if (result > 0)
-            {
-                Log.Information($"Certificate with serial number {serialNumber} has been successfully revoked.");
-                
-                return Result.Ok();
-            }
+            Log.Information($"Certificate with serial number {serialNumber} has been successfully revoked.");
 
-            Log.Error($"Failed to revoke certificate with serial number {serialNumber}.");
-            
-            return Result.Fail($"Failed to revoke certificate with serial number {serialNumber}.");
+            return Result.Ok();
         }
         catch (Exception ex)
         {
@@ -82,13 +71,12 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
             var issuerCertificate = issuerCertificateResult.Value;
             var crlBuilder = new CertificateRevocationListBuilder();
 
-            var context = await contextFactory.CreateDbContextAsync();
-            var crl = context.CertificateRevocationLists.OrderBy(ci => ci.Number).FirstOrDefault() ?? new Crl(BigInteger.Zero.ToString());
+            var crl = (await crlRepository.GetAllAsync()).MinBy(ci => ci.Number) ?? new Crl(BigInteger.Zero.ToString());
 
             var currentCrlNumber = BigInteger.Parse(crl.Number) + 1;
             var nextUpdate = DateTimeOffset.UtcNow.AddDays(30);
 
-            var revokedCertificates = context.RevokedCertificates.ToList();
+            var revokedCertificates = crl.RevokedCertificates;
 
             foreach (var revoked in revokedCertificates)
             {
@@ -101,16 +89,16 @@ public class CrlService(IDbContextFactory<CertificateDbContext> contextFactory, 
 
             crl.SetNumber(currentCrlNumber.ToString());
 
-            if (context.CertificateRevocationLists.Any())
+            if (crl.Id > 0)
             {
-                context.CertificateRevocationLists.Update(crl);
+                await crlRepository.UpdateAsync(crl);
             }
             else
             {
-                context.CertificateRevocationLists.Add(crl);
+                await crlRepository.AddAsync(crl);
             }
 
-            await context.SaveChangesAsync();
+            await crlRepository.SaveChangesAsync();
 
             return Result.Ok(crlData);
         }

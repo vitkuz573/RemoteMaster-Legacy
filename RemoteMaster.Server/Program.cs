@@ -142,7 +142,7 @@ public static class Program
         }
 
         services.AddDbContext<ApplicationDbContext>();
-        services.AddDbContextFactory<CertificateDbContext>();
+        services.AddDbContext<CertificateDbContext>();
 
         services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -177,6 +177,7 @@ public static class Program
         services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
         services.AddTransient<IUdpClient, UdpClientWrapper>();
         services.AddTransient<Func<IUdpClient>>(provider => provider.GetRequiredService<IUdpClient>);
+        services.AddScoped<ICrlRepository, CrlRepository>();
         services.AddScoped<IApplicationUserRepository, ApplicationUserRepository>();
         services.AddScoped<IOrganizationRepository, OrganizationRepository>();
         services.AddScoped<IOrganizationalUnitRepository, OrganizationalUnitRepository>();

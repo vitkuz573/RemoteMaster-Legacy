@@ -12,8 +12,6 @@ namespace RemoteMaster.Server.Data;
 
 public class CertificateDbContext(DbContextOptions<CertificateDbContext> options, IConfiguration? configuration = null) : DbContext(options)
 {
-    public DbSet<RevokedCertificate> RevokedCertificates { get; set; }
-
     public DbSet<Crl> CertificateRevocationLists { get; set; }
 
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "DbContextOptionsBuilder will not be null.")]
