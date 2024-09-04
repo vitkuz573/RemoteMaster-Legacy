@@ -23,12 +23,15 @@ public class OrganizationalUnitRepository(ApplicationDbContext context) : IOrgan
     public async Task<IEnumerable<OrganizationalUnit>> GetAllAsync()
     {
         return await context.OrganizationalUnits
+            .Include(ou => ou.Children)
+            .Include(ou => ou.Computers)
             .ToListAsync();
     }
 
     public async Task<IEnumerable<OrganizationalUnit>> FindAsync(Expression<Func<OrganizationalUnit, bool>> predicate)
     {
         return await context.OrganizationalUnits
+            .Include(ou => ou.Children)
             .Include(ou => ou.Computers)
             .Where(predicate)
             .ToListAsync();
