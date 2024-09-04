@@ -66,16 +66,6 @@ public class Organization : IAggregateRoot
         _organizationalUnits.Remove(unit);
     }
 
-    public void ClearOrganizationalUnits()
-    {
-        _organizationalUnits.Clear();
-    }
-
-    public void UpdateAddress(Address newAddress)
-    {
-        Address = newAddress;
-    }
-
     public void AddUser(string userId)
     {
         if (_userOrganizations.Any(u => u.UserId == userId))

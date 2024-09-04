@@ -85,10 +85,6 @@ public class OrganizationalUnit : IAggregateRoot
 
         _children.Remove(unit);
     }
-    public void ClearChildren()
-    {
-        _children.Clear();
-    }
 
     public void AddComputer(string name, string ipAddress, string macAddress)
     {
