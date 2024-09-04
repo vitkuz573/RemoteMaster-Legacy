@@ -71,7 +71,7 @@ public class ApplicationClaimsService(ApplicationDbContext applicationDbContext)
         }
         catch (Exception ex)
         {
-            return Result.Fail($"Error: Failed to remove ApplicationClaim.")
+            return Result.Fail("Error: Failed to remove ApplicationClaim.")
                          .WithError(ex.Message);
         }
     }
