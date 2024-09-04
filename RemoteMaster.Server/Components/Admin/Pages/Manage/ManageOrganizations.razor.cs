@@ -5,9 +5,9 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
+using RemoteMaster.Server.Aggregates.OrganizationAggregate.ValueObjects;
 using RemoteMaster.Server.Components.Admin.Dialogs;
 using RemoteMaster.Server.Models;
-using RemoteMaster.Server.ValueObjects;
 using Serilog;
 
 namespace RemoteMaster.Server.Components.Admin.Pages.Manage;

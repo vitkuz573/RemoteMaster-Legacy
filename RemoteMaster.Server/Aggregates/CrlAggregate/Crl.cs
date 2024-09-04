@@ -4,7 +4,7 @@
 
 using System.Security.Cryptography.X509Certificates;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.ValueObjects;
+using RemoteMaster.Server.Aggregates.CrlAggregate.ValueObjects;
 
 namespace RemoteMaster.Server.Aggregates.CrlAggregate;
 

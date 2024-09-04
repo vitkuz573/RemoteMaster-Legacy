@@ -4,7 +4,7 @@
 
 using System.Security.Cryptography;
 
-namespace RemoteMaster.Server.ValueObjects;
+namespace RemoteMaster.Server.Aggregates.CrlAggregate.ValueObjects;
 
 public class SerialNumber
 {

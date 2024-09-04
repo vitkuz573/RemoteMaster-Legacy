@@ -4,7 +4,7 @@
 
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.SignalR.Client;
-using RemoteMaster.Server.ValueObjects;
+using RemoteMaster.Server.Aggregates.CrlAggregate.ValueObjects;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 

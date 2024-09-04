@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using FluentResults;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.ValueObjects;
+using RemoteMaster.Server.Aggregates.CrlAggregate.ValueObjects;
 using RemoteMaster.Shared.Abstractions;
 using Serilog;
 

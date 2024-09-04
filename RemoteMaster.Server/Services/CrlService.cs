@@ -9,8 +9,8 @@ using System.Security.Cryptography.X509Certificates;
 using FluentResults;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.CrlAggregate;
+using RemoteMaster.Server.Aggregates.CrlAggregate.ValueObjects;
 using RemoteMaster.Server.Entities;
-using RemoteMaster.Server.ValueObjects;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;

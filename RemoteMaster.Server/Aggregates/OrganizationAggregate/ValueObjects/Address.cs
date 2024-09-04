@@ -4,7 +4,7 @@
 
 using System.Globalization;
 
-namespace RemoteMaster.Server.ValueObjects;
+namespace RemoteMaster.Server.Aggregates.OrganizationAggregate.ValueObjects;
 
 public class Address(string locality, string state, string country)
 {

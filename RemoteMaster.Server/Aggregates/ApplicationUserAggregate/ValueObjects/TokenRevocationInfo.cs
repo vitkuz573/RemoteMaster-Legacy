@@ -4,7 +4,7 @@
 
 using RemoteMaster.Server.Enums;
 
-namespace RemoteMaster.Server.ValueObjects;
+namespace RemoteMaster.Server.Aggregates.ApplicationUserAggregate.ValueObjects;
 
 public class TokenRevocationInfo(DateTime? revoked, string? revokedByIp, TokenRevocationReason revocationReason)
 {
