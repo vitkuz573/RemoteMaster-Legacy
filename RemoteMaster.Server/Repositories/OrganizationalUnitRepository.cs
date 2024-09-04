@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
 using RemoteMaster.Server.Data;
-using RemoteMaster.Server.Entities;
 
 namespace RemoteMaster.Server.Repositories;
 
