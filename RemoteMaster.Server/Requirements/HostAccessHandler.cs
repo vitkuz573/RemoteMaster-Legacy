@@ -4,72 +4,75 @@
 
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
-using RemoteMaster.Server.Data;
+using RemoteMaster.Server.Abstractions;
 
 namespace RemoteMaster.Server.Requirements;
 
-public class HostAccessHandler(IServiceScopeFactory scopeFactory) : AuthorizationHandler<HostAccessRequirement>
+public class HostAccessHandler(IApplicationUserRepository userRepository, IOrganizationalUnitRepository organizationalUnitRepository) : AuthorizationHandler<HostAccessRequirement>
 {
     protected async override Task HandleRequirementAsync(AuthorizationHandlerContext context, HostAccessRequirement requirement)
     {
         ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(requirement);
 
-        using var scope = scopeFactory.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-        var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (string.IsNullOrEmpty(userId))
+        try
         {
-            context.Fail();
+            var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            return;
-        }
-
-        var user = await dbContext.Users.FindAsync(userId);
-
-        if (user == null)
-        {
-            context.Fail();
-
-            return;
-        }
-
-        if (user.CanAccessUnregisteredHosts)
-        {
-            var isHostRegistered = await dbContext.Computers.AnyAsync(c => c.Name == requirement.Host || c.IpAddress == requirement.Host);
-
-            if (!isHostRegistered)
+            if (string.IsNullOrEmpty(userId))
             {
-                context.Succeed(requirement);
+                context.Fail();
 
                 return;
             }
+
+            var user = await userRepository.GetByIdAsync(userId);
+
+            if (user == null)
+            {
+                context.Fail();
+
+                return;
+            }
+
+            if (user.CanAccessUnregisteredHosts)
+            {
+                var isHostRegistered = await organizationalUnitRepository
+                    .FindComputersAsync(c => c.Name == requirement.Host || c.IpAddress == requirement.Host);
+
+                if (!isHostRegistered.Any())
+                {
+                    context.Succeed(requirement);
+
+                    return;
+                }
+            }
+
+            var computers = await organizationalUnitRepository
+                .FindComputersAsync(c => c.Name == requirement.Host || c.IpAddress == requirement.Host);
+            var computer = computers.FirstOrDefault();
+
+            if (computer?.ParentId == null)
+            {
+                context.Fail();
+
+                return;
+            }
+
+            var organizationalUnit = await organizationalUnitRepository.GetByIdAsync(computer.ParentId);
+
+            if (organizationalUnit == null || organizationalUnit.UserOrganizationalUnits.All(uou => uou.UserId != userId))
+            {
+                context.Fail();
+
+                return;
+            }
+
+            context.Succeed(requirement);
         }
-
-        var computer = await dbContext.Computers
-            .Include(c => c.Parent)
-            .FirstOrDefaultAsync(c => c.Name == requirement.Host || c.IpAddress == requirement.Host);
-
-        if (computer?.ParentId == null)
+        catch (Exception)
         {
             context.Fail();
-
-            return;
         }
-
-        var organizationalUnit = await dbContext.OrganizationalUnits
-            .Include(ou => ou.UserOrganizationalUnits)
-            .FirstOrDefaultAsync(ou => ou.Id == computer.ParentId);
-
-        if (organizationalUnit == null || organizationalUnit.UserOrganizationalUnits.All(uou => uou.UserId != userId))
-        {
-            context.Fail();
-
-            return;
-        }
-
-        context.Succeed(requirement);
     }
 }

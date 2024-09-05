@@ -15,6 +15,7 @@ public class OrganizationalUnitRepository(ApplicationDbContext context) : IOrgan
     public async Task<OrganizationalUnit?> GetByIdAsync(Guid id)
     {
         return await context.OrganizationalUnits
+            .Include(ou => ou.UserOrganizationalUnits)
             .Include(ou => ou.Children)
             .Include(ou => ou.Computers)
             .FirstOrDefaultAsync(ou => ou.Id == id);
@@ -23,6 +24,7 @@ public class OrganizationalUnitRepository(ApplicationDbContext context) : IOrgan
     public async Task<IEnumerable<OrganizationalUnit>> GetAllAsync()
     {
         return await context.OrganizationalUnits
+            .Include(ou => ou.UserOrganizationalUnits)
             .Include(ou => ou.Children)
             .Include(ou => ou.Computers)
             .ToListAsync();
@@ -31,6 +33,7 @@ public class OrganizationalUnitRepository(ApplicationDbContext context) : IOrgan
     public async Task<IEnumerable<OrganizationalUnit>> FindAsync(Expression<Func<OrganizationalUnit, bool>> predicate)
     {
         return await context.OrganizationalUnits
+            .Include(ou => ou.UserOrganizationalUnits)
             .Include(ou => ou.Children)
             .Include(ou => ou.Computers)
             .Where(predicate)
