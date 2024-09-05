@@ -28,7 +28,12 @@ public class ApplicationClaimConfiguration : IEntityTypeConfiguration<Applicatio
             .IsRequired()
             .HasColumnOrder(2);
 
-        builder.Property(ac => ac.Description)
+        builder.Property(ac => ac.DisplayName)
+            .IsRequired()
             .HasColumnOrder(3);
+
+        builder.Property(ac => ac.Description)
+            .IsRequired()
+            .HasColumnOrder(4);
     }
 }

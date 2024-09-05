@@ -40,6 +40,7 @@ public partial class ManageRoleClaims
                     Values = g.Select(ac => new ClaimValueViewModel
                     {
                         Value = ac.ClaimValue,
+                        DisplayName = ac.DisplayName,
                         Description = ac.Description
                     }).Distinct().ToList()
                 })
@@ -190,6 +191,8 @@ public partial class ManageRoleClaims
     public class ClaimValueViewModel
     {
         public string Value { get; set; } = string.Empty;
+
+        public string DisplayName { get; set; } = string.Empty;
 
         public string Description { get; set; } = string.Empty;
 

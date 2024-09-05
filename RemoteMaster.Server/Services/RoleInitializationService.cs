@@ -22,40 +22,40 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
 
     private static readonly List<ApplicationClaim> AllClaims =
     [
-        new ApplicationClaim("Input", "MouseInput", "Allow mouse input control"),
-        new ApplicationClaim("Input", "KeyboardInput", "Allow keyboard input control"),
-        new ApplicationClaim("Input", "ToggleInput", "Toggle input control"),
-        new ApplicationClaim("Input", "BlockUserInput", "Block user input"),
-        new ApplicationClaim("Screen", "SetFrameRate", "Set screen frame rate"),
-        new ApplicationClaim("Screen", "SetImageQuality", "Set screen image quality"),
-        new ApplicationClaim("Screen", "Recording", "Screen recording"),
-        new ApplicationClaim("Screen", "ToggleDrawCursor", "Toggle drawing cursor"),
-        new ApplicationClaim("Screen", "ChangeSelectedScreen", "Change selected screen"),
-        new ApplicationClaim("Screen", "SetCodec", "Set screen codec"),
-        new ApplicationClaim("Power", "RebootComputer", "Reboot the computer"),
-        new ApplicationClaim("Power", "ShutdownComputer", "Shutdown the computer"),
-        new ApplicationClaim("Power", "WakeUpComputer", "Wake up the computer"),
-        new ApplicationClaim("Hardware", "SetMonitorState", "Set monitor state"),
-        new ApplicationClaim("Security", "LockWorkStation", "Lock the workstation"),
-        new ApplicationClaim("Security", "LogOffUser", "Log off the user"),
-        new ApplicationClaim("HostManagement", "TerminateHost", "Terminate the host"),
-        new ApplicationClaim("HostManagement", "Move", "Move the host"),
-        new ApplicationClaim("HostManagement", "Remove", "Remove the host"),
-        new ApplicationClaim("HostManagement", "RenewCertificate", "Renew the certificate"),
-        new ApplicationClaim("Execution", "Scripts", "Execute scripts"),
-        new ApplicationClaim("Execution", "ManagePsExecRules", "Manage PsExec rules"),
-        new ApplicationClaim("Execution", "OpenShell", "Open shell"),
-        new ApplicationClaim("HostManagement", "Update", "Update the host"),
-        new ApplicationClaim("Domain", "Membership", "Manage domain membership"),
-        new ApplicationClaim("Communication", "MessageBox", "Show message box"),
-        new ApplicationClaim("Tasks", "Manager", "Open task manager"),
-        new ApplicationClaim("Files", "Manager", "Open file manager"),
-        new ApplicationClaim("Files", "Upload", "Upload files"),
-        new ApplicationClaim("HostInformation", "View", "View host information"),
-        new ApplicationClaim("Connect", "Control", "Control connection"),
-        new ApplicationClaim("Connect", "View", "View connection"),
-        new ApplicationClaim("Service", "DisconnectClient", "Disconnect any client"),
-        new ApplicationClaim("Logs", "Manager", "Open logs manager")
+        new ApplicationClaim("Input", "MouseInput", "Mouse Input", "Allow mouse input control"),
+        new ApplicationClaim("Input", "KeyboardInput", "Keyboard Input", "Allow keyboard input control"),
+        new ApplicationClaim("Input", "ToggleInput", "Toggle Input", "Toggle input control"),
+        new ApplicationClaim("Input", "BlockUserInput", "Block User Input", "Block user input"),
+        new ApplicationClaim("Screen", "SetFrameRate", "Set Frame Rate", "Set screen frame rate"),
+        new ApplicationClaim("Screen", "SetImageQuality", "Set Image Quality", "Set screen image quality"),
+        new ApplicationClaim("Screen", "Recording", "Screen Recording", "Screen recording"),
+        new ApplicationClaim("Screen", "ToggleDrawCursor", "Toggle Draw Cursor", "Toggle drawing cursor"),
+        new ApplicationClaim("Screen", "ChangeSelectedScreen", "Change Selected Screen", "Change selected screen"),
+        new ApplicationClaim("Screen", "SetCodec", "Set Codec", "Set screen codec"),
+        new ApplicationClaim("Power", "RebootComputer", "Reboot Computer", "Reboot the computer"),
+        new ApplicationClaim("Power", "ShutdownComputer", "Shutdown Computer", "Shutdown the computer"),
+        new ApplicationClaim("Power", "WakeUpComputer", "Wake Up Computer", "Wake up the computer"),
+        new ApplicationClaim("Hardware", "SetMonitorState", "Set Monitor State", "Set monitor state"),
+        new ApplicationClaim("Security", "LockWorkStation", "Lock Workstation", "Lock the workstation"),
+        new ApplicationClaim("Security", "LogOffUser", "Log Off User", "Log off the user"),
+        new ApplicationClaim("HostManagement", "TerminateHost", "Terminate Host", "Terminate the host"),
+        new ApplicationClaim("HostManagement", "Move", "Move Host", "Move the host"),
+        new ApplicationClaim("HostManagement", "Remove", "Remove Host", "Remove the host"),
+        new ApplicationClaim("HostManagement", "RenewCertificate", "Renew Certificate", "Renew the certificate"),
+        new ApplicationClaim("Execution", "Scripts", "Execute Scripts", "Execute scripts"),
+        new ApplicationClaim("Execution", "ManagePsExecRules", "Manage PsExec Rules", "Manage PsExec rules"),
+        new ApplicationClaim("Execution", "OpenShell", "Open Shell", "Open shell"),
+        new ApplicationClaim("HostManagement", "Update", "Update Host", "Update the host"),
+        new ApplicationClaim("Domain", "Membership", "Manage Domain Membership", "Manage domain membership"),
+        new ApplicationClaim("Communication", "MessageBox", "Show Message Box", "Show message box"),
+        new ApplicationClaim("Tasks", "Manager", "Task Manager", "Open task manager"),
+        new ApplicationClaim("Files", "Manager", "File Manager", "Open file manager"),
+        new ApplicationClaim("Files", "Upload", "Upload Files", "Upload files"),
+        new ApplicationClaim("HostInformation", "View", "View Host Information", "View host information"),
+        new ApplicationClaim("Connect", "Control", "Control Connection", "Control connection"),
+        new ApplicationClaim("Connect", "View", "View Connection", "View connection"),
+        new ApplicationClaim("Service", "DisconnectClient", "Disconnect Client", "Disconnect any client"),
+        new ApplicationClaim("Logs", "Manager", "Logs Manager", "Open logs manager")
     ];
 
     private static readonly List<Claim> AdministratorClaims =
@@ -153,7 +153,7 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
 
             var matchingClaim = AllClaims.FirstOrDefault(c => c.ClaimType == claim.Type && c.ClaimValue == claim.Value) ?? throw new InvalidOperationException($"Claim '{claim.Type}:{claim.Value}' is assigned to a role but does not exist in the central repository.");
 
-            await applicationClaimRepository.AddAsync(new ApplicationClaim(claim.Type, claim.Value, matchingClaim.Description));
+            await applicationClaimRepository.AddAsync(new ApplicationClaim(claim.Type, claim.Value, matchingClaim.DisplayName, matchingClaim.Description));
 
             await applicationClaimRepository.SaveChangesAsync();
         }

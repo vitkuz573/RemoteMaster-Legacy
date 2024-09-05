@@ -10,10 +10,11 @@ public class ApplicationClaim : IAggregateRoot
 {
     private ApplicationClaim() { }
 
-    public ApplicationClaim(string type, string value, string description)
+    public ApplicationClaim(string type, string value, string displayName, string description)
     {
         ClaimType = type;
         ClaimValue = value;
+        DisplayName = displayName;
         Description = description;
     }
 
@@ -22,6 +23,8 @@ public class ApplicationClaim : IAggregateRoot
     public string ClaimType { get; private set; }
 
     public string ClaimValue { get; private set; }
+
+    public string DisplayName { get; private set; }
 
     public string Description { get; private set; }
 }

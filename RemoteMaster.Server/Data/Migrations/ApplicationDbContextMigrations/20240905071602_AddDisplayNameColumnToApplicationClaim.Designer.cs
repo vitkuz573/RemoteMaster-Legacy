@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RemoteMaster.Server.Data;
 
@@ -11,9 +12,11 @@ using RemoteMaster.Server.Data;
 namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240905071602_AddDisplayNameColumnToApplicationClaim")]
+    partial class AddDisplayNameColumnToApplicationClaim
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -186,7 +189,7 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ApplicationClaims", (string)null);
+                    b.ToTable("ApplicationClaims");
                 });
 
             modelBuilder.Entity("RemoteMaster.Server.Aggregates.ApplicationUserAggregate.ApplicationUser", b =>
@@ -326,7 +329,7 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("SignInEntries", (string)null);
+                    b.ToTable("SignInEntries");
                 });
 
             modelBuilder.Entity("RemoteMaster.Server.Aggregates.OrganizationAggregate.Organization", b =>
@@ -347,7 +350,7 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Organizations", (string)null);
+                    b.ToTable("Organizations");
                 });
 
             modelBuilder.Entity("RemoteMaster.Server.Aggregates.OrganizationAggregate.UserOrganization", b =>
@@ -400,7 +403,7 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
 
                     b.HasIndex("ParentId");
 
-                    b.ToTable("Computers", (string)null);
+                    b.ToTable("Computers");
                 });
 
             modelBuilder.Entity("RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate.OrganizationalUnit", b =>
@@ -433,7 +436,7 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                     b.HasIndex("Name", "OrganizationId")
                         .IsUnique();
 
-                    b.ToTable("OrganizationalUnits", (string)null);
+                    b.ToTable("OrganizationalUnits");
                 });
 
             modelBuilder.Entity("RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate.UserOrganizationalUnit", b =>
@@ -515,7 +518,7 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.OwnsOne("RemoteMaster.Server.Aggregates.ApplicationUserAggregate.RefreshToken.RevocationInfo#RemoteMaster.Server.Aggregates.ApplicationUserAggregate.ValueObjects.TokenRevocationInfo", "RevocationInfo", b1 =>
+                    b.OwnsOne("RemoteMaster.Server.Aggregates.ApplicationUserAggregate.ValueObjects.TokenRevocationInfo", "RevocationInfo", b1 =>
                         {
                             b1.Property<int>("RefreshTokenId")
                                 .HasColumnType("int");
@@ -541,13 +544,13 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
 
                             b1.HasIndex("Revoked");
 
-                            b1.ToTable("RefreshTokens", (string)null);
+                            b1.ToTable("RefreshTokens");
 
                             b1.WithOwner()
                                 .HasForeignKey("RefreshTokenId");
                         });
 
-                    b.OwnsOne("RemoteMaster.Server.Aggregates.ApplicationUserAggregate.RefreshToken.TokenValue#RemoteMaster.Server.Aggregates.ApplicationUserAggregate.ValueObjects.TokenValue", "TokenValue", b1 =>
+                    b.OwnsOne("RemoteMaster.Server.Aggregates.ApplicationUserAggregate.ValueObjects.TokenValue", "TokenValue", b1 =>
                         {
                             b1.Property<int>("RefreshTokenId")
                                 .HasColumnType("int");
@@ -580,7 +583,7 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
 
                             b1.HasIndex("Expires");
 
-                            b1.ToTable("RefreshTokens", (string)null);
+                            b1.ToTable("RefreshTokens");
 
                             b1.WithOwner()
                                 .HasForeignKey("RefreshTokenId");
@@ -609,7 +612,7 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
 
             modelBuilder.Entity("RemoteMaster.Server.Aggregates.OrganizationAggregate.Organization", b =>
                 {
-                    b.OwnsOne("RemoteMaster.Server.Aggregates.OrganizationAggregate.Organization.Address#RemoteMaster.Server.Aggregates.OrganizationAggregate.ValueObjects.Address", "Address", b1 =>
+                    b.OwnsOne("RemoteMaster.Server.Aggregates.OrganizationAggregate.ValueObjects.Address", "Address", b1 =>
                         {
                             b1.Property<Guid>("OrganizationId")
                                 .HasColumnType("uniqueidentifier");
@@ -639,7 +642,7 @@ namespace RemoteMaster.Server.Data.Migrations.ApplicationDbContextMigrations
 
                             b1.HasIndex("Locality", "State", "Country");
 
-                            b1.ToTable("Organizations", (string)null);
+                            b1.ToTable("Organizations");
 
                             b1.WithOwner()
                                 .HasForeignKey("OrganizationId");
