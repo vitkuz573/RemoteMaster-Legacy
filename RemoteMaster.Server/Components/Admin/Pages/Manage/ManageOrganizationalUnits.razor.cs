@@ -56,16 +56,30 @@ public partial class ManageOrganizationalUnits
     {
         var organizations = await OrganizationService.GetAllOrganizationsAsync();
 
-        _organizations = organizations.ToList();
+        if (organizations != null)
+        {
+            _organizations = organizations.ToList();
+        }
+        else
+        {
+            _message = "Failed to load organizations.";
+        }
     }
 
     private async Task LoadOrganizationalUnitsAsync()
     {
         var organizationalUnits = await OrganizationalUnitService.GetAllOrganizationalUnitsAsync();
         
-        _organizationalUnits = organizationalUnits.ToList();
+        if (organizationalUnits != null)
+        {
+            _organizationalUnits = organizationalUnits.ToList();
 
-        FilterOrganizationalUnits();
+            FilterOrganizationalUnits();
+        }
+        else
+        {
+            _message = "Failed to load organizational units.";
+        }
     }
 
     private async Task OnOrganizationChanged(Guid organizationId)

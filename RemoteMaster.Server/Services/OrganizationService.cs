@@ -4,6 +4,8 @@
 
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
+using RemoteMaster.Server.Aggregates.OrganizationAggregate.ValueObjects;
+using RemoteMaster.Server.DTOs;
 
 namespace RemoteMaster.Server.Services;
 
@@ -12,5 +14,46 @@ public class OrganizationService(IOrganizationRepository organizationRepository)
     public async Task<IEnumerable<Organization>> GetAllOrganizationsAsync()
     {
         return await organizationRepository.GetAllAsync();
+    }
+
+    public async Task<string> AddOrUpdateOrganizationAsync(OrganizationDto dto)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+
+        var address = new Address(dto.Locality, dto.State, dto.Country);
+
+        if (dto.Id.HasValue)
+        {
+            var organization = await organizationRepository.GetByIdAsync(dto.Id.Value);
+            
+            if (organization == null)
+            {
+                return "Error: Organization not found.";
+            }
+
+            organization.SetName(dto.Name);
+            organization.SetAddress(address);
+
+            await organizationRepository.UpdateAsync(organization);
+        }
+        else
+        {
+            var newOrganization = new Organization(dto.Name, address);
+            await organizationRepository.AddAsync(newOrganization);
+        }
+
+        await organizationRepository.SaveChangesAsync();
+
+        return dto.Id.HasValue ? "Organization updated successfully." : "Organization created successfully.";
+    }
+
+    public async Task<string> DeleteOrganizationAsync(Organization organization)
+    {
+        ArgumentNullException.ThrowIfNull(organization);
+
+        await organizationRepository.DeleteAsync(organization);
+        await organizationRepository.SaveChangesAsync();
+
+        return "Organization deleted successfully.";
     }
 }

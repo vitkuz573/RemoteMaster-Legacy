@@ -5,8 +5,8 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
-using RemoteMaster.Server.Aggregates.OrganizationAggregate.ValueObjects;
 using RemoteMaster.Server.Components.Admin.Dialogs;
+using RemoteMaster.Server.DTOs;
 using RemoteMaster.Server.Models;
 using Serilog;
 
@@ -41,36 +41,16 @@ public partial class ManageOrganizations
 
     private async Task OnValidSubmitAsync()
     {
-        var address = new Address(Input.Locality, Input.State, Input.Country);
-
-        if (Input.Id.HasValue)
+        var dto = new OrganizationDto
         {
-            var organization = await OrganizationRepository.GetByIdAsync(Input.Id.Value);
-            
-            if (organization == null)
-            {
-                _message = "Organization not found.";
-                
-                return;
-            }
+            Id = Input.Id,
+            Name = Input.Name,
+            Locality = Input.Locality,
+            State = Input.State,
+            Country = Input.Country
+        };
 
-            organization.SetName(Input.Name);
-            organization.SetAddress(address);
-
-            await OrganizationRepository.UpdateAsync(organization);
-            
-            _message = "Organization updated successfully.";
-        }
-        else
-        {
-            var newOrganization = new Organization(Input.Name, address);
-
-            await OrganizationRepository.AddAsync(newOrganization);
-            
-            _message = "Organization created successfully.";
-        }
-
-        await OrganizationRepository.SaveChangesAsync();
+        _message = await OrganizationService.AddOrUpdateOrganizationAsync(dto);
 
         await OnOrganizationSaved(_message);
     }
@@ -87,7 +67,7 @@ public partial class ManageOrganizations
 
     private async Task LoadOrganizationsAsync()
     {
-        var organizations = await OrganizationRepository.GetAllAsync();
+        var organizations = await OrganizationService.GetAllOrganizationsAsync();
 
         if (organizations != null)
         {
@@ -101,11 +81,8 @@ public partial class ManageOrganizations
 
     private async Task DeleteOrganization(Organization organization)
     {
-        await OrganizationRepository.DeleteAsync(organization);
-        await OrganizationRepository.SaveChangesAsync();
-        
-        _message = "Organization deleted successfully.";
-        
+        _message = await OrganizationService.DeleteOrganizationAsync(organization);
+
         await LoadOrganizationsAsync();
     }
 
