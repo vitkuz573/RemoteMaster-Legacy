@@ -164,6 +164,14 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
         foreach (var (roleName, claims) in _roleClaims)
         {
             var roleIdentity = await roleManager.FindByNameAsync(roleName);
+
+            if (roleIdentity == null)
+            {
+                Log.Error("Role {RoleName} not found, skipping claim assignment.", roleName);
+
+                continue;
+            }
+
             var existingClaims = await roleManager.GetClaimsAsync(roleIdentity);
 
             foreach (var claim in claims.Where(cl => !existingClaims.Any(c => c.Type == cl.Type && c.Value == cl.Value)))
