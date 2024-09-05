@@ -31,7 +31,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
         {
             var ous = await organizationalUnitRepository.FindAsync(n => n.Name == ouName && n.OrganizationId == organizationId);
 
-            var ou = ous.FirstOrDefault(o => parentOu == null || o.ParentId == parentOu?.Id);
+            var ou = ous.FirstOrDefault(o => parentOu == null || o.ParentId == parentOu.Id);
 
             if (ou == null)
             {
@@ -76,6 +76,11 @@ public class HostRegistrationService(IEventNotificationService eventNotification
     public async Task<Result> RegisterHostAsync(HostConfiguration hostConfiguration)
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
+
+        if (hostConfiguration.Host == null)
+        {
+            throw new InvalidOperationException("Host information must be provided during the registration process.");
+        }
 
         var organizationResult = await GetOrganizationAsync(hostConfiguration.Subject.Organization);
 
@@ -148,6 +153,11 @@ public class HostRegistrationService(IEventNotificationService eventNotification
 
     private async Task<Result> UpdateComputerAsync(Computer computer, HostConfiguration hostConfiguration)
     {
+        if (hostConfiguration.Host == null)
+        {
+            throw new InvalidOperationException("Host information must be provided during the update process.");
+        }
+
         computer.SetName(hostConfiguration.Host.Name);
         computer.SetIpAddress(hostConfiguration.Host.IpAddress);
 
@@ -193,6 +203,12 @@ public class HostRegistrationService(IEventNotificationService eventNotification
         try
         {
             var parentUnit = parentOuResult.Value;
+
+            if (parentUnit == null)
+            {
+                throw new InvalidOperationException("Parent Organizational Unit not found.");
+            }
+
             var computer = parentUnit.Computers.FirstOrDefault(c => c.MacAddress == request.MacAddress);
 
             if (computer == null)
@@ -251,6 +267,12 @@ public class HostRegistrationService(IEventNotificationService eventNotification
         try
         {
             var parentUnit = parentOuResult.Value;
+
+            if (parentUnit == null)
+            {
+                throw new InvalidOperationException("Parent Organizational Unit not found.");
+            }
+
             var computer = parentUnit.Computers.FirstOrDefault(c => c.MacAddress == request.MacAddress);
 
             if (computer == null)

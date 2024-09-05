@@ -37,7 +37,10 @@ public class InMemoryNotificationService : INotificationService
 
     public Task<NotificationMessage> GetMessageById(string id)
     {
-        _notifications.TryGetValue(id, out var message);
+        if (!_notifications.TryGetValue(id, out var message))
+        {
+            throw new KeyNotFoundException($"Notification with ID '{id}' not found.");
+        }
 
         return Task.FromResult(message);
     }

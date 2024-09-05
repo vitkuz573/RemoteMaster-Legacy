@@ -11,19 +11,14 @@ namespace RemoteMaster.Server.Services;
 
 public class CountryProvider : ICountryProvider
 {
-    private readonly Lazy<List<Country>> _countries;
-
-    public CountryProvider()
-    {
-        _countries = new Lazy<List<Country>>(LoadCountries);
-    }
+    private readonly Lazy<List<Country>> _countries = new(LoadCountries);
 
     public Result<List<Country>> GetCountries()
     {
         return Result.Ok(_countries.Value);
     }
 
-    private List<Country> LoadCountries()
+    private static List<Country> LoadCountries()
     {
         return [.. CultureInfo.GetCultures(CultureTypes.SpecificCultures)
             .Select(culture => new RegionInfo(culture.Name))
