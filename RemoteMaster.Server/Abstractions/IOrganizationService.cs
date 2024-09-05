@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.DTOs;
 
@@ -14,4 +15,6 @@ public interface IOrganizationService
     Task<string> AddOrUpdateOrganizationAsync(OrganizationDto dto);
 
     Task<string> DeleteOrganizationAsync(Organization organization);
+
+    Task UpdateUserOrganizationsAsync(ApplicationUser user, List<Guid> selectedOrganizationIds);
 }

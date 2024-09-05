@@ -64,7 +64,7 @@ public partial class ManageUserRights
 
     private async Task LoadOrganizationsAsync()
     {
-        var organizations = await OrganizationRepository.GetAllAsync();
+        var organizations = await OrganizationService.GetAllOrganizationsAsync();
 
         if (organizations != null)
         {
@@ -160,31 +160,8 @@ public partial class ManageUserRights
         var selectedOrganizationIds = _organizations.Where(o => o.IsSelected).Select(o => o.Id).ToList();
         var selectedUnitIds = _organizations.SelectMany(o => o.OrganizationalUnits).Where(ou => ou.IsSelected).Select(ou => ou.Id).ToList();
 
-        foreach (var org in user.UserOrganizations.ToList().Where(org => !selectedOrganizationIds.Contains(org.OrganizationId)))
-        {
-            var organization = await OrganizationRepository.GetByIdAsync(org.OrganizationId);
-            organization?.RemoveUser(user.Id);
-        }
-
-        foreach (var unit in user.UserOrganizationalUnits.ToList().Where(unit => !selectedUnitIds.Contains(unit.OrganizationalUnitId)))
-        {
-            var organizationalUnit = await OrganizationalUnitRepository.GetByIdAsync(unit.OrganizationalUnitId);
-            organizationalUnit?.RemoveUser(user.Id);
-        }
-
-        foreach (var orgId in selectedOrganizationIds.Where(orgId => user.UserOrganizations.All(uo => uo.OrganizationId != orgId)))
-        {
-            var organization = await OrganizationRepository.GetByIdAsync(orgId);
-
-            organization?.AddUser(user.Id);
-        }
-
-        foreach (var unitId in selectedUnitIds.Where(unitId => user.UserOrganizationalUnits.All(uou => uou.OrganizationalUnitId != unitId)))
-        {
-            var unit = await OrganizationalUnitRepository.GetByIdAsync(unitId);
-
-            unit?.AddUser(user.Id);
-        }
+        await OrganizationService.UpdateUserOrganizationsAsync(user, selectedOrganizationIds);
+        await OrganizationalUnitService.UpdateUserOrganizationalUnitsAsync(user, selectedUnitIds);
     }
 
     private Task UpdateUserLockoutStatusAsync(ApplicationUser user)

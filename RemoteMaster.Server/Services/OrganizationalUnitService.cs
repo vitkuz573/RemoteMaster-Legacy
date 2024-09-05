@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
 using RemoteMaster.Server.DTOs;
 
@@ -108,5 +109,24 @@ public class OrganizationalUnitService(IOrganizationRepository organizationRepos
     public async Task<IEnumerable<OrganizationalUnit>> GetAllOrganizationalUnitsAsync()
     {
         return await organizationalUnitRepository.GetAllAsync();
+    }
+
+    public async Task UpdateUserOrganizationalUnitsAsync(ApplicationUser user, List<Guid> selectedUnitIds)
+    {
+        ArgumentNullException.ThrowIfNull(user);
+
+        foreach (var unit in user.UserOrganizationalUnits.ToList().Where(unit => !selectedUnitIds.Contains(unit.OrganizationalUnitId)))
+        {
+            var organizationalUnit = await organizationalUnitRepository.GetByIdAsync(unit.OrganizationalUnitId);
+            organizationalUnit?.RemoveUser(user.Id);
+        }
+
+        foreach (var unitId in selectedUnitIds.Where(unitId => user.UserOrganizationalUnits.All(uou => uou.OrganizationalUnitId != unitId)))
+        {
+            var unit = await organizationalUnitRepository.GetByIdAsync(unitId);
+            unit?.AddUser(user.Id);
+        }
+
+        await organizationalUnitRepository.SaveChangesAsync();
     }
 }

@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate.ValueObjects;
 using RemoteMaster.Server.DTOs;
@@ -55,5 +56,24 @@ public class OrganizationService(IOrganizationRepository organizationRepository)
         await organizationRepository.SaveChangesAsync();
 
         return "Organization deleted successfully.";
+    }
+
+    public async Task UpdateUserOrganizationsAsync(ApplicationUser user, List<Guid> selectedOrganizationIds)
+    {
+        ArgumentNullException.ThrowIfNull(user);
+
+        foreach (var org in user.UserOrganizations.ToList().Where(org => !selectedOrganizationIds.Contains(org.OrganizationId)))
+        {
+            var organization = await organizationRepository.GetByIdAsync(org.OrganizationId);
+            organization?.RemoveUser(user.Id);
+        }
+
+        foreach (var orgId in selectedOrganizationIds.Where(orgId => user.UserOrganizations.All(uo => uo.OrganizationId != orgId)))
+        {
+            var organization = await organizationRepository.GetByIdAsync(orgId);
+            organization?.AddUser(user.Id);
+        }
+
+        await organizationRepository.SaveChangesAsync();
     }
 }
