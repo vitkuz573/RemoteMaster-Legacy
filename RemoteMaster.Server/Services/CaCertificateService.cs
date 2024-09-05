@@ -135,7 +135,7 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
         }
     }
 
-    private static Result AddCertificateToStore(X509Certificate2 cert, StoreName storeName, StoreLocation storeLocation)
+    private static void AddCertificateToStore(X509Certificate2 cert, StoreName storeName, StoreLocation storeLocation)
     {
         try
         {
@@ -149,8 +149,8 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
             if (isCertificateAlreadyAdded)
             {
                 Log.Information("Certificate with thumbprint {Thumbprint} is already in the {StoreName} store in {StoreLocation} location.", cert.Thumbprint, storeName, storeLocation);
-                
-                return Result.Ok();
+
+                return;
             }
 
             store.Close();
@@ -158,14 +158,10 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
             store.Add(cert);
 
             Log.Information("Certificate with thumbprint {Thumbprint} added to the {StoreName} store in {StoreLocation} location.", cert.Thumbprint, storeName, storeLocation);
-            
-            return Result.Ok();
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Failed to add certificate to store.");
-            
-            return Result.Fail("Failed to add certificate to store.").WithError(ex.Message);
         }
     }
 

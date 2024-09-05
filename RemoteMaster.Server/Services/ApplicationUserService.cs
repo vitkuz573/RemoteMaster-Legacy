@@ -14,7 +14,13 @@ public class ApplicationUserService(IApplicationUserRepository applicationUserRe
         ArgumentNullException.ThrowIfNull(user);
 
         var httpContext = httpContextAccessor.HttpContext;
-        var ipAddress = httpContext.Connection.RemoteIpAddress.ToString() ?? "Unknown IP";
+
+        if (httpContext == null)
+        {
+            throw new InvalidOperationException("HttpContext is not available.");
+        }
+
+        var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
 
         await applicationUserRepository.AddSignInEntryAsync(user.Id, isSuccessful, ipAddress);
         await applicationUserRepository.SaveChangesAsync();

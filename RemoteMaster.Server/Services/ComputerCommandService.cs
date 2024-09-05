@@ -24,7 +24,7 @@ public class ComputerCommandService(IJSRuntime jsRuntime, [FromKeyedServices("Re
 
             foreach (var (computer, connection) in hosts)
             {
-                var result = await resiliencePipeline.ExecuteAsync(async cancellationToken =>
+                var result = await resiliencePipeline.ExecuteAsync(async _ =>
                 {
                     if (connection is not { State: HubConnectionState.Connected })
                     {

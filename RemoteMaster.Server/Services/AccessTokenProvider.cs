@@ -35,7 +35,7 @@ public class AccessTokenProvider(ITokenService tokenService, ITokenStorageServic
             {
                 var tokenDataResult = await tokenService.GenerateTokensAsync(userId, refreshTokenResult.Value);
 
-                if (tokenDataResult.IsSuccess && tokenDataResult.Value is not null)
+                if (tokenDataResult is { IsSuccess: true, Value: not null })
                 {
                     var tokenData = tokenDataResult.Value;
 
