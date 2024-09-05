@@ -114,11 +114,6 @@ public class OrganizationalUnit : IAggregateRoot
         newUnit._computers.Add(computer);
     }
 
-    public void ClearComputers()
-    {
-        _computers.Clear();
-    }
-
     public void AddUser(string userId)
     {
         if (_userOrganizationalUnits.Any(u => u.UserId == userId))
