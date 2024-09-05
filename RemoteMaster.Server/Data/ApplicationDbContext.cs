@@ -43,7 +43,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         optionsBuilder.ConfigureWarnings(warnings => warnings.Throw(RelationalEventId.MultipleCollectionIncludeWarning));
 
-        optionsBuilder.EnableSensitiveDataLogging();
         optionsBuilder.EnableDetailedErrors();
     }
 
