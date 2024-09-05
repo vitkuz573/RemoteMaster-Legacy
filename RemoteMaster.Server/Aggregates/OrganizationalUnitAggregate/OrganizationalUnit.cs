@@ -102,6 +102,8 @@ public class OrganizationalUnit : IAggregateRoot
 
     public void MoveComputerToUnit(Guid computerId, OrganizationalUnit newUnit)
     {
+        ArgumentNullException.ThrowIfNull(newUnit);
+
         var computer = _computers.SingleOrDefault(c => c.Id == computerId);
 
         if (computer == null)

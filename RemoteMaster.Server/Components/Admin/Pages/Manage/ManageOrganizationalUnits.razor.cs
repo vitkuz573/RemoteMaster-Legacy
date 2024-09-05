@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
 using RemoteMaster.Server.Components.Admin.Dialogs;
+using RemoteMaster.Server.DTOs;
 
 namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
 
@@ -30,60 +31,15 @@ public partial class ManageOrganizationalUnits
 
     private async Task OnValidSubmitAsync()
     {
-        if (Input.OrganizationId == Guid.Empty)
+        var dto = new OrganizationalUnitDto
         {
-            _message = "Error: Please select a valid organization.";
+            Id = Input.Id,
+            Name = Input.Name,
+            OrganizationId = Input.OrganizationId,
+            ParentId = Input.ParentId
+        };
 
-            return;
-        }
-
-        var organization = await OrganizationRepository.GetByIdAsync(Input.OrganizationId);
-        
-        if (organization == null)
-        {
-            _message = "Error: Organization not found.";
-            return;
-        }
-
-        OrganizationalUnit? parent = null;
-
-        if (Input.ParentId.HasValue)
-        {
-            parent = await OrganizationalUnitRepository.GetByIdAsync(Input.ParentId.Value);
-        }
-
-        if (Input.Id.HasValue)
-        {
-            var organizationalUnit = await OrganizationalUnitRepository.GetByIdAsync(Input.Id.Value);
-            
-            if (organizationalUnit == null)
-            {
-                _message = "Error: Organizational unit not found.";
-                return;
-            }
-
-            organizationalUnit.SetName(Input.Name);
-
-            if (parent != null)
-            {
-                organizationalUnit.SetParent(parent);
-            }
-
-            await OrganizationalUnitRepository.UpdateAsync(organizationalUnit);
-
-            _message = "Organizational unit updated successfully.";
-        }
-        else
-        {
-            var newUnit = new OrganizationalUnit(Input.Name, organization, parent);
-            organization.AddOrganizationalUnit(newUnit);
-
-            await OrganizationalUnitRepository.AddAsync(newUnit);
-
-            _message = "Organizational unit created successfully.";
-        }
-
-        await OrganizationalUnitRepository.SaveChangesAsync();
+        _message = await OrganizationalUnitService.AddOrUpdateOrganizationalUnitAsync(dto);
 
         await OnOrganizationalUnitSaved(_message);
     }
@@ -98,17 +54,17 @@ public partial class ManageOrganizationalUnits
 
     private async Task LoadOrganizationsAsync()
     {
-        var organizations = await OrganizationRepository.GetAllAsync();
+        var organizations = await OrganizationService.GetAllOrganizationsAsync();
 
         _organizations = organizations.ToList();
     }
 
     private async Task LoadOrganizationalUnitsAsync()
     {
-        var organizationalUnits = await OrganizationalUnitRepository.GetAllAsync();
+        var organizationalUnits = await OrganizationalUnitService.GetAllOrganizationalUnitsAsync();
         
         _organizationalUnits = organizationalUnits.ToList();
-        
+
         FilterOrganizationalUnits();
     }
 
@@ -128,29 +84,9 @@ public partial class ManageOrganizationalUnits
 
     private async Task DeleteOrganizationalUnit(OrganizationalUnit organizationalUnit)
     {
-        var organization = await OrganizationRepository.GetByIdAsync(organizationalUnit.OrganizationId);
-
-        if (organization == null)
-        {
-            _message = "Error: Organization not found.";
-            
-            return;
-        }
-
-        try
-        {
-            organization.RemoveOrganizationalUnit(organizationalUnit);
-            
-            await OrganizationRepository.UpdateAsync(organization);
-            await OrganizationalUnitRepository.SaveChangesAsync();
-
-            await LoadOrganizationalUnitsAsync();
-            _message = "Organizational unit deleted successfully.";
-        }
-        catch (InvalidOperationException ex)
-        {
-            _message = $"Error: {ex.Message}";
-        }
+        _message = await OrganizationalUnitService.DeleteOrganizationalUnitAsync(organizationalUnit);
+        
+        await LoadOrganizationalUnitsAsync();
     }
 
     private void EditOrganizationalUnit(OrganizationalUnit organizationalUnit)

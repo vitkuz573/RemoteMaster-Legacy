@@ -2,8 +2,11 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using RemoteMaster.Server.Aggregates.OrganizationAggregate;
+
 namespace RemoteMaster.Server.Abstractions;
 
 public interface IOrganizationService
 {
+    Task<IEnumerable<Organization>> GetAllOrganizationsAsync();
 }

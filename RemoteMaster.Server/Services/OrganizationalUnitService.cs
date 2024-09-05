@@ -3,10 +3,12 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
+using RemoteMaster.Server.DTOs;
 
 namespace RemoteMaster.Server.Services;
 
-public class OrganizationalUnitService(IOrganizationalUnitRepository organizationalUnitRepository) : IOrganizationalUnitService
+public class OrganizationalUnitService(IOrganizationRepository organizationRepository, IOrganizationalUnitRepository organizationalUnitRepository) : IOrganizationalUnitService
 {
     public async Task<string[]> GetFullPathAsync(Guid organizationalUnitId)
     {
@@ -26,5 +28,85 @@ public class OrganizationalUnitService(IOrganizationalUnitRepository organizatio
         }
 
         return [.. path];
+    }
+
+    public async Task<string> AddOrUpdateOrganizationalUnitAsync(OrganizationalUnitDto dto)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+
+        var organization = await organizationRepository.GetByIdAsync(dto.OrganizationId);
+
+        if (organization == null)
+        {
+            return "Error: Organization not found.";
+        }
+
+        OrganizationalUnit? parent = null;
+
+        if (dto.ParentId.HasValue)
+        {
+            parent = await organizationalUnitRepository.GetByIdAsync(dto.ParentId.Value);
+        }
+
+        if (dto.Id.HasValue)
+        {
+            var organizationalUnit = await organizationalUnitRepository.GetByIdAsync(dto.Id.Value);
+
+            if (organizationalUnit == null)
+            {
+                return "Error: Organizational unit not found.";
+            }
+
+            organizationalUnit.SetName(dto.Name);
+
+            if (parent != null)
+            {
+                organizationalUnit.SetParent(parent);
+            }
+
+            await organizationalUnitRepository.UpdateAsync(organizationalUnit);
+        }
+        else
+        {
+            var newUnit = new OrganizationalUnit(dto.Name, organization, parent);
+            organization.AddOrganizationalUnit(newUnit);
+
+            await organizationalUnitRepository.AddAsync(newUnit);
+        }
+
+        await organizationalUnitRepository.SaveChangesAsync();
+
+        return dto.Id.HasValue ? "Organizational unit updated successfully." : "Organizational unit created successfully.";
+    }
+
+    public async Task<string> DeleteOrganizationalUnitAsync(OrganizationalUnit organizationalUnit)
+    {
+        ArgumentNullException.ThrowIfNull(organizationalUnit);
+
+        var organization = await organizationRepository.GetByIdAsync(organizationalUnit.OrganizationId);
+        
+        if (organization == null)
+        {
+            return "Error: Organization not found.";
+        }
+
+        try
+        {
+            organization.RemoveOrganizationalUnit(organizationalUnit);
+
+            await organizationRepository.UpdateAsync(organization);
+            await organizationalUnitRepository.SaveChangesAsync();
+
+            return "Organizational unit deleted successfully.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            return $"Error: {ex.Message}";
+        }
+    }
+
+    public async Task<IEnumerable<OrganizationalUnit>> GetAllOrganizationalUnitsAsync()
+    {
+        return await organizationalUnitRepository.GetAllAsync();
     }
 }
