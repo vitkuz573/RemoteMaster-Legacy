@@ -15,30 +15,25 @@ public class UnifiedTreeItemData : TreeItemData<object>
         ArgumentNullException.ThrowIfNull(node);
 
         Value = node;
+
+        Initialize(node);
+    }
+
+    private void Initialize(object node)
+    {
         Children = [];
 
         switch (node)
         {
             case Organization organization:
                 Text = organization.Name;
-                if (organization.OrganizationalUnits != null)
-                {
-                    Children.AddRange(organization.OrganizationalUnits.Select(unit => new UnifiedTreeItemData(unit) as TreeItemData<object>));
-                }
+                Children.AddRange(organization.OrganizationalUnits.Select(unit => new UnifiedTreeItemData(unit) as TreeItemData<object>));
                 break;
 
             case OrganizationalUnit unit:
                 Text = unit.Name;
-                
-                if (unit.Computers != null)
-                {
-                    Children.AddRange(unit.Computers.Select(computer => new UnifiedTreeItemData(computer) as TreeItemData<object>));
-                }
-                
-                if (unit.Children != null)
-                {
-                    Children.AddRange(unit.Children.Select(child => new UnifiedTreeItemData(child) as TreeItemData<object>));
-                }
+                Children.AddRange(unit.Computers.Select(computer => new UnifiedTreeItemData(computer) as TreeItemData<object>));
+                Children.AddRange(unit.Children.Select(child => new UnifiedTreeItemData(child) as TreeItemData<object>));
                 break;
 
             case Computer computer:
