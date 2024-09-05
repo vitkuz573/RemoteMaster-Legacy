@@ -88,7 +88,7 @@ public class OrganizationalUnit : IAggregateRoot
     public void AddComputer(string name, string ipAddress, string macAddress)
     {
         var computer = new Computer(name, ipAddress, macAddress);
-        computer.SetOrganizationalUnit(this);
+        computer.SetOrganizationalUnit(Id);
 
         _computers.Add(computer);
     }
@@ -110,7 +110,7 @@ public class OrganizationalUnit : IAggregateRoot
         }
 
         _computers.Remove(computer);
-        computer.SetParent(newUnit);
+        computer.SetOrganizationalUnit(newUnit.Id);
         newUnit._computers.Add(computer);
     }
 

@@ -29,16 +29,9 @@ public class Computer
 
     public OrganizationalUnit Parent { get; private set; }
 
-    internal void SetParent(OrganizationalUnit parent)
+    internal void SetOrganizationalUnit(Guid organizationalUnitId)
     {
-        Parent = parent ?? throw new ArgumentNullException(nameof(parent));
-        ParentId = parent.Id;
-    }
-
-    internal void SetOrganizationalUnit(OrganizationalUnit organizationalUnit)
-    {
-        Parent = organizationalUnit ?? throw new ArgumentNullException(nameof(organizationalUnit));
-        ParentId = organizationalUnit.Id;
+        ParentId = organizationalUnitId;
     }
 
     public void SetThumbnail(byte[]? thumbnail)
