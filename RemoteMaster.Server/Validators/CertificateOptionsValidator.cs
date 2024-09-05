@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.Extensions.Options;
-using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Options;
 using RemoteMaster.Shared.Models;
 
@@ -49,7 +48,7 @@ public class CertificateOptionsValidator : IValidateOptions<CertificateOptions>
             return ValidateOptionsResult.Fail("Organization is required.");
         }
 
-        if (subjectOptions.OrganizationalUnit == null || subjectOptions.OrganizationalUnit.Length == 0)
+        if (subjectOptions.OrganizationalUnit.Length == 0)
         {
             return ValidateOptionsResult.Fail("At least one OrganizationalUnit is required.");
         }

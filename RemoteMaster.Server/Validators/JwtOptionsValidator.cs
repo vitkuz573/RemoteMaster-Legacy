@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.Extensions.Options;
-using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Options;
 
 namespace RemoteMaster.Server.Validators;

@@ -23,11 +23,6 @@ public class TelegramBotOptionsValidator : IValidateOptions<TelegramBotOptions>
             return ValidateOptionsResult.Fail("BotToken is required when Telegram bot is enabled.");
         }
 
-        if (options.ChatIds == null || options.ChatIds.Count == 0)
-        {
-            return ValidateOptionsResult.Fail("At least one chat ID is required when Telegram bot is enabled.");
-        }
-
-        return ValidateOptionsResult.Success;
+        return options.ChatIds.Count == 0 ? ValidateOptionsResult.Fail("At least one chat ID is required when Telegram bot is enabled.") : ValidateOptionsResult.Success;
     }
 }

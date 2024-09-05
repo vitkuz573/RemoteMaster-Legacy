@@ -18,7 +18,7 @@ public class SubjectOptionsValidator : IValidateOptions<SubjectOptions>
             return ValidateOptionsResult.Fail("Organization is required.");
         }
 
-        if (options.OrganizationalUnit == null || options.OrganizationalUnit.Length == 0)
+        if (options.OrganizationalUnit.Length == 0)
         {
             return ValidateOptionsResult.Fail("At least one OrganizationalUnit is required.");
         }
