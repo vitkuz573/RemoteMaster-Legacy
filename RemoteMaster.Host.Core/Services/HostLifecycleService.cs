@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Abstractions;
+using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
 using Serilog;
 
@@ -95,9 +96,10 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         }
     }
 
-    public async Task IssueCertificateAsync(HostConfiguration hostConfiguration)
+    public async Task IssueCertificateAsync(HostConfiguration hostConfiguration, AddressDto organizationAddress)
     {
         ArgumentNullException.ThrowIfNull(hostConfiguration);
+        ArgumentNullException.ThrowIfNull(organizationAddress);
 
         RSA? rsaKeyPair = null;
 
@@ -108,7 +110,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
                 hostConfiguration.Host!.IpAddress
             };
 
-            var distinguishedName = subjectService.GetDistinguishedName(hostConfiguration.Host.Name);
+            var distinguishedName = subjectService.GetDistinguishedName(hostConfiguration.Host.Name, organizationAddress.Locality, organizationAddress.State, organizationAddress.Country);
 
             Log.Information("Removing existing certificates...");
 
@@ -358,5 +360,31 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         store.Close();
 
         Log.Information("Finished removing existing certificates.");
+    }
+
+    public async Task<AddressDto> GetOrganizationAddressAsync(HostConfiguration hostConfiguration)
+    {
+        ArgumentNullException.ThrowIfNull(hostConfiguration);
+
+        try
+        {
+            Log.Information("Requesting organization address for organization: {Organization}", hostConfiguration.Subject.Organization);
+
+            var organizationAddress = await apiService.GetOrganizationAddressAsync(hostConfiguration.Subject.Organization);
+
+            if (organizationAddress == null)
+            {
+                throw new InvalidOperationException($"Failed to retrieve address for organization: {hostConfiguration.Subject.Organization}");
+            }
+
+            Log.Information("Successfully retrieved address for organization: {Organization}", hostConfiguration.Subject.Organization);
+
+            return organizationAddress;
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Error retrieving organization address: {Message}", ex.Message);
+            throw;
+        }
     }
 }

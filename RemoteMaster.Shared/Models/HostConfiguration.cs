@@ -13,7 +13,7 @@ public class HostConfiguration
     public string? Server { get; set; }
 
     [JsonPropertyName("subject")]
-    public SubjectOptions Subject { get; set; }
+    public SubjectDto Subject { get; set; }
 
     [JsonPropertyName("host")]
     public ComputerDto? Host { get; set; }

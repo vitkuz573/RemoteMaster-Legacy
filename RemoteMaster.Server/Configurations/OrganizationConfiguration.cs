@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
+using RemoteMaster.Server.Aggregates.OrganizationAggregate.ValueObjects;
 
 namespace RemoteMaster.Server.Configurations;
 
@@ -41,9 +42,10 @@ public class OrganizationConfiguration : IEntityTypeConfiguration<Organization>
 
             address.Property(a => a.Country)
                 .IsRequired()
-                .HasMaxLength(100)
+                .HasMaxLength(2)
                 .HasColumnName("Country")
-                .HasColumnOrder(4);
+                .HasColumnOrder(4)
+                .HasConversion(countryCode => countryCode.Code, code => new CountryCode(code));
 
             address.HasIndex(a => new { a.Locality, a.State, a.Country });
         });

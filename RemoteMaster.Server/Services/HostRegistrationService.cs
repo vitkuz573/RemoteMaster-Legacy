@@ -224,9 +224,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
                 return Result.Fail(errorMessage);
             }
 
-            parentUnit.RemoveComputer(computer.Id);
-            
-            await organizationRepository.UpdateAsync(organizationResult.Value);
+            await organizationRepository.RemoveComputerAsync(organizationResult.Value.Id, parentUnit.Id, computer.Id);
             await organizationRepository.SaveChangesAsync();
 
             var successMessage = $"Host unregistered: {request.Name} (`{request.MacAddress}`) from organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' in organization '{request.Organization}'";

@@ -17,7 +17,9 @@ public class CertificateManagementService(IHostConfigurationService hostConfigur
 
         if (!IsCertificateValid())
         {
-            await hostLifecycleService.IssueCertificateAsync(hostConfiguration);
+            var organizationAddress = await hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration);
+
+            await hostLifecycleService.IssueCertificateAsync(hostConfiguration, organizationAddress);
         }
     }
 

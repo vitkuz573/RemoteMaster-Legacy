@@ -5,6 +5,7 @@
 using System.Net.Http.Json;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Abstractions;
+using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
 using Serilog;
 
@@ -242,5 +243,14 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         var response = await _client.PostAsJsonAsync("/api/Notification", message);
 
         await ProcessSimpleResponse(response);
+    }
+
+    public async Task<AddressDto?> GetOrganizationAddressAsync(string organizationName)
+    {
+        await EnsureClientInitializedAsync();
+
+        var response = await _client.GetAsync($"/api/Organization/address?organizationName={organizationName}");
+
+        return await ProcessResponse<AddressDto>(response);
     }
 }

@@ -47,6 +47,7 @@ public class HostRegistrationMonitorService : IHostedService
                 if (isHostRegistered)
                 {
                     Log.Information("Updating host information and renewing certificate due to configuration change.");
+                    
                     await _hostLifecycleService.UpdateHostInformationAsync();
 
                     Log.Information("Host information updated and certificate renewed.");
@@ -54,10 +55,13 @@ public class HostRegistrationMonitorService : IHostedService
                 else
                 {
                     Log.Warning("Host is not registered and configuration has changed. Registering and renewing certificate...");
+                    
                     await _hostLifecycleService.RegisterAsync();
                 }
 
-                await _hostLifecycleService.IssueCertificateAsync(hostConfiguration);
+                var organizationAddress = await _hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration);
+
+                await _hostLifecycleService.IssueCertificateAsync(hostConfiguration, organizationAddress);
                 await RestartUserInstance();
             }
             else if (!isHostRegistered)
@@ -65,7 +69,10 @@ public class HostRegistrationMonitorService : IHostedService
                 Log.Warning("Host is not registered and configuration has not changed. Registering and issuing a new certificate...");
 
                 await _hostLifecycleService.RegisterAsync();
-                await _hostLifecycleService.IssueCertificateAsync(hostConfiguration);
+
+                var organizationAddress = await _hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration);
+
+                await _hostLifecycleService.IssueCertificateAsync(hostConfiguration, organizationAddress);
                 await RestartUserInstance();
             }
         }

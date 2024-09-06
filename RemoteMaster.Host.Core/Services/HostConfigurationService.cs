@@ -42,9 +42,9 @@ public class HostConfigurationService : IHostConfigurationService
             throw new ValidationException("Server must not be empty.");
         }
 
-        if (config.Subject == null || string.IsNullOrWhiteSpace(config.Subject.Organization) || config.Subject.OrganizationalUnit == null || config.Subject.OrganizationalUnit.Length == 0 || config.Subject.OrganizationalUnit.Any(string.IsNullOrWhiteSpace) || string.IsNullOrWhiteSpace(config.Subject.Locality) || string.IsNullOrWhiteSpace(config.Subject.State) || string.IsNullOrWhiteSpace(config.Subject.Country))
+        if (config.Subject == null || string.IsNullOrWhiteSpace(config.Subject.Organization) || config.Subject.OrganizationalUnit == null || config.Subject.OrganizationalUnit.Length == 0 || config.Subject.OrganizationalUnit.Any(string.IsNullOrWhiteSpace))
         {
-            throw new ValidationException("Subject options must be fully specified.");
+            throw new ValidationException("Subject options must include a valid organization and organizational unit.");
         }
 
         switch (isInternal)

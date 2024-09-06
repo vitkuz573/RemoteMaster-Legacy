@@ -316,8 +316,10 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         hostConfiguration.Subject.Organization = hostMoveRequest.NewOrganization;
         hostConfiguration.Subject.OrganizationalUnit = hostMoveRequest.NewOrganizationalUnit;
 
+        var organizationAddress = await hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration);
+
         await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
-        await hostLifecycleService.IssueCertificateAsync(hostConfiguration);
+        await hostLifecycleService.IssueCertificateAsync(hostConfiguration, organizationAddress);
     }
 
     [Authorize(Policy = "RenewCertificatePolicy")]
@@ -325,7 +327,9 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     {
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
 
-        await hostLifecycleService.IssueCertificateAsync(hostConfiguration);
+        var organizationAddress = await hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration);
+
+        await hostLifecycleService.IssueCertificateAsync(hostConfiguration, organizationAddress);
     }
 
     public string? GetCertificateSerialNumber()

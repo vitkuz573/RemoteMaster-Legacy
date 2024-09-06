@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Options;
+using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Controllers.V1;
@@ -99,13 +100,10 @@ public class HostConfigurationController(IOptions<ApplicationSettings> options) 
         var config = new HostConfiguration
         {
             Server = request.Server,
-            Subject = new SubjectOptions
+            Subject = new SubjectDto
             {
                 Organization = request.Organization,
-                OrganizationalUnit = [request.OrganizationalUnit],
-                Locality = request.Locality,
-                State = request.State,
-                Country = request.Country
+                OrganizationalUnit = [request.OrganizationalUnit]
             }
         };
 

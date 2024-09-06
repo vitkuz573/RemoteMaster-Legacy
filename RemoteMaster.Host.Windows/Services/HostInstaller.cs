@@ -26,8 +26,7 @@ public class HostInstaller(IHostInformationService hostInformationService, IHost
             Log.Information("Host Name: {HostName}, IP Address: {IPAddress}, MAC Address: {MacAddress}", hostInformation.Name, hostInformation.IpAddress, hostInformation.MacAddress);
 
             var organizationalUnits = string.Join(", ", hostConfiguration.Subject.OrganizationalUnit.Select(ou => $"OU={ou}"));
-
-            Log.Information("Distinguished Name: CN={CommonName}, O={Organization}, {OrganizationalUnits}, L={Locality}, ST={State}, C={Country}", hostInformation.Name, hostConfiguration.Subject.Organization, organizationalUnits, hostConfiguration.Subject.Locality, hostConfiguration.Subject.State, hostConfiguration.Subject.Country);
+            Log.Information("Distinguished Name: CN={CommonName}, O={Organization}, {OrganizationalUnits}", hostInformation.Name, hostConfiguration.Subject.Organization, organizationalUnits);
 
             var hostService = serviceFactory.GetService("RCHost");
 
@@ -50,7 +49,10 @@ public class HostInstaller(IHostInformationService hostInformationService, IHost
 
             await hostLifecycleService.RegisterAsync();
             await hostLifecycleService.GetCaCertificateAsync();
-            await hostLifecycleService.IssueCertificateAsync(hostConfiguration);
+
+            var organizationAddress = await hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration);
+
+            await hostLifecycleService.IssueCertificateAsync(hostConfiguration, organizationAddress);
 
             hostService.Start();
         }

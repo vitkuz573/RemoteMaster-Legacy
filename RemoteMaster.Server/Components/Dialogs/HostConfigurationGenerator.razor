@@ -1,5 +1,4 @@
 ﻿@using Microsoft.AspNetCore.Identity
-@using RemoteMaster.Server.Data
 @using RemoteMaster.Shared.Abstractions
 @using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Server.Aggregates.ApplicationUserAggregate
@@ -27,18 +26,11 @@
                                 <MudSelectItem Value="@organization.Name">@organization.Name</MudSelectItem>
                             }
                         </MudSelect>
+
                         <MudSelect Label="Organizational Unit" Value="_selectedOrganizationalUnit" T="string?" ValueChanged="OrganizationalUnitChanged" Dense Disabled="@string.IsNullOrEmpty(_selectedOrganization)">
                             @foreach (var unit in _organizationalUnits)
                             {
                                 <MudSelectItem Value="@unit.Name">@unit.Name</MudSelectItem>
-                            }
-                        </MudSelect>
-                        <MudTextField Label="Locality" @bind-Value="_model.Subject.Locality" For="@(() => _model.Subject.Locality)" ReadOnly="true" />
-                        <MudTextField Label="State" @bind-Value="_model.Subject.State" For="@(() => _model.Subject.State)" ReadOnly="true" />
-                        <MudSelect T="string" Label="Country" @bind-Value="_model.Subject.Country" Dense="true" ReadOnly="true">
-                            @foreach (var country in _countries)
-                            {
-                                <MudSelectItem T="string" Value="@country.Code">@country.Name</MudSelectItem>
                             }
                         </MudSelect>
                     </MudExpansionPanel>
