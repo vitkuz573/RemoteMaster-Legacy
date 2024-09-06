@@ -310,14 +310,17 @@ public class ControlHubTests
 
         var hostConfiguration = new HostConfiguration
         {
-            Subject = new SubjectOptions
+            Subject = new SubjectDto
             {
                 Organization = "OldOrg",
                 OrganizationalUnit = ["OldOU"]
             }
         };
 
+        var organizationAddress = new AddressDto("TestLocality", "TestState", "US");
+
         _mockHostConfigurationService.Setup(h => h.LoadConfigurationAsync(It.IsAny<bool>())).ReturnsAsync(hostConfiguration);
+        _mockHostLifecycleService.Setup(h => h.GetOrganizationAddressAsync(It.IsAny<HostConfiguration>())).ReturnsAsync(organizationAddress);
 
         // Act
         await _controlHub.MoveHost(hostMoveRequest);
@@ -327,7 +330,8 @@ public class ControlHubTests
             hc.Subject.Organization == hostMoveRequest.NewOrganization &&
             hc.Subject.OrganizationalUnit.SequenceEqual(hostMoveRequest.NewOrganizationalUnit)
         )), Times.Once);
-        _mockHostLifecycleService.Verify(h => h.IssueCertificateAsync(hostConfiguration), Times.Once);
+
+        _mockHostLifecycleService.Verify(h => h.IssueCertificateAsync(hostConfiguration, organizationAddress), Times.Once);
     }
 
     [Fact]
@@ -336,20 +340,23 @@ public class ControlHubTests
         // Arrange
         var hostConfiguration = new HostConfiguration
         {
-            Subject = new SubjectOptions
+            Subject = new SubjectDto
             {
                 Organization = "Org",
                 OrganizationalUnit = ["OU"]
             }
         };
 
+        var organizationAddress = new AddressDto("TestLocality", "TestState", "US");
+
         _mockHostConfigurationService.Setup(h => h.LoadConfigurationAsync(It.IsAny<bool>())).ReturnsAsync(hostConfiguration);
+        _mockHostLifecycleService.Setup(h => h.GetOrganizationAddressAsync(It.IsAny<HostConfiguration>())).ReturnsAsync(organizationAddress);
 
         // Act
         await _controlHub.RenewCertificate();
 
         // Assert
-        _mockHostLifecycleService.Verify(h => h.IssueCertificateAsync(hostConfiguration), Times.Once);
+        _mockHostLifecycleService.Verify(h => h.IssueCertificateAsync(hostConfiguration, organizationAddress), Times.Once);
     }
 
     [Fact]
