@@ -111,16 +111,16 @@ public class OrganizationalUnitService(IOrganizationRepository organizationRepos
         return await organizationalUnitRepository.GetAllAsync();
     }
 
-    public async Task UpdateUserOrganizationalUnitsAsync(ApplicationUser user, List<Guid> selectedUnitIds)
+    public async Task UpdateUserOrganizationalUnitsAsync(ApplicationUser user, List<Guid> unitIds)
     {
         ArgumentNullException.ThrowIfNull(user);
 
         var currentUnitIds = user.UserOrganizationalUnits.Select(uou => uou.OrganizationalUnitId).ToHashSet();
         
-        var organizationalUnits = await organizationalUnitRepository.GetByIdsAsync(selectedUnitIds);
+        var organizationalUnits = await organizationalUnitRepository.GetByIdsAsync(unitIds);
 
-        var unitsToRemove = currentUnitIds.Except(selectedUnitIds).ToList();
-        var unitsToAdd = selectedUnitIds.Except(currentUnitIds).ToList();
+        var unitsToRemove = currentUnitIds.Except(unitIds).ToList();
+        var unitsToAdd = unitIds.Except(currentUnitIds).ToList();
 
         if (unitsToRemove.Any())
         {

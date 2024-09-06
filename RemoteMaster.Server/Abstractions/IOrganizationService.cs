@@ -16,5 +16,5 @@ public interface IOrganizationService
 
     Task<string> DeleteOrganizationAsync(Organization organization);
 
-    Task UpdateUserOrganizationsAsync(ApplicationUser user, List<Guid> selectedOrganizationIds);
+    Task UpdateUserOrganizationsAsync(ApplicationUser user, List<Guid> organizationIds);
 }

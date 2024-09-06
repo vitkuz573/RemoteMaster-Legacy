@@ -58,16 +58,16 @@ public class OrganizationService(IOrganizationRepository organizationRepository)
         return "Organization deleted successfully.";
     }
 
-    public async Task UpdateUserOrganizationsAsync(ApplicationUser user, List<Guid> selectedOrganizationIds)
+    public async Task UpdateUserOrganizationsAsync(ApplicationUser user, List<Guid> organizationIds)
     {
         ArgumentNullException.ThrowIfNull(user);
 
         var currentOrganizationIds = user.UserOrganizations.Select(uo => uo.OrganizationId).ToHashSet();
 
-        var organizations = await organizationRepository.GetByIdsAsync(selectedOrganizationIds);
+        var organizations = await organizationRepository.GetByIdsAsync(organizationIds);
 
-        var organizationsToRemove = currentOrganizationIds.Except(selectedOrganizationIds).ToList();
-        var organizationsToAdd = selectedOrganizationIds.Except(currentOrganizationIds).ToList();
+        var organizationsToRemove = currentOrganizationIds.Except(organizationIds).ToList();
+        var organizationsToAdd = organizationIds.Except(currentOrganizationIds).ToList();
 
         if (organizationsToRemove.Any())
         {

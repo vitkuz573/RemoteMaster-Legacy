@@ -18,5 +18,5 @@ public interface IOrganizationalUnitService
 
     Task<IEnumerable<OrganizationalUnit>> GetAllOrganizationalUnitsAsync();
 
-    Task UpdateUserOrganizationalUnitsAsync(ApplicationUser user, List<Guid> selectedUnitIds);
+    Task UpdateUserOrganizationalUnitsAsync(ApplicationUser user, List<Guid> unitIds);
 }
