@@ -40,28 +40,52 @@ public class Organization : IAggregateRoot
         Address = address ?? throw new ArgumentNullException(nameof(address));
     }
 
-    public void AddOrganizationalUnit(OrganizationalUnit unit)
+    public void AddOrganizationalUnit(string unitName, Guid? parentId = null)
     {
-        ArgumentNullException.ThrowIfNull(unit);
+        OrganizationalUnit? parentUnit = null;
 
-        if (_organizationalUnits.Any(u => u.Name == unit.Name))
+        if (parentId.HasValue)
         {
-            throw new InvalidOperationException("Organizational unit with the same name already exists.");
+            parentUnit = _organizationalUnits.SingleOrDefault(u => u.Id == parentId.Value);
+
+            if (parentUnit == null)
+            {
+                throw new InvalidOperationException("Parent unit not found.");
+            }
         }
+
+        var unit = new OrganizationalUnit(unitName, parentUnit);
 
         unit.AssignToOrganization(this);
 
         _organizationalUnits.Add(unit);
     }
 
-    public void RemoveOrganizationalUnit(OrganizationalUnit unit)
+    public void RemoveOrganizationalUnit(Guid unitId)
     {
-        if (!_organizationalUnits.Contains(unit))
+        var unit = _organizationalUnits.SingleOrDefault(u => u.Id == unitId);
+
+        if (unit == null)
         {
             throw new InvalidOperationException("Organizational unit not found in this organization.");
         }
 
+        RemoveChildUnits(unit);
+
         _organizationalUnits.Remove(unit);
+    }
+
+    private void RemoveChildUnits(OrganizationalUnit unit)
+    {
+        foreach (var child in unit.Children.ToList())
+        {
+            RemoveChildUnits(child);
+
+            _organizationalUnits.Remove(child);
+        }
+
+        unit.ClearComputers();
+        unit.ClearUsers();
     }
 
     public void AddUser(string userId)

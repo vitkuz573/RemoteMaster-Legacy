@@ -75,8 +75,7 @@ public class OrganizationalUnitService(IOrganizationRepository organizationRepos
         }
         else
         {
-            var newUnit = new OrganizationalUnit(dto.Name, organization, parent);
-            organization.AddOrganizationalUnit(newUnit);
+            organization.AddOrganizationalUnit(dto.Name);
         }
 
         await organizationRepository.UpdateAsync(organization);
@@ -99,7 +98,7 @@ public class OrganizationalUnitService(IOrganizationRepository organizationRepos
 
         try
         {
-            organization.RemoveOrganizationalUnit(organizationalUnit);
+            organization.RemoveOrganizationalUnit(organizationalUnit.Id);
 
             await organizationRepository.UpdateAsync(organization);
             await organizationRepository.SaveChangesAsync();

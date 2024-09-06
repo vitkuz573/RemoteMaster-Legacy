@@ -30,15 +30,11 @@ public class OrganizationalUnit
 
     private OrganizationalUnit() { }
 
-    public OrganizationalUnit(string name, Organization organization, OrganizationalUnit? parent = null)
+    public OrganizationalUnit(string name, OrganizationalUnit? parent = null)
     {
         Name = name;
-        Organization = organization ?? throw new ArgumentNullException(nameof(organization));
-        OrganizationId = organization.Id;
         Parent = parent;
         ParentId = parent?.Id;
-
-        parent?.AddChildUnit(this);
     }
 
     public void SetName(string name)
@@ -58,30 +54,6 @@ public class OrganizationalUnit
         OrganizationId = organization.Id;
     }
 
-    private void AddChildUnit(OrganizationalUnit unit)
-    {
-        ArgumentNullException.ThrowIfNull(unit);
-
-        if (_children.Any(c => c.Name == unit.Name))
-        {
-            throw new InvalidOperationException("A child unit with the same name already exists.");
-        }
-
-        unit.AssignToParent(this);
-
-        _children.Add(unit);
-    }
-
-    public void RemoveChildUnit(OrganizationalUnit unit)
-    {
-        if (!_children.Contains(unit))
-        {
-            throw new InvalidOperationException("Child unit not found.");
-        }
-
-        _children.Remove(unit);
-    }
-
     public void AddComputer(string name, string ipAddress, string macAddress)
     {
         var computer = new Computer(name, ipAddress, macAddress);
@@ -95,6 +67,11 @@ public class OrganizationalUnit
         var computer = _computers.SingleOrDefault(c => c.Id == computerId);
 
         _computers.Remove(computer);
+    }
+
+    public void ClearComputers()
+    {
+        _computers.Clear();
     }
 
     public void MoveComputerToUnit(Guid computerId, OrganizationalUnit newUnit)
@@ -137,9 +114,8 @@ public class OrganizationalUnit
         _userOrganizationalUnits.Remove(userOrganizationalUnit);
     }
 
-    private void AssignToParent(OrganizationalUnit parent)
+    public void ClearUsers()
     {
-        Parent = parent ?? throw new ArgumentNullException(nameof(parent));
-        ParentId = parent.Id;
+        _userOrganizationalUnits.Clear();
     }
 }

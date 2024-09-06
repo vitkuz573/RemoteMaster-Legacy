@@ -75,8 +75,9 @@ public class HostAccessHandlerTests
         var context = new AuthorizationHandlerContext([requirement], user, null);
 
         var organization = new Organization("Test Organization", new Address("City", "State", "US"));
-        var organizationalUnit = new OrganizationalUnit("Test Unit", organization);
+        organization.AddOrganizationalUnit("Test Unit");
 
+        var organizationalUnit = organization.OrganizationalUnits.First();
         organizationalUnit.AddUser("user1");
         organizationalUnit.AddComputer("host", "127.0.0.1", "00-14-22-01-23-45");
 
@@ -108,7 +109,9 @@ public class HostAccessHandlerTests
         var context = new AuthorizationHandlerContext([requirement], user, null);
 
         var organization = new Organization("Test Organization", new Address("City", "State", "US"));
-        var organizationalUnit = new OrganizationalUnit("Test Unit", organization);
+        organization.AddOrganizationalUnit("Test Unit");
+
+        var organizationalUnit = organization.OrganizationalUnits.First();
 
         organizationalUnit.AddUser("user2");
         organizationalUnit.AddComputer("host", "127.0.0.1", "00-14-22-01-23-45");
@@ -143,11 +146,15 @@ public class HostAccessHandlerTests
         var organization1 = new Organization("Organization 1", new Address("City", "State", "US"));
         var organization2 = new Organization("Organization 2", new Address("City", "State", "US"));
 
-        var organizationalUnit1 = new OrganizationalUnit("Unit 1", organization1);
-        var organizationalUnit2 = new OrganizationalUnit("Unit 2", organization2);
+        organization1.AddOrganizationalUnit("Unit 1");
+        organization2.AddOrganizationalUnit("Unit 2");
+
+        var organizationalUnit1 = organization1.OrganizationalUnits.First();
+        var organizationalUnit2 = organization2.OrganizationalUnits.First();
 
         organizationalUnit1.AddUser("user1");
         organizationalUnit1.AddComputer("sharedHost", "127.0.0.1", "00-14-22-01-23-45");
+
         organizationalUnit2.AddUser("user2");
         organizationalUnit2.AddComputer("sharedHost", "127.0.0.2", "00-14-22-01-23-46");
 
@@ -181,11 +188,15 @@ public class HostAccessHandlerTests
         var organization1 = new Organization("Organization 1", new Address("City", "State", "US"));
         var organization2 = new Organization("Organization 2", new Address("City", "State", "US"));
 
-        var organizationalUnit1 = new OrganizationalUnit("Unit 1", organization1);
-        var organizationalUnit2 = new OrganizationalUnit("Unit 2", organization2);
+        organization1.AddOrganizationalUnit("Unit 1");
+        organization2.AddOrganizationalUnit("Unit 2");
+
+        var organizationalUnit1 = organization1.OrganizationalUnits.First();
+        var organizationalUnit2 = organization2.OrganizationalUnits.First();
 
         organizationalUnit1.AddUser("user2");
         organizationalUnit1.AddComputer("sharedHost", "127.0.0.1", "00-14-22-01-23-45");
+
         organizationalUnit2.AddUser("user1");
         organizationalUnit2.AddComputer("sharedHost", "127.0.0.2", "00-14-22-01-23-46");
 
