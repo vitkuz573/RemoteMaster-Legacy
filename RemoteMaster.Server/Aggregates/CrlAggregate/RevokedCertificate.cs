@@ -11,7 +11,7 @@ public class RevokedCertificate
 {
     private RevokedCertificate() { }
 
-    public RevokedCertificate(SerialNumber serialNumber, X509RevocationReason reason)
+    internal RevokedCertificate(SerialNumber serialNumber, X509RevocationReason reason)
     {
         SerialNumber = serialNumber ?? throw new ArgumentNullException(nameof(serialNumber));
         Reason = reason;

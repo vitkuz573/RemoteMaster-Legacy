@@ -8,7 +8,7 @@ public class SignInEntry
 {
     private SignInEntry() { }
 
-    public SignInEntry(string userId, bool isSuccessful, string ipAddress)
+    internal SignInEntry(string userId, bool isSuccessful, string ipAddress)
     {
         UserId = userId ?? throw new ArgumentNullException(nameof(userId));
         SignInTime = DateTime.UtcNow;

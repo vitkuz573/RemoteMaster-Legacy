@@ -12,7 +12,7 @@ public class RefreshToken
 {
     private RefreshToken() { }
 
-    private RefreshToken(string userId, DateTime expires, string ipAddress, string token)
+    internal RefreshToken(string userId, DateTime expires, string ipAddress, string token)
     {
         if (string.IsNullOrWhiteSpace(userId))
         {
