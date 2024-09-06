@@ -156,7 +156,7 @@ public partial class HostConfigurationGenerator
         {
             _model.Subject.Locality = selectedOrg.Address.Locality;
             _model.Subject.State = selectedOrg.Address.State;
-            _model.Subject.Country = selectedOrg.Address.Country;
+            _model.Subject.Country = selectedOrg.Address.Country.Code;
 
             StateHasChanged();
         }

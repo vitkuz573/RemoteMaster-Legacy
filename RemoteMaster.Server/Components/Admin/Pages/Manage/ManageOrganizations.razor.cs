@@ -94,7 +94,7 @@ public partial class ManageOrganizations
             Name = organization.Name,
             Locality = organization.Address.Locality,
             State = organization.Address.State,
-            Country = organization.Address.Country
+            Country = organization.Address.Country.Code
         };
     }
 

@@ -74,7 +74,7 @@ public class HostAccessHandlerTests
         var user = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user1")]));
         var context = new AuthorizationHandlerContext([requirement], user, null);
 
-        var organization = new Organization("Test Organization", new Address("City", "State", "US"));
+        var organization = new Organization("Test Organization", new Address("City", "State", new CountryCode("US")));
         organization.AddOrganizationalUnit("Test Unit");
 
         var organizationalUnit = organization.OrganizationalUnits.First();
@@ -108,7 +108,7 @@ public class HostAccessHandlerTests
         var user = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user1")]));
         var context = new AuthorizationHandlerContext([requirement], user, null);
 
-        var organization = new Organization("Test Organization", new Address("City", "State", "US"));
+        var organization = new Organization("Test Organization", new Address("City", "State", new CountryCode("US")));
         organization.AddOrganizationalUnit("Test Unit");
 
         var organizationalUnit = organization.OrganizationalUnits.First();
@@ -143,8 +143,8 @@ public class HostAccessHandlerTests
         var user = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user1")]));
         var context = new AuthorizationHandlerContext([requirement], user, null);
 
-        var organization1 = new Organization("Organization 1", new Address("City", "State", "US"));
-        var organization2 = new Organization("Organization 2", new Address("City", "State", "US"));
+        var organization1 = new Organization("Organization 1", new Address("City", "State", new CountryCode("US")));
+        var organization2 = new Organization("Organization 2", new Address("City", "State", new CountryCode("US")));
 
         organization1.AddOrganizationalUnit("Unit 1");
         organization2.AddOrganizationalUnit("Unit 2");
@@ -185,8 +185,8 @@ public class HostAccessHandlerTests
         var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }));
         var context = new AuthorizationHandlerContext(new[] { requirement }, user, null);
 
-        var organization1 = new Organization("Organization 1", new Address("City", "State", "US"));
-        var organization2 = new Organization("Organization 2", new Address("City", "State", "US"));
+        var organization1 = new Organization("Organization 1", new Address("City", "State", new CountryCode("US")));
+        var organization2 = new Organization("Organization 2", new Address("City", "State", new CountryCode("US")));
 
         organization1.AddOrganizationalUnit("Unit 1");
         organization2.AddOrganizationalUnit("Unit 2");
