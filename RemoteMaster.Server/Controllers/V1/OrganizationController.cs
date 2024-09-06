@@ -38,7 +38,9 @@ public class OrganizationController(IOrganizationRepository organizationReposito
 
         var organization = await organizationRepository.FindAsync(o => o.Name == organizationName);
 
-        if (organization == null || !organization.Any())
+        var organizationEntity = organization.FirstOrDefault();
+
+        if (organizationEntity == null)
         {
             var problemDetails = new ProblemDetails
             {
@@ -50,13 +52,6 @@ public class OrganizationController(IOrganizationRepository organizationReposito
             var errorResponse = ApiResponse<string>.Failure(problemDetails, StatusCodes.Status404NotFound);
 
             return NotFound(errorResponse);
-        }
-
-        var organizationEntity = organization.FirstOrDefault();
-
-        if (organizationEntity == null)
-        {
-            return NotFound(new { message = "Organization not found." });
         }
 
         var organizationAddress = new AddressDto(organizationEntity.Address.Locality, organizationEntity.Address.State, organizationEntity.Address.Country.Code);
