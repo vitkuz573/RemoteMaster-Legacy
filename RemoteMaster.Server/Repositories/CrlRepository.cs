@@ -19,6 +19,14 @@ public class CrlRepository(CertificateDbContext context) : ICrlRepository
             .FirstOrDefaultAsync(c => c.Id == id);
     }
 
+    public async Task<IEnumerable<Crl>> GetByIdsAsync(IEnumerable<int> ids)
+    {
+        return await context.CertificateRevocationLists
+            .Include(c => c.RevokedCertificates)
+            .Where(c => ids.Contains(c.Id))
+            .ToListAsync();
+    }
+
     public async Task<IEnumerable<Crl>> GetAllAsync()
     {
         return await context.CertificateRevocationLists

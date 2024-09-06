@@ -18,6 +18,13 @@ public class ApplicationClaimRepository(ApplicationDbContext context) : IApplica
             .FirstOrDefaultAsync(c => c.Id == id);
     }
 
+    public async Task<IEnumerable<ApplicationClaim>> GetByIdsAsync(IEnumerable<int> ids)
+    {
+        return await context.ApplicationClaims
+            .Where(c => ids.Contains(c.Id))
+            .ToListAsync();
+    }
+
     public async Task<IEnumerable<ApplicationClaim>> GetAllAsync()
     {
         return await context.ApplicationClaims

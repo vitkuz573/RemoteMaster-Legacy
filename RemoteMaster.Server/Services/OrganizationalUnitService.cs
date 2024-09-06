@@ -115,16 +115,29 @@ public class OrganizationalUnitService(IOrganizationRepository organizationRepos
     {
         ArgumentNullException.ThrowIfNull(user);
 
-        foreach (var unit in user.UserOrganizationalUnits.ToList().Where(unit => !selectedUnitIds.Contains(unit.OrganizationalUnitId)))
+        var currentUnitIds = user.UserOrganizationalUnits.Select(uou => uou.OrganizationalUnitId).ToHashSet();
+        
+        var organizationalUnits = await organizationalUnitRepository.GetByIdsAsync(selectedUnitIds);
+
+        var unitsToRemove = currentUnitIds.Except(selectedUnitIds).ToList();
+        var unitsToAdd = selectedUnitIds.Except(currentUnitIds).ToList();
+
+        if (unitsToRemove.Any())
         {
-            var organizationalUnit = await organizationalUnitRepository.GetByIdAsync(unit.OrganizationalUnitId);
-            organizationalUnit?.RemoveUser(user.Id);
+            var unitsToRemoveEntities = await organizationalUnitRepository.GetByIdsAsync(unitsToRemove);
+
+            foreach (var unit in unitsToRemoveEntities)
+            {
+                unit.RemoveUser(user.Id);
+            }
         }
 
-        foreach (var unitId in selectedUnitIds.Where(unitId => user.UserOrganizationalUnits.All(uou => uou.OrganizationalUnitId != unitId)))
+        if (unitsToAdd.Any())
         {
-            var unit = await organizationalUnitRepository.GetByIdAsync(unitId);
-            unit?.AddUser(user.Id);
+            foreach (var unit in unitsToAdd.Select(unitId => organizationalUnits.FirstOrDefault(u => u.Id == unitId)))
+            {
+                unit?.AddUser(user.Id);
+            }
         }
 
         await organizationalUnitRepository.SaveChangesAsync();

@@ -19,6 +19,14 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
             .FirstOrDefaultAsync(o => o.Id == id);
     }
 
+    public async Task<IEnumerable<Organization>> GetByIdsAsync(IEnumerable<Guid> ids)
+    {
+        return await context.Organizations
+            .Include(o => o.OrganizationalUnits)
+            .Where(o => ids.Contains(o.Id))
+            .ToListAsync();
+    }
+
     public async Task<IEnumerable<Organization>> GetAllAsync()
     {
         return await context.Organizations

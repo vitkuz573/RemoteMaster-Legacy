@@ -18,6 +18,13 @@ public class ApplicationUserRepository(ApplicationDbContext context) : IApplicat
             .FirstOrDefaultAsync(u => u.Id == id);
     }
 
+    public async Task<IEnumerable<ApplicationUser>> GetByIdsAsync(IEnumerable<string> ids)
+    {
+        return await context.Users
+            .Where(u => ids.Contains(u.Id))
+            .ToListAsync();
+    }
+
     public async Task<IEnumerable<ApplicationUser>> GetAllAsync()
     {
         return await context.Users

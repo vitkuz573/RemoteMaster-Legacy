@@ -21,6 +21,16 @@ public class OrganizationalUnitRepository(ApplicationDbContext context) : IOrgan
             .FirstOrDefaultAsync(ou => ou.Id == id);
     }
 
+    public async Task<IEnumerable<OrganizationalUnit>> GetByIdsAsync(IEnumerable<Guid> ids)
+    {
+        return await context.OrganizationalUnits
+            .Include(ou => ou.UserOrganizationalUnits)
+            .Include(ou => ou.Children)
+            .Include(ou => ou.Computers)
+            .Where(ou => ids.Contains(ou.Id))
+            .ToListAsync();
+    }
+
     public async Task<IEnumerable<OrganizationalUnit>> GetAllAsync()
     {
         return await context.OrganizationalUnits
