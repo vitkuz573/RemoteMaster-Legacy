@@ -19,6 +19,7 @@ public class Organization : IAggregateRoot
 
     private readonly List<OrganizationalUnit> _organizationalUnits = [];
     private readonly List<UserOrganization> _userOrganizations = [];
+    private readonly List<CertificateRenewalTask> _certificateRenewalTasks = [];
 
     public Guid Id { get; private set; }
 
@@ -29,6 +30,8 @@ public class Organization : IAggregateRoot
     public IReadOnlyCollection<OrganizationalUnit> OrganizationalUnits => _organizationalUnits.AsReadOnly();
     
     public IReadOnlyCollection<UserOrganization> UserOrganizations => _userOrganizations.AsReadOnly();
+
+    public IReadOnlyCollection<CertificateRenewalTask> CertificateRenewalTasks => _certificateRenewalTasks.AsReadOnly();
 
     public void SetName(string newName)
     {
@@ -110,5 +113,35 @@ public class Organization : IAggregateRoot
         }
 
         _userOrganizations.Remove(userOrganization);
+    }
+
+    public CertificateRenewalTask CreateCertificateRenewalTask(Guid computerId, DateTime plannedDate)
+    {
+        var unit = _organizationalUnits.SingleOrDefault(u => u.Computers.Any(c => c.Id == computerId));
+
+        if (unit == null)
+        {
+            throw new InvalidOperationException("Computer not found in this organization.");
+        }
+
+        var computer = unit.Computers.Single(c => c.Id == computerId);
+
+        var task = new CertificateRenewalTask(computer, this, plannedDate);
+
+        _certificateRenewalTasks.Add(task);
+
+        return task;
+    }
+
+    public void RemoveCertificateRenewalTask(Guid taskId)
+    {
+        var task = _certificateRenewalTasks.SingleOrDefault(t => t.Id == taskId);
+
+        if (task == null)
+        {
+            throw new InvalidOperationException("Certificate renewal task not found.");
+        }
+
+        _certificateRenewalTasks.Remove(task);
     }
 }
