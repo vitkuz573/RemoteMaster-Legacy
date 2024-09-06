@@ -125,7 +125,7 @@ public partial class MoveDialog
             }
 
             var newParentUnit = targetOrganization.OrganizationalUnits.FirstOrDefault(u => u.Id == _selectedOrganizationalUnitId.Value);
-            
+
             if (newParentUnit == null)
             {
                 throw new InvalidOperationException("New parent Organizational Unit not found.");
@@ -144,11 +144,7 @@ public partial class MoveDialog
             {
                 if (host.Value != null)
                 {
-                    var hostMoveRequest = new HostMoveRequest(
-                        host.Key.MacAddress,
-                        targetOrganization.Name,
-                        targetOrganizationalUnitsPath
-                    );
+                    var hostMoveRequest = new HostMoveRequest(host.Key.MacAddress, targetOrganization.Name, targetOrganizationalUnitsPath);
 
                     await host.Value.InvokeAsync("MoveHost", hostMoveRequest);
                 }
@@ -167,10 +163,14 @@ public partial class MoveDialog
             {
                 var currentParentUnit = computer.Parent;
 
-                currentParentUnit.MoveComputerToUnit(computer.Id, newParentUnit);
+                if (currentParentUnit == null)
+                {
+                    throw new InvalidOperationException("Current parent unit not found.");
+                }
+
+                await OrganizationRepository.MoveComputerAsync(currentParentUnit.OrganizationId, _selectedOrganizationId, computer.Id, currentParentUnit.Id, newParentUnit.Id);
             }
 
-            await OrganizationRepository.UpdateAsync(targetOrganization);
             await OrganizationRepository.SaveChangesAsync();
 
             await OnNodesMoved.InvokeAsync(Hosts.Keys);

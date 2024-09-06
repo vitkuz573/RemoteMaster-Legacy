@@ -16,4 +16,6 @@ public interface IOrganizationRepository : IRepository<Organization, Guid>
     Task<OrganizationalUnit?> GetOrganizationalUnitByIdAsync(Guid unitId);
 
     Task<Organization?> GetOrganizationByUnitIdAsync(Guid unitId);
+
+    Task MoveComputerAsync(Guid sourceOrganizationId, Guid targetOrganizationId, Guid computerId, Guid sourceUnitId, Guid targetUnitId);
 }

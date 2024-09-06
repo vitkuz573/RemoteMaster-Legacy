@@ -642,6 +642,7 @@ public partial class Home
                     var organizationalUnit = computer.Parent;
 
                     await OrganizationRepository.RemoveComputerAsync(organizationalUnit.OrganizationId, organizationalUnit.Id, computer.Id);
+                    await OrganizationRepository.SaveChangesAsync();
 
                     _availableComputers.TryRemove(computer.IpAddress, out _);
                     _unavailableComputers.TryRemove(computer.IpAddress, out _);

@@ -16,6 +16,8 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
     {
         return await context.Organizations
             .Include(o => o.OrganizationalUnits)
+            .ThenInclude(ou => ou.Children)
+            .Include(o => o.OrganizationalUnits)
             .ThenInclude(ou => ou.Computers)
             .FirstOrDefaultAsync(o => o.Id == id);
     }
@@ -99,8 +101,6 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
 
         unit.RemoveComputer(computer.Id);
         context.Computers.Remove(computer);
-
-        await SaveChangesAsync();
     }
 
     public async Task<OrganizationalUnit?> GetOrganizationalUnitByIdAsync(Guid unitId)
@@ -115,7 +115,59 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
     {
         return await context.Organizations
             .Include(o => o.OrganizationalUnits)
-            .ThenInclude(ou => ou.Computers) 
+            .ThenInclude(ou => ou.Children)
+            .ThenInclude(c => c.Computers)
             .FirstOrDefaultAsync(o => o.OrganizationalUnits.Any(ou => ou.Id == unitId));
+    }
+
+    public async Task MoveComputerAsync(Guid sourceOrganizationId, Guid targetOrganizationId, Guid computerId, Guid sourceUnitId, Guid targetUnitId)
+    {
+        var sourceOrganization = await context.Organizations
+            .Include(o => o.OrganizationalUnits)
+            .ThenInclude(ou => ou.Computers)
+            .FirstOrDefaultAsync(o => o.Id == sourceOrganizationId);
+
+        if (sourceOrganization == null)
+        {
+            throw new InvalidOperationException("Source organization not found.");
+        }
+
+        var targetOrganization = await context.Organizations
+            .Include(o => o.OrganizationalUnits)
+            .ThenInclude(ou => ou.Computers)
+            .FirstOrDefaultAsync(o => o.Id == targetOrganizationId);
+
+        if (targetOrganization == null)
+        {
+            throw new InvalidOperationException("Target organization not found.");
+        }
+
+        var sourceUnit = sourceOrganization.OrganizationalUnits.FirstOrDefault(u => u.Id == sourceUnitId);
+
+        if (sourceUnit == null)
+        {
+            throw new InvalidOperationException("Source unit not found.");
+        }
+
+        var computer = sourceUnit.Computers.FirstOrDefault(c => c.Id == computerId);
+
+        if (computer == null)
+        {
+            throw new InvalidOperationException("Computer not found in the source unit.");
+        }
+
+        var targetUnit = targetOrganization.OrganizationalUnits.FirstOrDefault(u => u.Id == targetUnitId);
+
+        if (targetUnit == null)
+        {
+            throw new InvalidOperationException("Target unit not found.");
+        }
+
+        sourceUnit.RemoveComputer(computer.Id);
+        computer.SetOrganizationalUnit(targetUnit.Id);
+        targetUnit.AddExistingComputer(computer);
+
+        context.Organizations.Update(sourceOrganization);
+        context.Organizations.Update(targetOrganization);
     }
 }

@@ -62,6 +62,16 @@ public class OrganizationalUnit
         _computers.Add(computer);
     }
 
+    internal void AddExistingComputer(Computer computer)
+    {
+        if (_computers.Any(c => c.Id == computer.Id))
+        {
+            throw new InvalidOperationException("Computer already exists in this unit.");
+        }
+
+        _computers.Add(computer);
+    }
+
     public void RemoveComputer(Guid computerId)
     {
         var computer = _computers.SingleOrDefault(c => c.Id == computerId);
@@ -72,22 +82,6 @@ public class OrganizationalUnit
     public void ClearComputers()
     {
         _computers.Clear();
-    }
-
-    public void MoveComputerToUnit(Guid computerId, OrganizationalUnit newUnit)
-    {
-        ArgumentNullException.ThrowIfNull(newUnit);
-
-        var computer = _computers.SingleOrDefault(c => c.Id == computerId);
-
-        if (computer == null)
-        {
-            throw new InvalidOperationException("Computer not found in the current unit.");
-        }
-
-        _computers.Remove(computer);
-        computer.SetOrganizationalUnit(newUnit.Id);
-        newUnit._computers.Add(computer);
     }
 
     public void AddUser(string userId)
