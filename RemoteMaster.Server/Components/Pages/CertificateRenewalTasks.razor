@@ -1,0 +1,44 @@
+﻿@page "/certificates/tasks"
+
+@using RemoteMaster.Server.Abstractions
+
+@inject IOrganizationRepository OrganizationRepository
+
+@rendermode InteractiveServer
+
+<div class="container mx-auto py-8">
+    <h1 class="mb-6 text-2xl font-bold">Certificate Renewal Tasks</h1>
+
+    @if (!_certificateTasks.Any())
+    {
+        <p class="text-gray-500">No certificate renewal tasks found.</p>
+    }
+    else
+    {
+        <table class="min-w-full rounded-lg border border-gray-300 bg-white shadow-md">
+            <thead>
+            <tr>
+                <th class="bg-gray-100 px-4 py-2 text-left">Computer ID</th>
+                <th class="bg-gray-100 px-4 py-2 text-left">Organization ID</th>
+                <th class="bg-gray-100 px-4 py-2 text-left">Planned Date</th>
+                <th class="bg-gray-100 px-4 py-2 text-left">Status</th>
+                <th class="bg-gray-100 px-4 py-2 text-left">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var task in _certificateTasks)
+            {
+                <tr class="border-t">
+                    <td class="px-4 py-2">@task.ComputerId</td>
+                    <td class="px-4 py-2">@task.OrganizationId</td>
+                    <td class="px-4 py-2">@task.PlannedDate.ToString("g")</td>
+                    <td class="px-4 py-2">@task.Status</td>
+                    <td class="px-4 py-2">
+                        <button class="text-red-600 hover:underline" @onclick="() => DeleteTask(task.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</div>

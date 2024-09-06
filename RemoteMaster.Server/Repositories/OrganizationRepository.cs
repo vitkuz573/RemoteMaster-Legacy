@@ -170,4 +170,19 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
         context.Organizations.Update(sourceOrganization);
         context.Organizations.Update(targetOrganization);
     }
+
+    public async Task<IEnumerable<CertificateRenewalTask>> GetAllCertificateRenewalTasksAsync()
+    {
+        return await context.CertificateRenewalTasks
+            .Include(task => task.Computer)
+            .Include(task => task.Organization)
+            .ToListAsync();
+    }
+
+    public async Task DeleteCertificateRenewalTaskAsync(CertificateRenewalTask task)
+    {
+        context.CertificateRenewalTasks.Remove(task);
+
+        await context.SaveChangesAsync();
+    }
 }

@@ -49,8 +49,5 @@ public class CertificateRenewalTaskConfiguration : IEntityTypeConfiguration<Cert
             .IsRequired()
             .HasConversion<string>()
             .HasColumnOrder(5);
-
-        builder.HasIndex(crt => crt.ComputerId);
-        builder.HasIndex(crt => crt.OrganizationId);
     }
 }

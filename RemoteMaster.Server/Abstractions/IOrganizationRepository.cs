@@ -18,4 +18,8 @@ public interface IOrganizationRepository : IRepository<Organization, Guid>
     Task<Organization?> GetOrganizationByUnitIdAsync(Guid unitId);
 
     Task MoveComputerAsync(Guid sourceOrganizationId, Guid targetOrganizationId, Guid computerId, Guid sourceUnitId, Guid targetUnitId);
+
+    Task<IEnumerable<CertificateRenewalTask>> GetAllCertificateRenewalTasksAsync();
+
+    Task DeleteCertificateRenewalTaskAsync(CertificateRenewalTask task);
 }
