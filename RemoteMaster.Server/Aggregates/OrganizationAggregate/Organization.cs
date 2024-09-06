@@ -111,31 +111,4 @@ public class Organization : IAggregateRoot
 
         _userOrganizations.Remove(userOrganization);
     }
-
-    public void MoveComputer(Guid computerId, Guid sourceUnitId, Guid targetUnitId)
-    {
-        var sourceUnit = _organizationalUnits.SingleOrDefault(u => u.Id == sourceUnitId);
-        var targetUnit = _organizationalUnits.SingleOrDefault(u => u.Id == targetUnitId);
-
-        if (sourceUnit == null)
-        {
-            throw new InvalidOperationException("Source unit not found.");
-        }
-
-        if (targetUnit == null)
-        {
-            throw new InvalidOperationException("Target unit not found.");
-        }
-
-        var computer = sourceUnit.Computers.SingleOrDefault(c => c.Id == computerId);
-
-        if (computer == null)
-        {
-            throw new InvalidOperationException("Computer not found in the source unit.");
-        }
-
-        sourceUnit.RemoveComputer(computerId);
-        computer.SetOrganizationalUnit(targetUnit.Id);
-        targetUnit.AddExistingComputer(computer);
-    }
 }

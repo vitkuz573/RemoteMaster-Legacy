@@ -10,7 +10,7 @@ public class UserOrganizationalUnit
 {
     private UserOrganizationalUnit() { }
 
-    public UserOrganizationalUnit(Guid unitId, string userId)
+    internal UserOrganizationalUnit(Guid unitId, string userId)
     {
         OrganizationalUnitId = unitId;
         UserId = userId;

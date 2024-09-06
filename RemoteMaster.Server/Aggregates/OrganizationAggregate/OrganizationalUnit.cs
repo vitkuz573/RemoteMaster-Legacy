@@ -30,7 +30,7 @@ public class OrganizationalUnit
 
     private OrganizationalUnit() { }
 
-    public OrganizationalUnit(string name, OrganizationalUnit? parent = null)
+    internal OrganizationalUnit(string name, OrganizationalUnit? parent = null)
     {
         Name = name;
         Parent = parent;
