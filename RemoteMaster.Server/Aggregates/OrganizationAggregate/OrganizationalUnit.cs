@@ -2,12 +2,9 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Aggregates.OrganizationAggregate;
+namespace RemoteMaster.Server.Aggregates.OrganizationAggregate;
 
-namespace RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
-
-public class OrganizationalUnit : IAggregateRoot
+public class OrganizationalUnit
 {
     private readonly List<OrganizationalUnit> _children = [];
     private readonly List<Computer> _computers = [];

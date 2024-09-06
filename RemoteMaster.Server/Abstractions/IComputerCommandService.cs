@@ -5,7 +5,7 @@
 using System.Collections.Concurrent;
 using FluentResults;
 using Microsoft.AspNetCore.SignalR.Client;
-using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
+using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 
 namespace RemoteMaster.Server.Abstractions;
 

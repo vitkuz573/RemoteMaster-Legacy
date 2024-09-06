@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
-using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
 
 namespace RemoteMaster.Server.Abstractions;
 

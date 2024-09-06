@@ -4,7 +4,6 @@
 
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate.ValueObjects;
-using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
 
 namespace RemoteMaster.Server.Aggregates.OrganizationAggregate;
 

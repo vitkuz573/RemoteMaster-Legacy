@@ -5,7 +5,6 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Components;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
-using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
 using RemoteMaster.Server.Components.Admin.Dialogs;
 using RemoteMaster.Server.DTOs;
 

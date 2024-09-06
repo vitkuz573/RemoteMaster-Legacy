@@ -10,7 +10,6 @@ using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate.ValueObjects;
-using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
 using RemoteMaster.Server.Requirements;
 
 namespace RemoteMaster.Server.Tests;
@@ -18,14 +17,14 @@ namespace RemoteMaster.Server.Tests;
 public class HostAccessHandlerTests
 {
     private readonly Mock<IApplicationUserRepository> _userRepositoryMock;
-    private readonly Mock<IOrganizationalUnitRepository> _organizationalUnitRepositoryMock;
+    private readonly Mock<IOrganizationRepository> _organizationRepositoryMock;
     private readonly HostAccessHandler _handler;
 
     public HostAccessHandlerTests()
     {
         _userRepositoryMock = new Mock<IApplicationUserRepository>();
-        _organizationalUnitRepositoryMock = new Mock<IOrganizationalUnitRepository>();
-        _handler = new HostAccessHandler(_userRepositoryMock.Object, _organizationalUnitRepositoryMock.Object);
+        _organizationRepositoryMock = new Mock<IOrganizationRepository>();
+        _handler = new HostAccessHandler(_userRepositoryMock.Object, _organizationRepositoryMock.Object);
     }
 
     [Fact]
@@ -57,7 +56,7 @@ public class HostAccessHandlerTests
         _userRepositoryMock.Setup(repo => repo.GetByIdAsync(It.IsAny<string>()))
             .ReturnsAsync(applicationUser);
 
-        _organizationalUnitRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Computer, bool>>>()))
+        _organizationRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Computer, bool>>>()))
             .ReturnsAsync(new List<Computer>());
 
         // Act
@@ -87,10 +86,10 @@ public class HostAccessHandlerTests
         _userRepositoryMock.Setup(repo => repo.GetByIdAsync("user1"))
             .ReturnsAsync(applicationUser);
 
-        _organizationalUnitRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Computer, bool>>>()))
+        _organizationRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Computer, bool>>>()))
             .ReturnsAsync(new List<Computer> { new("host", "127.0.0.1", "00-14-22-01-23-45") });
 
-        _organizationalUnitRepositoryMock.Setup(repo => repo.GetByIdAsync(It.IsAny<Guid>()))
+        _organizationRepositoryMock.Setup(repo => repo.GetOrganizationalUnitByIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync(organizationalUnit);
 
         // Act
@@ -120,10 +119,10 @@ public class HostAccessHandlerTests
         _userRepositoryMock.Setup(repo => repo.GetByIdAsync("user1"))
             .ReturnsAsync(applicationUser);
 
-        _organizationalUnitRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Computer, bool>>>()))
+        _organizationRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Computer, bool>>>()))
             .ReturnsAsync(new List<Computer> { new("host", "127.0.0.1", "00-14-22-01-23-45") });
 
-        _organizationalUnitRepositoryMock.Setup(repo => repo.GetByIdAsync(It.IsAny<Guid>()))
+        _organizationRepositoryMock.Setup(repo => repo.GetOrganizationalUnitByIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync(organizationalUnit);
 
         // Act
@@ -158,10 +157,10 @@ public class HostAccessHandlerTests
         _userRepositoryMock.Setup(repo => repo.GetByIdAsync("user1"))
             .ReturnsAsync(applicationUser);
 
-        _organizationalUnitRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Computer, bool>>>()))
+        _organizationRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Computer, bool>>>()))
             .ReturnsAsync(new List<Computer> { new("sharedHost", "127.0.0.1", "00-14-22-01-23-45") });
 
-        _organizationalUnitRepositoryMock.Setup(repo => repo.GetByIdAsync(organizationalUnit1.Id))
+        _organizationRepositoryMock.Setup(repo => repo.GetOrganizationalUnitByIdAsync(organizationalUnit1.Id))
             .ReturnsAsync(organizationalUnit1);
 
         // Act
@@ -196,10 +195,10 @@ public class HostAccessHandlerTests
         _userRepositoryMock.Setup(repo => repo.GetByIdAsync("user1"))
             .ReturnsAsync(applicationUser);
 
-        _organizationalUnitRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Computer, bool>>>()))
+        _organizationRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Computer, bool>>>()))
             .ReturnsAsync(new List<Computer> { new("sharedHost", "127.0.0.1", "00-14-22-01-23-45") });
 
-        _organizationalUnitRepositoryMock.Setup(repo => repo.GetByIdAsync(organizationalUnit1.Id))
+        _organizationRepositoryMock.Setup(repo => repo.GetOrganizationalUnitByIdAsync(organizationalUnit1.Id))
             .ReturnsAsync(organizationalUnit1);
 
         // Act

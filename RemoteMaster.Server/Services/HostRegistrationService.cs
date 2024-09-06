@@ -5,12 +5,11 @@
 using FluentResults;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
-using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Services;
 
-public class HostRegistrationService(IEventNotificationService eventNotificationService, IOrganizationRepository organizationRepository, IOrganizationalUnitRepository organizationalUnitRepository) : IHostRegistrationService
+public class HostRegistrationService(IEventNotificationService eventNotificationService, IOrganizationRepository organizationRepository) : IHostRegistrationService
 {
     private async Task<Result<Organization>> GetOrganizationAsync(string organizationName)
     {
@@ -27,11 +26,16 @@ public class HostRegistrationService(IEventNotificationService eventNotification
     {
         OrganizationalUnit? parentOu = null;
 
+        var organization = await organizationRepository.GetByIdAsync(organizationId);
+
+        if (organization == null)
+        {
+            return Result.Fail<OrganizationalUnit?>($"Organization with ID '{organizationId}' not found.");
+        }
+
         foreach (var ouName in ouNames)
         {
-            var ous = await organizationalUnitRepository.FindAsync(n => n.Name == ouName && n.OrganizationId == organizationId);
-
-            var ou = ous.FirstOrDefault(o => parentOu == null || o.ParentId == parentOu.Id);
+            var ou = organization.OrganizationalUnits.FirstOrDefault(n => n.Name == ouName && (parentOu == null || n.ParentId == parentOu.Id));
 
             if (ou == null)
             {
@@ -50,7 +54,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
 
         try
         {
-            var computers = await organizationalUnitRepository.FindComputersAsync(c => c.MacAddress == macAddress);
+            var computers = await organizationRepository.FindComputersAsync(c => c.MacAddress == macAddress);
 
             if (computers.Any())
             {
@@ -58,7 +62,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
             }
 
             var errorMessage = $"Host with MAC address `{macAddress}` is not registered.";
-           
+
             await eventNotificationService.SendNotificationAsync(errorMessage);
 
             return Result.Fail(errorMessage);
@@ -66,9 +70,9 @@ public class HostRegistrationService(IEventNotificationService eventNotification
         catch (Exception ex)
         {
             var errorMessage = $"Error while checking registration of the host with MAC address `{macAddress}`: {ex.Message}";
-            
+
             await eventNotificationService.SendNotificationAsync(errorMessage);
-            
+
             return Result.Fail(errorMessage);
         }
     }
@@ -87,9 +91,9 @@ public class HostRegistrationService(IEventNotificationService eventNotification
         if (organizationResult.IsFailed)
         {
             var errorMessage = $"Host registration failed: {organizationResult.Errors.FirstOrDefault()?.Message} for host {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'";
-
+            
             await eventNotificationService.SendNotificationAsync(errorMessage);
-
+            
             return Result.Fail(errorMessage);
         }
 
@@ -98,9 +102,9 @@ public class HostRegistrationService(IEventNotificationService eventNotification
         if (parentOuResult.IsFailed)
         {
             var errorMessage = $"Host registration failed: {parentOuResult.Errors.FirstOrDefault()?.Message} for host {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'";
-
+            
             await eventNotificationService.SendNotificationAsync(errorMessage);
-
+            
             return Result.Fail(errorMessage);
         }
 
@@ -113,30 +117,30 @@ public class HostRegistrationService(IEventNotificationService eventNotification
             if (computer != null)
             {
                 var updateResult = await UpdateComputerAsync(computer, hostConfiguration);
-
+                
                 if (updateResult.IsFailed)
                 {
                     var errorMessage = $"Failed to update existing computer: {updateResult.Errors.FirstOrDefault()?.Message}";
-
+                    
                     await eventNotificationService.SendNotificationAsync(errorMessage);
-
+                    
                     return Result.Fail(errorMessage);
                 }
 
                 var updateSuccessMessage = $"Host registration successful: {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'";
-
+                
                 await eventNotificationService.SendNotificationAsync(updateSuccessMessage);
-
+                
                 return Result.Ok();
             }
 
             parentUnit.AddComputer(hostConfiguration.Host.Name, hostConfiguration.Host.IpAddress, hostConfiguration.Host.MacAddress);
 
-            await organizationalUnitRepository.UpdateAsync(parentUnit);
-            await organizationalUnitRepository.SaveChangesAsync();
+            await organizationRepository.UpdateAsync(organizationResult.Value);
+            await organizationRepository.SaveChangesAsync();
 
             var successMessage = $"New host registered: {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'";
-
+            
             await eventNotificationService.SendNotificationAsync(successMessage);
 
             return Result.Ok();
@@ -144,9 +148,9 @@ public class HostRegistrationService(IEventNotificationService eventNotification
         catch (Exception ex)
         {
             var errorMessage = $"Host registration failed: {ex.Message} for host {hostConfiguration.Host.Name} (`{hostConfiguration.Host.MacAddress}`) in organizational unit '{string.Join(" > ", hostConfiguration.Subject.OrganizationalUnit)}' of organization '{hostConfiguration.Subject.Organization}'";
-
+            
             await eventNotificationService.SendNotificationAsync(errorMessage);
-
+            
             return Result.Fail(errorMessage);
         }
     }
@@ -161,10 +165,10 @@ public class HostRegistrationService(IEventNotificationService eventNotification
         computer.SetName(hostConfiguration.Host.Name);
         computer.SetIpAddress(hostConfiguration.Host.IpAddress);
 
-        var organizationalUnit = computer.Parent;
+        var organization = computer.Parent.Organization;
 
-        await organizationalUnitRepository.UpdateAsync(organizationalUnit);
-        await organizationalUnitRepository.SaveChangesAsync();
+        await organizationRepository.UpdateAsync(organization);
+        await organizationRepository.SaveChangesAsync();
 
         return Result.Ok();
     }
@@ -220,7 +224,10 @@ public class HostRegistrationService(IEventNotificationService eventNotification
                 return Result.Fail(errorMessage);
             }
 
-            await organizationalUnitRepository.RemoveComputerAsync(parentUnit, computer);
+            parentUnit.RemoveComputer(computer.Id);
+            
+            await organizationRepository.UpdateAsync(organizationResult.Value);
+            await organizationRepository.SaveChangesAsync();
 
             var successMessage = $"Host unregistered: {request.Name} (`{request.MacAddress}`) from organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' in organization '{request.Organization}'";
 
@@ -286,8 +293,8 @@ public class HostRegistrationService(IEventNotificationService eventNotification
 
             computer.SetIpAddress(request.IpAddress);
 
-            await organizationalUnitRepository.UpdateAsync(parentUnit);
-            await organizationalUnitRepository.SaveChangesAsync();
+            await organizationRepository.UpdateAsync(organizationResult.Value);
+            await organizationRepository.SaveChangesAsync();
 
             var successMessage = $"Host information updated: {computer.Name} (`{computer.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'";
 

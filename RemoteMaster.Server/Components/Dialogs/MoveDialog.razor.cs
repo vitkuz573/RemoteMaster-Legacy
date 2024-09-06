@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
-using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Dialogs;
@@ -36,22 +35,19 @@ public partial class MoveDialog
         if (!Hosts.IsEmpty)
         {
             var firstHostParentId = Hosts.First().Key.ParentId;
-            var currentOrganizationalUnit = await OrganizationalUnitRepository.GetByIdAsync(firstHostParentId);
+            var organization = await OrganizationRepository.GetOrganizationByUnitIdAsync(firstHostParentId);
+
+            var currentOrganizationalUnit = organization?.OrganizationalUnits.FirstOrDefault(ou => ou.Id == firstHostParentId);
 
             if (currentOrganizationalUnit != null)
             {
                 _selectedOrganizationalUnitId = currentOrganizationalUnit.Id;
                 _currentOrganizationalUnitName = currentOrganizationalUnit.Name;
 
-                var currentOrganization = await OrganizationRepository.GetByIdAsync(currentOrganizationalUnit.OrganizationId);
+                _currentOrganizationName = organization.Name;
+                _selectedOrganizationId = organization.Id;
 
-                if (currentOrganization != null)
-                {
-                    _currentOrganizationName = currentOrganization.Name;
-                    _selectedOrganizationId = currentOrganization.Id;
-
-                    await LoadOrganizationalUnits(currentOrganization.Id);
-                }
+                await LoadOrganizationalUnits(organization.Id);
             }
         }
     }
@@ -93,10 +89,14 @@ public partial class MoveDialog
 
             if (appUser != null)
             {
-                _organizationalUnits = appUser.UserOrganizationalUnits
-                    .Where(uou => uou.OrganizationalUnit.OrganizationId == organizationId)
-                    .Select(uou => uou.OrganizationalUnit)
-                    .ToList();
+                var organization = await OrganizationRepository.GetByIdAsync(organizationId);
+                
+                if (organization != null)
+                {
+                    _organizationalUnits = organization.OrganizationalUnits
+                        .Where(ou => appUser.UserOrganizationalUnits.Any(uou => uou.OrganizationalUnitId == ou.Id))
+                        .ToList();
+                }
             }
         }
     }
@@ -120,11 +120,17 @@ public partial class MoveDialog
             if (targetOrganization == null)
             {
                 MudDialog.Close(DialogResult.Cancel());
-                
+
                 return;
             }
 
-            var newParentUnit = await OrganizationalUnitRepository.GetByIdAsync(_selectedOrganizationalUnitId.Value) ?? throw new InvalidOperationException("New parent Organizational Unit not found.");
+            var newParentUnit = targetOrganization.OrganizationalUnits.FirstOrDefault(u => u.Id == _selectedOrganizationalUnitId.Value);
+            
+            if (newParentUnit == null)
+            {
+                throw new InvalidOperationException("New parent Organizational Unit not found.");
+            }
+
             var targetOrganizationalUnitsPath = await OrganizationalUnitService.GetFullPathAsync(newParentUnit.Id);
 
             if (targetOrganizationalUnitsPath.Length == 0)
@@ -161,15 +167,11 @@ public partial class MoveDialog
             {
                 var currentParentUnit = computer.Parent;
 
-                if (currentParentUnit == null)
-                {
-                    continue;
-                }
-
                 currentParentUnit.MoveComputerToUnit(computer.Id, newParentUnit);
             }
 
-            await OrganizationalUnitRepository.SaveChangesAsync();
+            await OrganizationRepository.UpdateAsync(targetOrganization);
+            await OrganizationRepository.SaveChangesAsync();
 
             await OnNodesMoved.InvokeAsync(Hosts.Keys);
 

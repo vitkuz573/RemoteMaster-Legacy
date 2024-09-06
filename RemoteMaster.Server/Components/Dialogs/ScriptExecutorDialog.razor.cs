@@ -6,7 +6,7 @@ using System.IO.Compression;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
-using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
+using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Enums;

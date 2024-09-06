@@ -181,7 +181,6 @@ public static class Program
         services.AddScoped<ICrlRepository, CrlRepository>();
         services.AddScoped<IApplicationUserRepository, ApplicationUserRepository>();
         services.AddScoped<IOrganizationRepository, OrganizationRepository>();
-        services.AddScoped<IOrganizationalUnitRepository, OrganizationalUnitRepository>();
         services.AddScoped<IQueryParameterService, QueryParameterService>();
         services.AddScoped<IComputerCommandService, ComputerCommandService>();
         services.AddScoped<ICrlService, CrlService>();

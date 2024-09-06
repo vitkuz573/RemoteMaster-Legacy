@@ -6,7 +6,7 @@ using System.IO.Compression;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using MudBlazor;
-using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
+using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;

@@ -7,7 +7,6 @@
 @using Microsoft.Extensions.Localization
 @using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Server.Aggregates.OrganizationAggregate
-@using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate
 @using RemoteMaster.Server.Data
 @using RemoteMaster.Shared.Abstractions
 @using System.Security.Claims
@@ -24,7 +23,6 @@
 @inject IStringLocalizer<Home> Localizer
 @inject INotificationService NotificationService
 @inject IOrganizationRepository OrganizationRepository
-@inject IOrganizationalUnitRepository OrganizationalUnitRepository
 
 <PageTitle>@Localizer["PageTitle"]</PageTitle>
 

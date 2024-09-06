@@ -4,17 +4,25 @@
 
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
-using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
+using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.DTOs;
 
 namespace RemoteMaster.Server.Services;
 
-public class OrganizationalUnitService(IOrganizationRepository organizationRepository, IOrganizationalUnitRepository organizationalUnitRepository) : IOrganizationalUnitService
+public class OrganizationalUnitService(IOrganizationRepository organizationRepository) : IOrganizationalUnitService
 {
     public async Task<string[]> GetFullPathAsync(Guid organizationalUnitId)
     {
         var path = new List<string>();
-        var unit = await organizationalUnitRepository.GetByIdAsync(organizationalUnitId);
+
+        var organization = await organizationRepository.GetOrganizationByUnitIdAsync(organizationalUnitId);
+        
+        if (organization == null)
+        {
+            return [];
+        }
+
+        var unit = organization.OrganizationalUnits.FirstOrDefault(u => u.Id == organizationalUnitId);
 
         while (unit != null)
         {
@@ -25,10 +33,10 @@ public class OrganizationalUnitService(IOrganizationRepository organizationRepos
                 break;
             }
 
-            unit = await organizationalUnitRepository.GetByIdAsync(unit.ParentId.Value);
+            unit = organization.OrganizationalUnits.FirstOrDefault(u => u.Id == unit.ParentId);
         }
 
-        return [.. path];
+        return path.ToArray();
     }
 
     public async Task<string> AddOrUpdateOrganizationalUnitAsync(OrganizationalUnitDto dto)
@@ -46,12 +54,12 @@ public class OrganizationalUnitService(IOrganizationRepository organizationRepos
 
         if (dto.ParentId.HasValue)
         {
-            parent = await organizationalUnitRepository.GetByIdAsync(dto.ParentId.Value);
+            parent = organization.OrganizationalUnits.FirstOrDefault(u => u.Id == dto.ParentId.Value);
         }
 
         if (dto.Id.HasValue)
         {
-            var organizationalUnit = await organizationalUnitRepository.GetByIdAsync(dto.Id.Value);
+            var organizationalUnit = organization.OrganizationalUnits.FirstOrDefault(u => u.Id == dto.Id.Value);
 
             if (organizationalUnit == null)
             {
@@ -64,28 +72,26 @@ public class OrganizationalUnitService(IOrganizationRepository organizationRepos
             {
                 organizationalUnit.SetParent(parent);
             }
-
-            await organizationalUnitRepository.UpdateAsync(organizationalUnit);
         }
         else
         {
             var newUnit = new OrganizationalUnit(dto.Name, organization, parent);
             organization.AddOrganizationalUnit(newUnit);
-
-            await organizationalUnitRepository.AddAsync(newUnit);
         }
 
-        await organizationalUnitRepository.SaveChangesAsync();
+        await organizationRepository.UpdateAsync(organization);
+        await organizationRepository.SaveChangesAsync();
 
         return dto.Id.HasValue ? "Organizational unit updated successfully." : "Organizational unit created successfully.";
     }
+
 
     public async Task<string> DeleteOrganizationalUnitAsync(OrganizationalUnit organizationalUnit)
     {
         ArgumentNullException.ThrowIfNull(organizationalUnit);
 
         var organization = await organizationRepository.GetByIdAsync(organizationalUnit.OrganizationId);
-        
+
         if (organization == null)
         {
             return "Error: Organization not found.";
@@ -96,7 +102,7 @@ public class OrganizationalUnitService(IOrganizationRepository organizationRepos
             organization.RemoveOrganizationalUnit(organizationalUnit);
 
             await organizationRepository.UpdateAsync(organization);
-            await organizationalUnitRepository.SaveChangesAsync();
+            await organizationRepository.SaveChangesAsync();
 
             return "Organizational unit deleted successfully.";
         }
@@ -108,7 +114,9 @@ public class OrganizationalUnitService(IOrganizationRepository organizationRepos
 
     public async Task<IEnumerable<OrganizationalUnit>> GetAllOrganizationalUnitsAsync()
     {
-        return await organizationalUnitRepository.GetAllAsync();
+        var organizations = await organizationRepository.GetAllAsync();
+
+        return organizations.SelectMany(o => o.OrganizationalUnits);
     }
 
     public async Task UpdateUserOrganizationalUnitsAsync(ApplicationUser user, List<Guid> unitIds)
@@ -116,15 +124,16 @@ public class OrganizationalUnitService(IOrganizationRepository organizationRepos
         ArgumentNullException.ThrowIfNull(user);
 
         var currentUnitIds = user.UserOrganizationalUnits.Select(uou => uou.OrganizationalUnitId).ToHashSet();
-        
-        var organizationalUnits = await organizationalUnitRepository.GetByIdsAsync(unitIds);
+
+        var organizations = await organizationRepository.GetAllAsync();
+        var organizationalUnits = organizations.SelectMany(o => o.OrganizationalUnits).Where(u => unitIds.Contains(u.Id)).ToList();
 
         var unitsToRemove = currentUnitIds.Except(unitIds).ToList();
         var unitsToAdd = unitIds.Except(currentUnitIds).ToList();
 
         if (unitsToRemove.Any())
         {
-            var unitsToRemoveEntities = await organizationalUnitRepository.GetByIdsAsync(unitsToRemove);
+            var unitsToRemoveEntities = organizationalUnits.Where(u => unitsToRemove.Contains(u.Id)).ToList();
 
             foreach (var unit in unitsToRemoveEntities)
             {
@@ -140,6 +149,6 @@ public class OrganizationalUnitService(IOrganizationRepository organizationRepos
             }
         }
 
-        await organizationalUnitRepository.SaveChangesAsync();
+        await organizationRepository.SaveChangesAsync();
     }
 }

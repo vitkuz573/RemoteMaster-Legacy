@@ -4,7 +4,7 @@
 
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 
-namespace RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
+namespace RemoteMaster.Server.Aggregates.OrganizationAggregate;
 
 public class UserOrganizationalUnit
 {

@@ -16,6 +16,7 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
     {
         return await context.Organizations
             .Include(o => o.OrganizationalUnits)
+            .ThenInclude(ou => ou.Computers)
             .FirstOrDefaultAsync(o => o.Id == id);
     }
 
@@ -59,5 +60,62 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
     public async Task SaveChangesAsync()
     {
         await context.SaveChangesAsync();
+    }
+
+    public async Task<IEnumerable<Computer>> FindComputersAsync(Expression<Func<Computer, bool>> predicate)
+    {
+        return await context.Organizations
+            .SelectMany(o => o.OrganizationalUnits)
+            .SelectMany(ou => ou.Computers)
+            .Where(predicate)
+            .ToListAsync();
+    }
+
+    public async Task RemoveComputerAsync(Guid organizationId, Guid unitId, Guid computerId)
+    {
+        var organization = await context.Organizations
+            .Include(o => o.OrganizationalUnits)
+            .ThenInclude(ou => ou.Computers)
+            .FirstOrDefaultAsync(o => o.Id == organizationId);
+
+        if (organization == null)
+        {
+            throw new InvalidOperationException("Organization not found.");
+        }
+
+        var unit = organization.OrganizationalUnits.FirstOrDefault(ou => ou.Id == unitId);
+
+        if (unit == null)
+        {
+            throw new InvalidOperationException("Organizational unit not found.");
+        }
+
+        var computer = unit.Computers.FirstOrDefault(c => c.Id == computerId);
+
+        if (computer == null)
+        {
+            throw new InvalidOperationException("Computer not found.");
+        }
+
+        unit.RemoveComputer(computer.Id);
+        context.Computers.Remove(computer);
+
+        await SaveChangesAsync();
+    }
+
+    public async Task<OrganizationalUnit?> GetOrganizationalUnitByIdAsync(Guid unitId)
+    {
+        return await context.Organizations
+            .SelectMany(o => o.OrganizationalUnits)
+            .Include(ou => ou.UserOrganizationalUnits)
+            .FirstOrDefaultAsync(ou => ou.Id == unitId);
+    }
+
+    public async Task<Organization?> GetOrganizationByUnitIdAsync(Guid unitId)
+    {
+        return await context.Organizations
+            .Include(o => o.OrganizationalUnits)
+            .ThenInclude(ou => ou.Computers) 
+            .FirstOrDefaultAsync(o => o.OrganizationalUnits.Any(ou => ou.Id == unitId));
     }
 }

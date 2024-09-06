@@ -3,7 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.SignalR.Client;
-using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
+using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
 

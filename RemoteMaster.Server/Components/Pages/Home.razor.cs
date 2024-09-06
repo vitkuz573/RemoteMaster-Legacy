@@ -14,7 +14,6 @@ using Microsoft.JSInterop;
 using MudBlazor;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
-using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
 using RemoteMaster.Server.Components.Dialogs;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.Models;
@@ -115,11 +114,6 @@ public partial class Home
         {
             var organizationsResult = await OrganizationRepository.FindAsync(o => accessibleOrganizations.Contains(o.Id));
 
-            if (organizationsResult == null)
-            {
-                return units;
-            }
-
             units.AddRange(organizationsResult);
 
             foreach (var organization in organizationsResult)
@@ -129,15 +123,16 @@ public partial class Home
         }
         else
         {
-            var organizationalUnitsResult = await OrganizationalUnitRepository.FindAsync(ou =>
-                ou.OrganizationId == organizationId &&
-                (parentId == null || ou.ParentId == parentId) &&
-                accessibleOrganizationalUnits.Contains(ou.Id));
+            var organization = await OrganizationRepository.GetByIdAsync(organizationId.Value);
 
-            if (organizationalUnitsResult == null)
+            if (organization == null)
             {
                 return units;
             }
+
+            var organizationalUnitsResult = organization.OrganizationalUnits
+                .Where(ou => (parentId == null || ou.ParentId == parentId) && accessibleOrganizationalUnits.Contains(ou.Id))
+                .ToList();
 
             units.AddRange(organizationalUnitsResult);
 
@@ -645,7 +640,8 @@ public partial class Home
                 foreach (var computer in computersToRemove)
                 {
                     var organizationalUnit = computer.Parent;
-                    await OrganizationalUnitRepository.RemoveComputerAsync(organizationalUnit, computer);
+
+                    await OrganizationRepository.RemoveComputerAsync(organizationalUnit.OrganizationId, organizationalUnit.Id, computer.Id);
 
                     _availableComputers.TryRemove(computer.IpAddress, out _);
                     _unavailableComputers.TryRemove(computer.IpAddress, out _);

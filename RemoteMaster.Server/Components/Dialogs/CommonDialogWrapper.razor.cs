@@ -5,7 +5,7 @@
 using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
-using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
+using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Dialogs;

@@ -9,7 +9,6 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using RemoteMaster.Server.Aggregates.ApplicationClaimAggregate;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
-using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
 using RemoteMaster.Server.Configurations;
 
 namespace RemoteMaster.Server.Data;

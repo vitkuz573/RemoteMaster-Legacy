@@ -2,10 +2,18 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Linq.Expressions;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 
 namespace RemoteMaster.Server.Abstractions;
 
 public interface IOrganizationRepository : IRepository<Organization, Guid>
 {
+    Task<IEnumerable<Computer>> FindComputersAsync(Expression<Func<Computer, bool>> predicate);
+
+    Task RemoveComputerAsync(Guid organizationId, Guid unitId, Guid computerId);
+
+    Task<OrganizationalUnit?> GetOrganizationalUnitByIdAsync(Guid unitId);
+
+    Task<Organization?> GetOrganizationByUnitIdAsync(Guid unitId);
 }

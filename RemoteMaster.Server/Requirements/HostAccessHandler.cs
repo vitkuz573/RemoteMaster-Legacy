@@ -8,7 +8,7 @@ using RemoteMaster.Server.Abstractions;
 
 namespace RemoteMaster.Server.Requirements;
 
-public class HostAccessHandler(IApplicationUserRepository userRepository, IOrganizationalUnitRepository organizationalUnitRepository) : AuthorizationHandler<HostAccessRequirement>
+public class HostAccessHandler(IApplicationUserRepository userRepository, IOrganizationRepository organizationRepository) : AuthorizationHandler<HostAccessRequirement>
 {
     protected async override Task HandleRequirementAsync(AuthorizationHandlerContext context, HostAccessRequirement requirement)
     {
@@ -37,8 +37,7 @@ public class HostAccessHandler(IApplicationUserRepository userRepository, IOrgan
 
             if (user.CanAccessUnregisteredHosts)
             {
-                var isHostRegistered = await organizationalUnitRepository
-                    .FindComputersAsync(c => c.Name == requirement.Host || c.IpAddress == requirement.Host);
+                var isHostRegistered = await organizationRepository.FindComputersAsync(c => c.Name == requirement.Host || c.IpAddress == requirement.Host);
 
                 if (!isHostRegistered.Any())
                 {
@@ -48,8 +47,7 @@ public class HostAccessHandler(IApplicationUserRepository userRepository, IOrgan
                 }
             }
 
-            var computers = await organizationalUnitRepository
-                .FindComputersAsync(c => c.Name == requirement.Host || c.IpAddress == requirement.Host);
+            var computers = await organizationRepository.FindComputersAsync(c => c.Name == requirement.Host || c.IpAddress == requirement.Host);
             var computer = computers.FirstOrDefault();
 
             if (computer?.ParentId == null)
@@ -59,9 +57,16 @@ public class HostAccessHandler(IApplicationUserRepository userRepository, IOrgan
                 return;
             }
 
-            var organizationalUnit = await organizationalUnitRepository.GetByIdAsync(computer.ParentId);
+            var organizationalUnit = await organizationRepository.GetOrganizationalUnitByIdAsync(computer.ParentId);
 
-            if (organizationalUnit == null || organizationalUnit.UserOrganizationalUnits.All(uou => uou.UserId != userId))
+            if (organizationalUnit == null)
+            {
+                context.Fail();
+
+                return;
+            }
+
+            if (organizationalUnit.UserOrganizationalUnits.All(uou => uou.UserId != userId))
             {
                 context.Fail();
 

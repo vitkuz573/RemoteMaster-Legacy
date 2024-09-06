@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
-using RemoteMaster.Server.Aggregates.OrganizationalUnitAggregate;
+using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Data;
 using RemoteMaster.Shared.Models;
 
