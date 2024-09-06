@@ -88,9 +88,9 @@ public class HostAccessHandlerTests
             .ReturnsAsync(applicationUser);
 
         _organizationRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Computer, bool>>>()))
-            .ReturnsAsync(new List<Computer> { new("host", "127.0.0.1", "00-14-22-01-23-45") });
+            .ReturnsAsync(new List<Computer> { organizationalUnit.Computers.First() });
 
-        _organizationRepositoryMock.Setup(repo => repo.GetOrganizationalUnitByIdAsync(It.IsAny<Guid>()))
+        _organizationRepositoryMock.Setup(repo => repo.GetOrganizationalUnitByIdAsync(organizationalUnit.Id))
             .ReturnsAsync(organizationalUnit);
 
         // Act
@@ -123,9 +123,9 @@ public class HostAccessHandlerTests
             .ReturnsAsync(applicationUser);
 
         _organizationRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Computer, bool>>>()))
-            .ReturnsAsync(new List<Computer> { new("host", "127.0.0.1", "00-14-22-01-23-45") });
+            .ReturnsAsync(new List<Computer> { organizationalUnit.Computers.First() });
 
-        _organizationRepositoryMock.Setup(repo => repo.GetOrganizationalUnitByIdAsync(It.IsAny<Guid>()))
+        _organizationRepositoryMock.Setup(repo => repo.GetOrganizationalUnitByIdAsync(organizationalUnit.Id))
             .ReturnsAsync(organizationalUnit);
 
         // Act
@@ -165,7 +165,7 @@ public class HostAccessHandlerTests
             .ReturnsAsync(applicationUser);
 
         _organizationRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Computer, bool>>>()))
-            .ReturnsAsync(new List<Computer> { new("sharedHost", "127.0.0.1", "00-14-22-01-23-45") });
+            .ReturnsAsync(new List<Computer> { organizationalUnit1.Computers.First() });
 
         _organizationRepositoryMock.Setup(repo => repo.GetOrganizationalUnitByIdAsync(organizationalUnit1.Id))
             .ReturnsAsync(organizationalUnit1);
@@ -182,8 +182,8 @@ public class HostAccessHandlerTests
     {
         // Arrange
         var requirement = new HostAccessRequirement("sharedHost");
-        var user = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user1")]));
-        var context = new AuthorizationHandlerContext([requirement], user, null);
+        var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }));
+        var context = new AuthorizationHandlerContext(new[] { requirement }, user, null);
 
         var organization1 = new Organization("Organization 1", new Address("City", "State", "US"));
         var organization2 = new Organization("Organization 2", new Address("City", "State", "US"));
@@ -207,9 +207,9 @@ public class HostAccessHandlerTests
             .ReturnsAsync(applicationUser);
 
         _organizationRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Computer, bool>>>()))
-            .ReturnsAsync(new List<Computer> { new("sharedHost", "127.0.0.1", "00-14-22-01-23-45") });
+            .ReturnsAsync(new List<Computer> { organizationalUnit1.Computers.First() });
 
-        _organizationRepositoryMock.Setup(repo => repo.GetOrganizationalUnitByIdAsync(organizationalUnit1.Id))
+        _organizationRepositoryMock.Setup(repo => repo.GetOrganizationalUnitByIdAsync(organizationalUnit2.Id))
             .ReturnsAsync(organizationalUnit1);
 
         // Act

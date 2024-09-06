@@ -8,7 +8,7 @@ public class Computer
 {
     protected Computer() { }
 
-    public Computer(string name, string ipAddress, string macAddress)
+    internal Computer(string name, string ipAddress, string macAddress)
     {
         Name = name ?? throw new ArgumentNullException(nameof(name));
         IpAddress = ipAddress ?? throw new ArgumentNullException(nameof(ipAddress));
