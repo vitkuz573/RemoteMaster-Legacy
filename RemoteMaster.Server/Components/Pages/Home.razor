@@ -73,6 +73,7 @@
                     @if (context.User.IsInRole("Administrator"))
                     {
                         <MudNavLink Match="NavLinkMatch.All" OnClick="OpenHostConfig">@Localizer["MenuHostConfig"]</MudNavLink>
+                        <MudNavLink Match="NavLinkMatch.All" OnClick="OpenCertificateRenewTasks">Certificate tasks</MudNavLink>
                         <MudNavLink Match="NavLinkMatch.All" OnClick="PublishCrl">@Localizer["MenuPublishCrl"]</MudNavLink>
                     }
                     <MudNavLink Match="NavLinkMatch.All" OnClick="ManageProfile">@Localizer["MenuProfile"]</MudNavLink>

@@ -159,6 +159,10 @@ public partial class Home
     }
 
     [Authorize(Roles = "Administrator")]
+    private void OpenCertificateRenewTasks() => NavigationManager.NavigateTo("/certificates/tasks");
+
+
+    [Authorize(Roles = "Administrator")]
     private async Task PublishCrl()
     {
         var crlResult = await CrlService.GenerateCrlAsync();
