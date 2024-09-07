@@ -133,6 +133,7 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
         return await context.CertificateRenewalTasks
             .Include(task => task.Computer)
             .Include(task => task.Organization)
+            .Include(task => task.OrganizationalUnit)
             .ToListAsync();
     }
 

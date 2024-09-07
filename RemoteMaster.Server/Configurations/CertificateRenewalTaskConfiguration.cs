@@ -38,16 +38,25 @@ public class CertificateRenewalTaskConfiguration : IEntityTypeConfiguration<Cert
             .HasForeignKey(crt => crt.OrganizationId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.Property(crt => crt.PlannedDate)
+        builder.Property(crt => crt.OrganizationalUnitId)
             .IsRequired()
             .HasColumnOrder(3);
 
-        builder.Property(crt => crt.LastAttemptDate)
+        builder.HasOne(crt => crt.OrganizationalUnit)
+            .WithMany()
+            .HasForeignKey(crt => crt.OrganizationalUnitId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Property(crt => crt.PlannedDate)
+            .IsRequired()
             .HasColumnOrder(4);
+
+        builder.Property(crt => crt.LastAttemptDate)
+            .HasColumnOrder(5);
 
         builder.Property(crt => crt.Status)
             .IsRequired()
             .HasConversion<string>()
-            .HasColumnOrder(5);
+            .HasColumnOrder(6);
     }
 }

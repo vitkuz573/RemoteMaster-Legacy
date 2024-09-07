@@ -22,6 +22,8 @@ public class CertificateRenewalTask
         ComputerId = computer.Id;
         Organization = organization ?? throw new ArgumentNullException(nameof(organization));
         OrganizationId = organization.Id;
+        OrganizationalUnit = computer.Parent ?? throw new ArgumentNullException(nameof(computer));
+        OrganizationalUnitId = computer.ParentId;
         PlannedDate = plannedDate;
         Status = CertificateRenewalStatus.Pending;
     }
@@ -35,6 +37,10 @@ public class CertificateRenewalTask
     public Guid OrganizationId { get; private set; }
 
     public Organization Organization { get; private set; }
+
+    public Guid OrganizationalUnitId { get; private set; }
+
+    public OrganizationalUnit OrganizationalUnit { get; private set; }
 
     public DateTime PlannedDate { get; private set; }
 

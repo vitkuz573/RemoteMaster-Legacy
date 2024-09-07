@@ -83,7 +83,7 @@ public class OrganizationService(IOrganizationRepository organizationRepository)
         var organizationsToRemove = currentOrganizationIds.Except(organizationIds).ToList();
         var organizationsToAdd = organizationIds.Except(currentOrganizationIds).ToList();
 
-        if (organizationsToRemove.Any())
+        if (organizationsToRemove.Count != 0)
         {
             var organizationsToRemoveEntities = await organizationRepository.GetByIdsAsync(organizationsToRemove);
 
