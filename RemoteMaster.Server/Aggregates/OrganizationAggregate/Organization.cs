@@ -19,7 +19,6 @@ public class Organization : IAggregateRoot
 
     private readonly List<OrganizationalUnit> _organizationalUnits = [];
     private readonly List<UserOrganization> _userOrganizations = [];
-    private readonly List<CertificateRenewalTask> _certificateRenewalTasks = [];
 
     public Guid Id { get; private set; }
 
@@ -31,8 +30,6 @@ public class Organization : IAggregateRoot
     
     public IReadOnlyCollection<UserOrganization> UserOrganizations => _userOrganizations.AsReadOnly();
 
-    public IReadOnlyCollection<CertificateRenewalTask> CertificateRenewalTasks => _certificateRenewalTasks.AsReadOnly();
-
     public void SetName(string newName)
     {
         Name = newName ?? throw new ArgumentNullException(nameof(newName));
@@ -41,14 +38,6 @@ public class Organization : IAggregateRoot
     public void SetAddress(Address address)
     {
         Address = address ?? throw new ArgumentNullException(nameof(address));
-
-        foreach (var unit in _organizationalUnits)
-        {
-            foreach (var computer in unit.Computers)
-            {
-                CreateCertificateRenewalTask(computer.Id, DateTime.UtcNow.AddHours(1));
-            }
-        }
     }
 
     public void AddOrganizationalUnit(string unitName, Guid? parentId = null)
@@ -118,17 +107,6 @@ public class Organization : IAggregateRoot
         var unit = _organizationalUnits.SingleOrDefault(u => u.Computers.Any(c => c.Id == computerId)) ?? throw new InvalidOperationException("Computer not found in this organization.");
         var computer = unit.Computers.Single(c => c.Id == computerId);
 
-        var task = new CertificateRenewalTask(computer, this, plannedDate);
-
-        _certificateRenewalTasks.Add(task);
-
-        return task;
-    }
-
-    public void RemoveCertificateRenewalTask(Guid taskId)
-    {
-        var task = _certificateRenewalTasks.SingleOrDefault(t => t.Id == taskId) ?? throw new InvalidOperationException("Certificate renewal task not found.");
-        
-        _certificateRenewalTasks.Remove(task);
+        return new CertificateRenewalTask(computer, this, plannedDate);
     }
 }

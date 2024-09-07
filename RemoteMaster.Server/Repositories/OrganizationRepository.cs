@@ -78,27 +78,11 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
         var organization = await context.Organizations
             .Include(o => o.OrganizationalUnits)
             .ThenInclude(ou => ou.Computers)
-            .FirstOrDefaultAsync(o => o.Id == organizationId);
-
-        if (organization == null)
-        {
-            throw new InvalidOperationException("Organization not found.");
-        }
-
-        var unit = organization.OrganizationalUnits.FirstOrDefault(ou => ou.Id == unitId);
-
-        if (unit == null)
-        {
-            throw new InvalidOperationException("Organizational unit not found.");
-        }
-
-        var computer = unit.Computers.FirstOrDefault(c => c.Id == computerId);
-
-        if (computer == null)
-        {
-            throw new InvalidOperationException("Computer not found.");
-        }
-
+            .FirstOrDefaultAsync(o => o.Id == organizationId) ?? throw new InvalidOperationException("Organization not found.");
+        
+        var unit = organization.OrganizationalUnits.FirstOrDefault(ou => ou.Id == unitId) ?? throw new InvalidOperationException("Organizational unit not found.");
+        var computer = unit.Computers.FirstOrDefault(c => c.Id == computerId) ?? throw new InvalidOperationException("Computer not found.");
+        
         unit.RemoveComputer(computer.Id);
         context.Computers.Remove(computer);
     }
@@ -125,44 +109,17 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
         var sourceOrganization = await context.Organizations
             .Include(o => o.OrganizationalUnits)
             .ThenInclude(ou => ou.Computers)
-            .FirstOrDefaultAsync(o => o.Id == sourceOrganizationId);
-
-        if (sourceOrganization == null)
-        {
-            throw new InvalidOperationException("Source organization not found.");
-        }
-
+            .FirstOrDefaultAsync(o => o.Id == sourceOrganizationId) ?? throw new InvalidOperationException("Source organization not found.");
+        
         var targetOrganization = await context.Organizations
             .Include(o => o.OrganizationalUnits)
             .ThenInclude(ou => ou.Computers)
-            .FirstOrDefaultAsync(o => o.Id == targetOrganizationId);
-
-        if (targetOrganization == null)
-        {
-            throw new InvalidOperationException("Target organization not found.");
-        }
-
-        var sourceUnit = sourceOrganization.OrganizationalUnits.FirstOrDefault(u => u.Id == sourceUnitId);
-
-        if (sourceUnit == null)
-        {
-            throw new InvalidOperationException("Source unit not found.");
-        }
-
-        var computer = sourceUnit.Computers.FirstOrDefault(c => c.Id == computerId);
-
-        if (computer == null)
-        {
-            throw new InvalidOperationException("Computer not found in the source unit.");
-        }
-
-        var targetUnit = targetOrganization.OrganizationalUnits.FirstOrDefault(u => u.Id == targetUnitId);
-
-        if (targetUnit == null)
-        {
-            throw new InvalidOperationException("Target unit not found.");
-        }
-
+            .FirstOrDefaultAsync(o => o.Id == targetOrganizationId) ?? throw new InvalidOperationException("Target organization not found.");
+        
+        var sourceUnit = sourceOrganization.OrganizationalUnits.FirstOrDefault(u => u.Id == sourceUnitId) ?? throw new InvalidOperationException("Source unit not found.");
+        var computer = sourceUnit.Computers.FirstOrDefault(c => c.Id == computerId) ?? throw new InvalidOperationException("Computer not found in the source unit.");
+        var targetUnit = targetOrganization.OrganizationalUnits.FirstOrDefault(u => u.Id == targetUnitId) ?? throw new InvalidOperationException("Target unit not found.");
+        
         sourceUnit.RemoveComputer(computer.Id);
         computer.SetOrganizationalUnit(targetUnit.Id);
         targetUnit.AddExistingComputer(computer);
@@ -177,6 +134,15 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
             .Include(task => task.Computer)
             .Include(task => task.Organization)
             .ToListAsync();
+    }
+
+    public async Task CreateCertificateRenewalTaskAsync(Guid organizationId, Guid computerId, DateTime plannedDate)
+    {
+        var organization = await GetByIdAsync(organizationId);
+
+        var certificateRenewalTask = organization?.CreateCertificateRenewalTask(computerId, plannedDate);
+
+        await context.CertificateRenewalTasks.AddAsync(certificateRenewalTask);
     }
 
     public async Task DeleteCertificateRenewalTaskAsync(CertificateRenewalTask task)

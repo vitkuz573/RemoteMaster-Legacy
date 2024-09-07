@@ -27,16 +27,29 @@ public class OrganizationService(IOrganizationRepository organizationRepository)
         if (dto.Id.HasValue)
         {
             var organization = await organizationRepository.GetByIdAsync(dto.Id.Value);
-            
+
             if (organization == null)
             {
                 return "Error: Organization not found.";
             }
 
+            var addressChanged = !organization.Address.Equals(address);
+
             organization.SetName(dto.Name);
             organization.SetAddress(address);
 
             await organizationRepository.UpdateAsync(organization);
+
+            if (addressChanged)
+            {
+                foreach (var unit in organization.OrganizationalUnits)
+                {
+                    foreach (var computer in unit.Computers)
+                    {
+                        await organizationRepository.CreateCertificateRenewalTaskAsync(organization.Id, computer.Id, DateTime.UtcNow.AddHours(1));
+                    }
+                }
+            }
         }
         else
         {
