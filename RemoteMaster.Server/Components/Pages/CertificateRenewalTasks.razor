@@ -18,8 +18,8 @@
         <table class="min-w-full rounded-lg border border-gray-300 bg-white shadow-md">
             <thead>
             <tr>
-                <th class="bg-gray-100 px-4 py-2 text-left">Computer ID</th>
-                <th class="bg-gray-100 px-4 py-2 text-left">Organization ID</th>
+                <th class="bg-gray-100 px-4 py-2 text-left">Computer</th>
+                <th class="bg-gray-100 px-4 py-2 text-left">Organization</th>
                 <th class="bg-gray-100 px-4 py-2 text-left">Planned Date</th>
                 <th class="bg-gray-100 px-4 py-2 text-left">Status</th>
                 <th class="bg-gray-100 px-4 py-2 text-left">Actions</th>
@@ -29,8 +29,8 @@
             @foreach (var task in _certificateTasks)
             {
                 <tr class="border-t">
-                    <td class="px-4 py-2">@task.ComputerId</td>
-                    <td class="px-4 py-2">@task.OrganizationId</td>
+                    <td class="px-4 py-2">@task.Computer.Name</td>
+                    <td class="px-4 py-2">@task.Organization.Name</td>
                     <td class="px-4 py-2">@task.PlannedDate.ToString("g")</td>
                     <td class="px-4 py-2">@task.Status</td>
                     <td class="px-4 py-2">
