@@ -22,6 +22,7 @@
                 <th class="bg-gray-100 px-4 py-2 text-left">Organization</th>
                 <th class="bg-gray-100 px-4 py-2 text-left">Organizational Unit</th>
                 <th class="bg-gray-100 px-4 py-2 text-left">Planned Date</th>
+                <th class="bg-gray-100 px-4 py-2 text-left">Last Attempt Date</th>
                 <th class="bg-gray-100 px-4 py-2 text-left">Status</th>
                 <th class="bg-gray-100 px-4 py-2 text-left">Actions</th>
             </tr>
@@ -34,6 +35,16 @@
                     <td class="px-4 py-2">@task.Organization.Name</td>
                     <td class="px-4 py-2">@task.OrganizationalUnit.Name</td>
                     <td class="px-4 py-2">@task.PlannedDate.ToString("g")</td>
+                    <td class="px-4 py-2">
+                        @if (task.LastAttemptDate.HasValue)
+                        {
+                            @task.LastAttemptDate.Value.ToString("g")
+                        }
+                        else
+                        {
+                            <span class="text-gray-500">N/A</span>
+                        }
+                    </td>
                     <td class="px-4 py-2">@task.Status</td>
                     <td class="px-4 py-2">
                         <button class="text-red-600 hover:underline" @onclick="() => DeleteTask(task.Id)">Delete</button>
