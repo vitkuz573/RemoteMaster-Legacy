@@ -102,7 +102,7 @@ public class Organization : IAggregateRoot
         _userOrganizations.Remove(userOrganization);
     }
 
-    public CertificateRenewalTask CreateCertificateRenewalTask(Guid computerId, DateTime plannedDate)
+    public CertificateRenewalTask CreateCertificateRenewalTask(Guid computerId, DateTimeOffset plannedDate)
     {
         var unit = _organizationalUnits.SingleOrDefault(u => u.Computers.Any(c => c.Id == computerId)) ?? throw new InvalidOperationException("Computer not found in this organization.");
         var computer = unit.Computers.Single(c => c.Id == computerId);

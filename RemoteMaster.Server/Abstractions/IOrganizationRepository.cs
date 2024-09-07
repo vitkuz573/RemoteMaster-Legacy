@@ -21,7 +21,7 @@ public interface IOrganizationRepository : IRepository<Organization, Guid>
 
     Task<IEnumerable<CertificateRenewalTask>> GetAllCertificateRenewalTasksAsync();
 
-    Task CreateCertificateRenewalTaskAsync(Guid organizationId, Guid computerId, DateTime plannedDate);
+    Task CreateCertificateRenewalTaskAsync(Guid organizationId, Guid computerId, DateTimeOffset plannedDate);
 
     Task DeleteCertificateRenewalTaskAsync(Guid taskId);
 }

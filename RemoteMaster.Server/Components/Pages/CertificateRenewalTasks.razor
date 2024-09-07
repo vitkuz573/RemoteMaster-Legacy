@@ -34,11 +34,11 @@
                     <td class="px-4 py-2">@task.Computer.Name</td>
                     <td class="px-4 py-2">@task.Organization.Name</td>
                     <td class="px-4 py-2">@task.OrganizationalUnit.Name</td>
-                    <td class="px-4 py-2">@task.PlannedDate.ToString("g")</td>
+                    <td class="px-4 py-2">@task.PlannedDate.ToLocalTime().ToString("g")</td>
                     <td class="px-4 py-2">
                         @if (task.LastAttemptDate.HasValue)
                         {
-                            @task.LastAttemptDate.Value.ToString("g")
+                            @task.LastAttemptDate.Value.ToLocalTime().ToString("g")
                         }
                         else
                         {

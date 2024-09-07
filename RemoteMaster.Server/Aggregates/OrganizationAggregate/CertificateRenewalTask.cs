@@ -10,9 +10,9 @@ public class CertificateRenewalTask
 {
     private CertificateRenewalTask() { }
 
-    internal CertificateRenewalTask(Computer computer, Organization organization, DateTime plannedDate)
+    internal CertificateRenewalTask(Computer computer, Organization organization, DateTimeOffset plannedDate)
     {
-        if (plannedDate <= DateTime.UtcNow)
+        if (plannedDate <= DateTimeOffset.Now)
         {
             throw new ArgumentException("Planned date must be in the future.", nameof(plannedDate));
         }
@@ -42,9 +42,9 @@ public class CertificateRenewalTask
 
     public OrganizationalUnit OrganizationalUnit { get; private set; }
 
-    public DateTime PlannedDate { get; private set; }
+    public DateTimeOffset PlannedDate { get; private set; }
 
-    public DateTime? LastAttemptDate { get; private set; }
+    public DateTimeOffset? LastAttemptDate { get; private set; }
 
     public CertificateRenewalStatus Status { get; private set; }
 }

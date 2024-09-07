@@ -137,7 +137,7 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
             .ToListAsync();
     }
 
-    public async Task CreateCertificateRenewalTaskAsync(Guid organizationId, Guid computerId, DateTime plannedDate)
+    public async Task CreateCertificateRenewalTaskAsync(Guid organizationId, Guid computerId, DateTimeOffset plannedDate)
     {
         var organization = await GetByIdAsync(organizationId);
 
