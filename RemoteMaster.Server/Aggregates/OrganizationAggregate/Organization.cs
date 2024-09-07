@@ -41,6 +41,14 @@ public class Organization : IAggregateRoot
     public void SetAddress(Address address)
     {
         Address = address ?? throw new ArgumentNullException(nameof(address));
+
+        foreach (var unit in _organizationalUnits)
+        {
+            foreach (var computer in unit.Computers)
+            {
+                CreateCertificateRenewalTask(computer.Id, DateTime.UtcNow.AddHours(1));
+            }
+        }
     }
 
     public void AddOrganizationalUnit(string unitName, Guid? parentId = null)
@@ -66,13 +74,8 @@ public class Organization : IAggregateRoot
 
     public void RemoveOrganizationalUnit(Guid unitId)
     {
-        var unit = _organizationalUnits.SingleOrDefault(u => u.Id == unitId);
-
-        if (unit == null)
-        {
-            throw new InvalidOperationException("Organizational unit not found in this organization.");
-        }
-
+        var unit = _organizationalUnits.SingleOrDefault(u => u.Id == unitId) ?? throw new InvalidOperationException("Organizational unit not found in this organization.");
+        
         RemoveChildUnits(unit);
 
         _organizationalUnits.Remove(unit);
@@ -105,25 +108,14 @@ public class Organization : IAggregateRoot
 
     public void RemoveUser(string userId)
     {
-        var userOrganization = _userOrganizations.SingleOrDefault(u => u.UserId == userId);
+        var userOrganization = _userOrganizations.SingleOrDefault(u => u.UserId == userId) ?? throw new InvalidOperationException("User not found in this organization.");
         
-        if (userOrganization == null)
-        {
-            throw new InvalidOperationException("User not found in this organization.");
-        }
-
         _userOrganizations.Remove(userOrganization);
     }
 
     public CertificateRenewalTask CreateCertificateRenewalTask(Guid computerId, DateTime plannedDate)
     {
-        var unit = _organizationalUnits.SingleOrDefault(u => u.Computers.Any(c => c.Id == computerId));
-
-        if (unit == null)
-        {
-            throw new InvalidOperationException("Computer not found in this organization.");
-        }
-
+        var unit = _organizationalUnits.SingleOrDefault(u => u.Computers.Any(c => c.Id == computerId)) ?? throw new InvalidOperationException("Computer not found in this organization.");
         var computer = unit.Computers.Single(c => c.Id == computerId);
 
         var task = new CertificateRenewalTask(computer, this, plannedDate);
@@ -135,13 +127,8 @@ public class Organization : IAggregateRoot
 
     public void RemoveCertificateRenewalTask(Guid taskId)
     {
-        var task = _certificateRenewalTasks.SingleOrDefault(t => t.Id == taskId);
-
-        if (task == null)
-        {
-            throw new InvalidOperationException("Certificate renewal task not found.");
-        }
-
+        var task = _certificateRenewalTasks.SingleOrDefault(t => t.Id == taskId) ?? throw new InvalidOperationException("Certificate renewal task not found.");
+        
         _certificateRenewalTasks.Remove(task);
     }
 }

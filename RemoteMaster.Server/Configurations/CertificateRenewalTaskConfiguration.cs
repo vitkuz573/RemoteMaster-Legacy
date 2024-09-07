@@ -34,7 +34,7 @@ public class CertificateRenewalTaskConfiguration : IEntityTypeConfiguration<Cert
             .HasColumnOrder(2);
 
         builder.HasOne(crt => crt.Organization)
-            .WithMany()
+            .WithMany(org => org.CertificateRenewalTasks)
             .HasForeignKey(crt => crt.OrganizationId)
             .OnDelete(DeleteBehavior.Cascade);
 
