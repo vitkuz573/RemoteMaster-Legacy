@@ -24,7 +24,8 @@ public partial class CertificateRenewalTasks : ComponentBase
 
         if (taskToRemove != null)
         {
-            await OrganizationRepository.DeleteCertificateRenewalTaskAsync(taskToRemove);
+            await OrganizationRepository.DeleteCertificateRenewalTaskAsync(taskId);
+            await OrganizationRepository.SaveChangesAsync();
 
             _certificateTasks.Remove(taskToRemove);
 

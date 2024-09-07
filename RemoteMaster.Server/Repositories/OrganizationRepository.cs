@@ -146,10 +146,11 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
         await context.CertificateRenewalTasks.AddAsync(certificateRenewalTask);
     }
 
-    public async Task DeleteCertificateRenewalTaskAsync(CertificateRenewalTask task)
+    public async Task DeleteCertificateRenewalTaskAsync(Guid taskId)
     {
-        context.CertificateRenewalTasks.Remove(task);
+        var task = await context.CertificateRenewalTasks
+            .FirstOrDefaultAsync(t => t.Id == taskId) ?? throw new InvalidOperationException("Task not found.");
 
-        await context.SaveChangesAsync();
+        context.CertificateRenewalTasks.Remove(task);
     }
 }
