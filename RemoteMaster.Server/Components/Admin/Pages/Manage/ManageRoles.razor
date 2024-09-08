@@ -55,7 +55,7 @@
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-center">
                                     <div class="flex items-center justify-center">
-                                        @if (role.Name != "RootAdministrator")
+                                        @if (role.Name != "RootAdministrator" && role.Name != "ServiceUser")
                                         {
                                             <button class="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 focus:outline-none" @onclick="() => ShowDeleteConfirmation(role)">
                                                 Delete

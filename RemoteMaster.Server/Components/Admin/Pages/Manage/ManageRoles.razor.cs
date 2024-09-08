@@ -36,6 +36,7 @@ public partial class ManageRoles
 
         _roles = [.. roles
             .OrderByDescending(r => r.Name == "RootAdministrator")
+            .ThenByDescending(r => r.Name == "ServiceUser")
             .ThenBy(r => r.Name)];
     }
 

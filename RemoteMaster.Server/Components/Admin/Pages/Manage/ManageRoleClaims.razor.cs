@@ -25,7 +25,7 @@ public partial class ManageRoleClaims
     protected async override Task OnInitializedAsync()
     {
         _roles = await RoleManager.Roles
-            .Where(role => role.Name != "RootAdministrator")
+            .Where(role => role.Name != "RootAdministrator" && role.Name != "ServiceUser")
             .ToListAsync();
 
         var allClaims = await ApplicationClaimRepository.GetAllAsync();
