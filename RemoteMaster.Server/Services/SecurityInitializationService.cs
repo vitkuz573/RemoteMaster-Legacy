@@ -33,7 +33,7 @@ public class SecurityInitializationService(ICaCertificateService caCertificateSe
             var serviceUser = new ApplicationUser
             {
                 Id = serviceUserId,
-                UserName = "RemoteMasterServiceUser",
+                UserName = "service",
                 SecurityStamp = Guid.NewGuid().ToString("D")
             };
 

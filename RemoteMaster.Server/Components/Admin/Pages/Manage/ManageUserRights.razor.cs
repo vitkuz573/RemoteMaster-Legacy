@@ -27,6 +27,7 @@ public partial class ManageUserRights
     private bool HasChanges => HasChangesInRole() || HasChangesInOrganizations() || HasChangesInUnits() || HasChangesInLockout() || HasChangesInAccessToUnregisteredHosts();
 
     private const string RootAdminRoleName = "RootAdministrator";
+    private const string ServiceUserRoleName = "ServiceUser";
 
     protected async override Task OnInitializedAsync()
     {
@@ -38,7 +39,7 @@ public partial class ManageUserRights
     private async Task LoadRolesAsync()
     {
         _roles = await RoleManager.Roles
-            .Where(role => role.Name != RootAdminRoleName)
+            .Where(role => role.Name != RootAdminRoleName && role.Name != ServiceUserRoleName)
             .ToListAsync();
     }
 
@@ -50,7 +51,9 @@ public partial class ManageUserRights
 
         foreach (var user in users)
         {
-            if (!await UserManager.IsInRoleAsync(user, RootAdminRoleName))
+            var userRoles = await UserManager.GetRolesAsync(user);
+
+            if (!userRoles.Contains(RootAdminRoleName) && !userRoles.Contains(ServiceUserRoleName))
             {
                 _users.Add(new UserViewModel
                 {

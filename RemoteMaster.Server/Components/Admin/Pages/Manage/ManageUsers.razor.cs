@@ -129,7 +129,9 @@ public partial class ManageUsers
     {
         var users = await UserManager.Users.ToListAsync();
 
-        var sortedUsers = new List<ApplicationUser>();
+        ApplicationUser? rootAdministrator = null;
+        ApplicationUser? serviceUser = null;
+        var otherUsers = new List<ApplicationUser>();
 
         _userRoles.Clear();
         _userTwoFactorStatus.Clear();
@@ -144,13 +146,31 @@ public partial class ManageUsers
 
             if (roles.Contains("RootAdministrator"))
             {
-                sortedUsers.Insert(0, user);
+                rootAdministrator = user;
+            }
+            else if (roles.Contains("ServiceUser"))
+            {
+                serviceUser = user;
             }
             else
             {
-                sortedUsers.Add(user);
+                otherUsers.Add(user);
             }
         }
+
+        var sortedUsers = new List<ApplicationUser>();
+
+        if (rootAdministrator != null)
+        {
+            sortedUsers.Add(rootAdministrator);
+        }
+
+        if (serviceUser != null)
+        {
+            sortedUsers.Add(serviceUser);
+        }
+
+        sortedUsers.AddRange(otherUsers);
 
         _users = sortedUsers;
     }
