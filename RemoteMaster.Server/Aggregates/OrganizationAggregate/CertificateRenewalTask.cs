@@ -47,4 +47,16 @@ public class CertificateRenewalTask
     public DateTimeOffset? LastAttemptDate { get; private set; }
 
     public CertificateRenewalStatus Status { get; private set; }
+
+    internal void MarkCompleted()
+    {
+        Status = CertificateRenewalStatus.Completed;
+        LastAttemptDate = DateTimeOffset.Now;
+    }
+
+    internal void MarkFailed()
+    {
+        Status = CertificateRenewalStatus.Failed;
+        LastAttemptDate = DateTimeOffset.Now;
+    }
 }

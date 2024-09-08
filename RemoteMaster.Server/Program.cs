@@ -221,9 +221,10 @@ public static class Program
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         });
 
-        services.AddHostedService<SecurityInitializationService>();
         services.AddHostedService<RoleInitializationService>();
+        services.AddHostedService<SecurityInitializationService>();
         services.AddHostedService<DatabaseCleanerService>();
+        services.AddHostedService<CertificateRenewalTaskService>();
 
         services.Configure<ApplicationSettings>(configurationManager);
         services.Configure<JwtOptions>(configurationManager.GetSection("jwt"));

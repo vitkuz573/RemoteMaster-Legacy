@@ -12,12 +12,13 @@ namespace RemoteMaster.Server.Services;
 
 public class RoleInitializationService(IServiceProvider serviceProvider) : IHostedService
 {
-    private readonly List<string> _roles = ["RootAdministrator", "Administrator", "Viewer"];
+    private readonly List<string> _roles = ["RootAdministrator", "Administrator", "Viewer", "ServiceUser"];
 
     private readonly Dictionary<string, List<Claim>> _roleClaims = new()
     {
         { "Administrator", AdministratorClaims },
-        { "Viewer", ViewerClaims }
+        { "Viewer", ViewerClaims },
+        { "ServiceUser", ServiceUserClaims }
     };
 
     private static readonly List<ApplicationClaim> AllClaims =
@@ -100,6 +101,11 @@ public class RoleInitializationService(IServiceProvider serviceProvider) : IHost
     [
         new Claim("Screen", "ToggleDrawCursor"),
         new Claim("Screen", "ChangeSelectedScreen")
+    ];
+
+    private static readonly List<Claim> ServiceUserClaims =
+    [
+        new Claim("HostManagement", "RenewCertificate")
     ];
 
     public async Task StartAsync(CancellationToken cancellationToken)

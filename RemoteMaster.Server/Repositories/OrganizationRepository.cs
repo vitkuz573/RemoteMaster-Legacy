@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
@@ -152,5 +153,21 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
             .FirstOrDefaultAsync(t => t.Id == taskId) ?? throw new InvalidOperationException("Task not found.");
 
         context.CertificateRenewalTasks.Remove(task);
+    }
+
+    public async Task MarkCertificateRenewalTaskCompleted(Guid taskId)
+    {
+        var task = await context.CertificateRenewalTasks
+            .FirstOrDefaultAsync(t => t.Id == taskId) ?? throw new InvalidOperationException("Task not found.");
+
+        task.MarkCompleted();
+    }
+
+    public async Task MarkCertificateRenewalTaskFailed(Guid taskId)
+    {
+        var task = await context.CertificateRenewalTasks
+            .FirstOrDefaultAsync(t => t.Id == taskId) ?? throw new InvalidOperationException("Task not found.");
+
+        task.MarkFailed();
     }
 }
