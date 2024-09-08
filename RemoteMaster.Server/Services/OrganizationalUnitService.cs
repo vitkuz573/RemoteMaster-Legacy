@@ -36,7 +36,7 @@ public class OrganizationalUnitService(IOrganizationRepository organizationRepos
             unit = organization.OrganizationalUnits.FirstOrDefault(u => u.Id == unit.ParentId);
         }
 
-        return path.ToArray();
+        return [.. path];
     }
 
     public async Task<string> AddOrUpdateOrganizationalUnitAsync(OrganizationalUnitDto dto)
@@ -130,7 +130,7 @@ public class OrganizationalUnitService(IOrganizationRepository organizationRepos
         var unitsToRemove = currentUnitIds.Except(unitIds).ToList();
         var unitsToAdd = unitIds.Except(currentUnitIds).ToList();
 
-        if (unitsToRemove.Any())
+        if (unitsToRemove.Count != 0)
         {
             var unitsToRemoveEntities = organizationalUnits.Where(u => unitsToRemove.Contains(u.Id)).ToList();
 
@@ -140,7 +140,7 @@ public class OrganizationalUnitService(IOrganizationRepository organizationRepos
             }
         }
 
-        if (unitsToAdd.Any())
+        if (unitsToAdd.Count != 0)
         {
             foreach (var unit in unitsToAdd.Select(unitId => organizationalUnits.FirstOrDefault(u => u.Id == unitId)))
             {

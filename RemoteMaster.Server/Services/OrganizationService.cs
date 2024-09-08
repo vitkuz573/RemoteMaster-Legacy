@@ -93,7 +93,7 @@ public class OrganizationService(IOrganizationRepository organizationRepository)
             }
         }
 
-        if (organizationsToAdd.Any())
+        if (organizationsToAdd.Count != 0)
         {
             foreach (var orgId in organizationsToAdd.Select(orgId => organizations.FirstOrDefault(o => o.Id == orgId)))
             {

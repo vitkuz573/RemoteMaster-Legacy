@@ -206,13 +206,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
 
         try
         {
-            var parentUnit = parentOuResult.Value;
-
-            if (parentUnit == null)
-            {
-                throw new InvalidOperationException("Parent Organizational Unit not found.");
-            }
-
+            var parentUnit = parentOuResult.Value ?? throw new InvalidOperationException("Parent Organizational Unit not found.");
             var computer = parentUnit.Computers.FirstOrDefault(c => c.MacAddress == request.MacAddress);
 
             if (computer == null)
@@ -271,13 +265,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
 
         try
         {
-            var parentUnit = parentOuResult.Value;
-
-            if (parentUnit == null)
-            {
-                throw new InvalidOperationException("Parent Organizational Unit not found.");
-            }
-
+            var parentUnit = parentOuResult.Value ?? throw new InvalidOperationException("Parent Organizational Unit not found.");
             var computer = parentUnit.Computers.FirstOrDefault(c => c.MacAddress == request.MacAddress);
 
             if (computer == null)

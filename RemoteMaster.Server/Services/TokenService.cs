@@ -168,7 +168,7 @@ public class TokenService(IOptions<JwtOptions> options, IHttpContextAccessor htt
         var usersWithExpiredTokens = (await applicationUserRepository.FindAsync(u =>
             u.RefreshTokens.Any(rt => rt.TokenValue.Expires < DateTime.UtcNow || rt.RevocationInfo != null))).ToList();
 
-        if (!usersWithExpiredTokens.Any())
+        if (usersWithExpiredTokens.Count == 0)
         {
             Log.Information("No expired or revoked tokens found for cleanup.");
 
