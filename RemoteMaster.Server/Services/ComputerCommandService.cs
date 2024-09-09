@@ -9,6 +9,7 @@ using Microsoft.JSInterop;
 using Polly;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
+using RemoteMaster.Shared.DTOs;
 using Serilog;
 
 namespace RemoteMaster.Server.Services;
@@ -16,7 +17,7 @@ namespace RemoteMaster.Server.Services;
 public class ComputerCommandService(IJSRuntime jsRuntime, [FromKeyedServices("Resilience-Pipeline")] ResiliencePipeline<string> resiliencePipeline) : IComputerCommandService
 {
     /// <inheritdoc />
-    public async Task<Result> Execute(ConcurrentDictionary<Computer, HubConnection?> hosts, Func<Computer, HubConnection, Task> action)
+    public async Task<Result> Execute(ConcurrentDictionary<ComputerDto, HubConnection?> hosts, Func<ComputerDto, HubConnection, Task> action)
     {
         try
         {

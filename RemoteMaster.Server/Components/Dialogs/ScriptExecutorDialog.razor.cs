@@ -6,7 +6,6 @@ using System.IO.Compression;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
-using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Enums;
@@ -19,7 +18,7 @@ public partial class ScriptExecutorDialog
     private string _content = string.Empty;
     private Shell _shell = Shell.Cmd;
     private bool _asSystem;
-    private readonly Dictionary<Computer, ComputerResults> _resultsPerComputer = [];
+    private readonly Dictionary<ComputerDto, ComputerResults> _resultsPerComputer = [];
     private readonly HashSet<HubConnection> _subscribedConnections = [];
 
     private async Task RunScript()
@@ -49,7 +48,7 @@ public partial class ScriptExecutorDialog
         }
     }
 
-    private void UpdateResultsForComputer(Computer computer, Message scriptResult)
+    private void UpdateResultsForComputer(ComputerDto computer, Message scriptResult)
     {
         if (!_resultsPerComputer.TryGetValue(computer, out var results))
         {

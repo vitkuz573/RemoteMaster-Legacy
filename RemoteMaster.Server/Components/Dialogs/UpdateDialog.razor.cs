@@ -6,7 +6,6 @@ using System.IO.Compression;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using MudBlazor;
-using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
@@ -25,7 +24,7 @@ public partial class UpdateDialog
     private bool _forceUpdate = false;
     private bool _allowDowngrade = false;
 
-    private readonly Dictionary<Computer, ComputerResults> _resultsPerComputer = [];
+    private readonly Dictionary<ComputerDto, ComputerResults> _resultsPerComputer = [];
     private readonly HashSet<HubConnection> _subscribedConnections = [];
 
     protected override void OnInitialized()
@@ -96,7 +95,7 @@ public partial class UpdateDialog
         await Task.WhenAll(updateTasks);
     }
 
-    private void UpdateResultsForComputer(Computer computer, Message message)
+    private void UpdateResultsForComputer(ComputerDto computer, Message message)
     {
         if (!_resultsPerComputer.TryGetValue(computer, out var results))
         {

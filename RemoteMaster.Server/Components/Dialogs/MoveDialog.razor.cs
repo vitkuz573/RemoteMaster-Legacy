@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
+using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Dialogs;
@@ -16,7 +17,7 @@ namespace RemoteMaster.Server.Components.Dialogs;
 public partial class MoveDialog
 {
     [Parameter]
-    public EventCallback<IEnumerable<Computer>> OnNodesMoved { get; set; }
+    public EventCallback<IEnumerable<ComputerDto>> OnNodesMoved { get; set; }
 
     [CascadingParameter]
     private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
@@ -34,7 +35,7 @@ public partial class MoveDialog
 
         if (!Hosts.IsEmpty)
         {
-            var firstHostParentId = Hosts.First().Key.ParentId;
+            var firstHostParentId = Hosts.First().Key.OrganizationalUnitId;
             var organization = await OrganizationRepository.GetOrganizationByUnitIdAsync(firstHostParentId);
 
             var currentOrganizationalUnit = organization?.OrganizationalUnits.FirstOrDefault(ou => ou.Id == firstHostParentId);
@@ -138,7 +139,7 @@ public partial class MoveDialog
                 throw new InvalidOperationException("Failed to get full path of the new parent.");
             }
 
-            var unavailableHosts = new List<Computer>();
+            var unavailableHosts = new List<ComputerDto>();
 
             foreach (var host in Hosts)
             {
@@ -161,14 +162,16 @@ public partial class MoveDialog
 
             foreach (var computer in unavailableHosts)
             {
-                var currentParentUnit = computer.Parent;
+                var currentParentUnitId = computer.OrganizationalUnitId;
+
+                var currentParentUnit = OrganizationRepository.GetOrganizationalUnitByIdAsync(currentParentUnitId);
 
                 if (currentParentUnit == null)
                 {
                     throw new InvalidOperationException("Current parent unit not found.");
                 }
 
-                await OrganizationRepository.MoveComputerAsync(currentParentUnit.OrganizationId, _selectedOrganizationId, computer.Id, currentParentUnit.Id, newParentUnit.Id);
+                await OrganizationRepository.MoveComputerAsync(computer.OrganizationId, _selectedOrganizationId, computer.Id, currentParentUnitId, newParentUnit.Id);
             }
 
             await OrganizationRepository.SaveChangesAsync();
@@ -179,7 +182,7 @@ public partial class MoveDialog
         }
     }
 
-    private static async Task AppendHostMoveRequests(List<Computer> unavailableHosts, string targetOrganization, string[] targetOrganizationalUnits)
+    private static async Task AppendHostMoveRequests(List<ComputerDto> unavailableHosts, string targetOrganization, string[] targetOrganizationalUnits)
     {
         var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
         var applicationData = Path.Combine(programDataPath, "RemoteMaster", "Server");

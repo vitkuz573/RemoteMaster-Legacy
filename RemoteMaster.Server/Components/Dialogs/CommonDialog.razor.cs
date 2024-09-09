@@ -10,8 +10,7 @@ using MudBlazor;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
-using RemoteMaster.Server.Data;
-using RemoteMaster.Shared.Models;
+using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
@@ -32,7 +31,7 @@ public class CommonDialogBase : ComponentBase
     private UserManager<ApplicationUser> UserManager { get; set; } = default!;
 
     [CascadingParameter]
-    public ConcurrentDictionary<Computer, HubConnection?> Hosts { get; set; } = default!;
+    public ConcurrentDictionary<ComputerDto, HubConnection?> Hosts { get; set; } = default!;
 
     [Parameter]
     public string ContentStyle { get; set; } = default!;
@@ -54,9 +53,9 @@ public class CommonDialogBase : ComponentBase
 
     public bool HasConnectionIssues => RequireConnections && Hosts.Any(kvp => kvp.Value == null);
 
-    private readonly ConcurrentDictionary<Computer, bool> _checkingStates = new();
-    private readonly ConcurrentDictionary<Computer, bool> _loadingStates = new();
-    private readonly ConcurrentDictionary<Computer, string> _errorMessages = new();
+    private readonly ConcurrentDictionary<ComputerDto, bool> _checkingStates = new();
+    private readonly ConcurrentDictionary<ComputerDto, bool> _loadingStates = new();
+    private readonly ConcurrentDictionary<ComputerDto, string> _errorMessages = new();
 
     protected async void Cancel()
     {
@@ -118,7 +117,7 @@ public class CommonDialogBase : ComponentBase
         await Task.WhenAll(tasks);
     }
 
-    private async Task<HubConnection> SetupConnection(string userId, Computer computer, string hubPath, bool startConnection, CancellationToken cancellationToken)
+    private async Task<HubConnection> SetupConnection(string userId, ComputerDto computer, string hubPath, bool startConnection, CancellationToken cancellationToken)
     {
         var connection = new HubConnectionBuilder()
             .WithUrl($"https://{computer.IpAddress}:5001/{hubPath}", options =>
@@ -140,7 +139,7 @@ public class CommonDialogBase : ComponentBase
         return connection;
     }
 
-    public async Task RecheckConnection(Computer computer)
+    public async Task RecheckConnection(ComputerDto computer)
     {
         ArgumentNullException.ThrowIfNull(computer);
 
@@ -183,7 +182,7 @@ public class CommonDialogBase : ComponentBase
         }
     }
 
-    public async Task RemoveComputer(Computer computer)
+    public async Task RemoveComputer(ComputerDto computer)
     {
         ArgumentNullException.ThrowIfNull(computer);
 
@@ -210,7 +209,7 @@ public class CommonDialogBase : ComponentBase
         }
     }
 
-    public string GetRefreshIconClass(Computer computer)
+    public string GetRefreshIconClass(ComputerDto computer)
     {
         return IsLoading(computer) ? "rotating" : string.Empty;
     }
@@ -220,7 +219,7 @@ public class CommonDialogBase : ComponentBase
         return RequireConnections && Hosts.Any(kvp => kvp.Value == null) ? "Click to view affected hosts (some hosts have issues)" : "Click to view affected hosts";
     }
 
-    public string GetButtonClass(Computer computer)
+    public string GetButtonClass(ComputerDto computer)
     {
         var baseClass = "fixed-size-button";
 
@@ -232,14 +231,14 @@ public class CommonDialogBase : ComponentBase
         return baseClass;
     }
 
-    public bool IsRefreshDisabled(Computer computer)
+    public bool IsRefreshDisabled(ComputerDto computer)
     {
         return IsLoading(computer) || IsChecking(computer);
     }
 
-    protected bool IsChecking(Computer computer) => _checkingStates.TryGetValue(computer, out var isChecking) && isChecking;
+    protected bool IsChecking(ComputerDto computer) => _checkingStates.TryGetValue(computer, out var isChecking) && isChecking;
 
-    protected bool IsLoading(Computer computer) => _loadingStates.TryGetValue(computer, out var isLoading) && isLoading;
+    protected bool IsLoading(ComputerDto computer) => _loadingStates.TryGetValue(computer, out var isLoading) && isLoading;
 
-    public string GetErrorMessage(Computer computer) => _errorMessages.TryGetValue(computer, out var errorMessage) ? errorMessage : "Unknown error";
+    public string GetErrorMessage(ComputerDto computer) => _errorMessages.TryGetValue(computer, out var errorMessage) ? errorMessage : "Unknown error";
 }

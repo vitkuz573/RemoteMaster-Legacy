@@ -3,8 +3,8 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.SignalR.Client;
-using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Dialogs;
@@ -12,7 +12,7 @@ namespace RemoteMaster.Server.Components.Dialogs;
 public partial class PsExecRulesDialog
 {
     private bool _selectedOption;
-    private readonly Dictionary<Computer, ComputerResults> _resultsPerComputer = [];
+    private readonly Dictionary<ComputerDto, ComputerResults> _resultsPerComputer = [];
     private readonly HashSet<HubConnection> _subscribedConnections = [];
 
     private async Task Ok()
@@ -37,7 +37,7 @@ public partial class PsExecRulesDialog
         }
     }
 
-    private void UpdateResultsForComputer(Computer computer, Message scriptResult)
+    private void UpdateResultsForComputer(ComputerDto computer, Message scriptResult)
     {
         if (!_resultsPerComputer.TryGetValue(computer, out var results))
         {
