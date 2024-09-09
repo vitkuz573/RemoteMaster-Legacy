@@ -4,7 +4,6 @@
 
 using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Options;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Validators;
 
