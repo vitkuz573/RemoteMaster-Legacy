@@ -112,7 +112,7 @@ public partial class Home
 
         if (organizationId == null)
         {
-            var organizationsResult = await OrganizationRepository.FindAsync(o => accessibleOrganizations.Contains(o.Id));
+            var organizationsResult = (await OrganizationRepository.FindAsync(o => accessibleOrganizations.Contains(o.Id))).ToList();
 
             units.AddRange(organizationsResult);
 

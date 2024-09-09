@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Linq.Expressions;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
