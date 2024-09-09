@@ -611,6 +611,8 @@ public partial class Home
 
                 var computerDto = new ComputerDto(computer.Name, computer.IpAddress, computer.MacAddress)
                 {
+                    OrganizationId = computer.Parent.OrganizationId,
+                    OrganizationalUnitId = computer.ParentId,
                     Thumbnail = null
                 };
 

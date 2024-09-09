@@ -21,8 +21,8 @@ public partial class UpdateDialog
     private string _folderPath = string.Empty;
     private string _username = string.Empty;
     private string _password = string.Empty;
-    private bool _forceUpdate = false;
-    private bool _allowDowngrade = false;
+    private bool _forceUpdate;
+    private bool _allowDowngrade;
 
     private readonly Dictionary<ComputerDto, ComputerResults> _resultsPerComputer = [];
     private readonly HashSet<HubConnection> _subscribedConnections = [];
