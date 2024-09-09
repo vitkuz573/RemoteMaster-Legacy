@@ -223,6 +223,7 @@ public partial class Home
         {
             var computerDto = new ComputerDto(computer.Name, computer.IpAddress, computer.MacAddress)
             {
+                Id = computer.Id,
                 OrganizationId = computer.Parent.OrganizationId,
                 OrganizationalUnitId = computer.ParentId,
                 Thumbnail = null
@@ -611,6 +612,7 @@ public partial class Home
 
                 var computerDto = new ComputerDto(computer.Name, computer.IpAddress, computer.MacAddress)
                 {
+                    Id = computer.Id,
                     OrganizationId = computer.Parent.OrganizationId,
                     OrganizationalUnitId = computer.ParentId,
                     Thumbnail = null
