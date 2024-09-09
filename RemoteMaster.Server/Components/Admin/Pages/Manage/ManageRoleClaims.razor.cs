@@ -28,7 +28,7 @@ public partial class ManageRoleClaims
             .Where(role => role.Name != "RootAdministrator" && role.Name != "ServiceUser")
             .ToListAsync();
 
-        var allClaims = await ApplicationClaimRepository.GetAllAsync();
+        var allClaims = (await ApplicationClaimRepository.GetAllAsync()).ToList();
 
         if (allClaims.Any())
         {
