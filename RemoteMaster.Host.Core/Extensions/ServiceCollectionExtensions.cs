@@ -5,6 +5,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Data;
 using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Shared.Extensions;
 
@@ -38,5 +39,9 @@ public static class ServiceCollectionExtensions
         services.AddHttpClient<ApiService>().AddHttpMessageHandler<CustomHttpClientHandler>();
 
         services.AddSignalR().AddMessagePackProtocol();
+
+        services.AddDbContext<HostDbContext>();
+
+        services.AddHostedService<MigrationService>();
     }
 }

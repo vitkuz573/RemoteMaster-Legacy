@@ -2,8 +2,11 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Data;
+using RemoteMaster.Host.Core.Entities;
 using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
@@ -14,15 +17,17 @@ public class HostRegistrationMonitorService : IHostedService
     private readonly IHostConfigurationService _hostConfigurationService;
     private readonly IHostInformationUpdaterService _hostInformationMonitorService;
     private readonly IUserInstanceService _userInstanceService;
+    private readonly HostDbContext _dbContext;
 
     private readonly Timer _timer;
 
-    public HostRegistrationMonitorService(IHostLifecycleService hostLifecycleService, IHostConfigurationService hostConfigurationService, IHostInformationUpdaterService hostInformationUpdaterService, IUserInstanceService userInstanceService)
+    public HostRegistrationMonitorService(IHostLifecycleService hostLifecycleService, IHostConfigurationService hostConfigurationService, IHostInformationUpdaterService hostInformationUpdaterService, IUserInstanceService userInstanceService, HostDbContext dbContext)
     {
         _hostLifecycleService = hostLifecycleService;
         _hostConfigurationService = hostConfigurationService;
         _hostInformationMonitorService = hostInformationUpdaterService;
         _userInstanceService = userInstanceService;
+        _dbContext = dbContext;
 
         _timer = new Timer(CheckHostRegistration, null, Timeout.Infinite, 0);
     }
@@ -42,26 +47,53 @@ public class HostRegistrationMonitorService : IHostedService
             var hostConfiguration = await _hostConfigurationService.LoadConfigurationAsync(false);
             var isHostRegistered = await _hostLifecycleService.IsHostRegisteredAsync();
 
-            if (configurationChanged)
+            var syncState = await _dbContext.ConfigurationSyncStates.FirstOrDefaultAsync() ?? new ConfigurationSyncState();
+
+            if (configurationChanged || syncState.IsSyncRequired)
             {
-                if (isHostRegistered)
+                try
                 {
-                    Log.Information("Updating host information and renewing certificate due to configuration change.");
-                    
-                    await _hostLifecycleService.UpdateHostInformationAsync();
+                    if (isHostRegistered)
+                    {
+                        Log.Information("Updating host information and renewing certificate due to configuration change.");
+                        
+                        await _hostLifecycleService.UpdateHostInformationAsync();
+                    }
+                    else
+                    {
+                        Log.Warning("Host is not registered. Registering and issuing a new certificate...");
 
-                    Log.Information("Host information updated and certificate renewed.");
+                        await _hostLifecycleService.RegisterAsync();
+                    }
+
+                    var organizationAddress = await _hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration);
+
+                    await _hostLifecycleService.IssueCertificateAsync(hostConfiguration, organizationAddress);
+
+                    syncState.IsSyncRequired = false;
                 }
-                else
+                catch (Exception ex)
                 {
-                    Log.Warning("Host is not registered and configuration has changed. Registering and renewing certificate...");
+                    Log.Error(ex, "Failed to update host information. Sync will be retried.");
+
+                    syncState.IsSyncRequired = true;
+                }
+                finally
+                {
+                    syncState.LastAttempt = DateTimeOffset.UtcNow;
                     
-                    await _hostLifecycleService.RegisterAsync();
+                    if (syncState.Id == 0)
+                    {
+                        _dbContext.ConfigurationSyncStates.Add(syncState);
+                    }
+                    else
+                    {
+                        _dbContext.ConfigurationSyncStates.Update(syncState);
+                    }
+                    
+                    await _dbContext.SaveChangesAsync();
                 }
 
-                var organizationAddress = await _hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration);
-
-                await _hostLifecycleService.IssueCertificateAsync(hostConfiguration, organizationAddress);
                 await RestartUserInstance();
             }
             else if (!isHostRegistered)
