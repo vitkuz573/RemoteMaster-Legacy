@@ -4,7 +4,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace RemoteMaster.Shared.Models;
+namespace RemoteMaster.Server.Options;
 
 public class SubjectOptions
 {

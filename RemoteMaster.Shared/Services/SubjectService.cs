@@ -3,28 +3,21 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Cryptography.X509Certificates;
-using Microsoft.Extensions.Options;
 using RemoteMaster.Shared.Abstractions;
-using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Shared.Services;
 
-public class SubjectService(IOptions<SubjectOptions> options) : ISubjectService
+public class SubjectService : ISubjectService
 {
-    private readonly SubjectOptions _options = options.Value ?? throw new ArgumentNullException(nameof(options));
-
-    public X500DistinguishedName GetDistinguishedName(string commonName)
+    public X500DistinguishedName GetDistinguishedName(string commonName, string organization, string[] organizationalUnits, string locality, string state, string country)
     {
-        var ous = string.Join(", ", _options.OrganizationalUnit.Select(ou => $"OU={ou}"));
-        var dnString = $"CN={commonName}, O={_options.Organization}, {ous}, L={_options.Locality}, ST={_options.State}, C={_options.Country}";
+        if (organizationalUnits == null || organizationalUnits.Length == 0)
+        {
+            throw new ArgumentException("Organizational units cannot be null or empty", nameof(organizationalUnits));
+        }
 
-        return new X500DistinguishedName(dnString);
-    }
-
-    public X500DistinguishedName GetDistinguishedName(string commonName, string locality, string state, string country)
-    {
-        var ous = string.Join(", ", _options.OrganizationalUnit.Select(ou => $"OU={ou}"));
-        var dnString = $"CN={commonName}, O={_options.Organization}, {ous}, L={locality}, ST={state}, C={country}";
+        var ous = string.Join(", ", organizationalUnits.Select(ou => $"OU={ou}"));
+        var dnString = $"CN={commonName}, O={organization}, {ous}, L={locality}, ST={state}, C={country}";
 
         return new X500DistinguishedName(dnString);
     }

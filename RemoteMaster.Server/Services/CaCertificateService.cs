@@ -91,7 +91,7 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
                 return Result.Fail("RSA provider is null.");
             }
 
-            var distinguishedName = subjectService.GetDistinguishedName(_settings.CommonName);
+            var distinguishedName = subjectService.GetDistinguishedName(_settings.CommonName, _settings.Subject.Organization, _settings.Subject.OrganizationalUnit, _settings.Subject.Locality, _settings.Subject.State, _settings.Subject.Country);
             var request = new CertificateRequest(distinguishedName, rsaProvider, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
             request.CertificateExtensions.Add(new X509BasicConstraintsExtension(true, false, 0, true));

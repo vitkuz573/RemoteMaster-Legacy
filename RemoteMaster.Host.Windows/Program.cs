@@ -140,7 +140,7 @@ internal class Program
     {
         services.AddHttpContextAccessor();
 
-        services.AddCoreServices(launchModeInstance);
+        services.AddCoreServices();
         services.AddTransient<IServiceFactory, ServiceFactory>();
         services.AddTransient<IRegistryKeyFactory, RegistryKeyFactory>();
         services.AddTransient<IProcessWrapperFactory, ProcessWrapperFactory>();

@@ -110,7 +110,7 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
                 hostConfiguration.Host!.IpAddress
             };
 
-            var distinguishedName = subjectService.GetDistinguishedName(hostConfiguration.Host.Name, organizationAddress.Locality, organizationAddress.State, organizationAddress.Country);
+            var distinguishedName = subjectService.GetDistinguishedName(hostConfiguration.Host.Name, hostConfiguration.Subject.Organization, hostConfiguration.Subject.OrganizationalUnit, organizationAddress.Locality, organizationAddress.State, organizationAddress.Country);
 
             Log.Information("Removing existing certificates...");
 
