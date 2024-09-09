@@ -58,6 +58,7 @@ public class JwtOptionsValidator : IValidateOptions<JwtOptions>
         {
             return false;
         }
+
         if (!password.Any(char.IsUpper))
         {
             return false;

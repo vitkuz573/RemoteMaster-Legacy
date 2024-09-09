@@ -31,11 +31,6 @@ public class CertificateOptionsValidator : IValidateOptions<CertificateOptions>
             return ValidateOptionsResult.Fail("CommonName is required.");
         }
 
-        if (options.Subject == null)
-        {
-            return ValidateOptionsResult.Fail("Subject is required.");
-        }
-
         var subjectValidationResult = ValidateSubjectOptions(options.Subject);
 
         return !subjectValidationResult.Succeeded ? subjectValidationResult : ValidateOptionsResult.Success;
