@@ -69,24 +69,17 @@ public partial class ManageUserRights
     {
         var organizations = await OrganizationService.GetAllOrganizationsAsync();
 
-        if (organizations != null)
-        {
-            _organizations = organizations
-                .Select(o => new OrganizationViewModel(
-                    o.Id,
-                    o.Name,
-                    o.OrganizationalUnits.Select(ou => new OrganizationalUnitViewModel
-                    {
-                        Id = ou.Id,
-                        Name = ou.Name
-                    }).ToList()
-                ))
-                .ToList();
-        }
-        else
-        {
-            _message = "Failed to load organizations.";
-        }
+        _organizations = organizations
+            .Select(o => new OrganizationViewModel(
+                o.Id,
+                o.Name,
+                o.OrganizationalUnits.Select(ou => new OrganizationalUnitViewModel
+                {
+                    Id = ou.Id,
+                    Name = ou.Name
+                }).ToList()
+            ))
+            .ToList();
     }
 
     private async Task OnValidSubmitAsync()

@@ -69,14 +69,7 @@ public partial class ManageOrganizations
     {
         var organizations = await OrganizationService.GetAllOrganizationsAsync();
 
-        if (organizations != null)
-        {
-            _organizations = organizations.ToList();
-        }
-        else
-        {
-            _message = "Failed to load organizations.";
-        }
+        _organizations = organizations.ToList();
     }
 
     private async Task DeleteOrganization(Organization organization)
