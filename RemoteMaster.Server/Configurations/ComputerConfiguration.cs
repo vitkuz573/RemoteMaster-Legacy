@@ -35,8 +35,6 @@ public class ComputerConfiguration : IEntityTypeConfiguration<Computer>
             .HasMaxLength(17)
             .HasColumnOrder(3);
 
-        builder.Ignore(c => c.Thumbnail);
-
         builder.HasOne(c => c.Parent)
             .WithMany(ou => ou.Computers)
             .HasForeignKey(c => c.ParentId)

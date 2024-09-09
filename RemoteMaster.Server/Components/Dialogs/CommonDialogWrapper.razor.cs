@@ -5,8 +5,7 @@
 using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
-using RemoteMaster.Server.Aggregates.OrganizationAggregate;
-using RemoteMaster.Shared.Models;
+using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
@@ -14,7 +13,7 @@ public partial class CommonDialogWrapper<TDialog> where TDialog : ComponentBase
 {
 #pragma warning disable CA2227
     [Parameter]
-    public ConcurrentDictionary<Computer, HubConnection?> Hosts { get; set; } = default!;
+    public ConcurrentDictionary<ComputerDto, HubConnection?> Hosts { get; set; } = default!;
 #pragma warning restore CA2227
 
     [Parameter]

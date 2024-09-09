@@ -8,6 +8,9 @@ namespace RemoteMaster.Shared.DTOs;
 
 public class ComputerDto(string name, string ipAddress, string macAddress) : IEquatable<ComputerDto>
 {
+    [JsonIgnore]
+    public Guid Id { get; set; }
+
     [JsonPropertyName("name")]
     public string Name { get; } = name;
 
@@ -16,6 +19,15 @@ public class ComputerDto(string name, string ipAddress, string macAddress) : IEq
 
     [JsonPropertyName("macAddress")]
     public string MacAddress { get; } = macAddress;
+
+    [JsonIgnore]
+    public byte[]? Thumbnail { get; set; }
+
+    [JsonIgnore]
+    public Guid OrganizationId { get; set; }
+
+    [JsonIgnore]
+    public Guid OrganizationalUnitId { get; set; }
 
     public bool Equals(ComputerDto? other)
     {

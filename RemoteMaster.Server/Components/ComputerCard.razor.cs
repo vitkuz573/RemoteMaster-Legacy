@@ -3,15 +3,14 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Components;
-using RemoteMaster.Server.Aggregates.OrganizationAggregate;
-using RemoteMaster.Shared.Models;
+using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Server.Components;
 
 public partial class ComputerCard : ComponentBase
 {
     [Parameter]
-    public Computer Computer { get; set; } = default!;
+    public ComputerDto Computer { get; set; } = default!;
 
     [Parameter]
     public bool IsSelected { get; set; }

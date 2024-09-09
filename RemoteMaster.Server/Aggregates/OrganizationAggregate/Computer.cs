@@ -23,8 +23,6 @@ public class Computer
 
     public string MacAddress { get; private set; }
 
-    public byte[]? Thumbnail { get; private set; }
-
     public Guid ParentId { get; private set; }
 
     public OrganizationalUnit Parent { get; private set; }
@@ -32,11 +30,6 @@ public class Computer
     internal void SetOrganizationalUnit(Guid organizationalUnitId)
     {
         ParentId = organizationalUnitId;
-    }
-
-    public void SetThumbnail(byte[]? thumbnail)
-    {
-        Thumbnail = thumbnail;
     }
 
     public void SetIpAddress(string ipAddress)
