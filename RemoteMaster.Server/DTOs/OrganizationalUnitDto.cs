@@ -4,13 +4,13 @@
 
 namespace RemoteMaster.Server.DTOs;
 
-public class OrganizationalUnitDto
+public class OrganizationalUnitDto(Guid? id, string name, Guid organizationId, Guid? parentId)
 {
-    public Guid? Id { get; set; }
-    
-    public string Name { get; set; }
-    
-    public Guid OrganizationId { get; set; }
-    
-    public Guid? ParentId { get; set; }
+    public Guid? Id { get; } = id;
+
+    public string Name { get; } = name;
+
+    public Guid OrganizationId { get; } = organizationId;
+
+    public Guid? ParentId { get; } = parentId;
 }

@@ -30,7 +30,7 @@
     <PackageVersion Include="Serilog.Sinks.TestCorrelator" Version="4.0.0" />
     <PackageVersion Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
     <PackageVersion Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="8.0.8" />
-    <PackageVersion Include="Microsoft.Windows.CsWin32" Version="0.3.136" />
+    <PackageVersion Include="Microsoft.Windows.CsWin32" Version="0.3.142" />
     <PackageVersion Include="Microsoft.Windows.SDK.Win32Metadata" Version="62.0.23-preview" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.7.3" />
     <PackageVersion Include="System.IO.Abstractions" Version="21.0.29" />

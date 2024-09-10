@@ -30,13 +30,7 @@ public partial class ManageOrganizationalUnits
 
     private async Task OnValidSubmitAsync()
     {
-        var dto = new OrganizationalUnitDto
-        {
-            Id = Input.Id,
-            Name = Input.Name,
-            OrganizationId = Input.OrganizationId,
-            ParentId = Input.ParentId
-        };
+        var dto = new OrganizationalUnitDto(Input.Id, Input.Name, Input.OrganizationId, Input.ParentId);
 
         _message = await OrganizationalUnitService.AddOrUpdateOrganizationalUnitAsync(dto);
 
