@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using RemoteMaster.Shared.DTOs;
-using RemoteMaster.Shared.Models;
 using Serilog;
 
 namespace RemoteMaster.Server.Components.Pages;
@@ -33,7 +32,7 @@ public partial class Chat : IAsyncDisposable
     private ClaimsPrincipal? _user;
     private bool _disposed;
     private Timer? _typingTimer;
-    private List<IBrowserFile> _selectedFiles = [];
+    private readonly List<IBrowserFile> _selectedFiles = [];
 
     protected async override Task OnInitializedAsync()
     {
@@ -43,6 +42,7 @@ public partial class Chat : IAsyncDisposable
 
         _connection = new HubConnectionBuilder()
             .WithUrl($"https://{Host}:5001/hubs/chat")
+            .AddMessagePackProtocol()
             .Build();
 
         _connection.On<ChatMessageDto>("ReceiveMessage", chatMessageDto =>
@@ -56,12 +56,14 @@ public partial class Chat : IAsyncDisposable
         {
             var messageToRemove = _messages.FirstOrDefault(m => m.Id == id);
 
-            if (messageToRemove != default)
+            if (messageToRemove == default)
             {
-                _messages.Remove(messageToRemove);
-
-                InvokeAsync(StateHasChanged);
+                return;
             }
+
+            _messages.Remove(messageToRemove);
+
+            InvokeAsync(StateHasChanged);
         });
 
         _connection.On<string>("UserTyping", user =>
@@ -71,25 +73,46 @@ public partial class Chat : IAsyncDisposable
             InvokeAsync(StateHasChanged);
         });
 
-        _connection.On<string>("UserStopTyping", user =>
+        _connection.On<string>("UserStopTyping", _ =>
         {
             _typingMessage = string.Empty;
 
             InvokeAsync(StateHasChanged);
         });
 
-        await _connection.StartAsync();
+        try
+        {
+            await _connection.StartAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to start connection.");
+        }
     }
 
     private async Task Send()
     {
+        if (_connection == null)
+        {
+            Log.Error("Connection is not established.");
+            
+            return;
+        }
+
         var attachments = new List<AttachmentDto>();
 
         foreach (var file in _selectedFiles)
         {
             var buffer = new byte[file.Size];
-            using var stream = file.OpenReadStream(file.Size);
-            await stream.ReadAsync(buffer);
+            await using var stream = file.OpenReadStream(file.Size);
+            var totalBytesRead = 0;
+            int bytesRead;
+
+            while (totalBytesRead < file.Size && (bytesRead = await stream.ReadAsync(buffer, totalBytesRead, buffer.Length - totalBytesRead)) > 0)
+            {
+                totalBytesRead += bytesRead;
+            }
+
             attachments.Add(new AttachmentDto
             {
                 FileName = file.Name,
@@ -100,7 +123,7 @@ public partial class Chat : IAsyncDisposable
 
         var chatMessageDto = new ChatMessageDto
         {
-            User = _user.FindFirstValue(ClaimTypes.Name),
+            User = _user?.FindFirstValue(ClaimTypes.Name) ?? throw new InvalidOperationException("User name is not found."),
             Message = _message,
             ReplyToId = _replyToMessage,
             Attachments = attachments
@@ -116,7 +139,16 @@ public partial class Chat : IAsyncDisposable
 
     private async Task Delete(string id)
     {
-        await _connection.SendAsync("DeleteMessage", id, _user.FindFirstValue(ClaimTypes.Name));
+        if (_connection == null)
+        {
+            Log.Error("Connection is not established.");
+            
+            return;
+        }
+
+        var userName = _user?.FindFirstValue(ClaimTypes.Name) ?? throw new InvalidOperationException("User name is not found.");
+
+        await _connection.SendAsync("DeleteMessage", id, userName);
     }
 
     private void SetReplyToMessage(string messageId)
@@ -138,10 +170,20 @@ public partial class Chat : IAsyncDisposable
         return message != null ? string.Concat(message.Message.AsSpan(0, Math.Min(30, message.Message.Length)), "...") : string.Empty;
     }
 
-    private void HandleInput(ChangeEventArgs e)
+    private async void HandleInput(ChangeEventArgs e)
     {
+        if (_connection == null)
+        {
+            Log.Error("Connection is not established.");
+
+            return;
+        }
+
+        var userName = _user?.FindFirstValue(ClaimTypes.Name) ?? throw new InvalidOperationException("User name is not found.");
         _message = e.Value?.ToString() ?? string.Empty;
-        _connection.SendAsync("Typing", _user.FindFirstValue(ClaimTypes.Name)).GetAwaiter().GetResult();
+        
+        await _connection.SendAsync("Typing", userName);
+
         ResetTypingTimer();
     }
 
@@ -157,10 +199,26 @@ public partial class Chat : IAsyncDisposable
 
     private void ResetTypingTimer()
     {
-        _typingTimer?.Dispose();
-        _typingTimer = new Timer(async _ =>
+        if (_connection == null)
         {
-            await _connection.SendAsync("StopTyping", _user.FindFirstValue(ClaimTypes.Name));
+            Log.Error("Connection is not established.");
+
+            return;
+        }
+
+        _typingTimer?.Dispose();
+        _typingTimer = new Timer(_ =>
+        {
+            SendStopTyping();
+            
+            return;
+
+            async void SendStopTyping()
+            {
+                var userName = _user?.FindFirstValue(ClaimTypes.Name) ?? throw new InvalidOperationException("User name is not found.");
+
+                await _connection.SendAsync("StopTyping", userName);
+            }
         }, null, 1000, Timeout.Infinite);
     }
 

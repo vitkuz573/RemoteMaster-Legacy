@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using Polly;
@@ -27,7 +26,7 @@ public partial class FileManager : IAsyncDisposable
     private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
 
     [Inject(Key = "Resilience-Pipeline")]
-    public ResiliencePipeline<string> ResiliencePipeline { get; set; }
+    public ResiliencePipeline<string> ResiliencePipeline { get; set; } = default!;
 
     private HubConnection? _connection;
     private ClaimsPrincipal? _user;
@@ -168,7 +167,7 @@ public partial class FileManager : IAsyncDisposable
 
     private async Task SafeInvokeAsync(Func<Task> action)
     {
-        var result = await ResiliencePipeline.ExecuteAsync(async cancellationToken =>
+        var result = await ResiliencePipeline.ExecuteAsync(async _ =>
         {
             if (_connection is not { State: HubConnectionState.Connected })
             {
