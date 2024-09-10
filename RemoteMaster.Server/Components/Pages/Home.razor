@@ -81,7 +81,7 @@
 
     <MudMainContent>
         <div class="flex h-full">
-            <div class="w-1/5">
+            <div class="flex-shrink-0 w-96">
                 <MudTreeView Items="@_treeItems" T="object" SelectedValueChanged="OnNodeSelected" Hover="true" Class="pa-6">
                     <ItemTemplate>
                         <MudTreeViewItem Text="@context.Text" Value="@context.Value" Icon="@context.Icon">
@@ -99,7 +99,7 @@
                 </MudTreeView>
             </div>
 
-            <div class="flex flex-grow flex-col gap-4 p-4">
+            <div class="flex flex-grow flex-col gap-4 overflow-auto p-4">
                 <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6 tabs flex">
                     <MudTabPanel Text="@Localizer["MainTab"]" Icon="@Icons.Material.Filled.Api">
                         <AuthorizeView>
