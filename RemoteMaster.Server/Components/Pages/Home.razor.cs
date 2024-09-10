@@ -403,12 +403,7 @@ public partial class Home
 
     private async Task<HubConnection> SetupConnection(ComputerDto computerDto, string hubPath, bool startConnection, CancellationToken cancellationToken)
     {
-        if (_user == null)
-        {
-            throw new InvalidOperationException("User is not initialized.");
-        }
-
-        var userId = _user.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("User ID is not found.");
+        var userId = _user?.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("User ID is not found.");
 
         var connection = new HubConnectionBuilder()
             .WithUrl($"https://{computerDto.IpAddress}:5001/{hubPath}", options =>

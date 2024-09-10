@@ -179,7 +179,7 @@ public partial class Access : IAsyncDisposable
 
     private async Task SafeInvokeAsync(Func<Task> action, bool requireAdmin = false)
     {
-        var result = await ResiliencePipeline.ExecuteAsync(async token =>
+        var result = await ResiliencePipeline.ExecuteAsync(async _ =>
         {
             if (_connection is not { State: HubConnectionState.Connected })
             {
