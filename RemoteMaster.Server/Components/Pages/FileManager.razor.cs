@@ -118,54 +118,52 @@ public partial class FileManager : IAsyncDisposable
 
     private async Task InitializeHostConnectionAsync()
     {
-        var userId = _user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = _user?.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("User ID is not found.");
 
-        if (!string.IsNullOrEmpty(userId))
-        {
-            _connection = new HubConnectionBuilder()
-                .WithUrl($"https://{Host}:5001/hubs/filemanager", options =>
+        _connection = new HubConnectionBuilder()
+            .WithUrl($"https://{Host}:5001/hubs/filemanager", options =>
+            {
+                options.AccessTokenProvider = async () =>
                 {
-                    options.AccessTokenProvider = async () =>
-                    {
-                        var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(userId);
-                        return accessTokenResult.IsSuccess ? accessTokenResult.Value : null;
-                    };
-                })
-                .AddMessagePackProtocol()
-                .Build();
+                    var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(userId);
+                    return accessTokenResult.IsSuccess ? accessTokenResult.Value : null;
+                };
+            })
+            .AddMessagePackProtocol()
+            .Build();
 
-            _connection.On<List<FileSystemItem>>("ReceiveFilesAndDirectories", async fileSystemItems =>
-            {
-                _fileSystemItems = fileSystemItems;
-                _allFileSystemItems = [.._fileSystemItems];
-                await InvokeAsync(StateHasChanged);
-            });
+        _connection.On<List<FileSystemItem>>("ReceiveFilesAndDirectories", async fileSystemItems =>
+        {
+            _fileSystemItems = fileSystemItems;
+            _allFileSystemItems = [.. _fileSystemItems];
 
-            _connection.On<byte[], string>("ReceiveFile", async (file, path) =>
-            {
-                var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/fileUtils.js");
+            await InvokeAsync(StateHasChanged);
+        });
 
-                var base64File = Convert.ToBase64String(file);
-                var fileName = Path.GetFileName(path);
+        _connection.On<byte[], string>("ReceiveFile", async (file, path) =>
+        {
+            var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/fileUtils.js");
 
-                const string contentType = "application/octet-stream;base64";
+            var base64File = Convert.ToBase64String(file);
+            var fileName = Path.GetFileName(path);
 
-                await module.InvokeVoidAsync("downloadDataAsFile", base64File, fileName, contentType);
-            });
+            const string contentType = "application/octet-stream;base64";
 
-            _connection.On<List<string>>("ReceiveAvailableDrives", drives =>
-            {
-                _availableDrives = drives;
-            });
+            await module.InvokeVoidAsync("downloadDataAsFile", base64File, fileName, contentType);
+        });
 
-            _connection.Closed += async (_) =>
-            {
-                await Task.Delay(TimeSpan.FromSeconds(5));
-                await _connection.StartAsync();
-            };
+        _connection.On<List<string>>("ReceiveAvailableDrives", drives =>
+        {
+            _availableDrives = drives;
+        });
 
+        _connection.Closed += async _ =>
+        {
+            await Task.Delay(TimeSpan.FromSeconds(5));
             await _connection.StartAsync();
-        }
+        };
+
+        await _connection.StartAsync();
     }
 
     private async Task SafeInvokeAsync(Func<Task> action)

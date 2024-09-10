@@ -79,38 +79,38 @@ public partial class TaskManager : IAsyncDisposable
 
     private async Task InitializeHostConnectionAsync()
     {
-        var userId = _user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = _user?.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("User ID is not found.");
 
-        if (!string.IsNullOrEmpty(userId))
-        {
-            _connection = new HubConnectionBuilder()
-                .WithUrl($"https://{Host}:5001/hubs/taskmanager", options =>
+        _connection = new HubConnectionBuilder()
+            .WithUrl($"https://{Host}:5001/hubs/taskmanager", options =>
+            {
+                options.AccessTokenProvider = async () =>
                 {
-                    options.AccessTokenProvider = async () =>
-                    {
-                        var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(userId);
-                        return accessTokenResult.IsSuccess ? accessTokenResult.Value : null;
-                    };
-                })
-                .AddMessagePackProtocol()
-                .Build();
+                    var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(userId);
 
-            _connection.On<List<ProcessInfo>>("ReceiveRunningProcesses", async (processes) =>
-            {
-                _allProcesses = processes ?? [];
-                _processes = [.._allProcesses];
-                FilterProcesses();
-                await InvokeAsync(StateHasChanged);
-            });
+                    return accessTokenResult.IsSuccess ? accessTokenResult.Value : null;
+                };
+            })
+            .AddMessagePackProtocol()
+            .Build();
 
-            _connection.Closed += async (_) =>
-            {
-                await Task.Delay(TimeSpan.FromSeconds(5));
-                await _connection.StartAsync();
-            };
+        _connection.On<List<ProcessInfo>>("ReceiveRunningProcesses", async processes =>
+        {
+            _allProcesses = processes;
+            _processes = [.. _allProcesses];
 
+            FilterProcesses();
+
+            await InvokeAsync(StateHasChanged);
+        });
+
+        _connection.Closed += async (_) =>
+        {
+            await Task.Delay(TimeSpan.FromSeconds(5));
             await _connection.StartAsync();
-        }
+        };
+
+        await _connection.StartAsync();
     }
 
     private async Task SafeInvokeAsync(Func<Task> action)

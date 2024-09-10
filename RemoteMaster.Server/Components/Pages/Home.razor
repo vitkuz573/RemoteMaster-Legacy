@@ -52,7 +52,7 @@
         </MudMenu>
         <AuthorizeView>
             <Authorized>
-                <MudText>@context.User.Identity.Name (@context.User.FindFirst(ClaimTypes.Role)?.Value)</MudText>
+                <MudText>@context.User.Identity.Name (@context.User.FindFirstValue(ClaimTypes.Role))</MudText>
             </Authorized>
         </AuthorizeView>
     </MudAppBar>

@@ -29,7 +29,7 @@ public partial class Access : IAsyncDisposable
     private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
 
     [Inject(Key = "Resilience-Pipeline")]
-    public ResiliencePipeline<string> ResiliencePipeline { get; set; }
+    public ResiliencePipeline<string> ResiliencePipeline { get; set; } = default!;
 
     private ClaimsPrincipal? _user;
     private string _transportType = string.Empty;
@@ -312,12 +312,7 @@ public partial class Access : IAsyncDisposable
             _isConnecting = true;
             _retryCount = 0;
 
-            var userId = _user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (string.IsNullOrEmpty(userId))
-            {
-                throw new InvalidOperationException("User ID is missing.");
-            }
+            var userId = _user?.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("User ID is not found.");
 
             _connection = new HubConnectionBuilder()
                 .WithUrl($"https://{Host}:5001/hubs/control?screencast=true", options =>
@@ -325,6 +320,7 @@ public partial class Access : IAsyncDisposable
                     options.AccessTokenProvider = async () =>
                     {
                         var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(userId);
+
                         return accessTokenResult.IsSuccess ? accessTokenResult.Value : null;
                     };
                 })
@@ -361,16 +357,6 @@ public partial class Access : IAsyncDisposable
                 _viewers = viewers;
                 InvokeAsync(StateHasChanged);
             });
-
-            var userIdentity = _user?.Identity as ClaimsIdentity ?? throw new InvalidOperationException("User identity is not a ClaimsIdentity.");
-
-            var userName = userIdentity.Name;
-            var role = userIdentity.FindFirst(ClaimTypes.Role)?.Value;
-
-            if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(role))
-            {
-                throw new InvalidOperationException("User name or role is missing.");
-            }
 
             _connection.Closed += async _ =>
             {

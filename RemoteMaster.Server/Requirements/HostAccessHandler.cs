@@ -17,7 +17,7 @@ public class HostAccessHandler(IApplicationUserRepository userRepository, IOrgan
 
         try
         {
-            var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             if (string.IsNullOrEmpty(userId))
             {

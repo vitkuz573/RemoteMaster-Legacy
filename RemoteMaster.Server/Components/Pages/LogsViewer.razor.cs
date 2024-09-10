@@ -40,37 +40,36 @@ public partial class LogsViewer : IAsyncDisposable
 
     private async Task InitializeHostConnectionAsync()
     {
-        var userId = _user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = _user?.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("User ID is not found.");
 
-        if (!string.IsNullOrEmpty(userId))
-        {
-            _connection = new HubConnectionBuilder()
-                .WithUrl($"https://{Host}:5001/hubs/log", options =>
+        _connection = new HubConnectionBuilder()
+            .WithUrl($"https://{Host}:5001/hubs/log", options =>
+            {
+                options.AccessTokenProvider = async () =>
                 {
-                    options.AccessTokenProvider = async () =>
-                    {
-                        var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(userId);
+                    var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(userId);
 
-                        return accessTokenResult.IsSuccess ? accessTokenResult.Value : null;
-                    };
-                })
-                .AddMessagePackProtocol()
-                .Build();
+                    return accessTokenResult.IsSuccess ? accessTokenResult.Value : null;
+                };
+            })
+            .AddMessagePackProtocol()
+            .Build();
 
-            _connection.On<List<string>>("ReceiveLogFiles", (logs) =>
-            {
-                _logFiles = logs;
-                InvokeAsync(StateHasChanged);
-            });
+        _connection.On<List<string>>("ReceiveLogFiles", logs =>
+        {
+            _logFiles = logs;
 
-            _connection.On<string>("ReceiveLog", (logContent) =>
-            {
-                _logContent = logContent;
-                InvokeAsync(StateHasChanged);
-            });
+            InvokeAsync(StateHasChanged);
+        });
 
-            await _connection.StartAsync();
-        }
+        _connection.On<string>("ReceiveLog", logContent =>
+        {
+            _logContent = logContent;
+
+            InvokeAsync(StateHasChanged);
+        });
+
+        await _connection.StartAsync();
     }
 
     private async Task FetchLogFiles()

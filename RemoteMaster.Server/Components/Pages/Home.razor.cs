@@ -47,14 +47,7 @@ public partial class Home
 
         _user = authState.User;
 
-        var userId = _user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (userId == null)
-        {
-            Log.Warning("User ID not found in claims.");
-
-            return;
-        }
+        var userId = _user.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("User ID is not found.");
 
         _currentUser = await UserManager.Users
             .Include(u => u.UserOrganizations)
@@ -415,7 +408,7 @@ public partial class Home
             throw new InvalidOperationException("User is not initialized.");
         }
 
-        var userId = _user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new InvalidOperationException("User ID is not found.");
+        var userId = _user.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("User ID is not found.");
 
         var connection = new HubConnectionBuilder()
             .WithUrl($"https://{computerDto.IpAddress}:5001/{hubPath}", options =>
