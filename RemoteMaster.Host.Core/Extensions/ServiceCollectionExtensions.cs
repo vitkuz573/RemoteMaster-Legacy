@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Data;
+using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Shared.Extensions;
 
@@ -13,7 +14,7 @@ namespace RemoteMaster.Host.Core.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static void AddCoreServices(this IServiceCollection services)
+    public static void AddCoreServices(this IServiceCollection services, LaunchModeBase launchMode)
     {
         services.AddLogging(loggingBuilder =>
         {
@@ -39,6 +40,11 @@ public static class ServiceCollectionExtensions
         services.AddHttpClient<ApiService>().AddHttpMessageHandler<CustomHttpClientHandler>();
 
         services.AddSignalR().AddMessagePackProtocol();
+
+        if (launchMode is UpdaterMode)
+        {
+            return;
+        }
 
         services.AddDbContext<HostDbContext>();
 
