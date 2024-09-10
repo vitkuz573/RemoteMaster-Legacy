@@ -21,8 +21,8 @@ public class OrganizationService(IOrganizationRepository organizationRepository)
     {
         ArgumentNullException.ThrowIfNull(dto);
 
-        var countryCode = new CountryCode(dto.Country);
-        var address = new Address(dto.Locality, dto.State, countryCode);
+        var countryCode = new CountryCode(dto.Address.Country);
+        var address = new Address(dto.Address.Locality, dto.Address.State, countryCode);
 
         if (dto.Id.HasValue)
         {

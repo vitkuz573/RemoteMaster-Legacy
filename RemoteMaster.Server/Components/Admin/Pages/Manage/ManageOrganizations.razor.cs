@@ -8,6 +8,7 @@ using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Components.Admin.Dialogs;
 using RemoteMaster.Server.DTOs;
 using RemoteMaster.Server.Models;
+using RemoteMaster.Shared.DTOs;
 using Serilog;
 
 namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
@@ -41,14 +42,8 @@ public partial class ManageOrganizations
 
     private async Task OnValidSubmitAsync()
     {
-        var dto = new OrganizationDto
-        {
-            Id = Input.Id,
-            Name = Input.Name,
-            Locality = Input.Locality,
-            State = Input.State,
-            Country = Input.Country
-        };
+        var addressDto = new AddressDto(Input.Locality, Input.State, Input.Country);
+        var dto = new OrganizationDto(Input.Id, Input.Name, addressDto);
 
         _message = await OrganizationService.AddOrUpdateOrganizationAsync(dto);
 

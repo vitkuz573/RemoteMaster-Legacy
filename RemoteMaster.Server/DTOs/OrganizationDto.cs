@@ -2,17 +2,15 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using RemoteMaster.Shared.DTOs;
+
 namespace RemoteMaster.Server.DTOs;
 
-public class OrganizationDto
+public class OrganizationDto(Guid? id, string name, AddressDto address)
 {
-    public Guid? Id { get; set; }
+    public Guid? Id { get; } = id;
 
-    public string Name { get; set; }
+    public string Name { get; } = name;
 
-    public string Locality { get; set; }
-
-    public string State { get; set; }
-
-    public string Country { get; set; }
+    public AddressDto Address { get; } = address;
 }
