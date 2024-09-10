@@ -2,12 +2,10 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.SignalR;
 using Moq;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
-using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
@@ -24,7 +22,6 @@ public class ControlHubTests
     private readonly Mock<IShutdownService> _mockShutdownService;
     private readonly Mock<IHostConfigurationService> _mockHostConfigurationService;
     private readonly Mock<IHostLifecycleService> _mockHostLifecycleService;
-    private readonly Mock<ICertificateStoreService> _mockCertificateStoreService;
     private readonly Mock<IHubCallerClients<IControlClient>> _mockClients;
     private readonly Mock<HubCallerContext> _mockHubCallerContext;
     private readonly ControlHub _controlHub;
@@ -41,7 +38,6 @@ public class ControlHubTests
         Mock<IScreenCapturingService> mockScreenCapturingService = new();
         _mockHostConfigurationService = new Mock<IHostConfigurationService>();
         _mockHostLifecycleService = new Mock<IHostLifecycleService>();
-        _mockCertificateStoreService = new Mock<ICertificateStoreService>();
         Mock<IWorkStationSecurityService> mockWorkStationSecurityService = new();
         Mock<IScreenCastingService> mockScreenCastingService = new();
         _mockClients = new Mock<IHubCallerClients<IControlClient>>();
@@ -62,7 +58,6 @@ public class ControlHubTests
             mockScreenCapturingService.Object,
             _mockHostConfigurationService.Object,
             _mockHostLifecycleService.Object,
-            _mockCertificateStoreService.Object,
             mockWorkStationSecurityService.Object,
             mockScreenCastingService.Object)
         {
@@ -332,49 +327,5 @@ public class ControlHubTests
         )), Times.Once);
 
         _mockHostLifecycleService.Verify(h => h.IssueCertificateAsync(hostConfiguration, organizationAddress), Times.Once);
-    }
-
-    [Fact]
-    public async Task RenewCertificate_ShouldRenewCertificate()
-    {
-        // Arrange
-        var hostConfiguration = new HostConfiguration
-        {
-            Subject = new SubjectDto
-            {
-                Organization = "Org",
-                OrganizationalUnit = ["OU"]
-            }
-        };
-
-        var organizationAddress = new AddressDto("TestLocality", "TestState", "US");
-
-        _mockHostConfigurationService.Setup(h => h.LoadConfigurationAsync(It.IsAny<bool>())).ReturnsAsync(hostConfiguration);
-        _mockHostLifecycleService.Setup(h => h.GetOrganizationAddressAsync(It.IsAny<HostConfiguration>())).ReturnsAsync(organizationAddress);
-
-        // Act
-        await _controlHub.RenewCertificate();
-
-        // Assert
-        _mockHostLifecycleService.Verify(h => h.IssueCertificateAsync(hostConfiguration, organizationAddress), Times.Once);
-    }
-
-    [Fact]
-    public void GetCertificateSerialNumber_ShouldReturnSerialNumber()
-    {
-        // Arrange
-        const string expectedSerialNumber = "123456";
-        var mockCertificate = new Mock<ICertificateWrapper>();
-        mockCertificate.Setup(c => c.HasPrivateKey).Returns(true);
-        mockCertificate.Setup(c => c.GetSerialNumberString()).Returns(expectedSerialNumber);
-
-        var certificates = new List<ICertificateWrapper> { mockCertificate.Object };
-        _mockCertificateStoreService.Setup(s => s.GetCertificates(StoreName.My, StoreLocation.LocalMachine, X509FindType.FindBySubjectName, It.IsAny<string>())).Returns(certificates);
-
-        // Act
-        var result = _controlHub.GetCertificateSerialNumber();
-
-        // Assert
-        Assert.Equal(expectedSerialNumber, result);
     }
 }
