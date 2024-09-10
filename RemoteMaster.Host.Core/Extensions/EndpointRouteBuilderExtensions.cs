@@ -17,6 +17,7 @@ public static class EndpointRouteBuilderExtensions
         if (launchModeBase is UserMode)
         {
             endpoints.MapHub<ControlHub>("/hubs/control");
+            endpoints.MapHub<CertificateHub>("/hubs/certificate");
             endpoints.MapHub<FileManagerHub>("/hubs/filemanager");
             endpoints.MapHub<TaskManagerHub>("/hubs/taskmanager");
             endpoints.MapHub<ScreenRecorderHub>("/hubs/screenrecorder");

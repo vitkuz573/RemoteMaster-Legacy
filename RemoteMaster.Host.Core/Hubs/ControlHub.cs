@@ -3,16 +3,13 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Drawing.Imaging;
-using System.Net;
 using System.Reflection;
 using System.Runtime.Versioning;
 using System.Security.Claims;
-using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Connections.Features;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.Claims;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Enums;
@@ -22,7 +19,7 @@ using Serilog;
 namespace RemoteMaster.Host.Core.Hubs;
 
 [Authorize(Policy = "LocalhostOrAuthenticatedPolicy")]
-public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturingService screenCapturingService, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService, ICertificateStoreService certificateStoreService, IWorkStationSecurityService workStationSecurityService, IScreenCastingService screenCastingService) : Hub<IControlClient>
+public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturingService screenCapturingService, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService, IWorkStationSecurityService workStationSecurityService, IScreenCastingService screenCastingService) : Hub<IControlClient>
 {
     private static readonly List<string> ExcludedCodecs = ["image/tiff"];
 
@@ -320,23 +317,5 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
         await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
         await hostLifecycleService.IssueCertificateAsync(hostConfiguration, organizationAddress);
-    }
-
-    [Authorize(Policy = "RenewCertificatePolicy")]
-    public async Task RenewCertificate()
-    {
-        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
-
-        var organizationAddress = await hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration);
-
-        await hostLifecycleService.IssueCertificateAsync(hostConfiguration, organizationAddress);
-    }
-
-    public string? GetCertificateSerialNumber()
-    {
-        var certificates = certificateStoreService.GetCertificates(StoreName.My, StoreLocation.LocalMachine, X509FindType.FindBySubjectName, Dns.GetHostName());
-        var certificate = certificates.FirstOrDefault(c => c.HasPrivateKey);
-
-        return certificate?.GetSerialNumberString();
     }
 }
