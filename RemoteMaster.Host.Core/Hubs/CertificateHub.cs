@@ -23,11 +23,12 @@ public class CertificateHub(IHostConfigurationService hostConfigurationService, 
         await hostLifecycleService.IssueCertificateAsync(hostConfiguration, organizationAddress);
     }
 
-    public string? GetCertificateSerialNumber()
+    public async Task GetCertificateSerialNumber()
     {
         var certificates = certificateStoreService.GetCertificates(StoreName.My, StoreLocation.LocalMachine, X509FindType.FindBySubjectName, Dns.GetHostName());
         var certificate = certificates.FirstOrDefault(c => c.HasPrivateKey);
+        var serialNumber =  certificate?.GetSerialNumberString();
 
-        return certificate?.GetSerialNumberString();
+        await Clients.Caller.ReceiveCertificateSerialNumber(serialNumber);
     }
 }

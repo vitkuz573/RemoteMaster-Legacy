@@ -22,12 +22,15 @@ public partial class RenewCertificateDialog
         var revokeCertificateTasks = new List<Task>();
         var renewCertificateTasks = new List<Task>();
 
-        foreach (var (computer, connection) in Hosts)
+        foreach (var (_, connection) in Hosts)
         {
-            var serialNumberString = await connection.InvokeAsync<string?>("GetCertificateSerialNumber");
-
-            if (!string.IsNullOrEmpty(serialNumberString))
+            connection.On<string?>("ReceiveCertificateSerialNumber", serialNumberString =>
             {
+                if (string.IsNullOrEmpty(serialNumberString))
+                {
+                    return;
+                }
+
                 var serialNumber = SerialNumber.FromExistingValue(serialNumberString);
 
                 var revokeCertificateTask = Task.Run(async () =>
@@ -36,7 +39,9 @@ public partial class RenewCertificateDialog
                 });
 
                 revokeCertificateTasks.Add(revokeCertificateTask);
-            }
+            });
+
+            await connection.InvokeAsync<string?>("GetCertificateSerialNumber");
 
             var renewCertificateTask = Task.Run(async () =>
             {

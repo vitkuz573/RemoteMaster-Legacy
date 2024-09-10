@@ -6,4 +6,5 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface ICertificateClient
 {
+    Task ReceiveCertificateSerialNumber(string? serialNumber);
 }
