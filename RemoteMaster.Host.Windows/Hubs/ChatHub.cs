@@ -6,10 +6,12 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Windows.Models;
+using RemoteMaster.Host.Windows.Services;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
 
-namespace RemoteMaster.Host.Core.Hubs;
+namespace RemoteMaster.Host.Windows.Hubs;
 
 public class ChatHub : Hub<IChatClient>
 {
@@ -21,7 +23,6 @@ public class ChatHub : Hub<IChatClient>
 
         const string processName = "RemoteMaster.Host.Chat";
         const string processPath = @"C:\Program Files\RemoteMaster\Host\RemoteMaster.Host.Chat.exe";
-        const string workingDirectory = @"C:\Program Files\RemoteMaster\Host";
 
         var isProcessRunning = Process.GetProcessesByName(processName).Length != 0;
 
@@ -29,14 +30,22 @@ public class ChatHub : Hub<IChatClient>
         {
             if (File.Exists(processPath))
             {
-                var startInfo = new ProcessStartInfo
+                var startInfo = new NativeProcessStartInfo
                 {
                     FileName = processPath,
-                    WorkingDirectory = workingDirectory,
-                    UseShellExecute = true
+                    ForceConsoleSession = true,
+                    CreateNoWindow = false,
+                    UseCurrentUserToken = false,
+                    Environment =
+                    {
+                        ["WEBVIEW2_USER_DATA_FOLDER"] = @"C:\ProgramData\RemoteMaster\Host"
+                    }
                 };
 
-                Process.Start(startInfo);
+                using var nativeProcess = new NativeProcess();
+                nativeProcess.StartInfo = startInfo;
+
+                nativeProcess.Start();
             }
             else
             {

@@ -130,6 +130,7 @@ internal class Program
 
         if (launchModeInstance is UserMode)
         {
+            app.MapHub<ChatHub>("/hubs/chat");
             app.MapHub<ServiceHub>("/hubs/service");
         }
 
