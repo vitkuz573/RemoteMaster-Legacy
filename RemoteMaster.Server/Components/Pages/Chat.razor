@@ -6,60 +6,71 @@
 
 @inject IJSRuntime JsRuntime
 
-<div class="flex min-h-screen flex-col items-center justify-center bg-gray-100">
-    <div class="w-full max-w-lg rounded-lg bg-white p-4 shadow-lg">
-        <h3 class="mb-4 text-center text-2xl font-semibold text-gray-700">Chat Room</h3>
-        <div class="flex flex-col">
-            <div class="mb-4 flex items-center space-x-2">
-                <input @bind="_message" placeholder="Enter your message..." class="flex-1 rounded border p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" @oninput="HandleInput" />
+<div class="flex min-h-screen items-center justify-center bg-gray-100">
+    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-lg">
+        <h3 class="mb-6 text-center text-2xl font-semibold text-gray-800">Chat Room</h3>
+        <div class="flex flex-col space-y-4">
+            <div class="flex items-center space-x-2">
+                <input @bind="_message" placeholder="Enter your message..." class="flex-1 rounded-full border p-3 text-gray-700 transition focus:outline-none focus:ring-2 focus:ring-blue-500" @oninput="HandleInput" />
                 <InputFile OnChange="HandleFileChange" id="fileInput" class="hidden" multiple />
-                <button @onclick="OpenFileDialog" class="rounded bg-gray-500 px-4 py-2 font-semibold text-white transition duration-200 hover:bg-gray-700">Attach</button>
-                <button @onclick="Send" class="rounded bg-blue-500 px-4 py-2 font-semibold text-white transition duration-200 hover:bg-blue-700">Send</button>
+                <button @onclick="OpenFileDialog" class="rounded-full bg-gray-500 p-3 text-white transition duration-200 hover:bg-gray-700">
+                    <span class="material-icons">attach_file</span>
+                </button>
+                <button @onclick="Send" class="rounded-full bg-blue-500 p-3 text-white transition duration-200 hover:bg-blue-700">
+                    <span class="material-icons">send</span>
+                </button>
             </div>
+
             @if (_selectedFiles.Any())
             {
-                <div class="mb-4 rounded bg-gray-200 p-2">
-                    <div>Selected files:</div>
+                <div class="mb-4 rounded bg-gray-200 p-3">
+                    <div class="font-semibold text-gray-700">Selected files:</div>
                     <ul class="list-disc pl-5">
                         @foreach (var file in _selectedFiles)
                         {
                             <li>
                                 @file.Name
-                                <button @onclick="() => RemoveFile(file)" class="ml-2 text-red-500 hover:text-red-700">Remove</button>
+                                <button @onclick="() => RemoveFile(file)" class="ml-2 text-red-500 hover:text-red-700">
+                                    <span class="material-icons">delete</span>
+                                </button>
                             </li>
                         }
                     </ul>
                 </div>
             }
+
             @if (!string.IsNullOrEmpty(_replyToMessage))
             {
-                <div class="mb-4 rounded bg-gray-200 p-2">
-                    Replying to: @_replyToMessage
-                    <button @onclick="ClearReply" class="ml-2 text-red-500 hover:text-red-700">Cancel</button>
+                <div class="mb-4 rounded bg-gray-200 p-3">
+                    <div class="text-gray-700">Replying to: @_replyToMessage</div>
+                    <button @onclick="ClearReply" class="ml-2 text-red-500 hover:text-red-700">
+                        <span class="material-icons">cancel</span>
+                    </button>
                 </div>
             }
-            <div class="h-80 overflow-y-auto border-t border-gray-200 pt-2">
-                <ul class="space-y-2">
+
+            <div class="h-80 space-y-2 overflow-y-auto border-t border-gray-200 pt-2">
+                <ul>
                     @foreach (var chatMessage in _messages)
                     {
-                        <li class="flex items-start space-x-2 rounded-lg bg-gray-50 p-2 shadow-sm">
+                        <li class="flex items-start space-x-2 rounded-lg bg-gray-50 p-3 shadow-sm">
                             <div class="flex-shrink-0">
-                                <span class="inline-block flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white">@chatMessage.User[0]</span>
+                                <span class="inline-block flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-lg text-white">@chatMessage.User[0]</span>
                             </div>
                             <div class="flex-1">
-                                <div class="text-sm font-semibold text-gray-700">@chatMessage.User</div>
+                                <div class="text-sm font-semibold text-gray-800">@chatMessage.User</div>
                                 @if (!string.IsNullOrEmpty(chatMessage.ReplyToId))
                                 {
                                     <div class="text-sm text-gray-500">Replying to: @GetReplyToMessage(chatMessage.ReplyToId)</div>
                                 }
-                                <div class="text-sm text-gray-600">@chatMessage.Message</div>
+                                <div class="text-sm text-gray-700">@chatMessage.Message</div>
                                 @if (chatMessage.Attachments != null && chatMessage.Attachments.Any())
                                 {
                                     @foreach (var attachment in chatMessage.Attachments)
                                     {
                                         @if (attachment.MimeType.StartsWith("image/"))
                                         {
-                                            <img src="data:@(attachment.MimeType);base64,@Convert.ToBase64String(attachment.Data)" class="mt-2 max-h-40" />
+                                            <img src="data:@(attachment.MimeType);base64,@Convert.ToBase64String(attachment.Data)" class="mt-2 max-h-40 rounded-lg" />
                                         }
                                         else
                                         {
@@ -67,13 +78,17 @@
                                         }
                                     }
                                 }
-                                <div class="text-sm text-gray-600">@chatMessage.Timestamp</div>
+                                <div class="text-xs text-gray-500">@chatMessage.Timestamp</div>
                             </div>
                             <div class="flex space-x-2">
-                                <button @onclick="@(() => SetReplyToMessage(chatMessage.Id))" class="text-blue-500 hover:text-blue-700">Reply</button>
+                                <button @onclick="@(() => SetReplyToMessage(chatMessage.Id))" class="text-blue-500 hover:text-blue-700">
+                                    <span class="material-icons">reply</span>
+                                </button>
                                 @if (chatMessage.User == _user?.FindFirstValue(ClaimTypes.Name))
                                 {
-                                    <button @onclick="@(() => Delete(chatMessage.Id))" class="text-red-500 hover:text-red-700">Delete</button>
+                                    <button @onclick="@(() => Delete(chatMessage.Id))" class="text-red-500 hover:text-red-700">
+                                        <span class="material-icons">delete</span>
+                                    </button>
                                 }
                             </div>
                         </li>
