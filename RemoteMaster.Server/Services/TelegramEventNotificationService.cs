@@ -3,8 +3,8 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using FluentResults;
-using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Abstractions;
+using RemoteMaster.Server.Aggregates.TelegramBotAggregate;
 using RemoteMaster.Server.Options;
 using Serilog;
 using Telegram.Bot;
@@ -14,38 +14,45 @@ namespace RemoteMaster.Server.Services;
 
 public class TelegramEventNotificationService : IEventNotificationService
 {
+    private readonly ITelegramBotRepository _repository;
     private ITelegramBotClient? _botClient;
-    private readonly IOptionsSnapshot<TelegramBotOptions> _optionsSnapshot;
-    private TelegramBotOptions _currentOptions;
+    private readonly TelegramBot? _currentBot;
 
-    public TelegramEventNotificationService(IOptionsSnapshot<TelegramBotOptions> optionsSnapshot)
+    public TelegramEventNotificationService(ITelegramBotRepository repository)
     {
-        ArgumentNullException.ThrowIfNull(optionsSnapshot);
+        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
 
-        _optionsSnapshot = optionsSnapshot;
-        _currentOptions = _optionsSnapshot.Value;
+        var bots = _repository.GetAllAsync().Result;
+        _currentBot = bots.FirstOrDefault();
 
-        if (_currentOptions.IsEnabled)
+        if (_currentBot is { IsEnabled: true })
         {
-            _botClient = new TelegramBotClient(_currentOptions.BotToken);
+            _botClient = new TelegramBotClient(_currentBot.BotToken);
         }
     }
 
     public async Task UpdateSettingsAsync(TelegramBotOptions options)
     {
-        _currentOptions = options;
+        ArgumentNullException.ThrowIfNull(options);
 
-        if (_currentOptions.IsEnabled)
+        if (_currentBot == null)
         {
-            _botClient = new TelegramBotClient(_currentOptions.BotToken);
+            throw new InvalidOperationException("No TelegramBot found in database.");
         }
+
+        _currentBot.UpdateSettings(options.IsEnabled, options.BotToken);
+
+        await _repository.UpdateAsync(_currentBot);
+        await _repository.SaveChangesAsync();
+
+        _botClient = _currentBot.IsEnabled ? new TelegramBotClient(_currentBot.BotToken) : null;
     }
 
     public async Task<Result> SendNotificationAsync(string message)
     {
         ArgumentNullException.ThrowIfNull(message);
 
-        if (!_currentOptions.IsEnabled || _botClient == null || !_currentOptions.ChatIds.Any())
+        if (_currentBot is not { IsEnabled: true } || _botClient == null || !_currentBot.ChatIds.Any())
         {
             return Result.Fail("Telegram bot is not configured or is disabled.");
         }
@@ -54,7 +61,7 @@ public class TelegramEventNotificationService : IEventNotificationService
         {
             var escapedMessage = EscapeMarkdownV2(message);
 
-            foreach (var chatId in _currentOptions.ChatIds)
+            foreach (var chatId in _currentBot.ChatIds.Select(c => c.ChatId))
             {
                 await _botClient.SendTextMessageAsync(chatId, escapedMessage, parseMode: ParseMode.MarkdownV2);
             }
