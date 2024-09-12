@@ -96,11 +96,16 @@ public partial class Home
     {
         if (_currentUser == null)
         {
+            Log.Warning("Current user is null during LoadNodes.");
             return [];
         }
 
+        // Сбор данных о доступных организациях и юнитах
         var accessibleOrganizations = _currentUser.UserOrganizations.Select(uo => uo.OrganizationId).ToList();
         var accessibleOrganizationalUnits = _currentUser.UserOrganizationalUnits.Select(uou => uou.OrganizationalUnitId).ToList();
+
+        Log.Information("Accessible organizations: {@AccessibleOrganizations}", accessibleOrganizations);
+        Log.Information("Accessible organizational units: {@AccessibleOrganizationalUnits}", accessibleOrganizationalUnits);
 
         var units = new List<object>();
 
@@ -108,10 +113,13 @@ public partial class Home
         {
             var organizationsResult = (await OrganizationRepository.FindAsync(o => accessibleOrganizations.Contains(o.Id))).ToList();
 
+            Log.Information("Loaded organizations for user: {@OrganizationsResult}", organizationsResult);
+
             units.AddRange(organizationsResult);
 
             foreach (var organization in organizationsResult)
             {
+                Log.Information("Loading nodes for organization {OrganizationId}", organization.Id);
                 await LoadNodes(organization.Id);
             }
         }
@@ -121,17 +129,24 @@ public partial class Home
 
             if (organization == null)
             {
+                Log.Warning("Organization with ID {OrganizationId} not found.", organizationId.Value);
                 return units;
             }
 
+            Log.Information("Loaded organization {OrganizationId} with units.", organization.Id);
+
+            // Фильтрация юнитов с проверкой на доступ
             var organizationalUnitsResult = organization.OrganizationalUnits
                 .Where(ou => (parentId == null || ou.ParentId == parentId) && accessibleOrganizationalUnits.Contains(ou.Id))
                 .ToList();
+
+            Log.Information("Organizational units loaded: {@OrganizationalUnitsResult}", organizationalUnitsResult);
 
             units.AddRange(organizationalUnitsResult);
 
             foreach (var unit in organizationalUnitsResult)
             {
+                Log.Information("Loading child units for organizational unit {UnitId} in organization {OrganizationId}", unit.Id, unit.OrganizationId);
                 await LoadNodes(unit.OrganizationId, unit.Id);
             }
         }

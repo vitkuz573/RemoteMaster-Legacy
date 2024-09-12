@@ -72,33 +72,20 @@ public class OrganizationService(IOrganizationRepository organizationRepository)
         return "Organization deleted successfully.";
     }
 
-    public async Task UpdateUserOrganizationsAsync(ApplicationUser user, List<Guid> organizationIds)
+    public async Task UpdateUserOrganizationsAsync(ApplicationUser user, List<Guid> selectedOrganizationIds)
     {
         ArgumentNullException.ThrowIfNull(user);
 
-        var currentOrganizationIds = user.UserOrganizations.Select(uo => uo.OrganizationId).ToHashSet();
-
-        var organizations = await organizationRepository.GetByIdsAsync(organizationIds);
-
-        var organizationsToRemove = currentOrganizationIds.Except(organizationIds).ToList();
-        var organizationsToAdd = organizationIds.Except(currentOrganizationIds).ToList();
-
-        if (organizationsToRemove.Count != 0)
+        foreach (var org in user.UserOrganizations.ToList().Where(org => !selectedOrganizationIds.Contains(org.OrganizationId)))
         {
-            var organizationsToRemoveEntities = await organizationRepository.GetByIdsAsync(organizationsToRemove);
-
-            foreach (var organization in organizationsToRemoveEntities)
-            {
-                organization.RemoveUser(user.Id);
-            }
+            var organization = await organizationRepository.GetByIdAsync(org.OrganizationId);
+            organization?.RemoveUser(user.Id);
         }
 
-        if (organizationsToAdd.Count != 0)
+        foreach (var orgId in selectedOrganizationIds.Where(orgId => user.UserOrganizations.All(uo => uo.OrganizationId != orgId)))
         {
-            foreach (var orgId in organizationsToAdd.Select(orgId => organizations.FirstOrDefault(o => o.Id == orgId)))
-            {
-                orgId?.AddUser(user.Id);
-            }
+            var organization = await organizationRepository.GetByIdAsync(orgId);
+            organization?.AddUser(user.Id);
         }
 
         await organizationRepository.SaveChangesAsync();

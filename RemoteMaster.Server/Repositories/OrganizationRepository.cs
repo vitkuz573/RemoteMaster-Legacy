@@ -15,12 +15,13 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
     public async Task<Organization?> GetByIdAsync(Guid id)
     {
         return await context.Organizations
-            .Include(o => o.OrganizationalUnits)
+            .Include(o => o.OrganizationalUnits.Where(ou => ou.UserOrganizationalUnits.Any()))
             .ThenInclude(ou => ou.Children)
-            .Include(o => o.OrganizationalUnits)
+            .Include(o => o.OrganizationalUnits.Where(ou => ou.UserOrganizationalUnits.Any()))
             .ThenInclude(ou => ou.Computers)
             .FirstOrDefaultAsync(o => o.Id == id);
     }
+    
 
     public async Task<IEnumerable<Organization>> GetByIdsAsync(IEnumerable<Guid> ids)
     {

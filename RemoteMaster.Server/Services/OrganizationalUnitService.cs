@@ -118,34 +118,26 @@ public class OrganizationalUnitService(IOrganizationRepository organizationRepos
         return organizations.SelectMany(o => o.OrganizationalUnits);
     }
 
-    public async Task UpdateUserOrganizationalUnitsAsync(ApplicationUser user, List<Guid> unitIds)
+    public async Task UpdateUserOrganizationalUnitsAsync(ApplicationUser user, List<Guid> selectedUnitIds)
     {
         ArgumentNullException.ThrowIfNull(user);
 
-        var currentUnitIds = user.UserOrganizationalUnits.Select(uou => uou.OrganizationalUnitId).ToHashSet();
-
         var organizations = await organizationRepository.GetAllAsync();
-        var organizationalUnits = organizations.SelectMany(o => o.OrganizationalUnits).Where(u => unitIds.Contains(u.Id)).ToList();
 
-        var unitsToRemove = currentUnitIds.Except(unitIds).ToList();
-        var unitsToAdd = unitIds.Except(currentUnitIds).ToList();
-
-        if (unitsToRemove.Count != 0)
+        foreach (var unit in user.UserOrganizationalUnits.ToList().Where(unit => !selectedUnitIds.Contains(unit.OrganizationalUnitId)))
         {
-            var unitsToRemoveEntities = organizationalUnits.Where(u => unitsToRemove.Contains(u.Id)).ToList();
+            var organization = organizations.FirstOrDefault(o => o.OrganizationalUnits.Any(u => u.Id == unit.OrganizationalUnitId));
+            var organizationalUnit = organization?.OrganizationalUnits.FirstOrDefault(u => u.Id == unit.OrganizationalUnitId);
 
-            foreach (var unit in unitsToRemoveEntities)
-            {
-                unit.RemoveUser(user.Id);
-            }
+            organizationalUnit?.RemoveUser(user.Id);
         }
 
-        if (unitsToAdd.Count != 0)
+        foreach (var unitId in selectedUnitIds.Where(unitId => user.UserOrganizationalUnits.All(uou => uou.OrganizationalUnitId != unitId)))
         {
-            foreach (var unit in unitsToAdd.Select(unitId => organizationalUnits.FirstOrDefault(u => u.Id == unitId)))
-            {
-                unit?.AddUser(user.Id);
-            }
+            var organization = organizations.FirstOrDefault(o => o.OrganizationalUnits.Any(u => u.Id == unitId));
+            var unit = organization?.OrganizationalUnits.FirstOrDefault(u => u.Id == unitId);
+
+            unit?.AddUser(user.Id);
         }
 
         await organizationRepository.SaveChangesAsync();
