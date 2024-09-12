@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using FluentResults;
+using RemoteMaster.Server.Options;
 
 namespace RemoteMaster.Server.Abstractions;
 
@@ -11,6 +12,8 @@ namespace RemoteMaster.Server.Abstractions;
 /// </summary>
 public interface IEventNotificationService
 {
+    Task UpdateSettingsAsync(TelegramBotOptions options);
+
     /// <summary>
     /// Sends a notification asynchronously.
     /// </summary>

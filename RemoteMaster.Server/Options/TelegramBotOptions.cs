@@ -16,6 +16,6 @@ public class TelegramBotOptions
 
 #pragma warning disable CA2227
     [JsonPropertyName("chatIds")]
-    public List<string> ChatIds { get; set; }
+    public List<int> ChatIds { get; set; }
 #pragma warning restore CA2227
 }

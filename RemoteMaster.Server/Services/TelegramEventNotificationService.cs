@@ -14,32 +14,38 @@ namespace RemoteMaster.Server.Services;
 
 public class TelegramEventNotificationService : IEventNotificationService
 {
-    private readonly ITelegramBotClient? _botClient;
-    private readonly List<string>? _chatIds;
-    private readonly bool _isEnabled;
+    private ITelegramBotClient? _botClient;
+    private readonly IOptionsSnapshot<TelegramBotOptions> _optionsSnapshot;
+    private TelegramBotOptions _currentOptions;
 
-    public TelegramEventNotificationService(IOptions<TelegramBotOptions> options)
+    public TelegramEventNotificationService(IOptionsSnapshot<TelegramBotOptions> optionsSnapshot)
     {
-        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(optionsSnapshot);
 
-        var telegramOptions = options.Value;
+        _optionsSnapshot = optionsSnapshot;
+        _currentOptions = _optionsSnapshot.Value;
 
-        _isEnabled = telegramOptions.IsEnabled;
-
-        if (!_isEnabled)
+        if (_currentOptions.IsEnabled)
         {
-            return;
+            _botClient = new TelegramBotClient(_currentOptions.BotToken);
         }
+    }
 
-        _botClient = new TelegramBotClient(telegramOptions.BotToken);
-        _chatIds = telegramOptions.ChatIds;
+    public async Task UpdateSettingsAsync(TelegramBotOptions options)
+    {
+        _currentOptions = options;
+
+        if (_currentOptions.IsEnabled)
+        {
+            _botClient = new TelegramBotClient(_currentOptions.BotToken);
+        }
     }
 
     public async Task<Result> SendNotificationAsync(string message)
     {
         ArgumentNullException.ThrowIfNull(message);
 
-        if (!_isEnabled || _botClient == null || _chatIds == null)
+        if (!_currentOptions.IsEnabled || _botClient == null || !_currentOptions.ChatIds.Any())
         {
             return Result.Fail("Telegram bot is not configured or is disabled.");
         }
@@ -48,7 +54,7 @@ public class TelegramEventNotificationService : IEventNotificationService
         {
             var escapedMessage = EscapeMarkdownV2(message);
 
-            foreach (var chatId in _chatIds)
+            foreach (var chatId in _currentOptions.ChatIds)
             {
                 await _botClient.SendTextMessageAsync(chatId, escapedMessage, parseMode: ParseMode.MarkdownV2);
             }

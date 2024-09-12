@@ -140,6 +140,7 @@ public static class Program
             throw new InvalidOperationException("Could not find a connection string named 'DefaultConnection'.");
         }
 
+        services.AddDbContext<TelegramBotDbContext>();
         services.AddDbContext<ApplicationDbContext>();
         services.AddDbContext<CertificateDbContext>();
 
@@ -176,6 +177,7 @@ public static class Program
         services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
         services.AddTransient<IUdpClient, UdpClientWrapper>();
         services.AddTransient<Func<IUdpClient>>(provider => provider.GetRequiredService<IUdpClient>);
+        services.AddScoped<ITelegramBotRepository, TelegramBotRepository>();
         services.AddScoped<IApplicationClaimRepository, ApplicationClaimRepository>();
         services.AddScoped<ICrlRepository, CrlRepository>();
         services.AddScoped<IApplicationUserRepository, ApplicationUserRepository>();
@@ -190,9 +192,12 @@ public static class Program
         services.AddScoped<IHostRegistrationService, HostRegistrationService>();
         services.AddScoped<IUserPlanProvider, UserPlanProvider>();
         services.AddScoped<ILimitChecker, LimitChecker>();
+        services.AddScoped<ITelegramBotService, TelegramBotService>();
         services.AddScoped<IApplicationUserService, ApplicationUserService>();
         services.AddScoped<IOrganizationService, OrganizationService>();
         services.AddScoped<IOrganizationalUnitService, OrganizationalUnitService>();
+        services.AddScoped<IEventNotificationService, TelegramEventNotificationService>();
+        services.AddScoped<IHostMoveRequestService, HostMoveService>();
         services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<ITokenStorageService, InMemoryTokenStorageService>();
         services.AddSingleton<IBrandingService, BrandingService>();
@@ -204,12 +209,10 @@ public static class Program
         services.AddSingleton<IRemoteSchtasksService, RemoteSchtasksService>();
         services.AddSingleton<INetworkDriveService, NetworkDriveService>();
         services.AddSingleton<ICountryProvider, CountryProvider>();
-        services.AddSingleton<IEventNotificationService, TelegramEventNotificationService>();
         services.AddSingleton<IValidateOptions<JwtOptions>, JwtOptionsValidator>();
         services.AddSingleton<IValidateOptions<CertificateOptions>, CertificateOptionsValidator>();
         services.AddSingleton<IValidateOptions<SubjectOptions>, SubjectOptionsValidator>();
         services.AddSingleton<IValidateOptions<TelegramBotOptions>, TelegramBotOptionsValidator>();
-        services.AddSingleton<IHostMoveRequestService, HostMoveService>();
         services.AddSingleton<INotificationService, InMemoryNotificationService>();
         services.AddSingleton<IPlanService, PlanService>();
 
@@ -230,7 +233,6 @@ public static class Program
         services.Configure<JwtOptions>(configurationManager.GetSection("jwt"));
         services.Configure<CertificateOptions>(configurationManager.GetSection("caSettings"));
         services.Configure<SubjectOptions>(configurationManager.GetSection("caSettings:subject"));
-        services.Configure<TelegramBotOptions>(configurationManager.GetSection("telegramBot"));
 
         services.AddMudServices();
 
@@ -269,7 +271,12 @@ public static class Program
                 name: "CertificateDbContext",
                 failureStatus: HealthStatus.Unhealthy,
                 tags: ["db", "entityframework"]
-            );
+            )
+            .AddDbContextCheck<TelegramBotDbContext>(
+                name: "TelegramBotDbContext",
+                failureStatus: HealthStatus.Unhealthy,
+                tags: ["db", "entityframework"]
+            ); ;
 
         services.AddRateLimiter(options =>
         {

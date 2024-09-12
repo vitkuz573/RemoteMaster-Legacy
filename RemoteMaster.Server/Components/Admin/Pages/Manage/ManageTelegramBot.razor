@@ -1,0 +1,63 @@
+﻿@page "/Admin/TelegramBot"
+
+@rendermode InteractiveServer
+
+@using RemoteMaster.Server.Abstractions
+@using RemoteMaster.Server.Components.Account.Shared
+
+@inject IEventNotificationService EventNotificationService
+@inject ITelegramBotService TelegramBotService
+
+<PageTitle>Manage Telegram Bot</PageTitle>
+
+<StatusMessage UseHttpContext="false" Message="@_message" />
+
+<EditForm Model="Input" OnValidSubmit="SaveSettings">
+    <DataAnnotationsValidator />
+    <div class="space-y-6">
+        <div class="w-full space-y-6">
+            <!-- Telegram Bot Enable/Disable -->
+            <div class="flex items-center">
+                <InputCheckbox @bind-Value="Input.IsEnabled" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                <label class="ml-2 block text-sm font-medium text-gray-700">Enable Telegram Bot</label>
+            </div>
+
+            <!-- Bot Token -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Bot Token</label>
+                <InputText @bind-Value="Input.BotToken" class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                <ValidationMessage For="() => Input.BotToken" class="text-red-500 mt-1" />
+            </div>
+
+            <!-- Chat IDs -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Chat IDs</label>
+                <div class="flex space-x-2">
+                    <InputText @bind-Value="_newChatId" placeholder="Enter new chat ID" class="flex-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                    <button type="button" @onclick="AddChatId" class="flex-shrink-0 w-32 rounded-md bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700 focus:outline-none">
+                        Add Chat ID
+                    </button>
+                </div>
+                <ul class="mt-4 space-y-2">
+                    @foreach (var chatId in Input.ChatIds)
+                    {
+                        <li class="flex items-center justify-between">
+                            <span>@chatId (@_userNames[chatId])</span>
+                            <button type="button" class="w-32 rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 focus:outline-none" @onclick="() => RemoveChatId(chatId)">Remove</button>
+                        </li>
+                    }
+                </ul>
+            </div>
+
+            <!-- Save Button -->
+            <button type="submit" class="w-full rounded-md bg-indigo-600 px-4 py-2 text-lg text-white hover:bg-indigo-700 focus:outline-none">
+                Save Settings
+            </button>
+        </div>
+    </div>
+</EditForm>
+
+<!-- Test Notification Button -->
+<button type="button" @onclick="TestNotification" class="mt-4 w-full rounded-md bg-blue-600 px-4 py-2 text-lg text-white hover:bg-blue-700 focus:outline-none">
+    Send Test Notification
+</button>

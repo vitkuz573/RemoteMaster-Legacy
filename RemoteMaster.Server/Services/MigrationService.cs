@@ -17,7 +17,8 @@ public class MigrationService(IServiceScopeFactory serviceScopeFactory) : IHoste
         var dbContexts = new List<DbContext>
         {
             scope.ServiceProvider.GetRequiredService<ApplicationDbContext>(),
-            scope.ServiceProvider.GetRequiredService<CertificateDbContext>()
+            scope.ServiceProvider.GetRequiredService<CertificateDbContext>(),
+            scope.ServiceProvider.GetRequiredService<TelegramBotDbContext>()
         };
 
         try
