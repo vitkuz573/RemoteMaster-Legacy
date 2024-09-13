@@ -119,8 +119,6 @@ public class OrganizationService(IOrganizationRepository organizationRepository)
             throw new InvalidOperationException("Computer not found");
         }
 
-        organizationalUnit.RemoveComputer(computerId);
-
         await organizationRepository.UpdateAsync(organization);
         await organizationRepository.SaveChangesAsync();
     }
