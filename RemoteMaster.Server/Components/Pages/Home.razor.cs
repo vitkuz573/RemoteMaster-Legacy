@@ -99,39 +99,24 @@ public partial class Home
             return [];
         }
 
-        var accessibleOrganizations = _currentUser.UserOrganizations.Select(uo => uo.OrganizationId).ToList();
-        var accessibleOrganizationalUnits = _currentUser.UserOrganizationalUnits.Select(uou => uou.OrganizationalUnitId).ToList();
+        var accessibleOrganizationIds = _currentUser.UserOrganizations
+            .Select(uo => uo.OrganizationId)
+            .ToList();
+
+        var accessibleOrganizationalUnitIds = _currentUser.UserOrganizationalUnits
+            .Select(uou => uou.OrganizationalUnitId)
+            .ToList();
 
         var units = new List<object>();
 
-        if (organizationId == null)
+        if (organizationId != null)
         {
-            var organizationsResult = (await OrganizationRepository.FindAsync(o => accessibleOrganizations.Contains(o.Id))).ToList();
-
-            units.AddRange(organizationsResult);
-
-            foreach (var organization in organizationsResult)
-            {
-                await LoadNodes(organization.Id);
-            }
+            return units;
         }
-        else
-        {
-            var organizationalUnits = await OrganizationRepository
-                .FindAsync(o => o.Id == organizationId && accessibleOrganizations.Contains(o.Id));
 
-            var accessibleUnits = organizationalUnits
-                .SelectMany(o => o.OrganizationalUnits)
-                .Where(ou => accessibleOrganizationalUnits.Contains(ou.Id) && (parentId == null || ou.ParentId == parentId))
-                .ToList();
+        var organizations = await OrganizationRepository.GetOrganizationsWithAccessibleUnitsAsync(accessibleOrganizationIds, accessibleOrganizationalUnitIds);
 
-            units.AddRange(accessibleUnits);
-
-            foreach (var unit in accessibleUnits)
-            {
-                await LoadNodes(unit.OrganizationId, unit.Id);
-            }
-        }
+        units.AddRange(organizations);
 
         return units;
     }

@@ -21,12 +21,14 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
             .ThenInclude(ou => ou.Computers)
             .FirstOrDefaultAsync(o => o.Id == id);
     }
-    
 
     public async Task<IEnumerable<Organization>> GetByIdsAsync(IEnumerable<Guid> ids)
     {
         return await context.Organizations
             .Include(o => o.OrganizationalUnits)
+            .ThenInclude(ou => ou.Children)
+            .Include(o => o.OrganizationalUnits)
+            .ThenInclude(ou => ou.Computers)
             .Where(o => ids.Contains(o.Id))
             .ToListAsync();
     }
@@ -35,6 +37,9 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
     {
         return await context.Organizations
             .Include(o => o.OrganizationalUnits)
+            .ThenInclude(ou => ou.Children)
+            .Include(o => o.OrganizationalUnits)
+            .ThenInclude(ou => ou.Computers)
             .ToListAsync();
     }
 
@@ -169,5 +174,19 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
             .FirstOrDefaultAsync(t => t.Id == taskId) ?? throw new InvalidOperationException("Task not found.");
 
         task.MarkFailed();
+    }
+
+    public async Task<IEnumerable<Organization>> GetOrganizationsWithAccessibleUnitsAsync(List<Guid> accessibleOrganizationIds, List<Guid> accessibleOrganizationalUnitIds)
+    {
+        return await context.Organizations
+            .Where(o => accessibleOrganizationIds.Contains(o.Id))
+            .Include(o => o.OrganizationalUnits
+                .Where(ou => accessibleOrganizationalUnitIds.Contains(ou.Id)))
+            .ThenInclude(ou => ou.Children
+                .Where(child => accessibleOrganizationalUnitIds.Contains(child.Id)))
+            .Include(o => o.OrganizationalUnits
+                .Where(ou => accessibleOrganizationalUnitIds.Contains(ou.Id)))
+            .ThenInclude(ou => ou.Computers)
+            .ToListAsync();
     }
 }
