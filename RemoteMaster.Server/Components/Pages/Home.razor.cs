@@ -117,20 +117,17 @@ public partial class Home
         }
         else
         {
-            var organization = await OrganizationRepository.GetByIdAsync(organizationId.Value);
+            var organizationalUnits = await OrganizationRepository
+                .FindAsync(o => o.Id == organizationId && accessibleOrganizations.Contains(o.Id));
 
-            if (organization == null)
-            {
-                return units;
-            }
-
-            var organizationalUnitsResult = organization.OrganizationalUnits
-                .Where(ou => (parentId == null || ou.ParentId == parentId) && accessibleOrganizationalUnits.Contains(ou.Id))
+            var accessibleUnits = organizationalUnits
+                .SelectMany(o => o.OrganizationalUnits)
+                .Where(ou => accessibleOrganizationalUnits.Contains(ou.Id) && (parentId == null || ou.ParentId == parentId))
                 .ToList();
 
-            units.AddRange(organizationalUnitsResult);
+            units.AddRange(accessibleUnits);
 
-            foreach (var unit in organizationalUnitsResult)
+            foreach (var unit in accessibleUnits)
             {
                 await LoadNodes(unit.OrganizationId, unit.Id);
             }
