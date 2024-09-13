@@ -107,7 +107,7 @@ public partial class Home
             .Select(uou => uou.OrganizationalUnitId)
             .ToList();
 
-        return await OrganizationRepository.GetOrganizationsWithAccessibleUnitsAsync(accessibleOrganizationIds, accessibleOrganizationalUnitIds);
+        return await OrganizationService.GetOrganizationsWithAccessibleUnitsAsync(accessibleOrganizationIds, accessibleOrganizationalUnitIds);
     }
 
     private void ToggleDrawer() => DrawerOpen = !DrawerOpen;
@@ -619,8 +619,7 @@ public partial class Home
             {
                 foreach (var computer in computersToRemove)
                 {
-                    await OrganizationRepository.RemoveComputerAsync(computer.OrganizationId, computer.OrganizationalUnitId, computer.Id);
-                    await OrganizationRepository.SaveChangesAsync();
+                    await OrganizationService.RemoveComputerAsync(computer.OrganizationId, computer.OrganizationalUnitId, computer.Id);
 
                     _availableComputers.TryRemove(computer.IpAddress, out _);
                     _unavailableComputers.TryRemove(computer.IpAddress, out _);

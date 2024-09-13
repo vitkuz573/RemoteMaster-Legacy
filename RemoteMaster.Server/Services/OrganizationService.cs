@@ -90,4 +90,38 @@ public class OrganizationService(IOrganizationRepository organizationRepository)
 
         await organizationRepository.SaveChangesAsync();
     }
+
+    public async Task<IEnumerable<Organization>> GetOrganizationsWithAccessibleUnitsAsync(List<Guid> accessibleOrganizationIds, List<Guid> accessibleOrganizationalUnitIds)
+    {
+        return await organizationRepository.GetOrganizationsWithAccessibleUnitsAsync(accessibleOrganizationIds, accessibleOrganizationalUnitIds);
+    }
+
+    public async Task RemoveComputerAsync(Guid organizationId, Guid organizationalUnitId, Guid computerId)
+    {
+        var organization = await organizationRepository.GetByIdAsync(organizationId);
+
+        if (organization == null)
+        {
+            throw new InvalidOperationException("Organization not found");
+        }
+
+        var organizationalUnit = organization.OrganizationalUnits.FirstOrDefault(u => u.Id == organizationalUnitId);
+
+        if (organizationalUnit == null)
+        {
+            throw new InvalidOperationException("Organizational Unit not found");
+        }
+
+        var computer = organizationalUnit.Computers.FirstOrDefault(c => c.Id == computerId);
+
+        if (computer == null)
+        {
+            throw new InvalidOperationException("Computer not found");
+        }
+
+        organizationalUnit.RemoveComputer(computerId);
+
+        await organizationRepository.UpdateAsync(organization);
+        await organizationRepository.SaveChangesAsync();
+    }
 }

@@ -94,6 +94,7 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
         return await context.Organizations
             .SelectMany(o => o.OrganizationalUnits)
             .Include(ou => ou.Computers)
+            .Include(ou => ou.UserOrganizationalUnits)
             .FirstOrDefaultAsync(ou => ou.Id == unitId);
     }
 

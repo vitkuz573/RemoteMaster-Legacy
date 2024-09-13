@@ -17,4 +17,8 @@ public interface IOrganizationService
     Task<string> DeleteOrganizationAsync(Organization organization);
 
     Task UpdateUserOrganizationsAsync(ApplicationUser user, List<Guid> organizationIds);
+
+    Task<IEnumerable<Organization>> GetOrganizationsWithAccessibleUnitsAsync(List<Guid> accessibleOrganizationIds, List<Guid> accessibleOrganizationalUnitIds);
+
+    Task RemoveComputerAsync(Guid organizationId, Guid organizationalUnitId, Guid computerId);
 }
