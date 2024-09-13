@@ -92,7 +92,7 @@ public partial class Home
 
     private bool DrawerOpen { get; set; }
 
-    private async Task<IEnumerable<object>> LoadNodes(Guid? organizationId = null)
+    private async Task<IEnumerable<Organization>> LoadNodes()
     {
         if (_currentUser == null)
         {
@@ -107,18 +107,7 @@ public partial class Home
             .Select(uou => uou.OrganizationalUnitId)
             .ToList();
 
-        var units = new List<object>();
-
-        if (organizationId != null)
-        {
-            return units;
-        }
-
-        var organizations = await OrganizationRepository.GetOrganizationsWithAccessibleUnitsAsync(accessibleOrganizationIds, accessibleOrganizationalUnitIds);
-
-        units.AddRange(organizations);
-
-        return units;
+        return await OrganizationRepository.GetOrganizationsWithAccessibleUnitsAsync(accessibleOrganizationIds, accessibleOrganizationalUnitIds);
     }
 
     private void ToggleDrawer() => DrawerOpen = !DrawerOpen;
