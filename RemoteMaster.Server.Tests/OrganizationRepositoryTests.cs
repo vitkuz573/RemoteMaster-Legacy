@@ -157,4 +157,115 @@ public class OrganizationRepositoryTests
         Assert.Single(result);
         Assert.Equal("Test1", result.First().Name);
     }
+
+    [Fact]
+    public async Task GetByIdsAsync_ReturnsOrganizations_WhenTheyExist()
+    {
+        // Arrange
+        var org1 = new Organization("Org 1", new Address("City1", "State1", new CountryCode("US")));
+        var org2 = new Organization("Org 2", new Address("City2", "State2", new CountryCode("CA")));
+        _context.Organizations.AddRange(org1, org2);
+        await _context.SaveChangesAsync();
+
+        var ids = new List<Guid> { org1.Id, org2.Id };
+
+        // Act
+        var result = await _repository.GetByIdsAsync(ids);
+
+        // Assert
+        Assert.Equal(2, result.Count());
+        Assert.Contains(result, o => o.Id == org1.Id);
+        Assert.Contains(result, o => o.Id == org2.Id);
+    }
+
+    [Fact]
+    public async Task FindComputersAsync_ReturnsFilteredComputers()
+    {
+        // Arrange
+        var organization = new Organization("Org", new Address("City", "State", new CountryCode("US")));
+        organization.AddOrganizationalUnit("Unit 1");
+        var unit = organization.OrganizationalUnits.First();
+        unit.AddComputer("Comp1", "192.168.1.1", "00:11:22:33:44:55");
+        unit.AddComputer("Comp2", "192.168.1.2", "00:11:22:33:44:66");
+        _context.Organizations.Add(organization);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _repository.FindComputersAsync(c => c.MacAddress == "00:11:22:33:44:66");
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal("Comp2", result.First().Name);
+    }
+
+    [Fact]
+    public async Task GetOrganizationByUnitIdAsync_ReturnsOrganization()
+    {
+        // Arrange
+        var organization = new Organization("Org", new Address("City", "State", new CountryCode("US")));
+        organization.AddOrganizationalUnit("Unit 1");
+        var unit = organization.OrganizationalUnits.First();
+        _context.Organizations.Add(organization);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _repository.GetOrganizationByUnitIdAsync(unit.Id);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(organization.Id, result.Id);
+    }
+
+    [Fact]
+    public async Task MoveComputerAsync_MovesComputerBetweenUnits()
+    {
+        // Arrange
+        var org1 = new Organization("Org 1", new Address("City1", "State1", new CountryCode("US")));
+        var org2 = new Organization("Org 2", new Address("City2", "State2", new CountryCode("CA")));
+        org1.AddOrganizationalUnit("Unit 1");
+        org2.AddOrganizationalUnit("Unit 2");
+
+        var unit1 = org1.OrganizationalUnits.First();
+        var unit2 = org2.OrganizationalUnits.First();
+        unit1.AddComputer("Comp1", "192.168.1.1", "00:11:22:33:44:55");
+
+        _context.Organizations.AddRange(org1, org2);
+        await _context.SaveChangesAsync();
+
+        var computerId = unit1.Computers.First().Id;
+
+        // Act
+        await _repository.MoveComputerAsync(org1.Id, org2.Id, computerId, unit1.Id, unit2.Id);
+        await _context.SaveChangesAsync();
+
+        // Assert
+        var updatedOrg1 = await _repository.GetByIdAsync(org1.Id);
+        var updatedOrg2 = await _repository.GetByIdAsync(org2.Id);
+        Assert.Empty(updatedOrg1.OrganizationalUnits.First().Computers);
+        Assert.Single(updatedOrg2.OrganizationalUnits.First().Computers);
+    }
+
+    [Fact]
+    public async Task CreateCertificateRenewalTaskAsync_CreatesTask()
+    {
+        // Arrange
+        var organization = new Organization("Org", new Address("City", "State", new CountryCode("US")));
+        organization.AddOrganizationalUnit("Unit 1");
+        var unit = organization.OrganizationalUnits.First();
+        unit.AddComputer("Comp1", "192.168.1.1", "00:11:22:33:44:55");
+        _context.Organizations.Add(organization);
+        await _context.SaveChangesAsync();
+
+        var computerId = unit.Computers.First().Id;
+        var plannedDate = DateTimeOffset.Now.AddDays(1);
+
+        // Act
+        await _repository.CreateCertificateRenewalTaskAsync(organization.Id, computerId, plannedDate);
+        await _repository.SaveChangesAsync();
+
+        // Assert
+        var tasks = await _repository.GetAllCertificateRenewalTasksAsync();
+        Assert.Single(tasks);
+        Assert.Equal(plannedDate, tasks.First().PlannedDate);
+    }
 }
