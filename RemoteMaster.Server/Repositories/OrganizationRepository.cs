@@ -16,8 +16,6 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
     {
         return await context.Organizations
             .Include(o => o.OrganizationalUnits)
-            .ThenInclude(ou => ou.Children)
-            .Include(o => o.OrganizationalUnits)
             .ThenInclude(ou => ou.Computers)
             .FirstOrDefaultAsync(o => o.Id == id);
     }
@@ -25,8 +23,6 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
     public async Task<IEnumerable<Organization>> GetByIdsAsync(IEnumerable<Guid> ids)
     {
         return await context.Organizations
-            .Include(o => o.OrganizationalUnits)
-            .ThenInclude(ou => ou.Children)
             .Include(o => o.OrganizationalUnits)
             .ThenInclude(ou => ou.Computers)
             .Where(o => ids.Contains(o.Id))
@@ -37,8 +33,6 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
     {
         return await context.Organizations
             .Include(o => o.OrganizationalUnits)
-            .ThenInclude(ou => ou.Children)
-            .Include(o => o.OrganizationalUnits)
             .ThenInclude(ou => ou.Computers)
             .ToListAsync();
     }
@@ -46,6 +40,8 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
     public async Task<IEnumerable<Organization>> FindAsync(Expression<Func<Organization, bool>> predicate)
     {
         return await context.Organizations
+            .Include(o => o.OrganizationalUnits)
+            .ThenInclude(ou => ou.Computers)
             .Where(predicate)
             .ToListAsync();
     }
@@ -85,10 +81,10 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
             .Include(o => o.OrganizationalUnits)
             .ThenInclude(ou => ou.Computers)
             .FirstOrDefaultAsync(o => o.Id == organizationId) ?? throw new InvalidOperationException("Organization not found.");
-        
+
         var unit = organization.OrganizationalUnits.FirstOrDefault(ou => ou.Id == unitId) ?? throw new InvalidOperationException("Organizational unit not found.");
         var computer = unit.Computers.FirstOrDefault(c => c.Id == computerId) ?? throw new InvalidOperationException("Computer not found.");
-        
+
         unit.RemoveComputer(computer.Id);
         context.Computers.Remove(computer);
     }
@@ -97,7 +93,7 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
     {
         return await context.Organizations
             .SelectMany(o => o.OrganizationalUnits)
-            .Include(ou => ou.UserOrganizationalUnits)
+            .Include(ou => ou.Computers)
             .FirstOrDefaultAsync(ou => ou.Id == unitId);
     }
 
@@ -105,8 +101,7 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
     {
         return await context.Organizations
             .Include(o => o.OrganizationalUnits)
-            .ThenInclude(ou => ou.Children)
-            .ThenInclude(c => c.Computers)
+            .ThenInclude(ou => ou.Computers)
             .FirstOrDefaultAsync(o => o.OrganizationalUnits.Any(ou => ou.Id == unitId));
     }
 
@@ -116,16 +111,16 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
             .Include(o => o.OrganizationalUnits)
             .ThenInclude(ou => ou.Computers)
             .FirstOrDefaultAsync(o => o.Id == sourceOrganizationId) ?? throw new InvalidOperationException("Source organization not found.");
-        
+
         var targetOrganization = await context.Organizations
             .Include(o => o.OrganizationalUnits)
             .ThenInclude(ou => ou.Computers)
             .FirstOrDefaultAsync(o => o.Id == targetOrganizationId) ?? throw new InvalidOperationException("Target organization not found.");
-        
+
         var sourceUnit = sourceOrganization.OrganizationalUnits.FirstOrDefault(u => u.Id == sourceUnitId) ?? throw new InvalidOperationException("Source unit not found.");
         var computer = sourceUnit.Computers.FirstOrDefault(c => c.Id == computerId) ?? throw new InvalidOperationException("Computer not found in the source unit.");
         var targetUnit = targetOrganization.OrganizationalUnits.FirstOrDefault(u => u.Id == targetUnitId) ?? throw new InvalidOperationException("Target unit not found.");
-        
+
         sourceUnit.RemoveComputer(computer.Id);
         computer.SetOrganizationalUnit(targetUnit.Id);
         targetUnit.AddExistingComputer(computer);
@@ -180,10 +175,6 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
     {
         return await context.Organizations
             .Where(o => accessibleOrganizationIds.Contains(o.Id))
-            .Include(o => o.OrganizationalUnits
-                .Where(ou => accessibleOrganizationalUnitIds.Contains(ou.Id)))
-            .ThenInclude(ou => ou.Children
-                .Where(child => accessibleOrganizationalUnitIds.Contains(child.Id)))
             .Include(o => o.OrganizationalUnits
                 .Where(ou => accessibleOrganizationalUnitIds.Contains(ou.Id)))
             .ThenInclude(ou => ou.Computers)
