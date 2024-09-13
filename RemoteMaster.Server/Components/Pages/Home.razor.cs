@@ -92,7 +92,7 @@ public partial class Home
 
     private bool DrawerOpen { get; set; }
 
-    private async Task<IEnumerable<object>> LoadNodes(Guid? organizationId = null, Guid? parentId = null)
+    private async Task<IEnumerable<object>> LoadNodes(Guid? organizationId = null)
     {
         if (_currentUser == null)
         {
