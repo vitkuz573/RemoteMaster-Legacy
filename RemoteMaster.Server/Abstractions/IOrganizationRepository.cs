@@ -29,5 +29,5 @@ public interface IOrganizationRepository : IRepository<Organization, Guid>
 
     Task MarkCertificateRenewalTaskFailed(Guid taskId);
 
-    Task<IEnumerable<Organization>> GetOrganizationsWithAccessibleUnitsAsync(List<Guid> accessibleOrganizationIds, List<Guid> accessibleOrganizationalUnitIds);
+    Task<IEnumerable<Organization>> GetOrganizationsWithAccessibleUnitsAsync(IEnumerable<Guid> organizationIds, IEnumerable<Guid> organizationalUnitIds);
 }

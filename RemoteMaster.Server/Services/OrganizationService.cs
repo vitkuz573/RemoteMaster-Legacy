@@ -91,9 +91,9 @@ public class OrganizationService(IOrganizationRepository organizationRepository)
         await organizationRepository.SaveChangesAsync();
     }
 
-    public async Task<IEnumerable<Organization>> GetOrganizationsWithAccessibleUnitsAsync(List<Guid> accessibleOrganizationIds, List<Guid> accessibleOrganizationalUnitIds)
+    public async Task<IEnumerable<Organization>> GetOrganizationsWithAccessibleUnitsAsync(IEnumerable<Guid> organizationIds, IEnumerable<Guid> organizationalUnitIds)
     {
-        return await organizationRepository.GetOrganizationsWithAccessibleUnitsAsync(accessibleOrganizationIds, accessibleOrganizationalUnitIds);
+        return await organizationRepository.GetOrganizationsWithAccessibleUnitsAsync(organizationIds, organizationalUnitIds);
     }
 
     public async Task RemoveComputerAsync(Guid organizationId, Guid organizationalUnitId, Guid computerId)

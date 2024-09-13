@@ -172,12 +172,12 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
         task.MarkFailed();
     }
 
-    public async Task<IEnumerable<Organization>> GetOrganizationsWithAccessibleUnitsAsync(List<Guid> accessibleOrganizationIds, List<Guid> accessibleOrganizationalUnitIds)
+    public async Task<IEnumerable<Organization>> GetOrganizationsWithAccessibleUnitsAsync(IEnumerable<Guid> organizationIds, IEnumerable<Guid> organizationalUnitIds)
     {
         return await context.Organizations
-            .Where(o => accessibleOrganizationIds.Contains(o.Id))
+            .Where(o => organizationIds.Contains(o.Id))
             .Include(o => o.OrganizationalUnits
-                .Where(ou => accessibleOrganizationalUnitIds.Contains(ou.Id)))
+                .Where(ou => organizationalUnitIds.Contains(ou.Id)))
             .ThenInclude(ou => ou.Computers)
             .ToListAsync();
     }

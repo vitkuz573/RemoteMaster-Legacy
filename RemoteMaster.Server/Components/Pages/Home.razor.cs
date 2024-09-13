@@ -99,13 +99,8 @@ public partial class Home
             return [];
         }
 
-        var accessibleOrganizationIds = _currentUser.UserOrganizations
-            .Select(uo => uo.OrganizationId)
-            .ToList();
-
-        var accessibleOrganizationalUnitIds = _currentUser.UserOrganizationalUnits
-            .Select(uou => uou.OrganizationalUnitId)
-            .ToList();
+        var accessibleOrganizationIds = _currentUser.UserOrganizations.Select(uo => uo.OrganizationId);
+        var accessibleOrganizationalUnitIds = _currentUser.UserOrganizationalUnits.Select(uou => uou.OrganizationalUnitId);
 
         return await OrganizationService.GetOrganizationsWithAccessibleUnitsAsync(accessibleOrganizationIds, accessibleOrganizationalUnitIds);
     }
