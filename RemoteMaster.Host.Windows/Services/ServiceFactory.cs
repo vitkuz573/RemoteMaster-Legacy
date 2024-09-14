@@ -19,9 +19,9 @@ public class ServiceFactory : IServiceFactory
 
         var serviceList = services.ToList();
 
-        _serviceInstances = new Dictionary<string, AbstractService>();
+        _serviceInstances = [];
 
-        if (!serviceList.Any())
+        if (serviceList.Count == 0)
         {
             LoadAllServices();
         }
