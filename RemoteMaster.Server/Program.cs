@@ -29,6 +29,7 @@ using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 using RemoteMaster.Server.Components;
 using RemoteMaster.Server.Components.Account;
 using RemoteMaster.Server.Data;
+using RemoteMaster.Server.Extensions;
 using RemoteMaster.Server.Middlewares;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Options;
@@ -77,6 +78,8 @@ public static class Program
             serverOptions.ListenAnyIP(80);
             serverOptions.ListenAnyIP(5254);
         });
+
+        builder.Configuration.AddTelegramBotConfiguration(builder.Services.BuildServiceProvider());
 
         var app = builder.Build();
 
@@ -212,7 +215,7 @@ public static class Program
         services.AddSingleton<IValidateOptions<JwtOptions>, JwtOptionsValidator>();
         services.AddSingleton<IValidateOptions<CertificateOptions>, CertificateOptionsValidator>();
         services.AddSingleton<IValidateOptions<SubjectOptions>, SubjectOptionsValidator>();
-        services.AddSingleton<IValidateOptions<TelegramBotOptions>, TelegramBotOptionsValidator>();
+        // services.AddSingleton<IValidateOptions<TelegramBotOptions>, TelegramBotOptionsValidator>();
         services.AddSingleton<INotificationService, InMemoryNotificationService>();
         services.AddSingleton<IPlanService, PlanService>();
 
@@ -233,6 +236,7 @@ public static class Program
         services.Configure<JwtOptions>(configurationManager.GetSection("jwt"));
         services.Configure<CertificateOptions>(configurationManager.GetSection("caSettings"));
         services.Configure<SubjectOptions>(configurationManager.GetSection("caSettings:subject"));
+        services.Configure<TelegramBotOptions>(configurationManager.GetSection("TelegramBot"));
 
         services.AddMudServices();
 

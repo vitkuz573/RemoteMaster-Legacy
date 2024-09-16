@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using RemoteMaster.Server.Aggregates.TelegramBotAggregate;
-using RemoteMaster.Server.Options;
 using Telegram.Bot;
 
 namespace RemoteMaster.Server.Components.Admin.Pages.Manage;
@@ -12,7 +11,7 @@ public partial class ManageTelegramBot
 {
     private InputModel Input { get; set; } = new();
 
-    private Dictionary<int, string> _userNames = new();
+    private readonly Dictionary<int, string> _userNames = new();
     private TelegramBot? _botSettings;
     private string? _newChatId;
     private string? _message;
@@ -99,15 +98,6 @@ public partial class ManageTelegramBot
             }
 
             await TelegramBotService.UpdateBotSettingsAsync(_botSettings);
-
-            var updatedOptions = new TelegramBotOptions
-            {
-                IsEnabled = _botSettings.IsEnabled,
-                BotToken = _botSettings.BotToken,
-                ChatIds = _botSettings.ChatIds.Select(c => c.ChatId).ToList()
-            };
-
-            await EventNotificationService.UpdateSettingsAsync(updatedOptions);
 
             _message = "Settings saved successfully.";
         }

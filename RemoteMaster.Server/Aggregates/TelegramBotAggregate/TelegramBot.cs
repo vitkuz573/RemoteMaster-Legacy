@@ -8,18 +8,13 @@ namespace RemoteMaster.Server.Aggregates.TelegramBotAggregate;
 
 public class TelegramBot : IAggregateRoot
 {
-    public TelegramBot()
-    {
-        BotToken = "test";
-    }
-
     private readonly List<TelegramBotChatId> _chatIds = [];
 
     public int Id { get; private set; }
 
     public bool IsEnabled { get; private set; }
 
-    public string BotToken { get; private set; }
+    public string BotToken { get; private set; } = "test";
 
     public IReadOnlyCollection<TelegramBotChatId> ChatIds => _chatIds.AsReadOnly();
 
