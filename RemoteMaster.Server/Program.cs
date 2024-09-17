@@ -136,13 +136,6 @@ public static class Program
         services.AddAuthorizationBuilder()
             .AddPolicy("ToggleInputPolicy", policy => policy.RequireClaim("Input", "MouseInput"));
 
-        var connectionString = configurationManager.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-
-        if (string.IsNullOrEmpty(connectionString))
-        {
-            throw new InvalidOperationException("Could not find a connection string named 'DefaultConnection'.");
-        }
-
         services.AddDbContext<TelegramBotDbContext>();
         services.AddDbContext<ApplicationDbContext>();
         services.AddDbContext<CertificateDbContext>();
@@ -260,7 +253,7 @@ public static class Program
 
         services.AddHealthChecks()
             .AddSqlServer(
-                connectionString: connectionString,
+                connectionString: configurationManager.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found."),
                 name: "SqlServer",
                 failureStatus: HealthStatus.Degraded,
                 tags: ["db", "sql"],
