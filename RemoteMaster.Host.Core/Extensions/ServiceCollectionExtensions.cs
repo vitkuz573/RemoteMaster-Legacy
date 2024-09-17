@@ -41,7 +41,7 @@ public static class ServiceCollectionExtensions
 
         services.AddSignalR().AddMessagePackProtocol();
 
-        if (launchMode is UpdaterMode)
+        if (launchMode is UpdaterMode or UninstallMode)
         {
             return;
         }
