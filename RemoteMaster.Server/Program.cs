@@ -311,16 +311,6 @@ public static class Program
                 return ValueTask.CompletedTask;
             };
         });
-
-        services.AddCors(options =>
-        {
-            options.AddPolicy("AllowAll", builder =>
-            {
-                builder.AllowAnyOrigin()
-                    .AllowAnyMethod()
-                    .AllowAnyHeader();
-            });
-        });
     }
 
     private static void ConfigurePipeline(WebApplication app)
@@ -359,8 +349,6 @@ public static class Program
         });
 
         app.UseRateLimiter();
-
-        app.UseCors("AllowAll");
 
         if (app.Environment.IsDevelopment())
         {
