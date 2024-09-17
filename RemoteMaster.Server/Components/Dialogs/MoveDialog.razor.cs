@@ -121,7 +121,7 @@ public partial class MoveDialog
             if (targetOrganization == null)
             {
                 MudDialog.Close(DialogResult.Cancel());
-
+                
                 return;
             }
 
@@ -146,37 +146,33 @@ public partial class MoveDialog
                 if (host.Value != null)
                 {
                     var hostMoveRequest = new HostMoveRequest(host.Key.MacAddress, targetOrganization.Name, targetOrganizationalUnitsPath);
-
+                    
                     await host.Value.InvokeAsync("MoveHost", hostMoveRequest);
                 }
                 else
                 {
                     unavailableHosts.Add(host.Key);
                 }
-            }
 
-            if (unavailableHosts.Count > 0)
-            {
-                await AppendHostMoveRequests(unavailableHosts, targetOrganization.Name, targetOrganizationalUnitsPath);
-            }
-
-            foreach (var computer in unavailableHosts)
-            {
-                var currentParentUnitId = computer.OrganizationalUnitId;
-
-                var currentParentUnit = OrganizationRepository.GetOrganizationalUnitByIdAsync(currentParentUnitId);
+                var currentParentUnitId = host.Key.OrganizationalUnitId;
+                var currentParentUnit = await OrganizationRepository.GetOrganizationalUnitByIdAsync(currentParentUnitId);
 
                 if (currentParentUnit == null)
                 {
                     throw new InvalidOperationException("Current parent unit not found.");
                 }
 
-                await OrganizationRepository.MoveComputerAsync(computer.OrganizationId, _selectedOrganizationId, computer.Id, currentParentUnitId, newParentUnit.Id);
+                await OrganizationRepository.MoveComputerAsync(host.Key.OrganizationId, _selectedOrganizationId, host.Key.Id, currentParentUnitId, newParentUnit.Id);
             }
 
             await OrganizationRepository.SaveChangesAsync();
 
             await OnNodesMoved.InvokeAsync(Hosts.Keys);
+
+            if (unavailableHosts.Count > 0)
+            {
+                await AppendHostMoveRequests(unavailableHosts, targetOrganization.Name, targetOrganizationalUnitsPath);
+            }
 
             MudDialog.Close(DialogResult.Ok(true));
         }
