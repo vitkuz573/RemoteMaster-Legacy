@@ -5,7 +5,6 @@
 using System.Collections.Concurrent;
 using FluentResults;
 using Microsoft.AspNetCore.SignalR.Client;
-using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Server.Abstractions;
@@ -18,8 +17,8 @@ public interface IComputerCommandService
     /// <summary>
     /// Executes the specified action on each computer in the provided dictionary.
     /// </summary>
-    /// <param name="computers">A dictionary of computers and their corresponding SignalR connections.</param>
-    /// <param name="actionOnComputer">The action to execute on each computer.</param>
+    /// <param name="hosts">A dictionary of computers and their corresponding SignalR connections.</param>
+    /// <param name="action">The action to execute on each computer.</param>
     /// <returns>A result indicating the success or failure of the operation.</returns>
-    Task<Result> Execute(ConcurrentDictionary<ComputerDto, HubConnection?> computers, Func<ComputerDto, HubConnection, Task> actionOnComputer);
+    Task<Result> Execute(ConcurrentDictionary<ComputerDto, HubConnection?> hosts, Func<ComputerDto, HubConnection?, Task> action);
 }

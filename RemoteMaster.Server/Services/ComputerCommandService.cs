@@ -16,14 +16,22 @@ namespace RemoteMaster.Server.Services;
 public class ComputerCommandService(IJSRuntime jsRuntime, [FromKeyedServices("Resilience-Pipeline")] ResiliencePipeline<string> resiliencePipeline) : IComputerCommandService
 {
     /// <inheritdoc />
-    public async Task<Result> Execute(ConcurrentDictionary<ComputerDto, HubConnection?> hosts, Func<ComputerDto, HubConnection, Task> action)
+    public async Task<Result> Execute(ConcurrentDictionary<ComputerDto, HubConnection?> hosts, Func<ComputerDto, HubConnection?, Task> action)
     {
         try
         {
             ArgumentNullException.ThrowIfNull(hosts);
+            ArgumentNullException.ThrowIfNull(action);
 
             foreach (var (computer, connection) in hosts)
             {
+                if (connection == null)
+                {
+                    await action(computer, null);
+
+                    continue;
+                }
+
                 var result = await resiliencePipeline.ExecuteAsync(async _ =>
                 {
                     if (connection is not { State: HubConnectionState.Connected })
