@@ -99,6 +99,8 @@ public partial class ManageTelegramBot
 
             await TelegramBotService.UpdateBotSettingsAsync(_botSettings);
 
+            (Configuration as IConfigurationRoot)?.Reload();
+
             _message = "Settings saved successfully.";
         }
     }

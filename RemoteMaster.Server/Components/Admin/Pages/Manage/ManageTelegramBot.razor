@@ -4,9 +4,11 @@
 
 @using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Server.Components.Account.Shared
+@using RemoteMaster.Server.Providers
 
 @inject IEventNotificationService EventNotificationService
 @inject ITelegramBotService TelegramBotService
+@inject IConfiguration Configuration
 
 <PageTitle>Manage Telegram Bot</PageTitle>
 

@@ -20,6 +20,16 @@ public class TelegramEventNotificationService(IOptionsSnapshot<TelegramBotOption
 
         var botOptions = botOptionsSnapshot.Value;
 
+        Console.WriteLine($"BotToken: {botOptions.BotToken}");
+        Console.WriteLine($"IsEnabled: {botOptions.IsEnabled}");
+
+        var chatIdList = botOptions.ChatIds ?? [];
+
+        foreach (var chatId in chatIdList)
+        {
+            Console.WriteLine($"ChatId: {chatId}");
+        }
+
         if (!botOptions.IsEnabled || !botOptions.ChatIds.Any())
         {
             return Result.Fail("Telegram bot is not configured or is disabled.");

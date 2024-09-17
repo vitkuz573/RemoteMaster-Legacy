@@ -13,10 +13,8 @@ public static class ConfigurationManagerExtensions
     {
         ArgumentNullException.ThrowIfNull(manager);
 
-        var dbContext = serviceProvider.GetRequiredService<TelegramBotDbContext>();
-
         IConfigurationBuilder configBuilder = manager;
-        configBuilder.Add(new TelegramBotConfigurationSource(dbContext));
+        configBuilder.Add(new TelegramBotConfigurationSource(serviceProvider));
 
         return manager;
     }

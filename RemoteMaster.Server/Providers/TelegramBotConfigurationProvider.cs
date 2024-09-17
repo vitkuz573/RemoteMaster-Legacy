@@ -2,31 +2,29 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Aggregates.TelegramBotAggregate;
 using RemoteMaster.Server.Data;
+using RemoteMaster.Server.Options;
 
 namespace RemoteMaster.Server.Providers;
 
-public sealed class TelegramBotConfigurationProvider(TelegramBotDbContext telegramBotDbContext) : ConfigurationProvider
+public sealed class TelegramBotConfigurationProvider(IServiceProvider serviceProvider) : ConfigurationProvider
 {
     public override void Load()
     {
-        telegramBotDbContext.Database.EnsureCreated();
+        using var scope = serviceProvider.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<TelegramBotDbContext>();
 
-        if (telegramBotDbContext.TelegramBots.Any(bot => bot.IsEnabled))
+        dbContext.Database.EnsureCreated();
+
+        var bot = dbContext.TelegramBots
+            .Include(bot => bot.ChatIds)
+            .FirstOrDefault();
+
+        if (bot != null)
         {
-            var bot = telegramBotDbContext.TelegramBots
-                .Where(bot => bot.IsEnabled)
-                .Include(bot => bot.ChatIds)
-                .FirstOrDefault();
-
-            if (bot == null)
-            {
-                return;
-            }
-
             Data["TelegramBot:BotToken"] = bot.BotToken;
             Data["TelegramBot:IsEnabled"] = bot.IsEnabled.ToString();
 
@@ -40,8 +38,10 @@ public sealed class TelegramBotConfigurationProvider(TelegramBotDbContext telegr
         }
         else
         {
-            Data = CreateAndSaveDefaultValues(telegramBotDbContext);
+            Data = CreateAndSaveDefaultValues(dbContext);
         }
+
+        OnReload();
     }
 
     private static Dictionary<string, string?> CreateAndSaveDefaultValues(TelegramBotDbContext context)
