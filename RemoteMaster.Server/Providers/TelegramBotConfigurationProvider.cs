@@ -3,10 +3,8 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Aggregates.TelegramBotAggregate;
 using RemoteMaster.Server.Data;
-using RemoteMaster.Server.Options;
 
 namespace RemoteMaster.Server.Providers;
 
