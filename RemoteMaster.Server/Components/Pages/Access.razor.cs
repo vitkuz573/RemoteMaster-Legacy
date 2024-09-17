@@ -89,7 +89,7 @@ public partial class Access : IAsyncDisposable
 
             if (_isAccessDenied)
             {
-                Snackbar.Add("Access denied. You do not have permission to access this computer.", Severity.Error);
+                SnackBar.Add("Access denied. You do not have permission to access this computer.", Severity.Error);
             }
             else
             {
@@ -369,7 +369,7 @@ public partial class Access : IAsyncDisposable
                 }
                 else
                 {
-                    Snackbar.Add("Unable to reconnect. Please check the host status and try again later.", Severity.Error);
+                    SnackBar.Add("Unable to reconnect. Please check the host status and try again later.", Severity.Error);
                 }
             };
 
@@ -378,7 +378,7 @@ public partial class Access : IAsyncDisposable
         catch (Exception ex)
         {
             Log.Error(ex, "An error occurred during host connection initialization for host {Host}", Host);
-            Snackbar.Add("An error occurred while initializing the connection. Please try again later.", Severity.Error);
+            SnackBar.Add("An error occurred while initializing the connection. Please try again later.", Severity.Error);
         }
         finally
         {
@@ -400,22 +400,22 @@ public partial class Access : IAsyncDisposable
         catch (HttpRequestException ex)
         {
             Log.Error(ex, "HTTP request error during connection to host {Host}", Host);
-            Snackbar.Add("Unable to connect to the host. Please check the host status and try again later.", Severity.Error);
+            SnackBar.Add("Unable to connect to the host. Please check the host status and try again later.", Severity.Error);
         }
         catch (TimeoutException ex)
         {
             Log.Error(ex, "Timeout error during connection to host {Host}", Host);
-            Snackbar.Add("Connection to the host timed out. Please try again later.", Severity.Error);
+            SnackBar.Add("Connection to the host timed out. Please try again later.", Severity.Error);
         }
         catch (TaskCanceledException ex)
         {
             Log.Error(ex, "Task was canceled during connection to host {Host}", Host);
-            Snackbar.Add("Connection to the host was canceled. Please try again later.", Severity.Error);
+            SnackBar.Add("Connection to the host was canceled. Please try again later.", Severity.Error);
         }
         catch (Exception ex)
         {
             Log.Error(ex, "An error occurred during connection to host {Host}", Host);
-            Snackbar.Add("An error occurred while connecting to the host. Please try again later.", Severity.Error);
+            SnackBar.Add("An error occurred while connecting to the host. Please try again later.", Severity.Error);
         }
         finally
         {
