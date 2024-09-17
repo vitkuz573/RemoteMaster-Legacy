@@ -19,6 +19,7 @@ public sealed class TelegramBotConfigurationProvider(IServiceProvider servicePro
 
         var bot = dbContext.TelegramBots
             .Include(bot => bot.ChatIds)
+            .OrderBy(bot => bot.Id)
             .FirstOrDefault();
 
         if (bot != null)

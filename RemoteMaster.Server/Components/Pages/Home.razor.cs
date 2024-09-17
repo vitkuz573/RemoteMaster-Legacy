@@ -257,8 +257,6 @@ public partial class Home
             connection.On("ReceiveCloseConnection", async () =>
             {
                 await connection.StopAsync(cancellationToken);
-
-                Log.Information("Connection closed for {IPAddress}", computerDto.IpAddress);
             });
         }
         catch (OperationCanceledException)
@@ -299,8 +297,6 @@ public partial class Home
             connection.On("ReceiveCloseConnection", async () =>
             {
                 await connection.StopAsync(cancellationToken);
-
-                Log.Information("Connection closed for {IPAddress}", computerDto.IpAddress);
             });
 
             computerDto.Thumbnail = null;
@@ -388,8 +384,6 @@ public partial class Home
         }
 
         await connection.StartAsync(cancellationToken);
-
-        Log.Information("Connection started for {IPAddress}", computerDto.IpAddress);
 
         return connection;
     }
