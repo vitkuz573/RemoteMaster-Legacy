@@ -260,8 +260,6 @@ public partial class Home
 
                 Log.Information("Connection closed for {IPAddress}", computerDto.IpAddress);
             });
-
-            await connection.StartAsync(cancellationToken);
         }
         catch (OperationCanceledException)
         {
