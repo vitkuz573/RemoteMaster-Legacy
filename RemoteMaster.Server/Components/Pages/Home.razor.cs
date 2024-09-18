@@ -574,6 +574,11 @@ public partial class Home
         await OpenComputerWindow("taskmanager");
     }
 
+    private async Task OpenDeviceManager()
+    {
+        await OpenComputerWindow("devicemanager");
+    }
+
     private async Task OpenFileManager()
     {
         await OpenComputerWindow("filemanager");

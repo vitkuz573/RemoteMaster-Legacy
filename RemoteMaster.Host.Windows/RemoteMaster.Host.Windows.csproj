@@ -16,6 +16,7 @@
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion Condition="'$(BUILD_BUILDID)' != ''">$(VersionPrefix)$(BUILD_BUILDID)</FileVersion>
     <FileVersion Condition="'$(BUILD_BUILDID)' == ''">$(Version)</FileVersion>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

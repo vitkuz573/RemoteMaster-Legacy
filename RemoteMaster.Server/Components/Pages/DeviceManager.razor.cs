@@ -15,7 +15,7 @@ using Serilog;
 namespace RemoteMaster.Server.Components.Pages;
 
 [Authorize]
-public partial class TaskManager : IAsyncDisposable
+public partial class DeviceManager : IAsyncDisposable
 {
     [Parameter]
     public string Host { get; set; } = default!;
@@ -24,14 +24,11 @@ public partial class TaskManager : IAsyncDisposable
     private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
 
     [Inject(Key = "Resilience-Pipeline")]
-    public ResiliencePipeline<string> ResiliencePipeline { get; set; }
+    public ResiliencePipeline<string> ResiliencePipeline { get; set; } = default!;
 
     private HubConnection? _connection;
     private ClaimsPrincipal? _user;
-    private string _searchQuery = string.Empty;
-    private List<ProcessInfo> _processes = [];
-    private List<ProcessInfo> _allProcesses = [];
-    private string _processPath = string.Empty;
+    private List<DeviceDto> _deviceItems = [];
     private bool _firstRenderCompleted;
 
     protected override void OnAfterRender(bool firstRender)
@@ -50,34 +47,12 @@ public partial class TaskManager : IAsyncDisposable
         if (_user?.Identity?.IsAuthenticated == true)
         {
             await InitializeHostConnectionAsync();
-            await FetchProcesses();
+            await FetchDevices();
         }
     }
-
-    private async Task FetchProcesses()
+    private async Task FetchDevices()
     {
-        await SafeInvokeAsync(async () => await _connection!.InvokeAsync("GetRunningProcesses"));
-    }
-
-    private void FilterProcesses()
-    {
-        if (string.IsNullOrWhiteSpace(_searchQuery))
-        {
-            _processes = [.._allProcesses];
-        }
-        else
-        {
-            _processes = _allProcesses
-                .Where(p => p.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-        }
-    }
-
-    private async Task UpdateSearchQuery(ChangeEventArgs e)
-    {
-        _searchQuery = e.Value?.ToString() ?? string.Empty;
-        FilterProcesses();
-        await InvokeAsync(StateHasChanged);
+        await SafeInvokeAsync(() => _connection!.InvokeAsync("GetDevices"));
     }
 
     private async Task InitializeHostConnectionAsync()
@@ -85,7 +60,7 @@ public partial class TaskManager : IAsyncDisposable
         var userId = _user?.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("User ID is not found.");
 
         _connection = new HubConnectionBuilder()
-            .WithUrl($"https://{Host}:5001/hubs/taskmanager", options =>
+            .WithUrl($"https://{Host}:5001/hubs/devicemanager", options =>
             {
                 options.AccessTokenProvider = async () =>
                 {
@@ -97,17 +72,14 @@ public partial class TaskManager : IAsyncDisposable
             .AddMessagePackProtocol()
             .Build();
 
-        _connection.On<List<ProcessInfo>>("ReceiveRunningProcesses", async processes =>
+        _connection.On<List<DeviceDto>>("ReceiveDeviceList", async deviceItems =>
         {
-            _allProcesses = processes;
-            _processes = [.. _allProcesses];
-
-            FilterProcesses();
+            _deviceItems = deviceItems;
 
             await InvokeAsync(StateHasChanged);
         });
 
-        _connection.Closed += async (_) =>
+        _connection.Closed += async _ =>
         {
             await Task.Delay(TimeSpan.FromSeconds(5));
             await _connection.StartAsync();
@@ -118,7 +90,7 @@ public partial class TaskManager : IAsyncDisposable
 
     private async Task SafeInvokeAsync(Func<Task> action)
     {
-        var result = await ResiliencePipeline.ExecuteAsync(async cancellationToken =>
+        var result = await ResiliencePipeline.ExecuteAsync(async _ =>
         {
             if (_connection is not { State: HubConnectionState.Connected })
             {
@@ -138,45 +110,6 @@ public partial class TaskManager : IAsyncDisposable
             {
                 await JsRuntime.InvokeVoidAsync("alert", result);
             }
-        }
-    }
-
-    private async Task KillProcess(int processId)
-    {
-        await SafeInvokeAsync(() => _connection?.InvokeAsync("KillProcess", processId) ?? Task.CompletedTask);
-        await FetchProcesses();
-        FilterProcesses();
-        await InvokeAsync(StateHasChanged);
-    }
-
-    private static string FormatSize(long size)
-    {
-        string[] sizes = ["B", "KB", "MB", "GB", "TB"];
-        double len = size;
-        var order = 0;
-
-        while (len >= 1024 && order < sizes.Length - 1)
-        {
-            order++;
-            len /= 1024;
-        }
-
-        return $"{len:0.##} {sizes[order]}";
-    }
-
-    private async Task StartProcess()
-    {
-        if (!string.IsNullOrWhiteSpace(_processPath))
-        {
-            await SafeInvokeAsync(() => _connection?.InvokeAsync("StartProcess", _processPath) ?? Task.CompletedTask);
-            _processPath = string.Empty;
-            await FetchProcesses();
-            FilterProcesses();
-            await InvokeAsync(StateHasChanged);
-        }
-        else
-        {
-            await JsRuntime.InvokeVoidAsync("alert", "Please enter a valid process path.");
         }
     }
 

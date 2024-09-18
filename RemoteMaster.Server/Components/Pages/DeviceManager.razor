@@ -1,0 +1,23 @@
+﻿@page "/{Host}/devicemanager"
+
+@rendermode InteractiveServer
+
+@using RemoteMaster.Server.Abstractions
+
+@inject IJSRuntime JsRuntime
+@inject IAccessTokenProvider AccessTokenProvider
+
+@foreach (var device in _deviceItems)
+{
+    <div>
+        <p><strong>Name:</strong> @device.Name</p>
+        <p><strong>Device Class:</strong> @device.DeviceClass</p>
+        <p><strong>Manufacturer:</strong> @device.Manufacturer</p>
+        <p><strong>Hardware Id:</strong> @device.HardwareId</p>
+        <p><strong>Compatible Ids:</strong> @device.CompatibleIds</p>
+        <p><strong>Location Info:</strong> @device.LocationInfo</p>
+        <p><strong>Service:</strong> @device.Service</p>
+        <p><strong>Class Guid:</strong> @device.ClassGuid</p>
+    </div>
+    <hr />
+}

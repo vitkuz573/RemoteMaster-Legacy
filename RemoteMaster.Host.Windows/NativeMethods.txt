@@ -102,3 +102,7 @@ CreateDXGIFactory1
 D3D11CreateDevice 
 IDXGIOutput1
 D3D11_SDK_VERSION
+
+SetupDiGetClassDevs
+SetupDiEnumDeviceInfo
+SetupDiGetDeviceRegistryProperty

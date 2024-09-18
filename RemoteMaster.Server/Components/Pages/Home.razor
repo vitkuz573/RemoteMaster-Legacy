@@ -177,6 +177,11 @@
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenTaskManager" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["TaskManager"]</MudButton>
                                 }
                                 
+                                @if (context.User.HasClaim("Devices", "Manager"))
+                                {
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenDeviceManager" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">Device Manager</MudButton>
+                                }
+                                
                                 @if (context.User.HasClaim("Files", "Manager"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenFileManager" Disabled="@(_selectedComputers.Count == 0 || !_selectedComputers.All(c => _availableComputers.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["FileManager"]</MudButton>

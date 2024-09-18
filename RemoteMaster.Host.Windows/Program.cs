@@ -132,6 +132,7 @@ internal class Program
         {
             app.MapHub<ChatHub>("/hubs/chat");
             app.MapHub<ServiceHub>("/hubs/service");
+            app.MapHub<DeviceManagerHub>("/hubs/devicemanager");
         }
 
         await app.RunAsync();

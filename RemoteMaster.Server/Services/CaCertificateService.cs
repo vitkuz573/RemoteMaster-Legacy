@@ -104,10 +104,10 @@ public class CaCertificateService(IOptions<CertificateOptions> options, ISubject
             var hostInformation = hostInformationService.GetHostInformation();
 
             var crlDistributionPoints = new List<string>
-                {
-                    $"file:///{crlFilePath.Replace("\\", "/")}",
-                    $"http://{hostInformation.Name}/crl"
-                };
+            {
+                $"file:///{crlFilePath.Replace("\\", "/")}",
+                $"http://{hostInformation.Name}/crl"
+            };
 
             var crlDistributionPointExtension = CertificateRevocationListBuilder.BuildCrlDistributionPointExtension(crlDistributionPoints);
 
