@@ -31,6 +31,8 @@ public partial class DeviceManager : IAsyncDisposable
     private List<DeviceDto> _deviceItems = [];
     private bool _firstRenderCompleted;
 
+    private Dictionary<string, bool> _devicePanelState = new();
+
     protected override void OnAfterRender(bool firstRender)
     {
         if (firstRender)
@@ -112,6 +114,16 @@ public partial class DeviceManager : IAsyncDisposable
             }
         }
     }
+
+    private void TogglePanel(string deviceClass)
+    {
+        if (!_devicePanelState.TryAdd(deviceClass, true))
+        {
+            _devicePanelState[deviceClass] = !_devicePanelState[deviceClass];
+        }
+    }
+
+    private bool IsPanelOpen(string deviceClass) => _devicePanelState.ContainsKey(deviceClass) && _devicePanelState[deviceClass];
 
     [JSInvokable]
     public async Task OnBeforeUnload()
