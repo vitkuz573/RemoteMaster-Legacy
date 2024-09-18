@@ -106,3 +106,4 @@ D3D11_SDK_VERSION
 SetupDiGetClassDevs
 SetupDiEnumDeviceInfo
 SetupDiGetDeviceRegistryProperty
+SetupDiClassNameFromGuid

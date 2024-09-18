@@ -28,6 +28,25 @@ public class DeviceManagerHub : Hub<IDeviceManagerClient>
         return str.Split('\0')[0].Trim();
     }
 
+    private static unsafe string GetClassNameFromGuid(Guid classGuid)
+    {
+        var classNameBuffer = new char[256];
+        uint requiredSize = 0;
+
+        fixed (char* classNamePtr = classNameBuffer)
+        {
+            var result =
+                SetupDiClassNameFromGuid(in classGuid, classNamePtr, (uint)classNameBuffer.Length, &requiredSize);
+
+            if (result == 0)
+            {
+                throw new Exception("Failed to retrieve class name for the specified GUID.");
+            }
+
+            return new string(classNamePtr, 0, (int)requiredSize - 1);
+        }
+    }
+
     private static List<DeviceDto> GetDeviceList()
     {
         var devices = new List<DeviceDto>();
@@ -60,7 +79,6 @@ public class DeviceManagerHub : Hub<IDeviceManagerClient>
             var locationInfo = string.Empty;
             var service = string.Empty;
             var className = string.Empty;
-            var classGuid = string.Empty;
 
             unsafe
             {
@@ -120,21 +138,15 @@ public class DeviceManagerHub : Hub<IDeviceManagerClient>
 
                     Array.Clear(buffer, 0, buffer.Length);
 
-                    if (SetupDiGetDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_CLASS, &propertyRegDataType, pBuffer, (uint)buffer.Length, &requiredSize))
-                    {
-                        className = CleanString(buffer);
-                    }
-
-                    Array.Clear(buffer, 0, buffer.Length);
-
                     if (SetupDiGetDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_CLASSGUID, &propertyRegDataType, pBuffer, (uint)buffer.Length, &requiredSize))
                     {
-                        classGuid = CleanString(buffer);
+                        var classGuid = CleanString(buffer);
+                        className = GetClassNameFromGuid(Guid.Parse(classGuid));
                     }
                 }
             }
 
-            devices.Add(new DeviceDto(Guid.NewGuid(), !string.IsNullOrEmpty(friendlyName) ? friendlyName : deviceName, className, manufacturer, hardwareId, compatibleIds, locationInfo, service, classGuid, true));
+            devices.Add(new DeviceDto(!string.IsNullOrEmpty(friendlyName) ? friendlyName : deviceName, className, manufacturer, hardwareId, compatibleIds, locationInfo, service));
 
             deviceIndex++;
         }

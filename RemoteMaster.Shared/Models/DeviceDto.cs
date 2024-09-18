@@ -4,10 +4,8 @@
 
 namespace RemoteMaster.Shared.Models;
 
-public class DeviceDto(Guid id, string name, string deviceClass, string manufacturer, string hardwareId, string compatibleIds, string locationInfo, string service, string classGuid, bool isEnabled)
+public class DeviceDto(string name, string deviceClass, string manufacturer, string hardwareId, string compatibleIds, string locationInfo, string service)
 {
-    public Guid Id { get; set; } = id;
-
     public string Name { get; set; } = name;
 
     public string DeviceClass { get; set; } = deviceClass;
@@ -21,8 +19,4 @@ public class DeviceDto(Guid id, string name, string deviceClass, string manufact
     public string LocationInfo { get; set; } = locationInfo;
 
     public string Service { get; set; } = service;
-
-    public string ClassGuid { get; set; } = classGuid;
-
-    public bool IsEnabled { get; set; } = isEnabled;
 }
