@@ -8,35 +8,42 @@
 @inject IJSRuntime JsRuntime
 @inject IAccessTokenProvider AccessTokenProvider
 
-@foreach (var deviceGroup in _deviceItems.GroupBy(device => device.DeviceClass))
+@if (_deviceItems.Any())
 {
-    <div class="mx-auto mt-5 w-full max-w-2xl">
-        <div class="mb-4 rounded-lg border border-gray-300 shadow-md">
-            <button @onclick="() => TogglePanel(deviceGroup.Key)" class="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 text-left text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-300">
-                @deviceGroup.Key
-                <span class="float-right">
-                    @(IsPanelOpen(deviceGroup.Key) ? "-" : "+")
-                </span>
-            </button>
+    @foreach (var deviceGroup in _deviceItems.GroupBy(device => device.DeviceClass))
+    {
+        <div class="mx-auto mt-5 w-full max-w-2xl">
+            <div class="mb-4 rounded-lg border border-gray-300 shadow-md">
+                <button @onclick="() => TogglePanel(deviceGroup.Key)" class="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 text-left text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-300">
+                    @deviceGroup.Key
+                    <span class="float-right">
+                        @(IsPanelOpen(deviceGroup.Key) ? "-" : "+")
+                    </span>
+                </button>
 
-            @if (IsPanelOpen(deviceGroup.Key))
-            {
-                <div class="space-y-4 border-t border-gray-300 bg-white px-4 py-3">
-                    @foreach (var device in deviceGroup)
-                    {
-                        <div class="rounded-md border border-gray-200 p-4 shadow-sm">
-                            <div class="mb-2">
-                                <p class="text-sm text-gray-500"><strong>Name:</strong> @device.Name</p>
-                                <p class="text-sm text-gray-500"><strong>Manufacturer:</strong> @device.Manufacturer</p>
-                                <p class="text-sm text-gray-500"><strong>Hardware Id:</strong> @device.HardwareId</p>
-                                <p class="text-sm text-gray-500"><strong>Compatible Ids:</strong> @device.CompatibleIds</p>
-                                <p class="text-sm text-gray-500"><strong>Location Info:</strong> @device.LocationInfo</p>
-                                <p class="text-sm text-gray-500"><strong>Service:</strong> @device.Service</p>
+                @if (IsPanelOpen(deviceGroup.Key))
+                {
+                    <div class="space-y-4 border-t border-gray-300 bg-white px-4 py-3">
+                        @foreach (var device in deviceGroup)
+                        {
+                            <div class="rounded-md border border-gray-200 p-4 shadow-sm">
+                                <div class="mb-2">
+                                    <p class="text-sm text-gray-500"><strong>Name:</strong> @device.Name</p>
+                                    <p class="text-sm text-gray-500"><strong>Manufacturer:</strong> @device.Manufacturer</p>
+                                    <p class="text-sm text-gray-500"><strong>Hardware Id:</strong> @device.HardwareId</p>
+                                    <p class="text-sm text-gray-500"><strong>Compatible Ids:</strong> @device.CompatibleIds</p>
+                                    <p class="text-sm text-gray-500"><strong>Location Info:</strong> @device.LocationInfo</p>
+                                    <p class="text-sm text-gray-500"><strong>Service:</strong> @device.Service</p>
+                                </div>
                             </div>
-                        </div>
-                    }
-                </div>
-            }
+                        }
+                    </div>
+                }
+            </div>
         </div>
-    </div>
+    }
+}
+else
+{
+    <p>No devices found.</p>
 }

@@ -28,7 +28,7 @@ public partial class DeviceManager : IAsyncDisposable
 
     private HubConnection? _connection;
     private ClaimsPrincipal? _user;
-    private List<DeviceDto> _deviceItems = [];
+    private List<DeviceDto> _deviceItems = new();
     private bool _firstRenderCompleted;
 
     private Dictionary<string, bool> _devicePanelState = new();
@@ -52,6 +52,7 @@ public partial class DeviceManager : IAsyncDisposable
             await FetchDevices();
         }
     }
+
     private async Task FetchDevices()
     {
         await SafeInvokeAsync(() => _connection!.InvokeAsync("GetDevices"));
