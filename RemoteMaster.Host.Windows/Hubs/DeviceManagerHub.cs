@@ -68,6 +68,7 @@ public class DeviceManagerHub : Hub<IDeviceManagerClient>
         while (SetupDiEnumDeviceInfo(deviceInfoSetHandle, deviceIndex, ref deviceInfoData))
         {
             var buffer = new byte[512];
+            var instanceIdBuffer = new char[512];
 
             var deviceName = string.Empty;
             var hardwareId = string.Empty;
@@ -79,6 +80,7 @@ public class DeviceManagerHub : Hub<IDeviceManagerClient>
             var className = string.Empty;
             var deviceInstanceId = string.Empty;
 
+            uint configFlags = 0;
             uint propertyRegDataType = 0;
             uint requiredSize = 0;
 
@@ -86,8 +88,6 @@ public class DeviceManagerHub : Hub<IDeviceManagerClient>
             {
                 deviceName = CleanString(buffer);
             }
-
-            var instanceIdBuffer = new char[512];
 
             fixed (char* pInstanceId = instanceIdBuffer)
             {
@@ -134,8 +134,6 @@ public class DeviceManagerHub : Hub<IDeviceManagerClient>
                 var classGuid = CleanString(buffer);
                 className = GetClassNameFromGuid(Guid.Parse(classGuid));
             }
-
-            uint configFlags = 0;
 
             if (SetupDiGetDeviceRegistryProperty(deviceInfoSetHandle, in deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_CONFIGFLAGS, &propertyRegDataType, buffer.AsSpan(), &requiredSize))
             {
