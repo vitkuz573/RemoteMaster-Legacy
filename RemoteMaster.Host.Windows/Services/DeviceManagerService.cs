@@ -7,7 +7,6 @@ using System.Text;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Models;
 using Windows.Win32.Devices.DeviceAndDriverInstallation;
-using Windows.Win32.Foundation;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Services;
@@ -76,90 +75,22 @@ public class DeviceManagerService : IDeviceManagerService
         return devices;
     }
 
-    public unsafe bool DisableDeviceByInstanceId(string deviceInstanceId)
+    public bool DisableDeviceByInstanceId(string deviceInstanceId)
     {
         try
         {
-            fixed (char* pDeviceId = deviceInstanceId)
+            unsafe
             {
-                var deviceInstancePtr = new PWSTR(pDeviceId);
-
-                const CM_LOCATE_DEVNODE_FLAGS flags = CM_LOCATE_DEVNODE_FLAGS.CM_LOCATE_DEVNODE_NORMAL;
-                var result = CM_Locate_DevNode(out var devInst, deviceInstancePtr, flags);
-
-                if (result != CONFIGRET.CR_SUCCESS)
+                fixed (char* pDeviceId = deviceInstanceId)
                 {
-                    return false;
-                }
+                    var result = CM_Locate_DevNode(out var devInst, pDeviceId, CM_LOCATE_DEVNODE_FLAGS.CM_LOCATE_DEVNODE_NORMAL);
 
-                result = CM_Disable_DevNode(devInst, CM_DISABLE_PERSIST);
+                    if (result != CONFIGRET.CR_SUCCESS)
+                    {
+                        return false;
+                    }
 
-                return result == CONFIGRET.CR_SUCCESS;
-            }
-        }
-        catch (Exception)
-        {
-            return false;
-        }
-    }
-
-    public unsafe bool EnableDeviceByInstanceId(string deviceInstanceId)
-    {
-        try
-        {
-            fixed (char* pDeviceId = deviceInstanceId)
-            {
-                var deviceInstancePtr = new PWSTR(pDeviceId);
-
-                const CM_LOCATE_DEVNODE_FLAGS flags = CM_LOCATE_DEVNODE_FLAGS.CM_LOCATE_DEVNODE_NORMAL;
-                var result = CM_Locate_DevNode(out var devInst, deviceInstancePtr, flags);
-
-                if (result != CONFIGRET.CR_SUCCESS)
-                {
-                    return false;
-                }
-
-                result = CM_Enable_DevNode(devInst, 0);
-
-                return result == CONFIGRET.CR_SUCCESS;
-            }
-        }
-        catch (Exception)
-        {
-            return false;
-        }
-    }
-
-    public unsafe bool StopDeviceByInstanceId(string deviceInstanceId)
-    {
-        try
-        {
-            fixed (char* pDeviceId = deviceInstanceId)
-            {
-                var deviceInstancePtr = new PWSTR(pDeviceId);
-
-                const CM_LOCATE_DEVNODE_FLAGS flags = CM_LOCATE_DEVNODE_FLAGS.CM_LOCATE_DEVNODE_NORMAL;
-                var result = CM_Locate_DevNode(out var devInst, deviceInstancePtr, flags);
-
-                if (result != CONFIGRET.CR_SUCCESS)
-                {
-                    return false;
-                }
-
-                result = CM_Get_DevNode_Status(out _, out _, devInst, 0);
-
-                if (result != CONFIGRET.CR_SUCCESS)
-                {
-                    return false;
-                }
-
-                PNP_VETO_TYPE vetoType = default;
-                var vetoNameBuffer = new char[256];
-
-                fixed (char* vetoNamePtr = vetoNameBuffer)
-                {
-                    var vetoNamePwstr = new PWSTR(vetoNamePtr);
-                    result = CM_Request_Device_Eject(devInst, &vetoType, vetoNamePwstr, (uint)vetoNameBuffer.Length, 0);
+                    result = CM_Disable_DevNode(devInst, CM_DISABLE_PERSIST);
 
                     return result == CONFIGRET.CR_SUCCESS;
                 }
@@ -171,25 +102,25 @@ public class DeviceManagerService : IDeviceManagerService
         }
     }
 
-    public unsafe bool StartDeviceByInstanceId(string deviceInstanceId)
+    public bool EnableDeviceByInstanceId(string deviceInstanceId)
     {
         try
         {
-            fixed (char* pDeviceId = deviceInstanceId)
+            unsafe
             {
-                var deviceInstancePtr = new PWSTR(pDeviceId);
-
-                const CM_LOCATE_DEVNODE_FLAGS flags = CM_LOCATE_DEVNODE_FLAGS.CM_LOCATE_DEVNODE_NORMAL;
-                var result = CM_Locate_DevNode(out var devInst, deviceInstancePtr, flags);
-
-                if (result != CONFIGRET.CR_SUCCESS)
+                fixed (char* pDeviceId = deviceInstanceId)
                 {
-                    return false;
+                    var result = CM_Locate_DevNode(out var devInst, pDeviceId, CM_LOCATE_DEVNODE_FLAGS.CM_LOCATE_DEVNODE_NORMAL);
+
+                    if (result != CONFIGRET.CR_SUCCESS)
+                    {
+                        return false;
+                    }
+
+                    result = CM_Enable_DevNode(devInst, 0);
+
+                    return result == CONFIGRET.CR_SUCCESS;
                 }
-
-                result = CM_Reenumerate_DevNode(devInst, 0);
-
-                return result == CONFIGRET.CR_SUCCESS;
             }
         }
         catch (Exception)
@@ -198,41 +129,115 @@ public class DeviceManagerService : IDeviceManagerService
         }
     }
 
-    private static unsafe string GetDeviceInstanceId(SafeHandle deviceInfoSetHandle, SP_DEVINFO_DATA deviceInfoData, char[] instanceIdBuffer)
+    public bool StopDeviceByInstanceId(string deviceInstanceId)
+    {
+        PNP_VETO_TYPE vetoType = default;
+        var vetoNameBuffer = new char[256];
+
+        try
+        {
+            unsafe
+            {
+                fixed (char* pDeviceId = deviceInstanceId)
+                {
+                    var result = CM_Locate_DevNode(out var devInst, pDeviceId, CM_LOCATE_DEVNODE_FLAGS.CM_LOCATE_DEVNODE_NORMAL);
+
+                    if (result != CONFIGRET.CR_SUCCESS)
+                    {
+                        return false;
+                    }
+
+                    result = CM_Get_DevNode_Status(out _, out _, devInst, 0);
+
+                    if (result != CONFIGRET.CR_SUCCESS)
+                    {
+                        return false;
+                    }
+
+                    fixed (char* vetoNamePtr = vetoNameBuffer)
+                    {
+                        result = CM_Request_Device_Eject(devInst, &vetoType, vetoNamePtr, (uint)vetoNameBuffer.Length, 0);
+
+                        return result == CONFIGRET.CR_SUCCESS;
+                    }
+                }
+            }
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    public bool StartDeviceByInstanceId(string deviceInstanceId)
+    {
+        try
+        {
+            unsafe
+            {
+                fixed (char* pDeviceId = deviceInstanceId)
+                {
+                    var result = CM_Locate_DevNode(out var devInst, pDeviceId, CM_LOCATE_DEVNODE_FLAGS.CM_LOCATE_DEVNODE_NORMAL);
+
+                    if (result != CONFIGRET.CR_SUCCESS)
+                    {
+                        return false;
+                    }
+
+                    result = CM_Reenumerate_DevNode(devInst, 0);
+
+                    return result == CONFIGRET.CR_SUCCESS;
+                }
+            }
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    private static string GetDeviceInstanceId(SafeHandle deviceInfoSetHandle, SP_DEVINFO_DATA deviceInfoData, char[] instanceIdBuffer)
     {
         uint requiredSize = 0;
 
-        fixed (char* pInstanceId = instanceIdBuffer)
+        unsafe
         {
-            var deviceInstancePtr = new PWSTR(pInstanceId);
-
-            if (SetupDiGetDeviceInstanceId(deviceInfoSetHandle, deviceInfoData, deviceInstancePtr, (uint)instanceIdBuffer.Length, &requiredSize))
+            fixed (char* pInstanceId = instanceIdBuffer)
             {
-                return new string(pInstanceId, 0, (int)requiredSize - 1);
+                if (SetupDiGetDeviceInstanceId(deviceInfoSetHandle, deviceInfoData, pInstanceId, (uint)instanceIdBuffer.Length, &requiredSize))
+                {
+                    return new string(pInstanceId, 0, (int)requiredSize - 1);
+                }
             }
         }
 
         return string.Empty;
     }
 
-    private static unsafe string GetDeviceProperty(SafeHandle deviceInfoSetHandle, SP_DEVINFO_DATA deviceInfoData, SETUP_DI_REGISTRY_PROPERTY property)
+    private static string GetDeviceProperty(SafeHandle deviceInfoSetHandle, SP_DEVINFO_DATA deviceInfoData, SETUP_DI_REGISTRY_PROPERTY property)
     {
         var buffer = new byte[512];
 
         uint requiredSize = 0;
         uint propertyRegDataType = 0;
 
-        return SetupDiGetDeviceRegistryProperty(deviceInfoSetHandle, in deviceInfoData, property, &propertyRegDataType, buffer.AsSpan(), &requiredSize) ? CleanString(buffer) : string.Empty;
+        unsafe
+        {
+            return SetupDiGetDeviceRegistryProperty(deviceInfoSetHandle, in deviceInfoData, property, &propertyRegDataType, buffer.AsSpan(), &requiredSize) ? CleanString(buffer) : string.Empty;
+        }
     }
 
-    private static unsafe uint GetConfigFlags(SafeHandle deviceInfoSetHandle, SP_DEVINFO_DATA deviceInfoData)
+    private static uint GetConfigFlags(SafeHandle deviceInfoSetHandle, SP_DEVINFO_DATA deviceInfoData)
     {
         var buffer = new byte[4];
 
         uint requiredSize = 0;
         uint propertyRegDataType = 0;
 
-        return SetupDiGetDeviceRegistryProperty(deviceInfoSetHandle, in deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_CONFIGFLAGS, &propertyRegDataType, buffer.AsSpan(), &requiredSize) ? BitConverter.ToUInt32(buffer, 0) : (uint)0;
+        unsafe
+        {
+            return SetupDiGetDeviceRegistryProperty(deviceInfoSetHandle, in deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_CONFIGFLAGS, &propertyRegDataType, buffer.AsSpan(), &requiredSize) ? BitConverter.ToUInt32(buffer, 0) : (uint)0;
+        }
     }
 
     private static string CleanString(byte[] buffer)
@@ -242,21 +247,24 @@ public class DeviceManagerService : IDeviceManagerService
         return str.Split('\0')[0].Trim();
     }
 
-    private static unsafe string GetClassNameFromGuid(Guid classGuid)
+    private static string GetClassNameFromGuid(Guid classGuid)
     {
         var classNameBuffer = new char[256];
         uint requiredSize = 0;
 
-        fixed (char* classNamePtr = classNameBuffer)
+        unsafe
         {
-            var result = SetupDiClassNameFromGuid(classGuid, classNamePtr, (uint)classNameBuffer.Length, &requiredSize);
-
-            if (result == 0)
+            fixed (char* classNamePtr = classNameBuffer)
             {
-                throw new Exception("Failed to retrieve class name for the specified GUID.");
-            }
+                var result = SetupDiClassNameFromGuid(classGuid, classNamePtr, (uint)classNameBuffer.Length, &requiredSize);
 
-            return new string(classNamePtr, 0, (int)requiredSize - 1);
+                if (result == 0)
+                {
+                    throw new Exception("Failed to retrieve class name for the specified GUID.");
+                }
+
+                return new string(classNamePtr, 0, (int)requiredSize - 1);
+            }
         }
     }
 }
