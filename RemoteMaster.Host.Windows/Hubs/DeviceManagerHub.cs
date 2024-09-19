@@ -11,14 +11,14 @@ public class DeviceManagerHub(IDeviceManagerService deviceManagerService) : Hub<
 {
     public async Task GetDevices()
     {
-        var devices = await Task.Run(deviceManagerService.GetDeviceList);
+        var devices = deviceManagerService.GetDeviceList();
 
         await Clients.All.ReceiveDeviceList(devices);
     }
 
     public async Task DisableDevice(string deviceInstanceId)
     {
-        var result = await Task.Run(() => deviceManagerService.DisableDeviceByInstanceId(deviceInstanceId));
+        var result = deviceManagerService.DisableDeviceByInstanceId(deviceInstanceId);
 
         if (result)
         {
@@ -32,7 +32,7 @@ public class DeviceManagerHub(IDeviceManagerService deviceManagerService) : Hub<
 
     public async Task EnableDevice(string deviceInstanceId)
     {
-        var result = await Task.Run(() => deviceManagerService.EnableDeviceByInstanceId(deviceInstanceId));
+        var result = deviceManagerService.EnableDeviceByInstanceId(deviceInstanceId);
 
         if (result)
         {
