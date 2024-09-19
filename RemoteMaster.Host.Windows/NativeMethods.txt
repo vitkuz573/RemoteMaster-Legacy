@@ -115,3 +115,5 @@ CM_Reenumerate_DevNode
 CM_Locate_DevNode
 CM_Disable_DevNode
 CM_Enable_DevNode
+
+CM_DISABLE_PERSIST

@@ -232,7 +232,7 @@ public class DeviceManagerHub : Hub<IDeviceManagerClient>
                     return false;
                 }
 
-                result = CM_Disable_DevNode(devInst, 0);
+                result = CM_Disable_DevNode(devInst, CM_DISABLE_PERSIST);
 
                 return result == CONFIGRET.CR_SUCCESS;
             }

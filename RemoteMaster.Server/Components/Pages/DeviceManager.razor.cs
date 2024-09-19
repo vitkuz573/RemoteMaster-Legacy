@@ -152,10 +152,19 @@ public partial class DeviceManager : IAsyncDisposable
     private async Task EnableDevice(string deviceInstanceId)
     {
         await SafeInvokeAsync(() => _connection!.InvokeAsync("EnableDevice", deviceInstanceId));
+
+        await FetchDevices();
+
+        StateHasChanged();
     }
 
     private async Task DisableDevice(string deviceInstanceId)
     {
         await SafeInvokeAsync(() => _connection!.InvokeAsync("DisableDevice", deviceInstanceId));
+        await SafeInvokeAsync(() => _connection!.InvokeAsync("DisableDevice", deviceInstanceId));
+
+        await FetchDevices();
+
+        StateHasChanged();
     }
 }

@@ -36,12 +36,28 @@
                                     <p class="text-sm text-gray-500"><strong>Service:</strong> @device.Service</p>
                                 </div>
                                 <div class="flex space-x-4">
-                                    <button @onclick="() => EnableDevice(device.DeviceInstanceId)" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300">
-                                        Enable
-                                    </button>
-                                    <button @onclick="() => DisableDevice(device.DeviceInstanceId)" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300">
-                                        Disable
-                                    </button>
+                                    @if (device.IsEnabled)
+                                    {
+                                        <!-- Device is enabled, so disable button for enabling -->
+                                        <button disabled class="rounded-md bg-gray-400 px-4 py-2 text-white">
+                                            Enable
+                                        </button>
+                                        <!-- Active disable button -->
+                                        <button @onclick="() => DisableDevice(device.DeviceInstanceId)" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300">
+                                            Disable
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <!-- Active enable button -->
+                                        <button @onclick="() => EnableDevice(device.DeviceInstanceId)" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300">
+                                            Enable
+                                        </button>
+                                        <!-- Device is disabled, so disable button for disabling -->
+                                        <button disabled class="rounded-md bg-gray-400 px-4 py-2 text-white">
+                                            Disable
+                                        </button>
+                                    }
                                 </div>
                             </div>
                         }
