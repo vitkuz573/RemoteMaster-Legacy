@@ -80,7 +80,7 @@ public class DeviceManagerHub : Hub<IDeviceManagerClient>
             var service = string.Empty;
             var className = string.Empty;
             var deviceInstanceId = string.Empty;
-            bool isEnabled = true;
+            bool isEnabled;
 
             unsafe
             {
