@@ -305,7 +305,7 @@ public class DeviceManagerHub : Hub<IDeviceManagerClient>
                 }
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return false;
         }
@@ -332,7 +332,7 @@ public class DeviceManagerHub : Hub<IDeviceManagerClient>
                 return result == CONFIGRET.CR_SUCCESS;
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return false;
         }
