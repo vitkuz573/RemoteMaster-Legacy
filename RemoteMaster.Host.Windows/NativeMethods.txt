@@ -107,3 +107,11 @@ SetupDiGetClassDevs
 SetupDiEnumDeviceInfo
 SetupDiGetDeviceRegistryProperty
 SetupDiClassNameFromGuid
+SetupDiGetDeviceInstanceId
+
+CM_Get_DevNode_Status
+CM_Request_Device_Eject
+CM_Reenumerate_DevNode
+CM_Locate_DevNode
+CM_Disable_DevNode
+CM_Enable_DevNode

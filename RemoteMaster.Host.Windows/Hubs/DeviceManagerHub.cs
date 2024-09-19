@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Models;
 using Windows.Win32.Devices.DeviceAndDriverInstallation;
+using Windows.Win32.Foundation;
 using static Windows.Win32.PInvoke;
 
 namespace RemoteMaster.Host.Windows.Hubs;
@@ -35,8 +36,7 @@ public class DeviceManagerHub : Hub<IDeviceManagerClient>
 
         fixed (char* classNamePtr = classNameBuffer)
         {
-            var result =
-                SetupDiClassNameFromGuid(in classGuid, classNamePtr, (uint)classNameBuffer.Length, &requiredSize);
+            var result = SetupDiClassNameFromGuid(classGuid, classNamePtr, (uint)classNameBuffer.Length, &requiredSize);
 
             if (result == 0)
             {
@@ -79,6 +79,7 @@ public class DeviceManagerHub : Hub<IDeviceManagerClient>
             var locationInfo = string.Empty;
             var service = string.Empty;
             var className = string.Empty;
+            var deviceInstanceId = string.Empty;
 
             unsafe
             {
@@ -92,6 +93,19 @@ public class DeviceManagerHub : Hub<IDeviceManagerClient>
                     if (SetupDiGetDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_DEVICEDESC, &propertyRegDataType, pBuffer, (uint)buffer.Length, &requiredSize))
                     {
                         deviceName = CleanString(buffer);
+                    }
+
+                    uint instanceIdRequiredSize = 0;
+                    var instanceIdBuffer = new char[512];
+
+                    fixed (char* pInstanceId = instanceIdBuffer)
+                    {
+                        var deviceInstancePtr = new PWSTR(pInstanceId);
+                        
+                        if (SetupDiGetDeviceInstanceId(deviceInfoSetHandle, deviceInfoData, deviceInstancePtr, (uint)instanceIdBuffer.Length, &instanceIdRequiredSize))
+                        {
+                            deviceInstanceId = new string(pInstanceId, 0, (int)instanceIdRequiredSize - 1);
+                        }
                     }
 
                     Array.Clear(buffer, 0, buffer.Length);
@@ -146,11 +160,161 @@ public class DeviceManagerHub : Hub<IDeviceManagerClient>
                 }
             }
 
-            devices.Add(new DeviceDto(!string.IsNullOrEmpty(friendlyName) ? friendlyName : deviceName, className, manufacturer, hardwareId, compatibleIds, locationInfo, service));
+            devices.Add(new DeviceDto(!string.IsNullOrEmpty(friendlyName) ? friendlyName : deviceName, className, manufacturer, hardwareId, compatibleIds, locationInfo, service, deviceInstanceId));
 
             deviceIndex++;
         }
 
         return devices;
+    }
+
+    public async Task DisableDevice(string deviceInstanceId)
+    {
+        var result = await Task.Run(() => DisableDeviceByInstanceId(deviceInstanceId));
+
+        if (result)
+        {
+            await Clients.All.NotifyDeviceDisabled(deviceInstanceId);
+        }
+        else
+        {
+            await Clients.All.NotifyDeviceDisableFailed(deviceInstanceId);
+        }
+    }
+
+    public async Task EnableDevice(string deviceInstanceId)
+    {
+        var result = await Task.Run(() => EnableDeviceByInstanceId(deviceInstanceId));
+
+        if (result)
+        {
+            await Clients.All.NotifyDeviceEnabled(deviceInstanceId);
+        }
+        else
+        {
+            await Clients.All.NotifyDeviceEnableFailed(deviceInstanceId);
+        }
+    }
+
+    private static unsafe bool DisableDeviceByInstanceId(string deviceInstanceId)
+    {
+        try
+        {
+            fixed (char* pDeviceId = deviceInstanceId)
+            {
+                var deviceInstancePtr = new PWSTR(pDeviceId);
+
+                const CM_LOCATE_DEVNODE_FLAGS flags = CM_LOCATE_DEVNODE_FLAGS.CM_LOCATE_DEVNODE_NORMAL;
+                var result = CM_Locate_DevNode(out var devInst, deviceInstancePtr, flags);
+
+                if (result != CONFIGRET.CR_SUCCESS)
+                {
+                    return false;
+                }
+
+                result = CM_Disable_DevNode(devInst, 0);
+
+                return result == CONFIGRET.CR_SUCCESS;
+            }
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    private static unsafe bool EnableDeviceByInstanceId(string deviceInstanceId)
+    {
+        try
+        {
+            fixed (char* pDeviceId = deviceInstanceId)
+            {
+                var deviceInstancePtr = new PWSTR(pDeviceId);
+
+                const CM_LOCATE_DEVNODE_FLAGS flags = CM_LOCATE_DEVNODE_FLAGS.CM_LOCATE_DEVNODE_NORMAL;
+                var result = CM_Locate_DevNode(out var devInst, deviceInstancePtr, flags);
+
+                if (result != CONFIGRET.CR_SUCCESS)
+                {
+                    return false;
+                }
+
+                result = CM_Enable_DevNode(devInst, 0);
+
+                return result == CONFIGRET.CR_SUCCESS;
+            }
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    private static unsafe bool StopDeviceByInstanceId(string deviceInstanceId)
+    {
+        try
+        {
+            fixed (char* pDeviceId = deviceInstanceId)
+            {
+                var deviceInstancePtr = new PWSTR(pDeviceId);
+
+                const CM_LOCATE_DEVNODE_FLAGS flags = CM_LOCATE_DEVNODE_FLAGS.CM_LOCATE_DEVNODE_NORMAL;
+                var result = CM_Locate_DevNode(out var devInst, deviceInstancePtr, flags);
+
+                if (result != CONFIGRET.CR_SUCCESS)
+                {
+                    return false;
+                }
+
+                result = CM_Get_DevNode_Status(out _, out _, devInst, 0);
+
+                if (result != CONFIGRET.CR_SUCCESS)
+                {
+                    return false;
+                }
+
+                PNP_VETO_TYPE vetoType = default;
+                var vetoNameBuffer = new char[256];
+
+                fixed (char* vetoNamePtr = vetoNameBuffer)
+                {
+                    var vetoNamePwstr = new PWSTR(vetoNamePtr);
+                    result = CM_Request_Device_Eject(devInst, &vetoType, vetoNamePwstr, (uint)vetoNameBuffer.Length, 0);
+
+                    return result == CONFIGRET.CR_SUCCESS;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            return false;
+        }
+    }
+
+    private static unsafe bool StartDeviceByInstanceId(string deviceInstanceId)
+    {
+        try
+        {
+            fixed (char* pDeviceId = deviceInstanceId)
+            {
+                var deviceInstancePtr = new PWSTR(pDeviceId);
+
+                const CM_LOCATE_DEVNODE_FLAGS flags = CM_LOCATE_DEVNODE_FLAGS.CM_LOCATE_DEVNODE_NORMAL;
+                var result = CM_Locate_DevNode(out var devInst, deviceInstancePtr, flags);
+
+                if (result != CONFIGRET.CR_SUCCESS)
+                {
+                    return false;
+                }
+
+                result = CM_Reenumerate_DevNode(devInst, 0);
+
+                return result == CONFIGRET.CR_SUCCESS;
+            }
+        }
+        catch (Exception ex)
+        {
+            return false;
+        }
     }
 }

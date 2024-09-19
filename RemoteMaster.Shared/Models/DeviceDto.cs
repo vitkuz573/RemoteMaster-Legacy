@@ -4,7 +4,7 @@
 
 namespace RemoteMaster.Shared.Models;
 
-public class DeviceDto(string name, string deviceClass, string manufacturer, string hardwareId, string compatibleIds, string locationInfo, string service)
+public class DeviceDto(string name, string deviceClass, string manufacturer, string hardwareId, string compatibleIds, string locationInfo, string service, string deviceInstanceId)
 {
     public string Name { get; set; } = name;
 
@@ -19,4 +19,6 @@ public class DeviceDto(string name, string deviceClass, string manufacturer, str
     public string LocationInfo { get; set; } = locationInfo;
 
     public string Service { get; set; } = service;
+
+    public string DeviceInstanceId { get; set; } = deviceInstanceId;
 }

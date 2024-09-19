@@ -28,10 +28,10 @@ public partial class DeviceManager : IAsyncDisposable
 
     private HubConnection? _connection;
     private ClaimsPrincipal? _user;
-    private List<DeviceDto> _deviceItems = new();
+    private List<DeviceDto> _deviceItems = [];
     private bool _firstRenderCompleted;
 
-    private Dictionary<string, bool> _devicePanelState = new();
+    private readonly Dictionary<string, bool> _devicePanelState = new();
 
     protected override void OnAfterRender(bool firstRender)
     {
@@ -147,5 +147,15 @@ public partial class DeviceManager : IAsyncDisposable
         }
 
         GC.SuppressFinalize(this);
+    }
+
+    private async Task EnableDevice(string deviceInstanceId)
+    {
+        await SafeInvokeAsync(() => _connection!.InvokeAsync("EnableDevice", deviceInstanceId));
+    }
+
+    private async Task DisableDevice(string deviceInstanceId)
+    {
+        await SafeInvokeAsync(() => _connection!.InvokeAsync("DisableDevice", deviceInstanceId));
     }
 }

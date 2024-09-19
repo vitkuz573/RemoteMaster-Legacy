@@ -9,4 +9,12 @@ namespace RemoteMaster.Host.Windows.Abstractions;
 public interface IDeviceManagerClient
 {
     Task ReceiveDeviceList(List<DeviceDto> devices);
+
+    Task NotifyDeviceDisabled(string deviceInstanceId);
+
+    Task NotifyDeviceDisableFailed(string deviceInstanceId);
+
+    Task NotifyDeviceEnabled(string deviceInstanceId);
+
+    Task NotifyDeviceEnableFailed(string deviceInstanceId);
 }
