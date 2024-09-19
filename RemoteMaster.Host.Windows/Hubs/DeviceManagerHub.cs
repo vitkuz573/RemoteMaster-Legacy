@@ -47,7 +47,7 @@ public class DeviceManagerHub : Hub<IDeviceManagerClient>
         }
     }
 
-    private static List<DeviceDto> GetDeviceList()
+    private static unsafe List<DeviceDto> GetDeviceList()
     {
         var devices = new List<DeviceDto>();
 
@@ -65,8 +65,6 @@ public class DeviceManagerHub : Hub<IDeviceManagerClient>
 
         uint deviceIndex = 0;
 
-        var deviceInfoSet = (HDEVINFO)deviceInfoSetHandle.DangerousGetHandle();
-
         while (SetupDiEnumDeviceInfo(deviceInfoSetHandle, deviceIndex, ref deviceInfoData))
         {
             var buffer = new byte[512];
@@ -80,105 +78,71 @@ public class DeviceManagerHub : Hub<IDeviceManagerClient>
             var service = string.Empty;
             var className = string.Empty;
             var deviceInstanceId = string.Empty;
-            bool isEnabled;
 
-            unsafe
+            uint propertyRegDataType = 0;
+            uint requiredSize = 0;
+
+            if (SetupDiGetDeviceRegistryProperty(deviceInfoSetHandle, in deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_DEVICEDESC, &propertyRegDataType, buffer.AsSpan(), &requiredSize))
             {
-                fixed (byte* pBuffer = buffer)
+                deviceName = CleanString(buffer);
+            }
+
+            var instanceIdBuffer = new char[512];
+
+            fixed (char* pInstanceId = instanceIdBuffer)
+            {
+                var deviceInstancePtr = new PWSTR(pInstanceId);
+                
+                if (SetupDiGetDeviceInstanceId(deviceInfoSetHandle, deviceInfoData, deviceInstancePtr, (uint)instanceIdBuffer.Length, &requiredSize))
                 {
-                    uint propertyRegDataType = 0;
-                    uint requiredSize = 0;
-
-                    Array.Clear(buffer, 0, buffer.Length);
-
-                    if (SetupDiGetDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_DEVICEDESC, &propertyRegDataType, pBuffer, (uint)buffer.Length, &requiredSize))
-                    {
-                        deviceName = CleanString(buffer);
-                    }
-
-                    uint instanceIdRequiredSize = 0;
-                    var instanceIdBuffer = new char[512];
-
-                    fixed (char* pInstanceId = instanceIdBuffer)
-                    {
-                        var deviceInstancePtr = new PWSTR(pInstanceId);
-                        
-                        if (SetupDiGetDeviceInstanceId(deviceInfoSetHandle, deviceInfoData, deviceInstancePtr, (uint)instanceIdBuffer.Length, &instanceIdRequiredSize))
-                        {
-                            deviceInstanceId = new string(pInstanceId, 0, (int)instanceIdRequiredSize - 1);
-                        }
-                    }
-
-                    Array.Clear(buffer, 0, buffer.Length);
-
-                    if (SetupDiGetDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_HARDWAREID, &propertyRegDataType, pBuffer, (uint)buffer.Length, &requiredSize))
-                    {
-                        hardwareId = CleanString(buffer);
-                    }
-
-                    Array.Clear(buffer, 0, buffer.Length);
-
-                    if (SetupDiGetDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_COMPATIBLEIDS, &propertyRegDataType, pBuffer, (uint)buffer.Length, &requiredSize))
-                    {
-                        compatibleIds = CleanString(buffer);
-                    }
-
-                    Array.Clear(buffer, 0, buffer.Length);
-
-                    if (SetupDiGetDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_MFG, &propertyRegDataType, pBuffer, (uint)buffer.Length, &requiredSize))
-                    {
-                        manufacturer = CleanString(buffer);
-                    }
-
-                    Array.Clear(buffer, 0, buffer.Length);
-
-                    if (SetupDiGetDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_FRIENDLYNAME, &propertyRegDataType, pBuffer, (uint)buffer.Length, &requiredSize))
-                    {
-                        friendlyName = CleanString(buffer);
-                    }
-
-                    Array.Clear(buffer, 0, buffer.Length);
-
-                    if (SetupDiGetDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_LOCATION_INFORMATION, &propertyRegDataType, pBuffer, (uint)buffer.Length, &requiredSize))
-                    {
-                        locationInfo = CleanString(buffer);
-                    }
-
-                    Array.Clear(buffer, 0, buffer.Length);
-
-                    if (SetupDiGetDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_SERVICE, &propertyRegDataType, pBuffer, (uint)buffer.Length, &requiredSize))
-                    {
-                        service = CleanString(buffer);
-                    }
-
-                    Array.Clear(buffer, 0, buffer.Length);
-
-                    if (SetupDiGetDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_CLASSGUID, &propertyRegDataType, pBuffer, (uint)buffer.Length, &requiredSize))
-                    {
-                        var classGuid = CleanString(buffer);
-                        className = GetClassNameFromGuid(Guid.Parse(classGuid));
-                    }
-
-                    uint configFlags = 0;
-
-                    if (SetupDiGetDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_CONFIGFLAGS, &propertyRegDataType, pBuffer, (uint)buffer.Length, &requiredSize))
-                    {
-                        configFlags = BitConverter.ToUInt32(buffer, 0);
-                    }
-
-                    isEnabled = (configFlags & 0x00000001) == 0;
-
-                    fixed (char* pInstanceId = instanceIdBuffer)
-                    {
-                        var deviceInstancePtr = new PWSTR(pInstanceId);
-                        
-                        if (SetupDiGetDeviceInstanceId(deviceInfoSetHandle, deviceInfoData, deviceInstancePtr, (uint)instanceIdBuffer.Length, &instanceIdRequiredSize))
-                        {
-                            deviceInstanceId = new string(pInstanceId, 0, (int)instanceIdRequiredSize - 1);
-                        }
-                    }
+                    deviceInstanceId = new string(pInstanceId, 0, (int)requiredSize - 1);
                 }
             }
+
+            if (SetupDiGetDeviceRegistryProperty(deviceInfoSetHandle, in deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_HARDWAREID, &propertyRegDataType, buffer.AsSpan(), &requiredSize))
+            {
+                hardwareId = CleanString(buffer);
+            }
+
+            if (SetupDiGetDeviceRegistryProperty(deviceInfoSetHandle, in deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_COMPATIBLEIDS, &propertyRegDataType, buffer.AsSpan(), &requiredSize))
+            {
+                compatibleIds = CleanString(buffer);
+            }
+
+            if (SetupDiGetDeviceRegistryProperty(deviceInfoSetHandle, in deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_MFG, &propertyRegDataType, buffer.AsSpan(), &requiredSize))
+            {
+                manufacturer = CleanString(buffer);
+            }
+
+            if (SetupDiGetDeviceRegistryProperty(deviceInfoSetHandle, in deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_FRIENDLYNAME, &propertyRegDataType, buffer.AsSpan(), &requiredSize))
+            {
+                friendlyName = CleanString(buffer);
+            }
+
+            if (SetupDiGetDeviceRegistryProperty(deviceInfoSetHandle, in deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_LOCATION_INFORMATION, &propertyRegDataType, buffer.AsSpan(), &requiredSize))
+            {
+                locationInfo = CleanString(buffer);
+            }
+
+            if (SetupDiGetDeviceRegistryProperty(deviceInfoSetHandle, in deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_SERVICE, &propertyRegDataType, buffer.AsSpan(), &requiredSize))
+            {
+                service = CleanString(buffer);
+            }
+
+            if (SetupDiGetDeviceRegistryProperty(deviceInfoSetHandle, in deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_CLASSGUID, &propertyRegDataType, buffer.AsSpan(), &requiredSize))
+            {
+                var classGuid = CleanString(buffer);
+                className = GetClassNameFromGuid(Guid.Parse(classGuid));
+            }
+
+            uint configFlags = 0;
+
+            if (SetupDiGetDeviceRegistryProperty(deviceInfoSetHandle, in deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_CONFIGFLAGS, &propertyRegDataType, buffer.AsSpan(), &requiredSize))
+            {
+                configFlags = BitConverter.ToUInt32(buffer, 0);
+            }
+
+            var isEnabled = (configFlags & 0x00000001) == 0;
 
             devices.Add(new DeviceDto(!string.IsNullOrEmpty(friendlyName) ? friendlyName : deviceName, className, manufacturer, hardwareId, compatibleIds, locationInfo, service, deviceInstanceId, isEnabled));
 
