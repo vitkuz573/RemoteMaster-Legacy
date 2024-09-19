@@ -80,6 +80,7 @@ public class DeviceManagerHub : Hub<IDeviceManagerClient>
             var service = string.Empty;
             var className = string.Empty;
             var deviceInstanceId = string.Empty;
+            bool isEnabled = true;
 
             unsafe
             {
@@ -157,10 +158,29 @@ public class DeviceManagerHub : Hub<IDeviceManagerClient>
                         var classGuid = CleanString(buffer);
                         className = GetClassNameFromGuid(Guid.Parse(classGuid));
                     }
+
+                    uint configFlags = 0;
+
+                    if (SetupDiGetDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SETUP_DI_REGISTRY_PROPERTY.SPDRP_CONFIGFLAGS, &propertyRegDataType, pBuffer, (uint)buffer.Length, &requiredSize))
+                    {
+                        configFlags = BitConverter.ToUInt32(buffer, 0);
+                    }
+
+                    isEnabled = (configFlags & 0x00000001) == 0;
+
+                    fixed (char* pInstanceId = instanceIdBuffer)
+                    {
+                        var deviceInstancePtr = new PWSTR(pInstanceId);
+                        
+                        if (SetupDiGetDeviceInstanceId(deviceInfoSetHandle, deviceInfoData, deviceInstancePtr, (uint)instanceIdBuffer.Length, &instanceIdRequiredSize))
+                        {
+                            deviceInstanceId = new string(pInstanceId, 0, (int)instanceIdRequiredSize - 1);
+                        }
+                    }
                 }
             }
 
-            devices.Add(new DeviceDto(!string.IsNullOrEmpty(friendlyName) ? friendlyName : deviceName, className, manufacturer, hardwareId, compatibleIds, locationInfo, service, deviceInstanceId));
+            devices.Add(new DeviceDto(!string.IsNullOrEmpty(friendlyName) ? friendlyName : deviceName, className, manufacturer, hardwareId, compatibleIds, locationInfo, service, deviceInstanceId, isEnabled));
 
             deviceIndex++;
         }
