@@ -177,6 +177,7 @@ internal class Program
         services.AddSingleton<IWorkStationSecurityService, WorkStationSecurityService>();
         services.AddSingleton<IAuthorizationHandler, LocalhostOrAuthenticatedHandler>();
         services.AddSingleton<ICommandExecutor, CommandExecutor>();
+        services.AddSingleton<IDeviceManagerService, DeviceManagerService>();
         services.AddSingleton(new JsonSerializerOptions
         {
             WriteIndented = true,
