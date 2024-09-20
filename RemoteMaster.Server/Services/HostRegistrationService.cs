@@ -277,6 +277,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
                 return Result.Fail(errorMessage);
             }
 
+            computer.SetName(request.Name);
             computer.SetIpAddress(request.IpAddress);
 
             await organizationRepository.UpdateAsync(organizationResult.Value);

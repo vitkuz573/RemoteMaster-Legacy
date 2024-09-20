@@ -2,11 +2,8 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Core.Data;
-using RemoteMaster.Host.Core.Entities;
 using Serilog;
 
 namespace RemoteMaster.Host.Core.Services;
@@ -17,17 +14,17 @@ public class HostRegistrationMonitorService : IHostedService
     private readonly IHostConfigurationService _hostConfigurationService;
     private readonly IHostInformationUpdaterService _hostInformationMonitorService;
     private readonly IUserInstanceService _userInstanceService;
-    private readonly HostDbContext _dbContext;
 
     private readonly Timer _timer;
+    private readonly string _syncIndicatorFilePath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, "sync_required.ind");
 
-    public HostRegistrationMonitorService(IHostLifecycleService hostLifecycleService, IHostConfigurationService hostConfigurationService, IHostInformationUpdaterService hostInformationUpdaterService, IUserInstanceService userInstanceService, HostDbContext dbContext)
+
+    public HostRegistrationMonitorService(IHostLifecycleService hostLifecycleService, IHostConfigurationService hostConfigurationService, IHostInformationUpdaterService hostInformationUpdaterService, IUserInstanceService userInstanceService)
     {
         _hostLifecycleService = hostLifecycleService;
         _hostConfigurationService = hostConfigurationService;
         _hostInformationMonitorService = hostInformationUpdaterService;
         _userInstanceService = userInstanceService;
-        _dbContext = dbContext;
 
         _timer = new Timer(CheckHostRegistration, null, Timeout.Infinite, 0);
     }
@@ -47,9 +44,9 @@ public class HostRegistrationMonitorService : IHostedService
             var hostConfiguration = await _hostConfigurationService.LoadConfigurationAsync(false);
             var isHostRegistered = await _hostLifecycleService.IsHostRegisteredAsync();
 
-            var syncState = await _dbContext.ConfigurationSyncStates.FirstOrDefaultAsync() ?? new ConfigurationSyncState();
+            var isSyncRequired = IsSyncRequired();
 
-            if (configurationChanged || syncState.IsSyncRequired)
+            if (configurationChanged || isSyncRequired)
             {
                 try
                 {
@@ -70,28 +67,13 @@ public class HostRegistrationMonitorService : IHostedService
 
                     await _hostLifecycleService.IssueCertificateAsync(hostConfiguration, organizationAddress);
 
-                    syncState.IsSyncRequired = false;
+                    ClearSyncIndicator();
                 }
                 catch (Exception ex)
                 {
                     Log.Error(ex, "Failed to update host information. Sync will be retried.");
 
-                    syncState.IsSyncRequired = true;
-                }
-                finally
-                {
-                    syncState.LastAttempt = DateTimeOffset.UtcNow;
-                    
-                    if (syncState.Id == 0)
-                    {
-                        _dbContext.ConfigurationSyncStates.Add(syncState);
-                    }
-                    else
-                    {
-                        _dbContext.ConfigurationSyncStates.Update(syncState);
-                    }
-                    
-                    await _dbContext.SaveChangesAsync();
+                    SetSyncRequired();
                 }
 
                 await RestartUserInstance();
@@ -135,5 +117,37 @@ public class HostRegistrationMonitorService : IHostedService
         _timer.Dispose();
 
         return Task.CompletedTask;
+    }
+
+    private bool IsSyncRequired()
+    {
+        return File.Exists(_syncIndicatorFilePath);
+    }
+
+    private void SetSyncRequired()
+    {
+        try
+        {
+            File.WriteAllText(_syncIndicatorFilePath, "Sync required");
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to create sync indicator file.");
+        }
+    }
+
+    private void ClearSyncIndicator()
+    {
+        try
+        {
+            if (File.Exists(_syncIndicatorFilePath))
+            {
+                File.Delete(_syncIndicatorFilePath);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to delete sync indicator file.");
+        }
     }
 }
