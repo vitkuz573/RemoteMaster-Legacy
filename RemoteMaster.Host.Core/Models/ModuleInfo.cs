@@ -15,10 +15,10 @@ public class ModuleInfo
     public string Version { get; set; }
 
     [JsonPropertyName("releaseDate")]
-    public string? ReleaseDate { get; set; }
+    public string ReleaseDate { get; set; }
 
     [JsonPropertyName("description")]
-    public string? Description { get; set; }
+    public string Description { get; set; }
 
     [JsonPropertyName("dependencies")]
     public string[] Dependencies { get; set; }

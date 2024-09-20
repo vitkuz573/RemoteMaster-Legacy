@@ -603,10 +603,12 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
         if (!Directory.Exists(modulesDirectory))
         {
             await Notify("Modules directory not found. Skipping module update.", MessageType.Warning);
+
             return;
         }
 
         var installedModulesPath = Path.Combine(BaseFolderPath, "Modules");
+
         var zipFiles = Directory.GetFiles(modulesDirectory, "*.zip");
 
         foreach (var zipFile in zipFiles)
@@ -625,14 +627,21 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             if (installedModuleInfo == null)
             {
                 await Notify($"Module {moduleInfo.Name} is not installed. Installing...", MessageType.Information);
-                await InstallModuleAsync(zipFile, installedModulesPath);
+
+                var copiedZipFile = Path.Combine(installedModulesPath, Path.GetFileName(zipFile));
+                File.Copy(zipFile, copiedZipFile, true);
+                await InstallModuleAsync(copiedZipFile, installedModulesPath);
+
                 continue;
             }
 
             if (force || new Version(moduleInfo.Version) > new Version(installedModuleInfo.Version))
             {
                 await Notify($"Updating module {moduleInfo.Name}...", MessageType.Information);
-                await InstallModuleAsync(zipFile, installedModulesPath);
+                var copiedZipFile = Path.Combine(installedModulesPath, Path.GetFileName(zipFile));
+                File.Copy(zipFile, copiedZipFile, true);
+
+                await InstallModuleAsync(copiedZipFile, installedModulesPath);
             }
             else
             {
@@ -674,9 +683,12 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             await Notify($"Module {moduleName} installed successfully with entry point {exeFileName}.", MessageType.Information);
 
-            File.Delete(zipFilePath);
+            if (File.Exists(zipFilePath))
+            {
+                File.Delete(zipFilePath);
 
-            await Notify($"Zip file {zipFilePath} has been deleted after installation.", MessageType.Information);
+                await Notify($"Zip file {zipFilePath} has been deleted after installation.", MessageType.Information);
+            }
         }
         catch (Exception ex)
         {
