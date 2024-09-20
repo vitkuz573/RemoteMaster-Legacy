@@ -118,7 +118,7 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
             if (moduleInfo == null)
             {
                 Log.Error("No module info found in zip file: {ZipFilePath}", zipFilePath);
-
+                
                 return;
             }
 
@@ -128,7 +128,7 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
             if (installedModuleInfo != null && new Version(moduleInfo.Version) <= new Version(installedModuleInfo.Version))
             {
                 Log.Information("Module {ModuleName} is already up-to-date. Skipping.", moduleInfo.Name);
-
+                
                 return;
             }
 
@@ -140,7 +140,7 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
             ZipFile.ExtractToDirectory(zipFilePath, moduleTargetPath);
             Log.Information("Module {ModuleName} extracted to {TargetPath}", moduleInfo.Name, moduleTargetPath);
 
-            var exeFileName = $"RemoteMaster.{moduleInfo.Name}.exe";
+            var exeFileName = moduleInfo.EntryPoint;
             var exeFilePath = Path.Combine(moduleTargetPath, exeFileName);
 
             if (!fileSystem.File.Exists(exeFilePath))
@@ -148,7 +148,7 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
                 throw new InvalidOperationException($"Module {moduleInfo.Name} does not contain the required executable file: {exeFileName}");
             }
 
-            Log.Information("Module {ModuleName} installed successfully with executable {Executable}.", moduleInfo.Name, exeFileName);
+            Log.Information("Module {ModuleName} installed successfully with entry point {Executable}.", moduleInfo.Name, exeFileName);
         }
         catch (Exception ex)
         {
