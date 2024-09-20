@@ -4,6 +4,7 @@
 
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Win32.SafeHandles;
 using Serilog;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
@@ -14,6 +15,10 @@ namespace RemoteMaster.Host.Windows.Services;
 public class ChatWindowService : IHostedService
 {
     private const string ClassName = "ChatWindowClass";
+
+    private const int IDC_CHAT_DISPLAY = 101;
+    private const int IDC_CHAT_INPUT = 102;
+    private const int IDC_SEND_BUTTON = 103;
 
     private HWND _hwnd;
     private readonly WNDPROC _wndProcDelegate = WndProc;
@@ -53,6 +58,27 @@ public class ChatWindowService : IHostedService
         }
 
         ShowWindow(_hwnd, SHOW_WINDOW_CMD.SW_SHOW);
+
+        using var safeChatDisplayHandle = new SafeFileHandle(IDC_CHAT_DISPLAY, false);
+
+        unsafe
+        {
+            CreateWindowEx(0, "EDIT", "", WINDOW_STYLE.WS_CHILD | WINDOW_STYLE.WS_VISIBLE | (WINDOW_STYLE)ES_MULTILINE | (WINDOW_STYLE)ES_AUTOVSCROLL | WINDOW_STYLE.WS_VSCROLL | (WINDOW_STYLE)ES_READONLY, 10, 10, 300, 200, _hwnd, safeChatDisplayHandle, null, null);
+        }
+
+        using var safeChatInputHandle = new SafeFileHandle(IDC_CHAT_INPUT, false);
+
+        unsafe
+        {
+            CreateWindowEx(0, "EDIT", "", WINDOW_STYLE.WS_CHILD | WINDOW_STYLE.WS_VISIBLE | (WINDOW_STYLE)ES_AUTOHSCROLL, 10, 220, 200, 20, _hwnd, safeChatInputHandle, null, null);
+        }
+
+        using var safeSendButtonHandle = new SafeFileHandle(IDC_SEND_BUTTON, false);
+
+        unsafe
+        {
+            CreateWindowEx(0, "BUTTON", "Send", WINDOW_STYLE.WS_CHILD | WINDOW_STYLE.WS_VISIBLE, 220, 220, 80, 20, _hwnd, safeSendButtonHandle, null, null);
+        }
     }
 
     private bool TryRegisterClass()
@@ -81,7 +107,10 @@ public class ChatWindowService : IHostedService
 
     private static unsafe HWND CreateChatWindow()
     {
-        return CreateWindowEx(0, ClassName, "RemoteMaster Chat", WINDOW_STYLE.WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, HWND.Null, null, null, null);
+        const int windowWidth = 500;
+        const int windowHeight = 400;
+
+        return CreateWindowEx(0, ClassName, "RemoteMaster Chat", WINDOW_STYLE.WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, windowWidth, windowHeight, HWND.Null, null, null, null);
     }
 
     private void StartMessageLoop()
@@ -99,6 +128,19 @@ public class ChatWindowService : IHostedService
 
     private static LRESULT WndProc(HWND hwnd, uint msg, WPARAM wParam, LPARAM lParam)
     {
+        switch (msg)
+        {
+            case WM_SETFOCUS:
+                var inputField = FindWindowEx(hwnd, HWND.Null, "EDIT", null);
+
+                if (!inputField.IsNull)
+                {
+                    SetFocus(inputField);
+                }
+
+                break;
+        }
+
         return DefWindowProc(hwnd, msg, wParam, lParam);
     }
 }
