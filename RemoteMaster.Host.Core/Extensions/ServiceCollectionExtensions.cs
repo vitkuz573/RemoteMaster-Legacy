@@ -47,7 +47,5 @@ public static class ServiceCollectionExtensions
         }
 
         services.AddDbContext<HostDbContext>();
-
-        services.AddHostedService<MigrationService>();
     }
 }

@@ -3,12 +3,13 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.IO.Abstractions;
+using System.IO.Compression;
 using System.Security.Cryptography;
+using Windows.Win32.Foundation;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Abstractions;
 using Serilog;
-using Windows.Win32.Foundation;
 
 namespace RemoteMaster.Host.Windows.Services;
 
@@ -22,7 +23,6 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
         {
             if (modulesPath != null)
             {
-                var sourceModulesPath = Path.Combine(modulesPath, "Modules");
                 var isNetworkPath = modulesPath.StartsWith(@"\\");
 
                 if (isNetworkPath)
@@ -35,6 +35,14 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
                     }
                 }
 
+                var modulesDirectory = Path.Combine(modulesPath, "Modules");
+
+                if (!Directory.Exists(modulesDirectory))
+                {
+                    Log.Error("Modules directory not found at path: {ModulesDirectory}", modulesDirectory);
+                    return;
+                }
+
                 var modulesFolderPath = Path.Combine(_applicationDirectory, "Modules");
 
                 if (!Directory.Exists(modulesFolderPath))
@@ -42,18 +50,16 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
                     Directory.CreateDirectory(modulesFolderPath);
                 }
 
-                var isDownloaded = await CopyDirectoryAsync(sourceModulesPath, modulesFolderPath, true);
+                var zipFiles = Directory.GetFiles(modulesDirectory, "*.zip");
+
+                foreach (var zipFile in zipFiles)
+                {
+                    InstallModuleAsync(zipFile, modulesFolderPath);
+                }
 
                 if (isNetworkPath)
                 {
                     UnmapNetworkDriveAsync(modulesPath);
-                }
-
-                if (!isDownloaded)
-                {
-                    Log.Error("Download or copy failed. Install aborted.");
-
-                    return;
                 }
             }
 
@@ -101,10 +107,42 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
         }
     }
 
+    private void InstallModuleAsync(string zipFilePath, string modulesFolderPath)
+    {
+        try
+        {
+            var moduleName = Path.GetFileNameWithoutExtension(zipFilePath);
+
+            var moduleTargetPath = Path.Combine(modulesFolderPath, moduleName);
+
+            if (Directory.Exists(moduleTargetPath))
+            {
+                Directory.Delete(moduleTargetPath, true);
+            }
+
+            ZipFile.ExtractToDirectory(zipFilePath, moduleTargetPath);
+
+            Log.Information("Module {ModuleName} extracted to {TargetPath}", moduleName, moduleTargetPath);
+
+            var exeFileName = $"RemoteMaster.{moduleName}.exe";
+            var exeFilePath = Path.Combine(moduleTargetPath, exeFileName);
+
+            if (!fileSystem.File.Exists(exeFilePath))
+            {
+                throw new InvalidOperationException($"Module {moduleName} does not contain the required executable file: {exeFileName}");
+            }
+
+            Log.Information("Module {ModuleName} installed successfully with executable {Executable}.", moduleName, exeFileName);
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Failed to install module from {ZipFilePath}: {ErrorMessage}", zipFilePath, ex.Message);
+        }
+    }
+
     private bool MapNetworkDriveAsync(string folderPath, string? username, string? password)
     {
         Log.Information($"Attempting to map network drive with remote path: {folderPath}");
-
         var isMapped = networkDriveService.MapNetworkDrive(folderPath, username, password);
 
         if (!isMapped)
@@ -123,7 +161,6 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
     private void UnmapNetworkDriveAsync(string folderPath)
     {
         Log.Information($"Attempting to unmap network drive with remote path: {folderPath}");
-
         var isCancelled = networkDriveService.CancelNetworkDrive(folderPath);
 
         if (!isCancelled)

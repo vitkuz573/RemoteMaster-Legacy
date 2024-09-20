@@ -22,7 +22,7 @@ public class ChatHub : Hub<IChatClient>
         ArgumentNullException.ThrowIfNull(chatMessageDto);
 
         const string processName = "RemoteMaster.Host.Chat";
-        const string processPath = @"C:\Program Files\RemoteMaster\Host\RemoteMaster.Host.Chat.exe";
+        const string processPath = @"C:\Program Files\RemoteMaster\Host\Modules\Chat\RemoteMaster.Chat.exe";
 
         var isProcessRunning = Process.GetProcessesByName(processName).Length != 0;
 
