@@ -673,6 +673,10 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             }
 
             await Notify($"Module {moduleName} installed successfully with entry point {exeFileName}.", MessageType.Information);
+
+            File.Delete(zipFilePath);
+
+            await Notify($"Zip file {zipFilePath} has been deleted after installation.", MessageType.Information);
         }
         catch (Exception ex)
         {
