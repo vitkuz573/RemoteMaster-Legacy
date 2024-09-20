@@ -117,3 +117,9 @@ CM_Disable_DevNode
 CM_Enable_DevNode
 
 CM_DISABLE_PERSIST
+
+CW_USEDEFAULT
+
+ShowWindow
+
+GetModuleHandle

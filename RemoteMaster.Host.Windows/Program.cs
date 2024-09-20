@@ -272,6 +272,9 @@ internal class Program
             case UpdaterMode:
                 services.AddHostedService<UpdaterBackground>();
                 break;
+            case ChatMode:
+                services.AddHostedService<ChatWindowService>();
+                break;
         }
     }
 

@@ -44,6 +44,15 @@ public static class WebApplicationBuilderExtensions
                         });
                     });
                     break;
+                case ChatMode:
+                    options.ListenAnyIP(7001, listenOptions =>
+                    {
+                        listenOptions.UseHttps(adapterOptions =>
+                        {
+                            adapterOptions.ServerCertificateSelector = (_, _) => certLoaderService.GetCurrentCertificate();
+                        });
+                    });
+                    break;
             }
         });
     }
