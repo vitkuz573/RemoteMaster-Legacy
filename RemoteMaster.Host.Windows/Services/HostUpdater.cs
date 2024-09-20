@@ -645,7 +645,16 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
     {
         try
         {
-            var moduleName = Path.GetFileNameWithoutExtension(zipFilePath);
+            var moduleInfo = await GetModuleInfoFromZipAsync(zipFilePath);
+
+            if (moduleInfo == null)
+            {
+                await Notify($"Module info not found in {zipFilePath}. Skipping.", MessageType.Warning);
+
+                return;
+            }
+
+            var moduleName = moduleInfo.Name;
             var moduleTargetPath = Path.Combine(modulesFolderPath, moduleName);
 
             if (Directory.Exists(moduleTargetPath))
@@ -655,7 +664,15 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
             ZipFile.ExtractToDirectory(zipFilePath, moduleTargetPath);
 
-            await Notify($"Module {moduleName} installed successfully.", MessageType.Information);
+            var exeFileName = moduleInfo.EntryPoint;
+            var exeFilePath = Path.Combine(moduleTargetPath, exeFileName);
+
+            if (!File.Exists(exeFilePath))
+            {
+                throw new InvalidOperationException($"Module {moduleInfo.Name} does not contain the required executable file: {exeFileName}");
+            }
+
+            await Notify($"Module {moduleName} installed successfully with entry point {exeFileName}.", MessageType.Information);
         }
         catch (Exception ex)
         {
