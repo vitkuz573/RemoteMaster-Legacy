@@ -3,11 +3,14 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Diagnostics;
+using System.IO.Compression;
 using System.Reflection;
 using System.Security.Cryptography;
+using System.Text.Json;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Hubs;
+using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Models;
 using Serilog;
@@ -80,6 +83,8 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             }
 
             await PerformUpdate();
+
+            await UpdateModulesAsync(folderPath, force);
         }
         catch (Exception ex)
         {
@@ -442,12 +447,12 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             if (allowDowngrade)
             {
                 await Notify("Allowing downgrade as per the allow-downgrade flag.", MessageType.Information);
-                
+
                 return true;
             }
 
             await Notify($"Current version {currentVersion} is newer than update version {updateVersion}. To allow downgrades, use the --allow-downgrade=true option.", MessageType.Information);
-            
+
             return false;
         }
 
@@ -458,12 +463,12 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             if (allowDowngrade && force)
             {
                 await Notify("Checksum match detected with same version. Update needed due to both allow-downgrade and force flags.", MessageType.Information);
-                
+
                 return true;
             }
 
             await Notify($"Current version {currentVersion} is the same as the update version {updateVersion}. No update needed. To force an update, use the --force=true option.", MessageType.Information);
-            
+
             return false;
         }
 
@@ -478,7 +483,6 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
 
         return false;
     }
-
 
     private static Version GetVersionFromExecutable(string filePath)
     {
@@ -552,6 +556,110 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
             {
                 await Notify($"Failed to delete directory {directory}: {ex.Message}", MessageType.Error);
             }
+        }
+    }
+
+    private static async Task<ModuleInfo?> GetModuleInfoFromZipAsync(string zipFilePath)
+    {
+        try
+        {
+            using var zipArchive = ZipFile.OpenRead(zipFilePath);
+            var entry = zipArchive.GetEntry("module-info.json");
+
+            if (entry == null)
+            {
+                return null;
+            }
+
+            await using var stream = entry.Open();
+
+            return await JsonSerializer.DeserializeAsync<ModuleInfo>(stream);
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Error reading module info from {ZipFilePath}: {ErrorMessage}", zipFilePath, ex.Message);
+            return null;
+        }
+    }
+
+    private static async Task<ModuleInfo?> GetInstalledModuleInfoAsync(string installedModulePath)
+    {
+        var moduleInfoPath = Path.Combine(installedModulePath, "module-info.json");
+
+        if (!File.Exists(moduleInfoPath))
+        {
+            return null;
+        }
+
+        var json = await File.ReadAllTextAsync(moduleInfoPath);
+
+        return JsonSerializer.Deserialize<ModuleInfo>(json);
+    }
+
+    private async Task UpdateModulesAsync(string folderPath, bool force)
+    {
+        var modulesDirectory = Path.Combine(folderPath, "Host", "Modules");
+
+        if (!Directory.Exists(modulesDirectory))
+        {
+            await Notify("Modules directory not found. Skipping module update.", MessageType.Warning);
+            return;
+        }
+
+        var installedModulesPath = Path.Combine(BaseFolderPath, "Modules");
+        var zipFiles = Directory.GetFiles(modulesDirectory, "*.zip");
+
+        foreach (var zipFile in zipFiles)
+        {
+            var moduleInfo = await GetModuleInfoFromZipAsync(zipFile);
+
+            if (moduleInfo == null)
+            {
+                await Notify($"Module info not found in {zipFile}. Skipping.", MessageType.Warning);
+                continue;
+            }
+
+            var installedModulePath = Path.Combine(installedModulesPath, moduleInfo.Name);
+            var installedModuleInfo = await GetInstalledModuleInfoAsync(installedModulePath);
+
+            if (installedModuleInfo == null)
+            {
+                await Notify($"Module {moduleInfo.Name} is not installed. Installing...", MessageType.Information);
+                await InstallModuleAsync(zipFile, installedModulesPath);
+                continue;
+            }
+
+            if (force || new Version(moduleInfo.Version) > new Version(installedModuleInfo.Version))
+            {
+                await Notify($"Updating module {moduleInfo.Name}...", MessageType.Information);
+                await InstallModuleAsync(zipFile, installedModulesPath);
+            }
+            else
+            {
+                await Notify($"Module {moduleInfo.Name} is up-to-date. Skipping update.", MessageType.Information);
+            }
+        }
+    }
+
+    private async Task InstallModuleAsync(string zipFilePath, string modulesFolderPath)
+    {
+        try
+        {
+            var moduleName = Path.GetFileNameWithoutExtension(zipFilePath);
+            var moduleTargetPath = Path.Combine(modulesFolderPath, moduleName);
+
+            if (Directory.Exists(moduleTargetPath))
+            {
+                Directory.Delete(moduleTargetPath, true);
+            }
+
+            ZipFile.ExtractToDirectory(zipFilePath, moduleTargetPath);
+
+            await Notify($"Module {moduleName} installed successfully.", MessageType.Information);
+        }
+        catch (Exception ex)
+        {
+            await Notify($"Failed to install module from {zipFilePath}: {ex.Message}", MessageType.Error);
         }
     }
 }

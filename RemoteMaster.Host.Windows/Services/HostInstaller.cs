@@ -5,11 +5,13 @@
 using System.IO.Abstractions;
 using System.IO.Compression;
 using System.Security.Cryptography;
-using Windows.Win32.Foundation;
+using System.Text.Json;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Abstractions;
 using Serilog;
+using Windows.Win32.Foundation;
 
 namespace RemoteMaster.Host.Windows.Services;
 
@@ -54,7 +56,7 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
 
                 foreach (var zipFile in zipFiles)
                 {
-                    InstallModuleAsync(zipFile, modulesFolderPath);
+                    await InstallOrUpdateModuleAsync(zipFile, modulesFolderPath);
                 }
 
                 if (isNetworkPath)
@@ -107,13 +109,28 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
         }
     }
 
-    private void InstallModuleAsync(string zipFilePath, string modulesFolderPath)
+    private async Task InstallOrUpdateModuleAsync(string zipFilePath, string modulesFolderPath)
     {
         try
         {
-            var moduleName = Path.GetFileNameWithoutExtension(zipFilePath);
+            var moduleInfo = await GetModuleInfoFromZipAsync(zipFilePath);
 
-            var moduleTargetPath = Path.Combine(modulesFolderPath, moduleName);
+            if (moduleInfo == null)
+            {
+                Log.Error("No module info found in zip file: {ZipFilePath}", zipFilePath);
+
+                return;
+            }
+
+            var moduleTargetPath = Path.Combine(modulesFolderPath, moduleInfo.Name);
+            var installedModuleInfo = await GetInstalledModuleInfoAsync(moduleTargetPath);
+
+            if (installedModuleInfo != null && new Version(moduleInfo.Version) <= new Version(installedModuleInfo.Version))
+            {
+                Log.Information("Module {ModuleName} is already up-to-date. Skipping.", moduleInfo.Name);
+
+                return;
+            }
 
             if (Directory.Exists(moduleTargetPath))
             {
@@ -121,18 +138,17 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
             }
 
             ZipFile.ExtractToDirectory(zipFilePath, moduleTargetPath);
+            Log.Information("Module {ModuleName} extracted to {TargetPath}", moduleInfo.Name, moduleTargetPath);
 
-            Log.Information("Module {ModuleName} extracted to {TargetPath}", moduleName, moduleTargetPath);
-
-            var exeFileName = $"RemoteMaster.{moduleName}.exe";
+            var exeFileName = $"RemoteMaster.{moduleInfo.Name}.exe";
             var exeFilePath = Path.Combine(moduleTargetPath, exeFileName);
 
             if (!fileSystem.File.Exists(exeFilePath))
             {
-                throw new InvalidOperationException($"Module {moduleName} does not contain the required executable file: {exeFileName}");
+                throw new InvalidOperationException($"Module {moduleInfo.Name} does not contain the required executable file: {exeFileName}");
             }
 
-            Log.Information("Module {ModuleName} installed successfully with executable {Executable}.", moduleName, exeFileName);
+            Log.Information("Module {ModuleName} installed successfully with executable {Executable}.", moduleInfo.Name, exeFileName);
         }
         catch (Exception ex)
         {
@@ -321,5 +337,43 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
         var hash = sha256.ComputeHash(stream);
 
         return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+    }
+
+    private static async Task<ModuleInfo?> GetModuleInfoFromZipAsync(string zipFilePath)
+    {
+        try
+        {
+            using var zipArchive = ZipFile.OpenRead(zipFilePath);
+            var entry = zipArchive.GetEntry("module-info.json");
+
+            if (entry == null)
+            {
+                return null;
+            }
+
+            await using var stream = entry.Open();
+
+            return await JsonSerializer.DeserializeAsync<ModuleInfo>(stream);
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Error reading module info from {ZipFilePath}: {ErrorMessage}", zipFilePath, ex.Message);
+
+            return null;
+        }
+    }
+
+    private static async Task<ModuleInfo?> GetInstalledModuleInfoAsync(string installedModulePath)
+    {
+        var moduleInfoPath = Path.Combine(installedModulePath, "module-info.json");
+
+        if (!File.Exists(moduleInfoPath))
+        {
+            return null;
+        }
+
+        var json = await File.ReadAllTextAsync(moduleInfoPath);
+
+        return JsonSerializer.Deserialize<ModuleInfo>(json);
     }
 }
