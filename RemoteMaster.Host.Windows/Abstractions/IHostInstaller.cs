@@ -5,6 +5,6 @@
 namespace RemoteMaster.Host.Windows.Abstractions;
 
 public interface IHostInstaller
-{
-    Task InstallAsync();
+{ 
+    Task InstallAsync(string? modulesPath, string? username, string? password);
 }

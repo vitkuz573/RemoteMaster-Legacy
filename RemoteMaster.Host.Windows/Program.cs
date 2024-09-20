@@ -71,10 +71,6 @@ internal class Program
 
         switch (launchModeInstance)
         {
-            case InstallMode:
-                var hostInstaller = app.Services.GetRequiredService<IHostInstaller>();
-                await hostInstaller.InstallAsync();
-                return;
             case UninstallMode:
                 var hostUninstaller = app.Services.GetRequiredService<IHostUninstaller>();
                 await hostUninstaller.UninstallAsync();
@@ -268,6 +264,9 @@ internal class Program
                 services.AddHostedService<HostRegistrationMonitorService>();
                 services.AddHostedService<MessageLoopService>();
                 services.AddHostedService<CommandListenerService>();
+                break;
+            case InstallMode:
+                services.AddHostedService<InstallerBackground>();
                 break;
             case UpdaterMode:
                 services.AddHostedService<UpdaterBackground>();

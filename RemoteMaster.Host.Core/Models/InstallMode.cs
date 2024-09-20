@@ -14,5 +14,8 @@ public class InstallMode : LaunchModeBase
 
     protected override void InitializeParameters()
     {
+        Parameters.Add("modules-path", new LaunchParameter("Specifies the folder path where the program's modules will be installed.", false));
+        Parameters.Add("username", new LaunchParameter("Specifies the username for authentication.", false));
+        Parameters.Add("password", new LaunchParameter("Specifies the password for authentication.", false));
     }
 }
