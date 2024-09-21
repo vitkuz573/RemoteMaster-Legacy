@@ -315,27 +315,23 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
         return true;
     }
 
-    private static bool VerifyChecksum(string sourceFilePath, string destFilePath, bool expectDifference = false)
+    private static bool VerifyChecksum(string sourceFilePath, string destFilePath)
     {
         var sourceChecksum = GenerateChecksum(sourceFilePath);
         var destChecksum = GenerateChecksum(destFilePath);
 
-        var checksumMatch = sourceChecksum == destChecksum;
-
         Log.Information($"Verifying checksum: {sourceFilePath} [Source Checksum: {sourceChecksum}] -> {destFilePath} [Destination Checksum: {destChecksum}].");
 
-        switch (expectDifference)
+        if (sourceChecksum != destChecksum)
         {
-            case true when !checksumMatch:
-                Log.Information("Checksums do not match as expected for an update. An update is needed.");
-                return false;
-            case false when !checksumMatch:
-                Log.Error("Unexpected checksum mismatch. The files may have been tampered with or corrupted.");
-                return false;
-            default:
-                Log.Information("Checksum verification successful. No differences found.");
-                return true;
+            Log.Error("Checksum mismatch. The files may have been tampered with or corrupted.");
+
+            return false;
         }
+
+        Log.Information("Checksum verification successful. No differences found.");
+
+        return true;
     }
 
     private static string GenerateChecksum(string filePath)
