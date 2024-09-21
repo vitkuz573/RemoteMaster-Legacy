@@ -362,22 +362,14 @@ public class HostLifecycleService(ICertificateRequestService certificateRequestS
         Log.Information("Finished removing existing certificates.");
     }
 
-    public async Task<AddressDto> GetOrganizationAddressAsync(HostConfiguration hostConfiguration)
+    public async Task<AddressDto> GetOrganizationAddressAsync(string organization)
     {
-        ArgumentNullException.ThrowIfNull(hostConfiguration);
-
         try
         {
-            Log.Information("Requesting organization address for organization: {Organization}", hostConfiguration.Subject.Organization);
+            Log.Information("Requesting organization address for organization: {Organization}", organization);
 
-            var organizationAddress = await apiService.GetOrganizationAddressAsync(hostConfiguration.Subject.Organization);
-
-            if (organizationAddress == null)
-            {
-                throw new InvalidOperationException($"Failed to retrieve address for organization: {hostConfiguration.Subject.Organization}");
-            }
-
-            Log.Information("Successfully retrieved address for organization: {Organization}", hostConfiguration.Subject.Organization);
+            var organizationAddress = await apiService.GetOrganizationAddressAsync(organization) ?? throw new InvalidOperationException($"Failed to retrieve address for organization: {organization}");
+            Log.Information("Successfully retrieved address for organization: {Organization}", organization);
 
             return organizationAddress;
         }

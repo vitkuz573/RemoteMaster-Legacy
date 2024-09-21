@@ -108,17 +108,6 @@ public partial class Home
     private void ToggleDrawer() => DrawerOpen = !DrawerOpen;
 
     [Authorize(Roles = "Administrator")]
-    private async Task OpenHostConfig()
-    {
-        var dialogOptions = new DialogOptions
-        {
-            CloseOnEscapeKey = true
-        };
-
-        await DialogService.ShowAsync<HostConfigurationGenerator>("Host Configuration Generator", dialogOptions);
-    }
-
-    [Authorize(Roles = "Administrator")]
     private void OpenCertificateRenewTasks() => NavigationManager.NavigateTo("/certificates/tasks");
 
 

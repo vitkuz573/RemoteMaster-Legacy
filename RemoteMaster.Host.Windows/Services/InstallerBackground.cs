@@ -18,13 +18,17 @@ public class InstallerBackground(IConfiguration configuration, IHostApplicationL
 
         async void Callback()
         {
+            var server = configuration["server"];
+            var organization = configuration["organization"];
+            var organizationalUnit = configuration["organizational-unit"];
+
             var modulesPath = configuration["modules-path"];
             var username = configuration["username"];
             var password = configuration["password"];
 
             await Task.Delay(2000, cancellationToken);
 
-            await hostInstaller.InstallAsync(modulesPath, username, password);
+            await hostInstaller.InstallAsync(server, organization, organizationalUnit, modulesPath, username, password);
 
             Environment.Exit(0);
         }

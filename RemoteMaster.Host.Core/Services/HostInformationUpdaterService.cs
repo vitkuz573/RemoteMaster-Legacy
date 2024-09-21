@@ -21,7 +21,7 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
 
         try
         {
-            hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
+            hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
         }
         catch (Exception ex) when (ex is FileNotFoundException or InvalidDataException)
         {

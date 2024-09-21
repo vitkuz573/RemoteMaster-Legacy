@@ -22,7 +22,7 @@ public class PsExecService(IHostConfigurationService hostConfigurationService, I
 
     public async Task EnableAsync()
     {
-        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
+        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
         var ipv4Addrs = await ResolveRemoteAddrsAsync(hostConfiguration.Server);
 
         await commandExecutor.ExecuteCommandAsync("winrm qc -force");

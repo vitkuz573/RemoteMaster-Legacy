@@ -10,6 +10,8 @@ using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Shared.Abstractions;
+using RemoteMaster.Shared.DTOs;
+using RemoteMaster.Shared.Models;
 using Serilog;
 using Windows.Win32.Foundation;
 
@@ -19,7 +21,7 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
 {
     private readonly string _applicationDirectory = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
 
-    public async Task InstallAsync(string? modulesPath, string? username, string? password)
+    public async Task InstallAsync(string server, string organization, string organizationalUnit, string? modulesPath, string? username, string? password)
     {
         try
         {
@@ -66,14 +68,11 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
             }
 
             var hostInformation = hostInformationService.GetHostInformation();
-            var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
 
             Log.Information("Starting installation...");
-            Log.Information("Server: {Server}", hostConfiguration.Server);
+            Log.Information("Server: {Server}", server);
             Log.Information("Host Name: {HostName}, IP Address: {IPAddress}, MAC Address: {MacAddress}", hostInformation.Name, hostInformation.IpAddress, hostInformation.MacAddress);
-
-            var organizationalUnits = string.Join(", ", hostConfiguration.Subject.OrganizationalUnit.Select(ou => $"OU={ou}"));
-            Log.Information("Distinguished Name: CN={CommonName}, O={Organization}, {OrganizationalUnits}", hostInformation.Name, hostConfiguration.Subject.Organization, organizationalUnits);
+            Log.Information("Distinguished Name: CN={CommonName}, O={Organization}, OU={OrganizationalUnit}", hostInformation.Name, organization, organizationalUnit);
 
             var hostService = serviceFactory.GetService("RCHost");
 
@@ -88,7 +87,16 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
                 hostService.Create();
             }
 
-            hostConfiguration.Host = hostInformation;
+            var hostConfiguration = new HostConfiguration
+            {
+                Server = server,
+                Subject = new SubjectDto
+                {
+                    Organization = organization,
+                    OrganizationalUnit = [organizationalUnit]
+                },
+                Host = hostInformation
+            };
 
             await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
 
@@ -97,7 +105,7 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
             await hostLifecycleService.RegisterAsync();
             await hostLifecycleService.GetCaCertificateAsync();
 
-            var organizationAddress = await hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration);
+            var organizationAddress = await hostLifecycleService.GetOrganizationAddressAsync(organization);
 
             await hostLifecycleService.IssueCertificateAsync(hostConfiguration, organizationAddress);
 

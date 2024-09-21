@@ -77,7 +77,7 @@ public class CommandListenerService : IHostedService
 
             Log.Debug("Creating HubConnection.");
 
-            var hostConfiguration = await _hostConfigurationService.LoadConfigurationAsync(false);
+            var hostConfiguration = await _hostConfigurationService.LoadConfigurationAsync();
 
             _connection = new HubConnectionBuilder()
                 .WithUrl($"https://{hostConfiguration.Host.IpAddress}:5001/hubs/control", options =>

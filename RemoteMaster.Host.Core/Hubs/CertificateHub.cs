@@ -17,9 +17,9 @@ public class CertificateHub(IHostConfigurationService hostConfigurationService, 
     [Authorize(Policy = "RenewCertificatePolicy")]
     public async Task RenewCertificate()
     {
-        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
+        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
 
-        var organizationAddress = await hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration);
+        var organizationAddress = await hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration.Subject.Organization);
         await hostLifecycleService.IssueCertificateAsync(hostConfiguration, organizationAddress);
     }
 

@@ -23,7 +23,7 @@ public class LocalhostOrAuthenticatedHandler : AuthorizationHandler<LocalhostOrA
 
         _httpContextAccessor = httpContextAccessor;
 
-        var hostConfiguration = hostConfigurationService.LoadConfigurationAsync(false).GetAwaiter().GetResult();
+        var hostConfiguration = hostConfigurationService.LoadConfigurationAsync().GetAwaiter().GetResult();
         _hostIpAddress = IPAddress.Parse(hostConfiguration.Host.IpAddress);
     }
 

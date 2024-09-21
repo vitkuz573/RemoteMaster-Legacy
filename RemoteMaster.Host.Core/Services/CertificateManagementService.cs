@@ -13,11 +13,11 @@ public class CertificateManagementService(IHostConfigurationService hostConfigur
 {
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
+        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
 
         if (!IsCertificateValid())
         {
-            var organizationAddress = await hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration);
+            var organizationAddress = await hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration.Subject.Organization);
 
             await hostLifecycleService.IssueCertificateAsync(hostConfiguration, organizationAddress);
         }

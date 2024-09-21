@@ -308,12 +308,12 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     {
         ArgumentNullException.ThrowIfNull(hostMoveRequest);
 
-        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
+        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
 
         hostConfiguration.Subject.Organization = hostMoveRequest.NewOrganization;
         hostConfiguration.Subject.OrganizationalUnit = hostMoveRequest.NewOrganizationalUnit;
 
-        var organizationAddress = await hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration);
+        var organizationAddress = await hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration.Subject.Organization);
 
         await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
         await hostLifecycleService.IssueCertificateAsync(hostConfiguration, organizationAddress);

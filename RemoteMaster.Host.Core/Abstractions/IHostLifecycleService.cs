@@ -23,5 +23,5 @@ public interface IHostLifecycleService
 
     Task GetCaCertificateAsync();
 
-    Task<AddressDto> GetOrganizationAddressAsync(HostConfiguration hostConfiguration);
+    Task<AddressDto> GetOrganizationAddressAsync(string organization);
 }

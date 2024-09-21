@@ -41,7 +41,7 @@ public class HostRegistrationMonitorService : IHostedService
         try
         {
             var configurationChanged = await _hostInformationMonitorService.UpdateHostConfigurationAsync();
-            var hostConfiguration = await _hostConfigurationService.LoadConfigurationAsync(false);
+            var hostConfiguration = await _hostConfigurationService.LoadConfigurationAsync();
             var isHostRegistered = await _hostLifecycleService.IsHostRegisteredAsync();
 
             var isSyncRequired = IsSyncRequired();
@@ -63,7 +63,7 @@ public class HostRegistrationMonitorService : IHostedService
                         await _hostLifecycleService.RegisterAsync();
                     }
 
-                    var organizationAddress = await _hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration);
+                    var organizationAddress = await _hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration.Subject.Organization);
 
                     await _hostLifecycleService.IssueCertificateAsync(hostConfiguration, organizationAddress);
 
@@ -84,7 +84,7 @@ public class HostRegistrationMonitorService : IHostedService
 
                 await _hostLifecycleService.RegisterAsync();
 
-                var organizationAddress = await _hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration);
+                var organizationAddress = await _hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration.Subject.Organization);
 
                 await _hostLifecycleService.IssueCertificateAsync(hostConfiguration, organizationAddress);
                 await RestartUserInstance();

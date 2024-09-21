@@ -13,9 +13,9 @@ public class HostConfigurationService : IHostConfigurationService
 {
     private readonly string _configurationFileName = $"{AppDomain.CurrentDomain.FriendlyName}.json";
 
-    public async Task<HostConfiguration> LoadConfigurationAsync(bool isInternal = true)
+    public async Task<HostConfiguration> LoadConfigurationAsync()
     {
-        var configFilePath = isInternal ? _configurationFileName : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", _configurationFileName);
+        var configFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", _configurationFileName);
 
         if (!File.Exists(configFilePath))
         {
@@ -25,34 +25,26 @@ public class HostConfigurationService : IHostConfigurationService
         var hostConfigurationJson = await File.ReadAllTextAsync(configFilePath);
         var hostConfiguration = JsonSerializer.Deserialize<HostConfiguration>(hostConfigurationJson);
 
-        ValidateConfiguration(hostConfiguration, isInternal);
+        ValidateConfiguration(hostConfiguration);
 
         return hostConfiguration ?? throw new InvalidDataException($"Invalid configuration in file '{configFilePath}'.");
     }
 
-    private static void ValidateConfiguration(HostConfiguration? config, bool isInternal)
+    private static void ValidateConfiguration(HostConfiguration configuration)
     {
-        if (config == null)
-        {
-            throw new InvalidDataException("Configuration is null.");
-        }
-
-        if (string.IsNullOrWhiteSpace(config.Server))
+        if (string.IsNullOrWhiteSpace(configuration.Server))
         {
             throw new ValidationException("Server must not be empty.");
         }
 
-        if (config.Subject == null || string.IsNullOrWhiteSpace(config.Subject.Organization) || config.Subject.OrganizationalUnit == null || config.Subject.OrganizationalUnit.Length == 0 || config.Subject.OrganizationalUnit.Any(string.IsNullOrWhiteSpace))
+        if (configuration.Subject == null || string.IsNullOrWhiteSpace(configuration.Subject.Organization) || configuration.Subject.OrganizationalUnit == null || configuration.Subject.OrganizationalUnit.Length == 0 || configuration.Subject.OrganizationalUnit.Any(string.IsNullOrWhiteSpace))
         {
             throw new ValidationException("Subject options must include a valid organization and organizational unit.");
         }
 
-        switch (isInternal)
+        if (configuration.Host == null || string.IsNullOrWhiteSpace(configuration.Host.Name) || string.IsNullOrWhiteSpace(configuration.Host.IpAddress) || string.IsNullOrWhiteSpace(configuration.Host.MacAddress))
         {
-            case true when config.Host != null:
-                throw new ValidationException("For internal configurations, Host must be null.");
-            case false when (config.Host == null || string.IsNullOrWhiteSpace(config.Host.IpAddress) || string.IsNullOrWhiteSpace(config.Host.MacAddress)):
-                throw new ValidationException("For external configurations, Host must have a valid IP and MAC address.");
+            throw new ValidationException("Host must have a valid Name, IP and MAC address.");
         }
     }
 

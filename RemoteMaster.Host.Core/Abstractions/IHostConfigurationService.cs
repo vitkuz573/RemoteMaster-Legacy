@@ -8,7 +8,7 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface IHostConfigurationService
 {
-    Task<HostConfiguration> LoadConfigurationAsync(bool isInternal = true);
+    Task<HostConfiguration> LoadConfigurationAsync();
 
     Task SaveConfigurationAsync(HostConfiguration hostConfiguration);
 }

@@ -57,23 +57,11 @@ public static class WebApplicationBuilderExtensions
         });
     }
 
-    public static async Task ConfigureSerilog(this WebApplicationBuilder builder)
+    public static async Task ConfigureSerilog(this WebApplicationBuilder builder, string server)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
         var serviceProvider = builder.Services.BuildServiceProvider();
-        var hostConfigurationService = serviceProvider.GetRequiredService<IHostConfigurationService>();
-
-        HostConfiguration hostConfiguration;
-
-        try
-        {
-            hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
-        }
-        catch (InvalidDataException ex) when (ex.Message.Contains("does not exist"))
-        {
-            hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
-        }
 
         var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
         var fileLog = Path.Combine(programDataPath, "RemoteMaster", "Host", "RemoteMaster_Host.log");
@@ -93,7 +81,7 @@ public static class WebApplicationBuilderExtensions
             configuration.MinimumLevel.Override("Microsoft.AspNetCore.Http.Connections", LogEventLevel.Warning);
 #endif
             configuration.WriteTo.Console();
-            configuration.WriteTo.Seq($"http://{hostConfiguration.Server}:5341");
+            configuration.WriteTo.Seq($"http://{server}:5341");
             configuration.WriteTo.File(fileLog, rollingInterval: RollingInterval.Day);
             configuration.Filter.ByExcluding(logEvent => logEvent.MessageTemplate.Text.Contains("Successfully switched to input desktop"));
         });

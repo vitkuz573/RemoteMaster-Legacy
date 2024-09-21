@@ -21,7 +21,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
     {
         if (_client.BaseAddress == null)
         {
-            var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
+            var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
 
             if (hostConfiguration == null || string.IsNullOrEmpty(hostConfiguration.Server))
             {
@@ -131,7 +131,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
     {
         await EnsureClientInitializedAsync();
 
-        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
+        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
 
         var response = await _client.PostAsJsonAsync("/api/Host/register", hostConfiguration);
 
@@ -142,7 +142,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
     {
         await EnsureClientInitializedAsync();
 
-        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
+        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
 
         var request = new HostUnregisterRequest
         {
@@ -164,7 +164,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
     {
         await EnsureClientInitializedAsync();
 
-        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
+        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
 
         var request = new HostUpdateRequest
         {
@@ -184,7 +184,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
     {
         await EnsureClientInitializedAsync();
 
-        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync(false);
+        var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
 
         var response = await _client.GetAsync($"/api/Host/status?macAddress={hostConfiguration.Host.MacAddress}");
 
