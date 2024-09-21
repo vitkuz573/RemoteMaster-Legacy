@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Models;
-using RemoteMaster.Shared.Models;
 using Serilog;
 using Serilog.Events;
 
@@ -57,28 +56,47 @@ public static class WebApplicationBuilderExtensions
         });
     }
 
-    public static async Task ConfigureSerilog(this WebApplicationBuilder builder, string server)
+    public static async Task ConfigureSerilog(this WebApplicationBuilder builder, LaunchModeBase launchModeInstance)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
         var serviceProvider = builder.Services.BuildServiceProvider();
-
+        
         var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
         var fileLog = Path.Combine(programDataPath, "RemoteMaster", "Host", "RemoteMaster_Host.log");
+
+        string server;
+
+        if (launchModeInstance is InstallMode)
+        {
+            server = builder.Configuration["server"];
+        }
+        else
+        {
+            var hostConfigurationService = serviceProvider.GetRequiredService<IHostConfigurationService>();
+            var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
+            server = hostConfiguration.Server;
+
+            if (string.IsNullOrEmpty(server))
+            {
+                throw new InvalidOperationException("Server address must be provided in host configuration.");
+            }
+        }
 
         builder.Host.UseSerilog((_, configuration) =>
         {
             configuration.Enrich.With(serviceProvider.GetRequiredService<HostInfoEnricher>());
-#if DEBUG
-        configuration.MinimumLevel.Debug();
-#else
-            configuration.MinimumLevel.Information();
 
-            configuration.MinimumLevel.Override("Microsoft", LogEventLevel.Warning);
-            configuration.MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning);
-            configuration.MinimumLevel.Override("System.Net.Http.HttpClient", LogEventLevel.Warning);
-            configuration.MinimumLevel.Override("Microsoft.AspNetCore.SignalR", LogEventLevel.Warning);
-            configuration.MinimumLevel.Override("Microsoft.AspNetCore.Http.Connections", LogEventLevel.Warning);
+#if DEBUG
+            configuration.MinimumLevel.Debug();
+#else
+        configuration.MinimumLevel.Information();
+        
+        configuration.MinimumLevel.Override("Microsoft", LogEventLevel.Warning);
+        configuration.MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning);
+        configuration.MinimumLevel.Override("System.Net.Http.HttpClient", LogEventLevel.Warning);
+        configuration.MinimumLevel.Override("Microsoft.AspNetCore.SignalR", LogEventLevel.Warning);
+        configuration.MinimumLevel.Override("Microsoft.AspNetCore.Http.Connections", LogEventLevel.Warning);
 #endif
             configuration.WriteTo.Console();
             configuration.WriteTo.Seq($"http://{server}:5341");

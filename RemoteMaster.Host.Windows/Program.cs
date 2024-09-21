@@ -59,9 +59,7 @@ internal class Program
 
         ConfigureServices(builder.Services, launchModeInstance);
 
-        var serverAddress = builder.Configuration["server"];
-
-        await builder.ConfigureSerilog(serverAddress);
+        await builder.ConfigureSerilog(launchModeInstance);
 
         builder.ConfigureCoreUrls(launchModeInstance);
 
