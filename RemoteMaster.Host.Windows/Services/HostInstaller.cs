@@ -117,7 +117,7 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
         }
     }
 
-    private async Task InstallOrUpdateModuleAsync(string zipFilePath, string modulesFolderPath)
+    private static async Task InstallOrUpdateModuleAsync(string zipFilePath, string modulesFolderPath)
     {
         try
         {
@@ -128,6 +128,18 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
                 Log.Error("No module info found in zip file: {ZipFilePath}", zipFilePath);
                 
                 return;
+            }
+
+            using (var zipArchive = ZipFile.OpenRead(zipFilePath))
+            {
+                var entryPoint = zipArchive.GetEntry(moduleInfo.EntryPoint);
+
+                if (entryPoint == null)
+                {
+                    Log.Error("Module {ModuleName} does not contain the required entry point: {EntryPoint}", moduleInfo.Name, moduleInfo.EntryPoint);
+                    
+                    return;
+                }
             }
 
             var moduleTargetPath = Path.Combine(modulesFolderPath, moduleInfo.Name);
@@ -146,17 +158,9 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
             }
 
             ZipFile.ExtractToDirectory(zipFilePath, moduleTargetPath);
+            
             Log.Information("Module {ModuleName} extracted to {TargetPath}", moduleInfo.Name, moduleTargetPath);
-
-            var exeFileName = moduleInfo.EntryPoint;
-            var exeFilePath = Path.Combine(moduleTargetPath, exeFileName);
-
-            if (!fileSystem.File.Exists(exeFilePath))
-            {
-                throw new InvalidOperationException($"Module {moduleInfo.Name} does not contain the required executable file: {exeFileName}");
-            }
-
-            Log.Information("Module {ModuleName} installed successfully with entry point {Executable}.", moduleInfo.Name, exeFileName);
+            Log.Information("Module {ModuleName} installed successfully with entry point {Executable}.", moduleInfo.Name, moduleInfo.EntryPoint);
         }
         catch (Exception ex)
         {
