@@ -28,7 +28,7 @@ public class LocalhostOrAuthenticatedHandlerTests
 
         Mock<IHostConfigurationService> hostConfigurationServiceMock = new();
         hostConfigurationServiceMock
-            .Setup(h => h.LoadConfigurationAsync(It.IsAny<bool>()))
+            .Setup(h => h.LoadConfigurationAsync())
             .ReturnsAsync(new HostConfiguration
             {
                 Host = new ComputerDto("TestComputer", "192.168.1.1", "00-14-22-01-23-45")

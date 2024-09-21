@@ -314,8 +314,8 @@ public class ControlHubTests
 
         var organizationAddress = new AddressDto("TestLocality", "TestState", "US");
 
-        _mockHostConfigurationService.Setup(h => h.LoadConfigurationAsync(It.IsAny<bool>())).ReturnsAsync(hostConfiguration);
-        _mockHostLifecycleService.Setup(h => h.GetOrganizationAddressAsync(It.IsAny<HostConfiguration>())).ReturnsAsync(organizationAddress);
+        _mockHostConfigurationService.Setup(h => h.LoadConfigurationAsync()).ReturnsAsync(hostConfiguration);
+        _mockHostLifecycleService.Setup(h => h.GetOrganizationAddressAsync(It.IsAny<string>())).ReturnsAsync(organizationAddress);
 
         // Act
         await _controlHub.MoveHost(hostMoveRequest);
