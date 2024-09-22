@@ -19,8 +19,25 @@ public class InstallerBackground(IConfiguration configuration, IHostApplicationL
         async void Callback()
         {
             var server = configuration["server"];
+
+            if (server == null)
+            {
+                throw new ArgumentNullException(server, "Configuration 'server' cannot be null or empty");
+            }
+
             var organization = configuration["organization"];
+
+            if (organization == null)
+            {
+                throw new ArgumentNullException(organization, "Configuration 'organization' cannot be null or empty");
+            }
+
             var organizationalUnit = configuration["organizational-unit"];
+
+            if (organizationalUnit == null)
+            {
+                throw new ArgumentNullException(organizationalUnit, "Configuration 'organizational-unit' cannot be null or empty");
+            }
 
             var modulesPath = configuration["modules-path"];
             var username = configuration["username"];

@@ -125,13 +125,7 @@ public partial class MoveDialog
                 return;
             }
 
-            var newParentUnit = targetOrganization.OrganizationalUnits.FirstOrDefault(u => u.Id == _selectedOrganizationalUnitId.Value);
-
-            if (newParentUnit == null)
-            {
-                throw new InvalidOperationException("New parent Organizational Unit not found.");
-            }
-
+            var newParentUnit = targetOrganization.OrganizationalUnits.FirstOrDefault(u => u.Id == _selectedOrganizationalUnitId.Value) ?? throw new InvalidOperationException("New parent Organizational Unit not found.");
             var targetOrganizationalUnitsPath = await OrganizationalUnitService.GetFullPathAsync(newParentUnit.Id);
 
             if (targetOrganizationalUnitsPath.Length == 0)

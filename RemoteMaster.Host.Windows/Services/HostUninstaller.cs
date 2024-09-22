@@ -65,6 +65,7 @@ public class HostUninstaller(IServiceFactory serviceFactory, IUserInstanceServic
         if (!fileSystem.Directory.Exists(directoryPath))
         {
             Log.Information("Directory {DirectoryPath} does not exist, no files to delete.", directoryPath);
+
             return;
         }
 
