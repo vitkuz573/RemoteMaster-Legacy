@@ -25,77 +25,67 @@ public class AddressTests
         Assert.Equal(country, address.Country);
     }
 
-    [Fact]
-    public void Address_ThrowsArgumentNullException_WhenLocalityIsNull()
+    [Theory]
+    [InlineData(null, "NY", "US")]
+    [InlineData("New York", null, "US")]
+    [InlineData("New York", "NY", null)]
+    public void Address_ThrowsArgumentNullException_WhenAnyArgumentIsNull(string locality, string state, string countryCode)
     {
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new Address(null!, "NY", new CountryCode("US")));
+        // Arrange & Act & Assert
+        Assert.Throws<ArgumentNullException>(() => new Address(locality!, state!, countryCode != null ? new CountryCode(countryCode) : null!));
     }
 
-    [Fact]
-    public void Address_ThrowsArgumentNullException_WhenStateIsNull()
-    {
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new Address("New York", null!, new CountryCode("US")));
-    }
-
-    [Fact]
-    public void Address_ThrowsArgumentNullException_WhenCountryIsNull()
-    {
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new Address("New York", "NY", null!));
-    }
-
-    [Fact]
-    public void Address_Equals_ReturnsTrueForEqualAddresses()
+    [Theory]
+    [InlineData("New York", "NY", "US", "New York", "NY", "US", true)]
+    [InlineData("New York", "NY", "US", "Los Angeles", "CA", "US", false)]
+    public void Address_Equals_ReturnsExpectedResult(string locality1, string state1, string countryCode1, string locality2, string state2, string countryCode2, bool expected)
     {
         // Arrange
-        var address1 = new Address("New York", "NY", new CountryCode("US"));
-        var address2 = new Address("New York", "NY", new CountryCode("US"));
+        var address1 = new Address(locality1, state1, new CountryCode(countryCode1));
+        var address2 = new Address(locality2, state2, new CountryCode(countryCode2));
 
-        // Act & Assert
-        Assert.True(address1.Equals(address2));
+        // Act
+        var result = address1.Equals(address2);
+
+        // Assert
+        Assert.Equal(expected, result);
     }
 
-    [Fact]
-    public void Address_Equals_ReturnsFalseForDifferentAddresses()
+    [Theory]
+    [InlineData("New York", "NY", "US", "New York", "NY", "US", true)]
+    [InlineData("New York", "NY", "US", "Los Angeles", "CA", "US", false)]
+    public void Address_GetHashCode_ReturnsExpectedResult(string locality1, string state1, string countryCode1, string locality2, string state2, string countryCode2, bool expected)
     {
         // Arrange
-        var address1 = new Address("New York", "NY", new CountryCode("US"));
-        var address2 = new Address("Los Angeles", "CA", new CountryCode("US"));
+        var address1 = new Address(locality1, state1, new CountryCode(countryCode1));
+        var address2 = new Address(locality2, state2, new CountryCode(countryCode2));
 
-        // Act & Assert
-        Assert.False(address1.Equals(address2));
+        // Act
+        var hashCodesEqual = address1.GetHashCode() == address2.GetHashCode();
+
+        // Assert
+        Assert.Equal(expected, hashCodesEqual);
     }
 
-    [Fact]
-    public void Address_GetHashCode_ReturnsSameHashCodeForEqualAddresses()
-    {
-        // Arrange
-        var address1 = new Address("New York", "NY", new CountryCode("US"));
-        var address2 = new Address("New York", "NY", new CountryCode("US"));
-
-        // Act & Assert
-        Assert.Equal(address1.GetHashCode(), address2.GetHashCode());
-    }
-
-    [Fact]
-    public void Address_IsImmutable()
+    [Theory]
+    [InlineData(nameof(Address.Locality), "Los Angeles")]
+    [InlineData(nameof(Address.State), "CA")]
+    [InlineData(nameof(Address.Country), "CA")]
+    public void Address_IsImmutable(string propertyName, object newValue)
     {
         // Arrange
         var address = new Address("New York", "NY", new CountryCode("US"));
 
-        // Act & Assert
-        var localityProperty = address.GetType().GetProperty(nameof(Address.Locality));
-        var stateProperty = address.GetType().GetProperty(nameof(Address.State));
-        var countryProperty = address.GetType().GetProperty(nameof(Address.Country));
+        if (propertyName == nameof(Address.Country))
+        {
+            newValue = new CountryCode((string)newValue);
+        }
 
-        Assert.NotNull(localityProperty);
-        Assert.NotNull(stateProperty);
-        Assert.NotNull(countryProperty);
+        // Act
+        var propertyInfo = address.GetType().GetProperty(propertyName);
 
-        Assert.Throws<ArgumentException>(() => localityProperty!.SetValue(address, "Los Angeles"));
-        Assert.Throws<ArgumentException>(() => stateProperty!.SetValue(address, "CA"));
-        Assert.Throws<ArgumentException>(() => countryProperty!.SetValue(address, new CountryCode("CA")));
+        // Assert
+        Assert.NotNull(propertyInfo);
+        Assert.Throws<ArgumentException>(() => propertyInfo!.SetValue(address, newValue));
     }
 }

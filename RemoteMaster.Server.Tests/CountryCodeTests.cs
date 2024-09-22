@@ -21,46 +21,46 @@ public class CountryCodeTests
         Assert.Equal(code, countryCode.Code);
     }
 
-    [Fact]
-    public void CountryCode_ThrowsArgumentException_WithInvalidCode()
+    [Theory]
+    [InlineData("INVALID")]
+    [InlineData("")]
+    [InlineData(null)]
+    public void CountryCode_ThrowsArgumentException_WithInvalidCode(string invalidCode)
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => new CountryCode("INVALID"));
-        Assert.Throws<ArgumentException>(() => new CountryCode(""));
-        Assert.Throws<ArgumentException>(() => new CountryCode(null!));
+        Assert.Throws<ArgumentException>(() => new CountryCode(invalidCode));
     }
 
-    [Fact]
-    public void CountryCode_Equals_ReturnsTrueForEqualCountryCodes()
+    [Theory]
+    [InlineData("US", "US", true)]
+    [InlineData("US", "CA", false)]
+    public void CountryCode_Equals_ReturnsExpectedResult(string code1, string code2, bool expected)
     {
         // Arrange
-        var countryCode1 = new CountryCode("US");
-        var countryCode2 = new CountryCode("US");
+        var countryCode1 = new CountryCode(code1);
+        var countryCode2 = new CountryCode(code2);
 
-        // Act & Assert
-        Assert.True(countryCode1.Equals(countryCode2));
+        // Act
+        var result = countryCode1.Equals(countryCode2);
+
+        // Assert
+        Assert.Equal(expected, result);
     }
 
-    [Fact]
-    public void CountryCode_Equals_ReturnsFalseForDifferentCountryCodes()
+    [Theory]
+    [InlineData("US", "US", true)]
+    [InlineData("US", "CA", false)]
+    public void CountryCode_GetHashCode_ReturnsExpectedResult(string code1, string code2, bool expected)
     {
         // Arrange
-        var countryCode1 = new CountryCode("US");
-        var countryCode2 = new CountryCode("CA");
+        var countryCode1 = new CountryCode(code1);
+        var countryCode2 = new CountryCode(code2);
 
-        // Act & Assert
-        Assert.False(countryCode1.Equals(countryCode2));
-    }
+        // Act
+        var hashCodesEqual = countryCode1.GetHashCode() == countryCode2.GetHashCode();
 
-    [Fact]
-    public void CountryCode_GetHashCode_ReturnsSameHashCodeForEqualCountryCodes()
-    {
-        // Arrange
-        var countryCode1 = new CountryCode("US");
-        var countryCode2 = new CountryCode("US");
-
-        // Act & Assert
-        Assert.Equal(countryCode1.GetHashCode(), countryCode2.GetHashCode());
+        // Assert
+        Assert.Equal(expected, hashCodesEqual);
     }
 
     [Fact]
