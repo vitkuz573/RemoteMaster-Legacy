@@ -59,7 +59,7 @@ public class TokenService(IOptions<JwtOptions> options, IHttpContextAccessor htt
 
         return refreshTokenResult.IsFailed
             ? Result.Fail<TokenData>(refreshTokenResult.Errors.Select(e => e.Message).ToArray())
-            : Result.Ok(CreateTokenData(accessTokenResult.Value, refreshTokenResult.Value.TokenValue.Token));
+            : Result.Ok(CreateTokenData(accessTokenResult.Value, refreshTokenResult.Value.TokenValue.Value));
     }
 
     private static TokenData CreateTokenData(string accessToken, string refreshToken)
@@ -150,7 +150,7 @@ public class TokenService(IOptions<JwtOptions> options, IHttpContextAccessor htt
 
         foreach (var token in refreshTokens)
         {
-            user.RevokeRefreshToken(token.TokenValue.Token, revocationReason, ipAddress);
+            user.RevokeRefreshToken(token.TokenValue.Value, revocationReason, ipAddress);
         }
 
         await applicationUserRepository.UpdateAsync(user);
@@ -185,7 +185,7 @@ public class TokenService(IOptions<JwtOptions> options, IHttpContextAccessor htt
             {
                 user.RemoveRefreshToken(token);
 
-                Log.Debug($"Removed token: {token.TokenValue.Token}, User ID: {user.Id}, Expired at: {token.TokenValue.Expires}, Revoked at: {token.RevocationInfo?.Revoked}");
+                Log.Debug($"Removed token: {token.TokenValue.Value}, User ID: {user.Id}, Expired at: {token.TokenValue.Expires}, Revoked at: {token.RevocationInfo?.Revoked}");
             }
 
             await applicationUserRepository.UpdateAsync(user);

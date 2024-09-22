@@ -6,11 +6,11 @@ using RemoteMaster.Server.Enums;
 
 namespace RemoteMaster.Server.Aggregates.ApplicationUserAggregate.ValueObjects;
 
-public class TokenRevocationInfo(DateTime? revoked, string? revokedByIp, TokenRevocationReason revocationReason)
+public class TokenRevocationInfo(DateTime? revoked, string? revokedBy, TokenRevocationReason revocationReason)
 {
     public DateTime? Revoked { get; } = revoked;
 
-    public string? RevokedByIp { get; } = revokedByIp;
+    public string? RevokedBy { get; } = revokedBy;
 
     public TokenRevocationReason RevocationReason { get; } = revocationReason;
 

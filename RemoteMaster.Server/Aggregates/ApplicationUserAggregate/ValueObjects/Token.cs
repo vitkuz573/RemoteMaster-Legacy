@@ -4,15 +4,15 @@
 
 namespace RemoteMaster.Server.Aggregates.ApplicationUserAggregate.ValueObjects;
 
-public class TokenValue(string token, DateTime expires, DateTime created, string createdByIp)
+public class Token(string value, DateTime expires, DateTime created, string createdBy)
 {
-    public string Token { get; } = token;
+    public string Value { get; } = value;
 
     public DateTime Expires { get; } = expires;
 
     public DateTime Created { get; } = created;
 
-    public string CreatedByIp { get; } = createdByIp;
+    public string CreatedBy { get; } = createdBy;
 
     public bool IsExpired => DateTime.UtcNow >= Expires;
 }

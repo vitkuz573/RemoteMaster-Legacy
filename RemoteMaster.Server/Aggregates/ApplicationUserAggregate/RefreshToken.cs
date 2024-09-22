@@ -25,14 +25,14 @@ public class RefreshToken
         }
 
         UserId = userId;
-        TokenValue = new TokenValue(token, expires, DateTime.UtcNow, ipAddress);
+        TokenValue = new Token(token, expires, DateTime.UtcNow, ipAddress);
     }
 
     public int Id { get; private set; }
 
     public string UserId { get; private set; }
 
-    public TokenValue TokenValue { get; private set; }
+    public Token TokenValue { get; private set; }
 
     public TokenRevocationInfo? RevocationInfo { get; private set; }
 

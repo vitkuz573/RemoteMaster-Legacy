@@ -27,7 +27,7 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
 
         builder.OwnsOne(rt => rt.TokenValue, tokenValue =>
         {
-            tokenValue.Property(t => t.Token)
+            tokenValue.Property(t => t.Value)
                 .IsRequired()
                 .HasMaxLength(256)
                 .HasColumnName("Token")
@@ -43,7 +43,7 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
                 .HasColumnName("Created")
                 .HasColumnOrder(4);
 
-            tokenValue.Property(t => t.CreatedByIp)
+            tokenValue.Property(t => t.CreatedBy)
                 .IsRequired()
                 .HasMaxLength(45)
                 .HasColumnName("CreatedByIp")
@@ -58,7 +58,7 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
                 .HasColumnName("Revoked")
                 .HasColumnOrder(6);
 
-            revocationInfo.Property(r => r.RevokedByIp)
+            revocationInfo.Property(r => r.RevokedBy)
                 .HasMaxLength(45)
                 .HasColumnName("RevokedByIp")
                 .HasColumnOrder(7);

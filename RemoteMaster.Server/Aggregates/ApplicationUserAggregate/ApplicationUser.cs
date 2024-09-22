@@ -49,14 +49,14 @@ public class ApplicationUser : IdentityUser, IAggregateRoot
 
     public void RevokeRefreshToken(string token, TokenRevocationReason reason, string ipAddress)
     {
-        var refreshToken = _refreshTokens.SingleOrDefault(rt => rt.TokenValue.Token == token);
+        var refreshToken = _refreshTokens.SingleOrDefault(rt => rt.TokenValue.Value == token);
 
         refreshToken.Revoke(reason, ipAddress);
     }
 
     public RefreshToken ReplaceRefreshToken(string token, string ipAddress)
     {
-        var refreshToken = _refreshTokens.SingleOrDefault(rt => rt.TokenValue.Token == token) ?? throw new InvalidOperationException("The specified token does not exist.");
+        var refreshToken = _refreshTokens.SingleOrDefault(rt => rt.TokenValue.Value == token) ?? throw new InvalidOperationException("The specified token does not exist.");
         var newRefreshToken = refreshToken.Replace(ipAddress, RefreshToken.Create);
 
         _refreshTokens.Add(newRefreshToken);
@@ -78,7 +78,7 @@ public class ApplicationUser : IdentityUser, IAggregateRoot
 
     public bool IsRefreshTokenValid(string token)
     {
-        var refreshToken = _refreshTokens.SingleOrDefault(rt => rt.TokenValue.Token == token);
+        var refreshToken = _refreshTokens.SingleOrDefault(rt => rt.TokenValue.Value == token);
 
         return refreshToken?.IsValid() ?? false;
     }
