@@ -22,12 +22,9 @@ using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Core.Requirements;
 using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Host.Windows.Abstractions;
-using RemoteMaster.Host.Windows.Enums;
 using RemoteMaster.Host.Windows.Helpers;
 using RemoteMaster.Host.Windows.Hubs;
 using RemoteMaster.Host.Windows.Services;
-using Serilog;
-using Windows.Win32.NetworkManagement.WindowsFirewall;
 
 namespace RemoteMaster.Host.Windows;
 
@@ -75,43 +72,6 @@ internal class Program
                 var hostUninstaller = app.Services.GetRequiredService<IHostUninstaller>();
                 await hostUninstaller.UninstallAsync();
                 return;
-        }
-
-        try
-        {
-            var secureAttentionSequenceService = app.Services.GetRequiredService<ISecureAttentionSequenceService>();
-
-            if (secureAttentionSequenceService.SasOption != SoftwareSasOption.ServicesAndEaseOfAccessApplications)
-            {
-                secureAttentionSequenceService.SasOption = SoftwareSasOption.ServicesAndEaseOfAccessApplications;
-            }
-        }
-        catch (Exception e)
-        {
-            Log.Error(e.Message);
-        }
-
-        var firewallService = app.Services.GetRequiredService<IFirewallService>();
-
-        var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-        var hostRootPath = Path.Combine(programFilesPath, "RemoteMaster", "Host");
-        var hostApplicationPath = Path.Combine(hostRootPath, "RemoteMaster.Host.exe");
-        var hostUpdaterApplicationPath = Path.Combine(hostRootPath, "Updater", "RemoteMaster.Host.exe");
-
-        firewallService.AddRule("Remote Master Host", NET_FW_ACTION.NET_FW_ACTION_ALLOW, NET_FW_IP_PROTOCOL.NET_FW_IP_PROTOCOL_ANY, NET_FW_PROFILE_TYPE2.NET_FW_PROFILE2_ALL, NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_IN, InterfaceType.All, "Allow all traffic for RemoteMaster Host", hostApplicationPath);
-        firewallService.AddRule("Remote Master Host Updater", NET_FW_ACTION.NET_FW_ACTION_ALLOW, NET_FW_IP_PROTOCOL.NET_FW_IP_PROTOCOL_ANY, NET_FW_PROFILE_TYPE2.NET_FW_PROFILE2_ALL, NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_IN, InterfaceType.All, "Allow all traffic for RemoteMaster Host Updater", hostUpdaterApplicationPath);
-
-        try
-        {
-            var wolConfiguratorService = app.Services.GetRequiredService<IWoLConfiguratorService>();
-
-            wolConfiguratorService.DisableFastStartup();
-            wolConfiguratorService.DisablePnPEnergySaving();
-            await wolConfiguratorService.EnableWakeOnLanForAllAdaptersAsync();
-        }
-        catch (Exception e)
-        {
-            Log.Error(e.Message);
         }
 
         if (!app.Environment.IsDevelopment())
@@ -256,6 +216,9 @@ internal class Program
         switch (launchModeInstance)
         {
             case UserMode:
+                services.AddHostedService<WoLInitializationService>();
+                services.AddHostedService<FirewallInitializationService>();
+                services.AddHostedService<SasInitializationService>();
                 services.AddHostedService<InputBackgroundService>();
                 break;
             case ServiceMode:
