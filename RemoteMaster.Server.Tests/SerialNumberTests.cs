@@ -147,4 +147,20 @@ public class SerialNumberTests
         var ex = Assert.Throws<ArgumentException>(() => SerialNumber.FromExistingValue(specialCharValue));
         Assert.Equal("Serial number must contain only hexadecimal characters.", ex.Message);
     }
+
+    [Fact]
+    public void SerialNumber_IsImmutable()
+    {
+        // Arrange
+        var serialNumber = SerialNumber.FromExistingValue("A1B2C3");
+
+        // Act
+        var byteArray = serialNumber.ToByteArray();
+        byteArray[0] = 0xFF;
+        var byteArrayAfterChange = serialNumber.ToByteArray();
+
+        // Assert
+        Assert.Equal("A1B2C3", serialNumber.Value);
+        Assert.NotEqual(byteArray, byteArrayAfterChange);
+    }
 }
