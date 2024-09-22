@@ -7,14 +7,18 @@ using System.Text.RegularExpressions;
 
 namespace RemoteMaster.Server.Aggregates.CrlAggregate.ValueObjects;
 
-public class SerialNumber
+public partial class SerialNumber
 {
     private const int MaxSerialNumberByteSize = 20;
     private const int MinSerialNumberByteSize = 1;
-
-    private static readonly Regex SerialNumberRegex = new("^[0-9A-F]+$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private const string HexadecimalPattern = "^[0-9A-F]+$";
+    private const int FirstByteMask = 0x7F;
+    private const string HexSeparator = "-";
 
     public string Value { get; }
+
+    [GeneratedRegex(HexadecimalPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled)]
+    private static partial Regex SerialNumberRegex();
 
     private SerialNumber(string value)
     {
@@ -23,7 +27,7 @@ public class SerialNumber
             throw new ArgumentException("Serial number cannot be empty", nameof(value));
         }
 
-        if (!SerialNumberRegex.IsMatch(value))
+        if (!SerialNumberRegex().IsMatch(value))
         {
             throw new ArgumentException("Serial number must contain only hexadecimal characters.");
         }
@@ -44,12 +48,9 @@ public class SerialNumber
     public static SerialNumber Generate()
     {
         var randomBytes = GenerateSecureRandomBytes(MaxSerialNumberByteSize);
+        randomBytes[0] &= FirstByteMask;
 
-        randomBytes[0] &= 0x7F;
-
-        var serialNumberString = BitConverter.ToString(randomBytes).Replace("-", string.Empty);
-
-        serialNumberString = TrimLeadingZeros(serialNumberString);
+        var serialNumberString = BitConverter.ToString(randomBytes).Replace(HexSeparator, string.Empty);
 
         return new SerialNumber(serialNumberString);
     }
@@ -75,10 +76,5 @@ public class SerialNumber
         }
 
         return randomBytes;
-    }
-
-    private static string TrimLeadingZeros(string hex)
-    {
-        return hex.TrimStart('0');
     }
 }
