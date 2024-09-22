@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net.NetworkInformation;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
 
@@ -23,9 +24,9 @@ public interface IApiService
 
     Task<byte[]?> IssueCertificateAsync(byte[] csrBytes);
 
-    Task<HostMoveRequest?> GetHostMoveRequestAsync(string macAddress);
+    Task<HostMoveRequest?> GetHostMoveRequestAsync(PhysicalAddress macAddress);
 
-    Task<bool> AcknowledgeMoveRequestAsync(string macAddress);
+    Task<bool> AcknowledgeMoveRequestAsync(PhysicalAddress macAddress);
 
     Task<AddressDto?> GetOrganizationAddressAsync(string organizationName);
 }

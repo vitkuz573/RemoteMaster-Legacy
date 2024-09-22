@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net;
 using Microsoft.AspNetCore.SignalR;
 using Moq;
 using RemoteMaster.Host.Core.Abstractions;
@@ -144,7 +145,7 @@ public class AppStateTests : IDisposable
         _viewerMock.Setup(v => v.UserName).Returns("testUser");
         _viewerMock.Setup(v => v.Role).Returns("testRole");
         _viewerMock.Setup(v => v.ConnectedTime).Returns(DateTime.UtcNow);
-        _viewerMock.Setup(v => v.IpAddress).Returns("127.0.0.1");
+        _viewerMock.Setup(v => v.IpAddress).Returns(IPAddress.Loopback);
         _viewerMock.Setup(v => v.AuthenticationType).Returns("testAuth");
 
         _appState.TryAddViewer(_viewerMock.Object);

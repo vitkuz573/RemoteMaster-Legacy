@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -31,7 +32,7 @@ public class LocalhostOrAuthenticatedHandlerTests
             .Setup(h => h.LoadConfigurationAsync())
             .ReturnsAsync(new HostConfiguration
             {
-                Host = new ComputerDto("TestComputer", "192.168.1.1", "00-14-22-01-23-45")
+                Host = new ComputerDto("TestComputer", IPAddress.Parse("192.168.1.1"), PhysicalAddress.Parse("00-14-22-01-23-45"))
             });
 
         Mock<IHttpContextAccessor> httpContextAccessorMock = new();

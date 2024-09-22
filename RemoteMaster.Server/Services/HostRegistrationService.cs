@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net.NetworkInformation;
 using FluentResults;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
@@ -48,13 +49,13 @@ public class HostRegistrationService(IEventNotificationService eventNotification
         return Result.Ok(parentOu);
     }
 
-    public async Task<Result> IsHostRegisteredAsync(string macAddress)
+    public async Task<Result> IsHostRegisteredAsync(PhysicalAddress macAddress)
     {
         ArgumentNullException.ThrowIfNull(macAddress);
 
         try
         {
-            var computers = await organizationRepository.FindComputersAsync(c => c.MacAddress == macAddress);
+            var computers = await organizationRepository.FindComputersAsync(c => c.MacAddress.GetAddressBytes().SequenceEqual(macAddress.GetAddressBytes()));
 
             if (computers.Any())
             {
@@ -112,7 +113,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
 
         try
         {
-            var computer = parentUnit.Computers.FirstOrDefault(c => c.MacAddress == hostConfiguration.Host.MacAddress);
+            var computer = parentUnit.Computers.FirstOrDefault(c => c.MacAddress.GetAddressBytes().SequenceEqual(hostConfiguration.Host.MacAddress.GetAddressBytes()));
 
             if (computer != null)
             {
@@ -177,11 +178,6 @@ public class HostRegistrationService(IEventNotificationService eventNotification
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        if (string.IsNullOrWhiteSpace(request.MacAddress))
-        {
-            return Result.Fail("Request must have a valid MAC address.");
-        }
-
         var organizationResult = await GetOrganizationAsync(request.Organization);
 
         if (organizationResult.IsFailed)
@@ -207,7 +203,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
         try
         {
             var parentUnit = parentOuResult.Value ?? throw new InvalidOperationException("Parent Organizational Unit not found.");
-            var computer = parentUnit.Computers.FirstOrDefault(c => c.MacAddress == request.MacAddress);
+            var computer = parentUnit.Computers.FirstOrDefault(c => c.MacAddress.GetAddressBytes().SequenceEqual(request.MacAddress.GetAddressBytes()));
 
             if (computer == null)
             {
@@ -266,7 +262,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
         try
         {
             var parentUnit = parentOuResult.Value ?? throw new InvalidOperationException("Parent Organizational Unit not found.");
-            var computer = parentUnit.Computers.FirstOrDefault(c => c.MacAddress == request.MacAddress);
+            var computer = parentUnit.Computers.FirstOrDefault(c => c.MacAddress.GetAddressBytes().SequenceEqual(request.MacAddress.GetAddressBytes()));
 
             if (computer == null)
             {

@@ -2,11 +2,14 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net;
+using System.Net.NetworkInformation;
 using System.Text.Json.Serialization;
+using RemoteMaster.Shared.Converters;
 
 namespace RemoteMaster.Shared.DTOs;
 
-public class ComputerDto(string name, string ipAddress, string macAddress) : IEquatable<ComputerDto>
+public class ComputerDto(string name, IPAddress ipAddress, PhysicalAddress macAddress) : IEquatable<ComputerDto>
 {
     [JsonIgnore]
     public Guid Id { get; init; }
@@ -15,10 +18,12 @@ public class ComputerDto(string name, string ipAddress, string macAddress) : IEq
     public string Name { get; } = name;
 
     [JsonPropertyName("ipAddress")]
-    public string IpAddress { get; } = ipAddress;
+    [JsonConverter(typeof(IPAddressConverter))]
+    public IPAddress IpAddress { get; } = ipAddress;
 
     [JsonPropertyName("macAddress")]
-    public string MacAddress { get; } = macAddress;
+    [JsonConverter(typeof(PhysicalAddressConverter))]
+    public PhysicalAddress MacAddress { get; } = macAddress;
 
     [JsonIgnore]
     public byte[]? Thumbnail { get; set; }

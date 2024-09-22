@@ -2,11 +2,14 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using MessagePack;
+using MessagePack.Resolvers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Services;
 using RemoteMaster.Shared.Extensions;
+using RemoteMaster.Shared.Formatters;
 
 namespace RemoteMaster.Host.Core.Extensions;
 
@@ -37,6 +40,11 @@ public static class ServiceCollectionExtensions
 
         services.AddHttpClient<ApiService>().AddHttpMessageHandler<CustomHttpClientHandler>();
 
-        services.AddSignalR().AddMessagePackProtocol();
+        services.AddSignalR().AddMessagePackProtocol(options =>
+        {
+            var resolver = CompositeResolver.Create([new IPAddressFormatter()], [ContractlessStandardResolver.Instance]);
+
+            options.SerializerOptions = MessagePackSerializerOptions.Standard.WithResolver(resolver);
+        });
     }
 }

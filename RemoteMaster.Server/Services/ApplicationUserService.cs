@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 
@@ -14,7 +15,7 @@ public class ApplicationUserService(IApplicationUserRepository applicationUserRe
         ArgumentNullException.ThrowIfNull(user);
 
         var httpContext = httpContextAccessor.HttpContext ?? throw new InvalidOperationException("HttpContext is not available.");
-        var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
+        var ipAddress = httpContext.Connection.RemoteIpAddress ?? IPAddress.None;
 
         await applicationUserRepository.AddSignInEntryAsync(user.Id, isSuccessful, ipAddress);
         await applicationUserRepository.SaveChangesAsync();

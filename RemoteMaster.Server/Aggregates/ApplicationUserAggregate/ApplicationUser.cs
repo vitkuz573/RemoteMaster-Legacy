@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net;
 using Microsoft.AspNetCore.Identity;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
@@ -33,12 +34,12 @@ public class ApplicationUser : IdentityUser, IAggregateRoot
         CanAccessUnregisteredHosts = false;
     }
 
-    public SignInEntry AddSignInEntry(bool isSuccessful, string ipAddress)
+    public SignInEntry AddSignInEntry(bool isSuccessful, IPAddress ipAddress)
     {
         return new SignInEntry(Id, isSuccessful, ipAddress);
     }
 
-    public RefreshToken AddRefreshToken(DateTime expires, string ipAddress)
+    public RefreshToken AddRefreshToken(DateTime expires, IPAddress ipAddress)
     {
         var refreshToken = RefreshToken.Create(Id, expires, ipAddress);
 
@@ -47,14 +48,14 @@ public class ApplicationUser : IdentityUser, IAggregateRoot
         return refreshToken;
     }
 
-    public void RevokeRefreshToken(string token, TokenRevocationReason reason, string ipAddress)
+    public void RevokeRefreshToken(string token, TokenRevocationReason reason, IPAddress ipAddress)
     {
         var refreshToken = _refreshTokens.SingleOrDefault(rt => rt.TokenValue.Value == token);
 
         refreshToken.Revoke(reason, ipAddress);
     }
 
-    public RefreshToken ReplaceRefreshToken(string token, string ipAddress)
+    public RefreshToken ReplaceRefreshToken(string token, IPAddress ipAddress)
     {
         var refreshToken = _refreshTokens.SingleOrDefault(rt => rt.TokenValue.Value == token) ?? throw new InvalidOperationException("The specified token does not exist.");
         var newRefreshToken = refreshToken.Replace(ipAddress, RefreshToken.Create);

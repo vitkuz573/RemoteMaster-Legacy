@@ -2,9 +2,11 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net.NetworkInformation;
+
 namespace RemoteMaster.Server.Abstractions;
 
 public interface IWakeOnLanService
 {
-    void WakeUp(string macAddress, int port = 9);
+    void WakeUp(PhysicalAddress macAddress, int port = 9);
 }

@@ -2,13 +2,15 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net;
+
 namespace RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 
 public class SignInEntry
 {
     private SignInEntry() { }
 
-    internal SignInEntry(string userId, bool isSuccessful, string ipAddress)
+    internal SignInEntry(string userId, bool isSuccessful, IPAddress ipAddress)
     {
         UserId = userId ?? throw new ArgumentNullException(nameof(userId));
         SignInTime = DateTime.UtcNow;
@@ -24,7 +26,7 @@ public class SignInEntry
 
     public bool IsSuccessful { get; private set; }
 
-    public string IpAddress { get; private set; }
+    public IPAddress IpAddress { get; private set; }
 
     public ApplicationUser User { get; private set; }
 }

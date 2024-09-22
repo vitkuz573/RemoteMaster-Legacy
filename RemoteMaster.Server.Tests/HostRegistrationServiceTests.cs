@@ -3,6 +3,8 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Linq.Expressions;
+using System.Net;
+using System.Net.NetworkInformation;
 using Moq;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
@@ -35,9 +37,12 @@ public class HostRegistrationServiceTests
         var organization = new Organization("TestOrg", address);
         organization.AddOrganizationalUnit("OU1");
 
+        var ipAddress = IPAddress.Parse("192.168.0.1");
+        var macAddress = PhysicalAddress.Parse("00:11:22:33:44:55");
+
         var hostConfig = new HostConfiguration
         {
-            Host = new ComputerDto("Host1", "192.168.0.1", "00:11:22:33:44:55"),
+            Host = new ComputerDto("Host1", ipAddress, macAddress),
             Subject = new SubjectDto { Organization = "TestOrg", OrganizationalUnit = ["OU1"] }
         };
 
@@ -62,9 +67,13 @@ public class HostRegistrationServiceTests
     public async Task RegisterHostAsync_ShouldFail_WhenOrganizationIsNotFound()
     {
         // Arrange
+
+        var ipAddress = IPAddress.Parse("192.168.0.1");
+        var macAddress = PhysicalAddress.Parse("00:11:22:33:44:55");
+
         var hostConfig = new HostConfiguration
         {
-            Host = new ComputerDto("Host1", "192.168.0.1", "00:11:22:33:44:55"),
+            Host = new ComputerDto("Host1", ipAddress, macAddress),
             Subject = new SubjectDto { Organization = "UnknownOrg", OrganizationalUnit = ["OU1"] }
         };
 

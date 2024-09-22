@@ -2,9 +2,11 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net;
+
 namespace RemoteMaster.Shared.Models;
 
-public class ViewerDto(string connectionId, string group, string userName, string role, DateTime connectedTime, string ipAddress, string authenticationType)
+public class ViewerDto(string connectionId, string group, string userName, string role, DateTime connectedTime, IPAddress ipAddress, string authenticationType)
 {
     public string ConnectionId { get; } = connectionId;
 
@@ -16,7 +18,7 @@ public class ViewerDto(string connectionId, string group, string userName, strin
 
     public DateTime ConnectedTime { get; } = connectedTime;
 
-    public string IpAddress { get; } = ipAddress;
+    public IPAddress IpAddress { get; } = ipAddress;
 
     public string AuthenticationType { get; } = authenticationType;
 }

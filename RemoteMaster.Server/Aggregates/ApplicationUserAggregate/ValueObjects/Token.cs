@@ -2,9 +2,11 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net;
+
 namespace RemoteMaster.Server.Aggregates.ApplicationUserAggregate.ValueObjects;
 
-public class Token(string value, DateTime expires, DateTime created, string createdBy)
+public class Token(string value, DateTime expires, DateTime created, IPAddress createdBy)
 {
     public string Value { get; } = value;
 
@@ -12,7 +14,7 @@ public class Token(string value, DateTime expires, DateTime created, string crea
 
     public DateTime Created { get; } = created;
 
-    public string CreatedBy { get; } = createdBy;
+    public IPAddress CreatedBy { get; } = createdBy;
 
     public bool IsExpired => DateTime.UtcNow >= Expires;
 }

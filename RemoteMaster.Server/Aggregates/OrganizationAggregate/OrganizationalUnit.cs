@@ -2,6 +2,9 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net;
+using System.Net.NetworkInformation;
+
 namespace RemoteMaster.Server.Aggregates.OrganizationAggregate;
 
 public class OrganizationalUnit
@@ -54,7 +57,7 @@ public class OrganizationalUnit
         OrganizationId = organization.Id;
     }
 
-    public void AddComputer(string name, string ipAddress, string macAddress)
+    public void AddComputer(string name, IPAddress ipAddress, PhysicalAddress macAddress)
     {
         var computer = new Computer(name, ipAddress, macAddress);
         computer.SetOrganizationalUnit(Id);

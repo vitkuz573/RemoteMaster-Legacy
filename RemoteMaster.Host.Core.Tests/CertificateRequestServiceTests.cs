@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using RemoteMaster.Host.Core.Services;
@@ -18,7 +19,7 @@ public class CertificateRequestServiceTests : IDisposable
     {
         // Arrange
         var subjectName = new X500DistinguishedName("CN=Test");
-        var ipAddresses = new List<string> { "192.168.0.1", "10.0.0.1" };
+        var ipAddresses = new List<IPAddress> { IPAddress.Parse("192.168.0.1"), IPAddress.Parse("10.0.0.1") };
 
         // Act
         var csr = _certificateRequestService.GenerateSigningRequest(subjectName, ipAddresses, out _rsaKeyPair);
@@ -38,7 +39,7 @@ public class CertificateRequestServiceTests : IDisposable
     {
         // Arrange
         X500DistinguishedName? subjectName = null;
-        var ipAddresses = new List<string> { "192.168.0.1", "10.0.0.1" };
+        var ipAddresses = new List<IPAddress> { IPAddress.Parse("192.168.0.1"), IPAddress.Parse("10.0.0.1") };
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => _certificateRequestService.GenerateSigningRequest(subjectName!, ipAddresses, out _rsaKeyPair));
@@ -49,7 +50,7 @@ public class CertificateRequestServiceTests : IDisposable
     {
         // Arrange
         var subjectName = new X500DistinguishedName("CN=Test");
-        List<string>? ipAddresses = null;
+        List<IPAddress>? ipAddresses = null;
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => _certificateRequestService.GenerateSigningRequest(subjectName, ipAddresses!, out _rsaKeyPair));
@@ -60,7 +61,7 @@ public class CertificateRequestServiceTests : IDisposable
     {
         // Arrange
         var subjectName = new X500DistinguishedName("CN=Test");
-        var ipAddresses = new List<string>();
+        var ipAddresses = new List<IPAddress>();
 
         // Act
         var csr = _certificateRequestService.GenerateSigningRequest(subjectName, ipAddresses, out _rsaKeyPair);

@@ -2,11 +2,16 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net.NetworkInformation;
+using System.Text.Json.Serialization;
+using RemoteMaster.Shared.Converters;
+
 namespace RemoteMaster.Shared.Models;
 
 public class HostUnregisterRequest
 {
-    public string MacAddress { get; set; }
+    [JsonConverter(typeof(PhysicalAddressConverter))]
+    public PhysicalAddress MacAddress { get; set; }
 
     public string Organization { get; set; }
 

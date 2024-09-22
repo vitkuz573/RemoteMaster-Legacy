@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Collections.Concurrent;
+using System.Net;
 using System.Security.Claims;
 using System.Threading.Channels;
 using Microsoft.AspNetCore.Authorization;
@@ -32,9 +33,9 @@ public partial class Home
     private List<TreeItemData<object>> _treeItems = [];
 
     private readonly List<ComputerDto> _selectedComputers = [];
-    private readonly ConcurrentDictionary<string, ComputerDto> _availableComputers = new();
-    private readonly ConcurrentDictionary<string, ComputerDto> _unavailableComputers = new();
-    private readonly ConcurrentDictionary<string, ComputerDto> _pendingComputers = new();
+    private readonly ConcurrentDictionary<IPAddress, ComputerDto> _availableComputers = new();
+    private readonly ConcurrentDictionary<IPAddress, ComputerDto> _unavailableComputers = new();
+    private readonly ConcurrentDictionary<IPAddress, ComputerDto> _pendingComputers = new();
 
     private ClaimsPrincipal? _user;
     private ApplicationUser? _currentUser;
@@ -165,7 +166,7 @@ public partial class Home
     {
         var computers = orgUnit.Computers.ToList();
 
-        var newPendingComputers = new ConcurrentDictionary<string, ComputerDto>();
+        var newPendingComputers = new ConcurrentDictionary<IPAddress, ComputerDto>();
 
         foreach (var computer in computers.Where(computer => !_availableComputers.ContainsKey(computer.IpAddress) && !_unavailableComputers.ContainsKey(computer.IpAddress)))
         {
@@ -682,17 +683,17 @@ public partial class Home
         await InvokeAsync(StateHasChanged);
     }
 
-    private static IEnumerable<ComputerDto> GetSortedComputers(ConcurrentDictionary<string, ComputerDto> computers)
+    private static IEnumerable<ComputerDto> GetSortedComputers(ConcurrentDictionary<IPAddress, ComputerDto> computers)
     {
         return computers.Values.OrderBy(computer => computer.Name);
     }
 
-    private bool CanSelectAll(ConcurrentDictionary<string, ComputerDto> computers)
+    private bool CanSelectAll(ConcurrentDictionary<IPAddress, ComputerDto> computers)
     {
         return computers.Any(computer => !_selectedComputers.Contains(computer.Value));
     }
 
-    private bool CanDeselectAll(ConcurrentDictionary<string, ComputerDto> computers)
+    private bool CanDeselectAll(ConcurrentDictionary<IPAddress, ComputerDto> computers)
     {
         return computers.Any(computer => _selectedComputers.Contains(computer.Value));
     }

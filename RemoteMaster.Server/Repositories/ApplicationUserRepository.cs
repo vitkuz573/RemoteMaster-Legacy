@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Linq.Expressions;
+using System.Net;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
@@ -58,7 +59,7 @@ public class ApplicationUserRepository(ApplicationDbContext context) : IApplicat
         await context.SaveChangesAsync();
     }
 
-    public async Task AddSignInEntryAsync(string userId, bool isSuccessful, string ipAddress)
+    public async Task AddSignInEntryAsync(string userId, bool isSuccessful, IPAddress ipAddress)
     {
         var user = await GetByIdAsync(userId);
 

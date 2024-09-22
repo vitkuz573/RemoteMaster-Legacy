@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "RemoteMaster.Host.Windows": {
+      "commandName": "Project",
+      "commandLineArgs": "--launch-mode=install --server=DESKTOP-95E2OAP --organization=test --organizational-unit=test"
+    }
+  }
+}

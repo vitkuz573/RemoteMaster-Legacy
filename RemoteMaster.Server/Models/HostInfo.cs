@@ -2,13 +2,16 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net;
+using System.Net.NetworkInformation;
+
 namespace RemoteMaster.Server.Models;
 
 public class HostInfo
 {
     public string Name { get; set; }
 
-    public string IpAddress { get; set; }
+    public IPAddress IpAddress { get; set; }
 
-    public string MacAddress { get; set; }
+    public PhysicalAddress MacAddress { get; set; }
 }

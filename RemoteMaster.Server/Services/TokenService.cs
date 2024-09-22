@@ -4,6 +4,7 @@
 
 using System.IdentityModel.Tokens.Jwt;
 using System.IO.Abstractions;
+using System.Net;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -39,7 +40,7 @@ public class TokenService(IOptions<JwtOptions> options, IHttpContextAccessor htt
             return Result.Fail<TokenData>("User not found");
         }
 
-        var ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
+        var ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress ?? IPAddress.None;
 
         var claimsResult = await claimsService.GetClaimsForUserAsync(user);
 
@@ -114,7 +115,7 @@ public class TokenService(IOptions<JwtOptions> options, IHttpContextAccessor htt
         return Result.Ok(tokenHandler.WriteToken(token));
     }
 
-    private async Task<Result<RefreshToken>> CreateOrReplaceRefreshTokenAsync(ApplicationUser user, string ipAddress, string? existingToken = null)
+    private async Task<Result<RefreshToken>> CreateOrReplaceRefreshTokenAsync(ApplicationUser user, IPAddress ipAddress, string? existingToken = null)
     {
         var refreshToken = existingToken != null
             ? user.ReplaceRefreshToken(existingToken, ipAddress)
@@ -128,7 +129,7 @@ public class TokenService(IOptions<JwtOptions> options, IHttpContextAccessor htt
 
     public async Task<Result> RevokeAllRefreshTokensAsync(string userId, TokenRevocationReason revocationReason)
     {
-        var ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
+        var ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress ?? IPAddress.None;
 
         var user = await applicationUserRepository.GetByIdAsync(userId);
 

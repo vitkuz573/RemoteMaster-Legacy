@@ -24,7 +24,7 @@ public class LocalhostOrAuthenticatedHandler : AuthorizationHandler<LocalhostOrA
         _httpContextAccessor = httpContextAccessor;
 
         var hostConfiguration = hostConfigurationService.LoadConfigurationAsync().GetAwaiter().GetResult();
-        _hostIpAddress = IPAddress.Parse(hostConfiguration.Host.IpAddress);
+        _hostIpAddress = hostConfiguration.Host.IpAddress;
     }
 
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, LocalhostOrAuthenticatedRequirement requirement)
@@ -74,6 +74,9 @@ public class LocalhostOrAuthenticatedHandler : AuthorizationHandler<LocalhostOrA
             remoteIpAddress = remoteIpAddress.MapToIPv4();
         }
 
-        return remoteIpAddress.Equals(_hostIpAddress);
+        var remoteBytes = remoteIpAddress.GetAddressBytes();
+        var hostBytes = _hostIpAddress.GetAddressBytes();
+
+        return remoteBytes.SequenceEqual(hostBytes);
     }
 }

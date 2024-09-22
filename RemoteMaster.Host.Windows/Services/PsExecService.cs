@@ -58,9 +58,9 @@ public class PsExecService(IHostConfigurationService hostConfigurationService, I
             throw new ArgumentException("Server address cannot be null or empty.", nameof(server));
         }
 
-        if (IsValidIpAddress(server))
+        if (IsValidIpAddress(server, out var ipAddress))
         {
-            return ConvertToCidrNotation(server);
+            return ConvertToCidrNotation(ipAddress);
         }
 
         if (!IsValidDomainName(server))
@@ -69,14 +69,16 @@ public class PsExecService(IHostConfigurationService hostConfigurationService, I
         }
 
         var addresses = await Dns.GetHostAddressesAsync(server);
-        var ipv4Addrs = string.Join(",", addresses.Where(addr => addr.AddressFamily == AddressFamily.InterNetwork).Select(addr => ConvertToCidrNotation(addr.ToString())));
+        var ipv4Addrs = string.Join(",", addresses
+            .Where(addr => addr.AddressFamily == AddressFamily.InterNetwork)
+            .Select(ConvertToCidrNotation));
 
         return ipv4Addrs;
     }
 
-    private static bool IsValidIpAddress(string address)
+    private static bool IsValidIpAddress(string address, out IPAddress ipAddress)
     {
-        return IPAddress.TryParse(address, out _);
+        return IPAddress.TryParse(address, out ipAddress);
     }
 
     private static bool IsValidDomainName(string domainName)
@@ -84,13 +86,12 @@ public class PsExecService(IHostConfigurationService hostConfigurationService, I
         return Uri.CheckHostName(domainName) == UriHostNameType.Dns;
     }
 
-    private static string ConvertToCidrNotation(string ipAddress)
+    private static string ConvertToCidrNotation(IPAddress ipAddress)
     {
-        if (!IPAddress.TryParse(ipAddress, out var address))
-        {
-            return ipAddress;
-        }
+        ArgumentNullException.ThrowIfNull(ipAddress);
 
-        return address.AddressFamily == AddressFamily.InterNetwork ? $"{ipAddress}/32" : ipAddress;
+        var prefixLength = ipAddress.AddressFamily == AddressFamily.InterNetwork ? 32 : 128;
+        
+        return $"{ipAddress}/{prefixLength}";
     }
 }

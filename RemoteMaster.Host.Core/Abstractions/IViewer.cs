@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net;
 using Microsoft.AspNetCore.SignalR;
 
 namespace RemoteMaster.Host.Core.Abstractions;
@@ -24,7 +25,7 @@ public interface IViewer : IDisposable
 
     DateTime ConnectedTime { get; }
 
-    public string IpAddress { get; }
+    public IPAddress IpAddress { get; }
 
     public string AuthenticationType { get; }
 

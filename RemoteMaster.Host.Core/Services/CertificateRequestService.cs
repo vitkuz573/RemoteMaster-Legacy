@@ -12,7 +12,7 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class CertificateRequestService : ICertificateRequestService
 {
-    public byte[] GenerateSigningRequest(X500DistinguishedName subjectName, List<string> ipAddresses, out RSA rsaKeyPair)
+    public byte[] GenerateSigningRequest(X500DistinguishedName subjectName, List<IPAddress> ipAddresses, out RSA rsaKeyPair)
     {
         ArgumentNullException.ThrowIfNull(subjectName);
         ArgumentNullException.ThrowIfNull(ipAddresses);
@@ -26,7 +26,7 @@ public class CertificateRequestService : ICertificateRequestService
 
         foreach (var ipAddress in ipAddresses)
         {
-            sanBuilder.AddIpAddress(IPAddress.Parse(ipAddress));
+            sanBuilder.AddIpAddress(ipAddress);
         }
 
         certificateRequest.CertificateExtensions.Add(sanBuilder.Build(true));

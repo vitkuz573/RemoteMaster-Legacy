@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net.NetworkInformation;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using RemoteMaster.Server.Abstractions;
@@ -19,22 +20,8 @@ public class HostMoveController(IHostMoveRequestService hostMoveRequestService) 
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<HostMoveRequest>), 200)]
     [ProducesResponseType(typeof(ApiResponse<HostMoveRequest>), 400)]
-    public async Task<IActionResult> GetHostMoveRequest([FromQuery] string macAddress)
+    public async Task<IActionResult> GetHostMoveRequest([FromQuery] PhysicalAddress macAddress)
     {
-        if (string.IsNullOrWhiteSpace(macAddress))
-        {
-            var problemDetails = new ProblemDetails
-            {
-                Title = "Invalid MAC address",
-                Detail = "The provided MAC address is invalid.",
-                Status = StatusCodes.Status400BadRequest
-            };
-
-            var errorResponse = ApiResponse<HostMoveRequest>.Failure(problemDetails);
-
-            return BadRequest(errorResponse);
-        }
-
         var hostMoveRequestResult = await hostMoveRequestService.GetHostMoveRequestAsync(macAddress);
 
         if (hostMoveRequestResult.IsSuccess)
@@ -59,22 +46,8 @@ public class HostMoveController(IHostMoveRequestService hostMoveRequestService) 
     [HttpPost("acknowledge")]
     [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponse<bool>), 400)]
-    public async Task<IActionResult> AcknowledgeMoveRequest([FromBody] string macAddress)
+    public async Task<IActionResult> AcknowledgeMoveRequest([FromBody] PhysicalAddress macAddress)
     {
-        if (string.IsNullOrWhiteSpace(macAddress))
-        {
-            var problemDetails = new ProblemDetails
-            {
-                Title = "Invalid MAC address",
-                Detail = "The provided MAC address is invalid.",
-                Status = StatusCodes.Status400BadRequest
-            };
-
-            var errorResponse = ApiResponse<bool>.Failure(problemDetails);
-
-            return BadRequest(errorResponse);
-        }
-
         var result = await hostMoveRequestService.AcknowledgeMoveRequestAsync(macAddress);
 
         if (result.IsSuccess)

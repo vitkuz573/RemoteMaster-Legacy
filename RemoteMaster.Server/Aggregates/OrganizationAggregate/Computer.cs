@@ -2,13 +2,16 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net;
+using System.Net.NetworkInformation;
+
 namespace RemoteMaster.Server.Aggregates.OrganizationAggregate;
 
 public class Computer
 {
     protected Computer() { }
 
-    internal Computer(string name, string ipAddress, string macAddress)
+    internal Computer(string name, IPAddress ipAddress, PhysicalAddress macAddress)
     {
         Name = name ?? throw new ArgumentNullException(nameof(name));
         IpAddress = ipAddress ?? throw new ArgumentNullException(nameof(ipAddress));
@@ -19,9 +22,9 @@ public class Computer
 
     public string Name { get; private set; }
 
-    public string IpAddress { get; private set; }
+    public IPAddress IpAddress { get; private set; }
 
-    public string MacAddress { get; private set; }
+    public PhysicalAddress MacAddress { get; private set; }
 
     public Guid ParentId { get; private set; }
 
@@ -32,7 +35,7 @@ public class Computer
         ParentId = organizationalUnitId;
     }
 
-    public void SetIpAddress(string ipAddress)
+    public void SetIpAddress(IPAddress ipAddress)
     {
         IpAddress = ipAddress ?? throw new ArgumentNullException(nameof(ipAddress));
     }

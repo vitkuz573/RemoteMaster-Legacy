@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Drawing.Imaging;
+using System.Net;
 using System.Reflection;
 using System.Runtime.Versioning;
 using System.Security.Claims;
@@ -37,7 +38,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
             if (httpContext != null)
             {
                 var query = httpContext.Request.Query;
-                var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+                var ipAddress = httpContext.Connection.RemoteIpAddress ?? IPAddress.None;
 
                 if (query.ContainsKey("thumbnail") && query["thumbnail"] == "true")
                 {
@@ -124,7 +125,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         await Clients.Caller.ReceiveCloseConnection();
     }
 
-    private async Task HandleScreenCastRequest(string userName, string role, string ipAddress, string authenticationType)
+    private async Task HandleScreenCastRequest(string userName, string role, IPAddress ipAddress, string authenticationType)
     {
         var viewer = viewerFactory.Create(Context.ConnectionId, Context, "Users", userName, role, ipAddress, authenticationType);
         appState.TryAddViewer(viewer);

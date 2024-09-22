@@ -49,18 +49,18 @@ public class HostInformationService : IHostInformationService
                descriptionLower.Contains("tap");
     }
 
-    private static string GetIPv4Address(NetworkInterface networkInterface)
+    private static IPAddress GetIPv4Address(NetworkInterface networkInterface)
     {
         var ipv4Address = networkInterface.GetIPProperties().UnicastAddresses
             .FirstOrDefault(ua => ua.Address.AddressFamily == AddressFamily.InterNetwork);
 
         return ipv4Address == null
             ? throw new InvalidOperationException("Valid IPv4 address not found for the selected interface.")
-            : ipv4Address.Address.ToString();
+            : ipv4Address.Address;
     }
 
-    private static string GetMacAddress(NetworkInterface networkInterface)
+    private static PhysicalAddress GetMacAddress(NetworkInterface networkInterface)
     {
-        return networkInterface.GetPhysicalAddress().ToString();
+        return networkInterface.GetPhysicalAddress();
     }
 }

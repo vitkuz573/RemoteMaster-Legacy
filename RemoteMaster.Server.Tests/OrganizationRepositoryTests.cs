@@ -3,6 +3,8 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Linq.Expressions;
+using System.Net;
+using System.Net.NetworkInformation;
 using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate.ValueObjects;
@@ -124,7 +126,11 @@ public class OrganizationRepositoryTests
         var organization = new Organization("Org", new Address("City", "State", new CountryCode("US")));
         organization.AddOrganizationalUnit("Unit 1");
         var unit = organization.OrganizationalUnits.First();
-        unit.AddComputer("Comp1", "192.168.1.1", "00:11:22:33:44:55");
+
+        var ipAddress = IPAddress.Parse("192.168.1.1");
+        var macAddress = PhysicalAddress.Parse("00:11:22:33:44:55");
+
+        unit.AddComputer("Comp1", ipAddress, macAddress);
         _context.Organizations.Add(organization);
         await _context.SaveChangesAsync();
 
@@ -185,13 +191,22 @@ public class OrganizationRepositoryTests
         var organization = new Organization("Org", new Address("City", "State", new CountryCode("US")));
         organization.AddOrganizationalUnit("Unit 1");
         var unit = organization.OrganizationalUnits.First();
-        unit.AddComputer("Comp1", "192.168.1.1", "00:11:22:33:44:55");
-        unit.AddComputer("Comp2", "192.168.1.2", "00:11:22:33:44:66");
+
+        var ipAddress1 = IPAddress.Parse("192.168.1.1");
+        var ipAddress2 = IPAddress.Parse("192.168.1.2");
+
+        var macAddress1 = PhysicalAddress.Parse("00-11-22-33-44-55");
+        var macAddress2 = PhysicalAddress.Parse("00-11-22-33-44-66");
+
+        unit.AddComputer("Comp1", ipAddress1, macAddress1);
+        unit.AddComputer("Comp2", ipAddress2, macAddress2);
+
         _context.Organizations.Add(organization);
         await _context.SaveChangesAsync();
 
         // Act
-        var result = await _repository.FindComputersAsync(c => c.MacAddress == "00:11:22:33:44:66");
+        var macAddress = PhysicalAddress.Parse("00-11-22-33-44-66");
+        var result = await _repository.FindComputersAsync(c => c.MacAddress.GetAddressBytes().SequenceEqual(macAddress.GetAddressBytes()));
 
         // Assert
         Assert.Single(result);
@@ -227,7 +242,11 @@ public class OrganizationRepositoryTests
 
         var unit1 = org1.OrganizationalUnits.First();
         var unit2 = org2.OrganizationalUnits.First();
-        unit1.AddComputer("Comp1", "192.168.1.1", "00:11:22:33:44:55");
+
+        var ipAddress = IPAddress.Parse("192.168.1.1");
+        var macAddress = PhysicalAddress.Parse("00-11-22-33-44-55");
+
+        unit1.AddComputer("Comp1", ipAddress, macAddress);
 
         _context.Organizations.AddRange(org1, org2);
         await _context.SaveChangesAsync();
@@ -252,7 +271,11 @@ public class OrganizationRepositoryTests
         var organization = new Organization("Org", new Address("City", "State", new CountryCode("US")));
         organization.AddOrganizationalUnit("Unit 1");
         var unit = organization.OrganizationalUnits.First();
-        unit.AddComputer("Comp1", "192.168.1.1", "00:11:22:33:44:55");
+
+        var ipAddress = IPAddress.Parse("192.168.1.1");
+        var macAddress = PhysicalAddress.Parse("00-11-22-33-44-55");
+
+        unit.AddComputer("Comp1", ipAddress, macAddress);
         _context.Organizations.Add(organization);
         await _context.SaveChangesAsync();
 

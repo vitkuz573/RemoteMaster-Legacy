@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net.NetworkInformation;
 using Microsoft.AspNetCore.SignalR;
 using Moq;
 using RemoteMaster.Host.Core.Abstractions;
@@ -301,7 +302,9 @@ public class ControlHubTests
     public async Task Move_ShouldUpdateHostConfigurationAndRenewCertificate()
     {
         // Arrange
-        var hostMoveRequest = new HostMoveRequest("00:11:22:33:44:55", "NewOrg", ["NewOU"]);
+        var macAddress = PhysicalAddress.Parse("00:11:22:33:44:55");
+
+        var hostMoveRequest = new HostMoveRequest(macAddress, "NewOrg", ["NewOU"]);
 
         var hostConfiguration = new HostConfiguration
         {

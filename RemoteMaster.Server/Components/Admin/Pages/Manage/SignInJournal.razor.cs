@@ -162,7 +162,7 @@ public partial class SignInJournal
                         : filteredEntries.Where(e => e.User.UserName.Contains(value, StringComparison.OrdinalIgnoreCase)),
                     "signintime" => filteredEntries.Where(e => e.SignInTime.ToString(CultureInfo.InvariantCulture).Contains(value, StringComparison.OrdinalIgnoreCase)),
                     "success" => filteredEntries.Where(e => (e.IsSuccessful ? "Yes" : "No").Contains(value, StringComparison.OrdinalIgnoreCase)),
-                    "ipaddress" => filteredEntries.Where(e => e.IpAddress.Contains(value, StringComparison.OrdinalIgnoreCase)),
+                    "ipaddress" => filteredEntries.Where(e => string.Equals(e.IpAddress.ToString(), value, StringComparison.OrdinalIgnoreCase)),
                     _ => filteredEntries
                 };
             }
@@ -176,7 +176,7 @@ public partial class SignInJournal
                         : filteredEntries.Where(e => e.User.UserName.Equals(value, StringComparison.OrdinalIgnoreCase)),
                     "signintime" => filteredEntries.Where(e => e.SignInTime.ToString(CultureInfo.InvariantCulture).Equals(value, StringComparison.OrdinalIgnoreCase)),
                     "success" => filteredEntries.Where(e => (e.IsSuccessful ? "Yes" : "No").Equals(value, StringComparison.OrdinalIgnoreCase)),
-                    "ipaddress" => filteredEntries.Where(e => e.IpAddress.Equals(value, StringComparison.OrdinalIgnoreCase)),
+                    "ipaddress" => filteredEntries.Where(e => string.Equals(e.IpAddress.ToString(), value, StringComparison.OrdinalIgnoreCase)),
                     _ => filteredEntries
                 };
             }
@@ -190,7 +190,7 @@ public partial class SignInJournal
                         : filteredEntries.Where(e => !e.User.UserName.Equals(value, StringComparison.OrdinalIgnoreCase)),
                     "signintime" => filteredEntries.Where(e => !e.SignInTime.ToString(CultureInfo.InvariantCulture).Equals(value, StringComparison.OrdinalIgnoreCase)),
                     "success" => filteredEntries.Where(e => !(e.IsSuccessful ? "Yes" : "No").Equals(value, StringComparison.OrdinalIgnoreCase)),
-                    "ipaddress" => filteredEntries.Where(e => !e.IpAddress.Equals(value, StringComparison.OrdinalIgnoreCase)),
+                    "ipaddress" => filteredEntries.Where(e => !string.Equals(e.IpAddress.ToString(), value, StringComparison.OrdinalIgnoreCase)),
                     _ => filteredEntries
                 };
             }

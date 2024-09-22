@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net.NetworkInformation;
 using FluentResults;
 using RemoteMaster.Shared.Models;
 
@@ -30,12 +31,12 @@ public interface IHostMoveRequestService
     /// </summary>
     /// <param name="macAddress">The MAC address of the host.</param>
     /// <returns>The <see cref="HostMoveRequest"/> wrapped in a <see cref="Result{T}"/>.</returns>
-    Task<Result<HostMoveRequest?>> GetHostMoveRequestAsync(string macAddress);
+    Task<Result<HostMoveRequest?>> GetHostMoveRequestAsync(PhysicalAddress macAddress);
 
     /// <summary>
     /// Acknowledges a move request by removing it and sending a notification.
     /// </summary>
     /// <param name="macAddress">The MAC address of the host.</param>
     /// <returns>A <see cref="Result"/> indicating success or failure.</returns>
-    Task<Result> AcknowledgeMoveRequestAsync(string macAddress);
+    Task<Result> AcknowledgeMoveRequestAsync(PhysicalAddress macAddress);
 }

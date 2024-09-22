@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net.NetworkInformation;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using RemoteMaster.Server.Abstractions;
@@ -77,22 +78,8 @@ public class HostController(IHostRegistrationService registrationService) : Cont
     [HttpGet("status")]
     [ProducesResponseType(typeof(ApiResponse), 200)]
     [ProducesResponseType(typeof(ApiResponse), 400)]
-    public async Task<IActionResult> CheckHostRegistration([FromQuery] string macAddress)
+    public async Task<IActionResult> CheckHostRegistration([FromQuery] PhysicalAddress macAddress)
     {
-        if (string.IsNullOrWhiteSpace(macAddress))
-        {
-            var problemDetails = new ProblemDetails
-            {
-                Title = "Invalid MAC address",
-                Detail = "The provided MAC address is invalid.",
-                Status = StatusCodes.Status400BadRequest
-            };
-
-            var errorResponse = ApiResponse.Failure(problemDetails);
-
-            return BadRequest(errorResponse);
-        }
-
         var result = await registrationService.IsHostRegisteredAsync(macAddress);
 
         if (result.IsSuccess)

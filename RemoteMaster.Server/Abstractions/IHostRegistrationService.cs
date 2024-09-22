@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net.NetworkInformation;
 using FluentResults;
 using RemoteMaster.Shared.Models;
 
@@ -24,7 +25,7 @@ public interface IHostRegistrationService
     /// </summary>
     /// <param name="macAddress">The MAC address of the host to check.</param>
     /// <returns>A <see cref="Result{T}"/> indicating the success or failure of the operation.</returns>
-    Task<Result> IsHostRegisteredAsync(string macAddress);
+    Task<Result> IsHostRegisteredAsync(PhysicalAddress macAddress);
 
     /// <summary>
     /// Unregisters a host based on the provided request.

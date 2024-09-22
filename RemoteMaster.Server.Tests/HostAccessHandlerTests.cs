@@ -3,6 +3,8 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Linq.Expressions;
+using System.Net;
+using System.Net.NetworkInformation;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Moq;
@@ -79,7 +81,11 @@ public class HostAccessHandlerTests
 
         var organizationalUnit = organization.OrganizationalUnits.First();
         organizationalUnit.AddUser("user1");
-        organizationalUnit.AddComputer("host", "127.0.0.1", "00-14-22-01-23-45");
+
+        var ipAddress = IPAddress.Parse("127.0.0.1");
+        var macAddress = PhysicalAddress.Parse("00-14-22-01-23-45");
+
+        organizationalUnit.AddComputer("localhost", ipAddress, macAddress);
 
         var applicationUser = new ApplicationUser();
         applicationUser.RevokeAccessToUnregisteredHosts();
@@ -114,7 +120,11 @@ public class HostAccessHandlerTests
         var organizationalUnit = organization.OrganizationalUnits.First();
 
         organizationalUnit.AddUser("user2");
-        organizationalUnit.AddComputer("host", "127.0.0.1", "00-14-22-01-23-45");
+
+        var ipAddress = IPAddress.Parse("127.0.0.1");
+        var macAddress = PhysicalAddress.Parse("00-14-22-01-23-45");
+
+        organizationalUnit.AddComputer("localhost", ipAddress, macAddress);
 
         var applicationUser = new ApplicationUser();
         applicationUser.RevokeAccessToUnregisteredHosts();
@@ -153,10 +163,18 @@ public class HostAccessHandlerTests
         var organizationalUnit2 = organization2.OrganizationalUnits.First();
 
         organizationalUnit1.AddUser("user1");
-        organizationalUnit1.AddComputer("sharedHost", "127.0.0.1", "00-14-22-01-23-45");
+
+        var ipAddress1 = IPAddress.Parse("127.0.0.1");
+        var macAddress1 = PhysicalAddress.Parse("00-14-22-01-23-45");
+
+        organizationalUnit1.AddComputer("sharedHost", ipAddress1, macAddress1);
 
         organizationalUnit2.AddUser("user2");
-        organizationalUnit2.AddComputer("sharedHost", "127.0.0.2", "00-14-22-01-23-46");
+
+        var ipAddress2 = IPAddress.Parse("127.0.0.1");
+        var macAddress2 = PhysicalAddress.Parse("00-14-22-01-23-45");
+
+        organizationalUnit2.AddComputer("sharedHost", ipAddress2, macAddress2);
 
         var applicationUser = new ApplicationUser();
         applicationUser.RevokeAccessToUnregisteredHosts();
@@ -195,10 +213,18 @@ public class HostAccessHandlerTests
         var organizationalUnit2 = organization2.OrganizationalUnits.First();
 
         organizationalUnit1.AddUser("user2");
-        organizationalUnit1.AddComputer("sharedHost", "127.0.0.1", "00-14-22-01-23-45");
+
+        var ipAddress1 = IPAddress.Parse("127.0.0.1");
+        var macAddress1 = PhysicalAddress.Parse("00-14-22-01-23-45");
+
+        organizationalUnit1.AddComputer("sharedHost", ipAddress1, macAddress1);
 
         organizationalUnit2.AddUser("user1");
-        organizationalUnit2.AddComputer("sharedHost", "127.0.0.2", "00-14-22-01-23-46");
+
+        var ipAddress2 = IPAddress.Parse("127.0.0.2");
+        var macAddress2 = PhysicalAddress.Parse("00-14-22-01-23-46");
+
+        organizationalUnit2.AddComputer("sharedHost", ipAddress2, macAddress2);
 
         var applicationUser = new ApplicationUser();
         applicationUser.RevokeAccessToUnregisteredHosts();

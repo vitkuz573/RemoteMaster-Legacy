@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using RemoteMaster.Server.Abstractions;
@@ -37,7 +38,7 @@ public class HostAccessHandler(IApplicationUserRepository userRepository, IOrgan
 
             if (user.CanAccessUnregisteredHosts)
             {
-                var isHostRegistered = await organizationRepository.FindComputersAsync(c => c.Name == requirement.Host || c.IpAddress == requirement.Host);
+                var isHostRegistered = await organizationRepository.FindComputersAsync(c => c.Name == requirement.Host || c.IpAddress == IPAddress.Parse(requirement.Host));
 
                 if (!isHostRegistered.Any())
                 {
@@ -47,7 +48,7 @@ public class HostAccessHandler(IApplicationUserRepository userRepository, IOrgan
                 }
             }
 
-            var computers = await organizationRepository.FindComputersAsync(c => c.Name == requirement.Host || c.IpAddress == requirement.Host);
+            var computers = await organizationRepository.FindComputersAsync(c => c.Name == requirement.Host || c.IpAddress == IPAddress.Parse(requirement.Host));
             var computer = computers.FirstOrDefault();
 
             if (computer == null)

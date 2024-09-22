@@ -2,6 +2,8 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net;
+using System.Net.NetworkInformation;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using FluentResults;
@@ -68,7 +70,11 @@ public class CertificateServiceTests
         // Arrange
         var csrBytes = GenerateCsrBytes(false);
         using var caCertificate = GenerateCaCertificate();
-        var computer = new ComputerDto("localhost", "127.0.0.1", "00-14-22-01-23-45");
+
+        var ipAddress = IPAddress.Parse("127.0.0.1");
+        var macAddress = PhysicalAddress.Parse("00-14-22-01-23-45");
+
+        var computer = new ComputerDto("localhost", ipAddress, macAddress);
 
         _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(Result.Ok(caCertificate));
         _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(computer);
@@ -88,7 +94,11 @@ public class CertificateServiceTests
         // Arrange
         var csrBytes = GenerateMinimalValidCsrBytes();
         using var caCertificate = GenerateCaCertificate();
-        var computer = new ComputerDto("localhost", "127.0.0.1", "00-14-22-01-23-45");
+
+        var ipAddress = IPAddress.Parse("127.0.0.1");
+        var macAddress = PhysicalAddress.Parse("00-14-22-01-23-45");
+
+        var computer = new ComputerDto("localhost", ipAddress, macAddress);
 
         _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(Result.Ok(caCertificate));
         _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(computer);
@@ -108,7 +118,11 @@ public class CertificateServiceTests
         // Arrange
         var csrBytes = GenerateCsrBytesWithExtensions();
         using var caCertificate = GenerateCaCertificate();
-        var computer = new ComputerDto("localhost", "127.0.0.1", "00-14-22-01-23-45");
+
+        var ipAddress = IPAddress.Parse("127.0.0.1");
+        var macAddress = PhysicalAddress.Parse("00-14-22-01-23-45");
+
+        var computer = new ComputerDto("localhost", ipAddress, macAddress);
 
         _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(Result.Ok(caCertificate));
         _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(computer);

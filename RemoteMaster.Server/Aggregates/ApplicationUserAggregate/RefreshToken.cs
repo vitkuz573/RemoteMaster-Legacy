@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net;
 using System.Security.Cryptography;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate.ValueObjects;
 using RemoteMaster.Server.Enums;
@@ -12,7 +13,7 @@ public class RefreshToken
 {
     private RefreshToken() { }
 
-    internal RefreshToken(string userId, DateTime expires, string ipAddress, string token)
+    internal RefreshToken(string userId, DateTime expires, IPAddress ipAddress, string token)
     {
         if (string.IsNullOrWhiteSpace(userId))
         {
@@ -42,7 +43,7 @@ public class RefreshToken
 
     public bool IsActive => RevocationInfo == null && !TokenValue.IsExpired;
 
-    public void Revoke(TokenRevocationReason reason, string ipAddress)
+    public void Revoke(TokenRevocationReason reason, IPAddress ipAddress)
     {
         if (RevocationInfo != null)
         {
@@ -54,7 +55,7 @@ public class RefreshToken
         RevocationInfo = revocationInfo;
     }
 
-    public RefreshToken Replace(string ipAddress, Func<string, DateTime, string, RefreshToken> tokenFactory)
+    public RefreshToken Replace(IPAddress ipAddress, Func<string, DateTime, IPAddress, RefreshToken> tokenFactory)
     {
         ArgumentNullException.ThrowIfNull(tokenFactory);
 
@@ -71,7 +72,7 @@ public class RefreshToken
         return RevocationInfo == null && !TokenValue.IsExpired;
     }
 
-    public static RefreshToken Create(string userId, DateTime expires, string ipAddress)
+    public static RefreshToken Create(string userId, DateTime expires, IPAddress ipAddress)
     {
         var token = GenerateToken();
 

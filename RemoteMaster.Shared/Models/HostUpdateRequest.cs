@@ -2,11 +2,17 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Text.Json.Serialization;
+using RemoteMaster.Shared.Converters;
+
 namespace RemoteMaster.Shared.Models;
 
 public class HostUpdateRequest
 {
-    public string MacAddress { get; set; }
+    [JsonConverter(typeof(PhysicalAddressConverter))]
+    public PhysicalAddress MacAddress { get; set; }
 
     public string Organization { get; set; }
 
@@ -14,7 +20,8 @@ public class HostUpdateRequest
     public List<string> OrganizationalUnit { get; set; }
 #pragma warning restore CA2227
 
-    public string IpAddress { get; set; }
+    [JsonConverter(typeof(IPAddressConverter))]
+    public IPAddress IpAddress { get; set; }
 
     public string Name { get; set; }
 }

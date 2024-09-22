@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net.NetworkInformation;
 using System.Text.Json;
 using FluentResults;
 using RemoteMaster.Server.Abstractions;
@@ -51,7 +52,7 @@ public class HostMoveService(IEventNotificationService eventNotificationService)
         }
     }
 
-    public async Task<Result<HostMoveRequest?>> GetHostMoveRequestAsync(string macAddress)
+    public async Task<Result<HostMoveRequest?>> GetHostMoveRequestAsync(PhysicalAddress macAddress)
     {
         try
         {
@@ -63,7 +64,9 @@ public class HostMoveService(IEventNotificationService eventNotificationService)
                              .WithErrors(hostMoveRequestsResult.Errors);
             }
 
-            var request = hostMoveRequestsResult.Value.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
+            var request = hostMoveRequestsResult.Value.FirstOrDefault(r => r.MacAddress != null &&
+                                                    r.MacAddress.GetAddressBytes()
+                                                    .SequenceEqual(macAddress.GetAddressBytes()));
             return Result.Ok(request);
         }
         catch (Exception ex)
@@ -73,7 +76,7 @@ public class HostMoveService(IEventNotificationService eventNotificationService)
         }
     }
 
-    public async Task<Result> AcknowledgeMoveRequestAsync(string macAddress)
+    public async Task<Result> AcknowledgeMoveRequestAsync(PhysicalAddress macAddress)
     {
         try
         {
@@ -85,7 +88,9 @@ public class HostMoveService(IEventNotificationService eventNotificationService)
                              .WithErrors(hostMoveRequestsResult.Errors);
             }
 
-            var requestToRemove = hostMoveRequestsResult.Value.FirstOrDefault(r => r.MacAddress.Equals(macAddress, StringComparison.OrdinalIgnoreCase));
+            var requestToRemove = hostMoveRequestsResult.Value.FirstOrDefault(r => r.MacAddress != null &&
+                                                    r.MacAddress.GetAddressBytes()
+                                                    .SequenceEqual(macAddress.GetAddressBytes()));
 
             if (requestToRemove == null)
             {

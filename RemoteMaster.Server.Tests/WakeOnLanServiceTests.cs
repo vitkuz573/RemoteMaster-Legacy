@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Net;
+using System.Net.NetworkInformation;
 using Moq;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Helpers;
@@ -18,7 +19,7 @@ public class WakeOnLanServiceTests
         // Arrange
         var packetSenderMock = new Mock<IPacketSender>();
         var wakeOnLanService = new WakeOnLanService(packetSenderMock.Object);
-        const string macAddress = "01:23:45:67:89:AB";
+        var macAddress = PhysicalAddress.Parse("01:23:45:67:89:AB");
         const int port = 9;
         var expectedPacket = MagicPacketCreator.Create(macAddress);
         var expectedEndPoint = new IPEndPoint(IPAddress.Broadcast, port);
@@ -38,7 +39,7 @@ public class WakeOnLanServiceTests
         // Arrange
         var packetSenderMock = new Mock<IPacketSender>();
         var wakeOnLanService = new WakeOnLanService(packetSenderMock.Object);
-        const string macAddress = "01:23:45:67:89:AB";
+        var macAddress = PhysicalAddress.Parse("01:23:45:67:89:AB");
         const int defaultPort = 9;
         var expectedPacket = MagicPacketCreator.Create(macAddress);
         var expectedEndPoint = new IPEndPoint(IPAddress.Broadcast, defaultPort);

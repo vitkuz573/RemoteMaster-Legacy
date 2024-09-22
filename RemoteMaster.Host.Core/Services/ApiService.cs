@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Net.Http.Json;
+using System.Net.NetworkInformation;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.DTOs;
@@ -44,7 +45,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
             Text: $"The current API version {CurrentApiVersion} is deprecated and will soon be unsupported. Please update to the latest version.",
             Category: "Warning",
             PublishDate: DateTime.UtcNow,
-            Author: hostInformation.IpAddress
+            Author: hostInformation.IpAddress.ToString()
         );
 
         await AddNotificationAsync(message);
@@ -218,7 +219,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         return await ProcessResponse<byte[]>(response);
     }
 
-    public async Task<HostMoveRequest?> GetHostMoveRequestAsync(string macAddress)
+    public async Task<HostMoveRequest?> GetHostMoveRequestAsync(PhysicalAddress macAddress)
     {
         await EnsureClientInitializedAsync();
 
@@ -227,7 +228,7 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
         return await ProcessResponse<HostMoveRequest>(response);
     }
 
-    public async Task<bool> AcknowledgeMoveRequestAsync(string macAddress)
+    public async Task<bool> AcknowledgeMoveRequestAsync(PhysicalAddress macAddress)
     {
         await EnsureClientInitializedAsync();
 
