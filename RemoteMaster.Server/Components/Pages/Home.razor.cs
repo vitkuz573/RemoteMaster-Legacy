@@ -654,7 +654,7 @@ public partial class Home
 
         var additionalParameters = new Dictionary<string, object>
         {
-            { "OnNodesMoved", EventCallback.Factory.Create<IEnumerable<ComputerDto>>(this, OnNodesMoved) }
+            { "OnHostsMoved", EventCallback.Factory.Create<IEnumerable<ComputerDto>>(this, OnHostsMoved) }
         };
 
         var dialogParameters = new DialogParameters
@@ -669,7 +669,7 @@ public partial class Home
         await ExecuteDialog<MoveDialog>("Move", dialogParameters, dialogOptions);
     }
 
-    private async Task OnNodesMoved(IEnumerable<ComputerDto> movedNodes)
+    private async Task OnHostsMoved(IEnumerable<ComputerDto> movedNodes)
     {
         foreach (var movedNode in movedNodes)
         {

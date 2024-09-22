@@ -98,13 +98,7 @@ public class OrganizationalUnit
 
     public void RemoveUser(string userId)
     {
-        var userOrganizationalUnit = _userOrganizationalUnits.SingleOrDefault(u => u.UserId == userId);
-
-        if (userOrganizationalUnit == null)
-        {
-            throw new InvalidOperationException("User not found in this unit.");
-        }
-
+        var userOrganizationalUnit = _userOrganizationalUnits.SingleOrDefault(u => u.UserId == userId) ?? throw new InvalidOperationException("User not found in this unit.");
         _userOrganizationalUnits.Remove(userOrganizationalUnit);
     }
 

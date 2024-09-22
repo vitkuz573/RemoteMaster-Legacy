@@ -17,7 +17,7 @@ namespace RemoteMaster.Server.Components.Dialogs;
 public partial class MoveDialog
 {
     [Parameter]
-    public EventCallback<IEnumerable<ComputerDto>> OnNodesMoved { get; set; }
+    public EventCallback<IEnumerable<ComputerDto>> OnHostsMoved { get; set; }
 
     [CascadingParameter]
     private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
@@ -155,19 +155,14 @@ public partial class MoveDialog
                 }
 
                 var currentParentUnitId = host.Key.OrganizationalUnitId;
-                var currentParentUnit = await OrganizationRepository.GetOrganizationalUnitByIdAsync(currentParentUnitId);
-
-                if (currentParentUnit == null)
-                {
-                    throw new InvalidOperationException("Current parent unit not found.");
-                }
-
+                var currentParentUnit = await OrganizationRepository.GetOrganizationalUnitByIdAsync(currentParentUnitId) ?? throw new InvalidOperationException("Current parent unit not found.");
+                
                 await OrganizationRepository.MoveComputerAsync(host.Key.OrganizationId, _selectedOrganizationId, host.Key.Id, currentParentUnitId, newParentUnit.Id);
             }
 
             await OrganizationRepository.SaveChangesAsync();
 
-            await OnNodesMoved.InvokeAsync(Hosts.Keys);
+            await OnHostsMoved.InvokeAsync(Hosts.Keys);
 
             if (unavailableHosts.Count > 0)
             {
