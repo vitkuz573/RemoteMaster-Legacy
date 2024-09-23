@@ -101,7 +101,8 @@ public class OrganizationService(IOrganizationRepository organizationRepository)
         var organization = await organizationRepository.GetByIdAsync(organizationId) ?? throw new InvalidOperationException("Organization not found");
         var organizationalUnit = organization.OrganizationalUnits.FirstOrDefault(u => u.Id == organizationalUnitId) ?? throw new InvalidOperationException("Organizational Unit not found");
         var computer = organizationalUnit.Computers.FirstOrDefault(c => c.Id == computerId) ?? throw new InvalidOperationException("Computer not found");
-        
+
+        await organizationRepository.RemoveComputerAsync(organizationId, organizationalUnitId, computerId);
         await organizationRepository.UpdateAsync(organization);
         await organizationRepository.SaveChangesAsync();
     }
