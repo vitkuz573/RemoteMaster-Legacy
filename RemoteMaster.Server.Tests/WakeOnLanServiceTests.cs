@@ -6,7 +6,6 @@ using System.Net;
 using System.Net.NetworkInformation;
 using Moq;
 using RemoteMaster.Server.Abstractions;
-using RemoteMaster.Server.Helpers;
 using RemoteMaster.Server.Services;
 
 namespace RemoteMaster.Server.Tests;
@@ -21,7 +20,12 @@ public class WakeOnLanServiceTests
         var wakeOnLanService = new WakeOnLanService(packetSenderMock.Object);
         var macAddress = PhysicalAddress.Parse("01:23:45:67:89:AB");
         const int port = 9;
-        var expectedPacket = MagicPacketCreator.Create(macAddress);
+
+        var macBytes = macAddress.GetAddressBytes();
+        var expectedPacket = Enumerable.Repeat((byte)0xFF, 6)
+                                       .Concat(Enumerable.Repeat(macBytes, 16).SelectMany(b => b))
+                                       .ToArray();
+
         var expectedEndPoint = new IPEndPoint(IPAddress.Broadcast, port);
 
         // Act
@@ -41,7 +45,12 @@ public class WakeOnLanServiceTests
         var wakeOnLanService = new WakeOnLanService(packetSenderMock.Object);
         var macAddress = PhysicalAddress.Parse("01:23:45:67:89:AB");
         const int defaultPort = 9;
-        var expectedPacket = MagicPacketCreator.Create(macAddress);
+
+        var macBytes = macAddress.GetAddressBytes();
+        var expectedPacket = Enumerable.Repeat((byte)0xFF, 6)
+                                       .Concat(Enumerable.Repeat(macBytes, 16).SelectMany(b => b))
+                                       .ToArray();
+
         var expectedEndPoint = new IPEndPoint(IPAddress.Broadcast, defaultPort);
 
         // Act
