@@ -12,6 +12,8 @@ public class WakeOnLanService(IPacketSender packetSender) : IWakeOnLanService
 {
     public void WakeUp(PhysicalAddress macAddress, int port = 9)
     {
+        ArgumentNullException.ThrowIfNull(macAddress);
+
         var packet = Enumerable.Repeat((byte)0xFF, 6)
             .Concat(Enumerable.Repeat(macAddress.GetAddressBytes(), 16).SelectMany(b => b))
             .ToArray();
