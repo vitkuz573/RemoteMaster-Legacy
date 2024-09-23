@@ -34,7 +34,7 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
 
         if (hostConfiguration.Host == null || !hostConfiguration.Host.Equals(hostInformation))
         {
-            if (hostConfiguration.Host != null && hostConfiguration.Host.MacAddress != hostInformation.MacAddress)
+            if (hostConfiguration.Host != null && !hostConfiguration.Host.MacAddress.GetAddressBytes().SequenceEqual(hostInformation.MacAddress.GetAddressBytes()))
             {
                 Log.Information("MAC address has changed, which might indicate restoration from backup.");
             }

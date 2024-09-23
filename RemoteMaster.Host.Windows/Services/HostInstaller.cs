@@ -9,6 +9,7 @@ using System.Text.Json;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Core.Models;
 using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Host.Windows.Models;
 using RemoteMaster.Shared.Abstractions;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
@@ -21,17 +22,19 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
 {
     private readonly string _applicationDirectory = fileSystem.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host");
 
-    public async Task InstallAsync(string server, string organization, string organizationalUnit, string? modulesPath, string? username, string? password)
+    public async Task InstallAsync(HostInstallRequest installRequest)
     {
+        ArgumentNullException.ThrowIfNull(installRequest);
+
         try
         {
-            if (modulesPath != null)
+            if (installRequest.ModulesPath != null)
             {
-                var isNetworkPath = modulesPath.StartsWith(@"\\");
+                var isNetworkPath = installRequest.ModulesPath.StartsWith(@"\\");
 
                 if (isNetworkPath)
                 {
-                    if (!MapNetworkDriveAsync(modulesPath, username, password))
+                    if (!MapNetworkDriveAsync(installRequest.ModulesPath, installRequest.UserCredentials))
                     {
                         Log.Information("Install aborted.");
 
@@ -39,7 +42,7 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
                     }
                 }
 
-                var modulesDirectory = Path.Combine(modulesPath, "Modules");
+                var modulesDirectory = Path.Combine(installRequest.ModulesPath, "Modules");
 
                 if (!Directory.Exists(modulesDirectory))
                 {
@@ -63,16 +66,16 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
 
                 if (isNetworkPath)
                 {
-                    UnmapNetworkDriveAsync(modulesPath);
+                    UnmapNetworkDriveAsync(installRequest.ModulesPath);
                 }
             }
 
             var hostInformation = hostInformationService.GetHostInformation();
 
             Log.Information("Starting installation...");
-            Log.Information("Server: {Server}", server);
+            Log.Information("Server: {Server}", installRequest.Server);
             Log.Information("Host Name: {HostName}, IP Address: {IPAddress}, MAC Address: {MacAddress}", hostInformation.Name, hostInformation.IpAddress, hostInformation.MacAddress);
-            Log.Information("Distinguished Name: CN={CommonName}, O={Organization}, OU={OrganizationalUnit}", hostInformation.Name, organization, organizationalUnit);
+            Log.Information("Distinguished Name: CN={CommonName}, O={Organization}, OU={OrganizationalUnit}", hostInformation.Name, installRequest.Organization, installRequest.OrganizationalUnit);
 
             var hostService = serviceFactory.GetService("RCHost");
 
@@ -89,11 +92,11 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
 
             var hostConfiguration = new HostConfiguration
             {
-                Server = server,
+                Server = installRequest.Server,
                 Subject = new SubjectDto
                 {
-                    Organization = organization,
-                    OrganizationalUnit = [organizationalUnit]
+                    Organization = installRequest.Organization,
+                    OrganizationalUnit = [installRequest.OrganizationalUnit]
                 },
                 Host = hostInformation
             };
@@ -105,7 +108,7 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
             await hostLifecycleService.RegisterAsync();
             await hostLifecycleService.GetCaCertificateAsync();
 
-            var organizationAddress = await hostLifecycleService.GetOrganizationAddressAsync(organization);
+            var organizationAddress = await hostLifecycleService.GetOrganizationAddressAsync(installRequest.Organization);
 
             await hostLifecycleService.IssueCertificateAsync(hostConfiguration, organizationAddress);
 
@@ -168,10 +171,11 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
         }
     }
 
-    private bool MapNetworkDriveAsync(string folderPath, string? username, string? password)
+    private bool MapNetworkDriveAsync(string folderPath, Credentials? userCredentials)
     {
         Log.Information($"Attempting to map network drive with remote path: {folderPath}");
-        var isMapped = networkDriveService.MapNetworkDrive(folderPath, username, password);
+
+        var isMapped = networkDriveService.MapNetworkDrive(folderPath, userCredentials.UserName, userCredentials.Password);
 
         if (!isMapped)
         {

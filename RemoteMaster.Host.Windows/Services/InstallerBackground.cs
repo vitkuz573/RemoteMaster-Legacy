@@ -5,6 +5,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using RemoteMaster.Host.Windows.Abstractions;
+using RemoteMaster.Host.Windows.Models;
+using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Windows.Services;
 
@@ -45,7 +47,17 @@ public class InstallerBackground(IConfiguration configuration, IHostApplicationL
 
             await Task.Delay(2000, cancellationToken);
 
-            await hostInstaller.InstallAsync(server, organization, organizationalUnit, modulesPath, username, password);
+            var installRequest = new HostInstallRequest(server, organization, organizationalUnit)
+            {
+                ModulesPath = modulesPath,
+            };
+
+            if (username != null && password != null)
+            {
+                installRequest.UserCredentials = new Credentials(username, password);
+            }
+
+            await hostInstaller.InstallAsync(installRequest);
 
             Environment.Exit(0);
         }

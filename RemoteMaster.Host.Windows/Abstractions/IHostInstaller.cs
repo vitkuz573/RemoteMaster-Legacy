@@ -2,9 +2,11 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using RemoteMaster.Host.Windows.Models;
+
 namespace RemoteMaster.Host.Windows.Abstractions;
 
 public interface IHostInstaller
 { 
-    Task InstallAsync(string server, string organization, string organizationalUnit, string? modulesPath, string? username, string? password);
+    Task InstallAsync(HostInstallRequest installRequest);
 }
