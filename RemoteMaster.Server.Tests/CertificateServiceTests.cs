@@ -71,7 +71,7 @@ public class CertificateServiceTests
         var csrBytes = GenerateCsrBytes(false);
         using var caCertificate = GenerateCaCertificate();
 
-        var ipAddress = IPAddress.Parse("127.0.0.1");
+        var ipAddress = IPAddress.Loopback;
         var macAddress = PhysicalAddress.Parse("00-14-22-01-23-45");
 
         var computer = new ComputerDto("localhost", ipAddress, macAddress);
@@ -95,7 +95,7 @@ public class CertificateServiceTests
         var csrBytes = GenerateMinimalValidCsrBytes();
         using var caCertificate = GenerateCaCertificate();
 
-        var ipAddress = IPAddress.Parse("127.0.0.1");
+        var ipAddress = IPAddress.Loopback;
         var macAddress = PhysicalAddress.Parse("00-14-22-01-23-45");
 
         var computer = new ComputerDto("localhost", ipAddress, macAddress);
@@ -119,7 +119,7 @@ public class CertificateServiceTests
         var csrBytes = GenerateCsrBytesWithExtensions();
         using var caCertificate = GenerateCaCertificate();
 
-        var ipAddress = IPAddress.Parse("127.0.0.1");
+        var ipAddress = IPAddress.Loopback;
         var macAddress = PhysicalAddress.Parse("00-14-22-01-23-45");
 
         var computer = new ComputerDto("localhost", ipAddress, macAddress);
