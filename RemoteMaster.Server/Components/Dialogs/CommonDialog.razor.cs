@@ -3,14 +3,16 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Collections.Concurrent;
+using MessagePack;
+using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
-using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Shared.DTOs;
+using RemoteMaster.Shared.Formatters;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
@@ -128,7 +130,12 @@ public class CommonDialogBase : ComponentBase
                     return accessTokenResult.IsSuccess ? accessTokenResult.Value : null;
                 };
             })
-            .AddMessagePackProtocol()
+            .AddMessagePackProtocol(options =>
+            {
+                var resolver = CompositeResolver.Create([new IPAddressFormatter(), new PhysicalAddressFormatter()], [ContractlessStandardResolver.Instance]);
+
+                options.SerializerOptions = MessagePackSerializerOptions.Standard.WithResolver(resolver);
+            })
             .Build();
 
         if (startConnection)

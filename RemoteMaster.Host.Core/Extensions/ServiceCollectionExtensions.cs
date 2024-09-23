@@ -42,7 +42,7 @@ public static class ServiceCollectionExtensions
 
         services.AddSignalR().AddMessagePackProtocol(options =>
         {
-            var resolver = CompositeResolver.Create([new IPAddressFormatter()], [ContractlessStandardResolver.Instance]);
+            var resolver = CompositeResolver.Create([new IPAddressFormatter(), new PhysicalAddressFormatter()], [ContractlessStandardResolver.Instance]);
 
             options.SerializerOptions = MessagePackSerializerOptions.Standard.WithResolver(resolver);
         });

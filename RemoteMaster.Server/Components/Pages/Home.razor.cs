@@ -6,6 +6,8 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Security.Claims;
 using System.Threading.Channels;
+using MessagePack.Resolvers;
+using MessagePack;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -18,6 +20,7 @@ using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Components.Dialogs;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.DTOs;
+using RemoteMaster.Shared.Formatters;
 using RemoteMaster.Shared.Models;
 using Serilog;
 
@@ -365,7 +368,12 @@ public partial class Home
                     return accessTokenResult.IsSuccess ? accessTokenResult.Value : null;
                 };
             })
-            .AddMessagePackProtocol()
+            .AddMessagePackProtocol(options =>
+            {
+                var resolver = CompositeResolver.Create([new IPAddressFormatter(), new PhysicalAddressFormatter()], [ContractlessStandardResolver.Instance]);
+
+                options.SerializerOptions = MessagePackSerializerOptions.Standard.WithResolver(resolver);
+            })
             .Build();
 
         if (!startConnection)

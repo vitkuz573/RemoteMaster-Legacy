@@ -149,7 +149,6 @@ public partial class MoveDialog
                 }
 
                 var currentParentUnitId = host.Key.OrganizationalUnitId;
-                var currentParentUnit = await OrganizationRepository.GetOrganizationalUnitByIdAsync(currentParentUnitId) ?? throw new InvalidOperationException("Current parent unit not found.");
                 
                 await OrganizationRepository.MoveComputerAsync(host.Key.OrganizationId, _selectedOrganizationId, host.Key.Id, currentParentUnitId, newParentUnit.Id);
             }
@@ -193,7 +192,7 @@ public partial class MoveDialog
 
         foreach (var host in unavailableHosts)
         {
-            var existingRequest = hostMoveRequests.FirstOrDefault(r => r.MacAddress == host.MacAddress);
+            var existingRequest = hostMoveRequests.FirstOrDefault(r => r.MacAddress.GetAddressBytes().SequenceEqual(host.MacAddress.GetAddressBytes()));
 
             if (existingRequest != null)
             {
