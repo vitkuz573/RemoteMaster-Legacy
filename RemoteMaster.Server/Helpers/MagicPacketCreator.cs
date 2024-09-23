@@ -8,24 +8,14 @@ namespace RemoteMaster.Server.Helpers;
 
 public static class MagicPacketCreator
 {
-    private const int MacAddressByteLength = 6;
-
     public static byte[] Create(PhysicalAddress macAddress)
     {
         ArgumentNullException.ThrowIfNull(macAddress);
 
-        var packet = new byte[17 * MacAddressByteLength];
+        var macBytes = macAddress.GetAddressBytes();
 
-        for (var i = 0; i < MacAddressByteLength; i++)
-        {
-            packet[i] = 0xFF;
-        }
-
-        for (var i = 1; i <= 16; i++)
-        {
-            Buffer.BlockCopy(macAddress.GetAddressBytes(), 0, packet, i * MacAddressByteLength, MacAddressByteLength);
-        }
-
-        return packet;
+        return Enumerable.Repeat((byte)0xFF, 6)
+                         .Concat(Enumerable.Repeat(macBytes, 16).SelectMany(b => b))
+                         .ToArray();
     }
 }
