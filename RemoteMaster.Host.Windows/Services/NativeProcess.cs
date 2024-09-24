@@ -58,6 +58,24 @@ public class NativeProcess : INativeProcess
 
     public StreamReader? StandardError => _standardError;
 
+    public bool HasExited
+    {
+        get
+        {
+            if (_processHandle == null || _processHandle.IsInvalid || _processHandle.IsClosed)
+            {
+                throw new InvalidOperationException("No process is associated with this NativeProcess object.");
+            }
+
+            if (GetExitCodeProcess(_processHandle, out var exitCode))
+            {
+                return exitCode != 259;
+            }
+
+            throw new Win32Exception(Marshal.GetLastWin32Error());
+        }
+    }
+
     public void Start()
     {
         var sessionId = StartInfo is { TargetSessionId: not null, ForceConsoleSession: false }

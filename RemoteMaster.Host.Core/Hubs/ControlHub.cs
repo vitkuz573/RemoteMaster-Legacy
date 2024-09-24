@@ -167,6 +167,8 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     [Authorize(Policy = "DisconnectClientPolicy")]
     public async Task DisconnectClient(ViewerDisconnectRequest disconnectRequest)
     {
+        ArgumentNullException.ThrowIfNull(disconnectRequest);
+
         if (appState.TryGetViewer(disconnectRequest.ConnectionId, out var viewer) && viewer != null)
         {
             screenCastingService.StopStreaming(viewer);

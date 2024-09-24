@@ -3,17 +3,14 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using Microsoft.AspNetCore.SignalR;
 using RemoteMaster.Host.Core.Abstractions;
-using RemoteMaster.Host.Windows.Models;
-using RemoteMaster.Host.Windows.Services;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Windows.Hubs;
 
-public class ChatHub : Hub<IChatClient>
+public class ChatHub(IModuleService moduleService) : Hub<IChatClient>
 {
     private static readonly ConcurrentQueue<ChatMessage> Messages = new();
 
@@ -21,37 +18,9 @@ public class ChatHub : Hub<IChatClient>
     {
         ArgumentNullException.ThrowIfNull(chatMessageDto);
 
-        const string processName = "RemoteMaster.Chat";
-        const string processPath = @"C:\Program Files\RemoteMaster\Host\Modules\Chat\RemoteMaster.Chat.exe";
+        var chatModule = moduleService.GetModule("Chat");
 
-        var isProcessRunning = Process.GetProcessesByName(processName).Length != 0;
-
-        if (!isProcessRunning)
-        {
-            if (File.Exists(processPath))
-            {
-                var startInfo = new NativeProcessStartInfo
-                {
-                    FileName = processPath,
-                    ForceConsoleSession = true,
-                    CreateNoWindow = false,
-                    UseCurrentUserToken = false,
-                    Environment =
-                    {
-                        ["WEBVIEW2_USER_DATA_FOLDER"] = @"C:\ProgramData\RemoteMaster\Host"
-                    }
-                };
-
-                using var nativeProcess = new NativeProcess();
-                nativeProcess.StartInfo = startInfo;
-
-                nativeProcess.Start();
-            }
-            else
-            {
-                throw new FileNotFoundException($"The specified file '{processPath}' was not found.");
-            }
-        }
+        chatModule?.Start();
 
         var id = Guid.NewGuid().ToString();
         var timestamp = DateTimeOffset.Now;
