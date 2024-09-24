@@ -165,17 +165,17 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
     }
 
     [Authorize(Policy = "DisconnectClientPolicy")]
-    public async Task DisconnectClient(string connectionId, DisconnectReason reason)
+    public async Task DisconnectClient(ViewerDisconnectRequest disconnectRequest)
     {
-        if (appState.TryGetViewer(connectionId, out var viewer) && viewer != null)
+        if (appState.TryGetViewer(disconnectRequest.ConnectionId, out var viewer) && viewer != null)
         {
             screenCastingService.StopStreaming(viewer);
-            appState.TryRemoveViewer(connectionId);
-            await Clients.Client(connectionId).ReceiveDisconnected(reason);
+            appState.TryRemoveViewer(disconnectRequest.ConnectionId);
+            await Clients.Client(disconnectRequest.ConnectionId).ReceiveDisconnected(disconnectRequest.Reason);
         }
         else
         {
-            Log.Error("Failed to find a viewer for connection ID {ConnectionId}", connectionId);
+            Log.Error("Failed to find a viewer for connection ID {ConnectionId}", disconnectRequest.ConnectionId);
         }
     }
 

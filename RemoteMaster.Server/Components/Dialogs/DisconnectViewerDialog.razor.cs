@@ -5,6 +5,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
+using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Models;
 
@@ -30,7 +31,9 @@ public partial class DisconnectViewerDialog
 
     public async Task Disconnect()
     {
-        await HubConnection.InvokeAsync("DisconnectClient", Viewer.ConnectionId, _selectedDisconnectReason);
+        var disconnectRequest = new ViewerDisconnectRequest(Viewer.ConnectionId, _selectedDisconnectReason);
+
+        await HubConnection.InvokeAsync("DisconnectClient", disconnectRequest);
 
         MudDialog.Close();
     }
