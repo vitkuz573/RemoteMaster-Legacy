@@ -26,7 +26,7 @@
                 Settings
             </MudText>
         </MudDrawerHeader>
-        <MudNavMenu>
+        <MudNavMenu Color="Color.Info">
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.DisplaySettings">
                 <MudSelect Value="@_selectedDisplay" ValueChanged="OnChangeScreen" Label="Display" T="string" Dense="true">
                     @foreach (var displayItem in GetDisplayItems())
@@ -76,46 +76,49 @@
                     <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Lock" OnClick="LockWorkStation">Lock Workstation</MudNavLink>
                     <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Logout" OnClick="LogOffUser">Logoff User</MudNavLink>
                     <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.ControlPoint" OnClick="SendCtrlAltDel" Disabled="@(_viewers.All(v => v.AuthenticationType != "RemoteMaster Security"))">Send Ctrl+Alt+Del</MudNavLink>
-                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.History" OnClick="RebootHost">Reboot Host</MudNavLink>
-                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.PowerOff" OnClick="ShutdownHost">Shutdown Host</MudNavLink>
+                    
+                    <MudNavGroup Title="Power" Icon="@Icons.Material.Filled.Power">
+                        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.History" OnClick="RebootHost">Reboot Host</MudNavLink>
+                        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.PowerOff" OnClick="ShutdownHost">Shutdown Host</MudNavLink>
+                    </MudNavGroup>
                 </Authorized>
             </AuthorizeView>
+            
+            <MudNavGroup Title="System Information" Icon="@Icons.Material.Filled.Info">
+                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Https">
+                    Transport Type: @_transportType
+                </MudNavLink>
 
-            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Https">
-                Transport Type: @_transportType
-            </MudNavLink>
+                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Tab">OS: @(_operatingSystem)</MudNavLink>
+                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Code">.NET Version: @(_dotNetVersion)</MudNavLink>
+                <MudNavLink Icon="@Icons.Material.Filled.Computer">Host Version: @(_hostVersion)</MudNavLink>
+            </MudNavGroup>
 
-            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Tab">OS: @(_operatingSystem)</MudNavLink>
-            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Code">.NET Version: @(_dotNetVersion)</MudNavLink>
-            <MudNavLink Icon="@Icons.Material.Filled.Computer">Host Version: @(_hostVersion)</MudNavLink>
-
-            <MudExpansionPanels>
-                <MudExpansionPanel Text="@($"Viewers ({_viewers.Count})")">
-                    @if (_viewers.Any())
-                    {
-                        <MudList T="string">
-                            @foreach (var viewer in _viewers)
-                            {
-                                <MudListItem OnClick="() => DisconnectViewer(viewer.ConnectionId)">
-                                    <MudText>
-                                        <b>ID:</b> @viewer.ConnectionId<br />
-                                        <b>Group:</b> @viewer.Group<br />
-                                        <b>Username:</b> @viewer.UserName<br />
-                                        <b>Role:</b> @viewer.Role<br />
-                                        <b>Connected:</b> @viewer.ConnectedTime.ToLocalTime()<br />
-                                        <b>IP Address:</b> @viewer.IpAddress<br />
-                                        <b>Authentication Type:</b> @viewer.AuthenticationType
-                                    </MudText>
-                                </MudListItem>
-                            }
-                        </MudList>
-                    }
-                    else
-                    {
-                        <MudText>No viewers connected</MudText>
-                    }
-                </MudExpansionPanel>
-            </MudExpansionPanels>
+            <MudNavGroup Title="@($"Viewers ({_viewers.Count})")" Icon="@Icons.Material.Filled.People">
+                @if (_viewers.Any())
+                {
+                    <MudList T="string">
+                        @foreach (var viewer in _viewers)
+                        {
+                            <MudListItem OnClick="() => DisconnectViewer(viewer.ConnectionId)">
+                                <MudText>
+                                    <b>ID:</b> @viewer.ConnectionId<br />
+                                    <b>Group:</b> @viewer.Group<br />
+                                    <b>Username:</b> @viewer.UserName<br />
+                                    <b>Role:</b> @viewer.Role<br />
+                                    <b>Connected:</b> @viewer.ConnectedTime.ToLocalTime()<br />
+                                    <b>IP Address:</b> @viewer.IpAddress<br />
+                                    <b>Authentication Type:</b> @viewer.AuthenticationType
+                                </MudText>
+                            </MudListItem>
+                        }
+                    </MudList>
+                }
+                else
+                {
+                    <MudText>No viewers connected</MudText>
+                }
+            </MudNavGroup>
         </MudNavMenu>
     </MudDrawer>
 
