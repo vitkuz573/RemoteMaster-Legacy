@@ -584,7 +584,7 @@ public partial class Home
 
     private async Task OpenLogsManager()
     {
-        await OpenComputerWindow("logs");
+        await OpenComputerWindow("logs", 1120);
     }
 
     private async Task OpenChat()
