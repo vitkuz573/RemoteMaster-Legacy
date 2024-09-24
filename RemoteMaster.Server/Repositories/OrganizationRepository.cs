@@ -17,7 +17,7 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
     {
         return await context.Organizations
             .Include(o => o.OrganizationalUnits)
-            .ThenInclude(ou => ou.Computers)
+            .ThenInclude(ou => ou.Hosts)
             .FirstOrDefaultAsync(o => o.Id == id);
     }
 
@@ -25,7 +25,7 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
     {
         return await context.Organizations
             .Include(o => o.OrganizationalUnits)
-            .ThenInclude(ou => ou.Computers)
+            .ThenInclude(ou => ou.Hosts)
             .Where(o => ids.Contains(o.Id))
             .ToListAsync();
     }
@@ -34,7 +34,7 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
     {
         return await context.Organizations
             .Include(o => o.OrganizationalUnits)
-            .ThenInclude(ou => ou.Computers)
+            .ThenInclude(ou => ou.Hosts)
             .ToListAsync();
     }
 
@@ -42,7 +42,7 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
     {
         return await context.Organizations
             .Include(o => o.OrganizationalUnits)
-            .ThenInclude(ou => ou.Computers)
+            .ThenInclude(ou => ou.Hosts)
             .Where(predicate)
             .ToListAsync();
     }
@@ -71,7 +71,7 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
     {
         return await context.Organizations
             .SelectMany(o => o.OrganizationalUnits)
-            .SelectMany(ou => ou.Computers)
+            .SelectMany(ou => ou.Hosts)
             .Where(predicate)
             .ToListAsync();
     }
@@ -80,11 +80,11 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
     {
         var organization = await context.Organizations
             .Include(o => o.OrganizationalUnits)
-            .ThenInclude(ou => ou.Computers)
+            .ThenInclude(ou => ou.Hosts)
             .FirstOrDefaultAsync(o => o.Id == organizationId) ?? throw new InvalidOperationException("Organization not found.");
 
         var unit = organization.OrganizationalUnits.FirstOrDefault(ou => ou.Id == unitId) ?? throw new InvalidOperationException("Organizational unit not found.");
-        var computer = unit.Computers.FirstOrDefault(c => c.Id == computerId) ?? throw new InvalidOperationException("Host not found.");
+        var computer = unit.Hosts.FirstOrDefault(c => c.Id == computerId) ?? throw new InvalidOperationException("Host not found.");
 
         unit.RemoveComputer(computer.Id);
         context.Hosts.Remove(computer);
@@ -94,7 +94,7 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
     {
         return await context.Organizations
             .SelectMany(o => o.OrganizationalUnits)
-            .Include(ou => ou.Computers)
+            .Include(ou => ou.Hosts)
             .Include(ou => ou.UserOrganizationalUnits)
             .FirstOrDefaultAsync(ou => ou.Id == unitId);
     }
@@ -103,7 +103,7 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
     {
         return await context.Organizations
             .Include(o => o.OrganizationalUnits)
-            .ThenInclude(ou => ou.Computers)
+            .ThenInclude(ou => ou.Hosts)
             .FirstOrDefaultAsync(o => o.OrganizationalUnits.Any(ou => ou.Id == unitId));
     }
 
@@ -111,16 +111,16 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
     {
         var sourceOrganization = await context.Organizations
             .Include(o => o.OrganizationalUnits)
-            .ThenInclude(ou => ou.Computers)
+            .ThenInclude(ou => ou.Hosts)
             .FirstOrDefaultAsync(o => o.Id == sourceOrganizationId) ?? throw new InvalidOperationException("Source organization not found.");
 
         var targetOrganization = await context.Organizations
             .Include(o => o.OrganizationalUnits)
-            .ThenInclude(ou => ou.Computers)
+            .ThenInclude(ou => ou.Hosts)
             .FirstOrDefaultAsync(o => o.Id == targetOrganizationId) ?? throw new InvalidOperationException("Target organization not found.");
 
         var sourceUnit = sourceOrganization.OrganizationalUnits.FirstOrDefault(u => u.Id == sourceUnitId) ?? throw new InvalidOperationException("Source unit not found.");
-        var computer = sourceUnit.Computers.FirstOrDefault(c => c.Id == computerId) ?? throw new InvalidOperationException("Host not found in the source unit.");
+        var computer = sourceUnit.Hosts.FirstOrDefault(c => c.Id == computerId) ?? throw new InvalidOperationException("Host not found in the source unit.");
         var targetUnit = targetOrganization.OrganizationalUnits.FirstOrDefault(u => u.Id == targetUnitId) ?? throw new InvalidOperationException("Target unit not found.");
 
         sourceUnit.RemoveComputer(computer.Id);
@@ -179,7 +179,7 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
             .Where(o => organizationIds.Contains(o.Id))
             .Include(o => o.OrganizationalUnits
                 .Where(ou => organizationalUnitIds.Contains(ou.Id)))
-            .ThenInclude(ou => ou.Computers)
+            .ThenInclude(ou => ou.Hosts)
             .ToListAsync();
     }
 }

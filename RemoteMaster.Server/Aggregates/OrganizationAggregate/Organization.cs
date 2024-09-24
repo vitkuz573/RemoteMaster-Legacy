@@ -104,8 +104,8 @@ public class Organization : IAggregateRoot
 
     public CertificateRenewalTask CreateCertificateRenewalTask(Guid computerId, DateTimeOffset plannedDate)
     {
-        var unit = _organizationalUnits.SingleOrDefault(u => u.Computers.Any(c => c.Id == computerId)) ?? throw new InvalidOperationException("Host not found in this organization.");
-        var computer = unit.Computers.Single(c => c.Id == computerId);
+        var unit = _organizationalUnits.SingleOrDefault(u => u.Hosts.Any(c => c.Id == computerId)) ?? throw new InvalidOperationException("Host not found in this organization.");
+        var computer = unit.Hosts.Single(c => c.Id == computerId);
 
         return new CertificateRenewalTask(computer, this, plannedDate);
     }

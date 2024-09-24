@@ -46,7 +46,7 @@ public class OrganizationalUnitConfiguration : IEntityTypeConfiguration<Organiza
             .HasForeignKey(ou => ou.OrganizationId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(ou => ou.Computers)
+        builder.HasMany(ou => ou.Hosts)
             .WithOne(c => c.Parent)
             .HasForeignKey(c => c.ParentId)
             .IsRequired()

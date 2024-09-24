@@ -10,7 +10,7 @@ namespace RemoteMaster.Server.Aggregates.OrganizationAggregate;
 public class OrganizationalUnit
 {
     private readonly List<OrganizationalUnit> _children = [];
-    private readonly List<Host> _computers = [];
+    private readonly List<Host> _hosts = [];
     private readonly List<UserOrganizationalUnit> _userOrganizationalUnits = [];
 
     public Guid Id { get; private set; }
@@ -27,7 +27,7 @@ public class OrganizationalUnit
 
     public IReadOnlyCollection<OrganizationalUnit> Children => _children.AsReadOnly();
 
-    public IReadOnlyCollection<Host> Computers => _computers.AsReadOnly();
+    public IReadOnlyCollection<Host> Hosts => _hosts.AsReadOnly();
 
     public IReadOnlyCollection<UserOrganizationalUnit> UserOrganizationalUnits => _userOrganizationalUnits.AsReadOnly();
 
@@ -62,29 +62,29 @@ public class OrganizationalUnit
         var computer = new Host(name, ipAddress, macAddress);
         computer.SetOrganizationalUnit(Id);
 
-        _computers.Add(computer);
+        _hosts.Add(computer);
     }
 
     internal void AddExistingComputer(Host host)
     {
-        if (_computers.Any(c => c.Id == host.Id))
+        if (_hosts.Any(c => c.Id == host.Id))
         {
             throw new InvalidOperationException("Host already exists in this unit.");
         }
 
-        _computers.Add(host);
+        _hosts.Add(host);
     }
 
     public void RemoveComputer(Guid computerId)
     {
-        var computer = _computers.SingleOrDefault(c => c.Id == computerId);
+        var computer = _hosts.SingleOrDefault(c => c.Id == computerId);
 
-        _computers.Remove(computer);
+        _hosts.Remove(computer);
     }
 
     public void ClearComputers()
     {
-        _computers.Clear();
+        _hosts.Clear();
     }
 
     public void AddUser(string userId)

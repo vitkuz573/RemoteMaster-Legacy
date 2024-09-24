@@ -41,7 +41,7 @@ public class LimitChecker(IPlanService planService, IUserPlanProvider userPlanPr
         ArgumentNullException.ThrowIfNull(organizationalUnit);
 
         var limits = GetCurrentPlanLimits();
-        var computerCount = organizationalUnit.Computers.Count;
+        var computerCount = organizationalUnit.Hosts.Count;
 
         return computerCount < limits.MaxComputersPerOrganizationalUnit;
     }

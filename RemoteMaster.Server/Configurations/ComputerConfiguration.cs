@@ -37,7 +37,7 @@ public class ComputerConfiguration : IEntityTypeConfiguration<Host>
             .HasColumnOrder(3);
 
         builder.HasOne(c => c.Parent)
-            .WithMany(ou => ou.Computers)
+            .WithMany(ou => ou.Hosts)
             .HasForeignKey(c => c.ParentId)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);

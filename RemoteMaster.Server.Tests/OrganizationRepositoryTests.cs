@@ -134,7 +134,7 @@ public class OrganizationRepositoryTests
         _context.Organizations.Add(organization);
         await _context.SaveChangesAsync();
 
-        var computerId = unit.Computers.First().Id;
+        var computerId = unit.Hosts.First().Id;
 
         // Act
         await _repository.RemoveComputerAsync(organization.Id, unit.Id, computerId);
@@ -142,7 +142,7 @@ public class OrganizationRepositoryTests
 
         // Assert
         var updatedOrganization = await _repository.GetByIdAsync(organization.Id);
-        Assert.Empty(updatedOrganization.OrganizationalUnits.First().Computers);
+        Assert.Empty(updatedOrganization.OrganizationalUnits.First().Hosts);
     }
 
     [Fact]
@@ -251,7 +251,7 @@ public class OrganizationRepositoryTests
         _context.Organizations.AddRange(org1, org2);
         await _context.SaveChangesAsync();
 
-        var computerId = unit1.Computers.First().Id;
+        var computerId = unit1.Hosts.First().Id;
 
         // Act
         await _repository.MoveComputerAsync(org1.Id, org2.Id, computerId, unit1.Id, unit2.Id);
@@ -260,8 +260,8 @@ public class OrganizationRepositoryTests
         // Assert
         var updatedOrg1 = await _repository.GetByIdAsync(org1.Id);
         var updatedOrg2 = await _repository.GetByIdAsync(org2.Id);
-        Assert.Empty(updatedOrg1.OrganizationalUnits.First().Computers);
-        Assert.Single(updatedOrg2.OrganizationalUnits.First().Computers);
+        Assert.Empty(updatedOrg1.OrganizationalUnits.First().Hosts);
+        Assert.Single(updatedOrg2.OrganizationalUnits.First().Hosts);
     }
 
     [Fact]
@@ -279,7 +279,7 @@ public class OrganizationRepositoryTests
         _context.Organizations.Add(organization);
         await _context.SaveChangesAsync();
 
-        var computerId = unit.Computers.First().Id;
+        var computerId = unit.Hosts.First().Id;
         var plannedDate = DateTimeOffset.Now.AddDays(1);
 
         // Act

@@ -167,7 +167,7 @@ public partial class Home
 
     private async Task LoadComputers(OrganizationalUnit orgUnit)
     {
-        var computers = orgUnit.Computers.ToList();
+        var computers = orgUnit.Hosts.ToList();
 
         var newPendingComputers = new ConcurrentDictionary<IPAddress, ComputerDto>();
 
@@ -547,7 +547,7 @@ public partial class Home
     {
         if (_selectedNode is { } orgUnit)
         {
-            foreach (var computer in orgUnit.Computers)
+            foreach (var computer in orgUnit.Hosts)
             {
                 if (!_availableComputers.ContainsKey(computer.IpAddress) && !_unavailableComputers.ContainsKey(computer.IpAddress))
                 {

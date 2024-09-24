@@ -44,7 +44,7 @@ public class OrganizationService(IOrganizationRepository organizationRepository)
             {
                 foreach (var unit in organization.OrganizationalUnits)
                 {
-                    foreach (var computer in unit.Computers)
+                    foreach (var computer in unit.Hosts)
                     {
                         await organizationRepository.CreateCertificateRenewalTaskAsync(organization.Id, computer.Id, DateTime.UtcNow.AddHours(1));
                     }
@@ -100,7 +100,7 @@ public class OrganizationService(IOrganizationRepository organizationRepository)
     {
         var organization = await organizationRepository.GetByIdAsync(organizationId) ?? throw new InvalidOperationException("Organization not found");
         var organizationalUnit = organization.OrganizationalUnits.FirstOrDefault(u => u.Id == organizationalUnitId) ?? throw new InvalidOperationException("Organizational Unit not found");
-        var computer = organizationalUnit.Computers.FirstOrDefault(c => c.Id == computerId) ?? throw new InvalidOperationException("Host not found");
+        var computer = organizationalUnit.Hosts.FirstOrDefault(c => c.Id == computerId) ?? throw new InvalidOperationException("Host not found");
 
         await organizationRepository.RemoveComputerAsync(organizationId, organizationalUnitId, computerId);
         await organizationRepository.UpdateAsync(organization);

@@ -114,7 +114,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
 
         try
         {
-            var computer = parentUnit.Computers.FirstOrDefault(c => c.MacAddress.GetAddressBytes().SequenceEqual(hostConfiguration.Host.MacAddress.GetAddressBytes()));
+            var computer = parentUnit.Hosts.FirstOrDefault(c => c.MacAddress.GetAddressBytes().SequenceEqual(hostConfiguration.Host.MacAddress.GetAddressBytes()));
 
             if (computer != null)
             {
@@ -204,7 +204,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
         try
         {
             var parentUnit = parentOuResult.Value ?? throw new InvalidOperationException("Parent Organizational Unit not found.");
-            var computer = parentUnit.Computers.FirstOrDefault(c => c.MacAddress.GetAddressBytes().SequenceEqual(request.MacAddress.GetAddressBytes()));
+            var computer = parentUnit.Hosts.FirstOrDefault(c => c.MacAddress.GetAddressBytes().SequenceEqual(request.MacAddress.GetAddressBytes()));
 
             if (computer == null)
             {
@@ -263,7 +263,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
         try
         {
             var parentUnit = parentOuResult.Value ?? throw new InvalidOperationException("Parent Organizational Unit not found.");
-            var computer = parentUnit.Computers.FirstOrDefault(c => c.MacAddress.GetAddressBytes().SequenceEqual(request.MacAddress.GetAddressBytes()));
+            var computer = parentUnit.Hosts.FirstOrDefault(c => c.MacAddress.GetAddressBytes().SequenceEqual(request.MacAddress.GetAddressBytes()));
 
             if (computer == null)
             {
