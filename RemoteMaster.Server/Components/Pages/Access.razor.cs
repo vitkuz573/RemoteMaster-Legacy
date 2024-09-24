@@ -3,8 +3,8 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Claims;
-using MessagePack.Resolvers;
 using MessagePack;
+using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -12,10 +12,10 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using MudBlazor;
 using Polly;
+using RemoteMaster.Server.Components.Dialogs;
 using RemoteMaster.Server.DTOs;
 using RemoteMaster.Server.Requirements;
 using RemoteMaster.Shared.DTOs;
-using RemoteMaster.Shared.Enums;
 using RemoteMaster.Shared.Formatters;
 using RemoteMaster.Shared.Models;
 using Serilog;
@@ -550,9 +550,11 @@ public partial class Access : IAsyncDisposable
             return;
         }
 
-        const DisconnectReason reason = DisconnectReason.AdminInitiated;
-
-        await SafeInvokeAsync(() => _connection.InvokeAsync("DisconnectClient", connectionId, reason));
+        await DialogService.ShowAsync<DisconnectViewerDialog>("Disconnect viewer", new DialogParameters
+        {
+            { nameof(DisconnectViewerDialog.HubConnection), _connection },
+            { nameof(DisconnectViewerDialog.Viewer), _viewers.FirstOrDefault(v => v.ConnectionId == connectionId) }
+        });
     }
 
     private async Task<bool> IsPolicyPermittedAsync(string policyName)

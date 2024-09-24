@@ -667,7 +667,7 @@ public partial class Home
 
         var additionalParameters = new Dictionary<string, object>
         {
-            { "OnHostsMoved", EventCallback.Factory.Create<IEnumerable<HostDto>>(this, OnHostsMoved) }
+            { nameof(MoveDialog.OnHostsMoved), EventCallback.Factory.Create<IEnumerable<HostDto>>(this, OnHostsMoved) }
         };
 
         var dialogParameters = new DialogParameters

@@ -1,0 +1,20 @@
+﻿@using RemoteMaster.Shared.Enums
+
+<MudDialog>
+    <DialogContent>
+        <MudText>@Viewer.UserName</MudText>
+
+        <MudRadioGroup T="DisconnectReason" @bind-Value="@_selectedDisconnectReason">
+            @foreach (DisconnectReason disconnectReason in Enum.GetValues(typeof(DisconnectReason)))
+            {
+                <MudItem xs="12">
+                    <MudRadio T="DisconnectReason" Value="@disconnectReason" Dense="true">@disconnectReason.ToString()</MudRadio>
+                </MudItem>
+            }
+        </MudRadioGroup>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton OnClick="Disconnect">Disconnect</MudButton>
+    </DialogActions>
+</MudDialog>
