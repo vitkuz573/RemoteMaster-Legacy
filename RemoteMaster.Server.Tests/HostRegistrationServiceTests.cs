@@ -42,7 +42,7 @@ public class HostRegistrationServiceTests
 
         var hostConfig = new HostConfiguration
         {
-            Host = new ComputerDto("Host1", ipAddress, macAddress),
+            Host = new HostDto("Host1", ipAddress, macAddress),
             Subject = new SubjectDto { Organization = "TestOrg", OrganizationalUnit = ["OU1"] }
         };
 
@@ -73,7 +73,7 @@ public class HostRegistrationServiceTests
 
         var hostConfig = new HostConfiguration
         {
-            Host = new ComputerDto("Host1", ipAddress, macAddress),
+            Host = new HostDto("Host1", ipAddress, macAddress),
             Subject = new SubjectDto { Organization = "UnknownOrg", OrganizationalUnit = ["OU1"] }
         };
 
@@ -100,11 +100,11 @@ public class HostRegistrationServiceTests
     // 
     //     organization.AddOrganizationalUnit("OU1");
     //     var organizationalUnit = organization.OrganizationalUnits.First();
-    //     organizationalUnit.AddComputer("OldHost", "192.168.0.10", "00:11:22:33:44:55");
+    //     organizationalUnit.AddHost("OldHost", "192.168.0.10", "00:11:22:33:44:55");
     // 
     //     var hostConfig = new HostConfiguration
     //     {
-    //         Host = new ComputerDto("NewHost", "192.168.0.1", "00:11:22:33:44:55"),
+    //         Host = new HostDto("NewHost", "192.168.0.1", "00:11:22:33:44:55"),
     //         Subject = new SubjectDto { Organization = "TestOrg", OrganizationalUnit = ["OU1"] }
     //     };
     // 
@@ -121,9 +121,9 @@ public class HostRegistrationServiceTests
     // 
     //     // Assert
     //     Assert.True(result.IsSuccess);
-    //     var updatedComputer = organizationalUnit.Hosts.First(c => c.MacAddress == "00:11:22:33:44:55");
-    //     Assert.Equal("NewHost", updatedComputer.Name);
-    //     Assert.Equal("192.168.0.1", updatedComputer.IpAddress);
+    //     var updatedHost = organizationalUnit.Hosts.First(c => c.MacAddress == "00:11:22:33:44:55");
+    //     Assert.Equal("NewHost", updatedHost.Name);
+    //     Assert.Equal("192.168.0.1", updatedHost.IpAddress);
     //     _organizationRepositoryMock.Verify(x => x.SaveChangesAsync(), Times.Once);
     //     _eventNotificationServiceMock.Verify(x => x.SendNotificationAsync(It.IsAny<string>()), Times.Once);
     // }
@@ -138,7 +138,7 @@ public class HostRegistrationServiceTests
     // 
     //     var hostConfig = new HostConfiguration
     //     {
-    //         Host = new ComputerDto("Host1", "192.168.0.1", "00:11:22:33:44:55"),
+    //         Host = new HostDto("Host1", "192.168.0.1", "00:11:22:33:44:55"),
     //         Subject = new SubjectDto { Organization = "TestOrg", OrganizationalUnit = ["NewOU"] }
     //     };
     // 

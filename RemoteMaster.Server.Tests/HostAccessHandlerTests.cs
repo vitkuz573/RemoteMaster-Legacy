@@ -58,7 +58,7 @@ public class HostAccessHandlerTests
         _userRepositoryMock.Setup(repo => repo.GetByIdAsync(It.IsAny<string>()))
             .ReturnsAsync(applicationUser);
 
-        _organizationRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Host, bool>>>()))
+        _organizationRepositoryMock.Setup(repo => repo.FindHostsAsync(It.IsAny<Expression<Func<Host, bool>>>()))
             .ReturnsAsync(new List<Host>());
 
         // Act
@@ -85,7 +85,7 @@ public class HostAccessHandlerTests
         var ipAddress = IPAddress.Loopback;
         var macAddress = PhysicalAddress.Parse("00-14-22-01-23-45");
 
-        organizationalUnit.AddComputer("localhost", ipAddress, macAddress);
+        organizationalUnit.AddHost("localhost", ipAddress, macAddress);
 
         var applicationUser = new ApplicationUser();
         applicationUser.RevokeAccessToUnregisteredHosts();
@@ -93,7 +93,7 @@ public class HostAccessHandlerTests
         _userRepositoryMock.Setup(repo => repo.GetByIdAsync("user1"))
             .ReturnsAsync(applicationUser);
 
-        _organizationRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Host, bool>>>()))
+        _organizationRepositoryMock.Setup(repo => repo.FindHostsAsync(It.IsAny<Expression<Func<Host, bool>>>()))
             .ReturnsAsync(new List<Host> { organizationalUnit.Hosts.First() });
 
         _organizationRepositoryMock.Setup(repo => repo.GetOrganizationalUnitByIdAsync(organizationalUnit.Id))
@@ -124,7 +124,7 @@ public class HostAccessHandlerTests
         var ipAddress = IPAddress.Loopback;
         var macAddress = PhysicalAddress.Parse("00-14-22-01-23-45");
 
-        organizationalUnit.AddComputer("localhost", ipAddress, macAddress);
+        organizationalUnit.AddHost("localhost", ipAddress, macAddress);
 
         var applicationUser = new ApplicationUser();
         applicationUser.RevokeAccessToUnregisteredHosts();
@@ -132,7 +132,7 @@ public class HostAccessHandlerTests
         _userRepositoryMock.Setup(repo => repo.GetByIdAsync("user1"))
             .ReturnsAsync(applicationUser);
 
-        _organizationRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Host, bool>>>()))
+        _organizationRepositoryMock.Setup(repo => repo.FindHostsAsync(It.IsAny<Expression<Func<Host, bool>>>()))
             .ReturnsAsync(new List<Host> { organizationalUnit.Hosts.First() });
 
         _organizationRepositoryMock.Setup(repo => repo.GetOrganizationalUnitByIdAsync(organizationalUnit.Id))
@@ -167,14 +167,14 @@ public class HostAccessHandlerTests
         var ipAddress1 = IPAddress.Loopback;
         var macAddress1 = PhysicalAddress.Parse("00-14-22-01-23-45");
 
-        organizationalUnit1.AddComputer("sharedHost", ipAddress1, macAddress1);
+        organizationalUnit1.AddHost("sharedHost", ipAddress1, macAddress1);
 
         organizationalUnit2.AddUser("user2");
 
         var ipAddress2 = IPAddress.Loopback;
         var macAddress2 = PhysicalAddress.Parse("00-14-22-01-23-45");
 
-        organizationalUnit2.AddComputer("sharedHost", ipAddress2, macAddress2);
+        organizationalUnit2.AddHost("sharedHost", ipAddress2, macAddress2);
 
         var applicationUser = new ApplicationUser();
         applicationUser.RevokeAccessToUnregisteredHosts();
@@ -182,7 +182,7 @@ public class HostAccessHandlerTests
         _userRepositoryMock.Setup(repo => repo.GetByIdAsync("user1"))
             .ReturnsAsync(applicationUser);
 
-        _organizationRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Host, bool>>>()))
+        _organizationRepositoryMock.Setup(repo => repo.FindHostsAsync(It.IsAny<Expression<Func<Host, bool>>>()))
             .ReturnsAsync(new List<Host> { organizationalUnit1.Hosts.First() });
 
         _organizationRepositoryMock.Setup(repo => repo.GetOrganizationalUnitByIdAsync(organizationalUnit1.Id))
@@ -217,14 +217,14 @@ public class HostAccessHandlerTests
         var ipAddress1 = IPAddress.Loopback;
         var macAddress1 = PhysicalAddress.Parse("00-14-22-01-23-45");
 
-        organizationalUnit1.AddComputer("sharedHost", ipAddress1, macAddress1);
+        organizationalUnit1.AddHost("sharedHost", ipAddress1, macAddress1);
 
         organizationalUnit2.AddUser("user1");
 
         var ipAddress2 = IPAddress.Parse("127.0.0.2");
         var macAddress2 = PhysicalAddress.Parse("00-14-22-01-23-46");
 
-        organizationalUnit2.AddComputer("sharedHost", ipAddress2, macAddress2);
+        organizationalUnit2.AddHost("sharedHost", ipAddress2, macAddress2);
 
         var applicationUser = new ApplicationUser();
         applicationUser.RevokeAccessToUnregisteredHosts();
@@ -232,7 +232,7 @@ public class HostAccessHandlerTests
         _userRepositoryMock.Setup(repo => repo.GetByIdAsync("user1"))
             .ReturnsAsync(applicationUser);
 
-        _organizationRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Host, bool>>>()))
+        _organizationRepositoryMock.Setup(repo => repo.FindHostsAsync(It.IsAny<Expression<Func<Host, bool>>>()))
             .ReturnsAsync(new List<Host> { organizationalUnit1.Hosts.First() });
 
         _organizationRepositoryMock.Setup(repo => repo.GetOrganizationalUnitByIdAsync(organizationalUnit2.Id))

@@ -117,7 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AvailableComputers" xml:space="preserve">
+  <data name="AvailableHosts" xml:space="preserve">
     <value>Доступные компьютеры</value>
   </data>
   <data name="Connect" xml:space="preserve">
@@ -171,13 +171,13 @@
   <data name="MoveHost" xml:space="preserve">
     <value>Перемещение</value>
   </data>
-  <data name="NoAvailableComputers" xml:space="preserve">
+  <data name="NoAvailableHosts" xml:space="preserve">
     <value>Нет доступных компьютеров для отображения.</value>
   </data>
-  <data name="NoPendingComputers" xml:space="preserve">
+  <data name="NoPendingHosts" xml:space="preserve">
     <value>Нет ожидающих компьютеров для отображения.</value>
   </data>
-  <data name="NoUnavailableComputers" xml:space="preserve">
+  <data name="NoUnavailableHosts" xml:space="preserve">
     <value>Нет недоступных компьютеров для отображения.</value>
   </data>
   <data name="OpenShell" xml:space="preserve">
@@ -186,7 +186,7 @@
   <data name="PageTitle" xml:space="preserve">
     <value>RemoteMaster - Главная</value>
   </data>
-  <data name="PendingComputers" xml:space="preserve">
+  <data name="PendingHosts" xml:space="preserve">
     <value>Ожидающие компьютеры</value>
   </data>
   <data name="Power" xml:space="preserve">
@@ -222,7 +222,7 @@
   <data name="ToolsTab" xml:space="preserve">
     <value>Инструменты</value>
   </data>
-  <data name="UnavailableComputers" xml:space="preserve">
+  <data name="UnavailableHosts" xml:space="preserve">
     <value>Недоступные компьютеры</value>
   </data>
   <data name="Update" xml:space="preserve">

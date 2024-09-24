@@ -269,7 +269,7 @@ public partial class Access : IAsyncDisposable
         await SafeInvokeAsync(() => _connection.InvokeAsync("SendCommandToService", "CtrlAltDel"), true);
     }
 
-    private async Task RebootComputer()
+    private async Task RebootHost()
     {
         if (_connection == null)
         {
@@ -283,10 +283,10 @@ public partial class Access : IAsyncDisposable
             ForceAppsClosed = true
         };
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("RebootComputer", powerActionRequest), true);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("RebootHost", powerActionRequest), true);
     }
 
-    private async Task ShutdownComputer()
+    private async Task ShutdownHost()
     {
         if (_connection == null)
         {
@@ -300,7 +300,7 @@ public partial class Access : IAsyncDisposable
             ForceAppsClosed = true
         };
 
-        await SafeInvokeAsync(() => _connection.InvokeAsync("ShutdownComputer", powerActionRequest), true);
+        await SafeInvokeAsync(() => _connection.InvokeAsync("ShutdownHost", powerActionRequest), true);
     }
 
     private async Task InitializeHostConnectionAsync()

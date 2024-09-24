@@ -10,15 +10,15 @@ using RemoteMaster.Shared.DTOs;
 namespace RemoteMaster.Server.Abstractions;
 
 /// <summary>
-/// Interface for executing commands on computers.
+/// Interface for executing commands on hosts.
 /// </summary>
-public interface IComputerCommandService
+public interface IHostCommandService
 {
     /// <summary>
     /// Executes the specified action on each host in the provided dictionary.
     /// </summary>
-    /// <param name="hosts">A dictionary of computers and their corresponding SignalR connections.</param>
+    /// <param name="hosts">A dictionary of hosts and their corresponding SignalR connections.</param>
     /// <param name="action">The action to execute on each host.</param>
     /// <returns>A result indicating the success or failure of the operation.</returns>
-    Task<Result> Execute(ConcurrentDictionary<ComputerDto, HubConnection?> hosts, Func<ComputerDto, HubConnection?, Task> action);
+    Task<Result> Execute(ConcurrentDictionary<HostDto, HubConnection?> hosts, Func<HostDto, HubConnection?, Task> action);
 }

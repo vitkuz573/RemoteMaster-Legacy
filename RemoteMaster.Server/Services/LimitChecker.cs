@@ -36,14 +36,14 @@ public class LimitChecker(IPlanService planService, IUserPlanProvider userPlanPr
         return organizationalUnitCount < limits.MaxOrganizationalUnitsPerOrganization;
     }
 
-    public bool CanAddComputer(OrganizationalUnit organizationalUnit)
+    public bool CanAddHost(OrganizationalUnit organizationalUnit)
     {
         ArgumentNullException.ThrowIfNull(organizationalUnit);
 
         var limits = GetCurrentPlanLimits();
-        var computerCount = organizationalUnit.Hosts.Count;
+        var hostCount = organizationalUnit.Hosts.Count;
 
-        return computerCount < limits.MaxComputersPerOrganizationalUnit;
+        return hostCount < limits.MaxHostsPerOrganizationalUnit;
     }
 
     public bool CanAddUserToOrganization(Organization organization)

@@ -12,18 +12,18 @@ namespace RemoteMaster.Server.Components.Dialogs;
 public partial class PsExecRulesDialog
 {
     private bool _selectedOption;
-    private readonly Dictionary<ComputerDto, ComputerResults> _resultsPerComputer = [];
+    private readonly Dictionary<HostDto, HostResults> _resultsPerHost = [];
     private readonly HashSet<HubConnection> _subscribedConnections = [];
 
     private async Task Ok()
     {
-        foreach (var (computer, connection) in Hosts)
+        foreach (var (host, connection) in Hosts)
         {
             if (connection != null && !_subscribedConnections.Contains(connection))
             {
                 connection.On<Message>("ReceiveMessage", async message =>
                 {
-                    UpdateResultsForComputer(computer, message);
+                    UpdateResultsForHost(host, message);
                     await InvokeAsync(StateHasChanged);
                 });
 
@@ -37,12 +37,12 @@ public partial class PsExecRulesDialog
         }
     }
 
-    private void UpdateResultsForComputer(ComputerDto computer, Message scriptResult)
+    private void UpdateResultsForHost(HostDto host, Message scriptResult)
     {
-        if (!_resultsPerComputer.TryGetValue(computer, out var results))
+        if (!_resultsPerHost.TryGetValue(host, out var results))
         {
-            results = new ComputerResults();
-            _resultsPerComputer[computer] = results;
+            results = new HostResults();
+            _resultsPerHost[host] = results;
         }
 
         if (scriptResult.Meta == "pid")

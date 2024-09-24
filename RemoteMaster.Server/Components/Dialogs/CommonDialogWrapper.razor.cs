@@ -13,7 +13,7 @@ public partial class CommonDialogWrapper<TDialog> where TDialog : ComponentBase
 {
 #pragma warning disable CA2227
     [Parameter]
-    public ConcurrentDictionary<ComputerDto, HubConnection?> Hosts { get; set; } = default!;
+    public ConcurrentDictionary<HostDto, HubConnection?> Hosts { get; set; } = default!;
 #pragma warning restore CA2227
 
     [Parameter]

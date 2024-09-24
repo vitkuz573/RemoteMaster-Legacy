@@ -16,5 +16,5 @@ public class HostConfiguration
     public SubjectDto Subject { get; set; }
 
     [JsonPropertyName("host")]
-    public ComputerDto? Host { get; set; }
+    public HostDto? Host { get; set; }
 }

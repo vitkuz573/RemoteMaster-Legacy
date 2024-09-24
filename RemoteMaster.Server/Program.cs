@@ -179,7 +179,7 @@ public static class Program
         services.AddScoped<IApplicationUserRepository, ApplicationUserRepository>();
         services.AddScoped<IOrganizationRepository, OrganizationRepository>();
         services.AddScoped<IQueryParameterService, QueryParameterService>();
-        services.AddScoped<IComputerCommandService, ComputerCommandService>();
+        services.AddScoped<IHostCommandService, HostCommandService>();
         services.AddScoped<ICrlService, CrlService>();
         services.AddScoped<IAccessTokenProvider, AccessTokenProvider>();
         services.AddScoped<IClaimsService, ClaimsService>();

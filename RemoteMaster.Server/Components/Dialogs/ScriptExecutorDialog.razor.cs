@@ -18,18 +18,18 @@ public partial class ScriptExecutorDialog
     private string _content = string.Empty;
     private Shell _shell = Shell.Cmd;
     private bool _asSystem;
-    private readonly Dictionary<ComputerDto, ComputerResults> _resultsPerComputer = [];
+    private readonly Dictionary<HostDto, HostResults> _resultsPerHost = [];
     private readonly HashSet<HubConnection> _subscribedConnections = [];
 
     private async Task RunScript()
     {
-        foreach (var (computer, connection) in Hosts)
+        foreach (var (host, connection) in Hosts)
         {
             if (connection != null && !_subscribedConnections.Contains(connection))
             {
                 connection.On<Message>("ReceiveMessage", async message =>
                 {
-                    UpdateResultsForComputer(computer, message);
+                    UpdateResultsForHost(host, message);
                     await InvokeAsync(StateHasChanged);
                 });
 
@@ -48,12 +48,12 @@ public partial class ScriptExecutorDialog
         }
     }
 
-    private void UpdateResultsForComputer(ComputerDto computer, Message scriptResult)
+    private void UpdateResultsForHost(HostDto host, Message scriptResult)
     {
-        if (!_resultsPerComputer.TryGetValue(computer, out var results))
+        if (!_resultsPerHost.TryGetValue(host, out var results))
         {
-            results = new ComputerResults();
-            _resultsPerComputer[computer] = results;
+            results = new HostResults();
+            _resultsPerHost[host] = results;
         }
 
         if (scriptResult.Meta == "pid")
@@ -85,7 +85,7 @@ public partial class ScriptExecutorDialog
 
     private void CleanResults()
     {
-        _resultsPerComputer.Clear();
+        _resultsPerHost.Clear();
     }
 
     private async Task ExportResults()
@@ -94,9 +94,9 @@ public partial class ScriptExecutorDialog
 
         using (var archive = new ZipArchive(zipMemoryStream, ZipArchiveMode.Create, true))
         {
-            foreach (var (computer, results) in _resultsPerComputer)
+            foreach (var (host, results) in _resultsPerHost)
             {
-                var fileName = $"results_{computer.Name}_{computer.IpAddress}.txt";
+                var fileName = $"results_{host.Name}_{host.IpAddress}.txt";
                 var fileContent = results.ToString();
 
                 var zipEntry = archive.CreateEntry(fileName, CompressionLevel.Fastest);

@@ -44,9 +44,9 @@ public class OrganizationService(IOrganizationRepository organizationRepository)
             {
                 foreach (var unit in organization.OrganizationalUnits)
                 {
-                    foreach (var computer in unit.Hosts)
+                    foreach (var host in unit.Hosts)
                     {
-                        await organizationRepository.CreateCertificateRenewalTaskAsync(organization.Id, computer.Id, DateTime.UtcNow.AddHours(1));
+                        await organizationRepository.CreateCertificateRenewalTaskAsync(organization.Id, host.Id, DateTime.UtcNow.AddHours(1));
                     }
                 }
             }
@@ -96,13 +96,13 @@ public class OrganizationService(IOrganizationRepository organizationRepository)
         return await organizationRepository.GetOrganizationsWithAccessibleUnitsAsync(organizationIds, organizationalUnitIds);
     }
 
-    public async Task RemoveComputerAsync(Guid organizationId, Guid organizationalUnitId, Guid computerId)
+    public async Task RemoveHostAsync(Guid organizationId, Guid organizationalUnitId, Guid hostId)
     {
         var organization = await organizationRepository.GetByIdAsync(organizationId) ?? throw new InvalidOperationException("Organization not found");
         var organizationalUnit = organization.OrganizationalUnits.FirstOrDefault(u => u.Id == organizationalUnitId) ?? throw new InvalidOperationException("Organizational Unit not found");
-        var computer = organizationalUnit.Hosts.FirstOrDefault(c => c.Id == computerId) ?? throw new InvalidOperationException("Host not found");
+        var host = organizationalUnit.Hosts.FirstOrDefault(c => c.Id == hostId) ?? throw new InvalidOperationException("Host not found");
 
-        await organizationRepository.RemoveComputerAsync(organizationId, organizationalUnitId, computerId);
+        await organizationRepository.RemoveHostAsync(organizationId, organizationalUnitId, hostId);
         await organizationRepository.UpdateAsync(organization);
         await organizationRepository.SaveChangesAsync();
     }

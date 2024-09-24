@@ -6,8 +6,8 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Security.Claims;
 using System.Threading.Channels;
-using MessagePack.Resolvers;
 using MessagePack;
+using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -35,10 +35,10 @@ public partial class Home
     private OrganizationalUnit? _selectedNode;
     private List<TreeItemData<object>> _treeItems = [];
 
-    private readonly List<ComputerDto> _selectedComputers = [];
-    private readonly ConcurrentDictionary<IPAddress, ComputerDto> _availableComputers = new();
-    private readonly ConcurrentDictionary<IPAddress, ComputerDto> _unavailableComputers = new();
-    private readonly ConcurrentDictionary<IPAddress, ComputerDto> _pendingComputers = new();
+    private readonly List<HostDto> _selectedHosts = [];
+    private readonly ConcurrentDictionary<IPAddress, HostDto> _availableHosts = new();
+    private readonly ConcurrentDictionary<IPAddress, HostDto> _unavailableHosts = new();
+    private readonly ConcurrentDictionary<IPAddress, HostDto> _pendingHosts = new();
 
     private ClaimsPrincipal? _user;
     private ApplicationUser? _currentUser;
@@ -147,10 +147,10 @@ public partial class Home
 
     private async Task OnNodeSelected(object? node)
     {
-        _selectedComputers.Clear();
-        _availableComputers.Clear();
-        _unavailableComputers.Clear();
-        _pendingComputers.Clear();
+        _selectedHosts.Clear();
+        _availableHosts.Clear();
+        _unavailableHosts.Clear();
+        _pendingHosts.Clear();
 
         switch (node)
         {
@@ -158,50 +158,50 @@ public partial class Home
                 break;
             case OrganizationalUnit orgUnit:
                 _selectedNode = orgUnit;
-                await LoadComputers(orgUnit);
+                await LoadHosts(orgUnit);
                 break;
         }
 
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task LoadComputers(OrganizationalUnit orgUnit)
+    private async Task LoadHosts(OrganizationalUnit orgUnit)
     {
-        var computers = orgUnit.Hosts.ToList();
+        var hosts = orgUnit.Hosts.ToList();
 
-        var newPendingComputers = new ConcurrentDictionary<IPAddress, ComputerDto>();
+        var newPendingHosts = new ConcurrentDictionary<IPAddress, HostDto>();
 
-        foreach (var computer in computers.Where(computer => !_availableComputers.ContainsKey(computer.IpAddress) && !_unavailableComputers.ContainsKey(computer.IpAddress)))
+        foreach (var host in hosts.Where(host => !_availableHosts.ContainsKey(host.IpAddress) && !_unavailableHosts.ContainsKey(host.IpAddress)))
         {
-            var computerDto = new ComputerDto(computer.Name, computer.IpAddress, computer.MacAddress)
+            var hostDto = new HostDto(host.Name, host.IpAddress, host.MacAddress)
             {
-                Id = computer.Id,
-                OrganizationId = computer.Parent.OrganizationId,
-                OrganizationalUnitId = computer.ParentId,
+                Id = host.Id,
+                OrganizationId = host.Parent.OrganizationId,
+                OrganizationalUnitId = host.ParentId,
                 Thumbnail = null
             };
 
-            newPendingComputers.TryAdd(computerDto.IpAddress, computerDto);
+            newPendingHosts.TryAdd(hostDto.IpAddress, hostDto);
         }
 
-        _pendingComputers.Clear();
+        _pendingHosts.Clear();
 
-        foreach (var kvp in newPendingComputers)
+        foreach (var kvp in newPendingHosts)
         {
-            _pendingComputers.TryAdd(kvp.Key, kvp.Value);
+            _pendingHosts.TryAdd(kvp.Key, kvp.Value);
         }
 
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task LogonComputers()
+    private async Task LogonHosts()
     {
-        var channel = Channel.CreateUnbounded<ComputerDto>();
+        var channel = Channel.CreateUnbounded<HostDto>();
 
-        var logonTasks = _selectedComputers.Select(async computer =>
+        var logonTasks = _selectedHosts.Select(async host =>
         {
-            await LogonComputer(computer);
-            await channel.Writer.WriteAsync(computer);
+            await LogonHost(host);
+            await channel.Writer.WriteAsync(host);
         });
 
         var readTask = Task.Run(async () =>
@@ -219,7 +219,7 @@ public partial class Home
         ResetSelections();
     }
 
-    private async Task LogonComputer(ComputerDto computerDto)
+    private async Task LogonHost(HostDto hostDto)
     {
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
 
@@ -229,19 +229,19 @@ public partial class Home
         {
             const string url = "hubs/control?thumbnail=true";
 
-            var connection = await SetupConnection(computerDto, url, true, cancellationToken);
+            var connection = await SetupConnection(hostDto, url, true, cancellationToken);
 
             connection.On<byte[]>("ReceiveThumbnail", async thumbnailBytes =>
             {
                 if (thumbnailBytes.Length > 0)
                 {
-                    computerDto.Thumbnail = thumbnailBytes;
+                    hostDto.Thumbnail = thumbnailBytes;
 
-                    await MoveToAvailable(computerDto);
+                    await MoveToAvailable(hostDto);
                 }
                 else
                 {
-                    await MoveToUnavailable(computerDto);
+                    await MoveToUnavailable(hostDto);
                 }
 
                 await InvokeAsync(StateHasChanged);
@@ -254,30 +254,30 @@ public partial class Home
         }
         catch (OperationCanceledException)
         {
-            await MoveToUnavailable(computerDto);
+            await MoveToUnavailable(hostDto);
             await InvokeAsync(StateHasChanged);
         }
         catch (Exception ex)
         {
-            Log.Error("Exception in LogonComputer for {IPAddress}: {Message}", computerDto.IpAddress, ex.Message);
+            Log.Error("Exception in LogonHost for {IPAddress}: {Message}", hostDto.IpAddress, ex.Message);
 
-            await MoveToUnavailable(computerDto);
+            await MoveToUnavailable(hostDto);
             await InvokeAsync(StateHasChanged);
         }
     }
 
-    private async Task LogoffComputers()
+    private async Task LogoffHosts()
     {
-        var tasks = _selectedComputers
-            .Where(c => _availableComputers.ContainsKey(c.IpAddress) || _unavailableComputers.ContainsKey(c.IpAddress))
-            .Select(LogoffComputer);
+        var tasks = _selectedHosts
+            .Where(c => _availableHosts.ContainsKey(c.IpAddress) || _unavailableHosts.ContainsKey(c.IpAddress))
+            .Select(LogoffHost);
 
         await Task.WhenAll(tasks);
 
         ResetSelections();
     }
 
-    private async Task LogoffComputer(ComputerDto computerDto)
+    private async Task LogoffHost(HostDto hostDto)
     {
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
 
@@ -285,81 +285,81 @@ public partial class Home
 
         try
         {
-            var connection = await SetupConnection(computerDto, "hubs/control", false, cancellationToken);
+            var connection = await SetupConnection(hostDto, "hubs/control", false, cancellationToken);
 
             connection.On("ReceiveCloseConnection", async () =>
             {
                 await connection.StopAsync(cancellationToken);
             });
 
-            computerDto.Thumbnail = null;
+            hostDto.Thumbnail = null;
 
-            await MoveToPending(computerDto);
+            await MoveToPending(hostDto);
         }
         catch (Exception ex)
         {
-            Log.Error("Exception in LogoffComputer for {IPAddress}: {Message}", computerDto.IpAddress, ex.Message);
+            Log.Error("Exception in LogoffHost for {IPAddress}: {Message}", hostDto.IpAddress, ex.Message);
         }
     }
 
-    private async Task MoveToAvailable(ComputerDto computerDto)
+    private async Task MoveToAvailable(HostDto hostDto)
     {
-        if (_pendingComputers.ContainsKey(computerDto.IpAddress))
+        if (_pendingHosts.ContainsKey(hostDto.IpAddress))
         {
-            _pendingComputers.TryRemove(computerDto.IpAddress, out _);
+            _pendingHosts.TryRemove(hostDto.IpAddress, out _);
         }
-        else if (_unavailableComputers.ContainsKey(computerDto.IpAddress))
+        else if (_unavailableHosts.ContainsKey(hostDto.IpAddress))
         {
-            _unavailableComputers.TryRemove(computerDto.IpAddress, out _);
+            _unavailableHosts.TryRemove(hostDto.IpAddress, out _);
         }
 
-        _availableComputers.TryAdd(computerDto.IpAddress, computerDto);
+        _availableHosts.TryAdd(hostDto.IpAddress, hostDto);
 
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task MoveToUnavailable(ComputerDto computerDto)
+    private async Task MoveToUnavailable(HostDto hostDto)
     {
-        computerDto.Thumbnail = null;
+        hostDto.Thumbnail = null;
 
-        if (_pendingComputers.ContainsKey(computerDto.IpAddress))
+        if (_pendingHosts.ContainsKey(hostDto.IpAddress))
         {
-            _pendingComputers.TryRemove(computerDto.IpAddress, out _);
+            _pendingHosts.TryRemove(hostDto.IpAddress, out _);
         }
-        else if (_availableComputers.ContainsKey(computerDto.IpAddress))
+        else if (_availableHosts.ContainsKey(hostDto.IpAddress))
         {
-            _availableComputers.TryRemove(computerDto.IpAddress, out _);
+            _availableHosts.TryRemove(hostDto.IpAddress, out _);
         }
 
-        _unavailableComputers.TryAdd(computerDto.IpAddress, computerDto);
+        _unavailableHosts.TryAdd(hostDto.IpAddress, hostDto);
 
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task MoveToPending(ComputerDto computerDto)
+    private async Task MoveToPending(HostDto hostDto)
     {
-        computerDto.Thumbnail = null;
+        hostDto.Thumbnail = null;
 
-        if (_availableComputers.ContainsKey(computerDto.IpAddress))
+        if (_availableHosts.ContainsKey(hostDto.IpAddress))
         {
-            _availableComputers.TryRemove(computerDto.IpAddress, out _);
+            _availableHosts.TryRemove(hostDto.IpAddress, out _);
         }
-        else if (_unavailableComputers.ContainsKey(computerDto.IpAddress))
+        else if (_unavailableHosts.ContainsKey(hostDto.IpAddress))
         {
-            _unavailableComputers.TryRemove(computerDto.IpAddress, out _);
+            _unavailableHosts.TryRemove(hostDto.IpAddress, out _);
         }
 
-        _pendingComputers.TryAdd(computerDto.IpAddress, computerDto);
+        _pendingHosts.TryAdd(hostDto.IpAddress, hostDto);
 
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task<HubConnection> SetupConnection(ComputerDto computerDto, string hubPath, bool startConnection, CancellationToken cancellationToken)
+    private async Task<HubConnection> SetupConnection(HostDto hostDto, string hubPath, bool startConnection, CancellationToken cancellationToken)
     {
         var userId = _user?.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("User ID is not found.");
 
         var connection = new HubConnectionBuilder()
-            .WithUrl($"https://{computerDto.IpAddress}:5001/{hubPath}", options =>
+            .WithUrl($"https://{hostDto.IpAddress}:5001/{hubPath}", options =>
             {
                 options.AccessTokenProvider = async () =>
                 {
@@ -386,66 +386,66 @@ public partial class Home
         return connection;
     }
 
-    private void SelectAllPendingComputers()
+    private void SelectAllPendingHosts()
     {
-        foreach (var computer in _pendingComputers.Values)
+        foreach (var host in _pendingHosts.Values)
         {
-            SelectComputer(computer, true);
+            SelectHost(host, true);
         }
     }
 
-    private void DeselectAllPendingComputers()
+    private void DeselectAllPendingHosts()
     {
-        foreach (var computer in _pendingComputers.Values)
+        foreach (var host in _pendingHosts.Values)
         {
-            SelectComputer(computer, false);
+            SelectHost(host, false);
         }
     }
 
-    private void SelectAllAvailableComputers()
+    private void SelectAllAvailableHosts()
     {
-        foreach (var computer in _availableComputers.Values)
+        foreach (var host in _availableHosts.Values)
         {
-            SelectComputer(computer, true);
+            SelectHost(host, true);
         }
     }
 
-    private void DeselectAllAvailableComputers()
+    private void DeselectAllAvailableHosts()
     {
-        foreach (var computer in _availableComputers.Values)
+        foreach (var host in _availableHosts.Values)
         {
-            SelectComputer(computer, false);
+            SelectHost(host, false);
         }
     }
 
-    private void SelectAllUnavailableComputers()
+    private void SelectAllUnavailableHosts()
     {
-        foreach (var computer in _unavailableComputers.Values)
+        foreach (var host in _unavailableHosts.Values)
         {
-            SelectComputer(computer, true);
+            SelectHost(host, true);
         }
     }
 
-    private void DeselectAllUnavailableComputers()
+    private void DeselectAllUnavailableHosts()
     {
-        foreach (var computer in _unavailableComputers.Values)
+        foreach (var host in _unavailableHosts.Values)
         {
-            SelectComputer(computer, false);
+            SelectHost(host, false);
         }
     }
 
-    private void SelectComputer(ComputerDto computerDto, bool isSelected)
+    private void SelectHost(HostDto hostDto, bool isSelected)
     {
         if (isSelected)
         {
-            if (!_selectedComputers.Contains(computerDto))
+            if (!_selectedHosts.Contains(hostDto))
             {
-                _selectedComputers.Add(computerDto);
+                _selectedHosts.Add(hostDto);
             }
         }
         else
         {
-            _selectedComputers.Remove(computerDto);
+            _selectedHosts.Remove(hostDto);
         }
 
         InvokeAsync(StateHasChanged);
@@ -486,12 +486,12 @@ public partial class Home
 
     private async Task ConnectAsViewer()
     {
-        var computers = _selectedComputers.Where(c => _availableComputers.ContainsKey(c.IpAddress)).ToList();
+        var hosts = _selectedHosts.Where(c => _availableHosts.ContainsKey(c.IpAddress)).ToList();
 
-        foreach (var computer in computers)
+        foreach (var host in hosts)
         {
             var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/windowOperations.js");
-            await module.InvokeVoidAsync("openNewWindow", $"/{computer.IpAddress}/access?frameRate=60&imageQuality=25&cursorTracking=true&inputEnabled=false", 600, 400);
+            await module.InvokeVoidAsync("openNewWindow", $"/{host.IpAddress}/access?frameRate=60&imageQuality=25&cursorTracking=true&inputEnabled=false", 600, 400);
         }
     }
 
@@ -519,9 +519,9 @@ public partial class Home
 
     private async Task ExecuteAction<TDialog>(string title, bool onlyAvailable = true, bool startConnection = true, string hubPath = "hubs/control", DialogOptions? dialogOptions = null, bool requireConnections = true) where TDialog : ComponentBase
     {
-        var computers = onlyAvailable ? _selectedComputers.Where(c => _availableComputers.ContainsKey(c.IpAddress)).ToList() : _selectedComputers.ToList();
+        var hosts = onlyAvailable ? _selectedHosts.Where(c => _availableHosts.ContainsKey(c.IpAddress)).ToList() : _selectedHosts.ToList();
 
-        if (computers.Count == 0)
+        if (hosts.Count == 0)
         {
             return;
         }
@@ -534,7 +534,7 @@ public partial class Home
 
         var dialogParameters = new DialogParameters
         {
-            { nameof(CommonDialogWrapper<TDialog>.Hosts), new ConcurrentDictionary<ComputerDto, HubConnection?>(computers.ToDictionary(c => c, _ => (HubConnection?)null)) },
+            { nameof(CommonDialogWrapper<TDialog>.Hosts), new ConcurrentDictionary<HostDto, HubConnection?>(hosts.ToDictionary(c => c, _ => (HubConnection?)null)) },
             { nameof(CommonDialogWrapper<TDialog>.HubPath), hubPath },
             { nameof(CommonDialogWrapper<TDialog>.StartConnection), startConnection },
             { nameof(CommonDialogWrapper<TDialog>.RequireConnections), requireConnections }
@@ -547,81 +547,81 @@ public partial class Home
     {
         if (_selectedNode is { } orgUnit)
         {
-            foreach (var computer in orgUnit.Hosts)
+            foreach (var host in orgUnit.Hosts)
             {
-                if (!_availableComputers.ContainsKey(computer.IpAddress) && !_unavailableComputers.ContainsKey(computer.IpAddress))
+                if (!_availableHosts.ContainsKey(host.IpAddress) && !_unavailableHosts.ContainsKey(host.IpAddress))
                 {
                     continue;
                 }
 
-                var computerDto = new ComputerDto(computer.Name, computer.IpAddress, computer.MacAddress)
+                var hostDto = new HostDto(host.Name, host.IpAddress, host.MacAddress)
                 {
-                    Id = computer.Id,
-                    OrganizationId = computer.Parent.OrganizationId,
-                    OrganizationalUnitId = computer.ParentId,
+                    Id = host.Id,
+                    OrganizationId = host.Parent.OrganizationId,
+                    OrganizationalUnitId = host.ParentId,
                     Thumbnail = null
                 };
 
-                await LogonComputer(computerDto);
+                await LogonHost(hostDto);
             }
         }
     }
 
     private async Task OpenTaskManager()
     {
-        await OpenComputerWindow("taskmanager");
+        await OpenHostWindow("taskmanager");
     }
 
     private async Task OpenDeviceManager()
     {
-        await OpenComputerWindow("devicemanager");
+        await OpenHostWindow("devicemanager");
     }
 
     private async Task OpenFileManager()
     {
-        await OpenComputerWindow("filemanager");
+        await OpenHostWindow("filemanager");
     }
 
     private async Task OpenLogsManager()
     {
-        await OpenComputerWindow("logs", 1120);
+        await OpenHostWindow("logs", 1120);
     }
 
     private async Task OpenChat()
     {
-        await OpenComputerWindow("chat");
+        await OpenHostWindow("chat");
     }
 
-    private async Task OpenComputerWindow(string path, uint width = 800, uint height = 800)
+    private async Task OpenHostWindow(string path, uint width = 800, uint height = 800)
     {
         var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/windowOperations.js");
 
-        foreach (var url in _selectedComputers.Select(computer => $"/{computer.IpAddress}/{path}"))
+        foreach (var url in _selectedHosts.Select(host => $"/{host.IpAddress}/{path}"))
         {
             await module.InvokeVoidAsync("openNewWindow", url, width, height);
         }
     }
 
-    private async Task RemoveComputers()
+    private async Task RemoveHosts()
     {
-        var confirmation = await DialogService.ShowMessageBox("Delete Confirmation", "Are you sure you want to delete the selected computers?", "Yes", "No");
+        var confirmation = await DialogService.ShowMessageBox("Delete Confirmation", "Are you sure you want to delete the selected hosts?", "Yes", "No");
 
         if (confirmation.HasValue && confirmation.Value)
         {
-            var computersToRemove = _selectedComputers.ToList();
+            var hostsToRemove = _selectedHosts.ToList();
 
-            if (computersToRemove.Count != 0)
+            if (hostsToRemove.Count != 0)
             {
-                foreach (var computer in computersToRemove)
+                foreach (var host in hostsToRemove)
                 {
-                    await OrganizationService.RemoveComputerAsync(computer.OrganizationId, computer.OrganizationalUnitId, computer.Id);
+                    await OrganizationService.RemoveHostAsync(host.OrganizationId, host.OrganizationalUnitId, host.Id);
 
-                    _availableComputers.TryRemove(computer.IpAddress, out _);
-                    _unavailableComputers.TryRemove(computer.IpAddress, out _);
-                    _pendingComputers.TryRemove(computer.IpAddress, out _);
+                    _availableHosts.TryRemove(host.IpAddress, out _);
+                    _unavailableHosts.TryRemove(host.IpAddress, out _);
+                    _pendingHosts.TryRemove(host.IpAddress, out _);
                 }
 
-                _selectedComputers.Clear();
+                _selectedHosts.Clear();
 
                 await InvokeAsync(StateHasChanged);
             }
@@ -638,7 +638,7 @@ public partial class Home
 
         var dialogParameters = new DialogParameters
         {
-            { "Host", _selectedComputers.First() }
+            { "Host", _selectedHosts.First() }
         };
 
         await DialogService.ShowAsync<HostDialog>("Host Info", dialogParameters, dialogOptions);
@@ -657,8 +657,7 @@ public partial class Home
 
     private async Task OpenMoveDialog()
     {
-        var computers = _selectedComputers.ToDictionary(c => c, _ => (HubConnection?)null);
-        var hosts = new ConcurrentDictionary<ComputerDto, HubConnection?>(computers);
+        var hosts = new ConcurrentDictionary<HostDto, HubConnection?>(_selectedHosts.ToDictionary(c => c, _ => (HubConnection?)null));
 
         var dialogOptions = new DialogOptions
         {
@@ -668,7 +667,7 @@ public partial class Home
 
         var additionalParameters = new Dictionary<string, object>
         {
-            { "OnHostsMoved", EventCallback.Factory.Create<IEnumerable<ComputerDto>>(this, OnHostsMoved) }
+            { "OnHostsMoved", EventCallback.Factory.Create<IEnumerable<HostDto>>(this, OnHostsMoved) }
         };
 
         var dialogParameters = new DialogParameters
@@ -683,39 +682,39 @@ public partial class Home
         await ExecuteDialog<MoveDialog>("Move", dialogParameters, dialogOptions);
     }
 
-    private async Task OnHostsMoved(IEnumerable<ComputerDto> movedNodes)
+    private async Task OnHostsMoved(IEnumerable<HostDto> movedNodes)
     {
         foreach (var movedNode in movedNodes)
         {
-            _selectedComputers.RemoveAll(c => c.Id == movedNode.Id);
-            _availableComputers.TryRemove(movedNode.IpAddress, out _);
-            _unavailableComputers.TryRemove(movedNode.IpAddress, out _);
-            _pendingComputers.TryRemove(movedNode.IpAddress, out _);
+            _selectedHosts.RemoveAll(c => c.Id == movedNode.Id);
+            _availableHosts.TryRemove(movedNode.IpAddress, out _);
+            _unavailableHosts.TryRemove(movedNode.IpAddress, out _);
+            _pendingHosts.TryRemove(movedNode.IpAddress, out _);
         }
 
         await InvokeAsync(StateHasChanged);
     }
 
-    private static IEnumerable<ComputerDto> GetSortedComputers(ConcurrentDictionary<IPAddress, ComputerDto> computers)
+    private static IEnumerable<HostDto> GetSortedHosts(ConcurrentDictionary<IPAddress, HostDto> hosts)
     {
-        return computers.Values.OrderBy(computer => computer.Name);
+        return hosts.Values.OrderBy(host => host.Name);
     }
 
-    private bool CanSelectAll(ConcurrentDictionary<IPAddress, ComputerDto> computers)
+    private bool CanSelectAll(ConcurrentDictionary<IPAddress, HostDto> hosts)
     {
-        return computers.Any(computer => !_selectedComputers.Contains(computer.Value));
+        return hosts.Any(host => !_selectedHosts.Contains(host.Value));
     }
 
-    private bool CanDeselectAll(ConcurrentDictionary<IPAddress, ComputerDto> computers)
+    private bool CanDeselectAll(ConcurrentDictionary<IPAddress, HostDto> hosts)
     {
-        return computers.Any(computer => _selectedComputers.Contains(computer.Value));
+        return hosts.Any(host => _selectedHosts.Contains(host.Value));
     }
 
     private void ResetSelections()
     {
-        foreach (var computer in _selectedComputers.ToList())
+        foreach (var host in _selectedHosts.ToList())
         {
-            SelectComputer(computer, false);
+            SelectHost(host, false);
         }
     }
 }

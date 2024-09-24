@@ -10,7 +10,7 @@ public class PlanLimits
 
     public int MaxOrganizationalUnitsPerOrganization { get; set; }
 
-    public int MaxComputersPerOrganizationalUnit { get; set; }
+    public int MaxHostsPerOrganizationalUnit { get; set; }
 
     public int MaxUsersPerOrganization { get; set; }
 

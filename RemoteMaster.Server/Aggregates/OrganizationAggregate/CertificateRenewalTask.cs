@@ -19,7 +19,7 @@ public class CertificateRenewalTask
 
         Id = Guid.NewGuid();
         Host = host ?? throw new ArgumentNullException(nameof(host));
-        ComputerId = host.Id;
+        HostId = host.Id;
         Organization = organization ?? throw new ArgumentNullException(nameof(organization));
         OrganizationId = organization.Id;
         OrganizationalUnit = host.Parent ?? throw new ArgumentNullException(nameof(host));
@@ -30,7 +30,7 @@ public class CertificateRenewalTask
 
     public Guid Id { get; private set; }
 
-    public Guid ComputerId { get; private set; }
+    public Guid HostId { get; private set; }
 
     public Host Host { get; private set; }
 

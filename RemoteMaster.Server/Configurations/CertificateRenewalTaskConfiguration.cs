@@ -20,13 +20,13 @@ public class CertificateRenewalTaskConfiguration : IEntityTypeConfiguration<Cert
             .ValueGeneratedOnAdd()
             .HasColumnOrder(0);
 
-        builder.Property(crt => crt.ComputerId)
+        builder.Property(crt => crt.HostId)
             .IsRequired()
             .HasColumnOrder(1);
 
         builder.HasOne(crt => crt.Host)
             .WithMany()
-            .HasForeignKey(crt => crt.ComputerId)
+            .HasForeignKey(crt => crt.HostId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Property(crt => crt.OrganizationId)

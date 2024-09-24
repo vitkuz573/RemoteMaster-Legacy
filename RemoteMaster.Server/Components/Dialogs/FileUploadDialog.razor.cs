@@ -46,7 +46,7 @@ public partial class FileUploadDialog
                 DestinationPath = _destinationPath
             };
 
-            await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("UploadFile", fileDto));
+            await HostCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("UploadFile", fileDto));
         }
 
         MudDialog.Close(DialogResult.Ok(true));

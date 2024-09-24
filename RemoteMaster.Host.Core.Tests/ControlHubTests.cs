@@ -228,26 +228,26 @@ public class ControlHubTests
     }
 
     [Fact]
-    public void SendRebootComputer_ShouldRebootComputer()
+    public void SendRebootHost_ShouldRebootHost()
     {
         // Arrange
         var powerActionRequest = new PowerActionRequest();
 
         // Act
-        _controlHub.RebootComputer(powerActionRequest);
+        _controlHub.RebootHost(powerActionRequest);
 
         // Assert
         _mockPowerService.Verify(p => p.Reboot(powerActionRequest), Times.Once);
     }
 
     [Fact]
-    public void SendShutdownComputer_ShouldShutdownComputer()
+    public void SendShutdownHost_ShouldShutdownHost()
     {
         // Arrange
         var powerActionRequest = new PowerActionRequest();
 
         // Act
-        _controlHub.ShutdownComputer(powerActionRequest);
+        _controlHub.ShutdownHost(powerActionRequest);
 
         // Assert
         _mockPowerService.Verify(p => p.Shutdown(powerActionRequest), Times.Once);

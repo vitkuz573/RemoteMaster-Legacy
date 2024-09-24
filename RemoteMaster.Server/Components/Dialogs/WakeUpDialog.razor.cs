@@ -10,9 +10,9 @@ public partial class WakeUpDialog
 {
     private void Confirm()
     {
-        foreach (var (computer, _) in Hosts)
+        foreach (var (host, _) in Hosts)
         {
-            WakeOnLanService.WakeUp(computer.MacAddress);
+            WakeOnLanService.WakeUp(host.MacAddress);
         }
 
         MudDialog.Close(DialogResult.Ok(true));

@@ -38,7 +38,7 @@ public class HostAccessHandler(IApplicationUserRepository userRepository, IOrgan
 
             if (user.CanAccessUnregisteredHosts)
             {
-                var isHostRegistered = await organizationRepository.FindComputersAsync(c => c.Name == requirement.Host || c.IpAddress == IPAddress.Parse(requirement.Host));
+                var isHostRegistered = await organizationRepository.FindHostsAsync(c => c.Name == requirement.Host || c.IpAddress == IPAddress.Parse(requirement.Host));
 
                 if (!isHostRegistered.Any())
                 {
@@ -48,17 +48,17 @@ public class HostAccessHandler(IApplicationUserRepository userRepository, IOrgan
                 }
             }
 
-            var computers = await organizationRepository.FindComputersAsync(c => c.Name == requirement.Host || c.IpAddress == IPAddress.Parse(requirement.Host));
-            var computer = computers.FirstOrDefault();
+            var hosts = await organizationRepository.FindHostsAsync(c => c.Name == requirement.Host || c.IpAddress == IPAddress.Parse(requirement.Host));
+            var host = hosts.FirstOrDefault();
 
-            if (computer == null)
+            if (host == null)
             {
                 context.Fail();
 
                 return;
             }
 
-            var organizationalUnit = await organizationRepository.GetOrganizationalUnitByIdAsync(computer.ParentId);
+            var organizationalUnit = await organizationRepository.GetOrganizationalUnitByIdAsync(host.ParentId);
 
             if (organizationalUnit == null)
             {

@@ -17,7 +17,7 @@ namespace RemoteMaster.Server.Components.Dialogs;
 public partial class MoveDialog
 {
     [Parameter]
-    public EventCallback<IEnumerable<ComputerDto>> OnHostsMoved { get; set; }
+    public EventCallback<IEnumerable<HostDto>> OnHostsMoved { get; set; }
 
     [CascadingParameter]
     private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
@@ -133,7 +133,7 @@ public partial class MoveDialog
                 throw new InvalidOperationException("Failed to get full path of the new parent.");
             }
 
-            var unavailableHosts = new List<ComputerDto>();
+            var unavailableHosts = new List<HostDto>();
 
             foreach (var host in Hosts)
             {
@@ -150,7 +150,7 @@ public partial class MoveDialog
 
                 var currentParentUnitId = host.Key.OrganizationalUnitId;
                 
-                await OrganizationRepository.MoveComputerAsync(host.Key.OrganizationId, _selectedOrganizationId, host.Key.Id, currentParentUnitId, newParentUnit.Id);
+                await OrganizationRepository.MoveHostAsync(host.Key.OrganizationId, _selectedOrganizationId, host.Key.Id, currentParentUnitId, newParentUnit.Id);
             }
 
             await OrganizationRepository.SaveChangesAsync();
@@ -166,7 +166,7 @@ public partial class MoveDialog
         }
     }
 
-    private static async Task AppendHostMoveRequests(List<ComputerDto> unavailableHosts, string targetOrganization, string[] targetOrganizationalUnits)
+    private static async Task AppendHostMoveRequests(List<HostDto> unavailableHosts, string targetOrganization, string[] targetOrganizationalUnits)
     {
         var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
         var applicationData = Path.Combine(programDataPath, "RemoteMaster", "Server");

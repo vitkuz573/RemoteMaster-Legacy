@@ -12,14 +12,14 @@ namespace RemoteMaster.Shared.Services;
 
 public class HostInformationService : IHostInformationService
 {
-    public ComputerDto GetHostInformation()
+    public HostDto GetHostInformation()
     {
         var hostName = Dns.GetHostName();
         var preferredInterface = GetPreferredNetworkInterface();
         var ipv4Address = GetIPv4Address(preferredInterface);
         var macAddress = GetMacAddress(preferredInterface);
 
-        return new ComputerDto(hostName, ipv4Address, macAddress);
+        return new HostDto(hostName, ipv4Address, macAddress);
     }
 
     private static NetworkInterface GetPreferredNetworkInterface()

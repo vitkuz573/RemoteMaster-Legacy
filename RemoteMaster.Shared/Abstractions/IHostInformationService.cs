@@ -8,5 +8,5 @@ namespace RemoteMaster.Shared.Abstractions;
 
 public interface IHostInformationService
 {
-    ComputerDto GetHostInformation();
+    HostDto GetHostInformation();
 }

@@ -7,15 +7,15 @@ using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Server.Components;
 
-public partial class ComputerCard : ComponentBase
+public partial class HostCard : ComponentBase
 {
     [Parameter]
-    public ComputerDto Computer { get; set; } = default!;
+    public HostDto Host { get; set; } = default!;
 
     [Parameter]
     public bool IsSelected { get; set; }
 
-    private string ThumbnailUri => Computer.Thumbnail != null ? $"data:image/png;base64,{Convert.ToBase64String(Computer.Thumbnail)}" : "/img/notconnected.png";
+    private string ThumbnailUri => Host.Thumbnail != null ? $"data:image/png;base64,{Convert.ToBase64String(Host.Thumbnail)}" : "/img/notconnected.png";
 
     [Parameter]
     public EventCallback<bool> IsSelectedChanged { get; set; }

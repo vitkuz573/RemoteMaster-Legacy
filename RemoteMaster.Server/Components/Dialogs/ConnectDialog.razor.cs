@@ -16,10 +16,10 @@ public partial class ConnectDialog : CommonDialogBase
         switch (_selectedOption)
         {
             case "control":
-                await ComputerCommandService.Execute(Hosts, async (computer, _) => await OpenWindow($"/{computer.IpAddress}/access?frameRate=60&imageQuality=25&cursorTracking=false&inputEnabled=true"));
+                await HostCommandService.Execute(Hosts, async (host, _) => await OpenWindow($"/{host.IpAddress}/access?frameRate=60&imageQuality=25&cursorTracking=false&inputEnabled=true"));
                 break;
             case "view":
-                await ComputerCommandService.Execute(Hosts, async (computer, _) => await OpenWindow($"/{computer.IpAddress}/access?frameRate=60&imageQuality=25&cursorTracking=true&inputEnabled=false"));
+                await HostCommandService.Execute(Hosts, async (host, _) => await OpenWindow($"/{host.IpAddress}/access?frameRate=60&imageQuality=25&cursorTracking=true&inputEnabled=false"));
                 break;
         }
 

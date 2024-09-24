@@ -57,15 +57,15 @@ public class OrganizationalUnit
         OrganizationId = organization.Id;
     }
 
-    public void AddComputer(string name, IPAddress ipAddress, PhysicalAddress macAddress)
+    public void AddHost(string name, IPAddress ipAddress, PhysicalAddress macAddress)
     {
-        var computer = new Host(name, ipAddress, macAddress);
-        computer.SetOrganizationalUnit(Id);
+        var host = new Host(name, ipAddress, macAddress);
+        host.SetOrganizationalUnit(Id);
 
-        _hosts.Add(computer);
+        _hosts.Add(host);
     }
 
-    internal void AddExistingComputer(Host host)
+    internal void AddExistingHost(Host host)
     {
         if (_hosts.Any(c => c.Id == host.Id))
         {
@@ -75,14 +75,14 @@ public class OrganizationalUnit
         _hosts.Add(host);
     }
 
-    public void RemoveComputer(Guid computerId)
+    public void RemoveHost(Guid hostId)
     {
-        var computer = _hosts.SingleOrDefault(c => c.Id == computerId);
+        var host = _hosts.SingleOrDefault(c => c.Id == hostId);
 
-        _hosts.Remove(computer);
+        _hosts.Remove(host);
     }
 
-    public void ClearComputers()
+    public void ClearHosts()
     {
         _hosts.Clear();
     }

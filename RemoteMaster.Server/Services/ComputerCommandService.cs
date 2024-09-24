@@ -13,21 +13,21 @@ using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class ComputerCommandService(IJSRuntime jsRuntime, [FromKeyedServices("Resilience-Pipeline")] ResiliencePipeline<string> resiliencePipeline) : IComputerCommandService
+public class HostCommandService(IJSRuntime jsRuntime, [FromKeyedServices("Resilience-Pipeline")] ResiliencePipeline<string> resiliencePipeline) : IHostCommandService
 {
     /// <inheritdoc />
-    public async Task<Result> Execute(ConcurrentDictionary<ComputerDto, HubConnection?> hosts, Func<ComputerDto, HubConnection?, Task> action)
+    public async Task<Result> Execute(ConcurrentDictionary<HostDto, HubConnection?> hosts, Func<HostDto, HubConnection?, Task> action)
     {
         try
         {
             ArgumentNullException.ThrowIfNull(hosts);
             ArgumentNullException.ThrowIfNull(action);
 
-            foreach (var (computer, connection) in hosts)
+            foreach (var (host, connection) in hosts)
             {
                 if (connection == null)
                 {
-                    await action(computer, null);
+                    await action(host, null);
 
                     continue;
                 }
@@ -39,7 +39,7 @@ public class ComputerCommandService(IJSRuntime jsRuntime, [FromKeyedServices("Re
                         throw new InvalidOperationException("Connection is not active");
                     }
 
-                    await action(computer, connection);
+                    await action(host, connection);
 
                     await Task.CompletedTask;
 
@@ -56,9 +56,9 @@ public class ComputerCommandService(IJSRuntime jsRuntime, [FromKeyedServices("Re
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "An error occurred while executing a command on computers.");
+            Log.Error(ex, "An error occurred while executing a command on hosts.");
 
-            return Result.Fail("An error occurred while executing a command on computers.").WithError(ex.Message);
+            return Result.Fail("An error occurred while executing a command on hosts.").WithError(ex.Message);
         }
     }
 }

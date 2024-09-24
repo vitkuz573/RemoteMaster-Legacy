@@ -56,9 +56,9 @@ public class HostRegistrationService(IEventNotificationService eventNotification
 
         try
         {
-            var computers = await organizationRepository.FindComputersAsync(c => c.MacAddress.GetAddressBytes().SequenceEqual(macAddress.GetAddressBytes()));
+            var hosts = await organizationRepository.FindHostsAsync(c => c.MacAddress.GetAddressBytes().SequenceEqual(macAddress.GetAddressBytes()));
 
-            if (computers.Any())
+            if (hosts.Any())
             {
                 return Result.Ok();
             }
@@ -114,11 +114,11 @@ public class HostRegistrationService(IEventNotificationService eventNotification
 
         try
         {
-            var computer = parentUnit.Hosts.FirstOrDefault(c => c.MacAddress.GetAddressBytes().SequenceEqual(hostConfiguration.Host.MacAddress.GetAddressBytes()));
+            var host = parentUnit.Hosts.FirstOrDefault(c => c.MacAddress.GetAddressBytes().SequenceEqual(hostConfiguration.Host.MacAddress.GetAddressBytes()));
 
-            if (computer != null)
+            if (host != null)
             {
-                var updateResult = await UpdateComputerAsync(computer, hostConfiguration);
+                var updateResult = await UpdateHostAsync(host, hostConfiguration);
                 
                 if (updateResult.IsFailed)
                 {
@@ -136,7 +136,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
                 return Result.Ok();
             }
 
-            parentUnit.AddComputer(hostConfiguration.Host.Name, hostConfiguration.Host.IpAddress, hostConfiguration.Host.MacAddress);
+            parentUnit.AddHost(hostConfiguration.Host.Name, hostConfiguration.Host.IpAddress, hostConfiguration.Host.MacAddress);
 
             await organizationRepository.UpdateAsync(organizationResult.Value);
             await organizationRepository.SaveChangesAsync();
@@ -157,7 +157,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
         }
     }
 
-    private async Task<Result> UpdateComputerAsync(Host host, HostConfiguration hostConfiguration)
+    private async Task<Result> UpdateHostAsync(Host host, HostConfiguration hostConfiguration)
     {
         if (hostConfiguration.Host == null)
         {
@@ -204,9 +204,9 @@ public class HostRegistrationService(IEventNotificationService eventNotification
         try
         {
             var parentUnit = parentOuResult.Value ?? throw new InvalidOperationException("Parent Organizational Unit not found.");
-            var computer = parentUnit.Hosts.FirstOrDefault(c => c.MacAddress.GetAddressBytes().SequenceEqual(request.MacAddress.GetAddressBytes()));
+            var host = parentUnit.Hosts.FirstOrDefault(c => c.MacAddress.GetAddressBytes().SequenceEqual(request.MacAddress.GetAddressBytes()));
 
-            if (computer == null)
+            if (host == null)
             {
                 var errorMessage = $"Failed to find the host: Host with MAC address '{request.MacAddress}' not found in organizational unit '{parentUnit.Name}'.";
 
@@ -215,7 +215,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
                 return Result.Fail(errorMessage);
             }
 
-            await organizationRepository.RemoveComputerAsync(organizationResult.Value.Id, parentUnit.Id, computer.Id);
+            await organizationRepository.RemoveHostAsync(organizationResult.Value.Id, parentUnit.Id, host.Id);
             await organizationRepository.SaveChangesAsync();
 
             var successMessage = $"Host unregistered: {request.Name} (`{request.MacAddress}`) from organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' in organization '{request.Organization}'";
@@ -263,9 +263,9 @@ public class HostRegistrationService(IEventNotificationService eventNotification
         try
         {
             var parentUnit = parentOuResult.Value ?? throw new InvalidOperationException("Parent Organizational Unit not found.");
-            var computer = parentUnit.Hosts.FirstOrDefault(c => c.MacAddress.GetAddressBytes().SequenceEqual(request.MacAddress.GetAddressBytes()));
+            var host = parentUnit.Hosts.FirstOrDefault(c => c.MacAddress.GetAddressBytes().SequenceEqual(request.MacAddress.GetAddressBytes()));
 
-            if (computer == null)
+            if (host == null)
             {
                 var errorMessage = $"Failed to find the host: Host with MAC address '{request.MacAddress}' not found in organizational unit '{parentUnit.Name}'.";
 
@@ -274,13 +274,13 @@ public class HostRegistrationService(IEventNotificationService eventNotification
                 return Result.Fail(errorMessage);
             }
 
-            computer.SetName(request.Name);
-            computer.SetIpAddress(request.IpAddress);
+            host.SetName(request.Name);
+            host.SetIpAddress(request.IpAddress);
 
             await organizationRepository.UpdateAsync(organizationResult.Value);
             await organizationRepository.SaveChangesAsync();
 
-            var successMessage = $"Host information updated: {computer.Name} (`{computer.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'";
+            var successMessage = $"Host information updated: {host.Name} (`{host.MacAddress}`) in organizational unit '{string.Join(" > ", request.OrganizationalUnit)}' of organization '{request.Organization}'";
 
             await eventNotificationService.SendNotificationAsync(successMessage);
 

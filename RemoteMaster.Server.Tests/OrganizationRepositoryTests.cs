@@ -120,7 +120,7 @@ public class OrganizationRepositoryTests
     }
 
     [Fact]
-    public async Task RemoveComputerAsync_RemovesComputer()
+    public async Task RemoveHostAsync_RemovesHost()
     {
         // Arrange
         var organization = new Organization("Org", new Address("City", "State", new CountryCode("US")));
@@ -130,14 +130,14 @@ public class OrganizationRepositoryTests
         var ipAddress = IPAddress.Parse("192.168.1.1");
         var macAddress = PhysicalAddress.Parse("00:11:22:33:44:55");
 
-        unit.AddComputer("Comp1", ipAddress, macAddress);
+        unit.AddHost("Comp1", ipAddress, macAddress);
         _context.Organizations.Add(organization);
         await _context.SaveChangesAsync();
 
-        var computerId = unit.Hosts.First().Id;
+        var hostId = unit.Hosts.First().Id;
 
         // Act
-        await _repository.RemoveComputerAsync(organization.Id, unit.Id, computerId);
+        await _repository.RemoveHostAsync(organization.Id, unit.Id, hostId);
         await _repository.SaveChangesAsync();
 
         // Assert
@@ -185,7 +185,7 @@ public class OrganizationRepositoryTests
     }
 
     [Fact]
-    public async Task FindComputersAsync_ReturnsFilteredComputers()
+    public async Task FindHostsAsync_ReturnsFilteredHosts()
     {
         // Arrange
         var organization = new Organization("Org", new Address("City", "State", new CountryCode("US")));
@@ -198,15 +198,15 @@ public class OrganizationRepositoryTests
         var macAddress1 = PhysicalAddress.Parse("00-11-22-33-44-55");
         var macAddress2 = PhysicalAddress.Parse("00-11-22-33-44-66");
 
-        unit.AddComputer("Comp1", ipAddress1, macAddress1);
-        unit.AddComputer("Comp2", ipAddress2, macAddress2);
+        unit.AddHost("Comp1", ipAddress1, macAddress1);
+        unit.AddHost("Comp2", ipAddress2, macAddress2);
 
         _context.Organizations.Add(organization);
         await _context.SaveChangesAsync();
 
         // Act
         var macAddress = PhysicalAddress.Parse("00-11-22-33-44-66");
-        var result = await _repository.FindComputersAsync(c => c.MacAddress.GetAddressBytes().SequenceEqual(macAddress.GetAddressBytes()));
+        var result = await _repository.FindHostsAsync(c => c.MacAddress.GetAddressBytes().SequenceEqual(macAddress.GetAddressBytes()));
 
         // Assert
         Assert.Single(result);
@@ -232,7 +232,7 @@ public class OrganizationRepositoryTests
     }
 
     [Fact]
-    public async Task MoveComputerAsync_MovesComputerBetweenUnits()
+    public async Task MoveHostAsync_MovesHostBetweenUnits()
     {
         // Arrange
         var org1 = new Organization("Org 1", new Address("City1", "State1", new CountryCode("US")));
@@ -246,15 +246,15 @@ public class OrganizationRepositoryTests
         var ipAddress = IPAddress.Parse("192.168.1.1");
         var macAddress = PhysicalAddress.Parse("00-11-22-33-44-55");
 
-        unit1.AddComputer("Comp1", ipAddress, macAddress);
+        unit1.AddHost("Comp1", ipAddress, macAddress);
 
         _context.Organizations.AddRange(org1, org2);
         await _context.SaveChangesAsync();
 
-        var computerId = unit1.Hosts.First().Id;
+        var hostId = unit1.Hosts.First().Id;
 
         // Act
-        await _repository.MoveComputerAsync(org1.Id, org2.Id, computerId, unit1.Id, unit2.Id);
+        await _repository.MoveHostAsync(org1.Id, org2.Id, hostId, unit1.Id, unit2.Id);
         await _context.SaveChangesAsync();
 
         // Assert
@@ -275,15 +275,15 @@ public class OrganizationRepositoryTests
         var ipAddress = IPAddress.Parse("192.168.1.1");
         var macAddress = PhysicalAddress.Parse("00-11-22-33-44-55");
 
-        unit.AddComputer("Comp1", ipAddress, macAddress);
+        unit.AddHost("Comp1", ipAddress, macAddress);
         _context.Organizations.Add(organization);
         await _context.SaveChangesAsync();
 
-        var computerId = unit.Hosts.First().Id;
+        var hostId = unit.Hosts.First().Id;
         var plannedDate = DateTimeOffset.Now.AddDays(1);
 
         // Act
-        await _repository.CreateCertificateRenewalTaskAsync(organization.Id, computerId, plannedDate);
+        await _repository.CreateCertificateRenewalTaskAsync(organization.Id, hostId, plannedDate);
         await _repository.SaveChangesAsync();
 
         // Assert

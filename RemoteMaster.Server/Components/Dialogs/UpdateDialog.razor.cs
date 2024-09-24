@@ -24,7 +24,7 @@ public partial class UpdateDialog
     private bool _forceUpdate;
     private bool _allowDowngrade;
 
-    private readonly Dictionary<ComputerDto, ComputerResults> _resultsPerComputer = [];
+    private readonly Dictionary<HostDto, HostResults> _resultsPerHost = [];
     private readonly HashSet<HubConnection> _subscribedConnections = [];
 
     protected override void OnInitialized()
@@ -39,12 +39,12 @@ public partial class UpdateDialog
 
         var updateTasks = new List<Task>();
 
-        foreach (var (computer, connection) in Hosts)
+        foreach (var (host, connection) in Hosts)
         {
             var updateTask = Task.Run(async () =>
             {
                 var updaterConnection = new HubConnectionBuilder()
-                .WithUrl($"https://{computer.IpAddress}:6001/hubs/updater", options =>
+                .WithUrl($"https://{host.IpAddress}:6001/hubs/updater", options =>
                 {
                     options.AccessTokenProvider = async () =>
                     {
@@ -68,7 +68,7 @@ public partial class UpdateDialog
                 {
                     connection.On<Message>("ReceiveMessage", async message =>
                     {
-                        UpdateResultsForComputer(computer, message);
+                        UpdateResultsForHost(host, message);
                         await InvokeAsync(StateHasChanged);
                     });
 
@@ -81,7 +81,7 @@ public partial class UpdateDialog
                 {
                     updaterConnection.On<Message>("ReceiveMessage", async message =>
                     {
-                        UpdateResultsForComputer(computer, message);
+                        UpdateResultsForHost(host, message);
                         await InvokeAsync(StateHasChanged);
                     });
 
@@ -95,12 +95,12 @@ public partial class UpdateDialog
         await Task.WhenAll(updateTasks);
     }
 
-    private void UpdateResultsForComputer(ComputerDto computer, Message message)
+    private void UpdateResultsForHost(HostDto host, Message message)
     {
-        if (!_resultsPerComputer.TryGetValue(computer, out var results))
+        if (!_resultsPerHost.TryGetValue(host, out var results))
         {
-            results = new ComputerResults();
-            _resultsPerComputer[computer] = results;
+            results = new HostResults();
+            _resultsPerHost[host] = results;
         }
 
         if (message.Meta == "pid")
@@ -131,7 +131,7 @@ public partial class UpdateDialog
 
     private void CleanResults()
     {
-        _resultsPerComputer.Clear();
+        _resultsPerHost.Clear();
     }
 
     private async Task ExportResults()
@@ -140,9 +140,9 @@ public partial class UpdateDialog
 
         using (var archive = new ZipArchive(zipMemoryStream, ZipArchiveMode.Create, true))
         {
-            foreach (var (computer, results) in _resultsPerComputer)
+            foreach (var (host, results) in _resultsPerHost)
             {
-                var fileName = $"results_{computer.Name}_{computer.IpAddress}.txt";
+                var fileName = $"results_{host.Name}_{host.IpAddress}.txt";
                 var fileContent = results.ToString();
 
                 var zipEntry = archive.CreateEntry(fileName, CompressionLevel.Fastest);

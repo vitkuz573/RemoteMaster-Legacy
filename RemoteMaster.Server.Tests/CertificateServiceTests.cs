@@ -74,10 +74,10 @@ public class CertificateServiceTests
         var ipAddress = IPAddress.Loopback;
         var macAddress = PhysicalAddress.Parse("00-14-22-01-23-45");
 
-        var computer = new ComputerDto("localhost", ipAddress, macAddress);
+        var host = new HostDto("localhost", ipAddress, macAddress);
 
         _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(Result.Ok(caCertificate));
-        _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(computer);
+        _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(host);
 
         // Act
         var result = _certificateService.IssueCertificate(csrBytes);
@@ -98,10 +98,10 @@ public class CertificateServiceTests
         var ipAddress = IPAddress.Loopback;
         var macAddress = PhysicalAddress.Parse("00-14-22-01-23-45");
 
-        var computer = new ComputerDto("localhost", ipAddress, macAddress);
+        var host = new HostDto("localhost", ipAddress, macAddress);
 
         _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(Result.Ok(caCertificate));
-        _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(computer);
+        _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(host);
 
         // Act
         var result = _certificateService.IssueCertificate(csrBytes);
@@ -122,10 +122,10 @@ public class CertificateServiceTests
         var ipAddress = IPAddress.Loopback;
         var macAddress = PhysicalAddress.Parse("00-14-22-01-23-45");
 
-        var computer = new ComputerDto("localhost", ipAddress, macAddress);
+        var host = new HostDto("localhost", ipAddress, macAddress);
 
         _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(Result.Ok(caCertificate));
-        _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(computer);
+        _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(host);
 
         // Act
         var result = _certificateService.IssueCertificate(csrBytes);

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace RemoteMaster.Server.Models;
 
-public class ComputerResults
+public class HostResults
 {
     public StringBuilder Messages { get; } = new();
 

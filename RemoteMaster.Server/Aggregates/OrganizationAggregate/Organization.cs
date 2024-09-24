@@ -79,7 +79,7 @@ public class Organization : IAggregateRoot
             _organizationalUnits.Remove(child);
         }
 
-        unit.ClearComputers();
+        unit.ClearHosts();
         unit.ClearUsers();
     }
 
@@ -102,11 +102,11 @@ public class Organization : IAggregateRoot
         _userOrganizations.Remove(userOrganization);
     }
 
-    public CertificateRenewalTask CreateCertificateRenewalTask(Guid computerId, DateTimeOffset plannedDate)
+    public CertificateRenewalTask CreateCertificateRenewalTask(Guid hostId, DateTimeOffset plannedDate)
     {
-        var unit = _organizationalUnits.SingleOrDefault(u => u.Hosts.Any(c => c.Id == computerId)) ?? throw new InvalidOperationException("Host not found in this organization.");
-        var computer = unit.Hosts.Single(c => c.Id == computerId);
+        var unit = _organizationalUnits.SingleOrDefault(u => u.Hosts.Any(c => c.Id == hostId)) ?? throw new InvalidOperationException("Host not found in this organization.");
+        var host = unit.Hosts.Single(c => c.Id == hostId);
 
-        return new CertificateRenewalTask(computer, this, plannedDate);
+        return new CertificateRenewalTask(host, this, plannedDate);
     }
 }

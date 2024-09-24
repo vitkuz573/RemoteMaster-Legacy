@@ -10,19 +10,19 @@ namespace RemoteMaster.Server.Abstractions;
 
 public interface IOrganizationRepository : IRepository<Organization, Guid>
 {
-    Task<IEnumerable<Host>> FindComputersAsync(Expression<Func<Host, bool>> predicate);
+    Task<IEnumerable<Host>> FindHostsAsync(Expression<Func<Host, bool>> predicate);
 
-    Task RemoveComputerAsync(Guid organizationId, Guid unitId, Guid computerId);
+    Task RemoveHostAsync(Guid organizationId, Guid unitId, Guid hostId);
 
     Task<OrganizationalUnit?> GetOrganizationalUnitByIdAsync(Guid unitId);
 
     Task<Organization?> GetOrganizationByUnitIdAsync(Guid unitId);
 
-    Task MoveComputerAsync(Guid sourceOrganizationId, Guid targetOrganizationId, Guid computerId, Guid sourceUnitId, Guid targetUnitId);
+    Task MoveHostAsync(Guid sourceOrganizationId, Guid targetOrganizationId, Guid hostId, Guid sourceUnitId, Guid targetUnitId);
 
     Task<IEnumerable<CertificateRenewalTask>> GetAllCertificateRenewalTasksAsync();
 
-    Task CreateCertificateRenewalTaskAsync(Guid organizationId, Guid computerId, DateTimeOffset plannedDate);
+    Task CreateCertificateRenewalTaskAsync(Guid organizationId, Guid hostId, DateTimeOffset plannedDate);
 
     Task DeleteCertificateRenewalTaskAsync(Guid taskId);
 

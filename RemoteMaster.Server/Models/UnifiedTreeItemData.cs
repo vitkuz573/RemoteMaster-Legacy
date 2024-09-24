@@ -32,12 +32,12 @@ public class UnifiedTreeItemData : TreeItemData<object>
 
             case OrganizationalUnit unit:
                 Text = unit.Name;
-                Children.AddRange(unit.Hosts.Select(computer => new UnifiedTreeItemData(computer) as TreeItemData<object>));
+                Children.AddRange(unit.Hosts.Select(host => new UnifiedTreeItemData(host) as TreeItemData<object>));
                 Children.AddRange(unit.Children.Select(child => new UnifiedTreeItemData(child) as TreeItemData<object>));
                 break;
 
-            case Host computer:
-                Text = computer.Name;
+            case Host host:
+                Text = host.Name;
                 break;
 
             default:

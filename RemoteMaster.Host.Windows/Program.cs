@@ -191,10 +191,10 @@ internal class Program
                     policy.RequireClaim("Input", "ToggleInput"))
                 .AddPolicy("BlockUserInputPolicy", policy =>
                     policy.RequireClaim("Input", "BlockUserInput"))
-                .AddPolicy("RebootComputerPolicy", policy =>
-                    policy.RequireClaim("Power", "RebootComputer"))
-                .AddPolicy("ShutdownComputerPolicy", policy =>
-                    policy.RequireClaim("Power", "ShutdownComputer"))
+                .AddPolicy("RebootHostPolicy", policy =>
+                    policy.RequireClaim("Power", "RebootHost"))
+                .AddPolicy("ShutdownHostPolicy", policy =>
+                    policy.RequireClaim("Power", "ShutdownHost"))
                 .AddPolicy("SetMonitorStatePolicy", policy =>
                     policy.RequireClaim("Hardware", "SetMonitorState"))
                 .AddPolicy("ExecuteScriptPolicy", policy =>

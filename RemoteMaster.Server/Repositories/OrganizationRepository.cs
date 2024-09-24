@@ -67,7 +67,7 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
         await context.SaveChangesAsync();
     }
 
-    public async Task<IEnumerable<Host>> FindComputersAsync(Expression<Func<Host, bool>> predicate)
+    public async Task<IEnumerable<Host>> FindHostsAsync(Expression<Func<Host, bool>> predicate)
     {
         return await context.Organizations
             .SelectMany(o => o.OrganizationalUnits)
@@ -76,7 +76,7 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
             .ToListAsync();
     }
 
-    public async Task RemoveComputerAsync(Guid organizationId, Guid unitId, Guid computerId)
+    public async Task RemoveHostAsync(Guid organizationId, Guid unitId, Guid hostId)
     {
         var organization = await context.Organizations
             .Include(o => o.OrganizationalUnits)
@@ -84,10 +84,10 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
             .FirstOrDefaultAsync(o => o.Id == organizationId) ?? throw new InvalidOperationException("Organization not found.");
 
         var unit = organization.OrganizationalUnits.FirstOrDefault(ou => ou.Id == unitId) ?? throw new InvalidOperationException("Organizational unit not found.");
-        var computer = unit.Hosts.FirstOrDefault(c => c.Id == computerId) ?? throw new InvalidOperationException("Host not found.");
+        var host = unit.Hosts.FirstOrDefault(c => c.Id == hostId) ?? throw new InvalidOperationException("Host not found.");
 
-        unit.RemoveComputer(computer.Id);
-        context.Hosts.Remove(computer);
+        unit.RemoveHost(host.Id);
+        context.Hosts.Remove(host);
     }
 
     public async Task<OrganizationalUnit?> GetOrganizationalUnitByIdAsync(Guid unitId)
@@ -107,7 +107,7 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
             .FirstOrDefaultAsync(o => o.OrganizationalUnits.Any(ou => ou.Id == unitId));
     }
 
-    public async Task MoveComputerAsync(Guid sourceOrganizationId, Guid targetOrganizationId, Guid computerId, Guid sourceUnitId, Guid targetUnitId)
+    public async Task MoveHostAsync(Guid sourceOrganizationId, Guid targetOrganizationId, Guid hostId, Guid sourceUnitId, Guid targetUnitId)
     {
         var sourceOrganization = await context.Organizations
             .Include(o => o.OrganizationalUnits)
@@ -120,12 +120,12 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
             .FirstOrDefaultAsync(o => o.Id == targetOrganizationId) ?? throw new InvalidOperationException("Target organization not found.");
 
         var sourceUnit = sourceOrganization.OrganizationalUnits.FirstOrDefault(u => u.Id == sourceUnitId) ?? throw new InvalidOperationException("Source unit not found.");
-        var computer = sourceUnit.Hosts.FirstOrDefault(c => c.Id == computerId) ?? throw new InvalidOperationException("Host not found in the source unit.");
+        var host = sourceUnit.Hosts.FirstOrDefault(c => c.Id == hostId) ?? throw new InvalidOperationException("Host not found in the source unit.");
         var targetUnit = targetOrganization.OrganizationalUnits.FirstOrDefault(u => u.Id == targetUnitId) ?? throw new InvalidOperationException("Target unit not found.");
 
-        sourceUnit.RemoveComputer(computer.Id);
-        computer.SetOrganizationalUnit(targetUnit.Id);
-        targetUnit.AddExistingComputer(computer);
+        sourceUnit.RemoveHost(host.Id);
+        host.SetOrganizationalUnit(targetUnit.Id);
+        targetUnit.AddExistingHost(host);
 
         context.Organizations.Update(sourceOrganization);
         context.Organizations.Update(targetOrganization);
@@ -140,11 +140,11 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
             .ToListAsync();
     }
 
-    public async Task CreateCertificateRenewalTaskAsync(Guid organizationId, Guid computerId, DateTimeOffset plannedDate)
+    public async Task CreateCertificateRenewalTaskAsync(Guid organizationId, Guid hostId, DateTimeOffset plannedDate)
     {
         var organization = await GetByIdAsync(organizationId);
 
-        var certificateRenewalTask = organization?.CreateCertificateRenewalTask(computerId, plannedDate);
+        var certificateRenewalTask = organization?.CreateCertificateRenewalTask(hostId, plannedDate);
 
         await context.CertificateRenewalTasks.AddAsync(certificateRenewalTask);
     }

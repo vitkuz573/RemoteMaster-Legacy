@@ -12,7 +12,7 @@ public interface ILimitChecker
 
     bool CanAddOrganizationalUnit(Organization organization);
 
-    bool CanAddComputer(OrganizationalUnit organizationalUnit);
+    bool CanAddHost(OrganizationalUnit organizationalUnit);
 
     bool CanAddUserToOrganization(Organization organization);
 

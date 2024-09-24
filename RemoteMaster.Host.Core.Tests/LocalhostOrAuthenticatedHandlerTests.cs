@@ -32,7 +32,7 @@ public class LocalhostOrAuthenticatedHandlerTests
             .Setup(h => h.LoadConfigurationAsync())
             .ReturnsAsync(new HostConfiguration
             {
-                Host = new ComputerDto("TestComputer", IPAddress.Parse("192.168.1.1"), PhysicalAddress.Parse("00-14-22-01-23-45"))
+                Host = new HostDto("TestHost", IPAddress.Parse("192.168.1.1"), PhysicalAddress.Parse("00-14-22-01-23-45"))
             });
 
         Mock<IHttpContextAccessor> httpContextAccessorMock = new();

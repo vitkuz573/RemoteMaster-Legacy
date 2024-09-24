@@ -13,7 +13,7 @@ public partial class LockWorkStationDialog
     {
         try
         {
-            await ComputerCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("LockWorkStation"));
+            await HostCommandService.Execute(Hosts, async (_, connection) => await connection.InvokeAsync("LockWorkStation"));
         }
         catch (Exception)
         {

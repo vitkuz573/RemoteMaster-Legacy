@@ -25,16 +25,16 @@
                 <MudCheckBox @bind-Value="@_allowDowngrade" Label="Allow Downgrade" />
                 
                 <MudStack Spacing="2">
-                    <MudButton OnClick="CleanResults" Variant="Variant.Filled" Color="Color.Error" Disabled="!_resultsPerComputer.Any()">Clear results</MudButton>
-                    <MudButton OnClick="ExportResults" Variant="Variant.Filled" Color="Color.Surface" Disabled="!_resultsPerComputer.Any()">Export Results</MudButton>
+                    <MudButton OnClick="CleanResults" Variant="Variant.Filled" Color="Color.Error" Disabled="!_resultsPerHost.Any()">Clear results</MudButton>
+                    <MudButton OnClick="ExportResults" Variant="Variant.Filled" Color="Color.Surface" Disabled="!_resultsPerHost.Any()">Export Results</MudButton>
                 </MudStack>
             </MudItem>
             
             <MudItem xs="9">
                 <MudExpansionPanels Class="max-h-[340px] overflow-y-auto" MultiExpansion="true">
-                    @foreach (var (computer, results) in _resultsPerComputer)
+                    @foreach (var (host, results) in _resultsPerHost)
                     {
-                        <MudExpansionPanel Text="@($"Results for {computer.Name} ({computer.IpAddress}) - PID: {results.LastPid}")" Class="select-text">
+                        <MudExpansionPanel Text="@($"Results for {host.Name} ({host.IpAddress}) - PID: {results.LastPid}")" Class="select-text">
                             @foreach (var line in results.Messages.ToString().Split([Environment.NewLine], StringSplitOptions.None))
                             {
                                 <div>@line</div>

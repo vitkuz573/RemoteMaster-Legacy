@@ -246,14 +246,14 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
         shutdownService.ImmediateShutdown();
     }
 
-    [Authorize(Policy = "RebootComputerPolicy")]
-    public void RebootComputer(PowerActionRequest powerActionRequest)
+    [Authorize(Policy = "RebootHostPolicy")]
+    public void RebootHost(PowerActionRequest powerActionRequest)
     {
         powerService.Reboot(powerActionRequest);
     }
 
-    [Authorize(Policy = "ShutdownComputerPolicy")]
-    public void ShutdownComputer(PowerActionRequest powerActionRequest)
+    [Authorize(Policy = "ShutdownHostPolicy")]
+    public void ShutdownHost(PowerActionRequest powerActionRequest)
     {
         powerService.Shutdown(powerActionRequest);
     }

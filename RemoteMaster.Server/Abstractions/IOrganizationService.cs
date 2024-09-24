@@ -20,5 +20,5 @@ public interface IOrganizationService
 
     Task<IEnumerable<Organization>> GetOrganizationsWithAccessibleUnitsAsync(IEnumerable<Guid> organizationIds, IEnumerable<Guid> organizationalUnitIds);
 
-    Task RemoveComputerAsync(Guid organizationId, Guid organizationalUnitId, Guid computerId);
+    Task RemoveHostAsync(Guid organizationId, Guid organizationalUnitId, Guid hostId);
 }

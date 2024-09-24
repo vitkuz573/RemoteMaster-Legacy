@@ -147,29 +147,29 @@
   <data name="ExtraTab" xml:space="preserve">
     <value>Extra</value>
   </data>
-  <data name="NoAvailableComputers" xml:space="preserve">
-    <value>No available computers to display.</value>
+  <data name="NoAvailableHosts" xml:space="preserve">
+    <value>No available hosts to display.</value>
   </data>
-  <data name="NoUnavailableComputers" xml:space="preserve">
-    <value>No unavailable computers to display.</value>
+  <data name="NoUnavailableHosts" xml:space="preserve">
+    <value>No unavailable hosts to display.</value>
   </data>
-  <data name="NoPendingComputers" xml:space="preserve">
-    <value>No pending computers to display.</value>
+  <data name="NoPendingHosts" xml:space="preserve">
+    <value>No pending hosts to display.</value>
   </data>
-  <data name="AvailableComputers" xml:space="preserve">
-    <value>Available computers</value>
+  <data name="AvailableHosts" xml:space="preserve">
+    <value>Available hosts</value>
   </data>
   <data name="DeselectAll" xml:space="preserve">
     <value>Deselect All</value>
   </data>
-  <data name="PendingComputers" xml:space="preserve">
-    <value>Pending computers</value>
+  <data name="PendingHosts" xml:space="preserve">
+    <value>Pending hosts</value>
   </data>
   <data name="SelectAll" xml:space="preserve">
     <value>Select All</value>
   </data>
-  <data name="UnavailableComputers" xml:space="preserve">
-    <value>Unavailable computers</value>
+  <data name="UnavailableHosts" xml:space="preserve">
+    <value>Unavailable hosts</value>
   </data>
   <data name="Connect" xml:space="preserve">
     <value>Connect</value>

@@ -9,7 +9,7 @@ using RemoteMaster.Shared.Converters;
 
 namespace RemoteMaster.Shared.DTOs;
 
-public class ComputerDto(string name, IPAddress ipAddress, PhysicalAddress macAddress) : IEquatable<ComputerDto>
+public class HostDto(string name, IPAddress ipAddress, PhysicalAddress macAddress) : IEquatable<HostDto>
 {
     [JsonIgnore]
     public Guid Id { get; init; }
@@ -34,7 +34,7 @@ public class ComputerDto(string name, IPAddress ipAddress, PhysicalAddress macAd
     [JsonIgnore]
     public Guid OrganizationalUnitId { get; init; }
 
-    public bool Equals(ComputerDto? other)
+    public bool Equals(HostDto? other)
     {
         if (other == null)
         {
@@ -44,7 +44,7 @@ public class ComputerDto(string name, IPAddress ipAddress, PhysicalAddress macAd
         return IpAddress == other.IpAddress && MacAddress == other.MacAddress && Name == other.Name;
     }
 
-    public override bool Equals(object? obj) => Equals(obj as ComputerDto);
+    public override bool Equals(object? obj) => Equals(obj as HostDto);
 
     public override int GetHashCode() => HashCode.Combine(IpAddress, MacAddress, Name);
 }

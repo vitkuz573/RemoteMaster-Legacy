@@ -24,13 +24,13 @@ public partial class OpenShellDialog
 
         try
         {
-            await ComputerCommandService.Execute(Hosts, async (computer, _) =>
+            await HostCommandService.Execute(Hosts, async (host, _) =>
             {
                 var sParameter = _selectedUser == "System" ? "-s" : "";
                 var command = _selectedShell switch
                 {
-                    Shell.Cmd => @$"/C psexec \\{computer.IpAddress} {sParameter} -nobanner -accepteula cmd",
-                    Shell.PowerShell => @$"/C psexec \\{computer.IpAddress} {sParameter} -nobanner -accepteula powershell",
+                    Shell.Cmd => @$"/C psexec \\{host.IpAddress} {sParameter} -nobanner -accepteula cmd",
+                    Shell.PowerShell => @$"/C psexec \\{host.IpAddress} {sParameter} -nobanner -accepteula powershell",
                     _ => throw new InvalidOperationException($"Unknown shell: {_selectedShell}")
                 };
 

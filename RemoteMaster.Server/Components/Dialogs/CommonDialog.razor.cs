@@ -33,7 +33,7 @@ public class CommonDialogBase : ComponentBase
     private UserManager<ApplicationUser> UserManager { get; set; } = default!;
 
     [CascadingParameter]
-    public ConcurrentDictionary<ComputerDto, HubConnection?> Hosts { get; set; } = default!;
+    public ConcurrentDictionary<HostDto, HubConnection?> Hosts { get; set; } = default!;
 
     [Parameter]
     public string ContentStyle { get; set; } = default!;
@@ -55,9 +55,9 @@ public class CommonDialogBase : ComponentBase
 
     public bool HasConnectionIssues => RequireConnections && Hosts.Any(kvp => kvp.Value == null);
 
-    private readonly ConcurrentDictionary<ComputerDto, bool> _checkingStates = new();
-    private readonly ConcurrentDictionary<ComputerDto, bool> _loadingStates = new();
-    private readonly ConcurrentDictionary<ComputerDto, string> _errorMessages = new();
+    private readonly ConcurrentDictionary<HostDto, bool> _checkingStates = new();
+    private readonly ConcurrentDictionary<HostDto, bool> _loadingStates = new();
+    private readonly ConcurrentDictionary<HostDto, string> _errorMessages = new();
 
     protected async void Cancel()
     {
@@ -95,23 +95,23 @@ public class CommonDialogBase : ComponentBase
 
         var tasks = Hosts.Select(async kvp =>
         {
-            var computer = kvp.Key;
-            _checkingStates[computer] = true;
+            var host = kvp.Key;
+            _checkingStates[host] = true;
 
             try
             {
                 var userId = UserManager.GetUserId(httpContext.User);
-                var connection = await SetupConnection(userId, computer, HubPath, StartConnection, CancellationToken.None);
-                Hosts[computer] = connection;
+                var connection = await SetupConnection(userId, host, HubPath, StartConnection, CancellationToken.None);
+                Hosts[host] = connection;
             }
             catch (Exception ex)
             {
-                Hosts[computer] = null;
-                _errorMessages[computer] = ex.Message;
+                Hosts[host] = null;
+                _errorMessages[host] = ex.Message;
             }
             finally
             {
-                _checkingStates[computer] = false;
+                _checkingStates[host] = false;
                 await InvokeAsync(StateHasChanged);
             }
         });
@@ -119,10 +119,10 @@ public class CommonDialogBase : ComponentBase
         await Task.WhenAll(tasks);
     }
 
-    private async Task<HubConnection> SetupConnection(string userId, ComputerDto computer, string hubPath, bool startConnection, CancellationToken cancellationToken)
+    private async Task<HubConnection> SetupConnection(string userId, HostDto host, string hubPath, bool startConnection, CancellationToken cancellationToken)
     {
         var connection = new HubConnectionBuilder()
-            .WithUrl($"https://{computer.IpAddress}:5001/{hubPath}", options =>
+            .WithUrl($"https://{host.IpAddress}:5001/{hubPath}", options =>
             {
                 options.AccessTokenProvider = async () =>
                 {
@@ -146,15 +146,15 @@ public class CommonDialogBase : ComponentBase
         return connection;
     }
 
-    public async Task RecheckConnection(ComputerDto computer)
+    public async Task RecheckConnection(HostDto host)
     {
-        ArgumentNullException.ThrowIfNull(computer);
+        ArgumentNullException.ThrowIfNull(host);
 
-        _loadingStates[computer] = true;
-        _checkingStates[computer] = true;
+        _loadingStates[host] = true;
+        _checkingStates[host] = true;
         await InvokeAsync(StateHasChanged);
 
-        if (Hosts.TryGetValue(computer, out var existingConnection) && existingConnection != null)
+        if (Hosts.TryGetValue(host, out var existingConnection) && existingConnection != null)
         {
             try
             {
@@ -172,28 +172,28 @@ public class CommonDialogBase : ComponentBase
             var httpContext = HttpContextAccessor.HttpContext;
 
             var userId = UserManager.GetUserId(httpContext.User);
-            var newConnection = await SetupConnection(userId, computer, HubPath, StartConnection, CancellationToken.None);
-            Hosts[computer] = newConnection;
-            _errorMessages.TryRemove(computer, out _);
+            var newConnection = await SetupConnection(userId, host, HubPath, StartConnection, CancellationToken.None);
+            Hosts[host] = newConnection;
+            _errorMessages.TryRemove(host, out _);
         }
         catch (Exception ex)
         {
-            Hosts[computer] = null;
-            _errorMessages[computer] = ex.Message;
+            Hosts[host] = null;
+            _errorMessages[host] = ex.Message;
         }
         finally
         {
-            _loadingStates[computer] = false;
-            _checkingStates[computer] = false;
+            _loadingStates[host] = false;
+            _checkingStates[host] = false;
             await InvokeAsync(StateHasChanged);
         }
     }
 
-    public async Task RemoveComputer(ComputerDto computer)
+    public async Task RemoveHost(HostDto host)
     {
-        ArgumentNullException.ThrowIfNull(computer);
+        ArgumentNullException.ThrowIfNull(host);
 
-        if (Hosts.TryGetValue(computer, out var existingConnection) && existingConnection != null)
+        if (Hosts.TryGetValue(host, out var existingConnection) && existingConnection != null)
         {
             try
             {
@@ -206,8 +206,8 @@ public class CommonDialogBase : ComponentBase
             }
         }
 
-        Hosts.TryRemove(computer, out _);
-        _errorMessages.TryRemove(computer, out _);
+        Hosts.TryRemove(host, out _);
+        _errorMessages.TryRemove(host, out _);
         await InvokeAsync(StateHasChanged);
 
         if (Hosts.IsEmpty)
@@ -216,9 +216,9 @@ public class CommonDialogBase : ComponentBase
         }
     }
 
-    public string GetRefreshIconClass(ComputerDto computer)
+    public string GetRefreshIconClass(HostDto host)
     {
-        return IsLoading(computer) ? "rotating" : string.Empty;
+        return IsLoading(host) ? "rotating" : string.Empty;
     }
 
     public string GetPanelHeaderText()
@@ -226,11 +226,11 @@ public class CommonDialogBase : ComponentBase
         return RequireConnections && Hosts.Any(kvp => kvp.Value == null) ? "Click to view affected hosts (some hosts have issues)" : "Click to view affected hosts";
     }
 
-    public string GetButtonClass(ComputerDto computer)
+    public string GetButtonClass(HostDto host)
     {
         var baseClass = "fixed-size-button";
 
-        if (IsLoading(computer))
+        if (IsLoading(host))
         {
             return $"{baseClass} rotating";
         }
@@ -238,14 +238,14 @@ public class CommonDialogBase : ComponentBase
         return baseClass;
     }
 
-    public bool IsRefreshDisabled(ComputerDto computer)
+    public bool IsRefreshDisabled(HostDto host)
     {
-        return IsLoading(computer) || IsChecking(computer);
+        return IsLoading(host) || IsChecking(host);
     }
 
-    protected bool IsChecking(ComputerDto computer) => _checkingStates.TryGetValue(computer, out var isChecking) && isChecking;
+    protected bool IsChecking(HostDto host) => _checkingStates.TryGetValue(host, out var isChecking) && isChecking;
 
-    protected bool IsLoading(ComputerDto computer) => _loadingStates.TryGetValue(computer, out var isLoading) && isLoading;
+    protected bool IsLoading(HostDto host) => _loadingStates.TryGetValue(host, out var isLoading) && isLoading;
 
-    public string GetErrorMessage(ComputerDto computer) => _errorMessages.TryGetValue(computer, out var errorMessage) ? errorMessage : "Unknown error";
+    public string GetErrorMessage(HostDto host) => _errorMessages.TryGetValue(host, out var errorMessage) ? errorMessage : "Unknown error";
 }
