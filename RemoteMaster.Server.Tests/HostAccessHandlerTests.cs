@@ -58,8 +58,8 @@ public class HostAccessHandlerTests
         _userRepositoryMock.Setup(repo => repo.GetByIdAsync(It.IsAny<string>()))
             .ReturnsAsync(applicationUser);
 
-        _organizationRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Computer, bool>>>()))
-            .ReturnsAsync(new List<Computer>());
+        _organizationRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Host, bool>>>()))
+            .ReturnsAsync(new List<Host>());
 
         // Act
         await _handler.HandleAsync(context);
@@ -93,8 +93,8 @@ public class HostAccessHandlerTests
         _userRepositoryMock.Setup(repo => repo.GetByIdAsync("user1"))
             .ReturnsAsync(applicationUser);
 
-        _organizationRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Computer, bool>>>()))
-            .ReturnsAsync(new List<Computer> { organizationalUnit.Computers.First() });
+        _organizationRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Host, bool>>>()))
+            .ReturnsAsync(new List<Host> { organizationalUnit.Computers.First() });
 
         _organizationRepositoryMock.Setup(repo => repo.GetOrganizationalUnitByIdAsync(organizationalUnit.Id))
             .ReturnsAsync(organizationalUnit);
@@ -132,8 +132,8 @@ public class HostAccessHandlerTests
         _userRepositoryMock.Setup(repo => repo.GetByIdAsync("user1"))
             .ReturnsAsync(applicationUser);
 
-        _organizationRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Computer, bool>>>()))
-            .ReturnsAsync(new List<Computer> { organizationalUnit.Computers.First() });
+        _organizationRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Host, bool>>>()))
+            .ReturnsAsync(new List<Host> { organizationalUnit.Computers.First() });
 
         _organizationRepositoryMock.Setup(repo => repo.GetOrganizationalUnitByIdAsync(organizationalUnit.Id))
             .ReturnsAsync(organizationalUnit);
@@ -182,8 +182,8 @@ public class HostAccessHandlerTests
         _userRepositoryMock.Setup(repo => repo.GetByIdAsync("user1"))
             .ReturnsAsync(applicationUser);
 
-        _organizationRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Computer, bool>>>()))
-            .ReturnsAsync(new List<Computer> { organizationalUnit1.Computers.First() });
+        _organizationRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Host, bool>>>()))
+            .ReturnsAsync(new List<Host> { organizationalUnit1.Computers.First() });
 
         _organizationRepositoryMock.Setup(repo => repo.GetOrganizationalUnitByIdAsync(organizationalUnit1.Id))
             .ReturnsAsync(organizationalUnit1);
@@ -232,8 +232,8 @@ public class HostAccessHandlerTests
         _userRepositoryMock.Setup(repo => repo.GetByIdAsync("user1"))
             .ReturnsAsync(applicationUser);
 
-        _organizationRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Computer, bool>>>()))
-            .ReturnsAsync(new List<Computer> { organizationalUnit1.Computers.First() });
+        _organizationRepositoryMock.Setup(repo => repo.FindComputersAsync(It.IsAny<Expression<Func<Host, bool>>>()))
+            .ReturnsAsync(new List<Host> { organizationalUnit1.Computers.First() });
 
         _organizationRepositoryMock.Setup(repo => repo.GetOrganizationalUnitByIdAsync(organizationalUnit2.Id))
             .ReturnsAsync(organizationalUnit1);

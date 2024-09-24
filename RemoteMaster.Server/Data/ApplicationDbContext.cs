@@ -10,6 +10,7 @@ using RemoteMaster.Server.Aggregates.ApplicationClaimAggregate;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Configurations;
+using Host = RemoteMaster.Server.Aggregates.OrganizationAggregate.Host;
 
 namespace RemoteMaster.Server.Data;
 
@@ -19,7 +20,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<OrganizationalUnit> OrganizationalUnits { get; set; }
 
-    public DbSet<Computer> Computers { get; set; }
+    public DbSet<Host> Hosts { get; set; }
 
     public DbSet<SignInEntry> SignInEntries { get; set; }
 

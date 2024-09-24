@@ -10,7 +10,7 @@ public class CertificateRenewalTask
 {
     private CertificateRenewalTask() { }
 
-    internal CertificateRenewalTask(Computer computer, Organization organization, DateTimeOffset plannedDate)
+    internal CertificateRenewalTask(Host host, Organization organization, DateTimeOffset plannedDate)
     {
         if (plannedDate <= DateTimeOffset.Now)
         {
@@ -18,12 +18,12 @@ public class CertificateRenewalTask
         }
 
         Id = Guid.NewGuid();
-        Computer = computer ?? throw new ArgumentNullException(nameof(computer));
-        ComputerId = computer.Id;
+        Host = host ?? throw new ArgumentNullException(nameof(host));
+        ComputerId = host.Id;
         Organization = organization ?? throw new ArgumentNullException(nameof(organization));
         OrganizationId = organization.Id;
-        OrganizationalUnit = computer.Parent ?? throw new ArgumentNullException(nameof(computer));
-        OrganizationalUnitId = computer.ParentId;
+        OrganizationalUnit = host.Parent ?? throw new ArgumentNullException(nameof(host));
+        OrganizationalUnitId = host.ParentId;
         PlannedDate = plannedDate;
         Status = CertificateRenewalStatus.Pending;
     }
@@ -32,7 +32,7 @@ public class CertificateRenewalTask
 
     public Guid ComputerId { get; private set; }
 
-    public Computer Computer { get; private set; }
+    public Host Host { get; private set; }
 
     public Guid OrganizationId { get; private set; }
 

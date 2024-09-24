@@ -92,7 +92,7 @@ public partial class Access : IAsyncDisposable
 
             if (_isAccessDenied)
             {
-                SnackBar.Add("Access denied. You do not have permission to access this computer.", Severity.Error);
+                SnackBar.Add("Access denied. You do not have permission to access this host.", Severity.Error);
             }
             else
             {

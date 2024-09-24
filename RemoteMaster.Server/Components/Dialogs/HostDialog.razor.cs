@@ -6,13 +6,14 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Models;
+using Host = RemoteMaster.Server.Aggregates.OrganizationAggregate.Host;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class HostDialog
 {
     [Parameter]
-    public Computer Host { get; set; } = default!;
+    public Host Host { get; set; } = default!;
 
     private readonly HostInfo _model = new();
 

@@ -4,12 +4,13 @@
 
 using System.Linq.Expressions;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
+using Host = RemoteMaster.Server.Aggregates.OrganizationAggregate.Host;
 
 namespace RemoteMaster.Server.Abstractions;
 
 public interface IOrganizationRepository : IRepository<Organization, Guid>
 {
-    Task<IEnumerable<Computer>> FindComputersAsync(Expression<Func<Computer, bool>> predicate);
+    Task<IEnumerable<Host>> FindComputersAsync(Expression<Func<Host, bool>> predicate);
 
     Task RemoveComputerAsync(Guid organizationId, Guid unitId, Guid computerId);
 

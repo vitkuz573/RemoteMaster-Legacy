@@ -121,7 +121,7 @@ public class HostRegistrationServiceTests
     // 
     //     // Assert
     //     Assert.True(result.IsSuccess);
-    //     var updatedComputer = organizationalUnit.Computers.First(c => c.MacAddress == "00:11:22:33:44:55");
+    //     var updatedComputer = organizationalUnit.Hosts.First(c => c.MacAddress == "00:11:22:33:44:55");
     //     Assert.Equal("NewHost", updatedComputer.Name);
     //     Assert.Equal("192.168.0.1", updatedComputer.IpAddress);
     //     _organizationRepositoryMock.Verify(x => x.SaveChangesAsync(), Times.Once);

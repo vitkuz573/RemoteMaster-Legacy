@@ -7,11 +7,11 @@ using System.Net.NetworkInformation;
 
 namespace RemoteMaster.Server.Aggregates.OrganizationAggregate;
 
-public class Computer
+public class Host
 {
-    protected Computer() { }
+    protected Host() { }
 
-    internal Computer(string name, IPAddress ipAddress, PhysicalAddress macAddress)
+    internal Host(string name, IPAddress ipAddress, PhysicalAddress macAddress)
     {
         Name = name ?? throw new ArgumentNullException(nameof(name));
         IpAddress = ipAddress ?? throw new ArgumentNullException(nameof(ipAddress));

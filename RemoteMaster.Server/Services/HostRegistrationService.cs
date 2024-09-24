@@ -7,6 +7,7 @@ using FluentResults;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Shared.Models;
+using Host = RemoteMaster.Server.Aggregates.OrganizationAggregate.Host;
 
 namespace RemoteMaster.Server.Services;
 
@@ -121,7 +122,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
                 
                 if (updateResult.IsFailed)
                 {
-                    var errorMessage = $"Failed to update existing computer: {updateResult.Errors.FirstOrDefault()?.Message}";
+                    var errorMessage = $"Failed to update existing host: {updateResult.Errors.FirstOrDefault()?.Message}";
                     
                     await eventNotificationService.SendNotificationAsync(errorMessage);
                     
@@ -156,17 +157,17 @@ public class HostRegistrationService(IEventNotificationService eventNotification
         }
     }
 
-    private async Task<Result> UpdateComputerAsync(Computer computer, HostConfiguration hostConfiguration)
+    private async Task<Result> UpdateComputerAsync(Host host, HostConfiguration hostConfiguration)
     {
         if (hostConfiguration.Host == null)
         {
             throw new InvalidOperationException("Host information must be provided during the update process.");
         }
 
-        computer.SetName(hostConfiguration.Host.Name);
-        computer.SetIpAddress(hostConfiguration.Host.IpAddress);
+        host.SetName(hostConfiguration.Host.Name);
+        host.SetIpAddress(hostConfiguration.Host.IpAddress);
 
-        var organization = computer.Parent.Organization;
+        var organization = host.Parent.Organization;
 
         await organizationRepository.UpdateAsync(organization);
         await organizationRepository.SaveChangesAsync();
@@ -207,7 +208,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
 
             if (computer == null)
             {
-                var errorMessage = $"Failed to find the computer: Computer with MAC address '{request.MacAddress}' not found in organizational unit '{parentUnit.Name}'.";
+                var errorMessage = $"Failed to find the host: Host with MAC address '{request.MacAddress}' not found in organizational unit '{parentUnit.Name}'.";
 
                 await eventNotificationService.SendNotificationAsync(errorMessage);
 
@@ -266,7 +267,7 @@ public class HostRegistrationService(IEventNotificationService eventNotification
 
             if (computer == null)
             {
-                var errorMessage = $"Failed to find the computer: Computer with MAC address '{request.MacAddress}' not found in organizational unit '{parentUnit.Name}'.";
+                var errorMessage = $"Failed to find the host: Host with MAC address '{request.MacAddress}' not found in organizational unit '{parentUnit.Name}'.";
 
                 await eventNotificationService.SendNotificationAsync(errorMessage);
 

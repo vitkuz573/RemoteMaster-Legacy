@@ -15,10 +15,10 @@ namespace RemoteMaster.Server.Abstractions;
 public interface IComputerCommandService
 {
     /// <summary>
-    /// Executes the specified action on each computer in the provided dictionary.
+    /// Executes the specified action on each host in the provided dictionary.
     /// </summary>
     /// <param name="hosts">A dictionary of computers and their corresponding SignalR connections.</param>
-    /// <param name="action">The action to execute on each computer.</param>
+    /// <param name="action">The action to execute on each host.</param>
     /// <returns>A result indicating the success or failure of the operation.</returns>
     Task<Result> Execute(ConcurrentDictionary<ComputerDto, HubConnection?> hosts, Func<ComputerDto, HubConnection?, Task> action);
 }

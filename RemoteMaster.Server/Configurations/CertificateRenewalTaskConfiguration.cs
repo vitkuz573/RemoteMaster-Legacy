@@ -24,7 +24,7 @@ public class CertificateRenewalTaskConfiguration : IEntityTypeConfiguration<Cert
             .IsRequired()
             .HasColumnOrder(1);
 
-        builder.HasOne(crt => crt.Computer)
+        builder.HasOne(crt => crt.Host)
             .WithMany()
             .HasForeignKey(crt => crt.ComputerId)
             .OnDelete(DeleteBehavior.Cascade);

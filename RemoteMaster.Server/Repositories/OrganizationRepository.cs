@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
 using RemoteMaster.Server.Data;
+using Host = RemoteMaster.Server.Aggregates.OrganizationAggregate.Host;
 
 namespace RemoteMaster.Server.Repositories;
 
@@ -66,7 +67,7 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
         await context.SaveChangesAsync();
     }
 
-    public async Task<IEnumerable<Computer>> FindComputersAsync(Expression<Func<Computer, bool>> predicate)
+    public async Task<IEnumerable<Host>> FindComputersAsync(Expression<Func<Host, bool>> predicate)
     {
         return await context.Organizations
             .SelectMany(o => o.OrganizationalUnits)
@@ -83,10 +84,10 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
             .FirstOrDefaultAsync(o => o.Id == organizationId) ?? throw new InvalidOperationException("Organization not found.");
 
         var unit = organization.OrganizationalUnits.FirstOrDefault(ou => ou.Id == unitId) ?? throw new InvalidOperationException("Organizational unit not found.");
-        var computer = unit.Computers.FirstOrDefault(c => c.Id == computerId) ?? throw new InvalidOperationException("Computer not found.");
+        var computer = unit.Computers.FirstOrDefault(c => c.Id == computerId) ?? throw new InvalidOperationException("Host not found.");
 
         unit.RemoveComputer(computer.Id);
-        context.Computers.Remove(computer);
+        context.Hosts.Remove(computer);
     }
 
     public async Task<OrganizationalUnit?> GetOrganizationalUnitByIdAsync(Guid unitId)
@@ -119,7 +120,7 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
             .FirstOrDefaultAsync(o => o.Id == targetOrganizationId) ?? throw new InvalidOperationException("Target organization not found.");
 
         var sourceUnit = sourceOrganization.OrganizationalUnits.FirstOrDefault(u => u.Id == sourceUnitId) ?? throw new InvalidOperationException("Source unit not found.");
-        var computer = sourceUnit.Computers.FirstOrDefault(c => c.Id == computerId) ?? throw new InvalidOperationException("Computer not found in the source unit.");
+        var computer = sourceUnit.Computers.FirstOrDefault(c => c.Id == computerId) ?? throw new InvalidOperationException("Host not found in the source unit.");
         var targetUnit = targetOrganization.OrganizationalUnits.FirstOrDefault(u => u.Id == targetUnitId) ?? throw new InvalidOperationException("Target unit not found.");
 
         sourceUnit.RemoveComputer(computer.Id);
@@ -133,7 +134,7 @@ public class OrganizationRepository(ApplicationDbContext context) : IOrganizatio
     public async Task<IEnumerable<CertificateRenewalTask>> GetAllCertificateRenewalTasksAsync()
     {
         return await context.CertificateRenewalTasks
-            .Include(task => task.Computer)
+            .Include(task => task.Host)
             .Include(task => task.Organization)
             .Include(task => task.OrganizationalUnit)
             .ToListAsync();

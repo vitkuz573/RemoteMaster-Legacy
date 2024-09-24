@@ -4,6 +4,7 @@
 
 using MudBlazor;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
+using Host = RemoteMaster.Server.Aggregates.OrganizationAggregate.Host;
 
 namespace RemoteMaster.Server.Models;
 
@@ -35,7 +36,7 @@ public class UnifiedTreeItemData : TreeItemData<object>
                 Children.AddRange(unit.Children.Select(child => new UnifiedTreeItemData(child) as TreeItemData<object>));
                 break;
 
-            case Computer computer:
+            case Host computer:
                 Text = computer.Name;
                 break;
 

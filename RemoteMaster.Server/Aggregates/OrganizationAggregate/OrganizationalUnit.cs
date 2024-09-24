@@ -10,7 +10,7 @@ namespace RemoteMaster.Server.Aggregates.OrganizationAggregate;
 public class OrganizationalUnit
 {
     private readonly List<OrganizationalUnit> _children = [];
-    private readonly List<Computer> _computers = [];
+    private readonly List<Host> _computers = [];
     private readonly List<UserOrganizationalUnit> _userOrganizationalUnits = [];
 
     public Guid Id { get; private set; }
@@ -27,7 +27,7 @@ public class OrganizationalUnit
 
     public IReadOnlyCollection<OrganizationalUnit> Children => _children.AsReadOnly();
 
-    public IReadOnlyCollection<Computer> Computers => _computers.AsReadOnly();
+    public IReadOnlyCollection<Host> Computers => _computers.AsReadOnly();
 
     public IReadOnlyCollection<UserOrganizationalUnit> UserOrganizationalUnits => _userOrganizationalUnits.AsReadOnly();
 
@@ -59,20 +59,20 @@ public class OrganizationalUnit
 
     public void AddComputer(string name, IPAddress ipAddress, PhysicalAddress macAddress)
     {
-        var computer = new Computer(name, ipAddress, macAddress);
+        var computer = new Host(name, ipAddress, macAddress);
         computer.SetOrganizationalUnit(Id);
 
         _computers.Add(computer);
     }
 
-    internal void AddExistingComputer(Computer computer)
+    internal void AddExistingComputer(Host host)
     {
-        if (_computers.Any(c => c.Id == computer.Id))
+        if (_computers.Any(c => c.Id == host.Id))
         {
-            throw new InvalidOperationException("Computer already exists in this unit.");
+            throw new InvalidOperationException("Host already exists in this unit.");
         }
 
-        _computers.Add(computer);
+        _computers.Add(host);
     }
 
     public void RemoveComputer(Guid computerId)

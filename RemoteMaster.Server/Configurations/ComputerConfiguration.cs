@@ -6,13 +6,14 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using RemoteMaster.Server.Aggregates.OrganizationAggregate;
+using Host = RemoteMaster.Server.Aggregates.OrganizationAggregate.Host;
 
 namespace RemoteMaster.Server.Configurations;
 
-public class ComputerConfiguration : IEntityTypeConfiguration<Computer>
+public class ComputerConfiguration : IEntityTypeConfiguration<Host>
 {
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "EntityTypeBuilder will not be null.")]
-    public void Configure(EntityTypeBuilder<Computer> builder)
+    public void Configure(EntityTypeBuilder<Host> builder)
     {
         builder.HasKey(c => c.Id);
 
