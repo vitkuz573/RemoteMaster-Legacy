@@ -38,7 +38,7 @@ public class HostAccessHandler(IApplicationUserRepository userRepository, IOrgan
 
             if (user.CanAccessUnregisteredHosts)
             {
-                var isHostRegistered = await organizationRepository.FindHostsAsync(c => c.Name == requirement.Host || c.IpAddress == IPAddress.Parse(requirement.Host));
+                var isHostRegistered = await organizationRepository.FindHostsAsync(c => c.Name == requirement.Host || c.IpAddress.Equals(IPAddress.Parse(requirement.Host)));
 
                 if (!isHostRegistered.Any())
                 {
@@ -48,7 +48,7 @@ public class HostAccessHandler(IApplicationUserRepository userRepository, IOrgan
                 }
             }
 
-            var hosts = await organizationRepository.FindHostsAsync(c => c.Name == requirement.Host || c.IpAddress == IPAddress.Parse(requirement.Host));
+            var hosts = await organizationRepository.FindHostsAsync(c => c.Name == requirement.Host || c.IpAddress.Equals(IPAddress.Parse(requirement.Host)));
             var host = hosts.FirstOrDefault();
 
             if (host == null)
