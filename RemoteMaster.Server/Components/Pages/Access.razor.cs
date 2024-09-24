@@ -545,6 +545,15 @@ public partial class Access : IAsyncDisposable
 
     private async Task DisconnectViewer(string connectionId)
     {
+        var viewer = _viewers.FirstOrDefault(v => v.ConnectionId == connectionId);
+
+        if (viewer.UserName == _user.FindFirstValue(ClaimTypes.Name))
+        {
+            SnackBar.Add("You cannot disconnect your own session.", Severity.Error);
+
+            return;
+        }
+
         if (_connection == null)
         {
             return;
@@ -553,7 +562,7 @@ public partial class Access : IAsyncDisposable
         await DialogService.ShowAsync<DisconnectViewerDialog>("Disconnect viewer", new DialogParameters
         {
             { nameof(DisconnectViewerDialog.HubConnection), _connection },
-            { nameof(DisconnectViewerDialog.Viewer), _viewers.FirstOrDefault(v => v.ConnectionId == connectionId) }
+            { nameof(DisconnectViewerDialog.Viewer), viewer }
         });
     }
 
