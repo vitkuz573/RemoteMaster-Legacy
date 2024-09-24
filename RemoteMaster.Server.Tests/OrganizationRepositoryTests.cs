@@ -206,7 +206,7 @@ public class OrganizationRepositoryTests
 
         // Act
         var macAddress = PhysicalAddress.Parse("00-11-22-33-44-66");
-        var result = await _repository.FindHostsAsync(c => c.MacAddress.GetAddressBytes().SequenceEqual(macAddress.GetAddressBytes()));
+        var result = await _repository.FindHostsAsync(c => c.MacAddress.Equals(macAddress));
 
         // Assert
         Assert.Single(result);

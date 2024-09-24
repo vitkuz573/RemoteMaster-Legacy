@@ -74,9 +74,6 @@ public class LocalhostOrAuthenticatedHandler : AuthorizationHandler<LocalhostOrA
             remoteIpAddress = remoteIpAddress.MapToIPv4();
         }
 
-        var remoteBytes = remoteIpAddress.GetAddressBytes();
-        var hostBytes = _hostIpAddress.GetAddressBytes();
-
-        return remoteBytes.SequenceEqual(hostBytes);
+        return remoteIpAddress.Equals(_hostIpAddress);
     }
 }

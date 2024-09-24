@@ -192,7 +192,7 @@ public partial class MoveDialog
 
         foreach (var host in unavailableHosts)
         {
-            var existingRequest = hostMoveRequests.FirstOrDefault(r => r.MacAddress.GetAddressBytes().SequenceEqual(host.MacAddress.GetAddressBytes()));
+            var existingRequest = hostMoveRequests.FirstOrDefault(r => r.MacAddress.Equals(host.MacAddress));
 
             if (existingRequest != null)
             {

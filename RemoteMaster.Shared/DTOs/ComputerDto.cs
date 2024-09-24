@@ -41,7 +41,7 @@ public class HostDto(string name, IPAddress ipAddress, PhysicalAddress macAddres
             return false;
         }
 
-        return IpAddress == other.IpAddress && MacAddress == other.MacAddress && Name == other.Name;
+        return IpAddress.Equals(other.IpAddress) && MacAddress.Equals(other.MacAddress) && Name == other.Name;
     }
 
     public override bool Equals(object? obj) => Equals(obj as HostDto);

@@ -222,11 +222,11 @@ internal class Program
                 services.AddHostedService<InputBackgroundService>();
                 break;
             case ServiceMode:
+                services.AddHostedService<CommandListenerService>();
                 services.AddHostedService<CertificateManagementService>();
                 services.AddHostedService<HostProcessMonitorService>();
                 services.AddHostedService<HostRegistrationMonitorService>();
                 services.AddHostedService<MessageLoopService>();
-                services.AddHostedService<CommandListenerService>();
                 break;
             case InstallMode:
                 services.AddHostedService<InstallerBackground>();

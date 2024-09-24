@@ -52,6 +52,9 @@ public static class WebApplicationBuilderExtensions
                         });
                     });
                     break;
+                case ServiceMode:
+                    options.ListenLocalhost(35456);
+                    break;
             }
         });
     }

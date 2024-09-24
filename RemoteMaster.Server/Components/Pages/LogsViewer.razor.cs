@@ -121,8 +121,11 @@ public partial class LogsViewer : IAsyncDisposable
     private async Task DeleteAllLogs()
     {
         if (_connection != null)
-        { await _connection.InvokeAsync("DeleteAllLogs");
+        {
+            await _connection.InvokeAsync("DeleteAllLogs");
         }
+
+        await FetchLogFiles();
     }
 
     public async ValueTask DisposeAsync()

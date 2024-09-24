@@ -34,7 +34,7 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
 
         if (hostConfiguration.Host == null || !hostConfiguration.Host.Equals(hostInformation))
         {
-            if (hostConfiguration.Host != null && !hostConfiguration.Host.MacAddress.GetAddressBytes().SequenceEqual(hostInformation.MacAddress.GetAddressBytes()))
+            if (hostConfiguration.Host != null && !hostConfiguration.Host.MacAddress.Equals(hostInformation.MacAddress))
             {
                 Log.Information("MAC address has changed, which might indicate restoration from backup.");
             }
@@ -67,8 +67,7 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
             if (hostMoveRequest != null)
             {
                 var isOrganizationChanged = hostConfiguration.Subject.Organization != hostMoveRequest.NewOrganization;
-                var isOrganizationalUnitChanged =
-                    !hostConfiguration.Subject.OrganizationalUnit.SequenceEqual(hostMoveRequest.NewOrganizationalUnit);
+                var isOrganizationalUnitChanged = !hostConfiguration.Subject.OrganizationalUnit.SequenceEqual(hostMoveRequest.NewOrganizationalUnit);
 
                 if (isOrganizationChanged || isOrganizationalUnitChanged)
                 {
@@ -81,8 +80,7 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
                         "HostMoveRequest applied: Organization changed to {Organization} and Organizational Unit changed to {OrganizationalUnit}.",
                         hostMoveRequest.NewOrganization, string.Join("/", hostMoveRequest.NewOrganizationalUnit));
 
-                    var acknowledgeResult =
-                        await apiService.AcknowledgeMoveRequestAsync(hostConfiguration.Host.MacAddress);
+                    var acknowledgeResult = await apiService.AcknowledgeMoveRequestAsync(hostConfiguration.Host.MacAddress);
 
                     if (acknowledgeResult)
                     {

@@ -64,8 +64,8 @@ public class HostMoveService(IEventNotificationService eventNotificationService)
                              .WithErrors(hostMoveRequestsResult.Errors);
             }
 
-            var request = hostMoveRequestsResult.Value.FirstOrDefault(r => r.MacAddress.GetAddressBytes().SequenceEqual(macAddress.GetAddressBytes()));
-            
+            var request = hostMoveRequestsResult.Value.FirstOrDefault(r => r.MacAddress.Equals(macAddress));
+
             return Result.Ok(request);
         }
         catch (Exception ex)
@@ -87,7 +87,7 @@ public class HostMoveService(IEventNotificationService eventNotificationService)
                              .WithErrors(hostMoveRequestsResult.Errors);
             }
 
-            var requestToRemove = hostMoveRequestsResult.Value.FirstOrDefault(r => r.MacAddress.GetAddressBytes().SequenceEqual(macAddress.GetAddressBytes()));
+            var requestToRemove = hostMoveRequestsResult.Value.FirstOrDefault(r => r.MacAddress.Equals(macAddress));
 
             if (requestToRemove == null)
             {
