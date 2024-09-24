@@ -20,7 +20,10 @@ public class ChatHub(IModuleService moduleService) : Hub<IChatClient>
 
         var chatModule = moduleService.GetModule("Chat");
 
-        chatModule?.Start();
+        if (!chatModule.IsRunning())
+        {
+            chatModule.Start();
+        }
 
         var id = Guid.NewGuid().ToString();
         var timestamp = DateTimeOffset.Now;
