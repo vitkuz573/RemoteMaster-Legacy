@@ -43,7 +43,7 @@ public partial class Login
 
     public async Task LoginUser()
     {
-        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var ipAddress = HttpContext.Connection.RemoteIpAddress;
         var user = await UserManager.FindByNameAsync(Input.Username);
 
         if (user == null)
@@ -62,7 +62,7 @@ public partial class Login
         }
 
         var isRootAdmin = await UserManager.IsInRoleAsync(user, "RootAdministrator");
-        var isLocalhost = IPAddress.IsLoopback(IPAddress.Parse(ipAddress));
+        var isLocalhost = IPAddress.IsLoopback(ipAddress);
 
         if (isRootAdmin && !isLocalhost)
         {

@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Identity;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
-using RemoteMaster.Server.Data;
 using Serilog;
 
 namespace RemoteMaster.Server.Components.Account.Pages;
@@ -30,8 +29,8 @@ public partial class Register
 
     public async Task RegisterUser(EditContext editContext)
     {
-        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-        var isLocalhost = IPAddress.IsLoopback(IPAddress.Parse(ipAddress));
+        var ipAddress = HttpContext.Connection.RemoteIpAddress;
+        var isLocalhost = IPAddress.IsLoopback(ipAddress);
 
         if (!isLocalhost)
         {
