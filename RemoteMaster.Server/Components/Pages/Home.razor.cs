@@ -587,6 +587,11 @@ public partial class Home
         await OpenComputerWindow("logs");
     }
 
+    private async Task OpenChat()
+    {
+        await OpenComputerWindow("chat");
+    }
+
     private async Task OpenComputerWindow(string path, uint width = 800, uint height = 800)
     {
         var module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/windowOperations.js");
