@@ -42,7 +42,7 @@ public class HostConfigurationService : IHostConfigurationService
             throw new ValidationException("Subject options must include a valid organization and organizational unit.");
         }
 
-        if (configuration.Host == null || string.IsNullOrWhiteSpace(configuration.Host.Name) || configuration.Host.IpAddress == null || configuration.Host.MacAddress == null || configuration.Host.MacAddress.GetAddressBytes().Length == 0)
+        if (configuration.Host == null || string.IsNullOrWhiteSpace(configuration.Host.Name))
         {
             throw new ValidationException("Host must have a valid Name, IP and MAC address.");
         }
