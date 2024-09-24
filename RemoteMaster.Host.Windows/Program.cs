@@ -134,6 +134,7 @@ internal class Program
         services.AddSingleton<IAuthorizationHandler, LocalhostOrAuthenticatedHandler>();
         services.AddSingleton<ICommandExecutor, CommandExecutor>();
         services.AddSingleton<IDeviceManagerService, DeviceManagerService>();
+        services.AddSingleton<IOperatingSystemInformationService, OperatingSystemInformationService>();
         services.AddSingleton(new JsonSerializerOptions
         {
             WriteIndented = true,

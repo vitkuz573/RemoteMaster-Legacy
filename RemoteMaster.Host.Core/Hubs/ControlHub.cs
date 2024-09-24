@@ -20,7 +20,7 @@ using Serilog;
 namespace RemoteMaster.Host.Core.Hubs;
 
 [Authorize(Policy = "LocalhostOrAuthenticatedPolicy")]
-public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturingService screenCapturingService, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService, IWorkStationSecurityService workStationSecurityService, IScreenCastingService screenCastingService) : Hub<IControlClient>
+public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScriptService scriptService, IInputService inputService, IPowerService powerService, IHardwareService hardwareService, IShutdownService shutdownService, IScreenCapturingService screenCapturingService, IHostConfigurationService hostConfigurationService, IHostLifecycleService hostLifecycleService, IWorkStationSecurityService workStationSecurityService, IScreenCastingService screenCastingService, IOperatingSystemInformationService operatingSystemInformationService) : Hub<IControlClient>
 {
     private static readonly List<string> ExcludedCodecs = ["image/tiff"];
 
@@ -140,7 +140,7 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
         var osBitness = Environment.Is64BitOperatingSystem ? "64-bit" : "32-bit";
 
-        await Clients.Caller.ReceiveOperatingSystemVersion($"{Environment.OSVersion.VersionString} ({osBitness})");
+        await Clients.Caller.ReceiveOperatingSystemVersion($"{operatingSystemInformationService.GetName()} ({osBitness})");
 
         var assembly = Assembly.GetEntryAssembly();
         var version = assembly?.GetName().Version ?? new Version();
