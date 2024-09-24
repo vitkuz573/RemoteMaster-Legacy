@@ -22,7 +22,7 @@ public partial class LogsViewer : IAsyncDisposable
 
     private HubConnection? _connection;
     private ClaimsPrincipal? _user;
-    private List<string> _logFiles = new();
+    private List<string> _logFiles = [];
     private string? _selectedLogFile;
     private string _logContent = string.Empty;
     private string _selectedLogLevel = string.Empty;
@@ -69,6 +69,20 @@ public partial class LogsViewer : IAsyncDisposable
             InvokeAsync(StateHasChanged);
         });
 
+        _connection.On<string>("ReceiveMessage", message =>
+        {
+            _logContent = message;
+
+            InvokeAsync(StateHasChanged);
+        });
+
+        _connection.On<string>("ReceiveError", errorMessage =>
+        {
+            _logContent = errorMessage;
+
+            InvokeAsync(StateHasChanged);
+        });
+
         await _connection.StartAsync();
     }
 
@@ -101,6 +115,13 @@ public partial class LogsViewer : IAsyncDisposable
         if (!string.IsNullOrEmpty(_selectedLogFile) && _connection != null)
         {
             await _connection.InvokeAsync("GetFilteredLog", _selectedLogFile, _selectedLogLevel, _startDate, _endDate);
+        }
+    }
+
+    private async Task DeleteAllLogs()
+    {
+        if (_connection != null)
+        { await _connection.InvokeAsync("DeleteAllLogs");
         }
     }
 
