@@ -20,7 +20,7 @@ public class ChatHub(IModuleService moduleService) : Hub<IChatClient>
 
         var chatModule = moduleService.GetModule("Chat");
 
-        if (!chatModule.IsRunning())
+        if (chatModule != null && !chatModule.IsRunning())
         {
             chatModule.Start();
         }
