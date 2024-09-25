@@ -196,8 +196,8 @@ public partial class MoveDialog
 
             if (existingRequest != null)
             {
-                existingRequest.NewOrganization = targetOrganization;
-                existingRequest.NewOrganizationalUnit = targetOrganizationalUnits;
+                existingRequest.Organization = targetOrganization;
+                existingRequest.OrganizationalUnit = targetOrganizationalUnits;
             }
             else
             {

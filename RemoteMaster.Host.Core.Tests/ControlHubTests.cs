@@ -327,8 +327,8 @@ public class ControlHubTests
 
         // Assert
         _mockHostConfigurationService.Verify(h => h.SaveConfigurationAsync(It.Is<HostConfiguration>(hc =>
-            hc.Subject.Organization == hostMoveRequest.NewOrganization &&
-            hc.Subject.OrganizationalUnit.SequenceEqual(hostMoveRequest.NewOrganizationalUnit)
+            hc.Subject.Organization == hostMoveRequest.Organization &&
+            hc.Subject.OrganizationalUnit.SequenceEqual(hostMoveRequest.OrganizationalUnit)
         )), Times.Once);
 
         _mockHostLifecycleService.Verify(h => h.IssueCertificateAsync(hostConfiguration, organizationAddress), Times.Once);

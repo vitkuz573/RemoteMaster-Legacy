@@ -66,19 +66,19 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
 
             if (hostMoveRequest != null)
             {
-                var isOrganizationChanged = hostConfiguration.Subject.Organization != hostMoveRequest.NewOrganization;
-                var isOrganizationalUnitChanged = !hostConfiguration.Subject.OrganizationalUnit.SequenceEqual(hostMoveRequest.NewOrganizationalUnit);
+                var isOrganizationChanged = hostConfiguration.Subject.Organization != hostMoveRequest.Organization;
+                var isOrganizationalUnitChanged = !hostConfiguration.Subject.OrganizationalUnit.SequenceEqual(hostMoveRequest.OrganizationalUnit);
 
                 if (isOrganizationChanged || isOrganizationalUnitChanged)
                 {
-                    hostConfiguration.Subject.Organization = hostMoveRequest.NewOrganization;
-                    hostConfiguration.Subject.OrganizationalUnit = hostMoveRequest.NewOrganizationalUnit;
+                    hostConfiguration.Subject.Organization = hostMoveRequest.Organization;
+                    hostConfiguration.Subject.OrganizationalUnit = hostMoveRequest.OrganizationalUnit;
 
                     await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
 
                     Log.Information(
                         "HostMoveRequest applied: Organization changed to {Organization} and Organizational Unit changed to {OrganizationalUnit}.",
-                        hostMoveRequest.NewOrganization, string.Join("/", hostMoveRequest.NewOrganizationalUnit));
+                        hostMoveRequest.Organization, string.Join("/", hostMoveRequest.OrganizationalUnit));
 
                     var acknowledgeResult = await apiService.AcknowledgeMoveRequestAsync(hostConfiguration.Host.MacAddress);
 

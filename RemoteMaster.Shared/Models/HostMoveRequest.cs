@@ -8,12 +8,15 @@ using RemoteMaster.Shared.Converters;
 
 namespace RemoteMaster.Shared.Models;
 
-public class HostMoveRequest(PhysicalAddress macAddress, string newOrganization, string[] newOrganizationalUnit)
+public class HostMoveRequest(PhysicalAddress macAddress, string organization, string[] organizationalUnit)
 {
+    [JsonPropertyName("macAddress")]
     [JsonConverter(typeof(PhysicalAddressConverter))]
     public PhysicalAddress MacAddress { get; } = macAddress;
 
-    public string NewOrganization { get; set; } = newOrganization;
+    [JsonPropertyName("organization")]
+    public string Organization { get; set; } = organization;
 
-    public string[] NewOrganizationalUnit { get; set; } = newOrganizationalUnit;
+    [JsonPropertyName("organizationalUnit")]
+    public string[] OrganizationalUnit { get; set; } = organizationalUnit;
 }

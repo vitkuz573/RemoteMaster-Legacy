@@ -313,8 +313,8 @@ public class ControlHub(IAppState appState, IViewerFactory viewerFactory, IScrip
 
         var hostConfiguration = await hostConfigurationService.LoadConfigurationAsync();
 
-        hostConfiguration.Subject.Organization = hostMoveRequest.NewOrganization;
-        hostConfiguration.Subject.OrganizationalUnit = hostMoveRequest.NewOrganizationalUnit;
+        hostConfiguration.Subject.Organization = hostMoveRequest.Organization;
+        hostConfiguration.Subject.OrganizationalUnit = hostMoveRequest.OrganizationalUnit;
 
         var organizationAddress = await hostLifecycleService.GetOrganizationAddressAsync(hostConfiguration.Subject.Organization);
 
