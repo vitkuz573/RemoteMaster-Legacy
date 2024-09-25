@@ -5,6 +5,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using RemoteMaster.Host.Core.Abstractions;
+using RemoteMaster.Shared.JsonContexts;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Core.Services;
@@ -23,7 +24,8 @@ public class HostConfigurationService : IHostConfigurationService
         }
 
         var hostConfigurationJson = await File.ReadAllTextAsync(configFilePath);
-        var hostConfiguration = JsonSerializer.Deserialize<HostConfiguration>(hostConfigurationJson);
+
+        var hostConfiguration = JsonSerializer.Deserialize(hostConfigurationJson, RemoteMasterJsonContext.Default.HostConfiguration);
 
         ValidateConfiguration(hostConfiguration);
 
@@ -57,7 +59,10 @@ public class HostConfigurationService : IHostConfigurationService
             WriteIndented = true
         };
 
-        var hostConfigurationJson = JsonSerializer.Serialize(hostConfiguration, jsonSerializerOptions);
+        var jsonContext = new RemoteMasterJsonContext(jsonSerializerOptions);
+
+        var hostConfigurationJson = JsonSerializer.Serialize(hostConfiguration, jsonContext.HostConfiguration);
+
         var configFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", _configurationFileName);
 
         await File.WriteAllTextAsync(configFilePath, hostConfigurationJson);
