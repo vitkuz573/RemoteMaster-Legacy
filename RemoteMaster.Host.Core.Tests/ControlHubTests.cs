@@ -41,6 +41,7 @@ public class ControlHubTests
         _mockHostLifecycleService = new Mock<IHostLifecycleService>();
         Mock<IWorkStationSecurityService> mockWorkStationSecurityService = new();
         Mock<IScreenCastingService> mockScreenCastingService = new();
+        Mock<IOperatingSystemInformationService> mockOperatingSystemInformationService = new();
         _mockClients = new Mock<IHubCallerClients<IControlClient>>();
         Mock<IGroupManager> mockGroups = new();
         Mock<IControlClient> mockClientProxy = new();
@@ -60,7 +61,8 @@ public class ControlHubTests
             _mockHostConfigurationService.Object,
             _mockHostLifecycleService.Object,
             mockWorkStationSecurityService.Object,
-            mockScreenCastingService.Object)
+            mockScreenCastingService.Object,
+            mockOperatingSystemInformationService.Object)
         {
             Clients = _mockClients.Object,
             Groups = mockGroups.Object,
