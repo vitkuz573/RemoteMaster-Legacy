@@ -2,7 +2,6 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.JsonContexts;
@@ -27,27 +26,7 @@ public class HostConfigurationService : IHostConfigurationService
 
         var hostConfiguration = JsonSerializer.Deserialize(hostConfigurationJson, RemoteMasterJsonContext.Default.HostConfiguration);
 
-        ValidateConfiguration(hostConfiguration);
-
         return hostConfiguration ?? throw new InvalidDataException($"Invalid configuration in file '{configFilePath}'.");
-    }
-
-    private static void ValidateConfiguration(HostConfiguration configuration)
-    {
-        if (string.IsNullOrWhiteSpace(configuration.Server))
-        {
-            throw new ValidationException("Server must not be empty.");
-        }
-
-        if (configuration.Subject == null || string.IsNullOrWhiteSpace(configuration.Subject.Organization) || configuration.Subject.OrganizationalUnit == null || configuration.Subject.OrganizationalUnit.Length == 0 || configuration.Subject.OrganizationalUnit.Any(string.IsNullOrWhiteSpace))
-        {
-            throw new ValidationException("Subject options must include a valid organization and organizational unit.");
-        }
-
-        if (configuration.Host == null || string.IsNullOrWhiteSpace(configuration.Host.Name))
-        {
-            throw new ValidationException("Host must have a valid Name, IP and MAC address.");
-        }
     }
 
     public async Task SaveConfigurationAsync(HostConfiguration hostConfiguration)
