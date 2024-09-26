@@ -45,18 +45,20 @@ public partial class AppLauncherDialog
 
             var scriptBuilder = new StringBuilder();
 
-            var isNetworkPath = _applicationPath.StartsWith(@"\\");
-
-            if (isNetworkPath)
+            if (_applicationPath.StartsWith(@"\\"))
             {
                 if (!string.IsNullOrEmpty(_username) && !string.IsNullOrEmpty(_password))
                 {
                     scriptBuilder.AppendLine($"net use \"{_applicationPath}\" /user:{_username} {_password}");
                 }
 
-                if (!string.IsNullOrEmpty(_applicationPath) && !string.IsNullOrEmpty(_destinationPath))
+                if (!string.IsNullOrEmpty(_destinationPath))
                 {
                     scriptBuilder.AppendLine($"copy \"{_applicationPath}\" \"{_destinationPath}\"");
+                }
+                else
+                {
+                    scriptBuilder.AppendLine($"\"{_applicationPath}\" {_parameters}");
                 }
 
                 scriptBuilder.AppendLine($"net use \"{_applicationPath}\" /delete");
