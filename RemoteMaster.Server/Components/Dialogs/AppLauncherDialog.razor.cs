@@ -3,6 +3,7 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.IO.Compression;
+using System.Text;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using RemoteMaster.Server.Models;
@@ -15,6 +16,7 @@ namespace RemoteMaster.Server.Components.Dialogs;
 public partial class AppLauncherDialog
 {
     private string _applicationPath = string.Empty;
+    private string _destinationPath = string.Empty;
     private string _parameters = string.Empty;
 
     private readonly Dictionary<HostDto, HostResults> _resultsPerHost = [];
@@ -34,7 +36,19 @@ public partial class AppLauncherDialog
                 _subscribedConnections.Add(connection);
             }
 
-            var scriptExecutionRequest = new ScriptExecutionRequest($"{_applicationPath} {_parameters}", Shell.Cmd);
+            var scriptBuilder = new StringBuilder();
+
+            if (!string.IsNullOrEmpty(_destinationPath))
+            {
+                scriptBuilder.AppendLine($"copy \"{_applicationPath}\" \"{_destinationPath}\"");
+                scriptBuilder.Append($"\"{_destinationPath}\\{Path.GetFileName(_applicationPath)}\" {_parameters}");
+            }
+            else
+            {
+                scriptBuilder.Append($"\"{_applicationPath}\" {_parameters}");
+            }
+
+            var scriptExecutionRequest = new ScriptExecutionRequest(scriptBuilder.ToString(), Shell.Cmd);
 
             if (connection != null)
             {
