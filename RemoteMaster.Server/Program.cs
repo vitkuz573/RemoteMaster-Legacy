@@ -37,6 +37,7 @@ using RemoteMaster.Server.Repositories;
 using RemoteMaster.Server.Requirements;
 using RemoteMaster.Server.Services;
 using RemoteMaster.Server.Validators;
+using RemoteMaster.Shared.Converters;
 using RemoteMaster.Shared.Extensions;
 using RemoteMaster.Shared.Models;
 using Serilog;
@@ -233,7 +234,12 @@ public static class Program
 
         services.AddMudServices();
 
-        services.AddControllers();
+        services.AddControllers()
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.Converters.Add(new IPAddressConverter());
+                options.JsonSerializerOptions.Converters.Add(new PhysicalAddressConverter());
+            });
 
         services.AddApiVersioning(options =>
         {

@@ -4,8 +4,10 @@
 
 using System.Net.Http.Json;
 using System.Net.NetworkInformation;
+using System.Text.Json;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Abstractions;
+using RemoteMaster.Shared.Converters;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
 using Serilog;
@@ -232,7 +234,10 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHostConfiguration
     {
         await EnsureClientInitializedAsync();
 
-        var response = await _client.PostAsJsonAsync("/api/HostMove/acknowledge", macAddress);
+        var options = new JsonSerializerOptions();
+        options.Converters.Add(new PhysicalAddressConverter());
+
+        var response = await _client.PostAsJsonAsync("/api/HostMove/acknowledge", macAddress, options);
 
         return await ProcessSimpleResponse(response);
     }
