@@ -45,29 +45,25 @@ public partial class AppLauncherDialog
 
             var scriptBuilder = new StringBuilder();
 
-            var isNetworkPath = _destinationPath.StartsWith(@"\\");
+            var isNetworkPath = _applicationPath.StartsWith(@"\\");
 
             if (isNetworkPath)
             {
                 if (!string.IsNullOrEmpty(_username) && !string.IsNullOrEmpty(_password))
                 {
-                    scriptBuilder.AppendLine("net use \"" + _destinationPath + "\" /user:" + _username + " " + _password);
+                    scriptBuilder.AppendLine($"net use \"{_applicationPath}\" /user:{_username} {_password}");
                 }
-            }
 
-            if (!string.IsNullOrEmpty(_destinationPath))
-            {
-                scriptBuilder.AppendLine("copy \"" + _applicationPath + "\" \"" + _destinationPath + "\"");
-                scriptBuilder.Append("\"" + _destinationPath + "\\" + Path.GetFileName(_applicationPath) + "\" " + _parameters);
+                if (!string.IsNullOrEmpty(_applicationPath) && !string.IsNullOrEmpty(_destinationPath))
+                {
+                    scriptBuilder.AppendLine($"copy \"{_applicationPath}\" \"{_destinationPath}\"");
+                }
+
+                scriptBuilder.AppendLine($"net use \"{_applicationPath}\" /delete");
             }
             else
             {
-                scriptBuilder.Append("\"" + _applicationPath + "\" " + _parameters);
-            }
-
-            if (isNetworkPath)
-            {
-                scriptBuilder.AppendLine("net use \"" + _destinationPath + "\" /delete");
+                scriptBuilder.AppendLine($"\"{_applicationPath}\" {_parameters}");
             }
 
             var scriptExecutionRequest = new ScriptExecutionRequest(scriptBuilder.ToString(), Shell.Cmd);
