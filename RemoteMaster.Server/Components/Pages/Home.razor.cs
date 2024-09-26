@@ -503,6 +503,8 @@ public partial class Home
 
     private async Task ManagePsExecRules() => await ExecuteAction<PsExecRulesDialog>("PSExec Rules", hubPath: "hubs/service");
 
+    private async Task AppLauncher() => await ExecuteAction<AppLauncherDialog>("App Launcher");
+
     private async Task SetMonitorState() => await ExecuteAction<MonitorStateDialog>("Set Monitor State");
 
     private async Task ScreenRecorder() => await ExecuteAction<ScreenRecorderDialog>("Screen Recorder", hubPath: "hubs/screenrecorder");

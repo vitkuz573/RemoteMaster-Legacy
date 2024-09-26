@@ -143,27 +143,29 @@
                     <AuthorizeView>
                         <Authorized>
                             <MudTabPanel Text="@Localizer["ServiceTab"]" Icon="@Icons.Material.Filled.Key">
+                                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="AppLauncher" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">App Launcher</MudButton>
+
                                 @if (context.User.HasClaim("Hardware", "SetMonitorState"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SetMonitorState" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["SetMonitorState"]</MudButton>
                                 }
-                                
+
                                 @if (context.User.HasClaim("Execution", "ManagePsExecRules"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ManagePsExecRules" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["PSExecRules"]</MudButton>
                                 }
-                                
+
                                 @if (context.User.HasClaim("Screen", "Recording"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ScreenRecorder" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["ScreenRecorder"]</MudButton>
 
                                 }
-                                
+
                                 @if (context.User.HasClaim("Domain", "Membership"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="DomainMembership" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["DomainMembership"]</MudButton>
                                 }
-                                
+
                                 @if (context.User.HasClaim("HostManagement", "Update"))
                                 {
                                     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Update" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["Update"]</MudButton>
