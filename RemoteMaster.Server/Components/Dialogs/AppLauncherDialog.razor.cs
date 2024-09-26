@@ -6,6 +6,7 @@ using System.IO.Compression;
 using System.Text;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
+using MudBlazor;
 using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Enums;
@@ -15,9 +16,15 @@ namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class AppLauncherDialog
 {
+    private bool _isShowPassword;
+    private InputType _passwordInput = InputType.Password;
+    private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+
     private string _applicationPath = string.Empty;
     private string _destinationPath = string.Empty;
     private string _parameters = string.Empty;
+    private string _username = string.Empty;
+    private string _password = string.Empty;
 
     private readonly Dictionary<HostDto, HostResults> _resultsPerHost = [];
     private readonly HashSet<HubConnection> _subscribedConnections = [];
@@ -38,14 +45,29 @@ public partial class AppLauncherDialog
 
             var scriptBuilder = new StringBuilder();
 
+            var isNetworkPath = _destinationPath.StartsWith(@"\\");
+
+            if (isNetworkPath)
+            {
+                if (!string.IsNullOrEmpty(_username) && !string.IsNullOrEmpty(_password))
+                {
+                    scriptBuilder.AppendLine("net use \"" + _destinationPath + "\" /user:" + _username + " " + _password);
+                }
+            }
+
             if (!string.IsNullOrEmpty(_destinationPath))
             {
-                scriptBuilder.AppendLine($"copy \"{_applicationPath}\" \"{_destinationPath}\"");
-                scriptBuilder.Append($"\"{_destinationPath}\\{Path.GetFileName(_applicationPath)}\" {_parameters}");
+                scriptBuilder.AppendLine("copy \"" + _applicationPath + "\" \"" + _destinationPath + "\"");
+                scriptBuilder.Append("\"" + _destinationPath + "\\" + Path.GetFileName(_applicationPath) + "\" " + _parameters);
             }
             else
             {
-                scriptBuilder.Append($"\"{_applicationPath}\" {_parameters}");
+                scriptBuilder.Append("\"" + _applicationPath + "\" " + _parameters);
+            }
+
+            if (isNetworkPath)
+            {
+                scriptBuilder.AppendLine("net use \"" + _destinationPath + "\" /delete");
             }
 
             var scriptExecutionRequest = new ScriptExecutionRequest(scriptBuilder.ToString(), Shell.Cmd);
@@ -72,6 +94,22 @@ public partial class AppLauncherDialog
         else
         {
             results.Messages.AppendLine(scriptResult.Text);
+        }
+    }
+
+    private void TogglePasswordVisibility()
+    {
+        if (_isShowPassword)
+        {
+            _isShowPassword = false;
+            _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+            _passwordInput = InputType.Password;
+        }
+        else
+        {
+            _isShowPassword = true;
+            _passwordInputIcon = Icons.Material.Filled.Visibility;
+            _passwordInput = InputType.Text;
         }
     }
 
