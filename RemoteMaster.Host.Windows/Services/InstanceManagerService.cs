@@ -9,7 +9,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class InstanceStarterService(INativeProcessFactory nativeProcessFactory, IFileSystem fileSystem) : IInstanceStarterService
+public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, IFileSystem fileSystem) : IInstanceManagerService
 {
     public int StartNewInstance(string executablePath, string? destinationPath, NativeProcessStartInfo startInfo)
     {

@@ -13,14 +13,14 @@ using Serilog.Sinks.TestCorrelator;
 
 namespace RemoteMaster.Host.Windows.Tests;
 
-public class InstanceStarterServiceTests
+public class InstanceManagerServiceTests
 {
     private readonly Mock<INativeProcess> _nativeProcessMock;
     private readonly Mock<INativeProcessFactory> _nativeProcessFactoryMock;
     private readonly MockFileSystem _mockFileSystem;
-    private readonly InstanceStarterService _instanceStarterService;
+    private readonly InstanceManagerService _instanceManagerService;
 
-    public InstanceStarterServiceTests()
+    public InstanceManagerServiceTests()
     {
         _nativeProcessMock = new Mock<INativeProcess>();
         _nativeProcessFactoryMock = new Mock<INativeProcessFactory>();
@@ -32,14 +32,14 @@ public class InstanceStarterServiceTests
             .WriteTo.TestCorrelator()
             .CreateLogger();
 
-        _instanceStarterService = new InstanceStarterService(_nativeProcessFactoryMock.Object, _mockFileSystem);
+        _instanceManagerService = new InstanceManagerService(_nativeProcessFactoryMock.Object, _mockFileSystem);
     }
 
     [Fact]
     public void StartNewInstance_ShouldThrowArgumentNullException_WhenStartInfoIsNull()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => _instanceStarterService.StartNewInstance("executablePath", "destinationPath", null!));
+        Assert.Throws<ArgumentNullException>(() => _instanceManagerService.StartNewInstance("executablePath", "destinationPath", null!));
     }
 
     [Fact]
@@ -54,7 +54,7 @@ public class InstanceStarterServiceTests
         _mockFileSystem.AddFile(executablePath, new MockFileData("test content"));
 
         // Act
-        _instanceStarterService.StartNewInstance(executablePath, destinationPath, startInfo);
+        _instanceManagerService.StartNewInstance(executablePath, destinationPath, startInfo);
 
         // Assert
         Assert.True(_mockFileSystem.Directory.Exists(destinationDirectory));
@@ -77,7 +77,7 @@ public class InstanceStarterServiceTests
             { executablePath, new MockFileData("content") }
         });
 
-        var instanceStarterService = new InstanceStarterService(_nativeProcessFactoryMock.Object, mockFileSystem);
+        var instanceStarterService = new InstanceManagerService(_nativeProcessFactoryMock.Object, mockFileSystem);
 
         // Act & Assert
         using (TestCorrelator.CreateContext())
@@ -106,7 +106,7 @@ public class InstanceStarterServiceTests
             { executablePath, new MockFileData("content") }
         });
 
-        var instanceStarterService = new InstanceStarterService(_nativeProcessFactoryMock.Object, mockFileSystem);
+        var instanceStarterService = new InstanceManagerService(_nativeProcessFactoryMock.Object, mockFileSystem);
 
         // Act & Assert
         using (TestCorrelator.CreateContext())
@@ -130,7 +130,7 @@ public class InstanceStarterServiceTests
         _nativeProcessMock.Setup(x => x.Id).Returns(1234);
 
         // Act
-        var processId = _instanceStarterService.StartNewInstance(executablePath, null, startInfo);
+        var processId = _instanceManagerService.StartNewInstance(executablePath, null, startInfo);
 
         // Assert
         Assert.Equal(1234, processId);

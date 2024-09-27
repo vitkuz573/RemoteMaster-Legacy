@@ -6,7 +6,7 @@ using RemoteMaster.Host.Windows.Models;
 
 namespace RemoteMaster.Host.Windows.Abstractions;
 
-public interface IInstanceStarterService
+public interface IInstanceManagerService
 {
     int StartNewInstance(string executablePath, string? destinationPath, NativeProcessStartInfo startInfo);
 }

@@ -16,18 +16,18 @@ public sealed class UserInstanceService : IUserInstanceService
     private const string Argument = "--launch-mode=user";
 
     private readonly string _currentExecutablePath = Environment.ProcessPath!;
-    private readonly IInstanceStarterService _instanceStarterService;
+    private readonly IInstanceManagerService _instanceManagerService;
     private readonly IProcessService _processService;
 
     public event EventHandler<UserInstanceCreatedEventArgs>? UserInstanceCreated;
 
     public bool IsRunning => _processService.FindProcessesByName(Path.GetFileNameWithoutExtension(_currentExecutablePath)).Any(p => _processService.HasProcessArgument(p, Argument));
 
-    public UserInstanceService(ISessionChangeEventService sessionChangeEventService, IInstanceStarterService instanceStarterService, IProcessService processService)
+    public UserInstanceService(ISessionChangeEventService sessionChangeEventService, IInstanceManagerService instanceManagerService, IProcessService processService)
     {
         ArgumentNullException.ThrowIfNull(sessionChangeEventService);
 
-        _instanceStarterService = instanceStarterService;
+        _instanceManagerService = instanceManagerService;
         _processService = processService;
 
         sessionChangeEventService.SessionChanged += OnSessionChanged;
@@ -84,7 +84,7 @@ public sealed class UserInstanceService : IUserInstanceService
             UseCurrentUserToken = false
         };
 
-        return _instanceStarterService.StartNewInstance(_currentExecutablePath, null, startInfo);
+        return _instanceManagerService.StartNewInstance(_currentExecutablePath, null, startInfo);
     }
 
     private void OnSessionChanged(object? sender, SessionChangeEventArgs e)

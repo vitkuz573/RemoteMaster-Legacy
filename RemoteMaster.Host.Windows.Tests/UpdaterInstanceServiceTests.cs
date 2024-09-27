@@ -14,13 +14,13 @@ namespace RemoteMaster.Host.Windows.Tests;
 public class UpdaterInstanceServiceTests
 {
     private readonly Mock<IArgumentBuilderService> _mockArgumentBuilderService;
-    private readonly Mock<IInstanceStarterService> _mockInstanceStarterService;
+    private readonly Mock<IInstanceManagerService> _mockInstanceStarterService;
     private readonly UpdaterInstanceService _service;
 
     public UpdaterInstanceServiceTests()
     {
         _mockArgumentBuilderService = new Mock<IArgumentBuilderService>();
-        _mockInstanceStarterService = new Mock<IInstanceStarterService>();
+        _mockInstanceStarterService = new Mock<IInstanceManagerService>();
         _service = new UpdaterInstanceService(_mockArgumentBuilderService.Object, _mockInstanceStarterService.Object);
     }
 

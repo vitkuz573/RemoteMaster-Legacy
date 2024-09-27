@@ -10,7 +10,7 @@ using Serilog;
 
 namespace RemoteMaster.Host.Windows.Services;
 
-public class UpdaterInstanceService(IArgumentBuilderService argumentBuilderService, IInstanceStarterService instanceStarterService) : IUpdaterInstanceService
+public class UpdaterInstanceService(IArgumentBuilderService argumentBuilderService, IInstanceManagerService instanceManagerService) : IUpdaterInstanceService
 {
     private readonly string _sourcePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "RemoteMaster.Host.exe");
     private readonly string _executablePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "Updater", "RemoteMaster.Host.exe");
@@ -43,7 +43,7 @@ public class UpdaterInstanceService(IArgumentBuilderService argumentBuilderServi
 
         try
         {
-            instanceStarterService.StartNewInstance(_sourcePath, _executablePath, startInfo);
+            instanceManagerService.StartNewInstance(_sourcePath, _executablePath, startInfo);
         }
         catch (Exception ex)
         {
