@@ -29,14 +29,14 @@ public class UserInstanceServiceTests
         // Arrange
         var processId = 1234;
         _instanceStarterServiceMock
-            .Setup(x => x.StartNewInstance(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<NativeProcessStartInfo>()))
+            .Setup(x => x.StartNewInstance(It.IsAny<string>(), It.IsAny<NativeProcessStartInfo>()))
             .Returns(processId);
 
         // Act
         _userInstanceService.Start();
 
         // Assert
-        _instanceStarterServiceMock.Verify(x => x.StartNewInstance(It.IsAny<string>(), null, It.IsAny<NativeProcessStartInfo>()), Times.Once);
+        _instanceStarterServiceMock.Verify(x => x.StartNewInstance(null, It.IsAny<NativeProcessStartInfo>()), Times.Once);
     }
 
     [Fact]

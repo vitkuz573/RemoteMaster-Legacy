@@ -44,7 +44,7 @@ public class UpdaterInstanceServiceTests
 
         // Assert
         _mockInstanceStarterService.Verify(service => service.StartNewInstance(
-            It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<string>(),
             It.Is<NativeProcessStartInfo>(info =>
                 info.Arguments == "--launch-mode=\"updater\" --folder-path=\"C:\\TestPath\" --username=\"testuser\" --password=\"testpassword\" --force=true --allow-downgrade=true"
                 && info.CreateNoWindow == true
@@ -136,7 +136,7 @@ public class UpdaterInstanceServiceTests
 
         // Assert
         _mockInstanceStarterService.Verify(service => service.StartNewInstance(
-            It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<string>(),
             It.Is<NativeProcessStartInfo>(info =>
                 info.Arguments == additionalArguments
                 && info.CreateNoWindow == true

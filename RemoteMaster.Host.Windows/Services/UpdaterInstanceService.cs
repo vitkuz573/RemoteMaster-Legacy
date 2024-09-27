@@ -12,7 +12,6 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class UpdaterInstanceService(IArgumentBuilderService argumentBuilderService, IInstanceManagerService instanceManagerService) : IUpdaterInstanceService
 {
-    private readonly string _sourcePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "RemoteMaster.Host.exe");
     private readonly string _executablePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RemoteMaster", "Host", "Updater", "RemoteMaster.Host.exe");
 
     public void Start(UpdateRequest updateRequest)
@@ -38,12 +37,14 @@ public class UpdaterInstanceService(IArgumentBuilderService argumentBuilderServi
         var startInfo = new NativeProcessStartInfo
         {
             Arguments = additionalArguments,
-            CreateNoWindow = true
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
         };
 
         try
         {
-            instanceManagerService.StartNewInstance(_sourcePath, _executablePath, startInfo);
+            instanceManagerService.StartNewInstance(_executablePath, startInfo);
         }
         catch (Exception ex)
         {

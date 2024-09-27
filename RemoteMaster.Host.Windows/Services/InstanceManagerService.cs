@@ -11,7 +11,9 @@ namespace RemoteMaster.Host.Windows.Services;
 
 public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, IFileSystem fileSystem) : IInstanceManagerService
 {
-    public int StartNewInstance(string executablePath, string? destinationPath, NativeProcessStartInfo startInfo)
+    private string _executablePath = Environment.ProcessPath!;
+
+    public int StartNewInstance(string? destinationPath, NativeProcessStartInfo startInfo)
     {
         ArgumentNullException.ThrowIfNull(startInfo);
 
@@ -27,16 +29,16 @@ public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, 
                     fileSystem.Directory.CreateDirectory(destinationDirectory);
                 }
 
-                Log.Information("Copying executable from {ExecutablePath} to {DestinationPath}", executablePath, destinationPath);
-                fileSystem.File.Copy(executablePath, destinationPath, true);
+                Log.Information("Copying executable from {ExecutablePath} to {DestinationPath}", _executablePath, destinationPath);
+                fileSystem.File.Copy(_executablePath, destinationPath, true);
                 Log.Information("Successfully copied the executable.");
 
-                executablePath = destinationPath;
+                _executablePath = destinationPath;
             }
 
             var process = nativeProcessFactory.Create();
 
-            startInfo.FileName = executablePath;
+            startInfo.FileName = _executablePath;
             process.StartInfo = startInfo;
 
             process.Start();
@@ -46,13 +48,13 @@ public class InstanceManagerService(INativeProcessFactory nativeProcessFactory, 
         }
         catch (IOException ioEx)
         {
-            Log.Error(ioEx, "IO error occurred while copying the executable. Source: {SourcePath}, Destination: {DestinationPath}", executablePath, destinationPath);
+            Log.Error(ioEx, "IO error occurred while copying the executable. Source: {SourcePath}, Destination: {DestinationPath}", _executablePath, destinationPath);
 
             throw;
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error starting new instance of the host. Executable path: {Path}", executablePath);
+            Log.Error(ex, "Error starting new instance of the host. Executable path: {Path}", _executablePath);
 
             throw;
         }

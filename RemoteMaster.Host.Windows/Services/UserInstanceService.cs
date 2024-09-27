@@ -84,7 +84,7 @@ public sealed class UserInstanceService : IUserInstanceService
             UseCurrentUserToken = false
         };
 
-        return _instanceManagerService.StartNewInstance(_currentExecutablePath, null, startInfo);
+        return _instanceManagerService.StartNewInstance(null, startInfo);
     }
 
     private void OnSessionChanged(object? sender, SessionChangeEventArgs e)
