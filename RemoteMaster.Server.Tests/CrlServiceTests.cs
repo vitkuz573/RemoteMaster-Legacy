@@ -17,7 +17,7 @@ using RemoteMaster.Server.Services;
 
 namespace RemoteMaster.Server.Tests;
 
-public class CrlServiceTests : IDisposable
+public class CrlServiceTests
 {
     private readonly ServiceProvider _serviceProvider;
     private readonly Mock<ICrlRepository> _crlRepositoryMock;
@@ -119,11 +119,6 @@ public class CrlServiceTests : IDisposable
 
         Assert.False(result.IsSuccess, "Second revocation should fail.");
         Assert.Contains("already revoked", result.Errors.FirstOrDefault()?.Message);
-    }
-
-    public void Dispose()
-    {
-        _serviceProvider.Dispose();
     }
 
     private static X509Certificate2 CreateTestCertificateWithBasicConstraints()
