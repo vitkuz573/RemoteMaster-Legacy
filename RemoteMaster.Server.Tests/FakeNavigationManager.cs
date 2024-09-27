@@ -28,4 +28,3 @@ public class FakeNavigationManager : NavigationManager
 
     public bool ForceLoad { get; private set; }
 }
-

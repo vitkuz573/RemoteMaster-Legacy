@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
-using RemoteMaster.Server.Data;
 using RemoteMaster.Server.Middlewares;
 
 namespace RemoteMaster.Server.Tests;
@@ -26,7 +25,7 @@ public class RegistrationRestrictionMiddlewareTests
         var roleStore = new Mock<IRoleStore<IdentityRole>>();
         _mockRoleManager = new Mock<RoleManager<IdentityRole>>(roleStore.Object, null!, null!, null!, null!);
 
-        _next = new RequestDelegate((innerHttpContext) => Task.CompletedTask);
+        _next = _ => Task.CompletedTask;
     }
 
     private HttpContext CreateHttpContext(string path)

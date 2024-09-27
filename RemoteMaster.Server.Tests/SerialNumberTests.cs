@@ -64,7 +64,7 @@ public class SerialNumberTests
     public void FromExistingValue_ReturnsSerialNumber_WithExpectedValue()
     {
         // Arrange
-        var expectedValue = "A12345";
+        const string expectedValue = "A12345";
 
         // Act
         var serialNumber = SerialNumber.FromExistingValue(expectedValue);
@@ -78,7 +78,7 @@ public class SerialNumberTests
     public void ToByteArray_ReturnsCorrectByteArray()
     {
         // Arrange
-        var serialNumberString = "A1B2C3";
+        const string serialNumberString = "A1B2C3";
         var serialNumber = SerialNumber.FromExistingValue(serialNumberString);
 
         // Act

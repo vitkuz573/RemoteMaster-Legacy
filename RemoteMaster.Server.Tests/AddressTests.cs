@@ -12,8 +12,8 @@ public class AddressTests
     public void Address_CreatesCorrectly_WithValidArguments()
     {
         // Arrange
-        var locality = "New York";
-        var state = "NY";
+        const string locality = "New York";
+        const string state = "NY";
         var country = new CountryCode("US");
 
         // Act
@@ -32,7 +32,7 @@ public class AddressTests
     public void Address_ThrowsArgumentNullException_WhenAnyArgumentIsNull(string locality, string state, string countryCode)
     {
         // Arrange & Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new Address(locality!, state!, countryCode != null ? new CountryCode(countryCode) : null!));
+        Assert.Throws<ArgumentNullException>(() => new Address(locality, state, new CountryCode(countryCode)));
     }
 
     [Theory]
@@ -86,6 +86,6 @@ public class AddressTests
 
         // Assert
         Assert.NotNull(propertyInfo);
-        Assert.Throws<ArgumentException>(() => propertyInfo!.SetValue(address, newValue));
+        Assert.Throws<ArgumentException>(() => propertyInfo.SetValue(address, newValue));
     }
 }

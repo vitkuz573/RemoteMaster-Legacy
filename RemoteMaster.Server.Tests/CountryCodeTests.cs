@@ -12,7 +12,7 @@ public class CountryCodeTests
     public void CountryCode_CreatesCorrectly_WithValidCode()
     {
         // Arrange
-        var code = "US";
+        const string code = "US";
 
         // Act
         var countryCode = new CountryCode(code);

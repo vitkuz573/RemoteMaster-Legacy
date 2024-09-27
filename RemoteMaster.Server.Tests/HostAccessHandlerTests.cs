@@ -200,8 +200,8 @@ public class HostAccessHandlerTests
     {
         // Arrange
         var requirement = new HostAccessRequirement("sharedHost");
-        var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }));
-        var context = new AuthorizationHandlerContext(new[] { requirement }, user, null);
+        var user = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user1")]));
+        var context = new AuthorizationHandlerContext([requirement], user, null);
 
         var organization1 = new Organization("Organization 1", new Address("City", "State", new CountryCode("US")));
         var organization2 = new Organization("Organization 2", new Address("City", "State", new CountryCode("US")));

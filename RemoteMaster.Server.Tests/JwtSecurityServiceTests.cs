@@ -6,7 +6,6 @@ using System.IO.Abstractions.TestingHelpers;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Moq;
-using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Options;
 using RemoteMaster.Server.Services;
 
@@ -15,7 +14,6 @@ namespace RemoteMaster.Server.Tests;
 public class JwtSecurityServiceTests
 {
     private readonly JwtOptions _options;
-    private readonly Mock<IOptions<JwtOptions>> _mockOptions;
     private readonly MockFileSystem _mockFileSystem;
     private readonly JwtSecurityService _jwtSecurityService;
 
@@ -28,12 +26,12 @@ public class JwtSecurityServiceTests
             KeyPassword = "TestPassword"
         };
 
-        _mockOptions = new Mock<IOptions<JwtOptions>>();
-        _mockOptions.Setup(o => o.Value).Returns(_options);
+        Mock<IOptions<JwtOptions>> mockOptions = new();
+        mockOptions.Setup(o => o.Value).Returns(_options);
 
         _mockFileSystem = new MockFileSystem();
 
-        _jwtSecurityService = new JwtSecurityService(_mockOptions.Object, _mockFileSystem);
+        _jwtSecurityService = new JwtSecurityService(mockOptions.Object, _mockFileSystem);
     }
 
     [Fact]

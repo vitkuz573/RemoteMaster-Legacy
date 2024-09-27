@@ -3,7 +3,6 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Security.Claims;
-using FluentResults;
 using Microsoft.AspNetCore.Identity;
 using Moq;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
