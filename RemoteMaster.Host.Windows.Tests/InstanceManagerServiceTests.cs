@@ -4,6 +4,7 @@
 
 using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
+using System.Reflection;
 using Moq;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Models;
@@ -42,24 +43,28 @@ public class InstanceManagerServiceTests
         Assert.Throws<ArgumentNullException>(() => _instanceManagerService.StartNewInstance("destinationPath", null!));
     }
 
-    // [Fact]
-    // public void StartNewInstance_ShouldCopyExecutable_WhenDestinationPathIsProvided()
-    // {
-    //     // Arrange
-    //     const string executablePath = @"C:\sourcePath\executable.exe";
-    //     const string destinationPath = @"C:\destinationPath\executable.exe";
-    //     var destinationDirectory = _mockFileSystem.Path.GetDirectoryName(destinationPath);
-    //     var startInfo = new NativeProcessStartInfo { FileName = executablePath };
-    // 
-    //     _mockFileSystem.AddFile(executablePath, new MockFileData("test content"));
-    // 
-    //     // Act
-    //     _instanceManagerService.StartNewInstance(destinationPath, startInfo);
-    // 
-    //     // Assert
-    //     Assert.True(_mockFileSystem.Directory.Exists(destinationDirectory));
-    //     Assert.True(_mockFileSystem.File.Exists(destinationPath));
-    // }
+    [Fact]
+    public void StartNewInstance_ShouldCopyExecutable_WhenDestinationPathIsProvided()
+    {
+        // Arrange
+        const string executablePath = @"C:\sourcePath\executable.exe";
+        const string destinationPath = @"C:\destinationPath\executable.exe";
+        var destinationDirectory = _mockFileSystem.Path.GetDirectoryName(destinationPath);
+        var startInfo = new NativeProcessStartInfo { FileName = executablePath };
+
+        typeof(InstanceManagerService)
+            .GetField("_executablePath", BindingFlags.NonPublic | BindingFlags.Instance)
+            ?.SetValue(_instanceManagerService, executablePath);
+
+        _mockFileSystem.AddFile(executablePath, new MockFileData("test content"));
+
+        // Act
+        _instanceManagerService.StartNewInstance(destinationPath, startInfo);
+
+        // Assert
+        Assert.True(_mockFileSystem.Directory.Exists(destinationDirectory));
+        Assert.True(_mockFileSystem.File.Exists(destinationPath));
+    }
 
     [Fact]
     public void StartNewInstance_ShouldLogAndRethrowIOException_WhenIOExceptionOccurs()
