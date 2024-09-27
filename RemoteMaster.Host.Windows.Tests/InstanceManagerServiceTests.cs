@@ -77,12 +77,18 @@ public class InstanceManagerServiceTests
         var fileMock = new Mock<IFile>();
         fileMock.Setup(f => f.Copy(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>())).Throws<IOException>();
 
-        var mockFileSystem = new TestableMockFileSystem(fileMock.Object, new Dictionary<string, MockFileData>
+        // Используем MockFileSystem и подменяем поведение File
+        var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
         {
             { executablePath, new MockFileData("content") }
         });
 
-        var instanceStarterService = new InstanceManagerService(_nativeProcessFactoryMock.Object, mockFileSystem);
+        var fileSystemMock = new Mock<IFileSystem>();
+        fileSystemMock.SetupGet(fs => fs.File).Returns(fileMock.Object);
+        fileSystemMock.SetupGet(fs => fs.Directory).Returns(mockFileSystem.Directory);
+        fileSystemMock.SetupGet(fs => fs.Path).Returns(mockFileSystem.Path);
+
+        var instanceStarterService = new InstanceManagerService(_nativeProcessFactoryMock.Object, fileSystemMock.Object);
 
         // Act & Assert
         using (TestCorrelator.CreateContext())
@@ -106,12 +112,17 @@ public class InstanceManagerServiceTests
         var fileMock = new Mock<IFile>();
         fileMock.Setup(f => f.Copy(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>())).Throws<Exception>();
 
-        var mockFileSystem = new TestableMockFileSystem(fileMock.Object, new Dictionary<string, MockFileData>
+        var mockFileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
         {
             { executablePath, new MockFileData("content") }
         });
 
-        var instanceStarterService = new InstanceManagerService(_nativeProcessFactoryMock.Object, mockFileSystem);
+        var fileSystemMock = new Mock<IFileSystem>();
+        fileSystemMock.SetupGet(fs => fs.File).Returns(fileMock.Object);
+        fileSystemMock.SetupGet(fs => fs.Directory).Returns(mockFileSystem.Directory);
+        fileSystemMock.SetupGet(fs => fs.Path).Returns(mockFileSystem.Path);
+
+        var instanceStarterService = new InstanceManagerService(_nativeProcessFactoryMock.Object, fileSystemMock.Object);
 
         // Act & Assert
         using (TestCorrelator.CreateContext())
