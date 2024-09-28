@@ -638,9 +638,9 @@ public partial class Home
             FullWidth = true
         };
 
-        var dialogParameters = new DialogParameters
+        var dialogParameters = new DialogParameters<HostDialog>
         {
-            { "Host", _selectedHosts.First() }
+            { d => d.HostDto, _selectedHosts.First() }
         };
 
         await DialogService.ShowAsync<HostDialog>("Host Info", dialogParameters, dialogOptions);
