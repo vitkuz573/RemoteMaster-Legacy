@@ -682,19 +682,19 @@ public partial class Home
         };
 
         await ExecuteDialog<MoveDialog>("Move", dialogParameters, dialogOptions);
-    }
 
-    private async Task OnHostsMoved(IEnumerable<HostDto> movedNodes)
-    {
-        foreach (var movedNode in movedNodes)
+        async Task OnHostsMoved(IEnumerable<HostDto> movedNodes)
         {
-            _selectedHosts.RemoveAll(c => c.Id == movedNode.Id);
-            _availableHosts.TryRemove(movedNode.IpAddress, out _);
-            _unavailableHosts.TryRemove(movedNode.IpAddress, out _);
-            _pendingHosts.TryRemove(movedNode.IpAddress, out _);
-        }
+            foreach (var movedNode in movedNodes)
+            {
+                _selectedHosts.RemoveAll(c => c.Id == movedNode.Id);
+                _availableHosts.TryRemove(movedNode.IpAddress, out _);
+                _unavailableHosts.TryRemove(movedNode.IpAddress, out _);
+                _pendingHosts.TryRemove(movedNode.IpAddress, out _);
+            }
 
-        await InvokeAsync(StateHasChanged);
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private static IEnumerable<HostDto> GetSortedHosts(ConcurrentDictionary<IPAddress, HostDto> hosts)
