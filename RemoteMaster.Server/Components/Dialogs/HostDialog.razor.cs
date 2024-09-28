@@ -3,12 +3,21 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using Microsoft.AspNetCore.Components;
+using MudBlazor;
 using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
 public partial class HostDialog
 {
+    [CascadingParameter]
+    protected MudDialogInstance MudDialog { get; set; } = default!;
+
     [Parameter]
     public HostDto HostDto { get; set; } = default!;
+
+    private async void Cancel()
+    {
+        MudDialog.Cancel();
+    }
 }
