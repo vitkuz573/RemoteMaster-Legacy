@@ -657,7 +657,7 @@ public partial class Home
         await DialogService.ShowAsync<RemoteCommandDialog>("Remote Command", dialogOptions);
     }
 
-    private async Task OpenMoveDialog()
+    private async Task OpenHostMoveDialog()
     {
         var hosts = new ConcurrentDictionary<HostDto, HubConnection?>(_selectedHosts.ToDictionary(c => c, _ => (HubConnection?)null));
 
