@@ -6,7 +6,7 @@ using System.Globalization;
 
 namespace RemoteMaster.Server.Aggregates.OrganizationAggregate.ValueObjects;
 
-public class CountryCode
+public record CountryCode
 {
     public string Code { get; }
 
@@ -36,9 +36,4 @@ public class CountryCode
             .Select(culture => new RegionInfo(culture.Name))
             .Any(ri => ri.TwoLetterISORegionName.Equals(countryCode, StringComparison.OrdinalIgnoreCase));
     }
-
-    public override bool Equals(object? obj) =>
-        obj is CountryCode code && Code == code.Code;
-
-    public override int GetHashCode() => HashCode.Combine(Code);
 }

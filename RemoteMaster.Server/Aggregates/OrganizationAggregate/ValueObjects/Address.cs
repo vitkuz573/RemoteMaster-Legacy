@@ -4,19 +4,11 @@
 
 namespace RemoteMaster.Server.Aggregates.OrganizationAggregate.ValueObjects;
 
-public class Address(string locality, string state, CountryCode country)
+public record Address(string Locality, string State, CountryCode Country)
 {
-    public string Locality { get; } = locality ?? throw new ArgumentNullException(nameof(locality));
-
-    public string State { get; } = state ?? throw new ArgumentNullException(nameof(state));
-
-    public CountryCode Country { get; } = country ?? throw new ArgumentNullException(nameof(country));
-
-    public override bool Equals(object? obj) =>
-        obj is Address address &&
-        Locality == address.Locality &&
-        State == address.State &&
-        Country.Equals(address.Country);
-
-    public override int GetHashCode() => HashCode.Combine(Locality, State, Country);
+    public string Locality { get; init; } = Locality ?? throw new ArgumentNullException(nameof(Locality));
+    
+    public string State { get; init; } = State ?? throw new ArgumentNullException(nameof(State));
+    
+    public CountryCode Country { get; init; } = Country ?? throw new ArgumentNullException(nameof(Country));
 }

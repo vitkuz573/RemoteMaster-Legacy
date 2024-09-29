@@ -24,11 +24,17 @@ public class CountryCodeTests
     [Theory]
     [InlineData("INVALID")]
     [InlineData("")]
-    [InlineData(null)]
     public void CountryCode_ThrowsArgumentException_WithInvalidCode(string invalidCode)
     {
         // Act & Assert
         Assert.Throws<ArgumentException>(() => new CountryCode(invalidCode));
+    }
+
+    [Fact]
+    public void CountryCode_ThrowsArgumentNullException_WithNullCode()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => new CountryCode(null));
     }
 
     [Theory]

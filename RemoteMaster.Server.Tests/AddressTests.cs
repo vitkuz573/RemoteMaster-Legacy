@@ -75,17 +75,35 @@ public class AddressTests
     {
         // Arrange
         var address = new Address("New York", "NY", new CountryCode("US"));
-
-        if (propertyName == nameof(Address.Country))
-        {
-            newValue = new CountryCode((string)newValue);
-        }
+        Address updatedAddress;
 
         // Act
-        var propertyInfo = address.GetType().GetProperty(propertyName);
+        updatedAddress = propertyName switch
+        {
+            nameof(Address.Locality) => address with { Locality = (string)newValue },
+            nameof(Address.State) => address with { State = (string)newValue },
+            nameof(Address.Country) => address with { Country = new CountryCode((string)newValue) },
+            _ => throw new ArgumentException("Invalid property name", nameof(propertyName)),
+        };
 
         // Assert
-        Assert.NotNull(propertyInfo);
-        Assert.Throws<ArgumentException>(() => propertyInfo.SetValue(address, newValue));
+        Assert.NotEqual(address, updatedAddress);
+
+        if (propertyName == nameof(Address.Locality))
+        {
+            Assert.Equal(newValue, updatedAddress.Locality);
+            Assert.NotEqual(newValue, address.Locality);
+        }
+        else if (propertyName == nameof(Address.State))
+        {
+            Assert.Equal(newValue, updatedAddress.State);
+            Assert.NotEqual(newValue, address.State);
+        }
+        else if (propertyName == nameof(Address.Country))
+        {
+            var expectedCountry = new CountryCode((string)newValue);
+            Assert.Equal(expectedCountry, updatedAddress.Country);
+            Assert.NotEqual(expectedCountry, address.Country);
+        }
     }
 }
