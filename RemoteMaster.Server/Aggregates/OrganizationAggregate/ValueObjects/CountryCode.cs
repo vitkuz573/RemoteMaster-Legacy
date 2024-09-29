@@ -12,6 +12,11 @@ public class CountryCode
 
     public CountryCode(string code)
     {
+        if (code is null)
+        {
+            throw new ArgumentNullException(nameof(code), "Country code cannot be null");
+        }
+
         if (!IsValidCountryCode(code))
         {
             throw new ArgumentException("Invalid country code", nameof(code));
