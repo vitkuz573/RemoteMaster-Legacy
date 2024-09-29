@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace RemoteMaster.Server.Aggregates.CrlAggregate.ValueObjects;
 
-public partial class SerialNumber
+public partial record SerialNumber
 {
     private const int MaxSerialNumberByteSize = 20;
     private const int MinSerialNumberByteSize = 1;
@@ -61,10 +61,6 @@ public partial class SerialNumber
             .Select(x => Convert.ToByte(Value.Substring(x * 2, 2), 16))
             .ToArray();
     }
-
-    public override bool Equals(object? obj) => obj is SerialNumber other && Value == other.Value;
-
-    public override int GetHashCode() => Value.GetHashCode();
 
     private static byte[] GenerateSecureRandomBytes(int byteSize)
     {

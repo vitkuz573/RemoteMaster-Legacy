@@ -189,14 +189,15 @@ public class SerialNumberTests
     {
         // Arrange
         var serialNumber = SerialNumber.FromExistingValue("A1B2C3");
+        var originalByteArray = serialNumber.ToByteArray();
+        var modifiedByteArray = (byte[])originalByteArray.Clone();
 
         // Act
-        var byteArray = serialNumber.ToByteArray();
-        byteArray[0] = 0xFF;
+        modifiedByteArray[0] = 0xFF;
         var byteArrayAfterChange = serialNumber.ToByteArray();
 
         // Assert
         Assert.Equal("A1B2C3", serialNumber.Value);
-        Assert.NotEqual(byteArray, byteArrayAfterChange);
+        Assert.Equal(originalByteArray, byteArrayAfterChange);
     }
 }
