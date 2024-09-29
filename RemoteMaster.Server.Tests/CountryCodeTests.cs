@@ -76,9 +76,10 @@ public class CountryCodeTests
         var countryCode = new CountryCode("US");
 
         // Act & Assert
-        var codeProperty = countryCode.GetType().GetProperty(nameof(CountryCode.Code));
+        var updatedCountryCode = countryCode with { Code = "CA" };
 
-        Assert.NotNull(codeProperty);
-        Assert.Throws<ArgumentException>(() => codeProperty!.SetValue(countryCode, "CA"));
+        // Assert
+        Assert.Equal("US", countryCode.Code);
+        Assert.Equal("CA", updatedCountryCode.Code);
     }
 }

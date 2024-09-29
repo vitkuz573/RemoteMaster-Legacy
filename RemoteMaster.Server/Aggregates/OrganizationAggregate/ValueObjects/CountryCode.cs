@@ -8,7 +8,7 @@ namespace RemoteMaster.Server.Aggregates.OrganizationAggregate.ValueObjects;
 
 public record CountryCode
 {
-    public string Code { get; }
+    public string Code { get; init; }
 
     public CountryCode(string code)
     {
