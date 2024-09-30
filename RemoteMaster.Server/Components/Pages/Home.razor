@@ -16,11 +16,10 @@
 @inject NavigationManager NavigationManager
 @inject IAccessTokenProvider AccessTokenProvider
 @inject UserManager<ApplicationUser> UserManager
-@inject IStringLocalizer<Home> Localizer
 @inject INotificationService NotificationService
 @inject IOrganizationService OrganizationService
 
-<PageTitle>@Localizer["PageTitle"]</PageTitle>
+<PageTitle>RemoteMaster - Home</PageTitle>
 
 <MudLayout>
     <MudAppBar Elevation="0" Color="Color.Primary">
@@ -69,10 +68,10 @@
                     @if (context.User.IsInRole("Administrator"))
                     {
                         <MudNavLink Match="NavLinkMatch.All" OnClick="OpenCertificateRenewTasks">Certificate tasks</MudNavLink>
-                        <MudNavLink Match="NavLinkMatch.All" OnClick="PublishCrl">@Localizer["MenuPublishCrl"]</MudNavLink>
+                        <MudNavLink Match="NavLinkMatch.All" OnClick="PublishCrl">Publish CRL</MudNavLink>
                     }
-                    <MudNavLink Match="NavLinkMatch.All" OnClick="ManageProfile">@Localizer["MenuProfile"]</MudNavLink>
-                    <MudNavLink Match="NavLinkMatch.All" OnClick="Logout">@Localizer["MenuLogout"]</MudNavLink>
+                    <MudNavLink Match="NavLinkMatch.All" OnClick="ManageProfile">Profile</MudNavLink>
+                    <MudNavLink Match="NavLinkMatch.All" OnClick="Logout">Logout</MudNavLink>
                 </Authorized>
             </AuthorizeView>
         </MudNavMenu>
@@ -100,22 +99,22 @@
 
             <div class="flex flex-grow flex-col gap-4 overflow-auto p-4">
                 <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6 tabs flex">
-                    <MudTabPanel Text="@Localizer["MainTab"]" Icon="@Icons.Material.Filled.Api">
+                    <MudTabPanel Text="Main" Icon="@Icons.Material.Filled.Api">
                         <AuthorizeView>
                             <Authorized>
                                 @if (context.User.HasClaim("Power", "RebootHost") || context.User.HasClaim("Power", "ShutdownHost"))
                                 {
-                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Power" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["Power"]</MudButton>
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Power" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Power</MudButton>
                                 }             
 
                                 @if (context.User.HasClaim("Power", "WakeUpHost"))
                                 {
-                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="WakeUp" Disabled="@(_selectedHosts.Count == 0)" Class="mr-2">@Localizer["WakeUp"]</MudButton>
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="WakeUp" Disabled="@(_selectedHosts.Count == 0)" Class="mr-2">Wake Up</MudButton>
                                 }
                                 
                                 @if (context.User.HasClaim("Connect", "View") || context.User.HasClaim("Connect", "Control"))
                                 {
-                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Connect" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["Connect"]</MudButton>
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Connect" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Connect</MudButton>
                                 }      
 
                                 @if (context.User.HasClaim("Security", "LockWorkStation"))
@@ -125,16 +124,16 @@
 
                                 @if (context.User.HasClaim("Execution", "OpenShell"))
                                 {
-                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenShell" Disabled="@(_selectedHosts.Count == 0)" Class="mr-2">@Localizer["OpenShell"]</MudButton>
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenShell" Disabled="@(_selectedHosts.Count == 0)" Class="mr-2">Open Shell</MudButton>
                                 }
 
                                 @if (context.User.HasClaim("Execution", "Scripts"))
                                 {
-                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ExecuteScript" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["ExecuteScript"]</MudButton>
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ExecuteScript" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Execute Script</MudButton>
                                 }
 
-                                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="LogonHosts" Disabled="@(_selectedHosts.Count == 0 || _selectedHosts.Any(c => _availableHosts.ContainsKey(c.IpAddress) || _unavailableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["Logon"]</MudButton>
-                                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="LogoffHosts" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.Any(c => _availableHosts.ContainsKey(c.IpAddress) || _unavailableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["Logoff"]</MudButton>
+                                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="LogonHosts" Disabled="@(_selectedHosts.Count == 0 || _selectedHosts.Any(c => _availableHosts.ContainsKey(c.IpAddress) || _unavailableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Logon</MudButton>
+                                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="LogoffHosts" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.Any(c => _availableHosts.ContainsKey(c.IpAddress) || _unavailableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Logoff</MudButton>
                                 <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Refresh" Class="ml-auto">Refresh</MudButton>
                             </Authorized>
                         </AuthorizeView>
@@ -142,40 +141,40 @@
 
                     <AuthorizeView>
                         <Authorized>
-                            <MudTabPanel Text="@Localizer["ServiceTab"]" Icon="@Icons.Material.Filled.Key">
+                            <MudTabPanel Text="Service" Icon="@Icons.Material.Filled.Key">
                                 <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="AppLauncher" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">App Launcher</MudButton>
 
                                 @if (context.User.HasClaim("Hardware", "SetMonitorState"))
                                 {
-                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SetMonitorState" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["SetMonitorState"]</MudButton>
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SetMonitorState" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Set Monitor State</MudButton>
                                 }
 
                                 @if (context.User.HasClaim("Execution", "ManagePsExecRules"))
                                 {
-                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ManagePsExecRules" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["PSExecRules"]</MudButton>
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ManagePsExecRules" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">PSExec Rules</MudButton>
                                 }
 
                                 @if (context.User.HasClaim("Screen", "Recording"))
                                 {
-                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ScreenRecorder" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["ScreenRecorder"]</MudButton>
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ScreenRecorder" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Screen Recorder</MudButton>
 
                                 }
 
                                 @if (context.User.HasClaim("Domain", "Membership"))
                                 {
-                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="DomainMembership" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["DomainMembership"]</MudButton>
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="DomainMembership" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Domain Membership</MudButton>
                                 }
 
                                 @if (context.User.HasClaim("HostManagement", "Update"))
                                 {
-                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Update" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["Update"]</MudButton>
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Update" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Update</MudButton>
                                 }
                             </MudTabPanel>
 
-                            <MudTabPanel Text="@Localizer["ToolsTab"]" Icon="@Icons.Material.Filled.MiscellaneousServices">
+                            <MudTabPanel Text="Tools" Icon="@Icons.Material.Filled.MiscellaneousServices">
                                 @if (context.User.HasClaim("Tasks", "Manager"))
                                 {
-                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenTaskManager" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["TaskManager"]</MudButton>
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenTaskManager" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Task Manager</MudButton>
                                 }
                                 
                                 @if (context.User.HasClaim("Devices", "Manager"))
@@ -185,17 +184,17 @@
                                 
                                 @if (context.User.HasClaim("Files", "Manager"))
                                 {
-                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenFileManager" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["FileManager"]</MudButton>
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenFileManager" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">File Manager</MudButton>
                                 }
                                 
                                 @if (context.User.HasClaim("Files", "Upload"))
                                 {
-                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="FileUpload" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["UploadFile"]</MudButton>
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="FileUpload" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Upload File</MudButton>
                                 }
 
                                 @if (context.User.HasClaim("Communication", "MessageBox"))
                                 {
-                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="MessageBox" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["MessageBox"]</MudButton>
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="MessageBox" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Message Box</MudButton>
                                 }
                                 
                                 @if (context.User.HasClaim("Communication", "Chat"))
@@ -209,25 +208,25 @@
                                 }
                             </MudTabPanel>
 
-                            <MudTabPanel Text="@Localizer["ManagementTab"]" Icon="@Icons.Material.Filled.Settings">
+                            <MudTabPanel Text="Management" Icon="@Icons.Material.Filled.Settings">
                                 @if (context.User.HasClaim("HostInformation", "View"))
                                 {
-                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenHostInfo" Disabled="@(_selectedHosts.Count != 1)" Class="mr-2">@Localizer["HostInfo"]</MudButton>
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenHostInfo" Disabled="@(_selectedHosts.Count != 1)" Class="mr-2">Host Info</MudButton>
                                 }
 
                                 @if (context.User.HasClaim("HostManagement", "Move"))
                                 {
-                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenHostMoveDialog" Disabled="@(_selectedHosts.Count == 0)" Class="mr-2">@Localizer["MoveHost"]</MudButton>
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenHostMoveDialog" Disabled="@(_selectedHosts.Count == 0)" Class="mr-2">Move Host</MudButton>
                                 }
                                 
                                 @if (context.User.HasClaim("HostManagement", "Remove"))
                                 {
-                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="RemoveHosts" Disabled="@(_selectedHosts.Count == 0)" Class="mr-2">@Localizer["Remove"]</MudButton>
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="RemoveHosts" Disabled="@(_selectedHosts.Count == 0)" Class="mr-2">Remove</MudButton>
                                 }
 
                                 @if (context.User.HasClaim("HostManagement", "RenewCertificate"))
                                 {
-                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="RenewCertificate" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">@Localizer["RenewCertificate"]</MudButton>
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="RenewCertificate" Disabled="@(_selectedHosts.Count == 0 || !_selectedHosts.All(c => _availableHosts.ContainsKey(c.IpAddress)))" Class="mr-2">Renew Certificate</MudButton>
                                 }
                             </MudTabPanel>
 
@@ -240,9 +239,9 @@
 
                 <div class="flex flex-col gap-4">
                     <MudExpansionPanels MultiExpansion="true">
-                        <MudExpansionPanel Text="@(Localizer["AvailableHosts"] + " (" + _availableHosts.Count + ")")" Expanded="true">
-                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="SelectAllAvailableHosts" Disabled="@(!CanSelectAll(_availableHosts))">@Localizer["SelectAll"]</MudButton>
-                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="DeselectAllAvailableHosts" Disabled="@(!CanDeselectAll(_availableHosts))">@Localizer["DeselectAll"]</MudButton>
+                        <MudExpansionPanel Text="@("Available hosts (" + _availableHosts.Count + ")")" Expanded="true">
+                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="SelectAllAvailableHosts" Disabled="@(!CanSelectAll(_availableHosts))">Select All</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="DeselectAllAvailableHosts" Disabled="@(!CanDeselectAll(_availableHosts))">Deselect All</MudButton>
                             <div class="mt-4 flex flex-wrap gap-4">
                                 @if (_availableHosts.Any())
                                 {
@@ -256,14 +255,14 @@
                                 else
                                 {
                                     <div class="w-full p-4 text-center">
-                                        <MudText Typo="Typo.body1">@Localizer["NoAvailableHosts"]</MudText>
+                                        <MudText Typo="Typo.body1">No available hosts</MudText>
                                     </div>
                                 }
                             </div>
                         </MudExpansionPanel>
-                        <MudExpansionPanel Text="@(Localizer["UnavailableHosts"] + " (" + _unavailableHosts.Count + ")")" Expanded="true">
-                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="SelectAllUnavailableHosts" Disabled="@(!CanSelectAll(_unavailableHosts))">@Localizer["SelectAll"]</MudButton>
-                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="DeselectAllUnavailableHosts" Disabled="@(!CanDeselectAll(_unavailableHosts))">@Localizer["DeselectAll"]</MudButton>
+                        <MudExpansionPanel Text="@("Unavailable hosts (" + _unavailableHosts.Count + ")")" Expanded="true">
+                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="SelectAllUnavailableHosts" Disabled="@(!CanSelectAll(_unavailableHosts))">Select All</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="DeselectAllUnavailableHosts" Disabled="@(!CanDeselectAll(_unavailableHosts))">Deselect All</MudButton>
                             <div class="mt-4 flex flex-wrap gap-4">
                                 @if (_unavailableHosts.Any())
                                 {
@@ -277,14 +276,14 @@
                                 else
                                 {
                                     <div class="w-full p-4 text-center">
-                                        <MudText Typo="Typo.body1">@Localizer["NoUnavailableHosts"]</MudText>
+                                        <MudText Typo="Typo.body1">No unavailable hosts</MudText>
                                     </div>
                                 }
                             </div>
                         </MudExpansionPanel>
-                        <MudExpansionPanel Text="@(Localizer["PendingHosts"] + " (" + _pendingHosts.Count + ")")" Expanded="true">
-                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="SelectAllPendingHosts" Disabled="@(!CanSelectAll(_pendingHosts))">@Localizer["SelectAll"]</MudButton>
-                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="DeselectAllPendingHosts" Disabled="@(!CanDeselectAll(_pendingHosts))">@Localizer["DeselectAll"]</MudButton>
+                        <MudExpansionPanel Text="@("Pending hosts (" + _pendingHosts.Count + ")")" Expanded="true">
+                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="SelectAllPendingHosts" Disabled="@(!CanSelectAll(_pendingHosts))">Select All</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="DeselectAllPendingHosts" Disabled="@(!CanDeselectAll(_pendingHosts))">Deselect all</MudButton>
                             <div class="mt-4 flex flex-wrap gap-4">
                                 @if (_pendingHosts.Any())
                                 {
@@ -298,7 +297,7 @@
                                 else
                                 {
                                     <div class="w-full p-4 text-center">
-                                        <MudText Typo="Typo.body1">@Localizer["NoPendingHosts"]</MudText>
+                                        <MudText Typo="Typo.body1">No pending hosts</MudText>
                                     </div>
                                 }
                             </div>

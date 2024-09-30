@@ -1,21 +1,17 @@
 ﻿@page "/Account/Login"
 
 @using Microsoft.AspNetCore.Identity
-@using Microsoft.Extensions.Localization
 @using RemoteMaster.Server.Abstractions
 @using RemoteMaster.Server.Aggregates.ApplicationUserAggregate
-@using RemoteMaster.Server.Data
 
 @inject SignInManager<ApplicationUser> SignInManager
 @inject IdentityRedirectManager RedirectManager
 @inject ITokenService TokenService
 @inject UserManager<ApplicationUser> UserManager
 @inject ITokenStorageService TokenStorageService
-@inject IServiceScopeFactory ScopeFactory
-@inject IStringLocalizer<Login> Localizer
 @inject IApplicationUserService ApplicationUserService
 
-<PageTitle>@Localizer["PageTitle"]</PageTitle>
+<PageTitle>Log in - RemoteMaster Server</PageTitle>
 
 <div class="flex min-h-screen items-center justify-center bg-gray-100 px-4 py-12 sm:px-6 lg:px-8">
     <div class="w-full max-w-md space-y-8">
@@ -24,28 +20,28 @@
                 security
             </span>
             <h1 class="mt-6 text-center text-3xl font-bold text-gray-900">RemoteMaster Server</h1>
-            <h2 class="mt-2 text-center text-xl font-medium text-gray-700">@Localizer["LoginHeader"]</h2>
+            <h2 class="mt-2 text-center text-xl font-medium text-gray-700">Log In</h2>
         </div>
         <StatusMessage Message="@_errorMessage" />
         <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login" class="mt-8 space-y-6">
             <DataAnnotationsValidator />
             <div class="rounded-md shadow-sm">
                 <div>
-                    <label for="username" class="sr-only">@Localizer["UsernameLabel"]</label>
-                    <InputText id="username" @bind-Value="Input.Username" class="relative block w-full appearance-none rounded-none rounded-t-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm" placeholder="@Localizer["UsernamePlaceholder"]" />
+                    <label for="username" class="sr-only">Enter your username</label>
+                    <InputText id="username" @bind-Value="Input.Username" class="relative block w-full appearance-none rounded-none rounded-t-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm" placeholder="Enter your username" />
                 </div>
                 <div>
-                    <label for="password" class="sr-only">@Localizer["PasswordLabel"]</label>
-                    <InputText id="password" type="password" @bind-Value="Input.Password" class="relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm" placeholder="@Localizer["PasswordPlaceholder"]" />
+                    <label for="password" class="sr-only">Enter your password</label>
+                    <InputText id="password" type="password" @bind-Value="Input.Password" class="relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm" placeholder="Enter your username" />
                 </div>
                 <div class="mt-6">
                     <button type="submit" class="group relative flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition duration-200 ease-in-out hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-                            <span class="material-icons text-indigo-500 group-hover:text-indigo-400">
+                            <span class="material-icons group-hover:text-indigo-400 text-indigo-500">
                                 lock
                             </span>
                         </span>
-                        @Localizer["LoginButton"]
+                        Log in
                     </button>
                 </div>
             </div>
