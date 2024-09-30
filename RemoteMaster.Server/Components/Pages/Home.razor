@@ -3,7 +3,6 @@
 @rendermode InteractiveServer
 
 @using Microsoft.AspNetCore.Identity
-@using Microsoft.Extensions.Localization
 @using RemoteMaster.Server.Abstractions
 @using System.Security.Claims
 @using RemoteMaster.Server.Aggregates.ApplicationUserAggregate
@@ -11,7 +10,7 @@
 @inject IBrandingService BrandingService
 @inject IDialogService DialogService
 @inject ICrlService CrlService
-@inject ISnackbar Snackbar
+@inject ISnackbar SnackBar
 @inject IJSRuntime JsRuntime
 @inject NavigationManager NavigationManager
 @inject IAccessTokenProvider AccessTokenProvider

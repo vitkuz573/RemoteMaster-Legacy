@@ -123,7 +123,7 @@ public partial class Home
         if (!crlResult.IsSuccess)
         {
             Log.Error("Failed to generate CRL: {Message}", crlResult.Errors.FirstOrDefault()?.Message);
-            Snackbar.Add("Failed to generate CRL", Severity.Error);
+            SnackBar.Add("Failed to generate CRL", Severity.Error);
             
             return;
         }
@@ -132,12 +132,12 @@ public partial class Home
 
         if (publishResult.IsSuccess)
         {
-            Snackbar.Add("CRL successfully published", Severity.Success);
+            SnackBar.Add("CRL successfully published", Severity.Success);
         }
         else
         {
             Log.Error("Failed to publish CRL: {Message}", publishResult.Errors.FirstOrDefault()?.Message);
-            Snackbar.Add("Failed to publish CRL", Severity.Error);
+            SnackBar.Add("Failed to publish CRL", Severity.Error);
         }
     }
 
