@@ -7,13 +7,7 @@ using RemoteMaster.Server.Enums;
 
 namespace RemoteMaster.Server.Aggregates.ApplicationUserAggregate.ValueObjects;
 
-public class TokenRevocationInfo(DateTime? revoked, IPAddress? revokedBy, TokenRevocationReason revocationReason)
+public record TokenRevocationInfo(DateTime? Revoked, IPAddress? RevokedBy, TokenRevocationReason RevocationReason)
 {
-    public DateTime? Revoked { get; } = revoked;
-
-    public IPAddress? RevokedBy { get; } = revokedBy;
-
-    public TokenRevocationReason RevocationReason { get; } = revocationReason;
-
     public bool IsRevoked => Revoked.HasValue;
 }

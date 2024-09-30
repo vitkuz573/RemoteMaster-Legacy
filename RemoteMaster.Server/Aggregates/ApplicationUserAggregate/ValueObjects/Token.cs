@@ -6,15 +6,7 @@ using System.Net;
 
 namespace RemoteMaster.Server.Aggregates.ApplicationUserAggregate.ValueObjects;
 
-public class Token(string value, DateTime expires, DateTime created, IPAddress createdBy)
+public record Token(string Value, DateTime Expires, DateTime Created, IPAddress CreatedBy)
 {
-    public string Value { get; } = value;
-
-    public DateTime Expires { get; } = expires;
-
-    public DateTime Created { get; } = created;
-
-    public IPAddress CreatedBy { get; } = createdBy;
-
     public bool IsExpired => DateTime.UtcNow >= Expires;
 }
