@@ -242,5 +242,5 @@ public class CommonDialogBase : ComponentBase
 
     private bool IsLoading(HostDto host) => _loadingStates.TryGetValue(host, out var isLoading) && isLoading;
 
-    public string GetErrorMessage(HostDto host) => _errorMessages.TryGetValue(host, out var errorMessage) ? errorMessage : "Unknown error";
+    protected string GetErrorMessage(HostDto host) => _errorMessages.TryGetValue(host, out var errorMessage) ? errorMessage : "Unknown error";
 }
