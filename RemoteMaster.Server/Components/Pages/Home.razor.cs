@@ -569,30 +569,15 @@ public partial class Home
         }
     }
 
-    private async Task OpenTaskManager()
-    {
-        await OpenHostWindow("taskmanager");
-    }
+    private async Task OpenTaskManager() => await OpenHostWindow("taskmanager");
 
-    private async Task OpenDeviceManager()
-    {
-        await OpenHostWindow("devicemanager");
-    }
+    private async Task OpenDeviceManager() => await OpenHostWindow("devicemanager");
 
-    private async Task OpenFileManager()
-    {
-        await OpenHostWindow("filemanager");
-    }
+    private async Task OpenFileManager() => await OpenHostWindow("filemanager", 1120);
 
-    private async Task OpenLogsManager()
-    {
-        await OpenHostWindow("logs", 1120);
-    }
+    private async Task OpenLogsManager() => await OpenHostWindow("logs", 1120);
 
-    private async Task OpenChat()
-    {
-        await OpenHostWindow("chat");
-    }
+    private async Task OpenChat() => await OpenHostWindow("chat");
 
     private async Task OpenHostWindow(string path, uint width = 800, uint height = 800)
     {
