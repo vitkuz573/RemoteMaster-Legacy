@@ -604,29 +604,44 @@ public partial class Home
         }
     }
 
-    private async Task RemoveHosts()
+    private async Task OpenHostRemoveDialog()
     {
-        var confirmation = await DialogService.ShowMessageBox("Delete Confirmation", "Are you sure you want to delete the selected hosts?", "Yes", "No");
+        var hosts = new ConcurrentDictionary<HostDto, HubConnection?>(_selectedHosts.ToDictionary(c => c, _ => (HubConnection?)null));
 
-        if (confirmation.HasValue && confirmation.Value)
+        var dialogOptions = new DialogOptions
         {
-            var hostsToRemove = _selectedHosts.ToList();
+            MaxWidth = MaxWidth.ExtraExtraLarge,
+            FullWidth = true
+        };
 
-            if (hostsToRemove.Count != 0)
+        var additionalParameters = new Dictionary<string, object>
+        {
+            { nameof(RemoveHostsDialog.OnHostsRemoved), EventCallback.Factory.Create<IEnumerable<HostDto>>(this, OnHostsRemoved) }
+        };
+
+        var dialogParameters = new DialogParameters
+        {
+            { nameof(CommonDialogWrapper<RemoveHostsDialog>.Hosts), hosts },
+            { nameof(CommonDialogWrapper<RemoveHostsDialog>.StartConnection), false },
+            { nameof(CommonDialogWrapper<RemoveHostsDialog>.RequireConnections), false },
+            { nameof(CommonDialogWrapper<RemoveHostsDialog>.AdditionalParameters), additionalParameters }
+        };
+
+        await ExecuteDialog<RemoveHostsDialog>("Remove Hosts", dialogParameters, dialogOptions);
+
+        return;
+
+        async Task OnHostsRemoved(IEnumerable<HostDto> removedHosts)
+        {
+            foreach (var removedHost in removedHosts)
             {
-                foreach (var host in hostsToRemove)
-                {
-                    await OrganizationService.RemoveHostAsync(host.OrganizationId, host.OrganizationalUnitId, host.Id);
-
-                    _availableHosts.TryRemove(host.IpAddress, out _);
-                    _unavailableHosts.TryRemove(host.IpAddress, out _);
-                    _pendingHosts.TryRemove(host.IpAddress, out _);
-                }
-
-                _selectedHosts.Clear();
-
-                await InvokeAsync(StateHasChanged);
+                _selectedHosts.RemoveAll(c => c.Id == removedHost.Id);
+                _availableHosts.TryRemove(removedHost.IpAddress, out _);
+                _unavailableHosts.TryRemove(removedHost.IpAddress, out _);
+                _pendingHosts.TryRemove(removedHost.IpAddress, out _);
             }
+
+            await InvokeAsync(StateHasChanged);
         }
     }
 
@@ -669,28 +684,30 @@ public partial class Home
 
         var additionalParameters = new Dictionary<string, object>
         {
-            { nameof(MoveDialog.OnHostsMoved), EventCallback.Factory.Create<IEnumerable<HostDto>>(this, OnHostsMoved) }
+            { nameof(MoveHostsDialog.OnHostsMoved), EventCallback.Factory.Create<IEnumerable<HostDto>>(this, OnHostsMoved) }
         };
 
         var dialogParameters = new DialogParameters
         {
-            { nameof(CommonDialogWrapper<MoveDialog>.Hosts), hosts },
-            { nameof(CommonDialogWrapper<MoveDialog>.HubPath), "hubs/control" },
-            { nameof(CommonDialogWrapper<MoveDialog>.StartConnection), true },
-            { nameof(CommonDialogWrapper<MoveDialog>.RequireConnections), true },
-            { nameof(CommonDialogWrapper<MoveDialog>.AdditionalParameters), additionalParameters }
+            { nameof(CommonDialogWrapper<MoveHostsDialog>.Hosts), hosts },
+            { nameof(CommonDialogWrapper<MoveHostsDialog>.HubPath), "hubs/control" },
+            { nameof(CommonDialogWrapper<MoveHostsDialog>.StartConnection), true },
+            { nameof(CommonDialogWrapper<MoveHostsDialog>.RequireConnections), true },
+            { nameof(CommonDialogWrapper<MoveHostsDialog>.AdditionalParameters), additionalParameters }
         };
 
-        await ExecuteDialog<MoveDialog>("Move", dialogParameters, dialogOptions);
+        await ExecuteDialog<MoveHostsDialog>("Move Hosts", dialogParameters, dialogOptions);
 
-        async Task OnHostsMoved(IEnumerable<HostDto> movedNodes)
+        return;
+
+        async Task OnHostsMoved(IEnumerable<HostDto> movedHosts)
         {
-            foreach (var movedNode in movedNodes)
+            foreach (var movedHost in movedHosts)
             {
-                _selectedHosts.RemoveAll(c => c.Id == movedNode.Id);
-                _availableHosts.TryRemove(movedNode.IpAddress, out _);
-                _unavailableHosts.TryRemove(movedNode.IpAddress, out _);
-                _pendingHosts.TryRemove(movedNode.IpAddress, out _);
+                _selectedHosts.RemoveAll(c => c.Id == movedHost.Id);
+                _availableHosts.TryRemove(movedHost.IpAddress, out _);
+                _unavailableHosts.TryRemove(movedHost.IpAddress, out _);
+                _pendingHosts.TryRemove(movedHost.IpAddress, out _);
             }
 
             await InvokeAsync(StateHasChanged);

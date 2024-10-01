@@ -14,7 +14,7 @@ using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
-public partial class MoveDialog
+public partial class MoveHostsDialog
 {
     [Parameter]
     public EventCallback<IEnumerable<HostDto>> OnHostsMoved { get; set; }

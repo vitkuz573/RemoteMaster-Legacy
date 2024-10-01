@@ -1,0 +1,14 @@
+﻿@inherits CommonDialogBase
+
+@using RemoteMaster.Server.Abstractions
+
+@inject IOrganizationService OrganizationService
+
+<CommonDialog>
+    <Content>
+        <MudText>Are you sure you want to delete the selected hosts?</MudText>
+    </Content>
+    <Actions>
+        <MudButton Color="Color.Primary" OnClick="Delete">Delete</MudButton>
+    </Actions>
+</CommonDialog>
