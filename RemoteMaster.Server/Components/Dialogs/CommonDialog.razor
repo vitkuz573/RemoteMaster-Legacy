@@ -14,7 +14,11 @@
                         @if (RequireConnections)
                         {
                             <MudTh>Hub Path</MudTh>
-                            <MudTh>Status</MudTh>
+                            <MudTh>
+                                <MudTableSortLabel SortBy="new Func<KeyValuePair<HostDto, HubConnection?>, object>(x => GetHostStatus(x.Key))">
+                                    Status
+                                </MudTableSortLabel>
+                            </MudTh>
                         }
                         <MudTh>Actions</MudTh>
                     </HeaderContent>

@@ -243,4 +243,19 @@ public class CommonDialogBase : ComponentBase
     private bool IsLoading(HostDto host) => _loadingStates.TryGetValue(host, out var isLoading) && isLoading;
 
     protected string GetErrorMessage(HostDto host) => _errorMessages.TryGetValue(host, out var errorMessage) ? errorMessage : "Unknown error";
+
+    public string GetHostStatus(HostDto host)
+    {
+        if (IsChecking(host))
+        {
+            return "Checking";
+        }
+
+        if (Hosts.TryGetValue(host, out var connection) && connection != null)
+        {
+            return "Connected";
+        }
+
+        return "Error";
+    }
 }
