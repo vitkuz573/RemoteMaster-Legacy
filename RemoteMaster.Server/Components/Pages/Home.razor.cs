@@ -499,7 +499,7 @@ public partial class Home
 
     private async Task OpenShell() => await ExecuteAction<OpenShellDialog>("Open Shell", false, false, requireConnections: false);
 
-    private async Task ExecuteScript() => await ExecuteAction<ScriptExecutorDialog>("Execute Script");
+    private async Task ExecuteScript() => await ExecuteAction<ScriptExecutorDialog>("Script Executor");
 
     private async Task ManagePsExecRules() => await ExecuteAction<PsExecRulesDialog>("PSExec Rules", hubPath: "hubs/service");
 
