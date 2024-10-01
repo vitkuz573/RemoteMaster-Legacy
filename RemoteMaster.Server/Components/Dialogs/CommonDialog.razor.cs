@@ -65,7 +65,7 @@ public class CommonDialogBase : ComponentBase
         MudDialog.Cancel();
     }
 
-    public async Task FreeResources()
+    private async Task FreeResources()
     {
         foreach (var connection in Hosts.Values.Where(connection => connection != null))
         {
@@ -146,7 +146,7 @@ public class CommonDialogBase : ComponentBase
         return connection;
     }
 
-    public async Task RecheckConnection(HostDto host)
+    protected async Task RecheckConnection(HostDto host)
     {
         ArgumentNullException.ThrowIfNull(host);
 
@@ -189,7 +189,7 @@ public class CommonDialogBase : ComponentBase
         }
     }
 
-    public async Task RemoveHost(HostDto host)
+    protected async Task RemoveHost(HostDto host)
     {
         ArgumentNullException.ThrowIfNull(host);
 
@@ -221,31 +221,26 @@ public class CommonDialogBase : ComponentBase
         return IsLoading(host) ? "rotating" : string.Empty;
     }
 
-    public string GetPanelHeaderText()
+    protected string GetPanelHeaderText()
     {
         return RequireConnections && Hosts.Any(kvp => kvp.Value == null) ? "Click to view affected hosts (some hosts have issues)" : "Click to view affected hosts";
     }
 
-    public string GetButtonClass(HostDto host)
+    protected string GetButtonClass(HostDto host)
     {
-        var baseClass = "fixed-size-button";
+        const string baseClass = "fixed-size-button";
 
-        if (IsLoading(host))
-        {
-            return $"{baseClass} rotating";
-        }
-
-        return baseClass;
+        return IsLoading(host) ? $"{baseClass} rotating" : baseClass;
     }
 
-    public bool IsRefreshDisabled(HostDto host)
+    protected bool IsRefreshDisabled(HostDto host)
     {
         return IsLoading(host) || IsChecking(host);
     }
 
     protected bool IsChecking(HostDto host) => _checkingStates.TryGetValue(host, out var isChecking) && isChecking;
 
-    protected bool IsLoading(HostDto host) => _loadingStates.TryGetValue(host, out var isLoading) && isLoading;
+    private bool IsLoading(HostDto host) => _loadingStates.TryGetValue(host, out var isLoading) && isLoading;
 
-    public string GetErrorMessage(HostDto host) => _errorMessages.TryGetValue(host, out var errorMessage) ? errorMessage : "Unknown error";
+    private string GetErrorMessage(HostDto host) => _errorMessages.TryGetValue(host, out var errorMessage) ? errorMessage : "Unknown error";
 }
