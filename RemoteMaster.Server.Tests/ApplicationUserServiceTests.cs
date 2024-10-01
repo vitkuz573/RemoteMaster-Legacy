@@ -37,7 +37,7 @@ public class ApplicationUserServiceTests
         {
             Connection =
             {
-                RemoteIpAddress = IPAddress.Parse("127.0.0.1")
+                RemoteIpAddress = IPAddress.Loopback
             }
         };
 
@@ -47,7 +47,7 @@ public class ApplicationUserServiceTests
         await _applicationUserService.AddSignInEntry(user, true);
 
         // Assert
-        _applicationUserRepositoryMock.Verify(x => x.AddSignInEntryAsync(It.IsAny<string>(), true, IPAddress.Parse("127.0.0.1")), Times.Once);
+        _applicationUserRepositoryMock.Verify(x => x.AddSignInEntryAsync(It.IsAny<string>(), true, IPAddress.Loopback), Times.Once);
         _applicationUserRepositoryMock.Verify(x => x.SaveChangesAsync(), Times.Once);
     }
 
