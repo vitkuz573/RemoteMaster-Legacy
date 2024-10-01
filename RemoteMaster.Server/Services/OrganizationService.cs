@@ -10,7 +10,7 @@ using RemoteMaster.Server.DTOs;
 
 namespace RemoteMaster.Server.Services;
 
-public class OrganizationService(IOrganizationRepository organizationRepository) : IOrganizationService
+public class OrganizationService(IOrganizationRepository organizationRepository, IApplicationUserRepository applicationUserRepository) : IOrganizationService
 {
     public async Task<IEnumerable<Organization>> GetAllOrganizationsAsync()
     {
@@ -91,9 +91,14 @@ public class OrganizationService(IOrganizationRepository organizationRepository)
         await organizationRepository.SaveChangesAsync();
     }
 
-    public async Task<IEnumerable<Organization>> GetOrganizationsWithAccessibleUnitsAsync(IEnumerable<Guid> organizationIds, IEnumerable<Guid> organizationalUnitIds)
+    public async Task<IEnumerable<Organization>> GetOrganizationsWithAccessibleUnitsAsync(string userId)
     {
-        return await organizationRepository.GetOrganizationsWithAccessibleUnitsAsync(organizationIds, organizationalUnitIds);
+        var user = await applicationUserRepository.GetByIdAsync(userId);
+
+        var accessibleOrganizationIds = user.UserOrganizations.Select(uo => uo.OrganizationId);
+        var accessibleOrganizationalUnitIds = user.UserOrganizationalUnits.Select(uou => uou.OrganizationalUnitId);
+
+        return await organizationRepository.GetOrganizationsWithAccessibleUnitsAsync(accessibleOrganizationIds, accessibleOrganizationalUnitIds);
     }
 
     public async Task RemoveHostAsync(Guid organizationId, Guid organizationalUnitId, Guid hostId)

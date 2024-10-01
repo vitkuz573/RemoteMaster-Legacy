@@ -103,10 +103,7 @@ public partial class Home
             return [];
         }
 
-        var accessibleOrganizationIds = _currentUser.UserOrganizations.Select(uo => uo.OrganizationId);
-        var accessibleOrganizationalUnitIds = _currentUser.UserOrganizationalUnits.Select(uou => uou.OrganizationalUnitId);
-
-        return await OrganizationService.GetOrganizationsWithAccessibleUnitsAsync(accessibleOrganizationIds, accessibleOrganizationalUnitIds);
+        return await OrganizationService.GetOrganizationsWithAccessibleUnitsAsync(_currentUser.Id);
     }
 
     private void ToggleDrawer() => DrawerOpen = !DrawerOpen;
