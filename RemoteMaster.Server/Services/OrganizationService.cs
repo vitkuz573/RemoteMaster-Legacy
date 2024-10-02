@@ -105,7 +105,11 @@ public class OrganizationService(IOrganizationRepository organizationRepository,
     {
         var organization = await organizationRepository.GetByIdAsync(organizationId) ?? throw new InvalidOperationException("Organization not found");
         var organizationalUnit = organization.OrganizationalUnits.FirstOrDefault(u => u.Id == organizationalUnitId) ?? throw new InvalidOperationException("Organizational Unit not found");
-        var host = organizationalUnit.Hosts.FirstOrDefault(c => c.Id == hostId) ?? throw new InvalidOperationException("Host not found");
+
+        if (organizationalUnit.Hosts.All(c => c.Id != hostId))
+        {
+            throw new InvalidOperationException("Host not found");
+        }
 
         await organizationRepository.RemoveHostAsync(organizationId, organizationalUnitId, hostId);
         await organizationRepository.UpdateAsync(organization);
