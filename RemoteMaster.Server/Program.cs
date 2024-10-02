@@ -193,6 +193,7 @@ public static class Program
         services.AddSingleton<INotificationService, InMemoryNotificationService>();
         services.AddSingleton<IPlanService, PlanService>();
         services.AddSingleton<ITokenSigningService, RsaTokenSigningService>();
+        services.AddSingleton<ITokenValidationService, RsaTokenValidationService>();
 
         services.AddSingleton(new JsonSerializerOptions
         {

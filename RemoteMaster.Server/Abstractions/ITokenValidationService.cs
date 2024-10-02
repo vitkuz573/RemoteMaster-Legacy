@@ -2,12 +2,11 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
-using System.Security.Claims;
 using FluentResults;
 
 namespace RemoteMaster.Server.Abstractions;
 
-public interface ITokenSigningService : IDisposable
+public interface ITokenValidationService : IDisposable
 {
-    Result<string> GenerateAccessToken(List<Claim> claims);
+    Result ValidateToken(string accessToken);
 }
