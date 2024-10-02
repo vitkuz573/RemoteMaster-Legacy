@@ -8,7 +8,7 @@ using RemoteMaster.Server.Abstractions;
 
 namespace RemoteMaster.Server.Services;
 
-public class AccessTokenProvider(ITokenService tokenService, ITokenStorageService tokenStorageService, NavigationManager navigationManager) : IAccessTokenProvider
+public class AccessTokenProvider(ITokenService tokenService, ITokenStorageService tokenStorageService, ITokenSigningService tokenSigningService, NavigationManager navigationManager) : IAccessTokenProvider
 {
     /// <inheritdoc />
     public async Task<Result<string?>> GetAccessTokenAsync(string userId)
@@ -17,7 +17,7 @@ public class AccessTokenProvider(ITokenService tokenService, ITokenStorageServic
 
         if (accessTokenResult.IsSuccess && !string.IsNullOrEmpty(accessTokenResult.Value))
         {
-            var tokenValidResult = tokenService.IsTokenValid(accessTokenResult.Value);
+            var tokenValidResult = tokenSigningService.ValidateToken(accessTokenResult.Value);
 
             if (tokenValidResult.IsSuccess)
             {

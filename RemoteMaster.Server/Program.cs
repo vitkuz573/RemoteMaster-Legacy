@@ -192,6 +192,7 @@ public static class Program
         // services.AddSingleton<IValidateOptions<TelegramBotOptions>, TelegramBotOptionsValidator>();
         services.AddSingleton<INotificationService, InMemoryNotificationService>();
         services.AddSingleton<IPlanService, PlanService>();
+        services.AddSingleton<ITokenSigningService, RsaTokenSigningService>();
 
         services.AddSingleton(new JsonSerializerOptions
         {

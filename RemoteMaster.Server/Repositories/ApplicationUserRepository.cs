@@ -16,6 +16,7 @@ public class ApplicationUserRepository(ApplicationDbContext context) : IApplicat
     public async Task<ApplicationUser?> GetByIdAsync(string id)
     {
         return await context.Users
+            .Include(u => u.RefreshTokens)
             .FirstOrDefaultAsync(u => u.Id == id);
     }
 

@@ -19,13 +19,6 @@ public interface ITokenService
     Task<Result<TokenData>> GenerateTokensAsync(string userId, string? refreshToken = null);
 
     /// <summary>
-    /// Validates the provided access token.
-    /// </summary>
-    /// <param name="accessToken">The access token to validate.</param>
-    /// <returns>A result indicating whether the access token is valid.</returns>
-    Result IsTokenValid(string accessToken);
-
-    /// <summary>
     /// Validates the provided refresh token.
     /// </summary>
     /// <param name="userId">The ID of the user whose tokens are to be revoked.</param>
