@@ -43,6 +43,13 @@ public class RefreshToken
 
     public bool IsActive => RevocationInfo == null && !TokenValue.IsExpired;
 
+    public static RefreshToken Create(string userId, DateTime expires, IPAddress ipAddress)
+    {
+        var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+
+        return new RefreshToken(userId, expires, ipAddress, token);
+    }
+
     public void Revoke(TokenRevocationReason reason, IPAddress ipAddress)
     {
         if (RevocationInfo != null)
@@ -70,17 +77,5 @@ public class RefreshToken
     public bool IsValid()
     {
         return RevocationInfo == null && !TokenValue.IsExpired;
-    }
-
-    public static RefreshToken Create(string userId, DateTime expires, IPAddress ipAddress)
-    {
-        var token = GenerateToken();
-
-        return new RefreshToken(userId, expires, ipAddress, token);
-    }
-
-    private static string GenerateToken()
-    {
-        return Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
     }
 }

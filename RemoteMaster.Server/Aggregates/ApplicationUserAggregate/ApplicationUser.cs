@@ -50,19 +50,19 @@ public class ApplicationUser : IdentityUser, IAggregateRoot
 
     public void RevokeRefreshToken(string token, TokenRevocationReason reason, IPAddress ipAddress)
     {
-        var refreshToken = _refreshTokens.SingleOrDefault(rt => rt.TokenValue.Value == token);
+        var refreshToken = _refreshTokens.SingleOrDefault(rt => rt.TokenValue.Value == token) ?? throw new InvalidOperationException("Token does not exist.");
 
         refreshToken.Revoke(reason, ipAddress);
     }
 
     public RefreshToken ReplaceRefreshToken(string token, IPAddress ipAddress)
     {
-        var refreshToken = _refreshTokens.SingleOrDefault(rt => rt.TokenValue.Value == token) ?? throw new InvalidOperationException("The specified token does not exist.");
-        var newRefreshToken = refreshToken.Replace(ipAddress, RefreshToken.Create);
+        var oldToken = _refreshTokens.SingleOrDefault(rt => rt.TokenValue.Value == token) ?? throw new InvalidOperationException("Token does not exist.");
+        var newToken = oldToken.Replace(ipAddress, RefreshToken.Create);
 
-        _refreshTokens.Add(newRefreshToken);
+        _refreshTokens.Add(newToken);
 
-        return newRefreshToken;
+        return newToken;
     }
 
     public void RemoveRefreshToken(RefreshToken refreshToken)
