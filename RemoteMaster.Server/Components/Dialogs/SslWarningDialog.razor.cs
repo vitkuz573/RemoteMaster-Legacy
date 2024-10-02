@@ -27,25 +27,25 @@ public partial class SslWarningDialog
     private static MarkupString BuildWarningMessage(SslPolicyErrors sslErrors)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("<strong>Warning:</strong> SSL certificate issues detected during the connection attempt.<br><br>");
-        sb.AppendLine("Details of the SSL certificate errors:<br>");
+        sb.AppendLine("<strong>Warning:</strong> SSL certificate issues have been detected during the connection attempt.<br><br>");
+        sb.AppendLine("The following SSL certificate errors were encountered:<br>");
 
         if (sslErrors.HasFlag(SslPolicyErrors.RemoteCertificateChainErrors))
         {
-            sb.AppendLine("- <strong>Certificate chain errors:</strong> This could mean that the certificate was issued by an untrusted certification authority, or it has expired.<br>");
+            sb.AppendLine("- <strong>Certificate chain errors:</strong> This indicates that the certificate chain cannot be verified. This could be caused by an untrusted certificate authority, an expired certificate, or missing intermediate certificates.<br>");
         }
 
         if (sslErrors.HasFlag(SslPolicyErrors.RemoteCertificateNameMismatch))
         {
-            sb.AppendLine("- <strong>Certificate name mismatch:</strong> The domain name does not match the name on the certificate.<br>");
+            sb.AppendLine("- <strong>Certificate name mismatch:</strong> The domain name presented by the server does not match the name on the SSL certificate. This could be a sign of a misconfigured server or a potential man-in-the-middle attack.<br>");
         }
 
         if (sslErrors.HasFlag(SslPolicyErrors.RemoteCertificateNotAvailable))
         {
-            sb.AppendLine("- <strong>Certificate not available:</strong> The certificate could not be retrieved from the remote server.<br>");
+            sb.AppendLine("- <strong>Certificate not available:</strong> The SSL certificate could not be retrieved from the remote server, potentially due to a misconfiguration or network issue.<br>");
         }
 
-        sb.AppendLine("<br>These issues could pose a security risk. Do you want to proceed with the connection?");
+        sb.AppendLine("<br><strong>These issues pose a significant security risk.</strong> Proceeding with the connection could expose sensitive data or lead to malicious interception. Do you want to continue with the connection despite these risks?");
 
         return new MarkupString(sb.ToString());
     }
