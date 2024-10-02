@@ -27,25 +27,26 @@ public partial class SslWarningDialog
     private static MarkupString BuildWarningMessage(SslPolicyErrors sslErrors)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("<strong>Warning:</strong> SSL certificate issues have been detected during the connection attempt.<br><br>");
-        sb.AppendLine("The following SSL certificate errors were encountered:<br>");
+        sb.AppendLine("<strong>Critical Warning:</strong> Severe SSL certificate issues have been detected during the connection attempt.<br><br>");
+        sb.AppendLine("The following SSL certificate errors were identified:<br>");
 
         if (sslErrors.HasFlag(SslPolicyErrors.RemoteCertificateChainErrors))
         {
-            sb.AppendLine("- <strong>Certificate chain errors:</strong> This indicates that the certificate chain cannot be verified. This could be caused by an untrusted certificate authority, an expired certificate, or missing intermediate certificates.<br>");
+            sb.AppendLine("- <strong>Certificate chain integrity compromised:</strong> The certificate chain is either incomplete, expired, or issued by an untrusted authority. This represents a serious risk as the server's identity cannot be reliably verified.<br>");
         }
 
         if (sslErrors.HasFlag(SslPolicyErrors.RemoteCertificateNameMismatch))
         {
-            sb.AppendLine("- <strong>Certificate name mismatch:</strong> The domain name presented by the server does not match the name on the SSL certificate. This could be a sign of a misconfigured server or a potential man-in-the-middle attack.<br>");
+            sb.AppendLine("- <strong>Domain mismatch:</strong> The domain name presented by the server does not match the name on the certificate. This is a critical security vulnerability that could indicate a man-in-the-middle attack or server misconfiguration.<br>");
         }
 
         if (sslErrors.HasFlag(SslPolicyErrors.RemoteCertificateNotAvailable))
         {
-            sb.AppendLine("- <strong>Certificate not available:</strong> The SSL certificate could not be retrieved from the remote server, potentially due to a misconfiguration or network issue.<br>");
+            sb.AppendLine("- <strong>SSL certificate unavailable:</strong> The server's SSL certificate could not be retrieved. This may signal a severe server misconfiguration, network tampering, or even malicious interference.<br>");
         }
 
-        sb.AppendLine("<br><strong>These issues pose a significant security risk.</strong> Proceeding with the connection could expose sensitive data or lead to malicious interception. Do you want to continue with the connection despite these risks?");
+        sb.AppendLine("<br><strong>Immediate action required:</strong> These SSL issues represent a significant threat to the security of your connection. Sensitive data may be exposed, and the integrity of the server cannot be assured. It is strongly recommended that you do <strong>not</strong> proceed unless you fully understand the risks involved and have taken additional security measures.<br>");
+        sb.AppendLine("Do you still wish to proceed despite these critical security warnings?");
 
         return new MarkupString(sb.ToString());
     }
