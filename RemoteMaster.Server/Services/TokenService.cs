@@ -16,7 +16,7 @@ namespace RemoteMaster.Server.Services;
 
 public class TokenService(IHttpContextAccessor httpContextAccessor, UserManager<ApplicationUser> userManager, IClaimsService claimsService, ITokenSigningService tokenSigningService, IApplicationUserRepository applicationUserRepository) : ITokenService
 {
-    private static readonly TimeSpan AccessTokenExpiration = TimeSpan.FromSeconds(15);
+    private static readonly TimeSpan AccessTokenExpiration = TimeSpan.FromMinutes(15);
     private static readonly TimeSpan RefreshTokenExpiration = TimeSpan.FromDays(1);
 
     public async Task<Result<TokenData>> GenerateTokensAsync(string userId, string? oldRefreshToken = null)
