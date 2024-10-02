@@ -306,30 +306,18 @@ public partial class Access : IAsyncDisposable
 
     private async Task<bool> ShowSslWarningDialog(SslPolicyErrors sslPolicyErrors)
     {
-        var errorMessage = sslPolicyErrors switch
-        {
-            SslPolicyErrors.RemoteCertificateChainErrors => "Chain validation error.",
-            SslPolicyErrors.RemoteCertificateNameMismatch => "Certificate name mismatch.",
-            SslPolicyErrors.RemoteCertificateNotAvailable => "Certificate not available.",
-            _ => "Unknown certificate error."
-        };
-
         var parameters = new DialogParameters<SslWarningDialog>
         {
-            { d => d.ContentText, $"SSL Certificate Warning: {errorMessage}. Do you want to continue?" }
+            { d => d.SslPolicyErrors, sslPolicyErrors }
         };
 
         var dialog = await DialogService.ShowAsync<SslWarningDialog>("SSL Certificate Warning", parameters);
         var result = await dialog.Result;
 
         if (!result.Canceled)
-        {
-            Log.Information("User chose to continue despite SSL certificate error: {ErrorMessage}", errorMessage);
-            
+        {            
             return true;
         }
-
-        Log.Information("User chose to discard connection due to SSL certificate error: {ErrorMessage}", errorMessage);
 
         return false;
     }
