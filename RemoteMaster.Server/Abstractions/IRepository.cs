@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 
 namespace RemoteMaster.Server.Abstractions;
 
-public interface IRepository<TEntity, TId> where TEntity : class, IAggregateRoot
+public interface IRepository<TEntity, in TId> where TEntity : class, IAggregateRoot
 {
     Task<TEntity?> GetByIdAsync(TId id);
 
