@@ -14,7 +14,7 @@ namespace RemoteMaster.Server.Components.Dialogs;
 public partial class DisconnectViewerDialog
 {
     [CascadingParameter]
-    protected MudDialogInstance MudDialog { get; set; } = default!;
+    private MudDialogInstance MudDialog { get; set; } = default!;
 
     [Parameter]
     public HubConnection HubConnection { get; set; } = default!;

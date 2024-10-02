@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net.Security;
 using System.Security.Claims;
 using MessagePack;
 using MessagePack.Resolvers;
@@ -303,6 +304,36 @@ public partial class Access : IAsyncDisposable
         await SafeInvokeAsync(() => _connection.InvokeAsync("ShutdownHost", powerActionRequest), true);
     }
 
+    private async Task<bool> ShowSslWarningDialog(SslPolicyErrors sslPolicyErrors)
+    {
+        var errorMessage = sslPolicyErrors switch
+        {
+            SslPolicyErrors.RemoteCertificateChainErrors => "Chain validation error.",
+            SslPolicyErrors.RemoteCertificateNameMismatch => "Certificate name mismatch.",
+            SslPolicyErrors.RemoteCertificateNotAvailable => "Certificate not available.",
+            _ => "Unknown certificate error."
+        };
+
+        var parameters = new DialogParameters<SslWarningDialog>
+        {
+            { d => d.ContentText, $"SSL Certificate Warning: {errorMessage}. Do you want to continue?" }
+        };
+
+        var dialog = await DialogService.ShowAsync<SslWarningDialog>("SSL Certificate Warning", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            Log.Information("User chose to continue despite SSL certificate error: {ErrorMessage}", errorMessage);
+            
+            return true;
+        }
+
+        Log.Information("User chose to discard connection due to SSL certificate error: {ErrorMessage}", errorMessage);
+
+        return false;
+    }
+
     private async Task InitializeHostConnectionAsync()
     {
         try
@@ -320,6 +351,19 @@ public partial class Access : IAsyncDisposable
             _connection = new HubConnectionBuilder()
                 .WithUrl($"https://{Host}:5001/hubs/control?screencast=true", options =>
                 {
+                    options.HttpMessageHandlerFactory = handler =>
+                    {
+                        if (handler is HttpClientHandler clientHandler)
+                        {
+                            clientHandler.ServerCertificateCustomValidationCallback = (_, _, _, sslPolicyErrors) =>
+                            {
+                                return sslPolicyErrors == SslPolicyErrors.None || Task.Run(() => ShowSslWarningDialog(sslPolicyErrors)).Result;
+                            };
+                        }
+
+                        return handler;
+                    };
+
                     options.AccessTokenProvider = async () =>
                     {
                         var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(userId);
