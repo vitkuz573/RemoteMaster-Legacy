@@ -219,8 +219,7 @@ public partial class Home
 
     private async Task LogonHost(HostDto hostDto)
     {
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
-
+        using var cts = new CancellationTokenSource();
         var cancellationToken = cts.Token;
 
         try
@@ -229,12 +228,21 @@ public partial class Home
 
             var connection = await SetupConnection(hostDto, url, true, cancellationToken);
 
+            if (connection.State != HubConnectionState.Connected)
+            {
+                Log.Warning("Failed to connect to host {IPAddress}", hostDto.IpAddress);
+
+                await MoveToUnavailable(hostDto);
+                await InvokeAsync(StateHasChanged);
+
+                return;
+            }
+
             connection.On<byte[]>("ReceiveThumbnail", async thumbnailBytes =>
             {
                 if (thumbnailBytes.Length > 0)
                 {
                     hostDto.Thumbnail = thumbnailBytes;
-
                     await MoveToAvailable(hostDto);
                 }
                 else
@@ -249,11 +257,6 @@ public partial class Home
             {
                 await connection.StopAsync(cancellationToken);
             });
-        }
-        catch (OperationCanceledException)
-        {
-            await MoveToUnavailable(hostDto);
-            await InvokeAsync(StateHasChanged);
         }
         catch (Exception ex)
         {
@@ -395,7 +398,6 @@ public partial class Home
             .AddMessagePackProtocol(options =>
             {
                 var resolver = CompositeResolver.Create([new IPAddressFormatter(), new PhysicalAddressFormatter()], [ContractlessStandardResolver.Instance]);
-
                 options.SerializerOptions = MessagePackSerializerOptions.Standard.WithResolver(resolver);
             })
             .Build();
@@ -405,7 +407,14 @@ public partial class Home
             return connection;
         }
 
-        await connection.StartAsync(cancellationToken);
+        try
+        {
+            await connection.StartAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error during connection start");
+        }
 
         return connection;
     }
