@@ -3,6 +3,8 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Collections.Concurrent;
+using System.Net;
+using System.Net.Security;
 using MessagePack;
 using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Components;
@@ -31,6 +33,12 @@ public class CommonDialogBase : ComponentBase
 
     [Inject]
     private UserManager<ApplicationUser> UserManager { get; set; } = default!;
+
+    [Inject]
+    private ISslWarningService SslWarningService { get; set; } = default!;
+
+    [Inject]
+    private IDialogService DialogService { get; set; } = default!;
 
     [CascadingParameter]
     public ConcurrentDictionary<HostDto, HubConnection?> Hosts { get; set; } = default!;
@@ -119,11 +127,44 @@ public class CommonDialogBase : ComponentBase
         await Task.WhenAll(tasks);
     }
 
+    private async Task<bool> ShowSslWarningDialog(IPAddress ipAddress, SslPolicyErrors sslPolicyErrors)
+    {
+        var parameters = new DialogParameters<SslWarningDialog>
+        {
+            { d => d.IpAddress, ipAddress },
+            { d => d.SslPolicyErrors, sslPolicyErrors }
+        };
+
+        var dialog = await DialogService.ShowAsync<SslWarningDialog>("SSL Certificate Warning", parameters);
+        var result = await dialog.Result;
+
+        return !result.Canceled;
+    }
+
+
     private async Task<HubConnection> SetupConnection(string userId, HostDto host, string hubPath, bool startConnection, CancellationToken cancellationToken)
     {
         var connection = new HubConnectionBuilder()
             .WithUrl($"https://{host.IpAddress}:5001/{hubPath}", options =>
             {
+                options.HttpMessageHandlerFactory = handler =>
+                {
+                    if (handler is HttpClientHandler clientHandler)
+                    {
+                        clientHandler.ServerCertificateCustomValidationCallback = (_, _, _, sslPolicyErrors) =>
+                        {
+                            if (SslWarningService.IsSslAllowed(host.IpAddress))
+                            {
+                                return true;
+                            }
+
+                            return sslPolicyErrors == SslPolicyErrors.None || Task.Run(() => ShowSslWarningDialog(host.IpAddress, sslPolicyErrors), cancellationToken).Result;
+                        };
+                    }
+
+                    return handler;
+                };
+
                 options.AccessTokenProvider = async () =>
                 {
                     var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(userId);
@@ -133,7 +174,7 @@ public class CommonDialogBase : ComponentBase
             .AddMessagePackProtocol(options =>
             {
                 var resolver = CompositeResolver.Create([new IPAddressFormatter(), new PhysicalAddressFormatter()], [ContractlessStandardResolver.Instance]);
-
+                
                 options.SerializerOptions = MessagePackSerializerOptions.Standard.WithResolver(resolver);
             })
             .Build();

@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net;
 using System.Net.Security;
 using System.Security.Claims;
 using MessagePack;
@@ -304,10 +305,11 @@ public partial class Access : IAsyncDisposable
         await SafeInvokeAsync(() => _connection.InvokeAsync("ShutdownHost", powerActionRequest), true);
     }
 
-    private async Task<bool> ShowSslWarningDialog(SslPolicyErrors sslPolicyErrors)
+    private async Task<bool> ShowSslWarningDialog(IPAddress ipAddress, SslPolicyErrors sslPolicyErrors)
     {
         var parameters = new DialogParameters<SslWarningDialog>
         {
+            { d => d.IpAddress, ipAddress },
             { d => d.SslPolicyErrors, sslPolicyErrors }
         };
 
@@ -340,7 +342,14 @@ public partial class Access : IAsyncDisposable
                         {
                             clientHandler.ServerCertificateCustomValidationCallback = (_, _, _, sslPolicyErrors) =>
                             {
-                                return sslPolicyErrors == SslPolicyErrors.None || Task.Run(() => ShowSslWarningDialog(sslPolicyErrors)).Result;
+                                var ipAddress = IPAddress.Parse(Host);
+
+                                if (SslWarningService.IsSslAllowed(ipAddress))
+                                {
+                                    return true;
+                                }
+
+                                return sslPolicyErrors == SslPolicyErrors.None || Task.Run(() => ShowSslWarningDialog(ipAddress, sslPolicyErrors)).Result;
                             };
                         }
 
