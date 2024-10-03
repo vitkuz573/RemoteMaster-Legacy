@@ -25,26 +25,26 @@ public partial class SslWarningDialog
 
     protected override void OnInitialized()
     {
-        _contentText = BuildWarningMessage(SslPolicyErrors);
+        _contentText = BuildWarningMessage();
     }
 
-    private static MarkupString BuildWarningMessage(SslPolicyErrors sslErrors)
+    private MarkupString BuildWarningMessage()
     {
         var sb = new StringBuilder();
-        sb.AppendLine("<strong>Warning:</strong> SSL certificate issues detected during the connection attempt.<br><br>");
+        sb.AppendLine($"<strong>Warning:</strong> SSL certificate issues detected during the connection attempt to IP address <strong>{IpAddress}</strong>.<br><br>");
         sb.AppendLine("The following SSL errors were found:<br><ul>");
 
-        if (sslErrors.HasFlag(SslPolicyErrors.RemoteCertificateChainErrors))
+        if (SslPolicyErrors.HasFlag(SslPolicyErrors.RemoteCertificateChainErrors))
         {
             sb.AppendLine("<li><strong>Certificate chain issue:</strong> The certificate chain is incomplete, expired, or from an untrusted authority. This means the server's identity may not be reliable.</li>");
         }
 
-        if (sslErrors.HasFlag(SslPolicyErrors.RemoteCertificateNameMismatch))
+        if (SslPolicyErrors.HasFlag(SslPolicyErrors.RemoteCertificateNameMismatch))
         {
             sb.AppendLine("<li><strong>Name mismatch:</strong> The server's domain does not match the certificate. This could indicate a man-in-the-middle attack or a server misconfiguration.</li>");
         }
 
-        if (sslErrors.HasFlag(SslPolicyErrors.RemoteCertificateNotAvailable))
+        if (SslPolicyErrors.HasFlag(SslPolicyErrors.RemoteCertificateNotAvailable))
         {
             sb.AppendLine("<li><strong>Certificate unavailable:</strong> The server's SSL certificate could not be retrieved. This may suggest a misconfiguration or malicious activity.</li>");
         }
@@ -64,7 +64,7 @@ public partial class SslWarningDialog
     private void Continue()
     {
         SslWarningService.SetSslAllowance(IpAddress, true);
-
+        
         MudDialog.Close(DialogResult.Ok(string.Empty));
     }
 }

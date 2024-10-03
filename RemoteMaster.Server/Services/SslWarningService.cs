@@ -5,7 +5,6 @@
 using System.Collections.Concurrent;
 using System.Net;
 using RemoteMaster.Server.Abstractions;
-using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
@@ -15,23 +14,11 @@ public class SslWarningService : ISslWarningService
 
     public bool IsSslAllowed(IPAddress ipAddress)
     {
-        var isAllowed = _sslAllowances.TryGetValue(ipAddress, out var result);
-        Log.Information("Checked SSL allowance for IP {IPAddress}. Allowed: {IsAllowed}", ipAddress, isAllowed && result);
-
-        return isAllowed && result;
+        return _sslAllowances.TryGetValue(ipAddress, out var isAllowed) && isAllowed;
     }
 
     public void SetSslAllowance(IPAddress ipAddress, bool isAllowed)
     {
         _sslAllowances[ipAddress] = isAllowed;
-
-        if (isAllowed)
-        {
-            Log.Information("SSL connection allowed for IP {IPAddress}.", ipAddress);
-        }
-        else
-        {
-            Log.Warning("SSL connection denied for IP {IPAddress}.", ipAddress);
-        }
     }
 }
