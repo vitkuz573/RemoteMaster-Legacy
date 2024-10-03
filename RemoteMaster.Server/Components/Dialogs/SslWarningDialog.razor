@@ -1,4 +1,8 @@
-﻿<MudDialog>
+﻿@using RemoteMaster.Server.Abstractions
+
+@inject ISslWarningService SslWarningService
+
+<MudDialog>
     <DialogContent>
         <MudText>@_contentText</MudText>
     </DialogContent>

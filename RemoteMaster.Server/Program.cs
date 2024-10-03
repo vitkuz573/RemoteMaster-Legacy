@@ -194,6 +194,7 @@ public static class Program
         services.AddSingleton<IPlanService, PlanService>();
         services.AddSingleton<ITokenSigningService, RsaTokenSigningService>();
         services.AddSingleton<ITokenValidationService, RsaTokenValidationService>();
+        services.AddSingleton<ISslWarningService, SslWarningService>();
 
         services.AddSingleton(new JsonSerializerOptions
         {

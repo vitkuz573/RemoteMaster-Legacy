@@ -2,6 +2,7 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Net;
 using System.Net.Security;
 using System.Text;
 using Microsoft.AspNetCore.Components;
@@ -13,6 +14,9 @@ public partial class SslWarningDialog
 {
     [CascadingParameter]
     private MudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public IPAddress IpAddress { get; set; } = default!;
 
     [Parameter]
     public SslPolicyErrors SslPolicyErrors { get; set; }
@@ -59,6 +63,8 @@ public partial class SslWarningDialog
 
     private void Continue()
     {
+        SslWarningService.SetSslAllowance(IpAddress, true);
+
         MudDialog.Close(DialogResult.Ok(string.Empty));
     }
 }

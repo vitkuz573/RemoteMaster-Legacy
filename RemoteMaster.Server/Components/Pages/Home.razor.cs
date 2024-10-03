@@ -355,10 +355,11 @@ public partial class Home
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task<bool> ShowSslWarningDialog(SslPolicyErrors sslPolicyErrors)
+    private async Task<bool> ShowSslWarningDialog(IPAddress ipAddress, SslPolicyErrors sslPolicyErrors)
     {
         var parameters = new DialogParameters<SslWarningDialog>
         {
+            { d => d.IpAddress, ipAddress },
             { d => d.SslPolicyErrors, sslPolicyErrors }
         };
 
@@ -381,7 +382,12 @@ public partial class Home
                     {
                         clientHandler.ServerCertificateCustomValidationCallback = (_, _, _, sslPolicyErrors) =>
                         {
-                            return sslPolicyErrors == SslPolicyErrors.None || Task.Run(() => ShowSslWarningDialog(sslPolicyErrors), cancellationToken).Result;
+                            if (SslWarningService.IsSslAllowed(hostDto.IpAddress))
+                            {
+                                return true;
+                            }
+
+                            return sslPolicyErrors == SslPolicyErrors.None || Task.Run(() => ShowSslWarningDialog(hostDto.IpAddress, sslPolicyErrors), cancellationToken).Result;
                         };
                     }
 
