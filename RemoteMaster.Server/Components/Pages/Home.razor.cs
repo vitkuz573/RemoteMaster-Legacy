@@ -4,6 +4,7 @@
 
 using System.Collections.Concurrent;
 using System.Net;
+using System.Net.Security;
 using System.Security.Claims;
 using System.Threading.Channels;
 using MessagePack;
@@ -351,6 +352,19 @@ public partial class Home
         await InvokeAsync(StateHasChanged);
     }
 
+    private async Task<bool> ShowSslWarningDialog(SslPolicyErrors sslPolicyErrors)
+    {
+        var parameters = new DialogParameters<SslWarningDialog>
+        {
+            { d => d.SslPolicyErrors, sslPolicyErrors }
+        };
+
+        var dialog = await DialogService.ShowAsync<SslWarningDialog>("SSL Certificate Warning", parameters);
+        var result = await dialog.Result;
+
+        return !result.Canceled;
+    }
+
     private async Task<HubConnection> SetupConnection(HostDto hostDto, string hubPath, bool startConnection, CancellationToken cancellationToken)
     {
         var userId = _user?.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("User ID is not found.");
@@ -358,6 +372,19 @@ public partial class Home
         var connection = new HubConnectionBuilder()
             .WithUrl($"https://{hostDto.IpAddress}:5001/{hubPath}", options =>
             {
+                options.HttpMessageHandlerFactory = handler =>
+                {
+                    if (handler is HttpClientHandler clientHandler)
+                    {
+                        clientHandler.ServerCertificateCustomValidationCallback = (_, _, _, sslPolicyErrors) =>
+                        {
+                            return sslPolicyErrors == SslPolicyErrors.None || Task.Run(() => ShowSslWarningDialog(sslPolicyErrors), cancellationToken).Result;
+                        };
+                    }
+
+                    return handler;
+                };
+
                 options.AccessTokenProvider = async () =>
                 {
                     var accessTokenResult = await AccessTokenProvider.GetAccessTokenAsync(userId);

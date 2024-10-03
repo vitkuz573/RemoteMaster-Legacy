@@ -314,12 +314,7 @@ public partial class Access : IAsyncDisposable
         var dialog = await DialogService.ShowAsync<SslWarningDialog>("SSL Certificate Warning", parameters);
         var result = await dialog.Result;
 
-        if (!result.Canceled)
-        {            
-            return true;
-        }
-
-        return false;
+        return !result.Canceled;
     }
 
     private async Task InitializeHostConnectionAsync()
