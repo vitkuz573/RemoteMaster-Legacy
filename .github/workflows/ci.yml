@@ -27,22 +27,21 @@ jobs:
         node-version: '20'
 
     - name: Install Chocolatey
-      shell: pwsh
+      shell: powershell
       run: |
         Set-ExecutionPolicy Bypass -Scope Process -Force
         [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
         Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 
     - name: Install Docker Compose via Chocolatey
-      shell: pwsh
+      shell: powershell
       run: choco install docker-compose -y
 
     - name: Add Docker Compose to PATH
-      shell: pwsh
-      run: echo "C:\ProgramData\chocolatey\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8
+      run: echo "C:\ProgramData\chocolatey\bin" >> $GITHUB_PATH
 
     - name: Verify Docker Compose
-      shell: pwsh
+      shell: powershell
       run: docker-compose --version
 
     - name: Install npm dependencies for RemoteMaster.Server
@@ -58,7 +57,7 @@ jobs:
       run: dotnet build --configuration Release --no-restore ./RemoteMaster.sln
 
     - name: Start LDAP container
-      shell: pwsh
+      shell: powershell
       run: ./RemoteMaster.Server.Tests/IntegrationTests/Start-Ldap.ps1
 
     - name: Run tests
@@ -66,5 +65,5 @@ jobs:
 
     - name: Stop LDAP container
       if: always()
-      shell: pwsh
+      shell: powershell
       run: ./RemoteMaster.Server.Tests/IntegrationTests/Stop-Ldap.ps1
