@@ -9,25 +9,8 @@ on:
       - main
 
 jobs:
-  start-container:
-    runs-on: ubuntu-latest
-    outputs:
-      container-status: ${{ steps.start.outputs.container-status }}
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Use Docker Compose Action
-      uses: hoverkraft-tech/compose-action@v2.0.2
-      with:
-        compose-file: "./RemoteMaster.Server.Tests/IntegrationTests/docker-compose.yml"
-    - name: Set Container Status
-      id: start
-      run: echo "::set-output name=container-status::success"
-
-  build-and-test:
+  build:
     runs-on: windows-latest
-    needs: start-container
 
     steps:
     - name: Checkout code
@@ -43,6 +26,16 @@ jobs:
       with:
         node-version: '20'
 
+    - name: Install Docker Compose via Chocolatey
+      shell: powershell
+      run: |
+        choco install docker-compose -y
+        echo "C:/ProgramData/chocolatey/bin" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
+
+    - name: Start LDAP container
+      shell: bash
+      run: docker-compose -f ./RemoteMaster.Server.Tests/IntegrationTests/docker-compose.yml up -d
+
     - name: Install npm dependencies for RemoteMaster.Server
       run: |
         cd RemoteMaster.Server
@@ -57,3 +50,8 @@ jobs:
 
     - name: Run tests
       run: dotnet test --configuration Release --no-build --verbosity normal ./RemoteMaster.sln
+
+    - name: Stop LDAP container
+      if: always()
+      shell: bash
+      run: docker-compose -f ./RemoteMaster.Server.Tests/IntegrationTests/docker-compose.yml down
