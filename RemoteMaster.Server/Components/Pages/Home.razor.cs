@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Security;
 using System.Security.Claims;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Channels;
 using MessagePack;
 using MessagePack.Resolvers;
@@ -355,12 +356,13 @@ public partial class Home
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task<bool> ShowSslWarningDialog(IPAddress ipAddress, SslPolicyErrors sslPolicyErrors)
+    private async Task<bool> ShowSslWarningDialog(IPAddress ipAddress, SslPolicyErrors sslPolicyErrors, CertificateInfo certificateInfo)
     {
         var parameters = new DialogParameters<SslWarningDialog>
         {
             { d => d.IpAddress, ipAddress },
-            { d => d.SslPolicyErrors, sslPolicyErrors }
+            { d => d.SslPolicyErrors, sslPolicyErrors },
+            { d => d.CertificateInfo, certificateInfo }
         };
 
         var dialog = await DialogService.ShowAsync<SslWarningDialog>("SSL Certificate Warning", parameters);
@@ -380,14 +382,44 @@ public partial class Home
                 {
                     if (handler is HttpClientHandler clientHandler)
                     {
-                        clientHandler.ServerCertificateCustomValidationCallback = (_, _, _, sslPolicyErrors) =>
+                        clientHandler.ServerCertificateCustomValidationCallback = (_, cert, chain, sslPolicyErrors) =>
                         {
                             if (SslWarningService.IsSslAllowed(hostDto.IpAddress))
                             {
                                 return true;
                             }
 
-                            return sslPolicyErrors == SslPolicyErrors.None || Task.Run(() => ShowSslWarningDialog(hostDto.IpAddress, sslPolicyErrors), cancellationToken).Result;
+                            var keySize = 0;
+
+                            switch (cert.PublicKey.Oid.Value)
+                            {
+                                case "1.2.840.113549.1.1.1":
+                                {
+                                    using var rsa = cert.GetRSAPublicKey();
+                                    keySize = rsa.KeySize;
+
+                                    break;
+                                }
+                                case "1.2.840.10040.4.1":
+                                {
+                                    using var dsa = cert.GetDSAPublicKey();
+                                    keySize = dsa.KeySize;
+
+                                    break;
+                                }
+                            }
+
+                            var certificateInfo = new CertificateInfo(
+                                cert.Issuer,
+                                cert.Subject,
+                                cert.GetExpirationDateString(),
+                                cert.GetEffectiveDateString(),
+                                cert.SignatureAlgorithm.FriendlyName,
+                                keySize.ToString(),
+                                chain?.ChainElements.Select(e => e.Certificate.Subject).ToList() ?? []
+                            );
+
+                            return sslPolicyErrors == SslPolicyErrors.None || Task.Run(() => ShowSslWarningDialog(hostDto.IpAddress, sslPolicyErrors, certificateInfo), cancellationToken).Result;
                         };
                     }
 

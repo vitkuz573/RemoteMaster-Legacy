@@ -5,6 +5,7 @@
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 using MessagePack;
 using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Components;
@@ -13,6 +14,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.ApplicationUserAggregate;
+using RemoteMaster.Server.Models;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Formatters;
 
@@ -127,12 +129,13 @@ public class CommonDialogBase : ComponentBase
         await Task.WhenAll(tasks);
     }
 
-    private async Task<bool> ShowSslWarningDialog(IPAddress ipAddress, SslPolicyErrors sslPolicyErrors)
+    private async Task<bool> ShowSslWarningDialog(IPAddress ipAddress, SslPolicyErrors sslPolicyErrors, CertificateInfo certificateInfo)
     {
         var parameters = new DialogParameters<SslWarningDialog>
         {
             { d => d.IpAddress, ipAddress },
-            { d => d.SslPolicyErrors, sslPolicyErrors }
+            { d => d.SslPolicyErrors, sslPolicyErrors },
+            { d => d.CertificateInfo, certificateInfo }
         };
 
         var dialog = await DialogService.ShowAsync<SslWarningDialog>("SSL Certificate Warning", parameters);
@@ -140,7 +143,6 @@ public class CommonDialogBase : ComponentBase
 
         return !result.Canceled;
     }
-
 
     private async Task<HubConnection> SetupConnection(string userId, HostDto host, string hubPath, bool startConnection, CancellationToken cancellationToken)
     {
@@ -151,14 +153,44 @@ public class CommonDialogBase : ComponentBase
                 {
                     if (handler is HttpClientHandler clientHandler)
                     {
-                        clientHandler.ServerCertificateCustomValidationCallback = (_, _, _, sslPolicyErrors) =>
+                        clientHandler.ServerCertificateCustomValidationCallback = (_, cert, chain, sslPolicyErrors) =>
                         {
                             if (SslWarningService.IsSslAllowed(host.IpAddress))
                             {
                                 return true;
                             }
 
-                            return sslPolicyErrors == SslPolicyErrors.None || Task.Run(() => ShowSslWarningDialog(host.IpAddress, sslPolicyErrors), cancellationToken).Result;
+                            var keySize = 0;
+                            
+                            switch (cert.PublicKey.Oid.Value)
+                            {
+                                case "1.2.840.113549.1.1.1":
+                                {
+                                    using var rsa = cert.GetRSAPublicKey();
+                                    keySize = rsa.KeySize;
+
+                                    break;
+                                }
+                                case "1.2.840.10040.4.1":
+                                {
+                                    using var dsa = cert.GetDSAPublicKey();
+                                    keySize = dsa.KeySize;
+
+                                    break;
+                                }
+                            }
+
+                            var certificateInfo = new CertificateInfo(
+                                cert.Issuer,
+                                cert.Subject,
+                                cert.GetExpirationDateString(),
+                                cert.GetEffectiveDateString(),
+                                cert.SignatureAlgorithm.FriendlyName,
+                                keySize.ToString(),
+                                chain?.ChainElements.Select(e => e.Certificate.Subject).ToList() ?? []
+                            );
+
+                            return sslPolicyErrors == SslPolicyErrors.None || Task.Run(() => ShowSslWarningDialog(host.IpAddress, sslPolicyErrors, certificateInfo), cancellationToken).Result;
                         };
                     }
 

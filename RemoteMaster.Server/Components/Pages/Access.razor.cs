@@ -5,6 +5,7 @@
 using System.Net;
 using System.Net.Security;
 using System.Security.Claims;
+using System.Security.Cryptography.X509Certificates;
 using MessagePack;
 using MessagePack.Resolvers;
 using Microsoft.AspNetCore.Authorization;
@@ -16,6 +17,7 @@ using MudBlazor;
 using Polly;
 using RemoteMaster.Server.Components.Dialogs;
 using RemoteMaster.Server.DTOs;
+using RemoteMaster.Server.Models;
 using RemoteMaster.Server.Requirements;
 using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Formatters;
@@ -305,12 +307,13 @@ public partial class Access : IAsyncDisposable
         await SafeInvokeAsync(() => _connection.InvokeAsync("ShutdownHost", powerActionRequest), true);
     }
 
-    private async Task<bool> ShowSslWarningDialog(IPAddress ipAddress, SslPolicyErrors sslPolicyErrors)
+    private async Task<bool> ShowSslWarningDialog(IPAddress ipAddress, SslPolicyErrors sslPolicyErrors, CertificateInfo certificateInfo)
     {
         var parameters = new DialogParameters<SslWarningDialog>
         {
             { d => d.IpAddress, ipAddress },
-            { d => d.SslPolicyErrors, sslPolicyErrors }
+            { d => d.SslPolicyErrors, sslPolicyErrors },
+            { d => d.CertificateInfo, certificateInfo }
         };
 
         var dialog = await DialogService.ShowAsync<SslWarningDialog>("SSL Certificate Warning", parameters);
@@ -340,7 +343,7 @@ public partial class Access : IAsyncDisposable
                     {
                         if (handler is HttpClientHandler clientHandler)
                         {
-                            clientHandler.ServerCertificateCustomValidationCallback = (_, _, _, sslPolicyErrors) =>
+                            clientHandler.ServerCertificateCustomValidationCallback = (_, cert, chain, sslPolicyErrors) =>
                             {
                                 var ipAddress = IPAddress.Parse(Host);
 
@@ -349,7 +352,37 @@ public partial class Access : IAsyncDisposable
                                     return true;
                                 }
 
-                                return sslPolicyErrors == SslPolicyErrors.None || Task.Run(() => ShowSslWarningDialog(ipAddress, sslPolicyErrors)).Result;
+                                var keySize = 0;
+
+                                switch (cert.PublicKey.Oid.Value)
+                                {
+                                    case "1.2.840.113549.1.1.1":
+                                    {
+                                        using var rsa = cert.GetRSAPublicKey();
+                                        keySize = rsa.KeySize;
+
+                                        break;
+                                    }
+                                    case "1.2.840.10040.4.1":
+                                    {
+                                        using var dsa = cert.GetDSAPublicKey();
+                                        keySize = dsa.KeySize;
+
+                                        break;
+                                    }
+                                }
+
+                                var certificateInfo = new CertificateInfo(
+                                    cert.Issuer,
+                                    cert.Subject,
+                                    cert.GetExpirationDateString(),
+                                    cert.GetEffectiveDateString(),
+                                    cert.SignatureAlgorithm.FriendlyName,
+                                    keySize.ToString(),
+                                    chain?.ChainElements.Select(e => e.Certificate.Subject).ToList() ?? []
+                                );
+
+                                return sslPolicyErrors == SslPolicyErrors.None || Task.Run(() => ShowSslWarningDialog(ipAddress, sslPolicyErrors, certificateInfo)).Result;
                             };
                         }
 

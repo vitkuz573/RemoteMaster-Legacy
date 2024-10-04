@@ -7,6 +7,7 @@ using System.Net.Security;
 using System.Text;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using RemoteMaster.Server.Models;
 
 namespace RemoteMaster.Server.Components.Dialogs;
 
@@ -20,6 +21,9 @@ public partial class SslWarningDialog
 
     [Parameter]
     public SslPolicyErrors SslPolicyErrors { get; set; }
+
+    [Parameter]
+    public CertificateInfo CertificateInfo { get; set; } = default!;
 
     private MarkupString _contentText;
 
@@ -47,10 +51,36 @@ public partial class SslWarningDialog
         if (SslPolicyErrors.HasFlag(SslPolicyErrors.RemoteCertificateNotAvailable))
         {
             sb.AppendLine("<li><strong>Certificate unavailable:</strong> The server's SSL certificate could not be retrieved. This may suggest a misconfiguration or malicious activity.</li>");
+            sb.AppendLine("<li><strong>Warning:</strong> No SSL certificate means the connection is <strong>not secure</strong>. Data could be intercepted or modified by third parties.</li>");
         }
 
         sb.AppendLine("</ul>");
-        sb.AppendLine("<br><strong>Proceed with caution:</strong> These SSL issues could compromise the security of your connection. Sensitive data may be exposed, and server integrity is not guaranteed. Proceed only if you fully understand the risks.<br>");
+
+        if (!SslPolicyErrors.HasFlag(SslPolicyErrors.RemoteCertificateNotAvailable))
+        {
+            sb.AppendLine("<br><strong>Certificate Details:</strong><br>");
+            sb.AppendLine($"<strong>Issuer:</strong> {CertificateInfo.Issuer}<br>");
+            sb.AppendLine($"<strong>Subject:</strong> {CertificateInfo.Subject}<br>");
+            sb.AppendLine($"<strong>Valid From:</strong> {CertificateInfo.EffectiveDate}<br>");
+            sb.AppendLine($"<strong>Valid Until:</strong> {CertificateInfo.ExpirationDate}<br>");
+            sb.AppendLine($"<strong>Signature Algorithm:</strong> {CertificateInfo.SignatureAlgorithm}<br>");
+            sb.AppendLine($"<strong>Key Size:</strong> {CertificateInfo.KeySize} bits<br><br>");
+
+            if (CertificateInfo.CertificateChain.Any())
+            {
+                sb.AppendLine("<strong>Certificate Chain:</strong><br>");
+                sb.AppendLine("<ul>");
+
+                foreach (var chainElement in CertificateInfo.CertificateChain)
+                {
+                    sb.AppendLine($"<li>{chainElement}</li>");
+                }
+
+                sb.AppendLine("</ul><br>");
+            }
+        }
+
+        sb.AppendLine("<strong>Proceed with caution:</strong> These SSL issues could compromise the security of your connection. Sensitive data may be exposed, and server integrity is not guaranteed. Proceed only if you fully understand the risks.<br>");
         sb.AppendLine("Do you wish to continue despite these warnings?");
 
         return new MarkupString(sb.ToString());
