@@ -26,25 +26,10 @@ jobs:
       with:
         node-version: '20'
 
-    - name: Install Chocolatey
-      shell: pwsh
-      run: |
-        Set-ExecutionPolicy Bypass -Scope Process -Force
-        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-        Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-
-    - name: Install Docker Compose via Chocolatey
-      shell: pwsh
-      run: choco install docker-compose -y
-
-    - name: Add Docker Compose to PATH
-      shell: bash
-      run: |
-        echo "C:\ProgramData\chocolatey\bin" >> $GITHUB_PATH
-
-    - name: Verify Docker Compose
-      shell: pwsh
-      run: docker-compose --version
+    - name: Use Docker Compose Action
+      uses: hoverkraft-tech/compose-action@v2
+      with:
+        version: "latest"
 
     - name: Install npm dependencies for RemoteMaster.Server
       run: |
