@@ -9,8 +9,21 @@ on:
       - main
 
 jobs:
-  build:
+  docker:
     runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Use Docker Compose Action
+      uses: hoverkraft-tech/compose-action@v2.0.2
+      with:
+        compose-file: "./RemoteMaster.Server.Tests/IntegrationTests/docker-compose.yml"
+
+  build:
+    needs: docker
+    runs-on: windows-latest
 
     steps:
     - name: Checkout code
@@ -25,11 +38,6 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '20'
-
-    - name: Use Docker Compose Action
-      uses: hoverkraft-tech/compose-action@v2.0.2
-      with:
-        compose-file: "./RemoteMaster.Server.Tests/IntegrationTests/docker-compose.yml"
 
     - name: Install npm dependencies for RemoteMaster.Server
       run: |
