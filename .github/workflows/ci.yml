@@ -26,18 +26,6 @@ jobs:
       with:
         node-version: '20'
 
-    - name: Install npm dependencies for RemoteMaster.Server
-      run: |
-        cd RemoteMaster.Server
-        npm install
-        cd ..
-
-    - name: Install .NET dependencies
-      run: dotnet restore --ignore-failed-sources --no-cache ./RemoteMaster.sln
-
-    - name: Build
-      run: dotnet build --configuration Release --no-restore ./RemoteMaster.sln
-
     - name: Install Docker Compose
       shell: pwsh
       run: |
@@ -52,14 +40,25 @@ jobs:
           }
           $outputPath = "$composePath\docker-compose.exe"
           Invoke-WebRequest -Uri $downloadUrl -OutFile $outputPath
-          [Environment]::SetEnvironmentVariable("Path", $env:Path + ";$composePath", [EnvironmentVariableTarget]::Machine)
+          $env:Path += ";$composePath"
         }
 
-    - name: Add Docker Compose to PATH
+    - name: Verify Docker Compose
       shell: pwsh
       run: |
-        $composePath = "C:\tools"
-        [Environment]::SetEnvironmentVariable("Path", $env:Path + ";$composePath", [EnvironmentVariableTarget]::Process)
+        docker-compose --version
+
+    - name: Install npm dependencies for RemoteMaster.Server
+      run: |
+        cd RemoteMaster.Server
+        npm install
+        cd ..
+
+    - name: Install .NET dependencies
+      run: dotnet restore --ignore-failed-sources --no-cache ./RemoteMaster.sln
+
+    - name: Build
+      run: dotnet build --configuration Release --no-restore ./RemoteMaster.sln
 
     - name: Start LDAP container
       shell: pwsh
