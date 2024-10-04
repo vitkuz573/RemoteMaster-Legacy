@@ -161,21 +161,30 @@ public class CommonDialogBase : ComponentBase
                             }
 
                             var keySize = 0;
-                            
+
                             switch (cert.PublicKey.Oid.Value)
                             {
                                 case "1.2.840.113549.1.1.1":
                                 {
                                     using var rsa = cert.GetRSAPublicKey();
-                                    keySize = rsa.KeySize;
-
+                                    keySize = rsa?.KeySize ?? 0;
                                     break;
                                 }
                                 case "1.2.840.10040.4.1":
                                 {
                                     using var dsa = cert.GetDSAPublicKey();
-                                    keySize = dsa.KeySize;
-
+                                    keySize = dsa?.KeySize ?? 0;
+                                    break;
+                                }
+                                case "1.2.840.10045.2.1":
+                                {
+                                    using var ecdsa = cert.GetECDsaPublicKey();
+                                    keySize = ecdsa?.KeySize ?? 0;
+                                    break;
+                                }
+                                default:
+                                {
+                                    keySize = 0;
                                     break;
                                 }
                             }
