@@ -38,6 +38,17 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore ./RemoteMaster.sln
 
+    - name: Install Docker Compose
+      shell: pwsh
+      run: |
+        $latestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/docker/compose/releases/latest"
+        $downloadUrl = $latestRelease.assets | Where-Object { $_.name -eq "docker-compose-windows-x86_64.exe" } | Select-Object -ExpandProperty browser_download_url
+        if ($null -eq $downloadUrl) {
+          Write-Error "Could not find a suitable Docker Compose executable for Windows."
+        } else {
+          Invoke-WebRequest -Uri $downloadUrl -OutFile "$env:ProgramFiles\Docker\docker-compose.exe"
+        }
+
     - name: Start LDAP container
       shell: pwsh
       run: ./RemoteMaster.Server.Tests/IntegrationTests/Start-Ldap.ps1
