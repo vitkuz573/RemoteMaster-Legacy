@@ -52,8 +52,14 @@ jobs:
           }
           $outputPath = "$composePath\docker-compose.exe"
           Invoke-WebRequest -Uri $downloadUrl -OutFile $outputPath
-          [Environment]::SetEnvironmentVariable("Path", $env:Path + ";$composePath", [EnvironmentVariableTarget]::Process)
+          [Environment]::SetEnvironmentVariable("Path", $env:Path + ";$composePath", [EnvironmentVariableTarget]::Machine)
         }
+
+    - name: Add Docker Compose to PATH
+      shell: pwsh
+      run: |
+        $composePath = "C:\tools"
+        [Environment]::SetEnvironmentVariable("Path", $env:Path + ";$composePath", [EnvironmentVariableTarget]::Process)
 
     - name: Start LDAP container
       shell: pwsh
