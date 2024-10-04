@@ -9,9 +9,10 @@ on:
       - main
 
 jobs:
-  docker:
+  start-container:
     runs-on: ubuntu-latest
-
+    outputs:
+      container-status: ${{ steps.start.outputs.container-status }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -20,10 +21,13 @@ jobs:
       uses: hoverkraft-tech/compose-action@v2.0.2
       with:
         compose-file: "./RemoteMaster.Server.Tests/IntegrationTests/docker-compose.yml"
+    - name: Set Container Status
+      id: start
+      run: echo "::set-output name=container-status::success"
 
-  build:
-    needs: docker
+  build-and-test:
     runs-on: windows-latest
+    needs: start-container
 
     steps:
     - name: Checkout code
