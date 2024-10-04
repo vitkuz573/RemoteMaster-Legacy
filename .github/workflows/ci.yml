@@ -30,10 +30,11 @@ jobs:
       shell: powershell
       run: |
         choco install docker-compose -y
-        echo "C:/ProgramData/chocolatey/bin" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
+        $env:Path += ";C:\ProgramData\chocolatey\bin"
+        [Environment]::SetEnvironmentVariable("Path", $env:Path, [EnvironmentVariableTarget]::Process)
 
     - name: Start LDAP container
-      shell: bash
+      shell: powershell
       run: docker-compose -f ./RemoteMaster.Server.Tests/IntegrationTests/docker-compose.yml up -d
 
     - name: Install npm dependencies for RemoteMaster.Server
@@ -53,5 +54,5 @@ jobs:
 
     - name: Stop LDAP container
       if: always()
-      shell: bash
+      shell: powershell
       run: docker-compose -f ./RemoteMaster.Server.Tests/IntegrationTests/docker-compose.yml down
