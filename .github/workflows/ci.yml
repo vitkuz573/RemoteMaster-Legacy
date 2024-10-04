@@ -27,9 +27,9 @@ jobs:
         node-version: '20'
 
     - name: Use Docker Compose Action
-      uses: hoverkraft-tech/compose-action@v2
+      uses: hoverkraft-tech/compose-action@v2.0.2
       with:
-        version: "latest"
+        compose-file: "./RemoteMaster.Server.Tests/IntegrationTests/docker-compose.yml"
 
     - name: Install npm dependencies for RemoteMaster.Server
       run: |
@@ -43,14 +43,5 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore ./RemoteMaster.sln
 
-    - name: Start LDAP container
-      shell: pwsh
-      run: ./RemoteMaster.Server.Tests/IntegrationTests/Start-Ldap.ps1
-
     - name: Run tests
       run: dotnet test --configuration Release --no-build --verbosity normal ./RemoteMaster.sln
-
-    - name: Stop LDAP container
-      if: always()
-      shell: pwsh
-      run: ./RemoteMaster.Server.Tests/IntegrationTests/Stop-Ldap.ps1
