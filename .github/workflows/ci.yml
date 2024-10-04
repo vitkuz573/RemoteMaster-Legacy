@@ -46,7 +46,13 @@ jobs:
         if ($null -eq $downloadUrl) {
           Write-Error "Could not find a suitable Docker Compose executable for Windows."
         } else {
-          Invoke-WebRequest -Uri $downloadUrl -OutFile "$env:ProgramFiles\Docker\docker-compose.exe"
+          $composePath = "C:\tools"
+          if (-not (Test-Path -Path $composePath)) {
+            New-Item -ItemType Directory -Path $composePath | Out-Null
+          }
+          $outputPath = "$composePath\docker-compose.exe"
+          Invoke-WebRequest -Uri $downloadUrl -OutFile $outputPath
+          [Environment]::SetEnvironmentVariable("Path", $env:Path + ";$composePath", [EnvironmentVariableTarget]::Process)
         }
 
     - name: Start LDAP container
