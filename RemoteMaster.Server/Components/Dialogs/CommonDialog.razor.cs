@@ -160,7 +160,7 @@ public class CommonDialogBase : ComponentBase
                                 return true;
                             }
 
-                            var keySize = 0;
+                            int keySize;
 
                             switch (cert.PublicKey.Oid.Value)
                             {
