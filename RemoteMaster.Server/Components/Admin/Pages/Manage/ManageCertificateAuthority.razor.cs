@@ -20,7 +20,7 @@ public partial class ManageCertificateAuthority
 
     protected override void OnInitialized()
     {
-        var caCertificateResult = CaCertificateService.GetCaCertificate(X509ContentType.Pfx);
+        var caCertificateResult = CertificateAuthorityService.GetCaCertificate(X509ContentType.Pfx);
 
         if (caCertificateResult.IsSuccess)
         {
@@ -44,7 +44,7 @@ public partial class ManageCertificateAuthority
     {
         try
         {
-            var caCertificateResult = CaCertificateService.GetCaCertificate(X509ContentType.Pfx);
+            var caCertificateResult = CertificateAuthorityService.GetCaCertificate(X509ContentType.Pfx);
 
             if (caCertificateResult.IsSuccess)
             {

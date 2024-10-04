@@ -17,18 +17,18 @@ namespace RemoteMaster.Server.Tests;
 
 public class CertificateServiceTests
 {
-    private readonly Mock<ICaCertificateService> _caCertificateServiceMock;
+    private readonly Mock<ICertificateAuthorityService> _certificateAuthorityServiceMock;
     private readonly Mock<IHostInformationService> _hostInformationServiceMock;
     private readonly CertificateService _certificateService;
 
     public CertificateServiceTests()
     {
-        _caCertificateServiceMock = new Mock<ICaCertificateService>();
+        _certificateAuthorityServiceMock = new Mock<ICertificateAuthorityService>();
         _hostInformationServiceMock = new Mock<IHostInformationService>();
 
         _certificateService = new CertificateService(
             _hostInformationServiceMock.Object,
-            _caCertificateServiceMock.Object
+            _certificateAuthorityServiceMock.Object
         );
     }
 
@@ -52,7 +52,7 @@ public class CertificateServiceTests
         var csrBytes = GenerateCsrBytes(true);
         using var caCertificate = GenerateCaCertificate();
 
-        _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(Result.Ok(caCertificate));
+        _certificateAuthorityServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(Result.Ok(caCertificate));
 
         // Act
         var result = _certificateService.IssueCertificate(csrBytes);
@@ -76,7 +76,7 @@ public class CertificateServiceTests
 
         var host = new HostDto("localhost", ipAddress, macAddress);
 
-        _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(Result.Ok(caCertificate));
+        _certificateAuthorityServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(Result.Ok(caCertificate));
         _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(host);
 
         // Act
@@ -100,7 +100,7 @@ public class CertificateServiceTests
 
         var host = new HostDto("localhost", ipAddress, macAddress);
 
-        _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(Result.Ok(caCertificate));
+        _certificateAuthorityServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(Result.Ok(caCertificate));
         _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(host);
 
         // Act
@@ -124,7 +124,7 @@ public class CertificateServiceTests
 
         var host = new HostDto("localhost", ipAddress, macAddress);
 
-        _caCertificateServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(Result.Ok(caCertificate));
+        _certificateAuthorityServiceMock.Setup(x => x.GetCaCertificate(X509ContentType.Pfx)).Returns(Result.Ok(caCertificate));
         _hostInformationServiceMock.Setup(x => x.GetHostInformation()).Returns(host);
 
         // Act

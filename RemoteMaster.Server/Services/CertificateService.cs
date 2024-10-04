@@ -12,7 +12,7 @@ using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class CertificateService(IHostInformationService hostInformationService, ICaCertificateService caCertificateService) : ICertificateService
+public class CertificateService(IHostInformationService hostInformationService, ICertificateAuthorityService certificateAuthorityService) : ICertificateService
 {
     /// <inheritdoc />
     public Result<X509Certificate2> IssueCertificate(byte[] csrBytes)
@@ -21,7 +21,7 @@ public class CertificateService(IHostInformationService hostInformationService, 
         {
             ArgumentNullException.ThrowIfNull(csrBytes);
 
-            var caCertificateResult = caCertificateService.GetCaCertificate(X509ContentType.Pfx);
+            var caCertificateResult = certificateAuthorityService.GetCaCertificate(X509ContentType.Pfx);
 
             if (!caCertificateResult.IsSuccess)
             {

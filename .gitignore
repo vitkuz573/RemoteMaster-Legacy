@@ -371,3 +371,6 @@ scripts/CodeSignCert
 scripts/keys
 
 appsettings.json
+
+ldap-config/
+ldap-data/

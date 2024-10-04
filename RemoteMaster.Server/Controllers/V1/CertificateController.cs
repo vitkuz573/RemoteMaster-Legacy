@@ -15,14 +15,14 @@ namespace RemoteMaster.Server.Controllers.V1;
 [ApiVersion("1.0")]
 [Consumes("application/vnd.remotemaster.v1+json")]
 [Produces("application/vnd.remotemaster.v1+json")]
-public class CertificateController(ICaCertificateService caCertificateService, ICertificateService certificateService) : ControllerBase
+public class CertificateController(ICertificateAuthorityService certificateAuthorityService, ICertificateService certificateService) : ControllerBase
 {
     [HttpGet("ca")]
     [ProducesResponseType(typeof(ApiResponse<byte[]>), 200)]
     [ProducesResponseType(typeof(ApiResponse<byte[]>), 400)]
     public IActionResult GetCaCertificate()
     {
-        var caCertificateResult = caCertificateService.GetCaCertificate(X509ContentType.Cert);
+        var caCertificateResult = certificateAuthorityService.GetCaCertificate(X509ContentType.Cert);
 
         if (caCertificateResult.IsSuccess)
         {
@@ -31,19 +31,17 @@ public class CertificateController(ICaCertificateService caCertificateService, I
             
             return Ok(response);
         }
-        else
+
+        var problemDetails = new ProblemDetails
         {
-            var problemDetails = new ProblemDetails
-            {
-                Title = "Error retrieving CA certificate",
-                Detail = caCertificateResult.Errors.FirstOrDefault()?.Message ?? "Unknown error",
-                Status = StatusCodes.Status400BadRequest
-            };
+            Title = "Error retrieving CA certificate",
+            Detail = caCertificateResult.Errors.FirstOrDefault()?.Message ?? "Unknown error",
+            Status = StatusCodes.Status400BadRequest
+        };
 
-            var errorResponse = ApiResponse<byte[]>.Failure(problemDetails);
+        var errorResponse = ApiResponse<byte[]>.Failure(problemDetails);
 
-            return BadRequest(errorResponse);
-        }
+        return BadRequest(errorResponse);
     }
 
     [HttpPost("issue")]
@@ -59,18 +57,16 @@ public class CertificateController(ICaCertificateService caCertificateService, I
             
             return Ok(response);
         }
-        else
+
+        var problemDetails = new ProblemDetails
         {
-            var problemDetails = new ProblemDetails
-            {
-                Title = "Error issuing certificate",
-                Detail = certificateResult.Errors.FirstOrDefault()?.Message ?? "Unknown error",
-                Status = StatusCodes.Status400BadRequest
-            };
+            Title = "Error issuing certificate",
+            Detail = certificateResult.Errors.FirstOrDefault()?.Message ?? "Unknown error",
+            Status = StatusCodes.Status400BadRequest
+        };
 
-            var errorResponse = ApiResponse<byte[]>.Failure(problemDetails);
+        var errorResponse = ApiResponse<byte[]>.Failure(problemDetails);
 
-            return BadRequest(errorResponse);
-        }
+        return BadRequest(errorResponse);
     }
 }

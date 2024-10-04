@@ -1,0 +1,25 @@
+﻿services:
+  openldap:
+    image: osixia/openldap:latest
+    container_name: openldap-server
+    ports:
+      - "389:389"
+    environment:
+      LDAP_ORGANIZATION: "Test Organization"
+      LDAP_DOMAIN: "test.com"
+      LDAP_ADMIN_PASSWORD: "admin"
+    volumes:
+      - ./LDAP/bootstrap.ldif:/container/bootstrap.ldif
+    entrypoint: >
+      /bin/bash -c "
+      /container/tool/run --copy-service &&
+      slapd -h 'ldap://0.0.0.0:389/' -u openldap -g openldap &
+      sleep 10 &&
+      if [ -f /container/bootstrap.ldif ]; then
+        echo 'Bootstrap file found:' &&
+        cat /container/bootstrap.ldif &&
+        ldapadd -x -D 'cn=admin,dc=test,dc=com' -w admin -f /container/bootstrap.ldif
+      else
+        echo 'Bootstrap file not found at /container/bootstrap.ldif'
+      fi &&
+      tail -F /dev/null"

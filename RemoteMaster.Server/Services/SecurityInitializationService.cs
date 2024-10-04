@@ -9,11 +9,11 @@ using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class SecurityInitializationService(ICaCertificateService caCertificateService, IJwtSecurityService jwtSecurityService, IServiceScopeFactory serviceScopeFactory) : IHostedService
+public class SecurityInitializationService(ICertificateAuthorityService certificateAuthorityService, IJwtSecurityService jwtSecurityService, IServiceScopeFactory serviceScopeFactory) : IHostedService
 {
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        caCertificateService.EnsureCaCertificateExists();
+        certificateAuthorityService.EnsureCaCertificateExists();
         await jwtSecurityService.EnsureKeysExistAsync();
 
         await EnsureServiceUserExistsAsync();

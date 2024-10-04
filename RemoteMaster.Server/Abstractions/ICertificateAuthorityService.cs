@@ -7,9 +7,9 @@ using FluentResults;
 
 namespace RemoteMaster.Server.Abstractions;
 
-public interface ICaCertificateService
+public interface ICertificateAuthorityService
 {
     Result EnsureCaCertificateExists();
-
+    
     Result<X509Certificate2> GetCaCertificate(X509ContentType contentType);
 }

@@ -3,12 +3,15 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Text.Json.Serialization;
-using RemoteMaster.Shared.Models;
+using RemoteMaster.Server.Enums;
 
 namespace RemoteMaster.Server.Options;
 
 public class CertificateOptions
 {
+    [JsonPropertyName("caType")]
+    public CaType CaType { get; set; } = CaType.Internal;
+
     [JsonPropertyName("keySize")]
     public int KeySize { get; set; }
 

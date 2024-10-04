@@ -151,6 +151,8 @@ public static class Program
 
         services.AddSharedServices();
 
+        services.AddCertificateAuthorityService();
+
         services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
         services.AddTransient<IUdpClient, UdpClientWrapper>();
         services.AddTransient<Func<IUdpClient>>(provider => provider.GetRequiredService<IUdpClient>);
@@ -181,7 +183,6 @@ public static class Program
         services.AddSingleton<ICertificateService, CertificateService>();
         services.AddSingleton<IPacketSender, UdpPacketSender>();
         services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
-        services.AddSingleton<ICaCertificateService, CaCertificateService>();
         services.AddSingleton<IJwtSecurityService, JwtSecurityService>();
         services.AddSingleton<IRemoteSchtasksService, RemoteSchtasksService>();
         services.AddSingleton<INetworkDriveService, NetworkDriveService>();

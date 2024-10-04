@@ -38,5 +38,14 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore ./RemoteMaster.sln
 
+    - name: Start LDAP container
+      shell: pwsh
+      run: ./RemoteMaster.Server.Tests/IntegrationTests/Start-Ldap.ps1
+
     - name: Run tests
       run: dotnet test --configuration Release --no-build --verbosity normal ./RemoteMaster.sln
+
+    - name: Stop LDAP container
+      if: always()
+      shell: pwsh
+      run: ./RemoteMaster.Server.Tests/IntegrationTests/Stop-Ldap.ps1

@@ -13,7 +13,7 @@ using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class CaCertificateService(IOptions<CertificateOptions> options, ISubjectService subjectService, IHostInformationService hostInformationService) : ICaCertificateService
+public class InternalCertificateAuthorityService(IOptions<CertificateOptions> options, ISubjectService subjectService, IHostInformationService hostInformationService) : ICertificateAuthorityService
 {
     private readonly CertificateOptions _settings = options.Value;
 
