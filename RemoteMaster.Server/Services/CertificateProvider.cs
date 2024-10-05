@@ -11,20 +11,20 @@ using RemoteMaster.Shared.Abstractions;
 
 namespace RemoteMaster.Server.Services;
 
-public class CertificateProvider(IOptions<CertificateOptions> options, ICertificateStoreService certificateStoreService) : ICertificateProvider
+public class CertificateProvider(IOptions<InternalCertificateOptions> options, ICertificateStoreService certificateStoreService) : ICertificateProvider
 {
-    private readonly CertificateOptions _settings = options.Value;
+    private readonly InternalCertificateOptions _options = options.Value;
 
     public Result<X509Certificate2> GetIssuerCertificate()
     {
         try
         {
-            var certificates = certificateStoreService.GetCertificates(StoreName.Root, StoreLocation.LocalMachine, X509FindType.FindBySubjectName, _settings.CommonName);
+            var certificates = certificateStoreService.GetCertificates(StoreName.Root, StoreLocation.LocalMachine, X509FindType.FindBySubjectName, _options.CommonName);
 
             var caCertificate = certificates.FirstOrDefault(cert => cert.HasPrivateKey);
 
             return caCertificate == null
-                ? Result.Fail<X509Certificate2>($"CA certificate with CommonName '{_settings.CommonName}' not found.")
+                ? Result.Fail<X509Certificate2>($"CA certificate with CommonName '{_options.CommonName}' not found.")
                 : Result.Ok(caCertificate.GetUnderlyingCertificate());
         }
         catch (Exception ex)

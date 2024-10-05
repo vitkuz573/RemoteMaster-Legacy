@@ -26,17 +26,6 @@ jobs:
       with:
         node-version: '20'
 
-    - name: Install Docker Compose via Chocolatey
-      shell: powershell
-      run: |
-        choco install docker-compose -y
-        $env:Path += ";C:\ProgramData\chocolatey\bin"
-        [Environment]::SetEnvironmentVariable("Path", $env:Path, [EnvironmentVariableTarget]::Process)
-
-    - name: Start LDAP container
-      shell: powershell
-      run: docker-compose -f ./RemoteMaster.Server.Tests/IntegrationTests/docker-compose.yml up -d
-
     - name: Install npm dependencies for RemoteMaster.Server
       run: |
         cd RemoteMaster.Server
@@ -51,8 +40,4 @@ jobs:
 
     - name: Run tests
       run: dotnet test --configuration Release --no-build --verbosity normal ./RemoteMaster.sln
-
-    - name: Stop LDAP container
-      if: always()
-      shell: powershell
-      run: docker-compose -f ./RemoteMaster.Server.Tests/IntegrationTests/docker-compose.yml down
+      

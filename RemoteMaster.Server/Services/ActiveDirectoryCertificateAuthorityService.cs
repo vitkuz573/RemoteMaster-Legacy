@@ -1,10 +1,5 @@
-﻿// Copyright © 2023 Vitaly Kuzyaev. All rights reserved.
-// This file is part of the RemoteMaster project.
-// Licensed under the GNU Affero General Public License v3.0.
-
-using System.DirectoryServices.Protocols;
+﻿using System.DirectoryServices.Protocols;
 using System.Net;
-using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using FluentResults;
 using Microsoft.Extensions.Options;
@@ -14,14 +9,25 @@ using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
+#pragma warning disable
+
 public class ActiveDirectoryCertificateAuthorityService(IOptions<ActiveDirectoryOptions> options) : ICertificateAuthorityService
 {
-    private readonly string _activeDirectoryServer = options.Value.ActiveDirectoryServer;
-    private readonly string _templateName = options.Value.TemplateName;
-    private readonly NetworkCredential _credentials = new(options.Value.Username, options.Value.Password);
+    private readonly ActiveDirectoryOptions _options = options.Value;
 
     public Result EnsureCaCertificateExists()
     {
+        var caCertificateResult = GetCaCertificate(X509ContentType.Cert);
+
+        if (caCertificateResult.IsFailed)
+        {
+            Log.Warning("CA certificate does not exist or could not be retrieved.");
+
+            return caCertificateResult.ToResult();
+        }
+
+        Log.Information("CA certificate exists and is valid.");
+
         return Result.Ok();
     }
 
@@ -29,45 +35,47 @@ public class ActiveDirectoryCertificateAuthorityService(IOptions<ActiveDirectory
     {
         try
         {
-            using var ldapConnection = new LdapConnection(_activeDirectoryServer);
-            ldapConnection.Credential = _credentials;
-            ldapConnection.AuthType = AuthType.Basic;
-            ldapConnection.SessionOptions.ProtocolVersion = 3;
-            var optionsValue = options.Value;
-            ldapConnection.Bind();
+            var ldapIdentifier = new LdapDirectoryIdentifier(_options.Server, _options.Port);
+            var credentials = new NetworkCredential(_options.Username, _options.Password);
 
-            var searchRequest = new SearchRequest(optionsValue.SearchBase, $"(CN={_templateName})", SearchScope.Subtree, null);
+            using var connection = new LdapConnection(ldapIdentifier, credentials, AuthType.Basic);
 
-            var searchResponse = (SearchResponse)ldapConnection.SendRequest(searchRequest);
+            connection.Bind();
 
-            if (searchResponse.Entries.Count == 0)
+            Log.Information("Successfully connected to LDAP server.");
+
+            var request = new SearchRequest(_options.SearchBase, "(objectClass=certificationAuthority)", SearchScope.Subtree, "cACertificate");
+
+            var response = (SearchResponse)connection.SendRequest(request);
+
+            if (response.Entries.Count == 0)
             {
-                return Result.Fail<X509Certificate2>("Certificate template not found in Active Directory.");
+                Log.Warning("No certificate authority found with the specified filter.");
+
+                return Result.Fail("Certificate Authority not found in Active Directory.");
             }
 
-            using var rsa = RSA.Create(options.Value.KeySize);
-            var certRequest = new CertificateRequest(new X500DistinguishedName("CN=CommonName"), rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-            var cert = certRequest.CreateSelfSigned(DateTimeOffset.Now, DateTimeOffset.Now.AddYears(options.Value.ValidityPeriod));
+            var entry = response.Entries[0];
 
-            return Result.Ok(cert);
-        }
-        catch (LdapException ldapEx)
-        {
-            Log.Error(ldapEx, "LDAP error occurred while retrieving CA certificate from Active Directory.");
+            if (!entry.Attributes.Contains("cACertificate"))
+            {
+                Log.Warning("Certificate attribute not found or empty for the given CA.");
 
-            return Result.Fail<X509Certificate2>("LDAP error occurred.").WithError(ldapEx.Message);
-        }
-        catch (CryptographicException cryptoEx)
-        {
-            Log.Error(cryptoEx, "Cryptographic error occurred while creating CA certificate.");
+                return Result.Fail("Certificate attribute not found or empty.");
+            }
 
-            return Result.Fail<X509Certificate2>("Cryptographic error occurred.").WithError(cryptoEx.Message);
+            var rawData = (byte[])entry.Attributes["cACertificate"][0];
+            var certificate = new X509Certificate2(rawData);
+
+            Log.Information("Successfully retrieved CA certificate.");
+
+            return Result.Ok(certificate);
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to retrieve CA certificate from Active Directory.");
+            Log.Error(ex, "An error occurred while retrieving the CA certificate.");
 
-            return Result.Fail<X509Certificate2>("Failed to retrieve CA certificate from Active Directory.").WithError(ex.Message);
+            return Result.Fail(new ExceptionalError(ex));
         }
     }
 }

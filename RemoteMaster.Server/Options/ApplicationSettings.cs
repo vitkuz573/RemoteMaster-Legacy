@@ -15,7 +15,7 @@ public class ApplicationSettings
     public JwtOptions Jwt { get; set; }
 
     [JsonPropertyName("caSettings")]
-    public CertificateOptions CASettings { get; set; }
+    public CertificateAuthorityOptions CASettings { get; set; }
 
     [JsonPropertyName("telegramBot")]
     public TelegramBotOptions TelegramBot { get; set; }

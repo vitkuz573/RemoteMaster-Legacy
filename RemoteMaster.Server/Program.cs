@@ -188,7 +188,7 @@ public static class Program
         services.AddSingleton<INetworkDriveService, NetworkDriveService>();
         services.AddSingleton<ICountryProvider, CountryProvider>();
         services.AddSingleton<IValidateOptions<JwtOptions>, JwtOptionsValidator>();
-        services.AddSingleton<IValidateOptions<CertificateOptions>, CertificateOptionsValidator>();
+        services.AddSingleton<IValidateOptions<CertificateAuthorityOptions>, CertificateAuthorityOptionsValidator>();
         services.AddSingleton<IValidateOptions<SubjectOptions>, SubjectOptionsValidator>();
         // services.AddSingleton<IValidateOptions<TelegramBotOptions>, TelegramBotOptionsValidator>();
         services.AddSingleton<INotificationService, InMemoryNotificationService>();
@@ -212,9 +212,10 @@ public static class Program
 
         services.Configure<ApplicationSettings>(configurationManager);
         services.Configure<JwtOptions>(configurationManager.GetSection("jwt"));
-        services.Configure<CertificateOptions>(configurationManager.GetSection("caSettings"));
-        services.Configure<SubjectOptions>(configurationManager.GetSection("caSettings:subject"));
-        services.Configure<TelegramBotOptions>(configurationManager.GetSection("TelegramBot"));
+        services.Configure<CertificateAuthorityOptions>(configurationManager.GetSection("certificateAuthority"));
+        services.Configure<InternalCertificateOptions>(configurationManager.GetSection("certificateAuthority:internalOptions"));
+        services.Configure<ActiveDirectoryOptions>(configurationManager.GetSection("certificateAuthority:activeDirectoryOptions"));
+        services.Configure<SubjectOptions>(configurationManager.GetSection("certificateAuthority:internalOptions:subject"));
 
         services.AddMudServices();
 

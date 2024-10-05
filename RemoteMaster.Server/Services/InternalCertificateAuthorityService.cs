@@ -13,9 +13,9 @@ using Serilog;
 
 namespace RemoteMaster.Server.Services;
 
-public class InternalCertificateAuthorityService(IOptions<CertificateOptions> options, ISubjectService subjectService, IHostInformationService hostInformationService) : ICertificateAuthorityService
+public class InternalCertificateAuthorityService(IOptions<InternalCertificateOptions> options, ISubjectService subjectService, IHostInformationService hostInformationService) : ICertificateAuthorityService
 {
-    private readonly CertificateOptions _settings = options.Value;
+    private readonly InternalCertificateOptions _options = options.Value;
 
     public Result EnsureCaCertificateExists()
     {
@@ -31,11 +31,11 @@ public class InternalCertificateAuthorityService(IOptions<CertificateOptions> op
 
                 if (existingCert.NotAfter > DateTime.Now)
                 {
-                    Log.Information("Existing CA certificate for '{Name}' is valid.", _settings.CommonName);
+                    Log.Information("Existing CA certificate for '{Name}' is valid.", _options.CommonName);
                     return Result.Ok();
                 }
 
-                Log.Warning("CA certificate for '{Name}' has expired. Reissuing.", _settings.CommonName);
+                Log.Warning("CA certificate for '{Name}' has expired. Reissuing.", _options.CommonName);
                 var generateResult = GenerateCertificate(existingCert.GetRSAPrivateKey(), true);
 
                 return generateResult.IsFailed
@@ -43,7 +43,7 @@ public class InternalCertificateAuthorityService(IOptions<CertificateOptions> op
                     : Result.Ok();
             }
 
-            Log.Warning("No valid CA certificate found. Generating new certificate for '{Name}'.", _settings.CommonName);
+            Log.Warning("No valid CA certificate found. Generating new certificate for '{Name}'.", _options.CommonName);
             var generateNewResult = GenerateCertificate(null, false);
 
             return generateNewResult.IsFailed
@@ -76,7 +76,7 @@ public class InternalCertificateAuthorityService(IOptions<CertificateOptions> op
                 };
 
 #pragma warning disable CA2000
-                rsaProvider = new RSACryptoServiceProvider(_settings.KeySize, cspParams);
+                rsaProvider = new RSACryptoServiceProvider(_options.KeySize, cspParams);
 #pragma warning restore CA2000
             }
             else
@@ -91,7 +91,7 @@ public class InternalCertificateAuthorityService(IOptions<CertificateOptions> op
                 return Result.Fail("RSA provider is null.");
             }
 
-            var distinguishedName = subjectService.GetDistinguishedName(_settings.CommonName, _settings.Subject.Organization, _settings.Subject.OrganizationalUnit, _settings.Subject.Locality, _settings.Subject.State, _settings.Subject.Country);
+            var distinguishedName = subjectService.GetDistinguishedName(_options.CommonName, _options.Subject.Organization, _options.Subject.OrganizationalUnit, _options.Subject.Locality, _options.Subject.State, _options.Subject.Country);
             var request = new CertificateRequest(distinguishedName, rsaProvider, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
             request.CertificateExtensions.Add(new X509BasicConstraintsExtension(true, false, 0, true));
@@ -113,8 +113,8 @@ public class InternalCertificateAuthorityService(IOptions<CertificateOptions> op
 
             request.CertificateExtensions.Add(crlDistributionPointExtension);
 
-            var caCert = request.CreateSelfSigned(DateTimeOffset.Now, DateTimeOffset.Now.AddYears(_settings.ValidityPeriod));
-            caCert.FriendlyName = _settings.CommonName;
+            var caCert = request.CreateSelfSigned(DateTimeOffset.Now, DateTimeOffset.Now.AddYears(_options.ValidityPeriod));
+            caCert.FriendlyName = _options.CommonName;
 
             AddCertificateToStore(caCert, StoreName.Root, StoreLocation.LocalMachine);
 
@@ -172,7 +172,7 @@ public class InternalCertificateAuthorityService(IOptions<CertificateOptions> op
             using var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
             store.Open(OpenFlags.ReadOnly);
 
-            var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, _settings.CommonName, false);
+            var certificates = store.Certificates.Find(X509FindType.FindBySubjectName, _options.CommonName, false);
 
             foreach (var cert in certificates.Where(cert => cert.HasPrivateKey))
             {

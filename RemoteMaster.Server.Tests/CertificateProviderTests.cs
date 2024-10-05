@@ -20,8 +20,8 @@ public class CertificateProviderTests
     public void GetIssuerCertificate_ReturnsCertificateWithPrivateKey()
     {
         // Arrange
-        var optionsMock = new Mock<IOptions<CertificateOptions>>();
-        optionsMock.Setup(o => o.Value).Returns(new CertificateOptions { CommonName = "TestCA" });
+        var optionsMock = new Mock<IOptions<InternalCertificateOptions>>();
+        optionsMock.Setup(o => o.Value).Returns(new InternalCertificateOptions { CommonName = "TestCA" });
 
         using var certificate = CreateTestCertificateWithPrivateKey();
         var certWrapper = new CertificateWrapper(certificate);
@@ -47,8 +47,8 @@ public class CertificateProviderTests
     public void GetIssuerCertificate_ReturnsFailureResultWhenCertificateNotFound()
     {
         // Arrange
-        var optionsMock = new Mock<IOptions<CertificateOptions>>();
-        optionsMock.Setup(o => o.Value).Returns(new CertificateOptions { CommonName = "NonExistentCA" });
+        var optionsMock = new Mock<IOptions<InternalCertificateOptions>>();
+        optionsMock.Setup(o => o.Value).Returns(new InternalCertificateOptions { CommonName = "NonExistentCA" });
 
         var certificateStoreServiceMock = new Mock<ICertificateStoreService>();
         certificateStoreServiceMock.Setup(s => s.GetCertificates(StoreName.Root, StoreLocation.LocalMachine, X509FindType.FindBySubjectName, "NonExistentCA"))
@@ -70,8 +70,8 @@ public class CertificateProviderTests
     public void GetIssuerCertificate_ReturnsFailureResultOnException()
     {
         // Arrange
-        var optionsMock = new Mock<IOptions<CertificateOptions>>();
-        optionsMock.Setup(o => o.Value).Returns(new CertificateOptions { CommonName = "TestCA" });
+        var optionsMock = new Mock<IOptions<InternalCertificateOptions>>();
+        optionsMock.Setup(o => o.Value).Returns(new InternalCertificateOptions { CommonName = "TestCA" });
 
         var certificateStoreServiceMock = new Mock<ICertificateStoreService>();
         certificateStoreServiceMock.Setup(s => s.GetCertificates(StoreName.Root, StoreLocation.LocalMachine, X509FindType.FindBySubjectName, "TestCA"))

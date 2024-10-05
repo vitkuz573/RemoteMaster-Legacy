@@ -2,21 +2,24 @@
 // This file is part of the RemoteMaster project.
 // Licensed under the GNU Affero General Public License v3.0.
 
+using System.Text.Json.Serialization;
+
 namespace RemoteMaster.Server.Options;
 
 public class ActiveDirectoryOptions
 {
+    [JsonPropertyName("server")]
+    public string Server { get; set; }
+
+    [JsonPropertyName("port")]
+    public int Port { get; set; }
+
+    [JsonPropertyName("searchBase")]
     public string SearchBase { get; set; }
 
-    public int KeySize { get; set; } = 2048;
+    [JsonPropertyName("userName")]
+    public string? Username { get; set; }
 
-    public int ValidityPeriod { get; set; } = 1;
-
-    public string ActiveDirectoryServer { get; set; }
-
-    public string TemplateName { get; set; }
-
-    public string Username { get; set; }
-
-    public string Password { get; set; }
+    [JsonPropertyName("password")]
+    public string? Password { get; set; }
 }
