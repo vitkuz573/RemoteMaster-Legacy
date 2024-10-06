@@ -21,7 +21,7 @@ public class Crl : IAggregateRoot
 
     public int Id { get; private set; }
 
-    public string Number { get; private set; }
+    public string Number { get; private set; } = null!;
 
     public IReadOnlyCollection<RevokedCertificate> RevokedCertificates => _revokedCertificates.AsReadOnly();
 

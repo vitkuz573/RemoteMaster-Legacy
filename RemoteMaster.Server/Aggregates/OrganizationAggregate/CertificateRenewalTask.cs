@@ -32,15 +32,15 @@ public class CertificateRenewalTask
 
     public Guid HostId { get; private set; }
 
-    public Host Host { get; private set; }
+    public Host? Host { get; private set; }
 
     public Guid OrganizationId { get; private set; }
 
-    public Organization Organization { get; private set; }
+    public Organization? Organization { get; private set; }
 
     public Guid OrganizationalUnitId { get; private set; }
 
-    public OrganizationalUnit OrganizationalUnit { get; private set; }
+    public OrganizationalUnit? OrganizationalUnit { get; private set; }
 
     public DateTimeOffset PlannedDate { get; private set; }
 

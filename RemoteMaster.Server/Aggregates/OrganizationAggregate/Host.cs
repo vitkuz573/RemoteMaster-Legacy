@@ -20,15 +20,15 @@ public class Host
 
     public Guid Id { get; private set; }
 
-    public string Name { get; private set; }
+    public string Name { get; private set; } = null!;
 
-    public IPAddress IpAddress { get; private set; }
+    public IPAddress IpAddress { get; private set; } = null!;
 
-    public PhysicalAddress MacAddress { get; private set; }
+    public PhysicalAddress MacAddress { get; private set; } = null!;
 
     public Guid ParentId { get; private set; }
 
-    public OrganizationalUnit Parent { get; private set; }
+    public OrganizationalUnit? Parent { get; private set; }
 
     internal void SetOrganizationalUnit(Guid organizationalUnitId)
     {

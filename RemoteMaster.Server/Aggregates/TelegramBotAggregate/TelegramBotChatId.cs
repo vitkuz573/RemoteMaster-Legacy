@@ -19,5 +19,5 @@ public class TelegramBotChatId
 
     public int TelegramBotId { get; private set; }
 
-    public TelegramBot TelegramBot { get; private set; }
+    public TelegramBot? TelegramBot { get; private set; }
 }

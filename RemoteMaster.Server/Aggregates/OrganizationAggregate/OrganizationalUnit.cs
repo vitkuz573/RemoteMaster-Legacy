@@ -15,7 +15,7 @@ public class OrganizationalUnit
 
     public Guid Id { get; private set; }
 
-    public string Name { get; private set; }
+    public string Name { get; private set; } = null!;
 
     public Guid? ParentId { get; private set; }
 
@@ -23,7 +23,7 @@ public class OrganizationalUnit
 
     public Guid OrganizationId { get; private set; }
 
-    public Organization Organization { get; private set; }
+    public Organization? Organization { get; private set; }
 
     public IReadOnlyCollection<OrganizationalUnit> Children => _children.AsReadOnly();
 
@@ -77,8 +77,8 @@ public class OrganizationalUnit
 
     public void RemoveHost(Guid hostId)
     {
-        var host = _hosts.SingleOrDefault(c => c.Id == hostId);
-
+        var host = _hosts.SingleOrDefault(c => c.Id == hostId) ?? throw new InvalidOperationException("Host not found in this unit.");
+        
         _hosts.Remove(host);
     }
 

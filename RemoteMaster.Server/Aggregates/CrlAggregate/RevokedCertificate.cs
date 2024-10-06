@@ -20,7 +20,7 @@ public class RevokedCertificate
 
     public int Id { get; private set; }
 
-    public SerialNumber SerialNumber { get; private set; }
+    public SerialNumber SerialNumber { get; private set; } = null!;
     
     public X509RevocationReason Reason { get; private set; }
 

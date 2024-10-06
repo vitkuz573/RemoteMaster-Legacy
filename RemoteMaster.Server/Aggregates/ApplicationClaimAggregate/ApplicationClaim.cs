@@ -20,11 +20,11 @@ public class ApplicationClaim : IAggregateRoot
 
     public int Id { get; private set; }
 
-    public string ClaimType { get; private set; }
+    public string ClaimType { get; private set; } = null!;
 
-    public string ClaimValue { get; private set; }
+    public string ClaimValue { get; private set; } = null!;
 
-    public string DisplayName { get; private set; }
+    public string DisplayName { get; private set; } = null!;
 
-    public string Description { get; private set; }
+    public string Description { get; private set; } = null!;
 }
