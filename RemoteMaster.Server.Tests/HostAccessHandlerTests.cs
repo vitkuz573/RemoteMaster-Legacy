@@ -59,7 +59,7 @@ public class HostAccessHandlerTests
             .ReturnsAsync(applicationUser);
 
         _organizationRepositoryMock.Setup(repo => repo.FindHostsAsync(It.IsAny<Expression<Func<Host, bool>>>()))
-            .ReturnsAsync(new List<Host>());
+            .ReturnsAsync([]);
 
         // Act
         await _handler.HandleAsync(context);
@@ -94,7 +94,7 @@ public class HostAccessHandlerTests
             .ReturnsAsync(applicationUser);
 
         _organizationRepositoryMock.Setup(repo => repo.FindHostsAsync(It.IsAny<Expression<Func<Host, bool>>>()))
-            .ReturnsAsync(new List<Host> { organizationalUnit.Hosts.First() });
+            .ReturnsAsync([organizationalUnit.Hosts.First()]);
 
         _organizationRepositoryMock.Setup(repo => repo.GetOrganizationalUnitByIdAsync(organizationalUnit.Id))
             .ReturnsAsync(organizationalUnit);
@@ -133,7 +133,7 @@ public class HostAccessHandlerTests
             .ReturnsAsync(applicationUser);
 
         _organizationRepositoryMock.Setup(repo => repo.FindHostsAsync(It.IsAny<Expression<Func<Host, bool>>>()))
-            .ReturnsAsync(new List<Host> { organizationalUnit.Hosts.First() });
+            .ReturnsAsync([organizationalUnit.Hosts.First()]);
 
         _organizationRepositoryMock.Setup(repo => repo.GetOrganizationalUnitByIdAsync(organizationalUnit.Id))
             .ReturnsAsync(organizationalUnit);
@@ -183,7 +183,7 @@ public class HostAccessHandlerTests
             .ReturnsAsync(applicationUser);
 
         _organizationRepositoryMock.Setup(repo => repo.FindHostsAsync(It.IsAny<Expression<Func<Host, bool>>>()))
-            .ReturnsAsync(new List<Host> { organizationalUnit1.Hosts.First() });
+            .ReturnsAsync([organizationalUnit1.Hosts.First()]);
 
         _organizationRepositoryMock.Setup(repo => repo.GetOrganizationalUnitByIdAsync(organizationalUnit1.Id))
             .ReturnsAsync(organizationalUnit1);
@@ -233,7 +233,7 @@ public class HostAccessHandlerTests
             .ReturnsAsync(applicationUser);
 
         _organizationRepositoryMock.Setup(repo => repo.FindHostsAsync(It.IsAny<Expression<Func<Host, bool>>>()))
-            .ReturnsAsync(new List<Host> { organizationalUnit1.Hosts.First() });
+            .ReturnsAsync([organizationalUnit1.Hosts.First()]);
 
         _organizationRepositoryMock.Setup(repo => repo.GetOrganizationalUnitByIdAsync(organizationalUnit2.Id))
             .ReturnsAsync(organizationalUnit1);
