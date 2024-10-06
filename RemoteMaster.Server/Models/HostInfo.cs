@@ -7,11 +7,11 @@ using System.Net.NetworkInformation;
 
 namespace RemoteMaster.Server.Models;
 
-public class HostInfo
+public class HostInfo(string name, IPAddress ipAddress, PhysicalAddress macAddress)
 {
-    public string Name { get; set; }
+    public string Name { get; } = name;
 
-    public IPAddress IpAddress { get; set; }
+    public IPAddress IpAddress { get; } = ipAddress;
 
-    public PhysicalAddress MacAddress { get; set; }
+    public PhysicalAddress MacAddress { get; } = macAddress;
 }

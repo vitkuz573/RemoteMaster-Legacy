@@ -14,9 +14,6 @@ public partial class LoginWith2fa
     private string? _message;
     private ApplicationUser _user = default!;
 
-    [CascadingParameter]
-    private HttpContext HttpContext { get; set; } = default!;
-
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
 
@@ -33,7 +30,6 @@ public partial class LoginWith2fa
 
     private async Task OnValidSubmitAsync()
     {
-        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
         var authenticatorCode = Input.TwoFactorCode!.Replace(" ", string.Empty).Replace("-", string.Empty);
         var result = await SignInManager.TwoFactorAuthenticatorSignInAsync(authenticatorCode, RememberMe, false);
         var userId = await UserManager.GetUserIdAsync(_user);

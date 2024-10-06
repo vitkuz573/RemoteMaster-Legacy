@@ -13,16 +13,16 @@ public class ActiveDirectoryOptions
     public ActiveDirectoryMethod Method { get; set; }
 
     [JsonPropertyName("server")]
-    public string Server { get; set; }
+    public string Server { get; set; } = string.Empty;
 
     [JsonPropertyName("port")]
     public int Port { get; set; }
 
     [JsonPropertyName("searchBase")]
-    public string SearchBase { get; set; }
+    public string SearchBase { get; set; } = string.Empty;
 
     [JsonPropertyName("templateName")]
-    public string TemplateName { get; set; }
+    public string TemplateName { get; set; } = string.Empty;
 
     [JsonPropertyName("userName")]
     public string? Username { get; set; }

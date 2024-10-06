@@ -25,7 +25,7 @@ public class JwtOptionsValidator : IValidateOptions<JwtOptions>
             return ValidateOptionsResult.Fail("KeysDirectory is not a valid path.");
         }
 
-        if (options.KeySize == null || !_validKeySizes.Contains(options.KeySize.Value))
+        if (!_validKeySizes.Contains(options.KeySize))
         {
             return ValidateOptionsResult.Fail($"KeySize must be one of the following values: {string.Join(", ", _validKeySizes)}.");
         }

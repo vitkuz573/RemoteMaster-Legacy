@@ -6,17 +6,17 @@ using System.Text.Json.Serialization;
 
 namespace RemoteMaster.Server.Models;
 
-public class TokenData
+public class TokenData(string accessToken, string refreshToken, DateTime accessTokenExpiresAt, DateTime refreshTokenExpiresAt)
 {
     [JsonPropertyName("accessToken")]
-    public string AccessToken { get; set; }
+    public string AccessToken { get; } = accessToken;
 
     [JsonPropertyName("refreshToken")]
-    public string RefreshToken { get; set; }
+    public string RefreshToken { get; } = refreshToken;
 
     [JsonPropertyName("accessTokenExpiresAt")]
-    public DateTime AccessTokenExpiresAt { get; set; }
+    public DateTime AccessTokenExpiresAt { get; } = accessTokenExpiresAt;
 
     [JsonPropertyName("refreshTokenExpiresAt")]
-    public DateTime RefreshTokenExpiresAt { get; set; }
+    public DateTime RefreshTokenExpiresAt { get; } = refreshTokenExpiresAt;
 }

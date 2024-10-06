@@ -12,10 +12,8 @@ public class TelegramBotOptions
     public bool IsEnabled { get; set; }
 
     [JsonPropertyName("botToken")]
-    public string BotToken { get; set; }
+    public string BotToken { get; set; } = string.Empty;
 
-#pragma warning disable CA2227
     [JsonPropertyName("chatIds")]
-    public List<int> ChatIds { get; set; }
-#pragma warning restore CA2227
+    public List<int> ChatIds { get; } = [];
 }

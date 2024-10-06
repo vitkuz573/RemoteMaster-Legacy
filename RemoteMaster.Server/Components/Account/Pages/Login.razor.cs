@@ -43,7 +43,7 @@ public partial class Login
 
     public async Task LoginUser()
     {
-        var ipAddress = HttpContext.Connection.RemoteIpAddress;
+        var ipAddress = HttpContext.Connection.RemoteIpAddress ?? IPAddress.None;
         var user = await UserManager.FindByNameAsync(Input.Username);
 
         if (user == null)

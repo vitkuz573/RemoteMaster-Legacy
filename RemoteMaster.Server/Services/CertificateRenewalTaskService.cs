@@ -38,7 +38,7 @@ public class CertificateRenewalTaskService(IServiceScopeFactory serviceScopeFact
         {
             try
             {
-                Log.Information($"Processing task for host: {task.Host.Name}");
+                Log.Information($"Processing task for host: {task.Host!.Name}");
 
                 await ProcessTaskAsync(task, tokenService);
 
@@ -47,7 +47,7 @@ public class CertificateRenewalTaskService(IServiceScopeFactory serviceScopeFact
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"Error processing task for host: {task.Host.Name}");
+                Log.Error(ex, $"Error processing task for host: {task.Host!.Name}");
 
                 await organizationRepository.MarkCertificateRenewalTaskFailed(task.Id);
                 await organizationRepository.SaveChangesAsync();
@@ -60,7 +60,7 @@ public class CertificateRenewalTaskService(IServiceScopeFactory serviceScopeFact
         await Task.Delay(1000);
 
         var hubConnection = new HubConnectionBuilder()
-            .WithUrl($"https://{task.Host.IpAddress}:5001/hubs/control", options =>
+            .WithUrl($"https://{task.Host!.IpAddress}:5001/hubs/control", options =>
             {
                 options.AccessTokenProvider = async () =>
                 {

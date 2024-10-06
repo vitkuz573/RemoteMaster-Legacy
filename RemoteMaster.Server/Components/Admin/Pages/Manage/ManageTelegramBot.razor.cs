@@ -11,7 +11,7 @@ public partial class ManageTelegramBot
 {
     private InputModel Input { get; set; } = new();
 
-    private readonly Dictionary<int, string> _userNames = new();
+    private readonly Dictionary<int, string> _userNames = [];
     private TelegramBot? _botSettings;
     private string? _newChatId;
     private string? _message;
@@ -20,13 +20,16 @@ public partial class ManageTelegramBot
     {
         _botSettings = await TelegramBotService.GetBotSettingsAsync();
 
-        Input = new InputModel
+        if (_botSettings != null)
         {
-            Id = _botSettings.Id,
-            IsEnabled = _botSettings.IsEnabled,
-            BotToken = _botSettings.BotToken,
-            ChatIds = _botSettings.ChatIds.Select(c => c.ChatId).ToList()
-        };
+            Input = new InputModel
+            {
+                Id = _botSettings.Id,
+                IsEnabled = _botSettings.IsEnabled,
+                BotToken = _botSettings.BotToken,
+                ChatIds = _botSettings.ChatIds.Select(c => c.ChatId).ToList()
+            };
+        }
 
         foreach (var chatId in Input.ChatIds)
         {
@@ -38,11 +41,16 @@ public partial class ManageTelegramBot
 
     private async Task<string?> ResolveChatIdToUserNameAsync(int chatId)
     {
-        var botClient = new TelegramBotClient(_botSettings.BotToken);
-        var chat = await botClient.GetChatAsync(chatId);
-        var userName = $"{chat.FirstName} {chat.LastName}";
+        if (_botSettings != null)
+        {
+            var botClient = new TelegramBotClient(_botSettings.BotToken);
+            var chat = await botClient.GetChatAsync(chatId);
+            var userName = $"{chat.FirstName} {chat.LastName}";
 
-        return userName;
+            return userName;
+        }
+
+        return string.Empty;
     }
 
     private async Task AddChatId()
@@ -54,7 +62,10 @@ public partial class ManageTelegramBot
 
         if (int.TryParse(_newChatId, out var chatId))
         {
-            await TelegramBotService.AddNewChatIdAsync(_botSettings.Id, chatId);
+            if (_botSettings != null)
+            {
+                await TelegramBotService.AddNewChatIdAsync(_botSettings.Id, chatId);
+            }
 
             Input.ChatIds.Add(chatId);
 
@@ -69,7 +80,10 @@ public partial class ManageTelegramBot
 
     private async Task RemoveChatId(int chatId)
     {
-        await TelegramBotService.RemoveChatIdAsync(_botSettings.Id, chatId);
+        if (_botSettings != null)
+        {
+            await TelegramBotService.RemoveChatIdAsync(_botSettings.Id, chatId);
+        }
 
         Input.ChatIds.Remove(chatId);
 
@@ -116,7 +130,7 @@ public partial class ManageTelegramBot
 
         public bool IsEnabled { get; set; }
 
-        public string BotToken { get; set; }
+        public string BotToken { get; set; } = string.Empty;
 
 #pragma warning disable CA2227
         public List<int> ChatIds { get; set; } = [];

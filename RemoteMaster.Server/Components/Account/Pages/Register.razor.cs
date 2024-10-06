@@ -29,7 +29,7 @@ public partial class Register
 
     public async Task RegisterUser(EditContext editContext)
     {
-        var ipAddress = HttpContext.Connection.RemoteIpAddress;
+        var ipAddress = HttpContext.Connection.RemoteIpAddress ?? IPAddress.None;
         var isLocalhost = IPAddress.IsLoopback(ipAddress);
 
         if (!isLocalhost)

@@ -24,7 +24,7 @@ public partial class TaskManager : IAsyncDisposable
     private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
 
     [Inject(Key = "Resilience-Pipeline")]
-    public ResiliencePipeline<string> ResiliencePipeline { get; set; }
+    public ResiliencePipeline<string> ResiliencePipeline { get; set; } = default!;
 
     private HubConnection? _connection;
     private ClaimsPrincipal? _user;

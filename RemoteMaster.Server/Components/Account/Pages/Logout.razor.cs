@@ -10,7 +10,7 @@ namespace RemoteMaster.Server.Components.Account.Pages;
 public partial class Logout
 {
     [CascadingParameter]
-    private HttpContext HttpContext { get; set; }
+    private HttpContext HttpContext { get; set; } = default!;
 
     protected async override Task OnInitializedAsync()
     {

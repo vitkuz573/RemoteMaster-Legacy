@@ -69,7 +69,7 @@ public class JwtSecurityService : IJwtSecurityService
 
             try
             {
-                using var rsa = RSA.Create(_options.KeySize ?? 2048);
+                using var rsa = RSA.Create(_options.KeySize);
                 var passwordBytes = Encoding.UTF8.GetBytes(_options.KeyPassword);
                 var encryptionAlgorithm = new PbeParameters(PbeEncryptionAlgorithm.Aes256Cbc, HashAlgorithmName.SHA256, 100000);
 

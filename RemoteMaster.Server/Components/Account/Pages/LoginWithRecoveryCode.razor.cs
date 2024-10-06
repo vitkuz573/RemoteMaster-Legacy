@@ -14,9 +14,6 @@ public partial class LoginWithRecoveryCode
     private string? _message;
     private ApplicationUser _user = default!;
 
-    [CascadingParameter]
-    private HttpContext HttpContext { get; set; } = default!;
-
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
 
@@ -30,7 +27,6 @@ public partial class LoginWithRecoveryCode
 
     private async Task OnValidSubmitAsync()
     {
-        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
         var recoveryCode = Input.RecoveryCode.Replace(" ", string.Empty);
 
         var result = await SignInManager.TwoFactorRecoveryCodeSignInAsync(recoveryCode);

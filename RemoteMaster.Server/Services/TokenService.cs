@@ -58,18 +58,12 @@ public class TokenService(IHttpContextAccessor httpContextAccessor, UserManager<
         await applicationUserRepository.UpdateAsync(user);
         await applicationUserRepository.SaveChangesAsync();
 
-        return Result.Ok(CreateTokenData(accessTokenResult.Value, refreshTokenResult.Value.TokenValue.Value));
+        return Result.Ok(CreateTokenData(accessTokenResult.Value, refreshTokenResult.Value.TokenValue!.Value));
     }
 
     private static TokenData CreateTokenData(string accessToken, string refreshToken)
     {
-        return new TokenData
-        {
-            AccessToken = accessToken,
-            RefreshToken = refreshToken,
-            AccessTokenExpiresAt = DateTime.UtcNow.Add(AccessTokenExpiration),
-            RefreshTokenExpiresAt = DateTime.UtcNow.Add(RefreshTokenExpiration)
-        };
+        return new TokenData(accessToken, refreshToken, DateTime.UtcNow.Add(AccessTokenExpiration), DateTime.UtcNow.Add(RefreshTokenExpiration));
     }
 
     public async Task<Result> RevokeAllRefreshTokensAsync(string userId, TokenRevocationReason revocationReason)
@@ -84,7 +78,7 @@ public class TokenService(IHttpContextAccessor httpContextAccessor, UserManager<
         }
 
         var refreshTokens = user.RefreshTokens
-            .Where(rt => rt.RevocationInfo == null && rt.TokenValue.Expires > DateTime.UtcNow)
+            .Where(rt => rt.RevocationInfo == null && rt.TokenValue!.Expires > DateTime.UtcNow)
             .ToList();
 
         if (refreshTokens.Count == 0)
@@ -96,7 +90,7 @@ public class TokenService(IHttpContextAccessor httpContextAccessor, UserManager<
 
         foreach (var token in refreshTokens)
         {
-            user.RevokeRefreshToken(token.TokenValue.Value, revocationReason, ipAddress);
+            user.RevokeRefreshToken(token.TokenValue!.Value, revocationReason, ipAddress);
         }
 
         await applicationUserRepository.UpdateAsync(user);
@@ -112,7 +106,7 @@ public class TokenService(IHttpContextAccessor httpContextAccessor, UserManager<
         Log.Debug("Starting cleanup of expired and revoked refresh tokens.");
 
         var usersWithExpiredTokens = (await applicationUserRepository.FindAsync(u =>
-            u.RefreshTokens.Any(rt => rt.TokenValue.Expires < DateTime.UtcNow || rt.RevocationInfo != null))).ToList();
+            u.RefreshTokens.Any(rt => rt.TokenValue!.Expires < DateTime.UtcNow || rt.RevocationInfo != null))).ToList();
 
         if (usersWithExpiredTokens.Count == 0)
         {
@@ -124,14 +118,14 @@ public class TokenService(IHttpContextAccessor httpContextAccessor, UserManager<
         foreach (var user in usersWithExpiredTokens)
         {
             var expiredTokens = user.RefreshTokens
-                .Where(rt => rt.TokenValue.Expires < DateTime.UtcNow || rt.RevocationInfo != null)
+                .Where(rt => rt.TokenValue!.Expires < DateTime.UtcNow || rt.RevocationInfo != null)
                 .ToList();
 
             foreach (var token in expiredTokens)
             {
                 user.RemoveRefreshToken(token);
 
-                Log.Debug($"Removed token: {token.TokenValue.Value}, User ID: {user.Id}, Expired at: {token.TokenValue.Expires}, Revoked at: {token.RevocationInfo?.Revoked}");
+                Log.Debug($"Removed token: {token.TokenValue!.Value}, User ID: {user.Id}, Expired at: {token.TokenValue.Expires}, Revoked at: {token.RevocationInfo?.Revoked}");
             }
 
             await applicationUserRepository.UpdateAsync(user);

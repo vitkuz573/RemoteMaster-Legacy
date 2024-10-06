@@ -9,8 +9,8 @@ public class InternalCertificateOptions
     public int KeySize { get; set; }
     
     public int ValidityPeriod { get; set; }
-    
-    public string CommonName { get; set; }
+
+    public string CommonName { get; set; } = "RemoteMaster Internal CA";
 
     public SubjectOptions Subject { get; set; }
 }
