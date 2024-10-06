@@ -7,7 +7,7 @@ using RemoteMaster.Shared.DTOs;
 
 namespace RemoteMaster.Shared.Models;
 
-public class HostConfiguration(string server, SubjectDto subject)
+public class HostConfiguration(string server, SubjectDto subject, HostDto host)
 {
     [JsonPropertyName("server")]
     public string Server { get; } = server;
@@ -16,5 +16,5 @@ public class HostConfiguration(string server, SubjectDto subject)
     public SubjectDto Subject { get; set; } = subject;
 
     [JsonPropertyName("host")]
-    public HostDto? Host { get; set; }
+    public HostDto Host { get; set; } = host;
 }

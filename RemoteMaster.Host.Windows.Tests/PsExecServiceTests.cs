@@ -35,7 +35,7 @@ public class PsExecServiceTests
     {
         // Arrange
         var service = new PsExecService(_mockHostConfigurationService.Object, _mockCommandExecutor.Object, _mockFirewallService.Object);
-        _mockHostConfigurationService.Setup(s => s.LoadConfigurationAsync()).ReturnsAsync(new HostConfiguration("192.168.1.1", It.IsAny<SubjectDto>()));
+        _mockHostConfigurationService.Setup(s => s.LoadConfigurationAsync()).ReturnsAsync(new HostConfiguration("192.168.1.1", It.IsAny<SubjectDto>(), It.IsAny<HostDto>()));
 
         // Act
         await service.EnableAsync();

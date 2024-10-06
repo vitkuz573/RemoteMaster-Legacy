@@ -11,14 +11,14 @@ namespace RemoteMaster.Host.Core.Services;
 
 public class CertificateLoaderService : ICertificateLoaderService
 {
-    private X509Certificate2 _currentCertificate;
+    private X509Certificate2? _currentCertificate;
 
     public CertificateLoaderService()
     {
         LoadCertificate();
     }
 
-    public X509Certificate2 GetCurrentCertificate()
+    public X509Certificate2? GetCurrentCertificate()
     {
         return _currentCertificate;
     }

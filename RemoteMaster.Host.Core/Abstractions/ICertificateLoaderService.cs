@@ -8,7 +8,7 @@ namespace RemoteMaster.Host.Core.Abstractions;
 
 public interface ICertificateLoaderService
 {
-    X509Certificate2 GetCurrentCertificate();
+    X509Certificate2? GetCurrentCertificate();
 
     void LoadCertificate();
 }

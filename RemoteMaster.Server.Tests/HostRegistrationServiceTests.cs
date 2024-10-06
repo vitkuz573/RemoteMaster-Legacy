@@ -42,7 +42,7 @@ public class HostRegistrationServiceTests
 
         var subject = new SubjectDto("TestOrg", ["OU1"]);
 
-        var hostConfig = new HostConfiguration(It.IsAny<string>(), subject)
+        var hostConfig = new HostConfiguration(It.IsAny<string>(), subject, It.IsAny<HostDto>())
         {
             Host = new HostDto("Host1", ipAddress, macAddress),
         };
@@ -73,11 +73,9 @@ public class HostRegistrationServiceTests
         var macAddress = PhysicalAddress.Parse("00:11:22:33:44:55");
 
         var subject = new SubjectDto("UnknownOrg", ["OU1"]);
+        var host = new HostDto("Host1", ipAddress, macAddress);
 
-        var hostConfig = new HostConfiguration(It.IsAny<string>(), subject)
-        {
-            Host = new HostDto("Host1", ipAddress, macAddress),
-        };
+        var hostConfig = new HostConfiguration(It.IsAny<string>(), subject, host);
 
         _organizationRepositoryMock
             .Setup(x => x.FindAsync(It.IsAny<Expression<Func<Organization, bool>>>()))

@@ -72,7 +72,7 @@ public static class WebApplicationBuilderExtensions
 
         if (launchModeInstance is InstallMode)
         {
-            server = builder.Configuration["server"];
+            server = builder.Configuration["server"] ?? throw new InvalidOperationException("Server is required.");
         }
         else
         {

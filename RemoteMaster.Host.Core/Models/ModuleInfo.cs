@@ -9,23 +9,23 @@ namespace RemoteMaster.Host.Core.Models;
 public class ModuleInfo
 {
     [JsonPropertyName("name")]
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     [JsonPropertyName("version")]
-    public string Version { get; set; }
+    public Version Version { get; set; } = new Version(1, 0);
 
     [JsonPropertyName("releaseDate")]
-    public string ReleaseDate { get; set; }
+    public DateTime? ReleaseDate { get; set; }
 
     [JsonPropertyName("description")]
-    public string Description { get; set; }
+    public string? Description { get; set; }
 
     [JsonPropertyName("dependencies")]
-    public string[] Dependencies { get; set; }
+    public string[] Dependencies { get; set; } = [];
 
     [JsonPropertyName("author")]
-    public string Author { get; set; }
+    public string? Author { get; set; }
 
     [JsonPropertyName("entryPoint")]
-    public string EntryPoint { get; set; }
+    public string EntryPoint { get; set; } = string.Empty;
 }

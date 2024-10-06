@@ -24,7 +24,7 @@ public class LogHub : Hub<ILogClient>
         }
 
         var logFiles = Directory.GetFiles(_logDirectory, "RemoteMaster_Host*.log");
-        var fileNames = logFiles.Select(Path.GetFileName).ToList();
+        var fileNames = logFiles.Select(file => Path.GetFileName(file)!).ToList();
 
         await Clients.Caller.ReceiveLogFiles(fileNames);
     }

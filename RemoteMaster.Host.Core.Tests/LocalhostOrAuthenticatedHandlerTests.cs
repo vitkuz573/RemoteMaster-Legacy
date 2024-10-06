@@ -28,12 +28,10 @@ public class LocalhostOrAuthenticatedHandlerTests
         _requirement = new LocalhostOrAuthenticatedRequirement();
 
         Mock<IHostConfigurationService> hostConfigurationServiceMock = new();
+        var host = new HostDto("TestHost", IPAddress.Parse("192.168.1.1"), PhysicalAddress.Parse("00-14-22-01-23-45"));
         hostConfigurationServiceMock
             .Setup(h => h.LoadConfigurationAsync())
-            .ReturnsAsync(new HostConfiguration(It.IsAny<string>(), It.IsAny<SubjectDto>())
-            {
-                Host = new HostDto("TestHost", IPAddress.Parse("192.168.1.1"), PhysicalAddress.Parse("00-14-22-01-23-45"))
-            });
+            .ReturnsAsync(new HostConfiguration(It.IsAny<string>(), It.IsAny<SubjectDto>(), host));
 
         Mock<IHttpContextAccessor> httpContextAccessorMock = new();
         httpContextAccessorMock.Setup(h => h.HttpContext).Returns(_httpContext);

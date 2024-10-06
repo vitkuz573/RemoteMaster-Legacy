@@ -636,7 +636,7 @@ public class HostUpdater(INetworkDriveService networkDriveService, IUserInstance
                 continue;
             }
 
-            if (force || new Version(moduleInfo.Version) > new Version(installedModuleInfo.Version))
+            if (force || moduleInfo.Version > installedModuleInfo.Version)
             {
                 await Notify($"Updating module {moduleInfo.Name}...", MessageType.Information);
                 var copiedZipFile = Path.Combine(installedModulesPath, Path.GetFileName(zipFile));

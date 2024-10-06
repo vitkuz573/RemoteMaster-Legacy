@@ -92,10 +92,7 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
 
             var subject = new SubjectDto(installRequest.Organization, [installRequest.OrganizationalUnit]);
 
-            var hostConfiguration = new HostConfiguration(installRequest.Server, subject)
-            {
-                Host = hostInformation
-            };
+            var hostConfiguration = new HostConfiguration(installRequest.Server, subject, hostInformation);
 
             await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
 
@@ -144,7 +141,7 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
             var moduleTargetPath = Path.Combine(modulesFolderPath, moduleInfo.Name);
             var installedModuleInfo = await GetInstalledModuleInfoAsync(moduleTargetPath);
 
-            if (installedModuleInfo != null && new Version(moduleInfo.Version) <= new Version(installedModuleInfo.Version))
+            if (installedModuleInfo != null && moduleInfo.Version <= installedModuleInfo.Version)
             {
                 Log.Information("Module {ModuleName} is already up-to-date. Skipping.", moduleInfo.Name);
                 

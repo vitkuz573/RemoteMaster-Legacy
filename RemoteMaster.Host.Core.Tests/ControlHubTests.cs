@@ -75,7 +75,7 @@ public class ControlHubTests
         _mockHubCallerContext.Setup(c => c.ConnectionId).Returns(connectionId);
     }
 
-    private void SetupAppState(string connectionId, IViewer viewer)
+    private void SetupAppState(string connectionId, IViewer? viewer)
     {
         _mockAppState.Setup(a => a.TryGetViewer(connectionId, out viewer)).Returns(true);
     }
@@ -308,10 +308,9 @@ public class ControlHubTests
 
         var hostMoveRequest = new HostMoveRequest(macAddress, "NewOrg", ["NewOU"]);
 
-        var hostConfiguration = new HostConfiguration(It.IsAny<string>(), It.IsAny<SubjectDto>())
-        {
-            Subject = new SubjectDto("OldOrg", ["OldOU"])
-        };
+        var subject = new SubjectDto("OldOrg", ["OldOU"]);
+
+        var hostConfiguration = new HostConfiguration(It.IsAny<string>(), subject, It.IsAny<HostDto>());
 
         var organizationAddress = new AddressDto("TestLocality", "TestState", "US");
 
