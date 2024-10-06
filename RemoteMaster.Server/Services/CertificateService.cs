@@ -113,9 +113,6 @@ public class CertificateService(IHostInformationService hostInformationService, 
         var handler = new HttpClientHandler
         {
             Credentials = new NetworkCredential(_options.Username, _options.Password),
-            PreAuthenticate = false,
-            UseDefaultCredentials = false,
-            ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
         };
 
         using (var client = new HttpClient(handler))
