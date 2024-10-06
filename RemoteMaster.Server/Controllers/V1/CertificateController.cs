@@ -47,9 +47,9 @@ public class CertificateController(ICertificateAuthorityService certificateAutho
     [HttpPost("issue")]
     [ProducesResponseType(typeof(ApiResponse<byte[]>), 200)]
     [ProducesResponseType(typeof(ApiResponse<byte[]>), 400)]
-    public IActionResult IssueCertificate([FromBody] byte[] csrBytes)
+    public async Task<IActionResult> IssueCertificate([FromBody] byte[] csrBytes)
     {
-        var certificateResult = certificateService.IssueCertificate(csrBytes);
+        var certificateResult = await certificateService.IssueCertificate(csrBytes);
 
         if (certificateResult.IsSuccess)
         {

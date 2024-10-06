@@ -17,6 +17,9 @@ public class ActiveDirectoryOptions
     [JsonPropertyName("searchBase")]
     public string SearchBase { get; set; }
 
+    [JsonPropertyName("templateName")]
+    public string TemplateName { get; set; }
+
     [JsonPropertyName("userName")]
     public string? Username { get; set; }
 
