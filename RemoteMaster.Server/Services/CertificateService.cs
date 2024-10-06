@@ -10,6 +10,7 @@ using FluentResults;
 using Microsoft.Extensions.Options;
 using RemoteMaster.Server.Abstractions;
 using RemoteMaster.Server.Aggregates.CrlAggregate.ValueObjects;
+using RemoteMaster.Server.Enums;
 using RemoteMaster.Server.Options;
 using RemoteMaster.Shared.Abstractions;
 using Serilog;
@@ -44,7 +45,13 @@ public class CertificateService(IHostInformationService hostInformationService, 
             {
                 Log.Information("Using Active Directory CA to issue the certificate.");
 
-                return await IssueCertificateUsingWebEnrollment(csrBytes);
+                switch (_options.Method)
+                {
+                    case ActiveDirectoryMethod.WebEnrollment:
+                        return await IssueCertificateUsingWebEnrollment(csrBytes);
+                    default:
+                        throw new InvalidOperationException("Unknown method.");
+                }
             }
             else
             {

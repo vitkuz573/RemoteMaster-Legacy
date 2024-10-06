@@ -3,11 +3,15 @@
 // Licensed under the GNU Affero General Public License v3.0.
 
 using System.Text.Json.Serialization;
+using RemoteMaster.Server.Enums;
 
 namespace RemoteMaster.Server.Options;
 
 public class ActiveDirectoryOptions
 {
+    [JsonPropertyName("method")]
+    public ActiveDirectoryMethod Method { get; set; }
+
     [JsonPropertyName("server")]
     public string Server { get; set; }
 
