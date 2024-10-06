@@ -6,6 +6,7 @@ using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Shared.Abstractions;
+using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
 using Serilog;
 
@@ -71,8 +72,7 @@ public class HostInformationUpdaterService(IHostConfigurationService hostConfigu
 
                 if (isOrganizationChanged || isOrganizationalUnitChanged)
                 {
-                    hostConfiguration.Subject.Organization = hostMoveRequest.Organization;
-                    hostConfiguration.Subject.OrganizationalUnit = hostMoveRequest.OrganizationalUnit;
+                    hostConfiguration.Subject = new SubjectDto(hostMoveRequest.Organization, hostMoveRequest.OrganizationalUnit);
 
                     await hostConfigurationService.SaveConfigurationAsync(hostConfiguration);
 

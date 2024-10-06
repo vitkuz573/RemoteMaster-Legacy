@@ -30,7 +30,7 @@ public class LocalhostOrAuthenticatedHandlerTests
         Mock<IHostConfigurationService> hostConfigurationServiceMock = new();
         hostConfigurationServiceMock
             .Setup(h => h.LoadConfigurationAsync())
-            .ReturnsAsync(new HostConfiguration
+            .ReturnsAsync(new HostConfiguration(It.IsAny<string>(), It.IsAny<SubjectDto>())
             {
                 Host = new HostDto("TestHost", IPAddress.Parse("192.168.1.1"), PhysicalAddress.Parse("00-14-22-01-23-45"))
             });

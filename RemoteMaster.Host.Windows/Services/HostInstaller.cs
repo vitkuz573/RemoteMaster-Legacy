@@ -90,11 +90,7 @@ public class HostInstaller(INetworkDriveService networkDriveService, IHostInform
                 hostService.Create();
             }
 
-            var subject = new SubjectDto
-            {
-                Organization = installRequest.Organization,
-                OrganizationalUnit = [installRequest.OrganizationalUnit]
-            };
+            var subject = new SubjectDto(installRequest.Organization, [installRequest.OrganizationalUnit]);
 
             var hostConfiguration = new HostConfiguration(installRequest.Server, subject)
             {

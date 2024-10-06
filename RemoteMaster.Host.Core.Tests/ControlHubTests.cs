@@ -124,7 +124,7 @@ public class ControlHubTests
     public void HandleKeyboardInput_ShouldCallHandleKeyboardInput()
     {
         // Arrange
-        var dto = new KeyboardInputDto();
+        var dto = new KeyboardInputDto(It.IsAny<string>(), It.IsAny<bool>());
 
         // Act
         _controlHub.HandleKeyboardInput(dto);
@@ -308,13 +308,9 @@ public class ControlHubTests
 
         var hostMoveRequest = new HostMoveRequest(macAddress, "NewOrg", ["NewOU"]);
 
-        var hostConfiguration = new HostConfiguration
+        var hostConfiguration = new HostConfiguration(It.IsAny<string>(), It.IsAny<SubjectDto>())
         {
-            Subject = new SubjectDto
-            {
-                Organization = "OldOrg",
-                OrganizationalUnit = ["OldOU"]
-            }
+            Subject = new SubjectDto("OldOrg", ["OldOU"])
         };
 
         var organizationAddress = new AddressDto("TestLocality", "TestState", "US");

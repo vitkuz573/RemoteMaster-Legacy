@@ -40,10 +40,11 @@ public class HostRegistrationServiceTests
         var ipAddress = IPAddress.Parse("192.168.0.1");
         var macAddress = PhysicalAddress.Parse("00:11:22:33:44:55");
 
-        var hostConfig = new HostConfiguration
+        var subject = new SubjectDto("TestOrg", ["OU1"]);
+
+        var hostConfig = new HostConfiguration(It.IsAny<string>(), subject)
         {
             Host = new HostDto("Host1", ipAddress, macAddress),
-            Subject = new SubjectDto { Organization = "TestOrg", OrganizationalUnit = ["OU1"] }
         };
 
         _organizationRepositoryMock
@@ -71,10 +72,11 @@ public class HostRegistrationServiceTests
         var ipAddress = IPAddress.Parse("192.168.0.1");
         var macAddress = PhysicalAddress.Parse("00:11:22:33:44:55");
 
-        var hostConfig = new HostConfiguration
+        var subject = new SubjectDto("UnknownOrg", ["OU1"]);
+
+        var hostConfig = new HostConfiguration(It.IsAny<string>(), subject)
         {
             Host = new HostDto("Host1", ipAddress, macAddress),
-            Subject = new SubjectDto { Organization = "UnknownOrg", OrganizationalUnit = ["OU1"] }
         };
 
         _organizationRepositoryMock

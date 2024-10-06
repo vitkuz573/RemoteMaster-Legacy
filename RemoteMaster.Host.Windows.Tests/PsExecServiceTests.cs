@@ -8,6 +8,7 @@ using RemoteMaster.Host.Core.Abstractions;
 using RemoteMaster.Host.Windows.Abstractions;
 using RemoteMaster.Host.Windows.Hubs;
 using RemoteMaster.Host.Windows.Services;
+using RemoteMaster.Shared.DTOs;
 using RemoteMaster.Shared.Models;
 
 namespace RemoteMaster.Host.Windows.Tests;
@@ -34,7 +35,7 @@ public class PsExecServiceTests
     {
         // Arrange
         var service = new PsExecService(_mockHostConfigurationService.Object, _mockCommandExecutor.Object, _mockFirewallService.Object);
-        _mockHostConfigurationService.Setup(s => s.LoadConfigurationAsync()).ReturnsAsync(new HostConfiguration { Server = "192.168.1.1" });
+        _mockHostConfigurationService.Setup(s => s.LoadConfigurationAsync()).ReturnsAsync(new HostConfiguration("192.168.1.1", It.IsAny<SubjectDto>()));
 
         // Act
         await service.EnableAsync();
