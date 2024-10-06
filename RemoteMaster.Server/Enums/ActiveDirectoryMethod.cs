@@ -6,5 +6,6 @@ namespace RemoteMaster.Server.Enums;
 
 public enum ActiveDirectoryMethod
 {
-    WebEnrollment
+    WebEnrollment,
+    CertEnroll
 }

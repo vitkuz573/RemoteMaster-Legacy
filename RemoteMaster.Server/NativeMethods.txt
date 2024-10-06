@@ -1,2 +1,5 @@
 ﻿WNetAddConnection2W
 WNetCancelConnection2W
+
+IX509CertificateRequestPkcs10 
+IX509Enrollment
