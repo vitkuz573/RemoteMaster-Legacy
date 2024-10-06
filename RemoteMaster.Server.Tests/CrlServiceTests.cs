@@ -57,7 +57,7 @@ public class CrlServiceTests
         var serialNumber = SerialNumber.FromExistingValue(serialNumberValue);
         var crl = new Crl(BigInteger.Zero.ToString());
 
-        _crlRepositoryMock.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Crl> { crl });
+        _crlRepositoryMock.Setup(r => r.GetAllAsync()).ReturnsAsync([crl]);
 
         var result = await service.RevokeCertificateAsync(serialNumber, reason);
 
@@ -78,7 +78,7 @@ public class CrlServiceTests
         var crl = new Crl("1");
         crl.RevokeCertificate(SerialNumber.FromExistingValue("1234567890"), X509RevocationReason.KeyCompromise);
 
-        _crlRepositoryMock.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Crl> { crl });
+        _crlRepositoryMock.Setup(r => r.GetAllAsync()).ReturnsAsync([crl]);
 
         var result = await service.GenerateCrlAsync();
 
@@ -113,7 +113,7 @@ public class CrlServiceTests
         var crl = new Crl(BigInteger.Zero.ToString());
         crl.RevokeCertificate(serialNumber, X509RevocationReason.KeyCompromise);
 
-        _crlRepositoryMock.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Crl> { crl });
+        _crlRepositoryMock.Setup(r => r.GetAllAsync()).ReturnsAsync([crl]);
 
         var result = await service.RevokeCertificateAsync(serialNumber, X509RevocationReason.KeyCompromise);
 
